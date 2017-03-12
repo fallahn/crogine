@@ -1,3 +1,3 @@
-#add source files used by your project here
+#source files used by crogine library
 set(PROJECT_SRC
-  ${PROJECT_DIR}/main.cpp)
+  ${PROJECT_DIR}/Window.cpp)
