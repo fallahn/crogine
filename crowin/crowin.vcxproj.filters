@@ -13,18 +13,42 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\shared\include\Config.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\include\Window.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <Filter Include="Header Files\detail">
+      <UniqueIdentifier>{cca3b464-e594-478f-ace8-1a9a2112aed1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\src\Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\src\App.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\src\glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\shared\include\crogine\Config.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\include\crogine\Window.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\include\crogine\Log.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\include\crogine\App.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\include\crogine\detail\SDLResource.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\include\crogine\detail\Assert.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\include\crogine\detail\Types.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

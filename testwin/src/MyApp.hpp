@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,32 +27,23 @@ source distribution.
 
 ---------------------------------------------------------------------- -*/
 
-//creates a window to which to draw
+#ifndef MY_APP_HPP_
+#define MY_APP_HPP_
 
-#ifndef CRO_WINDOW_HPP_
-#define CRO_WINDOW_HPP_
+//implements the cro::App class
 
-namespace cro
+#include <crogine/App.hpp>
+
+class MyApp final : public cro::App
 {
-	class Window final
-	{
-	public:
-		Window();
-		~Window();
-		Window(const Window&) = delete;
-		Window(const Window&&) = delete;
-		Window& operator = (const Window&) = delete;
-		Window& operator = (const Window&&) = delete;
+public:
+	MyApp() {};
+	~MyApp() = default;
 
-		void create();
-		void clear();
-		void display();
+private:
+	void update(float) override {}
+	void handleEvent(const cro::Event&) override {}
+	void draw() override {}
+};
 
-		bool pollEvent();
-
-	private:
-
-	};
-}
-
-#endif //CRO_WINDOW_HPP_
+#endif //MY_APP_HPP_
