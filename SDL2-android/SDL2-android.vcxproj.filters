@@ -382,6 +382,15 @@
     <ClCompile Include="src\libm\s_tan.c">
       <Filter>src\libm</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\opengles2\SDL_render_gles2.c">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\opengles2\SDL_shaders_gles2.c">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\opengles\SDL_render_gles.c">
+      <Filter>src\render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
