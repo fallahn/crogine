@@ -70,4 +70,6 @@ source distribution.
 
 #endif //CRO_STATIC
 
+#include <crogine/android/Android.hpp>
+
 #endif //CRO_CONFIG_HPP_

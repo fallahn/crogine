@@ -16,6 +16,9 @@
     <Filter Include="Header Files\detail">
       <UniqueIdentifier>{cca3b464-e594-478f-ace8-1a9a2112aed1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\android">
+      <UniqueIdentifier>{3ff2f69b-b8ea-43fc-9074-1ddf2f0f4df4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\src\Window.cpp">
@@ -49,6 +52,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\include\crogine\detail\Types.hpp">
       <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\include\crogine\android\Android.hpp">
+      <Filter>Header Files\android</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

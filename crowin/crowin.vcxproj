@@ -24,6 +24,7 @@
     <ClCompile Include="..\shared\src\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\include\crogine\android\Android.hpp" />
     <ClInclude Include="..\shared\include\crogine\App.hpp" />
     <ClInclude Include="..\shared\include\crogine\Config.hpp" />
     <ClInclude Include="..\shared\include\crogine\detail\Assert.hpp" />

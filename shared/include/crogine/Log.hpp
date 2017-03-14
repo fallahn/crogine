@@ -120,11 +120,13 @@ namespace cro
                 std::ofstream file("output.log", std::ios::app);
                 if (file.good())
                 {
+#ifndef __ANDROID__
                     std::time_t time = std::time(nullptr);
                     auto tm = *std::localtime(&time);
 
                     file.imbue(std::locale());
                     file << std::put_time(&tm, "%d/%m/%y-%H:%M:%S: ");
+#endif //__ANDROID__
                     file << outstring << std::endl;
                     file.close();
                 }
