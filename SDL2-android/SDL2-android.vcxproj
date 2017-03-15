@@ -159,6 +159,7 @@
     <ClCompile Include="src\libm\s_sin.c" />
     <ClCompile Include="src\libm\s_tan.c" />
     <ClCompile Include="src\loadso\dlopen\SDL_sysloadso.c" />
+    <ClCompile Include="src\main\android\SDL_android_main.c" />
     <ClCompile Include="src\power\android\SDL_syspower.c" />
     <ClCompile Include="src\power\SDL_power.c" />
     <ClCompile Include="src\render\direct3d11\SDL_render_d3d11.c" />
