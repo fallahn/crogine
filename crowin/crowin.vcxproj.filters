@@ -21,40 +21,40 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\shared\src\Window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\src\App.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\src\glad.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\shared\include\crogine\Config.hpp">
+    <ClInclude Include="..\common\include\crogine\App.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\include\crogine\Window.hpp">
+    <ClInclude Include="..\common\include\crogine\Config.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\include\crogine\Log.hpp">
+    <ClInclude Include="..\common\include\crogine\Log.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\include\crogine\App.hpp">
+    <ClInclude Include="..\common\include\crogine\Window.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\include\crogine\detail\SDLResource.hpp">
-      <Filter>Header Files\detail</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\include\crogine\detail\Assert.hpp">
-      <Filter>Header Files\detail</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\include\crogine\detail\Types.hpp">
-      <Filter>Header Files\detail</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\include\crogine\android\Android.hpp">
+    <ClInclude Include="..\common\include\crogine\android\Android.hpp">
       <Filter>Header Files\android</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\detail\Assert.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\detail\SDLResource.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\detail\Types.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\common\src\App.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

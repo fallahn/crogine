@@ -19,19 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\shared\src\App.cpp" />
-    <ClCompile Include="..\shared\src\glad.c" />
-    <ClCompile Include="..\shared\src\Window.cpp" />
+    <ClInclude Include="..\common\include\crogine\android\Android.hpp" />
+    <ClInclude Include="..\common\include\crogine\App.hpp" />
+    <ClInclude Include="..\common\include\crogine\Config.hpp" />
+    <ClInclude Include="..\common\include\crogine\detail\Assert.hpp" />
+    <ClInclude Include="..\common\include\crogine\detail\SDLResource.hpp" />
+    <ClInclude Include="..\common\include\crogine\detail\Types.hpp" />
+    <ClInclude Include="..\common\include\crogine\Log.hpp" />
+    <ClInclude Include="..\common\include\crogine\Window.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\shared\include\crogine\android\Android.hpp" />
-    <ClInclude Include="..\shared\include\crogine\App.hpp" />
-    <ClInclude Include="..\shared\include\crogine\Config.hpp" />
-    <ClInclude Include="..\shared\include\crogine\detail\Assert.hpp" />
-    <ClInclude Include="..\shared\include\crogine\detail\SDLResource.hpp" />
-    <ClInclude Include="..\shared\include\crogine\detail\Types.hpp" />
-    <ClInclude Include="..\shared\include\crogine\Log.hpp" />
-    <ClInclude Include="..\shared\include\crogine\Window.hpp" />
+    <ClCompile Include="..\common\src\App.cpp" />
+    <ClCompile Include="..\common\src\glad.c" />
+    <ClCompile Include="..\common\src\Window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -105,7 +105,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\shared\include;extlibs\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common\include;extlibs\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -118,7 +118,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\shared\include;extlibs\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common\include;extlibs\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -133,7 +133,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\shared\include;extlibs\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common\include;extlibs\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -150,7 +150,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\shared\include;extlibs\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common\include;extlibs\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>

@@ -76,7 +76,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\crowin\extlibs\include;$(VS_NdkRoot)/sources/android/support/include;..\shared\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\crowin\extlibs\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
     </ClCompile>
@@ -99,7 +99,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\crowin\extlibs\include;$(VS_NdkRoot)/sources/android/support/include;..\shared\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\crowin\extlibs\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
     </ClCompile>
@@ -121,9 +121,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\shared\src\App.cpp" />
-    <ClCompile Include="..\shared\src\glad.c" />
-    <ClCompile Include="..\shared\src\Window.cpp" />
+    <ClCompile Include="..\common\src\App.cpp" />
+    <ClCompile Include="..\common\src\glad.c" />
+    <ClCompile Include="..\common\src\Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

@@ -9,13 +9,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\shared\src\glad.c">
+    <ClCompile Include="..\common\src\App.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\src\App.cpp">
+    <ClCompile Include="..\common\src\glad.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\src\Window.cpp">
+    <ClCompile Include="..\common\src\Window.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
