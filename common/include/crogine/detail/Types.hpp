@@ -30,8 +30,8 @@ source distribution.
 #ifndef CRO_TYPES_HPP_
 #define CRO_TYPES_HPP_
 
-#include <sdl2/SDL_stdinc.h>
-#include <sdl2/SDL_events.h>
+#include <SDL_stdinc.h>
+#include <SDL_events.h>
 
 /*
 Aliases for SDL types

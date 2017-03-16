@@ -30,7 +30,7 @@ source distribution.
 #include <crogine/Window.hpp>
 #include <crogine/Log.hpp>
 
-#include <sdl2/SDL.h>
+#include <SDL.h>
 
 #include "glad/glad.h"
 

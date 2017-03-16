@@ -34,8 +34,8 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
-#include <sdl2/SDL_video.h>
-#include <sdl2/SDL_events.h>
+#include <SDL_video.h>
+#include <SDL_events.h>
 
 #include <string>
 

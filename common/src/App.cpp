@@ -32,7 +32,7 @@ source distribution.
 #include <crogine/Window.hpp>
 #include <crogine/detail/Assert.hpp>
 
-#include <sdl2/SDL.h>
+#include <SDL.h>
 
 #include "glad/glad.h"
 
