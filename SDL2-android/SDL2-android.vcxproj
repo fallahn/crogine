@@ -33,7 +33,7 @@
     <PlatformToolset>Clang_3_8</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
     <UseOfStl>gnustl_static</UseOfStl>
@@ -44,7 +44,7 @@
     <PlatformToolset>Clang_3_8</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
     <UseOfStl>gnustl_static</UseOfStl>
@@ -86,6 +86,9 @@
       <AdditionalOptions>
       </AdditionalOptions>
     </Lib>
+    <Link>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android</LibraryDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <ClCompile>
@@ -107,6 +110,9 @@
       <AdditionalOptions>
       </AdditionalOptions>
     </Lib>
+    <Link>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android</LibraryDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -159,7 +165,6 @@
     <ClCompile Include="src\libm\s_sin.c" />
     <ClCompile Include="src\libm\s_tan.c" />
     <ClCompile Include="src\loadso\dlopen\SDL_sysloadso.c" />
-    <ClCompile Include="src\main\android\SDL_android_main.c" />
     <ClCompile Include="src\power\android\SDL_syspower.c" />
     <ClCompile Include="src\power\SDL_power.c" />
     <ClCompile Include="src\render\direct3d11\SDL_render_d3d11.c" />

@@ -15,5 +15,8 @@
     <ClCompile Include="main.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\SDL2-android\src\main\android\SDL_android_main.c">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

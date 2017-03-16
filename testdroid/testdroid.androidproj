@@ -148,8 +148,8 @@
     <AntBuildXml Include="build.xml" />
     <AndroidManifest Include="AndroidManifest.xml" />
     <AntProjectPropertiesFile Include="project.properties" />
-    <JavaCompile Include="src\com\testdroid\SDLActivity.java" />
     <JavaCompile Include="src\com\testdroid\testdroid.java" />
+    <JavaCompile Include="src\org\libsdl\app\SDLActivity.java" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\crodroid\crodroid.vcxproj" />

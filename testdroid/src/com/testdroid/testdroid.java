@@ -1,9 +1,8 @@
 
 package com.testdroid;
 
-//import android.app.Activity;
-//import android.widget.TextView;
 import android.os.Bundle;
+import org.libsdl.app.SDLActivity;
 
 public class testdroid extends SDLActivity
 {
@@ -11,13 +10,6 @@ public class testdroid extends SDLActivity
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
-//        super.onCreate(savedInstanceState);
-//
-  //      /* Create a TextView and set its text to "Hello world" */
-    //    TextView  tv = new TextView(this);
-      //  tv.setText("Hello World!");
-        //setContentView(tv);
+        super.onCreate(savedInstanceState);
     }
 }
-
-

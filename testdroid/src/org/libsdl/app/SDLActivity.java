@@ -1,4 +1,4 @@
-package com.testdroid;
+package org.libsdl.app;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,7 +76,8 @@ public class SDLActivity extends Activity {
             // "SDL2_mixer",
             // "SDL2_net",
             // "SDL2_ttf",
-            "main"
+			"crodroid",
+            "droidmain"
         };
     }
 

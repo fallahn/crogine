@@ -391,9 +391,6 @@
     <ClCompile Include="src\render\opengles\SDL_render_gles.c">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\main\android\SDL_android_main.c">
-      <Filter>src</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
