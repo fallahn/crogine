@@ -7,6 +7,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
+SET (PROJECT_STATIC_RUNTIME FALSE)
 #SET(PROJECT_STATIC_RUNTIME FALSE CACHE BOOL "Use statically linked standard/runtime libraries?")
 #SET(PROJECT_STATIC_TMX FALSE CACHE BOOL "Use statically linked tmxlite library?")
 
@@ -43,6 +44,7 @@ include(${PROJECT_DIR}/CMakeLists.txt)
 add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 
 target_link_libraries(${PROJECT_NAME}
+  ${CROGINE_LIBRARIES}
   #${TMXLITE_LIBRARIES}
   ${SDL2_LIBRARY}
   #${SDL2_IMAGE_LIBRARIES}

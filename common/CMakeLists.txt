@@ -31,7 +31,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/common/include)
 
 
-SET(PROJECT_DIR ${CMAKE_SOURCE_DIR}/shared/src)
+SET(PROJECT_DIR ${CMAKE_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 
 if(PROJECT_STATIC_RUNTIME)
