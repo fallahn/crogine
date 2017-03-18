@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 
 #include <SDL.h>
+#include <SDL_mixer.h>
 
 #include "glad/glad.h"
 
@@ -40,13 +41,56 @@ using namespace cro;
 
 App* App::m_instance = nullptr;
 
+namespace
+{
+	void testAudio()
+	{
+		if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) >= 0)
+		{
+			auto mus = Mix_LoadMUS("assets/test_music.wav");
+			if (!mus)
+			{
+				std::string err(Mix_GetError());
+				Logger::log("Failed to load music: " + err);
+			}
+			else
+			{
+				Mix_PlayMusic(mus, 0);
+				//blocks but good enough for a test
+				while (Mix_PlayingMusic()) {}
+				Mix_FreeMusic(mus);
+			}
+
+			auto effect = Mix_LoadWAV("assets/test_effect.wav");
+			if (!effect)
+			{
+				std::string err(Mix_GetError());
+				Logger::log("Failed to open Effect: " + err, Logger::Type::Error);
+			}
+			else
+			{
+				Mix_PlayChannel(-1, effect, 0);
+				while (Mix_Playing(-1)) {}
+				Mix_FreeChunk(effect);
+			}
+			Mix_Quit();
+		}
+		else
+		{
+			std::string err(Mix_GetError());
+			Logger::log("Failed to init SDL2 Mixer: " + err);
+		}
+	}
+}
+
 App::App()
 {
 	CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
 	{
-		Logger::log("Failed init video system");
+		const std::string err(SDL_GetError());
+		Logger::log("Failed init: " + err, Logger::Type::Error);
 	}
 	else
 	{
@@ -78,6 +122,8 @@ void App::run()
 		Logger::log("Failed creating main window", Logger::Type::Error);
 		return;
 	}
+
+	testAudio();
 
 	while (win.isOpen())
 	{

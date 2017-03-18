@@ -49,6 +49,10 @@ source distribution.
 #include <Windows.h>
 #endif //_MSC_VER
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif //__ANDROID__
+
 namespace cro
 {
     /*!
@@ -94,7 +98,7 @@ namespace cro
                 outstring = "WARNING: " + message;
                 break;
             }
-
+#ifndef __ANDROID__
             if (output == Output::Console || output == Output::All)
             {
                 (type == Type::Error) ?
@@ -120,13 +124,13 @@ namespace cro
                 std::ofstream file("output.log", std::ios::app);
                 if (file.good())
                 {
-#ifndef __ANDROID__
+
                     std::time_t time = std::time(nullptr);
                     auto tm = *std::localtime(&time);
 
                     file.imbue(std::locale());
                     file << std::put_time(&tm, "%d/%m/%y-%H:%M:%S: ");
-#endif //__ANDROID__
+
                     file << outstring << std::endl;
                     file.close();
                 }
@@ -136,6 +140,10 @@ namespace cro
                     log("Above message was intended for log file. Opening file probably failed.", Type::Warning, Output::Console);
                 }
             }
+#else
+			//use logcat
+			__android_log_print(ANDROID_LOG_VERBOSE, "CroApp", message.c_str(), 1);
+#endif //__ANDROID__
         }
 
         static const std::string& bufferString(){ return stringOutput(); }
