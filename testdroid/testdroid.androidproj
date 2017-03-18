@@ -48,11 +48,13 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <TargetName>$(RootNamespace)</TargetName>
     <ConfigurationType>Application</ConfigurationType>
+    <AndroidAPILevel>android-22</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
     <TargetName>$(RootNamespace)</TargetName>
     <ConfigurationType>Application</ConfigurationType>
+    <AndroidAPILevel>android-22</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -145,6 +147,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Content Include="assets\assets\test_effect.wav" />
+    <Content Include="assets\assets\test_music.ogg" />
     <Content Include="assets\assets\test_music.wav" />
     <Content Include="res\values\strings.xml" />
     <AntBuildXml Include="build.xml" />

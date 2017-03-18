@@ -1,1 +1,1 @@
-This is the android project for building the SDL2_mixer library for android. Windows libraries are contained in extlibs, linux libraries should be found via package managers
+This is the android project for building the SDL2_mixer library for android. Windows libraries are contained in extlibs, linux libraries should be found via package managers. Not that the android version is built with only wav and ogg file support to save on dependencies.

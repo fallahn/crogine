@@ -4,6 +4,9 @@
     <Filter Include="src">
       <UniqueIdentifier>{0d6a8e6e-1646-40db-bc64-83988e2739ce}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\ogg">
+      <UniqueIdentifier>{43025dd0-ba65-4c3a-bca3-ff2bf35a489e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\dynamic_flac.c">
@@ -77,6 +80,51 @@
     </ClCompile>
     <ClCompile Include="src\wavestream.c">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ogg\bitwise.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ogg\framing.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\block.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\codebook.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\floor0.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\floor1.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\info.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\mapping0.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\mdct.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\registry.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\res012.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\sharedbook.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\synthesis.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\vorbisfile.c">
+      <Filter>src\ogg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vorbis\window.c">
+      <Filter>src\ogg</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

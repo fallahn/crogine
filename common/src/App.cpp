@@ -47,7 +47,7 @@ namespace
 	{
 		if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) >= 0)
 		{
-			auto mus = Mix_LoadMUS("assets/test_music.wav");
+			auto mus = Mix_LoadMUS("assets/test_music.ogg");
 			if (!mus)
 			{
 				std::string err(Mix_GetError());

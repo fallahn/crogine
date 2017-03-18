@@ -58,6 +58,21 @@
     <ClCompile Include="src\music_mod.c" />
     <ClCompile Include="src\music_modplug.c" />
     <ClCompile Include="src\music_ogg.c" />
+    <ClCompile Include="src\ogg\bitwise.c" />
+    <ClCompile Include="src\ogg\framing.c" />
+    <ClCompile Include="src\vorbis\block.c" />
+    <ClCompile Include="src\vorbis\codebook.c" />
+    <ClCompile Include="src\vorbis\floor0.c" />
+    <ClCompile Include="src\vorbis\floor1.c" />
+    <ClCompile Include="src\vorbis\info.c" />
+    <ClCompile Include="src\vorbis\mapping0.c" />
+    <ClCompile Include="src\vorbis\mdct.c" />
+    <ClCompile Include="src\vorbis\registry.c" />
+    <ClCompile Include="src\vorbis\res012.c" />
+    <ClCompile Include="src\vorbis\sharedbook.c" />
+    <ClCompile Include="src\vorbis\synthesis.c" />
+    <ClCompile Include="src\vorbis\vorbisfile.c" />
+    <ClCompile Include="src\vorbis\window.c" />
     <ClCompile Include="src\wavestream.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -84,13 +99,13 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
-    <AndroidAPILevel>android-19</AndroidAPILevel>
+    <AndroidAPILevel>android-22</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
-    <AndroidAPILevel>android-19</AndroidAPILevel>
+    <AndroidAPILevel>android-22</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -175,8 +190,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\SDL2-android\include;include;$(Sysroot)\usr\include;$(StlIncludeDirectories)%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>;WAV_MUSIC</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src\vorbis;src\ogg\include;..\SDL2-android\include;include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>;WAV_MUSIC;OGG_MUSIC;OGG_USE_TREMOR;OGG_HEADER=&lt;ivorbisfile.h&gt;</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -187,8 +202,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\SDL2-android\include;include;$(Sysroot)\usr\include;$(StlIncludeDirectories)%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);WAV_MUSIC</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src\vorbis;src\ogg\include;..\SDL2-android\include;include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);WAV_MUSIC;OGG_MUSIC;OGG_USE_TREMOR;OGG_HEADER=&lt;ivorbisfile.h&gt;</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
