@@ -89,7 +89,7 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
-      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer</LibraryDependencies>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_image</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -113,7 +113,7 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
-      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer</LibraryDependencies>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_image</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

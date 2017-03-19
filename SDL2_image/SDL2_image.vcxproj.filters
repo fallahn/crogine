@@ -1,0 +1,244 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{c6a3d294-fd78-499f-bd29-739673e41cc0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\jpg">
+      <UniqueIdentifier>{166102b6-3944-49a6-afeb-d1bea598cca0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\png">
+      <UniqueIdentifier>{67a3cabe-255d-4a8e-a2cc-20b159b3a667}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\IMG.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_bmp.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_gif.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_jpg.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_lbm.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_pcx.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_png.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_pnm.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_tga.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_tif.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_webp.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_xcf.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_xpm.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_xv.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IMG_xxx.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jaricom.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jcapimin.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jcapistd.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jcarith.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jccoefct.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jccolor.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jcdctmgr.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jchuff.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jcinit.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jcmainct.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jcmarker.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jcmaster.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jcomapi.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jcparam.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jcprepct.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jcsample.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jctrans.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdapimin.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdapistd.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdarith.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdatadst.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdatasrc.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdcoefct.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdcolor.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jddctmgr.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdhuff.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdinput.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdmainct.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdmarker.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdmaster.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdmerge.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdpostct.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdsample.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jdtrans.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jerror.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jfdctflt.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jfdctfst.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jfdctint.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jidctflt.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jidctint.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jquant1.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jquant2.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jutils.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jmem-android.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jmemmgr.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jpeg\jidctfst.c">
+      <Filter>src\jpg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\png.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngerror.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngget.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngmem.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngpread.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngread.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngrio.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngrtran.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngrutil.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngset.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngtrans.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngwio.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngwrite.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngwtran.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="src\png\pngwutil.c">
+      <Filter>src\png</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
