@@ -28,9 +28,6 @@ source distribution.
 ---------------------------------------------------------------------- -*/
 
 #include "MyApp.hpp"
-#ifdef WIN32
-#undef main //because of SDL main
-#endif
 
 int main()
 {

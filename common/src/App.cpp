@@ -123,7 +123,7 @@ void App::run()
 		return;
 	}
 
-	testAudio();
+	//testAudio();
 
 	while (win.isOpen())
 	{
