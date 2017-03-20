@@ -22,9 +22,9 @@ SET (CMAKE_CXX_FLAGS_RELEASE "-O4 -DNDEBUG")
 SET (CMAKE_DEBUG_POSTFIX -d)
 
 find_package(SDL2 REQUIRED)
-find_package(SDL2_mixer, required)
+find_package(SDL2_mixer REQUIRED)
 find_package(SDL2_Image REQUIRED)
-find_package(SDL2_ttf, required)
+find_package(SDL2_ttf REQUIRED)
 find_package(OpenGL REQUIRED)
 
 include_directories(
