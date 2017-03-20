@@ -27,9 +27,11 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include <SDL.h>
+
 #include "MyApp.hpp"
 
-int main()
+int main(int argc, char** argsv)
 {
 	MyApp mapp;
 	mapp.run();
