@@ -84,9 +84,9 @@ namespace cro
 		void registerState(StateID id, Args&&... args)
 		{
 			static_assert(std::is_base_of<State, T>::value, "Must derive from State class");
-			m_factories[id] = [this]()
+			m_factories[id] = [&args..., this]()
 			{
-				return std::make_unique<T>(*this, m_constext, std::forward<Args>(args)...);
+				return std::make_unique<T>(*this, m_context, std::forward<Args>(args)...);
 			};
 		}
 
