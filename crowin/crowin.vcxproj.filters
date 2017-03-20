@@ -19,6 +19,9 @@
     <Filter Include="Header Files\android">
       <UniqueIdentifier>{3ff2f69b-b8ea-43fc-9074-1ddf2f0f4df4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\system">
+      <UniqueIdentifier>{a1f1b07a-b73a-4f4e-b95a-1b09c63066bc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\App.hpp">
@@ -51,6 +54,9 @@
     <ClInclude Include="..\common\include\crogine\State.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\system\Clock.hpp">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp">
@@ -66,6 +72,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\StateStack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\system\Clock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -7,6 +7,9 @@
     <Filter Include="src">
       <UniqueIdentifier>{64015add-90b3-4e72-8765-1c5ea4668438}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\system">
+      <UniqueIdentifier>{91bfe830-0bd1-482c-9119-d63cd99a06b2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp">
@@ -17,6 +20,12 @@
     </ClCompile>
     <ClCompile Include="..\common\src\Window.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\StateStack.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\system\Clock.cpp">
+      <Filter>src\system</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

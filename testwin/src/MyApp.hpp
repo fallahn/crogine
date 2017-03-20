@@ -33,6 +33,7 @@ source distribution.
 //implements the cro::App class
 
 #include <crogine/App.hpp>
+#include <crogine/system/Clock.hpp>
 
 class MyApp final : public cro::App
 {
@@ -43,7 +44,7 @@ public:
 private:
 	
 	void handleEvent(const cro::Event&) override {}
-	void simulate(float) override {}
+	void simulate(cro::Time) override;
 	void render() override {}
 };
 

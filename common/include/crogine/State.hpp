@@ -41,6 +41,7 @@ namespace cro
 	class Window;
 	class App;
 	class StateStack;
+	class Time;
 
 	using StateID = cro::int32;
 
@@ -94,13 +95,13 @@ namespace cro
 		/*!
 		\brief Executes one step of the game's simulation.
 		All game logic should be performed under this function.
-		\param dt The amount of time in seconds passed since this
+		\param dt The amount of time passed since this
 		function was last called. By default it is fixed at 1/60 second.
 		\returns true if remaining states in the state should be simulated
 		else returns false. 
 		\see handleEvent()
 		*/
-		virtual bool simulate(float dt) = 0;
+		virtual bool simulate(Time dt) = 0;
 
 		/*!
 		\brief Calls to rendering systems should be performed here.

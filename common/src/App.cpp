@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/Window.hpp>
 #include <crogine/detail/Assert.hpp>
 
+#include <crogine/system/Clock.hpp>
+
 #include <SDL.h>
 #include <SDL_mixer.h>
 
@@ -81,6 +83,9 @@ namespace
 			Logger::log("Failed to init SDL2 Mixer: " + err);
 		}
 	}
+
+	const Time frameTime = seconds(1.f / 60.f);
+	Time timeSinceLastUpdate;
 }
 
 App::App()
@@ -125,21 +130,48 @@ void App::run()
 
 	//testAudio();
 
+	Clock frameClock;
+
 	while (win.isOpen())
 	{
-		cro::Event evt;
-		while (win.pollEvent(evt))
-		{
-			if (evt.type == SDL_QUIT)
-			{
-				win.close();
-			}
-		}
+		timeSinceLastUpdate += frameClock.restart();
 
+		while (timeSinceLastUpdate > frameTime)
+		{
+			timeSinceLastUpdate -= frameTime;
+
+			cro::Event evt;
+			while (win.pollEvent(evt))
+			{
+				if (evt.type == SDL_QUIT)
+				{
+					win.close();
+				}
+			}
+
+			simulate(frameTime);
+		}
 		win.clear();
 		render();
 		win.display();
 	}
+}
+
+#include <functional>
+#include <array>
+void App::setClearColour()
+{
+	static std::size_t idx = 0;
+	static std::array<std::function<void()>, 4u> funcs = 
+	{
+		[]() {glClearColor(1.f, 0.f, 0.f, 1.f); },
+		[]() {glClearColor(0.f, 1.f, 0.f, 1.f); },
+		[]() {glClearColor(0.f, 0.f, 1.f, 1.f); },
+		[]() {glClearColor(1.f, 1.f, 0.f, 1.f); }
+	};
+
+	funcs[idx]();
+	idx = (idx + 1) % funcs.size();
 }
 
 

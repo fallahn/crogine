@@ -39,6 +39,7 @@ source distribution.
 namespace cro
 {
 	class Window;
+	class Time;
 
 	/*!
 	\brief Maintains a stack of active states.
@@ -100,7 +101,7 @@ namespace cro
 		passing in the elapsed time, until the active state returns false,
 		or the end of the stack is reached.
 		*/
-		void simulate(float);
+		void simulate(Time);
 
 		/*!
 		\brief Calls the render function on each state active on the stack

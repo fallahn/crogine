@@ -176,6 +176,7 @@
   <ItemGroup>
     <ClCompile Include="..\SDL2-android\src\main\android\SDL_android_main.c" />
     <ClCompile Include="..\testwin\src\main.cpp" />
+    <ClCompile Include="..\testwin\src\MyApp.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

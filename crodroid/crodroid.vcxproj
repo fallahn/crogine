@@ -122,6 +122,8 @@
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp" />
     <ClCompile Include="..\common\src\glad.c" />
+    <ClCompile Include="..\common\src\StateStack.cpp" />
+    <ClCompile Include="..\common\src\system\Clock.cpp" />
     <ClCompile Include="..\common\src\Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

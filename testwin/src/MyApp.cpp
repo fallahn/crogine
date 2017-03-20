@@ -29,10 +29,15 @@ source distribution.
 
 #include "MyApp.hpp"
 
-int main()
-{
-	MyApp mapp;
-	mapp.run();
+#include <crogine/system/Clock.hpp>
 
-	return 0;
+void MyApp::simulate(cro::Time t)
+{
+	static cro::Clock clock;
+
+	if (clock.elapsed().asSeconds() > 1)
+	{
+		clock.restart();
+		setClearColour();
+	}
 }

@@ -39,6 +39,7 @@ namespace cro
 	{
 		class SDLResource;
 	}
+	class Time;
 
 	/*!
 	\brief Base class for crogine applications.
@@ -58,11 +59,13 @@ namespace cro
 
 		void run();
 
+		void setClearColour();
+
 	protected:
 		
 		virtual void handleEvent(const Event&) = 0;
 		//virtual void handleMessage() = 0;
-		virtual void simulate(float) = 0;
+		virtual void simulate(Time) = 0;
 		virtual void render() = 0;
 
 	private:

@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/Log.hpp>
 
 #include <crogine/detail/Assert.hpp>
+#include <crogine/system/Clock.hpp>
 
 using namespace cro;
 
@@ -50,7 +51,7 @@ void StateStack::handleEvent(const cro::Event& evt)
 	}
 }
 
-void StateStack::simulate(float dt)
+void StateStack::simulate(Time dt)
 {
 	applyPendingChanges();
 	for (auto i = m_stack.rbegin(); i != m_stack.rbegin(); ++i)

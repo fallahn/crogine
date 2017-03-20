@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\MyApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp" />

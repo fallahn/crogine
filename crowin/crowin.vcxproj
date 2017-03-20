@@ -28,6 +28,7 @@
     <ClInclude Include="..\common\include\crogine\Log.hpp" />
     <ClInclude Include="..\common\include\crogine\State.hpp" />
     <ClInclude Include="..\common\include\crogine\StateStack.hpp" />
+    <ClInclude Include="..\common\include\crogine\system\Clock.hpp" />
     <ClInclude Include="..\common\include\crogine\Window.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -35,6 +36,7 @@
     <ClCompile Include="..\common\src\glad.c" />
     <ClCompile Include="..\common\src\State.cpp" />
     <ClCompile Include="..\common\src\StateStack.cpp" />
+    <ClCompile Include="..\common\src\system\Clock.cpp" />
     <ClCompile Include="..\common\src\Window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
