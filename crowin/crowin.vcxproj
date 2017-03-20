@@ -26,11 +26,15 @@
     <ClInclude Include="..\common\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp" />
     <ClInclude Include="..\common\include\crogine\Log.hpp" />
+    <ClInclude Include="..\common\include\crogine\State.hpp" />
+    <ClInclude Include="..\common\include\crogine\StateStack.hpp" />
     <ClInclude Include="..\common\include\crogine\Window.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp" />
     <ClCompile Include="..\common\src\glad.c" />
+    <ClCompile Include="..\common\src\State.cpp" />
+    <ClCompile Include="..\common\src\StateStack.cpp" />
     <ClCompile Include="..\common\src\Window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

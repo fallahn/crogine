@@ -27,49 +27,40 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_APP_HPP_
-#define CRO_APP_HPP_
+#include <crogine/StateStack.hpp>
+#include <crogine/App.hpp>
 
-#include <crogine/Config.hpp>
-#include <crogine/detail/Types.hpp>
+using namespace cro;
 
-namespace cro
+State::State(StateStack& stack, State::Context context)
+	: m_stack	(stack),
+	m_context	(context)
 {
-	namespace Detail
-	{
-		class SDLResource;
-	}
 
-	/*!
-	\brief Base class for crogine applications.
-	One instance of this must exist before crogine may be used
-	*/
-	class CRO_EXPORT_API App
-	{
-	public:
-		friend class Detail::SDLResource;
-		App();
-		virtual ~App();
-
-		App(const App&) = delete;
-		App(const App&&) = delete;
-		App& operator = (const App&) = delete;
-		App& operator = (const App&&) = delete;
-
-		void run();
-
-	protected:
-		
-		virtual void handleEvent(const Event&) = 0;
-		//virtual void handleMessage() = 0;
-		virtual void simulate(float) = 0;
-		virtual void render() = 0;
-
-	private:
-
-		static App* m_instance;
-	};
 }
 
+//protected
+void State::requestStackPush(StateID id)
+{
+	m_stack.pushState(id);
+}
 
-#endif //CRO_APP_HPP_
+void State::requestStackPop()
+{
+	m_stack.popState();
+}
+
+void State::requestStackClear()
+{
+	m_stack.clearStates();
+}
+
+State::Context State::getContext() const
+{
+	return m_context;
+}
+
+std::size_t State::getStateCount() const
+{
+	return m_stack.getStackSize();
+}

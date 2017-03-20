@@ -1,4 +1,4 @@
-/*---------------------------------------------------------------------- -
+/*-----------------------------------------------------------------------
 
 Matt Marchant 2017
 http://trederia.blogspot.com
@@ -25,7 +25,7 @@ and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any
 source distribution.
 
----------------------------------------------------------------------- -*/
+-----------------------------------------------------------------------*/
 
 #ifndef MY_APP_HPP_
 #define MY_APP_HPP_
@@ -41,9 +41,10 @@ public:
 	~MyApp() = default;
 
 private:
-	void update(float) override {}
+	
 	void handleEvent(const cro::Event&) override {}
-	void draw() override {}
+	void simulate(float) override {}
+	void render() override {}
 };
 
 #endif //MY_APP_HPP_

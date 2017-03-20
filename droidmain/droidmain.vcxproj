@@ -150,7 +150,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\SDL2-android\include;$(Sysroot)\usr\include;$(StlIncludeDirectories)%(AdditionalIncludeDirectories);..\common\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\testwin\src;..\SDL2-android\include;$(Sysroot)\usr\include;$(StlIncludeDirectories)%(AdditionalIncludeDirectories);..\common\include</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
     </ClCompile>
     <Link>
@@ -162,7 +162,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\SDL2-android\include;$(Sysroot)\usr\include;$(StlIncludeDirectories)%(AdditionalIncludeDirectories);..\common\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\testwin\src;..\SDL2-android\include;$(Sysroot)\usr\include;$(StlIncludeDirectories)%(AdditionalIncludeDirectories);..\common\include</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
     </ClCompile>
     <Link>
@@ -172,11 +172,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="TestApp.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\SDL2-android\src\main\android\SDL_android_main.c" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\testwin\src\main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

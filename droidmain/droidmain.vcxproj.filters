@@ -2,9 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="TestApp.hpp">
-      <Filter>src</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -12,10 +9,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="..\SDL2-android\src\main\android\SDL_android_main.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\SDL2-android\src\main\android\SDL_android_main.c">
+    <ClCompile Include="..\testwin\src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
