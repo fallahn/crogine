@@ -28,43 +28,45 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MyApp.hpp"
+#include "MenuState.hpp"
 
-#include <crogine/system/Colour.hpp>
+#include <crogine/system/Clock.hpp>
 
 MyApp::MyApp()
+	: m_stateStack({*this, getWindow()})
 {
+	//register states
+	m_stateStack.registerState<MenuState>(States::ID::MainMenu);
 
+
+	m_stateStack.pushState(States::MainMenu);
 }
 
 //public
 void MyApp::handleEvent(const cro::Event& evt)
 {
-
+	if (evt.type == SDL_KEYUP)
+	{
+		switch (evt.key.keysym.sym)
+		{
+		default: break;
+		case SDLK_ESCAPE:
+		case SDLK_AC_BACK:
+			//TODO replace with app::quit()
+			getWindow().close();
+			break;
+		}
+	}
+	
+	m_stateStack.handleEvent(evt);
 }
 
-#include <array>
 void MyApp::simulate(cro::Time dt)
 {
-	static std::array<cro::Colour, 4u> colours =
-	{
-		cro::Colour(1.f, 0.f, 0.f),
-		cro::Colour(1.f, 1.f, 0.f),
-		cro::Colour(0.f, 1.f, 1.f),
-		cro::Colour(1.f, 1.f, 1.f)
-	};
-	static std::size_t idx = 0;
-
-	static cro::Clock timer;
-	if (timer.elapsed().asSeconds() > 1)
-	{
-		timer.restart();
-		setClearColour(colours[idx]);
-
-		idx = (idx + 1) % colours.size();
-	}
+	m_stateStack.simulate(dt);
 }
 
 void MyApp::render()
 {
-
+	m_stateStack.render();
 }

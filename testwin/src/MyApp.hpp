@@ -33,7 +33,7 @@ source distribution.
 //implements the cro::App class
 
 #include <crogine/App.hpp>
-#include <crogine/system/Clock.hpp>
+#include <crogine/StateStack.hpp>
 
 class MyApp final : public cro::App
 {
@@ -43,6 +43,8 @@ public:
 
 private:
 	
+	cro::StateStack m_stateStack;
+
 	void handleEvent(const cro::Event&) override;
 	void simulate(cro::Time) override;
 	void render() override;

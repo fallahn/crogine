@@ -31,6 +31,7 @@ source distribution.
 #define CRO_APP_HPP_
 
 #include <crogine/Config.hpp>
+#include <crogine/Window.hpp>
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/system/Colour.hpp>
@@ -71,8 +72,11 @@ namespace cro
 		virtual void simulate(Time) = 0;
 		virtual void render() = 0;
 
+		Window& getWindow() { return m_window; }
+
 	private:
 
+		Window m_window;
 		Colour m_clearColour;
 
 		static App* m_instance;

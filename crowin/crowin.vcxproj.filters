@@ -92,5 +92,8 @@
     <ClCompile Include="..\common\src\system\Colour.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\SDLresource.cpp">
+      <Filter>Source Files\detail</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

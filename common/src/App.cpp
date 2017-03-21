@@ -41,7 +41,7 @@ source distribution.
 
 using namespace cro;
 
-App* App::m_instance = nullptr;
+cro::App* App::m_instance = nullptr;
 
 namespace
 {
@@ -73,8 +73,7 @@ App::~App()
 //public
 void App::run()
 {
-	cro::Window win;
-	if (win.create(800, 600, "cro works!"))
+	if (m_window.create(800, 600, "cro works!"))
 	{
 		//load opengl
 		if (!gladLoadGLES2Loader(SDL_GL_GetProcAddress))
@@ -90,7 +89,7 @@ void App::run()
 	}
 
 	Clock frameClock;
-	while (win.isOpen())
+	while (m_window.isOpen())
 	{
 		timeSinceLastUpdate += frameClock.restart();
 
@@ -99,19 +98,20 @@ void App::run()
 			timeSinceLastUpdate -= frameTime;
 
 			cro::Event evt;
-			while (win.pollEvent(evt))
+			while (m_window.pollEvent(evt))
 			{
 				if (evt.type == SDL_QUIT)
 				{
-					win.close();
+					m_window.close();
 				}
+				handleEvent(evt);
 			}
 
 			simulate(frameTime);
 		}
-		win.clear();
+		m_window.clear();
 		render();
-		win.display();
+		m_window.display();
 	}
 }
 

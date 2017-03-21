@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,30 +27,16 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SDLREOURCE_HPP_
-#define CRO_SDLREOURCE_HPP_
+#ifndef TEST_STATE_IDS_HPP_
+#define TEST_STATE_IDS_HPP_
 
-#include <crogine/detail/Assert.hpp>
-
-namespace cro
+namespace States
 {
-	namespace Detail
+	enum ID
 	{
-		/*!
-		\brief Any classes which rely on SDL subsystems or opengl
-		should inherit this class.
-		This is done to ensure that the class required to maintain SDL
-		(the App class) exists before any resources can be created.
-		*/
-		class CRO_EXPORT_API SDLResource
-		{
-		public:
-			SDLResource();
-			virtual ~SDLResource() = default;
-
-			static bool valid();
-		};
-	}
+		MainMenu
+	};
 }
 
-#endif //CRO_SDLREOURCE_HPP_
+
+#endif //TEST_STATE_IDS_HPP_

@@ -27,30 +27,17 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SDLREOURCE_HPP_
-#define CRO_SDLREOURCE_HPP_
+#include <crogine/detail/SDLResource.hpp>
+#include <crogine/App.hpp>
 
-#include <crogine/detail/Assert.hpp>
+using namespace cro::Detail;
 
-namespace cro
+SDLResource::SDLResource()
 {
-	namespace Detail
-	{
-		/*!
-		\brief Any classes which rely on SDL subsystems or opengl
-		should inherit this class.
-		This is done to ensure that the class required to maintain SDL
-		(the App class) exists before any resources can be created.
-		*/
-		class CRO_EXPORT_API SDLResource
-		{
-		public:
-			SDLResource();
-			virtual ~SDLResource() = default;
-
-			static bool valid();
-		};
-	}
+	CRO_ASSERT(App::m_instance, "A single instance of cro::App must exist!");
 }
 
-#endif //CRO_SDLREOURCE_HPP_
+bool SDLResource::valid()
+{
+	return App::m_instance != nullptr;
+}

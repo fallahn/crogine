@@ -54,7 +54,7 @@ void StateStack::handleEvent(const cro::Event& evt)
 void StateStack::simulate(Time dt)
 {
 	applyPendingChanges();
-	for (auto i = m_stack.rbegin(); i != m_stack.rbegin(); ++i)
+	for (auto i = m_stack.rbegin(); i != m_stack.rend(); ++i)
 	{
 		if (!(*i)->simulate(dt)) break;
 	}

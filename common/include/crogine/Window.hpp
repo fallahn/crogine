@@ -32,7 +32,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
-#include <crogine/detail/SDLResource.hpp>
+//#include <crogine/detail/SDLResource.hpp>
 
 #include <SDL_video.h>
 #include <SDL_events.h>
@@ -44,7 +44,7 @@ namespace cro
 	/*!
 	\brief Creates a window to which to draw.
 	*/
-	class CRO_EXPORT_API Window final : public cro::Detail::SDLResource
+	class CRO_EXPORT_API Window final// : public cro::Detail::SDLResource
 	{
 	public:
 		Window();

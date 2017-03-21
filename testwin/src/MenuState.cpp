@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,30 +27,30 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SDLREOURCE_HPP_
-#define CRO_SDLREOURCE_HPP_
+#include "MenuState.hpp"
 
-#include <crogine/detail/Assert.hpp>
+#include <crogine/system/Clock.hpp>
+#include <crogine/App.hpp>
 
-namespace cro
+MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
+	: cro::State(stack, context)
 {
-	namespace Detail
-	{
-		/*!
-		\brief Any classes which rely on SDL subsystems or opengl
-		should inherit this class.
-		This is done to ensure that the class required to maintain SDL
-		(the App class) exists before any resources can be created.
-		*/
-		class CRO_EXPORT_API SDLResource
-		{
-		public:
-			SDLResource();
-			virtual ~SDLResource() = default;
 
-			static bool valid();
-		};
-	}
 }
 
-#endif //CRO_SDLREOURCE_HPP_
+//public
+bool MenuState::handleEvent(const cro::Event& evt)
+{
+	return true;
+}
+
+bool MenuState::simulate(cro::Time dt)
+{
+	
+	return true;
+}
+
+void MenuState::render() const
+{
+	
+}

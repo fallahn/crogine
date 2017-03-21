@@ -63,10 +63,10 @@ namespace cro
 		*/
 		struct CRO_EXPORT_API Context
 		{
-			Window& mainWindow;
 			App& appInstance;
+			Window& mainWindow;
 			//TODO handle the default view of the window
-			Context(Window& w, App& a) : mainWindow(w), appInstance(a) {}
+			Context(App& a, Window& w) : appInstance(a), mainWindow(w) {}
 		};
 
 		/*!

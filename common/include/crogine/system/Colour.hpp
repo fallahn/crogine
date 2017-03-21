@@ -52,7 +52,7 @@ namespace cro
 		/*!
 		\brief Construct the colour from 3 or 4 8-bit values
 		*/
-		Colour(uint8 red, uint8 green, uint8 blue, uint8 alpha = 255)
+		explicit Colour(uint8 red, uint8 green, uint8 blue, uint8 alpha = 255)
 			: r(static_cast<float>(red) / 255.f),
 			g(static_cast<float>(green) / 255.f),
 			b(static_cast<float>(blue) / 255.f),
@@ -61,7 +61,7 @@ namespace cro
 		\brief Constructs the colour from a 32bit bitmask of 4 8-bit values
 		in RGBA order
 		*/
-		Colour(uint32 mask)
+		explicit Colour(uint32 mask)
 			:r(static_cast<float>((mask >> 24) & 0xFF) / 255.f),
 			g(static_cast<float>((mask >> 16) & 0xFF) / 255.f),
 			b(static_cast<float>((mask >> 8) & 0xFF) / 255.f),
@@ -69,7 +69,7 @@ namespace cro
 		/*!
 		\brief Constructs the colour from 3 or 4 normalised values
 		*/
-		Colour(float red, float green, float blue, float alpha = 1.f)
+		explicit Colour(float red, float green, float blue, float alpha = 1.f)
 			: r(red), g(green), b(blue), a(alpha)
 		{
 			CRO_ASSERT((r >= 0 && r <= 1) && (g >= 0 && g <= 1) && (b >= 0 && b <= 1) && (a >= 0 && a <= 1), "Values must be normalised");

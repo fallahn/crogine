@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/Window.hpp>
 #include <crogine/Log.hpp>
+#include <crogine/detail/SDLResource.hpp>
 
 #include <SDL.h>
 
@@ -56,6 +57,8 @@ Window::~Window()
 //public
 bool Window::create(uint32 width, uint32 height, const std::string& title, bool fullscreen, bool borderless)
 {
+	if (!Detail::SDLResource::valid()) return false;
+	
 	destroy();
 
 	int styleMask = SDL_WINDOW_OPENGL;
