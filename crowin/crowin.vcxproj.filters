@@ -28,6 +28,9 @@
     <Filter Include="Source Files\detail">
       <UniqueIdentifier>{9d490ed0-91c3-4e19-bd46-86c69799ed9e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ecs">
+      <UniqueIdentifier>{b9ef2428-efc0-47a7-b5bf-9a714b1e22ac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\App.hpp">
@@ -68,6 +71,9 @@
     </ClInclude>
     <ClInclude Include="..\common\src\glad\GLCheck.hpp">
       <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\Containers.hpp">
+      <Filter>Header Files\ecs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

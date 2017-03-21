@@ -25,6 +25,7 @@
     <ClInclude Include="..\common\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\Containers.hpp" />
     <ClInclude Include="..\common\include\crogine\Log.hpp" />
     <ClInclude Include="..\common\include\crogine\State.hpp" />
     <ClInclude Include="..\common\include\crogine\StateStack.hpp" />
