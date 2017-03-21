@@ -27,5 +27,8 @@
     <ClCompile Include="..\common\src\system\Clock.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\system\Colour.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

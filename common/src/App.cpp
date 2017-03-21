@@ -37,7 +37,7 @@ source distribution.
 #include <SDL.h>
 #include <SDL_mixer.h>
 
-#include "glad/glad.h"
+#include "glad/glCheck.hpp"
 
 using namespace cro;
 
@@ -45,45 +45,6 @@ App* App::m_instance = nullptr;
 
 namespace
 {
-	void testAudio()
-	{
-		if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) >= 0)
-		{
-			auto mus = Mix_LoadMUS("assets/test_music.ogg");
-			if (!mus)
-			{
-				std::string err(Mix_GetError());
-				Logger::log("Failed to load music: " + err);
-			}
-			else
-			{
-				Mix_PlayMusic(mus, 0);
-				//blocks but good enough for a test
-				while (Mix_PlayingMusic()) {}
-				Mix_FreeMusic(mus);
-			}
-
-			auto effect = Mix_LoadWAV("assets/test_effect.wav");
-			if (!effect)
-			{
-				std::string err(Mix_GetError());
-				Logger::log("Failed to open Effect: " + err, Logger::Type::Error);
-			}
-			else
-			{
-				Mix_PlayChannel(-1, effect, 0);
-				while (Mix_Playing(-1)) {}
-				Mix_FreeChunk(effect);
-			}
-			Mix_Quit();
-		}
-		else
-		{
-			std::string err(Mix_GetError());
-			Logger::log("Failed to init SDL2 Mixer: " + err);
-		}
-	}
-
 	const Time frameTime = seconds(1.f / 60.f);
 	Time timeSinceLastUpdate;
 }
@@ -128,10 +89,7 @@ void App::run()
 		return;
 	}
 
-	//testAudio();
-
 	Clock frameClock;
-
 	while (win.isOpen())
 	{
 		timeSinceLastUpdate += frameClock.restart();
@@ -157,22 +115,15 @@ void App::run()
 	}
 }
 
-#include <functional>
-#include <array>
-void App::setClearColour()
+void App::setClearColour(Colour colour)
 {
-	static std::size_t idx = 0;
-	static std::array<std::function<void()>, 4u> funcs = 
-	{
-		[]() {glClearColor(1.f, 0.f, 0.f, 1.f); },
-		[]() {glClearColor(0.f, 1.f, 0.f, 1.f); },
-		[]() {glClearColor(0.f, 0.f, 1.f, 1.f); },
-		[]() {glClearColor(1.f, 1.f, 0.f, 1.f); }
-	};
-
-	funcs[idx]();
-	idx = (idx + 1) % funcs.size();
+	m_clearColour = colour;
+	glCheck(glClearColor(colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()));
 }
 
+const Colour& App::getClearColour() const
+{
+	return m_clearColour;
+}
 
 //private

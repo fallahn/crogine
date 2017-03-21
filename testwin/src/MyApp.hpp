@@ -38,14 +38,14 @@ source distribution.
 class MyApp final : public cro::App
 {
 public:
-	MyApp() {};
+	MyApp();
 	~MyApp() = default;
 
 private:
 	
-	void handleEvent(const cro::Event&) override {}
+	void handleEvent(const cro::Event&) override;
 	void simulate(cro::Time) override;
-	void render() override {}
+	void render() override;
 };
 
 #endif //MY_APP_HPP_

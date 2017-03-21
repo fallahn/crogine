@@ -29,7 +29,9 @@
     <ClInclude Include="..\common\include\crogine\State.hpp" />
     <ClInclude Include="..\common\include\crogine\StateStack.hpp" />
     <ClInclude Include="..\common\include\crogine\system\Clock.hpp" />
+    <ClInclude Include="..\common\include\crogine\system\Colour.hpp" />
     <ClInclude Include="..\common\include\crogine\Window.hpp" />
+    <ClInclude Include="..\common\src\glad\GLCheck.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp" />
@@ -37,6 +39,7 @@
     <ClCompile Include="..\common\src\State.cpp" />
     <ClCompile Include="..\common\src\StateStack.cpp" />
     <ClCompile Include="..\common\src\system\Clock.cpp" />
+    <ClCompile Include="..\common\src\system\Colour.cpp" />
     <ClCompile Include="..\common\src\Window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -44,6 +47,7 @@
     <ProjectGuid>{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}</ProjectGuid>
     <RootNamespace>crowin</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
+    <ProjectName>crogine</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

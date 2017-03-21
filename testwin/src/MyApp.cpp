@@ -29,15 +29,42 @@ source distribution.
 
 #include "MyApp.hpp"
 
-#include <crogine/system/Clock.hpp>
+#include <crogine/system/Colour.hpp>
 
-void MyApp::simulate(cro::Time t)
+MyApp::MyApp()
 {
-	static cro::Clock clock;
 
-	if (clock.elapsed().asSeconds() > 1)
+}
+
+//public
+void MyApp::handleEvent(const cro::Event& evt)
+{
+
+}
+
+#include <array>
+void MyApp::simulate(cro::Time dt)
+{
+	static std::array<cro::Colour, 4u> colours =
 	{
-		clock.restart();
-		setClearColour();
+		cro::Colour(1.f, 0.f, 0.f),
+		cro::Colour(1.f, 1.f, 0.f),
+		cro::Colour(0.f, 1.f, 1.f),
+		cro::Colour(1.f, 1.f, 1.f)
+	};
+	static std::size_t idx = 0;
+
+	static cro::Clock timer;
+	if (timer.elapsed().asSeconds() > 1)
+	{
+		timer.restart();
+		setClearColour(colours[idx]);
+
+		idx = (idx + 1) % colours.size();
 	}
+}
+
+void MyApp::render()
+{
+
 }

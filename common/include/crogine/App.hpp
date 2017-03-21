@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 
+#include <crogine/system/Colour.hpp>
+
 namespace cro
 {
 	namespace Detail
@@ -59,7 +61,8 @@ namespace cro
 
 		void run();
 
-		void setClearColour();
+		void setClearColour(Colour);
+		const Colour& getClearColour() const;
 
 	protected:
 		
@@ -69,6 +72,8 @@ namespace cro
 		virtual void render() = 0;
 
 	private:
+
+		Colour m_clearColour;
 
 		static App* m_instance;
 	};
