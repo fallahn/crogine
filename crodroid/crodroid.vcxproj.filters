@@ -13,6 +13,9 @@
     <Filter Include="src\detail">
       <UniqueIdentifier>{f3aced1c-38b3-41d9-b292-b757137c6779}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\ecs">
+      <UniqueIdentifier>{baad750d-becf-45de-ab34-ec5703d03fed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp">
@@ -38,6 +41,12 @@
     </ClCompile>
     <ClCompile Include="..\common\src\State.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\Entity.cpp">
+      <Filter>src\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\EntityManager.cpp">
+      <Filter>src\ecs</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

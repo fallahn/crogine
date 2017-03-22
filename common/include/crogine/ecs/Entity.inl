@@ -56,7 +56,7 @@ bool Entity::hasComponent() const
 }
 
 template <typename T>
-T* Entity::getcomponent()
+T* Entity::getComponent()
 {
     CRO_ASSERT(m_entityManager, "Not a valid Entity");
     return m_entityManager->getComponent<T>(*this);

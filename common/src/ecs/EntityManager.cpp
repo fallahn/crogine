@@ -64,20 +64,33 @@ Entity EntityManager::createEntity()
 
 void EntityManager::destroyEntity(Entity entity)
 {
+    const auto index = entity.getIndex();
+    CRO_ASSERT(index < m_generations.size(), "Index out of range");
 
+    ++m_generations[index];
+    m_freeIDs.push_back(index);
+    m_componentMasks[index].reset();
+
+    //TODO reset tags when tag management implemented
 }
 
 bool EntityManager::entityDestroyed(Entity entity) const
 {
-    return false;
+    const auto id = entity.getGeneration();
+    CRO_ASSERT(id < m_generations.size(), "Generation index out of range");
+    
+    return (m_generations[id] != entity.getGeneration());
 }
 
 Entity EntityManager::getEntity(Entity::ID id) const
 {
-    return { 0,0 };
+    CRO_ASSERT(id < m_generations.size(), "Invalid Entity ID");
+    return { id, m_generations[id] };
 }
 
 const ComponentMask& EntityManager::getComponentMask(Entity entity) const
 {
-
+    const auto index = entity.getIndex();
+    CRO_ASSERT(index < m_componentMasks.size(), "Invalid mask index (out of range)");
+    return m_componentMasks[index];
 }

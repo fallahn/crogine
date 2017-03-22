@@ -143,6 +143,12 @@ namespace cro
     public:
         EntityManager();
 
+        ~EntityManager() = default;
+        EntityManager(const EntityManager&) = delete;
+        EntityManager(const EntityManager&&) = delete;
+        EntityManager& operator = (const EntityManager&) = delete;
+        EntityManager& operator = (const EntityManager&&) = delete;
+
         /*!
         \brief Creates a new Entity
         */

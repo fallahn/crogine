@@ -35,6 +35,7 @@ source distribution.
 #include <cstdlib>
 #include <vector>
 #include <typeindex>
+#include <algorithm>
 //#include <typeinfo>
 
 namespace cro
