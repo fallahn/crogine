@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,38 +27,43 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "MenuState.hpp"
+#include <crogine/ecs/Component.hpp>
+#include <crogine/ecs/Entity.hpp>
 
-#include <crogine/system/Clock.hpp>
-#include <crogine/App.hpp>
+using namespace cro;
 
 namespace
 {
-	struct Buns
-	{
-		int flaps = 20;
-	};
+    const uint32 IndexMask = (1 << Detail::IndexBits) - 1;
+    const uint32 GenerationMask = (1 << Detail::GenerationBits) - 1;
 }
 
-MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
-	: cro::State(stack, context)
+Entity::Entity(Entity::ID index, Entity::Generation generation)
+    : m_id          ((generation << Detail::IndexBits) | index),
+    m_entityManager (nullptr)
 {
 
 }
 
 //public
-bool MenuState::handleEvent(const cro::Event& evt)
+Entity::ID Entity::getIndex() const
 {
-	return true;
+    return m_id & IndexMask;
 }
 
-bool MenuState::simulate(cro::Time dt)
+Entity::Generation Entity::getGeneration() const
 {
-	
-	return true;
+    return (m_id >> Detail::IndexBits) & GenerationMask;
 }
 
-void MenuState::render() const
+void Entity::destroy()
 {
-	
+    CRO_ASSERT(m_entityManager, "Invalid Entity instance");
+    m_entityManager->destroyEntity(*this);
+}
+
+bool Entity::destroyed() const
+{
+    CRO_ASSERT(m_entityManager, "Invalid Entity instance");
+    return m_entityManager->entityDestroyed(*this);
 }

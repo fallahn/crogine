@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,38 +27,37 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "MenuState.hpp"
-
-#include <crogine/system/Clock.hpp>
-#include <crogine/App.hpp>
-
-namespace
+template <typename T>
+void Entity::addComponent(const T& component)
 {
-	struct Buns
-	{
-		int flaps = 20;
-	};
+    CRO_ASSERT(m_entityManager, "Not a valid Entity");
+    m_entityManager->addComponent<T>(*this, component);
 }
 
-MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
-	: cro::State(stack, context)
+template <typename T, typename... Args>
+T& Entity::addComponent(Args&&... args)
 {
-
+    CRO_ASSERT(m_entityManager, "Not a valid Entity");
+    return m_entityManager->addComponent<T>(*this, std::forward<Args>(args)...);
 }
 
-//public
-bool MenuState::handleEvent(const cro::Event& evt)
+template <typename T>
+void Entity::removeComponent()
 {
-	return true;
+    CRO_ASSERT(m_entityManager, "Not a valid Entity");
+    m_entityManager->removeComponent<T>(*this);
 }
 
-bool MenuState::simulate(cro::Time dt)
+template <typename T>
+bool Entity::hasComponent() const
 {
-	
-	return true;
+    CRO_ASSERT(m_entityManager, "Not a valid Entity");
+    return m_entityManager->hasComponent<T>(*this);
 }
 
-void MenuState::render() const
+template <typename T>
+T* Entity::getcomponent()
 {
-	
+    CRO_ASSERT(m_entityManager, "Not a valid Entity");
+    return m_entityManager->getComponent<T>(*this);
 }

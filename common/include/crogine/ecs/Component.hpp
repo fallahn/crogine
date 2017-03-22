@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,38 +27,43 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "MenuState.hpp"
+#ifndef CRO_COMPONENT_HPP_
+#define CRO_COMPONENT_HPP_
 
-#include <crogine/system/Clock.hpp>
-#include <crogine/App.hpp>
+#include <crogine/detail/Types.hpp>
 
-namespace
+#include <cstdlib>
+#include <vector>
+#include <typeindex>
+//#include <typeinfo>
+
+namespace cro
 {
-	struct Buns
-	{
-		int flaps = 20;
-	};
+    class Component final
+    {
+    public:
+
+        using ID = uint32;
+
+        /*!
+        \brief Returns a unique ID based on the component type
+        */
+        template <typename T>
+        static ID getID()
+        {
+            auto id = std::type_index(typeid(T));
+            auto result = std::find(std::begin(m_IDs), std::end(m_IDs), id);
+            if (result == m_IDs.end())
+            {
+                m_IDs.push_back(id);
+                return static_cast<ID>(m_IDs.size() - 1);
+            }
+            return static_cast<ID>(std::distance(m_IDs.begin(), result));
+        }
+
+    private:
+        static std::vector<std::type_index> m_IDs;
+    };
 }
 
-MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
-	: cro::State(stack, context)
-{
-
-}
-
-//public
-bool MenuState::handleEvent(const cro::Event& evt)
-{
-	return true;
-}
-
-bool MenuState::simulate(cro::Time dt)
-{
-	
-	return true;
-}
-
-void MenuState::render() const
-{
-	
-}
+#endif //CRO_COMPONENT_HPP_

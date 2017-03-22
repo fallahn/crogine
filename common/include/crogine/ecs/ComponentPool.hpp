@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,38 +27,46 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "MenuState.hpp"
+#ifndef CRO_POOL_HPP_
+#define CRO_POOL_HPP_
 
-#include <crogine/system/Clock.hpp>
-#include <crogine/App.hpp>
+#include <crogine/detail/Assert.hpp>
 
-namespace
+#include <vector>
+
+namespace cro
 {
-	struct Buns
+	namespace Detail
 	{
-		int flaps = 20;
-	};
+		class Pool
+		{
+		public:
+			virtual ~Pool() = default;
+			virtual void clear() = 0;
+		};
+
+		/*!
+		\brief memory pooling for components - TODO map component to ID
+		*/
+		template <class T>
+		class ComponentPool final : public Pool
+		{
+		public:
+			explicit ComponentPool(std::size_t size = 100){	resize(size); }
+
+			bool empty() const { return m_pool.empty(); }
+			std::size_t size() const { return m_pool.size(); }
+			void resize(std::size_t size) { m_pool.resize(size); }
+			void clear() { m_pool.clear(); }
+			void add(T c) { m_pool.push_back(c); }
+
+			T& operator [] (std::size_t index) { return m_pool[index]; }
+			const T& operator [] (std::size_t index) const { return m_pool[index]; }
+
+		private:
+			std::vector<T> m_pool;
+		};
+	}
 }
 
-MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
-	: cro::State(stack, context)
-{
-
-}
-
-//public
-bool MenuState::handleEvent(const cro::Event& evt)
-{
-	return true;
-}
-
-bool MenuState::simulate(cro::Time dt)
-{
-	
-	return true;
-}
-
-void MenuState::render() const
-{
-	
-}
+#endif //CRO_POOL_HPP_

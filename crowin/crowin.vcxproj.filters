@@ -31,6 +31,9 @@
     <Filter Include="Header Files\ecs">
       <UniqueIdentifier>{b9ef2428-efc0-47a7-b5bf-9a714b1e22ac}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ecs">
+      <UniqueIdentifier>{55cab883-a1a5-4329-a46d-3595ecf4242a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\App.hpp">
@@ -72,7 +75,13 @@
     <ClInclude Include="..\common\src\glad\GLCheck.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\include\crogine\ecs\Containers.hpp">
+    <ClInclude Include="..\common\include\crogine\ecs\ComponentPool.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\Component.hpp">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
   </ItemGroup>
@@ -101,5 +110,19 @@
     <ClCompile Include="..\common\src\SDLresource.cpp">
       <Filter>Source Files\detail</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\Entity.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\EntityManager.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\common\include\crogine\ecs\Entity.inl">
+      <Filter>Header Files\ecs</Filter>
+    </None>
+    <None Include="..\common\include\crogine\ecs\EntityManager.inl">
+      <Filter>Header Files\ecs</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -6,5 +6,8 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/StateStack.cpp
   ${PROJECT_DIR}/Window.cpp
 
+  ${PROJECT_DIR}/ecs/Entity.cpp
+  ${PROJECT_DIR}/ecs/EntityManager.cpp
+
   ${PROJECT_DIR}/system/Clock.cpp
   ${PROJECT_DIR}/system/Colour.cpp)

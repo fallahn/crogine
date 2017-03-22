@@ -25,7 +25,9 @@
     <ClInclude Include="..\common\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp" />
-    <ClInclude Include="..\common\include\crogine\ecs\Containers.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\Component.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\ComponentPool.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />
     <ClInclude Include="..\common\include\crogine\Log.hpp" />
     <ClInclude Include="..\common\include\crogine\State.hpp" />
     <ClInclude Include="..\common\include\crogine\StateStack.hpp" />
@@ -36,6 +38,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp" />
+    <ClCompile Include="..\common\src\ecs\Entity.cpp" />
+    <ClCompile Include="..\common\src\ecs\EntityManager.cpp" />
     <ClCompile Include="..\common\src\glad.c" />
     <ClCompile Include="..\common\src\SDLresource.cpp" />
     <ClCompile Include="..\common\src\State.cpp" />
@@ -43,6 +47,10 @@
     <ClCompile Include="..\common\src\system\Clock.cpp" />
     <ClCompile Include="..\common\src\system\Colour.cpp" />
     <ClCompile Include="..\common\src\Window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\common\include\crogine\ecs\Entity.inl" />
+    <None Include="..\common\include\crogine\ecs\EntityManager.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

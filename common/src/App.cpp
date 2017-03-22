@@ -33,7 +33,6 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 
 #include <crogine/system/Clock.hpp>
-#include <crogine/ecs/Containers.hpp>
 
 #include <SDL.h>
 #include <SDL_mixer.h>
