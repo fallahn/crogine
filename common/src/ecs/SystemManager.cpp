@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/system/Clock.hpp>
 
 using namespace cro;
 
@@ -51,5 +52,13 @@ void SystemManager::removeFromSystems(Entity entity)
     for (auto& sys : m_systems)
     {
         sys->removeEntity(entity);
+    }
+}
+
+void SystemManager::process(Time dt)
+{
+    for (auto& system : m_systems)
+    {
+        system->process(dt);
     }
 }

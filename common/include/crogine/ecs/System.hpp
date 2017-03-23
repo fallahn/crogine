@@ -164,7 +164,10 @@ namespace cro
         */
         void removeFromSystems(Entity);
 
-
+        /*!
+        \brief Runs a simulation step by calling process() on each system
+        */
+        void process(Time);
     private:
 
         std::vector<std::unique_ptr<System>> m_systems;

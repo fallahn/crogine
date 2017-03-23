@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,52 +27,45 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "MenuState.hpp"
-
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/system/Clock.hpp>
-#include <crogine/App.hpp>
 
-namespace
+using namespace cro;
+
+Scene::Scene()
 {
 
-}
-
-MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
-	: cro::State(stack, context)
-{
-    //TODO launch load screen
-    //add systems to scene
-    addSystems();
-    //create some entities
-    createScene();
-    //TODO quit load screen
 }
 
 //public
-bool MenuState::handleEvent(const cro::Event& evt)
+void Scene::simulate(Time dt)
 {
-    //TODO apply input mask to any systems which want to read it
-	return true;
+    for (const auto& entity : m_pendingEntities)
+    {
+        m_systemManager.addToSystems(entity);
+    }
+    m_pendingEntities.clear();
+
+    for (const auto& entity : m_destroyedEntities)
+    {
+        m_systemManager.removeFromSystems(entity);
+        m_entityManager.destroyEntity(entity);
+    }
+    m_destroyedEntities.clear();
+
+
+    m_systemManager.process(dt);
 }
 
-bool MenuState::simulate(cro::Time dt)
+Entity Scene::createEntity()
 {
-    m_scene.simulate(dt);
-	return true;
+    m_pendingEntities.push_back(m_entityManager.createEntity());
+    return m_pendingEntities.back();
 }
 
-void MenuState::render() const
+void Scene::destroyEntity(Entity entity)
 {
-	//TODO draw any renderable systems
+    m_destroyedEntities.push_back(entity);
 }
 
 //private
-void MenuState::addSystems()
-{
-
-}
-
-void MenuState::createScene()
-{
-
-}

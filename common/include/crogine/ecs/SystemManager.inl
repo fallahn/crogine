@@ -30,6 +30,8 @@ source distribution.
 template <typename T, typename... Args>
 T& SystemManager::addSystem(Args&&... args)
 {
+    static_assert(std::is_base_of<System, T>::value, "This is not a system type");
+    
     UniqueType type(typeid(T));
     auto result = std::find_if(std::begin(m_systems), std::end(m_systems), 
         [&type](const System::Ptr& sys)

@@ -31,6 +31,7 @@ source distribution.
 #define TEST_MENUSTATE_HPP_
 
 #include <crogine/State.hpp>
+#include <crogine/ecs/Scene.hpp>
 
 #include "StateIDs.hpp"
 
@@ -50,6 +51,11 @@ public:
 	void render() const override;
 
 private:
+
+    cro::Scene m_scene;
+
+    void addSystems();
+    void createScene();
 
 };
 

@@ -87,6 +87,9 @@
     <ClInclude Include="..\common\include\crogine\ecs\System.hpp">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp">
@@ -123,6 +126,9 @@
       <Filter>Source Files\ecs</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\Scene.cpp">
       <Filter>Source Files\ecs</Filter>
     </ClCompile>
   </ItemGroup>
