@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/system/Clock.hpp>
 #include <crogine/App.hpp>
 
+#include <crogine/ecs/components/Transform.hpp>
+
 namespace
 {
 
@@ -74,5 +76,6 @@ void MenuState::addSystems()
 
 void MenuState::createScene()
 {
-
+    //cro::Entity ent = m_scene.createEntity();
+    //ent.addComponent<cro::Transform>();
 }

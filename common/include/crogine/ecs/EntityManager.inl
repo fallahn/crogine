@@ -48,7 +48,7 @@ T& EntityManager::addComponent(Entity entity, Args&&... args)
 {
     T component(std::forward<Args>(args)...);
     addComponent<T>(entity, component);
-    return *getComponent<T>(entity);
+    return getComponent<T>(entity);
 }
 
 template <typename T>
@@ -77,16 +77,14 @@ T& EntityManager::getComponent(Entity entity)
     const auto componentID = Component::getID<T>();
     const auto entityID = entity.getIndex();
 
-    if (!hasComponent<T>(entity))
-    {
-        return nullptr;
-    }
+    CRO_ASSERT(hasComponent<T>(entity), "Component does not exist!");
+
 
     CRO_ASSERT(componentID < m_componentPools.size(), "Component index out of range");
-    auto* pool = dynamic_cast<T*>(m_componentPools[componentID].get());
+    auto& pool = *(dynamic_cast<T*>(m_componentPools[componentID].get()));
 
     CRO_ASSERT(entityID < pool->size(), "Entity index out of range");
-    return (*pool)[entityID];
+    return pool[entityID];
 }
 
 template <typename T>

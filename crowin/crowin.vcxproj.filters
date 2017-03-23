@@ -34,6 +34,9 @@
     <Filter Include="Source Files\ecs">
       <UniqueIdentifier>{55cab883-a1a5-4329-a46d-3595ecf4242a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ecs\components">
+      <UniqueIdentifier>{58254e31-cfc1-4d6f-919e-0eb64c473565}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\App.hpp">
@@ -89,6 +92,9 @@
     </ClInclude>
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp">
       <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp">
+      <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
