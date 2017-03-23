@@ -57,5 +57,8 @@
     <ClCompile Include="..\common\src\ecs\Scene.cpp">
       <Filter>src\ecs</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\Component.cpp">
+      <Filter>src\ecs</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

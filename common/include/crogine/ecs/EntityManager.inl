@@ -81,10 +81,10 @@ T& EntityManager::getComponent(Entity entity)
 
 
     CRO_ASSERT(componentID < m_componentPools.size(), "Component index out of range");
-    auto& pool = *(dynamic_cast<T*>(m_componentPools[componentID].get()));
+    auto* pool = (dynamic_cast<Detail::ComponentPool<T>*>(m_componentPools[componentID].get()));
 
     CRO_ASSERT(entityID < pool->size(), "Entity index out of range");
-    return pool[entityID];
+    return pool->at(entityID);
 }
 
 template <typename T>
@@ -92,11 +92,11 @@ Detail::ComponentPool<T>& EntityManager::getPool()
 {
     const auto componentID = Component::getID<T>();
 
-    if (m_componentPools.size() <= componentID)
+    if (!m_componentPools[componentID])
     {
-        m_componentPools.resize(componentID + 1, nullptr);
+        //m_componentPools.resize(componentID + 1);
         m_componentPools[componentID] = std::make_unique<Detail::ComponentPool<T>>();
     }
 
-    return *(dynamic_cast<T*>(m_componentPools[componentID].get()));
+    return *(dynamic_cast<Detail::ComponentPool<T>*>(m_componentPools[componentID].get()));
 }

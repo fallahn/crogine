@@ -27,17 +27,22 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/detail/SDLResource.hpp>
-#include <crogine/App.hpp>
+#include <crogine/ecs/Component.hpp>
 
-using namespace cro::Detail;
+using namespace cro;
 
-SDLResource::SDLResource()
+namespace
 {
-	CRO_ASSERT(App::m_instance, "A single instance of cro::App must exist!");
+    std::vector<std::type_index> IDs;
 }
 
-bool SDLResource::valid()
+cro::Component::ID Component::getFromTypeID(std::type_index id)
 {
-	return App::m_instance != nullptr;
+    auto result = std::find(std::begin(IDs), std::end(IDs), id);
+    if (result == IDs.end())
+    {
+        IDs.push_back(id);
+        return static_cast<ID>(IDs.size() - 1);
+    }
+    return static_cast<ID>(std::distance(IDs.begin(), result));
 }

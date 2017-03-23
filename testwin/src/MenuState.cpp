@@ -76,6 +76,7 @@ void MenuState::addSystems()
 
 void MenuState::createScene()
 {
-    //cro::Entity ent = m_scene.createEntity();
-    //ent.addComponent<cro::Transform>();
+    cro::Entity ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>();
+    ent.getIndex();
 }

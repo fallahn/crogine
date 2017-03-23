@@ -37,7 +37,6 @@ source distribution.
 #include <vector>
 #include <typeindex>
 #include <algorithm>
-//#include <typeinfo>
 
 namespace cro
 {
@@ -54,17 +53,11 @@ namespace cro
         static ID getID()
         {
             auto id = std::type_index(typeid(T));
-            auto result = std::find(std::begin(m_IDs), std::end(m_IDs), id);
-            if (result == m_IDs.end())
-            {
-                m_IDs.push_back(id);
-                return static_cast<ID>(m_IDs.size() - 1);
-            }
-            return static_cast<ID>(std::distance(m_IDs.begin(), result));
+            return getFromTypeID(id);
         }
 
     private:
-        static std::vector<std::type_index> m_IDs;
+        static ID getFromTypeID(std::type_index);
     };
 }
 

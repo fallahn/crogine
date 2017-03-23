@@ -32,7 +32,9 @@ source distribution.
 
 using namespace cro;
 
-EntityManager::EntityManager() {}
+EntityManager::EntityManager()
+    : m_componentPools(Detail::MaxComponents)
+{}
 
 //public
 Entity EntityManager::createEntity()
