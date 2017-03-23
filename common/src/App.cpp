@@ -37,7 +37,7 @@ source distribution.
 #include <SDL.h>
 #include <SDL_mixer.h>
 
-#include "glad/glCheck.hpp"
+#include "glad/GLCheck.hpp"
 
 using namespace cro;
 
