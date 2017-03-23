@@ -48,5 +48,11 @@
     <ClCompile Include="..\common\src\ecs\EntityManager.cpp">
       <Filter>src\ecs</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\System.cpp">
+      <Filter>src\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\SystemManager.cpp">
+      <Filter>src\ecs</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

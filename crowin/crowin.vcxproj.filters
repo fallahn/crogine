@@ -84,6 +84,9 @@
     <ClInclude Include="..\common\include\crogine\ecs\Component.hpp">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\System.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp">
@@ -116,12 +119,24 @@
     <ClCompile Include="..\common\src\ecs\EntityManager.cpp">
       <Filter>Source Files\ecs</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\System.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\SystemManager.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\common\include\crogine\ecs\Entity.inl">
       <Filter>Header Files\ecs</Filter>
     </None>
     <None Include="..\common\include\crogine\ecs\EntityManager.inl">
+      <Filter>Header Files\ecs</Filter>
+    </None>
+    <None Include="..\common\include\crogine\ecs\System.inl">
+      <Filter>Header Files\ecs</Filter>
+    </None>
+    <None Include="..\common\include\crogine\ecs\SystemManager.inl">
       <Filter>Header Files\ecs</Filter>
     </None>
   </ItemGroup>

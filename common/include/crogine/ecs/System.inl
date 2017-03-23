@@ -27,45 +27,9 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_COMPONENT_HPP_
-#define CRO_COMPONENT_HPP_
-
-#include <crogine/Config.hpp>
-#include <crogine/detail/Types.hpp>
-
-#include <cstdlib>
-#include <vector>
-#include <typeindex>
-#include <algorithm>
-//#include <typeinfo>
-
-namespace cro
+template <typename T>
+void System::requireComponent()
 {
-    class CRO_EXPORT_API Component final
-    {
-    public:
-
-        using ID = uint32;
-
-        /*!
-        \brief Returns a unique ID based on the component type
-        */
-        template <typename T>
-        static ID getID()
-        {
-            auto id = std::type_index(typeid(T));
-            auto result = std::find(std::begin(m_IDs), std::end(m_IDs), id);
-            if (result == m_IDs.end())
-            {
-                m_IDs.push_back(id);
-                return static_cast<ID>(m_IDs.size() - 1);
-            }
-            return static_cast<ID>(std::distance(m_IDs.begin(), result));
-        }
-
-    private:
-        static std::vector<std::type_index> m_IDs;
-    };
+    const auto id = Component::getID<T>();
+    m_componentMask.set(id);
 }
-
-#endif //CRO_COMPONENT_HPP_

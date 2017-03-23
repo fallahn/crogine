@@ -27,49 +27,33 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/Component.hpp>
-#include <crogine/ecs/Entity.hpp>
+#include <crogine/ecs/System.hpp>
+#include <crogine/system/Clock.hpp>
 
 using namespace cro;
 
-namespace
+std::vector<Entity> System::getEntities() const
 {
-    const uint32 IndexMask = (1 << Detail::IndexBits) - 1;
-    const uint32 GenerationMask = (1 << Detail::GenerationBits) - 1;
+    return m_entities;
 }
 
-Entity::Entity(Entity::ID index, Entity::Generation generation)
-    : m_id          ((generation << Detail::IndexBits) | index),
-    m_entityManager (nullptr)
+void System::addEntity(Entity entity)
 {
-
+    m_entities.push_back(entity);
 }
 
-//public
-Entity::ID Entity::getIndex() const
+void System::removeEntity(Entity entity)
 {
-    return m_id & IndexMask;
+    m_entities.erase(std::remove_if(std::begin(m_entities), std::end(m_entities),
+        [&entity](const Entity& e)
+    {
+        return entity == e;
+    }), std::end(m_entities));
 }
 
-Entity::Generation Entity::getGeneration() const
+const ComponentMask& System::getComponentMask() const
 {
-    return (m_id >> Detail::IndexBits) & GenerationMask;
+    return m_componentMask;
 }
 
-void Entity::destroy()
-{
-    CRO_ASSERT(m_entityManager, "Invalid Entity instance");
-    m_entityManager->destroyEntity(*this);
-}
-
-bool Entity::destroyed() const
-{
-    CRO_ASSERT(m_entityManager, "Invalid Entity instance");
-    return m_entityManager->entityDestroyed(*this);
-}
-
-const ComponentMask& Entity::getComponentMask() const
-{
-    CRO_ASSERT(m_entityManager, "Invalid Entity instance");
-    return m_entityManager->getComponentMask(*this);
-}
+void System::process(Time) {}

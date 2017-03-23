@@ -72,7 +72,7 @@ bool EntityManager::hasComponent(Entity entity) const
 }
 
 template <typename T>
-T* EntityManager::getComponent(Entity entity)
+T& EntityManager::getComponent(Entity entity)
 {
     const auto componentID = Component::getID<T>();
     const auto entityID = entity.getIndex();
@@ -86,7 +86,7 @@ T* EntityManager::getComponent(Entity entity)
     auto* pool = dynamic_cast<T*>(m_componentPools[componentID].get());
 
     CRO_ASSERT(entityID < pool->size(), "Entity index out of range");
-    return &(*pool[entityID]);
+    return (*pool)[entityID];
 }
 
 template <typename T>

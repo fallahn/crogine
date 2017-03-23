@@ -119,15 +119,43 @@ namespace cro
 		bool hasComponent() const;
 
 		/*!
-		\brief Returns a pointer to the component if it exists, else nullptr
+		\brief Returns a reference to the component if it exists
 		*/
 		template <typename T>
-        T* getComponent();
+        T& getComponent();
+
+        /*!
+        \brief Returns a reference to the CompnentMask associated with this entity
+        */
+        const ComponentMask& getComponentMask() const;
 
 		//TODO add tags of types
 
         
-
+        bool operator == (Entity r)
+        {
+            return getIndex() == r.getIndex();
+        }
+        bool operator != (Entity r)
+        {
+            return getIndex() != r.getIndex();
+        }
+        bool operator < (Entity r)
+        {
+            return getIndex() < r.getIndex();
+        }
+        bool operator <= (Entity r)
+        {
+            return getIndex() <= r.getIndex();
+        }
+        bool operator > (Entity r)
+        {
+            return getIndex() > r.getIndex();
+        }
+        bool operator >= (Entity r)
+        {
+            return getIndex() >= r.getIndex();
+        }
 	private:
 
 		ID m_id;
@@ -195,7 +223,7 @@ namespace cro
         on the given Entity else returns nullptr
         */
         template <typename T>
-        T* getComponent(Entity);
+        T& getComponent(Entity);
 
         /*!
         \brief Returns a reference to the component mask of the given Entity.

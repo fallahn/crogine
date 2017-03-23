@@ -125,6 +125,8 @@
     <ClCompile Include="..\common\src\App.cpp" />
     <ClCompile Include="..\common\src\ecs\Entity.cpp" />
     <ClCompile Include="..\common\src\ecs\EntityManager.cpp" />
+    <ClCompile Include="..\common\src\ecs\System.cpp" />
+    <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
     <ClCompile Include="..\common\src\glad.c" />
     <ClCompile Include="..\common\src\SDLresource.cpp" />
     <ClCompile Include="..\common\src\State.cpp" />

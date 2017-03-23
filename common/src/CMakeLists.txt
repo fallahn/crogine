@@ -8,6 +8,8 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/ecs/Entity.cpp
   ${PROJECT_DIR}/ecs/EntityManager.cpp
+  ${PROJECT_DIR}/ecs/System.cpp
+  ${PROJECT_DIR}/ecs/SystemManager.cpp
 
   ${PROJECT_DIR}/system/Clock.cpp
   ${PROJECT_DIR}/system/Colour.cpp)

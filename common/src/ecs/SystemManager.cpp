@@ -27,49 +27,29 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/Component.hpp>
-#include <crogine/ecs/Entity.hpp>
+#include <crogine/ecs/System.hpp>
 
 using namespace cro;
 
-namespace
+SystemManager::SystemManager() {}
+
+void SystemManager::addToSystems(Entity entity)
 {
-    const uint32 IndexMask = (1 << Detail::IndexBits) - 1;
-    const uint32 GenerationMask = (1 << Detail::GenerationBits) - 1;
+    const auto& entMask = entity.getComponentMask();
+    for (auto& sys : m_systems)
+    {
+        const auto& sysMask = sys->getComponentMask();
+        if ((entMask & sysMask) == sysMask)
+        {
+            sys->addEntity(entity);
+        }
+    }
 }
 
-Entity::Entity(Entity::ID index, Entity::Generation generation)
-    : m_id          ((generation << Detail::IndexBits) | index),
-    m_entityManager (nullptr)
+void SystemManager::removeFromSystems(Entity entity)
 {
-
-}
-
-//public
-Entity::ID Entity::getIndex() const
-{
-    return m_id & IndexMask;
-}
-
-Entity::Generation Entity::getGeneration() const
-{
-    return (m_id >> Detail::IndexBits) & GenerationMask;
-}
-
-void Entity::destroy()
-{
-    CRO_ASSERT(m_entityManager, "Invalid Entity instance");
-    m_entityManager->destroyEntity(*this);
-}
-
-bool Entity::destroyed() const
-{
-    CRO_ASSERT(m_entityManager, "Invalid Entity instance");
-    return m_entityManager->entityDestroyed(*this);
-}
-
-const ComponentMask& Entity::getComponentMask() const
-{
-    CRO_ASSERT(m_entityManager, "Invalid Entity instance");
-    return m_entityManager->getComponentMask(*this);
+    for (auto& sys : m_systems)
+    {
+        sys->removeEntity(entity);
+    }
 }
