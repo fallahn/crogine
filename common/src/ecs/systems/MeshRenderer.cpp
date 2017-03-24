@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,25 +27,20 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/Component.hpp>
-#include <crogine/ecs/Entity.hpp>
+#include <crogine/ecs/systems/MeshRenderer.hpp>
+
+#include <crogine/ecs/components/Transform.hpp>
 
 using namespace cro;
 
-namespace
+MeshRenderer::MeshRenderer()
+    : System(this)
 {
-    std::vector<std::type_index> IDs;
+    requireComponent<Transform>();
 }
 
-cro::Component::ID Component::getFromTypeID(std::type_index id)
+//public
+void MeshRenderer::render() const
 {
-    CRO_ASSERT(IDs.size() < Detail::MaxComponents, "Max components have been allocated");
 
-    auto result = std::find(std::begin(IDs), std::end(IDs), id);
-    if (result == IDs.end())
-    {
-        IDs.push_back(id);
-        return static_cast<ID>(IDs.size() - 1);
-    }
-    return static_cast<ID>(std::distance(IDs.begin(), result));
 }

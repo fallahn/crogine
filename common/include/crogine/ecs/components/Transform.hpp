@@ -32,6 +32,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
+#include <crogine/ecs/Entity.hpp>
 
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
@@ -45,35 +46,82 @@ namespace cro
     /*!
     \brief A three dimensional transform component
     */
-    class Transform final
+    class CRO_EXPORT_API Transform final
     {
     public:
         using ParentID = int32;
 
-        Transform() = default;
+        Transform();
 
+        /*!
+        \brief Sets the transform position
+        */
         void setPosition(glm::vec3);
+        /*!
+        \brief Sets the euler rotation in radians for the x, y and z axis
+        */
         void setRotation(glm::vec3);
+        /*
+        \brief Sets the transform scale for each axis
+        */
         void setScale(glm::vec3);
 
+        /*
+        \brief Moves the transform.
+        The given paramter is added to the transform's existing position
+        */
         void move(glm::vec3);
-        void rotate(glm::vec3, float);
+        /*!
+        \brief Rotates the transform.
+        \param axis A vector representing the axis around which to rotate the transform
+        \param amount The amount of rotation in radians
+        */
+        void rotate(glm::vec3 axis, float amount);
+        /*!
+        \brief Scales the transform.
+        The existing scale on the x, y, and z axis is multiplied by the given values
+        */
         void scale(glm::vec3);
 
+        /*
+        \brief Returns the position of the transform
+        */
         glm::vec3 getPosition() const;
+        /*!
+        \brief Returns the euler rotation of the transform
+        */
         glm::vec3 getRotation() const;
+        /*!
+        \brief Returns the current scale of the transform
+        */
         glm::vec3 getScale() const;
 
+        /*!
+        \brief Returns a matrix representing the complete transform
+        in local space.
+        */
         const glm::mat4& getLocalTransform() const;
-        glm::mat4& getWorldTransform(const std::vector<Entity>&) const;
+        /*!
+        \brief Returns a matrix representing the world space Transform.
+        This is the local transform multiplied by all parenting transforms
+        */
+        glm::mat4 getWorldTransform(std::vector<Entity>&) const;
+
+        /*!
+        \brief Sets the ID of the parent entity of this transform.
+        World transforms are multiplied with the world transform of
+        parent entities to calculate final world position
+        */
+        void setParent(Entity::ID);
 
     private:
         glm::vec3 m_position;
         glm::vec3 m_scale;
         glm::quat m_rotation;
-        glm::mat4 m_transform;
+        mutable glm::mat4 m_transform;
 
-        ParentID m_parent = -1;
+        ParentID m_parent;
+        mutable bool m_dirty;
     };
 }
 

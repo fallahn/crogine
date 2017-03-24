@@ -20,8 +20,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\android\Android.hpp" />
-    <ClInclude Include="..\common\include\crogine\App.hpp" />
     <ClInclude Include="..\common\include\crogine\Config.hpp" />
+    <ClInclude Include="..\common\include\crogine\core\App.hpp" />
+    <ClInclude Include="..\common\include\crogine\core\Clock.hpp" />
+    <ClInclude Include="..\common\include\crogine\core\Log.hpp" />
+    <ClInclude Include="..\common\include\crogine\core\State.hpp" />
+    <ClInclude Include="..\common\include\crogine\core\StateStack.hpp" />
+    <ClInclude Include="..\common\include\crogine\core\Window.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp" />
@@ -31,22 +36,23 @@
     <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\System.hpp" />
-    <ClInclude Include="..\common\include\crogine\Log.hpp" />
-    <ClInclude Include="..\common\include\crogine\State.hpp" />
-    <ClInclude Include="..\common\include\crogine\StateStack.hpp" />
-    <ClInclude Include="..\common\include\crogine\system\Clock.hpp" />
-    <ClInclude Include="..\common\include\crogine\system\Colour.hpp" />
-    <ClInclude Include="..\common\include\crogine\Window.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\MeshRenderer.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\Colour.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\Image.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\Shader.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\common\src\glad\GLCheck.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
+    <ClCompile Include="..\common\src\ecs\components\Transform.cpp" />
     <ClCompile Include="..\common\src\ecs\Entity.cpp" />
     <ClCompile Include="..\common\src\ecs\EntityManager.cpp" />
     <ClCompile Include="..\common\src\ecs\Scene.cpp" />
     <ClCompile Include="..\common\src\ecs\System.cpp" />
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\MeshRenderer.cpp" />
     <ClCompile Include="..\common\src\glad.c" />
     <ClCompile Include="..\common\src\SDLresource.cpp" />
     <ClCompile Include="..\common\src\State.cpp" />

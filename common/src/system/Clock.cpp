@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/system/Clock.hpp>
+#include <crogine/core/Clock.hpp>
 
 #include <SDL.h>
 

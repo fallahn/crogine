@@ -30,7 +30,7 @@ source distribution.
 #ifndef CRO_STATESTACK_HPP_
 #define CRO_STATESTACK_HPP_
 
-#include <crogine/State.hpp>
+#include <crogine/core/State.hpp>
 
 #include <vector>
 #include <map>

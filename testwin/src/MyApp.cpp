@@ -30,7 +30,7 @@ source distribution.
 #include "MyApp.hpp"
 #include "MenuState.hpp"
 
-#include <crogine/system/Clock.hpp>
+#include <crogine/core/Clock.hpp>
 
 MyApp::MyApp()
 	: m_stateStack({*this, getWindow()})

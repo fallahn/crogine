@@ -27,8 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/StateStack.hpp>
-#include <crogine/App.hpp>
+#include <crogine/core/StateStack.hpp>
+#include <crogine/core/App.hpp>
 
 using namespace cro;
 

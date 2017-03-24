@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/Config.hpp>
-#include <crogine/Log.hpp>
+#include <crogine/core/Log.hpp>
 #include "glad.h"
 
 #include <string>

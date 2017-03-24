@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/system/Clock.hpp>
+#include <crogine/core/Clock.hpp>
 
 using namespace cro;
 

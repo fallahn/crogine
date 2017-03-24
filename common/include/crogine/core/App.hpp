@@ -31,10 +31,10 @@ source distribution.
 #define CRO_APP_HPP_
 
 #include <crogine/Config.hpp>
-#include <crogine/Window.hpp>
+#include <crogine/core/Window.hpp>
 #include <crogine/detail/Types.hpp>
 
-#include <crogine/system/Colour.hpp>
+#include <crogine/graphics/Colour.hpp>
 
 namespace cro
 {

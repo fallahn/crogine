@@ -30,10 +30,15 @@ source distribution.
 #ifndef TEST_MENUSTATE_HPP_
 #define TEST_MENUSTATE_HPP_
 
-#include <crogine/State.hpp>
+#include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 
 #include "StateIDs.hpp"
+
+namespace cro
+{
+    class MeshRenderer;
+}
 
 /*!
 Creates a state to render a menu.
@@ -53,6 +58,8 @@ public:
 private:
 
     cro::Scene m_scene;
+
+    cro::MeshRenderer * m_meshRenderer;
 
     void addSystems();
     void createScene();

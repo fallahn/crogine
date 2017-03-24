@@ -19,9 +19,6 @@
     <Filter Include="Header Files\android">
       <UniqueIdentifier>{3ff2f69b-b8ea-43fc-9074-1ddf2f0f4df4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\system">
-      <UniqueIdentifier>{a1f1b07a-b73a-4f4e-b95a-1b09c63066bc}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\system">
       <UniqueIdentifier>{b7b7aff8-28b3-46f5-8f2d-a75a1f89faa4}</UniqueIdentifier>
     </Filter>
@@ -37,18 +34,24 @@
     <Filter Include="Header Files\ecs\components">
       <UniqueIdentifier>{58254e31-cfc1-4d6f-919e-0eb64c473565}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ecs\components">
+      <UniqueIdentifier>{e35d44f0-344c-4368-9877-00125b33e822}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ecs\systems">
+      <UniqueIdentifier>{e85527b0-b713-4c1a-9982-184ff577c7b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ecs\systems">
+      <UniqueIdentifier>{787f9ec5-3858-4a70-b3e0-33901acdecfd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\graphics">
+      <UniqueIdentifier>{7d3c92ca-58f2-480c-a836-1945db34012d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\core">
+      <UniqueIdentifier>{a1f1b07a-b73a-4f4e-b95a-1b09c63066bc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\common\include\crogine\App.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\include\crogine\Config.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\include\crogine\Log.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\include\crogine\Window.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\include\crogine\android\Android.hpp">
@@ -62,18 +65,6 @@
     </ClInclude>
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp">
       <Filter>Header Files\detail</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\include\crogine\StateStack.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\include\crogine\State.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\include\crogine\system\Clock.hpp">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\include\crogine\system\Colour.hpp">
-      <Filter>Header Files\system</Filter>
     </ClInclude>
     <ClInclude Include="..\common\src\glad\GLCheck.hpp">
       <Filter>Header Files\detail</Filter>
@@ -95,6 +86,39 @@
     </ClInclude>
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp">
       <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\MeshRenderer.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\Image.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\Texture.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\Shader.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\Colour.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\core\App.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\core\Clock.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\core\Log.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\core\State.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\core\StateStack.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\core\Window.hpp">
+      <Filter>Header Files\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -139,6 +163,12 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\Component.cpp">
       <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\components\Transform.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\MeshRenderer.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

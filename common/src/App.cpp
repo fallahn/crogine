@@ -27,12 +27,11 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/App.hpp>
-#include <crogine/Log.hpp>
-#include <crogine/Window.hpp>
+#include <crogine/core/App.hpp>
+#include <crogine/core/Log.hpp>
+#include <crogine/core/Window.hpp>
+#include <crogine/core/Clock.hpp>
 #include <crogine/detail/Assert.hpp>
-
-#include <crogine/system/Clock.hpp>
 
 #include <SDL.h>
 #include <SDL_mixer.h>

@@ -27,8 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/Window.hpp>
-#include <crogine/Log.hpp>
+#include <crogine/core/Window.hpp>
+#include <crogine/core/Log.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
 #include <SDL.h>

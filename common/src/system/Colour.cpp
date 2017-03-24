@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/system/Colour.hpp>
+#include <crogine/graphics/Colour.hpp>
 
 #include <algorithm>
 

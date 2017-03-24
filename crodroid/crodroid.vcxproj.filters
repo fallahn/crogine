@@ -16,6 +16,12 @@
     <Filter Include="src\ecs">
       <UniqueIdentifier>{baad750d-becf-45de-ab34-ec5703d03fed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\ecs\components">
+      <UniqueIdentifier>{44ce7da5-c15a-4f26-a7b4-436f50a9b607}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ecs\systems">
+      <UniqueIdentifier>{3a478873-83a9-4535-9ff8-2d3eea74923f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp">
@@ -59,6 +65,12 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\Component.cpp">
       <Filter>src\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\components\Transform.cpp">
+      <Filter>src\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\MeshRenderer.cpp">
+      <Filter>src\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

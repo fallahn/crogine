@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/detail/SDLResource.hpp>
-#include <crogine/App.hpp>
+#include <crogine/core/App.hpp>
 
 using namespace cro::Detail;
 

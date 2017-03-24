@@ -32,8 +32,8 @@ source distribution.
 
 //implements the cro::App class
 
-#include <crogine/App.hpp>
-#include <crogine/StateStack.hpp>
+#include <crogine/core/App.hpp>
+#include <crogine/core/StateStack.hpp>
 
 class MyApp final : public cro::App
 {

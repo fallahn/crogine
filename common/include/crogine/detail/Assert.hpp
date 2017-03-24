@@ -32,7 +32,7 @@ source distribution.
 #ifndef CRO_ASSERT_HPP_
 #define CRO_ASSERT_HPP_
 
-#include <crogine/Log.hpp>
+#include <crogine/core/Log.hpp>
 
 #include <sstream>
 

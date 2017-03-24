@@ -14,5 +14,9 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/System.cpp
   ${PROJECT_DIR}/ecs/SystemManager.cpp
 
+  ${PROJECT_DIR}/ecs/components/Transform.cpp
+
+  ${PROJECT_DIR}/ecs/systems/MeshRenderer.cpp
+
   ${PROJECT_DIR}/system/Clock.cpp
   ${PROJECT_DIR}/system/Colour.cpp)

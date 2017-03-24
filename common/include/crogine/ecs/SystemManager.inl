@@ -41,11 +41,11 @@ T& SystemManager::addSystem(Args&&... args)
 
     if (result != m_systems.end())
     {
-        return *result->get();
+        return *(dynamic_cast<T*>(result->get()));
     }
 
     m_systems.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-    return *m_systems.back();
+    return *(dynamic_cast<T*>(m_systems.back().get()));
 }
 
 template <typename T>

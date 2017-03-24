@@ -27,12 +27,12 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/StateStack.hpp>
-#include <crogine/App.hpp>
-#include <crogine/Log.hpp>
+#include <crogine/core/StateStack.hpp>
+#include <crogine/core/App.hpp>
+#include <crogine/core/Log.hpp>
+#include <crogine/core/Clock.hpp>
 
 #include <crogine/detail/Assert.hpp>
-#include <crogine/system/Clock.hpp>
 
 using namespace cro;
 

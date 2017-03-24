@@ -29,10 +29,11 @@ source distribution.
 
 #include "MenuState.hpp"
 
-#include <crogine/system/Clock.hpp>
-#include <crogine/App.hpp>
+#include <crogine/core/Clock.hpp>
+#include <crogine/core/App.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/systems/MeshRenderer.hpp>
 
 namespace
 {
@@ -40,7 +41,8 @@ namespace
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
-	: cro::State(stack, context)
+	: cro::State    (stack, context),
+    m_meshRenderer  (nullptr)
 {
     //TODO launch load screen
     //add systems to scene
@@ -65,18 +67,19 @@ bool MenuState::simulate(cro::Time dt)
 
 void MenuState::render() const
 {
-	//TODO draw any renderable systems
+	//draw any renderable systems
+    m_meshRenderer->render();
 }
 
 //private
 void MenuState::addSystems()
 {
-
+    m_meshRenderer = &m_scene.addSystem<cro::MeshRenderer>();
 }
 
 void MenuState::createScene()
 {
     cro::Entity ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>();
-    ent.getIndex();
+    auto& tx = ent.addComponent<cro::Transform>();
+    tx.setPosition({ 20.f, 100.f, 0.f });
 }
