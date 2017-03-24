@@ -49,5 +49,15 @@ namespace cro
 	using int64 = Sint64;
 
 	using Event = SDL_Event;
+
+    namespace Graphics
+    {
+        enum Format
+        {
+            None,
+            RGB,
+            RGBA
+        };
+    }
 }
 #endif //CRO_TYPES_HPP_
