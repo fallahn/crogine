@@ -39,6 +39,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\MeshRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Colour.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Image.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\Rectangle.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Shader.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\common\src\glad\GLCheck.hpp" />
@@ -54,6 +55,8 @@
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\MeshRenderer.cpp" />
     <ClCompile Include="..\common\src\glad.c" />
+    <ClCompile Include="..\common\src\graphics\Image.cpp" />
+    <ClCompile Include="..\common\src\graphics\Texture.cpp" />
     <ClCompile Include="..\common\src\SDLresource.cpp" />
     <ClCompile Include="..\common\src\State.cpp" />
     <ClCompile Include="..\common\src\StateStack.cpp" />
@@ -66,6 +69,7 @@
     <None Include="..\common\include\crogine\ecs\EntityManager.inl" />
     <None Include="..\common\include\crogine\ecs\System.inl" />
     <None Include="..\common\include\crogine\ecs\SystemManager.inl" />
+    <None Include="..\common\include\crogine\graphics\Rectangle.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

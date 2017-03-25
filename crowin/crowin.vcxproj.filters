@@ -52,6 +52,9 @@
     <Filter Include="Source Files\core">
       <UniqueIdentifier>{ad54ac99-31ff-4ec9-b60d-eca4f76883bf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\graphics">
+      <UniqueIdentifier>{01e4f279-1f15-4506-a168-e6d673d636e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\Config.hpp">
@@ -123,6 +126,9 @@
     <ClInclude Include="..\common\include\crogine\core\Window.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\Rectangle.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\system\Clock.cpp">
@@ -173,6 +179,12 @@
     <ClCompile Include="..\common\src\StateStack.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\graphics\Image.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\Texture.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\common\include\crogine\ecs\Entity.inl">
@@ -186,6 +198,9 @@
     </None>
     <None Include="..\common\include\crogine\ecs\SystemManager.inl">
       <Filter>Header Files\ecs</Filter>
+    </None>
+    <None Include="..\common\include\crogine\graphics\Rectangle.inl">
+      <Filter>Header Files\graphics</Filter>
     </None>
   </ItemGroup>
 </Project>

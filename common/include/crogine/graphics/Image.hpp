@@ -86,7 +86,7 @@ namespace cro
         \param height Height of image to create. On mobile platforms this should be pow2
         \param format Image Format. Can be RGB or RGBA
         */
-        bool loadFromMemory(uint8* px, uint32 width, uint32 height, Graphics::Format format);
+        bool loadFromMemory(const uint8* px, uint32 width, uint32 height, Graphics::Format format);
 
         /*!
         \brief Sets pixels of a particular colour to transparent.
@@ -98,7 +98,7 @@ namespace cro
         /*!
         \brief Returns the dimensions of the image.
         */
-        glm::ivec2 getSize() const;
+        glm::uvec2 getSize() const;
 
         /*!
         \brief Returns the currently loaded image format.
@@ -112,7 +112,7 @@ namespace cro
 
 
     private:
-        glm::ivec2 m_size;
+        glm::uvec2 m_size;
         Graphics::Format m_format;
         std::vector<uint8> m_data;
     };

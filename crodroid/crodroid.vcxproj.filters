@@ -1,14 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="pch.h" />
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="src">
       <UniqueIdentifier>{64015add-90b3-4e72-8765-1c5ea4668438}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\system">
-      <UniqueIdentifier>{91bfe830-0bd1-482c-9119-d63cd99a06b2}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\detail">
       <UniqueIdentifier>{f3aced1c-38b3-41d9-b292-b757137c6779}</UniqueIdentifier>
@@ -22,31 +16,22 @@
     <Filter Include="src\ecs\systems">
       <UniqueIdentifier>{3a478873-83a9-4535-9ff8-2d3eea74923f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\core">
+      <UniqueIdentifier>{91bfe830-0bd1-482c-9119-d63cd99a06b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graphics">
+      <UniqueIdentifier>{26c9da39-87fb-4186-b917-ff3aff4b3212}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\common\src\App.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\Window.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\StateStack.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\src\system\Clock.cpp">
-      <Filter>src\system</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\system\Colour.cpp">
-      <Filter>src\system</Filter>
+      <Filter>src\core</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\glad.c">
       <Filter>src\detail</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\SDLresource.cpp">
       <Filter>src\detail</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\State.cpp">
-      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
       <Filter>src\ecs</Filter>
@@ -71,6 +56,27 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\MeshRenderer.cpp">
       <Filter>src\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\system\Colour.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\App.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\State.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\StateStack.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\Window.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\Image.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\Texture.cpp">
+      <Filter>src\graphics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/systems/MeshRenderer.hpp>
 
+#include <crogine/graphics/Rectangle.hpp>
+
 namespace
 {
 
