@@ -50,9 +50,9 @@ namespace cro
 
 	using Event = SDL_Event;
 
-    namespace Graphics
+    namespace ImageFormat
     {
-        enum Format
+        enum Type
         {
             None,
             RGB,

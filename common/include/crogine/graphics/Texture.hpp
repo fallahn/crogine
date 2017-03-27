@@ -32,6 +32,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
+#include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
 #include <glm/vec2.hpp>
@@ -45,7 +46,7 @@ namespace cro
     This class is intended for use with mesh texturing, rather than any
     advanced texture usage.
     */
-    class CRO_EXPORT_API Texture final
+    class CRO_EXPORT_API Texture final : public Detail::SDLResource
     {
     public:
         /*!
@@ -68,7 +69,7 @@ namespace cro
         \param height Height of the texture to create. On mobile platforms this should be pow2
         \param format Graphics::Format type - valid values are RGB or RGBA
         */
-        void create(uint32 width, uint32 height, Graphics::Format format = Graphics::RGBA);
+        void create(uint32 width, uint32 height, ImageFormat::Type format = ImageFormat::RGBA);
 
         /*!
         \brief Attempts to the the file in the given file path.
@@ -96,17 +97,44 @@ namespace cro
         /*!
         \brief Returns the current format of the texture
         */
-        Graphics::Format getFormat() const;
+        ImageFormat::Type getFormat() const;
 
         /*!
         brief Returns the OpenGL handle used by this texture.
         */
         uint32 getGLHandle() const;
 
+        /*!
+        \brief Enables texture smoothing
+        */
+        void setSmooth(bool);
+
+        /*!
+        \brief Returns true is texture smoothing is enabled
+        */
+        bool isSmooth() const;
+
+        /*!
+        \brief Enables of disables texture repeating
+        */
+        void setRepeated(bool);
+
+        /*!
+        \brief Returns true if texture repeating is enabled
+        */
+        bool isRepeated() const;
+
+        /*!
+        \brief Returns the max texture size for the current platform
+        */
+        static uint32 getMaxTextureSize();
+
     private:
         glm::uvec2 m_size;
-        Graphics::Format m_format;
+        ImageFormat::Type m_format;
         uint32 m_handle;
+        bool m_smooth;
+        bool m_repeated;
     };
 }
 
