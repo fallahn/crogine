@@ -19,6 +19,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/MeshRenderer.cpp
 
   ${PROJECT_DIR}/graphics/Image.cpp
+  ${PROJECT_DIR}/graphics/Shader.cpp
   ${PROJECT_DIR}/graphics/Texture.cpp
 
   ${PROJECT_DIR}/system/Clock.cpp
