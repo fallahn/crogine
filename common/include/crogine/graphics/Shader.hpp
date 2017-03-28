@@ -56,7 +56,11 @@ namespace cro
         \brief Attempts to load the shader source from given files on disk.
         \param vertexPath Path to the file containing vertex shader
         \param fragmentPath Path to file containing source for fragment shader
-        \returns true on success, else returns false
+        \returns true on success, else returns false.
+        NOTE In general this will fail on mobile platforms if trying to read from
+        and asset, for example, embedded in an apk. In these cases include the
+        shader sources as a raw string written in a header file or similar, and use
+        loadFromString() to read it directly.
         */
         bool loadFromFile(const std::string& vertexPath, const std::string& fragmentPath);
 
@@ -64,7 +68,10 @@ namespace cro
         \brief Attempts to load the shader source from given strings
         \param vertex A string containing the source of the vertex shader
         \param fragment A string containing the source for the fragment shader
-        \returns true on success, else returns false
+        \returns true on success, else returns false.
+        NOTE to ensure correct version number for specific playforms (100 for ES2,
+        330 for desktop) these are automatically appended here. Therefore #version
+        directives should be omitted from any source code.
         */
         bool loadFromString(const std::string& vertex, const std::string& fragment);
 

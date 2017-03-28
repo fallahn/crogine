@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,43 +27,17 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TEST_MENUSTATE_HPP_
-#define TEST_MENUSTATE_HPP_
+#include <crogine/ecs/components/Model.hpp>
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/MeshResource.hpp>
+using namespace cro;
 
-#include "StateIDs.hpp"
-
-namespace cro
+Model::Model(Mesh::Data data)
+    : m_meshData(data)
 {
-    class MeshRenderer;
+    //TODO init default material
 }
 
-/*!
-Creates a state to render a menu.
-*/
-class MenuState final : public cro::State
+void Model::setMaterial(std::size_t idx)
 {
-public:
-	MenuState(cro::StateStack&, cro::State::Context);
-	~MenuState() = default;
 
-	cro::StateID getStateID() const override { return States::MainMenu; }
-
-	bool handleEvent(const cro::Event&) override;
-	bool simulate(cro::Time) override;
-	void render() const override;
-
-private:
-
-    cro::Scene m_scene;
-    cro::MeshResource m_meshResource;
-    cro::MeshRenderer * m_meshRenderer;
-
-    void addSystems();
-    void createScene();
-};
-
-#endif //TEST_MENUSTATE_HPP_
+}

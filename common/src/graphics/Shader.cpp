@@ -65,8 +65,13 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
     //compile vert shader
     GLuint vertID = glCreateShader(GL_VERTEX_SHADER);
     
-    auto srcPtr = vertex.c_str();
-    glCheck(glShaderSource(vertID, 1, &srcPtr, nullptr));
+#ifdef __ANDROID__
+    const char* src[] = { "#version 100", vertex.c_str() };
+#else
+    const char* src[] = { "#version 150", vertex.c_str() };
+#endif //__ANDROID__
+
+    glCheck(glShaderSource(vertID, 2, src, nullptr));
     glCheck(glCompileShader(vertID));
 
     GLint result = GL_FALSE;
@@ -88,8 +93,8 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
     
     //compile frag shader
     GLuint fragID = glCreateShader(GL_FRAGMENT_SHADER);
-    srcPtr = fragment.c_str();
-    glCheck(glShaderSource(fragID, 1, &srcPtr, nullptr));
+    src[1] = fragment.c_str();
+    glCheck(glShaderSource(fragID, 2, src, nullptr));
     glCheck(glCompileShader(fragID));
 
     result = GL_FALSE;
@@ -160,6 +165,9 @@ uint32 Shader::getGLHandle() const
 //private
 std::string Shader::parseFile(const std::string& file)
 {
+    /*NOTE this won't work on android when trying to read resources frm the apk*/
+    /*It may be better to embed shader code in a header file as a raw string instead*/
+
     std::string retVal;
     retVal.reserve(1000);
 
@@ -169,6 +177,9 @@ std::string Shader::parseFile(const std::string& file)
     //if line starts with #include increase inclusion depth
     //if depth under limit append parseFile(include)
     //else append line
+
+    //if line is a version number remove it 
+    //as platform specific number is appeanded by loadFromString
 
     //close file
 

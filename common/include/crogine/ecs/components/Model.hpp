@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,43 +27,31 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TEST_MENUSTATE_HPP_
-#define TEST_MENUSTATE_HPP_
+#ifndef CRO_MODEL_COMPONENT_HPP_
+#define CRO_MODEL_COMPONENT_HPP_
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
+#include <crogine/Config.hpp>
+#include <crogine/detail/Types.hpp>
 #include <crogine/graphics/MeshResource.hpp>
 
-#include "StateIDs.hpp"
+#include <vector>
 
 namespace cro
 {
-    class MeshRenderer;
+    class CRO_EXPORT_API Model final
+    {
+    public:
+        Model() = default;
+        explicit Model(Mesh::Data);
+        void setMaterial(std::size_t);
+
+
+    private:
+        Mesh::Data m_meshData;
+        //TODO default material for all meshes
+        friend class MeshRenderer;
+    };
 }
 
-/*!
-Creates a state to render a menu.
-*/
-class MenuState final : public cro::State
-{
-public:
-	MenuState(cro::StateStack&, cro::State::Context);
-	~MenuState() = default;
 
-	cro::StateID getStateID() const override { return States::MainMenu; }
-
-	bool handleEvent(const cro::Event&) override;
-	bool simulate(cro::Time) override;
-	void render() const override;
-
-private:
-
-    cro::Scene m_scene;
-    cro::MeshResource m_meshResource;
-    cro::MeshRenderer * m_meshRenderer;
-
-    void addSystems();
-    void createScene();
-};
-
-#endif //TEST_MENUSTATE_HPP_
+#endif //CRO_MODEL_COMPONENT_HPP_

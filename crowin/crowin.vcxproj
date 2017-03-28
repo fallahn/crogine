@@ -32,6 +32,7 @@
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Component.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\ComponentPool.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp" />
@@ -39,14 +40,17 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\MeshRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Colour.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Image.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\MeshResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Rectangle.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Shader.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\shaders\Default.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\common\src\glad\GLCheck.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
+    <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp" />
     <ClCompile Include="..\common\src\ecs\Entity.cpp" />
     <ClCompile Include="..\common\src\ecs\EntityManager.cpp" />
@@ -56,6 +60,7 @@
     <ClCompile Include="..\common\src\ecs\systems\MeshRenderer.cpp" />
     <ClCompile Include="..\common\src\glad.c" />
     <ClCompile Include="..\common\src\graphics\Image.cpp" />
+    <ClCompile Include="..\common\src\graphics\MeshResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />
     <ClCompile Include="..\common\src\graphics\Texture.cpp" />
     <ClCompile Include="..\common\src\SDLresource.cpp" />

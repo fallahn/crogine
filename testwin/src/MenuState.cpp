@@ -33,10 +33,9 @@ source distribution.
 #include <crogine/core/App.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/systems/MeshRenderer.hpp>
 
-#include <crogine/graphics/Rectangle.hpp>
-#include <crogine/graphics/Texture.hpp>
 
 namespace
 {
@@ -85,4 +84,7 @@ void MenuState::createScene()
     cro::Entity ent = m_scene.createEntity();
     auto& tx = ent.addComponent<cro::Transform>();
     tx.setPosition({ 20.f, 100.f, 0.f });
+
+    auto& quad = ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Quad));
+    quad.setMaterial(3);
 }
