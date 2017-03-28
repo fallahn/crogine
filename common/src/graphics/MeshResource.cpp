@@ -94,7 +94,7 @@ void MeshResource::loadQuad()
     //TODO refactor all this so we can submit data arrays to single mesh building function.
 
     auto pair = std::make_pair(0, Mesh::Data());
-    auto meshData = pair.second;
+    auto& meshData = pair.second;
 
     std::vector<float> vertexData =
     {

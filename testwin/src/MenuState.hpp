@@ -63,6 +63,7 @@ private:
     cro::MeshRenderer * m_meshRenderer;
 
     void addSystems();
+    void loadAssets();
     void createScene();
 };
 

@@ -49,6 +49,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
     //TODO launch load screen
     //add systems to scene
     addSystems();
+    //load assets (textures, shaders, models etc)
+    loadAssets();
     //create some entities
     createScene();
     //TODO quit load screen
@@ -77,6 +79,11 @@ void MenuState::render() const
 void MenuState::addSystems()
 {
     m_meshRenderer = &m_scene.addSystem<cro::MeshRenderer>();
+}
+
+void MenuState::loadAssets()
+{
+    //TODO load shader and material here
 }
 
 void MenuState::createScene()
