@@ -90,5 +90,8 @@
     <ClCompile Include="..\common\src\graphics\MaterialResource.cpp">
       <Filter>src\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\components\Model.cpp">
+      <Filter>src\ecs\components</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

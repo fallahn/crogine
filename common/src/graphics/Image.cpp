@@ -58,12 +58,12 @@ void Image::create(uint32 width, uint32 height, Colour colour, ImageFormat::Type
     m_data.resize(size);
 
     std::array<uint8, 4u> comp = 
-    { 
+    {{
         colour.getRedByte(),
         colour.getGreenByte(),
         colour.getBlueByte(),
         colour.getAlphaByte()
-    };
+    }};
 
     uint32 step = (format == ImageFormat::RGB) ? 3 : 4;
     for (auto i = 0u; i < m_data.size(); i += step)
@@ -130,7 +130,7 @@ void Image::setTransparencyColour(Colour colour)
     CRO_ASSERT(m_format == ImageFormat::RGBA, "RGBA format required");
     CRO_ASSERT(!m_data.empty(), "Image not yet created");
 
-    std::array<uint8, 3u> comp = { colour.getRedByte(), colour.getGreenByte(), colour.getBlueByte() };
+    std::array<uint8, 3u> comp = { {colour.getRedByte(), colour.getGreenByte(), colour.getBlueByte()} };
     for (auto i = 0u; i < m_data.size(); i += 4)
     {
         if (m_data[i] == comp[0] &&
