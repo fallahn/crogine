@@ -132,9 +132,6 @@
     <ClInclude Include="..\common\include\crogine\graphics\Rectangle.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\include\crogine\graphics\shaders\Default.hpp">
-      <Filter>Header Files\graphics\shaders</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\include\crogine\ecs\components\Model.hpp">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
@@ -146,6 +143,12 @@
     </ClInclude>
     <ClInclude Include="..\common\include\crogine\graphics\MeshData.hpp">
       <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\MaterialResource.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\src\graphics\shaders\Default.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -213,6 +216,9 @@
       <Filter>Source Files\ecs\components</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\MaterialResource.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>

@@ -43,6 +43,12 @@ ShaderResource::ShaderResource()
 //public
 bool ShaderResource::preloadFromFile(const std::string& vertex, const std::string& fragment, int32 ID)
 {
+    if (m_shaders.count(ID) > 0)
+    {
+        Logger::log("Shader with this ID already exists!", Logger::Type::Error);
+        return false;
+    }
+    
     auto pair = std::make_pair(ID, Shader());
     if (!pair.second.loadFromFile(vertex, fragment))
     {
@@ -54,6 +60,12 @@ bool ShaderResource::preloadFromFile(const std::string& vertex, const std::strin
 
 bool ShaderResource::preloadFromString(const std::string& vertex, const std::string& fragment, int32 ID)
 {
+    if (m_shaders.count(ID) > 0)
+    {
+        Logger::log("Shader with this ID already exists!", Logger::Type::Error);
+        return false;
+    }
+    
     auto pair = std::make_pair(ID, Shader());
     if (!pair.second.loadFromString(vertex, fragment))
     {

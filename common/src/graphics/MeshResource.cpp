@@ -80,7 +80,7 @@ MeshResource::~MeshResource()
 }
 
 //public
-bool MeshResource::loadMesh(int32) { return false; }
+bool MeshResource::loadMesh(int32) { return false; } //TODO don't forget to check ID doesn't exist
 
 const Mesh::Data MeshResource::getMesh(int32 id) const
 {
@@ -114,7 +114,7 @@ void MeshResource::loadQuad()
     glCheck(glBufferData(GL_ARRAY_BUFFER, getVertexSize(meshData.attributes) * meshData.vertexCount, vertexData.data(), GL_STATIC_DRAW));
 
     //index arrays
-    std::array<uint8, 4u> idxData = { 0, 1, 2 ,3 };
+    std::array<uint8, 4u> idxData = { {0, 1, 2 ,3} };
     meshData.submeshCount = 1;
     meshData.indexData[0].format = GL_UNSIGNED_BYTE;
     meshData.indexData[0].primitiveType = meshData.primitiveType;

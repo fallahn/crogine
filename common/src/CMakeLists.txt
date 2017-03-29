@@ -20,6 +20,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/MeshRenderer.cpp
 
   ${PROJECT_DIR}/graphics/Image.cpp
+  ${PROJECT_DIR}/graphics/MaterialResource.cpp
   ${PROJECT_DIR}/graphics/MeshResource.cpp
   ${PROJECT_DIR}/graphics/Shader.cpp
   ${PROJECT_DIR}/graphics/ShaderResource.cpp

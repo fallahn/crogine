@@ -87,5 +87,8 @@
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp">
       <Filter>src\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\graphics\MaterialResource.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
