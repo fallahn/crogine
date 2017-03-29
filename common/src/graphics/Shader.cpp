@@ -32,12 +32,16 @@ source distribution.
 #include "../glad/glad.h"
 #include "../glad/GLCheck.hpp"
 
+#include <vector>
+#include <cstring>
+
 using namespace cro;
 
 Shader::Shader()
-    : m_handle(0)
+    : m_handle  (0),
+    m_attribMap ({})
 {
-
+    resetAttribMap();
 }
 
 Shader::~Shader()
@@ -60,6 +64,7 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
     {
         //remove existing program
         glCheck(glDeleteProgram(m_handle));
+        resetAttribMap();
     }    
     
     //compile vert shader
@@ -150,6 +155,14 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
 
             glCheck(glDeleteShader(vertID));
             glCheck(glDeleteShader(fragID));
+
+            //grab attributes
+            if (!fillAttribMap())
+            {
+                glCheck(glDeleteProgram(m_handle));
+                return false;
+            }
+
             return true;
         }
     }
@@ -162,7 +175,82 @@ uint32 Shader::getGLHandle() const
     return m_handle;
 }
 
+const std::array<int32, Mesh::Attribute::Total>& Shader::getAttribMap() const
+{
+    return m_attribMap;
+}
+
 //private
+bool Shader::fillAttribMap()
+{
+    GLint activeAttribs;
+    glCheck(glGetProgramiv(m_handle, GL_ACTIVE_ATTRIBUTES, &activeAttribs));
+    if (activeAttribs > 0)
+    {
+        GLint length;
+        glCheck(glGetProgramiv(m_handle, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &length));
+        if (length > 0)
+        {
+            std::vector<GLchar> attribName(length + 1);
+            GLint attribSize;
+            GLenum attribType;
+            GLint attribLocation;
+
+            for (auto i = 0; i < activeAttribs; ++i)
+            {
+                glCheck(glGetActiveAttrib(m_handle, i, length, nullptr, &attribSize, &attribType, attribName.data()));
+                attribName[length] = '\0';
+
+                glCheck(attribLocation = glGetAttribLocation(m_handle, attribName.data()));
+                std::string name(attribName.data());
+                if (name == "a_position")
+                {
+                    m_attribMap[Mesh::Position] = attribLocation;
+                }
+                else if (name == "a_colour")
+                {
+                    m_attribMap[Mesh::Colour] = attribLocation;
+                }
+                else if (name == "a_normal")
+                {
+                    m_attribMap[Mesh::Normal] = attribLocation;
+                }
+                else if (name == "a_tangent")
+                {
+                    m_attribMap[Mesh::Tangent] = attribLocation;
+                }
+                else if (name == "a_bitangent")
+                {
+                    m_attribMap[Mesh::Bitangent] = attribLocation;
+                }
+                else if (name == "a_texCoord0")
+                {
+                    m_attribMap[Mesh::UV0] = attribLocation;
+                }
+                else if (name == "a_texCoord1")
+                {
+                    m_attribMap[Mesh::UV1] = attribLocation;
+                }
+                else
+                {
+                    Logger::log(name + ": unknown vertex attribute. Shader compilation failed.", Logger::Type::Error);
+                    return false;
+                }
+                return true;
+            }
+        }
+        Logger::log("Failed loading shader attributes for some reason...", Logger::Type::Error);
+        return false;
+    }
+    Logger::log("No vertex attributes were found in shader - compilation failed.", Logger::Type::Error);
+    return false;
+}
+
+void Shader::resetAttribMap()
+{
+    std::memset(m_attribMap.data(), -1, m_attribMap.size() * sizeof(int32));
+}
+
 std::string Shader::parseFile(const std::string& file)
 {
     /*NOTE this won't work on android when trying to read resources frm the apk*/

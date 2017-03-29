@@ -40,9 +40,11 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\MeshRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Colour.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Image.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\MeshData.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MeshResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Rectangle.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Shader.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\ShaderResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\shaders\Default.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\common\src\glad\GLCheck.hpp" />
@@ -62,6 +64,7 @@
     <ClCompile Include="..\common\src\graphics\Image.cpp" />
     <ClCompile Include="..\common\src\graphics\MeshResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />
+    <ClCompile Include="..\common\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Texture.cpp" />
     <ClCompile Include="..\common\src\SDLresource.cpp" />
     <ClCompile Include="..\common\src\State.cpp" />

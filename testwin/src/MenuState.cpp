@@ -92,6 +92,8 @@ void MenuState::createScene()
     auto& tx = ent.addComponent<cro::Transform>();
     tx.setPosition({ 20.f, 100.f, 0.f });
 
+    auto& shader = m_shaderResource.get(0);
+    
     auto& quad = ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Quad));
     quad.setMaterial(3);
 }

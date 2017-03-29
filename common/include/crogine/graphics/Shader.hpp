@@ -33,8 +33,10 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/detail/Types.hpp>
+#include <crogine/graphics/MeshData.hpp>
 
 #include <string>
+#include <array>
 
 namespace cro
 {
@@ -48,9 +50,9 @@ namespace cro
         ~Shader();
 
         Shader(const Shader&) = delete;
-        Shader(const Shader&&) = delete;
+        Shader(Shader&&) = default;
         Shader& operator = (const Shader&) = delete;
-        Shader& operator = (const Shader&&) = delete;
+        Shader& operator = (Shader&&) = default;
 
         /*!
         \brief Attempts to load the shader source from given files on disk.
@@ -80,9 +82,17 @@ namespace cro
         */
         uint32 getGLHandle() const;
 
+        /*!
+        \brief Returns the shader's available vertex attributes mapped
+        to the Mesh::Attribute layout
+        */
+        const std::array<int32, Mesh::Attribute::Total>& getAttribMap() const;
+
     private:
         uint32 m_handle;
-
+        std::array<int32, Mesh::Attribute::Total> m_attribMap;
+        bool fillAttribMap();
+        void resetAttribMap();
         std::string parseFile(const std::string&);
     };
 }

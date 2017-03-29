@@ -33,72 +33,13 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/SDLResource.hpp>
+#include <crogine/graphics/MeshData.hpp>
 
 #include <unordered_map>
 #include <array>
 
 namespace cro
-{
-    namespace Mesh
-    {
-        /*!
-        \brief Mesh Identifiers.
-        These are default mappings for primitive shapes. Extend
-        these by starting from Count and map them to mesh buffers
-        by using the MeshResource load function.
-        */
-        enum ID
-        {
-            Quad = 0,
-            Cube,
-            Sphere,
-            Count
-        };
-
-        /*!
-        \brief used to map vertex attributes to shader input
-        */
-        enum Attribute
-        {
-            Invalid,
-            Position = 0,
-            Colour,
-            Normal,
-            Tangent,
-            Bitangent,
-            UV0,
-            UV1,
-            Total
-        };
-
-        /*!
-        \brief Index data for sub-mesh
-        */
-        struct CRO_EXPORT_API IndexData final
-        {
-            uint32 ibo = 0;
-            uint32 primitiveType = 0;
-            uint32 indexCount = 0;
-            uint32 format = 0;
-            static const std::size_t MaxBuffers = 32;
-        };
-
-        /*!
-        \brief Struct of mesh data used by Model components
-        */
-        struct CRO_EXPORT_API Data final
-        {
-            std::size_t vertexCount = 0;
-            uint32 vbo = 0;
-            uint32 primitiveType = 0;
-            std::array<std::size_t, Mesh::Attribute::Total> attributes{};
-
-            //index arrays
-            std::size_t submeshCount = 0;
-            std::array<Mesh::IndexData, Mesh::IndexData::MaxBuffers> indexData{};
-        };
-    }
-    
+{    
     /*!
     \brief Resource for mesh data.
     The mesh resource handles loading and unloading buffer data. It
