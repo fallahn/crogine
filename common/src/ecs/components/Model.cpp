@@ -31,13 +31,26 @@ source distribution.
 
 using namespace cro;
 
-Model::Model(Mesh::Data data)
+Model::Model(Mesh::Data data, Material::Data material)
     : m_meshData(data)
 {
-    //TODO init default material
+    //sets all materials to given default
+    bindMaterial(material);
+    for (auto& mat : m_materials)
+    {
+        mat = material;
+    }
 }
 
-void Model::setMaterial(std::size_t idx)
+void Model::setMaterial(std::size_t idx, Material::Data data)
 {
 
+}
+
+//private
+void Model::bindMaterial(Material::Data& material)
+{
+    //TODO init default material
+    //map attributes to material
+    //set all materials (up to mesh submesh size) to default
 }

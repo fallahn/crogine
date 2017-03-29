@@ -83,7 +83,9 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
-    //TODO load shader and material here
+    //load shader and material here
+    auto& shader = m_shaderResource.get(0); //falls back to default
+    m_materialResource.add(0, shader);
 }
 
 void MenuState::createScene()
@@ -92,8 +94,8 @@ void MenuState::createScene()
     auto& tx = ent.addComponent<cro::Transform>();
     tx.setPosition({ 20.f, 100.f, 0.f });
 
-    auto& shader = m_shaderResource.get(0);
+    auto material = m_materialResource.get(0);
     
-    auto& quad = ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Quad));
-    quad.setMaterial(3);
+    auto& quad = ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Quad), material);
+    //quad.setMaterial(0, material);
 }

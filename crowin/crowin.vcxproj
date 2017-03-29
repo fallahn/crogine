@@ -40,6 +40,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\MeshRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Colour.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Image.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\MaterialData.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MaterialResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MeshData.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MeshResource.hpp" />

@@ -33,27 +33,13 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/SDLResource.hpp>
-#include <crogine/graphics/MeshData.hpp>
+#include <crogine/graphics/MaterialData.hpp>
 
 #include <unordered_map>
 
 namespace cro
 {
     class Shader;
-    namespace Material
-    {
-        /*!
-        \brief Material data held by a model component and used for rendering.
-        This should be created exclusively through a MaterialResource instance,
-        manually trying to configure this will lead to undefined behaviour
-        */
-        struct CRO_EXPORT_API Data final
-        {
-            uint32 shader = 0;
-            std::array<std::array<int32, 2u>, Mesh::Attribute::Total> attribs{}; //< maps attrib location to attrib size between shader and mesh
-            std::size_t attribCount = 0; //< count of attributes successfully mapped
-        };
-    }
 
     /*!
     \brief Resource manager to manage the life span of Material data.

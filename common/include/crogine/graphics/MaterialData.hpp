@@ -27,33 +27,29 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_MODEL_COMPONENT_HPP_
-#define CRO_MODEL_COMPONENT_HPP_
+#ifndef CRO_MATERIAL_DATA_HPP_
+#define CRO_MATERIAL_DATA_HPP_
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/MeshData.hpp>
-#include <crogine/graphics/MaterialData.hpp>
 
 namespace cro
 {
-    class CRO_EXPORT_API Model final
+    namespace Material
     {
-    public:
-        Model() = default;
-        Model(Mesh::Data, Material::Data); //applied to all meshes by default
-        void setMaterial(std::size_t, Material::Data);
-
-
-    private:
-        Mesh::Data m_meshData;
-        std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_materials{};
-        
-        void bindMaterial(Material::Data&);
-        
-        friend class MeshRenderer;
-    };
+        /*!
+        \brief Material data held by a model component and used for rendering.
+        This should be created exclusively through a MaterialResource instance,
+        manually trying to configure this will lead to undefined behaviour
+        */
+        struct CRO_EXPORT_API Data final
+        {
+            uint32 shader = 0;
+            std::array<std::array<int32, 2u>, Mesh::Attribute::Total> attribs{}; //< maps attrib location to attrib size between shader and mesh
+            std::size_t attribCount = 0; //< count of attributes successfully mapped
+        };
+    }
 }
 
-
-#endif //CRO_MODEL_COMPONENT_HPP_
+#endif //CRO_MATERIAL_DATA_HPP_
