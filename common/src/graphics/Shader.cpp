@@ -235,9 +235,9 @@ bool Shader::fillAttribMap()
                 {
                     Logger::log(name + ": unknown vertex attribute. Shader compilation failed.", Logger::Type::Error);
                     return false;
-                }
-                return true;
+                }              
             }
+            return true;
         }
         Logger::log("Failed loading shader attributes for some reason...", Logger::Type::Error);
         return false;

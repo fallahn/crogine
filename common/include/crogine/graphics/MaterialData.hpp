@@ -45,8 +45,15 @@ namespace cro
         */
         struct CRO_EXPORT_API Data final
         {
+            enum
+            {
+                Index = 0,
+                Size,
+                Offset
+            };
             uint32 shader = 0;
-            std::array<std::array<int32, 2u>, Mesh::Attribute::Total> attribs{}; //< maps attrib location to attrib size between shader and mesh
+            //maps attrib location to attrib size between shader and mesh - index, size, pointer offset
+            std::array<std::array<int32, 3u>, Mesh::Attribute::Total> attribs{}; 
             std::size_t attribCount = 0; //< count of attributes successfully mapped
         };
     }

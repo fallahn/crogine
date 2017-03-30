@@ -59,7 +59,7 @@ namespace cro
         */
         enum Attribute
         {
-            Invalid,
+            Invalid = -1,
             Position = 0,
             Colour,
             Normal,

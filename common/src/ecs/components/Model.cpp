@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/detail/Assert.hpp>
 
 using namespace cro;
 
@@ -44,13 +45,41 @@ Model::Model(Mesh::Data data, Material::Data material)
 
 void Model::setMaterial(std::size_t idx, Material::Data data)
 {
-
+    CRO_ASSERT(idx < m_materials.size(), "Index out of range");
+    bindMaterial(data);
+    m_materials[idx] = data;
 }
 
 //private
 void Model::bindMaterial(Material::Data& material)
 {
-    //TODO init default material
     //map attributes to material
-    //set all materials (up to mesh submesh size) to default
+    std::size_t pointerOffset = 0;
+    for (auto i = 0u; i < Mesh::Attribute::Total; ++i)
+    {
+        if (material.attribs[i][Material::Data::Index] > -1)
+        {
+            //attrib exists in shader so map its size
+            material.attribs[i][Material::Data::Size] = m_meshData.attributes[i];
+
+            //calc the pointer offset for each attrib
+            material.attribs[i][Material::Data::Offset] = pointerOffset * sizeof(float);
+            pointerOffset += m_meshData.attributes[i];
+        }
+    }
+
+    //sort by size
+    std::sort(std::begin(material.attribs), std::end(material.attribs),
+        [](const std::array<int32, 3>& ip,
+            const std::array<int32, 3>& op)
+    {
+        return ip[Material::Data::Size] > op[Material::Data::Size];
+    });
+
+    //count attribs with size > 0
+    int i = 0;
+    while (material.attribs[i++][Material::Data::Size] != 0)
+    {
+        material.attribCount++;
+    }
 }

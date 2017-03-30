@@ -40,22 +40,27 @@ namespace cro
         {
             const static std::string Vertex = R"(
                 attribute vec3 a_position;
+                attribute vec2 a_texCoord0;
 
                 uniform mat4 u_projectionMatrix;
                 uniform mat4 u_worldViewMatrix;
 
-                //varying vec4 v_position;
+                varying vec2 v_texCoord;
 
                 void main()
                 {
                     mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
                     gl_Position = wvp * vec4(a_position, 1.0);
+
+                    v_texCoord = a_texCoord0;
                 })";
 
             const static std::string Fragment = R"(
+                varying vec2 v_texCoord;
+                
                 void main()
                 {
-                    gl_FragColor = vec4(1.0, 0.5, 0.25, 1.0);
+                    gl_FragColor = vec4(v_texCoord.x, v_texCoord.y, 0.0, 1.0);
                 })";
         }
     }

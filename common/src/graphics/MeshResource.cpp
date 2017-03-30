@@ -98,13 +98,14 @@ void MeshResource::loadQuad()
 
     std::vector<float> vertexData =
     {
-        -0.5f, 0.5f, 0.f,
-        -0.5f, -0.5f, 0.f,
-        0.5f, 0.5f, 0.f,
-        0.5f, -0.5f, 0.f
+        -0.5f, 0.5f, 0.f, 0.f, 1.f,
+        -0.5f, -0.5f, 0.f, 0.f, 0.f,
+        0.5f, 0.5f, 0.f, 1.f, 1.f,
+        0.5f, -0.5f, 0.f, 1.f, 0.f
     };
 
     meshData.attributes[Mesh::Position] = 3;
+    meshData.attributes[Mesh::UV0] = 2;
     meshData.primitiveType = GL_TRIANGLE_STRIP;
     meshData.submeshCount = 1;
     meshData.vertexCount = 4;

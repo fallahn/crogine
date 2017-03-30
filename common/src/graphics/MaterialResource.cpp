@@ -51,7 +51,7 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
     const auto& shaderAttribs = shader.getAttribMap();
     for (auto i = 0u; i < shaderAttribs.size(); ++i)
     {
-        data.attribs[i][0] = shaderAttribs[i];
+        data.attribs[i][Material::Data::Index] = shaderAttribs[i];
     }
 
     m_materials.insert(std::make_pair(ID, data));
