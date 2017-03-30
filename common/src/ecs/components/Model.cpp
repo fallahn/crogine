@@ -30,6 +30,8 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/detail/Assert.hpp>
 
+#include <algorithm>
+
 using namespace cro;
 
 Model::Model(Mesh::Data data, Material::Data material)
