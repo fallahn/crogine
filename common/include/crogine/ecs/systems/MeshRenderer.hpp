@@ -39,10 +39,12 @@ namespace cro
     public:
         MeshRenderer();
 
+        void process(Time) override;
+
         /*!
         \brief Renders all mesh components on entities in the scene
         */
-        void render() const;
+        void render();
 
     private:
 

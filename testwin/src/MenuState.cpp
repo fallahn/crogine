@@ -98,6 +98,4 @@ void MenuState::createScene()
     
     auto& quad = ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Quad), material);
     quad.setMaterial(0, material);
-
-
 }

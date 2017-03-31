@@ -78,7 +78,7 @@ namespace cro
         void requireComponent();
 
         /*!
-        \brief Returns a list of entities that thisd system is currently interested in
+        \brief Returns a list of entities that this system is currently interested in
         */
         std::vector<Entity> getEntities() const;
 

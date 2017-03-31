@@ -61,6 +61,11 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
 	
 	destroy();
 
+#ifdef __ANDROID__
+    fullscreen = true;
+    borderless = true;
+#endif //__ANDROID__
+
 	int styleMask = SDL_WINDOW_OPENGL;
 	if (fullscreen) styleMask |= SDL_WINDOW_FULLSCREEN;
 	if (borderless) styleMask |= SDL_WINDOW_BORDERLESS;

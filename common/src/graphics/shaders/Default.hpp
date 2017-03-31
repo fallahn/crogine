@@ -49,8 +49,9 @@ namespace cro
 
                 void main()
                 {
-                    mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
-                    gl_Position = wvp * vec4(a_position, 1.0);
+                    //mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+                    //gl_Position = wvp * vec4(a_position, 1.0);
+                    gl_Position = vec4(a_position, 1.0);
 
                     v_texCoord = a_texCoord0;
                 })";
@@ -60,7 +61,7 @@ namespace cro
                 
                 void main()
                 {
-                    gl_FragColor = vec4(v_texCoord.x, v_texCoord.y, 0.0, 1.0);
+                    gl_FragColor = vec4(v_texCoord.x, v_texCoord.y, 1.0, 1.0);
                 })";
         }
     }

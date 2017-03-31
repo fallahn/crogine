@@ -109,16 +109,18 @@ void MeshResource::loadQuad()
     meshData.primitiveType = GL_TRIANGLE_STRIP;
     meshData.submeshCount = 1;
     meshData.vertexCount = 4;
+    meshData.vertexSize = getVertexSize(meshData.attributes);
 
     glCheck(glGenBuffers(1, &meshData.vbo));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, getVertexSize(meshData.attributes) * meshData.vertexCount, vertexData.data(), GL_STATIC_DRAW));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vertexData.data(), GL_STATIC_DRAW));
 
     //index arrays
     std::array<uint8, 4u> idxData = { {0, 1, 2 ,3} };
     meshData.submeshCount = 1;
     meshData.indexData[0].format = GL_UNSIGNED_BYTE;
     meshData.indexData[0].primitiveType = meshData.primitiveType;
+    meshData.indexData[0].indexCount = static_cast<uint32>(idxData.size());
     
     glCheck(glGenBuffers(1, &meshData.indexData[0].ibo));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));

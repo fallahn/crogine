@@ -88,6 +88,7 @@ namespace cro
         struct CRO_EXPORT_API Data final
         {
             std::size_t vertexCount = 0;
+            std::size_t vertexSize = 0;
             uint32 vbo = 0;
             uint32 primitiveType = 0;
             std::array<std::size_t, Mesh::Attribute::Total> attributes{}; //< size of attribute if it exists

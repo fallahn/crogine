@@ -28,8 +28,13 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/ecs/systems/MeshRenderer.hpp>
-
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+
+#include <crogine/core/Clock.hpp>
+
+#include "../../glad/glad.h"
+#include "../../glad/GLCheck.hpp"
 
 using namespace cro;
 
@@ -37,10 +42,62 @@ MeshRenderer::MeshRenderer()
     : System(this)
 {
     requireComponent<Transform>();
+    requireComponent<Model>();
 }
 
 //public
-void MeshRenderer::render() const
+void MeshRenderer::process(cro::Time)
 {
+    //cull entities by viewable into draw lists by pass
 
+    //sort lists by depth
+}
+
+void MeshRenderer::render()
+{
+    //TODO sort by passes
+
+    auto& ents = getEntities();
+    for (auto& e : ents)
+    {
+        //calc entity transform
+        const auto& tx = e.getComponent<Transform>();
+
+        //foreach submesh / material:
+        const auto& model = e.getComponent<Model>();
+        for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
+        {
+            //apply shader uniforms from material
+
+            //apply uniform buffers
+
+            //bind shader
+            glCheck(glUseProgram(model.m_materials[i].shader));
+
+            //bind winding/cullface/depthfunc
+
+            //bind vaos
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
+            const auto& attribs = model.m_materials[i].attribs;
+            for (auto j = 0u; j < model.m_materials[i].attribCount; ++j)
+            {
+                glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
+                    GL_FLOAT, GL_FALSE, model.m_meshData.vertexSize, (void*)attribs[j][Material::Data::Offset]));
+                glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
+            }
+
+            //bind element/index buffer
+            const auto& indexData = model.m_meshData.indexData[i];
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexData.ibo));
+
+            //draw elements
+            glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+
+            //unbind vaos
+            for (auto j = 0u; j < model.m_materials[i].attribCount; ++j)
+            {
+                glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
+            }
+        }
+    }
 }
