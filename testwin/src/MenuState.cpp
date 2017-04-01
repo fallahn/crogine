@@ -92,7 +92,7 @@ void MenuState::createScene()
 {
     cro::Entity ent = m_scene.createEntity();
     auto& tx = ent.addComponent<cro::Transform>();
-    tx.setPosition({ 20.f, 100.f, 0.f });
+    tx.setPosition({ 0.5f, 0.1f, 0.f });
 
     auto material = m_materialResource.get(0);
     

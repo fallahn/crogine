@@ -102,7 +102,7 @@ const glm::mat4& Transform::getLocalTransform() const
     {
         m_dirty = false;
 
-        m_transform = glm::translate(glm::mat4(), m_position);;
+        m_transform = glm::translate(glm::mat4(), m_position);
         m_transform *= glm::toMat4(m_rotation);
         m_transform = glm::scale(m_transform, m_scale);
     }
@@ -114,9 +114,9 @@ glm::mat4 Transform::getWorldTransform(std::vector<Entity>& entityList) const
 {
     if (m_parent > -1)
     {
-        return entityList[m_parent].getComponent<Transform>().getWorldTransform(entityList) * m_transform;
+        return entityList[m_parent].getComponent<Transform>().getWorldTransform(entityList) * getLocalTransform();
     }
-    return m_transform;
+    return getLocalTransform();
 }
 
 void Transform::setParent(Entity::ID id)

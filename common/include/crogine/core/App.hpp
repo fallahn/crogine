@@ -65,6 +65,11 @@ namespace cro
 		void setClearColour(Colour);
 		const Colour& getClearColour() const;
 
+        /*!
+        \brief Use this to properly close down the application
+        */
+        static void quit();
+
 	protected:
 		
 		virtual void handleEvent(const Event&) = 0;
@@ -74,10 +79,18 @@ namespace cro
 
 		Window& getWindow() { return m_window; }
 
+        /*!
+        \brief Called before the windows is destroyed.
+        Use this to clean up any resources which rely on the
+        window's OpenGL context.
+        */
+        virtual void finalise() {};
+
 	private:
 
 		Window m_window;
 		Colour m_clearColour;
+        bool m_running;
 
 		static App* m_instance;
 	};

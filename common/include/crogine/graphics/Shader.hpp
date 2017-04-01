@@ -37,6 +37,7 @@ source distribution.
 
 #include <string>
 #include <array>
+#include <unordered_map>
 
 namespace cro
 {
@@ -88,11 +89,18 @@ namespace cro
         */
         const std::array<int32, Mesh::Attribute::Total>& getAttribMap() const;
 
+        /*!
+        \brief Returns a list of active uniforms mapped to their locations
+        */
+        const std::unordered_map<std::string, int32>& getUniformMap() const;
     private:
         uint32 m_handle;
         std::array<int32, Mesh::Attribute::Total> m_attribMap;
         bool fillAttribMap();
         void resetAttribMap();
+        std::unordered_map<std::string, int32> m_uniformMap;
+        void fillUniformMap();
+        void resetUniformMap();
         std::string parseFile(const std::string&);
     };
 }

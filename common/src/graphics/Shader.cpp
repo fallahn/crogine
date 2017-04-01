@@ -65,6 +65,7 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
         //remove existing program
         glCheck(glDeleteProgram(m_handle));
         resetAttribMap();
+        resetUniformMap();
     }    
     
     //compile vert shader
@@ -163,6 +164,8 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
                 return false;
             }
 
+            fillUniformMap();
+
             return true;
         }
     }
@@ -178,6 +181,11 @@ uint32 Shader::getGLHandle() const
 const std::array<int32, Mesh::Attribute::Total>& Shader::getAttribMap() const
 {
     return m_attribMap;
+}
+
+const std::unordered_map<std::string, int32>& Shader::getUniformMap() const
+{
+    return m_uniformMap;
 }
 
 //private
@@ -249,6 +257,32 @@ bool Shader::fillAttribMap()
 void Shader::resetAttribMap()
 {
     std::memset(m_attribMap.data(), -1, m_attribMap.size() * sizeof(int32));
+}
+
+void Shader::fillUniformMap()
+{
+    int32 uniformCount;
+    glCheck(glGetProgramiv(m_handle, GL_ACTIVE_UNIFORMS, &uniformCount));
+
+    for (auto i = 0; i < uniformCount; ++i)
+    {
+        int32 nameLength;
+        int32 size;
+        GLenum type;
+        static const int32 maxChar = 100;
+        char str[maxChar];
+        glCheck(glGetActiveUniform(m_handle, i, maxChar -1, &nameLength, &size, &type, str));
+        str[nameLength] = 0;
+
+        GLuint location = 0;
+        glCheck(location = glGetUniformLocation(m_handle, str));
+        m_uniformMap.insert(std::make_pair(std::string(str), location));
+    }
+}
+
+void Shader::resetUniformMap()
+{
+    m_uniformMap.clear();
 }
 
 std::string Shader::parseFile(const std::string& file)

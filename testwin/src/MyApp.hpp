@@ -48,6 +48,7 @@ private:
 	void handleEvent(const cro::Event&) override;
 	void simulate(cro::Time) override;
 	void render() override;
+    void finalise() override;
 };
 
 #endif //MY_APP_HPP_

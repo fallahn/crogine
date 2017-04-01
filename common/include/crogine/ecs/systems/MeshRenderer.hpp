@@ -32,6 +32,8 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 
+#include <glm/mat4x4.hpp>
+
 namespace cro
 {
     class CRO_EXPORT_API MeshRenderer final : public System
@@ -48,6 +50,8 @@ namespace cro
 
     private:
 
+        //TODO replace with uniform buffer
+        glm::mat4 m_projectionMatrix;
     };
 }
 

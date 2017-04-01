@@ -49,6 +49,7 @@ namespace
 }
 
 App::App()
+    : m_running (false)
 {
 	CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
@@ -88,7 +89,8 @@ void App::run()
 	}
 
 	Clock frameClock;
-	while (m_window.isOpen())
+    m_running = true;
+	while (m_running)
 	{
 		timeSinceLastUpdate += frameClock.restart();
 
@@ -101,7 +103,7 @@ void App::run()
 			{
 				if (evt.type == SDL_QUIT)
 				{
-					m_window.close();
+                    quit();
 				}
 				handleEvent(evt);
 			}
@@ -112,6 +114,8 @@ void App::run()
 		render();
 		m_window.display();
 	}
+    finalise();
+    m_window.close();
 }
 
 void App::setClearColour(Colour colour)
@@ -123,6 +127,15 @@ void App::setClearColour(Colour colour)
 const Colour& App::getClearColour() const
 {
 	return m_clearColour;
+}
+
+void App::quit()
+{
+    //properly quit the application
+    if (m_instance)
+    {
+        m_instance->m_running = false;
+    }
 }
 
 //private

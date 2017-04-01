@@ -52,8 +52,7 @@ void MyApp::handleEvent(const cro::Event& evt)
 		default: break;
 		case SDLK_ESCAPE:
 		case SDLK_AC_BACK:
-			//TODO replace with app::quit()
-			getWindow().close();
+            App::quit();
 			break;
 		}
 	}
@@ -69,4 +68,10 @@ void MyApp::simulate(cro::Time dt)
 void MyApp::render()
 {
 	m_stateStack.render();
+}
+
+void MyApp::finalise()
+{
+    m_stateStack.clearStates();
+    m_stateStack.simulate(cro::Time());
 }

@@ -54,6 +54,40 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
         data.attribs[i][Material::Data::Index] = shaderAttribs[i];
     }
 
+    //check the shader for standard uniforms and map them if they exist
+    const auto& uniformMap = shader.getUniformMap();
+    for (auto& uniform : data.uniforms)
+    {
+        uniform = -1;
+    }
+    for (const auto& uniform : uniformMap)
+    {
+        if (uniform.first == "u_worldMatrix")
+        {
+            data.uniforms[Material::World] = uniform.second;
+        }
+        else if (uniform.first == "u_viewMatrix")
+        {
+            data.uniforms[Material::View] = uniform.second;
+        }
+        else if (uniform.first == "u_worldViewMatrix")
+        {
+            data.uniforms[Material::WorldView] = uniform.second;
+        }
+        else if (uniform.first == "u_projectionMatrix") //TODO move this to uniform buffer
+        {
+            data.uniforms[Material::Projection] = uniform.second;
+        }
+        else if (uniform.first == "u_worldViewProjectionMatrix")
+        {
+            data.uniforms[Material::WorldViewProjection] = uniform.second;
+        }
+        else
+        {
+            //add to list of material properties
+        }
+    }
+
     m_materials.insert(std::make_pair(ID, data));
     return m_materials.find(ID)->second;
 }

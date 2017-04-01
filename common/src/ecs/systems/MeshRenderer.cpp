@@ -36,6 +36,9 @@ source distribution.
 #include "../../glad/glad.h"
 #include "../../glad/GLCheck.hpp"
 
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 using namespace cro;
 
 MeshRenderer::MeshRenderer()
@@ -43,6 +46,8 @@ MeshRenderer::MeshRenderer()
 {
     requireComponent<Transform>();
     requireComponent<Model>();
+
+    m_projectionMatrix = glm::perspective(1.66f, 4.f/3.f, 0.1f, 50.f);
 }
 
 //public
@@ -55,24 +60,26 @@ void MeshRenderer::process(cro::Time)
 
 void MeshRenderer::render()
 {
-    //TODO sort by passes
-
+    //TODO use draw list instead
     auto& ents = getEntities();
     for (auto& e : ents)
     {
         //calc entity transform
         const auto& tx = e.getComponent<Transform>();
+        glm::mat4 worldView = tx.getWorldTransform(ents);
 
         //foreach submesh / material:
         const auto& model = e.getComponent<Model>();
         for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
         {
-            //apply shader uniforms from material
-
-            //apply uniform buffers
-
             //bind shader
             glCheck(glUseProgram(model.m_materials[i].shader));
+
+            //apply shader uniforms from material
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+
+            //apply uniform buffers
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
 
             //bind winding/cullface/depthfunc
 

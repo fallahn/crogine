@@ -38,6 +38,19 @@ namespace cro
 {
     namespace Material
     {
+        /*
+        \brief Used to map standardised uniform locations
+        */
+        enum Uniform
+        {
+            World = 0,
+            View,
+            WorldView,
+            Projection,
+            WorldViewProjection,
+            Total
+        };
+        
         /*!
         \brief Material data held by a model component and used for rendering.
         This should be created exclusively through a MaterialResource instance,
@@ -55,6 +68,8 @@ namespace cro
             //maps attrib location to attrib size between shader and mesh - index, size, pointer offset
             std::array<std::array<int32, 3u>, Mesh::Attribute::Total> attribs{}; 
             std::size_t attribCount = 0; //< count of attributes successfully mapped
+            //maps uniform locations by indexing via Uniform enum
+            std::array<int32, Uniform::Total> uniforms{};
         };
     }
 }

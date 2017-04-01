@@ -98,10 +98,10 @@ void MeshResource::loadQuad()
 
     std::vector<float> vertexData =
     {
-        -0.5f, 0.5f, 0.f, 0.f, 1.f,
-        -0.5f, -0.5f, 0.f, 0.f, 0.f,
-        0.5f, 0.5f, 0.f, 1.f, 1.f,
-        0.5f, -0.5f, 0.f, 1.f, 0.f
+        -0.5f, 0.5f, -4.f, 0.f, 1.f,
+        -0.5f, -0.5f, -4.f, 0.f, 0.f,
+        0.5f, 0.5f, -4.f, 1.f, 1.f,
+        0.5f, -0.5f, -4.f, 1.f, 0.f
     };
 
     meshData.attributes[Mesh::Position] = 3;

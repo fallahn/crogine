@@ -84,4 +84,5 @@ void Model::bindMaterial(Material::Data& material)
     {
         material.attribCount++;
     }
+
 }

@@ -33,6 +33,8 @@ source distribution.
 #include <SDL_stdinc.h>
 #include <SDL_events.h>
 
+#include <glm/vec2.hpp>
+
 /*
 Aliases for SDL types
 */
@@ -59,5 +61,11 @@ namespace cro
             RGBA
         };
     }
+
+#ifdef __ANDROID__
+    static glm::uvec2 DefaultSceneSize(1280, 720);
+#else
+    static glm::uvec2 DefaultSceneSize(1920, 1080);
+#endif //__ANDROID__
 }
 #endif //CRO_TYPES_HPP_

@@ -49,19 +49,22 @@ namespace cro
 
                 void main()
                 {
-                    //mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
-                    //gl_Position = wvp * vec4(a_position, 1.0);
-                    gl_Position = vec4(a_position, 1.0);
+                    mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+                    gl_Position = wvp * vec4(a_position, 1.0);
+                    //gl_Position = vec4(a_position, 1.0);
 
                     v_texCoord = a_texCoord0;
                 })";
 
             const static std::string Fragment = R"(
+                //uniform vec3 u_colour = vec3(1.0);
+
                 varying vec2 v_texCoord;
                 
                 void main()
                 {
                     gl_FragColor = vec4(v_texCoord.x, v_texCoord.y, 1.0, 1.0);
+                    //gl_FragColor.rgb *= u_colour;
                 })";
         }
     }
