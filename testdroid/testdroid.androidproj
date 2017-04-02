@@ -146,6 +146,7 @@
     </AntPackage>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Content Include="assets\assets\test.png" />
     <Content Include="assets\assets\test_effect.wav" />
     <Content Include="assets\assets\test_music.ogg" />
     <Content Include="assets\assets\test_music.wav" />

@@ -124,6 +124,9 @@ void MeshRenderer::applyProperties(const Material::PropertyList& properties)
             break;
         case Material::Property::Texture:
             //TODO get texture binding locations
+            glCheck(glActiveTexture(GL_TEXTURE0));
+            glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
+            glCheck(glUniform1i(prop.second.first, 0));
             break;
         case Material::Property::Vec2:
             glCheck(glUniform2f(prop.second.first, prop.second.second.vecValue[0],
