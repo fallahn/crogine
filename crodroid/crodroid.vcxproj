@@ -131,6 +131,7 @@
     <ClCompile Include="..\common\src\ecs\systems\MeshRenderer.cpp" />
     <ClCompile Include="..\common\src\glad.c" />
     <ClCompile Include="..\common\src\graphics\Image.cpp" />
+    <ClCompile Include="..\common\src\graphics\MaterialData.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialResource.cpp" />
     <ClCompile Include="..\common\src\graphics\MeshResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />

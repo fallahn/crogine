@@ -1,0 +1,93 @@
+/*-----------------------------------------------------------------------
+
+Matt Marchant 2017
+http://trederia.blogspot.com
+
+crogine - Zlib license.
+
+This software is provided 'as-is', without any express or
+implied warranty.In no event will the authors be held
+liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute
+it freely, subject to the following restrictions :
+
+1. The origin of this software must not be misrepresented;
+you must not claim that you wrote the original software.
+If you use this software in a product, an acknowledgment
+in the product documentation would be appreciated but
+is not required.
+
+2. Altered source versions must be plainly marked as such,
+and must not be misrepresented as being the original software.
+
+3. This notice may not be removed or altered from any
+source distribution.
+
+-----------------------------------------------------------------------*/
+
+#include <crogine/graphics/MaterialData.hpp>
+#include <crogine/graphics/Texture.hpp>
+#include <crogine/core/Log.hpp>
+
+using namespace cro;
+using namespace cro::Material;
+
+#ifdef _DEBUG_
+#define  VERIFY(x, y) exists(x, y)
+#else
+#define VERIFY(x, y)
+#endif //_DEBUG_
+
+namespace
+{
+    void exists(const std::string& name, const Material::PropertyList& properties)
+    {
+        if (properties.count(name) == 0)
+        {
+            Logger::log("Property " + name + " doesn't exist in shader", Logger::Type::Warning);
+        }
+    }
+}
+
+void Data::setProperty(const std::string& name, float value)
+{
+    VERIFY(name, properties);
+    properties.find(name)->second.second.numberValue = value;
+    properties.find(name)->second.second.type = Property::Number;
+}
+
+void Data::setProperty(const std::string& name, glm::vec2 value)
+{
+    VERIFY(name, properties);
+    properties.find(name)->second.second.vecValue[0] = value.x;
+    properties.find(name)->second.second.vecValue[1] = value.y;
+    properties.find(name)->second.second.type = Property::Vec2;
+}
+
+void Data::setProperty(const std::string& name, glm::vec3 value)
+{
+    VERIFY(name, properties);
+    properties.find(name)->second.second.vecValue[0] = value.x;
+    properties.find(name)->second.second.vecValue[1] = value.y;
+    properties.find(name)->second.second.vecValue[2] = value.z;
+    properties.find(name)->second.second.type = Property::Vec3;
+}
+
+void Data::setProperty(const std::string& name, Colour value)
+{
+    VERIFY(name, properties);
+    properties.find(name)->second.second.vecValue[0] = value.getRed();
+    properties.find(name)->second.second.vecValue[1] = value.getGreen();
+    properties.find(name)->second.second.vecValue[2] = value.getBlue();
+    properties.find(name)->second.second.vecValue[3] = value.getAlpha();
+    properties.find(name)->second.second.type = Property::Vec4;
+}
+
+void Data::setProperty(const std::string& name, const Texture& value)
+{
+    VERIFY(name, properties);
+    properties.find(name)->second.second.textureID = value.getGLHandle();
+    properties.find(name)->second.second.type = Property::Texture;
+}

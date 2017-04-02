@@ -33,9 +33,16 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/MeshData.hpp>
+#include <crogine/graphics/Colour.hpp>
+
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+
+#include <unordered_map>
 
 namespace cro
 {
+    class Texture;
     namespace Material
     {
         /*
@@ -51,6 +58,29 @@ namespace cro
             Total
         };
         
+        struct CRO_EXPORT_API Property final
+        {
+            enum
+            {
+                None,
+                Number,
+                Vec2,
+                Vec3,
+                Vec4,
+                Texture
+            }type = None;
+
+            union
+            {
+                float numberValue;
+                float vecValue[4];
+                int32 textureID;
+            };
+        };
+
+        //allows looking up uniform name when paired location/value
+        using PropertyList = std::unordered_map<std::string, std::pair<int32, Property>>;
+
         /*!
         \brief Material data held by a model component and used for rendering.
         This should be created exclusively through a MaterialResource instance,
@@ -70,6 +100,39 @@ namespace cro
             std::size_t attribCount = 0; //< count of attributes successfully mapped
             //maps uniform locations by indexing via Uniform enum
             std::array<int32, Uniform::Total> uniforms{};
+
+            //arbitrary uniforms are stored as properties
+            PropertyList properties;
+            /*!
+            \brief Sets a float value uniform
+            \param name Name of the uniform
+            \param value Value of the uniform
+            */
+            void setProperty(const std::string& name, float value);
+            /*!
+            \brief Sets a 2 component vector value uniform
+            \param name Name of the uniform
+            \param value Value of the uniform
+            */
+            void setProperty(const std::string& name, glm::vec2 value);
+            /*!
+            \brief Sets a 3 component vector uniform
+            \param name String containing the name of the uniform
+            \param value Value of the unform
+            */
+            void setProperty(const std::string& name, glm::vec3 value);
+            /*!
+            \brief Sets a colour value uniform
+            \param name String containing the name of the uniform
+            \param value Colour value of the uniform
+            */
+            void setProperty(const std::string& name, Colour value);
+            /*!
+            \brief Sets a texture sampler uniform
+            \param name String containing the name of the uniform to set
+            \param value A reference to the texture to bind to the sampler
+            */
+            void setProperty(const std::string& name, const Texture& value);
         };
     }
 }

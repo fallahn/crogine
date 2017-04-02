@@ -85,6 +85,7 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
         else
         {
             //add to list of material properties
+            data.properties.insert(std::make_pair(uniform.first, std::make_pair(uniform.second, Material::Property())));
         }
     }
 

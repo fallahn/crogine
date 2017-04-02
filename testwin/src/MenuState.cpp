@@ -95,6 +95,7 @@ void MenuState::createScene()
     tx.setPosition({ 0.5f, 0.1f, 0.f });
 
     auto material = m_materialResource.get(0);
+    material.setProperty("u_colour", cro::Colour(0.4f, 1.f, 0.6f, 1.f));
     
     auto& quad = ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Quad), material);
     quad.setMaterial(0, material);

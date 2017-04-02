@@ -31,6 +31,7 @@ source distribution.
 #define CRO_MESH_RENDERER_HPP_
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/graphics/MaterialData.hpp>
 
 #include <glm/mat4x4.hpp>
 
@@ -52,6 +53,8 @@ namespace cro
 
         //TODO replace with uniform buffer
         glm::mat4 m_projectionMatrix;
+
+        void applyProperties(const Material::PropertyList&);
     };
 }
 

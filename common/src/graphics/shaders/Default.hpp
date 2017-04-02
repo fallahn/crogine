@@ -57,14 +57,14 @@ namespace cro
                 })";
 
             const static std::string Fragment = R"(
-                //uniform vec3 u_colour = vec3(1.0);
+                uniform vec4 u_colour;// = vec4(1.0);
 
                 varying vec2 v_texCoord;
                 
                 void main()
                 {
                     gl_FragColor = vec4(v_texCoord.x, v_texCoord.y, 1.0, 1.0);
-                    //gl_FragColor.rgb *= u_colour;
+                    gl_FragColor *= u_colour;
                 })";
         }
     }

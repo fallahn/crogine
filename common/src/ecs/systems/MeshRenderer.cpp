@@ -77,6 +77,7 @@ void MeshRenderer::render()
 
             //apply shader uniforms from material
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+            applyProperties(model.m_materials[i].properties);
 
             //apply uniform buffers
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
@@ -89,7 +90,8 @@ void MeshRenderer::render()
             for (auto j = 0u; j < model.m_materials[i].attribCount; ++j)
             {
                 glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
-                    GL_FLOAT, GL_FALSE, model.m_meshData.vertexSize, (void*)attribs[j][Material::Data::Offset]));
+                    GL_FLOAT, GL_FALSE, static_cast<GLsizei>(model.m_meshData.vertexSize), 
+                    reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
                 glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
             }
 
@@ -105,6 +107,36 @@ void MeshRenderer::render()
             {
                 glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
             }
+        }
+    }
+}
+
+//private
+void MeshRenderer::applyProperties(const Material::PropertyList& properties)
+{
+    for (const auto& prop : properties)
+    {
+        switch (prop.second.second.type)
+        {
+        default: break;
+        case Material::Property::Number:
+            glCheck(glUniform1f(prop.second.first, prop.second.second.numberValue));
+            break;
+        case Material::Property::Texture:
+            //TODO get texture binding locations
+            break;
+        case Material::Property::Vec2:
+            glCheck(glUniform2f(prop.second.first, prop.second.second.vecValue[0],
+                prop.second.second.vecValue[1]));
+            break;
+        case Material::Property::Vec3:
+            glCheck(glUniform3f(prop.second.first, prop.second.second.vecValue[0], 
+                prop.second.second.vecValue[1], prop.second.second.vecValue[2]));
+            break;
+        case Material::Property::Vec4:
+            glCheck(glUniform4f(prop.second.first, prop.second.second.vecValue[0], 
+                prop.second.second.vecValue[1], prop.second.second.vecValue[2], prop.second.second.vecValue[3]));
+            break;
         }
     }
 }
