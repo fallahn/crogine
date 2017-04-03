@@ -65,7 +65,6 @@ Texture::~Texture()
     if(m_handle)
     {
         glCheck(glDeleteTextures(1, &m_handle));
-        Logger::log("TEXTURE DELETED", Logger::Type::Info);
     }
 }
 

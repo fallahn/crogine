@@ -41,7 +41,8 @@ source distribution.
 using namespace cro;
 
 Image::Image()
-    : m_format(ImageFormat::None)
+    : m_format  (ImageFormat::None),
+    m_flipped   (false)
 {
 
 }
@@ -86,6 +87,8 @@ bool Image::loadFromFile(const std::string& path)
     auto img = IMG_Load(path.c_str());
     if (img)
     {
+        m_flipped = true;
+
         SDL_LockSurface(img);
 
         ImageFormat::Type format = (img->format->BitsPerPixel == 32) ? ImageFormat::RGBA : ImageFormat::RGB;
@@ -118,7 +121,25 @@ bool Image::loadFromMemory(const uint8* px, uint32 width, uint32 height, ImageFo
     size *= (width * height);
 
     m_data.resize(size);
-    std::memcpy(m_data.data(), px, size);
+    if (m_flipped)
+    {
+        //copy row by row starting at bottom
+        const auto rowSize = size / height;
+        auto dst = m_data.data();
+        auto src = px + ((m_data.size()) - rowSize);
+        for (auto i = 0u; i < height; ++i)
+        {
+            std::memcpy(dst, src, rowSize);
+            dst += rowSize;
+            src -= rowSize;
+        }
+
+        m_flipped = false;
+    }
+    else
+    {
+        std::memcpy(m_data.data(), px, size);
+    }
 
     m_size = { width, height };
     m_format = format;

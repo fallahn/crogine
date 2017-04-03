@@ -115,6 +115,7 @@ namespace cro
         glm::uvec2 m_size;
         ImageFormat::Type m_format;
         std::vector<uint8> m_data;
+        bool m_flipped;
     };
 }
 
