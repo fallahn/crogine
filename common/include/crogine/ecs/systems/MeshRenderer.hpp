@@ -54,6 +54,7 @@ namespace cro
         //TODO replace with uniform buffer
         glm::mat4 m_projectionMatrix;
 
+        uint32 m_currentTextureUnit;
         void applyProperties(const Material::PropertyList&);
     };
 }

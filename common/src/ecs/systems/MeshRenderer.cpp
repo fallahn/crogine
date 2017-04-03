@@ -42,12 +42,19 @@ source distribution.
 using namespace cro;
 
 MeshRenderer::MeshRenderer()
-    : System(this)
+    : System                (this),
+    m_currentTextureUnit    (0)
 {
     requireComponent<Transform>();
     requireComponent<Model>();
 
-    m_projectionMatrix = glm::perspective(1.66f, 4.f/3.f, 0.1f, 50.f);
+#ifdef __ANDROID__
+    const float ratio = 16.f / 9.f;
+#else
+    const float ratio = 4.f / 3.f;
+#endif //__ANDROID__
+
+    m_projectionMatrix = glm::perspective(1.96f, ratio, 0.1f, 50.f);
 }
 
 //public
@@ -118,6 +125,7 @@ void MeshRenderer::render()
 //private
 void MeshRenderer::applyProperties(const Material::PropertyList& properties)
 {
+    m_currentTextureUnit = 0;
     for (const auto& prop : properties)
     {
         switch (prop.second.second.type)
@@ -127,10 +135,10 @@ void MeshRenderer::applyProperties(const Material::PropertyList& properties)
             glCheck(glUniform1f(prop.second.first, prop.second.second.numberValue));
             break;
         case Material::Property::Texture:
-            //TODO get texture binding locations
-            glCheck(glActiveTexture(GL_TEXTURE0));
+            //TODO track the current tex ID bound to this unit and only bind if different
+            glCheck(glActiveTexture(GL_TEXTURE0 + m_currentTextureUnit));
             glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
-            glCheck(glUniform1i(prop.second.first, 0));
+            glCheck(glUniform1i(prop.second.first, m_currentTextureUnit++));
             break;
         case Material::Property::Vec2:
             glCheck(glUniform2f(prop.second.first, prop.second.second.vecValue[0],

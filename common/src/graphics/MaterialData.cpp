@@ -54,40 +54,60 @@ namespace
 void Data::setProperty(const std::string& name, float value)
 {
     VERIFY(name, properties);
-    properties.find(name)->second.second.numberValue = value;
-    properties.find(name)->second.second.type = Property::Number;
+    auto result = properties.find(name);
+    if (result != properties.end())
+    {
+        result->second.second.numberValue = value;
+        result->second.second.type = Property::Number;
+    }
 }
 
 void Data::setProperty(const std::string& name, glm::vec2 value)
 {
     VERIFY(name, properties);
-    properties.find(name)->second.second.vecValue[0] = value.x;
-    properties.find(name)->second.second.vecValue[1] = value.y;
-    properties.find(name)->second.second.type = Property::Vec2;
+    auto result = properties.find(name);
+    if (result != properties.end())
+    {
+        result->second.second.vecValue[0] = value.x;
+        result->second.second.vecValue[1] = value.y;
+        result->second.second.type = Property::Vec2;
+    }
 }
 
 void Data::setProperty(const std::string& name, glm::vec3 value)
 {
     VERIFY(name, properties);
-    properties.find(name)->second.second.vecValue[0] = value.x;
-    properties.find(name)->second.second.vecValue[1] = value.y;
-    properties.find(name)->second.second.vecValue[2] = value.z;
-    properties.find(name)->second.second.type = Property::Vec3;
+    auto result = properties.find(name);
+    if (result != properties.end())
+    {
+        result->second.second.vecValue[0] = value.x;
+        result->second.second.vecValue[1] = value.y;
+        result->second.second.vecValue[2] = value.z;
+        result->second.second.type = Property::Vec3;
+    }
 }
 
 void Data::setProperty(const std::string& name, Colour value)
 {
     VERIFY(name, properties);
-    properties.find(name)->second.second.vecValue[0] = value.getRed();
-    properties.find(name)->second.second.vecValue[1] = value.getGreen();
-    properties.find(name)->second.second.vecValue[2] = value.getBlue();
-    properties.find(name)->second.second.vecValue[3] = value.getAlpha();
-    properties.find(name)->second.second.type = Property::Vec4;
+    auto result = properties.find(name);
+    if (result != properties.end())
+    {
+        result->second.second.vecValue[0] = value.getRed();
+        result->second.second.vecValue[1] = value.getGreen();
+        result->second.second.vecValue[2] = value.getBlue();
+        result->second.second.vecValue[3] = value.getAlpha();
+        result->second.second.type = Property::Vec4;
+    }
 }
 
 void Data::setProperty(const std::string& name, const Texture& value)
 {
     VERIFY(name, properties);
-    properties.find(name)->second.second.textureID = value.getGLHandle();
-    properties.find(name)->second.second.type = Property::Texture;
+    auto result = properties.find(name);
+    if (result != properties.end())
+    {
+        result->second.second.textureID = value.getGLHandle();
+        result->second.second.type = Property::Texture;
+    }
 }

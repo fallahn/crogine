@@ -94,14 +94,18 @@ void MenuState::createScene()
 {
     cro::Entity ent = m_scene.createEntity();
     auto& tx = ent.addComponent<cro::Transform>();
-    tx.setPosition({ 0.5f, 0.1f, -2.f });
+    tx.setPosition({ -0.25f, 0.1f, -1.6f });
     tx.rotate({ 0.5f, 1.f, 0.3f }, 1.2f);
 
     auto material = m_materialResource.get(0);
     material.setProperty("u_colour", cro::Colour(0.4f, 1.f, 0.6f, 1.f));
     
+    m_textureResource.setFallbackColour(cro::Colour(1.f, 1.f, 1.f));
     auto& tex = m_textureResource.get("assets/test.png");
     material.setProperty("u_texture", tex);
+    auto& otherTex = m_textureResource.get("assets/blort.jpg");
+    otherTex.setSmooth(true);
+    material.setProperty("u_otherTexture", otherTex);
 
     auto& quad = ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Cube), material);
     quad.setMaterial(0, material);
