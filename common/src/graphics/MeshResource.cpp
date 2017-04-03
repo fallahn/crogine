@@ -39,22 +39,14 @@ using namespace cro;
 
 namespace
 {
-    std::size_t getVertexSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib)
-    {
-        std::size_t size = 0;
-        for (const auto& a : attrib)
-        {
-            size += a;
-        }
-        return size * sizeof(float);
-    }
+
 }
 
 MeshResource::MeshResource()
 {
     //create primitives - TODO only create these on first call?
     loadQuad();
-    //loadCube();
+    loadCube();
     //loadSphere();
 }
 
@@ -88,43 +80,67 @@ const Mesh::Data MeshResource::getMesh(int32 id) const
     return m_meshData.find(id)->second;
 }
 
+namespace
+{
+    std::size_t getVertexSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib)
+    {
+        std::size_t size = 0;
+        for (const auto& a : attrib)
+        {
+            size += a;
+        }
+        return size * sizeof(float);
+    }
+
+    void createVBO(Mesh::Data& meshData, const std::vector<float>& vertexData)
+    {
+        glCheck(glGenBuffers(1, &meshData.vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vertexData.data(), GL_STATIC_DRAW));
+    }
+
+    void createIBO(Mesh::Data& meshData, uint8* idxData, std::size_t idx)
+    {
+        glCheck(glGenBuffers(1, &meshData.indexData[idx].ibo));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[idx].ibo));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[idx].indexCount, idxData, GL_STATIC_DRAW));
+    }
+}
+
 //private
 void MeshResource::loadQuad()
 {
-    //TODO refactor all this so we can submit data arrays to single mesh building function.
-
-    auto pair = std::make_pair(0, Mesh::Data());
+    auto pair = std::make_pair(Mesh::Quad, Mesh::Data());
     auto& meshData = pair.second;
 
     std::vector<float> vertexData =
     {
-        -0.5f, 0.5f, -4.f, 0.f, 1.f,
-        -0.5f, -0.5f, -4.f, 0.f, 0.f,
-        0.5f, 0.5f, -4.f, 1.f, 1.f,
-        0.5f, -0.5f, -4.f, 1.f, 0.f
+        -0.5f, 0.5f, -2.f,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 1.f,
+        -0.5f, -0.5f, -2.f,  0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 0.f,
+        0.5f, 0.5f, -2.f,    0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 1.f,
+        0.5f, -0.5f, -2.f,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 0.f
     };
 
     meshData.attributes[Mesh::Position] = 3;
+    meshData.attributes[Mesh::Normal] = 3;
+    meshData.attributes[Mesh::Tangent] = 3;
+    meshData.attributes[Mesh::Bitangent] = 3;
     meshData.attributes[Mesh::UV0] = 2;
     meshData.primitiveType = GL_TRIANGLE_STRIP;
     meshData.submeshCount = 1;
     meshData.vertexCount = 4;
     meshData.vertexSize = getVertexSize(meshData.attributes);
+    createVBO(meshData, vertexData);
 
-    glCheck(glGenBuffers(1, &meshData.vbo));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vertexData.data(), GL_STATIC_DRAW));
 
     //index arrays
-    std::array<uint8, 4u> idxData = { {0, 1, 2 ,3} };
+    std::array<uint8, 4u> idxData = { {0, 1, 2, 3} };
     meshData.submeshCount = 1;
     meshData.indexData[0].format = GL_UNSIGNED_BYTE;
     meshData.indexData[0].primitiveType = meshData.primitiveType;
     meshData.indexData[0].indexCount = static_cast<uint32>(idxData.size());
     
-    glCheck(glGenBuffers(1, &meshData.indexData[0].ibo));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4, idxData.data(), GL_STATIC_DRAW));
+    createIBO(meshData, idxData.data(), 0);
 
     if (meshData.vbo && meshData.indexData[0].ibo)
     {
@@ -134,10 +150,79 @@ void MeshResource::loadQuad()
 
 void MeshResource::loadCube()
 {
-    //TODO pending above refactor
+    auto pair = std::make_pair(Mesh::Cube, Mesh::Data());
+    auto& meshData = pair.second;
+
+    std::vector<float> vertexData =
+    {
+        //front
+        -0.5f, 0.5f, 0.5f,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 1.f,
+        -0.5f, -0.5f, 0.5f,  0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 0.f,
+        0.5f, 0.5f, 0.5f,    0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 1.f,
+        0.5f, -0.5f, 0.5f,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 0.f,
+        //back
+        0.5f, 0.5f, -0.5f,   0.f,0.f,-1.f,   -1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 1.f,
+        0.5f, -0.5f, -0.5f,  0.f,0.f,-1.f,   -1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 0.f,
+        -0.5f, 0.5f, -0.5f,    0.f,0.f,-1.f,   -1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 1.f,
+        -0.5f, -0.5f, -0.5f,   0.f,0.f,-1.f,   -1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 0.f,
+        //left
+        -0.5f, 0.5f, -0.5f,   -1.f,0.f,0.f,   0.f,0.f,1.f,   0.f,1.f,0.f,     0.f, 1.f,
+        -0.5f, -0.5f, -0.5f,  -1.f,0.f,0.f,   0.f,0.f,1.f,   0.f,1.f,0.f,     0.f, 0.f,
+        -0.5f, 0.5f, 0.5f,    -1.f,0.f,0.f,   0.f,0.f,1.f,   0.f,1.f,0.f,     1.f, 1.f,
+        -0.5f, -0.5f, 0.5f,   -1.f,0.f,0.f,   0.f,0.f,1.f,   0.f,1.f,0.f,     1.f, 0.f,
+        //right
+        0.5f, 0.5f, 0.5f,   1.f,0.f,0.f,   0.f,0.f,-1.f,   0.f,1.f,0.f,     0.f, 1.f,
+        0.5f, -0.5f, 0.5f,  1.f,0.f,0.f,   0.f,0.f,-1.f,   0.f,1.f,0.f,     0.f, 0.f,
+        0.5f, 0.5f, -0.5f,    1.f,0.f,0.f,   0.f,0.f,-1.f,   0.f,1.f,0.f,     1.f, 1.f,
+        0.5f, -0.5f, -0.5f,   1.f,0.f,0.f,   0.f,0.f,-1.f,   0.f,1.f,0.f,     1.f, 0.f,
+        //top
+        -0.5f, 0.5f, -0.5f,   0.f,1.f,0.f,   1.f,0.f,0.f,   0.f,0.f,-1.f,     0.f, 1.f,
+        -0.5f, 0.5f, 0.5f,  0.f,1.f,0.f,   1.f,0.f,0.f,   0.f,0.f,-1.f,     0.f, 0.f,
+        0.5f, 0.5f, -0.5f,    0.f,1.f,0.f,   1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 1.f,
+        0.5f, 0.5f, 0.5f,   0.f,1.f,0.f,   1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 0.f,
+        //bottom
+        -0.5f, -0.5f, 0.5f,   0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     0.f, 1.f,
+        -0.5f, -0.5f, -0.5f,  0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     0.f, 0.f,
+        0.5f, -0.5f, 0.5f,    0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 1.f,
+        0.5f, -0.5f, -0.5f,   0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 0.f
+    };
+
+    meshData.attributes[Mesh::Position] = 3;
+    meshData.attributes[Mesh::Normal] = 3;
+    meshData.attributes[Mesh::Tangent] = 3;
+    meshData.attributes[Mesh::Bitangent] = 3;
+    meshData.attributes[Mesh::UV0] = 2;
+    meshData.primitiveType = GL_TRIANGLES;
+    meshData.submeshCount = 6;
+    meshData.vertexCount = 24;
+    meshData.vertexSize = getVertexSize(meshData.attributes);
+    createVBO(meshData, vertexData);
+
+
+    //index arrays
+    std::array<uint8, 36u> idxData = 
+    { {
+            0, 1, 2, 1, 3, 2, 
+            4, 5, 6, 5, 7, 6,
+            8, 9, 10, 9, 11, 10,
+            12, 13, 14, 13, 15, 14,
+            16, 17, 18, 17, 19 ,18,
+            20, 21, 22, 21, 23, 22
+    } };
+    meshData.submeshCount = 1;
+    meshData.indexData[0].format = GL_UNSIGNED_BYTE;
+    meshData.indexData[0].primitiveType = meshData.primitiveType;
+    meshData.indexData[0].indexCount = static_cast<uint32>(idxData.size());
+
+    createIBO(meshData, idxData.data(), 0);
+
+    if (meshData.vbo && meshData.indexData[0].ibo)
+    {
+        m_meshData.insert(pair);
+    }
 }
 
 void MeshResource::loadSphere()
 {
-    //TODO pending above refactor
+
 }

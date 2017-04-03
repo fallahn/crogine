@@ -60,6 +60,8 @@ void MeshRenderer::process(cro::Time)
 
 void MeshRenderer::render()
 {
+    glCheck(glEnable(GL_DEPTH_TEST));
+    
     //TODO use draw list instead
     auto& ents = getEntities();
     for (auto& e : ents)
@@ -109,6 +111,8 @@ void MeshRenderer::render()
             }
         }
     }
+
+    glCheck(glDisable(GL_DEPTH_TEST));
 }
 
 //private

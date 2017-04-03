@@ -40,6 +40,9 @@ namespace cro
         {
             const static std::string Vertex = R"(
                 attribute vec3 a_position;
+                attribute vec3 a_normal;
+                attribute vec3 a_tangent;
+                attribute vec3 a_bitangent;
                 attribute vec2 a_texCoord0;
 
                 uniform mat4 u_projectionMatrix;

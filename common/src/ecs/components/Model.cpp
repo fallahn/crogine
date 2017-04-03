@@ -65,9 +65,9 @@ void Model::bindMaterial(Material::Data& material)
             material.attribs[i][Material::Data::Size] = static_cast<int32>(m_meshData.attributes[i]);
 
             //calc the pointer offset for each attrib
-            material.attribs[i][Material::Data::Offset] = static_cast<int32>(pointerOffset * sizeof(float));
-            pointerOffset += m_meshData.attributes[i];
+            material.attribs[i][Material::Data::Offset] = static_cast<int32>(pointerOffset * sizeof(float));           
         }
+        pointerOffset += m_meshData.attributes[i]; //count the offset regardless as the mesh may have more attributes than material
     }
 
     //sort by size
