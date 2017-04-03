@@ -26,6 +26,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/Shader.cpp
   ${PROJECT_DIR}/graphics/ShaderResource.cpp
   ${PROJECT_DIR}/graphics/Texture.cpp
+  ${PROJECT_DIR}/graphics/TextureResource.cpp
 
   ${PROJECT_DIR}/system/Clock.cpp
   ${PROJECT_DIR}/system/Colour.cpp)

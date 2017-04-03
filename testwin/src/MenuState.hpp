@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/graphics/MeshResource.hpp>
 #include <crogine/graphics/ShaderResource.hpp>
 #include <crogine/graphics/MaterialResource.hpp>
-#include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/TextureResource.hpp>
 
 #include "StateIDs.hpp"
 
@@ -65,6 +65,7 @@ private:
     cro::MeshResource m_meshResource;
     cro::ShaderResource m_shaderResource;
     cro::MaterialResource m_materialResource;
+    cro::TextureResource m_textureResource;
     cro::MeshRenderer * m_meshRenderer;
 
     cro::Texture m_texture;

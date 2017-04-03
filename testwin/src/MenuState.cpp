@@ -97,9 +97,8 @@ void MenuState::createScene()
     auto material = m_materialResource.get(0);
     material.setProperty("u_colour", cro::Colour(0.4f, 1.f, 0.6f, 1.f));
     
-    //auto tex = m_textureResource;
-    m_texture.loadFromFile("assets/test.png");
-    material.setProperty("u_texture", m_texture);
+    auto& tex = m_textureResource.get("assets/test.png");
+    material.setProperty("u_texture", tex);
 
     auto& quad = ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Quad), material);
     quad.setMaterial(0, material);

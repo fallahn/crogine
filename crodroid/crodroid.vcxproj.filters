@@ -96,5 +96,8 @@
     <ClCompile Include="..\common\src\graphics\MaterialData.cpp">
       <Filter>src\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\graphics\TextureResource.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

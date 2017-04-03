@@ -52,10 +52,10 @@ namespace
 }
 
 Texture::Texture()
-    : m_format  (ImageFormat::None),
-    m_handle    (0),
-    m_smooth    (false),
-    m_repeated  (false)
+    : m_format          (ImageFormat::None),
+    m_handle            (0),
+    m_smooth            (false),
+    m_repeated          (false)
 {
 
 }
@@ -65,6 +65,7 @@ Texture::~Texture()
     if(m_handle)
     {
         glCheck(glDeleteTextures(1, &m_handle));
+        Logger::log("TEXTURE DELETED", Logger::Type::Info);
     }
 }
 

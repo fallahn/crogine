@@ -59,9 +59,9 @@ namespace cro
         ~Texture();
 
         Texture(const Texture&) = delete;
-        Texture(const Texture&&) = delete;
+        Texture(Texture&&) = delete;
         Texture& operator = (const Texture&) = delete;
-        Texture& operator = (const Texture&&) = delete;
+        Texture& operator = (Texture&&) = delete;
 
         /*!
         \brief Creates an empty texture.

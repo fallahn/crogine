@@ -66,7 +66,7 @@ namespace cro
                 {
                     gl_FragColor = vec4(v_texCoord.x, v_texCoord.y, 1.0, 1.0);
                     gl_FragColor *= u_colour;
-                    gl_FragColor += texture2D(u_texture, v_texCoord);
+                    gl_FragColor *= texture2D(u_texture, v_texCoord);
                 })";
         }
     }

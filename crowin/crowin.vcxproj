@@ -48,6 +48,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\Shader.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\ShaderResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Texture.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\TextureResource.hpp" />
     <ClInclude Include="..\common\src\glad\GLCheck.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Default.hpp" />
   </ItemGroup>
@@ -70,6 +71,7 @@
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Texture.cpp" />
+    <ClCompile Include="..\common\src\graphics\TextureResource.cpp" />
     <ClCompile Include="..\common\src\SDLresource.cpp" />
     <ClCompile Include="..\common\src\State.cpp" />
     <ClCompile Include="..\common\src\StateStack.cpp" />

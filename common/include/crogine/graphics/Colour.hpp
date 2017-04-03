@@ -220,5 +220,4 @@ namespace cro
 	CRO_EXPORT_API Colour& operator *= (Colour&, const Colour&);
 }
 
-
 #endif //CRO_COLOUR_HPP_
