@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MenuState.hpp"
+#include "RotateSystem.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
@@ -79,6 +80,7 @@ void MenuState::render() const
 void MenuState::addSystems()
 {
     m_meshRenderer = &m_scene.addSystem<cro::MeshRenderer>();
+    m_scene.addSystem<RotateSystem>();
 }
 
 void MenuState::loadAssets()

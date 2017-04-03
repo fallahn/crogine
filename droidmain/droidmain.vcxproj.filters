@@ -18,5 +18,8 @@
     <ClCompile Include="..\testwin\src\MenuState.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\testwin\src\RotateSystem.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
