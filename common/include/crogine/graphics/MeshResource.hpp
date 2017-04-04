@@ -40,6 +40,8 @@ source distribution.
 
 namespace cro
 {    
+    class MeshBuilder;
+
     /*!
     \brief Resource for mesh data.
     The mesh resource handles loading and unloading buffer data. It
@@ -63,8 +65,12 @@ namespace cro
         \brief Preloads mesh assets and maps them to the given ID.
         IDs should start at Mesh::ID::Count as other Mesh::ID values
         are used for preloading the mesh primitive types.
+        \param mb Instance of a concrete MeshBuilder type to load / create
+        a mesh to add to the resource
+        \param ID Integer ID to map to the mesh created by the MeshBuilder instance
+        \returns true if mesh was successfully added to the resource holder
         */
-        bool loadMesh(/*MeshParser,*/ int32 ID);
+        bool loadMesh(const MeshBuilder& mb, int32 ID);
 
         /*!
         \brief Returns the mesh data for the given ID.
@@ -73,10 +79,6 @@ namespace cro
 
     private:
         std::unordered_map<int32, Mesh::Data> m_meshData;
-
-        void loadQuad();
-        void loadCube();
-        void loadSphere();
     };
 }
 

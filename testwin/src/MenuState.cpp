@@ -37,6 +37,9 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/systems/MeshRenderer.hpp>
 
+#include <crogine/graphics/CubeBuilder.hpp>
+#include <crogine/graphics/QuadBuilder.hpp>
+#include <crogine/graphics/SphereBuilder.hpp>
 
 namespace
 {
@@ -87,19 +90,9 @@ void MenuState::loadAssets()
 {
     //load shader and material here
     auto& shader = m_shaderResource.get(0); //falls back to default
-    m_materialResource.add(0, shader);
-}
-
-void MenuState::createScene()
-{
-    cro::Entity ent = m_scene.createEntity();
-    auto& tx = ent.addComponent<cro::Transform>();
-    tx.setPosition({ -0.25f, 0.1f, -1.6f });
-    tx.rotate({ 0.5f, 1.f, 0.3f }, 1.2f);
-
-    auto material = m_materialResource.get(0);
+    auto& material = m_materialResource.add(0, shader);
     material.setProperty("u_colour", cro::Colour(0.4f, 1.f, 0.6f, 1.f));
-    
+
     m_textureResource.setFallbackColour(cro::Colour(1.f, 1.f, 1.f));
     auto& tex = m_textureResource.get("assets/test.png");
     material.setProperty("u_texture", tex);
@@ -107,6 +100,38 @@ void MenuState::createScene()
     otherTex.setSmooth(true);
     material.setProperty("u_otherTexture", otherTex);
 
-    auto& quad = ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Cube), material);
-    quad.setMaterial(0, material);
+    //test the mesh builders
+    cro::CubeBuilder cb;
+    m_meshResource.loadMesh(cb, cro::Mesh::Cube);
+
+    cro::QuadBuilder qb({ 0.5f, 1.f });
+    m_meshResource.loadMesh(qb, cro::Mesh::Quad);
+
+    cro::SphereBuilder sb(0.3f);
+    m_meshResource.loadMesh(sb, cro::Mesh::Sphere);
+}
+
+void MenuState::createScene()
+{
+    auto material = m_materialResource.get(0);    
+    
+    cro::Entity ent = m_scene.createEntity();
+    auto& tx = ent.addComponent<cro::Transform>();
+    tx.setPosition({ -1.2f, 0.1f, -4.6f });
+    tx.rotate({ 0.5f, 1.f, 0.3f }, 1.2f);
+    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Quad), material);
+    
+
+    ent = m_scene.createEntity();
+    auto& tx2 = ent.addComponent<cro::Transform>();
+    tx2.setPosition({ 1.3f, -0.61f, -4.96f });
+    //tx2.rotate({ 1.5f, 1.f, 0.03f }, 1.7f);
+    tx2.scale({ 0.5f, 0.4f, 0.44f });
+    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Cube), material);
+
+
+    ent = m_scene.createEntity();
+    auto& tx3 = ent.addComponent<cro::Transform>();
+    tx3.move({ 0.f, 0.f, -3.f });
+    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Sphere), material);
 }

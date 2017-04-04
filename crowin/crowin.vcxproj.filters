@@ -156,6 +156,18 @@
     <ClInclude Include="..\common\include\crogine\graphics\TextureResource.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\MeshBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\QuadBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\CubeBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\SphereBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\system\Clock.cpp">
@@ -231,6 +243,12 @@
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\graphics\TextureResource.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\MeshBuilder.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\PrimitiveBuilders.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>

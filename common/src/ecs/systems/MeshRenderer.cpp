@@ -54,7 +54,7 @@ MeshRenderer::MeshRenderer()
     const float ratio = 4.f / 3.f;
 #endif //__ANDROID__
 
-    m_projectionMatrix = glm::perspective(1.96f, ratio, 0.1f, 50.f);
+    m_projectionMatrix = glm::perspective(0.6f, ratio, 0.1f, 50.f);
 }
 
 //public
@@ -68,6 +68,7 @@ void MeshRenderer::process(cro::Time)
 void MeshRenderer::render()
 {
     glCheck(glEnable(GL_DEPTH_TEST));
+    glCheck(glEnable(GL_CULL_FACE));
     
     //TODO use draw list instead
     auto& ents = getEntities();
@@ -119,6 +120,7 @@ void MeshRenderer::render()
         }
     }
 
+    glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));
 }
 
