@@ -42,12 +42,13 @@ namespace
 {
     uint32 ensurePOW2(uint32 size)
     {
-        uint32 pow2 = 1;
+        /*uint32 pow2 = 1;
         while (pow2 < size)
         {
             pow2 *= 2;
         }
-        return pow2;
+        return pow2;*/
+        return size; //TODO this needs to not exlude combination resolutions such as 768
     }
 }
 
@@ -55,7 +56,8 @@ Texture::Texture()
     : m_format          (ImageFormat::None),
     m_handle            (0),
     m_smooth            (false),
-    m_repeated          (false)
+    m_repeated          (false),
+    m_hasMipMaps        (false)
 {
 
 }
@@ -111,7 +113,14 @@ bool Texture::loadFromFile(const std::string& path)
     Image image;
     if (image.loadFromFile(path))
     {
-        create(image.getSize().x, image.getSize().y, image.getFormat());
+        auto size = image.getSize();
+        if (!((size.x & (size.x - 1)) == 0) && ((size.y & (size.y - 1)) == 0))
+        {
+            LOG("Image not POW2", Logger::Type::Error);
+            return false;
+        }
+        
+        create(size.x, size.y, image.getFormat());
         return update(image.getPixelData());
     }
     
@@ -142,10 +151,25 @@ bool Texture::update(const uint8* pixels, URect area)
             format = GL_RGB;
         }
 
+        glCheck(glActiveTexture(GL_TEXTURE0));
         glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
         glCheck(glTexSubImage2D(GL_TEXTURE_2D, 0, area.left, area.bottom, area.width, area.height, format, GL_UNSIGNED_BYTE, pixels));
-        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR : GL_NEAREST));
-
+        
+        //attempt to generate mip maps and set correct filter
+        glGenerateMipmap(GL_TEXTURE_2D);
+        auto err = glGetError();
+        if (err == GL_INVALID_OPERATION || err == GL_INVALID_ENUM)
+        {
+            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR : GL_NEAREST));
+            m_hasMipMaps = false;
+            LOG("Failed to create Mipmaps", Logger::Type::Warning);
+        }
+        else
+        {
+            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST));
+            m_hasMipMaps = true;
+            LOG("Created Mipmaps", Logger::Type::Warning);
+        }
         return true;
     }
 
@@ -177,6 +201,15 @@ void Texture::setSmooth(bool smooth)
         {
             glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
             glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_smooth ? GL_LINEAR : GL_NEAREST));
+
+            if (m_hasMipMaps)
+            {
+                glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST));
+            }
+            else
+            {
+                glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR : GL_NEAREST));
+            }
         }
     }
 }

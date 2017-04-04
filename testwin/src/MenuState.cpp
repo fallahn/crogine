@@ -100,6 +100,10 @@ void MenuState::loadAssets()
     otherTex.setSmooth(true);
     material.setProperty("u_otherTexture", otherTex);
 
+    auto& ballMat = m_materialResource.add(1, shader);
+    ballMat.setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
+    ballMat.setProperty("u_texture", m_textureResource.get("assets/sphere_test.png"));
+
     //test the mesh builders
     cro::CubeBuilder cb;
     m_meshResource.loadMesh(cb, cro::Mesh::Cube);
@@ -107,7 +111,7 @@ void MenuState::loadAssets()
     cro::QuadBuilder qb({ 0.5f, 1.f });
     m_meshResource.loadMesh(qb, cro::Mesh::Quad);
 
-    cro::SphereBuilder sb(0.3f);
+    cro::SphereBuilder sb(0.3f, 6);
     m_meshResource.loadMesh(sb, cro::Mesh::Sphere);
 }
 
@@ -133,5 +137,5 @@ void MenuState::createScene()
     ent = m_scene.createEntity();
     auto& tx3 = ent.addComponent<cro::Transform>();
     tx3.move({ 0.f, 0.f, -3.f });
-    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Sphere), material);
+    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Sphere), m_materialResource.get(1));
 }
