@@ -32,11 +32,6 @@ source distribution.
 
 using namespace cro;
 
-namespace
-{
-    std::size_t uid = 0;
-}
-
 std::vector<Entity> System::getEntities() const
 {
     return m_entities;
