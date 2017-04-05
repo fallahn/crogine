@@ -27,38 +27,34 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/System.hpp>
-#include <crogine/core/Clock.hpp>
+#ifndef CRO_PLANE_HPP_
+#define CRO_PLANE_HPP_
 
-using namespace cro;
+#include <crogine/Config.hpp>
 
-namespace
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+
+#include <array>
+
+namespace cro
 {
-    std::size_t uid = 0;
-}
-
-std::vector<Entity> System::getEntities() const
-{
-    return m_entities;
-}
-
-void System::addEntity(Entity entity)
-{
-    m_entities.push_back(entity);
-}
-
-void System::removeEntity(Entity entity)
-{
-    m_entities.erase(std::remove_if(std::begin(m_entities), std::end(m_entities),
-        [&entity](const Entity& e)
+    using Plane = glm::vec4;
+    using Box = std::array<glm::vec3, 2u>;
+    struct CRO_EXPORT_API Sphere final
     {
-        return entity == e;
-    }), std::end(m_entities));
+        float radius = 0.f;
+        glm::vec3 centre;
+    };
+
+    namespace Spatial
+    {
+        float CRO_EXPORT_API distance(Plane plane, glm::vec3 point);
+        
+        bool CRO_EXPORT_API intersects(Plane plane, Sphere sphere);
+        bool CRO_EXPORT_API intersects(Plane plane, Box box);
+
+    }
 }
 
-const ComponentMask& System::getComponentMask() const
-{
-    return m_componentMask;
-}
-
-void System::process(Time) {}
+#endif //CRO_PLANE_HPP_

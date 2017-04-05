@@ -36,6 +36,7 @@ RotateSystem::RotateSystem()
     : cro::System(this)
 {
     requireComponent<cro::Transform>();
+    requireComponent<Rotator>();
 }
 
 //public
@@ -44,6 +45,7 @@ void RotateSystem::process(cro::Time dt)
     auto& ents = getEntities();
     for (auto& e : ents)
     {
-        e.getComponent<cro::Transform>().rotate({ 0.f, 1.f, 0.f }, 0.5f * dt.asSeconds());
+        auto r = e.getComponent<Rotator>();
+        e.getComponent<cro::Transform>().rotate(r.axis, r.speed * dt.asSeconds());
     }
 }

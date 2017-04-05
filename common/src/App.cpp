@@ -154,6 +154,16 @@ void App::doImGui()
 {
     ImGui_ImplSdlGL3_NewFrame(m_window.m_window);
 
+    ImGui::Begin("Stats:");
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::NewLine();
+    static bool vsync = true;
+    bool lastSync = vsync;
+    ImGui::Checkbox("Vsync", &vsync);
+    if (lastSync != vsync)
+    {
+        m_window.setVsyncEnabled(vsync);
+    }
+    ImGui::End();
 }
 #endif

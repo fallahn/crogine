@@ -87,7 +87,9 @@ bool EntityManager::entityDestroyed(Entity entity) const
 Entity EntityManager::getEntity(Entity::ID id) const
 {
     CRO_ASSERT(id < m_generations.size(), "Invalid Entity ID");
-    return { id, m_generations[id] };
+    Entity ent(id, m_generations[id]);
+    ent.m_entityManager = const_cast<EntityManager*>(this);
+    return ent;
 }
 
 const ComponentMask& EntityManager::getComponentMask(Entity entity) const

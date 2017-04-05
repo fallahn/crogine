@@ -32,6 +32,7 @@
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Component.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\ComponentPool.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\Camera.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />
@@ -50,6 +51,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\Rectangle.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Shader.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\ShaderResource.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\Spatial.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\SphereBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\TextureResource.hpp" />
@@ -80,6 +82,7 @@
     <ClCompile Include="..\common\src\graphics\PrimitiveBuilders.cpp" />
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp" />
+    <ClCompile Include="..\common\src\graphics\Spatial.cpp" />
     <ClCompile Include="..\common\src\graphics\Texture.cpp" />
     <ClCompile Include="..\common\src\graphics\TextureResource.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui.cpp" />

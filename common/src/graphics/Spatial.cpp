@@ -27,38 +27,21 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/System.hpp>
-#include <crogine/core/Clock.hpp>
+#include <crogine/graphics/Spatial.hpp>
 
 using namespace cro;
 
-namespace
+float Spatial::distance(Plane plane, glm::vec3 point)
 {
-    std::size_t uid = 0;
+    return 0.f;
 }
 
-std::vector<Entity> System::getEntities() const
+bool Spatial::intersects(Plane plane, Sphere sphere)
 {
-    return m_entities;
+    return false;
 }
 
-void System::addEntity(Entity entity)
+bool Spatial::intersects(Plane plane, Box box)
 {
-    m_entities.push_back(entity);
+    return false;
 }
-
-void System::removeEntity(Entity entity)
-{
-    m_entities.erase(std::remove_if(std::begin(m_entities), std::end(m_entities),
-        [&entity](const Entity& e)
-    {
-        return entity == e;
-    }), std::end(m_entities));
-}
-
-const ComponentMask& System::getComponentMask() const
-{
-    return m_componentMask;
-}
-
-void System::process(Time) {}

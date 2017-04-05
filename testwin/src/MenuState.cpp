@@ -82,7 +82,7 @@ void MenuState::render() const
 //private
 void MenuState::addSystems()
 {
-    m_meshRenderer = &m_scene.addSystem<cro::MeshRenderer>();
+    m_meshRenderer = &m_scene.addSystem<cro::MeshRenderer>(m_scene.getDefaultCamera());
     m_scene.addSystem<RotateSystem>();
 }
 
@@ -106,13 +106,13 @@ void MenuState::loadAssets()
 
     //test the mesh builders
     cro::CubeBuilder cb;
-    m_meshResource.loadMesh(cb, cro::Mesh::Cube);
+    m_meshResource.loadMesh(cb, cro::Mesh::CubeMesh);
 
     cro::QuadBuilder qb({ 0.5f, 1.f });
-    m_meshResource.loadMesh(qb, cro::Mesh::Quad);
+    m_meshResource.loadMesh(qb, cro::Mesh::QuadMesh);
 
     cro::SphereBuilder sb(0.3f, 6);
-    m_meshResource.loadMesh(sb, cro::Mesh::Sphere);
+    m_meshResource.loadMesh(sb, cro::Mesh::SphereMesh);
 }
 
 void MenuState::createScene()
@@ -123,7 +123,7 @@ void MenuState::createScene()
     auto& tx = ent.addComponent<cro::Transform>();
     tx.setPosition({ -1.2f, 0.1f, -4.6f });
     tx.rotate({ 0.5f, 1.f, 0.3f }, 1.2f);
-    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Quad), material);
+    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), material);
     
 
     ent = m_scene.createEntity();
@@ -131,11 +131,17 @@ void MenuState::createScene()
     tx2.setPosition({ 1.3f, -0.61f, -4.96f });
     //tx2.rotate({ 1.5f, 1.f, 0.03f }, 1.7f);
     tx2.scale({ 0.5f, 0.4f, 0.44f });
-    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Cube), material);
-
+    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::CubeMesh), material);
+    auto& r = ent.addComponent<Rotator>();
+    r.speed = 0.5f;
+    r.axis.y = 1.f;
 
     ent = m_scene.createEntity();
     auto& tx3 = ent.addComponent<cro::Transform>();
     tx3.move({ 0.f, 0.f, -3.f });
-    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Sphere), m_materialResource.get(1));
+    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(1));
+    auto& r2 = ent.addComponent<Rotator>();
+    r2.speed = -0.67f;
+    r2.axis.x = 0.141f;
+    r2.axis.z = 0.141f;
 }

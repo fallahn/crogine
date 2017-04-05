@@ -27,38 +27,24 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/System.hpp>
-#include <crogine/core/Clock.hpp>
+#ifndef CRO_CAMERA_HPP_
+#define CRO_CAMERA_HPP_
 
-using namespace cro;
+#include <crogine/Config.hpp>
 
-namespace
+#include <glm/mat4x4.hpp>
+
+namespace cro
 {
-    std::size_t uid = 0;
-}
-
-std::vector<Entity> System::getEntities() const
-{
-    return m_entities;
-}
-
-void System::addEntity(Entity entity)
-{
-    m_entities.push_back(entity);
-}
-
-void System::removeEntity(Entity entity)
-{
-    m_entities.erase(std::remove_if(std::begin(m_entities), std::end(m_entities),
-        [&entity](const Entity& e)
+    /*!
+    \brief Represents a camera within the scene.
+    Use MeshRenderer::setActiveCamera() to use an entity with
+    a camera component as the current view
+    */
+    struct CRO_EXPORT_API Camera final
     {
-        return entity == e;
-    }), std::end(m_entities));
+        glm::mat4 projection;
+    };
 }
 
-const ComponentMask& System::getComponentMask() const
-{
-    return m_componentMask;
-}
-
-void System::process(Time) {}
+#endif //CRO_CAMERA_HPP_

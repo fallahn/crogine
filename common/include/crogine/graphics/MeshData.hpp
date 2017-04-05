@@ -32,6 +32,9 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
+#include <crogine/graphics/Spatial.hpp>
+
+#include <glm/vec3.hpp>
 
 #include <cctype>
 #include <array>
@@ -48,9 +51,9 @@ namespace cro
         */
         enum ID
         {
-            Quad = 0,
-            Cube,
-            Sphere,
+            QuadMesh = 0,
+            CubeMesh,
+            SphereMesh,
             Count
         };
 
@@ -96,6 +99,10 @@ namespace cro
             //index arrays
             std::size_t submeshCount = 0;
             std::array<Mesh::IndexData, Mesh::IndexData::MaxBuffers> indexData{};
+
+            //spatial bounds
+            Box boundingBox;
+            Sphere boundingSphere;
         };
     }
 }

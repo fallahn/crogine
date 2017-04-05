@@ -27,6 +27,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/PrimitiveBuilders.cpp
   ${PROJECT_DIR}/graphics/Shader.cpp
   ${PROJECT_DIR}/graphics/ShaderResource.cpp
+  ${PROJECT_DIR}/graphics/Spatial.cpp
   ${PROJECT_DIR}/graphics/Texture.cpp
   ${PROJECT_DIR}/graphics/TextureResource.cpp
 

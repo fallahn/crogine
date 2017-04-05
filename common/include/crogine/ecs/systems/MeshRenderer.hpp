@@ -37,10 +37,16 @@ source distribution.
 
 namespace cro
 {
+    class Entity;
     class CRO_EXPORT_API MeshRenderer final : public System
     {
     public:
-        MeshRenderer();
+        /*!
+        \brief Constructor
+        \param camera Entity containing a camera to render the scene. Usually initialised
+        with Scene::getDefaultCamera()
+        */
+        explicit MeshRenderer(Entity camera);
 
         void process(Time) override;
 
@@ -51,8 +57,7 @@ namespace cro
 
     private:
 
-        //TODO replace with uniform buffer
-        glm::mat4 m_projectionMatrix;
+        Entity m_activeCamera;
 
         uint32 m_currentTextureUnit;
         void applyProperties(const Material::PropertyList&);

@@ -32,6 +32,8 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 
+#include <glm/vec3.hpp>
+
 class RotateSystem final : public cro::System
 {
 public:
@@ -41,6 +43,12 @@ public:
 
 private:
 
+};
+
+struct Rotator final
+{
+    float speed = 0.f;
+    glm::vec3 axis;
 };
 
 #endif //TEST_ROTATE_SYS_HPP_

@@ -20,7 +20,7 @@
 #else
 #ifdef _DEBUG_
 #define IMGUI_INIT(x) ImGui_ImplSdlGL3_Init(x)
-//#define IMGUI_EVENTS(x) if(!ImGui_ImplSdlGL3_ProcessEvent(x))
+#define IMGUI_EVENTS(x) if(!ImGui_ImplSdlGL3_ProcessEvent(x))
 #define IMGUI_EVENTS(x) ImGui_ImplSdlGL3_ProcessEvent(x);
 #define IMGUI_UPDATE doImGui();
 #define IMGUI_RENDER ImGui::Render();

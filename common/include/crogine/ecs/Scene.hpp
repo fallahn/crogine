@@ -86,7 +86,14 @@ namespace cro
         template <typename T, typename... Args>
         T& addSystem(Args&&... args);
 
+        /*!
+        \brief Returns a copy of the entity containing the default camera
+        */
+        Entity getDefaultCamera() const;
+
     private:
+
+        Entity::ID m_defaultCamera;
 
         std::vector<Entity> m_pendingEntities;
         std::vector<Entity> m_destroyedEntities;

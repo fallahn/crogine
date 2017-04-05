@@ -89,6 +89,11 @@ Mesh::Data QuadBuilder::build() const
 
     createIBO(meshData, idxData.data(), 0);
 
+    //spatial bounds
+    meshData.boundingBox[0] = { -halfSizeX, halfSizeY, -0.01f };
+    meshData.boundingBox[1] = { halfSizeX, -halfSizeX, 0.01f };
+    meshData.boundingSphere.radius = glm::length(meshData.boundingBox[0]);
+
     return meshData;
 }
 
@@ -160,6 +165,10 @@ Mesh::Data CubeBuilder::build() const
 
     createIBO(meshData, idxData.data(), 0);
     
+    meshData.boundingBox[0] = { -0.5f, -0.5f, -0.5f };
+    meshData.boundingBox[1] = { 0.5f, 0.5f, 0.5f };
+    meshData.boundingSphere.radius = glm::length(meshData.boundingBox[0]);
+
     return meshData;
 }
 
@@ -299,6 +308,10 @@ Mesh::Data SphereBuilder::build() const
     meshData.indexData[0].indexCount = static_cast<uint32>(indices.size() * sizeof(uint16));
 
     createIBO(meshData, indices.data(), 0);
+
+    meshData.boundingBox[0] = { -m_radius, -m_radius, -m_radius };
+    meshData.boundingBox[1] = { m_radius, m_radius, m_radius };
+    meshData.boundingSphere.radius = m_radius;
 
     return meshData;
 }

@@ -30,6 +30,9 @@ source distribution.
 #include <crogine/ecs/systems/MeshRenderer.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Camera.hpp>
+
+#include <crogine/graphics/Spatial.hpp>
 
 #include <crogine/core/Clock.hpp>
 
@@ -41,25 +44,70 @@ source distribution.
 
 using namespace cro;
 
-MeshRenderer::MeshRenderer()
+MeshRenderer::MeshRenderer(Entity camera)
     : System                (this),
+    m_activeCamera          (camera),
     m_currentTextureUnit    (0)
 {
     requireComponent<Transform>();
     requireComponent<Model>();
 
-#ifdef __ANDROID__
-    const float ratio = 16.f / 9.f;
-#else
-    const float ratio = 4.f / 3.f;
-#endif //__ANDROID__
-
-    m_projectionMatrix = glm::perspective(0.6f, ratio, 0.1f, 50.f);
+    CRO_ASSERT(camera.hasComponent<Camera>() && camera.hasComponent<Transform>(), "Invalid camera Entity");
 }
 
 //public
 void MeshRenderer::process(cro::Time)
 {
+    //build the frustum from the view-projection matrix
+    auto viewProj = m_activeCamera.getComponent<Camera>().projection
+        * glm::inverse(m_activeCamera.getComponent<Transform>().getWorldTransform(getEntities()));
+    
+    std::array<Plane, 6u> frustum = 
+    {
+        Plane
+        (
+            viewProj[0][3] + viewProj[0][0],
+            viewProj[1][3] + viewProj[1][0],
+            viewProj[2][3] + viewProj[2][0],
+            viewProj[3][3] + viewProj[3][0]
+        ),
+        Plane
+        (
+            viewProj[0][3] - viewProj[0][0],
+            viewProj[1][3] - viewProj[1][0],
+            viewProj[2][3] - viewProj[2][0],
+            viewProj[3][3] - viewProj[3][0]
+        ),
+        Plane
+        (
+            viewProj[0][3] + viewProj[0][1],
+            viewProj[1][3] + viewProj[1][1],
+            viewProj[2][3] + viewProj[2][1],
+            viewProj[3][3] + viewProj[3][1]
+        ),
+        Plane
+        (
+            viewProj[0][3] - viewProj[0][1],
+            viewProj[1][3] - viewProj[1][1],
+            viewProj[2][3] - viewProj[2][1],
+            viewProj[3][3] - viewProj[3][1]
+        ),
+        Plane
+        (
+            viewProj[0][3] + viewProj[0][2],
+            viewProj[1][3] + viewProj[1][2],
+            viewProj[2][3] + viewProj[2][2],
+            viewProj[3][3] + viewProj[3][2]
+        ),
+        Plane
+        (
+            viewProj[0][3] - viewProj[0][2],
+            viewProj[1][3] - viewProj[1][2],
+            viewProj[2][3] - viewProj[2][2],
+            viewProj[3][3] - viewProj[3][2]
+        )
+    };
+    
     //cull entities by viewable into draw lists by pass
 
     //sort lists by depth
@@ -70,13 +118,15 @@ void MeshRenderer::render()
     glCheck(glEnable(GL_DEPTH_TEST));
     glCheck(glEnable(GL_CULL_FACE));
     
-    //TODO use draw list instead
-    auto& ents = getEntities();
+    
+    auto& ents = getEntities(); //we need this list for world transforms - not the culled list
+    auto viewMat = glm::inverse(m_activeCamera.getComponent<Transform>().getWorldTransform(ents));
+    //TODO use draw list instead of drawing all ents
     for (auto& e : ents)
     {
         //calc entity transform
         const auto& tx = e.getComponent<Transform>();
-        glm::mat4 worldView = tx.getWorldTransform(ents);
+        glm::mat4 worldView = viewMat * tx.getWorldTransform(ents);
 
         //foreach submesh / material:
         const auto& model = e.getComponent<Model>();
@@ -90,7 +140,7 @@ void MeshRenderer::render()
             applyProperties(model.m_materials[i].properties);
 
             //apply uniform buffers
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(m_activeCamera.getComponent<Camera>().projection)));
 
             //bind winding/cullface/depthfunc
 
@@ -123,6 +173,7 @@ void MeshRenderer::render()
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));
 }
+
 
 //private
 void MeshRenderer::applyProperties(const Material::PropertyList& properties)
