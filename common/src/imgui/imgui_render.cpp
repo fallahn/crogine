@@ -11,7 +11,9 @@
 
 // SDL
 #include <SDL.h>
+#ifndef __ANDROID__
 #include <SDL_syswm.h>
+#endif //__ANDROID__
 #include "../glad/glad.h"
 
 // Data

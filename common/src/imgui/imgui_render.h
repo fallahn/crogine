@@ -11,13 +11,13 @@
 
 #define IMGUI_API
 
-#ifdef __ANDROID__
-#define IMGUI_INIT(x) 
-#define IMGUI_EVENTS(x)
-#define IMGUI_UPDATE
-#define IMGUI_RENDER
-#define IMGUI_UNINIT
-#else
+//#ifdef __ANDROID__
+//#define IMGUI_INIT(x) 
+//#define IMGUI_EVENTS(x)
+//#define IMGUI_UPDATE
+//#define IMGUI_RENDER
+//#define IMGUI_UNINIT
+//#else
 #ifdef _DEBUG_
 #define IMGUI_INIT(x) ImGui_ImplSdlGL3_Init(x)
 //#define IMGUI_EVENTS(x) if(!ImGui_ImplSdlGL3_ProcessEvent(x))
@@ -32,7 +32,7 @@
 #define IMGUI_RENDER
 #define IMGUI_UNINIT
 #endif //_DEBUG_
-#endif //__ANDROID__
+//#endif //__ANDROID__
 
 struct SDL_Window;
 typedef union SDL_Event SDL_Event;

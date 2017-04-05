@@ -22,6 +22,9 @@
     <Filter Include="src\graphics">
       <UniqueIdentifier>{26c9da39-87fb-4186-b917-ff3aff4b3212}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\imgui">
+      <UniqueIdentifier>{5e248dab-a396-434a-be13-8e1926e12b43}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\system\Clock.cpp">
@@ -104,6 +107,18 @@
     </ClCompile>
     <ClCompile Include="..\common\src\graphics\PrimitiveBuilders.cpp">
       <Filter>src\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\imgui\imgui.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\imgui\imgui_demo.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\imgui\imgui_draw.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\imgui\imgui_render.cpp">
+      <Filter>src\imgui</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

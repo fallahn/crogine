@@ -149,7 +149,7 @@ void App::quit()
 }
 
 //private
-#ifndef __ANDROID__
+//#ifndef __ANDROID__
 void App::doImGui()
 {
     ImGui_ImplSdlGL3_NewFrame(m_window.m_window);
@@ -166,4 +166,4 @@ void App::doImGui()
     }
     ImGui::End();
 }
-#endif
+//#endif

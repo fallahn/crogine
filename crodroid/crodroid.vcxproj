@@ -83,6 +83,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PreprocessorDefinitions>_DEBUG_</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>
@@ -140,6 +141,10 @@
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Texture.cpp" />
     <ClCompile Include="..\common\src\graphics\TextureResource.cpp" />
+    <ClCompile Include="..\common\src\imgui\imgui.cpp" />
+    <ClCompile Include="..\common\src\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\common\src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\common\src\imgui\imgui_render.cpp" />
     <ClCompile Include="..\common\src\SDLresource.cpp" />
     <ClCompile Include="..\common\src\State.cpp" />
     <ClCompile Include="..\common\src\StateStack.cpp" />

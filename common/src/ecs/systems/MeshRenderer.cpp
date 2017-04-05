@@ -64,7 +64,7 @@ void MeshRenderer::process(cro::Time)
     
     std::array<Plane, 6u> frustum = 
     {
-        Plane
+        {Plane
         (
             viewProj[0][3] + viewProj[0][0],
             viewProj[1][3] + viewProj[1][0],
@@ -105,7 +105,7 @@ void MeshRenderer::process(cro::Time)
             viewProj[1][3] - viewProj[1][2],
             viewProj[2][3] - viewProj[2][2],
             viewProj[3][3] - viewProj[3][2]
-        )
+        )}
     };
     
     //cull entities by viewable into draw lists by pass

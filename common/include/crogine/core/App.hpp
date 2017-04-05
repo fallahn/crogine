@@ -92,9 +92,9 @@ namespace cro
 		Colour m_clearColour;
         bool m_running;
 
-#ifndef __ANDROID__
+//#ifndef __ANDROID__
         void doImGui();
-#endif
+//#endif
 		static App* m_instance;
 	};
 }
