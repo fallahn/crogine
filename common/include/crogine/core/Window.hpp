@@ -32,7 +32,6 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
-//#include <crogine/detail/SDLResource.hpp>
 
 #include <SDL_video.h>
 #include <SDL_events.h>
@@ -98,6 +97,8 @@ namespace cro
 		SDL_GLContext m_context;
 
 		void destroy();
+
+        friend class App;
 	};
 }
 

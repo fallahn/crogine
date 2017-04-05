@@ -37,6 +37,8 @@ source distribution.
 #include <SDL_mixer.h>
 
 #include "glad/GLCheck.hpp"
+#include "imgui/imgui_render.h"
+#include "imgui/imgui.h"
 
 using namespace cro;
 
@@ -81,6 +83,7 @@ void App::run()
 			Logger::log("Failed loading OpenGL", Logger::Type::Error);
 			return;
 		}
+        IMGUI_INIT(m_window.m_window);
 	}
 	else
 	{
@@ -101,20 +104,27 @@ void App::run()
 			cro::Event evt;
 			while (m_window.pollEvent(evt))
 			{
-				if (evt.type == SDL_QUIT)
+                
+                if (evt.type == SDL_QUIT)
 				{
                     quit();
 				}
-				handleEvent(evt);
+
+                IMGUI_EVENTS(evt) handleEvent(evt);
 			}
 
 			simulate(frameTime);
 		}
+
+        IMGUI_UPDATE;
+
 		m_window.clear();
 		render();
+        IMGUI_RENDER;
 		m_window.display();
 	}
     finalise();
+    IMGUI_UNINIT;
     m_window.close();
 }
 
@@ -139,3 +149,11 @@ void App::quit()
 }
 
 //private
+#ifndef __ANDROID__
+void App::doImGui()
+{
+    ImGui_ImplSdlGL3_NewFrame(m_window.m_window);
+
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+}
+#endif

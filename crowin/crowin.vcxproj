@@ -55,6 +55,10 @@
     <ClInclude Include="..\common\include\crogine\graphics\TextureResource.hpp" />
     <ClInclude Include="..\common\src\glad\GLCheck.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Default.hpp" />
+    <ClInclude Include="..\common\src\imgui\imconfig.h" />
+    <ClInclude Include="..\common\src\imgui\imgui.h" />
+    <ClInclude Include="..\common\src\imgui\imgui_render.h" />
+    <ClInclude Include="..\common\src\imgui\imgui_internal.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\App.cpp" />
@@ -78,6 +82,10 @@
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Texture.cpp" />
     <ClCompile Include="..\common\src\graphics\TextureResource.cpp" />
+    <ClCompile Include="..\common\src\imgui\imgui.cpp" />
+    <ClCompile Include="..\common\src\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\common\src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\common\src\imgui\imgui_render.cpp" />
     <ClCompile Include="..\common\src\SDLresource.cpp" />
     <ClCompile Include="..\common\src\State.cpp" />
     <ClCompile Include="..\common\src\StateStack.cpp" />

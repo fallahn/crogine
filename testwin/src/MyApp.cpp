@@ -45,7 +45,7 @@ MyApp::MyApp()
 //public
 void MyApp::handleEvent(const cro::Event& evt)
 {
-	if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_KEYUP)
 	{
 		switch (evt.key.keysym.sym)
 		{

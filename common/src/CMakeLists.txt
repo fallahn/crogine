@@ -30,5 +30,10 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/Texture.cpp
   ${PROJECT_DIR}/graphics/TextureResource.cpp
 
+  ${PROJECT_DIR}/imgui/imgui.cpp
+  ${PROJECT_DIR}/imgui/imgui_demo.cpp
+  ${PROJECT_DIR}/imgui/imgui_draw.cpp
+  ${PROJECT_DIR}/imgui/imgui_render.cpp
+
   ${PROJECT_DIR}/system/Clock.cpp
   ${PROJECT_DIR}/system/Colour.cpp)
