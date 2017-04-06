@@ -139,6 +139,7 @@
     <ClCompile Include="..\common\src\graphics\PrimitiveBuilders.cpp" />
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp" />
+    <ClCompile Include="..\common\src\graphics\Spatial.cpp" />
     <ClCompile Include="..\common\src\graphics\Texture.cpp" />
     <ClCompile Include="..\common\src\graphics\TextureResource.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui.cpp" />

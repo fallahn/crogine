@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/Config.hpp>
 
 #include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace cro
 {
@@ -44,6 +45,17 @@ namespace cro
     struct CRO_EXPORT_API Camera final
     {
         glm::mat4 projection;
+
+        Camera()
+        {
+#ifdef __ANDROID__
+            const float ratio = 16.f / 9.f;
+#else
+            const float ratio = 4.f / 3.f;
+#endif //__ANDROID__
+
+            projection = glm::perspective(0.6f, ratio, 0.1f, 50.f);
+        }
     };
 }
 

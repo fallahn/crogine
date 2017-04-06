@@ -47,12 +47,17 @@ namespace cro
         glm::vec3 centre;
     };
 
+    enum class Planar
+    {
+        Intersection, Front, Back
+    };
+
     namespace Spatial
     {
         float CRO_EXPORT_API distance(Plane plane, glm::vec3 point);
         
-        bool CRO_EXPORT_API intersects(Plane plane, Sphere sphere);
-        bool CRO_EXPORT_API intersects(Plane plane, Box box);
+        Planar CRO_EXPORT_API intersects(Plane plane, Sphere sphere);
+        Planar CRO_EXPORT_API intersects(Plane plane, Box box);
 
     }
 }

@@ -35,6 +35,7 @@ source distribution.
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/systems/MeshRenderer.hpp>
 
 #include <crogine/graphics/CubeBuilder.hpp>
@@ -144,4 +145,14 @@ void MenuState::createScene()
     r2.speed = -0.67f;
     r2.axis.x = 0.141f;
     r2.axis.z = 0.141f;
+
+    ent = m_scene.createEntity();
+    auto& tx4 = ent.addComponent<cro::Transform>();
+    tx4.move({ 0.f, 0.4f, 1.f });
+    tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);
+    ent.addComponent<cro::Camera>();
+    /*auto& r3 = ent.addComponent<Rotator>();
+    r3.axis.y = 1.f;
+    r3.speed = 0.1f;*/
+    m_meshRenderer->setActiveCamera(ent);
 }

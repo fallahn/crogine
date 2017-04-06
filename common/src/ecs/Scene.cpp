@@ -33,23 +33,14 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 
-#include <glm/gtc/matrix_transform.hpp>
-
 using namespace cro;
 
 Scene::Scene()
 {
     auto defaultCamera = createEntity();
     defaultCamera.addComponent<Transform>();
-    auto& cam = defaultCamera.addComponent<Camera>();
+    defaultCamera.addComponent<Camera>();
 
-#ifdef __ANDROID__
-    const float ratio = 16.f / 9.f;
-#else
-    const float ratio = 4.f / 3.f;
-#endif //__ANDROID__
-
-    cam.projection = glm::perspective(0.6f, ratio, 0.1f, 50.f);
     m_defaultCamera = defaultCamera.getIndex();
 }
 

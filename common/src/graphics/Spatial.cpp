@@ -29,19 +29,42 @@ source distribution.
 
 #include <crogine/graphics/Spatial.hpp>
 
+#include <glm/vec3.hpp>
+#include <glm/geometric.hpp>
+
 using namespace cro;
 
 float Spatial::distance(Plane plane, glm::vec3 point)
 {
-    return 0.f;
+    return glm::dot({ plane.x, plane.y, plane.z }, point) + plane.w;
 }
 
-bool Spatial::intersects(Plane plane, Sphere sphere)
+Planar Spatial::intersects(Plane plane, Sphere sphere)
 {
-    return false;
+    const float dist = distance(plane, sphere.centre);
+    
+    if (std::abs(dist) <= sphere.radius)
+    {
+        return Planar::Intersection;
+    }
+    else if (dist > 0.f)
+    {
+        return Planar::Front;
+    }
+    return Planar::Back;
 }
 
-bool Spatial::intersects(Plane plane, Box box)
+Planar Spatial::intersects(Plane plane, Box box)
 {
-    return false;
+    glm::vec3 centre = (box[0] + box[1]) / 2.f;
+    const float dist = distance(plane, centre);
+
+    glm::vec3 extents = (box[1] - box[0]) / 2.f;
+    extents *= glm::vec3(plane.x, plane.y, plane.z);
+
+    if (std::abs(dist) <= (std::abs(extents.x) + std::abs(extents.y) + std::abs(extents.z)))
+    {
+        return Planar::Intersection;
+    }
+    return (dist > 0) ? Planar::Front : Planar::Back;
 }

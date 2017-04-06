@@ -36,6 +36,14 @@ source distribution.
 
 #include <crogine/graphics/Colour.hpp>
 
+#include <vector>
+
+#ifdef _DEBUG_
+#define DPRINT(x, y) cro::App::debugPrint(x, y)
+#else
+#define DPRINT(x, y)
+#endif //_DEBUG_
+
 namespace cro
 {
 	namespace Detail
@@ -70,6 +78,11 @@ namespace cro
         */
         static void quit();
 
+        /*
+        \brief Print a Name/Value string to the ImGui window in debug mode
+        */
+        static void debugPrint(const std::string& name, const std::string& value);
+
 	protected:
 		
 		virtual void handleEvent(const Event&) = 0;
@@ -93,6 +106,7 @@ namespace cro
         bool m_running;
 
 //#ifndef __ANDROID__
+        std::vector<std::string> m_debugLines;
         void doImGui();
 //#endif
 		static App* m_instance;

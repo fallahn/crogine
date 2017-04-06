@@ -120,5 +120,8 @@
     <ClCompile Include="..\common\src\imgui\imgui_render.cpp">
       <Filter>src\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\graphics\Spatial.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

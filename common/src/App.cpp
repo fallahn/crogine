@@ -112,7 +112,8 @@ void App::run()
 
                 IMGUI_EVENTS(evt) handleEvent(evt);
 			}
-
+            m_debugLines.clear();
+            m_debugLines.reserve(10);
 			simulate(frameTime);
 		}
 
@@ -148,6 +149,12 @@ void App::quit()
     }
 }
 
+void App::debugPrint(const std::string& name, const std::string& value)
+{
+    CRO_ASSERT(m_instance, "Not now, fuzznuts");
+    m_instance->m_debugLines.emplace_back(name + " : " + value);
+}
+
 //private
 //#ifndef __ANDROID__
 void App::doImGui()
@@ -155,8 +162,6 @@ void App::doImGui()
     ImGui_ImplSdlGL3_NewFrame(m_window.m_window);
 
     ImGui::Begin("Stats:");
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    ImGui::NewLine();
     static bool vsync = true;
     bool lastSync = vsync;
     ImGui::Checkbox("Vsync", &vsync);
@@ -164,6 +169,15 @@ void App::doImGui()
     {
         m_window.setVsyncEnabled(vsync);
     }
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+    //print any debug lines
+    ImGui::NewLine();
+    for (const auto& p : m_debugLines)
+    {
+        ImGui::Text(p.c_str());
+    }
+
     ImGui::End();
 }
 //#endif

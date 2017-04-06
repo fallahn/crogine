@@ -48,6 +48,10 @@ namespace cro
         */
         explicit MeshRenderer(Entity camera);
 
+        /*!
+        \brief Automatically executed once per fram by the ECS.
+        Performs culling and sorting of entities
+        */
         void process(Time) override;
 
         /*!
@@ -55,9 +59,17 @@ namespace cro
         */
         void render();
 
+        /*!
+        \brief Sets the active camera used when drawing the scene.
+        \returns Entity with previous camera attached to it.
+        */
+        Entity setActiveCamera(Entity camera);
+
     private:
 
         Entity m_activeCamera;
+
+        std::vector<Entity> m_visibleEntities;
 
         uint32 m_currentTextureUnit;
         void applyProperties(const Material::PropertyList&);
