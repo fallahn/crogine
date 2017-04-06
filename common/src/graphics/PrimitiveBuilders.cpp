@@ -87,7 +87,7 @@ Mesh::Data QuadBuilder::build() const
     meshData.indexData[0].primitiveType = meshData.primitiveType;
     meshData.indexData[0].indexCount = static_cast<uint32>(idxData.size());
 
-    createIBO(meshData, idxData.data(), 0);
+    createIBO(meshData, idxData.data(), 0, sizeof(uint8));
 
     //spatial bounds
     meshData.boundingBox[0] = { -halfSizeX, halfSizeY, -0.01f };
@@ -149,7 +149,7 @@ Mesh::Data CubeBuilder::build() const
 
 
     //index arrays
-    std::array<uint8, 36u> idxData =
+    std::array<uint16, 36u> idxData =
     { {
             0, 1, 2, 1, 3, 2,
             4, 5, 6, 5, 7, 6,
@@ -159,11 +159,11 @@ Mesh::Data CubeBuilder::build() const
             20, 21, 22, 21, 23, 22
         } };
     meshData.submeshCount = 1;
-    meshData.indexData[0].format = GL_UNSIGNED_BYTE;
+    meshData.indexData[0].format = GL_UNSIGNED_SHORT;
     meshData.indexData[0].primitiveType = meshData.primitiveType;
     meshData.indexData[0].indexCount = static_cast<uint32>(idxData.size());
 
-    createIBO(meshData, idxData.data(), 0);
+    createIBO(meshData, idxData.data(), 0, sizeof(uint16));
     
     meshData.boundingBox[0] = { -0.5f, -0.5f, -0.5f };
     meshData.boundingBox[1] = { 0.5f, 0.5f, 0.5f };
@@ -217,7 +217,7 @@ Mesh::Data SphereBuilder::build() const
             vertexData.emplace_back(vert.z);
 
             //because we're on a grid the tan points to
-            // the next vertex position - unless we're
+            //the next vertex position - unless we're
             //at the end of a line
             glm::vec3 tan;
             if (i % (m_resolution + 1) == (m_resolution))
@@ -305,9 +305,9 @@ Mesh::Data SphereBuilder::build() const
     meshData.submeshCount = 1;
     meshData.indexData[0].format = GL_UNSIGNED_SHORT;
     meshData.indexData[0].primitiveType = meshData.primitiveType;
-    meshData.indexData[0].indexCount = static_cast<uint32>(indices.size() * sizeof(uint16));
+    meshData.indexData[0].indexCount = static_cast<uint32>(indices.size());
 
-    createIBO(meshData, indices.data(), 0);
+    createIBO(meshData, indices.data(), 0, sizeof(uint16));
 
     meshData.boundingBox[0] = { -m_radius, -m_radius, -m_radius };
     meshData.boundingBox[1] = { m_radius, m_radius, m_radius };

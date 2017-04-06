@@ -74,7 +74,7 @@ namespace cro
 
         static std::size_t getVertexSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib);
         static void createVBO(Mesh::Data& meshData, const std::vector<float>& vertexData);
-        static void createIBO(Mesh::Data& meshData, void* idxData, std::size_t idx);
+        static void createIBO(Mesh::Data& meshData, void* idxData, std::size_t idx, int32 dataSize);
     };
 }
 
