@@ -55,6 +55,8 @@ namespace cro
             WorldView,
             Projection,
             WorldViewProjection,
+            Normal,
+            Camera,
             Total
         };
         

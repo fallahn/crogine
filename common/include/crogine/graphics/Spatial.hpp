@@ -54,9 +54,21 @@ namespace cro
 
     namespace Spatial
     {
+        /*!
+        \brief Returns the distance between a plane and a point
+        */
         float CRO_EXPORT_API distance(Plane plane, glm::vec3 point);
-        
+        /*!
+        \brief Checks for planer intersection with a sphere.
+        \returns Planar::Front if the sphere is in front of the plane (positive to plane normal),
+        Planar::Intersects when intersecting or Planar::Back if it behind the plane.
+        */
         Planar CRO_EXPORT_API intersects(Plane plane, Sphere sphere);
+        /*!
+        \brief Checks for planar intersection with a bounding box.
+        \returns Planar::Front if the box is on the positive side (pointed to by plane
+        normal), Planar::Intersects when intersecting or Planar::Back
+        */
         Planar CRO_EXPORT_API intersects(Plane plane, Box box);
 
     }

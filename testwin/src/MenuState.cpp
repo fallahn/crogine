@@ -92,18 +92,16 @@ void MenuState::loadAssets()
     //load shader and material here
     auto& shader = m_shaderResource.get(0); //falls back to default
     auto& material = m_materialResource.add(0, shader);
-    material.setProperty("u_colour", cro::Colour(0.4f, 1.f, 0.6f, 1.f));
 
     m_textureResource.setFallbackColour(cro::Colour(1.f, 1.f, 1.f));
     auto& tex = m_textureResource.get("assets/test.png");
-    material.setProperty("u_texture", tex);
+    material.setProperty("u_diffuseMap", tex);
     auto& otherTex = m_textureResource.get("assets/blort.jpg");
     otherTex.setSmooth(true);
-    material.setProperty("u_otherTexture", otherTex);
+    //material.setProperty("u_normalMap", otherTex);
 
     auto& ballMat = m_materialResource.add(1, shader);
-    ballMat.setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
-    ballMat.setProperty("u_texture", m_textureResource.get("assets/sphere_test.png"));
+    ballMat.setProperty("u_diffuseMap", m_textureResource.get("assets/sphere_test.png"));
 
     //test the mesh builders
     cro::CubeBuilder cb;

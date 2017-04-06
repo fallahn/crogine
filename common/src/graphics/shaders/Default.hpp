@@ -40,38 +40,87 @@ namespace cro
         {
             const static std::string Vertex = R"(
                 attribute vec3 a_position;
+                attribute vec3 a_colour;
                 attribute vec3 a_normal;
                 attribute vec3 a_tangent;
                 attribute vec3 a_bitangent;
                 attribute vec2 a_texCoord0;
+                attribute vec2 a_texCoord1;
 
-                uniform mat4 u_projectionMatrix;
+                uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;
+                uniform mat3 u_normalMatrix;                
+                uniform mat4 u_projectionMatrix;
+                
+                varying vec3 v_worldPosition;
+                varying vec3 v_colour;
+                varying vec3 v_normalVector;
+                varying vec2 v_texCoord0;
+                varying vec2 v_texCoord1;
 
-                varying vec2 v_texCoord;
 
                 void main()
                 {
                     mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
                     gl_Position = wvp * vec4(a_position, 1.0);
-                    //gl_Position = vec4(a_position, 1.0);
 
-                    v_texCoord = a_texCoord0;
+                    v_worldPosition = (u_worldMatrix * vec4(a_position, 1.0)).xyz;
+
+                    v_colour = a_colour;
+                    v_normalVector = u_normalMatrix * a_normal;
+
+                    v_texCoord0 = a_texCoord0;
+                    v_texCoord1 = a_texCoord1;
+
                 })";
 
             const static std::string Fragment = R"(
-                uniform vec4 u_colour;// = vec4(1.0);
-                uniform sampler2D u_texture;
-                uniform sampler2D u_otherTexture;
 
-                varying vec2 v_texCoord;
+                uniform sampler2D u_diffuseMap;
+                uniform sampler2D u_normalMap;
+                uniform sampler2D u_maskMap;
+                uniform sampler2D u_lightMap;
+
+                uniform vec3 u_cameraWorldPosition;
+
+                varying vec3 v_worldPosition;
+                varying vec3 v_colour;
+                varying vec3 v_normalVector;
+                varying vec2 v_texCoord0;
+                varying vec2 v_texCoord1;
                 
+                vec3 lightDir = vec3(0.1, -0.8, -0.2);
+
+                vec3 diffuseColour;
+                vec3 eyeDirection;
+                vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
+                {
+                    float diffuseAmount = max(dot(normal, lightDirection), 0.0);
+                    //diffuseAmount = pow((diffuseAmount * 0.5) + 5.0, 2.0);
+                    vec3 mixedColour = diffuseColour * lightDiffuse * diffuseAmount * falloff;
+
+                    vec3 halfVec = normalize(eyeDirection + lightDirection);
+                    float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
+                    vec3 specularColour = lightSpecular * vec3(pow(specularAngle, 255.0)) * falloff;
+
+                    return mixedColour + specularColour;
+                }
+
                 void main()
                 {
-                    gl_FragColor = vec4(v_texCoord.x, v_texCoord.y, 1.0, 1.0);
-                    gl_FragColor *= u_colour;
-                    gl_FragColor *= texture2D(u_texture, v_texCoord);
-                    gl_FragColor *= texture2D(u_otherTexture, v_texCoord);
+                    vec3 normal = normalize(v_normalVector);
+                    vec4 diffuse = texture2D(u_diffuseMap, v_texCoord0);
+                    diffuseColour = diffuse.rgb;
+                    vec3 blendedColour = diffuse.rgb * 0.2; //ambience
+                    eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+
+                    blendedColour += calcLighting(normal, normalize(-lightDir), vec3(0.18), vec3(1.0), 1.0);
+                    gl_FragColor.rgb = blendedColour;
+
+                    //gl_FragColor = vec4(v_texCoord0.x, v_texCoord0.y, 1.0, 1.0);
+                    //gl_FragColor.rgb *= v_normalVector;
+                    //gl_FragColor *= texture2D(u_diffuseMap, v_texCoord0);
+                    //gl_FragColor *= texture2D(u_normalMap, v_texCoord0);
                 })";
         }
     }

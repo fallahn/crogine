@@ -74,13 +74,21 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
         {
             data.uniforms[Material::WorldView] = uniform.second;
         }
-        else if (uniform.first == "u_projectionMatrix") //TODO move this to uniform buffer
+        else if (uniform.first == "u_projectionMatrix")
         {
             data.uniforms[Material::Projection] = uniform.second;
         }
         else if (uniform.first == "u_worldViewProjectionMatrix")
         {
             data.uniforms[Material::WorldViewProjection] = uniform.second;
+        }
+        else if (uniform.first == "u_normalMatrix")
+        {
+            data.uniforms[Material::Normal] = uniform.second;
+        }
+        else if (uniform.first == "u_cameraWorldPosition")
+        {
+            data.uniforms[Material::Camera] = uniform.second;
         }
         else
         {

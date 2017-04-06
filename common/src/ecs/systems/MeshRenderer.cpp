@@ -42,6 +42,7 @@ source distribution.
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 
 using namespace cro;
 
@@ -135,9 +136,9 @@ void MeshRenderer::process(cro::Time)
 
         bool visible = true;
         std::size_t i = 0;
-        while(visible && i++ < (frustum.size() - 1))
+        while(visible && i < frustum.size())
         {
-            visible = (Spatial::intersects(frustum[i], sphere) != Planar::Back);
+            visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
         }
 
         if (visible)
@@ -159,13 +160,17 @@ void MeshRenderer::render()
     
     
     auto& ents = getEntities(); //we need this list for world transforms - not the culled list
+    auto cameraPosition = glm::vec3(m_activeCamera.getComponent<Transform>().getWorldTransform(ents)[3]);
     auto viewMat = glm::inverse(m_activeCamera.getComponent<Transform>().getWorldTransform(ents));
+    auto projMat = m_activeCamera.getComponent<Camera>().projection;
+
     //TODO use draw list instead of drawing all ents
     for (auto& e : m_visibleEntities)
     {
         //calc entity transform
         const auto& tx = e.getComponent<Transform>();
-        glm::mat4 worldView = viewMat * tx.getWorldTransform(ents);
+        glm::mat4 worldMat = tx.getWorldTransform(ents);
+        glm::mat4 worldView = viewMat * worldMat;
 
         //foreach submesh / material:
         const auto& model = e.getComponent<Model>();
@@ -178,8 +183,11 @@ void MeshRenderer::render()
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
             applyProperties(model.m_materials[i].properties);
 
-            //apply uniform buffers
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(m_activeCamera.getComponent<Camera>().projection)));
+            //apply standard uniforms
+            glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(projMat)));
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
+            glCheck(glUniformMatrix3fv(model.m_materials[i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
 
             //bind winding/cullface/depthfunc
 
