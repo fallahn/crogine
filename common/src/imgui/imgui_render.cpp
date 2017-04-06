@@ -8,6 +8,7 @@
 
 #include "imgui.h"
 #include "imgui_render.h"
+#include "../glad/GLCheck.hpp"
 
 // SDL
 #include <SDL.h>
@@ -208,14 +209,20 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
     glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
 
+#ifdef __ANDROID__
+#define VERSION "#version 100\n"
+#else
+#define VERSION "#version 130\n"
+#endif
+
     const GLchar *vertex_shader =
-        "#version 330\n"
+        VERSION
         "uniform mat4 ProjMtx;\n"
-        "in vec2 Position;\n"
-        "in vec2 UV;\n"
-        "in vec4 Color;\n"
-        "out vec2 Frag_UV;\n"
-        "out vec4 Frag_Color;\n"
+        "attribute vec2 Position;\n"
+        "attribute vec2 UV;\n"
+        "attribute vec4 Color;\n"
+        "varying vec2 Frag_UV;\n"
+        "varying vec4 Frag_Color;\n"
         "void main()\n"
         "{\n"
         "	Frag_UV = UV;\n"
@@ -224,20 +231,20 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
         "}\n";
 
     const GLchar* fragment_shader =
-        "#version 330\n"
+        VERSION
         "uniform sampler2D Texture;\n"
-        "in vec2 Frag_UV;\n"
-        "in vec4 Frag_Color;\n"
-        "out vec4 Out_Color;\n"
+        "varying vec2 Frag_UV;\n"
+        "varying vec4 Frag_Color;\n"
+
         "void main()\n"
         "{\n"
-        "	Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
+        "	gl_FragColor = Frag_Color * texture2D(Texture, Frag_UV.st);\n"
         "}\n";
 
     g_ShaderHandle = glCreateProgram();
-    g_VertHandle = glCreateShader(GL_VERTEX_SHADER);
+    glCheck(g_VertHandle = glCreateShader(GL_VERTEX_SHADER));
     g_FragHandle = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(g_VertHandle, 1, &vertex_shader, 0);
+    glCheck(glShaderSource(g_VertHandle, 1, &vertex_shader, 0));
     glShaderSource(g_FragHandle, 1, &fragment_shader, 0);
     glCompileShader(g_VertHandle);
     glCompileShader(g_FragHandle);
@@ -245,7 +252,7 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
     glAttachShader(g_ShaderHandle, g_FragHandle);
     glLinkProgram(g_ShaderHandle);
 
-    g_AttribLocationTex = glGetUniformLocation(g_ShaderHandle, "Texture");
+    glCheck(g_AttribLocationTex = glGetUniformLocation(g_ShaderHandle, "Texture"));
     g_AttribLocationProjMtx = glGetUniformLocation(g_ShaderHandle, "ProjMtx");
     g_AttribLocationPosition = glGetAttribLocation(g_ShaderHandle, "Position");
     g_AttribLocationUV = glGetAttribLocation(g_ShaderHandle, "UV");
@@ -268,6 +275,10 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
 #undef OFFSETOF
 
     ImGui_ImplSdlGL3_CreateFontsTexture();
+
+    //glDisableVertexAttribArray(g_AttribLocationPosition);
+    //glDisableVertexAttribArray(g_AttribLocationUV);
+    //glDisableVertexAttribArray(g_AttribLocationColor);
 
     // Restore modified GL state
     glBindTexture(GL_TEXTURE_2D, last_texture);
