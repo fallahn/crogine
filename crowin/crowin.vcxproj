@@ -69,6 +69,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\ShaderResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Spatial.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\SphereBuilder.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\StaticMeshBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\TextureResource.hpp" />
     <ClInclude Include="..\common\src\glad\GLCheck.hpp" />

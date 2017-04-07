@@ -47,7 +47,7 @@ namespace cro
         is 4*4 per side, 6 sides = 96 quads for 192 triangles. Higher
         numbers result in a smoother mesh but increased triangle count.
         */
-        explicit SphereBuilder(float radius = 0.5f, std::size_t resolution = 4);
+        SphereBuilder(float radius = 0.5f, std::size_t resolution = 4);
 
     private:
         float m_radius;
