@@ -7,7 +7,15 @@
     <AndroidDeviceID>TA930045X3;falcon_retgb</AndroidDeviceID>
     <DebuggerFlavor>AndroidDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tools|ARM'">
+    <AndroidDeviceID>TA930045X3;falcon_retgb</AndroidDeviceID>
+    <DebuggerFlavor>AndroidDebugger</DebuggerFlavor>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <AndroidDeviceID>TA930045X3;falcon_retgb</AndroidDeviceID>
+    <DebuggerFlavor>AndroidDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|ARM'">
     <AndroidDeviceID>TA930045X3;falcon_retgb</AndroidDeviceID>
     <DebuggerFlavor>AndroidDebugger</DebuggerFlavor>
   </PropertyGroup>
