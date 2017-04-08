@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/SphereBuilder.hpp>
+#include <crogine/graphics/StaticMeshBuilder.hpp>
 
 namespace
 {
@@ -60,7 +61,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
     createScene();
     //TODO quit load screen
 
-    context.appInstance.setClearColour(cro::Colour::Red());
+    context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
 }
 
 //public
@@ -114,6 +115,9 @@ void MenuState::loadAssets()
 
     cro::SphereBuilder sb(0.3f, 6);
     m_meshResource.loadMesh(sb, cro::Mesh::SphereMesh);
+
+    cro::StaticMeshBuilder smb("assets/beeble.cmf");
+    m_meshResource.loadMesh(smb, cro::Mesh::Count);
 }
 
 void MenuState::createScene()
@@ -140,7 +144,8 @@ void MenuState::createScene()
     ent = m_scene.createEntity();
     auto& tx3 = ent.addComponent<cro::Transform>();
     tx3.move({ 0.f, 0.f, -3.f });
-    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(1));
+
+    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Count), m_materialResource.get(1));
     auto& r2 = ent.addComponent<Rotator>();
     r2.speed = -0.67f;
     r2.axis.x = 0.141f;

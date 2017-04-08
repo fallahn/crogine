@@ -29,17 +29,163 @@ source distribution.
 
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 
+#include <glm/geometric.hpp>
+
+#include "../glad/glad.h"
+
 using namespace cro;
 
 StaticMeshBuilder::StaticMeshBuilder(const std::string& path)
-    : m_path(path)
+    : m_path    (path),
+    m_file      (nullptr)
 {
 
 
 }
 
+StaticMeshBuilder::~StaticMeshBuilder()
+{
+    //we're using fopen for android's sake
+    if (m_file)
+    {
+        fclose(m_file);
+    }
+}
+
 //private
 Mesh::Data StaticMeshBuilder::build() const
 {
+    m_file = fopen(m_path.c_str(), "rb");
+    if (m_file)
+    {
+        uint8 flags, arrayCount;
+        auto readCount = fread(&flags, sizeof(uint8), 1, m_file);
+        if (checkError(readCount)) return {};
+        readCount = fread(&arrayCount, sizeof(uint8), 1, m_file);
+        if (checkError(readCount)) return {};
+
+        std::vector<int32> indexOffsets(arrayCount);
+        std::vector<int32> indexSizes(arrayCount);
+        readCount = fread(indexOffsets.data(), sizeof(int32), arrayCount, m_file);
+        if (checkError(readCount)) return {};
+        readCount = fread(indexSizes.data(), sizeof(int32), arrayCount, m_file);
+        if (checkError(readCount)) return {};
+
+        std::size_t headerSize = sizeof(flags) + sizeof(arrayCount) +
+            ((sizeof(int32) * arrayCount) * 2);
+
+        std::size_t vboSize = (indexOffsets[0] - headerSize) / sizeof(float);
+        std::vector<float> vboData(vboSize);
+        readCount = fread(vboData.data(), sizeof(float), vboSize, m_file);
+        if (checkError(readCount)) return {};
+
+        std::vector<std::vector<uint32>> indexArrays(arrayCount);
+        for (auto i = 0; i < arrayCount; ++i)
+        {
+            indexArrays[i].resize(indexSizes[i]);
+            readCount = fread(indexArrays[i].data(), sizeof(uint32), indexSizes[i], m_file);
+            if (checkError(readCount)) return {};
+        }
+
+        fclose(m_file);
+
+        CRO_ASSERT(flags && (flags & (1 << Mesh::Position)), "Invalid flag value");
+
+        Mesh::Data meshData;
+        meshData.attributes[Mesh::Position] = 3;
+        if (flags & (1 << Mesh::Colour))
+        {
+            meshData.attributes[Mesh::Colour] = 3;
+        }
+
+        meshData.attributes[Mesh::Normal] = 3;
+
+        if (flags & ((1 << Mesh::Tangent) | (1 << Mesh::Bitangent)))
+        {
+            meshData.attributes[Mesh::Tangent] = 3;
+            meshData.attributes[Mesh::Bitangent] = 3;
+        }
+
+        if (flags & (1 << Mesh::UV0))
+        {
+            meshData.attributes[Mesh::UV0] = 2;
+        }
+        if (flags & (1 << Mesh::UV1))
+        {
+            meshData.attributes[Mesh::UV1] = 2;
+        }
+
+        meshData.primitiveType = GL_TRIANGLES;       
+        meshData.vertexSize = getVertexSize(meshData.attributes);
+        meshData.vertexCount = vboData.size() / meshData.vertexSize;
+        createVBO(meshData, vboData);
+
+        meshData.submeshCount = arrayCount;
+        for (auto i = 0; i < arrayCount; ++i)
+        {
+            meshData.indexData[i].format = GL_UNSIGNED_INT;
+            meshData.indexData[i].primitiveType = meshData.primitiveType;
+            meshData.indexData[i].indexCount = static_cast<uint32>(indexArrays[i].size());
+
+            createIBO(meshData, indexArrays[i].data(), i, sizeof(uint32));
+        }
+
+        //boundingbox / sphere
+        for (auto i = 0; i < vboData.size(); i += meshData.vertexSize)
+        {
+            //min point
+            if (meshData.boundingBox[0].x > vboData[i])
+            {
+                meshData.boundingBox[0].x = vboData[i];
+            }
+            if (meshData.boundingBox[0].y > vboData[i+1])
+            {
+                meshData.boundingBox[0].y = vboData[i+1];
+            }
+            if (meshData.boundingBox[0].z > vboData[i+2])
+            {
+                meshData.boundingBox[0].z = vboData[i+2];
+            }
+
+            //maxpoint
+            if (meshData.boundingBox[1].x < vboData[i])
+            {
+                meshData.boundingBox[1].x = vboData[i];
+            }
+            if (meshData.boundingBox[1].y < vboData[i + 1])
+            {
+                meshData.boundingBox[1].y = vboData[i + 1];
+            }
+            if (meshData.boundingBox[1].z < vboData[i + 2])
+            {
+                meshData.boundingBox[1].z = vboData[i + 2];
+            }
+        }
+        auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;
+        meshData.boundingSphere.centre = meshData.boundingBox[0] + rad;
+        meshData.boundingSphere.radius = glm::length(rad);
+
+        return meshData;
+    }
+   
     return {};
+}
+
+bool StaticMeshBuilder::checkError(size_t readCount) const
+{
+    if (readCount == 0 && feof(m_file))
+    {
+        Logger::log(m_path + ": Unexpected End of File", Logger::Type::Error);
+        fclose(m_file);
+        m_file = nullptr;
+        return true;
+    }
+    else if (ferror(m_file))
+    {
+        Logger::log(m_path + ": Error Reading File", Logger::Type::Error);
+        fclose(m_file);
+        m_file = nullptr;
+        return true;
+    }
+    return false;
 }

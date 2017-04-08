@@ -77,7 +77,7 @@ namespace cro
     Be Aware: binary files are little endian (intel) by default.
 
     */
-    class StaticMeshBuilder final : public MeshBuilder
+    class CRO_EXPORT_API StaticMeshBuilder final : public MeshBuilder
     {
     public:
         /*!
@@ -86,9 +86,14 @@ namespace cro
         */
         explicit StaticMeshBuilder(const std::string& path);
 
+        ~StaticMeshBuilder();
+
     private:
         std::string m_path;
+        mutable FILE* m_file;
         Mesh::Data build() const override;
+
+        bool checkError(size_t readCount) const;
     };
 }
 

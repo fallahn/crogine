@@ -95,7 +95,7 @@ namespace ModelConverter
 
         private void processOutput(string output, Assimp.Mesh mesh)
         {
-            const int Position = 0;
+            const int Position = 0; //NOTE this must match the Mesh::Attribute enum of cro
             const int Colour = 1;
             const int Normal = 2;
             const int Tangent = 3;
