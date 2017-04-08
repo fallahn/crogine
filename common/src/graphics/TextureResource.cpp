@@ -33,7 +33,7 @@ source distribution.
 using namespace cro;
 
 TextureResource::TextureResource()
-    : m_fallbackColour(Colour::Magenta)
+    : m_fallbackColour(Colour::Magenta())
 {
 
 }

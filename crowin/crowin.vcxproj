@@ -80,6 +80,7 @@
     <ClInclude Include="..\common\src\imgui\imgui_internal.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\common\src\android\Android.cpp" />
     <ClCompile Include="..\common\src\App.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
@@ -100,6 +101,7 @@
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Spatial.cpp" />
+    <ClCompile Include="..\common\src\graphics\StaticMeshBuilder.cpp" />
     <ClCompile Include="..\common\src\graphics\Texture.cpp" />
     <ClCompile Include="..\common\src\graphics\TextureResource.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui.cpp" />

@@ -59,6 +59,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
     //create some entities
     createScene();
     //TODO quit load screen
+
+    context.appInstance.setClearColour(cro::Colour::Red());
 }
 
 //public

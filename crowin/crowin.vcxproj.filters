@@ -64,6 +64,9 @@
     <Filter Include="Header Files\imgui">
       <UniqueIdentifier>{6866406d-a139-4549-b3d0-999a295ecf2d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\android">
+      <UniqueIdentifier>{7001eb83-a98a-4678-ae0a-001b40357845}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\Config.hpp">
@@ -292,6 +295,12 @@
     </ClCompile>
     <ClCompile Include="..\common\src\graphics\Spatial.cpp">
       <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\StaticMeshBuilder.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\android\Android.cpp">
+      <Filter>Source Files\android</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

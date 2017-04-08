@@ -27,43 +27,19 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifdef __ANDROID__
-//implement missing stl functions on android
+#include <crogine/graphics/StaticMeshBuilder.hpp>
 
-#ifndef CRO_ANDROID_HPP_
-#define CRO_ANDROID_HPP_
+using namespace cro;
 
-#include <string>
-#include <sstream>
-namespace std
+StaticMeshBuilder::StaticMeshBuilder(const std::string& path)
+    : m_path(path)
 {
-	template <typename T>
-	std::string to_string(T value)
-	{
-		std::ostringstream os;
-		os << value;
-		return os.str();
-	}
+
+
 }
 
-//no iostreams for apk so override fopen
-
-#include <stdio.h>
-#include <android/asset_manager.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-
-    void android_fopen_set_asset_manager(AAssetManager* manager);
-    FILE* android_fopen(const char* fname, const char* mode);
-
-#define fopen(name, mode) android_fopen(name, mode)
-
-#ifdef __cplusplus
+//private
+Mesh::Data StaticMeshBuilder::build() const
+{
+    return {};
 }
-#endif //__cplusplus
-
-#endif //CRO_ANDROID_HPP_
-
-#endif //__ANDROID__
