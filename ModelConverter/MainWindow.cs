@@ -8,6 +8,8 @@ namespace ModelConverter
 {
     public partial class ModelConverter : Form
     {
+        private const int maxMaterials = 32;
+        
         //ctor
         public ModelConverter()
         {
@@ -54,7 +56,12 @@ namespace ModelConverter
             Assimp.AssimpContext importer = new Assimp.AssimpContext();
             importer.SetConfig(new NormalSmoothingAngleConfig(66f));
             //TODO check which other post processes we need
-            m_scene = importer.ImportFile(path, Assimp.PostProcessSteps.CalculateTangentSpace);
+            m_scene = importer.ImportFile(path, 
+                Assimp.PostProcessSteps.CalculateTangentSpace 
+                | Assimp.PostProcessSteps.GenerateNormals 
+                | Assimp.PostProcessSteps.Triangulate
+                | Assimp.PostProcessSteps.JoinIdenticalVertices
+                | Assimp.PostProcessSteps.OptimizeMeshes);
 
             //failed loading :(
             if (!m_scene.HasMeshes)
@@ -64,16 +71,32 @@ namespace ModelConverter
             }
 
             //display some info
-            string msg = "Mesh Count: " + m_scene.MeshCount.ToString();
+            string msg = "Mesh Count: " + m_scene.MeshCount.ToString()
+                + Environment.NewLine + "Material count: " + m_scene.MaterialCount.ToString()
+                + " (Maximum material count is 32)";
 
             showGroupBoxMessage(msg);
+
+            buttonSave.Enabled = (m_scene.MeshCount > 0 && m_scene.MaterialCount <= maxMaterials);
 
             return true;
         }
 
         private void outputFile(string name)
         {
-            labelInfo.Text = "Processing...";
+            textBoxInfo.Text = "Processing...";
+
+            //TODO
+            /*
+             * Apparently assimp creates one or more meshes for each material
+             * The meshes should be sorted by material type and joinded into 
+             * a single VBO. Each time a new material type is encountered the current
+             * VBO size should be kept as the material index offset.
+             * Then, for each material, an index array created adding the index
+             * offset to each value. A material list can be added to the header
+             * to correctly map materials to a mesh.
+            */
+
 
             if (m_scene.MeshCount == 1)
             {
@@ -90,7 +113,7 @@ namespace ModelConverter
                 }
             }
 
-            labelInfo.Text += "\n\nDone!";
+            textBoxInfo.Text += "\n\nDone!";
         }
 
         private void processOutput(string output, Assimp.Mesh mesh)
@@ -107,7 +130,7 @@ namespace ModelConverter
             //append any messages to info label
             if (!mesh.HasVertices)
             {
-                labelInfo.Text += "\nNo vertex positions found. File not written.";
+                textBoxInfo.Text += "\nNo vertex positions found. File not written.";
                 return;
             }
             if(mesh.HasVertexColors(0))
@@ -117,12 +140,12 @@ namespace ModelConverter
 
             if (!mesh.HasNormals)
             {
-                labelInfo.Text += "\nNo normals found. File not written.";
+                textBoxInfo.Text += "\nNo normals found. File not written.";
                 return;
             }
             if(!mesh.HasTangentBasis)
             {
-                labelInfo.Text += "\nMesh tangents were missing...";
+                textBoxInfo.Text += "\nMesh tangents were missing...";
             }
             else
             {
@@ -131,7 +154,7 @@ namespace ModelConverter
 
             if (!mesh.HasTextureCoords(0))
             {
-                labelInfo.Text += "\nPrimary texture coords are missing, textures will appear undefined.";
+                textBoxInfo.Text += "\nPrimary texture coords are missing, textures will appear undefined.";
             }
             else
             {
@@ -139,13 +162,13 @@ namespace ModelConverter
             }
             if (!mesh.HasTextureCoords(1))
             {
-                labelInfo.Text += "\nSecondary texture coords are missing,\n\tlightmapping will be unavailable for this mesh.";
+                textBoxInfo.Text += "\nSecondary texture coords are missing,\n\tlightmapping will be unavailable for this mesh.";
             }
             else
             {
                 flags |= (1 << UV1);
             }
-            //labelInfo.Text += "\n" + flags.ToString();
+            //textBoxInfo.Text += "\n" + flags.ToString();
 
             // cmf FILE FORMAT
             /* HEADER
@@ -209,12 +232,19 @@ namespace ModelConverter
                 }
             }
 
-            var indexArray = mesh.GetUnsignedIndices();
+            //var indexArray = mesh.GetUnsignedIndices();
+            //mesh.
+
+            List<int> indexArray = new List<int>();
+            for(var i = 0; i < mesh.FaceCount; ++i)
+            {
+                indexArray.AddRange(mesh.Faces[i].Indices);
+            }
 
             byte arrayCount = 1;
             int arrayOffset = (sizeof(int) * 2) + 2; //(array offset + array size) + array count + flags
             arrayOffset += (vboData.Count * sizeof(float));
-            int arraySize = indexArray.Length * sizeof(uint);
+            int arraySize = indexArray.Count * sizeof(uint);
 
             using (BinaryWriter writer = new BinaryWriter(File.Open(output, FileMode.Create)))
             {
@@ -239,7 +269,7 @@ namespace ModelConverter
             //Label l = new Label();
             //l.Text = msg;
             //groupBoxInfo.Controls.Add(l);
-            labelInfo.Text = msg;
+            textBoxInfo.Text = msg;
         }
     }
 }

@@ -65,6 +65,6 @@ source distribution.
 //    if (!asset) return NULL;
 //
 //    return funopen(asset, android_read, android_write, android_seek, android_close);
-}
+//}
 
 #endif //__ANDROID__

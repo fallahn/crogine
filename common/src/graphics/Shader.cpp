@@ -287,8 +287,7 @@ void Shader::resetUniformMap()
 
 std::string Shader::parseFile(const std::string& file)
 {
-    /*NOTE this won't work on android when trying to read resources frm the apk*/
-    /*It may be better to embed shader code in a header file as a raw string instead*/
+    /*NOTE Remember to use SDL_RWops when opening files*/
 
     std::string retVal;
     retVal.reserve(1000);

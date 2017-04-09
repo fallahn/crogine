@@ -32,7 +32,7 @@
             this.buttonOpen = new System.Windows.Forms.Button();
             this.buttonSave = new System.Windows.Forms.Button();
             this.groupBoxInfo = new System.Windows.Forms.GroupBox();
-            this.labelInfo = new System.Windows.Forms.Label();
+            this.textBoxInfo = new System.Windows.Forms.TextBox();
             this.groupBoxInfo.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -66,7 +66,7 @@
             // 
             // groupBoxInfo
             // 
-            this.groupBoxInfo.Controls.Add(this.labelInfo);
+            this.groupBoxInfo.Controls.Add(this.textBoxInfo);
             this.groupBoxInfo.Location = new System.Drawing.Point(13, 39);
             this.groupBoxInfo.Name = "groupBoxInfo";
             this.groupBoxInfo.Size = new System.Drawing.Size(374, 199);
@@ -74,14 +74,15 @@
             this.groupBoxInfo.TabStop = false;
             this.groupBoxInfo.Text = "Info";
             // 
-            // labelInfo
+            // textBoxInfo
             // 
-            this.labelInfo.AutoSize = true;
-            this.labelInfo.Location = new System.Drawing.Point(19, 27);
-            this.labelInfo.Name = "labelInfo";
-            this.labelInfo.Size = new System.Drawing.Size(81, 13);
-            this.labelInfo.TabIndex = 0;
-            this.labelInfo.Text = "No File Opened";
+            this.textBoxInfo.Location = new System.Drawing.Point(7, 20);
+            this.textBoxInfo.Multiline = true;
+            this.textBoxInfo.Name = "textBoxInfo";
+            this.textBoxInfo.ReadOnly = true;
+            this.textBoxInfo.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBoxInfo.Size = new System.Drawing.Size(361, 173);
+            this.textBoxInfo.TabIndex = 0;
             // 
             // ModelConverter
             // 
@@ -107,7 +108,7 @@
         private System.Windows.Forms.Button buttonOpen;
         private System.Windows.Forms.Button buttonSave;
         private System.Windows.Forms.GroupBox groupBoxInfo;
-        private System.Windows.Forms.Label labelInfo;
+        private System.Windows.Forms.TextBox textBoxInfo;
     }
 }
 

@@ -82,8 +82,8 @@ Mesh::Data StaticMeshBuilder::build() const
         std::vector<std::vector<uint32>> indexArrays(arrayCount);
         for (auto i = 0; i < arrayCount; ++i)
         {
-            indexArrays[i].resize(indexSizes[i]);
-            readCount = SDL_RWread(m_file, indexArrays[i].data(), sizeof(uint32), indexSizes[i]);
+            indexArrays[i].resize(indexSizes[i] / sizeof(uint32));
+            readCount = SDL_RWread(m_file, indexArrays[i].data(), sizeof(uint32), indexSizes[i] / sizeof(uint32));
             if (checkError(readCount)) return {};
         }
 
@@ -117,7 +117,7 @@ Mesh::Data StaticMeshBuilder::build() const
 
         meshData.primitiveType = GL_TRIANGLES;       
         meshData.vertexSize = getVertexSize(meshData.attributes);
-        meshData.vertexCount = vboData.size() / meshData.vertexSize;
+        meshData.vertexCount = vboData.size() / (meshData.vertexSize / sizeof(float));
         createVBO(meshData, vboData);
 
         meshData.submeshCount = arrayCount;
@@ -131,7 +131,7 @@ Mesh::Data StaticMeshBuilder::build() const
         }
 
         //boundingbox / sphere
-        for (auto i = 0; i < vboData.size(); i += meshData.vertexSize)
+        for (std::size_t i = 0; i < vboData.size(); i += meshData.vertexSize)
         {
             //min point
             if (meshData.boundingBox[0].x > vboData[i])
@@ -173,13 +173,13 @@ Mesh::Data StaticMeshBuilder::build() const
 
 bool StaticMeshBuilder::checkError(size_t readCount) const
 {
-    //if (readCount == 0 && feof(m_file))
-    //{
-    //    Logger::log(m_path + ": Unexpected End of File", Logger::Type::Error);
-    //    fclose(m_file);
-    //    m_file = nullptr;
-    //    return true;
-    //}
+    if (readCount == 0)
+    {
+        Logger::log(m_path + ": Unexpected End of File", Logger::Type::Error);
+        SDL_RWclose(m_file);
+        m_file = nullptr;
+        return true;
+    }
     //else if (ferror(m_file))
     //{
     //    Logger::log(m_path + ": Error Reading File", Logger::Type::Error);
