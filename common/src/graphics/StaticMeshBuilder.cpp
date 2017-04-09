@@ -48,27 +48,27 @@ StaticMeshBuilder::~StaticMeshBuilder()
     //we're using fopen for android's sake
     if (m_file)
     {
-        fclose(m_file);
+        SDL_RWclose(m_file);
     }
 }
 
 //private
 Mesh::Data StaticMeshBuilder::build() const
 {
-    m_file = fopen(m_path.c_str(), "rb");
+    auto m_file = SDL_RWFromFile(m_path.c_str(), "rb");
     if (m_file)
     {
         uint8 flags, arrayCount;
-        auto readCount = fread(&flags, sizeof(uint8), 1, m_file);
+        auto readCount = SDL_RWread(m_file,&flags, sizeof(uint8), 1);
         if (checkError(readCount)) return {};
-        readCount = fread(&arrayCount, sizeof(uint8), 1, m_file);
+        readCount = SDL_RWread(m_file, &arrayCount, sizeof(uint8), 1);
         if (checkError(readCount)) return {};
 
         std::vector<int32> indexOffsets(arrayCount);
         std::vector<int32> indexSizes(arrayCount);
-        readCount = fread(indexOffsets.data(), sizeof(int32), arrayCount, m_file);
+        readCount = SDL_RWread(m_file, indexOffsets.data(), sizeof(int32), arrayCount);
         if (checkError(readCount)) return {};
-        readCount = fread(indexSizes.data(), sizeof(int32), arrayCount, m_file);
+        readCount = SDL_RWread(m_file, indexSizes.data(), sizeof(int32), arrayCount);
         if (checkError(readCount)) return {};
 
         std::size_t headerSize = sizeof(flags) + sizeof(arrayCount) +
@@ -76,18 +76,18 @@ Mesh::Data StaticMeshBuilder::build() const
 
         std::size_t vboSize = (indexOffsets[0] - headerSize) / sizeof(float);
         std::vector<float> vboData(vboSize);
-        readCount = fread(vboData.data(), sizeof(float), vboSize, m_file);
+        readCount = SDL_RWread(m_file, vboData.data(), sizeof(float), vboSize);
         if (checkError(readCount)) return {};
 
         std::vector<std::vector<uint32>> indexArrays(arrayCount);
         for (auto i = 0; i < arrayCount; ++i)
         {
             indexArrays[i].resize(indexSizes[i]);
-            readCount = fread(indexArrays[i].data(), sizeof(uint32), indexSizes[i], m_file);
+            readCount = SDL_RWread(m_file, indexArrays[i].data(), sizeof(uint32), indexSizes[i]);
             if (checkError(readCount)) return {};
         }
 
-        fclose(m_file);
+        SDL_RWclose(m_file);
 
         CRO_ASSERT(flags && (flags & (1 << Mesh::Position)), "Invalid flag value");
 
@@ -173,19 +173,19 @@ Mesh::Data StaticMeshBuilder::build() const
 
 bool StaticMeshBuilder::checkError(size_t readCount) const
 {
-    if (readCount == 0 && feof(m_file))
-    {
-        Logger::log(m_path + ": Unexpected End of File", Logger::Type::Error);
-        fclose(m_file);
-        m_file = nullptr;
-        return true;
-    }
-    else if (ferror(m_file))
-    {
-        Logger::log(m_path + ": Error Reading File", Logger::Type::Error);
-        fclose(m_file);
-        m_file = nullptr;
-        return true;
-    }
+    //if (readCount == 0 && feof(m_file))
+    //{
+    //    Logger::log(m_path + ": Unexpected End of File", Logger::Type::Error);
+    //    fclose(m_file);
+    //    m_file = nullptr;
+    //    return true;
+    //}
+    //else if (ferror(m_file))
+    //{
+    //    Logger::log(m_path + ": Error Reading File", Logger::Type::Error);
+    //    fclose(m_file);
+    //    m_file = nullptr;
+    //    return true;
+    //}
     return false;
 }

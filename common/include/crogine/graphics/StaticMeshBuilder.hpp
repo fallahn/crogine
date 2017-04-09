@@ -32,6 +32,8 @@ source distribution.
 
 #include <crogine/graphics/MeshBuilder.hpp>
 
+#include <SDL_rwops.h>
+
 namespace cro
 {
     /*!
@@ -90,7 +92,7 @@ namespace cro
 
     private:
         std::string m_path;
-        mutable FILE* m_file;
+        mutable SDL_RWops* m_file;
         Mesh::Data build() const override;
 
         bool checkError(size_t readCount) const;

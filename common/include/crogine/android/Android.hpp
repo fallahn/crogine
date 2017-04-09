@@ -47,22 +47,22 @@ namespace std
 }
 
 //no iostreams for apk so override fopen
-
-#include <stdio.h>
-#include <android/asset_manager.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-
-    void android_fopen_set_asset_manager(AAssetManager* manager);
-    FILE* android_fopen(const char* fname, const char* mode);
-
-#define fopen(name, mode) android_fopen(name, mode)
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
+//FORGET THIS - USE SDL_RWops and let the magic happen...
+//#include <stdio.h>
+//#include <android/asset_manager.h>
+//
+//#ifdef __cplusplus
+//extern "C" {
+//#endif //__cplusplus
+//
+//    void android_fopen_set_asset_manager(AAssetManager* manager);
+//    FILE* android_fopen(const char* fname, const char* mode);
+//
+//#define fopen(name, mode) android_fopen(name, mode)
+//
+//#ifdef __cplusplus
+//}
+//#endif //__cplusplus
 
 #endif //CRO_ANDROID_HPP_
 

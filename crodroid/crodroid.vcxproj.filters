@@ -129,5 +129,8 @@
     <ClCompile Include="..\common\src\android\Android.cpp">
       <Filter>src\android</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\graphics\StaticMeshBuilder.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
