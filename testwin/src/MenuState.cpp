@@ -122,14 +122,14 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
-    auto material = m_materialResource.get(0);    
-    
+    auto material = m_materialResource.get(0);
+
     cro::Entity ent = m_scene.createEntity();
     auto& tx = ent.addComponent<cro::Transform>();
     tx.setPosition({ -1.2f, 0.1f, -4.6f });
-    tx.rotate({ 0.5f, 1.f, 0.3f }, 1.2f);
+    tx.rotate({ 0.5f, 1.f, 0.3f }, 0.6f);
     ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), material);
-    
+
 
     ent = m_scene.createEntity();
     auto& tx2 = ent.addComponent<cro::Transform>();
@@ -143,9 +143,11 @@ void MenuState::createScene()
 
     ent = m_scene.createEntity();
     auto& tx3 = ent.addComponent<cro::Transform>();
-    tx3.move({ 0.f, 0.f, -3.f });
+    tx3.move({ 0.f, 0.f, -13.f });
+    tx3.scale({ 0.5f, 0.5f, 0.5f });
 
-    ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Count), m_materialResource.get(1));
+    auto& model = ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Count), m_materialResource.get(1));
+    model.setMaterial(1, material);
     auto& r2 = ent.addComponent<Rotator>();
     r2.speed = -0.67f;
     r2.axis.x = 0.141f;

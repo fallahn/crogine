@@ -74,7 +74,7 @@ namespace cro
     (sizeof(int32) * array count)
 
     uint32[arraySizes[0]] array of uint32 values making up the first
-    index array - followed by any further index arrays (not yet used)
+    index array - followed by any further index arrays
 
     Be Aware: binary files are little endian (intel) by default.
 
