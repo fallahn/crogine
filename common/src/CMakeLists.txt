@@ -17,7 +17,8 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/components/Model.cpp
   ${PROJECT_DIR}/ecs/components/Transform.cpp
 
-  ${PROJECT_DIR}/ecs/systems/MeshRenderer.cpp
+  ${PROJECT_DIR}/ecs/systems/MeshSorter.cpp
+  ${PROJECT_DIR}/ecs/systems/SceneRenderer.cpp  
 
   ${PROJECT_DIR}/graphics/Image.cpp
   ${PROJECT_DIR}/graphics/MaterialData.cpp

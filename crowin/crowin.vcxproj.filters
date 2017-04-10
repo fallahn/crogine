@@ -105,9 +105,6 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\include\crogine\ecs\systems\MeshRenderer.hpp">
-      <Filter>Header Files\ecs\systems</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\include\crogine\graphics\Image.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
@@ -198,6 +195,12 @@
     <ClInclude Include="..\common\include\crogine\graphics\StaticMeshBuilder.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\MeshSorter.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\SceneRenderer.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\system\Clock.cpp">
@@ -232,9 +235,6 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp">
       <Filter>Source Files\ecs\components</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\ecs\systems\MeshRenderer.cpp">
-      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\Window.cpp">
       <Filter>Source Files\core</Filter>
@@ -301,6 +301,12 @@
     </ClCompile>
     <ClCompile Include="..\common\src\android\Android.cpp">
       <Filter>Source Files\android</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\MeshSorter.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -233,7 +233,8 @@
     <ClCompile Include="..\common\src\ecs\Scene.cpp" />
     <ClCompile Include="..\common\src\ecs\System.cpp" />
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
-    <ClCompile Include="..\common\src\ecs\systems\MeshRenderer.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\MeshSorter.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />
     <ClCompile Include="..\common\src\glad.c" />
     <ClCompile Include="..\common\src\graphics\Image.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialData.cpp" />

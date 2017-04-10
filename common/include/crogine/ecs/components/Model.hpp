@@ -51,7 +51,8 @@ namespace cro
         
         void bindMaterial(Material::Data&);
         
-        friend class MeshRenderer;
+        friend class MeshSorter;
+        friend class SceneRenderer;
     };
 }
 

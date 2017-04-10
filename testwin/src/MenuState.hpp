@@ -41,7 +41,7 @@ source distribution.
 
 namespace cro
 {
-    class MeshRenderer;
+    class SceneRenderer;
 }
 
 /*!
@@ -66,7 +66,7 @@ private:
     cro::ShaderResource m_shaderResource;
     cro::MaterialResource m_materialResource;
     cro::TextureResource m_textureResource;
-    cro::MeshRenderer * m_meshRenderer;
+    cro::SceneRenderer* m_sceneRenderer;
 
     cro::Texture m_texture;
 

@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,15 +27,11 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/systems/MeshRenderer.hpp>
-#include <crogine/ecs/components/Model.hpp>
-#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/systems/SceneRenderer.hpp>
+#include <crogine/detail/Assert.hpp>
 #include <crogine/ecs/components/Camera.hpp>
-
-#include <crogine/graphics/Spatial.hpp>
-
-#include <crogine/core/Clock.hpp>
-#include <crogine/core/App.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Model.hpp>
 
 #include "../../glad/glad.h"
 #include "../../glad/GLCheck.hpp"
@@ -46,119 +42,41 @@ source distribution.
 
 using namespace cro;
 
-MeshRenderer::MeshRenderer(Entity camera)
-    : System                (this),
-    m_activeCamera          (camera),
-    m_currentTextureUnit    (0)
+SceneRenderer::SceneRenderer(Entity camera)
+    : System            (this),
+    m_activeCamera      (camera),
+    m_currentTextureUnit(0)
 {
-    requireComponent<Transform>();
-    requireComponent<Model>();
-
     CRO_ASSERT(camera.hasComponent<Camera>() && camera.hasComponent<Transform>(), "Invalid camera Entity");
+    requireComponent<Transform>();
 }
 
 //public
-void MeshRenderer::process(cro::Time)
+Entity SceneRenderer::setActiveCamera(Entity camera)
 {
-    auto& entities = getEntities();
-    
-    //build the frustum from the view-projection matrix
-    auto viewProj = m_activeCamera.getComponent<Camera>().projection
-        * glm::inverse(m_activeCamera.getComponent<Transform>().getWorldTransform(entities));
-    
-    std::array<Plane, 6u> frustum = 
-    {
-        {Plane //left
-        (
-            viewProj[0][3] + viewProj[0][0],
-            viewProj[1][3] + viewProj[1][0],
-            viewProj[2][3] + viewProj[2][0],
-            viewProj[3][3] + viewProj[3][0]
-        ),
-        Plane //right
-        (
-            viewProj[0][3] - viewProj[0][0],
-            viewProj[1][3] - viewProj[1][0],
-            viewProj[2][3] - viewProj[2][0],
-            viewProj[3][3] - viewProj[3][0]
-        ),
-        Plane //bottom
-        (
-            viewProj[0][3] + viewProj[0][1],
-            viewProj[1][3] + viewProj[1][1],
-            viewProj[2][3] + viewProj[2][1],
-            viewProj[3][3] + viewProj[3][1]
-        ),
-        Plane //top
-        (
-            viewProj[0][3] - viewProj[0][1],
-            viewProj[1][3] - viewProj[1][1],
-            viewProj[2][3] - viewProj[2][1],
-            viewProj[3][3] - viewProj[3][1]
-        ),
-        Plane //near
-        (
-            viewProj[0][3] + viewProj[0][2],
-            viewProj[1][3] + viewProj[1][2],
-            viewProj[2][3] + viewProj[2][2],
-            viewProj[3][3] + viewProj[3][2]
-        ),
-        Plane //far
-        (
-            viewProj[0][3] - viewProj[0][2],
-            viewProj[1][3] - viewProj[1][2],
-            viewProj[2][3] - viewProj[2][2],
-            viewProj[3][3] - viewProj[3][2]
-        )}
-    };
-
-    //normalise the planes
-    for (auto& p : frustum)
-    {
-        const float factor = 1.f / std::sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
-        p.x *= factor;
-        p.y *= factor;
-        p.z *= factor;
-        p.w *= factor;
-    }
-    //DPRINT("Near Plane", std::to_string(frustum[1].w));
-    
-    //cull entities by viewable into draw lists by pass
-    m_visibleEntities.clear();
-    m_visibleEntities.reserve(entities.size());
-    for (auto& entity : entities)
-    {
-        auto sphere = entity.getComponent<Model>().m_meshData.boundingSphere;
-        auto tx = entity.getComponent<Transform>();
-        sphere.centre += tx.getPosition(/*entities*/);
-        auto scale = tx.getScale();
-        sphere.radius *= (scale.x + scale.y + scale.z) / 3.f;
-
-        bool visible = true;
-        std::size_t i = 0;
-        while(visible && i < frustum.size())
-        {
-            visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
-        }
-
-        if (visible)
-        {
-            m_visibleEntities.push_back(entity);
-        }
-    }
-    DPRINT("Visible ents", std::to_string(m_visibleEntities.size()));
-
-    //sort lists by depth
-    //TODO sub sort opaque materials front to back
-    //TODO transparent materials back to front
+    CRO_ASSERT(camera.hasComponent<Camera>() && camera.hasComponent<Transform>(), "Invalid camera Entity");
+    auto oldCam = m_activeCamera;
+    m_activeCamera = camera;
+    return oldCam;
 }
 
-void MeshRenderer::render()
+Entity SceneRenderer::getActiveCamera() const
+{
+    return m_activeCamera;
+}
+
+void SceneRenderer::setDrawableList(std::vector<Entity>& entities)
+{
+    m_visibleEntities.swap(entities);
+    entities.clear();
+}
+
+void SceneRenderer::render()
 {
     glCheck(glEnable(GL_DEPTH_TEST));
     glCheck(glEnable(GL_CULL_FACE));
-    
-    
+
+
     auto& ents = getEntities(); //we need this list for world transforms - not the culled list
     auto cameraPosition = glm::vec3(m_activeCamera.getComponent<Transform>().getWorldTransform(ents)[3]);
     auto viewMat = glm::inverse(m_activeCamera.getComponent<Transform>().getWorldTransform(ents));
@@ -197,7 +115,7 @@ void MeshRenderer::render()
             for (auto j = 0u; j < model.m_materials[i].attribCount; ++j)
             {
                 glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
-                    GL_FLOAT, GL_FALSE, static_cast<GLsizei>(model.m_meshData.vertexSize), 
+                    GL_FLOAT, GL_FALSE, static_cast<GLsizei>(model.m_meshData.vertexSize),
                     reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
                 glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
             }
@@ -221,16 +139,8 @@ void MeshRenderer::render()
     glCheck(glDisable(GL_DEPTH_TEST));
 }
 
-Entity MeshRenderer::setActiveCamera(Entity newCam)
-{
-    CRO_ASSERT(newCam.hasComponent<Camera>() && newCam.hasComponent<Transform>(), "Invalid camera Entity");
-    auto oldCam = m_activeCamera;
-    m_activeCamera = newCam;
-    return oldCam;
-}
-
 //private
-void MeshRenderer::applyProperties(const Material::PropertyList& properties)
+void SceneRenderer::applyProperties(const Material::PropertyList& properties)
 {
     m_currentTextureUnit = 0;
     for (const auto& prop : properties)
@@ -252,11 +162,11 @@ void MeshRenderer::applyProperties(const Material::PropertyList& properties)
                 prop.second.second.vecValue[1]));
             break;
         case Material::Property::Vec3:
-            glCheck(glUniform3f(prop.second.first, prop.second.second.vecValue[0], 
+            glCheck(glUniform3f(prop.second.first, prop.second.second.vecValue[0],
                 prop.second.second.vecValue[1], prop.second.second.vecValue[2]));
             break;
         case Material::Property::Vec4:
-            glCheck(glUniform4f(prop.second.first, prop.second.second.vecValue[0], 
+            glCheck(glUniform4f(prop.second.first, prop.second.second.vecValue[0],
                 prop.second.second.vecValue[1], prop.second.second.vecValue[2], prop.second.second.vecValue[3]));
             break;
         }

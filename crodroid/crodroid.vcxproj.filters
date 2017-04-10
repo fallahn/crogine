@@ -60,9 +60,6 @@
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp">
       <Filter>src\ecs\components</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\src\ecs\systems\MeshRenderer.cpp">
-      <Filter>src\ecs\systems</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\src\system\Colour.cpp">
       <Filter>src\graphics</Filter>
     </ClCompile>
@@ -131,6 +128,12 @@
     </ClCompile>
     <ClCompile Include="..\common\src\graphics\StaticMeshBuilder.cpp">
       <Filter>src\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\MeshSorter.cpp">
+      <Filter>src\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp">
+      <Filter>src\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

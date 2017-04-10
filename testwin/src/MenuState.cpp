@@ -36,7 +36,8 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
-#include <crogine/ecs/systems/MeshRenderer.hpp>
+#include <crogine/ecs/systems/MeshSorter.hpp>
+#include <crogine/ecs/systems/SceneRenderer.hpp>
 
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
@@ -50,7 +51,7 @@ namespace
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 	: cro::State    (stack, context),
-    m_meshRenderer  (nullptr)
+    m_sceneRenderer (nullptr)
 {
     //TODO launch load screen
     //add systems to scene
@@ -80,13 +81,14 @@ bool MenuState::simulate(cro::Time dt)
 void MenuState::render() const
 {
 	//draw any renderable systems
-    m_meshRenderer->render();
+    m_sceneRenderer->render();
 }
 
 //private
 void MenuState::addSystems()
 {
-    m_meshRenderer = &m_scene.addSystem<cro::MeshRenderer>(m_scene.getDefaultCamera());
+    m_sceneRenderer = &m_scene.addSystem<cro::SceneRenderer>(m_scene.getDefaultCamera());
+    m_scene.addSystem<cro::MeshSorter>(*m_sceneRenderer);
     m_scene.addSystem<RotateSystem>();
 }
 
@@ -158,8 +160,8 @@ void MenuState::createScene()
     tx4.move({ 0.f, 0.4f, 1.f });
     tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);
     ent.addComponent<cro::Camera>();
-    /*auto& r3 = ent.addComponent<Rotator>();
-    r3.axis.y = 1.f;
-    r3.speed = 0.1f;*/
-    m_meshRenderer->setActiveCamera(ent);
+    //auto& r3 = ent.addComponent<Rotator>();
+    //r3.axis.y = 1.f;
+    //r3.speed = 0.1f;
+    m_sceneRenderer->setActiveCamera(ent);
 }

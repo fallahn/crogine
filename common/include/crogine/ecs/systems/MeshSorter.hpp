@@ -27,8 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_MESH_RENDERER_HPP_
-#define CRO_MESH_RENDERER_HPP_
+#ifndef CRO_MESH_SORTER_HPP_
+#define CRO_MESH_SORTER_HPP_
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/MaterialData.hpp>
@@ -38,15 +38,19 @@ source distribution.
 namespace cro
 {
     class Entity;
-    class CRO_EXPORT_API MeshRenderer final : public System
+    class SceneRenderer;
+    /*!
+    \brief Culls and sorts entities into draw lists for renderer.
+    */
+    class CRO_EXPORT_API MeshSorter final : public System
     {
     public:
         /*!
         \brief Constructor
-        \param camera Entity containing a camera to render the scene. Usually initialised
-        with Scene::getDefaultCamera()
+        \param renderer Reference to renderer used to draw
+        the meshes sorted by this system
         */
-        explicit MeshRenderer(Entity camera);
+        explicit MeshSorter(SceneRenderer& renderer);
 
         /*!
         \brief Automatically executed once per fram by the ECS.
@@ -54,26 +58,11 @@ namespace cro
         */
         void process(Time) override;
 
-        /*!
-        \brief Renders all mesh components on entities in the scene
-        */
-        void render();
-
-        /*!
-        \brief Sets the active camera used when drawing the scene.
-        \returns Entity with previous camera attached to it.
-        */
-        Entity setActiveCamera(Entity camera);
-
     private:
 
-        Entity m_activeCamera;
-
+        SceneRenderer& m_renderer;
         std::vector<Entity> m_visibleEntities;
-
-        uint32 m_currentTextureUnit;
-        void applyProperties(const Material::PropertyList&);
     };
 }
 
-#endif//CRO_MESH_RENDERER_HPP_
+#endif//CRO_MESH_SORTER_HPP_
