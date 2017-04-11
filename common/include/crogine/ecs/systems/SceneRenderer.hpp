@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/MaterialData.hpp>
+#include <crogine/detail/SDLResource.hpp>
 
 #include <vector>
 
@@ -43,9 +44,10 @@ namespace cro
     \brief Used to draw a given list of meshes.
     Provide an instance of this to systems such as the MeshSorter
     or LightSorter so that they may, in turn, update the entity lists
-    required to render a scene.
+    required to render a scene. Note that this will not render any
+    Sprite components - these should be drawn with SpriteRenderer
     */
-    class CRO_EXPORT_API SceneRenderer final : public System
+    class CRO_EXPORT_API SceneRenderer final : public System, public Detail::SDLResource
     {
     public:
         /*!

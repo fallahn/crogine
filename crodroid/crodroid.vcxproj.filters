@@ -135,5 +135,11 @@
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp">
       <Filter>src\ecs\systems</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\components\Sprite.cpp">
+      <Filter>src\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp">
+      <Filter>src\ecs\systems</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -227,6 +227,7 @@
     <ClCompile Include="..\common\src\App.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
+    <ClCompile Include="..\common\src\ecs\components\Sprite.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp" />
     <ClCompile Include="..\common\src\ecs\Entity.cpp" />
     <ClCompile Include="..\common\src\ecs\EntityManager.cpp" />
@@ -235,6 +236,7 @@
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\MeshSorter.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />
     <ClCompile Include="..\common\src\glad.c" />
     <ClCompile Include="..\common\src\graphics\Image.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialData.cpp" />

@@ -201,6 +201,12 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneRenderer.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\components\Sprite.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\SpriteRenderer.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\system\Clock.cpp">
@@ -306,6 +312,12 @@
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\components\Sprite.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>

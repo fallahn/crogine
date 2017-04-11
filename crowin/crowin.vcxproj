@@ -50,12 +50,14 @@
     <ClInclude Include="..\common\include\crogine\ecs\ComponentPool.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Camera.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Model.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\Sprite.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\System.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\MeshSorter.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneRenderer.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\SpriteRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Colour.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\CubeBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Image.hpp" />
@@ -85,6 +87,7 @@
     <ClCompile Include="..\common\src\App.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
+    <ClCompile Include="..\common\src\ecs\components\Sprite.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp" />
     <ClCompile Include="..\common\src\ecs\Entity.cpp" />
     <ClCompile Include="..\common\src\ecs\EntityManager.cpp" />
@@ -93,6 +96,7 @@
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\MeshSorter.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />
     <ClCompile Include="..\common\src\glad.c" />
     <ClCompile Include="..\common\src\graphics\Image.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialData.cpp" />
