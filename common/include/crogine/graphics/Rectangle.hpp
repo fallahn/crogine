@@ -36,6 +36,7 @@ source distribution.
 #include <glm/vec2.hpp>
 
 #include <type_traits>
+#include <algorithm>
 
 namespace cro
 {
