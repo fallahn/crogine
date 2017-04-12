@@ -40,14 +40,20 @@ std::vector<Entity> System::getEntities() const
 void System::addEntity(Entity entity)
 {
     m_entities.push_back(entity);
+    onEntityAdded(entity);
 }
 
 void System::removeEntity(Entity entity)
 {
     m_entities.erase(std::remove_if(std::begin(m_entities), std::end(m_entities),
-        [&entity](const Entity& e)
+        [&entity, this](const Entity& e)
     {
-        return entity == e;
+        if (entity == e)
+        {
+            onEntityRemoved(e);
+            return true;
+        }
+        return false;
     }), std::end(m_entities));
 }
 

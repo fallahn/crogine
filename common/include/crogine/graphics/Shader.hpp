@@ -71,12 +71,13 @@ namespace cro
         \brief Attempts to load the shader source from given strings
         \param vertex A string containing the source of the vertex shader
         \param fragment A string containing the source for the fragment shader
+        \param defines Optional list of newline delimited defines for the GLSL preprocessor
         \returns true on success, else returns false.
         NOTE to ensure correct version number for specific playforms (100 for ES2,
         330 for desktop) these are automatically appended here. Therefore #version
         directives should be omitted from any source code.
         */
-        bool loadFromString(const std::string& vertex, const std::string& fragment);
+        bool loadFromString(const std::string& vertex, const std::string& fragment, const std::string& defines = "");
 
         /*!
         \brief Returns the opengl handle for the shader program

@@ -106,6 +106,16 @@ namespace cro
     protected:
         std::vector<Entity>& getEntities() { return m_entities; }
 
+        /*!
+        \brief Optional callback performed when an entity is added
+        */
+        virtual void onEntityAdded(Entity) {}
+
+        /*!
+        \brief Optional callback performed when an entity is removed
+        */
+        virtual void onEntityRemoved(Entity) {}
+
     private:
 
         UniqueType m_type;

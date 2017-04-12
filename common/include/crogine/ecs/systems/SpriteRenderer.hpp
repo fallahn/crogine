@@ -38,6 +38,7 @@ source distribution.
 #include <glm/mat4x4.hpp>
 
 #include <map>
+#include <set>
 
 namespace cro
 {
@@ -63,11 +64,37 @@ namespace cro
         void render();
 
     private:
-        //maps VBO to texture
-        std::map<uint32, uint32> m_buffers;
+        //maps IBO to texture
+        struct Batch final
+        {
+            int32 texture = 0;
+            uint32 start = 0;
+            uint32 end = 0;
+        };
+        std::map<uint32, std::vector<Batch>> m_buffers;
+        std::vector<std::vector<glm::mat4>> m_bufferTransforms;
+
+        enum AttribLocation
+        {
+            Position, Colour, UV0, UV1, Count
+        };
+        struct AttribData final
+        {
+            uint32 size = 0;
+            uint32 location = 0;
+        };
+        std::array<AttribData, AttribLocation::Count> m_attribMap;
 
         glm::mat4 m_projectionMatrix;
         Shader m_shader;
+        int32 m_matrixIndex;
+        int32 m_textureIndex;
+
+        bool m_pendingRebuild;
+        void rebuildBatch();
+
+        void onEntityAdded(Entity) override;
+        void onEntityRemoved(Entity) override;
     };
 }
 

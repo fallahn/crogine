@@ -77,6 +77,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\TextureResource.hpp" />
     <ClInclude Include="..\common\src\glad\GLCheck.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Default.hpp" />
+    <ClInclude Include="..\common\src\graphics\shaders\Sprite.hpp" />
     <ClInclude Include="..\common\src\imgui\imconfig.h" />
     <ClInclude Include="..\common\src\imgui\imgui.h" />
     <ClInclude Include="..\common\src\imgui\imgui_render.h" />

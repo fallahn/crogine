@@ -33,7 +33,8 @@ source distribution.
 using namespace cro;
 
 Sprite::Sprite()
-    : m_textureID(-1)
+    : m_textureID   (0),
+    m_dirty         (true)
 {
     for (auto& q : m_quad)
     {
@@ -71,6 +72,8 @@ void Sprite::setSize(FloatRect size)
 
     m_quad[3].position.x = size.left + size.width;
     m_quad[3].position.y = size.bottom + size.height;
+
+    m_dirty = true;
 }
 
 void Sprite::setTextureRect(FloatRect subRect)
@@ -91,6 +94,8 @@ void Sprite::setTextureRect(FloatRect subRect)
 
     m_quad[3].UV.x = (subRect.left + subRect.width) / width;
     m_quad[3].UV.y = (subRect.bottom + subRect.height) / height;
+
+    m_dirty = true;
 }
 
 void Sprite::setColour(Colour colour)
@@ -99,4 +104,5 @@ void Sprite::setColour(Colour colour)
     {
         v.colour = { colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha() };
     }
+    m_dirty = true;
 }

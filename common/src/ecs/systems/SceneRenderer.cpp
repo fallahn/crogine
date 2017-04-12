@@ -109,7 +109,7 @@ void SceneRenderer::render()
 
             //bind winding/cullface/depthfunc
 
-            //bind vaos
+            //bind attribs
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
             const auto& attribs = model.m_materials[i].attribs;
             for (auto j = 0u; j < model.m_materials[i].attribCount; ++j)
@@ -127,7 +127,7 @@ void SceneRenderer::render()
             //draw elements
             glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
 
-            //unbind vaos
+            //unbind attribs
             for (auto j = 0u; j < model.m_materials[i].attribCount; ++j)
             {
                 glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));

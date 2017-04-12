@@ -58,7 +58,7 @@ bool Shader::loadFromFile(const std::string& vertex, const std::string& fragment
     return loadFromString(parseFile(vertex), parseFile(fragment));
 }
 
-bool Shader::loadFromString(const std::string& vertex, const std::string& fragment)
+bool Shader::loadFromString(const std::string& vertex, const std::string& fragment, const std::string& defines)
 {
     if (m_handle)
     {
@@ -72,12 +72,12 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
     GLuint vertID = glCreateShader(GL_VERTEX_SHADER);
     
 #ifdef __ANDROID__
-    const char* src[] = { "#version 100", vertex.c_str() };
+    const char* src[] = { "#version 100\n", defines.c_str(), vertex.c_str() };
 #else
-    const char* src[] = { "#version 130", vertex.c_str() };
+    const char* src[] = { "#version 130\n", defines.c_str(), vertex.c_str() };
 #endif //__ANDROID__
 
-    glCheck(glShaderSource(vertID, 2, src, nullptr));
+    glCheck(glShaderSource(vertID, 3, src, nullptr));
     glCheck(glCompileShader(vertID));
 
     GLint result = GL_FALSE;
@@ -99,8 +99,8 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
     
     //compile frag shader
     GLuint fragID = glCreateShader(GL_FRAGMENT_SHADER);
-    src[1] = fragment.c_str();
-    glCheck(glShaderSource(fragID, 2, src, nullptr));
+    src[2] = fragment.c_str();
+    glCheck(glShaderSource(fragID, 3, src, nullptr));
     glCheck(glCompileShader(fragID));
 
     result = GL_FALSE;

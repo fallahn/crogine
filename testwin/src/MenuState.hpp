@@ -42,6 +42,7 @@ source distribution.
 namespace cro
 {
     class SceneRenderer;
+    class SpriteRenderer;
 }
 
 /*!
@@ -67,8 +68,9 @@ private:
     cro::MaterialResource m_materialResource;
     cro::TextureResource m_textureResource;
     cro::SceneRenderer* m_sceneRenderer;
+    cro::SpriteRenderer* m_spriteRenderer;
 
-    cro::Texture m_texture;
+    //cro::Texture m_texture;
 
     void addSystems();
     void loadAssets();

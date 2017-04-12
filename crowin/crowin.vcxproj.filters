@@ -207,6 +207,9 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\SpriteRenderer.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\src\graphics\shaders\Sprite.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\system\Clock.cpp">

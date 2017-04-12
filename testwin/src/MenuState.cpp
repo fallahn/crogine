@@ -36,8 +36,10 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/systems/MeshSorter.hpp>
 #include <crogine/ecs/systems/SceneRenderer.hpp>
+#include <crogine/ecs/systems/SpriteRenderer.hpp>
 
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
@@ -51,7 +53,8 @@ namespace
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 	: cro::State    (stack, context),
-    m_sceneRenderer (nullptr)
+    m_sceneRenderer (nullptr),
+    m_spriteRenderer(nullptr)
 {
     //TODO launch load screen
     //add systems to scene
@@ -82,6 +85,7 @@ void MenuState::render() const
 {
 	//draw any renderable systems
     m_sceneRenderer->render();
+    m_spriteRenderer->render();
 }
 
 //private
@@ -89,6 +93,8 @@ void MenuState::addSystems()
 {
     m_sceneRenderer = &m_scene.addSystem<cro::SceneRenderer>(m_scene.getDefaultCamera());
     m_scene.addSystem<cro::MeshSorter>(*m_sceneRenderer);
+    m_spriteRenderer = &m_scene.addSystem<cro::SpriteRenderer>();
+
     m_scene.addSystem<RotateSystem>();
 }
 
@@ -164,4 +170,18 @@ void MenuState::createScene()
     //r3.axis.y = 1.f;
     //r3.speed = 0.1f;
     m_sceneRenderer->setActiveCamera(ent);
+
+    ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>();
+    auto& sprite = ent.addComponent<cro::Sprite>();
+    sprite.setColour(cro::Colour::Magenta());
+    sprite.setSize({ 0.f, 0.f, 100.f, 50.f });
+
+    ent = m_scene.createEntity();
+    auto& tx5 = ent.addComponent<cro::Transform>();
+    tx5.setPosition({ 220.f, 300.f, 0.f });
+    auto& spr2 = ent.addComponent<cro::Sprite>();
+    spr2.setColour(cro::Colour::Yellow());
+    spr2.setSize({ 0.f, 0.f, 400.f, 30.f });
+    spr2.setTexture(m_textureResource.get("assets/sphere_test.png"));
 }

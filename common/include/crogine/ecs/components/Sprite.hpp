@@ -95,7 +95,7 @@ namespace cro
             glm::vec2 UV;
         };
         std::array<Vertex, 4u> m_quad;
-
+        bool m_dirty;
         friend class SpriteRenderer;
     };
 }
