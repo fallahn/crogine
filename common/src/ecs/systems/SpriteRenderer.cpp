@@ -66,7 +66,7 @@ SpriteRenderer::SpriteRenderer()
     }
 
     //get shader texture uniform loc
-    m_matrixIndex = m_shader.getUniformMap().find("u_worldMatrix")->second;
+    m_matrixIndex = m_shader.getUniformMap().find("u_worldMatrix[0]")->second;
     m_textureIndex = m_shader.getUniformMap().find("u_texture")->second;
 
     //map shader attribs
@@ -81,7 +81,7 @@ SpriteRenderer::SpriteRenderer()
     m_attribMap[AttribLocation::UV1].location = attribMap[Mesh::UV1];
 
     //setup projection
-    m_projectionMatrix = glm::ortho(0.f, 800.f, 0.f, 600.f); //TODO get from current window size
+    m_projectionMatrix = glm::ortho(0.f, 800.f, 0.f, 600.f, 0.1f, 10.f); //TODO get from current window size
     glCheck(glUseProgram(m_shader.getGLHandle()));
     glCheck(glUniformMatrix4fv(m_shader.getUniformMap().find("u_projectionMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
     glCheck(glUseProgram(0));
@@ -130,7 +130,7 @@ void SpriteRenderer::process(Time)
 
         //get current transforms
         std::size_t buffIdx = (i > MaxSprites) ? i % MaxSprites : 0;
-        m_bufferTransforms[buffIdx][i - (buffIdx * MaxSprites)] = tx.getWorldTransform(entities);
+        //m_bufferTransforms[buffIdx][i - (buffIdx * MaxSprites)] = tx.getWorldTransform(entities);
     }
 
     //TODO
@@ -140,12 +140,14 @@ void SpriteRenderer::process(Time)
 void SpriteRenderer::render()
 {
     //TODO enable / disable depth testing as per setting
-
+    //glCheck(glDisable(GL_CULL_FACE));
+    glCheck(glEnable(GL_DEPTH_TEST));
+    //glViewport(0, 0, 800, 600);
 
     //bind shader and attrib arrays
     glCheck(glUseProgram(m_shader.getGLHandle()));
     glCheck(glActiveTexture(GL_TEXTURE0));
-    glCheck(glUniform1i(m_textureIndex, 0));
+    //glCheck(glUniform1i(m_textureIndex, 0));
 
     //bind attrib pointers
     int offset = 0;
@@ -162,7 +164,7 @@ void SpriteRenderer::render()
     for (const auto& batch : m_buffers)
     {
         const auto& transforms = m_bufferTransforms[0];
-        glCheck(glUniformMatrix4fv(m_matrixIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
+        //glCheck(glUniformMatrix4fv(m_matrixIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
 
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, batch.first));
         for (const auto& batchData : batch.second)
@@ -179,6 +181,8 @@ void SpriteRenderer::render()
     {
         glCheck(glDisableVertexAttribArray(m_attribMap[i].location));
     }
+
+    
 }
 
 //private
