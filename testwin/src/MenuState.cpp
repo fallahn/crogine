@@ -177,11 +177,11 @@ void MenuState::createScene()
     sprite.setColour(cro::Colour::Magenta());
     sprite.setSize({ 0.f, 0.f, 100.f, 50.f });
 
-    ent = m_scene.createEntity();
+    /*ent = m_scene.createEntity();
     auto& tx5 = ent.addComponent<cro::Transform>();
     tx5.setPosition({ 220.f, 300.f, 0.f });
     auto& spr2 = ent.addComponent<cro::Sprite>();
     spr2.setColour(cro::Colour::Yellow());
     spr2.setSize({ 0.f, 0.f, 400.f, 30.f });
-    spr2.setTexture(m_textureResource.get("assets/sphere_test.png"));
+    spr2.setTexture(m_textureResource.get("assets/sphere_test.png"));*/
 }

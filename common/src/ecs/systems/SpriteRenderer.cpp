@@ -44,7 +44,7 @@ using namespace cro;
 
 namespace
 {
-    int32 MaxSprites = 0;
+    uint32 MaxSprites = 0;
     constexpr uint32 vertexSize = (4 + 4 + 2 + 2) * sizeof(float); //pos, colour, UV0, UV1
 }
 
@@ -55,9 +55,11 @@ SpriteRenderer::SpriteRenderer()
     m_pendingRebuild(false)
 {
     //load shader
-    glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &MaxSprites));
-    MaxSprites /= 4; //4 x 4-components make up a mat4.
+    GLint maxVec;
+    glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
+    MaxSprites = maxVec / 4; //4 x 4-components make up a mat4.
     MaxSprites -= 1;
+	MaxSprites = 31;
     LOG(std::to_string(MaxSprites) + " sprites are available per batch", Logger::Type::Info);
 
     if (!m_shader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Fragment, "#define MAX_MATRICES " + std::to_string(MaxSprites) + "\n"))
@@ -66,8 +68,13 @@ SpriteRenderer::SpriteRenderer()
     }
 
     //get shader texture uniform loc
-    m_matrixIndex = m_shader.getUniformMap().find("u_worldMatrix[0]")->second;
-    m_textureIndex = m_shader.getUniformMap().find("u_texture")->second;
+    const auto& uniforms = m_shader.getUniformMap();
+    for(const auto& p : uniforms)
+    {
+        Logger::log(p.first, Logger::Type::Info);
+    }
+    //m_matrixIndex = m_shader.getUniformMap().find("u_worldMatrix[0]")->second;
+    //m_textureIndex = m_shader.getUniformMap().find("u_texture")->second;
 
     //map shader attribs
     const auto& attribMap = m_shader.getAttribMap();
@@ -251,7 +258,7 @@ void SpriteRenderer::rebuildBatch()
                 start += 2;
 
                 //copy last vert
-                for (auto j = 0; j < vertexSize; ++j)
+                for (auto j = 0u; j < vertexSize; ++j)
                 {
                     vertexData.push_back(vertexData[vertexData.size() - vertexSize]);
                 }
