@@ -96,13 +96,13 @@ SpriteRenderer::SpriteRenderer()
         listUniforms();
     }
 
-    if (uniforms.count("u_texture") != 0)
+    if (uniforms.count("u_projectionMatrix") != 0)
     {
-        m_textureIndex = m_shader.getUniformMap().find("u_texture")->second;
+        m_projectionIndex = m_shader.getUniformMap().find("u_projectionMatrix")->second;
     }
     else
     {
-        Logger::log("u_texture uniform missing from sprite renderer. Available uniforms are: ", Logger::Type::Info);
+        Logger::log("u_projectionMatrix uniform missing from sprite renderer. Available uniforms are: ", Logger::Type::Info);
         listUniforms();
     }
 
@@ -115,17 +115,14 @@ SpriteRenderer::SpriteRenderer()
     m_attribMap[AttribLocation::Colour].offset = m_attribMap[AttribLocation::Colour].size * sizeof(float);
     m_attribMap[AttribLocation::UV0].size = 2;
     m_attribMap[AttribLocation::UV0].location = attribMap[Mesh::UV0];
-    m_attribMap[AttribLocation::UV0].offset = m_attribMap[AttribLocation::Colour].offset + (m_attribMap[AttribLocation::UV0].size * sizeof(float));
+    m_attribMap[AttribLocation::UV0].offset = m_attribMap[AttribLocation::Colour].offset + (m_attribMap[AttribLocation::Colour].size * sizeof(float));
     m_attribMap[AttribLocation::UV1].size = 2;
     m_attribMap[AttribLocation::UV1].location = attribMap[Mesh::UV1];
-    m_attribMap[AttribLocation::UV1].offset = m_attribMap[AttribLocation::UV0].offset + (m_attribMap[AttribLocation::UV1].size * sizeof(float));
+    m_attribMap[AttribLocation::UV1].offset = m_attribMap[AttribLocation::UV0].offset + (m_attribMap[AttribLocation::UV0].size * sizeof(float));
 
     //setup projection
     m_projectionMatrix = glm::ortho(0.f, 800.f, 0.f, 600.f, -0.1f, 10.f); //TODO get from current window size
     //m_projectionMatrix = glm::perspective(0.6f, 4.f / 3.f, 0.f, 100.f);
-    /*glCheck(glUseProgram(m_shader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_shader.getUniformMap().find("u_projectionMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
-    glCheck(glUseProgram(0));*/
 
     //only want these entities
     requireComponent<Sprite>();
@@ -166,7 +163,7 @@ void SpriteRenderer::process(Time)
         //if depth sorted set Z to -Y
         auto tx = entities[i].getComponent<Transform>();
         auto pos = tx.getPosition();
-        pos.z = -pos.y;
+        pos.z = -(pos.y / 100.f); //reduce this else we surpass clip plane
         tx.setPosition(pos);
 
         //get current transforms
@@ -181,9 +178,8 @@ void SpriteRenderer::process(Time)
 void SpriteRenderer::render()
 {
     //TODO enable / disable depth testing as per setting
-    //glCheck(glDisable(GL_CULL_FACE));
-    //glCheck(glEnable(GL_DEPTH_TEST));
-    //glViewport(0, 0, 800, 600);
+    glCheck(glEnable(GL_CULL_FACE));
+    glCheck(glEnable(GL_DEPTH_TEST));
 
     //bind shader and attrib arrays
     glCheck(glUseProgram(m_shader.getGLHandle()));
@@ -196,7 +192,7 @@ void SpriteRenderer::render()
     {
         glCheck(glEnableVertexAttribArray(m_attribMap[i].location));
         glCheck(glVertexAttribPointer(m_attribMap[i].location, m_attribMap[i].size, GL_FLOAT, GL_FALSE, vertexSize, 
-            reinterpret_cast<void*>(static_cast<intptr_t>(m_attribMap[i].offset))));
+            reinterpret_cast<void*>(static_cast<intptr_t>(m_attribMap[i].offset))));      
     }
 
     //foreach vbo bind and draw
@@ -204,25 +200,27 @@ void SpriteRenderer::render()
     for (const auto& batch : m_buffers)
     {
         const auto& transforms = m_bufferTransforms[0]; //TODO this should be same index as current buffer
-        //glCheck(glUniformMatrix4fv(m_matrixIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
+        glCheck(glUniformMatrix4fv(m_matrixIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
 
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, batch.first));
         for (const auto& batchData : batch.second)
         {
-            CRO_ASSERT(batchData.texture > -1, "Missing sprite texture!");
+            //CRO_ASSERT(batchData.texture > -1, "Missing sprite texture!");
             glCheck(glBindTexture(GL_TEXTURE_2D, batchData.texture));
             glCheck(glDrawArrays(GL_TRIANGLE_STRIP, batchData.start, batchData.count));
         }
-        idx++;
+        idx++;  
     }
+    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     //unbind attrib pointers
     for (auto i = 0u; i < m_attribMap.size(); ++i)
     {
         glCheck(glDisableVertexAttribArray(m_attribMap[i].location));
-    }
+    } 
 
-    
+    glCheck(glDisable(GL_DEPTH_TEST));
+    glCheck(glDisable(GL_CULL_FACE));
 }
 
 //private
@@ -248,6 +246,7 @@ void SpriteRenderer::rebuildBatch()
         Batch batchData;
         batchData.start = start;
         batchData.texture = entities[batchIdx].getComponent<Sprite>().m_textureID;
+        int32 spritesThisBatch = 0;
 
         std::vector<float> vertexData;
         auto maxCount = std::min(static_cast<uint32>(entities.size()), batchIdx + MaxSprites);
@@ -258,11 +257,13 @@ void SpriteRenderer::rebuildBatch()
             if (sprite.m_textureID != batchData.texture)
             {
                 //end the batch and start a new one for this buffer
-                batchData.count = start;
+                batchData.count = start - batchData.start;
                 batch.second.push_back(batchData);
 
                 batchData.start = start;
                 batchData.texture = sprite.m_textureID;
+
+                spritesThisBatch = 0;
             }
 
 
@@ -282,19 +283,20 @@ void SpriteRenderer::rebuildBatch()
                 vertexData.push_back(sprite.m_quad[idx].UV.y);
 
                 vertexData.push_back(static_cast<float>(i)); //for transform lookup
-                vertexData.push_back(1.f);
+                vertexData.push_back(77.f); //not used right now, just makes it easier to see in debugger
                 //vertexData.push_back(1.f);
             };
 
-            if (i > 0)
+            if (spritesThisBatch > 0)
             {
                 //add degenerate tri
                 start += 2;
 
                 //copy last vert
-                for (auto j = 0u; j < vertexSize; ++j)
+                auto elementCount = vertexSize / sizeof(float);
+                for (auto j = 0u; j < elementCount; ++j)
                 {
-                    vertexData.push_back(vertexData[vertexData.size() - vertexSize]);
+                    vertexData.push_back(vertexData[vertexData.size() - elementCount]);
                 }
 
                 //copy impending vert
@@ -304,10 +306,14 @@ void SpriteRenderer::rebuildBatch()
             //increase the start point
             start += 4;
             //and append data
-            for (auto j = 0; j < 4; ++j) copyVertex(j);
+            for (auto j = 0; j < 4; ++j)
+            {
+                copyVertex(j);
+            }
+            spritesThisBatch++;
         }
         batchIdx += MaxSprites;
-        batchData.count = start;
+        batchData.count = start - batchData.start;
         batch.second.push_back(batchData);
 
         //upload to VBO
@@ -321,7 +327,7 @@ void SpriteRenderer::rebuildBatch()
     std::size_t i = 0;
     for (const auto& buffer : m_buffers)
     {
-        m_bufferTransforms[i].resize(buffer.second.back().count / 4);
+        m_bufferTransforms[i].resize((buffer.second.back().start + buffer.second.back().count) / 4);
         i++;
     }
 

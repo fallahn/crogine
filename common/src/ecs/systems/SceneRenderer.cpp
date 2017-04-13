@@ -92,6 +92,7 @@ void SceneRenderer::render()
 
         //foreach submesh / material:
         const auto& model = e.getComponent<Model>();
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
         for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
         {
             //bind shader
@@ -110,14 +111,13 @@ void SceneRenderer::render()
             //bind winding/cullface/depthfunc
 
             //bind attribs
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
             const auto& attribs = model.m_materials[i].attribs;
             for (auto j = 0u; j < model.m_materials[i].attribCount; ++j)
             {
+                glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
                 glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
                     GL_FLOAT, GL_FALSE, static_cast<GLsizei>(model.m_meshData.vertexSize),
-                    reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
-                glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
+                    reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));               
             }
 
             //bind element/index buffer
@@ -127,12 +127,16 @@ void SceneRenderer::render()
             //draw elements
             glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
 
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
             //unbind attribs
             for (auto j = 0u; j < model.m_materials[i].attribCount; ++j)
             {
                 glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
             }
         }
+        //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        glCheck(glUseProgram(0));
     }
 
     glCheck(glDisable(GL_CULL_FACE));

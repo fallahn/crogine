@@ -55,45 +55,44 @@ void Sprite::setTexture(const Texture& t)
 void Sprite::setSize(glm::vec2 size)
 {
     /*
-      1-------4
+      0-------2
       |       |
       |       |
-      0-------3
+      1-------3
     */
-
     m_quad[0].position.x = 0.f;
-    m_quad[0].position.y = 0.f;
-
+    m_quad[0].position.y = size.y;
+    
     m_quad[1].position.x = 0.f;
-    m_quad[1].position.y = size.y;
+    m_quad[1].position.y = 0.f;
 
     m_quad[2].position.x = size.x;
-    m_quad[2].position.y = 0.f;
+    m_quad[2].position.y = size.y;
 
     m_quad[3].position.x = size.x;
-    m_quad[3].position.y = size.y;
+    m_quad[3].position.y = 0.f;
 
     m_dirty = true;
 }
 
 void Sprite::setTextureRect(FloatRect subRect)
 {
-    float width = m_quad[3].position.x - m_quad[0].position.x;
-    float height = m_quad[1].position.y - m_quad[0].position.y;
+    float width = m_quad[3].position.x;
+    float height = m_quad[0].position.y;
     
     CRO_ASSERT(width != 0 && height != 0, "Invalid width or height - is the texture set?");
 
     m_quad[0].UV.x = subRect.left / width;
-    m_quad[0].UV.y = subRect.bottom / height;
-
+    m_quad[0].UV.y = (subRect.bottom + subRect.height) / height;
+    
     m_quad[1].UV.x = subRect.left / width;
-    m_quad[1].UV.y = (subRect.bottom + subRect.height) / height;
+    m_quad[1].UV.y = subRect.bottom / height;
 
     m_quad[2].UV.x = (subRect.left + subRect.width) / width;
-    m_quad[2].UV.y = subRect.bottom / height;
+    m_quad[2].UV.y = (subRect.bottom + subRect.height) / height;
 
     m_quad[3].UV.x = (subRect.left + subRect.width) / width;
-    m_quad[3].UV.y = (subRect.bottom + subRect.height) / height;
+    m_quad[3].UV.y = subRect.bottom / height;
 
     m_dirty = true;
 }

@@ -85,7 +85,7 @@ void MenuState::render() const
 {
 	//draw any renderable systems
     //m_sceneRenderer->render();
-    m_spriteRenderer->render();
+    m_spriteRenderer->render();    
 }
 
 //private
@@ -166,22 +166,39 @@ void MenuState::createScene()
     tx4.move({ 0.f, 0.4f, 1.f });
     tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);
     ent.addComponent<cro::Camera>();
-    //auto& r3 = ent.addComponent<Rotator>();
-    //r3.axis.y = 1.f;
-    //r3.speed = 0.1f;
     m_sceneRenderer->setActiveCamera(ent);
 
-    /*ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>();
+    ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>().setPosition({ 40.f, 40.f, 0.f });
     auto& sprite = ent.addComponent<cro::Sprite>();
-    sprite.setColour(cro::Colour::Magenta());
-    sprite.setSize({ 100.f, 50.f });*/
+    sprite.setColour(cro::Colour(1.f, 0.5f, 0.f, 1.f));
+    sprite.setTexture(m_textureResource.get("g"));
+    sprite.setSize({ 100.f, 50.f });
+
+    ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>().setPosition({ 200.f, 10.f, 0.f });
+    auto& spr = ent.addComponent<cro::Sprite>();
+    spr.setColour(cro::Colour(0.f, 0.5f, 1.f, 1.f));
+    spr.setTexture(m_textureResource.get("assets/test.png"));
+    spr.setSize({ 200.f, 50.f });
 
     ent = m_scene.createEntity();
     auto& tx5 = ent.addComponent<cro::Transform>();
-    //tx5.setPosition({ 220.f, 300.f, 0.f });
+    tx5.setPosition({ 220.f, 200.f, 0.f });
+    tx5.setScale({ 0.5, 0.5f, 0.5f });
+    tx5.setRotation({ 0.f, 0.5f, 0.f });
     auto& spr2 = ent.addComponent<cro::Sprite>();
     //spr2.setColour(cro::Colour::Yellow());
-    spr2.setSize({ 0.2f, 0.4f });
+    //spr2.setSize({ 220.2f, 100.4f });
     spr2.setTexture(m_textureResource.get("assets/sphere_test.png"));
+
+    ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>().setPosition({ 500.f, 140.f, 0.f });
+    auto& spr3 = ent.addComponent<cro::Sprite>();
+    spr3.setColour(cro::Colour(1.f, 0.5f, 0.5f, 1.f));
+    spr3.setTexture(m_textureResource.get("g"));
+    spr3.setSize({ 10.f, 150.f });
+    auto& r3 = ent.addComponent<Rotator>();
+    r3.axis.z = 1.f;
+    r3.speed = -4.1f;
 }

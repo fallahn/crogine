@@ -53,10 +53,10 @@ namespace cro
                 void main()
                 {
                     int idx = int(clamp(a_texCoord1.x, 0.0, MAX_MATRICES - 1));/* u_worldMatrix[idx]*/
-                    gl_Position = u_projectionMatrix * a_position;
+                    gl_Position = u_projectionMatrix * u_worldMatrix[idx] * a_position;
                     v_colour = a_colour;
-                    //v_colour.rg *= a_texCoord1;
-                    v_texCoord0 = a_texCoord0 * a_texCoord1;
+                    //v_colour *= a_texCoord1.y;
+                    v_texCoord0 = a_texCoord0;// * a_texCoord1;
                 })";
 
             const static std::string Fragment = R"(
@@ -67,7 +67,6 @@ namespace cro
 
                 void main()
                 {
-                    //vec4 buns = texture2D(u_texture, v_texCoord0) * 0.1;
                     gl_FragColor = texture2D(u_texture, v_texCoord0) * v_colour;
                 })";
         }
