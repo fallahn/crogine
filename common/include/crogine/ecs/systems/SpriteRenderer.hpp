@@ -53,6 +53,23 @@ namespace cro
 
         //TODO setters for view/resolution
 
+        enum class DepthAxis
+        {
+            Y, Z
+        };
+        /*!
+        \brief Sets the depth sorting axis.
+        When the depth axis is set to Y then sprites lower down on the
+        screen will appear nearer the front. When set to Z they are sorted
+        by the Z depth value of the entity transform. Defaults to Z
+        */
+        void setDepthAxis(DepthAxis d) { m_depthAxis = d; }
+
+        /*!
+        \brief Returns the current DepthAxis setting
+        */
+        DepthAxis getDepthAxis() const { return m_depthAxis; }
+
         /*!
         \brief Implements the process which performs batching
         */
@@ -64,7 +81,7 @@ namespace cro
         void render();
 
     private:
-        //maps IBO to texture
+        //maps VBO to textures
         struct Batch final
         {
             int32 texture = 0;
@@ -91,6 +108,8 @@ namespace cro
         int32 m_matrixIndex;
         int32 m_textureIndex;
         int32 m_projectionIndex;
+
+        DepthAxis m_depthAxis;
 
         bool m_pendingRebuild;
         void rebuildBatch();

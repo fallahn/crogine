@@ -53,6 +53,7 @@ SpriteRenderer::SpriteRenderer()
     m_matrixIndex       (0),
     m_textureIndex      (0),
     m_projectionIndex   (0),
+    m_depthAxis         (DepthAxis::Z),
     m_pendingRebuild    (false)
 {
     //load shader
@@ -121,7 +122,7 @@ SpriteRenderer::SpriteRenderer()
     m_attribMap[AttribLocation::UV1].offset = m_attribMap[AttribLocation::UV0].offset + (m_attribMap[AttribLocation::UV0].size * sizeof(float));
 
     //setup projection
-    m_projectionMatrix = glm::ortho(0.f, 800.f, 0.f, 600.f, -0.1f, 10.f); //TODO get from current window size
+    m_projectionMatrix = glm::ortho(0.f, 800.f, 0.f, 600.f, -0.1f, 100.f); //TODO get from current window size
     //m_projectionMatrix = glm::perspective(0.6f, 4.f / 3.f, 0.f, 100.f);
 
     //only want these entities
@@ -160,12 +161,15 @@ void SpriteRenderer::process(Time)
             sprite.m_dirty = false;
         }
 
-        //if depth sorted set Z to -Y
+        
         auto tx = entities[i].getComponent<Transform>();
-        auto pos = tx.getPosition();
-        pos.z = -(pos.y / 100.f); //reduce this else we surpass clip plane
-        tx.setPosition(pos);
-
+        //if depth sorted set Z to -Y
+        if (m_depthAxis == DepthAxis::Y)
+        {
+            auto pos = tx.getPosition();
+            pos.z = -(pos.y / 100.f); //reduce this else we surpass clip plane
+            tx.setPosition(pos);
+        }
         //get current transforms
         std::size_t buffIdx = (i > MaxSprites) ? i % MaxSprites : 0;
         m_bufferTransforms[buffIdx][i - (buffIdx * MaxSprites)] = tx.getWorldTransform(entities);
