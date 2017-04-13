@@ -48,11 +48,11 @@ void Sprite::setTexture(const Texture& t)
 {
     m_textureID = t.getGLHandle();
     FloatRect size = { 0.f, 0.f, static_cast<float>(t.getSize().x), static_cast<float>(t.getSize().y) };
-    setSize(size);
+    setSize({ size.width, size.height });
     setTextureRect(size);
 }
 
-void Sprite::setSize(FloatRect size)
+void Sprite::setSize(glm::vec2 size)
 {
     /*
       1-------4
@@ -61,17 +61,17 @@ void Sprite::setSize(FloatRect size)
       0-------3
     */
 
-    m_quad[0].position.x = size.left;
-    m_quad[0].position.y = size.bottom;
+    m_quad[0].position.x = 0.f;
+    m_quad[0].position.y = 0.f;
 
-    m_quad[1].position.x = size.left;
-    m_quad[1].position.y = size.bottom + size.height;
+    m_quad[1].position.x = 0.f;
+    m_quad[1].position.y = size.y;
 
-    m_quad[2].position.x = size.left + size.width;
-    m_quad[2].position.y = size.bottom;
+    m_quad[2].position.x = size.x;
+    m_quad[2].position.y = 0.f;
 
-    m_quad[3].position.x = size.left + size.width;
-    m_quad[3].position.y = size.bottom + size.height;
+    m_quad[3].position.x = size.x;
+    m_quad[3].position.y = size.y;
 
     m_dirty = true;
 }

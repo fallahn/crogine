@@ -84,7 +84,7 @@ bool MenuState::simulate(cro::Time dt)
 void MenuState::render() const
 {
 	//draw any renderable systems
-    m_sceneRenderer->render();
+    //m_sceneRenderer->render();
     m_spriteRenderer->render();
 }
 
@@ -171,17 +171,17 @@ void MenuState::createScene()
     //r3.speed = 0.1f;
     m_sceneRenderer->setActiveCamera(ent);
 
-    ent = m_scene.createEntity();
+    /*ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>();
     auto& sprite = ent.addComponent<cro::Sprite>();
     sprite.setColour(cro::Colour::Magenta());
-    sprite.setSize({ 0.f, 0.f, 100.f, 50.f });
+    sprite.setSize({ 100.f, 50.f });*/
 
-    /*ent = m_scene.createEntity();
+    ent = m_scene.createEntity();
     auto& tx5 = ent.addComponent<cro::Transform>();
-    tx5.setPosition({ 220.f, 300.f, 0.f });
+    //tx5.setPosition({ 220.f, 300.f, 0.f });
     auto& spr2 = ent.addComponent<cro::Sprite>();
-    spr2.setColour(cro::Colour::Yellow());
-    spr2.setSize({ 0.f, 0.f, 400.f, 30.f });
-    spr2.setTexture(m_textureResource.get("assets/sphere_test.png"));*/
+    //spr2.setColour(cro::Colour::Yellow());
+    spr2.setSize({ 0.2f, 0.4f });
+    spr2.setTexture(m_textureResource.get("assets/sphere_test.png"));
 }

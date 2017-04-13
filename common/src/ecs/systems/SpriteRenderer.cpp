@@ -49,17 +49,17 @@ namespace
 }
 
 SpriteRenderer::SpriteRenderer()
-    : System        (this),
-    m_matrixIndex   (0),
-    m_textureIndex  (0),
-    m_pendingRebuild(false)
+    : System            (this),
+    m_matrixIndex       (0),
+    m_textureIndex      (0),
+    m_projectionIndex   (0),
+    m_pendingRebuild    (false)
 {
     //load shader
     GLint maxVec;
     glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
     MaxSprites = maxVec / 4; //4 x 4-components make up a mat4.
     MaxSprites -= 1;
-	MaxSprites = 31;
     LOG(std::to_string(MaxSprites) + " sprites are available per batch", Logger::Type::Info);
 
     if (!m_shader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Fragment, "#define MAX_MATRICES " + std::to_string(MaxSprites) + "\n"))
@@ -69,12 +69,42 @@ SpriteRenderer::SpriteRenderer()
 
     //get shader texture uniform loc
     const auto& uniforms = m_shader.getUniformMap();
-    for(const auto& p : uniforms)
+    auto listUniforms = [&uniforms]()
     {
-        Logger::log(p.first, Logger::Type::Info);
+        for (const auto& p : uniforms)
+        {
+            Logger::log(p.first, Logger::Type::Info);
+        }
+    };
+    if (uniforms.count("u_worldMatrix[0]") != 0)
+    {
+        m_matrixIndex = m_shader.getUniformMap().find("u_worldMatrix[0]")->second;
     }
-    //m_matrixIndex = m_shader.getUniformMap().find("u_worldMatrix[0]")->second;
-    //m_textureIndex = m_shader.getUniformMap().find("u_texture")->second;
+    else
+    {
+        Logger::log("u_worldMatrix uniform missing from sprite renderer. Available uniforms are: ", Logger::Type::Info);
+        listUniforms();
+    }
+
+    if (uniforms.count("u_texture") != 0)
+    {
+        m_textureIndex = m_shader.getUniformMap().find("u_texture")->second;
+    }
+    else
+    {
+        Logger::log("u_texture uniform missing from sprite renderer. Available uniforms are: ", Logger::Type::Info);
+        listUniforms();
+    }
+
+    if (uniforms.count("u_texture") != 0)
+    {
+        m_textureIndex = m_shader.getUniformMap().find("u_texture")->second;
+    }
+    else
+    {
+        Logger::log("u_texture uniform missing from sprite renderer. Available uniforms are: ", Logger::Type::Info);
+        listUniforms();
+    }
 
     //map shader attribs
     const auto& attribMap = m_shader.getAttribMap();
@@ -82,16 +112,20 @@ SpriteRenderer::SpriteRenderer()
     m_attribMap[AttribLocation::Position].location = attribMap[Mesh::Position];
     m_attribMap[AttribLocation::Colour].size = 4;
     m_attribMap[AttribLocation::Colour].location = attribMap[Mesh::Colour];
+    m_attribMap[AttribLocation::Colour].offset = m_attribMap[AttribLocation::Colour].size * sizeof(float);
     m_attribMap[AttribLocation::UV0].size = 2;
     m_attribMap[AttribLocation::UV0].location = attribMap[Mesh::UV0];
+    m_attribMap[AttribLocation::UV0].offset = m_attribMap[AttribLocation::Colour].offset + (m_attribMap[AttribLocation::UV0].size * sizeof(float));
     m_attribMap[AttribLocation::UV1].size = 2;
     m_attribMap[AttribLocation::UV1].location = attribMap[Mesh::UV1];
+    m_attribMap[AttribLocation::UV1].offset = m_attribMap[AttribLocation::UV0].offset + (m_attribMap[AttribLocation::UV1].size * sizeof(float));
 
     //setup projection
-    m_projectionMatrix = glm::ortho(0.f, 800.f, 0.f, 600.f, 0.1f, 10.f); //TODO get from current window size
-    glCheck(glUseProgram(m_shader.getGLHandle()));
+    m_projectionMatrix = glm::ortho(0.f, 800.f, 0.f, 600.f, -0.1f, 10.f); //TODO get from current window size
+    //m_projectionMatrix = glm::perspective(0.6f, 4.f / 3.f, 0.f, 100.f);
+    /*glCheck(glUseProgram(m_shader.getGLHandle()));
     glCheck(glUniformMatrix4fv(m_shader.getUniformMap().find("u_projectionMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
-    glCheck(glUseProgram(0));
+    glCheck(glUseProgram(0));*/
 
     //only want these entities
     requireComponent<Sprite>();
@@ -137,7 +171,7 @@ void SpriteRenderer::process(Time)
 
         //get current transforms
         std::size_t buffIdx = (i > MaxSprites) ? i % MaxSprites : 0;
-        //m_bufferTransforms[buffIdx][i - (buffIdx * MaxSprites)] = tx.getWorldTransform(entities);
+        m_bufferTransforms[buffIdx][i - (buffIdx * MaxSprites)] = tx.getWorldTransform(entities);
     }
 
     //TODO
@@ -148,29 +182,28 @@ void SpriteRenderer::render()
 {
     //TODO enable / disable depth testing as per setting
     //glCheck(glDisable(GL_CULL_FACE));
-    glCheck(glEnable(GL_DEPTH_TEST));
+    //glCheck(glEnable(GL_DEPTH_TEST));
     //glViewport(0, 0, 800, 600);
 
     //bind shader and attrib arrays
     glCheck(glUseProgram(m_shader.getGLHandle()));
+    glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
     glCheck(glActiveTexture(GL_TEXTURE0));
-    //glCheck(glUniform1i(m_textureIndex, 0));
+    glCheck(glUniform1i(m_textureIndex, 0));
 
     //bind attrib pointers
-    int offset = 0;
     for (auto i = 0u; i < m_attribMap.size(); ++i)
     {
         glCheck(glEnableVertexAttribArray(m_attribMap[i].location));
         glCheck(glVertexAttribPointer(m_attribMap[i].location, m_attribMap[i].size, GL_FLOAT, GL_FALSE, vertexSize, 
-            reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
-        offset += m_attribMap[i].size;
+            reinterpret_cast<void*>(static_cast<intptr_t>(m_attribMap[i].offset))));
     }
 
     //foreach vbo bind and draw
     std::size_t idx = 0;
     for (const auto& batch : m_buffers)
     {
-        const auto& transforms = m_bufferTransforms[0];
+        const auto& transforms = m_bufferTransforms[0]; //TODO this should be same index as current buffer
         //glCheck(glUniformMatrix4fv(m_matrixIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
 
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, batch.first));
@@ -178,7 +211,7 @@ void SpriteRenderer::render()
         {
             CRO_ASSERT(batchData.texture > -1, "Missing sprite texture!");
             glCheck(glBindTexture(GL_TEXTURE_2D, batchData.texture));
-            glCheck(glDrawArrays(GL_TRIANGLE_STRIP, batchData.start, batchData.end));
+            glCheck(glDrawArrays(GL_TRIANGLE_STRIP, batchData.start, batchData.count));
         }
         idx++;
     }
@@ -225,7 +258,7 @@ void SpriteRenderer::rebuildBatch()
             if (sprite.m_textureID != batchData.texture)
             {
                 //end the batch and start a new one for this buffer
-                batchData.end = start - 1;
+                batchData.count = start;
                 batch.second.push_back(batchData);
 
                 batchData.start = start;
@@ -238,7 +271,7 @@ void SpriteRenderer::rebuildBatch()
                 vertexData.push_back(sprite.m_quad[idx].position.x);
                 vertexData.push_back(sprite.m_quad[idx].position.y);
                 vertexData.push_back(sprite.m_quad[idx].position.z);
-                vertexData.push_back(sprite.m_quad[idx].position.w);
+                vertexData.push_back(1.f);
 
                 vertexData.push_back(sprite.m_quad[idx].colour.r);
                 vertexData.push_back(sprite.m_quad[idx].colour.g);
@@ -249,7 +282,8 @@ void SpriteRenderer::rebuildBatch()
                 vertexData.push_back(sprite.m_quad[idx].UV.y);
 
                 vertexData.push_back(static_cast<float>(i)); //for transform lookup
-                vertexData.push_back(0.f);
+                vertexData.push_back(1.f);
+                //vertexData.push_back(1.f);
             };
 
             if (i > 0)
@@ -273,7 +307,7 @@ void SpriteRenderer::rebuildBatch()
             for (auto j = 0; j < 4; ++j) copyVertex(j);
         }
         batchIdx += MaxSprites;
-        batchData.end = start - 1;
+        batchData.count = start;
         batch.second.push_back(batchData);
 
         //upload to VBO
@@ -287,7 +321,7 @@ void SpriteRenderer::rebuildBatch()
     std::size_t i = 0;
     for (const auto& buffer : m_buffers)
     {
-        m_bufferTransforms[i].resize(buffer.second.back().end / 4);
+        m_bufferTransforms[i].resize(buffer.second.back().count / 4);
         i++;
     }
 

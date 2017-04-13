@@ -69,7 +69,7 @@ namespace cro
         {
             int32 texture = 0;
             uint32 start = 0;
-            uint32 end = 0;
+            uint32 count = 0; //this is the COUNT not the final index
         };
         std::map<uint32, std::vector<Batch>> m_buffers;
         std::vector<std::vector<glm::mat4>> m_bufferTransforms;
@@ -82,6 +82,7 @@ namespace cro
         {
             uint32 size = 0;
             uint32 location = 0;
+            uint32 offset = 0;
         };
         std::array<AttribData, AttribLocation::Count> m_attribMap;
 
@@ -89,6 +90,7 @@ namespace cro
         Shader m_shader;
         int32 m_matrixIndex;
         int32 m_textureIndex;
+        int32 m_projectionIndex;
 
         bool m_pendingRebuild;
         void rebuildBatch();

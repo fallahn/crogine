@@ -70,7 +70,7 @@ namespace cro
         \brief Sets the size of the sprite.
         This is initally set to the size of the texture.
         */
-        void setSize(FloatRect);
+        void setSize(glm::vec2);
 
         /*!
         \brief Sets a sub-rectangle of the texture to draw.
