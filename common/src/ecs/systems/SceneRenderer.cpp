@@ -108,7 +108,7 @@ void SceneRenderer::render()
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
             glCheck(glUniformMatrix3fv(model.m_materials[i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
 
-            //bind winding/cullface/depthfunc
+            //TODO set material winding/cullface/depthfunc
 
             //bind attribs
             const auto& attribs = model.m_materials[i].attribs;
@@ -139,6 +139,7 @@ void SceneRenderer::render()
         glCheck(glUseProgram(0));
     }
 
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));
 }

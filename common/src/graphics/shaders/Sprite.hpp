@@ -52,7 +52,7 @@ namespace cro
 
                 void main()
                 {
-                    int idx = int(clamp(a_texCoord1.x, 0.0, MAX_MATRICES - 1));/* u_worldMatrix[idx]*/
+                    int idx = int(clamp(a_texCoord1.x, 0.0, float(MAX_MATRICES - 1)));/* u_worldMatrix[idx]*/
                     gl_Position = u_projectionMatrix * u_worldMatrix[idx] * a_position;
                     v_colour = a_colour;
                     //v_colour *= a_texCoord1.y;

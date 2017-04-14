@@ -75,6 +75,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\StaticMeshBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\TextureResource.hpp" />
+    <ClInclude Include="..\common\include\crogine\util\Maths.hpp" />
     <ClInclude Include="..\common\src\glad\GLCheck.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Default.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Sprite.hpp" />

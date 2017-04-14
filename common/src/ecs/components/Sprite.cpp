@@ -34,7 +34,8 @@ using namespace cro;
 
 Sprite::Sprite()
     : m_textureID   (0),
-    m_dirty         (true)
+    m_dirty         (true),
+    m_vboOffset     (0)
 {
     for (auto& q : m_quad)
     {
@@ -104,4 +105,14 @@ void Sprite::setColour(Colour colour)
         v.colour = { colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha() };
     }
     m_dirty = true;
+}
+
+glm::vec2 Sprite::getSize() const
+{
+    return m_quad[2].position;
+}
+
+Colour Sprite::getColour() const
+{
+    return  Colour(m_quad[0].colour);
 }

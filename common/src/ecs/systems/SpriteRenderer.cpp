@@ -149,7 +149,6 @@ void SpriteRenderer::process(Time)
     //get list of entities (should already be sorted by addEnt callback)
     auto& entities = getEntities();
 
-    bool rebatch = false;
     for (auto i = 0u; i < entities.size(); ++i)
     {
         //check for dirty flag
@@ -157,7 +156,44 @@ void SpriteRenderer::process(Time)
         auto& sprite = entities[i].getComponent<Sprite>();
         if (sprite.m_dirty)
         {
-            rebatch = true;
+            //update buffer subdata
+            //TODO depending on how often this happens it might be worth
+            //double buffering the VBOs
+
+            //create data
+            std::vector<float> vertexData;
+            auto copyVertex = [&](uint32 idx)
+            {
+                vertexData.push_back(sprite.m_quad[idx].position.x);
+                vertexData.push_back(sprite.m_quad[idx].position.y);
+                vertexData.push_back(sprite.m_quad[idx].position.z);
+                vertexData.push_back(1.f);
+
+                vertexData.push_back(sprite.m_quad[idx].colour.r);
+                vertexData.push_back(sprite.m_quad[idx].colour.g);
+                vertexData.push_back(sprite.m_quad[idx].colour.b);
+                vertexData.push_back(sprite.m_quad[idx].colour.a);
+
+                vertexData.push_back(sprite.m_quad[idx].UV.x);
+                vertexData.push_back(sprite.m_quad[idx].UV.y);
+
+                vertexData.push_back(static_cast<float>(i)); //for transform lookup
+                vertexData.push_back(0.f);
+            };
+            for (auto j = 0; j < 4; ++j)
+            {
+                copyVertex(j);
+            }
+
+            //find offset (and VBO id)
+            auto vboIdx = (i > MaxSprites) ? i % MaxSprites : 0;
+
+            //update sub data
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_buffers[vboIdx].first));
+            glCheck(glBufferSubData(GL_ARRAY_BUFFER, sprite.m_vboOffset,
+                vertexData.size() * sizeof(float), vertexData.data()));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
             sprite.m_dirty = false;
         }
 
@@ -174,9 +210,6 @@ void SpriteRenderer::process(Time)
         std::size_t buffIdx = (i > MaxSprites) ? i % MaxSprites : 0;
         m_bufferTransforms[buffIdx][i - (buffIdx * MaxSprites)] = tx.getWorldTransform(entities);
     }
-
-    //TODO
-    //if(rebatch){updateSubdata();}
 }
 
 void SpriteRenderer::render()
@@ -191,38 +224,38 @@ void SpriteRenderer::render()
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glUniform1i(m_textureIndex, 0));
 
-    //bind attrib pointers
-    for (auto i = 0u; i < m_attribMap.size(); ++i)
-    {
-        glCheck(glEnableVertexAttribArray(m_attribMap[i].location));
-        glCheck(glVertexAttribPointer(m_attribMap[i].location, m_attribMap[i].size, GL_FLOAT, GL_FALSE, vertexSize, 
-            reinterpret_cast<void*>(static_cast<intptr_t>(m_attribMap[i].offset))));      
-    }
-
     //foreach vbo bind and draw
     std::size_t idx = 0;
     for (const auto& batch : m_buffers)
     {
-        const auto& transforms = m_bufferTransforms[0]; //TODO this should be same index as current buffer
+        const auto& transforms = m_bufferTransforms[idx++]; //TODO this should be same index as current buffer
         glCheck(glUniformMatrix4fv(m_matrixIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
 
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, batch.first));
+        
+        //bind attrib pointers
+        for (auto i = 0u; i < m_attribMap.size(); ++i)
+        {
+            glCheck(glEnableVertexAttribArray(m_attribMap[i].location));
+            glCheck(glVertexAttribPointer(m_attribMap[i].location, m_attribMap[i].size, GL_FLOAT, GL_FALSE, vertexSize, 
+                reinterpret_cast<void*>(static_cast<intptr_t>(m_attribMap[i].offset))));      
+        }
+
         for (const auto& batchData : batch.second)
         {
             //CRO_ASSERT(batchData.texture > -1, "Missing sprite texture!");
             glCheck(glBindTexture(GL_TEXTURE_2D, batchData.texture));
             glCheck(glDrawArrays(GL_TRIANGLE_STRIP, batchData.start, batchData.count));
         }
-        idx++;  
+  
+        //unbind attrib pointers
+        for (auto i = 0u; i < m_attribMap.size(); ++i)
+        {
+            glCheck(glDisableVertexAttribArray(m_attribMap[i].location));
+        } 
+
     }
-    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-    //unbind attrib pointers
-    for (auto i = 0u; i < m_attribMap.size(); ++i)
-    {
-        glCheck(glDisableVertexAttribArray(m_attribMap[i].location));
-    } 
-
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDisable(GL_CULL_FACE));
 }
@@ -239,7 +272,7 @@ void SpriteRenderer::rebuildBatch()
     {
         uint32 vbo;
         glCheck(glGenBuffers(1, &vbo));
-        m_buffers.insert(std::make_pair(vbo, std::vector<Batch>()));
+        m_buffers.emplace_back(std::make_pair(vbo, std::vector<Batch>()));
     }
 
     //create each batch
@@ -256,7 +289,7 @@ void SpriteRenderer::rebuildBatch()
         auto maxCount = std::min(static_cast<uint32>(entities.size()), batchIdx + MaxSprites);
         for (auto i = 0u; i < maxCount; ++i)
         {
-            const auto& sprite = entities[i + batchIdx].getComponent<Sprite>();
+            auto& sprite = entities[i + batchIdx].getComponent<Sprite>();
 
             if (sprite.m_textureID != batchData.texture)
             {
@@ -309,12 +342,15 @@ void SpriteRenderer::rebuildBatch()
 
             //increase the start point
             start += 4;
+            
             //and append data
+            sprite.m_vboOffset = static_cast<int32>(vertexData.size() * sizeof(float));
             for (auto j = 0; j < 4; ++j)
             {
                 copyVertex(j);
             }
             spritesThisBatch++;
+            sprite.m_dirty = false;
         }
         batchIdx += MaxSprites;
         batchData.count = start - batchData.start;

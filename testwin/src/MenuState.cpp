@@ -29,6 +29,7 @@ source distribution.
 
 #include "MenuState.hpp"
 #include "RotateSystem.hpp"
+#include "ColourSystem.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
@@ -84,7 +85,7 @@ bool MenuState::simulate(cro::Time dt)
 void MenuState::render() const
 {
 	//draw any renderable systems
-    //m_sceneRenderer->render();
+    m_sceneRenderer->render();
     m_spriteRenderer->render();    
 }
 
@@ -96,6 +97,7 @@ void MenuState::addSystems()
     m_spriteRenderer = &m_scene.addSystem<cro::SpriteRenderer>();
 
     m_scene.addSystem<RotateSystem>();
+    m_scene.addSystem<ColourSystem>();
 }
 
 void MenuState::loadAssets()
@@ -181,6 +183,7 @@ void MenuState::createScene()
     spr.setColour(cro::Colour(0.f, 0.5f, 1.f, 1.f));
     spr.setTexture(m_textureResource.get("assets/test.png"));
     spr.setSize({ 200.f, 50.f });
+    ent.addComponent<ColourChanger>();
 
     ent = m_scene.createEntity();
     auto& tx5 = ent.addComponent<cro::Transform>();
@@ -201,4 +204,5 @@ void MenuState::createScene()
     auto& r3 = ent.addComponent<Rotator>();
     r3.axis.z = 1.f;
     r3.speed = -4.1f;
+    ent.addComponent<ColourChanger>();
 }

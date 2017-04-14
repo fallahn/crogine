@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/Assert.hpp>
 
+#include <glm/vec4.hpp>
+
 namespace cro
 {
 	/*!
@@ -64,6 +66,11 @@ namespace cro
 		\brief Constructs the colour from 3 or 4 normalised values
 		*/
         explicit Colour(float red, float green, float blue, float alpha = 1.f);
+
+        /*!
+        \brief Constructs the colour from a vector 4
+        */
+        Colour(glm::vec4 vector);
 
 		/*!
 		\brief sets the red channel value

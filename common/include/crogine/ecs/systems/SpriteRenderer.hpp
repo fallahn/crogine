@@ -88,7 +88,7 @@ namespace cro
             uint32 start = 0;
             uint32 count = 0; //this is the COUNT not the final index
         };
-        std::map<uint32, std::vector<Batch>> m_buffers;
+        std::vector<std::pair<uint32, std::vector<Batch>>> m_buffers;
         std::vector<std::vector<glm::mat4>> m_bufferTransforms;
 
         enum AttribLocation

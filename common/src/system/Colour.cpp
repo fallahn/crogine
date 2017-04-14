@@ -63,6 +63,14 @@ cro::Colour::Colour(float red, float green, float blue, float alpha)
     CRO_ASSERT((r >= 0 && r <= 1) && (g >= 0 && g <= 1) && (b >= 0 && b <= 1) && (a >= 0 && a <= 1), "Values must be normalised");
 }
 
+cro::Colour::Colour(glm::vec4 vector)
+{
+    setRed(vector.r);
+    setGreen(vector.g);
+    setBlue(vector.b);
+    setAlpha(vector.a);
+}
+
 //public
 void cro::Colour::setRed(cro::uint8 red)
 {
@@ -147,7 +155,6 @@ float cro::Colour::getAlpha() const
 {
     return a;
 }
-
 
 cro::int32 cro::Colour::getPacked() const
 {

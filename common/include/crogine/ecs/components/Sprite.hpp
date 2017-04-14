@@ -86,6 +86,16 @@ namespace cro
         */
         void setColour(Colour);
 
+        /*!
+        \brief Gets the current size of the sprite
+        */
+        glm::vec2 getSize() const;
+
+        /*!
+        \brief Returns the current colour of the sprite
+        */
+        Colour getColour() const;
+
     private:
         int32 m_textureID;
         struct Vertex
@@ -96,6 +106,7 @@ namespace cro
         };
         std::array<Vertex, 4u> m_quad;
         bool m_dirty;
+        int32 m_vboOffset; //where this sprite starts in its VBO
         friend class SpriteRenderer;
     };
 }

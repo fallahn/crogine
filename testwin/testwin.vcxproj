@@ -285,12 +285,14 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ColourSystem.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\RotateSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ColourSystem.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\RotateSystem.hpp" />
