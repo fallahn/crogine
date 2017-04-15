@@ -271,6 +271,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Content Include="assets\assets\beeble.cmf" />
+    <Content Include="assets\assets\interface.png" />
     <Content Include="assets\assets\sphere_test.png" />
     <Content Include="assets\assets\test.png" />
     <Content Include="assets\assets\test_effect.wav" />

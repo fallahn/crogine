@@ -67,6 +67,9 @@
     <Filter Include="Source Files\android">
       <UniqueIdentifier>{7001eb83-a98a-4678-ae0a-001b40357845}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{c6fea9cf-8260-46a5-a625-8bae00d3684e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\Config.hpp">
@@ -211,7 +214,7 @@
       <Filter>Header Files\graphics\shaders</Filter>
     </ClInclude>
     <ClInclude Include="..\common\include\crogine\util\Maths.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

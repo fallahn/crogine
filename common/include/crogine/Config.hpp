@@ -30,6 +30,12 @@ source distribution.
 #ifndef CRO_CONFIG_HPP_
 #define CRO_CONFIG_HPP_
 
+#if defined  __ANDROID__ || (defined __APPLE__ && TARGET_OS_IPHONE)
+#define PLATFORM_MOBILE 1
+#else
+#define PLATFORM_DESKTOP 1
+#endif //platform check
+
 //check which platform we're on and create export macros as necessary
 #if !defined(CRO_STATIC)
 

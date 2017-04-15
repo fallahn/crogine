@@ -132,6 +132,8 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
+    //----3D stuff----//
+    
     auto material = m_materialResource.get(0);
 
     cro::Entity ent = m_scene.createEntity();
@@ -139,7 +141,6 @@ void MenuState::createScene()
     tx.setPosition({ -1.2f, 0.1f, -4.6f });
     tx.rotate({ 0.5f, 1.f, 0.3f }, 0.6f);
     ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), material);
-
 
     ent = m_scene.createEntity();
     auto& tx2 = ent.addComponent<cro::Transform>();
@@ -170,39 +171,37 @@ void MenuState::createScene()
     ent.addComponent<cro::Camera>();
     m_sceneRenderer->setActiveCamera(ent);
 
+
+    //------sprite stuff-----//
+
+    auto& uiTex = m_textureResource.get("assets/interface.png");
+    
     ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 40.f, 40.f, 0.f });
+    ent.addComponent<cro::Transform>().setPosition({ 10.f, 552.f, 0.f });
     auto& sprite = ent.addComponent<cro::Sprite>();
-    sprite.setColour(cro::Colour(1.f, 0.5f, 0.f, 1.f));
-    sprite.setTexture(m_textureResource.get("g"));
-    sprite.setSize({ 100.f, 50.f });
+    //sprite.setColour(cro::Colour(1.f, 0.5f, 0.f, 1.f));
+    sprite.setTexture(uiTex);
+    sprite.setTextureRect({ 0.f, 210.f, 256.f, 38.f });
 
     ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 200.f, 10.f, 0.f });
+    ent.addComponent<cro::Transform>().setPosition({ 680.f, 10.f, 0.f });
     auto& spr = ent.addComponent<cro::Sprite>();
     spr.setColour(cro::Colour(0.f, 0.5f, 1.f, 1.f));
-    spr.setTexture(m_textureResource.get("assets/test.png"));
-    spr.setSize({ 200.f, 50.f });
+    spr.setTexture(uiTex);
+    spr.setTextureRect({ 6.f, 136.f, 110.f, 66.f });
     ent.addComponent<ColourChanger>();
 
     ent = m_scene.createEntity();
-    auto& tx5 = ent.addComponent<cro::Transform>();
-    tx5.setPosition({ 220.f, 200.f, 0.f });
-    tx5.setScale({ 0.5, 0.5f, 0.5f });
-    tx5.setRotation({ 0.f, 0.5f, 0.f });
+    ent.addComponent<cro::Transform>().setPosition({ 20.f, 10.f, 0.f });
     auto& spr2 = ent.addComponent<cro::Sprite>();
-    //spr2.setColour(cro::Colour::Yellow());
-    //spr2.setSize({ 220.2f, 100.4f });
-    spr2.setTexture(m_textureResource.get("assets/sphere_test.png"));
+    spr2.setTexture(uiTex);
+    spr2.setTextureRect({ 0.f, 0.f, 136.f, 136.f });
 
     ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 500.f, 140.f, 0.f });
+    ent.addComponent<cro::Transform>().setPosition({ 720.f, 82.f, 0.f });
     auto& spr3 = ent.addComponent<cro::Sprite>();
     spr3.setColour(cro::Colour(1.f, 0.5f, 0.5f, 1.f));
-    spr3.setTexture(m_textureResource.get("g"));
-    spr3.setSize({ 10.f, 150.f });
-    auto& r3 = ent.addComponent<Rotator>();
-    r3.axis.z = 1.f;
-    r3.speed = -4.1f;
+    spr3.setTexture(uiTex);
+    spr3.setTextureRect({ 180.f, 0.f, 76.f, 214.f });
     ent.addComponent<ColourChanger>();
 }

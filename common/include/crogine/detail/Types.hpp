@@ -30,6 +30,8 @@ source distribution.
 #ifndef CRO_TYPES_HPP_
 #define CRO_TYPES_HPP_
 
+#include <crogine/Config.hpp>
+
 #include <SDL_stdinc.h>
 #include <SDL_events.h>
 
@@ -62,10 +64,10 @@ namespace cro
         };
     }
 
-#ifdef __ANDROID__
-    static glm::uvec2 DefaultSceneSize(1280, 720);
+#ifdef PLATFORM_MOBILE
+    static const glm::uvec2 DefaultSceneSize(1280, 720);
 #else
-    static glm::uvec2 DefaultSceneSize(1920, 1080);
-#endif //__ANDROID__
+    static const glm::uvec2 DefaultSceneSize(1920, 1080);
+#endif //PLATFORM
 }
 #endif //CRO_TYPES_HPP_

@@ -49,7 +49,9 @@ void Sprite::setTexture(const Texture& t)
 {
     m_textureID = t.getGLHandle();
     FloatRect size = { 0.f, 0.f, static_cast<float>(t.getSize().x), static_cast<float>(t.getSize().y) };
-    setSize({ size.width, size.height });
+    //setSize({ size.width, size.height });
+    m_textureSize.x = size.width;
+    m_textureSize.y = size.height;
     setTextureRect(size);
 }
 
@@ -78,8 +80,11 @@ void Sprite::setSize(glm::vec2 size)
 
 void Sprite::setTextureRect(FloatRect subRect)
 {
-    float width = m_quad[3].position.x;
-    float height = m_quad[0].position.y;
+    setSize({ subRect.width, subRect.height });
+
+    
+    float width = m_textureSize.x;
+    float height = m_textureSize.y;
     
     CRO_ASSERT(width != 0 && height != 0, "Invalid width or height - is the texture set?");
 

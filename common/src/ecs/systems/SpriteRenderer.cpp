@@ -44,7 +44,7 @@ using namespace cro;
 
 namespace
 {
-    uint32 MaxSprites = 0;
+    uint32 MaxSprites = 127u;
     constexpr uint32 vertexSize = (4 + 4 + 2 + 2) * sizeof(float); //pos, colour, UV0, UV1
 }
 
@@ -56,13 +56,15 @@ SpriteRenderer::SpriteRenderer()
     m_depthAxis         (DepthAxis::Z),
     m_pendingRebuild    (false)
 {
-    //load shader
+    //this has been known to fail on some platforms - but android can be as low as 63
+    //which almost negates the usefulness of GPU bound transforms... :S
     GLint maxVec;
     glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
     MaxSprites = maxVec / 4; //4 x 4-components make up a mat4.
     MaxSprites -= 1;
     LOG(std::to_string(MaxSprites) + " sprites are available per batch", Logger::Type::Info);
-
+    
+    //load shader
     if (!m_shader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Fragment, "#define MAX_MATRICES " + std::to_string(MaxSprites) + "\n"))
     {
         Logger::log("Failed loading sprite rendering shader. Rendering will be in invalid state.", Logger::Type::Error, Logger::Output::All);
@@ -122,7 +124,8 @@ SpriteRenderer::SpriteRenderer()
     m_attribMap[AttribLocation::UV1].offset = m_attribMap[AttribLocation::UV0].offset + (m_attribMap[AttribLocation::UV0].size * sizeof(float));
 
     //setup projection
-    m_projectionMatrix = glm::ortho(0.f, 800.f, 0.f, 600.f, -0.1f, 100.f); //TODO get from current window size
+    m_projectionMatrix = glm::ortho(0.f, static_cast<float>(DefaultSceneSize.x), 0.f,
+                                    static_cast<float>(DefaultSceneSize.y), -0.1f, 100.f);
     //m_projectionMatrix = glm::perspective(0.6f, 4.f / 3.f, 0.f, 100.f);
 
     //only want these entities
@@ -214,9 +217,11 @@ void SpriteRenderer::process(Time)
 
 void SpriteRenderer::render()
 {
-    //TODO enable / disable depth testing as per setting
     glCheck(glEnable(GL_CULL_FACE));
     glCheck(glEnable(GL_DEPTH_TEST));
+    glCheck(glEnable(GL_BLEND));
+
+    glViewport(0, 0, DefaultSceneSize.x, DefaultSceneSize.y);
 
     //bind shader and attrib arrays
     glCheck(glUseProgram(m_shader.getGLHandle()));
@@ -256,6 +261,10 @@ void SpriteRenderer::render()
 
     }
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    glViewport(0, 0, 1280, 720); //TODO set to window size
+
+    glCheck(glDisable(GL_BLEND));
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDisable(GL_CULL_FACE));
 }

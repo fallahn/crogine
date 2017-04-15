@@ -98,6 +98,7 @@ namespace cro
 
     private:
         int32 m_textureID;
+        glm::vec3 m_textureSize;
         struct Vertex
         {
             glm::vec4 position;
@@ -106,7 +107,7 @@ namespace cro
         };
         std::array<Vertex, 4u> m_quad;
         bool m_dirty;
-        int32 m_vboOffset; //where this sprite starts in its VBO
+        int32 m_vboOffset; //where this sprite starts in its VBO - used when updating sub buffer data
         friend class SpriteRenderer;
     };
 }
