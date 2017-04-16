@@ -33,3 +33,9 @@ void System::requireComponent()
     const auto id = Component::getID<T>();
     m_componentMask.set(id);
 }
+
+template <typename T>
+cro::Message* System::postMessage(cro::Message::ID id)
+{
+    return m_messageBus.post<T>(id);
+}

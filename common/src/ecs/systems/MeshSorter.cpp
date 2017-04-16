@@ -47,8 +47,8 @@ source distribution.
 
 using namespace cro;
 
-MeshSorter::MeshSorter(SceneRenderer& renderer)
-    : System                (this),
+MeshSorter::MeshSorter(MessageBus& mb, SceneRenderer& renderer)
+    : System                (mb, this),
     m_renderer              (renderer)
 {
     requireComponent<Transform>();

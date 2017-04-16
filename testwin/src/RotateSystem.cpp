@@ -32,8 +32,8 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 
-RotateSystem::RotateSystem()
-    : cro::System(this)
+RotateSystem::RotateSystem(cro::MessageBus& mb)
+    : cro::System(mb, this)
 {
     requireComponent<cro::Transform>();
     requireComponent<Rotator>();

@@ -49,8 +49,8 @@ namespace
     constexpr uint32 vertexSize = (4 + 4 + 2 + 2) * sizeof(float); //pos, colour, UV0, UV1
 }
 
-SpriteRenderer::SpriteRenderer()
-    : System            (this),
+SpriteRenderer::SpriteRenderer(MessageBus& mb)
+    : System            (mb, this),
     m_matrixIndex       (0),
     m_textureIndex      (0),
     m_projectionIndex   (0),

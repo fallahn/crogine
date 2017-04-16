@@ -33,13 +33,14 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/ecs/Entity.hpp>
+#include <crogine/core/MessageBus.hpp>
 
 #include <glm/vec4.hpp>
 
 class ColourSystem final : public cro::System
 {
 public:
-    ColourSystem();
+    explicit ColourSystem(cro::MessageBus&);
 
     void process(cro::Time) override;
 

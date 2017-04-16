@@ -78,7 +78,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
 
 void MenuState::handleMessage(const cro::Message& msg)
 {
-
+    m_scene.forwardMessage(msg);
 }
 
 bool MenuState::simulate(cro::Time dt)
@@ -97,12 +97,14 @@ void MenuState::render() const
 //private
 void MenuState::addSystems()
 {
-    m_sceneRenderer = &m_scene.addSystem<cro::SceneRenderer>(m_scene.getDefaultCamera());
-    m_scene.addSystem<cro::MeshSorter>(*m_sceneRenderer);
-    m_spriteRenderer = &m_scene.addSystem<cro::SpriteRenderer>();
+    auto& mb = getContext().appInstance.getMessageBus();
+    
+    m_sceneRenderer = &m_scene.addSystem<cro::SceneRenderer>(mb, m_scene.getDefaultCamera());
+    m_scene.addSystem<cro::MeshSorter>(mb, *m_sceneRenderer);
+    m_spriteRenderer = &m_scene.addSystem<cro::SpriteRenderer>(mb);
 
-    m_scene.addSystem<RotateSystem>();
-    m_scene.addSystem<ColourSystem>();
+    m_scene.addSystem<RotateSystem>(mb);
+    m_scene.addSystem<ColourSystem>(mb);
 }
 
 void MenuState::loadAssets()

@@ -39,6 +39,7 @@ namespace cro
 {
     class Entity;
     class SceneRenderer;
+    class MessageBus;
     /*!
     \brief Culls and sorts entities into draw lists for renderer.
     */
@@ -47,10 +48,11 @@ namespace cro
     public:
         /*!
         \brief Constructor
+        \param mb Reference to the system message bus
         \param renderer Reference to renderer used to draw
         the meshes sorted by this system
         */
-        explicit MeshSorter(SceneRenderer& renderer);
+        MeshSorter(MessageBus& mb,SceneRenderer& renderer);
 
         /*!
         \brief Automatically executed once per fram by the ECS.

@@ -80,4 +80,9 @@ Entity Scene::getDefaultCamera() const
     return m_entityManager.getEntity(m_defaultCamera);
 }
 
+void Scene::forwardMessage(const Message& msg)
+{
+    m_systemManager.forwardMessage(msg);
+}
+
 //private

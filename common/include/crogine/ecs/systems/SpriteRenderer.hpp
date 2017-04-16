@@ -42,13 +42,19 @@ source distribution.
 
 namespace cro
 {
+    class MessageBus;
+
     /*!
     \brief Batches and renders the scene Sprite components
     */
     class CRO_EXPORT_API SpriteRenderer final : public System, public Detail::SDLResource
     {
     public:
-        SpriteRenderer();
+        /*!
+        \brief Constructor.
+        \param mb Refernce to system message bus
+        */
+        explicit SpriteRenderer(MessageBus& mb);
         ~SpriteRenderer();
 
         //TODO setters for view/resolution

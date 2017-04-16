@@ -38,8 +38,8 @@ source distribution.
 
 using namespace cro;
 
-ColourSystem::ColourSystem()
-    : cro::System(this)
+ColourSystem::ColourSystem(cro::MessageBus& mb)
+    : cro::System(mb, this)
 {
     requireComponent<cro::Sprite>();
     requireComponent<ColourChanger>();

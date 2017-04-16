@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/Component.hpp>
+#include <crogine/core/MessageBus.hpp>
 
 #include <vector>
 #include <typeindex>
@@ -61,7 +62,7 @@ namespace cro
         a unique type ID for this system.
         */
         template <typename T>
-        explicit System(T* c) : m_type(typeid(*c)){}
+        System(MessageBus& mb, T* c) : m_messageBus(mb), m_type(typeid(*c)){}
 
         virtual ~System() = default;
 
@@ -99,6 +100,11 @@ namespace cro
         const ComponentMask& getComponentMask() const;
 
         /*!
+        \brief Used to process any incoming system messages
+        */
+        virtual void handleMessage(const cro::Message&) {}
+
+        /*!
         \brief Implement this for system specific processing to entities.
         */
         virtual void process(cro::Time);
@@ -116,8 +122,15 @@ namespace cro
         */
         virtual void onEntityRemoved(Entity) {}
 
+        /*!
+        \brief Posts a message on the system wide message bus
+        */
+        template <typename T>
+        Message* postMessage(Message::ID id);
+
     private:
 
+        MessageBus& m_messageBus;
         UniqueType m_type;
 
         ComponentMask m_componentMask;
@@ -173,6 +186,11 @@ namespace cro
         \brief Removes the given Entity from any systems to which it may belong
         */
         void removeFromSystems(Entity);
+
+        /*!
+        \brief Forwards messages to all systems
+        */
+        void forwardMessage(const cro::Message&);
 
         /*!
         \brief Runs a simulation step by calling process() on each system

@@ -55,6 +55,14 @@ void SystemManager::removeFromSystems(Entity entity)
     }
 }
 
+void SystemManager::forwardMessage(const Message& msg)
+{
+    for (auto& sys : m_systems)
+    {
+        sys->handleMessage(msg);
+    }
+}
+
 void SystemManager::process(Time dt)
 {
     for (auto& system : m_systems)

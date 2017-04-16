@@ -91,6 +91,11 @@ namespace cro
         */
         Entity getDefaultCamera() const;
 
+        /*!
+        \brief Forwards messages to the systems in the scene
+        */
+        void forwardMessage(const Message&);
+
     private:
 
         Entity::ID m_defaultCamera;

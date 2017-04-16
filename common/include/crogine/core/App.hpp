@@ -89,6 +89,11 @@ namespace cro
         */
         static Window& getWindow();
 
+        /*!
+        \brief Returns a reference to the system message bus
+        */
+        MessageBus& getMessageBus() { return m_messageBus; }
+
 	protected:
 		
 		virtual void handleEvent(const Event&) = 0;

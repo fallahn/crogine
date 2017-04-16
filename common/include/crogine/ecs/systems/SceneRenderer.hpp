@@ -40,6 +40,8 @@ source distribution.
 
 namespace cro
 {
+    class MessageBus;
+    
     /*!
     \brief Used to draw a given list of meshes.
     Provide an instance of this to systems such as the MeshSorter
@@ -52,9 +54,10 @@ namespace cro
     public:
         /*!
         \brief Constructor.
+        \param mb Refernce to the system message bus
         \param Default camera to use when rendering
         */
-        explicit SceneRenderer(Entity defaultCamera);
+        SceneRenderer(MessageBus& mb, Entity defaultCamera);
 
         /*!
         \brief Sets the active camera when rendering

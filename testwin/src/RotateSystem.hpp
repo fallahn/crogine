@@ -31,13 +31,14 @@ source distribution.
 #define TEST_ROTATE_SYS_HPP_
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/core/MessageBus.hpp>
 
 #include <glm/vec3.hpp>
 
 class RotateSystem final : public cro::System
 {
 public:
-    RotateSystem();
+    explicit RotateSystem(cro::MessageBus&);
 
     void process(cro::Time) override;
 
