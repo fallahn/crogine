@@ -132,6 +132,9 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     //only want these entities
     requireComponent<Sprite>();
     requireComponent<Transform>();
+
+    auto size = App::getWindow().getSize();
+    setViewPort(size.x, size.y);
 }
 
 SpriteRenderer::~SpriteRenderer()
@@ -143,6 +146,18 @@ SpriteRenderer::~SpriteRenderer()
 }
 
 //public
+void SpriteRenderer::handleMessage(const Message& msg)
+{
+    if (msg.id == Message::WindowMessage)
+    {
+        const auto& data = msg.getData<Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            setViewPort(data.data0, data.data1);
+        }
+    }
+}
+
 void SpriteRenderer::process(Time)
 {
     if (m_pendingRebuild)
@@ -222,8 +237,7 @@ void SpriteRenderer::render()
     glCheck(glEnable(GL_DEPTH_TEST));
     glCheck(glEnable(GL_BLEND));
 
-    auto windowSize = App::getWindow().getSize(); //TODO get aspect correct size - only on window resize
-    glViewport(0, 0, windowSize.x, windowSize.y);
+    glViewport(0, m_viewPort.bottom, m_viewPort.width, m_viewPort.height);
 
     //bind shader and attrib arrays
     glCheck(glUseProgram(m_shader.getGLHandle()));
@@ -270,6 +284,14 @@ void SpriteRenderer::render()
 }
 
 //private
+void SpriteRenderer::setViewPort(int32 x, int32 y)
+{
+    //assumes width is always widest    
+    m_viewPort.width = x;
+    m_viewPort.height = (x/16) * 9;
+    m_viewPort.bottom = (y - m_viewPort.height) / 2;
+}
+
 void SpriteRenderer::rebuildBatch()
 {
     auto& entities = getEntities();

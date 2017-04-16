@@ -184,14 +184,14 @@ void MenuState::createScene()
     auto& uiTex = m_textureResource.get("assets/interface.png");
     
     ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 10.f, 552.f, 0.f });
+    ent.addComponent<cro::Transform>().setPosition({ 10.f, cro::DefaultSceneSize.y - 48.f, 0.f });
     auto& sprite = ent.addComponent<cro::Sprite>();
     //sprite.setColour(cro::Colour(1.f, 0.5f, 0.f, 1.f));
     sprite.setTexture(uiTex);
     sprite.setTextureRect({ 0.f, 210.f, 256.f, 38.f });
 
     ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 680.f, 10.f, 0.f });
+    ent.addComponent<cro::Transform>().setPosition({ cro::DefaultSceneSize.x - 120.f, 10.f, 0.f });
     auto& spr = ent.addComponent<cro::Sprite>();
     spr.setColour(cro::Colour(0.f, 0.5f, 1.f, 1.f));
     spr.setTexture(uiTex);
@@ -205,7 +205,7 @@ void MenuState::createScene()
     spr2.setTextureRect({ 0.f, 0.f, 136.f, 136.f });
 
     ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 720.f, 82.f, 0.f });
+    ent.addComponent<cro::Transform>().setPosition({ cro::DefaultSceneSize.x - 80.f, 82.f, 0.f });
     auto& spr3 = ent.addComponent<cro::Sprite>();
     spr3.setColour(cro::Colour(1.f, 0.5f, 0.5f, 1.f));
     spr3.setTexture(uiTex);

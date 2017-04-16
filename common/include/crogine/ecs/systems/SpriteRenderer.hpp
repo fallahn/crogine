@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/detail/SDLResource.hpp>
+#include <crogine/graphics/Rectangle.hpp>
 
 #include <glm/mat4x4.hpp>
 
@@ -77,6 +78,11 @@ namespace cro
         DepthAxis getDepthAxis() const { return m_depthAxis; }
 
         /*!
+        \brief Implements message handling
+        */
+        void handleMessage(const Message&) override;
+
+        /*!
         \brief Implements the process which performs batching
         */
         void process(Time) override;
@@ -87,6 +93,9 @@ namespace cro
         void render();
 
     private:
+        IntRect m_viewPort;
+        void setViewPort(int32 x, int32 y);
+        
         //maps VBO to textures
         struct Batch final
         {
