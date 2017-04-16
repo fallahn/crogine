@@ -33,12 +33,6 @@
     <ClCompile Include="..\common\src\system\Clock.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\src\glad.c">
-      <Filter>src\detail</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\SDLresource.cpp">
-      <Filter>src\detail</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
       <Filter>src\ecs</Filter>
     </ClCompile>
@@ -59,21 +53,6 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp">
       <Filter>src\ecs\components</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\system\Colour.cpp">
-      <Filter>src\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\App.cpp">
-      <Filter>src\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\State.cpp">
-      <Filter>src\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\StateStack.cpp">
-      <Filter>src\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\Window.cpp">
-      <Filter>src\core</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\graphics\Image.cpp">
       <Filter>src\graphics</Filter>
@@ -140,6 +119,27 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp">
       <Filter>src\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\core\App.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\core\State.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\core\StateStack.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\core\Window.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\Colour.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\glad.c">
+      <Filter>src\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\SDLResource.cpp">
+      <Filter>src\detail</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

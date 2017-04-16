@@ -224,7 +224,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\android\Android.cpp" />
-    <ClCompile Include="..\common\src\App.cpp" />
+    <ClCompile Include="..\common\src\core\App.cpp" />
+    <ClCompile Include="..\common\src\core\State.cpp" />
+    <ClCompile Include="..\common\src\core\StateStack.cpp" />
+    <ClCompile Include="..\common\src\core\Window.cpp" />
+    <ClCompile Include="..\common\src\detail\glad.c" />
+    <ClCompile Include="..\common\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Sprite.cpp" />
@@ -237,7 +242,7 @@
     <ClCompile Include="..\common\src\ecs\systems\MeshSorter.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />
-    <ClCompile Include="..\common\src\glad.c" />
+    <ClCompile Include="..\common\src\graphics\Colour.cpp" />
     <ClCompile Include="..\common\src\graphics\Image.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialData.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialResource.cpp" />
@@ -254,12 +259,7 @@
     <ClCompile Include="..\common\src\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_render.cpp" />
-    <ClCompile Include="..\common\src\SDLresource.cpp" />
-    <ClCompile Include="..\common\src\State.cpp" />
-    <ClCompile Include="..\common\src\StateStack.cpp" />
     <ClCompile Include="..\common\src\system\Clock.cpp" />
-    <ClCompile Include="..\common\src\system\Colour.cpp" />
-    <ClCompile Include="..\common\src\Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

@@ -32,8 +32,9 @@ source distribution.
 #include <crogine/detail/SDLResource.hpp>
 
 #include <SDL.h>
+#include <SDL_video.h>
 
-#include "glad/glad.h"
+#include "../detail/glad.h"
 
 using namespace cro;
 
@@ -131,6 +132,14 @@ bool Window::pollEvent(Event& evt)
 void Window::close()
 {
 	destroy();
+}
+
+glm::uvec2 Window::getSize() const
+{
+    CRO_ASSERT(m_window, "window not created");
+    int32 x, y;
+    SDL_GetWindowSize(m_window, &x, &y);
+    return { x, y };
 }
 
 //private

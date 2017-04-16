@@ -36,9 +36,9 @@ source distribution.
 #include <SDL.h>
 #include <SDL_mixer.h>
 
-#include "glad/GLCheck.hpp"
-#include "imgui/imgui_render.h"
-#include "imgui/imgui.h"
+#include "../detail/GLCheck.hpp"
+#include "../imgui/imgui_render.h"
+#include "../imgui/imgui.h"
 
 using namespace cro;
 
@@ -75,7 +75,7 @@ App::~App()
 //public
 void App::run()
 {
-	if (m_window.create(1280, 720, "cro works!"))
+	if (m_window.create(800, 600, "cro works!"))
 	{
 		//load opengl
 		if (!gladLoadGLES2Loader(SDL_GL_GetProcAddress))
@@ -153,6 +153,12 @@ void App::debugPrint(const std::string& name, const std::string& value)
 {
     CRO_ASSERT(m_instance, "Not now, fuzznuts");
     m_instance->m_debugLines.emplace_back(name + " : " + value);
+}
+
+Window& App::getWindow()
+{
+    CRO_ASSERT(m_instance, "No valid app instance");
+    return m_instance->m_window;
 }
 
 //private

@@ -91,6 +91,12 @@ namespace cro
 		{
 			return m_window != nullptr;
 		}
+        /*!
+        \brief Returns the current size of the window
+        */
+        glm::uvec2 getSize() const;
+
+
 	private:
 
 		SDL_Window* m_window;

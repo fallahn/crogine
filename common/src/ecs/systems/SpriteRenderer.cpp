@@ -32,9 +32,10 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/App.hpp>
 
-#include "../../glad/glad.h"
-#include "../../glad/GLCheck.hpp"
+#include "../../detail/glad.h"
+#include "../../detail/GLCheck.hpp"
 #include "../../graphics/shaders/Sprite.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -221,7 +222,8 @@ void SpriteRenderer::render()
     glCheck(glEnable(GL_DEPTH_TEST));
     glCheck(glEnable(GL_BLEND));
 
-    glViewport(0, 0, DefaultSceneSize.x, DefaultSceneSize.y);
+    auto windowSize = App::getWindow().getSize(); //TODO get aspect correct size - only on window resize
+    glViewport(0, 0, windowSize.x, windowSize.y);
 
     //bind shader and attrib arrays
     glCheck(glUseProgram(m_shader.getGLHandle()));
@@ -261,8 +263,6 @@ void SpriteRenderer::render()
 
     }
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-    glViewport(0, 0, 1280, 720); //TODO set to window size
 
     glCheck(glDisable(GL_BLEND));
     glCheck(glDisable(GL_DEPTH_TEST));

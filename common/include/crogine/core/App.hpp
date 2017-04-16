@@ -83,6 +83,11 @@ namespace cro
         */
         static void debugPrint(const std::string& name, const std::string& value);
 
+        /*!
+        \brief Returns a reference to the active window
+        */
+        static Window& getWindow();
+
 	protected:
 		
 		virtual void handleEvent(const Event&) = 0;
@@ -90,10 +95,10 @@ namespace cro
 		virtual void simulate(Time) = 0;
 		virtual void render() = 0;
 
-		Window& getWindow() { return m_window; }
+		
 
         /*!
-        \brief Called before the windows is destroyed.
+        \brief Called before the window is destroyed.
         Use this to clean up any resources which rely on the
         window's OpenGL context.
         */

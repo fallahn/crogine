@@ -216,16 +216,16 @@
     <ClInclude Include="..\common\include\crogine\util\Maths.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\core\Message.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\core\MessageBus.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\system\Clock.cpp">
       <Filter>Source Files\system</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\glad.c">
-      <Filter>Source Files\detail</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\SDLresource.cpp">
-      <Filter>Source Files\detail</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
       <Filter>Source Files\ecs</Filter>
@@ -247,18 +247,6 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp">
       <Filter>Source Files\ecs\components</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\Window.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\App.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\State.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\StateStack.cpp">
-      <Filter>Source Files\core</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\graphics\Image.cpp">
       <Filter>Source Files\graphics</Filter>
@@ -326,8 +314,26 @@
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\src\system\Colour.cpp">
+    <ClCompile Include="..\common\src\core\App.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\core\State.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\core\StateStack.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\core\Window.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\Colour.cpp">
       <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\glad.c">
+      <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\SDLResource.cpp">
+      <Filter>Source Files\detail</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

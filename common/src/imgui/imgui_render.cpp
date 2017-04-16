@@ -8,14 +8,14 @@
 
 #include "imgui.h"
 #include "imgui_render.h"
-#include "../glad/GLCheck.hpp"
+#include "../detail/GLCheck.hpp"
 
 // SDL
 #include <SDL.h>
 #ifndef __ANDROID__
 #include <SDL_syswm.h>
 #endif //__ANDROID__
-#include "../glad/glad.h"
+#include "../detail/glad.h"
 
 // Data
 static double       g_Time = 0.0f;

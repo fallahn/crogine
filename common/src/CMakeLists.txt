@@ -1,11 +1,12 @@
 #source files used by crogine library
 set(PROJECT_SRC
-  ${PROJECT_DIR}/App.cpp
-  ${PROJECT_DIR}/glad.c
-  ${PROJECT_DIR}/SDLResource.cpp
-  ${PROJECT_DIR}/State.cpp
-  ${PROJECT_DIR}/StateStack.cpp
-  ${PROJECT_DIR}/Window.cpp
+  ${PROJECT_DIR}/core/App.cpp
+  ${PROJECT_DIR}/core/State.cpp
+  ${PROJECT_DIR}/core/StateStack.cpp
+  ${PROJECT_DIR}/core/Window.cpp
+
+  ${PROJECT_DIR}/detail/glad.c
+  ${PROJECT_DIR}/detail/SDLResource.cpp 
 
   ${PROJECT_DIR}/ecs/Component.cpp
   ${PROJECT_DIR}/ecs/Entity.cpp
@@ -22,6 +23,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/SceneRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteRenderer.cpp
 
+  ${PROJECT_DIR}/graphics/Colour.cpp
   ${PROJECT_DIR}/graphics/Image.cpp
   ${PROJECT_DIR}/graphics/MaterialData.cpp
   ${PROJECT_DIR}/graphics/MaterialResource.cpp
@@ -40,5 +42,4 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/imgui_draw.cpp
   ${PROJECT_DIR}/imgui/imgui_render.cpp
 
-  ${PROJECT_DIR}/system/Clock.cpp
-  ${PROJECT_DIR}/system/Colour.cpp)
+  ${PROJECT_DIR}/system/Clock.cpp)

@@ -31,7 +31,7 @@ source distribution.
 
 #include <glm/geometric.hpp>
 
-#include "../glad/glad.h"
+#include "../detail/glad.h"
 
 using namespace cro;
 
