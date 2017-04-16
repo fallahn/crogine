@@ -141,5 +141,8 @@
     <ClCompile Include="..\common\src\detail\SDLResource.cpp">
       <Filter>src\detail</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\core\MessageBus.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
