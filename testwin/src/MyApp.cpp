@@ -60,6 +60,11 @@ void MyApp::handleEvent(const cro::Event& evt)
 	m_stateStack.handleEvent(evt);
 }
 
+void MyApp::handleMessage(const cro::Message& msg)
+{
+
+}
+
 void MyApp::simulate(cro::Time dt)
 {
 	m_stateStack.simulate(dt);

@@ -76,6 +76,11 @@ bool MenuState::handleEvent(const cro::Event& evt)
 	return true;
 }
 
+void MenuState::handleMessage(const cro::Message& msg)
+{
+
+}
+
 bool MenuState::simulate(cro::Time dt)
 {
     m_scene.simulate(dt);

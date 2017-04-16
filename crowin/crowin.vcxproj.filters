@@ -335,6 +335,9 @@
     <ClCompile Include="..\common\src\detail\SDLResource.cpp">
       <Filter>Source Files\detail</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\core\MessageBus.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\common\include\crogine\ecs\Entity.inl">

@@ -96,6 +96,11 @@ namespace cro
 		*/
 		void handleEvent(const cro::Event&);
 
+        /*!
+        \brief Forwards system wide messages received by the App
+        */
+        void handleMessage(const Message&);
+
 		/*!
 		\brief Calls the simulate function of each active state,
 		passing in the elapsed time, until the active state returns false,

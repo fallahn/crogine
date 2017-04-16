@@ -57,6 +57,7 @@ public:
 	cro::StateID getStateID() const override { return States::MainMenu; }
 
 	bool handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
 	bool simulate(cro::Time) override;
 	void render() const override;
 

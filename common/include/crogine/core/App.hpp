@@ -31,6 +31,7 @@ source distribution.
 #define CRO_APP_HPP_
 
 #include <crogine/Config.hpp>
+#include <crogine/core/MessageBus.hpp>
 #include <crogine/core/Window.hpp>
 #include <crogine/detail/Types.hpp>
 
@@ -91,7 +92,7 @@ namespace cro
 	protected:
 		
 		virtual void handleEvent(const Event&) = 0;
-		//virtual void handleMessage() = 0;
+		virtual void handleMessage(const cro::Message&) = 0;
 		virtual void simulate(Time) = 0;
 		virtual void render() = 0;
 
@@ -109,6 +110,11 @@ namespace cro
 		Window m_window;
 		Colour m_clearColour;
         bool m_running;
+
+        void handleEvents();
+
+        MessageBus m_messageBus;
+        void handleMessages();
 
 //#ifndef __ANDROID__
         std::vector<std::string> m_debugLines;

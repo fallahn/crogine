@@ -1,6 +1,7 @@
 #source files used by crogine library
 set(PROJECT_SRC
   ${PROJECT_DIR}/core/App.cpp
+  ${PROJECT_DIR}/core/MessageBus.cpp
   ${PROJECT_DIR}/core/State.cpp
   ${PROJECT_DIR}/core/StateStack.cpp
   ${PROJECT_DIR}/core/Window.cpp

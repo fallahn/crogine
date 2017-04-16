@@ -51,6 +51,23 @@ void StateStack::handleEvent(const cro::Event& evt)
 	}
 }
 
+void StateStack::handleMessage(const Message& msg)
+{
+    //if (msg.id == Message::Type::UIMessage)
+    //{
+    //    auto& msgData = msg.getData<Message::UIEvent>();
+    //    switch (msgData.type)
+    //    {
+    //    case Message::UIEvent::RequestState:
+    //        pushState(msgData.stateID);
+    //        break;
+    //    default: break;
+    //    }
+    //}
+
+    for (auto& s : m_stack) s->handleMessage(msg);
+}
+
 void StateStack::simulate(Time dt)
 {
 	applyPendingChanges();

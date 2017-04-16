@@ -76,8 +76,8 @@ namespace cro
         */
         struct WindowEvent
         {
-            uint32 WindowID = 0;
-            uint8 Event = 0;
+            uint32 windowID = 0;
+            uint8 event = 0;
             int32 data0 = 0;
             int32 data1 = 0;
         };

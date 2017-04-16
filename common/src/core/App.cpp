@@ -101,17 +101,8 @@ void App::run()
 		{
 			timeSinceLastUpdate -= frameTime;
 
-			cro::Event evt;
-			while (m_window.pollEvent(evt))
-			{
-                
-                if (evt.type == SDL_QUIT)
-				{
-                    quit();
-				}
-
-                IMGUI_EVENTS(evt) handleEvent(evt);
-			}
+            handleEvents();
+            handleMessages();
             m_debugLines.clear();
             m_debugLines.reserve(10);
 			simulate(frameTime);
@@ -124,6 +115,7 @@ void App::run()
         IMGUI_RENDER;
 		m_window.display();
 	}
+    m_messageBus.disable(); //prevents spamming a load of quit messages
     finalise();
     IMGUI_UNINIT;
     m_window.close();
@@ -162,6 +154,44 @@ Window& App::getWindow()
 }
 
 //private
+void App::handleEvents()
+{
+    cro::Event evt;
+    while (m_window.pollEvent(evt))
+    {
+        if (evt.type == SDL_QUIT)
+        {
+            quit();
+        }
+        else if (evt.type == SDL_WINDOWEVENT)
+        {
+            auto* msg = m_messageBus.post<Message::WindowEvent>(Message::Type::WindowMessage);
+            msg->event = evt.window.event;
+            msg->windowID = evt.window.windowID;
+            msg->data0 = evt.window.data1;
+            msg->data1 = evt.window.data2;
+        }
+
+        IMGUI_EVENTS(evt) handleEvent(evt);
+    }
+}
+
+void App::handleMessages()
+{
+    while (!m_messageBus.empty())
+    {
+        auto msg = m_messageBus.poll();
+
+        /*switch (msg.id)
+        {
+
+        default: break;
+        }*/
+
+        handleMessage(msg);
+    }
+}
+
 //#ifndef __ANDROID__
 void App::doImGui()
 {

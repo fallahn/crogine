@@ -32,6 +32,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
+#include <crogine/core/Message.hpp>
 
 #include <cstdlib>
 #include <memory>
@@ -91,6 +92,12 @@ namespace cro
 		state residing underneath.
 		*/
 		virtual bool handleEvent(const cro::Event&) = 0;
+
+        /*!
+        \brief Receives system messages handed down from the StateStack.
+        All states receive all messages regardlessly.
+        */
+        virtual void handleMessage(const cro::Message&) = 0;
 
 		/*!
 		\brief Executes one step of the game's simulation.
