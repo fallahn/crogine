@@ -36,6 +36,8 @@ source distribution.
 
 #include "../detail/glad.h"
 
+#include <algorithm>
+
 using namespace cro;
 
 namespace
@@ -109,29 +111,29 @@ void Window::setVsyncEnabled(bool enabled)
 {
 	if (m_context)
 	{
-		SDL_GL_SetSwapInterval(enabled ? 1 : 0);
-	}
+SDL_GL_SetSwapInterval(enabled ? 1 : 0);
+    }
 }
 
 void Window::clear()
 {
-	//glClearColor(1.f, 0.f, 0.f, 1.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClearColor(1.f, 0.f, 0.f, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Window::display()
 {
-	SDL_GL_SwapWindow(m_window);
+    SDL_GL_SwapWindow(m_window);
 }
 
 bool Window::pollEvent(Event& evt)
 {
-	return SDL_PollEvent(&evt);
+    return SDL_PollEvent(&evt);
 }
 
 void Window::close()
 {
-	destroy();
+    destroy();
 }
 
 glm::uvec2 Window::getSize() const
@@ -140,6 +142,77 @@ glm::uvec2 Window::getSize() const
     int32 x, y;
     SDL_GetWindowSize(m_window, &x, &y);
     return { x, y };
+}
+
+void Window::setSize(glm::uvec2 size)
+{
+    CRO_ASSERT(m_window, "window not created");
+    SDL_SetWindowSize(m_window, size.x, size.y);
+}
+
+void Window::setFullScreen(bool fullscreen)
+{
+    CRO_ASSERT(m_window, "window not created");
+    SDL_SetWindowFullscreen(m_window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
+}
+
+void Window::setPosition(int32 x, int32 y)
+{
+    CRO_ASSERT(m_window, "window not created");
+    if (x < 0) x = SDL_WINDOWPOS_CENTERED;
+    if (y < 0) y = SDL_WINDOWPOS_CENTERED;
+    SDL_SetWindowPosition(m_window, x, y);
+}
+
+void Window::setIcon(const uint8* data)
+{
+    CRO_ASSERT(m_window, "window not created");
+    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*)(data), 16, 16, 32, 16 * 4, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+    if (surface)
+    {
+        SDL_SetWindowIcon(m_window, surface);
+        SDL_FreeSurface(surface);
+    }
+    else
+    {
+        Logger::log("Failed creating icon from pixel data", Logger::Type::Error);
+    }
+}
+
+const std::vector<glm::uvec2>& Window::getAvailableResolutions() const
+{
+    CRO_ASSERT(m_window, "window not created");
+    if (m_resolutions.empty())
+    {
+        auto modeCount = SDL_GetNumDisplayModes(0);
+        if (modeCount > 0)
+        {
+            SDL_DisplayMode mode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };
+            for (auto i = 0; i < modeCount; ++i)
+            {
+                if (SDL_GetDisplayMode(0, i, &mode) == 0)
+                {
+                    if (SDL_BITSPERPIXEL(mode.format) == 24)
+                    {
+                        m_resolutions.emplace_back(mode.w, mode.h);
+                    }
+                }
+            }
+            m_resolutions.erase(std::unique(std::begin(m_resolutions), std::end(m_resolutions)), std::end(m_resolutions));
+        }
+        else
+        {
+            std::string err(SDL_GetError());
+            Logger::log("failed retrieving available resolutions: " + err, Logger::Type::Error, Logger::Output::All);
+        }
+    }
+    return m_resolutions;
+}
+
+void Window::setTitle(const std::string& title)
+{
+    CRO_ASSERT(m_window, "window not created");
+    SDL_SetWindowTitle(m_window, title.c_str());
 }
 
 //private

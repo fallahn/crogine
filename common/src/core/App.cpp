@@ -48,6 +48,8 @@ namespace
 {
 	const Time frameTime = seconds(1.f / 60.f);
 	Time timeSinceLastUpdate;
+
+#include "../detail/DefaultIcon.inl"
 }
 
 App::App()
@@ -84,6 +86,7 @@ void App::run()
 			return;
 		}
         IMGUI_INIT(m_window.m_window);
+        m_window.setIcon(defaultIcon);
 	}
 	else
 	{
@@ -205,6 +208,16 @@ void App::doImGui()
     {
         m_window.setVsyncEnabled(vsync);
     }
+
+    ImGui::SameLine();
+    static bool fullScreen = false;
+    bool lastFS = fullScreen;
+    ImGui::Checkbox("Full Screen", &fullScreen);
+    if (lastFS != fullScreen)
+    {
+        m_window.setFullScreen(fullScreen);
+    }
+
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
     //print any debug lines

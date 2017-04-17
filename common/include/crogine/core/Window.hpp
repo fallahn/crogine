@@ -37,6 +37,7 @@ source distribution.
 #include <SDL_events.h>
 
 #include <string>
+#include <vector>
 
 namespace cro
 {	
@@ -95,12 +96,45 @@ namespace cro
         \brief Returns the current size of the window
         */
         glm::uvec2 getSize() const;
-
+        /*!
+        \brief Attempts to set the window to the given size if it is valid
+        */
+        void setSize(glm::uvec2);
+        /*!
+        \brief Attempts to toggle full screen mode
+        */
+        void setFullScreen(bool);
+        /*!
+        \brief Set the window position in desktop coordinates.
+        \param x Horizontal position to place the window. A negative number
+        will centre the window horizonally
+        \param y Vertical position to place the window. A negative number
+        will centre the window vertically
+        */
+        void setPosition(int32 x, int32 y);
+        /*!
+        \brief Sets the window icon from an array of RGBA pixels.
+        The image size is assumed to be 16x16 pixels in 8-bit format.
+        To use an image from disk load it first with cro::Image then pass
+        the pixel pointer to this function.
+        */
+        void setIcon(const uint8*);
+        /*!
+        \brief Returns a refernce to a vector containing a list of available
+        display resolutions of the first monitor.
+        */
+        const std::vector<glm::uvec2>& getAvailableResolutions() const;
+        /*!
+        \brief Sets the window's title
+        */
+        void setTitle(const std::string&);
 
 	private:
 
 		SDL_Window* m_window;
 		SDL_GLContext m_context;
+
+        mutable std::vector<glm::uvec2> m_resolutions;
 
 		void destroy();
 
