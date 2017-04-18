@@ -62,7 +62,7 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     GLint maxVec;
     glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
     MaxSprites = maxVec / 4; //4 x 4-components make up a mat4.
-    MaxSprites -= 1;
+    MaxSprites = std::min(MaxSprites - 1, 255u);
     LOG(std::to_string(MaxSprites) + " sprites are available per batch", Logger::Type::Info);
     
     //load shader
