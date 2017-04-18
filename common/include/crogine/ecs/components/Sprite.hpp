@@ -96,6 +96,16 @@ namespace cro
         */
         Colour getColour() const;
 
+        /*!
+        \brief Returns the local (pre-transform) AABB
+        */
+        const FloatRect& getLocalBounds() const { return m_localBounds; }
+
+        /*!
+        \brief Returns the global (post-transform) AABB
+        */
+        const FloatRect& getGlobalBounds() const { return m_globalBounds; }
+
     private:
         int32 m_textureID;
         glm::vec3 m_textureSize;
@@ -108,6 +118,10 @@ namespace cro
         std::array<Vertex, 4u> m_quad;
         bool m_dirty;
         int32 m_vboOffset; //where this sprite starts in its VBO - used when updating sub buffer data
+
+        FloatRect m_localBounds;
+        FloatRect m_globalBounds;
+
         friend class SpriteRenderer;
     };
 }

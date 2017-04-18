@@ -44,6 +44,8 @@ source distribution.
 namespace cro
 {
     class MessageBus;
+    class Sprite;
+    class Transform;
 
     /*!
     \brief Batches and renders the scene Sprite components
@@ -129,8 +131,21 @@ namespace cro
         bool m_pendingRebuild;
         void rebuildBatch();
 
+        void updateGlobalBounds(Sprite&, const glm::mat4&);
+
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
+
+#ifdef _DEBUG_
+        //Shader m_debugShader;
+        int32 m_debugMatrixIndex;
+        /*std::array<AttribData, 2u> m_debugAttribs;*/
+        uint32 m_debugVBO;
+        uint32 m_debugVertCount;
+
+        void buildDebug();
+        void drawDebug();
+#endif //_DEBUG_
     };
 }
 

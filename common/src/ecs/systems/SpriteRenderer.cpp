@@ -38,6 +38,10 @@ source distribution.
 #include "../../detail/GLCheck.hpp"
 #include "../../graphics/shaders/Sprite.hpp"
 
+#ifdef _DEBUG_
+#include "../../graphics/shaders/Debug.hpp"
+#endif //_DEBUG_
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -56,13 +60,16 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     m_projectionIndex   (0),
     m_depthAxis         (DepthAxis::Z),
     m_pendingRebuild    (false)
+#ifdef _DEBUG_
+    //,m_debugMatrixIndex(-1), m_debugVBO(0), m_debugVertCount(0)
+#endif //_DEBUG_
 {
     //this has been known to fail on some platforms - but android can be as low as 63
     //which almost negates the usefulness of GPU bound transforms... :S
     GLint maxVec;
     glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
     MaxSprites = maxVec / 4; //4 x 4-components make up a mat4.
-    MaxSprites -= 1;
+    MaxSprites = std::min(MaxSprites -= 1, 255u);
     LOG(std::to_string(MaxSprites) + " sprites are available per batch", Logger::Type::Info);
     
     //load shader
@@ -135,6 +142,26 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
 
     auto size = App::getWindow().getSize();
     setViewPort(size.x, size.y);
+
+#ifdef _DEBUG_
+    /*if (m_debugShader.loadFromString(Shaders::Debug::Vertex, Shaders::Debug::Fragment))
+    {
+        const auto& shaderAttribs = m_debugShader.getAttribMap();
+        m_debugAttribs[AttribLocation::Position].size = 4;
+        m_debugAttribs[AttribLocation::Position].location = shaderAttribs[Mesh::Position];
+        m_debugAttribs[AttribLocation::Colour].size = 4;
+        m_debugAttribs[AttribLocation::Colour].location = shaderAttribs[Mesh::Colour];
+        m_debugAttribs[AttribLocation::Colour].offset = m_debugAttribs[AttribLocation::Colour].size * sizeof(float);
+
+        const auto& debugUniforms = m_debugShader.getUniformMap();
+        if (debugUniforms.count("u_projectionMatrix") != 0)
+        {
+            m_debugMatrixIndex = debugUniforms.find("u_projectionMatrix")->second;
+
+            glCheck(glGenBuffers(1, &m_debugVBO));
+        }
+    }*/
+#endif //_DEBUG_
 }
 
 SpriteRenderer::~SpriteRenderer()
@@ -143,6 +170,10 @@ SpriteRenderer::~SpriteRenderer()
     {
         glCheck(glDeleteBuffers(1, &p.first));
     }
+
+#ifdef _DEBUG_
+    //glCheck(glDeleteBuffers(1, &m_debugVBO));
+#endif //_DEBUG_
 }
 
 //public
@@ -167,6 +198,10 @@ void SpriteRenderer::process(Time)
     
     //get list of entities (should already be sorted by addEnt callback)
     auto& entities = getEntities();
+
+#ifdef _DEBUG_
+    bool dirtyDebug = false;
+#endif //_DEBUG_
 
     for (auto i = 0u; i < entities.size(); ++i)
     {
@@ -213,7 +248,13 @@ void SpriteRenderer::process(Time)
                 vertexData.size() * sizeof(float), vertexData.data()));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
+            updateGlobalBounds(sprite, entities[i].getComponent<Transform>().getWorldTransform(entities));
+
             sprite.m_dirty = false;
+
+#ifdef _DEBUG_
+            dirtyDebug = true;
+#endif //_DEBUG_
         }
 
         
@@ -229,6 +270,10 @@ void SpriteRenderer::process(Time)
         std::size_t buffIdx = (i > MaxSprites) ? i % MaxSprites : 0;
         m_bufferTransforms[buffIdx][i - (buffIdx * MaxSprites)] = tx.getWorldTransform(entities);
     }
+
+#ifdef _DEBUG_
+    if (dirtyDebug) buildDebug();
+#endif //_DEBUG_
 }
 
 void SpriteRenderer::render()
@@ -277,6 +322,10 @@ void SpriteRenderer::render()
 
     }
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+#ifdef _DEBUG_
+    drawDebug();
+#endif //_DEBUG_
 
     glCheck(glDisable(GL_BLEND));
     glCheck(glDisable(GL_DEPTH_TEST));
@@ -334,7 +383,7 @@ void SpriteRenderer::rebuildBatch()
                 spritesThisBatch = 0;
             }
 
-
+            //TODO this is repeated from process function...
             auto copyVertex = [&](uint32 idx)
             {
                 vertexData.push_back(sprite.m_quad[idx].position.x);
@@ -381,6 +430,9 @@ void SpriteRenderer::rebuildBatch()
                 copyVertex(j);
             }
             spritesThisBatch++;
+
+            updateGlobalBounds(sprite, entities[i + batchIdx].getComponent<Transform>().getWorldTransform(entities));
+
             sprite.m_dirty = false;
         }
         batchIdx += MaxSprites;
@@ -402,7 +454,49 @@ void SpriteRenderer::rebuildBatch()
         i++;
     }
 
+#ifdef _DEBUG_
+    buildDebug();
+#endif //_DEBUG_
+
     m_pendingRebuild = false;
+}
+
+void SpriteRenderer::updateGlobalBounds(Sprite& sprite, const glm::mat4& transform)
+{
+    std::vector<glm::vec4> points = 
+    {
+        transform * glm::vec4(sprite.m_quad[0].position.x, sprite.m_quad[0].position.y, 0.f, 1.f),
+        transform * glm::vec4(sprite.m_quad[1].position.x, sprite.m_quad[0].position.y, 0.f, 1.f),
+        transform * glm::vec4(sprite.m_quad[2].position.x, sprite.m_quad[0].position.y, 0.f, 1.f),
+        transform * glm::vec4(sprite.m_quad[3].position.x, sprite.m_quad[0].position.y, 0.f, 1.f)
+    };
+
+    for (const auto& p : points)
+    {
+        if (sprite.m_globalBounds.left > p.x)
+        {
+            sprite.m_globalBounds.left = p.x;
+        }
+        if (sprite.m_globalBounds.bottom > p.y)
+        {
+            sprite.m_globalBounds.bottom = p.y;
+        }
+    }
+
+    for (const auto& p : points)
+    {
+        auto width = p.x - sprite.m_globalBounds.left;
+        if (width > sprite.m_globalBounds.width)
+        {
+            sprite.m_globalBounds.width = width;
+        }
+
+        auto height = p.y - sprite.m_globalBounds.bottom;
+        if (height > sprite.m_globalBounds.height)
+        {
+            sprite.m_globalBounds.height = height;
+        }
+    }
 }
 
 void SpriteRenderer::onEntityAdded(Entity entity)
@@ -421,3 +515,70 @@ void SpriteRenderer::onEntityRemoved(Entity entity)
 {
     m_pendingRebuild = true;
 }
+
+#ifdef _DEBUG_
+void SpriteRenderer::buildDebug()
+{
+    //std::vector<float> vertData;    
+    //auto addVertex = [&](float x, float y, float alpha = 1.f)
+    //{
+    //    vertData.push_back(x);
+    //    vertData.push_back(y);
+    //    vertData.push_back(0.f);
+    //    vertData.push_back(1.f);
+
+    //    vertData.push_back(1.f);
+    //    vertData.push_back(0.f);
+    //    vertData.push_back(1.f);
+    //    vertData.push_back(alpha);
+    //};
+    //
+    //auto& entities = getEntities();
+    //for (auto& entity : entities)
+    //{
+    //    FloatRect rect = entity.getComponent<Sprite>().getGlobalBounds();
+    //    addVertex(rect.left, rect.bottom, 0.f);
+    //    addVertex(rect.left, rect.bottom);
+    //    addVertex(rect.left, rect.bottom + rect.height);
+    //    addVertex(rect.left + rect.width, rect.bottom + rect.height);
+    //    addVertex(rect.left + rect.width, rect.bottom);
+    //    addVertex(rect.left, rect.bottom);
+    //    addVertex(rect.left, rect.bottom, 0.f);
+    //}
+
+    //m_debugVertCount = vertData.size() * sizeof(float);
+
+    ////TODO double buffer this
+    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_debugVBO));
+    //glCheck(glBufferData(GL_ARRAY_BUFFER, m_debugVertCount, vertData.data(), GL_STATIC_DRAW));
+}
+
+void SpriteRenderer::drawDebug()
+{
+    /*if (m_debugVBO == 0) return;
+
+    static constexpr int32 vertSize = 8 * sizeof(float);
+
+    glCheck(glUseProgram(m_debugShader.getGLHandle()));
+    glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_debugVBO));
+
+    for (auto i = 0u; i < m_debugAttribs.size(); ++i)
+    {
+        glCheck(glEnableVertexAttribArray(m_debugAttribs[i].location));
+        glCheck(glVertexAttribPointer(m_debugAttribs[i].location, m_debugAttribs[i].size, GL_FLOAT, GL_FALSE, vertSize,
+            reinterpret_cast<void*>(static_cast<intptr_t>(m_debugAttribs[i].offset))));
+    }
+
+    glCheck(glDrawArrays(GL_LINE_STRIP, 0, m_debugVertCount));
+
+    for (auto i = 0u; i < m_debugAttribs.size(); ++i)
+    {
+        glCheck(glDisableVertexAttribArray(m_debugAttribs[i].location));
+    }
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
+}
+
+#endif //_DEBUG_

@@ -75,6 +75,9 @@ void Sprite::setSize(glm::vec2 size)
     m_quad[3].position.x = size.x;
     m_quad[3].position.y = 0.f;
 
+    m_localBounds.width = size.x;
+    m_localBounds.height = size.y;
+
     m_dirty = true;
 }
 
