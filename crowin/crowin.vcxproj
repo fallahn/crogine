@@ -51,12 +51,14 @@
     <ClInclude Include="..\common\include\crogine\ecs\Component.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\ComponentPool.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Camera.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\CommandID.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Sprite.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\System.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\CommandSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\MeshSorter.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SpriteRenderer.hpp" />
@@ -89,6 +91,7 @@
   <ItemGroup>
     <ClCompile Include="..\common\src\android\Android.cpp" />
     <ClCompile Include="..\common\src\core\App.cpp" />
+    <ClCompile Include="..\common\src\core\Clock.cpp" />
     <ClCompile Include="..\common\src\core\MessageBus.cpp" />
     <ClCompile Include="..\common\src\core\State.cpp" />
     <ClCompile Include="..\common\src\core\StateStack.cpp" />
@@ -104,6 +107,7 @@
     <ClCompile Include="..\common\src\ecs\Scene.cpp" />
     <ClCompile Include="..\common\src\ecs\System.cpp" />
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\CommandSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\MeshSorter.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />
@@ -124,7 +128,6 @@
     <ClCompile Include="..\common\src\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_render.cpp" />
-    <ClCompile Include="..\common\src\system\Clock.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\common\include\crogine\ecs\Entity.inl" />

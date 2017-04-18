@@ -19,9 +19,6 @@
     <Filter Include="Header Files\android">
       <UniqueIdentifier>{3ff2f69b-b8ea-43fc-9074-1ddf2f0f4df4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\system">
-      <UniqueIdentifier>{b7b7aff8-28b3-46f5-8f2d-a75a1f89faa4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\detail">
       <UniqueIdentifier>{9d490ed0-91c3-4e19-bd46-86c69799ed9e}</UniqueIdentifier>
     </Filter>
@@ -222,11 +219,14 @@
     <ClInclude Include="..\common\include\crogine\core\MessageBus.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\components\CommandID.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\CommandSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\common\src\system\Clock.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
       <Filter>Source Files\ecs</Filter>
     </ClCompile>
@@ -336,6 +336,12 @@
       <Filter>Source Files\detail</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\core\MessageBus.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\CommandSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\core\Clock.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>

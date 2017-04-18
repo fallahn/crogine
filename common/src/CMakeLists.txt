@@ -1,6 +1,7 @@
 #source files used by crogine library
 set(PROJECT_SRC
   ${PROJECT_DIR}/core/App.cpp
+  ${PROJECT_DIR}/core/Clock.cpp
   ${PROJECT_DIR}/core/MessageBus.cpp
   ${PROJECT_DIR}/core/State.cpp
   ${PROJECT_DIR}/core/StateStack.cpp
@@ -20,6 +21,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/components/Sprite.cpp
   ${PROJECT_DIR}/ecs/components/Transform.cpp
 
+  ${PROJECT_DIR}/ecs/systems/CommandSystem.cpp
   ${PROJECT_DIR}/ecs/systems/MeshSorter.cpp
   ${PROJECT_DIR}/ecs/systems/SceneRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteRenderer.cpp
@@ -41,6 +43,4 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/imgui.cpp
   ${PROJECT_DIR}/imgui/imgui_demo.cpp
   ${PROJECT_DIR}/imgui/imgui_draw.cpp
-  ${PROJECT_DIR}/imgui/imgui_render.cpp
-
-  ${PROJECT_DIR}/system/Clock.cpp)
+  ${PROJECT_DIR}/imgui/imgui_render.cpp)

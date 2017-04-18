@@ -38,9 +38,11 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/CommandID.hpp>
 #include <crogine/ecs/systems/MeshSorter.hpp>
 #include <crogine/ecs/systems/SceneRenderer.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
@@ -49,13 +51,27 @@ source distribution.
 
 namespace
 {
+    enum Command
+    {
+        Keyboard = 0x1,
+        Touch = 0x2
+    };
 
+    enum Input
+    {
+        Left = 0x1,
+        Right = 0x2,
+        Up = 0x4,
+        Down = 0x8
+    };
+    cro::uint16 input = 0;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 	: cro::State    (stack, context),
     m_sceneRenderer (nullptr),
-    m_spriteRenderer(nullptr)
+    m_spriteRenderer(nullptr),
+    m_commandSystem (nullptr)
 {
     //TODO launch load screen
     //add systems to scene
@@ -72,7 +88,33 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
-    //TODO apply input mask to any systems which want to read it
+    if (evt.type == SDL_KEYDOWN)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_LEFT:
+            input |= Left;
+            break;
+        case SDLK_RIGHT:
+            input |= Right;
+            break;
+        }
+    }
+    else if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_LEFT:
+            input &= ~Left;
+            break;
+        case SDLK_RIGHT:
+            input &= ~Right;
+            break;
+        }
+    }
+
 	return true;
 }
 
@@ -83,6 +125,26 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(cro::Time dt)
 {
+    //parse input
+    cro::Command cmd;
+    cmd.targetFlags = Keyboard;
+    if (input & Left)
+    {
+        cmd.action = [](cro::Entity entity, cro::Time dt)
+        {
+            entity.getComponent<cro::Transform>().rotate({ 0.f, 1.f, 0.f }, -0.9f * dt.asSeconds());
+        };
+        m_commandSystem->sendCommand(cmd);
+    }
+    if (input & Right)
+    {
+        cmd.action = [](cro::Entity entity, cro::Time dt)
+        {
+            entity.getComponent<cro::Transform>().rotate({ 0.f, 1.f, 0.f }, 0.9f * dt.asSeconds());
+        };
+        m_commandSystem->sendCommand(cmd);
+    }
+    
     m_scene.simulate(dt);
 	return true;
 }
@@ -102,6 +164,7 @@ void MenuState::addSystems()
     m_sceneRenderer = &m_scene.addSystem<cro::SceneRenderer>(mb, m_scene.getDefaultCamera());
     m_scene.addSystem<cro::MeshSorter>(mb, *m_sceneRenderer);
     m_spriteRenderer = &m_scene.addSystem<cro::SpriteRenderer>(mb);
+    m_commandSystem = &m_scene.addSystem<cro::CommandSystem>(mb);
 
     m_scene.addSystem<RotateSystem>(mb);
     m_scene.addSystem<ColourSystem>(mb);
@@ -148,6 +211,7 @@ void MenuState::createScene()
     tx.setPosition({ -1.2f, 0.1f, -4.6f });
     tx.rotate({ 0.5f, 1.f, 0.3f }, 0.6f);
     ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), material);
+    ent.addComponent<cro::CommandTarget>().ID |= Keyboard;
 
     ent = m_scene.createEntity();
     auto& tx2 = ent.addComponent<cro::Transform>();

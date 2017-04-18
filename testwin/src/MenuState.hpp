@@ -43,6 +43,7 @@ namespace cro
 {
     class SceneRenderer;
     class SpriteRenderer;
+    class CommandSystem;
 }
 
 /*!
@@ -70,6 +71,7 @@ private:
     cro::TextureResource m_textureResource;
     cro::SceneRenderer* m_sceneRenderer;
     cro::SpriteRenderer* m_spriteRenderer;
+    cro::CommandSystem* m_commandSystem;
 
     //cro::Texture m_texture;
 

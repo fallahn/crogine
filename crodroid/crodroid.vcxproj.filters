@@ -30,9 +30,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\common\src\system\Clock.cpp">
-      <Filter>src\core</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
       <Filter>src\ecs</Filter>
     </ClCompile>
@@ -142,6 +139,12 @@
       <Filter>src\detail</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\core\MessageBus.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\CommandSystem.cpp">
+      <Filter>src\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\core\Clock.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
   </ItemGroup>
