@@ -45,6 +45,8 @@ source distribution.
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <cfloat>
+
 using namespace cro;
 
 namespace
