@@ -35,7 +35,8 @@ using namespace cro;
 Sprite::Sprite()
     : m_textureID   (0),
     m_dirty         (true),
-    m_vboOffset     (0)
+    m_vboOffset     (0),
+    m_visible       (false)
 {
     for (auto& q : m_quad)
     {

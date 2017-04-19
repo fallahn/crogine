@@ -122,6 +122,8 @@ namespace cro
         FloatRect m_localBounds;
         FloatRect m_globalBounds;
 
+        bool m_visible;
+
         friend class SpriteRenderer;
     };
 }

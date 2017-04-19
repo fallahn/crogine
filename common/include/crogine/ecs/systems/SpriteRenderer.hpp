@@ -136,10 +136,10 @@ namespace cro
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
 
-#ifdef _DEBUG_
-        //Shader m_debugShader;
+#ifdef _DEBUG_ //THIS IS BBBAAAAADDDD - it might not be defined in apps using this header
+        Shader m_debugShader;
         int32 m_debugMatrixIndex;
-        /*std::array<AttribData, 2u> m_debugAttribs;*/
+        std::array<AttribData, 2u> m_debugAttribs;
         uint32 m_debugVBO;
         uint32 m_debugVertCount;
 

@@ -160,7 +160,7 @@ void MenuState::render() const
 void MenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    
+
     m_sceneRenderer = &m_scene.addSystem<cro::SceneRenderer>(mb, m_scene.getDefaultCamera());
     m_scene.addSystem<cro::MeshSorter>(mb, *m_sceneRenderer);
     m_spriteRenderer = &m_scene.addSystem<cro::SpriteRenderer>(mb);

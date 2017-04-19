@@ -42,9 +42,9 @@ namespace cro
                 attribute vec4 a_position;
                 attribute vec4 a_colour;
 
-                uniform u_projectionMatrix;
+                uniform mat4 u_projectionMatrix;
 
-                vary vec4 v_colour;
+                varying vec4 v_colour;
 
                 void main()
                 {
@@ -57,7 +57,7 @@ namespace cro
 
                 void main()
                 {
-                    gl_FragColor.rgb = v_colour;
+                    gl_FragColor = v_colour;
                 })";
         }
     }

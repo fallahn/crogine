@@ -61,7 +61,7 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     m_depthAxis         (DepthAxis::Z),
     m_pendingRebuild    (false)
 #ifdef _DEBUG_
-    //,m_debugMatrixIndex(-1), m_debugVBO(0), m_debugVertCount(0)
+    ,m_debugMatrixIndex(-1), m_debugVBO(0), m_debugVertCount(0)
 #endif //_DEBUG_
 {
     //this has been known to fail on some platforms - but android can be as low as 63
@@ -144,7 +144,7 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     setViewPort(size.x, size.y);
 
 #ifdef _DEBUG_
-    /*if (m_debugShader.loadFromString(Shaders::Debug::Vertex, Shaders::Debug::Fragment))
+    if (m_debugShader.loadFromString(Shaders::Debug::Vertex, Shaders::Debug::Fragment))
     {
         const auto& shaderAttribs = m_debugShader.getAttribMap();
         m_debugAttribs[AttribLocation::Position].size = 4;
@@ -160,7 +160,7 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
 
             glCheck(glGenBuffers(1, &m_debugVBO));
         }
-    }*/
+    }
 #endif //_DEBUG_
 }
 
@@ -205,11 +205,18 @@ void SpriteRenderer::process(Time)
 
     for (auto i = 0u; i < entities.size(); ++i)
     {
-        //check for dirty flag
-        //rebatch all sprites with texture, check for resizing
-        auto& sprite = entities[i].getComponent<Sprite>();
+        auto& sprite = entities[i].getComponent<Sprite>();        
         if (sprite.m_dirty)
         {
+            //check for culling
+            /*bool state = sprite.m_visible;
+            sprite.m_visible = m_viewPort.intersects(static_cast<IntRect>(sprite.getGlobalBounds()));*/
+            //if (sprite.m_visible != state)
+            //{
+            //    m_pendingRebuild = true;
+            //}
+            //if (m_pendingRebuild) continue;
+            
             //update buffer subdata
             //TODO depending on how often this happens it might be worth
             //double buffering the VBOs
@@ -257,18 +264,20 @@ void SpriteRenderer::process(Time)
 #endif //_DEBUG_
         }
 
-        
-        auto tx = entities[i].getComponent<Transform>();
-        //if depth sorted set Z to -Y
-        if (m_depthAxis == DepthAxis::Y)
+        //if (sprite.m_visible)
         {
-            auto pos = tx.getPosition();
-            pos.z = -(pos.y / 100.f); //reduce this else we surpass clip plane
-            tx.setPosition(pos);
+            auto tx = entities[i].getComponent<Transform>();
+            //if depth sorted set Z to -Y
+            if (m_depthAxis == DepthAxis::Y)
+            {
+                auto pos = tx.getPosition();
+                pos.z = -(pos.y / 100.f); //reduce this else we surpass clip plane
+                tx.setPosition(pos);
+            }
+            //get current transforms
+            std::size_t buffIdx = (i > MaxSprites) ? i % MaxSprites : 0;
+            m_bufferTransforms[buffIdx][i - (buffIdx * MaxSprites)] = tx.getWorldTransform(entities);
         }
-        //get current transforms
-        std::size_t buffIdx = (i > MaxSprites) ? i % MaxSprites : 0;
-        m_bufferTransforms[buffIdx][i - (buffIdx * MaxSprites)] = tx.getWorldTransform(entities);
     }
 
 #ifdef _DEBUG_
@@ -281,6 +290,8 @@ void SpriteRenderer::render()
     glCheck(glEnable(GL_CULL_FACE));
     glCheck(glEnable(GL_DEPTH_TEST));
     glCheck(glEnable(GL_BLEND));
+    glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    glCheck(glBlendEquation(GL_FUNC_ADD));
 
     glViewport(0, m_viewPort.bottom, m_viewPort.width, m_viewPort.height);
 
@@ -323,13 +334,13 @@ void SpriteRenderer::render()
     }
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
+
+    glCheck(glDisable(GL_DEPTH_TEST));
+    glCheck(glDisable(GL_CULL_FACE));
 #ifdef _DEBUG_
     drawDebug();
 #endif //_DEBUG_
-
     glCheck(glDisable(GL_BLEND));
-    glCheck(glDisable(GL_DEPTH_TEST));
-    glCheck(glDisable(GL_CULL_FACE));
 }
 
 //private
@@ -422,7 +433,7 @@ void SpriteRenderer::rebuildBatch()
 
             //increase the start point
             start += 4;
-            
+
             //and append data
             sprite.m_vboOffset = static_cast<int32>(vertexData.size() * sizeof(float));
             for (auto j = 0; j < 4; ++j)
@@ -466,11 +477,12 @@ void SpriteRenderer::updateGlobalBounds(Sprite& sprite, const glm::mat4& transfo
     std::vector<glm::vec4> points = 
     {
         transform * glm::vec4(sprite.m_quad[0].position.x, sprite.m_quad[0].position.y, 0.f, 1.f),
-        transform * glm::vec4(sprite.m_quad[1].position.x, sprite.m_quad[0].position.y, 0.f, 1.f),
-        transform * glm::vec4(sprite.m_quad[2].position.x, sprite.m_quad[0].position.y, 0.f, 1.f),
-        transform * glm::vec4(sprite.m_quad[3].position.x, sprite.m_quad[0].position.y, 0.f, 1.f)
+        transform * glm::vec4(sprite.m_quad[1].position.x, sprite.m_quad[1].position.y, 0.f, 1.f),
+        transform * glm::vec4(sprite.m_quad[2].position.x, sprite.m_quad[2].position.y, 0.f, 1.f),
+        transform * glm::vec4(sprite.m_quad[3].position.x, sprite.m_quad[3].position.y, 0.f, 1.f)
     };
 
+    sprite.m_globalBounds = { FLT_MAX, FLT_MAX, 0.f, 0.f };
     for (const auto& p : points)
     {
         if (sprite.m_globalBounds.left > p.x)
@@ -519,43 +531,43 @@ void SpriteRenderer::onEntityRemoved(Entity entity)
 #ifdef _DEBUG_
 void SpriteRenderer::buildDebug()
 {
-    //std::vector<float> vertData;    
-    //auto addVertex = [&](float x, float y, float alpha = 1.f)
-    //{
-    //    vertData.push_back(x);
-    //    vertData.push_back(y);
-    //    vertData.push_back(0.f);
-    //    vertData.push_back(1.f);
+    std::vector<float> vertData;    
+    auto addVertex = [&](float x, float y, float alpha = 1.f)
+    {
+        vertData.push_back(x);
+        vertData.push_back(y);
+        vertData.push_back(0.f);
+        vertData.push_back(1.f);
 
-    //    vertData.push_back(1.f);
-    //    vertData.push_back(0.f);
-    //    vertData.push_back(1.f);
-    //    vertData.push_back(alpha);
-    //};
-    //
-    //auto& entities = getEntities();
-    //for (auto& entity : entities)
-    //{
-    //    FloatRect rect = entity.getComponent<Sprite>().getGlobalBounds();
-    //    addVertex(rect.left, rect.bottom, 0.f);
-    //    addVertex(rect.left, rect.bottom);
-    //    addVertex(rect.left, rect.bottom + rect.height);
-    //    addVertex(rect.left + rect.width, rect.bottom + rect.height);
-    //    addVertex(rect.left + rect.width, rect.bottom);
-    //    addVertex(rect.left, rect.bottom);
-    //    addVertex(rect.left, rect.bottom, 0.f);
-    //}
+        vertData.push_back(1.f);
+        vertData.push_back(0.f);
+        vertData.push_back(1.f);
+        vertData.push_back(alpha);
+    };
+    
+    auto& entities = getEntities();
+    for (auto& entity : entities)
+    {
+        FloatRect rect = entity.getComponent<Sprite>().getGlobalBounds();
+        addVertex(rect.left, rect.bottom, 0.f);
+        addVertex(rect.left, rect.bottom);
+        addVertex(rect.left, rect.bottom + rect.height);
+        addVertex(rect.left + rect.width, rect.bottom + rect.height);
+        addVertex(rect.left + rect.width, rect.bottom);
+        addVertex(rect.left, rect.bottom);
+        addVertex(rect.left, rect.bottom, 0.f);
+    }
 
-    //m_debugVertCount = vertData.size() * sizeof(float);
+    m_debugVertCount = vertData.size() * sizeof(float);
 
-    ////TODO double buffer this
-    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_debugVBO));
-    //glCheck(glBufferData(GL_ARRAY_BUFFER, m_debugVertCount, vertData.data(), GL_STATIC_DRAW));
+    //TODO double buffer this
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_debugVBO));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, m_debugVertCount, vertData.data(), GL_STATIC_DRAW));
 }
 
 void SpriteRenderer::drawDebug()
 {
-    /*if (m_debugVBO == 0) return;
+    if (m_debugVBO == 0) return;
 
     static constexpr int32 vertSize = 8 * sizeof(float);
 
@@ -578,7 +590,7 @@ void SpriteRenderer::drawDebug()
         glCheck(glDisableVertexAttribArray(m_debugAttribs[i].location));
     }
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
 #endif //_DEBUG_

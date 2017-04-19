@@ -26,6 +26,13 @@ and must not be misrepresented as being the original software.
 source distribution.
 
 -----------------------------------------------------------------------*/
+template <typename T>
+template <typename U>
+Rectangle<T>::Rectangle(const Rectangle<U>& other)
+    : left(static_cast<T>(other.left)),
+    bottom(static_cast<T>(other.bottom)),
+    width(static_cast<T>(other.width)),
+    height(static_cast<T>(other.height)) {}
 
 template <class T>
 bool Rectangle<T>::intersects(Rectangle<T> other, Rectangle<T>& overlap) const

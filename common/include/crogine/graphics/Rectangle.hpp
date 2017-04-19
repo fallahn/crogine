@@ -56,6 +56,13 @@ namespace cro
         T left, bottom, width, height;
 
         /*!
+        \brief Conversion constructor.
+        Creates a rectangle of T when the param is of type U
+        */
+        template <typename U>
+        explicit Rectangle(const Rectangle<U>&);
+
+        /*!
         \brief Returns true if the given rectangle intersects this one
         \param overlap If a rectangle instance is passed in as a second parameter
         then it will contain the overlapping area of the two rectangles, if they
