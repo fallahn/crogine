@@ -45,6 +45,12 @@ Transform::Transform()
 }
 
 //public
+void Transform::setOrigin(glm::vec3 o)
+{
+    m_origin = o;
+    m_dirty = true;
+}
+
 void Transform::setPosition(glm::vec3 position)
 {
     m_position = position;
@@ -81,6 +87,11 @@ void Transform::scale(glm::vec3 scale)
     m_dirty = true;
 }
 
+glm::vec3 Transform::getOrigin() const
+{
+    return m_origin;
+}
+
 glm::vec3 Transform::getPosition() const
 {
     return m_position;
@@ -102,9 +113,10 @@ const glm::mat4& Transform::getLocalTransform() const
     {
         m_dirty = false;
 
-        m_transform = glm::translate(glm::mat4(), m_position);
+        m_transform = glm::translate(glm::mat4(), m_position + m_origin);
         m_transform *= glm::toMat4(m_rotation);
         m_transform = glm::scale(m_transform, m_scale);
+        m_transform = glm::translate(m_transform, -m_origin);
     }
 
     return m_transform;

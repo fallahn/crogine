@@ -54,6 +54,11 @@ namespace cro
         Transform();
 
         /*!
+        \brief Sets the origin of the transform
+        */
+        void setOrigin(glm::vec3);
+
+        /*!
         \brief Sets the transform position
         */
         void setPosition(glm::vec3);
@@ -82,6 +87,11 @@ namespace cro
         The existing scale on the x, y, and z axis is multiplied by the given values
         */
         void scale(glm::vec3);
+
+        /*!
+        \brief Returns the current origin of the transform
+        */
+        glm::vec3 getOrigin() const;
 
         /*
         \brief Returns the position of the transform
@@ -115,6 +125,7 @@ namespace cro
         void setParent(Entity::ID);
 
     private:
+        glm::vec3 m_origin;
         glm::vec3 m_position;
         glm::vec3 m_scale;
         glm::quat m_rotation;

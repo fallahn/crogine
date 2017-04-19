@@ -249,10 +249,14 @@ void MenuState::createScene()
     
     ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 10.f, cro::DefaultSceneSize.y - 48.f, 0.f });
+    ent.getComponent<cro::Transform>().setOrigin({ 128.f, 19.f, 0.f });
     auto& sprite = ent.addComponent<cro::Sprite>();
     //sprite.setColour(cro::Colour(1.f, 0.5f, 0.f, 1.f));
     sprite.setTexture(uiTex);
     sprite.setTextureRect({ 0.f, 210.f, 256.f, 38.f });
+    auto& rr = ent.addComponent<Rotator>();
+    rr.axis.z = 1.f;
+    rr.speed = 3.f;
 
     ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ cro::DefaultSceneSize.x - 120.f, 10.f, 0.f });
