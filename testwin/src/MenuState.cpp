@@ -62,7 +62,9 @@ namespace
         Left = 0x1,
         Right = 0x2,
         Up = 0x4,
-        Down = 0x8
+        Down = 0x8,
+        FingerUp = 0x10,
+        FingerDown = 0x20
     };
     cro::uint16 input = 0;
 }
@@ -113,6 +115,19 @@ bool MenuState::handleEvent(const cro::Event& evt)
             input &= ~Right;
             break;
         }
+    }
+    else if (evt.type == SDL_FINGERDOWN)
+    {
+        cro::Command cmd;
+        cmd.targetFlags = Touch;
+        cmd.action = [](cro::Entity entity, cro::Time)
+        {
+            auto& r = entity.getComponent<Rotator>();
+            r.speed = -r.speed;
+
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Blue());
+        };
+        m_commandSystem->sendCommand(cmd);
     }
 
 	return true;
@@ -222,6 +237,7 @@ void MenuState::createScene()
     auto& r = ent.addComponent<Rotator>();
     r.speed = 0.5f;
     r.axis.y = 1.f;
+    ent.addComponent<cro::CommandTarget>().ID |= Touch;
 
     ent = m_scene.createEntity();
     auto& tx3 = ent.addComponent<cro::Transform>();

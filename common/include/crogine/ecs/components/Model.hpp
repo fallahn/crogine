@@ -42,8 +42,21 @@ namespace cro
     public:
         Model() = default;
         Model(Mesh::Data, Material::Data); //applied to all meshes by default
+        
+        /*!
+        \brief Applies the given material to the given sub-mesh index
+        */
         void setMaterial(std::size_t, Material::Data);
 
+        /*!
+        \brief Sets a parameter on the material applied at the given index
+        */
+        template <typename T>
+        void setMaterialProperty(std::size_t idx, const std::string& str, T val)
+        {
+            CRO_ASSERT(idx < m_materials.size(), "Index out of range");
+            m_materials[idx].setProperty(str, val);
+        }
 
     private:
         Mesh::Data m_meshData;
