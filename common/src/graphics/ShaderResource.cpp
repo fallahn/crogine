@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/graphics/ShaderResource.hpp>
 #include "shaders/Default.hpp"
+#include "shaders/VertexLit.hpp"
 
 using namespace cro;
 
@@ -65,14 +66,30 @@ bool ShaderResource::preloadFromString(const std::string& vertex, const std::str
         Logger::log("Shader with this ID already exists!", Logger::Type::Error);
         return false;
     }
-    
-    auto pair = std::make_pair(ID, Shader());
-    if (!pair.second.loadFromString(vertex, fragment))
+
+    //we have to insert before loading else moving
+    //shader will destroy it...
+    m_shaders.insert(std::make_pair(ID, Shader()));
+    if (!m_shaders[ID].loadFromString(vertex, fragment))
     {
+        m_shaders.erase(ID);
         return false;
     }
-    m_shaders.insert(std::move(pair));
     return true;
+}
+
+int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
+{
+    CRO_ASSERT(type >= BuiltIn::Unlit && flags > 0, "Invalid type of flags value");
+    int32 id = type | flags;
+
+    //TODO create shader defines based on flags
+
+    if (preloadFromString(Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, id))
+    {
+        return id;
+    }
+    return -1;
 }
 
 cro::Shader& ShaderResource::get(int32 ID)

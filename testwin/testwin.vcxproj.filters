@@ -13,6 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\TL">
+      <UniqueIdentifier>{8963ed67-5a29-447a-a803-fac933d6051d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\TL">
+      <UniqueIdentifier>{cd9d4109-524a-4419-86ff-d476099d9efc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\systems">
+      <UniqueIdentifier>{37611082-c33c-455f-a97e-4ec2bfee20bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\systems">
+      <UniqueIdentifier>{ca72897f-ded0-4029-8edf-7f4a316d6164}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -25,10 +37,13 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\RotateSystem.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\systems</Filter>
     </ClCompile>
     <ClCompile Include="src\ColourSystem.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MainState.cpp">
+      <Filter>Source Files\TL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -42,10 +57,13 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\RotateSystem.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\systems</Filter>
     </ClInclude>
     <ClInclude Include="src\ColourSystem.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MainState.hpp">
+      <Filter>Header Files\TL</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -46,6 +46,22 @@ namespace cro
     class CRO_EXPORT_API ShaderResource final : public Detail::SDLResource
     {
     public:
+        enum BuiltIn
+        {
+            Unlit = 0x7FFE0000,
+            VertexLit = 0x7FFF0000
+        };
+
+        enum BuiltInFlags
+        {
+            VertexColour = 0x1,
+            DiffuseColour = 0x2,
+            DiffuseMap = 0x4,
+            NormalMap = 0x8,
+            MaskMap = 0x10,
+            Skinning = 0x20
+        };
+        
         ShaderResource();
 
         ~ShaderResource() = default;
@@ -55,8 +71,7 @@ namespace cro
         ShaderResource& operator = (const ShaderResource&&) = delete;
 
         /*!
-        \brief Preloads a shader from given files on disk, if possible - this generally
-        doesn't work on mobile platforms.
+        \brief Preloads a shader from given files on disk, if possible
         \param vertex String containing path to file containing the source code for the vertex shader
         \param fragment String containing the path to the file containing the source code for
         the fragment shader.
@@ -75,6 +90,16 @@ namespace cro
         \returns true if successful, else returns false
         */
         bool preloadFromString(const std::string& vertex, const std::string& fragment, int32 ID);
+
+        /*!
+        \brief Preloads one of the built in shaders.
+        \param type BuiltIn type for shader. Vertex lit supports normal mapping, mask mapping and skinning
+        and is lit by in-scene entities which posess lights.
+        \param flags A combination of BuiltInFlags bitwise ORd together indicating which shader features are requested
+        \returns int32 representing the ID of the preloaded shader if it succeeds, else returns -1. The returned ID
+        can be used with get() to return an instance of the shader.
+        */
+        int32 preloadBuiltIn(BuiltIn type, int32 flags);
 
         /*!
         \brief Returns the shader with the given ID if it exists, else the default system shader.
