@@ -129,7 +129,8 @@ void MeshSorter::process(cro::Time)
     {
         auto sphere = entity.getComponent<Model>().m_meshData.boundingSphere;
         auto tx = entity.getComponent<Transform>();
-        sphere.centre += tx.getPosition(/*entities*/);
+        //sphere.centre += tx.getPosition(/*entities*/);
+        sphere.centre = glm::vec3(tx.getWorldTransform(entities) * glm::vec4(sphere.centre.x, sphere.centre.y, sphere.centre.z, 1.f));
         auto scale = tx.getScale();
         sphere.radius *= (scale.x + scale.y + scale.z) / 3.f;
 

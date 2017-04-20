@@ -9,6 +9,7 @@ namespace ModelConverter
     public partial class ModelConverter : Form
     {
         private const int maxMaterials = 32;
+        private string m_currentFileName;
         
         //ctor
         public ModelConverter()
@@ -26,6 +27,8 @@ namespace ModelConverter
             if(od.ShowDialog() == DialogResult.OK && loadFile(od.FileName))
             {
                 textBoxPath.Text = od.FileName;
+                m_currentFileName = Path.GetFileNameWithoutExtension(od.FileName);
+                this.Text = "Model Converter - " + Path.GetFileName(od.FileName);
             }
         }
 
@@ -33,6 +36,7 @@ namespace ModelConverter
         {
             SaveFileDialog sd = new SaveFileDialog();
             sd.Filter = "Cro Model File|*.cmf";
+            sd.FileName = m_currentFileName + ".cmf";
             if (sd.ShowDialog() == DialogResult.OK)
             {
                 if (File.Exists(sd.FileName))

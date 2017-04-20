@@ -54,7 +54,8 @@ namespace
     enum Command
     {
         Keyboard = 0x1,
-        Touch = 0x2
+        Touch = 0x2,
+        Drag = 0x4
     };
 
     enum Input
@@ -63,10 +64,10 @@ namespace
         Right = 0x2,
         Up = 0x4,
         Down = 0x8,
-        FingerUp = 0x10,
-        FingerDown = 0x20
+        FingerDown = 0x10
     };
     cro::uint16 input = 0;
+    glm::vec2 movement;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
@@ -90,46 +91,68 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_KEYDOWN)
+    static glm::vec2 lastFingerPos(0.5f, 0.5f);
+    switch (evt.type)
     {
-        switch (evt.key.keysym.sym)
+    default: break;
+    case SDL_KEYDOWN:
         {
-        default: break;
-        case SDLK_LEFT:
-            input |= Left;
-            break;
-        case SDLK_RIGHT:
-            input |= Right;
-            break;
+            switch (evt.key.keysym.sym)
+            {
+            default: break;
+            case SDLK_LEFT:
+                input |= Left;
+                break;
+            case SDLK_RIGHT:
+                input |= Right;
+                break;
+            }
         }
-    }
-    else if (evt.type == SDL_KEYUP)
-    {
-        switch (evt.key.keysym.sym)
+        break;
+    case SDL_KEYUP:
         {
-        default: break;
-        case SDLK_LEFT:
-            input &= ~Left;
-            break;
-        case SDLK_RIGHT:
-            input &= ~Right;
-            break;
+            switch (evt.key.keysym.sym)
+            {
+            default: break;
+            case SDLK_LEFT:
+                input &= ~Left;
+                break;
+            case SDLK_RIGHT:
+                input &= ~Right;
+                break;
+            }
         }
-    }
-    else if (evt.type == SDL_FINGERDOWN)
-    {
-        cro::Command cmd;
-        cmd.targetFlags = Touch;
-        cmd.action = [](cro::Entity entity, cro::Time)
+        break;
+    case SDL_FINGERDOWN:
         {
-            auto& r = entity.getComponent<Rotator>();
-            r.speed = -r.speed;
+            //cro::Command cmd;
+            //cmd.targetFlags = Touch;
+            //cmd.action = [](cro::Entity entity, cro::Time)
+            //{
+            //    auto& r = entity.getComponent<Rotator>();
+            //    r.speed = -r.speed;
 
-            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Blue());
-        };
-        m_commandSystem->sendCommand(cmd);
+            //    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Blue());
+            //};
+            //m_commandSystem->sendCommand(cmd);
+            input |= FingerDown;
+            lastFingerPos = { evt.tfinger.x, evt.tfinger.y };
+        }
+        break;
+    case SDL_FINGERUP:
+        {
+            input &= ~FingerDown;
+        }
+        break;
+    case SDL_FINGERMOTION:
+        {
+        
+        glm::vec2 pos(evt.tfinger.x, evt.tfinger.y);
+        movement = pos - lastFingerPos;
+        lastFingerPos = pos;
+        }
+        break;
     }
-
 	return true;
 }
 
@@ -160,6 +183,18 @@ bool MenuState::simulate(cro::Time dt)
         m_commandSystem->sendCommand(cmd);
     }
     
+    if (input & FingerDown)
+    {
+        cmd.targetFlags = Drag;
+        cmd.action = [](cro::Entity entity, cro::Time dt)
+        {
+            const float speed = 500.f;
+            glm::vec3 move(movement.x, -movement.y, 0.f);
+            entity.getComponent<cro::Transform>().move(move *  speed * dt.asSeconds());
+        };
+        m_commandSystem->sendCommand(cmd);
+    }
+
     m_scene.simulate(dt);
 	return true;
 }
@@ -211,7 +246,7 @@ void MenuState::loadAssets()
     cro::SphereBuilder sb(0.3f, 6);
     m_meshResource.loadMesh(sb, cro::Mesh::SphereMesh);
 
-    cro::StaticMeshBuilder smb("assets/beeble.cmf");
+    cro::StaticMeshBuilder smb("assets/room_1x1.cmf");
     m_meshResource.loadMesh(smb, cro::Mesh::Count);
 }
 
@@ -240,16 +275,18 @@ void MenuState::createScene()
     ent.addComponent<cro::CommandTarget>().ID |= Touch;
 
     ent = m_scene.createEntity();
+    ent.addComponent<cro::CommandTarget>().ID = Drag;
     auto& tx3 = ent.addComponent<cro::Transform>();
-    tx3.move({ 0.f, 0.f, -13.f });
+    tx3.move({ 32.f, -2.5f, -13.f });
     tx3.scale({ 0.5f, 0.5f, 0.5f });
+    //tx3.rotate({ 0.f, 1.f, 0.f }, 3.14f);
 
     auto& model = ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Count), m_materialResource.get(1));
-    model.setMaterial(1, material);
-    auto& r2 = ent.addComponent<Rotator>();
+    //model.setMaterial(1, material);
+    /*auto& r2 = ent.addComponent<Rotator>();
     r2.speed = -0.67f;
     r2.axis.x = 0.141f;
-    r2.axis.z = 0.141f;
+    r2.axis.z = 0.141f;*/
 
     ent = m_scene.createEntity();
     auto& tx4 = ent.addComponent<cro::Transform>();
@@ -257,7 +294,6 @@ void MenuState::createScene()
     tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);
     ent.addComponent<cro::Camera>();
     m_sceneRenderer->setActiveCamera(ent);
-
 
     //------sprite stuff-----//
 

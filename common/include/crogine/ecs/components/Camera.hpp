@@ -54,7 +54,7 @@ namespace cro
             const float ratio = 4.f / 3.f;
 #endif //__ANDROID__
 
-            projection = glm::perspective(0.6f, ratio, 0.1f, 50.f);
+            projection = glm::perspective(0.6f, ratio, 0.1f, 150.f);
         }
     };
 }
