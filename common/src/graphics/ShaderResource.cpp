@@ -59,7 +59,7 @@ bool ShaderResource::preloadFromFile(const std::string& vertex, const std::strin
     return true;
 }
 
-bool ShaderResource::preloadFromString(const std::string& vertex, const std::string& fragment, int32 ID)
+bool ShaderResource::preloadFromString(const std::string& vertex, const std::string& fragment, int32 ID, const std::string& defines)
 {
     if (m_shaders.count(ID) > 0)
     {
@@ -70,7 +70,7 @@ bool ShaderResource::preloadFromString(const std::string& vertex, const std::str
     //we have to insert before loading else moving
     //shader will destroy it...
     m_shaders.insert(std::make_pair(ID, Shader()));
-    if (!m_shaders[ID].loadFromString(vertex, fragment))
+    if (!m_shaders[ID].loadFromString(vertex, fragment, defines))
     {
         m_shaders.erase(ID);
         return false;
@@ -83,9 +83,16 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     CRO_ASSERT(type >= BuiltIn::Unlit && flags > 0, "Invalid type of flags value");
     int32 id = type | flags;
 
-    //TODO create shader defines based on flags
+    //create shader defines based on flags
+    //TODO finish list
+    std::string defines;
+    if (flags & BuiltInFlags::DiffuseMap)
+    {
+        defines += "\n#define TEXTURED";
+    }
+    defines += "\n";
 
-    if (preloadFromString(Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, id))
+    if (preloadFromString(Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, id, defines))
     {
         return id;
     }

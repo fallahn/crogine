@@ -40,12 +40,20 @@ namespace cro
         {
             const static std::string Vertex = R"(
                 attribute vec3 a_position;
+                #if defined (VERTEX_COLOUR)
                 attribute vec3 a_colour;
+                #endif
                 attribute vec3 a_normal;
+                #if defined(BUMP)
                 attribute vec3 a_tangent;
                 attribute vec3 a_bitangent;
+                #endif
+                #if defined(TEXTURED)
                 attribute vec2 a_texCoord0;
+                #if defined (LIGHTMAPPED)
                 attribute vec2 a_texCoord1;
+                #endif
+                #endif
 
                 uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;
@@ -53,10 +61,16 @@ namespace cro
                 uniform mat4 u_projectionMatrix;
                 
                 varying vec3 v_worldPosition;
+                #if defined (VERTEX_COLOUR)
                 varying vec3 v_colour;
+                #endif
                 varying vec3 v_normalVector;
+                #if defined(TEXTURED)
                 varying vec2 v_texCoord0;
+                #if defined(LIGHTMAPPED)
                 varying vec2 v_texCoord1;
+                #endif
+                #endif
 
 
                 void main()
@@ -65,29 +79,46 @@ namespace cro
                     gl_Position = wvp * vec4(a_position, 1.0);
 
                     v_worldPosition = (u_worldMatrix * vec4(a_position, 1.0)).xyz;
-
+                #if defined(VERTEX_COLOUR)
                     v_colour = a_colour;
+                #endif
                     v_normalVector = u_normalMatrix * a_normal;
-
+                #if defined(TEXTURED)
                     v_texCoord0 = a_texCoord0;
+                #if defined(LIGHTMAPPED)
                     v_texCoord1 = a_texCoord1;
-
+                #endif
+                #endif
                 })";
 
-            const static std::string Fragment = R"(
-
+                const static std::string Fragment = R"(
+                #if defined(TEXTURED)
                 uniform sampler2D u_diffuseMap;
+                #if defined(BUMP)
                 uniform sampler2D u_normalMap;
                 uniform sampler2D u_maskMap;
+                #if defined(LIGHTMAPPED)
                 uniform sampler2D u_lightMap;
+                #endif
+                #endif
+                #endif
 
                 uniform vec3 u_cameraWorldPosition;
+                #if defined(COLOURED)
+                uniform vec4 u_colour;
+                #endif
 
                 varying vec3 v_worldPosition;
+                #if defined(VERTEX_COLOUR)
                 varying vec3 v_colour;
+                #endif
                 varying vec3 v_normalVector;
+                #if defined(TEXTURED)
                 varying vec2 v_texCoord0;
+                #if defined(LIGHTMAPPED)
                 varying vec2 v_texCoord1;
+                #endif
+                #endif
                 
                 vec3 lightDir = vec3(0.1, -0.8, -0.2);
 
@@ -109,7 +140,15 @@ namespace cro
                 void main()
                 {
                     vec3 normal = normalize(v_normalVector);
+                #if defined (TEXTURED)
                     vec4 diffuse = texture2D(u_diffuseMap, v_texCoord0);
+                #elif defined(COLOURED)
+                    vec4 diffuse = u_colour;
+                #elif defined(VERTEX_COLOURED)
+                    vec4 diffuse = v_colour;
+                #else
+                    vec4 diffuse = vec4(1.0);
+                #endif
                     diffuseColour = diffuse.rgb;
                     vec3 blendedColour = diffuse.rgb * 0.2; //ambience
                     eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
