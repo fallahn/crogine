@@ -287,6 +287,7 @@
   <ItemGroup>
     <ClCompile Include="src\ColourSystem.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\MainState.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\RotateSystem.cpp" />
@@ -297,6 +298,7 @@
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\RotateSystem.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
+    <ClInclude Include="src\MainState.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

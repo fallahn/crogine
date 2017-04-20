@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MyApp.hpp"
+#include "MainState.hpp"
 #include "MenuState.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -36,8 +37,11 @@ MyApp::MyApp()
 	: m_stateStack({*this, getWindow()})
 {
 	//register states
-	m_stateStack.registerState<MenuState>(States::ID::MainMenu);
-
+#ifdef PLATFORM_MOBILE
+    m_stateStack.registerState<MenuState>(States::ID::MainMenu);
+#else
+	m_stateStack.registerState<MainState>(States::ID::MainMenu);
+#endif //PLATFORM_MOBILE
 
 	m_stateStack.pushState(States::MainMenu);
 }

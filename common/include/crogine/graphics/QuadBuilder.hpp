@@ -45,11 +45,15 @@ namespace cro
         /*!
         \brief Constructor.
         \param size Dimensions of the quad created by this mesh builder
+        \param texRepeat Number of times to repeat the texture in the S and T
+        axes. NOTE texture repeat should be applied to the textures used
+        for the quad material when setting to a value greater than 1
         */
-        explicit QuadBuilder(glm::vec2 size);
+        QuadBuilder(glm::vec2 size, glm::vec2 texRepeat = glm::vec2(1.f, 1.f));
 
     private:
         glm::vec2 m_size;
+        glm::vec2 m_repeat;
         Mesh::Data build() const override;
     };
 }

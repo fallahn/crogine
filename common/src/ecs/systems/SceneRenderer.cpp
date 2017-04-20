@@ -49,6 +49,7 @@ SceneRenderer::SceneRenderer(MessageBus& mb, Entity camera)
 {
     CRO_ASSERT(camera.hasComponent<Camera>() && camera.hasComponent<Transform>(), "Invalid camera Entity");
     requireComponent<Transform>();
+    requireComponent<Model>();
 }
 
 //public

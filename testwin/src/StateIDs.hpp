@@ -34,7 +34,13 @@ namespace States
 {
 	enum ID
 	{
-		MainMenu
+		MainMenu,
+        OptionsMenu,
+        HighScoreMenu,
+        PauseMenu,
+        GamePlaying,
+        RoundEnd,
+        GameEnd
 	};
 }
 

@@ -4,6 +4,9 @@
     <Filter Include="src">
       <UniqueIdentifier>{f3bf3311-ba22-40ec-abf5-624ec4310cf1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\TL">
+      <UniqueIdentifier>{4c6a8ab7-0ecc-4bba-a341-78a5b5167fca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\SDL2-android\src\main\android\SDL_android_main.c">
@@ -23,6 +26,9 @@
     </ClCompile>
     <ClCompile Include="..\testwin\src\ColourSystem.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\testwin\src\MainState.cpp">
+      <Filter>src\TL</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
