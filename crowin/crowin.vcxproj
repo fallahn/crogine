@@ -84,6 +84,7 @@
     <ClInclude Include="..\common\src\graphics\shaders\Debug.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Default.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Sprite.hpp" />
+    <ClInclude Include="..\common\src\graphics\shaders\Unlit.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\VertexLit.hpp" />
     <ClInclude Include="..\common\src\imgui\imconfig.h" />
     <ClInclude Include="..\common\src\imgui\imgui.h" />

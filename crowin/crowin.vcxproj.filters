@@ -231,6 +231,9 @@
     <ClInclude Include="..\common\src\graphics\shaders\VertexLit.hpp">
       <Filter>Header Files\graphics\shaders</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\src\graphics\shaders\Unlit.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">

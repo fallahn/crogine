@@ -87,9 +87,10 @@ namespace cro
         \param fragment String containing the source code for the fragment shader. Version
         directives are automatically prepended depending on the current platform so should be omitted.
         \param ID Integer value, such as an enumeration, to be mapped to the shader.
+        \param defines Optional list of newline delimited defines used with given shader source
         \returns true if successful, else returns false
         */
-        bool preloadFromString(const std::string& vertex, const std::string& fragment, int32 ID);
+        bool preloadFromString(const std::string& vertex, const std::string& fragment, int32 ID, const std::string& defines = "");
 
         /*!
         \brief Preloads one of the built in shaders.
