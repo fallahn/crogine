@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/ecs/systems/MeshSorter.hpp>
 
 #include <crogine/graphics/SphereBuilder.hpp>
+#include <crogine/graphics/QuadBuilder.hpp>
 
 namespace
 {
@@ -62,6 +63,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     addSystems();
     loadAssets();
     createScene();
+    //context.appInstance.setClearColour(cro::Colour::Red());
 }
 
 //public
@@ -103,8 +105,18 @@ void MainState::loadAssets()
     moonMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/rock_normal.png"));
     moonMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/rock_mask.png"));
 
+    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
+    auto& starTexture = m_textureResource.get("assets/materials/stars.png");
+    starTexture.setRepeated(true);
+    auto& skyMaterial = m_materialResource.add(MaterialID::Stars, m_shaderResource.get(shaderID));
+    skyMaterial.setProperty("u_diffuseMap", starTexture);
+    skyMaterial.blendMode = cro::Material::BlendMode::Additive;
+
     cro::SphereBuilder sb(2.2f, 6);
     m_meshResource.loadMesh(sb, cro::Mesh::SphereMesh);
+
+    cro::QuadBuilder qb(glm::vec2(16.f, 9.f), glm::vec2(16.f / 9.f, 1.f));
+    m_meshResource.loadMesh(qb, cro::Mesh::QuadMesh);
 }
 
 void MainState::createScene()
@@ -120,7 +132,13 @@ void MainState::createScene()
     moonRotator.axis.z = -0.2f;
 
     //create stars
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -18.f });
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), m_materialResource.get(MaterialID::Stars));
 
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -17.f });
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), m_materialResource.get(MaterialID::Stars));
 
     //entity = m_backgroundScene.createEntity();
     //auto& tx4 = entity.addComponent<cro::Transform>();

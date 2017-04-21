@@ -111,6 +111,8 @@ void SceneRenderer::render()
 
             //TODO set material winding/cullface/depthfunc
 
+            applyBlendMode(model.m_materials[i].blendMode);
+
             //bind attribs
             const auto& attribs = model.m_materials[i].attribs;
             for (auto j = 0u; j < model.m_materials[i].attribCount; ++j)
@@ -141,6 +143,8 @@ void SceneRenderer::render()
     }
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    glCheck(glDisable(GL_BLEND));
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));
 }
@@ -176,5 +180,35 @@ void SceneRenderer::applyProperties(const Material::PropertyList& properties)
                 prop.second.second.vecValue[1], prop.second.second.vecValue[2], prop.second.second.vecValue[3]));
             break;
         }
+    }
+}
+
+void SceneRenderer::applyBlendMode(Material::BlendMode mode)
+{
+    switch (mode)
+    {
+    default: break;
+    case Material::BlendMode::Additive:
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glBlendFunc(GL_ONE, GL_ONE));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
+        break;
+    case Material::BlendMode::Alpha:
+        glCheck(glDisable(GL_CULL_FACE));
+        glCheck(glDisable(GL_DEPTH_TEST));
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glEnable(GL_CULL_FACE));
+        break;
+    case Material::BlendMode::Multiply:
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
+        break;
+    case Material::BlendMode::None:
+        glCheck(glDisable(GL_BLEND));
+        break;
     }
 }

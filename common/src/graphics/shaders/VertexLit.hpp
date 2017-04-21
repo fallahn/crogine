@@ -178,6 +178,7 @@ namespace cro
 
                     blendedColour += calcLighting(normal, normalize(-lightDir), vec3(0.48), vec3(1.0), 1.0);
                     gl_FragColor.rgb = blendedColour;
+                    gl_FragColor.a = 1.0;
                 })";
         }
     }
