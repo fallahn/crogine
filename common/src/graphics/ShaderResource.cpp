@@ -67,14 +67,12 @@ bool ShaderResource::preloadFromString(const std::string& vertex, const std::str
         return false;
     }
 
-    //we have to insert before loading else moving
-    //shader will destroy it...
-    m_shaders.insert(std::make_pair(ID, Shader()));
-    if (!m_shaders[ID].loadFromString(vertex, fragment, defines))
+    auto pair = std::make_pair(ID, Shader());
+    if (!pair.second.loadFromString(vertex, fragment, defines))
     {
-        m_shaders.erase(ID);
         return false;
     }
+    m_shaders.insert(std::move(pair));
     return true;
 }
 

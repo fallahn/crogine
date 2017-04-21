@@ -44,6 +44,32 @@ Shader::Shader()
     resetAttribMap();
 }
 
+Shader::Shader(Shader&& other)
+{
+    m_handle = other.m_handle;
+    m_attribMap = other.m_attribMap;
+    m_uniformMap = other.m_uniformMap;
+
+    other.m_handle = 0;
+    other.m_attribMap = {};
+    other.m_uniformMap.clear();
+}
+
+Shader& Shader::operator=(Shader&& other)
+{
+    if (this != &other)
+    {
+        m_handle = other.m_handle;
+        m_attribMap = other.m_attribMap;
+        m_uniformMap = other.m_uniformMap;
+
+        other.m_handle = 0;
+        other.m_attribMap = {};
+        other.m_uniformMap.clear();
+    }
+    return *this;
+}
+
 Shader::~Shader()
 {
     if (m_handle)
