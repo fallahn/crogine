@@ -56,8 +56,9 @@ namespace
 
 MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     : cro::State        (stack, context),
-    m_backgroundRenderer(nullptr),
     m_currentMenu       (nullptr),
+    m_backgroundRenderer(nullptr),
+    m_spriteRenderer    (nullptr),
     m_commandSystem     (nullptr)
 {
     addSystems();
