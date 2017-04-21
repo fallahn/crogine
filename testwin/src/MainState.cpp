@@ -49,7 +49,8 @@ namespace
         enum
         {
             Moon,
-            Stars
+            Stars,
+            Planet
         };
     }
 }
@@ -106,6 +107,14 @@ void MainState::loadAssets()
     moonMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/rock_normal.png"));
     moonMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/rock_mask.png"));
 
+    //shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap);
+    auto& planetMaterial = m_materialResource.add(MaterialID::Planet, m_shaderResource.get(shaderID));
+    planetMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/gas_diffuse.png"));
+    auto& normalTex = m_textureResource.get("assets/materials/gas_normal.png");
+    normalTex.setSmooth(true);
+    planetMaterial.setProperty("u_normalMap", normalTex);
+    planetMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/gas_mask.png"));
+
     shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
     auto& starTexture = m_textureResource.get("assets/materials/stars.png");
     starTexture.setRepeated(true);
@@ -113,7 +122,8 @@ void MainState::loadAssets()
     skyMaterial.setProperty("u_diffuseMap", starTexture);
     skyMaterial.blendMode = cro::Material::BlendMode::Additive;
 
-    cro::SphereBuilder sb(2.2f, 6);
+
+    cro::SphereBuilder sb(2.2f, 8);
     m_meshResource.loadMesh(sb, cro::Mesh::SphereMesh);
 
     cro::QuadBuilder qb(glm::vec2(16.f, 9.f), glm::vec2(16.f / 9.f, 1.f));
@@ -123,14 +133,23 @@ void MainState::loadAssets()
 void MainState::createScene()
 {
     //-----background-----//
-    //create moon
+    //create planet / moon
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 2.3f, -0.7f, -6.f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(MaterialID::Moon));
+    entity.getComponent<cro::Transform>().setRotation({ -0.5f, 0.f, 0.4f });
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(MaterialID::Planet));
     auto& moonRotator = entity.addComponent<Rotator>();
-    moonRotator.speed = 0.03f;
+    moonRotator.speed = 0.05f;
     moonRotator.axis.y = 0.2f;
-    moonRotator.axis.z = -0.2f;
+    //moonRotator.axis.z = -0.2f;
+
+    auto moonEntity = m_backgroundScene.createEntity();
+    auto& moonTx = moonEntity.addComponent<cro::Transform>();
+    //moonTx.setOrigin({ 2.5f, 0.f, 0.f });
+    moonTx.setScale({ 0.1f, 0.1f, 0.1f });
+    moonTx.setPosition({ 0.f, 0.f, -6.f });
+    //moonTx.setParent(entity.getIndex());
+    moonEntity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(MaterialID::Moon));
 
     //create stars
     entity = m_backgroundScene.createEntity();
