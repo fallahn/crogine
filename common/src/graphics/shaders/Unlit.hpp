@@ -40,45 +40,77 @@ namespace cro
         {
             const static std::string Vertex = R"(
                 attribute vec3 a_position;
-                attribute vec3 a_colour;
+                #if defined(VERTEX_COLOUR)
+                attribute vec4 a_colour;
+                #endif
+                if defined(TEXTURED)
                 attribute vec2 a_texCoord0;
+                if defined(LIGHTMAPPED)
                 attribute vec2 a_texCoord1;
+                #endif
+                #endif
 
                 uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;               
                 uniform mat4 u_projectionMatrix;
                 
-                varying vec3 v_worldPosition;
-                varying vec3 v_colour;
+                #if defined (VERTEX_COLOURED)
+                varying vec4 v_colour;
+                #endif
+                #if defined (TEXTURED)
                 varying vec2 v_texCoord0;
+                #if defined (LIGHTMAPPED)
                 varying vec2 v_texCoord1;
+                #endif
+                #endif
 
                 void main()
                 {
                     mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
                     gl_Position = wvp * vec4(a_position, 1.0);
 
-                    v_worldPosition = (u_worldMatrix * vec4(a_position, 1.0)).xyz;
-
+                #if defined (VERTEX_COLOUR)
                     v_colour = a_colour;
-
+                #endif
+                #if defined (TEXTURED)
                     v_texCoord0 = a_texCoord0;
+                #if defined (LIGHTMAPPED)
                     v_texCoord1 = a_texCoord1;
-
+                #endif
+                #endif
                 })";
 
             const static std::string Fragment = R"(
-
+                #if defined (TEXTURED)
                 uniform sampler2D u_diffuseMap;
+                #if defined (LIGHTMAPPED)
                 uniform sampler2D u_lightMap;
+                #endif
+                #endif
 
-                varying vec3 v_colour;
+                #if defined (VERTEX_COLOUR)
+                varying vec4 v_colour;
+                #endif
+                #if defined (TEXTURED)
                 varying vec2 v_texCoord0;
+                #if defined (LIGHTMAPPED)
                 varying vec2 v_texCoord1;
+                #endif
+                #endif
                 
                 void main()
                 {
-                    gl_FragColor = texture2D(u_diffuseMap, v_texCoord0);
+                #if defined (VERTEX_COLOUR)
+                    gl_FragColour = v_colour;
+                #else
+                    gl_FragColour = vec4(1.0);
+                #endif
+                #if defined (TEXTURED)
+                    gl_FragColor *= texture2D(u_diffuseMap, v_texCoord0);
+                #if defined (LIGHTMAPPED)
+                    gl_FragColour *= texture2D(u_lightMap, v_texCoord1);
+                #endif
+                #endif
                 })";
         }
     }

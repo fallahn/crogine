@@ -60,6 +60,14 @@ namespace cro
             Total
         };
         
+        enum class BlendMode
+        {
+            None,
+            Alpha,
+            Multiply,
+            Additive
+        };
+
         struct CRO_EXPORT_API Property final
         {
             enum
@@ -102,6 +110,8 @@ namespace cro
             std::size_t attribCount = 0; //< count of attributes successfully mapped
             //maps uniform locations by indexing via Uniform enum
             std::array<int32, Uniform::Total> uniforms{};
+
+            BlendMode blendMode = BlendMode::None;
 
             //arbitrary uniforms are stored as properties
             PropertyList properties;

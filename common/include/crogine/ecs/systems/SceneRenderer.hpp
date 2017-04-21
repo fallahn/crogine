@@ -91,6 +91,8 @@ namespace cro
 
         uint32 m_currentTextureUnit;
         void applyProperties(const Material::PropertyList&);
+
+        void applyBlendMode(Material::BlendMode);
     };
 
 }
