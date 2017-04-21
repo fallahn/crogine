@@ -90,6 +90,10 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     {
         defines += "\n#define TEXTURED";
     }
+    if (flags & BuiltInFlags::NormalMap)
+    {
+        defines += "\n#define BUMP";
+    }
     defines += "\n";
 
     if (preloadFromString(Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, id, defines))

@@ -100,6 +100,8 @@ void MainState::loadAssets()
     cro::int32 shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::NormalMap);
     auto& moonMaterial = m_materialResource.add(MaterialID::Moon, m_shaderResource.get(shaderID));
     moonMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/rock_diffuse.png"));
+    moonMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/rock_normal.png"));
+    moonMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/rock_mask.png"));
 
     cro::SphereBuilder sb(2.2f, 6);
     m_meshResource.loadMesh(sb, cro::Mesh::SphereMesh);
