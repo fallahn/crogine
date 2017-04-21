@@ -62,6 +62,39 @@ Texture::Texture()
 
 }
 
+Texture::Texture(Texture&& other)
+    : m_format  (other.m_format),
+    m_handle    (other.m_handle),
+    m_smooth    (other.m_smooth),
+    m_repeated  (other.m_repeated),
+    m_hasMipMaps(other.m_hasMipMaps)
+{
+    other.m_format = ImageFormat::None;
+    other.m_handle = 0;
+    other.m_smooth = false;
+    other.m_repeated = false;
+    other.m_hasMipMaps = false;
+}
+
+Texture& Texture::operator=(Texture&& other)
+{
+    if (this != &other)
+    {
+        m_format = other.m_format;
+        m_handle = other.m_handle;
+        m_smooth = other.m_smooth;
+        m_repeated = other.m_repeated;
+        m_hasMipMaps = other.m_hasMipMaps;
+
+        other.m_format = ImageFormat::None;
+        other.m_handle = 0;
+        other.m_smooth = false;
+        other.m_repeated = false;
+        other.m_hasMipMaps = false;
+    }
+    return *this;
+}
+
 Texture::~Texture()
 {
     if(m_handle)

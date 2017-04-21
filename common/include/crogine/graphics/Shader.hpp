@@ -51,9 +51,9 @@ namespace cro
         ~Shader();
 
         Shader(const Shader&) = delete;
-        Shader(Shader&&) = default;
+        Shader(Shader&&);
         Shader& operator = (const Shader&) = delete;
-        Shader& operator = (Shader&&) = default;
+        Shader& operator = (Shader&&);
 
         /*!
         \brief Attempts to load the shader source from given files on disk.
