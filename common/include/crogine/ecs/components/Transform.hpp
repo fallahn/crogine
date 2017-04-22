@@ -118,11 +118,11 @@ namespace cro
         glm::mat4 getWorldTransform(std::vector<Entity>&) const;
 
         /*!
-        \brief Sets the ID of the parent entity of this transform.
+        \brief Sets the parent entity of this transform.
         World transforms are multiplied with the world transform of
         parent entities to calculate final world position
         */
-        void setParent(Entity::ID);
+        void setParent(Entity);
 
     private:
         glm::vec3 m_origin;
@@ -131,7 +131,7 @@ namespace cro
         glm::quat m_rotation;
         mutable glm::mat4 m_transform;
 
-        ParentID m_parent;
+        mutable Entity m_parent;
         mutable bool m_dirty;
     };
 }

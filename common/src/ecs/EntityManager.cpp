@@ -49,7 +49,7 @@ Entity EntityManager::createEntity()
     {
         m_generations.push_back(0);
         idx = static_cast<Entity::ID>(m_generations.size() - 1);
-
+        
         CRO_ASSERT(idx < (1 << Detail::IndexBits), "Index out of range");
         if (idx >= m_componentMasks.size())
         {
