@@ -131,6 +131,10 @@ namespace cro
 
 		//TODO add tags of types
 
+        /*!
+        \brief Returns true if this is a valid entity
+        */
+        bool valid() const { return m_entityManager && !destroyed(); }
         
         bool operator == (Entity r)
         {

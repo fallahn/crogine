@@ -38,7 +38,7 @@ using namespace cro;
 
 Transform::Transform()
     : m_scale   (1.f, 1.f, 1.f),
-    m_parent    (-1),
+    m_parent    (-1, 0),
     m_dirty     (true)
 {
 
@@ -124,14 +124,15 @@ const glm::mat4& Transform::getLocalTransform() const
 
 glm::mat4 Transform::getWorldTransform(std::vector<Entity>& entityList) const
 {
-    if (m_parent > -1)
-    {
-        return entityList[m_parent].getComponent<Transform>().getWorldTransform(entityList) * getLocalTransform();
+    if (m_parent.valid())
+    {        
+        return m_parent.getComponent<Transform>().getWorldTransform(entityList) * getLocalTransform();
     }
     return getLocalTransform();
 }
 
-void Transform::setParent(Entity::ID id)
+void Transform::setParent(Entity parent)
 {
-    m_parent = id;
+    CRO_ASSERT(parent.hasComponent<Transform>(), "This entity has no transform");
+    m_parent = parent;
 }

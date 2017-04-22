@@ -29,6 +29,7 @@ source distribution.
 
 #include "MainState.hpp"
 #include "RotateSystem.hpp"
+#include "DriftSystem.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -41,6 +42,7 @@ source distribution.
 
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
+#include <crogine/graphics/StaticMeshBuilder.hpp>
 
 namespace
 {
@@ -50,7 +52,16 @@ namespace
         {
             Moon,
             Stars,
-            Planet
+            Planet,
+            Roids
+        };
+    }
+
+    namespace MeshID
+    {
+        enum
+        {
+            Roids = cro::Mesh::ID::Count
         };
     }
 }
@@ -97,6 +108,7 @@ void MainState::addSystems()
     m_backgroundRenderer = &m_backgroundScene.addSystem<cro::SceneRenderer>(mb, m_backgroundScene.getDefaultCamera());
     m_backgroundScene.addSystem<cro::MeshSorter>(mb, *m_backgroundRenderer);
     m_backgroundScene.addSystem<RotateSystem>(mb);
+    m_backgroundScene.addSystem<DriftSystem>(mb);
 }
 
 void MainState::loadAssets()
@@ -107,13 +119,18 @@ void MainState::loadAssets()
     moonMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/rock_normal.png"));
     moonMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/rock_mask.png"));
 
-    //shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap);
     auto& planetMaterial = m_materialResource.add(MaterialID::Planet, m_shaderResource.get(shaderID));
     planetMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/gas_diffuse.png"));
     auto& normalTex = m_textureResource.get("assets/materials/gas_normal.png");
     normalTex.setSmooth(true);
     planetMaterial.setProperty("u_normalMap", normalTex);
     planetMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/gas_mask.png"));
+
+    //shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap);
+    auto& roidMaterial = m_materialResource.add(MaterialID::Roids, m_shaderResource.get(shaderID));
+    roidMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/roid_diffuse.png"));
+    roidMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/roid_normal.png"));
+    roidMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/roid_mask.png"));
 
     shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
     auto& starTexture = m_textureResource.get("assets/materials/stars.png");
@@ -128,6 +145,10 @@ void MainState::loadAssets()
 
     cro::QuadBuilder qb(glm::vec2(16.f, 9.f), glm::vec2(16.f / 9.f, 1.f));
     m_meshResource.loadMesh(qb, cro::Mesh::QuadMesh);
+
+    cro::StaticMeshBuilder smb("assets/models/roid_belt.cmf");
+    m_meshResource.loadMesh(smb, MeshID::Roids);
+
 }
 
 void MainState::createScene()
@@ -138,34 +159,43 @@ void MainState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 2.3f, -0.7f, -6.f });
     entity.getComponent<cro::Transform>().setRotation({ -0.5f, 0.f, 0.4f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(MaterialID::Planet));
-    auto& moonRotator = entity.addComponent<Rotator>();
-    moonRotator.speed = 0.05f;
-    moonRotator.axis.y = 0.2f;
-    //moonRotator.axis.z = -0.2f;
+    auto& planetRotator = entity.addComponent<Rotator>();
+    planetRotator.speed = 0.02f;
+    planetRotator.axis.y = 0.2f;
 
     auto moonEntity = m_backgroundScene.createEntity();
     auto& moonTx = moonEntity.addComponent<cro::Transform>();
-    //moonTx.setOrigin({ 2.5f, 0.f, 0.f });
-    moonTx.setScale({ 0.1f, 0.1f, 0.1f });
-    moonTx.setPosition({ 0.f, 0.f, -6.f });
-    //moonTx.setParent(entity.getIndex());
+    moonTx.setScale({ 0.22f, 0.22f, 0.22f });
+    moonTx.setOrigin({ -5.6f, 0.f, 0.f });
+    moonTx.setParent(entity);  
     moonEntity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(MaterialID::Moon));
+
+    auto roidEntity = m_backgroundScene.createEntity();  
+    roidEntity.addComponent<cro::Transform>().setParent(entity);
+    roidEntity.getComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
+    roidEntity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Roids), m_materialResource.get(MaterialID::Roids));
+    auto& roidRotator = roidEntity.addComponent<Rotator>();
+    roidRotator.speed = -0.03f;
+    roidRotator.axis.y = 1.f;
 
     //create stars
     entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -18.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -19.f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), m_materialResource.get(MaterialID::Stars));
 
     entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -17.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -15.f });
+    entity.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, 3.14f);
     entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), m_materialResource.get(MaterialID::Stars));
+    entity.addComponent<Drifter>().amplitude = -0.1f;
 
-    //entity = m_backgroundScene.createEntity();
-    //auto& tx4 = entity.addComponent<cro::Transform>();
-    //tx4.move({ 0.f, 0.4f, 1.f });
-    //tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);
-    //entity.addComponent<cro::Camera>();
-    //m_backgroundRenderer->setActiveCamera(entity);
+    entity = m_backgroundScene.createEntity();
+    /*auto& tx4 = */entity.addComponent<cro::Transform>();
+    /*tx4.move({ 0.f, 0.4f, 1.f });
+    tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);*/
+    entity.addComponent<cro::Camera>();
+    entity.addComponent<Drifter>().amplitude = 0.05f;
+    m_backgroundRenderer->setActiveCamera(entity);
 
     //-----menus-----//
 }
