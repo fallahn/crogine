@@ -130,11 +130,6 @@ namespace cro
         const ComponentMask& getComponentMask() const;
 
 		//TODO add tags of types
-
-        /*!
-        \brief Returns true if this is a valid entity
-        */
-        bool valid() const { return m_entityManager && !destroyed(); }
         
         bool operator == (Entity r)
         {
@@ -167,13 +162,14 @@ namespace cro
         friend class EntityManager;
 	};
 
+    class MessageBus;
     /*!
     \brief Manages the relationship between an Entity and its components
     */
     class CRO_EXPORT_API EntityManager final
     {
     public:
-        EntityManager();
+        explicit EntityManager(MessageBus&);
 
         ~EntityManager() = default;
         EntityManager(const EntityManager&) = delete;
@@ -236,7 +232,7 @@ namespace cro
         const ComponentMask& getComponentMask(Entity) const;
 
     private:
-
+        MessageBus& m_messageBus;
         std::deque<Entity::ID> m_freeIDs;
         std::vector<Entity::Generation> m_generations; // < indexed by entity ID
         std::vector<std::unique_ptr<Detail::Pool>> m_componentPools; // < index is component ID. Pool index is entity ID.

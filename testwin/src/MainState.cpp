@@ -68,6 +68,10 @@ namespace
 
 MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     : cro::State        (stack, context),
+    m_backgroundScene   (context.appInstance.getMessageBus()),
+    m_mainMenuScene     (context.appInstance.getMessageBus()),
+    m_optionMenuScene   (context.appInstance.getMessageBus()),
+    m_highScoreScene    (context.appInstance.getMessageBus()),
     m_currentMenu       (nullptr),
     m_backgroundRenderer(nullptr),
     m_spriteRenderer    (nullptr),

@@ -56,6 +56,7 @@ namespace cro
             AudioMessage = 0,
             UIMessage,
             WindowMessage,
+            SceneMessage,
             Count
         };
 
@@ -74,12 +75,21 @@ namespace cro
         /*!
         \brief Window event message.
         */
-        struct WindowEvent
+        struct WindowEvent final
         {
             uint32 windowID = 0;
             uint8 event = 0;
             int32 data0 = 0;
             int32 data1 = 0;
+        };
+
+        struct SceneEvent final
+        {
+            enum
+            {
+                EntityDestroyed
+            }event;
+            int32 entityID = -1;
         };
 
         ID id = -1;

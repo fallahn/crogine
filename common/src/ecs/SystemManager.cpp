@@ -32,7 +32,7 @@ source distribution.
 
 using namespace cro;
 
-SystemManager::SystemManager() {}
+SystemManager::SystemManager(EntityManager& em) : m_entityManager(em) {}
 
 void SystemManager::addToSystems(Entity entity)
 {

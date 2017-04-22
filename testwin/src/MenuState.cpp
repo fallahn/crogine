@@ -72,6 +72,7 @@ namespace
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 	: cro::State    (stack, context),
+    m_scene         (context.appInstance.getMessageBus()),
     m_sceneRenderer (nullptr),
     m_spriteRenderer(nullptr),
     m_commandSystem (nullptr)

@@ -37,6 +37,7 @@ source distribution.
 namespace cro
 {
     class Time;
+    class MessageBus;
 
     /*!
     \brief Encapsulates a single scene.
@@ -52,7 +53,7 @@ namespace cro
     class CRO_EXPORT_API Scene final
     {
     public:
-        Scene();
+        explicit Scene(MessageBus&);
 
         ~Scene() = default;
         Scene(const Scene&) = delete;
@@ -97,7 +98,7 @@ namespace cro
         void forwardMessage(const Message&);
 
     private:
-
+        MessageBus& m_messageBus;
         Entity::ID m_defaultCamera;
 
         std::vector<Entity> m_pendingEntities;

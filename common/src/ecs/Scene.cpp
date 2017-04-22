@@ -35,7 +35,10 @@ source distribution.
 
 using namespace cro;
 
-Scene::Scene()
+Scene::Scene(MessageBus& mb)
+    : m_messageBus  (mb),
+    m_entityManager (mb),
+    m_systemManager (m_entityManager)
 {
     auto defaultCamera = createEntity();
     defaultCamera.addComponent<Transform>();
