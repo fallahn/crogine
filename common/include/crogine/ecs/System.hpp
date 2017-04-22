@@ -41,6 +41,7 @@ source distribution.
 namespace cro
 {
     class Time;
+    class EntityManager;
 
     using UniqueType = std::type_index;
 
@@ -62,7 +63,8 @@ namespace cro
         a unique type ID for this system.
         */
         template <typename T>
-        System(MessageBus& mb, T* c) : m_messageBus(mb), m_type(typeid(*c)){}
+        System(MessageBus& mb, T* c) 
+            : m_messageBus(mb), m_type(typeid(*c)), m_entityManager(nullptr){}
 
         virtual ~System() = default;
 
@@ -70,13 +72,6 @@ namespace cro
         \brief Returns the unique type ID of the system
         */
         UniqueType getType() const { return m_type; }
-
-        /*!
-        \brief Adds a component type to the list of components required by the 
-        system for it to be interested in a particular entity.
-        */
-        template <typename T>
-        void requireComponent();
 
         /*!
         \brief Returns a list of entities that this system is currently interested in
@@ -102,7 +97,7 @@ namespace cro
         /*!
         \brief Used to process any incoming system messages
         */
-        virtual void handleMessage(const cro::Message&) {}
+        virtual void handleMessage(const cro::Message&);
 
         /*!
         \brief Implement this for system specific processing to entities.
@@ -110,6 +105,14 @@ namespace cro
         virtual void process(cro::Time);
 
     protected:
+
+        /*!
+        \brief Adds a component type to the list of components required by the
+        system for it to be interested in a particular entity.
+        */
+        template <typename T>
+        void requireComponent();
+
         std::vector<Entity>& getEntities() { return m_entities; }
 
         /*!
@@ -128,6 +131,16 @@ namespace cro
         template <typename T>
         Message* postMessage(Message::ID id);
 
+        /*
+        \brief Used by the SystemManager to supply the active entity manager
+        */
+        void setEntityManager(EntityManager&);
+
+        /*!
+        \brief Returns a pointer to the currently active EntityManager
+        */
+        const EntityManager* getEntityManager() const;
+
     private:
 
         MessageBus& m_messageBus;
@@ -136,13 +149,15 @@ namespace cro
         ComponentMask m_componentMask;
         std::vector<Entity> m_entities;
 
+        EntityManager* m_entityManager;
+
         friend class SystemManager;
     };
 
     class CRO_EXPORT_API SystemManager final
     {
     public:
-        SystemManager();
+        explicit SystemManager(EntityManager&);
 
         ~SystemManager() = default;
         SystemManager(const SystemManager&) = delete;
@@ -153,7 +168,7 @@ namespace cro
         /*!
         \brief Adds a system of a given type to the manager.
         If the system already exists nothing is changed.
-        \returns Reference to the system, fo instance a rendering
+        \returns Reference to the system, for instance a rendering
         system maybe required elsewhere so a reference to it can be kept.
         */
         template <typename T, typename... Args>
@@ -197,7 +212,7 @@ namespace cro
         */
         void process(Time);
     private:
-
+        EntityManager& m_entityManager;
         std::vector<std::unique_ptr<System>> m_systems;
     };
 

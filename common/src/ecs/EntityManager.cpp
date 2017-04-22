@@ -29,11 +29,13 @@ source distribution.
 
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/detail/Assert.hpp>
+#include <crogine/core/MessageBus.hpp>
 
 using namespace cro;
 
-EntityManager::EntityManager()
-    : m_componentPools(Detail::MaxComponents)
+EntityManager::EntityManager(MessageBus& mb)
+    : m_messageBus  (mb),
+    m_componentPools(Detail::MaxComponents)
 {}
 
 //public
@@ -72,6 +74,11 @@ void EntityManager::destroyEntity(Entity entity)
     ++m_generations[index];
     m_freeIDs.push_back(index);
     m_componentMasks[index].reset();
+
+    //let the world know the entity was destroyed
+    auto msg = m_messageBus.post<Message::SceneEvent>(Message::SceneMessage);
+    msg->entityID = index;
+    msg->event = Message::SceneEvent::EntityDestroyed;
 
     //TODO reset tags when tag management implemented
 }

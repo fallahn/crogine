@@ -27,61 +27,29 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "MyApp.hpp"
-#include "MainState.hpp"
-#include "MenuState.hpp"
+#ifndef CRO_SCENE_GRAPH_HPP_
+#define CRO_SCENE_GRAPH_HPP_
 
-#include <crogine/core/Clock.hpp>
+#include <crogine/ecs/System.hpp>
 
-MyApp::MyApp()
-	: m_stateStack({*this, getWindow()})
+namespace cro
 {
-	//register states
-#ifdef PLATFORM_MOBILE
-    //m_stateStack.registerState<MenuState>(States::ID::MainMenu);
-    m_stateStack.registerState<MainState>(States::ID::MainMenu);
-#else
-	m_stateStack.registerState<MainState>(States::ID::MainMenu);
-#endif //PLATFORM_MOBILE
+    /*!
+    \brief System in charge of making sure parent and child
+    transforms correctly update each other
+    */
+    class CRO_EXPORT_API SceneGraph final : public System
+    {
+    public:
+        explicit SceneGraph(MessageBus&);
 
-	m_stateStack.pushState(States::MainMenu);
+        void process(Time) override;
+
+        void handleMessage(const Message&) override;
+
+    private:
+        void onEntityAdded(Entity) override;
+    };
 }
 
-//public
-void MyApp::handleEvent(const cro::Event& evt)
-{
-    if (evt.type == SDL_KEYUP)
-	{
-		switch (evt.key.keysym.sym)
-		{
-		default: break;
-		case SDLK_ESCAPE:
-		case SDLK_AC_BACK:
-            App::quit();
-			break;
-		}
-	}
-	
-	m_stateStack.handleEvent(evt);
-}
-
-void MyApp::handleMessage(const cro::Message& msg)
-{
-
-}
-
-void MyApp::simulate(cro::Time dt)
-{
-	m_stateStack.simulate(dt);
-}
-
-void MyApp::render()
-{
-	m_stateStack.render();
-}
-
-void MyApp::finalise()
-{
-    m_stateStack.clearStates();
-    m_stateStack.simulate(cro::Time());
-}
+#endif //CRO_SCENE_GRAPH_HPP_

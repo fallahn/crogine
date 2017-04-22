@@ -45,6 +45,7 @@ T& SystemManager::addSystem(Args&&... args)
     }
 
     m_systems.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+    m_systems.back()->setEntityManager(m_entityManager);
     return *(dynamic_cast<T*>(m_systems.back().get()));
 }
 

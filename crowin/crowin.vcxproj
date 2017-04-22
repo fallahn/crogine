@@ -53,6 +53,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\Camera.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\CommandID.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Model.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\SceneNode.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Sprite.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />
@@ -60,6 +61,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\System.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\CommandSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\MeshSorter.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\SceneGraph.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SpriteRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Colour.hpp" />
@@ -105,6 +107,7 @@
     <ClCompile Include="..\common\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
+    <ClCompile Include="..\common\src\ecs\components\SceneNode.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Sprite.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp" />
     <ClCompile Include="..\common\src\ecs\Entity.cpp" />
@@ -114,6 +117,7 @@
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\CommandSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\MeshSorter.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\SceneGraph.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />
     <ClCompile Include="..\common\src\graphics\Colour.cpp" />

@@ -272,6 +272,18 @@
   <ItemGroup>
     <Content Include="assets\assets\beeble.cmf" />
     <Content Include="assets\assets\interface.png" />
+    <Content Include="assets\assets\materials\credits.txt" />
+    <Content Include="assets\assets\materials\gas_diffuse.png" />
+    <Content Include="assets\assets\materials\gas_mask.png" />
+    <Content Include="assets\assets\materials\gas_normal.png" />
+    <Content Include="assets\assets\materials\rock_diffuse.png" />
+    <Content Include="assets\assets\materials\rock_mask.png" />
+    <Content Include="assets\assets\materials\rock_normal.png" />
+    <Content Include="assets\assets\materials\roid_diffuse.png" />
+    <Content Include="assets\assets\materials\roid_mask.png" />
+    <Content Include="assets\assets\materials\roid_normal.png" />
+    <Content Include="assets\assets\materials\stars.png" />
+    <Content Include="assets\assets\models\roid_belt.cmf" />
     <Content Include="assets\assets\room_1x1.cmf" />
     <Content Include="assets\assets\sphere_test.png" />
     <Content Include="assets\assets\test.png" />

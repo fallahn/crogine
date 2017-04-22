@@ -27,61 +27,38 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "MyApp.hpp"
-#include "MainState.hpp"
-#include "MenuState.hpp"
-
+#include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/ecs/components/SceneNode.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 
-MyApp::MyApp()
-	: m_stateStack({*this, getWindow()})
+using namespace cro;
+
+SceneGraph::SceneGraph(MessageBus& mb)
+    : System(mb, this)
 {
-	//register states
-#ifdef PLATFORM_MOBILE
-    //m_stateStack.registerState<MenuState>(States::ID::MainMenu);
-    m_stateStack.registerState<MainState>(States::ID::MainMenu);
-#else
-	m_stateStack.registerState<MainState>(States::ID::MainMenu);
-#endif //PLATFORM_MOBILE
-
-	m_stateStack.pushState(States::MainMenu);
+    requireComponent<Transform>();
+    requireComponent<SceneNode>();
 }
 
 //public
-void MyApp::handleEvent(const cro::Event& evt)
+void SceneGraph::process(Time dt)
 {
-    if (evt.type == SDL_KEYUP)
-	{
-		switch (evt.key.keysym.sym)
-		{
-		default: break;
-		case SDLK_ESCAPE:
-		case SDLK_AC_BACK:
-            App::quit();
-			break;
-		}
-	}
-	
-	m_stateStack.handleEvent(evt);
+    //when updating world transform make sure we have no children so we're only ever working from the bottom up
+    //ie the recursive nature updates ALL world transforms it touches
+
+    //scene node dirty flags needs to say if parent / child was updated
+    //so we can update the new parent with a child and vice versa
 }
 
-void MyApp::handleMessage(const cro::Message& msg)
+void SceneGraph::handleMessage(const Message& msg)
 {
-
+    //remove all children when an entity dies
 }
 
-void MyApp::simulate(cro::Time dt)
+//private
+void SceneGraph::onEntityAdded(Entity entity)
 {
-	m_stateStack.simulate(dt);
-}
-
-void MyApp::render()
-{
-	m_stateStack.render();
-}
-
-void MyApp::finalise()
-{
-    m_stateStack.clearStates();
-    m_stateStack.simulate(cro::Time());
+    //nab our entity's index
+    entity.getComponent<SceneNode>().m_id = entity.getIndex();
 }

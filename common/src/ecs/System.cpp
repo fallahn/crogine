@@ -37,6 +37,7 @@ std::vector<Entity> System::getEntities() const
     return m_entities;
 }
 
+//public
 void System::addEntity(Entity entity)
 {
     m_entities.push_back(entity);
@@ -62,4 +63,18 @@ const ComponentMask& System::getComponentMask() const
     return m_componentMask;
 }
 
+void System::handleMessage(const Message&) {}
+
 void System::process(Time) {}
+
+//protected
+void System::setEntityManager(EntityManager& em)
+{
+    m_entityManager = &em;
+}
+
+const EntityManager* System::getEntityManager() const
+{
+    CRO_ASSERT(m_entityManager, "Entity Manager is nullptr - something went wrong!");
+    return m_entityManager;
+}
