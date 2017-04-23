@@ -79,8 +79,8 @@ void SceneRenderer::render()
 
 
     auto& ents = getEntities(); //we need this list for world transforms - not the culled list
-    auto cameraPosition = glm::vec3(m_activeCamera.getComponent<Transform>().getWorldTransform(ents)[3]);
-    auto viewMat = glm::inverse(m_activeCamera.getComponent<Transform>().getWorldTransform(ents));
+    auto cameraPosition = glm::vec3(m_activeCamera.getComponent<Transform>().getWorldTransform()[3]);
+    auto viewMat = glm::inverse(m_activeCamera.getComponent<Transform>().getWorldTransform());
     auto projMat = m_activeCamera.getComponent<Camera>().projection;
 
     //TODO use draw list instead of drawing all ents
@@ -88,7 +88,7 @@ void SceneRenderer::render()
     {
         //calc entity transform
         const auto& tx = e.getComponent<Transform>();
-        glm::mat4 worldMat = tx.getWorldTransform(ents);
+        glm::mat4 worldMat = tx.getWorldTransform();
         glm::mat4 worldView = viewMat * worldMat;
 
         //foreach submesh / material:

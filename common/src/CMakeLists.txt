@@ -19,7 +19,6 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/ecs/components/Model.cpp
   ${PROJECT_DIR}/ecs/components/Sprite.cpp
-  ${PROJECT_DIR}/ecs/components/SceneNode.cpp
   ${PROJECT_DIR}/ecs/components/Transform.cpp
 
   ${PROJECT_DIR}/ecs/systems/CommandSystem.cpp

@@ -63,7 +63,7 @@ void MeshSorter::process(cro::Time)
     
     //build the frustum from the view-projection matrix
     auto viewProj = activeCamera.getComponent<Camera>().projection
-        * glm::inverse(activeCamera.getComponent<Transform>().getWorldTransform(entities));
+        * glm::inverse(activeCamera.getComponent<Transform>().getWorldTransform());
     
     std::array<Plane, 6u> frustum = 
     {
@@ -129,8 +129,7 @@ void MeshSorter::process(cro::Time)
     {
         auto sphere = entity.getComponent<Model>().m_meshData.boundingSphere;
         auto tx = entity.getComponent<Transform>();
-        //sphere.centre += tx.getPosition(/*entities*/);
-        sphere.centre = glm::vec3(tx.getWorldTransform(entities) * glm::vec4(sphere.centre.x, sphere.centre.y, sphere.centre.z, 1.f));
+        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre.x, sphere.centre.y, sphere.centre.z, 1.f));
         auto scale = tx.getScale();
         sphere.radius *= (scale.x + scale.y + scale.z) / 3.f;
 
