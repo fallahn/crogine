@@ -38,6 +38,7 @@ source distribution.
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include <array>
 #include <vector>
 
 namespace cro
@@ -49,7 +50,10 @@ namespace cro
     class CRO_EXPORT_API Transform final
     {
     public:
-        using ParentID = int32;
+        enum
+        {
+            MaxChildren = 16
+        };
 
         Transform();
 
@@ -115,7 +119,34 @@ namespace cro
         \brief Returns a matrix representing the world space Transform.
         This is the local transform multiplied by all parenting transforms
         */
-        glm::mat4 getWorldTransform(std::vector<Entity>&) const;
+        glm::mat4 getWorldTransform() const;
+
+
+        /*!
+        \brief Sets the parent entity if this node in the scene graph.
+        Parents must have both a Transform and SceneNode component
+        */
+        void setParent(Entity);
+
+        /*!
+        \brief Removes the parent entity if it exists so that this
+        and all child nodes are orphaned
+        */
+        void removeParent();
+
+        /*!
+        \brief Sets the child node at the given index.
+        \param id ID of the entity to add as a child.
+        No more than MaxChildren may be added to any one transform.
+        \returns false if child was not successfully added
+        */
+        bool addChild(uint32 id);
+
+        /*!
+        \brief Removes a child with the given entity ID if it exists.
+        */
+        void removeChild(uint32 id);
+
 
     private:
         glm::vec3 m_origin;
@@ -123,8 +154,24 @@ namespace cro
         glm::vec3 m_scale;
         glm::quat m_rotation;
         mutable glm::mat4 m_transform;
+        mutable glm::mat4 m_worldTransform;
 
-        mutable bool m_dirty;
+        int32 m_parent;
+        int32 m_lastParent;
+        int32 m_id;
+        std::array<int32, MaxChildren> m_children = { -1 };
+        std::vector<int32> m_removedChildren;
+
+        enum Flags
+        {
+            Parent = 0x1,
+            Child = 0x2,
+            Tx = 0x4,
+            All = Parent | Child | Tx
+        };
+        mutable uint8 m_dirtyFlags;
+
+        friend class SceneGraph;
     };
 }
 

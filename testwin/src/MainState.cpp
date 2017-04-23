@@ -39,6 +39,7 @@ source distribution.
 
 #include <crogine/ecs/systems/SceneRenderer.hpp>
 #include <crogine/ecs/systems/MeshSorter.hpp>
+#include <crogine/ecs/systems/SceneGraph.hpp>
 
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
@@ -109,6 +110,7 @@ void MainState::render() const
 void MainState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_backgroundScene.addSystem<cro::SceneGraph>(mb);
     m_backgroundRenderer = &m_backgroundScene.addSystem<cro::SceneRenderer>(mb, m_backgroundScene.getDefaultCamera());
     m_backgroundScene.addSystem<cro::MeshSorter>(mb, *m_backgroundRenderer);
     m_backgroundScene.addSystem<RotateSystem>(mb);
@@ -171,12 +173,12 @@ void MainState::createScene()
     auto& moonTx = moonEntity.addComponent<cro::Transform>();
     moonTx.setScale({ 0.22f, 0.22f, 0.22f });
     moonTx.setOrigin({ -5.6f, 0.f, 0.f });
-    moonTx.setParent(entity);  
+    moonTx.setParent(entity);
     moonEntity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(MaterialID::Moon));
 
     auto roidEntity = m_backgroundScene.createEntity();  
-    roidEntity.addComponent<cro::Transform>().setParent(entity);
-    roidEntity.getComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
+    roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
+    roidEntity.getComponent<cro::Transform>().setParent(entity);
     roidEntity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Roids), m_materialResource.get(MaterialID::Roids));
     auto& roidRotator = roidEntity.addComponent<Rotator>();
     roidRotator.speed = -0.03f;

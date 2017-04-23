@@ -29,8 +29,9 @@ source distribution.
 
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/core/Clock.hpp>
-#include <crogine/ecs/components/SceneNode.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+
+#include <functional>
 
 using namespace cro;
 
@@ -38,27 +39,154 @@ SceneGraph::SceneGraph(MessageBus& mb)
     : System(mb, this)
 {
     requireComponent<Transform>();
-    requireComponent<SceneNode>();
 }
 
 //public
 void SceneGraph::process(Time dt)
 {
-    //when updating world transform make sure we have no children so we're only ever working from the bottom up
-    //ie the recursive nature updates ALL world transforms it touches
+    std::vector<int32> updateList;
 
-    //scene node dirty flags needs to say if parent / child was updated
-    //so we can update the new parent with a child and vice versa
+    auto& entities = getEntities();
+    for (auto& entity : entities)
+    {
+        //get entity tx node
+        auto& tx = entity.getComponent<Transform>();
+        bool addToList = false;
+
+        //if node has dirty parent flag update parent with new child
+        if (tx.m_dirtyFlags & Transform::Parent)
+        {
+            if (tx.m_parent > -1) //parent was added
+            {
+                if (!getEntityManager()->getEntity(tx.m_parent).getComponent<Transform>().addChild(entity.getIndex()))
+                {
+                    tx.m_parent = -1;
+                    LOG("Failed adding tx to parent - too many children already", Logger::Type::Error);
+                }
+            }
+            if (tx.m_lastParent > -1) //remove old parent
+            {
+                //remove the parent from all the children
+                auto& children = getEntityManager()->getEntity(tx.m_lastParent).getComponent<Transform>().m_children;
+                for (auto& c : children)
+                {
+                    getEntityManager()->getEntity(c).getComponent<Transform>().removeParent();
+                }
+
+                tx.m_lastParent = -1;
+            }
+            addToList = true;
+            tx.m_dirtyFlags &= ~Transform::Parent;
+        }
+
+        //if node has dirty child find child and update its parent
+        if (tx.m_dirtyFlags & Transform::Child)
+        {
+            auto& children = tx.m_children;
+            for (auto c : children)
+            {
+                if (c = -1)
+                {
+                    break;
+                }
+                getEntityManager()->getEntity(c).getComponent<Transform>().setParent(entity);
+            }
+
+            auto& removedChildren = tx.m_removedChildren;
+            for (auto c : removedChildren)
+            {
+                getEntityManager()->getEntity(c).getComponent<Transform>().removeParent();
+            }
+            removedChildren.clear();
+            addToList = true;
+            tx.m_dirtyFlags &= ~Transform::Child;
+        }
+
+        //check transform for dirty flag        
+        if (tx.m_dirtyFlags & Transform::Tx || addToList)
+        {
+            //walk to bottom and add to list
+            std::function<void (Transform&)> getLastNode = 
+                [&](Transform& xform)
+            {
+                if (xform.m_children[0] == -1)
+                {
+                    updateList.push_back(xform.m_id);
+                    return;
+                }
+                for (auto c : xform.m_children)
+                {
+                    if (c == -1)
+                    {
+                        break;
+                    }
+                    getLastNode(getEntityManager()->getEntity(c).getComponent<Transform>());
+                }
+            };
+            getLastNode(tx);
+        }
+    }
+
+    //for each ID in the list recursively update transform (TODO could find a way to only go as far as last dirty)
+    //make sure to remove all dirty flags as we go
+    std::sort(updateList.begin(), updateList.end());
+    auto end = std::unique(updateList.begin(), updateList.end());
+    for (auto i = updateList.begin(); i != end; ++i)
+    {
+        std::function<glm::mat4 (Transform&)> getWorldTransform = 
+            [&, this](Transform& xform)->glm::mat4
+        {
+            if (xform.m_parent > -1)
+            {
+                return getWorldTransform(getEntityManager()->getEntity(xform.m_parent).getComponent<Transform>()) * xform.getLocalTransform();
+            }
+            return xform.getLocalTransform();
+        };
+        auto& tx = getEntityManager()->getEntity(*i).getComponent<Transform>();
+        tx.m_worldTransform = getWorldTransform(tx);
+    }
 }
 
 void SceneGraph::handleMessage(const Message& msg)
 {
+    std::function<void(std::array<int32, Transform::MaxChildren>&)> destroyChildren = 
+        [&, this](std::array<int32, Transform::MaxChildren>& children)
+    {
+        for (auto& c : children)
+        {
+            if (c > -1)
+            {
+                auto entity = getEntityManager()->getEntity(c);
+                destroyChildren(entity.getComponent<Transform>().m_children);
+                entity.destroy();
+                c = -1; //mark the child as gone else the message from destroying this
+                //entity will become infinitely recursive...
+            }
+            else
+            {
+                break;
+            }
+        }
+    };
+    
     //remove all children when an entity dies
+    //TODO does this entity still exist by the time we get here?
+    if (msg.id == Message::SceneMessage)
+    {
+        const auto& data = msg.getData<Message::SceneEvent>();
+        auto entity = getEntityManager()->getEntity(data.entityID);
+        if (entity.hasComponent<Transform>())
+        {
+            auto& children = entity.getComponent<Transform>().m_children;
+            destroyChildren(children);
+        }
+        LOG("Removing children from dead entity", Logger::Type::Info);
+    }
 }
 
 //private
 void SceneGraph::onEntityAdded(Entity entity)
 {
     //nab our entity's index
-    entity.getComponent<SceneNode>().m_id = entity.getIndex();
+    entity.getComponent<Transform>().m_id = entity.getIndex();
 }

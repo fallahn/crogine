@@ -257,7 +257,7 @@ void SpriteRenderer::process(Time)
                 vertexData.size() * sizeof(float), vertexData.data()));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-            updateGlobalBounds(sprite, entities[i].getComponent<Transform>().getWorldTransform(entities));
+            updateGlobalBounds(sprite, entities[i].getComponent<Transform>().getWorldTransform());
 
             sprite.m_dirty = false;
 
@@ -278,7 +278,7 @@ void SpriteRenderer::process(Time)
             }
             //get current transforms
             std::size_t buffIdx = (i > MaxSprites) ? i % MaxSprites : 0;
-            m_bufferTransforms[buffIdx][i - (buffIdx * MaxSprites)] = tx.getWorldTransform(entities);
+            m_bufferTransforms[buffIdx][i - (buffIdx * MaxSprites)] = tx.getWorldTransform();
         }
     }
 
@@ -444,7 +444,7 @@ void SpriteRenderer::rebuildBatch()
             }
             spritesThisBatch++;
 
-            updateGlobalBounds(sprite, entities[i + batchIdx].getComponent<Transform>().getWorldTransform(entities));
+            updateGlobalBounds(sprite, entities[i + batchIdx].getComponent<Transform>().getWorldTransform());
 
             sprite.m_dirty = false;
         }

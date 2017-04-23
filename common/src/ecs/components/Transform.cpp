@@ -38,8 +38,10 @@ using namespace cro;
 
 Transform::Transform()
     : m_scale   (1.f, 1.f, 1.f),
-    m_parent    (-1, 0),
-    m_dirty     (true)
+    m_parent    (-1),
+    m_lastParent(-1),
+    m_id        (-1),
+    m_dirtyFlags(0)
 {
 
 }
@@ -48,43 +50,43 @@ Transform::Transform()
 void Transform::setOrigin(glm::vec3 o)
 {
     m_origin = o;
-    m_dirty = true;
+    m_dirtyFlags |= Tx;
 }
 
 void Transform::setPosition(glm::vec3 position)
 {
     m_position = position;
-    m_dirty = true;
+    m_dirtyFlags |= Tx;
 }
 
 void Transform::setRotation(glm::vec3 rotation)
 {
     m_rotation = glm::toQuat(glm::orientate3(rotation));
-    m_dirty = true;
+    m_dirtyFlags |= Tx;
 }
 
 void Transform::setScale(glm::vec3 scale)
 {
     m_scale = scale;
-    m_dirty = true;
+    m_dirtyFlags |= Tx;
 }
 
 void Transform::move(glm::vec3 distance)
 {
     m_position += distance;
-    m_dirty = true;
+    m_dirtyFlags |= Tx;
 }
 
 void Transform::rotate(glm::vec3 axis, float rotation)
 {
     m_rotation = glm::rotate(m_rotation, rotation, glm::normalize(axis));
-    m_dirty = true;
+    m_dirtyFlags |= Tx;
 }
 
 void Transform::scale(glm::vec3 scale)
 {
     m_scale *= scale;
-    m_dirty = true;
+    m_dirtyFlags |= Tx;
 }
 
 glm::vec3 Transform::getOrigin() const
@@ -109,9 +111,9 @@ glm::vec3 Transform::getScale() const
 
 const glm::mat4& Transform::getLocalTransform() const
 {
-    if (m_dirty)
+    if (m_dirtyFlags & Tx)
     {
-        m_dirty = false;
+        m_dirtyFlags &= ~Tx;
 
         m_transform = glm::translate(glm::mat4(), m_position + m_origin);
         m_transform *= glm::toMat4(m_rotation);
@@ -122,17 +124,67 @@ const glm::mat4& Transform::getLocalTransform() const
     return m_transform;
 }
 
-glm::mat4 Transform::getWorldTransform(std::vector<Entity>& entityList) const
+glm::mat4 Transform::getWorldTransform() const
 {
-    if (m_parent.valid())
-    {        
-        return m_parent.getComponent<Transform>().getWorldTransform(entityList) * getLocalTransform();
-    }
-    return getLocalTransform();
+    return (m_parent > -1) ? m_worldTransform : getLocalTransform();
 }
 
 void Transform::setParent(Entity parent)
 {
-    CRO_ASSERT(parent.hasComponent<Transform>(), "This entity has no transform");
-    m_parent = parent;
+    /*if you're setting this and getting apparently no transform at all remember to add a SceneGraph system*/
+    
+    CRO_ASSERT(parent.hasComponent<Transform>(), "Parent must have a transform component");
+    CRO_ASSERT(parent.getIndex() != m_id, "Can't parent to ourself!");
+    int32 newID = parent.getIndex();
+    if (m_parent == newID) return;
+
+    m_lastParent = m_parent;
+    m_parent = newID;
+
+    m_dirtyFlags |= Parent;
+}
+
+void Transform::removeParent()
+{
+    m_lastParent = m_parent;
+    m_parent = -1;
+    m_dirtyFlags |= Parent;
+}
+
+bool Transform::addChild(uint32 id)
+{
+    auto freeSlot = std::find(std::begin(m_children), std::end(m_children), -1);
+    if (freeSlot != std::end(m_children))
+    {
+        if (*freeSlot > -1)
+        {
+            m_removedChildren.push_back(*freeSlot);
+        }
+        
+        *freeSlot = id;
+        std::sort(std::begin(m_children), std::end(m_children), [](int32 i, int32 j) { return i > j; });
+
+        //mark for update
+        m_dirtyFlags |= Child;
+        return true;
+    }
+    return false;
+}
+
+void Transform::removeChild(uint32 id)
+{
+    auto freeSlot = std::find(std::begin(m_children), std::end(m_children), id);
+    if (freeSlot != std::end(m_children))
+    {
+        if (*freeSlot > -1)
+        {
+            m_removedChildren.push_back(*freeSlot);
+        }
+        *freeSlot = -1;
+    }
+
+    std::sort(std::begin(m_children), std::end(m_children), [](int32 i, int32 j) { return i > j; });
+
+    //mark for update
+    m_dirtyFlags |= Child;
 }
