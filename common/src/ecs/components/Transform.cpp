@@ -113,7 +113,7 @@ const glm::mat4& Transform::getLocalTransform() const
 {
     if (m_dirtyFlags & Tx)
     {
-        m_dirtyFlags &= ~Tx;
+        //m_dirtyFlags &= ~Tx;
 
         m_transform = glm::translate(glm::mat4(), m_position + m_origin);
         m_transform *= glm::toMat4(m_rotation);
@@ -153,7 +153,7 @@ void Transform::removeParent()
 
 bool Transform::addChild(uint32 id)
 {
-    auto freeSlot = std::find(std::begin(m_children), std::end(m_children), -1);
+    auto freeSlot = std::find_if(std::begin(m_children), std::end(m_children), [id](int32 i) {return (i == -1 || i == id); });
     if (freeSlot != std::end(m_children))
     {
         if (*freeSlot > -1)
@@ -176,7 +176,7 @@ void Transform::removeChild(uint32 id)
     auto freeSlot = std::find(std::begin(m_children), std::end(m_children), id);
     if (freeSlot != std::end(m_children))
     {
-        if (*freeSlot > -1)
+        //if (*freeSlot > -1)
         {
             m_removedChildren.push_back(*freeSlot);
         }
