@@ -43,7 +43,7 @@ Transform::Transform()
     m_id        (-1),
     m_dirtyFlags(0)
 {
-
+    for(auto& c : m_children) c = -1;
 }
 
 //public
