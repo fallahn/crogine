@@ -27,48 +27,30 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_TYPES_HPP_
-#define CRO_TYPES_HPP_
+#ifndef CRO_TEXT_RENDERER_HPP_
+#define CRO_TEXT_RENDERER_HPP_
 
-#include <crogine/Config.hpp>
-
-#include <SDL_stdinc.h>
-#include <SDL_events.h>
-
-#include <glm/vec2.hpp>
-
-/*
-Aliases for SDL types
-*/
+#include <crogine/ecs/System.hpp>
 
 namespace cro
 {
-	using uint8 = Uint8;
-	using int8 = Sint8;
-	using uint16 = Uint16;
-	using int16 = Sint16;
-	using uint32 = Uint32;
-	using int32 = Sint32;
-	using uint64 = Uint64;
-	using int64 = Sint64;
-
-	using Event = SDL_Event;
-
-    namespace ImageFormat
+    class CRO_EXPORT_API TextRenderer final : public System
     {
-        enum Type
-        {
-            None,
-            RGB,
-            RGBA,
-            A
-        };
-    }
+    public:
+        explicit TextRenderer(MessageBus&);
 
-#ifdef PLATFORM_MOBILE
-    static const glm::uvec2 DefaultSceneSize(1280, 720);
-#else
-    static const glm::uvec2 DefaultSceneSize(1920, 1080);
-#endif //PLATFORM
+        void process(Time) override;
+
+        /*!
+        \brief Draws all the text components in this system's parent Scene
+        */
+        void render();
+
+        void onEntityAdded(Entity) override;
+
+    private:
+
+    };
 }
-#endif //CRO_TYPES_HPP_
+
+#endif //CRO_TEXT_RENDERER_HPP_

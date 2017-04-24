@@ -27,48 +27,26 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_TYPES_HPP_
-#define CRO_TYPES_HPP_
+#include <crogine/ecs/components/Text.hpp>
 
-#include <crogine/Config.hpp>
+using namespace cro;
 
-#include <SDL_stdinc.h>
-#include <SDL_events.h>
-
-#include <glm/vec2.hpp>
-
-/*
-Aliases for SDL types
-*/
-
-namespace cro
+Text::Text(const Font& font)
+    : m_font        (font),
+    m_needsUpdate   (true)
 {
-	using uint8 = Uint8;
-	using int8 = Sint8;
-	using uint16 = Uint16;
-	using int16 = Sint16;
-	using uint32 = Uint32;
-	using int32 = Sint32;
-	using uint64 = Uint64;
-	using int64 = Sint64;
 
-	using Event = SDL_Event;
-
-    namespace ImageFormat
-    {
-        enum Type
-        {
-            None,
-            RGB,
-            RGBA,
-            A
-        };
-    }
-
-#ifdef PLATFORM_MOBILE
-    static const glm::uvec2 DefaultSceneSize(1280, 720);
-#else
-    static const glm::uvec2 DefaultSceneSize(1920, 1080);
-#endif //PLATFORM
 }
-#endif //CRO_TYPES_HPP_
+
+//public
+void Text::setString(const std::string& str)
+{
+    m_string = str;
+    m_needsUpdate = true;
+}
+
+void Text::setColour(Colour colour)
+{
+    m_colour = colour;
+    m_needsUpdate = true;
+}

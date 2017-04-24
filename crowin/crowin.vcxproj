@@ -55,6 +55,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\SceneNode.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Sprite.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\Text.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp" />
@@ -64,8 +65,10 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneGraph.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SpriteRenderer.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\TextRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Colour.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\CubeBuilder.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\Font.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Image.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MaterialData.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MaterialResource.hpp" />
@@ -108,6 +111,7 @@
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Sprite.cpp" />
+    <ClCompile Include="..\common\src\ecs\components\Text.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp" />
     <ClCompile Include="..\common\src\ecs\Entity.cpp" />
     <ClCompile Include="..\common\src\ecs\EntityManager.cpp" />
@@ -119,7 +123,9 @@
     <ClCompile Include="..\common\src\ecs\systems\SceneGraph.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\TextRenderer.cpp" />
     <ClCompile Include="..\common\src\graphics\Colour.cpp" />
+    <ClCompile Include="..\common\src\graphics\Font.cpp" />
     <ClCompile Include="..\common\src\graphics\Image.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialData.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialResource.cpp" />

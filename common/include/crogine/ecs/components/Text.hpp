@@ -27,48 +27,48 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_TYPES_HPP_
-#define CRO_TYPES_HPP_
+#ifndef CRO_TEXT_HPP_
+#define CRO_TEXT_HPP_
 
 #include <crogine/Config.hpp>
+#include <crogine/graphics/Colour.hpp>
 
-#include <SDL_stdinc.h>
-#include <SDL_events.h>
-
-#include <glm/vec2.hpp>
-
-/*
-Aliases for SDL types
-*/
+#include <string>
 
 namespace cro
 {
-	using uint8 = Uint8;
-	using int8 = Sint8;
-	using uint16 = Uint16;
-	using int16 = Sint16;
-	using uint32 = Uint32;
-	using int32 = Sint32;
-	using uint64 = Uint64;
-	using int64 = Sint64;
+    class Font;
 
-	using Event = SDL_Event;
-
-    namespace ImageFormat
+    /*!
+    \brief Component to draw text.
+    */
+    class CRO_EXPORT_API Text final
     {
-        enum Type
-        {
-            None,
-            RGB,
-            RGBA,
-            A
-        };
-    }
+    public:
+        /*!
+        \brief Constructor.
+        \param font Font with which to draw text
+        */
+        explicit Text(const Font& font);
 
-#ifdef PLATFORM_MOBILE
-    static const glm::uvec2 DefaultSceneSize(1280, 720);
-#else
-    static const glm::uvec2 DefaultSceneSize(1920, 1080);
-#endif //PLATFORM
+        /*!
+        \brief Set the text's string
+        */
+        void setString(const std::string&);
+
+        /*!
+        \brief Sets the colour with which to render the text
+        */
+        void setColour(Colour);
+
+    private:
+        const Font& m_font;
+        std::string m_string;
+        Colour m_colour;
+        bool m_needsUpdate;
+
+        friend class TextRenderer;
+    };
 }
-#endif //CRO_TYPES_HPP_
+
+#endif //CRO_TEXT_HPP_
