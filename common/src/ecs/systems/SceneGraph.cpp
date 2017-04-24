@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/core/App.hpp>
 
 #include <functional>
 
@@ -138,13 +139,19 @@ void SceneGraph::process(Time dt)
         {
             if (xform.m_parent > -1)
             {
-                return getWorldTransform(getEntityManager()->getEntity(xform.m_parent).getComponent<Transform>()) * xform.getLocalTransform();
+                auto wtx = getWorldTransform(getEntityManager()->getEntity(xform.m_parent).getComponent<Transform>()) * xform.getLocalTransform();
+                xform.m_dirtyFlags &= ~Transform::Tx;
+                return wtx;
             }
-            return xform.getLocalTransform();
+            auto ltx = xform.getLocalTransform();
+            xform.m_dirtyFlags &= ~Transform::Tx;
+            return ltx;
         };
         auto& tx = getEntityManager()->getEntity(*i).getComponent<Transform>();
         tx.m_worldTransform = getWorldTransform(tx);
     }
+    /*int32 dbid = updateList.empty() ? 0 : updateList[0];
+    DPRINT("update Entity", std::to_string(std::distance(updateList.begin(), end)));*/
 }
 
 void SceneGraph::handleMessage(const Message& msg)

@@ -84,9 +84,6 @@
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\src\glad\GLCheck.hpp">
-      <Filter>Header Files\detail</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\include\crogine\ecs\ComponentPool.hpp">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
@@ -246,6 +243,9 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\SceneNode.hpp">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\src\detail\GLCheck.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -364,9 +364,6 @@
     </ClCompile>
     <ClCompile Include="..\common\src\core\Clock.cpp">
       <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\ecs\components\SceneNode.cpp">
-      <Filter>Source Files\ecs\components</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\SceneGraph.cpp">
       <Filter>Source Files\ecs\systems</Filter>

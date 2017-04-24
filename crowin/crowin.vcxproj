@@ -84,7 +84,7 @@
     <ClInclude Include="..\common\include\crogine\util\Constants.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Maths.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Wavetable.hpp" />
-    <ClInclude Include="..\common\src\glad\GLCheck.hpp" />
+    <ClInclude Include="..\common\src\detail\GLCheck.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Debug.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Default.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Sprite.hpp" />
@@ -107,7 +107,6 @@
     <ClCompile Include="..\common\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
-    <ClCompile Include="..\common\src\ecs\components\SceneNode.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Sprite.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp" />
     <ClCompile Include="..\common\src\ecs\Entity.cpp" />

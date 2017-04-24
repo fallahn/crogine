@@ -111,7 +111,7 @@ void Window::setVsyncEnabled(bool enabled)
 {
 	if (m_context)
 	{
-SDL_GL_SetSwapInterval(enabled ? 1 : 0);
+        SDL_GL_SetSwapInterval(enabled ? 1 : 0);
     }
 }
 
