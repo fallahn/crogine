@@ -78,7 +78,6 @@ void SceneRenderer::render()
     glCheck(glEnable(GL_CULL_FACE));
 
 
-    auto& ents = getEntities(); //we need this list for world transforms - not the culled list
     auto cameraPosition = glm::vec3(m_activeCamera.getComponent<Transform>().getWorldTransform()[3]);
     auto viewMat = glm::inverse(m_activeCamera.getComponent<Transform>().getWorldTransform());
     auto projMat = m_activeCamera.getComponent<Camera>().projection;

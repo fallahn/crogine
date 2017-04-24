@@ -85,7 +85,7 @@ void SceneGraph::process(Time dt)
             auto& children = tx.m_children;
             for (auto c : children)
             {
-                if (c = -1)
+                if (c == -1)
                 {
                     break;
                 }

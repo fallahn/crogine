@@ -159,7 +159,7 @@ namespace cro
         int32 m_parent;
         int32 m_lastParent;
         int32 m_id;
-        std::array<int32, MaxChildren> m_children = { -1 };
+        std::array<int32, MaxChildren> m_children;
         std::vector<int32> m_removedChildren;
 
         enum Flags
