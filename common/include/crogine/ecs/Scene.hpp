@@ -77,6 +77,11 @@ namespace cro
         */
         void destroyEntity(Entity);
 
+        /*|
+        \brief Returns the entity with the given ID if it exists
+        */
+        Entity getEntity(Entity::ID) const;
+
         /*!
         \brief Creates a new system of the given type.
         All systems need to be fully created before adding entities, else

@@ -28,8 +28,9 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/ecs/systems/SceneGraph.hpp>
-#include <crogine/core/Clock.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 
 #include <functional>
@@ -59,7 +60,7 @@ void SceneGraph::process(Time dt)
         {
             if (tx.m_parent > -1) //parent was added
             {
-                if (!getEntityManager()->getEntity(tx.m_parent).getComponent<Transform>().addChild(entity.getIndex()))
+                if (!getScene()->getEntity(tx.m_parent).getComponent<Transform>().addChild(entity.getIndex()))
                 {
                     tx.m_parent = -1;
                     LOG("Failed adding tx to parent - too many children already", Logger::Type::Error);
@@ -68,10 +69,10 @@ void SceneGraph::process(Time dt)
             if (tx.m_lastParent > -1) //remove old parent
             {
                 //remove the parent from all the children
-                auto& children = getEntityManager()->getEntity(tx.m_lastParent).getComponent<Transform>().m_children;
+                auto& children = getScene()->getEntity(tx.m_lastParent).getComponent<Transform>().m_children;
                 for (auto& c : children)
                 {
-                    getEntityManager()->getEntity(c).getComponent<Transform>().removeParent();
+                    getScene()->getEntity(c).getComponent<Transform>().removeParent();
                 }
 
                 tx.m_lastParent = -1;
@@ -90,13 +91,13 @@ void SceneGraph::process(Time dt)
                 {
                     break;
                 }
-                getEntityManager()->getEntity(c).getComponent<Transform>().setParent(entity);
+                getScene()->getEntity(c).getComponent<Transform>().setParent(entity);
             }
 
             auto& removedChildren = tx.m_removedChildren;
             for (auto c : removedChildren)
             {
-                getEntityManager()->getEntity(c).getComponent<Transform>().removeParent();
+                getScene()->getEntity(c).getComponent<Transform>().removeParent();
             }
             removedChildren.clear();
             addToList = true;
@@ -121,7 +122,7 @@ void SceneGraph::process(Time dt)
                     {
                         break;
                     }
-                    getLastNode(getEntityManager()->getEntity(c).getComponent<Transform>());
+                    getLastNode(getScene()->getEntity(c).getComponent<Transform>());
                 }
             };
             getLastNode(tx);
@@ -139,7 +140,7 @@ void SceneGraph::process(Time dt)
         {
             if (xform.m_parent > -1)
             {
-                auto wtx = getWorldTransform(getEntityManager()->getEntity(xform.m_parent).getComponent<Transform>()) * xform.getLocalTransform();
+                auto wtx = getWorldTransform(getScene()->getEntity(xform.m_parent).getComponent<Transform>()) * xform.getLocalTransform();
                 xform.m_dirtyFlags &= ~Transform::Tx;
                 return wtx;
             }
@@ -147,7 +148,7 @@ void SceneGraph::process(Time dt)
             xform.m_dirtyFlags &= ~Transform::Tx;
             return ltx;
         };
-        auto& tx = getEntityManager()->getEntity(*i).getComponent<Transform>();
+        auto& tx = getScene()->getEntity(*i).getComponent<Transform>();
         tx.m_worldTransform = getWorldTransform(tx);
     }
     /*int32 dbid = updateList.empty() ? 0 : updateList[0];
@@ -163,7 +164,7 @@ void SceneGraph::handleMessage(const Message& msg)
         {
             if (c > -1)
             {
-                auto entity = getEntityManager()->getEntity(c);
+                auto entity = getScene()->getEntity(c);
                 destroyChildren(entity.getComponent<Transform>().m_children);
                 entity.destroy();
                 c = -1; //mark the child as gone else the message from destroying this
@@ -181,7 +182,7 @@ void SceneGraph::handleMessage(const Message& msg)
     if (msg.id == Message::SceneMessage)
     {
         const auto& data = msg.getData<Message::SceneEvent>();
-        auto entity = getEntityManager()->getEntity(data.entityID);
+        auto entity = getScene()->getEntity(data.entityID);
         if (entity.hasComponent<Transform>())
         {
             auto& children = entity.getComponent<Transform>().m_children;

@@ -68,13 +68,13 @@ void System::handleMessage(const Message&) {}
 void System::process(Time) {}
 
 //protected
-void System::setEntityManager(EntityManager& em)
+void System::setScene(Scene& scene)
 {
-    m_entityManager = &em;
+    m_scene = &scene;
 }
 
-const EntityManager* System::getEntityManager() const
+const Scene* System::getScene() const
 {
-    CRO_ASSERT(m_entityManager, "Entity Manager is nullptr - something went wrong!");
-    return m_entityManager;
+    CRO_ASSERT(m_scene, "Scene is nullptr - something went wrong!");
+    return m_scene;
 }
