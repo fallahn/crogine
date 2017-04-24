@@ -79,6 +79,7 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
+    void createMainMenu();
 };
 
 #endif //TL_MAIN_STATE_HPP_

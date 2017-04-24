@@ -36,10 +36,12 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 
 #include <crogine/ecs/systems/SceneRenderer.hpp>
 #include <crogine/ecs/systems/MeshSorter.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
+#include <crogine/ecs/systems/SpriteRenderer.hpp>
 
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
@@ -82,6 +84,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     loadAssets();
     createScene();
     //context.appInstance.setClearColour(cro::Colour::Red());
+    createMainMenu();
 }
 
 //public
@@ -93,17 +96,20 @@ bool MainState::handleEvent(const cro::Event& evt)
 void MainState::handleMessage(const cro::Message& msg)
 {
     m_backgroundScene.forwardMessage(msg);
+    m_currentMenu->forwardMessage(msg);
 }
 
 bool MainState::simulate(cro::Time dt)
 {
     m_backgroundScene.simulate(dt);
+    m_currentMenu->simulate(dt);
     return true;
 }
 
 void MainState::render() const
 {
     m_backgroundRenderer->render();
+    m_spriteRenderer->render();
 }
 
 //private
@@ -204,4 +210,43 @@ void MainState::createScene()
     m_backgroundRenderer->setActiveCamera(entity);
 
     //-----menus-----//
+}
+
+void MainState::createMainMenu()
+{
+    m_currentMenu = &m_mainMenuScene;
+    m_spriteRenderer = &m_mainMenuScene.addSystem<cro::SpriteRenderer>(getContext().appInstance.getMessageBus());
+
+    auto& uiTexture = m_textureResource.get("assets/sprites/menu.png");
+    auto entity = m_mainMenuScene.createEntity();
+    auto& titleSprite = entity.addComponent<cro::Sprite>();
+    titleSprite.setTexture(uiTexture);
+    titleSprite.setTextureRect({ 0.f, 64.f, 1024.f, 320.f });
+    auto& titleTx = entity.addComponent<cro::Transform>();
+    titleTx.setOrigin({ 512.f, 160.f, 0.f });
+    titleTx.setPosition({ 960.f - 512.f, 900.f, 0.f });
+
+    entity = m_mainMenuScene.createEntity();
+    auto& gameSprite = entity.addComponent<cro::Sprite>();
+    gameSprite.setTexture(uiTexture);
+    gameSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
+    auto& gameTx = entity.addComponent<cro::Transform>();
+    gameTx.setPosition({ 960.f - 256.f, 540.f, 0.f });
+    gameTx.setScale({ 2.f, 2.f, 2.f });
+
+    entity = m_mainMenuScene.createEntity();
+    auto& optionSprite = entity.addComponent<cro::Sprite>();
+    optionSprite.setTexture(uiTexture);
+    optionSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
+    auto& optionTx = entity.addComponent<cro::Transform>();
+    optionTx.setPosition({ 960.f - 256.f, 400.f, 0.f });
+    optionTx.setScale({ 2.f, 2.f, 2.f });
+
+    entity = m_mainMenuScene.createEntity();
+    auto& scoreSprite = entity.addComponent<cro::Sprite>();
+    scoreSprite.setTexture(uiTexture);
+    scoreSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
+    auto& scoreTx = entity.addComponent<cro::Transform>();
+    scoreTx.setPosition({ 960.f - 256.f, 260.f, 0.f });
+    scoreTx.setScale({ 2.f, 2.f, 2.f });
 }

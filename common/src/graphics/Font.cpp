@@ -27,48 +27,38 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_TYPES_HPP_
-#define CRO_TYPES_HPP_
+#include <crogine/graphics/Font.hpp>
 
-#include <crogine/Config.hpp>
+using namespace cro;
 
-#include <SDL_stdinc.h>
-#include <SDL_events.h>
-
-#include <glm/vec2.hpp>
-
-/*
-Aliases for SDL types
-*/
-
-namespace cro
+Font::Font()
+    : m_type(Type::Bitmap)
 {
-	using uint8 = Uint8;
-	using int8 = Sint8;
-	using uint16 = Uint16;
-	using int16 = Sint16;
-	using uint32 = Uint32;
-	using int32 = Sint32;
-	using uint64 = Uint64;
-	using int64 = Sint64;
 
-	using Event = SDL_Event;
-
-    namespace ImageFormat
-    {
-        enum Type
-        {
-            None,
-            RGB,
-            RGBA,
-            A
-        };
-    }
-
-#ifdef PLATFORM_MOBILE
-    static const glm::uvec2 DefaultSceneSize(1280, 720);
-#else
-    static const glm::uvec2 DefaultSceneSize(1920, 1080);
-#endif //PLATFORM
 }
-#endif //CRO_TYPES_HPP_
+
+//public
+bool Font::loadFromFile(const std::string& path)
+{
+    return false;
+}
+
+bool Font::loadFromImage(const Image& image, glm::vec2 charSize, Type type)
+{
+    return false;
+}
+
+FloatRect Font::getGlyph(char c) const
+{
+    return {};
+}
+
+const Texture& Font::getTexture() const
+{
+    return m_texture;
+}
+
+Font::Type Font::getType() const
+{
+    return m_type;
+}

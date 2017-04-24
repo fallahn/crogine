@@ -132,6 +132,10 @@ void Texture::create(uint32 width, uint32 height, ImageFormat::Type format)
     {
         texFormat = GL_RGBA;
     }
+    else if(format == ImageFormat::A)
+    {
+        texFormat = GL_RED;
+    }
 
     glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
     glCheck(glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, NULL));
@@ -182,6 +186,10 @@ bool Texture::update(const uint8* pixels, URect area)
         if (m_format == ImageFormat::RGB)
         {
             format = GL_RGB;
+        }
+        else if (m_format == ImageFormat::A)
+        {
+            format = GL_RED;
         }
 
         glCheck(glActiveTexture(GL_TEXTURE0));

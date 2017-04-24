@@ -295,6 +295,8 @@ void SpriteRenderer::render()
     glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     glCheck(glBlendEquation(GL_FUNC_ADD));
 
+    GLint oldView[4];
+    glCheck(glGetIntegerv(GL_VIEWPORT, oldView));
     glViewport(0, m_viewPort.bottom, m_viewPort.width, m_viewPort.height);
 
     //bind shader and attrib arrays
@@ -343,6 +345,7 @@ void SpriteRenderer::render()
     drawDebug();
 #endif //_DEBUG_
     glCheck(glDisable(GL_BLEND));
+    glCheck(glViewport(oldView[0], oldView[1], oldView[2], oldView[3]));
 }
 
 //private

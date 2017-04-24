@@ -147,5 +147,14 @@
     <ClCompile Include="..\common\src\core\Clock.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\components\Text.cpp">
+      <Filter>src\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\TextRenderer.cpp">
+      <Filter>src\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\Font.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
