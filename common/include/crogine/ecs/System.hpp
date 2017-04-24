@@ -41,7 +41,7 @@ source distribution.
 namespace cro
 {
     class Time;
-    class EntityManager;
+    class Scene;
 
     using UniqueType = std::type_index;
 
@@ -64,7 +64,7 @@ namespace cro
         */
         template <typename T>
         System(MessageBus& mb, T* c) 
-            : m_messageBus(mb), m_type(typeid(*c)), m_entityManager(nullptr){}
+            : m_messageBus(mb), m_type(typeid(*c)), m_scene(nullptr){}
 
         virtual ~System() = default;
 
@@ -132,14 +132,14 @@ namespace cro
         Message* postMessage(Message::ID id);
 
         /*
-        \brief Used by the SystemManager to supply the active entity manager
+        \brief Used by the SystemManager to supply the active scene
         */
-        void setEntityManager(EntityManager&);
+        void setScene(Scene&);
 
         /*!
-        \brief Returns a pointer to the currently active EntityManager
+        \brief Returns a pointer to the scene to which this system belongs
         */
-        const EntityManager* getEntityManager() const;
+        const Scene* getScene() const;
 
     private:
 
@@ -149,7 +149,7 @@ namespace cro
         ComponentMask m_componentMask;
         std::vector<Entity> m_entities;
 
-        EntityManager* m_entityManager;
+        Scene* m_scene;
 
         friend class SystemManager;
     };
@@ -157,7 +157,7 @@ namespace cro
     class CRO_EXPORT_API SystemManager final
     {
     public:
-        explicit SystemManager(EntityManager&);
+        explicit SystemManager(Scene&);
 
         ~SystemManager() = default;
         SystemManager(const SystemManager&) = delete;
@@ -212,7 +212,7 @@ namespace cro
         */
         void process(Time);
     private:
-        EntityManager& m_entityManager;
+        Scene& m_scene;
         std::vector<std::unique_ptr<System>> m_systems;
     };
 

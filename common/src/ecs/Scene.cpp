@@ -38,7 +38,7 @@ using namespace cro;
 Scene::Scene(MessageBus& mb)
     : m_messageBus  (mb),
     m_entityManager (mb),
-    m_systemManager (m_entityManager)
+    m_systemManager (*this)
 {
     auto defaultCamera = createEntity();
     defaultCamera.addComponent<Transform>();
@@ -76,6 +76,11 @@ Entity Scene::createEntity()
 void Scene::destroyEntity(Entity entity)
 {
     m_destroyedEntities.push_back(entity);
+}
+
+Entity Scene::getEntity(Entity::ID id) const
+{
+    return m_entityManager.getEntity(id);
 }
 
 Entity Scene::getDefaultCamera() const
