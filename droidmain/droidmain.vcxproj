@@ -295,7 +295,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\common\include;..\testwin\src;..\SDL2-android\include;$(Sysroot)\usr\include;$(StlIncludeDirectories)%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common\include;..\testwin\src;..\SDL2_image\include;..\SDL2-android\include;$(Sysroot)\usr\include;$(StlIncludeDirectories)%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>

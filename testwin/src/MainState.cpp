@@ -220,7 +220,7 @@ void MainState::createScene()
 
     //-----menus-----//
 }
-
+#include <crogine/graphics/Image.hpp>
 void MainState::createMainMenu()
 {
     //test sprite sheet
@@ -263,9 +263,9 @@ void MainState::createMainMenu()
     scoreTx.setPosition({ 960.f - 256.f, 260.f, 0.f });
     scoreTx.setScale({ 2.f, 2.f, 2.f });
 
-    //entity = m_mainMenuScene.createEntity();
-    //auto& buns = entity.addComponent<cro::Sprite>();
-    //buns.setTexture(testFont.getTexture());
-    ////buns.setTextureRect(testFont.getGlyph('Z'));
-    //entity.addComponent<cro::Transform>().move({ 30.f, 0.f, 0.f });
+    entity = m_mainMenuScene.createEntity();
+    auto& buns = entity.addComponent<cro::Sprite>();
+    buns.setTexture(testFont.getTexture());
+    //buns.setTextureRect(testFont.getGlyph('@'));
+    entity.addComponent<cro::Transform>().move({ 30.f, 0.f, 0.f });
 }

@@ -41,11 +41,11 @@ using namespace cro;
 
 namespace
 {
-    const FloatRect defaultRect(0.f, 0.f, 0.f, 0.f);
     const uint16 maxGlyphHeight = 40u; //maximum char size in pixels
-    const uint16 charCountX = 16u;
-    const uint16 charCountY = 16u;
-    const uint16 charCount = charCountX * charCountY; //just while we use extended ascii
+    const uint16 firstChar = 32; //space in asii
+    const uint16 lastChar = 255; //extended ascii end
+    const uint16 charCount = lastChar - firstChar;
+    const uint16 charCountX = 16; //chars horizontally
 
     //rounds n to nearest pow2 value for padding images
     uint32 pow2(uint32 n)
@@ -61,24 +61,37 @@ namespace
 }
 
 Font::Font()
-    : m_type(Type::Bitmap)
+    : m_type    (Type::Bitmap),
+    m_font      (nullptr)
 {
 
+}
+
+Font::~Font()
+{
+    if (m_font)
+    {
+        TTF_CloseFont(m_font);
+    }
 }
 
 //public
 bool Font::loadFromFile(const std::string& path)
 {
-    //TODO need to check if this font as already loaded
-    
     if (TTF_WasInit() == 0)
     {
         Logger::log("TTF fonts are unavailable.. failed to init SDL_ttf", Logger::Type::Error);
         return false;
     }
 
-    auto* font = TTF_OpenFont(path.c_str(), maxGlyphHeight);
-    if (font)
+    if (m_font)
+    {
+        TTF_CloseFont(m_font);
+        m_subRects.clear();
+    }
+
+    m_font = TTF_OpenFont(path.c_str(), maxGlyphHeight);
+    if (m_font)
     {
         uint32 celWidth = 0;
         uint32 celHeight = 0;
@@ -88,21 +101,23 @@ bool Font::loadFromFile(const std::string& path)
         SDL_Color black, white;
         black.r = 0; black.g = 0; black.b = 0; black.a = 255;
         white.r = 255; white.g = 255; white.b = 255; white.a = 255;
-        for (auto i = 0u; i < charCount; ++i)
+        for (auto i = firstChar; i < lastChar; ++i) //start at 32 (Space)
         {
-            TTF_GlyphMetrics(font, i, &metricData[i].minx, &metricData[i].maxx, &metricData[i].miny, &metricData[i].maxy, 0);           
+            auto index = i - firstChar;
             
-            auto* glyph = TTF_RenderGlyph_Shaded(font, i, white, black);          
+            TTF_GlyphMetrics(m_font, i, &metricData[index].minx, &metricData[index].maxx, &metricData[index].miny, &metricData[index].maxy, 0);
+            
+            auto* glyph = TTF_RenderGlyph_Shaded(m_font, i, white, black);          
             if (glyph)
             {
-                glyphData[i].width = glyph->pitch;
-                glyphData[i].height = glyph->h;
-                glyphData[i].data.resize(glyph->pitch * glyph->h);
+                glyphData[index].width = glyph->pitch;
+                glyphData[index].height = glyph->h;
+                glyphData[index].data.resize(glyph->pitch * glyph->h);
                 auto stride = glyph->format->BytesPerPixel;
                 char* pixels = static_cast<char*>(glyph->pixels);
-                for (auto j = 0u, k = 0u; j < glyphData[i].data.size(); ++j, k += stride)
+                for (auto j = 0u, k = 0u; j < glyphData[index].data.size(); ++j, k += stride)
                 {
-                    glyphData[i].data[j] = pixels[k];
+                    glyphData[index].data[j] = pixels[k];
                 }
 
                 if (glyph->w > celWidth)
@@ -120,13 +135,12 @@ bool Font::loadFromFile(const std::string& path)
             }
             else
             {
-                glyphData[i].width = 0;
-                glyphData[i].height = 0;
+                glyphData[index].width = 0;
+                glyphData[index].height = 0;
             }
         }
 
-        TTF_CloseFont(font);
-
+        
         //load the glyphs into an image atlas
         auto imgWidth = pow2(celWidth * charCountX);
         auto glyphCountX = imgWidth / celWidth;
@@ -138,22 +152,24 @@ bool Font::loadFromFile(const std::string& path)
         std::memset(imgData.data(), 0, imgSize);
         FloatRect subRect(0.f, 0.f, static_cast<float>(celWidth), static_cast<float>(celHeight));
         
-        std::size_t i = 0;
+        std::size_t i = firstChar;
         for (auto y = 0u; y < glyphCountY; ++y)
         {
-            for (auto x = 0u; x < glyphCountX && i < charCount; ++x, ++i)
+            for (auto x = 0u; x < glyphCountX && i < lastChar; ++x, ++i)
             {
                 auto cx = celWidth * x;
                 auto cy = celHeight * y;
 
+                auto index = i - firstChar;
                 subRect.left = static_cast<float>(cx);
                 subRect.bottom = static_cast<float>(imgHeight - (cy + celHeight));
+                subRect.width = static_cast<float>(metricData[index].maxx);
                 m_subRects.insert(std::make_pair(static_cast<uint8>(i), subRect));
 
                 //copy row by row
-                for (auto j = 0u; j < glyphData[i].height; ++j)
+                for (auto j = 0u; j < glyphData[index].height; ++j)
                 {
-                    std::memcpy(&imgData[((j + cy) * imgWidth) + cx], &glyphData[i].data[j * glyphData[i].width], glyphData[i].width);
+                    std::memcpy(&imgData[((j + cy) * imgWidth) + cx], &glyphData[index].data[j * glyphData[index].width], glyphData[index].width);
                 }
             }
         }
@@ -170,9 +186,7 @@ bool Font::loadFromFile(const std::string& path)
         }
 
         m_texture.create(imgWidth, imgHeight, ImageFormat::A);
-        m_texture.update(flippedData.data());
-
-        return true;
+        return m_texture.update(flippedData.data());
     }
     else
     {
@@ -184,8 +198,32 @@ bool Font::loadFromFile(const std::string& path)
 
 bool Font::loadFromImage(const Image& image, glm::vec2 charSize, Type type)
 {
-    //TODO check if font was already loaded successfully
-    return false;
+    CRO_ASSERT(image.getSize().x > 0 && image.getSize().y > 0, "Can't use empty image!");
+    CRO_ASSERT(charSize.x > 0 && charSize.y > 0, "Can't use empty char size!");
+    
+    if (m_font)
+    {
+        TTF_CloseFont(m_font);
+        m_font = nullptr;
+        m_subRects.clear();
+    }
+
+    //create subrects from char size / image size
+    auto charX = image.getSize().x / charSize.x;
+    auto charY = image.getSize().y / charSize.y;
+    for (auto y = 0; y < charY; ++y)
+    {
+        for (auto x = 0; x < charX; ++x)
+        {
+            auto idx = (y * charX + x) + 32; //start at ascii space
+            m_subRects.insert(std::make_pair(static_cast<uint8>(idx), FloatRect(charSize.x * x, image.getSize().y - (charSize.y * (y + 1)), charSize.x, charSize.y)));
+        }
+    }
+
+    m_type = type;
+
+    m_texture.create(image.getSize().x, image.getSize().y, image.getFormat());
+    return m_texture.update(image.getPixelData());
 }
 
 FloatRect Font::getGlyph(char c) const
