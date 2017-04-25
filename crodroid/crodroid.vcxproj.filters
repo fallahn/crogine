@@ -159,5 +159,8 @@
     <ClCompile Include="..\common\src\ecs\systems\SceneGraph.cpp">
       <Filter>src\ecs\systems</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\graphics\FontResource.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

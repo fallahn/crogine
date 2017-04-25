@@ -69,6 +69,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\Colour.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\CubeBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Font.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\FontResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Image.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MaterialData.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MaterialResource.hpp" />
@@ -126,6 +127,7 @@
     <ClCompile Include="..\common\src\ecs\systems\TextRenderer.cpp" />
     <ClCompile Include="..\common\src\graphics\Colour.cpp" />
     <ClCompile Include="..\common\src\graphics\Font.cpp" />
+    <ClCompile Include="..\common\src\graphics\FontResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Image.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialData.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialResource.cpp" />

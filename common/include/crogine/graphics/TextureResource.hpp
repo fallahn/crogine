@@ -71,7 +71,7 @@ namespace cro
         /*!
         \brief Attempts to load the given texture if not already loaded and
         returns a reference to it.
-        If the texture failes to load then a texture containing the current
+        If the texture fails to load then a texture containing the current
         fallback colour is returned.
         */
         Texture& get(const std::string& path);

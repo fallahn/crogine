@@ -255,6 +255,9 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\TextRenderer.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\FontResource.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -385,6 +388,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\TextRenderer.cpp">
       <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\FontResource.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -35,6 +35,7 @@ source distribution.
 
 #include <SDL.h>
 #include <SDL_mixer.h>
+#include <SDL_ttf.h>
 
 #include "../detail/GLCheck.hpp"
 #include "../imgui/imgui_render.h"
@@ -65,12 +66,17 @@ App::App()
 	else
 	{
 		m_instance = this;
+        if (TTF_Init() == -1)
+        {
+            Logger::log("Something when wrong initialising TTF fonts!", Logger::Type::Error);
+        }
 	}
 }
 
 App::~App()
 {
 	//SDL cleanup
+    TTF_Quit();
 	SDL_Quit();
 }
 

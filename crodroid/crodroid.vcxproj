@@ -250,6 +250,7 @@
     <ClCompile Include="..\common\src\ecs\systems\TextRenderer.cpp" />
     <ClCompile Include="..\common\src\graphics\Colour.cpp" />
     <ClCompile Include="..\common\src\graphics\Font.cpp" />
+    <ClCompile Include="..\common\src\graphics\FontResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Image.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialData.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialResource.cpp" />

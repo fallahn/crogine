@@ -67,6 +67,14 @@ namespace
             Roids = cro::Mesh::ID::Count
         };
     }
+
+    namespace FontID
+    {
+        enum
+        {
+            MenuFont
+        };
+    }
 }
 
 MainState::MainState(cro::StateStack& stack, cro::State::Context context)
@@ -143,7 +151,8 @@ void MainState::loadAssets()
     roidMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/roid_diffuse.png"));
     roidMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/roid_normal.png"));
     roidMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/roid_mask.png"));
-
+    
+    
     shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
     auto& starTexture = m_textureResource.get("assets/materials/stars.png");
     starTexture.setRepeated(true);
@@ -214,6 +223,10 @@ void MainState::createScene()
 
 void MainState::createMainMenu()
 {
+    //test sprite sheet
+    auto& testFont = m_fontResource.get(FontID::MenuFont);
+    testFont.loadFromFile("assets/fonts/VeraMono.ttf");
+    
     m_currentMenu = &m_mainMenuScene;
     m_spriteRenderer = &m_mainMenuScene.addSystem<cro::SpriteRenderer>(getContext().appInstance.getMessageBus());
 
@@ -249,4 +262,10 @@ void MainState::createMainMenu()
     auto& scoreTx = entity.addComponent<cro::Transform>();
     scoreTx.setPosition({ 960.f - 256.f, 260.f, 0.f });
     scoreTx.setScale({ 2.f, 2.f, 2.f });
+
+    //entity = m_mainMenuScene.createEntity();
+    //auto& buns = entity.addComponent<cro::Sprite>();
+    //buns.setTexture(testFont.getTexture());
+    ////buns.setTextureRect(testFont.getGlyph('Z'));
+    //entity.addComponent<cro::Transform>().move({ 30.f, 0.f, 0.f });
 }

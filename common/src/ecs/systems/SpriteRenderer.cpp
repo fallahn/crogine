@@ -38,9 +38,9 @@ source distribution.
 #include "../../detail/GLCheck.hpp"
 #include "../../graphics/shaders/Sprite.hpp"
 
-#ifdef _DEBUG_
+#ifdef DEBUG_DRAW
 #include "../../graphics/shaders/Debug.hpp"
-#endif //_DEBUG_
+#endif //DEBUG_DRAW
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -62,9 +62,9 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     m_projectionIndex   (0),
     m_depthAxis         (DepthAxis::Z),
     m_pendingRebuild    (false)
-#ifdef _DEBUG_
+#ifdef DEBUG_DRAW
     ,m_debugMatrixIndex(-1), m_debugVBO(0), m_debugVertCount(0)
-#endif //_DEBUG_
+#endif //DEBUG_DRAW
 {
     //this has been known to fail on some platforms - but android can be as low as 63
     //which almost negates the usefulness of GPU bound transforms... :S
@@ -145,7 +145,7 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     auto size = App::getWindow().getSize();
     setViewPort(size.x, size.y);
 
-#ifdef _DEBUG_
+#ifdef DEBUG_DRAW
     if (m_debugShader.loadFromString(Shaders::Debug::Vertex, Shaders::Debug::Fragment))
     {
         const auto& shaderAttribs = m_debugShader.getAttribMap();
@@ -163,7 +163,7 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
             glCheck(glGenBuffers(1, &m_debugVBO));
         }
     }
-#endif //_DEBUG_
+#endif //DEBUG_DRAW
 }
 
 SpriteRenderer::~SpriteRenderer()
@@ -173,9 +173,9 @@ SpriteRenderer::~SpriteRenderer()
         glCheck(glDeleteBuffers(1, &p.first));
     }
 
-#ifdef _DEBUG_
-    //glCheck(glDeleteBuffers(1, &m_debugVBO));
-#endif //_DEBUG_
+#ifdef DEBUG_DRAW
+    glCheck(glDeleteBuffers(1, &m_debugVBO));
+#endif //DEBUG_DRAW
 }
 
 //public
@@ -201,9 +201,9 @@ void SpriteRenderer::process(Time)
     //get list of entities (should already be sorted by addEnt callback)
     auto& entities = getEntities();
 
-#ifdef _DEBUG_
+#ifdef DEBUG_DRAW
     bool dirtyDebug = false;
-#endif //_DEBUG_
+#endif //DEBUG_DRAW
 
     for (auto i = 0u; i < entities.size(); ++i)
     {
@@ -261,9 +261,9 @@ void SpriteRenderer::process(Time)
 
             sprite.m_dirty = false;
 
-#ifdef _DEBUG_
+#ifdef DEBUG_DRAW
             dirtyDebug = true;
-#endif //_DEBUG_
+#endif //DEBUG_DRAW
         }
 
         //if (sprite.m_visible)
@@ -282,9 +282,9 @@ void SpriteRenderer::process(Time)
         }
     }
 
-#ifdef _DEBUG_
+#ifdef DEBUG_DRAW
     if (dirtyDebug) buildDebug();
-#endif //_DEBUG_
+#endif //DEBUG_DRAW
 }
 
 void SpriteRenderer::render()
@@ -341,9 +341,9 @@ void SpriteRenderer::render()
 
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDisable(GL_CULL_FACE));
-#ifdef _DEBUG_
+#ifdef DEBUG_DRAW
     drawDebug();
-#endif //_DEBUG_
+#endif //DEBUG_DRAW
     glCheck(glDisable(GL_BLEND));
     glCheck(glViewport(oldView[0], oldView[1], oldView[2], oldView[3]));
 }
@@ -470,9 +470,9 @@ void SpriteRenderer::rebuildBatch()
         i++;
     }
 
-#ifdef _DEBUG_
+#ifdef DEBUG_DRAW
     buildDebug();
-#endif //_DEBUG_
+#endif //DEBUG_DRAW
 
     m_pendingRebuild = false;
 }
@@ -533,7 +533,7 @@ void SpriteRenderer::onEntityRemoved(Entity entity)
     m_pendingRebuild = true;
 }
 
-#ifdef _DEBUG_
+#ifdef DEBUG_DRAW
 void SpriteRenderer::buildDebug()
 {
     std::vector<float> vertData;    
@@ -598,4 +598,4 @@ void SpriteRenderer::drawDebug()
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
-#endif //_DEBUG_
+#endif //DEBUG_DRAW
