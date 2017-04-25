@@ -65,10 +65,7 @@ namespace cro
         };
     }
 
-#ifdef PLATFORM_MOBILE
-    static const glm::uvec2 DefaultSceneSize(1280, 720);
-#else
+    //Used by orthogonal renderers
     static const glm::uvec2 DefaultSceneSize(1920, 1080);
-#endif //PLATFORM
 }
 #endif //CRO_TYPES_HPP_

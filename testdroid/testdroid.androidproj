@@ -271,6 +271,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Content Include="assets\assets\fonts\charset.png" />
+    <Content Include="assets\assets\fonts\VeraMono.ttf" />
     <Content Include="assets\assets\materials\credits.txt" />
     <Content Include="assets\assets\materials\gas_diffuse.png" />
     <Content Include="assets\assets\materials\gas_mask.png" />

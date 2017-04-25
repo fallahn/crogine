@@ -64,10 +64,10 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
 	
 	destroy();
 
-#ifdef __ANDROID__
+#ifdef PLATFORM_MOBILE
     fullscreen = true;
     borderless = true;
-#endif //__ANDROID__
+#endif //PLATFORM_MOBILE
 
 	int styleMask = SDL_WINDOW_OPENGL;
 	if (fullscreen) styleMask |= SDL_WINDOW_FULLSCREEN;
@@ -140,7 +140,11 @@ glm::uvec2 Window::getSize() const
 {
     CRO_ASSERT(m_window, "window not created");
     int32 x, y;
+#ifdef PLATFORM_MOBILE
+    SDL_GL_GetDrawableSize(m_window, &x, &y);
+#else
     SDL_GetWindowSize(m_window, &x, &y);
+#endif //PLATFORM_MOBILE
     return { x, y };
 }
 

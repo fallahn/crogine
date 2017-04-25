@@ -133,17 +133,17 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     m_attribMap[AttribLocation::UV1].location = attribMap[Mesh::UV1];
     m_attribMap[AttribLocation::UV1].offset = m_attribMap[AttribLocation::UV0].offset + (m_attribMap[AttribLocation::UV0].size * sizeof(float));
 
-    //setup projection
-    m_projectionMatrix = glm::ortho(0.f, static_cast<float>(DefaultSceneSize.x), 0.f,
-                                    static_cast<float>(DefaultSceneSize.y), -0.1f, 100.f);
-    //m_projectionMatrix = glm::perspective(0.6f, 4.f / 3.f, 0.f, 100.f);
-
     //only want these entities
     requireComponent<Sprite>();
     requireComponent<Transform>();
 
     auto size = App::getWindow().getSize();
     setViewPort(size.x, size.y);
+
+    //setup projection
+    m_projectionMatrix = glm::ortho(0.f, static_cast<float>(DefaultSceneSize.x), 0.f,
+        static_cast<float>(DefaultSceneSize.y), -0.1f, 100.f);
+
 
 #ifdef DEBUG_DRAW
     if (m_debugShader.loadFromString(Shaders::Debug::Vertex, Shaders::Debug::Fragment))

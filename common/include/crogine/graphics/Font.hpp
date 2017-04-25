@@ -37,6 +37,7 @@ source distribution.
 #include <map>
 #include <vector>
 
+struct _TTF_Font;
 namespace cro
 {
     class Image;
@@ -56,7 +57,7 @@ namespace cro
         };
 
         Font();
-        ~Font() = default;
+        ~Font();
         Font(const Font&) = delete;
         const Font& operator = (const Font&) = delete;
         Font(Font&&) = delete;
@@ -100,6 +101,8 @@ namespace cro
         glm::vec2 m_glyphCount;
         Type m_type;
         std::map<uint8, FloatRect> m_subRects;
+
+        _TTF_Font* m_font;
 
         struct GlyphData final
         {

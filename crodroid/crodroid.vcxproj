@@ -150,7 +150,7 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
-      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_image</LibraryDependencies>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_image;SDL2_ttf</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|ARM'">
@@ -201,7 +201,7 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
-      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_image</LibraryDependencies>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_image;SDL2_ttf</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tools|ARM'">
