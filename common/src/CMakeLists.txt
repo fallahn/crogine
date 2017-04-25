@@ -31,6 +31,7 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/graphics/Colour.cpp
   ${PROJECT_DIR}/graphics/Font.cpp
+  ${PROJECT_DIR}/graphics/FontResource.cpp
   ${PROJECT_DIR}/graphics/Image.cpp
   ${PROJECT_DIR}/graphics/MaterialData.cpp
   ${PROJECT_DIR}/graphics/MaterialResource.cpp

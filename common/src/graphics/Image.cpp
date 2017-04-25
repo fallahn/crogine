@@ -111,13 +111,13 @@ bool Image::loadFromMemory(const uint8* px, uint32 width, uint32 height, ImageFo
     CRO_ASSERT(width > 0 && height > 0, "Invalid image dimension");
 
     if (format != ImageFormat::RGB &&
-        format != ImageFormat::RGBA)
+        format != ImageFormat::RGBA && format != ImageFormat::A)
     {
-        Logger::log("Invalid image format, must be RGB or RGBA", Logger::Type::Error);
+        Logger::log("Invalid image format, must be A, RGB or RGBA", Logger::Type::Error);
         return false;
     }
 
-    std::size_t size = (format == ImageFormat::RGB) ? 3 : 4;
+    std::size_t size = (format == ImageFormat::RGB) ? 3 : (format == ImageFormat::RGBA) ? 4 : 1;
     size *= (width * height);
 
     m_data.resize(size);

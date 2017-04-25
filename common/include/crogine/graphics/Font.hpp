@@ -34,6 +34,9 @@ source distribution.
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/Texture.hpp>
 
+#include <map>
+#include <vector>
+
 namespace cro
 {
     class Image;
@@ -96,6 +99,18 @@ namespace cro
         glm::vec2 m_glyphSize;
         glm::vec2 m_glyphCount;
         Type m_type;
+        std::map<uint8, FloatRect> m_subRects;
+
+        struct GlyphData final
+        {
+            uint32 width, height;
+            std::vector<uint8> data;
+        };
+
+        struct MetricData final
+        {
+            int32 minx, maxx, miny, maxy;
+        };
     };
 }
 

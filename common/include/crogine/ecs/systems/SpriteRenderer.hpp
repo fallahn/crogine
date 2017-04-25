@@ -41,6 +41,8 @@ source distribution.
 #include <map>
 #include <set>
 
+//#define DEBUG_DRAW 1
+
 namespace cro
 {
     class MessageBus;
@@ -136,7 +138,7 @@ namespace cro
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
 
-#ifdef _DEBUG_ //THIS IS BBBAAAAADDDD - it might not be defined in apps using this header
+#ifdef DEBUG_DRAW //THIS IS BBBAAAAADDDD - it might not be defined in apps using this header
         Shader m_debugShader;
         int32 m_debugMatrixIndex;
         std::array<AttribData, 2u> m_debugAttribs;
@@ -145,7 +147,7 @@ namespace cro
 
         void buildDebug();
         void drawDebug();
-#endif //_DEBUG_
+#endif //DEBUG_DRAW
     };
 }
 
