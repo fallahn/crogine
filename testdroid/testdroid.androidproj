@@ -276,13 +276,14 @@
     <Content Include="assets\assets\materials\gas_diffuse.png" />
     <Content Include="assets\assets\materials\gas_mask.png" />
     <Content Include="assets\assets\materials\gas_normal.png" />
-    <Content Include="assets\assets\materials\rock_diffuse.png" />
-    <Content Include="assets\assets\materials\rock_mask.png" />
-    <Content Include="assets\assets\materials\rock_normal.png" />
+    <Content Include="assets\assets\materials\moon_diffuse.png" />
+    <Content Include="assets\assets\materials\moon_mask.png" />
+    <Content Include="assets\assets\materials\moon_normal.png" />
     <Content Include="assets\assets\materials\roid_diffuse.png" />
     <Content Include="assets\assets\materials\roid_mask.png" />
     <Content Include="assets\assets\materials\roid_normal.png" />
     <Content Include="assets\assets\materials\stars.png" />
+    <Content Include="assets\assets\models\moon.cmf" />
     <Content Include="assets\assets\models\roid_belt.cmf" />
     <Content Include="assets\assets\sprites\menu.png" />
     <Content Include="res\values\strings.xml" />

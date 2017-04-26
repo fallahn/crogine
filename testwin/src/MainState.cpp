@@ -191,12 +191,20 @@ void MainState::createScene()
     planetRotator.speed = 0.02f;
     planetRotator.axis.y = 0.2f;
 
+    //auto moonAxis = m_backgroundScene.createEntity();
+    //auto& moonAxisTx = moonAxis.addComponent<cro::Transform>();
+    //moonAxisTx.setOrigin({ -5.6f, 0.f, 0.f });
+    //moonAxisTx.setParent(entity);
+    
     auto moonEntity = m_backgroundScene.createEntity();
     auto& moonTx = moonEntity.addComponent<cro::Transform>();
     moonTx.setScale({ 0.22f, 0.22f, 0.22f });
     moonTx.setOrigin({ -5.6f, 0.f, 0.f });
     moonTx.setParent(entity);
     moonEntity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Moon), m_materialResource.get(MaterialID::Moon));
+    //auto& moonRotator = moonEntity.addComponent<Rotator>();
+    //moonRotator.axis.y = 1.f;
+    //moonRotator.speed = 0.4f;
 
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
