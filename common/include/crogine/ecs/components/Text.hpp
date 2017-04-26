@@ -32,6 +32,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/Rectangle.hpp>
 
 #include <string>
 #include <vector>
@@ -64,6 +65,16 @@ namespace cro
         */
         void setColour(Colour);
 
+        /*!
+        \brief Returns the current line height of the text
+        */
+        float getLineHeight() const;
+
+        /*!
+        \brief Returns the local (pre transform) bounds
+        */
+        const FloatRect& getLocalBounds() const { return m_localBounds; }
+
     private:
         const Font* m_font;
         std::string m_string;
@@ -83,7 +94,7 @@ namespace cro
         std::vector<Vertex> m_vertices;
         int32 m_vboOffset; //starting index in parent VBO
 
-        void rebuildVerts();
+        FloatRect m_localBounds;
 
         friend class TextRenderer;
     };

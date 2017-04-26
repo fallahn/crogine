@@ -61,8 +61,9 @@ namespace
 }
 
 Font::Font()
-    : m_type    (Type::Bitmap),
-    m_font      (nullptr)
+    : m_lineHeight  (0.f),
+    m_type          (Type::Bitmap),
+    m_font          (nullptr)
 {
 
 }
@@ -93,8 +94,9 @@ bool Font::loadFromFile(const std::string& path)
     m_font = TTF_OpenFont(path.c_str(), maxGlyphHeight);
     if (m_font)
     {
-        uint32 celWidth = 0;
-        uint32 celHeight = 0;
+        int32 celWidth = 0;
+        int32 celHeight = 0;
+        m_lineHeight = static_cast<float>(TTF_FontHeight(m_font));
 
         std::array<GlyphData, charCount> glyphData;
         std::array<MetricData, charCount> metricData;
@@ -163,7 +165,7 @@ bool Font::loadFromFile(const std::string& path)
                 auto index = i - firstChar;
                 subRect.left = static_cast<float>(cx);
                 subRect.bottom = static_cast<float>(imgHeight - (cy + celHeight));
-                subRect.width = static_cast<float>(metricData[index].maxx);
+                subRect.width = static_cast<float>((metricData[index].maxx < 1) ? celWidth : metricData[index].maxx + 1);
                 m_subRects.insert(std::make_pair(static_cast<uint8>(i), subRect));
 
                 //copy row by row
@@ -221,6 +223,7 @@ bool Font::loadFromImage(const Image& image, glm::vec2 charSize, Type type)
     }
 
     m_type = type;
+    m_lineHeight = charSize.y;
 
     m_texture.create(image.getSize().x, image.getSize().y, image.getFormat());
     return m_texture.update(image.getPixelData());

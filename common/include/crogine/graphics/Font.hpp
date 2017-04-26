@@ -95,10 +95,15 @@ namespace cro
         */
         Type getType() const;
 
+        /*!
+        \brief Returns the lineheight of bitmap fonts or the default height
+        of SDF fonts before resizing
+        */
+        float getLineHeight() const { return m_lineHeight; }
+
     private:
         Texture m_texture;
-        glm::vec2 m_glyphSize;
-        glm::vec2 m_glyphCount;
+        float m_lineHeight;
         Type m_type;
         std::map<uint8, FloatRect> m_subRects;
 

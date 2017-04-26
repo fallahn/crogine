@@ -340,7 +340,7 @@ void TextRenderer::rebuildBatch()
 
                 spritesThisBatch = 0;
             }
-            text.rebuildVerts();
+            updateVerts(text);
 
             //copies vertex data at a given index
             auto copyVertex = [&](uint32 idx)
@@ -413,6 +413,88 @@ void TextRenderer::rebuildBatch()
     }
 
     m_pendingRebuild = false;
+}
+
+void TextRenderer::updateVerts(Text& text)
+{
+    /*
+    0-------2
+    |       |
+    |       |
+    1-------3
+    */
+    CRO_ASSERT(text.m_font, "Must construct text with a font!");
+
+    text.m_vertices.clear();
+    text.m_vertices.reserve(text.m_string.size() * 6); //4 verts per char + degen tri
+
+    float xPos = 0.f; //current char offset
+    float yPos = -text.getLineHeight();
+    float lineHeight = text.getLineHeight();
+    glm::vec2 texSize(text.m_font->getTexture().getSize());
+    CRO_ASSERT(texSize.x > 0 && texSize.y > 0, "Font texture not loaded!");
+
+    float top = 0.f;
+    float width = 0.f;
+
+    for (auto c : text.m_string)
+    {
+        //check for end of lines
+        if (c == '\r' || c == '\n')
+        {
+            xPos = 0.f;
+            yPos -= lineHeight;
+            continue;
+        }
+
+        auto rect = text.m_font->getGlyph(c);
+        Text::Vertex v;
+        v.position.x = xPos;
+        v.position.y = yPos + rect.height;
+        v.position.z = 0.f;
+
+        v.UV.x = rect.left / texSize.x;
+        v.UV.y = (rect.bottom + rect.height) / texSize.y;
+        text.m_vertices.push_back(v);
+        text.m_vertices.push_back(v); //twice for degen tri
+
+        v.position.y = yPos;
+
+        v.UV.x = rect.left / texSize.x;
+        v.UV.y = rect.bottom / texSize.y;
+        text.m_vertices.push_back(v);
+
+        v.position.x = xPos + rect.width;
+        v.position.y = yPos + rect.height;
+
+        v.UV.x = (rect.left + rect.width) / texSize.x;
+        v.UV.y = (rect.bottom + rect.height) / texSize.y;
+        text.m_vertices.push_back(v);
+
+        v.position.y = yPos;
+
+        v.UV.x = (rect.left + rect.width) / texSize.x;
+        v.UV.y = rect.bottom / texSize.y;
+        text.m_vertices.push_back(v);
+        text.m_vertices.push_back(v); //end degen tri
+
+        if (v.position.x > width) width = v.position.x;
+
+        xPos += rect.width;
+    }
+
+    text.m_localBounds.bottom = yPos;
+    text.m_localBounds.height = top - yPos;
+    text.m_localBounds.width = width;
+
+    text.m_vertices.erase(text.m_vertices.begin()); //remove front/back degens as these are added by renderer
+    text.m_vertices.pop_back();
+
+    for (auto& v : text.m_vertices)
+    {
+        v.colour = { text.m_colour.getRed(), text.m_colour.getGreen(), text.m_colour.getBlue(), text.m_colour.getAlpha() };
+    }
+    text.m_dirtyFlags = 0;
 }
 
 void TextRenderer::onEntityAdded(Entity entity)

@@ -66,7 +66,8 @@ namespace
     {
         enum
         {
-            Roids = cro::Mesh::ID::Count
+            Roids = cro::Mesh::ID::Count,
+            Moon
         };
     }
 
@@ -139,9 +140,9 @@ void MainState::loadAssets()
 {
     cro::int32 shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::NormalMap);
     auto& moonMaterial = m_materialResource.add(MaterialID::Moon, m_shaderResource.get(shaderID));
-    moonMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/rock_diffuse.png"));
-    moonMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/rock_normal.png"));
-    moonMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/rock_mask.png"));
+    moonMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/moon_diffuse.png"));
+    moonMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/moon_normal.png"));
+    moonMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/moon_mask.png"));
 
     auto& planetMaterial = m_materialResource.add(MaterialID::Planet, m_shaderResource.get(shaderID));
     planetMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/gas_diffuse.png"));
@@ -174,6 +175,8 @@ void MainState::loadAssets()
     cro::StaticMeshBuilder smb("assets/models/roid_belt.cmf");
     m_meshResource.loadMesh(smb, MeshID::Roids);
 
+    cro::StaticMeshBuilder msmb("assets/models/moon.cmf");
+    m_meshResource.loadMesh(msmb, MeshID::Moon);
 }
 
 void MainState::createScene()
@@ -193,7 +196,7 @@ void MainState::createScene()
     moonTx.setScale({ 0.22f, 0.22f, 0.22f });
     moonTx.setOrigin({ -5.6f, 0.f, 0.f });
     moonTx.setParent(entity);
-    moonEntity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(MaterialID::Moon));
+    moonEntity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Moon), m_materialResource.get(MaterialID::Moon));
 
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
@@ -231,45 +234,86 @@ void MainState::createMainMenu()
     auto& testFont = m_fontResource.get(FontID::MenuFont);
     testFont.loadFromFile("assets/fonts/VeraMono.ttf");
     
+    auto& mb = getContext().appInstance.getMessageBus();
     m_currentMenu = &m_mainMenuScene;
-    m_spriteRenderer = &m_mainMenuScene.addSystem<cro::SpriteRenderer>(getContext().appInstance.getMessageBus());
-    m_textRenderer = &m_mainMenuScene.addSystem<cro::TextRenderer>(getContext().appInstance.getMessageBus());
+    m_spriteRenderer = &m_mainMenuScene.addSystem<cro::SpriteRenderer>(mb);
+    m_textRenderer = &m_mainMenuScene.addSystem<cro::TextRenderer>(mb);
+    m_mainMenuScene.addSystem<cro::SceneGraph>(mb);
 
-    //auto& uiTexture = m_textureResource.get("assets/sprites/menu.png");
-    //auto entity = m_mainMenuScene.createEntity();
-    //auto& titleSprite = entity.addComponent<cro::Sprite>();
-    //titleSprite.setTexture(uiTexture);
-    //titleSprite.setTextureRect({ 0.f, 64.f, 1024.f, 320.f });
-    //auto& titleTx = entity.addComponent<cro::Transform>();
-    //titleTx.setOrigin({ 512.f, 160.f, 0.f });
-    //titleTx.setPosition({ 960.f - 512.f, 900.f, 0.f });
+    auto& uiTexture = m_textureResource.get("assets/sprites/menu.png");
+    auto entity = m_mainMenuScene.createEntity();
+    auto& titleSprite = entity.addComponent<cro::Sprite>();
+    titleSprite.setTexture(uiTexture);
+    titleSprite.setTextureRect({ 0.f, 64.f, 1024.f, 320.f });
+    auto& titleTx = entity.addComponent<cro::Transform>();
+    titleTx.setOrigin({ 512.f, 160.f, 0.f });
+    titleTx.setPosition({ 960.f - 512.f, 900.f, 0.f });
+    titleTx.setScale({ 1.5f, 1.5f, 1.5f });
 
-    //entity = m_mainMenuScene.createEntity();
-    //auto& gameSprite = entity.addComponent<cro::Sprite>();
-    //gameSprite.setTexture(uiTexture);
-    //gameSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
-    //auto& gameTx = entity.addComponent<cro::Transform>();
-    //gameTx.setPosition({ 960.f - 256.f, 540.f, 0.f });
-    //gameTx.setScale({ 2.f, 2.f, 2.f });
-    //auto& gameText = entity.addComponent<cro::Text>(testFont);
-    //gameText.setString("Text Works!");
-    //gameText.setColour(cro::Colour::Blue());
+    entity = m_mainMenuScene.createEntity();
+    auto& gameSprite = entity.addComponent<cro::Sprite>();
+    gameSprite.setTexture(uiTexture);
+    gameSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
+    auto& gameTx = entity.addComponent<cro::Transform>();
+    gameTx.setPosition({ 960.f - 256.f, 620.f, 0.f });
+    gameTx.setScale({ 2.f, 2.f, 2.f });
 
-    //entity = m_mainMenuScene.createEntity();
-    //auto& optionSprite = entity.addComponent<cro::Sprite>();
-    //optionSprite.setTexture(uiTexture);
-    //optionSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
-    //auto& optionTx = entity.addComponent<cro::Transform>();
-    //optionTx.setPosition({ 960.f - 256.f, 400.f, 0.f });
-    //optionTx.setScale({ 2.f, 2.f, 2.f });
+    auto textEnt = m_mainMenuScene.createEntity();
+    auto& gameText = textEnt.addComponent<cro::Text>(testFont);
+    gameText.setString("Play");
+    gameText.setColour(cro::Colour::Blue());
+    auto& gameTextTx = textEnt.addComponent<cro::Transform>();
+    gameTextTx.setPosition({ 90.f, 50.f, 0.f });
+    gameTextTx.setParent(entity);
 
-    //entity = m_mainMenuScene.createEntity();
-    //auto& scoreSprite = entity.addComponent<cro::Sprite>();
-    //scoreSprite.setTexture(uiTexture);
-    //scoreSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
-    //auto& scoreTx = entity.addComponent<cro::Transform>();
-    //scoreTx.setPosition({ 960.f - 256.f, 260.f, 0.f });
-    //scoreTx.setScale({ 2.f, 2.f, 2.f });
+    entity = m_mainMenuScene.createEntity();
+    auto& optionSprite = entity.addComponent<cro::Sprite>();
+    optionSprite.setTexture(uiTexture);
+    optionSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
+    auto& optionTx = entity.addComponent<cro::Transform>();
+    optionTx.setPosition({ 960.f - 256.f, 460.f, 0.f });
+    optionTx.setScale({ 2.f, 2.f, 2.f });
+
+    textEnt = m_mainMenuScene.createEntity();
+    auto& optionText = textEnt.addComponent<cro::Text>(testFont);
+    optionText.setString("Options");
+    optionText.setColour(cro::Colour::Magenta());
+    auto& texTx = textEnt.addComponent<cro::Transform>();
+    texTx.setParent(entity);
+    texTx.move({ 64.f, 50.f, 0.f });
+
+    entity = m_mainMenuScene.createEntity();
+    auto& scoreSprite = entity.addComponent<cro::Sprite>();
+    scoreSprite.setTexture(uiTexture);
+    scoreSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
+    auto& scoreTx = entity.addComponent<cro::Transform>();
+    scoreTx.setPosition({ 960.f - 256.f, 300.f, 0.f });
+    scoreTx.setScale({ 2.f, 2.f, 2.f });
+
+    textEnt = m_mainMenuScene.createEntity();
+    auto& scoreText = textEnt.addComponent<cro::Text>(testFont);
+    scoreText.setString("Scores");
+    scoreText.setColour(cro::Colour::Green());
+    auto& scoreTexTx = textEnt.addComponent<cro::Transform>();
+    scoreTexTx.setParent(entity);
+    scoreTexTx.move({ 74.f, 50.f, 0.f });
+
+    entity = m_mainMenuScene.createEntity();
+    auto& quitSprite = entity.addComponent<cro::Sprite>();
+    quitSprite.setTexture(uiTexture);
+    quitSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
+    auto& quitTx = entity.addComponent<cro::Transform>();
+    quitTx.setPosition({ 960.f - 256.f, 140.f, 0.f });
+    quitTx.setScale({ 2.f, 2.f, 2.f });
+
+    textEnt = m_mainMenuScene.createEntity();
+    auto& quitText = textEnt.addComponent<cro::Text>(testFont);
+    quitText.setString("Quit");
+    quitText.setColour(cro::Colour::Red());
+    auto& quitTexTx = textEnt.addComponent<cro::Transform>();
+    quitTexTx.setParent(entity);
+    quitTexTx.move({ 88.f, 50.f, 0.f });
+
 
     //entity = m_mainMenuScene.createEntity();
     //auto& buns = entity.addComponent<cro::Sprite>();
