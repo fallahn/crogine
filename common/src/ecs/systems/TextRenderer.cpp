@@ -144,7 +144,7 @@ void TextRenderer::process(Time dt)
                 vertexData.push_back(static_cast<float>(i)); //for transform lookup
                 vertexData.push_back(0.f);
             };
-            for (auto j = 0; j < text.m_vertices.size(); ++j)
+            for (auto j = 0u; j < text.m_vertices.size(); ++j)
             {
                 copyVertex(j);
             }
@@ -383,7 +383,7 @@ void TextRenderer::rebuildBatch()
 
             //and append data
             text.m_vboOffset = static_cast<int32>(vertexData.size() * sizeof(float));
-            for (auto j = 0; j < text.m_vertices.size(); ++j)
+            for (auto j = 0u; j < text.m_vertices.size(); ++j)
             {
                 copyVertex(j);
             }
