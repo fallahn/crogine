@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/graphics/Colour.hpp>
 
 #include <string>
+#include <vector>
 
 namespace cro
 {
@@ -45,6 +46,8 @@ namespace cro
     class CRO_EXPORT_API Text final
     {
     public:
+        Text();
+
         /*!
         \brief Constructor.
         \param font Font with which to draw text
@@ -62,10 +65,25 @@ namespace cro
         void setColour(Colour);
 
     private:
-        const Font& m_font;
+        const Font* m_font;
         std::string m_string;
         Colour m_colour;
-        bool m_needsUpdate;
+        uint8 m_dirtyFlags;
+        enum Flags
+        {
+            Verts = 0x1, Colours = 0x2
+        };
+
+        struct Vertex final
+        {
+            glm::vec4 position;
+            glm::vec4 colour;
+            glm::vec2 UV;
+        };
+        std::vector<Vertex> m_vertices;
+        int32 m_vboOffset; //starting index in parent VBO
+
+        void rebuildVerts();
 
         friend class TextRenderer;
     };

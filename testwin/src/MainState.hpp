@@ -44,6 +44,7 @@ namespace cro
 {
     class SceneRenderer;
     class SpriteRenderer;
+    class TextRenderer;
     class CommandSystem;
 }
 
@@ -76,6 +77,7 @@ private:
 
     cro::SceneRenderer* m_backgroundRenderer;
     cro::SpriteRenderer* m_spriteRenderer;
+    cro::TextRenderer* m_textRenderer;
     cro::CommandSystem* m_commandSystem;
 
     void addSystems();

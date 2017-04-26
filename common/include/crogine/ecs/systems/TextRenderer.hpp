@@ -31,6 +31,12 @@ source distribution.
 #define CRO_TEXT_RENDERER_HPP_
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/graphics/Rectangle.hpp>
+#include <crogine/graphics/Shader.hpp>
+
+#include <glm/mat4x4.hpp>
+
+#include <vector>
 
 namespace cro
 {
@@ -38,7 +44,21 @@ namespace cro
     {
     public:
         explicit TextRenderer(MessageBus&);
+        ~TextRenderer();
 
+        TextRenderer(const TextRenderer&) = delete;
+        TextRenderer(TextRenderer&&) = delete;
+        const TextRenderer& operator = (const TextRenderer&) = delete;
+        TextRenderer& operator = (TextRenderer&&) = delete;
+
+        /*!
+        \brief Message handler
+        */
+        void handleMessage(const Message&) override;
+        
+        /*!
+        \brief Processes the text data into renderable batches
+        */
         void process(Time) override;
 
         /*!
@@ -46,10 +66,45 @@ namespace cro
         */
         void render();
 
-        void onEntityAdded(Entity) override;
-
     private:
+        IntRect m_viewPort;
+        void setViewPort(int32 x, int32 y);
 
+        struct Batch final
+        {
+            int32 texture = 0; //font texture atlas
+            uint32 start = 0; //first vert of this batch in the VBO
+            uint32 count = 0; //number of verts in the batch
+        };
+        //maps VBO id to a batch
+        std::vector<std::pair<uint32, std::vector<Batch>>> m_buffers;
+        std::vector<std::vector<glm::mat4>> m_bufferTransforms;
+
+        enum AttribLocation
+        {
+            Position, Colour, UV0, UV1, Count
+        };
+        struct AttribData final
+        {
+            uint32 size = 0;
+            uint32 location = 0;
+            uint32 offset = 0;
+        };
+        std::array<AttribData, AttribLocation::Count> m_attribMap;
+        void fetchShaderData(Shader&);
+
+        glm::mat4 m_projectionMatrix;
+        Shader m_bitmapShader;
+        //shader uniform locations - TODO organise these for two shaders
+        int32 m_txMatrixIndex;
+        int32 m_textureUniformIndex;
+        int32 m_projectionUniformIndex;
+
+        bool m_pendingRebuild;
+        void rebuildBatch();
+
+        void onEntityAdded(Entity) override;
+        void onEntityRemoved(Entity) override;
     };
 }
 

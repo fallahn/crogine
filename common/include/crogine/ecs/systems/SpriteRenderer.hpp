@@ -57,10 +57,14 @@ namespace cro
     public:
         /*!
         \brief Constructor.
-        \param mb Refernce to system message bus
+        \param mb Reference to system message bus
         */
         explicit SpriteRenderer(MessageBus& mb);
         ~SpriteRenderer();
+        SpriteRenderer(const SpriteRenderer&) = delete;
+        SpriteRenderer(SpriteRenderer&&) = delete;
+        const SpriteRenderer& operator = (const SpriteRenderer&) = delete;
+        SpriteRenderer& operator = (SpriteRenderer&&) = delete;
 
         //TODO setters for view/resolution
 
