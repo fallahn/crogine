@@ -41,8 +41,8 @@ using namespace cro;
 
 namespace
 {
-    const uint16 maxGlyphHeight = 40u; //maximum char size in pixels
-    const uint16 firstChar = 32; //space in asii
+    const uint16 maxGlyphHeight = 30u; //maximum char size in pixels
+    const uint16 firstChar = 32; //space in ascii
     const uint16 lastChar = 255; //extended ascii end
     const uint16 charCount = lastChar - firstChar;
     const uint16 charCountX = 16; //chars horizontally

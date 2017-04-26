@@ -70,6 +70,22 @@ namespace cro
                     gl_FragColor = texture2D(u_texture, v_texCoord0) * v_colour;
                 })";
         }
+
+        namespace Text
+        {
+            const static std::string BitmapFragment = R"(
+                uniform sampler2D u_texture;
+                
+                varying vec4 v_colour;
+                varying vec2 v_texCoord0;
+
+                void main()
+                {
+                    float value = texture2D(u_texture, v_texCoord0).r;
+                    gl_FragColor = value * v_colour;
+                    //gl_FragColor.a *= value;
+                })";
+        }
     }
 }
 

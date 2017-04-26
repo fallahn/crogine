@@ -109,7 +109,7 @@ namespace cro
     private:
         int32 m_textureID;
         glm::vec3 m_textureSize;
-        struct Vertex
+        struct Vertex final
         {
             glm::vec4 position;
             glm::vec4 colour;
@@ -122,7 +122,7 @@ namespace cro
         FloatRect m_localBounds;
         FloatRect m_globalBounds;
 
-        bool m_visible;
+        bool m_visible; //used in culling
 
         friend class SpriteRenderer;
     };
