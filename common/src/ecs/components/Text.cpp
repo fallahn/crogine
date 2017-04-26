@@ -32,11 +32,6 @@ source distribution.
 
 using namespace cro;
 
-namespace
-{
-    const float lineHeight = 40.f; //TODO make this a variable with text size/bitmap font height
-}
-
 Text::Text()
     : m_font        (nullptr),
     m_dirtyFlags    (Flags::Verts),
@@ -70,75 +65,12 @@ void Text::setColour(Colour colour)
     m_dirtyFlags |= Flags::Colours;
 }
 
-//private
-void Text::rebuildVerts() //TODO this should be in text renderer
+float Text::getLineHeight() const
 {
-    /*
-    0-------2
-    |       |
-    |       |
-    1-------3
-    */
-    CRO_ASSERT(m_font, "Must construct text with a font!");
-    
-    m_vertices.clear();
-    m_vertices.reserve(m_string.size() * 6); //4 verts per char + degen tri
-
-    float xPos = 0.f; //current char offset
-    float yPos = 0.f;
-    glm::vec2 texSize(m_font->getTexture().getSize());
-    CRO_ASSERT(texSize.x > 0 && texSize.y > 0, "Font texture not loaded!");
-
-    for (auto c : m_string)
-    {
-        //check for end of lines
-        if (c == '\r' || c == '\n')
-        {
-            xPos = 0.f;
-            yPos -= lineHeight;
-            continue;
-        }
-
-        auto rect = m_font->getGlyph(c);
-        Vertex v;
-        v.position.x = xPos;
-        v.position.y = yPos + rect.height;
-        v.position.z = 0.f;
-
-        v.UV.x = rect.left / texSize.x;
-        v.UV.y = (rect.bottom + rect.height) / texSize.y;
-        m_vertices.push_back(v);
-        m_vertices.push_back(v); //twice for degen tri
-
-        v.position.y = yPos;
-
-        v.UV.x = rect.left / texSize.x;
-        v.UV.y = rect.bottom / texSize.y;
-        m_vertices.push_back(v);
-
-        v.position.x = xPos + rect.width;
-        v.position.y = yPos + rect.height;
-
-        v.UV.x = (rect.left + rect.width) / texSize.x;
-        v.UV.y = (rect.bottom + rect.height) / texSize.y;
-        m_vertices.push_back(v);
-
-        v.position.y = yPos;
-
-        v.UV.x = (rect.left + rect.width) / texSize.x;
-        v.UV.y = rect.bottom / texSize.y;
-        m_vertices.push_back(v);
-        m_vertices.push_back(v); //end degen tri
-
-        xPos += rect.width;
-    }
-
-    m_vertices.erase(m_vertices.begin()); //remove front/back degens as these are added by renderer
-    m_vertices.pop_back();
-
-    for (auto& v : m_vertices)
-    {
-        v.colour = { m_colour.getRed(), m_colour.getGreen(), m_colour.getBlue(), m_colour.getAlpha() };
-    }
-    m_dirtyFlags = 0;
+    //TODO return height depending on whether or
+    //not the font is a bitmap or SDF
+    CRO_ASSERT(m_font, "Font not loaded!");
+    return m_font->getLineHeight();
 }
+
+//private

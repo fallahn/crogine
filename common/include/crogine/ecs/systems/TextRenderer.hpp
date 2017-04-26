@@ -40,6 +40,12 @@ source distribution.
 
 namespace cro
 {
+    class Text;
+
+    /*!
+    \brief Text renderer class.
+    Responsible for batching and rendering sprite components.
+    */
     class CRO_EXPORT_API TextRenderer final : public System
     {
     public:
@@ -102,6 +108,7 @@ namespace cro
 
         bool m_pendingRebuild;
         void rebuildBatch();
+        void updateVerts(Text&);
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
