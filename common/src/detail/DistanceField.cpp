@@ -31,6 +31,7 @@ source distribution.
 
 #include <cmath>
 #include <climits>
+#include <cstring>
 #include <algorithm>
 
 using namespace cro;
@@ -70,29 +71,29 @@ void DistanceField::twoD(std::vector<float>& floatData, int32 width, int32 heigh
 {
     std::vector<float> f(std::max(width, height));
 
-    for (int x = 0; x < width; x++) 
+    for (auto x = 0; x < width; x++) 
     {
-        for (int y = 0; y < height; y++)
+        for (auto y = 0; y < height; y++)
         {
             f[y] = floatData[y * width + x];
         }
         auto d = oneD(f, height);
 
-        for (int y = 0; y < height; y++)
+        for (auto y = 0; y < height; y++)
         {
             floatData[y * width + x] = d[y];
         }
     }
 
-    for (int y = 0; y < height; y++)
+    for (auto y = 0; y < height; y++)
     {
-        for (int x = 0; x < width; x++)
+        for (auto x = 0; x < width; x++)
         {
             f[x] = floatData[y * width + x];
         }
         auto d = oneD(f, width);
 
-        for (int x = 0; x < width; x++)
+        for (auto x = 0; x < width; x++)
         {
             floatData[y * width + x] = d[x];
         }
@@ -110,7 +111,7 @@ std::vector<float> DistanceField::oneD(const std::vector<float>& floatData, std:
     z[0] = -INF;
     z[1] = INF;
 
-    for (auto q = 1; q <= size - 1; q++)
+    for (auto q = 1u; q <= size - 1; q++)
     {
         float s = ((floatData[q] + square(q)) - (floatData[v[k]] + square(v[k]))) / (2 * q - 2 * v[k]);
         while (s <= z[k]) 
@@ -125,7 +126,7 @@ std::vector<float> DistanceField::oneD(const std::vector<float>& floatData, std:
     }
 
     k = 0;
-    for (int q = 0; q <= size - 1; q++) 
+    for (auto q = 0u; q <= size - 1; q++) 
     {
         while (z[k + 1] < q)
             k++;
