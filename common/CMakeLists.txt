@@ -23,14 +23,12 @@ SET (CMAKE_DEBUG_POSTFIX -d)
 
 find_package(SDL2 REQUIRED)
 find_package(SDL2_mixer REQUIRED)
-find_package(SDL2_Image REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(OpenGL REQUIRED)
 
 include_directories(
   ${SDL2_INCLUDE_DIR}
   ${SDL2_MIXER_INCLUDE_DIR}
-  ${SDL2_IMAGE_INCLUDE_DIR}
   ${SDL2_TTF_INCLUDE_DIR}
   ${CMAKE_SOURCE_DIR}/common/include)
 
@@ -47,7 +45,6 @@ endif()
 target_link_libraries(${PROJECT_NAME}
   ${SDL2_LIBRARY}
   ${SDL2_MIXER_LIBRARY}
-  ${SDL2_IMAGE_LIBRARIES}
   ${SDL2_TTF_LIBRARIES}
   ${OPENGL_LIBRARIES})
 
@@ -55,7 +52,7 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/crogine DESTINATION include)
-if(TMXLITE_STATIC_LIB)
+if(CROGINE_STATIC_LIB)
   install(TARGETS ${PROJECT_NAME} EXPORT crogine-targets DESTINATION lib)
 else()
   install(TARGETS ${PROJECT_NAME} EXPORT crogine-targets 

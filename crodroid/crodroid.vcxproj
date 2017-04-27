@@ -138,7 +138,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;$(SolutionDir)extlibs\SDL2_image\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\sdl2\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\sdl2\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -150,14 +150,14 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
-      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_image;SDL2_ttf</LibraryDependencies>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_ttf</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|ARM'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;$(SolutionDir)extlibs\SDL2_image\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\sdl2\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\sdl2\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -169,7 +169,7 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
-      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_image</LibraryDependencies>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -190,7 +190,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;$(SolutionDir)extlibs\SDL2_image\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\sdl2\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\sdl2\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -201,14 +201,14 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
-      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_image;SDL2_ttf</LibraryDependencies>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_ttf</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tools|ARM'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;$(SolutionDir)extlibs\SDL2_image\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\sdl2\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\sdl2\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -219,7 +219,7 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
-      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_image</LibraryDependencies>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

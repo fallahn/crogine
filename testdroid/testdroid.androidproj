@@ -297,7 +297,6 @@
     <ProjectReference Include="..\crodroid\crodroid.vcxproj" />
     <ProjectReference Include="..\droidmain\droidmain.vcxproj" />
     <ProjectReference Include="..\SDL2-android\SDL2-android.vcxproj" />
-    <ProjectReference Include="..\SDL2_image\SDL2_image.vcxproj" />
     <ProjectReference Include="..\SDL2_ttf\SDL2_ttf.vcxproj" />
     <ProjectReference Include="..\SDL_mixer\SDL_mixer.vcxproj" />
   </ItemGroup>
