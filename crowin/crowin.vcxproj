@@ -57,6 +57,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\Sprite.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Text.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\UIInput.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\System.hpp" />
@@ -66,6 +67,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SpriteRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\TextRenderer.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\UISystem.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Colour.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\CubeBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Font.hpp" />
@@ -127,6 +129,7 @@
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\TextRenderer.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\UISystem.cpp" />
     <ClCompile Include="..\common\src\graphics\Colour.cpp" />
     <ClCompile Include="..\common\src\graphics\Font.cpp" />
     <ClCompile Include="..\common\src\graphics\FontResource.cpp" />

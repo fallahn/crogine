@@ -327,9 +327,9 @@ void MainState::createMainMenu()
     quitTexTx.move({ 88.f, 50.f, 0.f });
 
 
-    entity = m_mainMenuScene.createEntity();
-    auto& buns = entity.addComponent<cro::Sprite>();
-    buns.setTexture(testFont.getTexture());
-    //buns.setTextureRect(testFont.getGlyph('@'));
-    entity.addComponent<cro::Transform>().move({ 30.f, 0.f, 0.f });
+    //entity = m_mainMenuScene.createEntity();
+    //auto& buns = entity.addComponent<cro::Sprite>();
+    //buns.setTexture(testFont.getTexture());
+    ////buns.setTextureRect(testFont.getGlyph('@'));
+    //entity.addComponent<cro::Transform>().move({ 30.f, 0.f, 0.f });
 }
