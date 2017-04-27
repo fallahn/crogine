@@ -33,8 +33,6 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 
-#include <SDL_image.h>
-
 #include <glm/vec2.hpp>
 
 #include <string>

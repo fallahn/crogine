@@ -129,7 +129,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\shared\include;$(SolutionDir)extlibs\sdl2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PostBuildEvent>
@@ -138,8 +138,8 @@
     </PostBuildEvent>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine-d.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x86</AdditionalLibraryDirectories>
+      <AdditionalDependencies>crogine-d.lib;SDL2.lib;%(AdditionalDependencies);SDL2main.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|Win32'">
@@ -165,7 +165,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_image\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG_;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PostBuildEvent>
@@ -175,7 +175,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\SDL2_image\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine-d.lib;SDL2.lib;%(AdditionalDependencies);SDL2_image.lib;SDL2main.lib</AdditionalDependencies>
+      <AdditionalDependencies>crogine-d.lib;SDL2.lib;%(AdditionalDependencies);SDL2main.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|x64'">
@@ -183,7 +183,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_image\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PostBuildEvent>
@@ -203,15 +203,15 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\shared\include;$(SolutionDir)extlibs\sdl2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x86</AdditionalLibraryDirectories>
+      <AdditionalDependencies>crogine.lib;SDL2.lib;%(AdditionalDependencies);SDL2main.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -247,7 +247,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_image\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -255,7 +255,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\SDL2_image\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine.lib;SDL2.lib;%(AdditionalDependencies);SDL2_image.lib;SDL2main.lib</AdditionalDependencies>
+      <AdditionalDependencies>crogine.lib;SDL2.lib;%(AdditionalDependencies);SDL2main.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -269,7 +269,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_image\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>

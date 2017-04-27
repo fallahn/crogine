@@ -200,7 +200,7 @@ void MainState::createScene()
     auto moonEntity = m_backgroundScene.createEntity();
     auto& moonTx = moonEntity.addComponent<cro::Transform>();
     moonTx.setScale({ 0.22f, 0.22f, 0.22f });
-    moonTx.setOrigin({ -5.6f, 0.f, 0.f });
+    moonTx.setOrigin({ -5.2f, 0.f, 0.f });
     moonTx.setParent(entity);
     moonEntity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Moon), m_materialResource.get(MaterialID::Moon));
     //auto& moonRotator = moonEntity.addComponent<Rotator>();
