@@ -29,6 +29,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/SceneRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/TextRenderer.cpp
+  ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 
   ${PROJECT_DIR}/graphics/Colour.cpp
   ${PROJECT_DIR}/graphics/Font.cpp

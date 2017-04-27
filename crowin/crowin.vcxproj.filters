@@ -261,6 +261,12 @@
     <ClInclude Include="..\common\src\detail\DistanceField.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\components\UIInput.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\UISystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -397,6 +403,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\detail\DistanceField.cpp">
       <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\UISystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

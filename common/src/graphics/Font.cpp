@@ -42,11 +42,7 @@ using namespace cro;
 
 namespace
 {
-#ifdef PLATFORM_MOBILE
-    const uint16 maxGlyphHeight = 20u; //maximum char size in pixels
-#else
-    const uint16 maxGlyphHeight = 40u; //maximum char size in pixels
-#endif //PLATFORM_MOBILE
+    const uint16 maxGlyphHeight = 30u; //maximum char size in pixels
     const uint16 firstChar = 32; //space in ascii
     const uint16 lastChar = 255; //extended ascii end
     const uint16 charCount = lastChar - firstChar;
