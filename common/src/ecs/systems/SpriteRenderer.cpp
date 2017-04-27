@@ -91,7 +91,7 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     };
     if (uniforms.count("u_worldMatrix[0]") != 0)
     {
-        m_matrixIndex = m_shader.getUniformMap().find("u_worldMatrix[0]")->second;
+        m_matrixIndex = uniforms.find("u_worldMatrix[0]")->second;
     }
     else
     {
@@ -101,7 +101,7 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
 
     if (uniforms.count("u_texture") != 0)
     {
-        m_textureIndex = m_shader.getUniformMap().find("u_texture")->second;
+        m_textureIndex = uniforms.find("u_texture")->second;
     }
     else
     {
@@ -111,7 +111,7 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
 
     if (uniforms.count("u_projectionMatrix") != 0)
     {
-        m_projectionIndex = m_shader.getUniformMap().find("u_projectionMatrix")->second;
+        m_projectionIndex = uniforms.find("u_projectionMatrix")->second;
     }
     else
     {

@@ -258,6 +258,9 @@
     <ClInclude Include="..\common\include\crogine\graphics\FontResource.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\src\detail\DistanceField.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -391,6 +394,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\graphics\FontResource.cpp">
       <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\DistanceField.cpp">
+      <Filter>Source Files\detail</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

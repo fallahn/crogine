@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/Image.hpp>
+#include "../detail/DistanceField.hpp"
 
 #include <SDL_ttf.h>
 #include <SDL_pixels.h>
@@ -41,7 +42,11 @@ using namespace cro;
 
 namespace
 {
-    const uint16 maxGlyphHeight = 30u; //maximum char size in pixels
+#ifdef PLATFORM_MOBILE
+    const uint16 maxGlyphHeight = 20u; //maximum char size in pixels
+#else
+    const uint16 maxGlyphHeight = 40u; //maximum char size in pixels
+#endif //PLATFORM_MOBILE
     const uint16 firstChar = 32; //space in ascii
     const uint16 lastChar = 255; //extended ascii end
     const uint16 charCount = lastChar - firstChar;
@@ -114,6 +119,7 @@ bool Font::loadFromFile(const std::string& path)
             {
                 glyphData[index].width = glyph->pitch;
                 glyphData[index].height = glyph->h;
+                //glyphData[index].data = Detail::DistanceField::toDF(glyph);
                 glyphData[index].data.resize(glyph->pitch * glyph->h);
                 auto stride = glyph->format->BytesPerPixel;
                 char* pixels = static_cast<char*>(glyph->pixels);
@@ -134,6 +140,7 @@ bool Font::loadFromFile(const std::string& path)
                 SDL_FreeSurface(glyph);
 
                 //TODO process distance field on glyph and mark font as distance field type
+
             }
             else
             {
