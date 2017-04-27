@@ -52,9 +52,6 @@ namespace
 
 TextRenderer::TextRenderer(MessageBus& mb)
     : System                (mb, this),
-    m_txMatrixIndex         (0),
-    m_textureUniformIndex   (0),
-    m_projectionUniformIndex(0),
     m_pendingRebuild        (false)
 {
     GLint maxVec;
@@ -63,13 +60,17 @@ TextRenderer::TextRenderer(MessageBus& mb)
     MaxTexts = std::min(MaxTexts - 1, 255u); //caps size on platforms such as VMs which incorrectly report max_vectors
     LOG(std::to_string(MaxTexts) + " texts are available per batch", Logger::Type::Info);
 
-    if (!m_bitmapShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Text::BitmapFragment, "#define MAX_MATRICES " + std::to_string(MaxTexts) + "\n"))
+    if (!m_shaders[Font::Type::Bitmap].shader.loadFromString(Shaders::Sprite::Vertex, Shaders::Text::BitmapFragment, "#define MAX_MATRICES " + std::to_string(MaxTexts) + "\n"))
     {
         Logger::log("Failed loading bitmap font shader, text renderer is in invalid state", Logger::Type::Error, Logger::Output::All);
     }
 
-    //TODO load SDF shader
-    fetchShaderData(m_bitmapShader);
+    if (!m_shaders[Font::Type::SDF].shader.loadFromString(Shaders::Sprite::Vertex, Shaders::Text::SDFFragment, "#define MAX_MATRICES " + std::to_string(MaxTexts) + "\n"))
+    {
+        Logger::log("Failed loading SDF font shader, text renderer is in invalid state", Logger::Type::Error, Logger::Output::All);
+    }
+    fetchShaderData(m_shaders[Font::Type::Bitmap]);
+    fetchShaderData(m_shaders[Font::SDF]);
 
     requireComponent<Text>();
     requireComponent<Transform>();
@@ -188,26 +189,26 @@ void TextRenderer::render()
     glViewport(0, m_viewPort.bottom, m_viewPort.width, m_viewPort.height);
 
     //bind shader and attrib arrays - TODO dow this for both shader types
-    glCheck(glUseProgram(m_bitmapShader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_projectionUniformIndex, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
+    glCheck(glUseProgram(m_shaders[Font::Bitmap].shader.getGLHandle()));
+    glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].projectionUniformIndex, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
     glCheck(glActiveTexture(GL_TEXTURE0));
-    glCheck(glUniform1i(m_textureUniformIndex, 0));
+    glCheck(glUniform1i(m_shaders[Font::Bitmap].textureUniformIndex, 0));
 
     //foreach vbo bind and draw
     std::size_t idx = 0;
     for (const auto& batch : m_buffers)
     {
         const auto& transforms = m_bufferTransforms[idx++]; //TODO this should be same index as current buffer
-        glCheck(glUniformMatrix4fv(m_txMatrixIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
+        glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].xformUniformIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
 
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, batch.first));
 
         //bind attrib pointers
-        for (auto i = 0u; i < m_attribMap.size(); ++i)
+        for (auto i = 0u; i < m_shaders[Font::Bitmap].attribMap.size(); ++i)
         {
-            glCheck(glEnableVertexAttribArray(m_attribMap[i].location));
-            glCheck(glVertexAttribPointer(m_attribMap[i].location, m_attribMap[i].size, GL_FLOAT, GL_FALSE, vertexSize,
-                reinterpret_cast<void*>(static_cast<intptr_t>(m_attribMap[i].offset))));
+            glCheck(glEnableVertexAttribArray(m_shaders[Font::Bitmap].attribMap[i].location));
+            glCheck(glVertexAttribPointer(m_shaders[Font::Bitmap].attribMap[i].location, m_shaders[Font::Bitmap].attribMap[i].size, GL_FLOAT, GL_FALSE, vertexSize,
+                reinterpret_cast<void*>(static_cast<intptr_t>(m_shaders[Font::Bitmap].attribMap[i].offset))));
         }
 
         for (const auto& batchData : batch.second)
@@ -218,9 +219,9 @@ void TextRenderer::render()
         }
 
         //unbind attrib pointers
-        for (auto i = 0u; i < m_attribMap.size(); ++i)
+        for (auto i = 0u; i < m_shaders[Font::Bitmap].attribMap.size(); ++i)
         {
-            glCheck(glDisableVertexAttribArray(m_attribMap[i].location));
+            glCheck(glDisableVertexAttribArray(m_shaders[Font::Bitmap].attribMap[i].location));
         }
 
     }
@@ -242,10 +243,10 @@ void TextRenderer::setViewPort(int32 x, int32 y)
     m_viewPort.bottom = (y - m_viewPort.height) / 2;
 }
 
-void TextRenderer::fetchShaderData(Shader& shader)
+void TextRenderer::fetchShaderData(ShaderData& data)
 {
     //check shader uniforms and get locations
-    const auto& uniforms = shader.getUniformMap();
+    const auto& uniforms = data.shader.getUniformMap();
     auto listUniforms = [&uniforms]()
     {
         for (const auto& p : uniforms)
@@ -255,7 +256,7 @@ void TextRenderer::fetchShaderData(Shader& shader)
     };
     if (uniforms.count("u_worldMatrix[0]") != 0)
     {
-        m_txMatrixIndex = shader.getUniformMap().find("u_worldMatrix[0]")->second;
+        data.xformUniformIndex = uniforms.find("u_worldMatrix[0]")->second;
     }
     else
     {
@@ -265,7 +266,7 @@ void TextRenderer::fetchShaderData(Shader& shader)
 
     if (uniforms.count("u_texture") != 0)
     {
-        m_textureUniformIndex = shader.getUniformMap().find("u_texture")->second;
+        data.textureUniformIndex = uniforms.find("u_texture")->second;
     }
     else
     {
@@ -275,7 +276,7 @@ void TextRenderer::fetchShaderData(Shader& shader)
 
     if (uniforms.count("u_projectionMatrix") != 0)
     {
-        m_projectionUniformIndex = shader.getUniformMap().find("u_projectionMatrix")->second;
+        data.projectionUniformIndex = uniforms.find("u_projectionMatrix")->second;
     }
     else
     {
@@ -284,18 +285,18 @@ void TextRenderer::fetchShaderData(Shader& shader)
     }
 
     //map attrib locations
-    const auto& attribMap = shader.getAttribMap();
-    m_attribMap[AttribLocation::Position].size = 4;
-    m_attribMap[AttribLocation::Position].location = attribMap[Mesh::Position];
-    m_attribMap[AttribLocation::Colour].size = 4;
-    m_attribMap[AttribLocation::Colour].location = attribMap[Mesh::Colour];
-    m_attribMap[AttribLocation::Colour].offset = m_attribMap[AttribLocation::Colour].size * sizeof(float);
-    m_attribMap[AttribLocation::UV0].size = 2;
-    m_attribMap[AttribLocation::UV0].location = attribMap[Mesh::UV0];
-    m_attribMap[AttribLocation::UV0].offset = m_attribMap[AttribLocation::Colour].offset + (m_attribMap[AttribLocation::Colour].size * sizeof(float));
-    m_attribMap[AttribLocation::UV1].size = 2;
-    m_attribMap[AttribLocation::UV1].location = attribMap[Mesh::UV1];
-    m_attribMap[AttribLocation::UV1].offset = m_attribMap[AttribLocation::UV0].offset + (m_attribMap[AttribLocation::UV0].size * sizeof(float));
+    const auto& attribMap = data.shader.getAttribMap();
+    data.attribMap[AttribLocation::Position].size = 4;
+    data.attribMap[AttribLocation::Position].location = attribMap[Mesh::Position];
+    data.attribMap[AttribLocation::Colour].size = 4;
+    data.attribMap[AttribLocation::Colour].location = attribMap[Mesh::Colour];
+    data.attribMap[AttribLocation::Colour].offset = data.attribMap[AttribLocation::Colour].size * sizeof(float);
+    data.attribMap[AttribLocation::UV0].size = 2;
+    data.attribMap[AttribLocation::UV0].location = attribMap[Mesh::UV0];
+    data.attribMap[AttribLocation::UV0].offset = data.attribMap[AttribLocation::Colour].offset + (data.attribMap[AttribLocation::Colour].size * sizeof(float));
+    data.attribMap[AttribLocation::UV1].size = 2;
+    data.attribMap[AttribLocation::UV1].location = attribMap[Mesh::UV1];
+    data.attribMap[AttribLocation::UV1].offset = data.attribMap[AttribLocation::UV0].offset + (data.attribMap[AttribLocation::UV0].size * sizeof(float));
 
 }
 

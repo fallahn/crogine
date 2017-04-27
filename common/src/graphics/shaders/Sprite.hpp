@@ -85,6 +85,24 @@ namespace cro
                     gl_FragColor = value * v_colour;
                     //gl_FragColor.a *= value;
                 })";
+
+            const static std::string SDFFragment = R"(
+                uniform sampler2D u_texture;
+                
+                varying vec4 v_colour;
+                varying vec2 v_texCoord0;
+
+                float spread = 4.0;
+                float scale = 5.0;
+                float smoothing = 1.0 / 16.0;
+
+                void main()
+                {
+                    //smoothing = 0.25 / (spread * scale);
+                    float value = texture2D(u_texture, v_texCoord0).r;
+                    float alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, value);
+                    gl_FragColor = vec4(v_colour.rgb, v_colour.a * alpha);
+                })";
         }
     }
 }

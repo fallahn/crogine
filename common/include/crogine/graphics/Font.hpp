@@ -51,9 +51,10 @@ namespace cro
     class CRO_EXPORT_API Font final : public Detail::SDLResource
     {
     public:
-        enum class Type
+        enum Type
         {
-            Bitmap, SDF
+            Bitmap = 0,
+            SDF
         };
 
         Font();

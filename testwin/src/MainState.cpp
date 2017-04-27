@@ -48,6 +48,7 @@ source distribution.
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
+#include <crogine/graphics/Image.hpp>
 
 namespace
 {
@@ -241,6 +242,9 @@ void MainState::createMainMenu()
     //test sprite sheet
     auto& testFont = m_fontResource.get(FontID::MenuFont);
     testFont.loadFromFile("assets/fonts/VeraMono.ttf");
+    //cro::Image img;
+    //img.loadFromFile("assets/fonts/sdf.png");
+    //testFont.loadFromImage(img, { 32.f, 32.f }, cro::Font::Type::SDF);
     
     auto& mb = getContext().appInstance.getMessageBus();
     m_currentMenu = &m_mainMenuScene;
@@ -323,9 +327,9 @@ void MainState::createMainMenu()
     quitTexTx.move({ 88.f, 50.f, 0.f });
 
 
-    //entity = m_mainMenuScene.createEntity();
-    //auto& buns = entity.addComponent<cro::Sprite>();
-    //buns.setTexture(testFont.getTexture());
-    ////buns.setTextureRect(testFont.getGlyph('@'));
-    //entity.addComponent<cro::Transform>().move({ 30.f, 0.f, 0.f });
+    entity = m_mainMenuScene.createEntity();
+    auto& buns = entity.addComponent<cro::Sprite>();
+    buns.setTexture(testFont.getTexture());
+    //buns.setTextureRect(testFont.getGlyph('@'));
+    entity.addComponent<cro::Transform>().move({ 30.f, 0.f, 0.f });
 }

@@ -7,6 +7,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/core/StateStack.cpp
   ${PROJECT_DIR}/core/Window.cpp
 
+  ${PROJECT_DIR}/detail/DistanceField.cpp
   ${PROJECT_DIR}/detail/glad.c
   ${PROJECT_DIR}/detail/SDLResource.cpp 
 

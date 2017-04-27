@@ -96,16 +96,21 @@ namespace cro
             uint32 location = 0;
             uint32 offset = 0;
         };
-        std::array<AttribData, AttribLocation::Count> m_attribMap;
-        void fetchShaderData(Shader&);
+        
+        struct ShaderData final
+        {
+            Shader shader;
+            int32 xformUniformIndex = 0;
+            int32 textureUniformIndex = 0;
+            int32 projectionUniformIndex = 0;
+            std::array<AttribData, AttribLocation::Count> attribMap;
+        };
+        std::array<ShaderData, 2u> m_shaders;
+
+        void fetchShaderData(ShaderData&);
 
         glm::mat4 m_projectionMatrix;
-        Shader m_bitmapShader;
-        //shader uniform locations - TODO organise these for two shaders
-        int32 m_txMatrixIndex;
-        int32 m_textureUniformIndex;
-        int32 m_projectionUniformIndex;
-
+        
         bool m_pendingRebuild;
         void rebuildBatch();
         void updateVerts(Text&);

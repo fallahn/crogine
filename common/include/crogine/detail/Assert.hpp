@@ -1,4 +1,4 @@
-/*---------------------------------------------------------------------- -
+/*-----------------------------------------------------------------------
 
 Matt Marchant 2017
 http://trederia.blogspot.com
@@ -25,7 +25,7 @@ and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any
 source distribution.
 
----------------------------------------------------------------------- -*/
+-----------------------------------------------------------------------*/
 
 //custom assertion macro which is more verbose than standard assert
 
