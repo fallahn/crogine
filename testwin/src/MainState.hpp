@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/graphics/FontResource.hpp>
 
 #include "StateIDs.hpp"
+#include "ResourceIDs.hpp"
 
 namespace cro
 {
@@ -46,6 +47,7 @@ namespace cro
     class SpriteRenderer;
     class TextRenderer;
     class CommandSystem;
+    class UISystem;
 }
 
 class MainState final : public cro::State
@@ -79,11 +81,13 @@ private:
     cro::SpriteRenderer* m_spriteRenderer;
     cro::TextRenderer* m_textRenderer;
     cro::CommandSystem* m_commandSystem;
+    cro::UISystem* m_uiSystem;
 
     void addSystems();
     void loadAssets();
     void createScene();
     void createMainMenu();
+    void createOptionsMenu();
+    void createScoreMenu();
 };
-
 #endif //TL_MAIN_STATE_HPP_

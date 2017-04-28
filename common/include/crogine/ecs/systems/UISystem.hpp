@@ -31,6 +31,9 @@ source distribution.
 #define CRO_UI_SYSTEM_HPP_
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/graphics/Rectangle.hpp>
+
+#include <glm/mat4x4.hpp>
 
 #include <functional>
 
@@ -39,8 +42,9 @@ namespace cro
     class CRO_EXPORT_API UISystem final : public System
     {
     public:
-        //passes in the entity for whom the callback was triggered and a ref to the message bus
-        using Callback = std::function<void(Entity, MessageBus&)>;
+        //passes in the entity for whom the callback was triggered and a copy of the flags
+        //which contain the input which triggered it. Use the Flags enum to find the input type
+        using Callback = std::function<void(Entity, uint64 flags)>;
 
         explicit UISystem(MessageBus&);
 
@@ -55,6 +59,11 @@ namespace cro
         void process(Time) override;
 
         /*!
+        \brief Message handler
+        */
+        void handleMessage(const Message&) override;
+
+        /*!
         \brief Adds a callback.
         \returns ID of the callback. This should be used to assigned the callback
         to the relative callback slot of a UIInput component. eg:
@@ -63,9 +72,34 @@ namespace cro
         */
         uint32 addCallback(const Callback&);
 
+        /*!
+        \brief Input flags.
+        Use these with the callback bitmask to find which input triggered it
+        */
+        enum Flags
+        {
+            RightMouse = 0x1,
+            LeftMouse = 0x2,
+            MiddleMouse = 0x4,
+            Finger = 0x8
+        };
+
     private:
 
         std::vector<Callback> m_callbacks;
+
+        glm::vec2 m_previousEventPosition; //in screen coords
+        glm::vec2 m_eventPosition;
+
+        std::vector<Flags> m_downEvents;
+        std::vector<Flags> m_upEvents;
+
+        glm::mat4 m_projectionMatrix;
+        glm::uvec2 m_windowSize;
+        IntRect m_viewPort;
+        void setViewPort(int32, int32);
+        glm::vec2 toScreenCoords(int32 x, int32 y); //converts mouse input
+        glm::vec2 toScreenCoords(float, float); //converts touch input
     };
 }
 

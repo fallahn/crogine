@@ -33,5 +33,14 @@
     <ClCompile Include="..\testwin\src\DriftSystem.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\testwin\src\MenuMain.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\testwin\src\MenuOptions.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\testwin\src\MenuScores.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -36,49 +36,21 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
-#include <crogine/ecs/components/Sprite.hpp>
-#include <crogine/ecs/components/Text.hpp>
 
 #include <crogine/ecs/systems/SceneRenderer.hpp>
 #include <crogine/ecs/systems/MeshSorter.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
+#include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
-#include <crogine/graphics/Image.hpp>
 
 namespace
 {
-    namespace MaterialID
-    {
-        enum
-        {
-            Moon,
-            Stars,
-            Planet,
-            Roids
-        };
-    }
 
-    namespace MeshID
-    {
-        enum
-        {
-            Roids = cro::Mesh::ID::Count,
-            Moon
-        };
-    }
-
-    namespace FontID
-    {
-        enum
-        {
-            MenuFont
-        };
-    }
 }
 
 MainState::MainState(cro::StateStack& stack, cro::State::Context context)
@@ -91,18 +63,22 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     m_backgroundRenderer(nullptr),
     m_spriteRenderer    (nullptr),
     m_textRenderer      (nullptr),
-    m_commandSystem     (nullptr)
+    m_commandSystem     (nullptr),
+    m_uiSystem          (nullptr)
 {
     addSystems();
     loadAssets();
     createScene();
     //context.appInstance.setClearColour(cro::Colour::Red());
     createMainMenu();
+    createOptionsMenu();
+    createScoreMenu();
 }
 
 //public
 bool MainState::handleEvent(const cro::Event& evt)
 {
+    m_uiSystem->handleEvent(evt);
     return true;
 }
 
@@ -110,6 +86,7 @@ void MainState::handleMessage(const cro::Message& msg)
 {
     m_backgroundScene.forwardMessage(msg);
     m_currentMenu->forwardMessage(msg);
+    m_uiSystem->handleMessage(msg);
 }
 
 bool MainState::simulate(cro::Time dt)
@@ -233,103 +210,4 @@ void MainState::createScene()
     entity.addComponent<cro::Camera>();
     entity.addComponent<Drifter>().amplitude = 0.05f;
     m_backgroundRenderer->setActiveCamera(entity);
-
-    //-----menus-----//
-}
-
-void MainState::createMainMenu()
-{
-    //test sprite sheet
-    auto& testFont = m_fontResource.get(FontID::MenuFont);
-    testFont.loadFromFile("assets/fonts/VeraMono.ttf");
-    //cro::Image img;
-    //img.loadFromFile("assets/fonts/sdf.png");
-    //testFont.loadFromImage(img, { 32.f, 32.f }, cro::Font::Type::SDF);
-    
-    auto& mb = getContext().appInstance.getMessageBus();
-    m_currentMenu = &m_mainMenuScene;
-    m_spriteRenderer = &m_mainMenuScene.addSystem<cro::SpriteRenderer>(mb);
-    m_textRenderer = &m_mainMenuScene.addSystem<cro::TextRenderer>(mb);
-    m_mainMenuScene.addSystem<cro::SceneGraph>(mb);
-
-    auto& uiTexture = m_textureResource.get("assets/sprites/menu.png");
-    auto entity = m_mainMenuScene.createEntity();
-    auto& titleSprite = entity.addComponent<cro::Sprite>();
-    titleSprite.setTexture(uiTexture);
-    titleSprite.setTextureRect({ 0.f, 64.f, 1024.f, 320.f });
-    auto& titleTx = entity.addComponent<cro::Transform>();
-    titleTx.setOrigin({ 512.f, 160.f, 0.f });
-    titleTx.setPosition({ 960.f - 512.f, 900.f, 0.f });
-    titleTx.setScale({ 1.5f, 1.5f, 1.5f });
-
-    entity = m_mainMenuScene.createEntity();
-    auto& gameSprite = entity.addComponent<cro::Sprite>();
-    gameSprite.setTexture(uiTexture);
-    gameSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
-    auto& gameTx = entity.addComponent<cro::Transform>();
-    gameTx.setPosition({ 960.f - 256.f, 620.f, 0.f });
-    gameTx.setScale({ 2.f, 2.f, 2.f });
-
-    auto textEnt = m_mainMenuScene.createEntity();
-    auto& gameText = textEnt.addComponent<cro::Text>(testFont);
-    gameText.setString("Play");
-    gameText.setColour(cro::Colour::Blue());
-    auto& gameTextTx = textEnt.addComponent<cro::Transform>();
-    gameTextTx.setPosition({ 90.f, 50.f, 0.f });
-    gameTextTx.setParent(entity);
-
-    entity = m_mainMenuScene.createEntity();
-    auto& optionSprite = entity.addComponent<cro::Sprite>();
-    optionSprite.setTexture(uiTexture);
-    optionSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
-    auto& optionTx = entity.addComponent<cro::Transform>();
-    optionTx.setPosition({ 960.f - 256.f, 460.f, 0.f });
-    optionTx.setScale({ 2.f, 2.f, 2.f });
-
-    textEnt = m_mainMenuScene.createEntity();
-    auto& optionText = textEnt.addComponent<cro::Text>(testFont);
-    optionText.setString("Options");
-    optionText.setColour(cro::Colour::Magenta());
-    auto& texTx = textEnt.addComponent<cro::Transform>();
-    texTx.setParent(entity);
-    texTx.move({ 64.f, 50.f, 0.f });
-
-    entity = m_mainMenuScene.createEntity();
-    auto& scoreSprite = entity.addComponent<cro::Sprite>();
-    scoreSprite.setTexture(uiTexture);
-    scoreSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
-    auto& scoreTx = entity.addComponent<cro::Transform>();
-    scoreTx.setPosition({ 960.f - 256.f, 300.f, 0.f });
-    scoreTx.setScale({ 2.f, 2.f, 2.f });
-
-    textEnt = m_mainMenuScene.createEntity();
-    auto& scoreText = textEnt.addComponent<cro::Text>(testFont);
-    scoreText.setString("Scores");
-    scoreText.setColour(cro::Colour::Green());
-    auto& scoreTexTx = textEnt.addComponent<cro::Transform>();
-    scoreTexTx.setParent(entity);
-    scoreTexTx.move({ 74.f, 50.f, 0.f });
-
-    entity = m_mainMenuScene.createEntity();
-    auto& quitSprite = entity.addComponent<cro::Sprite>();
-    quitSprite.setTexture(uiTexture);
-    quitSprite.setTextureRect({ 0.f, 0.f, 256.f, 64.f });
-    auto& quitTx = entity.addComponent<cro::Transform>();
-    quitTx.setPosition({ 960.f - 256.f, 140.f, 0.f });
-    quitTx.setScale({ 2.f, 2.f, 2.f });
-
-    textEnt = m_mainMenuScene.createEntity();
-    auto& quitText = textEnt.addComponent<cro::Text>(testFont);
-    quitText.setString("Quit");
-    quitText.setColour(cro::Colour::Red());
-    auto& quitTexTx = textEnt.addComponent<cro::Transform>();
-    quitTexTx.setParent(entity);
-    quitTexTx.move({ 88.f, 50.f, 0.f });
-
-
-    //entity = m_mainMenuScene.createEntity();
-    //auto& buns = entity.addComponent<cro::Sprite>();
-    //buns.setTexture(testFont.getTexture());
-    ////buns.setTextureRect(testFont.getGlyph('@'));
-    //entity.addComponent<cro::Transform>().move({ 30.f, 0.f, 0.f });
 }

@@ -48,6 +48,15 @@
     <ClCompile Include="src\DriftSystem.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\MenuMain.cpp">
+      <Filter>Source Files\TL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MenuOptions.cpp">
+      <Filter>Source Files\TL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MenuScores.cpp">
+      <Filter>Source Files\TL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -70,6 +79,9 @@
     </ClInclude>
     <ClInclude Include="src\DriftSystem.hpp">
       <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ResourceIDs.hpp">
+      <Filter>Header Files\TL</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -34,9 +34,13 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 
 #include <glm/vec2.hpp>
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
 
 #include <type_traits>
 #include <algorithm>
+#include <array>
+#include <limits>
 
 namespace cro
 {
@@ -79,6 +83,11 @@ namespace cro
         \brief Returns true if this rectangle contains the given point
         */
         bool contains(glm::vec2) const;
+
+        /*!
+        \brief Returns a copy of this rectangle transformed by the given matrix
+        */
+        Rectangle<T> transform(const glm::mat4&);
     };
 
     /*Some short cuts for concrete types*/
