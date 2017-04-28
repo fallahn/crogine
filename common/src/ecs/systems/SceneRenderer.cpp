@@ -43,7 +43,7 @@ source distribution.
 using namespace cro;
 
 SceneRenderer::SceneRenderer(MessageBus& mb, Entity camera)
-    : System            (mb, this),
+    : System            (mb, typeid(SceneRenderer)),
     m_activeCamera      (camera),
     m_currentTextureUnit(0)
 {

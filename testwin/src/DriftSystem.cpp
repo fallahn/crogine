@@ -34,7 +34,7 @@ source distribution.
 #include <crogine/util/Wavetable.hpp>
 
 DriftSystem::DriftSystem(cro::MessageBus& mb)
-    : cro::System(mb, this)
+    : cro::System(mb, typeid(DriftSystem))
 {
     //create wave table
     m_waveTable = cro::Util::Wavetable::sine(0.05f);

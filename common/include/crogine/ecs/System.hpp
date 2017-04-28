@@ -62,9 +62,9 @@ namespace cro
         Pass in a reference to the concrete implementation to generate
         a unique type ID for this system.
         */
-        template <typename T>
-        System(MessageBus& mb, T* c) 
-            : m_messageBus(mb), m_type(typeid(*c)), m_scene(nullptr){}
+        //template <typename T>
+        System(MessageBus& mb, UniqueType t) 
+            : m_messageBus(mb), m_type(t), m_scene(nullptr){}
 
         virtual ~System() = default;
 

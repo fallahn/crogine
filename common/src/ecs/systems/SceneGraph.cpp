@@ -38,7 +38,7 @@ source distribution.
 using namespace cro;
 
 SceneGraph::SceneGraph(MessageBus& mb)
-    : System(mb, this)
+    : System(mb, typeid(SceneGraph))
 {
     requireComponent<Transform>();
 }

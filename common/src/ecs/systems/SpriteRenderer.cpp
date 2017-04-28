@@ -56,7 +56,7 @@ namespace
 }
 
 SpriteRenderer::SpriteRenderer(MessageBus& mb)
-    : System            (mb, this),
+    : System            (mb, typeid(SpriteRenderer)),
     m_matrixIndex       (0),
     m_textureIndex      (0),
     m_projectionIndex   (0),

@@ -51,7 +51,7 @@ namespace
 }
 
 TextRenderer::TextRenderer(MessageBus& mb)
-    : System                (mb, this),
+    : System                (mb, typeid(TextRenderer)),
     m_pendingRebuild        (false)
 {
     GLint maxVec;

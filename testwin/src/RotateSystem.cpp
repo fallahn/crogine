@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 
 RotateSystem::RotateSystem(cro::MessageBus& mb)
-    : cro::System(mb, this)
+    : cro::System(mb, typeid(RotateSystem))
 {
     requireComponent<cro::Transform>();
     requireComponent<Rotator>();

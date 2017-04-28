@@ -93,6 +93,12 @@ namespace cro
         T& addSystem(Args&&... args);
 
         /*!
+        \brief Returns a reference to the Scene's system of this type, if it exists
+        */
+        template <typename T>
+        T& getSystem();
+
+        /*!
         \brief Returns a copy of the entity containing the default camera
         */
         Entity getDefaultCamera() const;
@@ -117,6 +123,12 @@ namespace cro
     T& Scene::addSystem(Args&&... args)
     {
         return m_systemManager.addSystem<T>(std::forward<Args>(args)...);
+    }
+
+    template <typename T>
+    T& Scene::getSystem()
+    {
+        return m_systemManager.getSystem<T>();
     }
 }
 
