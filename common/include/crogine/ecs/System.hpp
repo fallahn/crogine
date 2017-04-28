@@ -131,6 +131,11 @@ namespace cro
         template <typename T>
         Message* postMessage(Message::ID id);
 
+        /*!
+        \brief Returns a reference to the MessageBus
+        */
+        MessageBus& getMessageBus() { return m_messageBus; }
+
         /*
         \brief Used by the SystemManager to supply the active scene
         */
