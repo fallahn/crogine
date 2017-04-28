@@ -39,7 +39,7 @@ source distribution.
 using namespace cro;
 
 UISystem::UISystem(MessageBus& mb)
-    : System    (mb, this)
+    : System    (mb, typeid(UISystem))
 {
     requireComponent<UIInput>();
     requireComponent<Transform>();

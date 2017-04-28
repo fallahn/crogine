@@ -39,7 +39,7 @@ namespace
 }
 
 CommandSystem::CommandSystem(MessageBus& mb)
-    : System        (mb, this),
+    : System        (mb, typeid(CommandSystem)),
     m_commands      (MaxCommands),
     m_currentCommand(m_commands.begin()),
     m_count         (0)

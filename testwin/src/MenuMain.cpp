@@ -115,6 +115,20 @@ void MainState::createMainMenu()
     optionControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
     optionControl.area = buttonArea;
 
+    auto optionCallback = m_uiSystem->addCallback([this]
+    (cro::Entity, cro::uint64 flags)
+    {
+        if ((flags & cro::UISystem::LeftMouse)
+            || (flags & cro::UISystem::Finger))
+        {
+            m_currentMenu = &m_optionMenuScene;
+            m_spriteRenderer = &m_optionMenuScene.getSystem<cro::SpriteRenderer>();
+            m_textRenderer = &m_optionMenuScene.getSystem<cro::TextRenderer>();
+            m_uiSystem = &m_optionMenuScene.getSystem<cro::UISystem>();
+        }
+    });
+    optionControl.callbacks[cro::UIInput::MouseUp] = optionCallback;
+
     textEnt = m_mainMenuScene.createEntity();
     auto& optionText = textEnt.addComponent<cro::Text>(testFont);
     optionText.setString("Options");
@@ -134,6 +148,20 @@ void MainState::createMainMenu()
     scoreControl.callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
     scoreControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
     scoreControl.area = buttonArea;
+
+    auto scoreCallback = m_uiSystem->addCallback([this]
+    (cro::Entity, cro::uint64 flags)
+    {
+        if ((flags & cro::UISystem::LeftMouse)
+            || (flags & cro::UISystem::Finger))
+        {
+            m_currentMenu = &m_highScoreScene;
+            m_spriteRenderer = &m_highScoreScene.getSystem<cro::SpriteRenderer>();
+            m_textRenderer = &m_highScoreScene.getSystem<cro::TextRenderer>();
+            m_uiSystem = &m_highScoreScene.getSystem<cro::UISystem>();
+        }
+    });
+    scoreControl.callbacks[cro::UIInput::MouseUp] = scoreCallback;
 
     textEnt = m_mainMenuScene.createEntity();
     auto& scoreText = textEnt.addComponent<cro::Text>(testFont);
