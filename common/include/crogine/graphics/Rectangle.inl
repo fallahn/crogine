@@ -95,21 +95,21 @@ bool Rectangle<T>::contains(glm::vec2 point) const
 template <class T>
 Rectangle<T> Rectangle<T>::transform(const glm::mat4& tx)
 {
-    std::array<glm::vec4, 4u> points = 
+    std::array<glm::vec4, 4u> points =
     {
-        tx * glm::vec4(left, bottom, 0.f, 1.f),
-        tx * glm::vec4(left, bottom + height, 0.f, 1.f),
-        tx * glm::vec4(left + width, bottom + height, 0.f, 1.f),
-        tx * glm::vec4(left + width, bottom, 0.f, 1.f)
+        tx * glm::vec4(static_cast<float>(left), static_cast<float>(bottom), 0.f, 1.f),
+        tx * glm::vec4(static_cast<float>(left), static_cast<float>(bottom + height), 0.f, 1.f),
+        tx * glm::vec4(static_cast<float>(left + width), static_cast<float>(bottom + height), 0.f, 1.f),
+        tx * glm::vec4(static_cast<float>(left + width), static_cast<float>(bottom), 0.f, 1.f)
     };
 
     Rectangle<T> retVal(std::numeric_limits<T>::max(), std::numeric_limits<T>::max(), 0, 0);
     for (auto& p : points)
     {
-        if (p.x < retVal.left) retVal.left = p.x;
-        if (p.x > retVal.width) retVal.width = p.x;
-        if (p.y < retVal.bottom) retVal.bottom = p.y;
-        if (p.y > retVal.height) retVal.height = p.y;
+        if (p.x < retVal.left) retVal.left = static_cast<T>(p.x);
+        if (p.x > retVal.width) retVal.width = static_cast<T>(p.x);
+        if (p.y < retVal.bottom) retVal.bottom = static_cast<T>(p.y);
+        if (p.y > retVal.height) retVal.height = static_cast<T>(p.y);
     }
     retVal.width -= retVal.left;
     retVal.height -= retVal.bottom;
