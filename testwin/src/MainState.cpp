@@ -58,10 +58,7 @@ namespace
 MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     : cro::State        (stack, context),
     m_backgroundScene   (context.appInstance.getMessageBus()),
-    m_mainMenuScene     (context.appInstance.getMessageBus()),
-    m_optionMenuScene   (context.appInstance.getMessageBus()),
-    m_highScoreScene    (context.appInstance.getMessageBus()),
-    m_currentMenu       (nullptr),
+    m_menuScene         (context.appInstance.getMessageBus()),
     m_backgroundRenderer(nullptr),
     m_spriteRenderer    (nullptr),
     m_textRenderer      (nullptr),
@@ -73,8 +70,8 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     createScene();
     //context.appInstance.setClearColour(cro::Colour::Red());
     createMainMenu();
-    //createOptionsMenu();
-    //createScoreMenu();
+    createOptionsMenu();
+    createScoreMenu();
 }
 
 //public
@@ -87,14 +84,14 @@ bool MainState::handleEvent(const cro::Event& evt)
 void MainState::handleMessage(const cro::Message& msg)
 {
     m_backgroundScene.forwardMessage(msg);
-    m_currentMenu->forwardMessage(msg);
+    m_menuScene.forwardMessage(msg);
     m_uiSystem->handleMessage(msg);
 }
 
 bool MainState::simulate(cro::Time dt)
 {
     m_backgroundScene.simulate(dt);
-    m_currentMenu->simulate(dt);
+    m_menuScene.simulate(dt);
     return true;
 }
 
@@ -115,14 +112,14 @@ void MainState::addSystems()
     m_backgroundScene.addSystem<RotateSystem>(mb);
     m_backgroundScene.addSystem<DriftSystem>(mb);
 
-    m_currentMenu = &m_mainMenuScene;
-    m_spriteRenderer = &m_mainMenuScene.addSystem<cro::SpriteRenderer>(mb);
-    m_textRenderer = &m_mainMenuScene.addSystem<cro::TextRenderer>(mb);
-    m_mainMenuScene.addSystem<cro::SceneGraph>(mb);
-    m_uiSystem = &m_mainMenuScene.addSystem<cro::UISystem>(mb);
-    m_commandSystem = &m_mainMenuScene.addSystem<cro::CommandSystem>(mb);
-    //m_mainMenuScene.addSystem<cro::DebugInfo>(mb);
-    m_mainMenuScene.addSystem<SliderSystem>(mb);
+    m_spriteRenderer = &m_menuScene.addSystem<cro::SpriteRenderer>(mb);
+    m_spriteRenderer->setDepthAxis(cro::SpriteRenderer::DepthAxis::Z);
+    m_textRenderer = &m_menuScene.addSystem<cro::TextRenderer>(mb);
+    m_menuScene.addSystem<cro::SceneGraph>(mb);
+    m_uiSystem = &m_menuScene.addSystem<cro::UISystem>(mb);
+    m_commandSystem = &m_menuScene.addSystem<cro::CommandSystem>(mb);
+    //m_menuScene.addSystem<cro::DebugInfo>(mb);
+    m_menuScene.addSystem<SliderSystem>(mb);
 }
 
 void MainState::loadAssets()
