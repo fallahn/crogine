@@ -96,17 +96,18 @@ void UISystem::handleEvent(const Event& evt)
         }
         break;
     case SDL_FINGERMOTION:
-        m_eventPosition = toScreenCoords(evt.tfinger.dx, evt.tfinger.dy);
+        m_eventPosition = toScreenCoords(evt.tfinger.x, evt.tfinger.y);
         //TODO check finger IDs for gestures etc
         break;
     case SDL_FINGERDOWN:
-        m_eventPosition = toScreenCoords(evt.tfinger.dx, evt.tfinger.dy);
+        m_eventPosition = toScreenCoords(evt.tfinger.x, evt.tfinger.y);
         m_previousEventPosition = m_eventPosition;
         //TODO check finger IDs for gestures etc
         m_downEvents.push_back(Finger);
+        Logger::log("Touch pos: " + std::to_string(m_eventPosition.x) + ", " + std::to_string(m_eventPosition.y), Logger::Type::Info);
         break;
     case SDL_FINGERUP:
-        m_eventPosition = toScreenCoords(evt.tfinger.dx, evt.tfinger.dy);
+        m_eventPosition = toScreenCoords(evt.tfinger.x, evt.tfinger.y);
         m_upEvents.push_back(Finger);
         break;
     }
@@ -209,9 +210,15 @@ glm::vec2 UISystem::toScreenCoords(int32 x, int32 y)
 
 glm::vec2 UISystem::toScreenCoords(float x, float y)
 {
-    //touch input is alread NDC - TODO check Y inversion
+    //invert Y
+    y = 1.f - y;
+
+    //scale to vp
     float ratio = static_cast<float>(m_windowSize.y) / m_viewPort.height;
     y *= ratio;
+
+    x *= 2.f; x -= 1.f;
+    y *= 2.f; y -= 1.f;
 
     auto screenPos = glm::inverse(m_projectionMatrix) * glm::vec4(x, y, 0.f, 1.f);
     return { screenPos };

@@ -248,6 +248,7 @@
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\TextRenderer.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\UISystem.cpp" />
     <ClCompile Include="..\common\src\graphics\Colour.cpp" />
     <ClCompile Include="..\common\src\graphics\Font.cpp" />
     <ClCompile Include="..\common\src\graphics\FontResource.cpp" />
