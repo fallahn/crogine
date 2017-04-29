@@ -66,10 +66,7 @@ public:
 private:
 
     cro::Scene m_backgroundScene;
-    cro::Scene m_mainMenuScene;
-    cro::Scene m_optionMenuScene; //TODO different scene depending on platform
-    cro::Scene m_highScoreScene;
-    cro::Scene* m_currentMenu;
+    cro::Scene m_menuScene;
 
     cro::MeshResource m_meshResource;
     cro::ShaderResource m_shaderResource;
