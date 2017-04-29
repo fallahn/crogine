@@ -27,37 +27,46 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "DriftSystem.hpp"
+#include "Slider.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/util/Wavetable.hpp>
 
-DriftSystem::DriftSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(DriftSystem))
+#include <glm/gtx/norm.hpp>
+
+namespace
 {
-    //create wave table
-    m_waveTable = cro::Util::Wavetable::sine(0.05f, 0.1f);
+    const float minDistSqrd = 25.f;
+}
 
-    requireComponent<Drifter>();
+SliderSystem::SliderSystem(cro::MessageBus& mb)
+    : cro::System(mb, typeid(SliderSystem))
+{
     requireComponent<cro::Transform>();
+    requireComponent<Slider>();
 }
 
 //public
-void DriftSystem::process(cro::Time dt)
+void SliderSystem::process(cro::Time dt)
 {
     auto& entities = getEntities();
-    for (auto& entity : entities)
+    for (auto& e : entities)
     {
-        auto& cp = entity.getComponent<Drifter>();
-        float position = m_waveTable[cp.currentIndex] * cp.amplitude;
-        cp.currentIndex = (cp.currentIndex + 1) % m_waveTable.size();
-
-        //auto& tx = entity.getComponent<cro::Transform>();
-        //auto currPos = tx.getPosition();
-        //currPos.y = position;
-        //tx.setPosition(currPos);
-
-        entity.getComponent<cro::Transform>().move({ 0.f, position * dt.asSeconds(), 0.f });
+        auto& slider = e.getComponent<Slider>();
+        if (slider.active)
+        {
+            auto& tx = e.getComponent<cro::Transform>();
+            auto movement = slider.destination - tx.getPosition();
+            
+            if (glm::length2(movement) < minDistSqrd)
+            {
+                slider.active = false;
+                tx.setPosition(slider.destination);
+            }
+            else
+            {
+                tx.move(movement * slider.speed * dt.asSeconds());
+            }
+        }
     }
 }

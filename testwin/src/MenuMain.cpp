@@ -28,38 +28,29 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MainState.hpp"
+#include "Slider.hpp"
 
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/DebugInfo.hpp>
 
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/CommandID.hpp>
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/Font.hpp>
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/Clock.hpp>
 
 void MainState::createMainMenu()
 {
-    //test sprite sheet
-    auto& testFont = m_fontResource.get(FontID::MenuFont);
-    testFont.loadFromFile("assets/fonts/VeraMono.ttf");
-    //cro::Image img;
-    //img.loadFromFile("assets/fonts/sdf.png");
-    //testFont.loadFromImage(img, { 32.f, 32.f }, cro::Font::Type::SDF);
-
-    auto& mb = getContext().appInstance.getMessageBus();
-    m_currentMenu = &m_mainMenuScene;
-    m_spriteRenderer = &m_mainMenuScene.addSystem<cro::SpriteRenderer>(mb);
-    m_textRenderer = &m_mainMenuScene.addSystem<cro::TextRenderer>(mb);
-    m_mainMenuScene.addSystem<cro::SceneGraph>(mb);
-    m_uiSystem = &m_mainMenuScene.addSystem<cro::UISystem>(mb);
-
     cro::FloatRect buttonArea(0.f, 0.f, 256.f, 64.f);
     auto mouseEnterCallback = m_uiSystem->addCallback([buttonArea](cro::Entity e, cro::uint64)
     {
@@ -72,29 +63,39 @@ void MainState::createMainMenu()
         e.getComponent<cro::Sprite>().setTextureRect(buttonArea);
     });
 
+    //create an entity to move the menu
+    auto controlEntity = m_mainMenuScene.createEntity();
+    auto& controlTx = controlEntity.addComponent<cro::Transform>();
+    controlTx.setPosition({ 960.f, 684.f, 0.f });
+    controlEntity.addComponent<cro::CommandTarget>().ID = CommandID::MenuController;
+    controlEntity.addComponent<Slider>();
+
+    //title image
     auto& uiTexture = m_textureResource.get("assets/sprites/menu.png");
     auto entity = m_mainMenuScene.createEntity();
     auto& titleSprite = entity.addComponent<cro::Sprite>();
     titleSprite.setTexture(uiTexture);
     titleSprite.setTextureRect({ 0.f, 64.f, 1024.f, 320.f });
     auto& titleTx = entity.addComponent<cro::Transform>();
-    titleTx.setOrigin({ 512.f, 160.f, 0.f });
-    titleTx.setPosition({ 960.f - 512.f, 900.f, 0.f });
+    titleTx.setOrigin({ 1024.f, 160.f, 0.f });
+    titleTx.setPosition({ 960.f - 274.f, 900.f, 0.f });
     titleTx.setScale({ 1.5f, 1.5f, 1.5f });
 
+    //start game
     entity = m_mainMenuScene.createEntity();
     auto& gameSprite = entity.addComponent<cro::Sprite>();
     gameSprite.setTexture(uiTexture);
     gameSprite.setTextureRect(buttonArea);
     auto& gameTx = entity.addComponent<cro::Transform>();
-    gameTx.setPosition({ 960.f - 256.f, 620.f, 0.f });
+    gameTx.setOrigin({ buttonArea.width, buttonArea.height, 0.f });
     gameTx.setScale({ 2.f, 2.f, 2.f });
+    gameTx.setParent(controlEntity);
     auto& gameControl = entity.addComponent<cro::UIInput>();
     gameControl.callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
     gameControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
     gameControl.area = buttonArea;
 
-
+    auto& testFont = m_fontResource.get(FontID::MenuFont);
     auto textEnt = m_mainMenuScene.createEntity();
     auto& gameText = textEnt.addComponent<cro::Text>(testFont);
     gameText.setString("Play");
@@ -103,13 +104,16 @@ void MainState::createMainMenu()
     gameTextTx.setPosition({ 90.f, 50.f, 0.f });
     gameTextTx.setParent(entity);
 
+    //options
     entity = m_mainMenuScene.createEntity();
     auto& optionSprite = entity.addComponent<cro::Sprite>();
     optionSprite.setTexture(uiTexture);
     optionSprite.setTextureRect(buttonArea);
     auto& optionTx = entity.addComponent<cro::Transform>();
-    optionTx.setPosition({ 960.f - 256.f, 460.f, 0.f });
+    optionTx.setOrigin({ buttonArea.width, buttonArea.height, 0.f });
     optionTx.setScale({ 2.f, 2.f, 2.f });
+    optionTx.setParent(controlEntity);
+    optionTx.setPosition({ 0.f, -160.f, 0.f });
     auto& optionControl = entity.addComponent<cro::UIInput>();
     optionControl.callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
     optionControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
@@ -121,10 +125,15 @@ void MainState::createMainMenu()
         if ((flags & cro::UISystem::LeftMouse)
             || (flags & cro::UISystem::Finger))
         {
-            m_currentMenu = &m_optionMenuScene;
-            m_spriteRenderer = &m_optionMenuScene.getSystem<cro::SpriteRenderer>();
-            m_textRenderer = &m_optionMenuScene.getSystem<cro::TextRenderer>();
-            m_uiSystem = &m_optionMenuScene.getSystem<cro::UISystem>();
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::MenuController;
+            cmd.action = [](cro::Entity e, cro::Time)
+            {
+                auto& slider = e.getComponent<Slider>();
+                slider.active = true;
+                slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(cro::DefaultSceneSize.x, 0.f, 0.f);
+            };
+            m_commandSystem->sendCommand(cmd);
         }
     });
     optionControl.callbacks[cro::UIInput::MouseUp] = optionCallback;
@@ -137,28 +146,36 @@ void MainState::createMainMenu()
     texTx.setParent(entity);
     texTx.move({ 64.f, 50.f, 0.f });
 
+    //high scores
     entity = m_mainMenuScene.createEntity();
     auto& scoreSprite = entity.addComponent<cro::Sprite>();
     scoreSprite.setTexture(uiTexture);
     scoreSprite.setTextureRect(buttonArea);
     auto& scoreTx = entity.addComponent<cro::Transform>();
-    scoreTx.setPosition({ 960.f - 256.f, 300.f, 0.f });
+    scoreTx.setPosition({ 0.f, -320.f, 0.f });
     scoreTx.setScale({ 2.f, 2.f, 2.f });
+    scoreTx.setOrigin({ buttonArea.width, buttonArea.height, 0.f });
+    scoreTx.setParent(controlEntity);
     auto& scoreControl = entity.addComponent<cro::UIInput>();
     scoreControl.callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
     scoreControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
     scoreControl.area = buttonArea;
 
     auto scoreCallback = m_uiSystem->addCallback([this]
-    (cro::Entity, cro::uint64 flags)
+    (cro::Entity e, cro::uint64 flags)
     {
         if ((flags & cro::UISystem::LeftMouse)
             || (flags & cro::UISystem::Finger))
         {
-            m_currentMenu = &m_highScoreScene;
-            m_spriteRenderer = &m_highScoreScene.getSystem<cro::SpriteRenderer>();
-            m_textRenderer = &m_highScoreScene.getSystem<cro::TextRenderer>();
-            m_uiSystem = &m_highScoreScene.getSystem<cro::UISystem>();
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::MenuController;
+            cmd.action = [](cro::Entity e, cro::Time)
+            {
+                auto& slider = e.getComponent<Slider>();
+                slider.active = true;
+                slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(-static_cast<float>(cro::DefaultSceneSize.x), 0.f, 0.f);
+            };
+            m_commandSystem->sendCommand(cmd);
         }
     });
     scoreControl.callbacks[cro::UIInput::MouseUp] = scoreCallback;
@@ -171,13 +188,16 @@ void MainState::createMainMenu()
     scoreTexTx.setParent(entity);
     scoreTexTx.move({ 74.f, 50.f, 0.f });
 
+    //quit button
     entity = m_mainMenuScene.createEntity();
     auto& quitSprite = entity.addComponent<cro::Sprite>();
     quitSprite.setTexture(uiTexture);
     quitSprite.setTextureRect(buttonArea);
     auto& quitTx = entity.addComponent<cro::Transform>();
-    quitTx.setPosition({ 960.f - 256.f, 140.f, 0.f });
+    quitTx.setPosition({ 0.f, -480.f, 0.f });
     quitTx.setScale({ 2.f, 2.f, 2.f });
+    quitTx.setParent(controlEntity);
+    quitTx.setOrigin({ buttonArea.width, buttonArea.height, 0.f });
 
     textEnt = m_mainMenuScene.createEntity();
     auto& quitText = textEnt.addComponent<cro::Text>(testFont);

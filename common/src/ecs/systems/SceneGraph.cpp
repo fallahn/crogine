@@ -105,12 +105,13 @@ void SceneGraph::process(Time dt)
         }
 
         //check transform for dirty flag        
-        if (tx.m_dirtyFlags & Transform::Tx || addToList)
+        if ((tx.m_dirtyFlags & Transform::Tx) || addToList)
         {
             //walk to bottom and add to list
             std::function<void (Transform&)> getLastNode = 
                 [&](Transform& xform)
             {
+                xform.m_dirtyFlags |= Transform::Tx;
                 if (xform.m_children[0] == -1)
                 {
                     updateList.push_back(xform.m_id);
@@ -140,7 +141,10 @@ void SceneGraph::process(Time dt)
         {
             if (xform.m_parent > -1)
             {
-                auto wtx = getWorldTransform(getScene()->getEntity(xform.m_parent).getComponent<Transform>()) * xform.getLocalTransform();
+                auto& parentTx = getScene()->getEntity(xform.m_parent).getComponent<Transform>();
+                parentTx.m_worldTransform = getWorldTransform(parentTx);
+
+                auto wtx = parentTx.m_worldTransform * xform.getLocalTransform();
                 xform.m_dirtyFlags &= ~Transform::Tx;
                 return wtx;
             }

@@ -27,33 +27,35 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_CAMERA_HPP_
-#define CRO_CAMERA_HPP_
-
-#include <crogine/Config.hpp>
+#include <crogine/ecs/systems/DebugInfo.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
-#include <crogine/core/Window.hpp>
 
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+using namespace cro;
 
-namespace cro
+DebugInfo::DebugInfo(MessageBus& mb)
+    : System(mb, typeid(DebugInfo))
 {
-    /*!
-    \brief Represents a camera within the scene.
-    Use MeshRenderer::setActiveCamera() to use an entity with
-    a camera component as the current view
-    */
-    struct CRO_EXPORT_API Camera final
-    {
-        glm::mat4 projection;
-
-        Camera()
-        {
-            glm::vec2 windowSize(App::getWindow().getSize());
-            projection = glm::perspective(0.6f, windowSize.x / windowSize.y, 0.1f, 150.f);
-        }
-    };
+    requireComponent<Transform>();
 }
 
-#endif //CRO_CAMERA_HPP_
+//public
+void DebugInfo::process(Time)
+{
+    auto& entities = getEntities();
+    for (auto& e : entities)
+    {
+        auto& tx = e.getComponent<Transform>();
+
+        auto pos = tx.getPosition();
+        auto wtx = tx.getWorldTransform();
+
+        std::string op("Local position: ");
+        op += std::to_string(pos.x) + ", " + std::to_string(pos.y);
+
+        op += " World position: " + std::to_string(wtx[3][0]) + ", " + std::to_string(wtx[3][1]);
+
+        App::debugPrint("Entity " + std::to_string(e.getIndex()), op);
+    }
+}

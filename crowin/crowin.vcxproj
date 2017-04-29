@@ -62,6 +62,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\System.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\CommandSystem.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\DebugInfo.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\MeshSorter.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneGraph.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneRenderer.hpp" />
@@ -125,6 +126,7 @@
     <ClCompile Include="..\common\src\ecs\System.cpp" />
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\CommandSystem.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\DebugInfo.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\MeshSorter.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneGraph.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />

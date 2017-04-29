@@ -60,4 +60,12 @@ namespace FontID
     };
 }
 
+namespace CommandID
+{
+    enum
+    {
+        MenuController = 0x1
+    };
+}
+
 #endif //TL_RESOURCE_IDS_HPP_
