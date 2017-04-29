@@ -27,33 +27,20 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_CAMERA_HPP_
-#define CRO_CAMERA_HPP_
+#ifndef CRO_DEBUG_INFO_HPP_
+#define CRO_DEBUG_INFO_HPP_
 
-#include <crogine/Config.hpp>
-#include <crogine/core/App.hpp>
-#include <crogine/core/Window.hpp>
-
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <crogine/ecs/System.hpp>
 
 namespace cro
 {
-    /*!
-    \brief Represents a camera within the scene.
-    Use MeshRenderer::setActiveCamera() to use an entity with
-    a camera component as the current view
-    */
-    struct CRO_EXPORT_API Camera final
+    class CRO_EXPORT_API DebugInfo final : public System
     {
-        glm::mat4 projection;
+    public:
+        DebugInfo(MessageBus&);
 
-        Camera()
-        {
-            glm::vec2 windowSize(App::getWindow().getSize());
-            projection = glm::perspective(0.6f, windowSize.x / windowSize.y, 0.1f, 150.f);
-        }
+        void process(Time) override;
     };
 }
 
-#endif //CRO_CAMERA_HPP_
+#endif //CRO_DEBUG_INFO_HPP_

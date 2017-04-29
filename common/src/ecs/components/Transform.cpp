@@ -115,6 +115,8 @@ const glm::mat4& Transform::getLocalTransform() const
     {
         //m_dirtyFlags &= ~Tx;
 
+        //auto offset = m_origin;// *m_scale;
+
         m_transform = glm::translate(glm::mat4(), m_position + m_origin);
         m_transform *= glm::toMat4(m_rotation);
         m_transform = glm::scale(m_transform, m_scale);

@@ -243,6 +243,7 @@
     <ClCompile Include="..\common\src\ecs\System.cpp" />
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\CommandSystem.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\DebugInfo.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\MeshSorter.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneGraph.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />

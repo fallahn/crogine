@@ -270,6 +270,9 @@
     <ClInclude Include="..\common\src\graphics\stb_image.h">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\DebugInfo.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -408,6 +411,9 @@
       <Filter>Source Files\detail</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\UISystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\DebugInfo.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>

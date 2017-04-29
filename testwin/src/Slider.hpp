@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,33 +27,26 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_CAMERA_HPP_
-#define CRO_CAMERA_HPP_
+#ifndef TL_SLIDER_HPP_
+#define TL_SLIDER_HPP_
 
-#include <crogine/Config.hpp>
-#include <crogine/core/App.hpp>
-#include <crogine/core/Window.hpp>
+#include <crogine/ecs/System.hpp>
 
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <glm/vec3.hpp>
 
-namespace cro
+struct Slider final
 {
-    /*!
-    \brief Represents a camera within the scene.
-    Use MeshRenderer::setActiveCamera() to use an entity with
-    a camera component as the current view
-    */
-    struct CRO_EXPORT_API Camera final
-    {
-        glm::mat4 projection;
+    glm::vec3 destination;
+    bool active = false;
+    float speed = 10.f;
+};
 
-        Camera()
-        {
-            glm::vec2 windowSize(App::getWindow().getSize());
-            projection = glm::perspective(0.6f, windowSize.x / windowSize.y, 0.1f, 150.f);
-        }
-    };
-}
+class SliderSystem final : public cro::System
+{
+public:
+    SliderSystem(cro::MessageBus&);
 
-#endif //CRO_CAMERA_HPP_
+    void process(cro::Time) override;
+};
+
+#endif //TL_SLIDER_HPP_

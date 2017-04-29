@@ -30,6 +30,7 @@ source distribution.
 #include "MainState.hpp"
 #include "RotateSystem.hpp"
 #include "DriftSystem.hpp"
+#include "Slider.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -43,6 +44,7 @@ source distribution.
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
@@ -71,8 +73,8 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     createScene();
     //context.appInstance.setClearColour(cro::Colour::Red());
     createMainMenu();
-    createOptionsMenu();
-    createScoreMenu();
+    //createOptionsMenu();
+    //createScoreMenu();
 }
 
 //public
@@ -112,6 +114,15 @@ void MainState::addSystems()
     m_backgroundScene.addSystem<cro::MeshSorter>(mb, *m_backgroundRenderer);
     m_backgroundScene.addSystem<RotateSystem>(mb);
     m_backgroundScene.addSystem<DriftSystem>(mb);
+
+    m_currentMenu = &m_mainMenuScene;
+    m_spriteRenderer = &m_mainMenuScene.addSystem<cro::SpriteRenderer>(mb);
+    m_textRenderer = &m_mainMenuScene.addSystem<cro::TextRenderer>(mb);
+    m_mainMenuScene.addSystem<cro::SceneGraph>(mb);
+    m_uiSystem = &m_mainMenuScene.addSystem<cro::UISystem>(mb);
+    m_commandSystem = &m_mainMenuScene.addSystem<cro::CommandSystem>(mb);
+    //m_mainMenuScene.addSystem<cro::DebugInfo>(mb);
+    m_mainMenuScene.addSystem<SliderSystem>(mb);
 }
 
 void MainState::loadAssets()
@@ -155,6 +166,10 @@ void MainState::loadAssets()
 
     cro::StaticMeshBuilder msmb("assets/models/moon.cmf");
     m_meshResource.loadMesh(msmb, MeshID::Moon);
+
+    //test sprite sheet
+    auto& testFont = m_fontResource.get(FontID::MenuFont);
+    testFont.loadFromFile("assets/fonts/VeraMono.ttf");
 }
 
 void MainState::createScene()
@@ -208,6 +223,6 @@ void MainState::createScene()
     /*tx4.move({ 0.f, 0.4f, 1.f });
     tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);*/
     entity.addComponent<cro::Camera>();
-    entity.addComponent<Drifter>().amplitude = 0.05f;
+    entity.addComponent<Drifter>().amplitude = 0.08f;
     m_backgroundRenderer->setActiveCamera(entity);
 }

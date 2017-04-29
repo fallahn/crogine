@@ -165,5 +165,8 @@
     <ClCompile Include="..\common\src\ecs\systems\UISystem.cpp">
       <Filter>src\ecs\systems</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\DebugInfo.cpp">
+      <Filter>src\ecs\systems</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

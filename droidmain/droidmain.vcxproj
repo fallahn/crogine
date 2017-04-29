@@ -329,6 +329,7 @@
     <ClCompile Include="..\testwin\src\MenuState.cpp" />
     <ClCompile Include="..\testwin\src\MyApp.cpp" />
     <ClCompile Include="..\testwin\src\RotateSystem.cpp" />
+    <ClCompile Include="..\testwin\src\SliderSystem.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

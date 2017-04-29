@@ -295,6 +295,7 @@
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\RotateSystem.cpp" />
+    <ClCompile Include="src\SliderSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ColourSystem.hpp" />
@@ -303,6 +304,7 @@
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\RotateSystem.hpp" />
+    <ClInclude Include="src\Slider.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\MainState.hpp" />
   </ItemGroup>
