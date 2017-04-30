@@ -51,8 +51,7 @@ namespace cro
         {
             //get the last error
             GLenum errorCode = glGetError();
-
-            if (errorCode != GL_NO_ERROR)
+            while (errorCode != GL_NO_ERROR)
             {
                 std::string fileString = file;
                 std::string error = "Unknown error";
@@ -113,6 +112,8 @@ namespace cro
                     << "\nError description:\n   " << error << "\n   " << description << "\n"
                     << std::endl;
                 Logger::log(ss.str(), Logger::Type::Error);
+
+                errorCode = glGetError(); //call until all errors are printed
             }
         }
     }

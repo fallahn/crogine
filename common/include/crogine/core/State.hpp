@@ -77,7 +77,7 @@ namespace cro
 		\param Context Copy of the current application's Context
 		*/
 		State(StateStack&, Context);
-		virtual ~State() = default;
+        virtual ~State() = default;
 
 		State(const State&) = delete;
 		State(const State&&) = delete;

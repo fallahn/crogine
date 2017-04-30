@@ -76,7 +76,7 @@ void SceneRenderer::render()
 {
     glCheck(glEnable(GL_DEPTH_TEST));
     glCheck(glEnable(GL_CULL_FACE));
-
+    glCheck(glEnable(GL_BLEND));
 
     auto cameraPosition = glm::vec3(m_activeCamera.getComponent<Transform>().getWorldTransform()[3]);
     auto viewMat = glm::inverse(m_activeCamera.getComponent<Transform>().getWorldTransform());
@@ -139,6 +139,11 @@ void SceneRenderer::render()
         }
         //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
         glCheck(glUseProgram(0));
+        /*for (auto i = 0; i < m_currentTextureUnit; ++i)
+        {
+            glCheck(glActiveTexture(GL_TEXTURE0 + i));
+            glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+        }*/
     }
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -189,6 +194,8 @@ void SceneRenderer::applyBlendMode(Material::BlendMode mode)
     default: break;
     case Material::BlendMode::Additive:
         glCheck(glEnable(GL_BLEND));
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_ONE, GL_ONE));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
@@ -198,15 +205,19 @@ void SceneRenderer::applyBlendMode(Material::BlendMode mode)
         glCheck(glEnable(GL_BLEND));
         glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         glCheck(glBlendEquation(GL_FUNC_ADD));
-        glCheck(glEnable(GL_DEPTH_TEST));
-        glCheck(glEnable(GL_CULL_FACE));
+        //glCheck(glEnable(GL_DEPTH_TEST)); //TODO uh... reenabling here is pointless, needs to be done after drawing
+        //glCheck(glEnable(GL_CULL_FACE));
         break;
     case Material::BlendMode::Multiply:
         glCheck(glEnable(GL_BLEND));
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
     case Material::BlendMode::None:
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glEnable(GL_CULL_FACE));
         glCheck(glDisable(GL_BLEND));
         break;
     }

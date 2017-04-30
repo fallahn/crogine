@@ -29,6 +29,7 @@ source distribution.
 
 #include "MainState.hpp"
 #include "Slider.hpp"
+#include "StateIDs.hpp"
 
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
@@ -93,6 +94,12 @@ void MainState::createMainMenu()
     auto& gameControl = entity.addComponent<cro::UIInput>();
     gameControl.callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
     gameControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
+    gameControl.callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([this]
+    (cro::Entity, cro::uint64)
+    {
+        requestStackClear();
+        requestStackPush(States::ID::GamePlaying);
+    });
     gameControl.area = buttonArea;
 
     auto& testFont = m_fontResource.get(FontID::MenuFont);
@@ -119,7 +126,7 @@ void MainState::createMainMenu()
     optionControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
     optionControl.area = buttonArea;
 
-    auto optionCallback = m_uiSystem->addCallback([this]
+    optionControl.callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([this]
     (cro::Entity, cro::uint64 flags)
     {
         if ((flags & cro::UISystem::LeftMouse)
@@ -136,7 +143,6 @@ void MainState::createMainMenu()
             m_commandSystem->sendCommand(cmd);
         }
     });
-    optionControl.callbacks[cro::UIInput::MouseUp] = optionCallback;
 
     textEnt = m_menuScene.createEntity();
     auto& optionText = textEnt.addComponent<cro::Text>(testFont);
@@ -234,8 +240,8 @@ void MainState::createMainMenu()
     auto& confTx = entity.addComponent<cro::Transform>();
     confTx.setParent(controlEntity);
     confTx.setPosition({ 0.f, -1080.f, -10.f });
-    confTx.setScale({ 2.f, 4.f, 1.f });
-    confTx.setOrigin({ buttonArea.width, buttonArea.height, 0.f });
+    confTx.setScale({ 4.f, 6.f, 1.f });
+    confTx.setOrigin({ buttonArea.width * 0.667f, buttonArea.height, 0.f });
 
     auto& confSprite = entity.addComponent<cro::Sprite>();
     confSprite.setTexture(uiTexture);
@@ -248,15 +254,15 @@ void MainState::createMainMenu()
     confText.setColour(cro::Colour::Red());
     auto& confTexTx = textEnt.addComponent<cro::Transform>();
     confTexTx.setParent(entity);
-    confTexTx.move({ 82.f, 54.f, 0.f });
-    confTexTx.setScale({ 0.5f, 0.25f, 1.f });
+    confTexTx.move({ 73.f, 54.f, 0.f });
+    confTexTx.setScale({ 0.667f, 0.334f, 1.f });
 
     //OK button
     auto buttonEnt = m_menuScene.createEntity();
     auto& buttonTx0 = buttonEnt.addComponent<cro::Transform>();
     buttonTx0.setParent(entity);
     buttonTx0.setPosition({ 20.f, 12.f, 1.f });
-    buttonTx0.setScale({ 0.4f, 0.25f, 1.f });
+    buttonTx0.setScale({ 0.4f, 0.4f, 1.f });
 
     auto& buttonSprite0 = buttonEnt.addComponent<cro::Sprite>();
     buttonSprite0.setTexture(uiTexture);
@@ -267,7 +273,8 @@ void MainState::createMainMenu()
     buttonText0.setString("OK");
     auto& buttonTextTx0 = textEnt.addComponent<cro::Transform>();
     buttonTextTx0.setParent(buttonEnt);
-    buttonTextTx0.setPosition({ 107.f, 50.f, 0.f });
+    buttonTextTx0.setPosition({ 107.f, 44.f, 0.f });
+    buttonTextTx0.setScale({ 1.f, 0.67f, 1.f });
 
     auto okCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
@@ -290,7 +297,7 @@ void MainState::createMainMenu()
     auto& buttonTx1 = buttonEnt.addComponent<cro::Transform>();
     buttonTx1.setParent(entity);
     buttonTx1.setPosition({ 132.f, 12.f, 1.f });
-    buttonTx1.setScale({ 0.4f, 0.25f, 1.f });
+    buttonTx1.setScale({ 0.4f, 0.4f, 1.f });
 
     auto& buttonSprite1 = buttonEnt.addComponent<cro::Sprite>();
     buttonSprite1.setTexture(uiTexture);
@@ -301,7 +308,8 @@ void MainState::createMainMenu()
     buttonText1.setString("Cancel");
     auto& buttonTextTx1 = textEnt.addComponent<cro::Transform>();
     buttonTextTx1.setParent(buttonEnt);
-    buttonTextTx1.setPosition({ 82.f, 50.f, 0.f });
+    buttonTextTx1.setPosition({ 81.f, 44.f, 0.f });
+    buttonTextTx1.setScale({ 1.f, 0.67f, 1.f });
 
     auto cancelCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {

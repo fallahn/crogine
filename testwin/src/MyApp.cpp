@@ -30,6 +30,7 @@ source distribution.
 #include "MyApp.hpp"
 #include "MainState.hpp"
 #include "MenuState.hpp"
+#include "GameState.hpp"
 
 #include <crogine/core/Clock.hpp>
 
@@ -43,6 +44,8 @@ MyApp::MyApp()
 #else
 	m_stateStack.registerState<MainState>(States::ID::MainMenu);
 #endif //PLATFORM_MOBILE
+
+    m_stateStack.registerState<GameState>(States::ID::GamePlaying);
 
 	m_stateStack.pushState(States::MainMenu);
 }
