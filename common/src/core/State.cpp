@@ -30,6 +30,8 @@ source distribution.
 #include <crogine/core/StateStack.hpp>
 #include <crogine/core/App.hpp>
 
+#include "../detail/GLCheck.hpp"
+
 using namespace cro;
 
 State::State(StateStack& stack, State::Context context)

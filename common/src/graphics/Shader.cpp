@@ -90,6 +90,7 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
     {
         //remove existing program
         glCheck(glDeleteProgram(m_handle));
+        m_handle = 0;
         resetAttribMap();
         resetUniformMap();
     }    
@@ -187,6 +188,7 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
             if (!fillAttribMap())
             {
                 glCheck(glDeleteProgram(m_handle));
+                m_handle = 0;
                 return false;
             }
 

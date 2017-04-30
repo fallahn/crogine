@@ -144,6 +144,7 @@ void Texture::create(uint32 width, uint32 height, ImageFormat::Type format)
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap));
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, smooth));
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, smooth));
+    glCheck(glBindTexture(GL_TEXTURE_2D, 0));
 }
 
 bool Texture::loadFromFile(const std::string& path)
@@ -212,6 +213,7 @@ bool Texture::update(const uint8* pixels, URect area)
             m_hasMipMaps = true;
             //LOG("Created Mipmaps", Logger::Type::Warning);
         }
+        glCheck(glBindTexture(GL_TEXTURE_2D, 0));
         return true;
     }
 
@@ -252,6 +254,7 @@ void Texture::setSmooth(bool smooth)
             {
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR : GL_NEAREST));
             }
+            glCheck(glBindTexture(GL_TEXTURE_2D, 0));
         }
     }
 }
@@ -272,6 +275,7 @@ void Texture::setRepeated(bool repeat)
             glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
             glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE));
             glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE));
+            glCheck(glBindTexture(GL_TEXTURE_2D, 0));
         }
     }
 }

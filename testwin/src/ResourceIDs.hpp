@@ -39,7 +39,10 @@ namespace MaterialID
         Moon,
         Stars,
         Planet,
-        Roids
+        Roids,
+        GameBackgroundFar,
+        GameBackgroundMid,
+        GameBackgroundNear
     };
 }
 
@@ -48,7 +51,8 @@ namespace MeshID
     enum
     {
         Roids = cro::Mesh::ID::Count,
-        Moon
+        Moon,
+        GameBackground
     };
 }
 

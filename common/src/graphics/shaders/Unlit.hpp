@@ -43,9 +43,9 @@ namespace cro
                 #if defined(VERTEX_COLOUR)
                 attribute vec4 a_colour;
                 #endif
-                if defined(TEXTURED)
+                #if defined(TEXTURED)
                 attribute vec2 a_texCoord0;
-                if defined(LIGHTMAPPED)
+                #if defined(LIGHTMAPPED)
                 attribute vec2 a_texCoord1;
                 #endif
                 #endif
@@ -101,14 +101,14 @@ namespace cro
                 void main()
                 {
                 #if defined (VERTEX_COLOUR)
-                    gl_FragColour = v_colour;
+                    gl_FragColor = v_colour;
                 #else
-                    gl_FragColour = vec4(1.0);
+                    gl_FragColor = vec4(1.0);
                 #endif
                 #if defined (TEXTURED)
                     gl_FragColor *= texture2D(u_diffuseMap, v_texCoord0);
                 #if defined (LIGHTMAPPED)
-                    gl_FragColour *= texture2D(u_lightMap, v_texCoord1);
+                    gl_FragColor *= texture2D(u_lightMap, v_texCoord1);
                 #endif
                 #endif
                 })";

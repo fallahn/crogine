@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/graphics/ShaderResource.hpp>
 #include "shaders/Default.hpp"
+#include "shaders/Unlit.hpp"
 #include "shaders/VertexLit.hpp"
 
 using namespace cro;
@@ -94,7 +95,19 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     }
     defines += "\n";
 
-    if (preloadFromString(Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, id, defines))
+    bool success = false;
+    switch (type)
+    {
+    default:
+    case BuiltIn::Unlit:
+        success = preloadFromString(Shaders::Unlit::Vertex, Shaders::Unlit::Fragment, id, defines);
+        break;
+    case BuiltIn::VertexLit:
+        success = preloadFromString(Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, id, defines);
+        break;
+    }
+
+    if (success)
     {
         return id;
     }

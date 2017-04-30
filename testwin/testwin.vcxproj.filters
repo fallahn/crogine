@@ -60,6 +60,9 @@
     <ClCompile Include="src\SliderSystem.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\GameState.cpp">
+      <Filter>Source Files\TL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -88,6 +91,9 @@
     </ClInclude>
     <ClInclude Include="src\Slider.hpp">
       <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameState.hpp">
+      <Filter>Header Files\TL</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
