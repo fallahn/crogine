@@ -104,11 +104,13 @@ void App::run()
     m_running = true;
 	while (m_running)
 	{
-		timeSinceLastUpdate += frameClock.restart();
+		timeSinceLastUpdate = frameClock.restart();
+        //Let's go with flexible time and let physics systems
+        //themselves worry about fixed steps (may even facilitate threading)
 
-		while (timeSinceLastUpdate > frameTime)
+		//while (timeSinceLastUpdate > frameTime)
 		{
-			timeSinceLastUpdate -= frameTime;
+			//timeSinceLastUpdate -= frameTime;
 
             handleEvents();
             handleMessages();
@@ -116,16 +118,18 @@ void App::run()
             m_debugLines.clear();
             m_debugLines.reserve(10);
 #endif //_DEBUG_
-			simulate(frameTime);
-            //simulate(timeSinceLastUpdate);
+			//simulate(frameTime);
+            simulate(timeSinceLastUpdate);
 		}
-        //DPRINT("Interp", std::to_string((timeSinceLastUpdate / frameTime).asSeconds()));
+        //DPRINT("Frame time", std::to_string(timeSinceLastUpdate.asMilliseconds()));
         IMGUI_UPDATE;
 
 		m_window.clear();
         render();
         IMGUI_RENDER;
-		m_window.display();      
+		m_window.display();
+
+        //SDL_Delay((frameTime - timeSinceLastUpdate).asMilliseconds());
 	}
     m_messageBus.disable(); //prevents spamming a load of quit messages
     finalise();
