@@ -37,7 +37,7 @@ DriftSystem::DriftSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(DriftSystem))
 {
     //create wave table
-    m_waveTable = cro::Util::Wavetable::sine(0.05f, 0.1f);
+    m_waveTable = cro::Util::Wavetable::sine(0.07f, 0.2f);
 
     requireComponent<Drifter>();
     requireComponent<cro::Transform>();

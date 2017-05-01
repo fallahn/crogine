@@ -72,6 +72,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     createMainMenu();
     createOptionsMenu();
     createScoreMenu();
+    //context.mainWindow.setVsyncEnabled(false);
 }
 
 //public
@@ -210,7 +211,7 @@ void MainState::createScene()
     entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), m_materialResource.get(MaterialID::Stars));
 
     entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -15.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -12.f });
     entity.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, 3.14f);
     entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), m_materialResource.get(MaterialID::Stars));
     entity.addComponent<Drifter>().amplitude = -0.1f;
@@ -220,6 +221,6 @@ void MainState::createScene()
     /*tx4.move({ 0.f, 0.4f, 1.f });
     tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);*/
     entity.addComponent<cro::Camera>();
-    entity.addComponent<Drifter>().amplitude = 0.08f;
+    entity.addComponent<Drifter>().amplitude = 0.1f;
     m_backgroundRenderer->setActiveCamera(entity);
 }
