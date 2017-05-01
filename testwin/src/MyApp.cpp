@@ -78,9 +78,9 @@ void MyApp::simulate(cro::Time dt)
 	m_stateStack.simulate(dt);
 }
 
-void MyApp::render(cro::Time t)
+void MyApp::render()
 {
-	m_stateStack.render(t);
+	m_stateStack.render();
 }
 
 void MyApp::finalise()

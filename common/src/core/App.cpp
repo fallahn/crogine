@@ -47,7 +47,7 @@ cro::App* App::m_instance = nullptr;
 
 namespace
 {
-	const Time frameTime = seconds(1.f / 90.f);
+	const Time frameTime = seconds(1.f / 60.f);
 	Time timeSinceLastUpdate;
 
 #include "../detail/DefaultIcon.inl"
@@ -123,7 +123,7 @@ void App::run()
         IMGUI_UPDATE;
 
 		m_window.clear();
-        render(timeSinceLastUpdate / frameTime);
+        render();
         IMGUI_RENDER;
 		m_window.display();      
 	}

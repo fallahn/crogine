@@ -103,9 +103,9 @@ namespace cro
         */
         virtual void simulate(Time) = 0;
         /*!
-        \brief Renders any drawables passing in the delta time between the last two updates
+        \brief Renders any drawables
         */
-		virtual void render(Time) = 0;
+		virtual void render() = 0;
 
 		
 

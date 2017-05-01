@@ -82,7 +82,7 @@ namespace cro
         /*!
         \brief Attempts to render the scene based on the current entity lists
         */
-        void render(Time);
+        void render();
 
     private:
         Entity m_activeCamera;
@@ -90,7 +90,7 @@ namespace cro
         //TODO list of lighting
 
         uint32 m_currentTextureUnit;
-        void applyProperties(Material::PropertyList&, Time);
+        void applyProperties(const Material::PropertyList&);
 
         void applyBlendMode(Material::BlendMode);
     };

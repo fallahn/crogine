@@ -109,10 +109,9 @@ namespace cro
 		void simulate(Time);
 
 		/*!
-		\brief Calls the render function on each state active on the stack,
-        passing in the interpolated time between state updates
+		\brief Calls the render function on each state active on the stack
 		*/
-		void render(Time);
+		void render();
 
 
 		/*!
