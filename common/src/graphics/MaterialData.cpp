@@ -51,6 +51,14 @@ namespace
     }
 }
 
+Property::Property()
+{
+        lastVecValue[0] = 0.f;
+        lastVecValue[1] = 0.f;
+        lastVecValue[2] = 0.f;
+        lastVecValue[3] = 0.f;
+}
+
 void Data::setProperty(const std::string& name, float value)
 {
     VERIFY(name, properties);
@@ -68,6 +76,8 @@ void Data::setProperty(const std::string& name, glm::vec2 value)
     auto result = properties.find(name);
     if (result != properties.end())
     {
+        result->second.second.lastVecValue[0] = result->second.second.vecValue[0];
+        result->second.second.lastVecValue[1] = result->second.second.vecValue[1];
         result->second.second.vecValue[0] = value.x;
         result->second.second.vecValue[1] = value.y;
         result->second.second.type = Property::Vec2;

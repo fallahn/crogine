@@ -285,6 +285,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\BackgroundController.cpp" />
     <ClCompile Include="src\ColourSystem.cpp" />
     <ClCompile Include="src\DriftSystem.cpp" />
     <ClCompile Include="src\GameState.cpp" />
@@ -299,6 +300,8 @@
     <ClCompile Include="src\SliderSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\BackgroundController.hpp" />
+    <ClInclude Include="src\BackgroundShader.hpp" />
     <ClInclude Include="src\ColourSystem.hpp" />
     <ClInclude Include="src\DriftSystem.hpp" />
     <ClInclude Include="src\GameState.hpp" />

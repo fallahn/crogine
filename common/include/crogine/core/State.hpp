@@ -112,8 +112,10 @@ namespace cro
 
 		/*!
 		\brief Calls to rendering systems should be performed here.
+        The interpolated time between update is passed in for optional
+        render interpolation.
 		*/
-		virtual void render() const = 0;
+		virtual void render(Time) const = 0;
 
 		/*!
 		\brief Returns the unique ID of concrete states.

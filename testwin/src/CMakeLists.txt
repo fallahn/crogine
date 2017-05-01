@@ -1,5 +1,6 @@
 #source files used by crogine test app
 set(PROJECT_SRC
+  ${PROJECT_DIR}/BackgroundController.cpp
   ${PROJECT_DIR}/ColourSystem.cpp
   ${PROJECT_DIR}/DriftSystem.cpp
   ${PROJECT_DIR}/GameState.cpp

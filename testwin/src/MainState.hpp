@@ -61,7 +61,7 @@ public:
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
     bool simulate(cro::Time) override;
-    void render() const override;
+    void render(cro::Time) const override;
 
 private:
 

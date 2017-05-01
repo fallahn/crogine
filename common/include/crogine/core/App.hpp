@@ -98,8 +98,14 @@ namespace cro
 		
 		virtual void handleEvent(const Event&) = 0;
 		virtual void handleMessage(const cro::Message&) = 0;
-		virtual void simulate(Time) = 0;
-		virtual void render() = 0;
+		/*!
+        \brief Used to updat ethe simulation with a fixed timestep of 1/60 second
+        */
+        virtual void simulate(Time) = 0;
+        /*!
+        \brief Renders any drawables passing in the delta time between the last two updates
+        */
+		virtual void render(Time) = 0;
 
 		
 

@@ -28,6 +28,9 @@
     <Filter Include="src\android">
       <UniqueIdentifier>{9e8aeca9-4856-4ef9-b12a-a4a0dd882102}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\util">
+      <UniqueIdentifier>{2127def2-6bb4-4b9e-85dd-9b34d42c93df}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -167,6 +170,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\DebugInfo.cpp">
       <Filter>src\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\util\Random.cpp">
+      <Filter>src\util</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

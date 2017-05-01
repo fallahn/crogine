@@ -47,7 +47,7 @@ cro::App* App::m_instance = nullptr;
 
 namespace
 {
-	const Time frameTime = seconds(1.f / 60.f);
+	const Time frameTime = seconds(1.f / 90.f);
 	Time timeSinceLastUpdate;
 
 #include "../detail/DefaultIcon.inl"
@@ -112,17 +112,20 @@ void App::run()
 
             handleEvents();
             handleMessages();
+#ifdef _DEBUG_
             m_debugLines.clear();
             m_debugLines.reserve(10);
+#endif //_DEBUG_
 			simulate(frameTime);
+            //simulate(timeSinceLastUpdate);
 		}
-
+        //DPRINT("Interp", std::to_string((timeSinceLastUpdate / frameTime).asSeconds()));
         IMGUI_UPDATE;
 
 		m_window.clear();
-		render();
+        render(timeSinceLastUpdate / frameTime);
         IMGUI_RENDER;
-		m_window.display();
+		m_window.display();      
 	}
     m_messageBus.disable(); //prevents spamming a load of quit messages
     finalise();
@@ -153,7 +156,9 @@ void App::quit()
 void App::debugPrint(const std::string& name, const std::string& value)
 {
     CRO_ASSERT(m_instance, "Not now, fuzznuts");
+#ifdef _DEBUG_
     m_instance->m_debugLines.emplace_back(name + " : " + value);
+#endif
 }
 
 Window& App::getWindow()
