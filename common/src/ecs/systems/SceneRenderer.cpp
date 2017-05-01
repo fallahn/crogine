@@ -73,7 +73,7 @@ void SceneRenderer::setDrawableList(std::vector<Entity>& entities)
     entities.clear();
 }
 
-void SceneRenderer::render(Time t)
+void SceneRenderer::render()
 {
     glCheck(glEnable(GL_DEPTH_TEST));
     glCheck(glEnable(GL_CULL_FACE));
@@ -92,7 +92,7 @@ void SceneRenderer::render(Time t)
         glm::mat4 worldView = viewMat * worldMat;
 
         //foreach submesh / material:
-        auto& model = e.getComponent<Model>();
+        const auto& model = e.getComponent<Model>();
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
         for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
         {
@@ -101,7 +101,7 @@ void SceneRenderer::render(Time t)
 
             //apply shader uniforms from material
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-            applyProperties(model.m_materials[i].properties, t);
+            applyProperties(model.m_materials[i].properties);
 
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
@@ -155,19 +155,10 @@ void SceneRenderer::render(Time t)
 }
 
 //private
-namespace
+void SceneRenderer::applyProperties(const Material::PropertyList& properties)
 {
-    float interp(float a, float b, float amt)
-    {
-        //return a + ((b - a) * amt);
-        return ((1.f - amt) * a) + (amt * b);
-    }
-}
-void SceneRenderer::applyProperties(Material::PropertyList& properties, Time t)
-{
-    static Time lastTime;
     m_currentTextureUnit = 0;
-    for (auto& prop : properties)
+    for (const auto& prop : properties)
     {
         switch (prop.second.second.type)
         {
@@ -198,8 +189,6 @@ void SceneRenderer::applyProperties(Material::PropertyList& properties, Time t)
             break;
         }
     }
-
-    lastTime = t;
 }
 
 void SceneRenderer::applyBlendMode(Material::BlendMode mode)

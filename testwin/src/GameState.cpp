@@ -93,9 +93,9 @@ bool GameState::simulate(cro::Time dt)
     return true;
 }
 
-void GameState::render(cro::Time t) const
+void GameState::render() const
 {
-    m_sceneRenderer->render(t);
+    m_sceneRenderer->render();
 }
 
 //private

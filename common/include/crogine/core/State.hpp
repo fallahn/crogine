@@ -103,7 +103,7 @@ namespace cro
 		\brief Executes one step of the game's simulation.
 		All game logic should be performed under this function.
 		\param dt The amount of time passed since this
-		function was last called. By default it is fixed at 1/60 second.
+		function was last called.
 		\returns true if remaining states in the state should be simulated
 		else returns false. 
 		\see handleEvent()
@@ -112,10 +112,8 @@ namespace cro
 
 		/*!
 		\brief Calls to rendering systems should be performed here.
-        The interpolated time between update is passed in for optional
-        render interpolation.
 		*/
-		virtual void render(Time) const = 0;
+		virtual void render() const = 0;
 
 		/*!
 		\brief Returns the unique ID of concrete states.

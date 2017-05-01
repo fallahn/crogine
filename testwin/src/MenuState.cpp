@@ -200,10 +200,10 @@ bool MenuState::simulate(cro::Time dt)
 	return true;
 }
 
-void MenuState::render(cro::Time t) const
+void MenuState::render() const
 {
 	//draw any renderable systems
-    m_sceneRenderer->render(t);
+    m_sceneRenderer->render();
     m_spriteRenderer->render();    
 }
 

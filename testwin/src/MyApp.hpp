@@ -48,7 +48,7 @@ private:
 	void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
 	void simulate(cro::Time) override;
-	void render(cro::Time) override;
+	void render() override;
     void finalise() override;
 };
 

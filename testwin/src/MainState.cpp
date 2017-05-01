@@ -95,9 +95,9 @@ bool MainState::simulate(cro::Time dt)
     return true;
 }
 
-void MainState::render(cro::Time t) const
+void MainState::render() const
 {
-    m_backgroundRenderer->render(t);
+    m_backgroundRenderer->render();
     m_spriteRenderer->render();
     m_textRenderer->render();
 }
