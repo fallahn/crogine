@@ -27,29 +27,39 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef MY_APP_HPP_
-#define MY_APP_HPP_
+#ifndef TL_BACKGROUND_CONTROLLER_HPP_
+#define TL_BACKGROUND_CONTROLLER_HPP_
 
-//implements the cro::App class
+#include <crogine/ecs/System.hpp>
 
-#include <crogine/core/App.hpp>
-#include <crogine/core/StateStack.hpp>
-
-class MyApp final : public cro::App
+struct BackgroundComponent final
 {
-public:
-	MyApp();
-	~MyApp() = default;
-
-private:
-	
-	cro::StateStack m_stateStack;
-
-	void handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-	void simulate(cro::Time) override;
-	void render(cro::Time) override;
-    void finalise() override;
+    cro::uint32 shaderID = 0;
+    cro::uint32 uniformLocation = 0;
 };
 
-#endif //MY_APP_HPP_
+class BackgroundController final : public cro::System
+{
+public:
+    enum class Mode
+    {
+        Scroll, Shake
+    };
+
+    explicit BackgroundController(cro::MessageBus&);
+
+    void process(cro::Time) override;
+
+    void setScrollSpeed(float);
+
+    void setMode(Mode);
+
+private:
+    glm::vec2 m_offset;
+    float m_speed;
+    float m_currentSpeed;
+    Mode m_currentMode;
+    std::size_t m_currentIndex;
+};
+
+#endif //TL_BACKGROUND_CONTROLLER_HPP_

@@ -27,57 +27,45 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_RESOURCE_IDS_HPP_
-#define TL_RESOURCE_IDS_HPP_
+#ifndef TL_BACKGROUND_SHADER_HPP_
+#define TL_BACKGROUND_SHADER_HPP_
 
-#include <crogine/graphics/MeshResource.hpp>
+#include <string>
 
-namespace MaterialID
+
+namespace Shaders
 {
-    enum
+    namespace Background
     {
-        Moon,
-        Stars,
-        Planet,
-        Roids,
-        GameBackgroundFar,
-        GameBackgroundMid,
-        GameBackgroundNear
-    };
+        const static std::string Vertex = R"(
+            attribute vec3 a_position;
+            attribute vec2 a_texCoord0;
+
+            uniform mat4 u_worldMatrix;
+            uniform mat4 u_worldViewMatrix;               
+            uniform mat4 u_projectionMatrix;
+            uniform vec2 u_textureOffset;
+                
+            varying vec2 v_texCoord0;
+
+            void main()
+            {
+                mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+                gl_Position = wvp * vec4(a_position, 1.0);
+
+                v_texCoord0 = a_texCoord0 + u_textureOffset;
+            })";
+
+        const static std::string Fragment = R"(
+            uniform sampler2D u_diffuseMap;
+
+            varying vec2 v_texCoord0;
+                
+            void main()
+            {
+                gl_FragColor = texture2D(u_diffuseMap, v_texCoord0);
+            })";
+    }
 }
 
-namespace MeshID
-{
-    enum
-    {
-        Roids = cro::Mesh::ID::Count,
-        Moon,
-        GameBackground
-    };
-}
-
-namespace FontID
-{
-    enum
-    {
-        MenuFont
-    };
-}
-
-namespace ShaderID
-{
-    enum
-    {
-        Background
-    };
-}
-
-namespace CommandID
-{
-    enum
-    {
-        MenuController = 0x1
-    };
-}
-
-#endif //TL_RESOURCE_IDS_HPP_
+#endif //TL_BACKGROUND_SHADER_HPP_

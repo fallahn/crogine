@@ -90,6 +90,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\TextureResource.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Constants.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Maths.hpp" />
+    <ClInclude Include="..\common\include\crogine\util\Random.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Wavetable.hpp" />
     <ClInclude Include="..\common\src\detail\DistanceField.hpp" />
     <ClInclude Include="..\common\src\detail\GLCheck.hpp" />
@@ -152,6 +153,7 @@
     <ClCompile Include="..\common\src\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_render.cpp" />
+    <ClCompile Include="..\common\src\util\Random.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\common\include\crogine\ecs\Entity.inl" />

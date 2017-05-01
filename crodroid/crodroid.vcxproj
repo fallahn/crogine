@@ -269,6 +269,7 @@
     <ClCompile Include="..\common\src\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_render.cpp" />
+    <ClCompile Include="..\common\src\util\Random.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

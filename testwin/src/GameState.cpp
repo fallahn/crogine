@@ -29,6 +29,8 @@ source distribution.
 
 #include "GameState.hpp"
 #include "ResourceIDs.hpp"
+#include "BackgroundShader.hpp"
+#include "BackgroundController.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -41,6 +43,11 @@ source distribution.
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
+
+namespace
+{
+    BackgroundController* cnt = nullptr;
+}
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
@@ -60,6 +67,18 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 //public
 bool GameState::handleEvent(const cro::Event& evt)
 {
+    if (evt.type == SDL_KEYUP)
+    {
+        if (evt.key.keysym.sym == SDLK_SPACE)
+        {
+            cnt->setMode(BackgroundController::Mode::Shake);
+        }
+        else if (evt.key.keysym.sym == SDLK_RETURN)
+        {
+            cnt->setMode(BackgroundController::Mode::Scroll);
+            cnt->setScrollSpeed(0.2f);
+        }
+    }
     return true;
 }
 
@@ -74,9 +93,9 @@ bool GameState::simulate(cro::Time dt)
     return true;
 }
 
-void GameState::render() const
+void GameState::render(cro::Time t) const
 {
-    m_sceneRenderer->render();
+    m_sceneRenderer->render(t);
 }
 
 //private
@@ -86,28 +105,30 @@ void GameState::addSystems()
     m_scene.addSystem<cro::SceneGraph>(mb);
     m_sceneRenderer = &m_scene.addSystem<cro::SceneRenderer>(mb, m_scene.getDefaultCamera());
     m_scene.addSystem<cro::MeshSorter>(mb, *m_sceneRenderer);
+    cnt = &m_scene.addSystem<BackgroundController>(mb);
+    cnt->setScrollSpeed(0.2f);
 }
 
 void GameState::loadAssets()
 {
-    auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
+    m_shaderResource.preloadFromString(Shaders::Background::Vertex, Shaders::Background::Fragment, ShaderID::Background);
     auto& farTexture = m_textureResource.get("assets/materials/background_far.png");
     farTexture.setRepeated(true);
     farTexture.setSmooth(true);
-    auto& farMaterial = m_materialResource.add(MaterialID::GameBackgroundFar, m_shaderResource.get(shaderID));
+    auto& farMaterial = m_materialResource.add(MaterialID::GameBackgroundFar, m_shaderResource.get(ShaderID::Background));
     farMaterial.setProperty("u_diffuseMap", farTexture);
 
     auto& midTexture = m_textureResource.get("assets/materials/background_mid.png");
     midTexture.setRepeated(true);
     midTexture.setSmooth(true);
-    auto& midMaterial = m_materialResource.add(MaterialID::GameBackgroundMid, m_shaderResource.get(shaderID));
+    auto& midMaterial = m_materialResource.add(MaterialID::GameBackgroundMid, m_shaderResource.get(ShaderID::Background));
     midMaterial.setProperty("u_diffuseMap", midTexture);
     midMaterial.blendMode = cro::Material::BlendMode::Alpha;
 
     auto& nearTexture = m_textureResource.get("assets/materials/background_near.png");
     nearTexture.setRepeated(true);
     nearTexture.setSmooth(true);
-    auto& nearMaterial = m_materialResource.add(MaterialID::GameBackgroundNear, m_shaderResource.get(shaderID));
+    auto& nearMaterial = m_materialResource.add(MaterialID::GameBackgroundNear, m_shaderResource.get(ShaderID::Background));
     nearMaterial.setProperty("u_diffuseMap", nearTexture);
     nearMaterial.blendMode = cro::Material::BlendMode::Alpha;
 
@@ -129,4 +150,5 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -11.f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::GameBackground), m_materialResource.get(MaterialID::GameBackgroundNear));
+    entity.addComponent<BackgroundComponent>();
 }

@@ -67,6 +67,9 @@
     <Filter Include="Header Files\util">
       <UniqueIdentifier>{c6fea9cf-8260-46a5-a625-8bae00d3684e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\util">
+      <UniqueIdentifier>{cc32c5c7-3cde-4fa9-ba3f-f2b3fa4cde07}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\Config.hpp">
@@ -273,6 +276,9 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\DebugInfo.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\util\Random.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -415,6 +421,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\DebugInfo.cpp">
       <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\util\Random.cpp">
+      <Filter>Source Files\util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

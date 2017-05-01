@@ -86,6 +86,15 @@ namespace cro
                 float vecValue[4];
                 int32 textureID;
             };
+
+            //used to interpolate when rendering
+            union
+            {
+                float lastNumberValue;
+                float lastVecValue[4];
+            };
+
+            Property();
         };
 
         //allows looking up uniform name when paired location/value

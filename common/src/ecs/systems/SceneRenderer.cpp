@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/core/Clock.hpp>
 
 #include "../../detail/glad.h"
 #include "../../detail/GLCheck.hpp"
@@ -72,7 +73,7 @@ void SceneRenderer::setDrawableList(std::vector<Entity>& entities)
     entities.clear();
 }
 
-void SceneRenderer::render()
+void SceneRenderer::render(Time t)
 {
     glCheck(glEnable(GL_DEPTH_TEST));
     glCheck(glEnable(GL_CULL_FACE));
@@ -91,7 +92,7 @@ void SceneRenderer::render()
         glm::mat4 worldView = viewMat * worldMat;
 
         //foreach submesh / material:
-        const auto& model = e.getComponent<Model>();
+        auto& model = e.getComponent<Model>();
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
         for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
         {
@@ -100,7 +101,7 @@ void SceneRenderer::render()
 
             //apply shader uniforms from material
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-            applyProperties(model.m_materials[i].properties);
+            applyProperties(model.m_materials[i].properties, t);
 
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
@@ -154,26 +155,38 @@ void SceneRenderer::render()
 }
 
 //private
-void SceneRenderer::applyProperties(const Material::PropertyList& properties)
+namespace
 {
+    float interp(float a, float b, float amt)
+    {
+        //return a + ((b - a) * amt);
+        return ((1.f - amt) * a) + (amt * b);
+    }
+}
+void SceneRenderer::applyProperties(Material::PropertyList& properties, Time t)
+{
+    static Time lastTime;
     m_currentTextureUnit = 0;
-    for (const auto& prop : properties)
+    for (auto& prop : properties)
     {
         switch (prop.second.second.type)
         {
         default: break;
-        case Material::Property::Number:
-            glCheck(glUniform1f(prop.second.first, prop.second.second.numberValue));
-            break;
         case Material::Property::Texture:
             //TODO track the current tex ID bound to this unit and only bind if different
             glCheck(glActiveTexture(GL_TEXTURE0 + m_currentTextureUnit));
             glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
             glCheck(glUniform1i(prop.second.first, m_currentTextureUnit++));
             break;
+        case Material::Property::Number:
+            glCheck(glUniform1f(prop.second.first,
+                prop.second.second.numberValue));
+            break;
         case Material::Property::Vec2:
-            glCheck(glUniform2f(prop.second.first, prop.second.second.vecValue[0],
+            glCheck(glUniform2f(prop.second.first, 
+                prop.second.second.vecValue[0],
                 prop.second.second.vecValue[1]));
+
             break;
         case Material::Property::Vec3:
             glCheck(glUniform3f(prop.second.first, prop.second.second.vecValue[0],
@@ -185,6 +198,8 @@ void SceneRenderer::applyProperties(const Material::PropertyList& properties)
             break;
         }
     }
+
+    lastTime = t;
 }
 
 void SceneRenderer::applyBlendMode(Material::BlendMode mode)

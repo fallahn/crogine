@@ -51,4 +51,6 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/imgui.cpp
   ${PROJECT_DIR}/imgui/imgui_demo.cpp
   ${PROJECT_DIR}/imgui/imgui_draw.cpp
-  ${PROJECT_DIR}/imgui/imgui_render.cpp)
+  ${PROJECT_DIR}/imgui/imgui_render.cpp
+
+  ${PROJECT_DIR}/util/Random.cpp)

@@ -319,8 +319,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\SDL2-android\src\main\android\SDL_android_main.c" />
+    <ClCompile Include="..\testwin\src\BackgroundController.cpp" />
     <ClCompile Include="..\testwin\src\ColourSystem.cpp" />
     <ClCompile Include="..\testwin\src\DriftSystem.cpp" />
+    <ClCompile Include="..\testwin\src\GameState.cpp" />
     <ClCompile Include="..\testwin\src\main.cpp" />
     <ClCompile Include="..\testwin\src\MainState.cpp" />
     <ClCompile Include="..\testwin\src\MenuMain.cpp" />

@@ -77,9 +77,9 @@ void StateStack::simulate(Time dt)
 	}
 }
 
-void StateStack::render()
+void StateStack::render(Time t)
 {
-	for (auto& s : m_stack) s->render();
+	for (auto& s : m_stack) s->render(t);
 }
 
 void StateStack::pushState(StateID id)

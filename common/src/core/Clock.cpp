@@ -187,9 +187,9 @@ Time& cro::operator /= (Time& l, int32 r)
 	return l = l / r;
 }
 
-float cro::operator / (Time l, Time r)
+Time cro::operator / (Time l, Time r)
 {
-	return l.asSeconds() / r.asSeconds();
+	return milliseconds(l.asMilliseconds() / r.asMilliseconds());
 }
 
 Time cro::operator % (Time l, Time r)

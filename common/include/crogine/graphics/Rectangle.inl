@@ -96,12 +96,13 @@ template <class T>
 Rectangle<T> Rectangle<T>::transform(const glm::mat4& tx)
 {
     std::array<glm::vec4, 4u> points =
-    {
+    { {
         tx * glm::vec4(static_cast<float>(left), static_cast<float>(bottom), 0.f, 1.f),
         tx * glm::vec4(static_cast<float>(left), static_cast<float>(bottom + height), 0.f, 1.f),
         tx * glm::vec4(static_cast<float>(left + width), static_cast<float>(bottom + height), 0.f, 1.f),
         tx * glm::vec4(static_cast<float>(left + width), static_cast<float>(bottom), 0.f, 1.f)
-    };
+    } };
+
 
     Rectangle<T> retVal(std::numeric_limits<T>::max(), std::numeric_limits<T>::max(), 0, 0);
     for (auto& p : points)

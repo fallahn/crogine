@@ -25,6 +25,9 @@
     <Filter Include="Header Files\systems">
       <UniqueIdentifier>{ca72897f-ded0-4029-8edf-7f4a316d6164}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\TL\shaders">
+      <UniqueIdentifier>{3bb9db09-ca99-47c3-8ac2-efc692828806}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -63,6 +66,9 @@
     <ClCompile Include="src\GameState.cpp">
       <Filter>Source Files\TL</Filter>
     </ClCompile>
+    <ClCompile Include="src\BackgroundController.cpp">
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -94,6 +100,12 @@
     </ClInclude>
     <ClInclude Include="src\GameState.hpp">
       <Filter>Header Files\TL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BackgroundShader.hpp">
+      <Filter>Header Files\TL\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BackgroundController.hpp">
+      <Filter>Header Files\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

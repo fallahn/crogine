@@ -21,17 +21,11 @@
     <ClCompile Include="..\testwin\src\MenuState.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\testwin\src\RotateSystem.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\testwin\src\ColourSystem.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\testwin\src\MainState.cpp">
       <Filter>src\TL</Filter>
-    </ClCompile>
-    <ClCompile Include="..\testwin\src\DriftSystem.cpp">
-      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\testwin\src\MenuMain.cpp">
       <Filter>src\TL</Filter>
@@ -42,8 +36,20 @@
     <ClCompile Include="..\testwin\src\MenuScores.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
+    <ClCompile Include="..\testwin\src\GameState.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\testwin\src\DriftSystem.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\testwin\src\RotateSystem.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
     <ClCompile Include="..\testwin\src\SliderSystem.cpp">
-      <Filter>src</Filter>
+      <Filter>src\TL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\testwin\src\BackgroundController.cpp">
+      <Filter>src\TL</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

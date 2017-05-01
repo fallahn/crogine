@@ -154,7 +154,7 @@ namespace cro
 	/*!
 	\brief OVerload of / operator to divide one Time object by another
 	*/
-	CRO_EXPORT_API float operator / (Time, Time);
+	CRO_EXPORT_API Time operator / (Time, Time);
 	/*!
 	\brief Overload of % opertor to return remainder of one Time object divided by another
 	*/
