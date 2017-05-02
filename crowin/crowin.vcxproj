@@ -82,6 +82,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\MeshResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\QuadBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Rectangle.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\RenderTexture.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Shader.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\ShaderResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Spatial.hpp" />
@@ -144,6 +145,7 @@
     <ClCompile Include="..\common\src\graphics\MeshBuilder.cpp" />
     <ClCompile Include="..\common\src\graphics\MeshResource.cpp" />
     <ClCompile Include="..\common\src\graphics\PrimitiveBuilders.cpp" />
+    <ClCompile Include="..\common\src\graphics\RenderTexture.cpp" />
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Spatial.cpp" />

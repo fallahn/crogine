@@ -259,6 +259,7 @@
     <ClCompile Include="..\common\src\graphics\MeshBuilder.cpp" />
     <ClCompile Include="..\common\src\graphics\MeshResource.cpp" />
     <ClCompile Include="..\common\src\graphics\PrimitiveBuilders.cpp" />
+    <ClCompile Include="..\common\src\graphics\RenderTexture.cpp" />
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Spatial.cpp" />

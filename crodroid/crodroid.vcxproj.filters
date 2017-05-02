@@ -174,5 +174,8 @@
     <ClCompile Include="..\common\src\util\Random.cpp">
       <Filter>src\util</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\graphics\RenderTexture.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
