@@ -279,6 +279,9 @@
     <ClInclude Include="..\common\include\crogine\util\Random.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\Renderable.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">

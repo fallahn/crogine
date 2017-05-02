@@ -113,7 +113,7 @@ namespace cro
 		/*!
 		\brief Calls to rendering systems should be performed here.
 		*/
-		virtual void render() const = 0;
+		virtual void render() = 0;
 
 		/*!
 		\brief Returns the unique ID of concrete states.

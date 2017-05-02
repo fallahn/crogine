@@ -113,7 +113,6 @@ namespace cro
 		*/
 		void render();
 
-
 		/*!
 		\brief Pushes a new instance of a state with the given ID, assuming
 		it has been registered with registerState()

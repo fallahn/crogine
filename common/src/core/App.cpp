@@ -83,7 +83,7 @@ App::~App()
 //public
 void App::run()
 {
-	if (m_window.create(1280, 720, "cro works!"))
+	if (m_window.create(800, 600, "cro works!"))
 	{
 		//load opengl
 		if (!gladLoadGLES2Loader(SDL_GL_GetProcAddress))

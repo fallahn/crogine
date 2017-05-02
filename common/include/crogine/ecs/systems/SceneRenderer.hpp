@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/System.hpp>
+#include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
@@ -49,7 +50,7 @@ namespace cro
     required to render a scene. Note that this will not render any
     Sprite components - these should be drawn with SpriteRenderer
     */
-    class CRO_EXPORT_API SceneRenderer final : public System, public Detail::SDLResource
+    class CRO_EXPORT_API SceneRenderer final : public System, public Renderable, public Detail::SDLResource
     {
     public:
         /*!
@@ -82,7 +83,7 @@ namespace cro
         /*!
         \brief Attempts to render the scene based on the current entity lists
         */
-        void render();
+        void render() override;
 
     private:
         Entity m_activeCamera;
