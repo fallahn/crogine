@@ -43,9 +43,6 @@ source distribution.
 
 namespace cro
 {
-    class SceneRenderer;
-    class SpriteRenderer;
-    class TextRenderer;
     class CommandSystem;
     class UISystem;
 }
@@ -61,7 +58,7 @@ public:
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
     bool simulate(cro::Time) override;
-    void render() const override;
+    void render() override;
 
 private:
 
@@ -74,9 +71,6 @@ private:
     cro::TextureResource m_textureResource;
     cro::FontResource m_fontResource;
 
-    cro::SceneRenderer* m_backgroundRenderer;
-    cro::SpriteRenderer* m_spriteRenderer;
-    cro::TextRenderer* m_textRenderer;
     cro::CommandSystem* m_commandSystem;
     cro::UISystem* m_uiSystem;
 

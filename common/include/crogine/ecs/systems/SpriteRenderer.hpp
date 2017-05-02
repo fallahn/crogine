@@ -32,6 +32,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/ecs/System.hpp>
+#include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/Rectangle.hpp>
@@ -52,7 +53,7 @@ namespace cro
     /*!
     \brief Batches and renders the scene Sprite components
     */
-    class CRO_EXPORT_API SpriteRenderer final : public System, public Detail::SDLResource
+    class CRO_EXPORT_API SpriteRenderer final : public System, public Renderable, public Detail::SDLResource
     {
     public:
         /*!
@@ -98,7 +99,7 @@ namespace cro
         /*!
         \brief Renders the Sprite components
         */
-        void render();
+        void render() override;
 
     private:
         IntRect m_viewPort;

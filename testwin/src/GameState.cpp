@@ -52,9 +52,6 @@ namespace
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_scene         (context.appInstance.getMessageBus()),
-    m_sceneRenderer (nullptr),
-    m_spriteRenderer(nullptr),
-    m_textRenderer  (nullptr),
     m_commandSystem (nullptr)
 {
     addSystems();
@@ -84,7 +81,7 @@ bool GameState::handleEvent(const cro::Event& evt)
 
 void GameState::handleMessage(const cro::Message& msg)
 {
-    m_sceneRenderer->handleMessage(msg);
+    m_scene.forwardMessage(msg);
 }
 
 bool GameState::simulate(cro::Time dt)
@@ -93,9 +90,9 @@ bool GameState::simulate(cro::Time dt)
     return true;
 }
 
-void GameState::render() const
+void GameState::render()
 {
-    m_sceneRenderer->render();
+    m_scene.render();
 }
 
 //private
@@ -103,8 +100,8 @@ void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::SceneGraph>(mb);
-    m_sceneRenderer = &m_scene.addSystem<cro::SceneRenderer>(mb, m_scene.getDefaultCamera());
-    m_scene.addSystem<cro::MeshSorter>(mb, *m_sceneRenderer);
+    auto& sceneRenderer = m_scene.addSystem<cro::SceneRenderer>(mb, m_scene.getDefaultCamera());
+    m_scene.addSystem<cro::MeshSorter>(mb, sceneRenderer);
     cnt = &m_scene.addSystem<BackgroundController>(mb);
     cnt->setScrollSpeed(0.2f);
 }

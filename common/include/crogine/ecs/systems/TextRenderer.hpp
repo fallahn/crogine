@@ -31,8 +31,10 @@ source distribution.
 #define CRO_TEXT_RENDERER_HPP_
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/detail/SDLResource.hpp>
 
 #include <glm/mat4x4.hpp>
 
@@ -46,7 +48,7 @@ namespace cro
     \brief Text renderer class.
     Responsible for batching and rendering sprite components.
     */
-    class CRO_EXPORT_API TextRenderer final : public System
+    class CRO_EXPORT_API TextRenderer final : public System, public Renderable, public Detail::SDLResource
     {
     public:
         explicit TextRenderer(MessageBus&);
@@ -70,7 +72,7 @@ namespace cro
         /*!
         \brief Draws all the text components in this system's parent Scene
         */
-        void render();
+        void render() override;
 
     private:
         IntRect m_viewPort;

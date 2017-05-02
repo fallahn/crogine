@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/Renderable.hpp>
 
 #include <crogine/core/Clock.hpp>
 
@@ -91,6 +92,11 @@ Entity Scene::getDefaultCamera() const
 void Scene::forwardMessage(const Message& msg)
 {
     m_systemManager.forwardMessage(msg);
+}
+
+void Scene::render()
+{
+    for (auto r : m_renderables) r->render();
 }
 
 //private

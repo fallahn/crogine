@@ -73,8 +73,6 @@ namespace
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 	: cro::State    (stack, context),
     m_scene         (context.appInstance.getMessageBus()),
-    m_sceneRenderer (nullptr),
-    m_spriteRenderer(nullptr),
     m_commandSystem (nullptr)
 {
     //TODO launch load screen
@@ -200,11 +198,10 @@ bool MenuState::simulate(cro::Time dt)
 	return true;
 }
 
-void MenuState::render() const
+void MenuState::render()
 {
 	//draw any renderable systems
-    m_sceneRenderer->render();
-    m_spriteRenderer->render();    
+    m_scene.render();
 }
 
 //private
@@ -212,9 +209,9 @@ void MenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
-    m_sceneRenderer = &m_scene.addSystem<cro::SceneRenderer>(mb, m_scene.getDefaultCamera());
-    m_scene.addSystem<cro::MeshSorter>(mb, *m_sceneRenderer);
-    m_spriteRenderer = &m_scene.addSystem<cro::SpriteRenderer>(mb);
+    auto& sceneRenderer = m_scene.addSystem<cro::SceneRenderer>(mb, m_scene.getDefaultCamera());
+    m_scene.addSystem<cro::MeshSorter>(mb, sceneRenderer);
+    m_scene.addSystem<cro::SpriteRenderer>(mb);
     m_commandSystem = &m_scene.addSystem<cro::CommandSystem>(mb);
 
     m_scene.addSystem<RotateSystem>(mb);
@@ -294,7 +291,7 @@ void MenuState::createScene()
     tx4.move({ 0.f, 0.4f, 1.f });
     tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);
     ent.addComponent<cro::Camera>();
-    m_sceneRenderer->setActiveCamera(ent);
+    m_scene.getSystem<cro::SceneRenderer>().setActiveCamera(ent);
 
     //------sprite stuff-----//
 

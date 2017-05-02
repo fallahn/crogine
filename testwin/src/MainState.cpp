@@ -59,9 +59,6 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     : cro::State        (stack, context),
     m_backgroundScene   (context.appInstance.getMessageBus()),
     m_menuScene         (context.appInstance.getMessageBus()),
-    m_backgroundRenderer(nullptr),
-    m_spriteRenderer    (nullptr),
-    m_textRenderer      (nullptr),
     m_commandSystem     (nullptr),
     m_uiSystem          (nullptr)
 {
@@ -96,11 +93,10 @@ bool MainState::simulate(cro::Time dt)
     return true;
 }
 
-void MainState::render() const
+void MainState::render()
 {
-    m_backgroundRenderer->render();
-    m_spriteRenderer->render();
-    m_textRenderer->render();
+    m_backgroundScene.render();
+    m_menuScene.render();
 }
 
 //private
@@ -108,14 +104,13 @@ void MainState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_backgroundScene.addSystem<cro::SceneGraph>(mb);
-    m_backgroundRenderer = &m_backgroundScene.addSystem<cro::SceneRenderer>(mb, m_backgroundScene.getDefaultCamera());
-    m_backgroundScene.addSystem<cro::MeshSorter>(mb, *m_backgroundRenderer);
+    auto& backgroundRenderer = m_backgroundScene.addSystem<cro::SceneRenderer>(mb, m_backgroundScene.getDefaultCamera());
+    m_backgroundScene.addSystem<cro::MeshSorter>(mb, backgroundRenderer);
     m_backgroundScene.addSystem<RotateSystem>(mb);
     m_backgroundScene.addSystem<DriftSystem>(mb);
 
-    m_spriteRenderer = &m_menuScene.addSystem<cro::SpriteRenderer>(mb);
-    m_spriteRenderer->setDepthAxis(cro::SpriteRenderer::DepthAxis::Z);
-    m_textRenderer = &m_menuScene.addSystem<cro::TextRenderer>(mb);
+    m_menuScene.addSystem<cro::SpriteRenderer>(mb).setDepthAxis(cro::SpriteRenderer::DepthAxis::Z);   
+    m_menuScene.addSystem<cro::TextRenderer>(mb);
     m_menuScene.addSystem<cro::SceneGraph>(mb);
     m_uiSystem = &m_menuScene.addSystem<cro::UISystem>(mb);
     m_commandSystem = &m_menuScene.addSystem<cro::CommandSystem>(mb);
@@ -222,5 +217,5 @@ void MainState::createScene()
     tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);*/
     entity.addComponent<cro::Camera>();
     entity.addComponent<Drifter>().amplitude = 0.1f;
-    m_backgroundRenderer->setActiveCamera(entity);
+    m_backgroundScene.getSystem<cro::SceneRenderer>().setActiveCamera(entity);
 }

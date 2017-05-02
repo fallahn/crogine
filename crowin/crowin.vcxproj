@@ -59,6 +59,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\UIInput.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\Renderable.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\System.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\CommandSystem.hpp" />

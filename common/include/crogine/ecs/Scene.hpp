@@ -38,6 +38,7 @@ namespace cro
 {
     class Time;
     class MessageBus;
+    class Renderable;
 
     /*!
     \brief Encapsulates a single scene.
@@ -108,6 +109,11 @@ namespace cro
         */
         void forwardMessage(const Message&);
 
+        /*!
+        \brief Draws any renderable systems in this scene, in the order in which they were addeded
+        */
+        void render();
+
     private:
         MessageBus& m_messageBus;
         Entity::ID m_defaultCamera;
@@ -117,12 +123,19 @@ namespace cro
 
         EntityManager m_entityManager;
         SystemManager m_systemManager;
+
+        std::vector<Renderable*> m_renderables;
     };
 
     template <typename T, typename... Args>
     T& Scene::addSystem(Args&&... args)
     {
-        return m_systemManager.addSystem<T>(std::forward<Args>(args)...);
+        auto& system = m_systemManager.addSystem<T>(std::forward<Args>(args)...);
+        if (std::is_base_of<Renderable, T>::value)
+        {
+            m_renderables.push_back(dynamic_cast<Renderable*>(&system));
+        }
+        return system;
     }
 
     template <typename T>
