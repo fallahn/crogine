@@ -129,6 +129,7 @@ bool RenderTexture::create(uint32 width, uint32 height, bool depthBuffer, bool s
         {
             glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
             m_fboID = fbo;
+            m_viewport = getDefaultViewport();
             return true;
         }
     }
