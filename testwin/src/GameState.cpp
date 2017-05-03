@@ -31,6 +31,7 @@ source distribution.
 #include "ResourceIDs.hpp"
 #include "BackgroundShader.hpp"
 #include "BackgroundController.hpp"
+#include "PostRadial.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -104,6 +105,8 @@ void GameState::addSystems()
     m_scene.addSystem<cro::MeshSorter>(mb, sceneRenderer);
     cnt = &m_scene.addSystem<BackgroundController>(mb);
     cnt->setScrollSpeed(0.2f);
+
+    m_scene.addPostProcess<PostRadial>();
 }
 
 void GameState::loadAssets()

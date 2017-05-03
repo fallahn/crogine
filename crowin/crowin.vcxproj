@@ -80,11 +80,13 @@
     <ClInclude Include="..\common\include\crogine\graphics\MeshBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MeshData.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MeshResource.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\PostProcess.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\QuadBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Rectangle.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\RenderTexture.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Shader.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\ShaderResource.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\shaders\PostVertex.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Spatial.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\SphereBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\StaticMeshBuilder.hpp" />
@@ -144,6 +146,7 @@
     <ClCompile Include="..\common\src\graphics\MaterialResource.cpp" />
     <ClCompile Include="..\common\src\graphics\MeshBuilder.cpp" />
     <ClCompile Include="..\common\src\graphics\MeshResource.cpp" />
+    <ClCompile Include="..\common\src\graphics\PostProcess.cpp" />
     <ClCompile Include="..\common\src\graphics\PrimitiveBuilders.cpp" />
     <ClCompile Include="..\common\src\graphics\RenderTexture.cpp" />
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />

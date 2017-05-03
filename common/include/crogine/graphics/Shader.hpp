@@ -41,6 +41,8 @@ source distribution.
 
 namespace cro
 {
+    class Texture;
+
     /*!
     \bref Encapsulates a compiled/linked shader program
     */
@@ -94,6 +96,7 @@ namespace cro
         \brief Returns a list of active uniforms mapped to their locations
         */
         const std::unordered_map<std::string, int32>& getUniformMap() const;
+
     private:
         uint32 m_handle;
         std::array<int32, Mesh::Attribute::Total> m_attribMap;

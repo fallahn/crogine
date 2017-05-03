@@ -93,6 +93,7 @@ bool RenderTexture::create(uint32 width, uint32 height, bool depthBuffer, bool s
     {
         glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
         glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture.getGLHandle(), 0));
+
         m_clearBits |= GL_COLOR_BUFFER_BIT;
 
         if (depthBuffer)

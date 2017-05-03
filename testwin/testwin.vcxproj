@@ -296,6 +296,7 @@
     <ClCompile Include="src\MenuScores.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
+    <ClCompile Include="src\PostRadial.cpp" />
     <ClCompile Include="src\RotateSystem.cpp" />
     <ClCompile Include="src\SliderSystem.cpp" />
   </ItemGroup>
@@ -307,6 +308,7 @@
     <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
+    <ClInclude Include="src\PostRadial.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\RotateSystem.hpp" />
     <ClInclude Include="src\Slider.hpp" />
