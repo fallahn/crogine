@@ -31,6 +31,7 @@ source distribution.
 #define CRO_SCENE_HPP_
 
 #include <crogine/Config.hpp>
+#include <crogine/core/App.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
