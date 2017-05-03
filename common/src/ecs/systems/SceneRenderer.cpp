@@ -177,7 +177,6 @@ void SceneRenderer::applyProperties(const Material::PropertyList& properties)
             glCheck(glUniform2f(prop.second.first, 
                 prop.second.second.vecValue[0],
                 prop.second.second.vecValue[1]));
-
             break;
         case Material::Property::Vec3:
             glCheck(glUniform3f(prop.second.first, prop.second.second.vecValue[0],

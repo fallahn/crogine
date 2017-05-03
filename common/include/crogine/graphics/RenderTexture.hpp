@@ -136,6 +136,13 @@ namespace cro
         */
         URect getDefaultViewport() const;
 
+        /*!
+        \brief Returns true if the render texture is available for drawing.
+        If create() has not yet been called, or previously failed then this
+        will return false
+        */
+        bool available() const { return m_fboID != 0; }
+
     private:
         uint32 m_fboID;
         uint32 m_rboID;

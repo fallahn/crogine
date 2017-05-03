@@ -46,6 +46,11 @@ Scene::Scene(MessageBus& mb)
     defaultCamera.addComponent<Camera>();
 
     m_defaultCamera = defaultCamera.getIndex();
+
+    currentRenderPath = [this]()
+    {
+        for (auto r : m_renderables) r->render();
+    };
 }
 
 //public
@@ -66,6 +71,7 @@ void Scene::simulate(Time dt)
 
 
     m_systemManager.process(dt);
+    for (auto& p : m_postEffects) p->process(dt);
 }
 
 Entity Scene::createEntity()
@@ -92,11 +98,32 @@ Entity Scene::getDefaultCamera() const
 void Scene::forwardMessage(const Message& msg)
 {
     m_systemManager.forwardMessage(msg);
+
+    if (msg.id == Message::WindowMessage)
+    {
+        const auto& data = msg.getData<Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            //resizes the post effect buffer if it is in use
+            if (m_sceneBuffer.available())
+            {
+                m_sceneBuffer.create(data.data0, data.data1, true);
+            }
+        }
+    }
 }
 
 void Scene::render()
 {
-    for (auto r : m_renderables) r->render();
+    currentRenderPath();
 }
 
 //private
+void Scene::postRenderPath()
+{
+    m_sceneBuffer.clear(Colour::Blue());
+    for (auto r : m_renderables) r->render();
+    m_sceneBuffer.display();
+
+    m_postEffects[0]->apply(m_sceneBuffer);
+}
