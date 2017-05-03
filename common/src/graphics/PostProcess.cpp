@@ -176,7 +176,7 @@ void PostProcess::setUniform(const std::string& name, glm::vec4 value, const Sha
     m_uniforms[a][b].numberValue[0] = value.x;
     m_uniforms[a][b].numberValue[1] = value.y;
     m_uniforms[a][b].numberValue[2] = value.z;
-    m_uniforms[a][b].numberValue[4] = value.w;
+    m_uniforms[a][b].numberValue[3] = value.w;
 }
 
 void PostProcess::setUniform(const std::string& name, Colour value, const Shader& shader)
@@ -189,7 +189,7 @@ void PostProcess::setUniform(const std::string& name, Colour value, const Shader
     m_uniforms[a][b].numberValue[0] = value.getRed();
     m_uniforms[a][b].numberValue[1] = value.getGreen();
     m_uniforms[a][b].numberValue[2] = value.getBlue();
-    m_uniforms[a][b].numberValue[4] = value.getAlpha();
+    m_uniforms[a][b].numberValue[3] = value.getAlpha();
 }
 
 void PostProcess::setUniform(const std::string& name, const Texture& value, const Shader& shader)

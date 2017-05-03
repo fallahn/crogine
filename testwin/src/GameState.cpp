@@ -151,4 +151,13 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -11.f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::GameBackground), m_materialResource.get(MaterialID::GameBackgroundNear));
     entity.addComponent<BackgroundComponent>();
+
+
+    /*auto ent = m_scene.createEntity();
+    auto& tx4 = ent.addComponent<cro::Transform>();
+    ent.addComponent<cro::Camera>();
+    m_scene.getSystem<cro::SceneRenderer>().setActiveCamera(ent);
+    auto& r = ent.addComponent<Rotator>();
+    r.axis.x = 1.f;
+    r.speed = 0.6f;*/
 }

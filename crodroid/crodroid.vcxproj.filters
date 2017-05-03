@@ -177,5 +177,8 @@
     <ClCompile Include="..\common\src\graphics\RenderTexture.cpp">
       <Filter>src\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\graphics\PostProcess.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

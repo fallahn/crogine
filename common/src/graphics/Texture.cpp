@@ -109,8 +109,8 @@ void Texture::create(uint32 width, uint32 height, ImageFormat::Type format)
     CRO_ASSERT(width > 0 && height > 0, "Invalid texture size");
     CRO_ASSERT(format != ImageFormat::None, "Invalid image format");
 
-    width = ensurePOW2(width);
-    height = ensurePOW2(height);
+    //width = ensurePOW2(width);
+    //height = ensurePOW2(height);
 
     width = std::min(width, getMaxTextureSize());
     height = std::min(height, getMaxTextureSize());
