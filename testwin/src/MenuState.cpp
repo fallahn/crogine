@@ -279,7 +279,7 @@ void MenuState::createScene()
     tx3.scale({ 0.5f, 0.5f, 0.5f });
     //tx3.rotate({ 0.f, 1.f, 0.f }, 3.14f);
 
-    auto& model = ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Count), m_materialResource.get(1));
+    /*auto& model =*/ ent.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::Count), m_materialResource.get(1));
     //model.setMaterial(1, material);
     /*auto& r2 = ent.addComponent<Rotator>();
     r2.speed = -0.67f;
