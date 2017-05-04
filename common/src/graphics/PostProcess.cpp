@@ -76,7 +76,11 @@ PostProcess::~PostProcess()
 }
 
 //public
-
+void PostProcess::resizeBuffer(int32 w, int32 h)
+{
+    m_currentBufferSize = { w, h };
+    bufferResized();
+}
 
 //protected
 void PostProcess::drawQuad(Shader& shader, FloatRect size)

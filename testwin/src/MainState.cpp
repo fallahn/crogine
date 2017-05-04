@@ -31,6 +31,7 @@ source distribution.
 #include "RotateSystem.hpp"
 #include "DriftSystem.hpp"
 #include "Slider.hpp"
+#include "PostRadial.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
