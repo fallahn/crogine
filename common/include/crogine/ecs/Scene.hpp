@@ -114,6 +114,11 @@ namespace cro
         T& addPostProcess(Args&&... args);
 
         /*!
+        \brief Enables or disables any added post processes added to the scene
+        */
+        void setPostEnabled(bool);
+
+        /*!
         \brief Returns a copy of the entity containing the default camera
         */
         Entity getDefaultCamera() const;
