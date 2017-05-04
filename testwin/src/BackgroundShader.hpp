@@ -32,6 +32,9 @@ source distribution.
 
 #include <string>
 
+/*
+Used with background elements to make them scroll with time.
+*/
 
 namespace Shaders
 {
