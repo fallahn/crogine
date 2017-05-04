@@ -69,7 +69,6 @@ void Scene::simulate(Time dt)
     }
     m_destroyedEntities.clear();
 
-
     m_systemManager.process(dt);
     for (auto& p : m_postEffects) p->process(dt);
 }
@@ -107,7 +106,8 @@ void Scene::forwardMessage(const Message& msg)
             //resizes the post effect buffer if it is in use
             if (m_sceneBuffer.available())
             {
-                m_sceneBuffer.create(data.data0, data.data1, true);
+                m_sceneBuffer.create(data.data0, data.data1);
+                for (auto& p : m_postEffects) p->resizeBuffer(data.data0, data.data1);
             }
         }
     }
@@ -121,7 +121,7 @@ void Scene::render()
 //private
 void Scene::postRenderPath()
 {
-    m_sceneBuffer.clear(Colour::Blue());
+    m_sceneBuffer.clear();
     for (auto r : m_renderables) r->render();
     m_sceneBuffer.display();
 

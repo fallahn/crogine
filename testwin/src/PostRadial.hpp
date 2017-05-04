@@ -32,6 +32,7 @@ source distribution.
 
 #include <crogine/graphics/PostProcess.hpp>
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 class PostRadial final : public cro::PostProcess
 {
@@ -41,7 +42,11 @@ public:
     void apply(const cro::RenderTexture& source) override;
 
 private:
-    cro::Shader m_shader;
+    cro::Shader m_inputShader;
+    cro::Shader m_outputShader;
+    cro::RenderTexture m_blurBuffer;
+
+    void bufferResized() override;
 };
 
 #endif //TL_POST_RADIAL_HPP_

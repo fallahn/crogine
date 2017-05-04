@@ -168,9 +168,9 @@ namespace cro
     T& Scene::addPostProcess(Args&&... args)
     {
         static_assert(std::is_base_of<PostProcess, T>::value, "Must be a post process type");
+        auto size = App::getWindow().getSize();
         if (!m_sceneBuffer.available())
-        {
-            auto size = App::getWindow().getSize();
+        {           
             if (m_sceneBuffer.create(size.x, size.y))
             {
                 //set render path
@@ -182,6 +182,7 @@ namespace cro
             }
         }
         m_postEffects.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+        m_postEffects.back()->resizeBuffer(size.x, size.y);
         return *dynamic_cast<T*>(m_postEffects.back().get());
     }
 }

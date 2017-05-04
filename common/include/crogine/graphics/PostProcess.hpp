@@ -72,7 +72,7 @@ namespace cro
         PostProcess& operator = (PostProcess&&) = delete;
 
         /*!
-        \brief Optionally implement this is the effect requires updating
+        \brief Optionally implement this if the effect requires updating
         over time, for example animated uniform values.
         */
         virtual void process(Time) {};
@@ -83,6 +83,12 @@ namespace cro
         Called automatically by the scene to which this effect belongs
         */
         virtual void apply(const RenderTexture& source) = 0;
+
+        /*
+        \brief Used by crogine to update the post process should the buffer be resized.
+        This should not be called by the user.
+        */
+        void resizeBuffer(int32 w, int32 h);
 
     protected:
         /*!
@@ -102,7 +108,23 @@ namespace cro
         void setUniform(const std::string& name, Colour value, const Shader& shader);
         void setUniform(const std::string& name, const Texture& value, const Shader& shader);
 
+        /*!
+        \brief Called when main output buffer resized.
+        Override this is you need to resize any intermediate render textures. Use
+        getCurrentBufferSize() to read the new value. This is gaurenteed to be called at
+        least once for each post process so it is safe to initialise any intermediate
+        buffers here, rather than upon construction.
+        */
+        virtual void bufferResized() {}
+
+        /*!
+        \brief Returns the current output buffer size (normally the window resolution)
+        */
+        glm::uvec2 getCurrentBufferSize() const { return m_currentBufferSize; }
+
     private:
+        glm::uvec2 m_currentBufferSize;
+        
         uint32 m_vbo;
         glm::mat4 m_projection;
         glm::mat4 m_transform;

@@ -30,7 +30,6 @@ source distribution.
 #include "PostRadial.hpp"
 
 #include <crogine/graphics/shaders/PostVertex.hpp>
-#include <crogine/graphics/RenderTexture.hpp>
 
 namespace
 {
@@ -50,12 +49,28 @@ namespace
 
 PostRadial::PostRadial()
 {
-    m_shader.loadFromString(cro::PostVertex, blueDream);
+    m_inputShader.loadFromString(cro::PostVertex, extractionFrag);
+    m_outputShader.loadFromString(cro::PostVertex, blueDream);
 }
 
 //public
 void PostRadial::apply(const cro::RenderTexture& source)
 {
-    setUniform("u_texture", source.getTexture(), m_shader);
-    drawQuad(m_shader, { 0.f, 0.f, 800.f, 600.f });
+    glm::vec2 size(getCurrentBufferSize());
+    setUniform("u_texture", source.getTexture(), m_inputShader);
+    m_blurBuffer.clear();
+    drawQuad(m_inputShader, { 0.f, 0.f, size.x / 2.f, size.y / 2.f });
+    m_blurBuffer.display();
+    
+    setUniform("u_baseTexture", source.getTexture(), m_outputShader);
+    drawQuad(m_outputShader, { 0.f, 0.f, size.x, size.y });
+}
+
+//private
+void PostRadial::bufferResized()
+{
+    auto size = getCurrentBufferSize() / 2u;
+    
+    m_blurBuffer.create(size.x, size.y, false);
+    setUniform("u_texture", m_blurBuffer.getTexture(), m_outputShader);
 }
