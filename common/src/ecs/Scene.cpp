@@ -37,9 +37,9 @@ source distribution.
 using namespace cro;
 
 Scene::Scene(MessageBus& mb)
-    : m_messageBus  (mb),
-    m_entityManager (mb),
-    m_systemManager (*this)
+    : m_messageBus(mb),
+    m_entityManager(mb),
+    m_systemManager(*this)
 {
     auto defaultCamera = createEntity();
     defaultCamera.addComponent<Transform>();
@@ -87,6 +87,24 @@ void Scene::destroyEntity(Entity entity)
 Entity Scene::getEntity(Entity::ID id) const
 {
     return m_entityManager.getEntity(id);
+}
+
+void Scene::setPostEnabled(bool enabled)
+{
+    if (enabled && !m_postEffects.empty())
+    {
+        currentRenderPath = std::bind(&Scene::postRenderPath, this);
+        auto size = App::getWindow().getSize();
+        m_sceneBuffer.create(size.x, size.y, true);
+        for (auto& p : m_postEffects) p->resizeBuffer(size.x, size.y);
+    }
+    else
+    {
+        currentRenderPath = [this]()
+        {
+            for (auto& r : m_renderables) r->render();
+        };
+    }
 }
 
 Entity Scene::getDefaultCamera() const
