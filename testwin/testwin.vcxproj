@@ -315,6 +315,9 @@
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\MainState.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="src\PostRadial.inl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

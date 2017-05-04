@@ -114,4 +114,9 @@
       <Filter>Header Files\TL</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="src\PostRadial.inl">
+      <Filter>Header Files\TL\shaders</Filter>
+    </None>
+  </ItemGroup>
 </Project>

@@ -44,11 +44,13 @@ namespace
             gl_FragColor = texture2D(u_texture, v_texCoord);
         }       
     )";
+
+#include "PostRadial.inl"
 }
 
 PostRadial::PostRadial()
 {
-    m_shader.loadFromString(cro::PostVertex, fragment);
+    m_shader.loadFromString(cro::PostVertex, blueDream);
 }
 
 //public
