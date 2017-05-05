@@ -1,0 +1,72 @@
+/*-----------------------------------------------------------------------
+
+Matt Marchant 2017
+http://trederia.blogspot.com
+
+crogine - Zlib license.
+
+This software is provided 'as-is', without any express or
+implied warranty.In no event will the authors be held
+liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute
+it freely, subject to the following restrictions :
+
+1. The origin of this software must not be misrepresented;
+you must not claim that you wrote the original software.
+If you use this software in a product, an acknowledgment
+in the product documentation would be appreciated but
+is not required.
+
+2. Altered source versions must be plainly marked as such,
+and must not be misrepresented as being the original software.
+
+3. This notice may not be removed or altered from any
+source distribution.
+
+-----------------------------------------------------------------------*/
+
+#ifndef CRO_LOADING_SCREEN_HPP_
+#define CRO_LOADING_SCREEN_HPP_
+
+#include <crogine/Config.hpp>
+#include <crogine/detail/SDLResource.hpp>
+
+namespace cro
+{
+    /*!
+    \brief Loading Screen interface.
+    Loading screens are displayed by the window class when loading resources.
+    A loading screen can be used to reasonably draw anything - but bear in mind
+    loading screen resources themselves are not loaded in a thread and will block
+    so loading as few resources as possible is preferred.
+    */
+    class CRO_EXPORT_API LoadingScreen : public Detail::SDLResource
+    {
+    public:
+        LoadingScreen() = default;
+        virtual ~LoadingScreen() = default;
+        LoadingScreen(const LoadingScreen&) = delete;
+        LoadingScreen(LoadingScreen&&) = delete;
+        const LoadingScreen& operator = (const LoadingScreen&) = delete;
+        LoadingScreen& operator = (LoadingScreen&&) = delete;
+
+        /*!
+        \brief updates the loading screen.
+        This is called by the thread as often as possible, so it's
+        up to concrete instances to provide any needed timing
+        */
+        virtual void update() = 0;
+
+        /*!
+        \brief Draws the loading screen
+        */
+        virtual void draw() = 0;
+
+    private:
+
+    };
+}
+
+#endif //CRO_LOADING_SCREEN_HPP_

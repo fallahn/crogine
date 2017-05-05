@@ -35,12 +35,17 @@ source distribution.
 
 #include <SDL_video.h>
 #include <SDL_events.h>
+#include <SDL_atomic.h>
 
 #include <string>
 #include <vector>
+#include <functional>
+#include <memory>
 
 namespace cro
 {	
+    class LoadingScreen;
+
 	/*!
 	\brief Creates a window to which to draw.
 	*/
@@ -129,10 +134,28 @@ namespace cro
         */
         void setTitle(const std::string&);
 
+        /*!
+        \brief Executes a given function in its own thread, while displaying
+        a loading screen. Usually you pass a std::function object which loads
+        OpenGL resources.
+        */
+        void loadResources(const std::function<void()>&);
+
+        /*!
+        \brief Sets a custom loading screen.
+        Loading screens should use the LoadingScreen interface.
+        \see LoadingScreen
+        */
+        template <typename T, typename... Args>
+        void setLoadingScreen(Args&&...);
+
 	private:
 
 		SDL_Window* m_window;
-		SDL_GLContext m_context;
+        SDL_GLContext m_threadContext;
+		SDL_GLContext m_mainContext;
+
+        std::unique_ptr<LoadingScreen> m_loadingScreen;
 
         mutable std::vector<glm::uvec2> m_resolutions;
 
@@ -140,6 +163,14 @@ namespace cro
 
         friend class App;
 	};
+
+    template <typename T, typename... Args>
+    void Window::setLoadingScreen(Args&&... args)
+    {
+        static_assert(std::is_base_of<LoadingScreen, T>::value, "must be a LoadingScreen type");
+        CRO_ASSERT(Detail::SDLResource::valid(), "Window must be created and in a valid state first!");
+        m_loadingScreen = std::make_unique<T>(std::forward<Args>(args)...);
+    }
 }
 
 #endif //CRO_WINDOW_HPP_

@@ -75,6 +75,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\Font.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\FontResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Image.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\LoadingScreen.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MaterialData.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MaterialResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MeshBuilder.hpp" />
@@ -96,6 +97,7 @@
     <ClInclude Include="..\common\include\crogine\util\Maths.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Random.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Wavetable.hpp" />
+    <ClInclude Include="..\common\src\core\DefaultLoadingScreen.hpp" />
     <ClInclude Include="..\common\src\detail\DistanceField.hpp" />
     <ClInclude Include="..\common\src\detail\GLCheck.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Debug.hpp" />
@@ -113,6 +115,7 @@
     <ClCompile Include="..\common\src\android\Android.cpp" />
     <ClCompile Include="..\common\src\core\App.cpp" />
     <ClCompile Include="..\common\src\core\Clock.cpp" />
+    <ClCompile Include="..\common\src\core\DefaultLoadingScreen.cpp" />
     <ClCompile Include="..\common\src\core\MessageBus.cpp" />
     <ClCompile Include="..\common\src\core\State.cpp" />
     <ClCompile Include="..\common\src\core\StateStack.cpp" />

@@ -291,6 +291,12 @@
     <ClInclude Include="..\common\include\crogine\graphics\shaders\PostVertex.hpp">
       <Filter>Header Files\graphics\shaders</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\LoadingScreen.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\src\core\DefaultLoadingScreen.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -442,6 +448,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\graphics\PostProcess.cpp">
       <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\core\DefaultLoadingScreen.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

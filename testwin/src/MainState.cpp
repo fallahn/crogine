@@ -63,13 +63,16 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     m_commandSystem     (nullptr),
     m_uiSystem          (nullptr)
 {
-    addSystems();
-    loadAssets();
-    createScene();
-    //context.appInstance.setClearColour(cro::Colour::Red());
-    createMainMenu();
-    createOptionsMenu();
-    createScoreMenu();
+    context.mainWindow.loadResources([this]()
+    {
+        addSystems();
+        loadAssets();
+        createScene();
+        createMainMenu();
+        createOptionsMenu();
+        createScoreMenu();
+    });
+
     //context.mainWindow.setVsyncEnabled(false);
 }
 
