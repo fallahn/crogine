@@ -55,10 +55,11 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     m_scene         (context.appInstance.getMessageBus()),
     m_commandSystem (nullptr)
 {
-    addSystems();
-    loadAssets();
-    createScene();
-
+    context.mainWindow.loadResources([this]() {
+        addSystems();
+        loadAssets();
+        createScene();
+    });
     //context.appInstance.setClearColour(cro::Colour::White());
 }
 

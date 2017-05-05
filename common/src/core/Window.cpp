@@ -34,7 +34,8 @@ source distribution.
 #include <SDL.h>
 #include <SDL_video.h>
 
-#include "../detail/glad.h"
+#include "../detail/GLCheck.hpp"
+#include "DefaultLoadingScreen.hpp"
 
 #include <algorithm>
 
@@ -46,8 +47,9 @@ namespace
 }
 
 Window::Window()
-	: m_window	(nullptr),
-	m_context	(nullptr)
+	: m_window	    (nullptr),
+    m_threadContext (nullptr),
+	m_mainContext	(nullptr)
 {
 
 }
@@ -84,7 +86,9 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
 	}
 	else
 	{
-		m_context = SDL_GL_CreateContext(m_window);
+        SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+        m_threadContext = SDL_GL_CreateContext(m_window);
+		m_mainContext = SDL_GL_CreateContext(m_window);
 
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -109,7 +113,7 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
 
 void Window::setVsyncEnabled(bool enabled)
 {
-	if (m_context)
+	if (m_mainContext)
 	{
         SDL_GL_SetSwapInterval(enabled ? 1 : 0);
     }
@@ -219,14 +223,101 @@ void Window::setTitle(const std::string& title)
     SDL_SetWindowTitle(m_window, title.c_str());
 }
 
+namespace
+{
+    struct ThreadData final
+    {
+        SDL_Window* window = nullptr;
+        SDL_GLContext context = nullptr;
+        SDL_atomic_t threadFlag;
+        LoadingScreen* loadingScreen = nullptr;
+    };
+
+//    int threadFunc(void* data)
+//    {
+//        ThreadData* threadData = static_cast<ThreadData*>(data);
+//        
+//        SDL_GL_MakeCurrent(threadData->window, threadData->context);
+//
+//        const auto loadFunc = *static_cast<const std::function<void()>*>(threadData->function);
+//        loadFunc();
+//
+//        //this ensures all GL ops are complete before signalling we are done loading
+//#ifdef PLATFORM_MOBILE
+//        //ES2 doesn't support sync commands - so we have to rely on glFinish();
+//        glFinish();
+//#else
+//        GLsync fenceId = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+//        while (true)
+//        {
+//            GLenum result = glClientWaitSync(fenceId, GL_SYNC_FLUSH_COMMANDS_BIT, GLuint64(5000000000)); //5 Second timeout
+//            if (result != GL_TIMEOUT_EXPIRED) break; //we ignore timeouts and wait until all OpenGL commands are processed!
+//        }
+//#endif //PLATFORM_MOBILE
+//        SDL_AtomicIncRef(&threadData->threadFlag);
+//
+//        SDL_GL_MakeCurrent(threadData->window, nullptr);
+//        return 0;
+//    }
+
+    int loadingDisplayFunc(void* data)
+    {
+        ThreadData* threadData = static_cast<ThreadData*>(data);
+        SDL_GL_MakeCurrent(threadData->window, threadData->context);
+
+        while (SDL_AtomicGet(&threadData->threadFlag) != 1)
+        {
+            threadData->loadingScreen->update();
+            glCheck(glClear(GL_COLOR_BUFFER_BIT));
+            threadData->loadingScreen->draw();
+            SDL_GL_SwapWindow(threadData->window);
+        }
+
+        SDL_GL_MakeCurrent(threadData->window, nullptr);
+        return 0;
+    }
+}
+
+void Window::loadResources(const std::function<void()>& loader)
+{
+    if (!m_loadingScreen)
+    {
+        m_loadingScreen = std::make_unique<DefaultLoadingScreen>();
+    }
+    
+    //create thread
+    ThreadData data;
+    data.context = m_threadContext;
+    data.window = m_window;
+    data.threadFlag.value = 0;
+    data.loadingScreen = m_loadingScreen.get();
+
+    SDL_Thread* thread = SDL_CreateThread(loadingDisplayFunc, "Loading Thread", static_cast<void*>(&data));
+
+    loader();
+    glFinish(); //make sure to wait for gl stuff to finish before continuing
+
+    SDL_AtomicIncRef(&data.threadFlag);
+
+    int32 result;
+    SDL_WaitThread(thread, &result);
+}
+
 //private
 void Window::destroy()
 {
-	if (m_context)
+	if (m_mainContext)
 	{
-		SDL_GL_DeleteContext(m_context);
-		m_context = nullptr;
+        m_loadingScreen.reset(); //delete this while we still have a valid context!
+        SDL_GL_DeleteContext(m_mainContext);
+		m_mainContext = nullptr;
 	}
+
+    if(m_threadContext)
+    {
+        SDL_GL_DeleteContext(m_threadContext);
+        m_threadContext = nullptr;
+    }
 
 	if (m_window)
 	{
