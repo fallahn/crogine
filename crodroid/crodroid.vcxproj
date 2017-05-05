@@ -226,6 +226,7 @@
     <ClCompile Include="..\common\src\android\Android.cpp" />
     <ClCompile Include="..\common\src\core\App.cpp" />
     <ClCompile Include="..\common\src\core\Clock.cpp" />
+    <ClCompile Include="..\common\src\core\DefaultLoadingScreen.cpp" />
     <ClCompile Include="..\common\src\core\MessageBus.cpp" />
     <ClCompile Include="..\common\src\core\State.cpp" />
     <ClCompile Include="..\common\src\core\StateStack.cpp" />

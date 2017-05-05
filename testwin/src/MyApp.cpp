@@ -46,7 +46,6 @@ MyApp::MyApp()
 #endif //PLATFORM_MOBILE
 
     m_stateStack.registerState<GameState>(States::ID::GamePlaying);
-
 	m_stateStack.pushState(States::MainMenu);
 }
 
