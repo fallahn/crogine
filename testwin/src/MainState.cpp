@@ -31,7 +31,7 @@ source distribution.
 #include "RotateSystem.hpp"
 #include "DriftSystem.hpp"
 #include "Slider.hpp"
-#include "PostRadial.hpp"
+#include "icon.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -51,9 +51,36 @@ source distribution.
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 
+#include <crogine/graphics/Image.hpp>
+#include <iomanip>
 namespace
 {
+    void outputIcon(const cro::Image& img)
+    {
+        CRO_ASSERT(img.getFormat() == cro::ImageFormat::RGBA, "");
+        std::stringstream ss;
+        ss<< "static const unsigned char icon[] = {" << std::endl;
+        ss << std::showbase << std::internal << std::setfill('0');
 
+        auto i = 0;
+        for (auto y = 0; y < 16; ++y)
+        {
+            for (auto x = 0; x < 16; ++x)
+            {
+                ss << std::hex << (int)img.getPixelData()[i++] << ", ";
+                ss << std::hex << (int)img.getPixelData()[i++] << ", ";
+                ss << std::hex << (int)img.getPixelData()[i++] << ", ";
+                ss << std::hex << (int)img.getPixelData()[i++] << ", ";
+            }
+            ss << std::endl;
+        }
+
+        ss << "};";
+
+        std::ofstream file("icon.hpp");
+        file << ss.rdbuf();
+        file.close();
+    }
 }
 
 MainState::MainState(cro::StateStack& stack, cro::State::Context context)
@@ -63,7 +90,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     m_commandSystem     (nullptr),
     m_uiSystem          (nullptr)
 {
-    context.mainWindow.loadResources([this]()
+    context.mainWindow.loadResources([this, &context]()
     {
         addSystems();
         loadAssets();
@@ -71,6 +98,8 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
         createMainMenu();
         createOptionsMenu();
         createScoreMenu();
+        context.mainWindow.setIcon(icon);
+        context.mainWindow.setTitle("Threat Level");
     });
 
     //context.mainWindow.setVsyncEnabled(false);
