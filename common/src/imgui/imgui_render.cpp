@@ -15,7 +15,8 @@
 #ifndef __ANDROID__
 #include <SDL_syswm.h>
 #endif //__ANDROID__
-#include "../detail/glad.h"
+//#include "../detail/glad.h"
+#include <crogine/detail/OpenGL.hpp>
 
 // Data
 static double       g_Time = 0.0f;

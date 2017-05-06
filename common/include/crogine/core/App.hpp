@@ -107,7 +107,12 @@ namespace cro
         */
 		virtual void render() = 0;
 
-		
+		/*!
+        \brief Called on startup after winbdow is created.
+        Use it to perform initial operations such as setting the 
+        window title, icon or custom loading screen
+        */
+        virtual void initialise() {}
 
         /*!
         \brief Called before the window is destroyed.

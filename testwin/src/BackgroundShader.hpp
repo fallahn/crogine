@@ -41,7 +41,7 @@ namespace Shaders
     namespace Background
     {
         const static std::string Vertex = R"(
-            attribute vec3 a_position;
+            attribute vec4 a_position;
             attribute vec2 a_texCoord0;
 
             uniform mat4 u_worldMatrix;
@@ -54,7 +54,7 @@ namespace Shaders
             void main()
             {
                 mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
-                gl_Position = wvp * vec4(a_position, 1.0);
+                gl_Position = wvp * a_position;
 
                 v_texCoord0 = a_texCoord0 + u_textureOffset;
             })";

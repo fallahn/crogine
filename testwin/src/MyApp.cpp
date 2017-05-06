@@ -31,6 +31,8 @@ source distribution.
 #include "MainState.hpp"
 #include "MenuState.hpp"
 #include "GameState.hpp"
+#include "LoadingScreen.hpp"
+#include "icon.hpp"
 
 #include <crogine/core/Clock.hpp>
 
@@ -80,6 +82,13 @@ void MyApp::simulate(cro::Time dt)
 void MyApp::render()
 {
 	m_stateStack.render();
+}
+
+void MyApp::initialise()
+{
+    getWindow().setLoadingScreen<LoadingScreen>();
+    getWindow().setIcon(icon);
+    getWindow().setTitle("Threat Level");
 }
 
 void MyApp::finalise()

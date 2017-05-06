@@ -39,7 +39,7 @@ namespace cro
         namespace Default
         {
             const static std::string Vertex = R"(
-                attribute vec3 a_position;
+                attribute vec4 a_position;
                 attribute vec3 a_colour;
                 attribute vec3 a_normal;
                 attribute vec3 a_tangent;
@@ -62,9 +62,9 @@ namespace cro
                 void main()
                 {
                     mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
-                    gl_Position = wvp * vec4(a_position, 1.0);
+                    gl_Position = wvp * a_position;
 
-                    v_worldPosition = (u_worldMatrix * vec4(a_position, 1.0)).xyz;
+                    v_worldPosition = (u_worldMatrix * a_position).xyz;
 
                     v_colour = a_colour;
                     v_normalVector = u_normalMatrix * a_normal;

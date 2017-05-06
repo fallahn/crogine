@@ -31,7 +31,6 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 #include <crogine/graphics/MeshBuilder.hpp>
 
-#include "../detail/glad.h"
 #include "../detail/GLCheck.hpp"
 
 using namespace cro;

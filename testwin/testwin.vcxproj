@@ -289,6 +289,7 @@
     <ClCompile Include="src\ColourSystem.cpp" />
     <ClCompile Include="src\DriftSystem.cpp" />
     <ClCompile Include="src\GameState.cpp" />
+    <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MainState.cpp" />
     <ClCompile Include="src\MenuMain.cpp" />
@@ -306,6 +307,7 @@
     <ClInclude Include="src\ColourSystem.hpp" />
     <ClInclude Include="src\DriftSystem.hpp" />
     <ClInclude Include="src\GameState.hpp" />
+    <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\PostRadial.hpp" />

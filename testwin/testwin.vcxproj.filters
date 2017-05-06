@@ -72,6 +72,9 @@
     <ClCompile Include="src\PostRadial.cpp">
       <Filter>Source Files\TL</Filter>
     </ClCompile>
+    <ClCompile Include="src\LoadingScreen.cpp">
+      <Filter>Source Files\TL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -111,6 +114,9 @@
       <Filter>Header Files\systems</Filter>
     </ClInclude>
     <ClInclude Include="src\PostRadial.hpp">
+      <Filter>Header Files\TL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LoadingScreen.hpp">
       <Filter>Header Files\TL</Filter>
     </ClInclude>
   </ItemGroup>

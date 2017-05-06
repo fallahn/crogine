@@ -29,7 +29,6 @@ source distribution.
 
 #include <crogine/graphics/Shader.hpp>
 
-#include "../detail/glad.h"
 #include "../detail/GLCheck.hpp"
 
 #include <vector>

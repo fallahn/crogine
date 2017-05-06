@@ -34,7 +34,6 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/core/Clock.hpp>
 
-#include "../../detail/glad.h"
 #include "../../detail/GLCheck.hpp"
 
 #include <glm/gtc/type_ptr.hpp>

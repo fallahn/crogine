@@ -36,7 +36,6 @@ source distribution.
 #include <crogine/core/App.hpp>
 
 #include "../../graphics/shaders/Sprite.hpp"
-#include "../../detail/glad.h"
 #include "../../detail/GLCheck.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>

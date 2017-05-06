@@ -54,5 +54,8 @@
     <ClCompile Include="..\testwin\src\PostRadial.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
+    <ClCompile Include="..\testwin\src\LoadingScreen.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -39,7 +39,7 @@ namespace cro
         namespace Unlit
         {
             const static std::string Vertex = R"(
-                attribute vec3 a_position;
+                attribute vec4 a_position;
                 #if defined(VERTEX_COLOUR)
                 attribute vec4 a_colour;
                 #endif
@@ -67,7 +67,7 @@ namespace cro
                 void main()
                 {
                     mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
-                    gl_Position = wvp * vec4(a_position, 1.0);
+                    gl_Position = wvp * a_position;
 
                 #if defined (VERTEX_COLOUR)
                     v_colour = a_colour;
