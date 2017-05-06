@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -42,8 +43,8 @@ source distribution.
 
 namespace
 {
-    const float rotation = -35.f;
     constexpr cro::uint32 vertexSize = 2 * sizeof(float);
+    constexpr float timestep = 1.f / 60.f;
 
     const std::string vertex = R"(
         attribute vec4 a_position;
@@ -51,26 +52,39 @@ namespace
         uniform mat4 u_worldMatrix;
         uniform mat4 u_projectionMatrix;
 
+        varying vec2 v_texCoord;
+
         void main()
         {
             gl_Position = u_projectionMatrix * u_worldMatrix * a_position;
+            v_texCoord = a_position.xy;
         }
     )";
 
     const std::string fragment = R"(
+        uniform sampler2D u_texture;
+        
+        varying vec2 v_texCoord;
+
         void main()
         {
-            gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+            gl_FragColor = texture2D(u_texture, v_texCoord);
         }
     )";
 }
 
 LoadingScreen::LoadingScreen()
     : m_vbo(0),
-    m_transformIndex(0)
+    m_transformIndex(0),
+    m_wavetableIndex(0)
 {
     m_viewport = cro::App::getWindow().getSize();
     m_projectionMatrix = glm::ortho(0.f, static_cast<float>(m_viewport.x), 0.f, static_cast<float>(m_viewport.y), -0.1f, 10.f);
+
+    m_wavetable = cro::Util::Wavetable::sine(4.f, 3.f);
+
+    //TODO if the texture fails we should load a version of the shader with defines which dont require a texture
+    m_texture.loadFromFile("assets/sprites/lolading.png");
 
     if (m_shader.loadFromString(vertex, fragment))
     {
@@ -81,6 +95,7 @@ LoadingScreen::LoadingScreen()
 
         glCheck(glUseProgram(m_shader.getGLHandle()));
         glCheck(glUniformMatrix4fv(uniforms.find("u_projectionMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
+        glCheck(glUniform1i(uniforms.find("u_texture")->second, 0));
         glCheck(glUseProgram(0));
 
         //create VBO
@@ -91,10 +106,10 @@ LoadingScreen::LoadingScreen()
 
         std::vector<float> verts =
         {
-            -0.5f, 0.5f,
-            -0.5f, -0.5f,
-            0.5f, 0.5f,
-            0.5f, -0.5f,
+            0.f, 1.f,
+            0.f, 0.f,
+            1.f, 1.f,
+            1.f, 0.f,
         };
         glCheck(glGenBuffers(1, &m_vbo));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
@@ -114,17 +129,30 @@ LoadingScreen::~LoadingScreen()
 //public
 void LoadingScreen::update()
 {
-    m_transform = glm::rotate(m_transform, rotation * m_clock.restart().asSeconds(), { 0.f, 0.f, 1.f });
+    static float accumulator = 0.f;
+    accumulator += m_clock.restart().asSeconds();
+    
+    while (accumulator > timestep)
+    {
+        m_transform = glm::translate(m_transform, { 0.f, m_wavetable[m_wavetableIndex] * timestep, 0.f });
+        m_wavetableIndex = (m_wavetableIndex + 1) % m_wavetable.size();
+        
+        accumulator -= timestep;
+    }
 }
 
 void LoadingScreen::draw()
 {
     cro::int32 oldView[4];
     glCheck(glGetIntegerv(GL_VIEWPORT, oldView));
+    glCheck(glEnable(GL_BLEND));
 
     glCheck(glViewport(0, 0, m_viewport.x, m_viewport.y));
     glCheck(glUseProgram(m_shader.getGLHandle()));
     glCheck(glUniformMatrix4fv(m_transformIndex, 1, GL_FALSE, glm::value_ptr(m_transform)));
+
+    glCheck(glActiveTexture(GL_TEXTURE0));
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_texture.getGLHandle()));
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
 
@@ -139,4 +167,5 @@ void LoadingScreen::draw()
 
     glCheck(glUseProgram(0));
     glCheck(glViewport(oldView[0], oldView[1], oldView[2], oldView[3]));
+    glCheck(glDisable(GL_BLEND));
 }

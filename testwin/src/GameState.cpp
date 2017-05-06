@@ -170,7 +170,7 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     auto& playerTx = entity.addComponent<cro::Transform>();
     playerTx.setPosition({ 0.f, 0.f, -5.f });
-    //playerTx.setScale({ 0.5f, 0.5f, 0.5f });
+    playerTx.setScale({ 0.5f, 0.5f, 0.5f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::PlayerShip), m_materialResource.get(MaterialID::PlayerShip));
 
     auto& rotator = entity.addComponent<Rotator>();
