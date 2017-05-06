@@ -32,11 +32,13 @@ source distribution.
 #include "BackgroundShader.hpp"
 #include "BackgroundController.hpp"
 #include "PostRadial.hpp"
+#include "RotateSystem.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
 
 #include <crogine/graphics/QuadBuilder.hpp>
+#include <crogine/graphics/StaticMeshBuilder.hpp>
 
 #include <crogine/ecs/systems/MeshSorter.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
@@ -107,6 +109,8 @@ void GameState::addSystems()
     cnt = &m_scene.addSystem<BackgroundController>(mb);
     cnt->setScrollSpeed(0.2f);
 
+    m_scene.addSystem<RotateSystem>(mb);
+
     m_scene.addPostProcess<PostRadial>();
 }
 
@@ -135,6 +139,15 @@ void GameState::loadAssets()
 
     cro::QuadBuilder qb({ 21.3f, 7.2f });
     m_meshResource.loadMesh(qb, MeshID::GameBackground);
+
+    auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::BuiltIn::VertexLit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::NormalMap);
+    auto& playerMaterial = m_materialResource.add(MaterialID::PlayerShip, m_shaderResource.get(shaderID));
+    playerMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/player_diffuse.png"));
+    playerMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/player_mask.png"));
+    playerMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/player_normal.png"));
+
+    cro::StaticMeshBuilder playerMesh("assets/models/player_ship.cmf");
+    m_meshResource.loadMesh(playerMesh, MeshID::PlayerShip);
 }
 
 void GameState::createScene()
@@ -153,6 +166,16 @@ void GameState::createScene()
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::GameBackground), m_materialResource.get(MaterialID::GameBackgroundNear));
     entity.addComponent<BackgroundComponent>();
 
+    //player ship
+    entity = m_scene.createEntity();
+    auto& playerTx = entity.addComponent<cro::Transform>();
+    playerTx.setPosition({ 0.f, 0.f, -5.f });
+    //playerTx.setScale({ 0.5f, 0.5f, 0.5f });
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::PlayerShip), m_materialResource.get(MaterialID::PlayerShip));
+
+    auto& rotator = entity.addComponent<Rotator>();
+    rotator.axis.x = 1.f;
+    rotator.speed = 1.f;
 
     /*auto ent = m_scene.createEntity();
     auto& tx4 = ent.addComponent<cro::Transform>();

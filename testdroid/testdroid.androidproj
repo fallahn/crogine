@@ -282,11 +282,15 @@
     <Content Include="assets\assets\materials\moon_diffuse.png" />
     <Content Include="assets\assets\materials\moon_mask.png" />
     <Content Include="assets\assets\materials\moon_normal.png" />
+    <Content Include="assets\assets\materials\player_diffuse.png" />
+    <Content Include="assets\assets\materials\player_mask.png" />
+    <Content Include="assets\assets\materials\player_normal.png" />
     <Content Include="assets\assets\materials\roid_diffuse.png" />
     <Content Include="assets\assets\materials\roid_mask.png" />
     <Content Include="assets\assets\materials\roid_normal.png" />
     <Content Include="assets\assets\materials\stars.png" />
     <Content Include="assets\assets\models\moon.cmf" />
+    <Content Include="assets\assets\models\player_ship.cmf" />
     <Content Include="assets\assets\models\roid_belt.cmf" />
     <Content Include="assets\assets\sprites\menu.png" />
     <Content Include="res\values\strings.xml" />
