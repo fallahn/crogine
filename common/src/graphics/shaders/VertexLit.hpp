@@ -103,7 +103,7 @@ namespace cro
                 #endif
                 })";
 
-                const static std::string Fragment = R"(
+            const static std::string Fragment = R"(
                 #if defined(TEXTURED)
                 uniform sampler2D u_diffuseMap;
                 uniform sampler2D u_maskMap;
@@ -177,8 +177,12 @@ namespace cro
                     eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
 
                     blendedColour += calcLighting(normal, normalize(-lightDir), vec3(0.48), vec3(1.0), 1.0);
+                #if defined(TEXTURED)
+                    gl_FragColor.rgb = mix(blendedColour, diffuseColour, mask.b);
+                #else     
                     gl_FragColor.rgb = blendedColour;
-                    gl_FragColor.a = 1.0;
+                #endif
+                    gl_FragColor.a = diffuse.a;
                 })";
         }
     }
