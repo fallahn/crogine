@@ -57,6 +57,9 @@ struct gladGLversionStruct {
 
 typedef void* (* GLADloadproc)(const char *name);
 
+#define GLAD_GLAPI_EXPORT
+//#define GLAD_GLAPI_EXPORT_BUILD
+
 #ifndef GLAPI
 # if defined(GLAD_GLAPI_EXPORT)
 #  if defined(WIN32) || defined(__CYGWIN__)
@@ -87,7 +90,7 @@ GLAPI struct gladGLversionStruct GLVersion;
 GLAPI int gladLoadGLES2Loader(GLADloadproc);
 
 #include <stddef.h>
-#include "../KHR/khrplatform.h"
+#include "KHR/khrplatform.h"
 #ifndef GLEXT_64_TYPES_DEFINED
 /* This code block is duplicated in glxext.h, so must be protected */
 #define GLEXT_64_TYPES_DEFINED

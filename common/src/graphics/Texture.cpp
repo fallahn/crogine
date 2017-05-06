@@ -32,7 +32,6 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 
 #include "../detail/GLCheck.hpp"
-#include "../detail/glad.h"
 
 #include <algorithm>
 

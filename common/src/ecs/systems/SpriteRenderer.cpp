@@ -34,7 +34,6 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 
-#include "../../detail/glad.h"
 #include "../../detail/GLCheck.hpp"
 #include "../../graphics/shaders/Sprite.hpp"
 

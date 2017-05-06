@@ -31,7 +31,6 @@ source distribution.
 #include "RotateSystem.hpp"
 #include "DriftSystem.hpp"
 #include "Slider.hpp"
-#include "icon.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -98,8 +97,6 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
         createMainMenu();
         createOptionsMenu();
         createScoreMenu();
-        context.mainWindow.setIcon(icon);
-        context.mainWindow.setTitle("Threat Level");
     });
 
     //context.mainWindow.setVsyncEnabled(false);

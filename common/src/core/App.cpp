@@ -99,6 +99,7 @@ void App::run()
 		Logger::log("Failed creating main window", Logger::Type::Error);
 		return;
 	}
+    initialise();
 
 	Clock frameClock;
     m_running = true;

@@ -36,7 +36,6 @@ source distribution.
 #include <glm/vec3.hpp>
 #include <glm/gtc/packing.hpp>
 
-#include "../detail/glad.h"
 #include "../detail/GLCheck.hpp"
 
 #include <functional>

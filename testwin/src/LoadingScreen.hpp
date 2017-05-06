@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,31 +27,35 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_POST_VERTEX_HPP_
-#define CRO_POST_VERTEX_HPP_
+#ifndef TL_LOADING_SCREEN_HPP_
+#define TL_LOADING_SCREEN_HPP_
 
-#include <string>
+#include <crogine/graphics/LoadingScreen.hpp>
+#include <crogine/detail/Types.hpp>
+#include <crogine/graphics/Shader.hpp>
+#include <crogine/core/Clock.hpp>
 
-namespace cro
+#include <glm/mat4x4.hpp>
+
+class LoadingScreen final : public cro::LoadingScreen
 {
-    /*
-    Because the Quad is size 0-1 and made to fit the screen via its transform
-    we can use the pre-transform positions as texture coords!!
-    */
-    static const std::string PostVertex = R"(
-        attribute vec4 a_position;
+public:
+    LoadingScreen();
+    ~LoadingScreen();
 
-        uniform mat4 u_worldMatrix;
-        uniform mat4 u_projectionMatrix;
-            
-        varying vec2 v_texCoord;
+    void update() override;
+    void draw() override;
 
-        void main()
-        {
-            gl_Position = u_projectionMatrix * u_worldMatrix * a_position;
-            v_texCoord = a_position.xy;
-        }
-    )";
-}
+private:
+    cro::uint32 m_vbo;
+    cro::uint32 m_transformIndex;
 
-#endif //CRO_POST_VERTEX_HPP_
+    cro::Shader m_shader;
+    glm::mat4 m_transform;
+    glm::mat4 m_projectionMatrix;
+    glm::uvec2 m_viewport;
+
+    cro::Clock m_clock;
+};
+
+#endif //TL_LOADING_SCREEN_HPP_

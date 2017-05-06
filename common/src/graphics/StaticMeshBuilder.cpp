@@ -28,10 +28,10 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/graphics/StaticMeshBuilder.hpp>
+#include <crogine/detail/OpenGL.hpp>
 
 #include <glm/geometric.hpp>
 
-#include "../detail/glad.h"
 
 using namespace cro;
 

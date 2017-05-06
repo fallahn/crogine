@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,9 +27,9 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "DefaultLoadingScreen.hpp"
-#include "../detail/GLCheck.hpp"
+#include "LoadingScreen.hpp"
 
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/core/App.hpp>
 
 #include <glm/gtc/type_ptr.hpp>
@@ -38,12 +38,12 @@ source distribution.
 #include <string>
 #include <vector>
 
-using namespace cro;
+#define glCheck(x) x
 
 namespace
 {
     const float rotation = -35.f;
-    constexpr uint32 vertexSize = 2 * sizeof(float);
+    constexpr cro::uint32 vertexSize = 2 * sizeof(float);
 
     const std::string vertex = R"(
         attribute vec4 a_position;
@@ -60,18 +60,18 @@ namespace
     const std::string fragment = R"(
         void main()
         {
-            gl_FragColor = vec4(1.0);
+            gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
         }
     )";
 }
 
-DefaultLoadingScreen::DefaultLoadingScreen()
-    : m_vbo         (0),
+LoadingScreen::LoadingScreen()
+    : m_vbo(0),
     m_transformIndex(0)
 {
-    m_viewport = App::getWindow().getSize();
+    m_viewport = cro::App::getWindow().getSize();
     m_projectionMatrix = glm::ortho(0.f, static_cast<float>(m_viewport.x), 0.f, static_cast<float>(m_viewport.y), -0.1f, 10.f);
-    
+
     if (m_shader.loadFromString(vertex, fragment))
     {
         const auto& uniforms = m_shader.getUniformMap();
@@ -103,7 +103,7 @@ DefaultLoadingScreen::DefaultLoadingScreen()
     }
 }
 
-DefaultLoadingScreen::~DefaultLoadingScreen()
+LoadingScreen::~LoadingScreen()
 {
     if (m_vbo)
     {
@@ -112,14 +112,14 @@ DefaultLoadingScreen::~DefaultLoadingScreen()
 }
 
 //public
-void DefaultLoadingScreen::update()
+void LoadingScreen::update()
 {
     m_transform = glm::rotate(m_transform, rotation * m_clock.restart().asSeconds(), { 0.f, 0.f, 1.f });
 }
 
-void DefaultLoadingScreen::draw()
+void LoadingScreen::draw()
 {
-    int32 oldView[4];
+    cro::int32 oldView[4];
     glCheck(glGetIntegerv(GL_VIEWPORT, oldView));
 
     glCheck(glViewport(0, 0, m_viewport.x, m_viewport.y));
