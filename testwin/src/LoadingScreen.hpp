@@ -33,9 +33,12 @@ source distribution.
 #include <crogine/graphics/LoadingScreen.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/Texture.hpp>
 #include <crogine/core/Clock.hpp>
 
 #include <glm/mat4x4.hpp>
+
+#include <vector>
 
 class LoadingScreen final : public cro::LoadingScreen
 {
@@ -56,6 +59,10 @@ private:
     glm::uvec2 m_viewport;
 
     cro::Clock m_clock;
+    std::vector<float> m_wavetable;
+    std::size_t m_wavetableIndex;
+
+    cro::Texture m_texture;
 };
 
 #endif //TL_LOADING_SCREEN_HPP_
