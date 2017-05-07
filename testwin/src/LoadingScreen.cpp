@@ -81,7 +81,7 @@ LoadingScreen::LoadingScreen()
     m_viewport = cro::App::getWindow().getSize();
     m_projectionMatrix = glm::ortho(0.f, static_cast<float>(m_viewport.x), 0.f, static_cast<float>(m_viewport.y), -0.1f, 10.f);
 
-    m_wavetable = cro::Util::Wavetable::sine(4.f, 3.f);
+    m_wavetable = cro::Util::Wavetable::sine(2.f, 3.f);
 
     //TODO if the texture fails we should load a version of the shader with defines which dont require a texture
     m_texture.loadFromFile("assets/sprites/loading.png");
@@ -91,7 +91,7 @@ LoadingScreen::LoadingScreen()
         const auto& uniforms = m_shader.getUniformMap();
         m_transformIndex = uniforms.find("u_worldMatrix")->second;
         m_transform = glm::translate(glm::mat4(), { 60.f, 60.f, 0.f });
-        m_transform = glm::scale(m_transform, { 60.f, 60.f, 1.f });
+        m_transform = glm::scale(m_transform, { 128.f, 64.f, 1.f });
 
         glCheck(glUseProgram(m_shader.getGLHandle()));
         glCheck(glUniformMatrix4fv(uniforms.find("u_projectionMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
@@ -146,6 +146,8 @@ void LoadingScreen::draw()
     cro::int32 oldView[4];
     glCheck(glGetIntegerv(GL_VIEWPORT, oldView));
     glCheck(glEnable(GL_BLEND));
+    glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    glCheck(glBlendEquation(GL_FUNC_ADD));
 
     glCheck(glViewport(0, 0, m_viewport.x, m_viewport.y));
     glCheck(glUseProgram(m_shader.getGLHandle()));
