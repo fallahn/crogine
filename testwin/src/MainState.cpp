@@ -124,7 +124,7 @@ bool MainState::simulate(cro::Time dt)
 }
 
 void MainState::render()
-{
+{    
     m_backgroundScene.render();
     m_menuScene.render();
 }
@@ -247,5 +247,6 @@ void MainState::createScene()
     tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);*/
     entity.addComponent<cro::Camera>();
     entity.addComponent<Drifter>().amplitude = 0.1f;
-    m_backgroundScene.getSystem<cro::SceneRenderer>().setActiveCamera(entity);
+    auto& renderer = m_backgroundScene.getSystem<cro::SceneRenderer>();
+    renderer.setActiveCamera(entity);
 }

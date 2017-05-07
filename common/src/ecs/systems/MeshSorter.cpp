@@ -132,6 +132,8 @@ void MeshSorter::process(cro::Time)
         auto scale = tx.getScale();
         sphere.radius *= (scale.x + scale.y + scale.z) / 3.f;
 
+        //DPRINT("Found entity", std::to_string(entity.getIndex()));
+
         bool visible = true;
         std::size_t i = 0;
         while(visible && i < frustum.size())
@@ -142,9 +144,11 @@ void MeshSorter::process(cro::Time)
         if (visible)
         {
             m_visibleEntities.push_back(entity);
+            //DPRINT("Added entity", std::to_string(entity.getIndex()));
         }
     }
     DPRINT("Visible ents", std::to_string(m_visibleEntities.size()));
+    //DPRINT("Total ents", std::to_string(entities.size()));
 
     //sort lists by depth
     //TODO sub sort opaque materials front to back

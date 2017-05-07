@@ -52,6 +52,7 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/crogine DESTINATION include)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/glm DESTINATION include)
 if(CROGINE_STATIC_LIB)
   install(TARGETS ${PROJECT_NAME} EXPORT crogine-targets DESTINATION lib)
 else()

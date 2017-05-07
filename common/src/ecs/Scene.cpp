@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/App.hpp>
 
 using namespace cro;
 
