@@ -115,10 +115,7 @@ void App::run()
 
             handleEvents();
             handleMessages();
-#ifdef _DEBUG_
-            m_debugLines.clear();
-            m_debugLines.reserve(10);
-#endif //_DEBUG_
+
 			//simulate(frameTime);
             simulate(timeSinceLastUpdate);
 		}
@@ -244,5 +241,8 @@ void App::doImGui()
     }
 
     ImGui::End();
+
+    m_debugLines.clear();
+    m_debugLines.reserve(10);
 }
 //#endif

@@ -89,6 +89,7 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
         m_threadContext = SDL_GL_CreateContext(m_window);
 		m_mainContext = SDL_GL_CreateContext(m_window);
+        //SDL_GL_MakeCurrent(m_window, m_mainContext);
 
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -301,6 +302,8 @@ void Window::loadResources(const std::function<void()>& loader)
 
     int32 result;
     SDL_WaitThread(thread, &result);
+
+    //SDL_GL_MakeCurrent(m_window, m_mainContext);
 }
 
 //private
