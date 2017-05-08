@@ -74,10 +74,6 @@ void SceneRenderer::setDrawableList(MaterialList& entities)
 
 void SceneRenderer::render()
 {
-    //glCheck(glEnable(GL_DEPTH_TEST));
-    //glCheck(glEnable(GL_CULL_FACE));
-    //glCheck(glEnable(GL_BLEND));
-
     auto cameraPosition = glm::vec3(m_activeCamera.getComponent<Transform>().getWorldTransform()[3]);
     auto viewMat = glm::inverse(m_activeCamera.getComponent<Transform>().getWorldTransform());
     auto projMat = m_activeCamera.getComponent<Camera>().projection;
@@ -92,7 +88,7 @@ void SceneRenderer::render()
         //foreach submesh / material:
         const auto& model = e.first.getComponent<Model>();
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
-        //for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
+        
         for(auto i : e.second.matIDs)
         {
             //bind shader
@@ -107,8 +103,6 @@ void SceneRenderer::render()
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(projMat)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
             glCheck(glUniformMatrix3fv(model.m_materials[i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
-
-            //TODO set material winding/cullface/depthfunc
 
             applyBlendMode(model.m_materials[i].blendMode);
 
@@ -137,7 +131,7 @@ void SceneRenderer::render()
                 glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
             }
         }
-        //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        
         glCheck(glUseProgram(0));
         /*for (auto i = 0; i < m_currentTextureUnit; ++i)
         {

@@ -162,13 +162,16 @@ void MainState::loadAssets()
     normalTex.setSmooth(true);
     planetMaterial.setProperty("u_normalMap", normalTex);
     planetMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/gas_mask.png"));
-
-    //shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap);
+    
     auto& roidMaterial = m_materialResource.add(MaterialID::Roids, m_shaderResource.get(shaderID));
     roidMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/roid_diffuse.png"));
     roidMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/roid_normal.png"));
     roidMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/roid_mask.png"));
     
+    /*shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap);
+    auto& cloudMaterial = m_materialResource.add(MaterialID::PlanetClouds, m_shaderResource.get(shaderID));
+    cloudMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/gas_clouds.png"));
+    cloudMaterial.blendMode = cro::Material::BlendMode::Alpha;*/
     
     shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
     auto& starTexture = m_textureResource.get("assets/materials/stars.png");
@@ -230,6 +233,11 @@ void MainState::createScene()
     roidRotator.speed = -0.03f;
     roidRotator.axis.y = 1.f;
 
+    /*auto cloudEntity = m_backgroundScene.createEntity();
+    cloudEntity.addComponent<cro::Transform>().setScale({ 1.01f, 1.01f, 1.01f });
+    cloudEntity.getComponent<cro::Transform>().setParent(entity);
+    cloudEntity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(MaterialID::PlanetClouds));
+*/
     //create stars
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -19.f });

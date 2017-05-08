@@ -39,6 +39,7 @@ namespace MaterialID
         Moon,
         Stars,
         Planet,
+        PlanetClouds,
         Roids,
         GameBackgroundFar,
         GameBackgroundMid,
