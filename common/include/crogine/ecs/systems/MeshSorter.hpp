@@ -32,6 +32,7 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/MaterialData.hpp>
+#include <crogine/ecs/systems/SceneRenderer.hpp>
 
 #include <glm/mat4x4.hpp>
 
@@ -63,7 +64,7 @@ namespace cro
     private:
 
         SceneRenderer& m_renderer;
-        std::vector<Entity> m_visibleEntities;
+        MaterialList m_visibleEntities;
     };
 }
 

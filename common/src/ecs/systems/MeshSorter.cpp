@@ -28,7 +28,6 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/ecs/systems/MeshSorter.hpp>
-#include <crogine/ecs/systems/SceneRenderer.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -122,11 +121,11 @@ void MeshSorter::process(cro::Time)
     //DPRINT("Near Plane", std::to_string(frustum[1].w));
     
     //cull entities by viewable into draw lists by pass
-    //m_visibleEntities.clear();
-    m_visibleEntities.reserve(entities.size());
+    m_visibleEntities.reserve(entities.size() * 2);
     for (auto& entity : entities)
     {
-        auto sphere = entity.getComponent<Model>().m_meshData.boundingSphere;
+        auto model = entity.getComponent<Model>();
+        auto sphere = model.m_meshData.boundingSphere;
         auto tx = entity.getComponent<Transform>();
         sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre.x, sphere.centre.y, sphere.centre.z, 1.f));
         auto scale = tx.getScale();
@@ -143,16 +142,49 @@ void MeshSorter::process(cro::Time)
 
         if (visible)
         {
-            m_visibleEntities.push_back(entity);
-            //DPRINT("Added entity", std::to_string(entity.getIndex()));
+            auto opaque = std::make_pair(entity, SortData());
+            auto transparent = std::make_pair(entity, SortData());
+            
+            auto worldPos = tx.getWorldTransform() * glm::vec4(tx.getPosition(), 1.f);
+
+            //foreach material
+            //add ent/index pair to alpha or opaque list
+            for (auto i = 0; i < model.m_meshData.submeshCount; ++i)
+            {
+                if (model.m_materials[i].blendMode == Material::BlendMode::Alpha)
+                {
+                    transparent.second.matIDs.push_back(i);
+                    transparent.second.flags = static_cast<int64>(worldPos.z * 1000000.f); //suitably large number to shift decimal point
+                    transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
+                }
+                else
+                {
+                    opaque.second.matIDs.push_back(i);
+                    opaque.second.flags = static_cast<int64>(-worldPos.z * 1000000.f);
+                }
+            }
+
+            //if (!opaque.second.matIDs.empty())
+            {
+                m_visibleEntities.push_back(opaque);
+            }
+
+            //if (!transparent.second.matIDs.empty())
+            {
+                m_visibleEntities.push_back(transparent);
+            }
         }
     }
-    DPRINT("Visible ents", std::to_string(m_visibleEntities.size()));
+    //DPRINT("Visible ents", std::to_string(m_visibleEntities.size()));
     //DPRINT("Total ents", std::to_string(entities.size()));
 
     //sort lists by depth
-    //TODO sub sort opaque materials front to back
-    //TODO transparent materials back to front
+    //sort opaque materials front to back
+    std::sort(std::begin(m_visibleEntities), std::end(m_visibleEntities),
+        [](MaterialPair& a, MaterialPair& b)
+    {
+        return a.second.flags < b.second.flags;
+    });
 
     m_renderer.setDrawableList(m_visibleEntities);
 }

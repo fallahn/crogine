@@ -42,7 +42,18 @@ source distribution.
 namespace cro
 {
     class MessageBus;
-    
+
+    //don't export this, used internally.
+    struct SortData final
+    {
+        int64 flags = 0;
+        std::vector<int32> matIDs;
+    };
+
+    using MaterialPair = std::pair<Entity, SortData>;
+    using MaterialList = std::vector<MaterialPair>;
+
+
     /*!
     \brief Used to draw a given list of meshes.
     Provide an instance of this to systems such as the MeshSorter
@@ -78,7 +89,7 @@ namespace cro
         The vectors are swapped by this function so the vector being passed
         in will be cleared.
         */
-        void setDrawableList(std::vector<Entity>& drawableList);
+        void setDrawableList(MaterialList& drawableList);
 
         /*!
         \brief Attempts to render the scene based on the current entity lists
@@ -87,7 +98,7 @@ namespace cro
 
     private:
         Entity m_activeCamera;
-        std::vector<Entity> m_visibleEntities;
+        MaterialList m_visibleEntities;
         //TODO list of lighting
 
         uint32 m_currentTextureUnit;
