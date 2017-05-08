@@ -66,7 +66,7 @@ Entity SceneRenderer::getActiveCamera() const
     return m_activeCamera;
 }
 
-void SceneRenderer::setDrawableList(std::vector<Entity>& entities)
+void SceneRenderer::setDrawableList(MaterialList& entities)
 {
     m_visibleEntities.swap(entities);
     entities.clear();
@@ -74,26 +74,26 @@ void SceneRenderer::setDrawableList(std::vector<Entity>& entities)
 
 void SceneRenderer::render()
 {
-    glCheck(glEnable(GL_DEPTH_TEST));
-    glCheck(glEnable(GL_CULL_FACE));
-    glCheck(glEnable(GL_BLEND));
+    //glCheck(glEnable(GL_DEPTH_TEST));
+    //glCheck(glEnable(GL_CULL_FACE));
+    //glCheck(glEnable(GL_BLEND));
 
     auto cameraPosition = glm::vec3(m_activeCamera.getComponent<Transform>().getWorldTransform()[3]);
     auto viewMat = glm::inverse(m_activeCamera.getComponent<Transform>().getWorldTransform());
     auto projMat = m_activeCamera.getComponent<Camera>().projection;
 
-    //TODO use draw list instead of drawing all ents
     for (auto& e : m_visibleEntities)
     {
         //calc entity transform
-        const auto& tx = e.getComponent<Transform>();
+        const auto& tx = e.first.getComponent<Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
         glm::mat4 worldView = viewMat * worldMat;
 
         //foreach submesh / material:
-        const auto& model = e.getComponent<Model>();
+        const auto& model = e.first.getComponent<Model>();
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
-        for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
+        //for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
+        for(auto i : e.second.matIDs)
         {
             //bind shader
             glCheck(glUseProgram(model.m_materials[i].shader));
@@ -151,6 +151,7 @@ void SceneRenderer::render()
     glCheck(glDisable(GL_BLEND));
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));
+    glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
 }
 
 //private
@@ -197,28 +198,30 @@ void SceneRenderer::applyBlendMode(Material::BlendMode mode)
     case Material::BlendMode::Additive:
         glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_TRUE));
         glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_ONE, GL_ONE));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
     case Material::BlendMode::Alpha:
         glCheck(glDisable(GL_CULL_FACE));
-        glCheck(glDisable(GL_DEPTH_TEST));
+        //glCheck(glDisable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_FALSE));
         glCheck(glEnable(GL_BLEND));
         glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         glCheck(glBlendEquation(GL_FUNC_ADD));
-        //glCheck(glEnable(GL_DEPTH_TEST)); //TODO uh... reenabling here is pointless, needs to be done after drawing
-        //glCheck(glEnable(GL_CULL_FACE));
         break;
     case Material::BlendMode::Multiply:
         glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_TRUE));
         glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
     case Material::BlendMode::None:
         glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_TRUE));
         glCheck(glEnable(GL_CULL_FACE));
         glCheck(glDisable(GL_BLEND));
         break;
