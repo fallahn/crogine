@@ -29,7 +29,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/core/Log.hpp>
-#include <crogine/detail/OpenGL.hpp>
+#include "glad.hpp"
 
 #include <string>
 #include <sstream>

@@ -21,8 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include "glad.h"
-#include <crogine/detail/OpenGL.hpp>
+#include "glad.hpp"
 
 struct gladGLversionStruct GLVersion;
 
