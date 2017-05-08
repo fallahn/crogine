@@ -99,6 +99,7 @@
     <ClInclude Include="..\common\include\crogine\util\Wavetable.hpp" />
     <ClInclude Include="..\common\src\core\DefaultLoadingScreen.hpp" />
     <ClInclude Include="..\common\src\detail\DistanceField.hpp" />
+    <ClInclude Include="..\common\src\detail\glad.hpp" />
     <ClInclude Include="..\common\src\detail\GLCheck.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Debug.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Default.hpp" />
