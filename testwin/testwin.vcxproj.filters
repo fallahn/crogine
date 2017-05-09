@@ -75,6 +75,12 @@
     <ClCompile Include="src\LoadingScreen.cpp">
       <Filter>Source Files\TL</Filter>
     </ClCompile>
+    <ClCompile Include="src\TerrainChunk.cpp">
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ChunkBuilder.cpp">
+      <Filter>Source Files\TL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -117,6 +123,18 @@
       <Filter>Header Files\TL</Filter>
     </ClInclude>
     <ClInclude Include="src\LoadingScreen.hpp">
+      <Filter>Header Files\TL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TerrainChunk.hpp">
+      <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Messages.hpp">
+      <Filter>Header Files\TL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ChunkBuilder.hpp">
+      <Filter>Header Files\TL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ErrorCheck.hpp">
       <Filter>Header Files\TL</Filter>
     </ClInclude>
   </ItemGroup>

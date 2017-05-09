@@ -1,6 +1,7 @@
 #source files used by crogine test app
 set(PROJECT_SRC
   ${PROJECT_DIR}/BackgroundController.cpp
+  ${PROJECT_DIR}/ChunkBuilder.cpp
   ${PROJECT_DIR}/ColourSystem.cpp
   ${PROJECT_DIR}/DriftSystem.cpp
   ${PROJECT_DIR}/GameState.cpp
@@ -14,4 +15,5 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/MyApp.cpp 
   ${PROJECT_DIR}/PostRadial.cpp
   ${PROJECT_DIR}/RotateSystem.cpp
-  ${PROJECT_DIR}/SliderSystem.cpp)
+  ${PROJECT_DIR}/SliderSystem.cpp
+  ${PROJECT_DIR}/TerrainChunk.cpp)

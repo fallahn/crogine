@@ -286,6 +286,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\BackgroundController.cpp" />
+    <ClCompile Include="src\ChunkBuilder.cpp" />
     <ClCompile Include="src\ColourSystem.cpp" />
     <ClCompile Include="src\DriftSystem.cpp" />
     <ClCompile Include="src\GameState.cpp" />
@@ -300,15 +301,19 @@
     <ClCompile Include="src\PostRadial.cpp" />
     <ClCompile Include="src\RotateSystem.cpp" />
     <ClCompile Include="src\SliderSystem.cpp" />
+    <ClCompile Include="src\TerrainChunk.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\BackgroundController.hpp" />
     <ClInclude Include="src\BackgroundShader.hpp" />
+    <ClInclude Include="src\ChunkBuilder.hpp" />
     <ClInclude Include="src\ColourSystem.hpp" />
     <ClInclude Include="src\DriftSystem.hpp" />
+    <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
+    <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\PostRadial.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
@@ -316,6 +321,7 @@
     <ClInclude Include="src\Slider.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\MainState.hpp" />
+    <ClInclude Include="src\TerrainChunk.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\PostRadial.inl" />

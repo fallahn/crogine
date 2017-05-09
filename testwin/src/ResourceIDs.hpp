@@ -44,7 +44,8 @@ namespace MaterialID
         GameBackgroundFar,
         GameBackgroundMid,
         GameBackgroundNear,
-        PlayerShip
+        PlayerShip,
+        TerrainChunk
     };
 }
 
@@ -55,7 +56,9 @@ namespace MeshID
         Roids = cro::Mesh::ID::Count,
         Moon,
         GameBackground,
-        PlayerShip
+        PlayerShip,
+        TerrainChunkA,
+        TerrainChunkB
     };
 }
 

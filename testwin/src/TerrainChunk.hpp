@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,15 +27,37 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-template <typename T>
-void System::requireComponent()
-{
-    const auto id = Component::getID<T>();
-    m_componentMask.set(id);
-}
+#ifndef TL_TERRAIN_CHUNK_HPP_
+#define TL_TERRAIN_CHUNK_HPP_
 
-template <typename T>
-T* System::postMessage(cro::Message::ID id)
+#include <crogine/ecs/System.hpp>
+
+#include <array>
+
+struct TerrainChunk final
 {
-    return m_messageBus.post<T>(id);
-}
+    static const std::size_t PointCount = 200;
+    std::array<float, PointCount> points{};
+};
+
+class ChunkSystem final : public cro::System
+{
+public:
+    ChunkSystem(cro::MessageBus&);
+
+    void process(cro::Time) override;
+
+    void handleMessage(const cro::Message&) override;
+
+private:
+
+    float m_speed;
+    float m_currentSpeed;
+
+    float m_topX;
+    float m_bottomX; //noise coordinate
+
+    void rebuildChunk(cro::Entity);
+};
+
+#endif //TL_TERRAIN_CHUNK_HPP_

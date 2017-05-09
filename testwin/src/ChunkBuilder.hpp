@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,15 +27,23 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-template <typename T>
-void System::requireComponent()
-{
-    const auto id = Component::getID<T>();
-    m_componentMask.set(id);
-}
+#ifndef TL_CHUNK_BUILDER_HPP_
+#define TL_CHUNK_BUILDER_HPP_
 
-template <typename T>
-T* System::postMessage(cro::Message::ID id)
+#include <crogine/graphics/MeshBuilder.hpp>
+
+/*
+Allocates the VBO/IBO mesh data required but vertices are updated
+by ChunkSystem.
+*/
+
+class ChunkBuilder final : public cro::MeshBuilder
 {
-    return m_messageBus.post<T>(id);
-}
+public:
+
+private:
+    cro::Mesh::Data build() const override;
+};
+
+
+#endif //TL_CHUNK_BUILDER_HPP_

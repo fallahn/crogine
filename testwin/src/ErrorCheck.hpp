@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,15 +27,27 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-template <typename T>
-void System::requireComponent()
+#ifndef ERROR_CHECK_HPP_
+#define ERROR_CHECK_HPP_
+
+#ifdef _DEBUG_
+#define glCheck(x) do{x; glErrorCheck(__FILE__, __LINE__, #x);}while (false)
+#else
+#define glCheck(x) (x)
+#endif //_DEBUG_
+
+#include <crogine/detail/OpenGL.hpp>
+#include <iostream>
+
+static inline void glErrorCheck(const char* file, unsigned int line, const char* expression)
 {
-    const auto id = Component::getID<T>();
-    m_componentMask.set(id);
+    GLenum err = glGetError();
+    while(err != GL_NO_ERROR)
+    {
+        std::cout << file << ", " << line << ": " << expression << ". " << " glError: " << err << std::endl;
+
+        err = glGetError();
+    }
 }
 
-template <typename T>
-T* System::postMessage(cro::Message::ID id)
-{
-    return m_messageBus.post<T>(id);
-}
+#endif //ERROR_CHECK_HPP_

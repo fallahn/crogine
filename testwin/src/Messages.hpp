@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,15 +27,26 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-template <typename T>
-void System::requireComponent()
+#ifndef TL_MESSAGES_HPP_
+#define TL_MESSAGES_HPP_
+
+#include <crogine/core/Message.hpp>
+
+namespace MessageID
 {
-    const auto id = Component::getID<T>();
-    m_componentMask.set(id);
+    enum
+    {
+        BackgroundSystem = cro::Message::Count
+    };
 }
 
-template <typename T>
-T* System::postMessage(cro::Message::ID id)
+struct BackgroundEvent final
 {
-    return m_messageBus.post<T>(id);
-}
+    enum
+    {
+        SpeedChange
+    } type;
+    float value = 0.f;
+};
+
+#endif //TL_MESSAGES_HPP_

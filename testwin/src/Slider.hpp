@@ -27,6 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+//slides the menu about
 #ifndef TL_SLIDER_HPP_
 #define TL_SLIDER_HPP_
 

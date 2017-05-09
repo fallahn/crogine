@@ -45,7 +45,6 @@ StaticMeshBuilder::StaticMeshBuilder(const std::string& path)
 
 StaticMeshBuilder::~StaticMeshBuilder()
 {
-    //we're using fopen for android's sake
     if (m_file)
     {
         SDL_RWclose(m_file);

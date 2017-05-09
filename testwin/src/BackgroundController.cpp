@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BackgroundController.hpp"
+#include "Messages.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -75,6 +76,7 @@ void BackgroundController::process(cro::Time dt)
     auto& entities = getEntities();
     for (auto& entity : entities)
     {
+        //TODO... aren't the shader properties stored in the component?
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_textureOffset", m_offset);
     }
 }
@@ -82,6 +84,10 @@ void BackgroundController::process(cro::Time dt)
 void BackgroundController::setScrollSpeed(float speed)
 {
     m_speed = speed;
+
+    auto* msg = postMessage<BackgroundEvent>(MessageID::BackgroundSystem);
+    msg->type = BackgroundEvent::SpeedChange;
+    msg->value = m_speed;
 }
 
 void BackgroundController::setMode(Mode mode)
