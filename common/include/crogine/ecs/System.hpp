@@ -129,7 +129,7 @@ namespace cro
         \brief Posts a message on the system wide message bus
         */
         template <typename T>
-        Message* postMessage(Message::ID id);
+        T* postMessage(Message::ID id);
 
         /*!
         \brief Returns a reference to the MessageBus

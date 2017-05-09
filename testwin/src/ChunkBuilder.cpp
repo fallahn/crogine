@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,15 +27,27 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-template <typename T>
-void System::requireComponent()
-{
-    const auto id = Component::getID<T>();
-    m_componentMask.set(id);
-}
+#include "ChunkBuilder.hpp"
+#include "ErrorCheck.hpp"
 
-template <typename T>
-T* System::postMessage(cro::Message::ID id)
+
+//private
+cro::Mesh::Data ChunkBuilder::build() const
 {
-    return m_messageBus.post<T>(id);
+    cro::Mesh::Data data;
+
+    data.attributes[cro::Mesh::Position] = 2;
+    data.attributes[cro::Mesh::Colour] = 3;
+    data.primitiveType = GL_TRIANGLE_STRIP;
+    data.submeshCount = 1;
+    data.vertexCount = 0;
+    data.vertexSize = (data.attributes[cro::Mesh::Position] + data.attributes[cro::Mesh::Position]) * sizeof(float);
+    data.indexData[0].format = GL_UNSIGNED_SHORT;
+    data.indexData[0].indexCount = 0;
+    data.indexData[0].primitiveType = data.primitiveType;
+
+    glCheck(glGenBuffers(1, &data.vbo));
+    glCheck(glGenBuffers(1, &data.indexData[0].ibo));
+
+    return data;
 }

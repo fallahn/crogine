@@ -33,6 +33,8 @@ source distribution.
 #include "BackgroundController.hpp"
 #include "PostRadial.hpp"
 #include "RotateSystem.hpp"
+#include "TerrainChunk.hpp"
+#include "ChunkBuilder.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -108,6 +110,7 @@ void GameState::addSystems()
     m_scene.addSystem<cro::MeshSorter>(mb, sceneRenderer);
     cnt = &m_scene.addSystem<BackgroundController>(mb);
     cnt->setScrollSpeed(0.2f);
+    m_scene.addSystem<ChunkSystem>(mb);
 
     m_scene.addSystem<RotateSystem>(mb);
 
@@ -148,6 +151,13 @@ void GameState::loadAssets()
 
     cro::StaticMeshBuilder playerMesh("assets/models/player_ship.cmf");
     m_meshResource.loadMesh(playerMesh, MeshID::PlayerShip);
+
+    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
+    m_materialResource.add(MaterialID::TerrainChunk, m_shaderResource.get(shaderID));
+
+    ChunkBuilder chunkBuilder;
+    m_meshResource.loadMesh(chunkBuilder, MeshID::TerrainChunkA);
+    m_meshResource.loadMesh(chunkBuilder, MeshID::TerrainChunkB);
 }
 
 void GameState::createScene()
@@ -165,6 +175,13 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -11.f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::GameBackground), m_materialResource.get(MaterialID::GameBackgroundNear));
     entity.addComponent<BackgroundComponent>();
+
+    //terrain chunks
+    entity = m_scene.createEntity();
+    auto& chunkTxA = entity.addComponent<cro::Transform>();
+    chunkTxA.setPosition({ 0.f, 0.f, -5.f });
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::TerrainChunkA), m_materialResource.get(MaterialID::TerrainChunk));
+    entity.addComponent<TerrainChunk>();
 
     //player ship
     entity = m_scene.createEntity();
