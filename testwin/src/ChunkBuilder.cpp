@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ChunkBuilder.hpp"
+#include "TerrainChunk.hpp"
 #include "ErrorCheck.hpp"
 
 
@@ -39,15 +40,42 @@ cro::Mesh::Data ChunkBuilder::build() const
     data.attributes[cro::Mesh::Position] = 2;
     data.attributes[cro::Mesh::Colour] = 3;
     data.primitiveType = GL_TRIANGLE_STRIP;
-    data.submeshCount = 1;
-    data.vertexCount = 0;
-    data.vertexSize = (data.attributes[cro::Mesh::Position] + data.attributes[cro::Mesh::Position]) * sizeof(float);
+    data.submeshCount = 2;
+    data.vertexCount = TerrainChunk::PointCount * 2;
+    data.vertexSize = (data.attributes[cro::Mesh::Position] + data.attributes[cro::Mesh::Colour]) * sizeof(float);
+    glCheck(glGenBuffers(1, &data.vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, data.vertexCount * data.vertexSize, NULL, GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    
+    //index array for top and bottom parts
+    //these should remain the same only the positions get updated
+    constexpr std::size_t indexCount = TerrainChunk::PointCount;
     data.indexData[0].format = GL_UNSIGNED_SHORT;
-    data.indexData[0].indexCount = 0;
+    data.indexData[0].indexCount = indexCount;
     data.indexData[0].primitiveType = data.primitiveType;
 
-    glCheck(glGenBuffers(1, &data.vbo));
+    std::array<cro::uint16, indexCount> indices;
+    for (auto i = 0; i < indexCount; ++i)
+    {
+        indices[i] = i;
+    }
     glCheck(glGenBuffers(1, &data.indexData[0].ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[0].ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(cro::uint16), indices.data(), GL_DYNAMIC_DRAW));
+    
+    data.indexData[1].format = GL_UNSIGNED_SHORT;
+    data.indexData[1].indexCount = indexCount;
+    data.indexData[1].primitiveType = data.primitiveType;
+
+    for (auto i = 0; i < indexCount; ++i)
+    {
+        indices[i] += indexCount;
+    }
+    glCheck(glGenBuffers(1, &data.indexData[1].ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[1].ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(cro::uint16), indices.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     return data;
 }

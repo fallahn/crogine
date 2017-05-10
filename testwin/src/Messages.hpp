@@ -36,7 +36,8 @@ namespace MessageID
 {
     enum
     {
-        BackgroundSystem = cro::Message::Count
+        BackgroundSystem = cro::Message::Count,
+        GameMessage
     };
 }
 
@@ -47,6 +48,14 @@ struct BackgroundEvent final
         SpeedChange
     } type;
     float value = 0.f;
+};
+
+struct GameEvent final
+{
+    enum
+    {
+        RoundStart
+    }type;
 };
 
 #endif //TL_MESSAGES_HPP_

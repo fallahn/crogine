@@ -37,15 +37,18 @@ source distribution.
 #endif //_DEBUG_
 
 #include <crogine/detail/OpenGL.hpp>
-#include <iostream>
+#include <crogine/core/Log.hpp>
+
+#include <sstream>
 
 static inline void glErrorCheck(const char* file, unsigned int line, const char* expression)
 {
     GLenum err = glGetError();
     while(err != GL_NO_ERROR)
     {
-        std::cout << file << ", " << line << ": " << expression << ". " << " glError: " << err << std::endl;
-
+        std::stringstream ss;
+        ss << file << ", " << line << ": " << expression << ". " << " glError: " << err << std::endl;
+        cro::Logger::log(ss.str(), cro::Logger::Type::Error);
         err = glGetError();
     }
 }

@@ -41,7 +41,7 @@ namespace cro
             const static std::string Vertex = R"(
                 attribute vec4 a_position;
                 #if defined (VERTEX_COLOUR)
-                attribute vec3 a_colour;
+                attribute vec4 a_colour;
                 #endif
                 attribute vec3 a_normal;
                 #if defined(BUMP)
@@ -62,7 +62,7 @@ namespace cro
                 
                 varying vec3 v_worldPosition;
                 #if defined (VERTEX_COLOUR)
-                varying vec3 v_colour;
+                varying vec4 v_colour;
                 #endif
                 #if defined(BUMP)
                 varying vec3 v_tbn[3];
@@ -122,7 +122,7 @@ namespace cro
 
                 varying vec3 v_worldPosition;
                 #if defined(VERTEX_COLOUR)
-                varying vec3 v_colour;
+                varying vec4 v_colour;
                 #endif
                 #if defined (BUMP)
                 varying vec3 v_tbn[3];

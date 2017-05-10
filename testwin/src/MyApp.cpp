@@ -71,7 +71,7 @@ void MyApp::handleEvent(const cro::Event& evt)
 
 void MyApp::handleMessage(const cro::Message& msg)
 {
-
+    m_stateStack.handleMessage(msg);
 }
 
 void MyApp::simulate(cro::Time dt)

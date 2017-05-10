@@ -35,6 +35,7 @@ source distribution.
 #include "RotateSystem.hpp"
 #include "TerrainChunk.hpp"
 #include "ChunkBuilder.hpp"
+#include "Messages.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -65,6 +66,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         createScene();
     });
     //context.appInstance.setClearColour(cro::Colour::White());
+    auto* msg = getContext().appInstance.getMessageBus().post<GameEvent>(MessageID::GameMessage);
+    msg->type = GameEvent::RoundStart;
 }
 
 //public
@@ -179,8 +182,16 @@ void GameState::createScene()
     //terrain chunks
     entity = m_scene.createEntity();
     auto& chunkTxA = entity.addComponent<cro::Transform>();
-    chunkTxA.setPosition({ 0.f, 0.f, -5.f });
+    chunkTxA.setPosition({ 0.f, 0.f, -9.f });
+    //chunkTxA.setScale({ 0.5f, 0.5f, 1.f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::TerrainChunkA), m_materialResource.get(MaterialID::TerrainChunk));
+    entity.addComponent<TerrainChunk>();
+
+    entity = m_scene.createEntity();
+    auto& chunkTxB = entity.addComponent<cro::Transform>();
+    chunkTxB.setPosition({ 21.3f, 0.f, -9.f }); //TODO get all these background sizes together somewhere
+    //chunkTxA.setScale({ 0.5f, 0.5f, 1.f });
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::TerrainChunkB), m_materialResource.get(MaterialID::TerrainChunk));
     entity.addComponent<TerrainChunk>();
 
     //player ship
