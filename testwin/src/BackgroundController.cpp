@@ -69,6 +69,11 @@ void BackgroundController::process(cro::Time dt)
     if(m_currentMode == Mode::Shake)
     {
         m_offset.x += noiseTable[m_currentIndex];
+
+        auto* msg = postMessage<BackgroundEvent>(MessageID::BackgroundSystem);
+        msg->type = BackgroundEvent::Shake;
+        msg->value = -noiseTable[m_currentIndex] * 100.f;
+
         noiseTable[m_currentIndex] = -noiseTable[m_currentIndex]; //averages out overall movement so it doesn't drift over time
         m_currentIndex = (m_currentIndex + 1) % noiseTable.size();
     }
@@ -95,6 +100,6 @@ void BackgroundController::setMode(Mode mode)
     m_currentMode = mode;
     if (mode == Mode::Shake)
     {
-        m_speed = 0.f;
+        setScrollSpeed(0.f);
     }
 }

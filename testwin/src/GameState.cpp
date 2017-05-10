@@ -53,6 +53,7 @@ source distribution.
 namespace
 {
     BackgroundController* cnt = nullptr;
+    const glm::vec2 backgroundSize(21.3f, 7.2f);
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -143,7 +144,7 @@ void GameState::loadAssets()
     nearMaterial.setProperty("u_diffuseMap", nearTexture);
     nearMaterial.blendMode = cro::Material::BlendMode::Alpha;
 
-    cro::QuadBuilder qb({ 21.3f, 7.2f });
+    cro::QuadBuilder qb(backgroundSize);
     m_meshResource.loadMesh(qb, MeshID::GameBackground);
 
     auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::BuiltIn::VertexLit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::NormalMap);
@@ -189,16 +190,15 @@ void GameState::createScene()
 
     entity = m_scene.createEntity();
     auto& chunkTxB = entity.addComponent<cro::Transform>();
-    chunkTxB.setPosition({ 21.3f, 0.f, -9.f }); //TODO get all these background sizes together somewhere
-    //chunkTxA.setScale({ 0.5f, 0.5f, 1.f });
+    chunkTxB.setPosition({ backgroundSize.x, 0.f, -9.f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::TerrainChunkB), m_materialResource.get(MaterialID::TerrainChunk));
     entity.addComponent<TerrainChunk>();
 
     //player ship
     entity = m_scene.createEntity();
     auto& playerTx = entity.addComponent<cro::Transform>();
-    playerTx.setPosition({ 0.f, 0.f, -5.f });
-    playerTx.setScale({ 0.5f, 0.5f, 0.5f });
+    playerTx.setPosition({ -2.f, 0.f, -6.f });
+    playerTx.setScale({ 0.35f, 0.35f, 0.35f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::PlayerShip), m_materialResource.get(MaterialID::PlayerShip));
 
     auto& rotator = entity.addComponent<Rotator>();
