@@ -54,7 +54,7 @@ namespace cro
                 uniform mat4 u_worldViewMatrix;               
                 uniform mat4 u_projectionMatrix;
                 
-                #if defined (VERTEX_COLOURED)
+                #if defined (VERTEX_COLOUR)
                 varying vec4 v_colour;
                 #endif
                 #if defined (TEXTURED)

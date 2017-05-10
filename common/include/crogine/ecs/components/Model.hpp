@@ -58,6 +58,14 @@ namespace cro
             m_materials[idx].setProperty(str, val);
         }
 
+        /*!
+        \brief Returns a reference to the mesh data for this model.
+        This can be used to update vertex data, but care should be taken to
+        not modify the attribute layout as this will already be bound to the
+        model's material.
+        */
+        Mesh::Data& getMeshData() { return m_meshData; };
+
     private:
         Mesh::Data m_meshData;
         std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_materials{};

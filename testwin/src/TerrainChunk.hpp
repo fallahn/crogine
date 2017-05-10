@@ -32,12 +32,14 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 
+#include <glm/vec2.hpp>
+
 #include <array>
 
 struct TerrainChunk final
 {
     static const std::size_t PointCount = 200;
-    std::array<float, PointCount> points{};
+    std::array<glm::vec2, PointCount> points{};
 };
 
 class ChunkSystem final : public cro::System

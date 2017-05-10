@@ -93,6 +93,10 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     {
         defines += "\n#define BUMP";
     }
+    if (flags & BuiltInFlags::VertexColour)
+    {
+        defines += "\n#define VERTEX_COLOUR";
+    }
     defines += "\n";
 
     bool success = false;
