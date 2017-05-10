@@ -56,10 +56,20 @@ private:
     float m_speed;
     float m_currentSpeed;
 
+    float m_offset;
+
     float m_topX;
     float m_bottomX; //noise coordinate
 
+    float m_lastTop; //need to be repeated on next chunk
+    float m_lastBottom;
+
+    std::vector<float> m_shortWavetable;
+    std::vector<float> m_longWaveTable;
+    std::size_t m_topIndexShort, m_topIndexLong;
+
     void rebuildChunk(cro::Entity);
+    void calcNormals(std::vector<float>&);
 };
 
 #endif //TL_TERRAIN_CHUNK_HPP_

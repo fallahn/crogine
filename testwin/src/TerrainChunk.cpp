@@ -32,9 +32,14 @@ source distribution.
 #include "ErrorCheck.hpp"
 
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Wavetable.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+
+#include <glm/gtc/noise.hpp>
+
 
 namespace
 {
@@ -46,14 +51,21 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb)
     : cro::System   (mb, typeid(ChunkSystem)),
     m_speed         (0.f),
     m_currentSpeed  (0.f),
+    m_offset        (0.f),
     m_topX          (cro::Util::Random::value(-2343.f, 5637.f)),
-    m_bottomX       (cro::Util::Random::value(-3965.f, 2842.f))
+    m_bottomX       (cro::Util::Random::value(-3965.f, 2842.f)),
+    m_lastTop       (0.f),
+    m_lastBottom    (0.f),
+    m_topIndexShort (0),
+    m_topIndexLong  (0)
 {
     requireComponent<cro::Model>();
     requireComponent<cro::Transform>();
     requireComponent<TerrainChunk>();
 
-    //TODO build wave tables
+    //build wave tables
+    m_shortWavetable = cro::Util::Wavetable::sine(5.f, 0.07f);
+    m_longWaveTable = cro::Util::Wavetable::sine(1.6f, 0.09f);
 }
 
 //public
@@ -68,7 +80,7 @@ void ChunkSystem::process(cro::Time dt)
     for (auto& e : entities)
     {
         auto& tx = e.getComponent<cro::Transform>();
-        tx.move({ -m_currentSpeed * dtSec, 0.f, 0.f });
+        tx.move({ (-m_currentSpeed + m_offset) * dtSec, 0.f, 0.f });
 
 
         //if out of view move by one width and rebuild from current coords
@@ -78,10 +90,6 @@ void ChunkSystem::process(cro::Time dt)
             tx.move({ chunkWidth * 2.f, 0.f, 0.f });
             rebuildChunk(e);
         }
-
-
-        //first chunk top/bottom should be a gradient in to average height
-        //don't forget vertices need colour.
     }
 }
 
@@ -93,6 +101,12 @@ void ChunkSystem::handleMessage(const cro::Message& msg)
         if (data.type == BackgroundEvent::SpeedChange)
         {
             m_speed = data.value * chunkWidth;
+            m_offset = 0.f;
+        }
+        else if (data.type == BackgroundEvent::Shake)
+        {
+            m_offset = data.value * chunkWidth;
+            //DPRINT("Offset", std::to_string(m_offset));
         }
     }
     else if (msg.id == MessageID::GameMessage)
@@ -124,17 +138,31 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
     auto& chunkComponent = entity.getComponent<TerrainChunk>();
     std::size_t halfCount = chunkComponent.PointCount / 2u;
     
-    const float spacing = chunkWidth / (halfCount - 1);
+    const float spacing = chunkWidth / (halfCount - 1); //remember there are one fewer 'segments' than points
     for (auto i = 0u; i < halfCount; ++i)
     {
         float xPos =  -(chunkWidth / 2.f) + (spacing * i);
+        auto noise = glm::simplex(glm::vec2(m_bottomX, m_bottomX++)) * 0.5f;        
         
         //bottom row
-        chunkComponent.points[i] = { xPos, -2.f };
+        chunkComponent.points[i] = { xPos, -2.f + 
+            m_shortWavetable[(m_topIndexShort + 50) % m_shortWavetable.size()] - 
+            m_longWaveTable[(m_topIndexLong + 30) % m_longWaveTable.size()] + noise };
+
 
         //top row
-        chunkComponent.points[i + halfCount] = { xPos, 2.f };
+        noise = glm::simplex(glm::vec2(m_topX, m_topX++)) * 0.6f;
+        chunkComponent.points[i + halfCount] = { xPos, 2.f + 
+            m_shortWavetable[m_topIndexShort] + 
+            m_longWaveTable[m_topIndexLong] - noise};
+
+        m_topIndexShort = (m_topIndexShort + 1) % m_shortWavetable.size();
+        m_topIndexLong = (m_topIndexLong + 1) % m_longWaveTable.size();
     }
+    chunkComponent.points[0].y = m_lastBottom;
+    chunkComponent.points[halfCount].y = m_lastTop;
+    m_lastBottom = chunkComponent.points[halfCount - 1].y;
+    m_lastTop = chunkComponent.points.back().y;
 
 
     //build mesh. first half of points are bottom chunk, then rest are for top
@@ -142,14 +170,23 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
     vertData.reserve((chunkComponent.PointCount * 2) * 5); //includes colour vals
     for (auto i = 0u; i < halfCount; ++i)
     {
+        float zPos = static_cast<float>(i % 2);
+        zPos *= 0.2f;
+        
+        //pos
         vertData.push_back(chunkComponent.points[i].x);
         vertData.push_back(chunkComponent.points[i].y);
+
+        //colour
         vertData.push_back(0.f);
         vertData.push_back(0.f);
         vertData.push_back(0.f);
 
+
+
         vertData.push_back(chunkComponent.points[i].x);
         vertData.push_back(-(chunkHeight / 2.f));
+        
         vertData.push_back(0.f);
         vertData.push_back(0.f);
         vertData.push_back(0.f);
@@ -159,16 +196,22 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
     {
         vertData.push_back(chunkComponent.points[i].x);
         vertData.push_back(chunkHeight / 2.f);
+        
         vertData.push_back(0.f);
         vertData.push_back(0.f);
         vertData.push_back(0.f);
 
+
+
         vertData.push_back(chunkComponent.points[i].x);
         vertData.push_back(chunkComponent.points[i].y);
+
         vertData.push_back(0.f);
         vertData.push_back(0.f);
         vertData.push_back(0.f);
     }
+
+    calcNormals(vertData);
 
     //update the vertices   
     auto& mesh = entity.getComponent<cro::Model>().getMeshData();
@@ -178,4 +221,9 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo));
     glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, mesh.vertexCount * mesh.vertexSize, vertData.data()));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+}
+
+void ChunkSystem::calcNormals(std::vector<float>& data)
+{
+
 }

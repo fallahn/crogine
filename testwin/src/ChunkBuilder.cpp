@@ -39,10 +39,11 @@ cro::Mesh::Data ChunkBuilder::build() const
 
     data.attributes[cro::Mesh::Position] = 2;
     data.attributes[cro::Mesh::Colour] = 3;
+
     data.primitiveType = GL_TRIANGLE_STRIP;
     data.submeshCount = 2;
     data.vertexCount = TerrainChunk::PointCount * 2;
-    data.vertexSize = (data.attributes[cro::Mesh::Position] + data.attributes[cro::Mesh::Colour]) * sizeof(float);
+    data.vertexSize = (data.attributes[cro::Mesh::Position] + data.attributes[cro::Mesh::Colour] + data.attributes[cro::Mesh::Normal]) * sizeof(float);
     glCheck(glGenBuffers(1, &data.vbo));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vbo));
     glCheck(glBufferData(GL_ARRAY_BUFFER, data.vertexCount * data.vertexSize, NULL, GL_DYNAMIC_DRAW));
