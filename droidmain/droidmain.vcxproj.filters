@@ -57,5 +57,11 @@
     <ClCompile Include="..\testwin\src\LoadingScreen.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
+    <ClCompile Include="..\testwin\src\TerrainChunk.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\testwin\src\ChunkBuilder.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
