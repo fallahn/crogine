@@ -57,7 +57,7 @@ cro::Mesh::Data ChunkBuilder::build() const
     data.indexData[0].primitiveType = data.primitiveType;
 
     std::array<cro::uint16, indexCount> indices;
-    for (auto i = 0; i < indexCount; ++i)
+    for (auto i = 0u; i < indexCount; ++i)
     {
         indices[i] = i;
     }
@@ -69,7 +69,7 @@ cro::Mesh::Data ChunkBuilder::build() const
     data.indexData[1].indexCount = indexCount;
     data.indexData[1].primitiveType = data.primitiveType;
 
-    for (auto i = 0; i < indexCount; ++i)
+    for (auto i = 0u; i < indexCount; ++i)
     {
         indices[i] += indexCount;
     }
