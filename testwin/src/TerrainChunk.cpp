@@ -142,7 +142,8 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
     for (auto i = 0u; i < halfCount; ++i)
     {
         float xPos =  -(chunkWidth / 2.f) + (spacing * i);
-        auto noise = glm::simplex(glm::vec2(m_bottomX, m_bottomX++)) * 0.5f;        
+        auto noise = glm::simplex(glm::vec2(m_bottomX, m_bottomX)) * 0.5f;        
+        m_bottomX++;
         
         //bottom row
         chunkComponent.points[i] = { xPos, -2.f + 
@@ -151,7 +152,8 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
 
 
         //top row
-        noise = glm::simplex(glm::vec2(m_topX, m_topX++)) * 0.6f;
+        noise = glm::simplex(glm::vec2(m_topX, m_topX)) * 0.6f;
+        m_topX++;
         chunkComponent.points[i + halfCount] = { xPos, 2.f + 
             m_shortWavetable[m_topIndexShort] + 
             m_longWaveTable[m_topIndexLong] - noise};
