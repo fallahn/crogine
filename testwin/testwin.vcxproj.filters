@@ -81,6 +81,9 @@
     <ClCompile Include="src\ChunkBuilder.cpp">
       <Filter>Source Files\TL</Filter>
     </ClCompile>
+    <ClCompile Include="src\RockFallSystem.cpp">
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -136,6 +139,9 @@
     </ClInclude>
     <ClInclude Include="src\ErrorCheck.hpp">
       <Filter>Header Files\TL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RockFallSystem.hpp">
+      <Filter>Header Files\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

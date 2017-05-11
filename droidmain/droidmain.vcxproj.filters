@@ -63,5 +63,8 @@
     <ClCompile Include="..\testwin\src\ChunkBuilder.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
+    <ClCompile Include="..\testwin\src\RockFallSystem.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

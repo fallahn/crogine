@@ -299,6 +299,7 @@
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\PostRadial.cpp" />
+    <ClCompile Include="src\RockFallSystem.cpp" />
     <ClCompile Include="src\RotateSystem.cpp" />
     <ClCompile Include="src\SliderSystem.cpp" />
     <ClCompile Include="src\TerrainChunk.cpp" />
@@ -317,6 +318,7 @@
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\PostRadial.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
+    <ClInclude Include="src\RockFallSystem.hpp" />
     <ClInclude Include="src\RotateSystem.hpp" />
     <ClInclude Include="src\Slider.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />

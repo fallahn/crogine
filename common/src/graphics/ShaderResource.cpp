@@ -97,6 +97,10 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     {
         defines += "\n#define VERTEX_COLOUR";
     }
+    if (flags & BuiltInFlags::Subrects)
+    {
+        defines += "\n#define SUBRECTS";
+    }
     defines += "\n";
 
     bool success = false;
