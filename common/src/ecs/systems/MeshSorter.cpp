@@ -149,9 +149,9 @@ void MeshSorter::process(cro::Time)
 
             //foreach material
             //add ent/index pair to alpha or opaque list
-            for (auto i = 0; i < model.m_meshData.submeshCount; ++i)
+            for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
             {
-                if (model.m_materials[i].blendMode == Material::BlendMode::Alpha)
+                if (model.m_materials[i].blendMode != Material::BlendMode::None)
                 {
                     transparent.second.matIDs.push_back(i);
                     transparent.second.flags = static_cast<int64>(worldPos.z * 1000000.f); //suitably large number to shift decimal point

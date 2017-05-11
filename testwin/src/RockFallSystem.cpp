@@ -37,7 +37,7 @@ source distribution.
 
 namespace
 {
-    const float gravity = 0.4f;
+    const float gravity = 7.95f;
     const float spawnTime = 1.7f;
     const float shakeTime = 1.f;
     const float newRockTime = spawnTime + shakeTime;
@@ -52,7 +52,7 @@ RockFallSystem::RockFallSystem(cro::MessageBus& mb)
     requireComponent<cro::Transform>();
     requireComponent<RockFall>();
 
-    m_wavetable = cro::Util::Wavetable::sine(10.f, 0.7f);
+    m_wavetable = cro::Util::Wavetable::sine(10.f, 1.2f);
 }
 
 //public
@@ -116,7 +116,7 @@ void RockFallSystem::process(cro::Time dt)
             break;
         case RockFall::Falling:
             rockfall.velocity += gravity * dtSec;
-            tx.move({ 0.f, -rockfall.velocity, 0.f });
+            tx.move({ 0.f, -rockfall.velocity * dtSec, 0.f });
 
             if (tx.getPosition().y < -4.f)
             {
