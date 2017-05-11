@@ -60,6 +60,7 @@ namespace cro
             NormalMap = 0x8,
             /*MaskMap = 0x10,
             Skinning = 0x20*/
+            Subrects = 0x40
         };
         
         ShaderResource();

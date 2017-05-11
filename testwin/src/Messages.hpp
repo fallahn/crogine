@@ -46,7 +46,8 @@ struct BackgroundEvent final
     enum
     {
         SpeedChange,
-        Shake
+        Shake,
+        ModeChanged
     } type;
     float value = 0.f;
 };

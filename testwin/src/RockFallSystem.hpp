@@ -27,65 +27,44 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_RESOURCE_IDS_HPP_
-#define TL_RESOURCE_IDS_HPP_
+#ifndef TL_ROCKFALL_HPP_
+#define TL_ROCKFALL_HPP_
 
-#include <crogine/graphics/MeshResource.hpp>
+#include <crogine/ecs/System.hpp>
+#include <crogine/core/Clock.hpp>
 
-namespace MaterialID
+//component
+struct RockFall final
 {
     enum
     {
-        Moon,
-        Stars,
-        Planet,
-        PlanetClouds,
-        Roids,
-        GameBackgroundFar,
-        GameBackgroundMid,
-        GameBackgroundNear,
-        PlayerShip,
-        TerrainChunk,
-        Rockfall, Rockfall2 //hmm a bit hacky but we want a variant for each entity
-    };
-}
+        Idle,
+        Spawning,
+        Shaking,
+        Falling
+    }state = Idle;
+    float velocity = 0.f;
+    float stateTime = 0.f;
+    std::size_t wavetableIndex = 0;
+};
 
-namespace MeshID
+//system
+class RockFallSystem final : public cro::System
 {
-    enum
-    {
-        Roids = cro::Mesh::ID::Count,
-        Moon,
-        GameBackground,
-        PlayerShip,
-        TerrainChunkA,
-        TerrainChunkB,
-        RockQuad
-    };
-}
+public:
+    RockFallSystem(cro::MessageBus&);
 
-namespace FontID
-{
-    enum
-    {
-        MenuFont
-    };
-}
+    void process(cro::Time) override;
 
-namespace ShaderID
-{
-    enum
-    {
-        Background
-    };
-}
+    void handleMessage(const cro::Message&) override;
 
-namespace CommandID
-{
-    enum
-    {
-        MenuController = 0x1
-    };
-}
+    void setRunning(bool r) { m_running = r; }
 
-#endif //TL_RESOURCE_IDS_HPP_
+private:
+
+    bool m_running;
+    cro::Clock m_clock;
+    std::vector<float> m_wavetable;
+};
+
+#endif //TL_ROCKFALL_HPP_

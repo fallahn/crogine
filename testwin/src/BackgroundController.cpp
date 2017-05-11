@@ -102,4 +102,7 @@ void BackgroundController::setMode(Mode mode)
     {
         setScrollSpeed(0.f);
     }
+    auto* msg = postMessage<BackgroundEvent>(MessageID::BackgroundSystem);
+    msg->type = BackgroundEvent::ModeChanged;
+    msg->value = (mode == Mode::Shake) ? 1.f : 0.f;
 }

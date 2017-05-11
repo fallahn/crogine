@@ -333,6 +333,7 @@
     <ClCompile Include="..\testwin\src\MenuState.cpp" />
     <ClCompile Include="..\testwin\src\MyApp.cpp" />
     <ClCompile Include="..\testwin\src\PostRadial.cpp" />
+    <ClCompile Include="..\testwin\src\RockFallSystem.cpp" />
     <ClCompile Include="..\testwin\src\RotateSystem.cpp" />
     <ClCompile Include="..\testwin\src\SliderSystem.cpp" />
     <ClCompile Include="..\testwin\src\TerrainChunk.cpp" />

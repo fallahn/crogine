@@ -36,6 +36,7 @@ source distribution.
 #include "TerrainChunk.hpp"
 #include "ChunkBuilder.hpp"
 #include "Messages.hpp"
+#include "RockFallSystem.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -54,6 +55,7 @@ namespace
 {
     BackgroundController* cnt = nullptr;
     const glm::vec2 backgroundSize(21.3f, 7.2f);
+    std::size_t rockfallCount = 2;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -115,7 +117,7 @@ void GameState::addSystems()
     cnt = &m_scene.addSystem<BackgroundController>(mb);
     cnt->setScrollSpeed(0.2f);
     m_scene.addSystem<ChunkSystem>(mb);
-
+    m_scene.addSystem<RockFallSystem>(mb);
     m_scene.addSystem<RotateSystem>(mb);
 
     m_scene.addPostProcess<PostRadial>();
@@ -162,6 +164,18 @@ void GameState::loadAssets()
     ChunkBuilder chunkBuilder;
     m_meshResource.loadMesh(chunkBuilder, MeshID::TerrainChunkA);
     m_meshResource.loadMesh(chunkBuilder, MeshID::TerrainChunkB);
+
+
+    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::Subrects);
+    for (auto i = 0u; i < rockfallCount; ++i)
+    {
+        auto& rockMat = m_materialResource.add(MaterialID::Rockfall + i, m_shaderResource.get(shaderID));
+        rockMat.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/npc/tites.png"));
+        rockMat.setProperty("u_subrect", glm::vec4(0.f, 0.f, 0.25f, 1.f));
+        rockMat.blendMode = cro::Material::BlendMode::Alpha;
+    }
+    cro::QuadBuilder rockQuad({ 1.f, 1.f });
+    m_meshResource.loadMesh(rockQuad, MeshID::RockQuad);
 }
 
 void GameState::createScene()
@@ -193,6 +207,18 @@ void GameState::createScene()
     chunkTxB.setPosition({ backgroundSize.x, 0.f, -9.f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::TerrainChunkB), m_materialResource.get(MaterialID::TerrainChunk));
     entity.addComponent<TerrainChunk>();
+
+    //some rockfall parts
+    for (auto i = 0u; i < rockfallCount; ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<RockFall>();
+        auto& tx = entity.addComponent<cro::Transform>();
+        tx.setScale({ 0.6f, 1.2f, 1.f });
+        tx.setPosition({ 0.f, 3.4f, -8.9f });
+
+        entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::RockQuad), m_materialResource.get(MaterialID::Rockfall + i));
+    }
 
     //player ship
     entity = m_scene.createEntity();

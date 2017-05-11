@@ -42,6 +42,7 @@ using namespace cro::Material;
 
 namespace
 {
+#ifdef _DEBUG_
     void exists(const std::string& name, const Material::PropertyList& properties)
     {
         if (properties.count(name) == 0)
@@ -49,6 +50,7 @@ namespace
             Logger::log("Property " + name + " doesn't exist in shader", Logger::Type::Warning);
         }
     }
+#endif //_DEBUG_
 }
 
 Property::Property()
@@ -94,6 +96,20 @@ void Data::setProperty(const std::string& name, glm::vec3 value)
         result->second.second.vecValue[1] = value.y;
         result->second.second.vecValue[2] = value.z;
         result->second.second.type = Property::Vec3;
+    }
+}
+
+void Data::setProperty(const std::string& name, glm::vec4 value)
+{
+    VERIFY(name, properties);
+    auto result = properties.find(name);
+    if (result != properties.end())
+    {
+        result->second.second.vecValue[0] = value.x;
+        result->second.second.vecValue[1] = value.y;
+        result->second.second.vecValue[2] = value.z;
+        result->second.second.vecValue[3] = value.w;
+        result->second.second.type = Property::Vec4;
     }
 }
 
