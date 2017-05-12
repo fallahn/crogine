@@ -183,5 +183,8 @@
     <ClCompile Include="..\common\src\core\DefaultLoadingScreen.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\core\Wavetable.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

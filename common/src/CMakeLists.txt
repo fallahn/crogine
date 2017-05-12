@@ -21,6 +21,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/SystemManager.cpp
 
   ${PROJECT_DIR}/ecs/components/Model.cpp
+  ${PROJECT_DIR}/ecs/components/ParticleEmitter.cpp
   ${PROJECT_DIR}/ecs/components/Sprite.cpp
   ${PROJECT_DIR}/ecs/components/Text.cpp
   ${PROJECT_DIR}/ecs/components/Transform.cpp
@@ -28,6 +29,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/CommandSystem.cpp
   ${PROJECT_DIR}/ecs/systems/DebugInfo.cpp
   ${PROJECT_DIR}/ecs/systems/MeshSorter.cpp
+  ${PROJECT_DIR}/ecs/systems/ParticleSystem.cpp
   ${PROJECT_DIR}/ecs/systems/SceneGraph.cpp
   ${PROJECT_DIR}/ecs/systems/SceneRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteRenderer.cpp
