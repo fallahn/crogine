@@ -40,11 +40,11 @@ namespace cro
         {
             const static std::string Vertex = R"(
                 attribute vec4 a_position;
-                attribute vec4 a_colour;
+                attribute LOW vec4 a_colour;
 
                 uniform mat4 u_projectionMatrix;
 
-                varying vec4 v_colour;
+                varying MED vec4 v_colour;
 
                 void main()
                 {
@@ -53,7 +53,7 @@ namespace cro
                 })";
 
             const static std::string Fragment = R"(
-                varying vec4 v_colour;
+                varying LOW vec4 v_colour;
 
                 void main()
                 {

@@ -40,12 +40,12 @@ namespace cro
         {
             const static std::string Vertex = R"(
                 attribute vec4 a_position;
-                attribute vec3 a_colour;
+                attribute LOW vec4 a_colour;
                 attribute vec3 a_normal;
                 attribute vec3 a_tangent;
                 attribute vec3 a_bitangent;
-                attribute vec2 a_texCoord0;
-                attribute vec2 a_texCoord1;
+                attribute MED vec2 a_texCoord0;
+                attribute MED vec2 a_texCoord1;
 
                 uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;
@@ -53,10 +53,10 @@ namespace cro
                 uniform mat4 u_projectionMatrix;
                 
                 varying vec3 v_worldPosition;
-                varying vec3 v_colour;
+                varying LOW vec4 v_colour;
                 varying vec3 v_normalVector;
-                varying vec2 v_texCoord0;
-                varying vec2 v_texCoord1;
+                varying MED vec2 v_texCoord0;
+                varying MED vec2 v_texCoord1;
 
 
                 void main()

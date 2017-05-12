@@ -52,7 +52,7 @@ RockFallSystem::RockFallSystem(cro::MessageBus& mb)
     requireComponent<cro::Transform>();
     requireComponent<RockFall>();
 
-    m_wavetable = cro::Util::Wavetable::sine(10.f, 1.2f);
+    m_wavetable = cro::Util::Wavetable::sine(10.f, 0.02f);
 }
 
 //public
@@ -107,7 +107,7 @@ void RockFallSystem::process(cro::Time dt)
             break;
         case RockFall::Shaking:
             rockfall.stateTime -= dtSec;
-            tx.move({ m_wavetable[rockfall.wavetableIndex] * dtSec, 0.f, 0.f });
+            tx.move({ m_wavetable[rockfall.wavetableIndex], 0.f, 0.f });
             rockfall.wavetableIndex = (rockfall.wavetableIndex + 1) % m_wavetable.size();
             if (rockfall.stateTime <= 0)
             {

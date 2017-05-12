@@ -42,14 +42,14 @@ namespace Shaders
     {
         const static std::string Vertex = R"(
             attribute vec4 a_position;
-            attribute vec2 a_texCoord0;
+            attribute MED vec2 a_texCoord0;
 
             uniform mat4 u_worldMatrix;
             uniform mat4 u_worldViewMatrix;               
             uniform mat4 u_projectionMatrix;
             uniform vec2 u_textureOffset;
                 
-            varying vec2 v_texCoord0;
+            varying MED vec2 v_texCoord0;
 
             void main()
             {
@@ -62,7 +62,7 @@ namespace Shaders
         const static std::string Fragment = R"(
             uniform sampler2D u_diffuseMap;
 
-            varying vec2 v_texCoord0;
+            varying MED vec2 v_texCoord0;
                 
             void main()
             {

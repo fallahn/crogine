@@ -40,15 +40,15 @@ namespace cro
         {
             const static std::string Vertex = R"(
                 attribute vec4 a_position;
-                attribute vec4 a_colour;
-                attribute vec2 a_texCoord0;
-                attribute vec2 a_texCoord1; //this actually has the matrix index in the x component
+                attribute LOW vec4 a_colour;
+                attribute MED vec2 a_texCoord0;
+                attribute MED vec2 a_texCoord1; //this actually has the matrix index in the x component
 
                 uniform mat4 u_projectionMatrix;
                 uniform mat4 u_worldMatrix[MAX_MATRICES];               
                
-                varying vec4 v_colour;
-                varying vec2 v_texCoord0;
+                varying LOW vec4 v_colour;
+                varying MED vec2 v_texCoord0;
 
                 void main()
                 {
@@ -62,8 +62,8 @@ namespace cro
             const static std::string Fragment = R"(
                 uniform sampler2D u_texture;
                 
-                varying vec4 v_colour;
-                varying vec2 v_texCoord0;
+                varying LOW vec4 v_colour;
+                varying MED vec2 v_texCoord0;
 
                 void main()
                 {
@@ -76,8 +76,8 @@ namespace cro
             const static std::string BitmapFragment = R"(
                 uniform sampler2D u_texture;
                 
-                varying vec4 v_colour;
-                varying vec2 v_texCoord0;
+                varying LOW vec4 v_colour;
+                varying MED vec2 v_texCoord0;
 
                 void main()
                 {
@@ -89,18 +89,18 @@ namespace cro
             const static std::string SDFFragment = R"(
                 uniform sampler2D u_texture;
                 
-                varying vec4 v_colour;
-                varying vec2 v_texCoord0;
+                varying LOW vec4 v_colour;
+                varying MED vec2 v_texCoord0;
 
-                float spread = 4.0;
-                float scale = 5.0;
-                float smoothing = 1.0 / 16.0;
+                MED float spread = 4.0;
+                MED float scale = 5.0;
+                MED float smoothing = 1.0 / 16.0;
 
                 void main()
                 {
                     //smoothing = 0.25 / (spread * scale);
-                    float value = texture2D(u_texture, v_texCoord0).r;
-                    float alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, value);
+                    MED float value = texture2D(u_texture, v_texCoord0).r;
+                    MED float alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, value);
                     gl_FragColor = vec4(v_colour.rgb, v_colour.a * alpha);
                 })";
         }

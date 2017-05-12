@@ -36,6 +36,21 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    const std::string precision = R"(
+        #if defined(MOBILE)
+        #define HIGH highp
+        #define MED mediump
+        #define LOW lowp
+        #else
+        #define HIGH
+        #define MED
+        #define LOW
+        #endif
+        )";
+}
+
 Shader::Shader()
     : m_handle  (0),
     m_attribMap ({})
@@ -98,12 +113,12 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
     GLuint vertID = glCreateShader(GL_VERTEX_SHADER);
     
 #ifdef __ANDROID__
-    const char* src[] = { "#version 100\n", defines.c_str(), vertex.c_str() };
+    const char* src[] = { "#version 100\n#define MOBILE\n", precision.c_str(), defines.c_str(), vertex.c_str() };
 #else
-    const char* src[] = { "#version 130\n", defines.c_str(), vertex.c_str() };
+    const char* src[] = { "#version 130\n", precision.c_str(), defines.c_str(), vertex.c_str() };
 #endif //__ANDROID__
 
-    glCheck(glShaderSource(vertID, 3, src, nullptr));
+    glCheck(glShaderSource(vertID, 4, src, nullptr));
     glCheck(glCompileShader(vertID));
 
     GLint result = GL_FALSE;
@@ -125,8 +140,8 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
     
     //compile frag shader
     GLuint fragID = glCreateShader(GL_FRAGMENT_SHADER);
-    src[2] = fragment.c_str();
-    glCheck(glShaderSource(fragID, 3, src, nullptr));
+    src[3] = fragment.c_str();
+    glCheck(glShaderSource(fragID, 4, src, nullptr));
     glCheck(glCompileShader(fragID));
 
     result = GL_FALSE;
