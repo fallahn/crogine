@@ -39,7 +39,7 @@ namespace
 {
     const float gravity = 7.95f;
     const float spawnTime = 1.7f;
-    const float shakeTime = 1.f;
+    const float shakeTime = 1.8f;
     const float newRockTime = spawnTime + shakeTime;
 
     std::array<float, 4u> textureOffsets = { 0.f, 0.25f, 0.5f, 0.75f };
@@ -99,7 +99,7 @@ void RockFallSystem::process(cro::Time dt)
             tx.move({ 0.f, -0.6f * dtSec, 0.f });
             if (rockfall.stateTime <= 0)
             {
-                rockfall.stateTime = shakeTime + cro::Util::Random::value(-0.5f, 0.5f);
+                rockfall.stateTime = shakeTime + cro::Util::Random::value(-0.8f, 0.8f);
                 rockfall.state = RockFall::Shaking;
             }
             break;
@@ -133,6 +133,24 @@ void RockFallSystem::handleMessage(const cro::Message& msg)
         if (data.type == BackgroundEvent::ModeChanged)
         {
             setRunning((data.value != 0));
+        }
+    }
+}
+
+void RockFallSystem::setRunning(bool r)
+{
+    m_running = r;
+
+    if (!r) //drop everything!
+    {
+        auto& entities = getEntities();
+        for (auto& e : entities)
+        {
+            auto& rf = e.getComponent<RockFall>();
+            if (rf.state != RockFall::Idle)
+            {
+                rf.state = RockFall::Falling;
+            }
         }
     }
 }

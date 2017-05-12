@@ -58,7 +58,7 @@ public:
 
     void handleMessage(const cro::Message&) override;
 
-    void setRunning(bool r) { m_running = r; }
+    void setRunning(bool);
 
 private:
 

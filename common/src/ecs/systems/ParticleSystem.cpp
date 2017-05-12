@@ -130,8 +130,7 @@ void ParticleSystem::process(Time dt)
         {
             if (emitter.m_particles[i].lifetime < 0)
             {
-                auto it = std::begin(emitter.m_particles);
-                std::swap(it + i, it + emitter.m_nextFreeParticle);
+                std::swap(emitter.m_particles[i], emitter.m_particles[emitter.m_nextFreeParticle]);
                 emitter.m_nextFreeParticle--;
             }
         }

@@ -236,6 +236,7 @@
     <ClCompile Include="..\common\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
+    <ClCompile Include="..\common\src\ecs\components\ParticleEmitter.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Sprite.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Text.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp" />
@@ -247,6 +248,7 @@
     <ClCompile Include="..\common\src\ecs\systems\CommandSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\DebugInfo.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\MeshSorter.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\ParticleSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneGraph.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />
