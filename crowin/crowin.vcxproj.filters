@@ -243,9 +243,6 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneGraph.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\include\crogine\ecs\components\SceneNode.hpp">
-      <Filter>Header Files\ecs\components</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\src\detail\GLCheck.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
@@ -302,6 +299,12 @@
     </ClInclude>
     <ClInclude Include="..\common\include\crogine\core\Wavetable.hpp">
       <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\components\ParticleEmitter.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\ParticleSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -460,6 +463,12 @@
     </ClCompile>
     <ClCompile Include="..\common\src\core\Wavetable.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\components\ParticleEmitter.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\ParticleSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

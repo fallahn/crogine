@@ -230,6 +230,7 @@
     <ClCompile Include="..\common\src\core\MessageBus.cpp" />
     <ClCompile Include="..\common\src\core\State.cpp" />
     <ClCompile Include="..\common\src\core\StateStack.cpp" />
+    <ClCompile Include="..\common\src\core\Wavetable.cpp" />
     <ClCompile Include="..\common\src\core\Window.cpp" />
     <ClCompile Include="..\common\src\detail\glad.c" />
     <ClCompile Include="..\common\src\detail\SDLResource.cpp" />

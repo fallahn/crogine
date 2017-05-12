@@ -46,7 +46,7 @@ cro::Mesh::Data ChunkBuilder::build() const
     data.vertexSize = (data.attributes[cro::Mesh::Position] + data.attributes[cro::Mesh::Colour] + data.attributes[cro::Mesh::Normal]) * sizeof(float);
     glCheck(glGenBuffers(1, &data.vbo));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, data.vertexCount * data.vertexSize, NULL, GL_DYNAMIC_DRAW));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, data.vertexCount * data.vertexSize, nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     
     //index array for top and bottom parts
