@@ -41,7 +41,7 @@ namespace cro
             const static std::string Vertex = R"(
                 attribute vec4 a_position;
                 #if defined (VERTEX_COLOUR)
-                attribute vec4 a_colour;
+                attribute LOW vec4 a_colour;
                 #endif
                 attribute vec3 a_normal;
                 #if defined(BUMP)
@@ -49,9 +49,9 @@ namespace cro
                 attribute vec3 a_bitangent;
                 #endif
                 #if defined(TEXTURED)
-                attribute vec2 a_texCoord0;
+                attribute MED vec2 a_texCoord0;
                 #if defined (LIGHTMAPPED)
-                attribute vec2 a_texCoord1;
+                attribute MED vec2 a_texCoord1;
                 #endif
                 #endif
 
@@ -62,7 +62,7 @@ namespace cro
                 
                 varying vec3 v_worldPosition;
                 #if defined (VERTEX_COLOUR)
-                varying vec4 v_colour;
+                varying LOW vec4 v_colour;
                 #endif
                 #if defined(BUMP)
                 varying vec3 v_tbn[3];
@@ -70,9 +70,9 @@ namespace cro
                 varying vec3 v_normalVector;
                 #endif
                 #if defined(TEXTURED)
-                varying vec2 v_texCoord0;
+                varying MED vec2 v_texCoord0;
                 #if defined(LIGHTMAPPED)
-                varying vec2 v_texCoord1;
+                varying MED vec2 v_texCoord1;
                 #endif
                 #endif
 
@@ -115,41 +115,41 @@ namespace cro
                 #endif
                 #endif
 
-                uniform vec3 u_cameraWorldPosition;
+                uniform HIGH vec3 u_cameraWorldPosition;
                 #if defined(COLOURED)
-                uniform vec4 u_colour;
+                uniform LOW vec4 u_colour;
                 #endif
 
-                varying vec3 v_worldPosition;
+                varying HIGH vec3 v_worldPosition;
                 #if defined(VERTEX_COLOUR)
-                varying vec4 v_colour;
+                varying LOW vec4 v_colour;
                 #endif
                 #if defined (BUMP)
-                varying vec3 v_tbn[3];
+                varying HIGH vec3 v_tbn[3];
                 #else
-                varying vec3 v_normalVector;
+                varying HIGH vec3 v_normalVector;
                 #endif
                 #if defined(TEXTURED)
-                varying vec2 v_texCoord0;
+                varying MED vec2 v_texCoord0;
                 #if defined(LIGHTMAPPED)
-                varying vec2 v_texCoord1;
+                varying MED vec2 v_texCoord1;
                 #endif
                 #endif
                 
-                vec3 lightDir = vec3(0.1, -0.8, -0.2);
+                HIGH vec3 lightDir = vec3(0.1, -0.8, -0.2);
 
-                vec3 diffuseColour;
-                vec3 eyeDirection;
-                vec3 mask;
+                LOW vec3 diffuseColour;
+                HIGH vec3 eyeDirection;
+                LOW vec3 mask;
                 vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
                 {
-                    float diffuseAmount = max(dot(normal, lightDirection), 0.0);
+                    MED float diffuseAmount = max(dot(normal, lightDirection), 0.0);
                     //diffuseAmount = pow((diffuseAmount * 0.5) + 5.0, 2.0);
-                    vec3 mixedColour = diffuseColour * lightDiffuse * diffuseAmount * falloff;
+                    MED vec3 mixedColour = diffuseColour * lightDiffuse * diffuseAmount * falloff;
 
-                    vec3 halfVec = normalize(eyeDirection + lightDirection);
-                    float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
-                    vec3 specularColour = lightSpecular * vec3(pow(specularAngle, ((254.0 * mask.r) + 1.0))) * falloff;
+                    MED vec3 halfVec = normalize(eyeDirection + lightDirection);
+                    MED float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
+                    LOW vec3 specularColour = lightSpecular * vec3(pow(specularAngle, ((254.0 * mask.r) + 1.0))) * falloff;
 
                     return mixedColour + (specularColour * mask.g);
                 }
@@ -157,23 +157,23 @@ namespace cro
                 void main()
                 {
                 #if defined (BUMP)
-                    vec3 texNormal = texture2D(u_normalMap, v_texCoord0).rgb * 2.0 - 1.0;
-                    vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
+                    MED vec3 texNormal = texture2D(u_normalMap, v_texCoord0).rgb * 2.0 - 1.0;
+                    MED vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
                 #else
-                    vec3 normal = normalize(v_normalVector);
+                    MED vec3 normal = normalize(v_normalVector);
                 #endif
                 #if defined (TEXTURED)
-                    vec4 diffuse = texture2D(u_diffuseMap, v_texCoord0);
+                    LOW vec4 diffuse = texture2D(u_diffuseMap, v_texCoord0);
                     mask = texture2D(u_maskMap, v_texCoord0).rgb;
                 #elif defined(COLOURED)
-                    vec4 diffuse = u_colour;
+                    LOW vec4 diffuse = u_colour;
                 #elif defined(VERTEX_COLOURED)
-                    vec4 diffuse = v_colour;
+                    LOW vec4 diffuse = v_colour;
                 #else
-                    vec4 diffuse = vec4(1.0);
+                    LOW vec4 diffuse = vec4(1.0);
                 #endif
                     diffuseColour = diffuse.rgb;
-                    vec3 blendedColour = diffuse.rgb * 0.2; //ambience
+                    LOW vec3 blendedColour = diffuse.rgb * 0.2; //ambience
                     eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
 
                     blendedColour += calcLighting(normal, normalize(-lightDir), vec3(0.48), vec3(1.0), 1.0);

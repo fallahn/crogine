@@ -44,7 +44,7 @@ namespace cro
         uniform mat4 u_worldMatrix;
         uniform mat4 u_projectionMatrix;
             
-        varying vec2 v_texCoord;
+        varying MED vec2 v_texCoord;
 
         void main()
         {

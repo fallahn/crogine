@@ -44,9 +44,9 @@ namespace cro
                 attribute vec4 a_colour;
                 #endif
                 #if defined(TEXTURED)
-                attribute vec2 a_texCoord0;
+                attribute MED vec2 a_texCoord0;
                 #if defined(LIGHTMAPPED)
-                attribute vec2 a_texCoord1;
+                attribute MED vec2 a_texCoord1;
                 #endif
                 #endif
 
@@ -54,16 +54,16 @@ namespace cro
                 uniform mat4 u_worldViewMatrix;               
                 uniform mat4 u_projectionMatrix;
                 #if defined (SUBRECTS)
-                uniform vec4 u_subrect;
+                uniform MED vec4 u_subrect;
                 #endif
                 
                 #if defined (VERTEX_COLOUR)
-                varying vec4 v_colour;
+                varying LOW vec4 v_colour;
                 #endif
                 #if defined (TEXTURED)
-                varying vec2 v_texCoord0;
+                varying MED vec2 v_texCoord0;
                 #if defined (LIGHTMAPPED)
-                varying vec2 v_texCoord1;
+                varying MED vec2 v_texCoord1;
                 #endif
                 #endif
 
@@ -96,12 +96,12 @@ namespace cro
                 #endif
 
                 #if defined (VERTEX_COLOUR)
-                varying vec4 v_colour;
+                varying LOW vec4 v_colour;
                 #endif
                 #if defined (TEXTURED)
-                varying vec2 v_texCoord0;
+                varying MED vec2 v_texCoord0;
                 #if defined (LIGHTMAPPED)
-                varying vec2 v_texCoord1;
+                varying MED vec2 v_texCoord1;
                 #endif
                 #endif
                 

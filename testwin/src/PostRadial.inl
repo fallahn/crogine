@@ -30,15 +30,15 @@ source distribution.
 const std::string extractionFrag = R"(
     uniform sampler2D u_texture;
 
-    varying vec2 v_texCoord;
+    varying MED vec2 v_texCoord;
 
-    const float threshold = 0.8;
-    const float factor = 4.0;
+    const MED float threshold = 0.8;
+    const MED float factor = 4.0;
 
     void main()
     {
-        vec4 colour = texture2D(u_texture, v_texCoord);
-        float luminance = colour.r * 0.2126 + colour.b * 0.7152 + colour.g * 0.0722;
+        LOW vec4 colour = texture2D(u_texture, v_texCoord);
+        LOW float luminance = colour.r * 0.2126 + colour.b * 0.7152 + colour.g * 0.0722;
         colour *= clamp(luminance - threshold, 0.0, 1.0) * factor;
         gl_FragColor = colour;
     }
@@ -53,29 +53,29 @@ const std::string blueDream = R"(
     uniform sampler2D u_texture;
     uniform sampler2D u_baseTexture;
 
-    varying vec2 v_texCoord;
+    varying MED vec2 v_texCoord;
 
-    const float decay = 0.96815;
-    const float exposure = 0.21;
-    const float density = 0.926;
-    const float weight = 0.58767;
+    const MED float decay = 0.96815;
+    const MED float exposure = 0.21;
+    const MED float density = 0.926;
+    const MED float weight = 0.58767;
         
     void main()
     {
-        vec2 deltaTexCoord =  v_texCoord + vec2(-0.5);
+        MED vec2 deltaTexCoord =  v_texCoord + vec2(-0.5);
         deltaTexCoord *= 1.0 / float(SAMPLES) * density;
 
-        vec2 texCoord = v_texCoord;
+        MED vec2 texCoord = v_texCoord;
 
-        float illuminationDecay = 1.0;
-        vec4 colour = texture2D(u_texture, texCoord) * 0.305104;
+        LOW float illuminationDecay = 1.0;
+        LOW vec4 colour = texture2D(u_texture, texCoord) * 0.305104;
         
         texCoord += deltaTexCoord * fract(sin(dot(v_texCoord, vec2(12.9898, 78.233))) * 43758.5453);
 
         for(int i = 0; i < SAMPLES; ++i)
         {
             texCoord -= deltaTexCoord;
-            vec4 deltaColour = texture2D(u_texture, texCoord) * 0.305104;
+            LOW vec4 deltaColour = texture2D(u_texture, texCoord) * 0.305104;
             deltaColour *- illuminationDecay * weight;
             colour += deltaColour;
             illuminationDecay *= decay;
