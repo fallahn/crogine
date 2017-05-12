@@ -44,6 +44,7 @@
     <ClInclude Include="..\common\include\crogine\core\MessageBus.hpp" />
     <ClInclude Include="..\common\include\crogine\core\State.hpp" />
     <ClInclude Include="..\common\include\crogine\core\StateStack.hpp" />
+    <ClInclude Include="..\common\include\crogine\core\Wavetable.hpp" />
     <ClInclude Include="..\common\include\crogine\core\Window.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\SDLResource.hpp" />
@@ -120,6 +121,7 @@
     <ClCompile Include="..\common\src\core\MessageBus.cpp" />
     <ClCompile Include="..\common\src\core\State.cpp" />
     <ClCompile Include="..\common\src\core\StateStack.cpp" />
+    <ClCompile Include="..\common\src\core\Wavetable.cpp" />
     <ClCompile Include="..\common\src\core\Window.cpp" />
     <ClCompile Include="..\common\src\detail\DistanceField.cpp" />
     <ClCompile Include="..\common\src\detail\glad.c" />

@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,44 +27,41 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_ROCKFALL_HPP_
-#define TL_ROCKFALL_HPP_
-
-#include <crogine/ecs/System.hpp>
-#include <crogine/core/Clock.hpp>
 #include <crogine/core/Wavetable.hpp>
+#include <crogine/util/Wavetable.hpp>
 
-//component
-struct RockFall final
+#include <crogine/detail/Assert.hpp>
+
+using namespace cro;
+
+Wavetable::Wavetable(Waveform waveform, float frequency, float amplitude, float updateRate)
+    : m_timestep    (1.f / updateRate),
+    m_accumulator   (0.f),
+    m_currentIndex  (0)
 {
-    enum
+    CRO_ASSERT(waveform == Waveform::Sine, "Other waveforms not yet implemented");
+
+    m_wavetable = Util::Wavetable::sine(frequency, amplitude, updateRate);
+}
+
+Wavetable::Wavetable(const std::vector<float>& data, float updaterate)
+    : m_timestep    (1.f / updaterate),
+    m_accumulator   (0.f),
+    m_currentIndex  (0)
+{
+    m_wavetable = data;
+}
+
+float Wavetable::fetch(Time dt) const
+{
+    CRO_ASSERT(!m_wavetable.empty(), "Invalid wavetable data");
+    
+    m_accumulator  += dt.asSeconds();
+    while (m_accumulator > m_timestep)
     {
-        Idle,
-        Spawning,
-        Shaking,
-        Falling
-    }state = Idle;
-    float velocity = 0.f;
-    float stateTime = 0.f;
-};
+        m_accumulator -= m_timestep;
+        m_currentIndex = (m_currentIndex + 1) % m_wavetable.size();
+    }
 
-//system
-class RockFallSystem final : public cro::System
-{
-public:
-    RockFallSystem(cro::MessageBus&);
-
-    void process(cro::Time) override;
-
-    void handleMessage(const cro::Message&) override;
-
-    void setRunning(bool r) { m_running = r; }
-
-private:
-
-    bool m_running;
-    cro::Clock m_clock;
-    cro::Wavetable m_wavetable;
-};
-
-#endif //TL_ROCKFALL_HPP_
+    return m_wavetable[m_currentIndex];
+}
