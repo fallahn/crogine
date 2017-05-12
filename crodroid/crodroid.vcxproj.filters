@@ -186,5 +186,11 @@
     <ClCompile Include="..\common\src\core\Wavetable.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\components\ParticleEmitter.cpp">
+      <Filter>src\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\ParticleSystem.cpp">
+      <Filter>src\ecs\systems</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
