@@ -300,6 +300,9 @@
     <ClInclude Include="..\common\src\detail\glad.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\core\Wavetable.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -453,6 +456,9 @@
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\core\DefaultLoadingScreen.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\core\Wavetable.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
