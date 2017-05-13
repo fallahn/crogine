@@ -45,6 +45,13 @@ namespace
 {
     const float chunkWidth = 21.3f;
     const float chunkHeight = 7.2f;
+
+    const std::array<float, 13> curve = 
+    {
+        0.4f, 0.55f, 0.65f, 0.8f, 0.9f, 0.95,
+        1.f,
+        0.95f, 0.9f, 0.8f, 0.65f, 0.55f, 0.4f
+    };
 }
 
 ChunkSystem::ChunkSystem(cro::MessageBus& mb)
@@ -142,7 +149,7 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
     for (auto i = 0u; i < halfCount; ++i)
     {
         float xPos =  -(chunkWidth / 2.f) + (spacing * i);
-        auto noise = glm::simplex(glm::vec2(m_bottomX, m_bottomX)) * 0.4f;        
+        auto noise = glm::perlin(glm::vec2(m_bottomX, m_bottomX)) * 0.4f;        
         m_bottomX++;
         
         static const float baseline = 2.1f;
@@ -163,6 +170,17 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
         m_topIndexShort = (m_topIndexShort + 1) % m_shortWavetable.size();
         m_topIndexLong = (m_topIndexLong + 1) % m_longWaveTable.size();
     }
+
+    //add random humps
+    std::size_t offset = ((cro::Util::Random::value(0, 1) % 2) == 0) ? 0 : halfCount;
+    bool bottom = (offset == 0);
+    offset += cro::Util::Random::value(0, static_cast<int>(halfCount - curve.size()));
+    for (auto i = 0u; i < curve.size(); ++i)
+    {
+         bottom ? chunkComponent.points[i + offset].y += (curve[i] * cro::Util::Random::value(1.f, 1.6f))
+             : chunkComponent.points[i + offset].y -= (curve[i] * cro::Util::Random::value(1.f, 1.6f));
+    }
+
     chunkComponent.points[0].y = m_lastBottom;
     chunkComponent.points[halfCount].y = m_lastTop;
     m_lastBottom = chunkComponent.points[halfCount - 1].y;
@@ -186,8 +204,6 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
         vertData.push_back(0.04f);
         vertData.push_back(0.14f);
 
-
-
         vertData.push_back(chunkComponent.points[i].x);
         vertData.push_back(-(chunkHeight / 2.f));
         
@@ -205,8 +221,6 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
         vertData.push_back(0.f);
         vertData.push_back(0.f);
 
-
-
         vertData.push_back(chunkComponent.points[i].x);
         vertData.push_back(chunkComponent.points[i].y);
 
@@ -214,8 +228,6 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
         vertData.push_back(0.04f);
         vertData.push_back(0.14f);
     }
-
-    calcNormals(vertData);
 
     //update the vertices   
     auto& mesh = entity.getComponent<cro::Model>().getMeshData();
@@ -225,9 +237,4 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo));
     glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, mesh.vertexCount * mesh.vertexSize, vertData.data()));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-}
-
-void ChunkSystem::calcNormals(std::vector<float>& data)
-{
-
 }
