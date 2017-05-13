@@ -42,41 +42,30 @@ source distribution.
 
 using namespace cro;
 
-SceneRenderer::SceneRenderer(MessageBus& mb, Entity camera)
+SceneRenderer::SceneRenderer(MessageBus& mb)
     : System            (mb, typeid(SceneRenderer)),
-    m_activeCamera      (camera),
     m_currentTextureUnit(0)
 {
-    CRO_ASSERT(camera.hasComponent<Camera>() && camera.hasComponent<Transform>(), "Invalid camera Entity");
     requireComponent<Transform>();
     //requireComponent<Model>();
 }
 
 //public
-Entity SceneRenderer::setActiveCamera(Entity camera)
-{
-    CRO_ASSERT(camera.hasComponent<Camera>() && camera.hasComponent<Transform>(), "Invalid camera Entity");
-    auto oldCam = m_activeCamera;
-    m_activeCamera = camera;
-    return oldCam;
-}
-
-Entity SceneRenderer::getActiveCamera() const
-{
-    return m_activeCamera;
-}
-
 void SceneRenderer::setDrawableList(MaterialList& entities)
 {
     m_visibleEntities.swap(entities);
     entities.clear();
 }
 
-void SceneRenderer::render()
+void SceneRenderer::render(Entity camera)
 {
-    auto cameraPosition = glm::vec3(m_activeCamera.getComponent<Transform>().getWorldTransform()[3]);
-    auto viewMat = glm::inverse(m_activeCamera.getComponent<Transform>().getWorldTransform());
-    auto projMat = m_activeCamera.getComponent<Camera>().projection;
+    const auto& camTx = camera.getComponent<Transform>();
+    const auto& camComponent = camera.getComponent<Camera>();
+    
+    auto cameraPosition = glm::vec3(camTx.getWorldTransform()[3]);
+    auto viewMat = glm::inverse(camTx.getWorldTransform());
+    auto projMat = camComponent.projection;
+    applyViewport(camComponent.viewport);
 
     for (auto& e : m_visibleEntities)
     {
@@ -133,11 +122,6 @@ void SceneRenderer::render()
         }
         
         glCheck(glUseProgram(0));
-        /*for (auto i = 0; i < m_currentTextureUnit; ++i)
-        {
-            glCheck(glActiveTexture(GL_TEXTURE0 + i));
-            glCheck(glBindTexture(GL_TEXTURE_2D, 0));
-        }*/
     }
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -146,6 +130,8 @@ void SceneRenderer::render()
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
+
+    restorePreviousViewport();
 }
 
 //private

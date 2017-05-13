@@ -51,7 +51,7 @@ namespace cro
     the ECS and providing factory functions for entities and systems. Multple scenes
     can exist at one time, for instance one to draw the game world, and another to draw
     the HUD. Everything is rendered through renderable systems which, in turn, require
-    and ECS - therefor every state which wish to draw something requires at least a scene,
+    an ECS - therefore every state which wishes to draw something requires at least a scene,
     right down to menus. All systems should be created before attempting to create any
     entities else existing entities will not be processed by new systems.
     */
@@ -124,6 +124,23 @@ namespace cro
         Entity getDefaultCamera() const;
 
         /*!
+        \brief Sets the active camera used when rendering.
+        This camera will be used for the entire scene. This means that
+        a scene should be constructed entirely as a 3D or 2D scene, but not both.
+        Rendering overlays such as a UI or menu is usually done by constructing
+        a specific scene, which is then rendered after any 3D scenes, using a 2D
+        (orthographic) camera. A single scene may also be rendered multiple times
+        with different cameras, for example when rendering split screen.
+        \returns Entity used as the previous camera for the scene
+        */
+        Entity setActiveCamera(Entity);
+
+        /*!
+        \brief Returns the entity containing the active camera component
+        */
+        Entity getActiveCamera() const;
+
+        /*!
         \brief Forwards messages to the systems in the scene
         */
         void forwardMessage(const Message&);
@@ -136,6 +153,7 @@ namespace cro
     private:
         MessageBus& m_messageBus;
         Entity::ID m_defaultCamera;
+        Entity::ID m_activeCamera;
 
         std::vector<Entity> m_pendingEntities;
         std::vector<Entity> m_destroyedEntities;

@@ -46,9 +46,25 @@ namespace cro
     */
     struct CRO_EXPORT_API Camera final
     {
+        /*!
+        \brief Projection matrix for this camera.
+        This can be either a perspective or orthographic projection.
+        By default it is constructed to a perspective matrix to match
+        the curent window size.
+        */
         glm::mat4 projection;
 
-        Camera()
+        /*!
+        \brief Viewport.
+        This is in normalised (0 - 1) coordinates to describe which part
+        of the window this camera should render to. By default it is 0, 0, 1, 1
+        which covers the entire screen. Changing this is useful when letterboxing
+        the output to maintain a fixed aspect ratio, or for rendering sub-areas of
+        the screen such as a minimap or split-screen multiplayer.
+        */
+        FloatRect viewport;
+
+        Camera() : viewport(0.f, 0.f, 1.f, 1.f)
         {
             glm::vec2 windowSize(App::getWindow().getSize());
             projection = glm::perspective(0.6f, windowSize.x / windowSize.y, 0.1f, 150.f);

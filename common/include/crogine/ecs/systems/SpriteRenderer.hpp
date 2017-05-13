@@ -42,8 +42,6 @@ source distribution.
 #include <map>
 #include <set>
 
-//#define DEBUG_DRAW 1
-
 namespace cro
 {
     class MessageBus;
@@ -53,7 +51,7 @@ namespace cro
     /*!
     \brief Batches and renders the scene Sprite components
     */
-    class CRO_EXPORT_API SpriteRenderer final : public System, public Renderable, public Detail::SDLResource
+    class CRO_EXPORT_API SpriteRenderer final : public System, public Renderable
     {
     public:
         /*!
@@ -66,8 +64,6 @@ namespace cro
         SpriteRenderer(SpriteRenderer&&) = delete;
         const SpriteRenderer& operator = (const SpriteRenderer&) = delete;
         SpriteRenderer& operator = (SpriteRenderer&&) = delete;
-
-        //TODO setters for view/resolution
 
         enum class DepthAxis
         {
@@ -99,11 +95,9 @@ namespace cro
         /*!
         \brief Renders the Sprite components
         */
-        void render() override;
+        void render(Entity) override;
 
     private:
-        IntRect m_viewPort;
-        void setViewPort(int32 x, int32 y);
         
         //maps VBO to textures
         struct Batch final
@@ -127,7 +121,6 @@ namespace cro
         };
         std::array<AttribData, AttribLocation::Count> m_attribMap;
 
-        glm::mat4 m_projectionMatrix;
         Shader m_shader;
         int32 m_matrixIndex;
         int32 m_textureIndex;
@@ -142,17 +135,6 @@ namespace cro
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
-
-#ifdef DEBUG_DRAW //THIS IS BBBAAAAADDDD - it might not be defined in apps using this header
-        Shader m_debugShader;
-        int32 m_debugMatrixIndex;
-        std::array<AttribData, 2u> m_debugAttribs;
-        uint32 m_debugVBO;
-        uint32 m_debugVertCount;
-
-        void buildDebug();
-        void drawDebug();
-#endif //DEBUG_DRAW
     };
 }
 

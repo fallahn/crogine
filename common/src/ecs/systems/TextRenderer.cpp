@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/core/Clock.hpp>
@@ -73,14 +74,6 @@ TextRenderer::TextRenderer(MessageBus& mb)
 
     requireComponent<Text>();
     requireComponent<Transform>();
-
-    auto size = App::getWindow().getSize();
-    setViewPort(size.x, size.y);
-
-    //setup projection
-    m_projectionMatrix = glm::ortho(0.f, static_cast<float>(DefaultSceneSize.x), 0.f,
-        static_cast<float>(DefaultSceneSize.y), -0.1f, 100.f);
-
 }
 
 TextRenderer::~TextRenderer()
@@ -94,14 +87,7 @@ TextRenderer::~TextRenderer()
 //public
 void TextRenderer::handleMessage(const Message& msg)
 {
-    if (msg.id == Message::WindowMessage)
-    {
-        const auto& data = msg.getData<Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-        {
-            setViewPort(data.data0, data.data1);
-        }
-    }
+
 }
 
 void TextRenderer::process(Time dt)
@@ -175,7 +161,7 @@ void TextRenderer::process(Time dt)
     }
 }
 
-void TextRenderer::render()
+void TextRenderer::render(Entity camera)
 {
     glCheck(glEnable(GL_CULL_FACE));
     //glCheck(glEnable(GL_DEPTH_TEST));
@@ -183,13 +169,13 @@ void TextRenderer::render()
     glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     glCheck(glBlendEquation(GL_FUNC_ADD));
 
-    GLint oldView[4];
-    glCheck(glGetIntegerv(GL_VIEWPORT, oldView));
-    glViewport(0, m_viewPort.bottom, m_viewPort.width, m_viewPort.height);
+    //TODO add viewmatrix calc
+    const auto& camComponent = camera.getComponent<Camera>();
+    applyViewport(camComponent.viewport);
 
     //bind shader and attrib arrays - TODO dow this for both shader types
     glCheck(glUseProgram(m_shaders[Font::Bitmap].shader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].projectionUniformIndex, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
+    glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].projectionUniformIndex, 1, GL_FALSE, glm::value_ptr(camComponent.projection)));
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glUniform1i(m_shaders[Font::Bitmap].textureUniformIndex, 0));
 
@@ -230,18 +216,10 @@ void TextRenderer::render()
     //glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_BLEND));
-    glCheck(glViewport(oldView[0], oldView[1], oldView[2], oldView[3]));
+    restorePreviousViewport();
 }
 
 //private
-void TextRenderer::setViewPort(int32 x, int32 y)
-{
-    //assumes width is always widest    
-    m_viewPort.width = x;
-    m_viewPort.height = (x / 16) * 9;
-    m_viewPort.bottom = (y - m_viewPort.height) / 2;
-}
-
 void TextRenderer::fetchShaderData(ShaderData& data)
 {
     //check shader uniforms and get locations

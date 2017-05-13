@@ -36,9 +36,6 @@
     <ClCompile Include="src\MyApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\MenuState.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\RotateSystem.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>

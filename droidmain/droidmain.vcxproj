@@ -330,7 +330,6 @@
     <ClCompile Include="..\testwin\src\MenuMain.cpp" />
     <ClCompile Include="..\testwin\src\MenuOptions.cpp" />
     <ClCompile Include="..\testwin\src\MenuScores.cpp" />
-    <ClCompile Include="..\testwin\src\MenuState.cpp" />
     <ClCompile Include="..\testwin\src\MyApp.cpp" />
     <ClCompile Include="..\testwin\src\PostRadial.cpp" />
     <ClCompile Include="..\testwin\src\RockFallSystem.cpp" />

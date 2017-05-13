@@ -18,9 +18,6 @@
     <ClCompile Include="..\testwin\src\MyApp.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\testwin\src\MenuState.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\testwin\src\ColourSystem.cpp">
       <Filter>src</Filter>
     </ClCompile>
