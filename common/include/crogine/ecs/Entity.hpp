@@ -231,6 +231,11 @@ namespace cro
         */
         const ComponentMask& getComponentMask(Entity) const;
 
+        /*!
+        \brief Returns true if this manager owns the given entity
+        */
+        bool owns(Entity) const;
+
     private:
         MessageBus& m_messageBus;
         std::deque<Entity::ID> m_freeIDs;

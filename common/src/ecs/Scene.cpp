@@ -38,19 +38,21 @@ source distribution.
 using namespace cro;
 
 Scene::Scene(MessageBus& mb)
-    : m_messageBus(mb),
-    m_entityManager(mb),
-    m_systemManager(*this)
+    : m_messageBus  (mb),
+    m_entityManager (mb),
+    m_systemManager (*this)
 {
     auto defaultCamera = createEntity();
     defaultCamera.addComponent<Transform>();
     defaultCamera.addComponent<Camera>();
 
     m_defaultCamera = defaultCamera.getIndex();
+    m_activeCamera = m_defaultCamera;
 
     currentRenderPath = [this]()
     {
-        for (auto r : m_renderables) r->render();
+        auto camera = m_entityManager.getEntity(m_activeCamera);
+        for (auto r : m_renderables) r->render(camera);
     };
 }
 
@@ -100,10 +102,11 @@ void Scene::setPostEnabled(bool enabled)
         for (auto& p : m_postEffects) p->resizeBuffer(size.x, size.y);
     }
     else
-    {
+    {       
         currentRenderPath = [this]()
         {
-            for (auto& r : m_renderables) r->render();
+            auto camera = m_entityManager.getEntity(m_activeCamera);
+            for (auto& r : m_renderables) r->render(camera);
         };
     }
 }
@@ -111,6 +114,20 @@ void Scene::setPostEnabled(bool enabled)
 Entity Scene::getDefaultCamera() const
 {
     return m_entityManager.getEntity(m_defaultCamera);
+}
+
+Entity Scene::setActiveCamera(Entity entity)
+{
+    CRO_ASSERT(entity.hasComponent<Transform>() && entity.hasComponent<Camera>(), "Entity requires at least a transform and a camera component");
+    CRO_ASSERT(m_entityManager.owns(entity), "This entity must belong to this scene!");
+    auto oldCam = m_entityManager.getEntity(m_activeCamera);
+    m_activeCamera = entity.getIndex();
+    return oldCam;
+}
+
+Entity Scene::getActiveCamera() const
+{
+    return m_entityManager.getEntity(m_activeCamera);
 }
 
 void Scene::forwardMessage(const Message& msg)
@@ -140,8 +157,10 @@ void Scene::render()
 //private
 void Scene::postRenderPath()
 {
+    auto camera = m_entityManager.getEntity(m_activeCamera);
+    
     m_sceneBuffer.clear();
-    for (auto r : m_renderables) r->render();
+    for (auto r : m_renderables) r->render(camera);
     m_sceneBuffer.display();
 
     m_postEffects[0]->apply(m_sceneBuffer);

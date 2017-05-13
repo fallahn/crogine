@@ -30,16 +30,13 @@ source distribution.
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 
 #include "../../detail/GLCheck.hpp"
 #include "../../graphics/shaders/Sprite.hpp"
-
-#ifdef DEBUG_DRAW
-#include "../../graphics/shaders/Debug.hpp"
-#endif //DEBUG_DRAW
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -61,9 +58,6 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     m_projectionIndex   (0),
     m_depthAxis         (DepthAxis::Z),
     m_pendingRebuild    (false)
-#ifdef DEBUG_DRAW
-    ,m_debugMatrixIndex(-1), m_debugVBO(0), m_debugVertCount(0)
-#endif //DEBUG_DRAW
 {
     //this has been known to fail on some platforms - but android can be as low as 63
     //which almost negates the usefulness of GPU bound transforms... :S
@@ -135,34 +129,6 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     //only want these entities
     requireComponent<Sprite>();
     requireComponent<Transform>();
-
-    auto size = App::getWindow().getSize();
-    setViewPort(size.x, size.y);
-
-    //setup projection
-    m_projectionMatrix = glm::ortho(0.f, static_cast<float>(DefaultSceneSize.x), 0.f,
-        static_cast<float>(DefaultSceneSize.y), -0.1f, 100.f);
-
-
-#ifdef DEBUG_DRAW
-    if (m_debugShader.loadFromString(Shaders::Debug::Vertex, Shaders::Debug::Fragment))
-    {
-        const auto& shaderAttribs = m_debugShader.getAttribMap();
-        m_debugAttribs[AttribLocation::Position].size = 4;
-        m_debugAttribs[AttribLocation::Position].location = shaderAttribs[Mesh::Position];
-        m_debugAttribs[AttribLocation::Colour].size = 4;
-        m_debugAttribs[AttribLocation::Colour].location = shaderAttribs[Mesh::Colour];
-        m_debugAttribs[AttribLocation::Colour].offset = m_debugAttribs[AttribLocation::Colour].size * sizeof(float);
-
-        const auto& debugUniforms = m_debugShader.getUniformMap();
-        if (debugUniforms.count("u_projectionMatrix") != 0)
-        {
-            m_debugMatrixIndex = debugUniforms.find("u_projectionMatrix")->second;
-
-            glCheck(glGenBuffers(1, &m_debugVBO));
-        }
-    }
-#endif //DEBUG_DRAW
 }
 
 SpriteRenderer::~SpriteRenderer()
@@ -180,14 +146,7 @@ SpriteRenderer::~SpriteRenderer()
 //public
 void SpriteRenderer::handleMessage(const Message& msg)
 {
-    if (msg.id == Message::WindowMessage)
-    {
-        const auto& data = msg.getData<Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-        {
-            setViewPort(data.data0, data.data1);
-        }
-    }
+
 }
 
 void SpriteRenderer::process(Time)
@@ -286,7 +245,7 @@ void SpriteRenderer::process(Time)
 #endif //DEBUG_DRAW
 }
 
-void SpriteRenderer::render()
+void SpriteRenderer::render(Entity camera)
 {
     glCheck(glEnable(GL_CULL_FACE));
     glCheck(glEnable(GL_DEPTH_TEST));
@@ -294,13 +253,13 @@ void SpriteRenderer::render()
     glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     glCheck(glBlendEquation(GL_FUNC_ADD));
 
-    GLint oldView[4];
-    glCheck(glGetIntegerv(GL_VIEWPORT, oldView));
-    glViewport(0, m_viewPort.bottom, m_viewPort.width, m_viewPort.height);
+    const auto& camComponent = camera.getComponent<Camera>();
+    applyViewport(camComponent.viewport);
+    //TODO calc viewMat
 
     //bind shader and attrib arrays
     glCheck(glUseProgram(m_shader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
+    glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(camComponent.projection)));
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glUniform1i(m_textureIndex, 0));
 
@@ -340,22 +299,12 @@ void SpriteRenderer::render()
 
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDisable(GL_CULL_FACE));
-#ifdef DEBUG_DRAW
-    drawDebug();
-#endif //DEBUG_DRAW
     glCheck(glDisable(GL_BLEND));
-    glCheck(glViewport(oldView[0], oldView[1], oldView[2], oldView[3]));
+
+    restorePreviousViewport();
 }
 
 //private
-void SpriteRenderer::setViewPort(int32 x, int32 y)
-{
-    //assumes width is always widest    
-    m_viewPort.width = x;
-    m_viewPort.height = (x/16) * 9;
-    m_viewPort.bottom = (y - m_viewPort.height) / 2;
-}
-
 void SpriteRenderer::rebuildBatch()
 {
     auto& entities = getEntities();
@@ -469,10 +418,6 @@ void SpriteRenderer::rebuildBatch()
         i++;
     }
 
-#ifdef DEBUG_DRAW
-    buildDebug();
-#endif //DEBUG_DRAW
-
     m_pendingRebuild = false;
 }
 
@@ -531,70 +476,3 @@ void SpriteRenderer::onEntityRemoved(Entity entity)
 {
     m_pendingRebuild = true;
 }
-
-#ifdef DEBUG_DRAW
-void SpriteRenderer::buildDebug()
-{
-    std::vector<float> vertData;    
-    auto addVertex = [&](float x, float y, float alpha = 1.f)
-    {
-        vertData.push_back(x);
-        vertData.push_back(y);
-        vertData.push_back(0.f);
-        vertData.push_back(1.f);
-
-        vertData.push_back(1.f);
-        vertData.push_back(0.f);
-        vertData.push_back(1.f);
-        vertData.push_back(alpha);
-    };
-    
-    auto& entities = getEntities();
-    for (auto& entity : entities)
-    {
-        FloatRect rect = entity.getComponent<Sprite>().getGlobalBounds();
-        addVertex(rect.left, rect.bottom, 0.f);
-        addVertex(rect.left, rect.bottom);
-        addVertex(rect.left, rect.bottom + rect.height);
-        addVertex(rect.left + rect.width, rect.bottom + rect.height);
-        addVertex(rect.left + rect.width, rect.bottom);
-        addVertex(rect.left, rect.bottom);
-        addVertex(rect.left, rect.bottom, 0.f);
-    }
-
-    m_debugVertCount = vertData.size() * sizeof(float);
-
-    //TODO double buffer this
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_debugVBO));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, m_debugVertCount, vertData.data(), GL_STATIC_DRAW));
-}
-
-void SpriteRenderer::drawDebug()
-{
-    if (m_debugVBO == 0) return;
-
-    static constexpr int32 vertSize = 8 * sizeof(float);
-
-    glCheck(glUseProgram(m_debugShader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
-
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_debugVBO));
-
-    for (auto i = 0u; i < m_debugAttribs.size(); ++i)
-    {
-        glCheck(glEnableVertexAttribArray(m_debugAttribs[i].location));
-        glCheck(glVertexAttribPointer(m_debugAttribs[i].location, m_debugAttribs[i].size, GL_FLOAT, GL_FALSE, vertSize,
-            reinterpret_cast<void*>(static_cast<intptr_t>(m_debugAttribs[i].offset))));
-    }
-
-    glCheck(glDrawArrays(GL_LINE_STRIP, 0, m_debugVertCount));
-
-    for (auto i = 0u; i < m_debugAttribs.size(); ++i)
-    {
-        glCheck(glDisableVertexAttribArray(m_debugAttribs[i].location));
-    }
-
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-}
-
-#endif //DEBUG_DRAW

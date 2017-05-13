@@ -50,6 +50,7 @@ source distribution.
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 
 namespace
 {
@@ -112,7 +113,7 @@ void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::SceneGraph>(mb);
-    auto& sceneRenderer = m_scene.addSystem<cro::SceneRenderer>(mb, m_scene.getDefaultCamera());
+    auto& sceneRenderer = m_scene.addSystem<cro::SceneRenderer>(mb);
     m_scene.addSystem<cro::MeshSorter>(mb, sceneRenderer);
     cnt = &m_scene.addSystem<BackgroundController>(mb);
     cnt->setScrollSpeed(0.2f);
@@ -231,11 +232,9 @@ void GameState::createScene()
     rotator.axis.x = 1.f;
     rotator.speed = 1.f;
 
-    /*auto ent = m_scene.createEntity();
-    auto& tx4 = ent.addComponent<cro::Transform>();
+    //3D camera
+    auto ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>();
     ent.addComponent<cro::Camera>();
-    m_scene.getSystem<cro::SceneRenderer>().setActiveCamera(ent);
-    auto& r = ent.addComponent<Rotator>();
-    r.axis.x = 1.f;
-    r.speed = 0.6f;*/
+    m_scene.setActiveCamera(ent);
 }

@@ -31,6 +31,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/Scene.hpp>
 
 #include <crogine/graphics/Spatial.hpp>
 
@@ -57,7 +58,7 @@ MeshSorter::MeshSorter(MessageBus& mb, SceneRenderer& renderer)
 void MeshSorter::process(cro::Time)
 {
     auto& entities = getEntities();
-    auto activeCamera = m_renderer.getActiveCamera();
+    auto activeCamera = getScene()->getActiveCamera();
     
     //build the frustum from the view-projection matrix
     auto viewProj = activeCamera.getComponent<Camera>().projection

@@ -27,46 +27,23 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_PARTICLE_SYSTEM_HPP_
-#define CRO_PARTICLE_SYSTEM_HPP_
-
-#include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
+#include <crogine/core/App.hpp>
+#include "../detail/GLCheck.hpp"
 
-#include <vector>
+using namespace cro;
 
-namespace cro
+//protected
+void Renderable::applyViewport(FloatRect vp)
 {
-    /*!
-    \brief Particle system.
-    Updates and renders all particle emitters in the scene
-    */
-    class CRO_EXPORT_API ParticleSystem final : public Renderable, public System
-    {
-    public:
-        ParticleSystem(MessageBus&);
-        ~ParticleSystem();
+    glm::vec2 size(App::getWindow().getSize());
 
-        ParticleSystem(const ParticleSystem&) = delete;
-        ParticleSystem(ParticleSystem&&) = delete;
-        const ParticleSystem operator = (const ParticleSystem&) = delete;
-        ParticleSystem& operator = (ParticleSystem&&) = delete;
-
-        void process(Time) override;
-
-        void render(Entity) override;
-
-    private:
-        
-        void onEntityAdded(Entity) override;
-        void onEntityRemoved(Entity) override;
-
-        std::vector<float> m_dataBuffer;
-        std::vector<uint32> m_vboIDs;
-        std::size_t m_nextBuffer;
-        std::size_t m_bufferCount;
-        void allocateBuffer();
-    };
+    glCheck(glGetIntegerv(GL_VIEWPORT, m_previousViewport.data()));
+    glViewport(static_cast<int32>(size.x * vp.left), static_cast<int32>(size.y * vp.bottom),
+                static_cast<int32>(size.x * vp.width), static_cast<int32>(size.y * vp.height));
 }
 
-#endif //CRO_PARTICLE_SYSTEM_HPP_
+void Renderable::restorePreviousViewport()
+{
+    glViewport(m_previousViewport[0], m_previousViewport[1], m_previousViewport[2], m_previousViewport[3]);
+}

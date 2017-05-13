@@ -296,7 +296,6 @@
     <ClCompile Include="src\MenuMain.cpp" />
     <ClCompile Include="src\MenuOptions.cpp" />
     <ClCompile Include="src\MenuScores.cpp" />
-    <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\PostRadial.cpp" />
     <ClCompile Include="src\RockFallSystem.cpp" />

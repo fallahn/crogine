@@ -48,7 +48,7 @@ namespace cro
     \brief Text renderer class.
     Responsible for batching and rendering sprite components.
     */
-    class CRO_EXPORT_API TextRenderer final : public System, public Renderable, public Detail::SDLResource
+    class CRO_EXPORT_API TextRenderer final : public System, public Renderable
     {
     public:
         explicit TextRenderer(MessageBus&);
@@ -72,11 +72,9 @@ namespace cro
         /*!
         \brief Draws all the text components in this system's parent Scene
         */
-        void render() override;
+        void render(Entity) override;
 
     private:
-        IntRect m_viewPort;
-        void setViewPort(int32 x, int32 y);
 
         struct Batch final
         {
@@ -110,8 +108,6 @@ namespace cro
         std::array<ShaderData, 2u> m_shaders;
 
         void fetchShaderData(ShaderData&);
-
-        glm::mat4 m_projectionMatrix;
         
         bool m_pendingRebuild;
         void rebuildBatch();

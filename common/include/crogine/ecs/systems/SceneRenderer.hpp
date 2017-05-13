@@ -61,26 +61,14 @@ namespace cro
     required to render a scene. Note that this will not render any
     Sprite components - these should be drawn with SpriteRenderer
     */
-    class CRO_EXPORT_API SceneRenderer final : public System, public Renderable, public Detail::SDLResource
+    class CRO_EXPORT_API SceneRenderer final : public System, public Renderable
     {
     public:
         /*!
         \brief Constructor.
-        \param mb Refernce to the system message bus
-        \param Default camera to use when rendering
+        \param mb Reference to the system message bus
         */
-        SceneRenderer(MessageBus& mb, Entity defaultCamera);
-
-        /*!
-        \brief Sets the active camera when rendering
-        \returns The existing camera which is being replaced.
-        */
-        Entity setActiveCamera(Entity camera);
-
-        /*!
-        \brief Returns a copy of the entity containing the active camera
-        */
-        Entity getActiveCamera() const;
+        SceneRenderer(MessageBus& mb);
 
         /*!
         \brief Supplies a list of entities to render.
@@ -94,10 +82,9 @@ namespace cro
         /*!
         \brief Attempts to render the scene based on the current entity lists
         */
-        void render() override;
+        void render(Entity) override;
 
     private:
-        Entity m_activeCamera;
         MaterialList m_visibleEntities;
         //TODO list of lighting
 

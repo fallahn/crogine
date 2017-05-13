@@ -134,7 +134,7 @@ void MainState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_backgroundScene.addSystem<cro::SceneGraph>(mb);
-    auto& backgroundRenderer = m_backgroundScene.addSystem<cro::SceneRenderer>(mb, m_backgroundScene.getDefaultCamera());
+    auto& backgroundRenderer = m_backgroundScene.addSystem<cro::SceneRenderer>(mb);
     m_backgroundScene.addSystem<cro::MeshSorter>(mb, backgroundRenderer);
     m_backgroundScene.addSystem<RotateSystem>(mb);
     m_backgroundScene.addSystem<DriftSystem>(mb);
@@ -249,12 +249,21 @@ void MainState::createScene()
     entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), m_materialResource.get(MaterialID::Stars));
     entity.addComponent<Drifter>().amplitude = -0.1f;
 
+
+    //2D and 3D cameras
     entity = m_backgroundScene.createEntity();
     /*auto& tx4 = */entity.addComponent<cro::Transform>();
     /*tx4.move({ 0.f, 0.4f, 1.f });
     tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);*/
-    entity.addComponent<cro::Camera>();
+    auto& cam3D = entity.addComponent<cro::Camera>();
+    //TODO set up for 16/9
+
     entity.addComponent<Drifter>().amplitude = 0.1f;
-    auto& renderer = m_backgroundScene.getSystem<cro::SceneRenderer>();
-    renderer.setActiveCamera(entity);
+    m_backgroundScene.setActiveCamera(entity);
+
+    entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    auto& cam2D = entity.addComponent<cro::Camera>();
+    cam2D.projection = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -0.1f, 100.f);
+    m_menuScene.setActiveCamera(entity);
 }

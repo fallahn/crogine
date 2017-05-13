@@ -139,7 +139,7 @@ void ParticleSystem::process(Time dt)
     }
 }
 
-void ParticleSystem::render()
+void ParticleSystem::render(Entity camera)
 {
     //particles are already in world space so just need viewProj
 }

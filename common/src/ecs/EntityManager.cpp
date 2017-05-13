@@ -105,3 +105,8 @@ const ComponentMask& EntityManager::getComponentMask(Entity entity) const
     CRO_ASSERT(index < m_componentMasks.size(), "Invalid mask index (out of range)");
     return m_componentMasks[index];
 }
+
+bool EntityManager::owns(Entity entity) const
+{
+    return (entity.m_entityManager == this);
+}
