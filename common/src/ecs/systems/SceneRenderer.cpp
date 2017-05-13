@@ -62,7 +62,7 @@ void SceneRenderer::render(Entity camera)
     const auto& camTx = camera.getComponent<Transform>();
     const auto& camComponent = camera.getComponent<Camera>();
     
-    auto cameraPosition = glm::vec3(camTx.getWorldTransform()[3]);
+    auto cameraPosition = camTx.getWorldPosition();
     auto viewMat = glm::inverse(camTx.getWorldTransform());
     auto projMat = camComponent.projection;
     applyViewport(camComponent.viewport);

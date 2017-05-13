@@ -146,7 +146,7 @@ void MeshSorter::process(cro::Time)
             auto opaque = std::make_pair(entity, SortData());
             auto transparent = std::make_pair(entity, SortData());
             
-            auto worldPos = tx.getWorldTransform() * glm::vec4(tx.getPosition(), 1.f);
+            auto worldPos = tx.getWorldPosition();
 
             //foreach material
             //add ent/index pair to alpha or opaque list

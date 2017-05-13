@@ -99,6 +99,11 @@ glm::vec3 Transform::getPosition() const
     return m_position;
 }
 
+glm::vec3 Transform::getWorldPosition() const
+{
+    return glm::vec3(getWorldTransform()[3]);
+}
+
 glm::vec3 Transform::getRotation() const
 {
     return glm::eulerAngles(m_rotation);

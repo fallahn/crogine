@@ -76,5 +76,7 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
+
+    void updateView();
 };
 #endif //TL_GAME_STATE_HPP_

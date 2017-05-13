@@ -65,7 +65,7 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb)
 
     //build wave tables
     m_shortWavetable = cro::Util::Wavetable::sine(5.f, 0.07f);
-    m_longWaveTable = cro::Util::Wavetable::sine(1.6f, 0.09f);
+    m_longWaveTable = cro::Util::Wavetable::sine(1.6f, 0.11f);
 }
 
 //public
@@ -142,20 +142,22 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
     for (auto i = 0u; i < halfCount; ++i)
     {
         float xPos =  -(chunkWidth / 2.f) + (spacing * i);
-        auto noise = glm::simplex(glm::vec2(m_bottomX, m_bottomX)) * 0.5f;        
+        auto noise = glm::simplex(glm::vec2(m_bottomX, m_bottomX)) * 0.4f;        
         m_bottomX++;
         
+        static const float baseline = 2.1f;
+
         //bottom row
-        chunkComponent.points[i] = { xPos, -2.f + 
+        chunkComponent.points[i] = { xPos, -baseline + 
             m_shortWavetable[(m_topIndexShort + 50) % m_shortWavetable.size()] - 
             m_longWaveTable[(m_topIndexLong + 30) % m_longWaveTable.size()] + noise };
 
 
         //top row
-        noise = glm::simplex(glm::vec2(m_topX, m_topX)) * 0.6f;
+        noise = glm::simplex(glm::vec2(m_topX, m_topX)) * 0.5f;
         m_topX++;
-        chunkComponent.points[i + halfCount] = { xPos, 2.f + 
-            m_shortWavetable[m_topIndexShort] + 
+        chunkComponent.points[i + halfCount] = { xPos, baseline + 
+            m_shortWavetable[m_topIndexShort] - 
             m_longWaveTable[m_topIndexLong] - noise};
 
         m_topIndexShort = (m_topIndexShort + 1) % m_shortWavetable.size();
@@ -181,8 +183,8 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
 
         //colour
         vertData.push_back(0.f);
-        vertData.push_back(0.f);
-        vertData.push_back(0.f);
+        vertData.push_back(0.04f);
+        vertData.push_back(0.14f);
 
 
 
@@ -209,8 +211,8 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
         vertData.push_back(chunkComponent.points[i].y);
 
         vertData.push_back(0.f);
-        vertData.push_back(0.f);
-        vertData.push_back(0.f);
+        vertData.push_back(0.04f);
+        vertData.push_back(0.14f);
     }
 
     calcNormals(vertData);

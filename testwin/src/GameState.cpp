@@ -70,6 +70,9 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         createScene();
     });
     //context.appInstance.setClearColour(cro::Colour::White());
+
+    updateView();
+
     auto* msg = getContext().appInstance.getMessageBus().post<GameEvent>(MessageID::GameMessage);
     msg->type = GameEvent::RoundStart;
 }
@@ -95,6 +98,15 @@ bool GameState::handleEvent(const cro::Event& evt)
 void GameState::handleMessage(const cro::Message& msg)
 {
     m_scene.forwardMessage(msg);
+
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            updateView();
+        }
+    }
 }
 
 bool GameState::simulate(cro::Time dt)
@@ -216,7 +228,7 @@ void GameState::createScene()
         entity.addComponent<RockFall>();
         auto& tx = entity.addComponent<cro::Transform>();
         tx.setScale({ 0.6f, 1.2f, 1.f });
-        tx.setPosition({ 0.f, 3.4f, -8.9f });
+        tx.setPosition({ 0.f, 3.4f, -9.1f });
 
         entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::RockQuad), m_materialResource.get(MaterialID::Rockfall + i));
     }
@@ -224,8 +236,8 @@ void GameState::createScene()
     //player ship
     entity = m_scene.createEntity();
     auto& playerTx = entity.addComponent<cro::Transform>();
-    playerTx.setPosition({ -2.f, 0.f, -6.f });
-    playerTx.setScale({ 0.35f, 0.35f, 0.35f });
+    playerTx.setPosition({ -3.4f, 0.f, -9.25f });
+    playerTx.setScale({ 0.5f, 0.5f, 0.5f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::PlayerShip), m_materialResource.get(MaterialID::PlayerShip));
 
     auto& rotator = entity.addComponent<Rotator>();
@@ -237,4 +249,19 @@ void GameState::createScene()
     ent.addComponent<cro::Transform>();
     ent.addComponent<cro::Camera>();
     m_scene.setActiveCamera(ent);
+}
+
+void GameState::updateView()
+{
+    glm::vec2 size(cro::App::getWindow().getSize());
+    size.y = ((size.x / 16.f) * 9.f) / size.y;
+    size.x = 1.f;
+
+    auto& cam3D = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    cam3D.projection = glm::perspective(0.6f, 16.f / 9.f, 0.1f, 100.f);
+    cam3D.viewport.bottom = (1.f - size.y) / 2.f;
+    cam3D.viewport.height = size.y;
+
+    /*auto& cam2D = m_menuScene.getActiveCamera().getComponent<cro::Camera>();
+    cam2D.viewport = cam3D.viewport;*/
 }

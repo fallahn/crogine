@@ -100,6 +100,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     });
 
     //context.mainWindow.setVsyncEnabled(false);
+    updateView();
 }
 
 //public
@@ -113,7 +114,15 @@ void MainState::handleMessage(const cro::Message& msg)
 {
     m_backgroundScene.forwardMessage(msg);
     m_menuScene.forwardMessage(msg);
-    m_uiSystem->handleMessage(msg);
+
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            updateView();
+        }
+    }
 }
 
 bool MainState::simulate(cro::Time dt)
@@ -252,11 +261,8 @@ void MainState::createScene()
 
     //2D and 3D cameras
     entity = m_backgroundScene.createEntity();
-    /*auto& tx4 = */entity.addComponent<cro::Transform>();
-    /*tx4.move({ 0.f, 0.4f, 1.f });
-    tx4.rotate({ 1.f, 0.f, 0.f }, -0.1f);*/
-    auto& cam3D = entity.addComponent<cro::Camera>();
-    //TODO set up for 16/9
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Camera>();
 
     entity.addComponent<Drifter>().amplitude = 0.1f;
     m_backgroundScene.setActiveCamera(entity);
@@ -266,4 +272,19 @@ void MainState::createScene()
     auto& cam2D = entity.addComponent<cro::Camera>();
     cam2D.projection = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -0.1f, 100.f);
     m_menuScene.setActiveCamera(entity);
+}
+
+void MainState::updateView()
+{
+    glm::vec2 size(cro::App::getWindow().getSize());
+    size.y = ((size.x / 16.f) * 9.f) / size.y;
+    size.x = 1.f;
+
+    auto& cam3D = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
+    cam3D.projection = glm::perspective(0.6f, 16.f / 9.f, 0.1f, 100.f);
+    cam3D.viewport.bottom = (1.f - size.y) / 2.f;
+    cam3D.viewport.height = size.y;
+
+    auto& cam2D = m_menuScene.getActiveCamera().getComponent<cro::Camera>();
+    cam2D.viewport = cam3D.viewport;
 }
