@@ -29,7 +29,9 @@ source distribution.
 
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 
@@ -47,11 +49,6 @@ UISystem::UISystem(MessageBus& mb)
     m_callbacks.push_back([](Entity, uint64) {}); //default callback for components which don't have one assigned
 
     m_windowSize = App::getWindow().getSize();
-    setViewPort(m_windowSize.x, m_windowSize.y);
-
-    //setup projection
-    m_projectionMatrix = glm::ortho(0.f, static_cast<float>(DefaultSceneSize.x), 0.f,
-        static_cast<float>(DefaultSceneSize.y), -0.1f, 100.f);
 }
 
 void UISystem::handleEvent(const Event& evt)
@@ -166,7 +163,6 @@ void UISystem::handleMessage(const Message& msg)
         const auto& data = msg.getData<Message::WindowEvent>();
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
-            setViewPort(data.data0, data.data1);
             m_windowSize.x = data.data0;
             m_windowSize.y = data.data1;
         }
@@ -180,32 +176,12 @@ uint32 UISystem::addCallback(const Callback& cb)
 }
 
 //private
-void UISystem::setViewPort(int32 x, int32 y)
-{
-    //assumes width is always widest    
-    m_viewPort.width = x;
-    m_viewPort.height = (x / 16) * 9;
-    m_viewPort.bottom = (y - m_viewPort.height) / 2;
-}
-
 glm::vec2 UISystem::toScreenCoords(int32 x, int32 y)
 {
-    y = m_windowSize.y - y; //invert vertically
-    //convert to viewport space
-    auto vpX = static_cast<float>(x - m_viewPort.left) / m_viewPort.width;
-    auto vpY = static_cast<float>(y - m_viewPort.bottom) / m_viewPort.height;
+    auto vpX = static_cast<float>(x) / m_windowSize.x;
+    auto vpY = static_cast<float>(y) / m_windowSize.y;
 
-    //convert to NDC
-    vpX *= 2.f;
-    vpX -= 1.f;
-
-    vpY *= 2.f;
-    vpY -= 1.f;
-
-    //convert to world
-    auto worldPos = glm::inverse(m_projectionMatrix) * glm::vec4(vpX, vpY, 0.f, 1.f);
-
-    return { worldPos };
+    return toScreenCoords(vpX, vpY);
 }
 
 glm::vec2 UISystem::toScreenCoords(float x, float y)
@@ -214,12 +190,22 @@ glm::vec2 UISystem::toScreenCoords(float x, float y)
     y = 1.f - y;
 
     //scale to vp
-    float ratio = static_cast<float>(m_windowSize.y) / m_viewPort.height;
-    y *= ratio;
+    auto vp = getScene()->getActiveCamera().getComponent<Camera>().viewport;
+    y -= vp.bottom;
+    y /= vp.height;
 
+    //convert to NDC
     x *= 2.f; x -= 1.f;
     y *= 2.f; y -= 1.f;
 
-    auto screenPos = glm::inverse(m_projectionMatrix) * glm::vec4(x, y, 0.f, 1.f);
-    return { screenPos };
+    //and unproject
+    auto worldPos = glm::inverse(getProjectionMatrix()) * glm::vec4(x, y, 0.f, 1.f);
+    return { worldPos };
+}
+
+glm::mat4 UISystem::getProjectionMatrix() const
+{
+    const auto& tx = getScene()->getActiveCamera().getComponent<Transform>();
+    const auto& cam = getScene()->getActiveCamera().getComponent<Camera>();
+    return cam.projection * glm::inverse(tx.getWorldTransform());
 }

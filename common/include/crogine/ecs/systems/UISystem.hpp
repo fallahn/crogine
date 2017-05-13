@@ -94,12 +94,13 @@ namespace cro
         std::vector<Flags> m_downEvents;
         std::vector<Flags> m_upEvents;
 
-        glm::mat4 m_projectionMatrix;
         glm::uvec2 m_windowSize;
-        IntRect m_viewPort;
-        void setViewPort(int32, int32);
-        glm::vec2 toScreenCoords(int32 x, int32 y); //converts mouse input
-        glm::vec2 toScreenCoords(float, float); //converts touch input
+
+        //void setViewPort(int32, int32);
+        glm::vec2 toScreenCoords(int32 x, int32 y); //converts screen coords
+        glm::vec2 toScreenCoords(float, float); //converts normalised coords
+
+        glm::mat4 getProjectionMatrix() const;
     };
 }
 

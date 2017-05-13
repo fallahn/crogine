@@ -169,13 +169,15 @@ void TextRenderer::render(Entity camera)
     glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     glCheck(glBlendEquation(GL_FUNC_ADD));
 
-    //TODO add viewmatrix calc
     const auto& camComponent = camera.getComponent<Camera>();
     applyViewport(camComponent.viewport);
 
+    const auto& camTx = camera.getComponent<Transform>();
+    auto viewMat = glm::inverse(camTx.getWorldTransform());
+
     //bind shader and attrib arrays - TODO dow this for both shader types
     glCheck(glUseProgram(m_shaders[Font::Bitmap].shader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].projectionUniformIndex, 1, GL_FALSE, glm::value_ptr(camComponent.projection)));
+    glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].projectionUniformIndex, 1, GL_FALSE, glm::value_ptr(camComponent.projection * viewMat)));
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glUniform1i(m_shaders[Font::Bitmap].textureUniformIndex, 0));
 
