@@ -69,7 +69,6 @@ private:
     std::size_t m_topIndexShort, m_topIndexLong;
 
     void rebuildChunk(cro::Entity);
-    void calcNormals(std::vector<float>&);
 };
 
 #endif //TL_TERRAIN_CHUNK_HPP_
