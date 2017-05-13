@@ -98,7 +98,7 @@ void ParticleSystem::process(Time dt)
                 
                 //spawn particle in world position
                 auto& tx = e.getComponent<Transform>();
-                p.position = glm::vec3(tx.getWorldTransform() * glm::vec4(tx.getPosition(), 1.f));
+                p.position = tx.getWorldPosition();
 
                 //add random radius placement - TODO how to do with a position table?
                 p.position.x += Util::Random::value(-settings.spawnRadius.x, settings.spawnRadius.x);

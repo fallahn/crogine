@@ -98,9 +98,15 @@ namespace cro
         glm::vec3 getOrigin() const;
 
         /*
-        \brief Returns the position of the transform
+        \brief Returns the local position of the transform
         */
         glm::vec3 getPosition() const;
+
+        /*!
+        \brief Returns the world position of the transform
+        */
+        glm::vec3 getWorldPosition() const;
+
         /*!
         \brief Returns the euler rotation of the transform
         */

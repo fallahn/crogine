@@ -80,5 +80,7 @@ private:
     void createMainMenu();
     void createOptionsMenu();
     void createScoreMenu();
+
+    void updateView();
 };
 #endif //TL_MAIN_STATE_HPP_

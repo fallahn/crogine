@@ -38,7 +38,7 @@ source distribution.
 namespace
 {
     const float gravity = 7.95f;
-    const float spawnTime = 1.7f;
+    const float spawnTime = 1.6f;
     const float shakeTime = 1.8f;
     const float newRockTime = spawnTime + shakeTime;
 
@@ -96,7 +96,7 @@ void RockFallSystem::process(cro::Time dt)
 
         case RockFall::Spawning:
             rockfall.stateTime -= dtSec;
-            tx.move({ 0.f, -0.6f * dtSec, 0.f });
+            tx.move({ 0.f, -0.5f * dtSec, 0.f });
             if (rockfall.stateTime <= 0)
             {
                 rockfall.stateTime = shakeTime + cro::Util::Random::value(-0.8f, 0.8f);
