@@ -192,5 +192,8 @@
     <ClCompile Include="..\common\src\ecs\systems\ParticleSystem.cpp">
       <Filter>src\ecs\systems</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\Renderable.cpp">
+      <Filter>src\ecs</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

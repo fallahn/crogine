@@ -159,10 +159,6 @@ void SpriteRenderer::process(Time)
     //get list of entities (should already be sorted by addEnt callback)
     auto& entities = getEntities();
 
-#ifdef DEBUG_DRAW
-    bool dirtyDebug = false;
-#endif //DEBUG_DRAW
-
     for (auto i = 0u; i < entities.size(); ++i)
     {
         auto& sprite = entities[i].getComponent<Sprite>();        
@@ -255,11 +251,13 @@ void SpriteRenderer::render(Entity camera)
 
     const auto& camComponent = camera.getComponent<Camera>();
     applyViewport(camComponent.viewport);
-    //TODO calc viewMat
+    
+    const auto& camTx = camera.getComponent<Transform>();
+    auto viewMat = glm::inverse(camTx.getWorldTransform());
 
     //bind shader and attrib arrays
     glCheck(glUseProgram(m_shader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(camComponent.projection)));
+    glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(camComponent.projection * viewMat)));
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glUniform1i(m_textureIndex, 0));
 

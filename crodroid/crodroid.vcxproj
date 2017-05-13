@@ -242,6 +242,7 @@
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp" />
     <ClCompile Include="..\common\src\ecs\Entity.cpp" />
     <ClCompile Include="..\common\src\ecs\EntityManager.cpp" />
+    <ClCompile Include="..\common\src\ecs\Renderable.cpp" />
     <ClCompile Include="..\common\src\ecs\Scene.cpp" />
     <ClCompile Include="..\common\src\ecs\System.cpp" />
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />

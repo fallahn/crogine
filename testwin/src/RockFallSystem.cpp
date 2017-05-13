@@ -42,7 +42,7 @@ namespace
     const float shakeTime = 1.8f;
     const float newRockTime = spawnTime + shakeTime;
 
-    std::array<float, 4u> textureOffsets = { 0.f, 0.25f, 0.5f, 0.75f };
+    std::array<float, 4u> textureOffsets = { {0.f, 0.25f, 0.5f, 0.75f} };
 }
 
 RockFallSystem::RockFallSystem(cro::MessageBus& mb)
