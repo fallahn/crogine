@@ -23,7 +23,7 @@ namespace ModelConverter
         private void buttonOpen_Click(object sender, EventArgs e)
         {
             OpenFileDialog od = new OpenFileDialog();
-            od.Filter = "Obj Files|*.obj";
+            od.Filter = "Obj Files|*.obj|Collada Files|*.DAE|FBX Files|*.fbx";
             if(od.ShowDialog() == DialogResult.OK && loadFile(od.FileName))
             {
                 textBoxPath.Text = od.FileName;
@@ -287,6 +287,7 @@ namespace ModelConverter
             if (mesh.HasVertexColors(0))
             {
                 flags |= (1 << Colour);
+                textBoxInfo.Text += Environment.NewLine + "Colour data found in vertices.";
             }
 
             if (!mesh.HasNormals)

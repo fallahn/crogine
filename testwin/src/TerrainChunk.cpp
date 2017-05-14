@@ -44,14 +44,16 @@ source distribution.
 namespace
 {
     const float chunkWidth = 21.3f;
-    const float chunkHeight = 7.2f;
+    const float chunkHeight = 5.6f;
 
     const std::array<float, 13> curve = 
     {
-        0.4f, 0.55f, 0.65f, 0.8f, 0.9f, 0.95,
+        0.4f, 0.55f, 0.65f, 0.8f, 0.9f, 0.95f,
         1.f,
         0.95f, 0.9f, 0.8f, 0.65f, 0.55f, 0.4f
     };
+
+    const glm::vec3 rimColour(0.1f, 0.16f, 0.26f);
 }
 
 ChunkSystem::ChunkSystem(cro::MessageBus& mb)
@@ -72,7 +74,7 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb)
 
     //build wave tables
     m_shortWavetable = cro::Util::Wavetable::sine(5.f, 0.07f);
-    m_longWaveTable = cro::Util::Wavetable::sine(1.6f, 0.11f);
+    m_longWaveTable = cro::Util::Wavetable::sine(1.6f, 0.21f);
 }
 
 //public
@@ -200,9 +202,9 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
         vertData.push_back(chunkComponent.points[i].y);
 
         //colour
-        vertData.push_back(0.f);
-        vertData.push_back(0.04f);
-        vertData.push_back(0.14f);
+        vertData.push_back(rimColour.r);
+        vertData.push_back(rimColour.g);
+        vertData.push_back(rimColour.b);
 
         vertData.push_back(chunkComponent.points[i].x);
         vertData.push_back(-(chunkHeight / 2.f));
@@ -224,9 +226,9 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
         vertData.push_back(chunkComponent.points[i].x);
         vertData.push_back(chunkComponent.points[i].y);
 
-        vertData.push_back(0.f);
-        vertData.push_back(0.04f);
-        vertData.push_back(0.14f);
+        vertData.push_back(rimColour.r);
+        vertData.push_back(rimColour.g);
+        vertData.push_back(rimColour.b);
     }
 
     //update the vertices   

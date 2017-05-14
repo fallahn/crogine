@@ -240,9 +240,9 @@ void GameState::createScene()
     playerTx.setScale({ 0.5f, 0.5f, 0.5f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::PlayerShip), m_materialResource.get(MaterialID::PlayerShip));
 
-    auto& rotator = entity.addComponent<Rotator>();
+    /*auto& rotator = entity.addComponent<Rotator>();
     rotator.axis.x = 1.f;
-    rotator.speed = 1.f;
+    rotator.speed = 1.f;*/
 
     //3D camera
     auto ent = m_scene.createEntity();
