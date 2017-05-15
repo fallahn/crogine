@@ -95,7 +95,7 @@ namespace cro
         void start();
         void stop();
 
-        static const uint32 MaxParticles = 100u;
+        static const uint32 MaxParticles = 1000u;
 
     private:
         uint32 m_vbo; //< if this is 0 the system manager knows to allocate the next free VBO to it
