@@ -249,8 +249,8 @@ void GameState::createScene()
     settings.gravity = { 0.f, -2.f, 0.f };
     settings.colour = cro::Colour::White();
     settings.lifetime = 2.f;
-    settings.blendmode = cro::EmitterSettings::Alpha;
-    settings.textureID = m_textureResource.get("assets/materials/moon_diffuse.png").getGLHandle();
+    settings.blendmode = cro::EmitterSettings::Add;
+    settings.textureID = m_textureResource.get("assets/particles/ball.png").getGLHandle();
     entity.addComponent<cro::ParticleEmitter>().applySettings(settings);
 
     auto& rotator = entity.addComponent<Rotator>();

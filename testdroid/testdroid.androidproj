@@ -292,6 +292,7 @@
     <Content Include="assets\assets\models\moon.cmf" />
     <Content Include="assets\assets\models\player_ship.cmf" />
     <Content Include="assets\assets\models\roid_belt.cmf" />
+    <Content Include="assets\assets\particles\ball.png" />
     <Content Include="assets\assets\sprites\loading.png" />
     <Content Include="assets\assets\sprites\menu.png" />
     <Content Include="res\values\strings.xml" />

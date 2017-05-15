@@ -48,9 +48,9 @@ namespace
 
     const std::array<float, 13> curve = 
     {
-        0.4f, 0.55f, 0.65f, 0.8f, 0.9f, 0.95f,
+        {0.4f, 0.55f, 0.65f, 0.8f, 0.9f, 0.95f,
         1.f,
-        0.95f, 0.9f, 0.8f, 0.65f, 0.55f, 0.4f
+        0.95f, 0.9f, 0.8f, 0.65f, 0.55f, 0.4f} 
     };
 
     const glm::vec3 rimColour(0.1f, 0.16f, 0.26f);
