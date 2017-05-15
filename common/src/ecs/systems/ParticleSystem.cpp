@@ -41,9 +41,17 @@ source distribution.
 #include <glm/gtc/type_ptr.hpp>
 
 //why do I have to hack this? there has to be a catch...
+#ifdef PLATFORM_DESKTOP
 #ifndef GL_PROGRAM_POINT_SIZE
 #define GL_PROGRAM_POINT_SIZE 34370
-#endif
+#define GL_POINT_SPRITE 34913
+#define ENABLE_POINT_SPRITES  glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); glCheck(glEnable(GL_POINT_SPRITE))
+#define DISABLE_POINT_SPRITES glCheck(glDisable(GL_PROGRAM_POINT_SIZE)); glCheck(glDisable(GL_POINT_SPRITE))
+#endif //GL_PROGRAM_POINT_SIZE
+#else
+#define ENABLE_POINT_SPRITES
+#define DISABLE_POINT_SPRITES
+#endif // PLATFORM_DESKTOP
 
 using namespace cro;
 
@@ -61,7 +69,7 @@ namespace
         void main()
         {
             v_colour = a_colour;
-            gl_PointSize = 60.0;
+            gl_PointSize = 40.0;
             gl_Position = u_projection * a_position;
         }
     )";
@@ -73,7 +81,7 @@ namespace
 
         void main()
         {
-            gl_FragColor = v_colour * texture2D(u_texture, gl_PointCoord);
+            gl_FragColor = v_colour * texture2D(u_texture, gl_PointCoord) * v_colour.a;
         }
     )";
 
@@ -148,11 +156,12 @@ void ParticleSystem::process(Time dt)
             emitter.m_emissionClock.elapsed().asSeconds() > (1.f / emitter.m_emitterSettings.emitRate))
         {
             emitter.m_emissionClock.restart();
-            if (emitter.m_nextFreeParticle < emitter.m_particles.size())
+            if (emitter.m_nextFreeParticle < emitter.m_particles.size() - 1)
             {
                 auto& tx = e.getComponent<Transform>();
-                auto worldMat = tx.getWorldTransform();
-                
+                /*auto worldMat = tx.getLocalTransform();
+                glm::vec3 forward = glm::vec3(-worldMat[2][0], -worldMat[2][1], -worldMat[2][2]);
+                */
                 const auto& settings = emitter.m_emitterSettings;
                 auto& p = emitter.m_particles[emitter.m_nextFreeParticle];
                 p.colour = settings.colour;
@@ -160,8 +169,11 @@ void ParticleSystem::process(Time dt)
                 p.gravity = settings.gravity;
                 p.lifetime = p.maxLifeTime = settings.lifetime;
                 //p.rotation; //TODO random initial rotation
+                //TODO transform initial velocity with parent
                 p.velocity = settings.initialVelocity;// glm::vec3(worldMat * glm::vec4(settings.initialVelocity, 1.f));
                 
+                
+
                 //spawn particle in world position
                 p.position = tx.getWorldPosition();
 
@@ -235,7 +247,8 @@ void ParticleSystem::process(Time dt)
 void ParticleSystem::render(Entity camera)
 {
     glCheck(glEnable(GL_CULL_FACE));
-    glEnable(GL_PROGRAM_POINT_SIZE);
+    glCheck(glEnable(GL_BLEND));
+    ENABLE_POINT_SPRITES;
         
     //particles are already in world space so just need viewProj
     const auto& tx = camera.getComponent<Transform>();
@@ -294,8 +307,7 @@ void ParticleSystem::render(Entity camera)
     glCheck(glDisable(GL_BLEND));
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDepthMask(GL_TRUE));
-    glCheck(glDisable(GL_PROGRAM_POINT_SIZE));
-    
+    DISABLE_POINT_SPRITES;
 }
 
 //private
@@ -343,27 +355,18 @@ void ParticleSystem::applyBlendMode(int32 mode)
     {
     default: break;
     case EmitterSettings::Alpha:
-        glCheck(glDisable(GL_CULL_FACE));
         glCheck(glDepthMask(GL_FALSE));
-        glCheck(glEnable(GL_BLEND));
         glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-        glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
     case EmitterSettings::Multiply:
-        glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
-        glCheck(glDepthMask(GL_TRUE));
-        glCheck(glEnable(GL_CULL_FACE));
+        glCheck(glDepthMask(GL_FALSE));
         glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
-        glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
     case EmitterSettings::Add:
-        glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
-        glCheck(glDepthMask(GL_TRUE));
-        glCheck(glEnable(GL_CULL_FACE));
+        glCheck(glDepthMask(GL_FALSE));
         glCheck(glBlendFunc(GL_ONE, GL_ONE));
-        glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
     }
 }
