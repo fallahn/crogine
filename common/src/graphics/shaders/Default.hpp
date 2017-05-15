@@ -84,7 +84,7 @@ namespace cro
                 uniform vec3 u_cameraWorldPosition;
 
                 varying vec3 v_worldPosition;
-                varying vec3 v_colour;
+                varying vec4 v_colour;
                 varying vec3 v_normalVector;
                 varying vec2 v_texCoord0;
                 varying vec2 v_texCoord1;
