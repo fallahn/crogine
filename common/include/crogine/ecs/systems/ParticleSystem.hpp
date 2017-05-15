@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
 
+#include <crogine/graphics/Shader.hpp>
+
 #include <vector>
 
 namespace cro
@@ -66,6 +68,19 @@ namespace cro
         std::size_t m_nextBuffer;
         std::size_t m_bufferCount;
         void allocateBuffer();
+
+        Shader m_shader;
+        int32 m_matrixUniform;
+        int32 m_textureUniform;
+        struct AttribData final
+        {
+            int32 index = 0;
+            int32 attribSize = 0;
+            int32 offset = 0;
+        };
+        std::array<AttribData, 3u> m_attribData;
+
+        void applyBlendMode(int32);
     };
 }
 

@@ -47,14 +47,16 @@ source distribution.
 #include <crogine/ecs/systems/MeshSorter.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/SceneRenderer.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 namespace
 {
-    BackgroundController* cnt = nullptr;
+    BackgroundController* backgroundController = nullptr;
     const glm::vec2 backgroundSize(21.3f, 7.2f);
     std::size_t rockfallCount = 2;
 }
@@ -84,12 +86,12 @@ bool GameState::handleEvent(const cro::Event& evt)
     {
         if (evt.key.keysym.sym == SDLK_SPACE)
         {
-            cnt->setMode(BackgroundController::Mode::Shake);
+            backgroundController->setMode(BackgroundController::Mode::Shake);
         }
         else if (evt.key.keysym.sym == SDLK_RETURN)
         {
-            cnt->setMode(BackgroundController::Mode::Scroll);
-            cnt->setScrollSpeed(0.2f);
+            backgroundController->setMode(BackgroundController::Mode::Scroll);
+            backgroundController->setScrollSpeed(0.2f);
         }
     }
     return true;
@@ -127,11 +129,12 @@ void GameState::addSystems()
     m_scene.addSystem<cro::SceneGraph>(mb);
     auto& sceneRenderer = m_scene.addSystem<cro::SceneRenderer>(mb);
     m_scene.addSystem<cro::MeshSorter>(mb, sceneRenderer);
-    cnt = &m_scene.addSystem<BackgroundController>(mb);
-    cnt->setScrollSpeed(0.2f);
+    backgroundController = &m_scene.addSystem<BackgroundController>(mb);
+    backgroundController->setScrollSpeed(0.2f);
     m_scene.addSystem<ChunkSystem>(mb);
     m_scene.addSystem<RockFallSystem>(mb);
     m_scene.addSystem<RotateSystem>(mb);
+    m_scene.addSystem<cro::ParticleSystem>(mb);
 
     m_scene.addPostProcess<PostRadial>();
 }
@@ -240,9 +243,19 @@ void GameState::createScene()
     playerTx.setScale({ 0.5f, 0.5f, 0.5f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::PlayerShip), m_materialResource.get(MaterialID::PlayerShip));
 
-    /*auto& rotator = entity.addComponent<Rotator>();
+    cro::EmitterSettings settings;
+    settings.emitRate = 20.f;
+    settings.initialVelocity = { 2.f, 2.f, 0.f };
+    settings.gravity = { 0.f, -2.f, 0.f };
+    settings.colour = cro::Colour::White();
+    settings.lifetime = 2.f;
+    settings.blendmode = cro::EmitterSettings::Alpha;
+    settings.textureID = m_textureResource.get("assets/materials/moon_diffuse.png").getGLHandle();
+    entity.addComponent<cro::ParticleEmitter>().applySettings(settings);
+
+    auto& rotator = entity.addComponent<Rotator>();
     rotator.axis.x = 1.f;
-    rotator.speed = 1.f;*/
+    rotator.speed = 1.f;
 
     //3D camera
     auto ent = m_scene.createEntity();
