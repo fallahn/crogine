@@ -245,10 +245,12 @@ void GameState::createScene()
 
     cro::EmitterSettings settings;
     settings.emitRate = 20.f;
-    settings.initialVelocity = { 2.f, 2.f, 0.f };
+    settings.initialVelocity = { 1.f, 2.f, -3.f };
     settings.gravity = { 0.f, -2.f, 0.f };
     settings.colour = cro::Colour::White();
     settings.lifetime = 2.f;
+    settings.rotationSpeed = 2.f;
+    settings.size = 0.3f;
     settings.blendmode = cro::EmitterSettings::Add;
     settings.textureID = m_textureResource.get("assets/particles/ball.png").getGLHandle();
     entity.addComponent<cro::ParticleEmitter>().applySettings(settings);

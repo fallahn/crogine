@@ -70,8 +70,12 @@ namespace cro
         void allocateBuffer();
 
         Shader m_shader;
-        int32 m_matrixUniform;
+        int32 m_projectionUniform;
         int32 m_textureUniform;
+        int32 m_viewProjUniform;
+        int32 m_viewportUniform;
+        int32 m_sizeUniform;
+
         struct AttribData final
         {
             int32 index = 0;
