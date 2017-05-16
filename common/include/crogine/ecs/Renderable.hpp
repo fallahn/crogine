@@ -61,8 +61,9 @@ namespace cro
         \brief Applies the given normalised viewport.
         Use this to set the viewport for the given camera component when rendering.
         Usually one would restore the existing viewport when done rendering, for consistency.
+        \returns Newly set viewport in window coords
         */
-        void applyViewport(FloatRect);
+        IntRect applyViewport(FloatRect);
 
         /*!
         \brief Restores the previously active viewport after a call to applyViewport()

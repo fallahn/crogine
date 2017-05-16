@@ -75,6 +75,7 @@ namespace cro
         float lifetime = 1.f;
         Colour colour;
         float rotationSpeed = 0.f;
+        float size = 1.f; //diameter of particle
         float emitRate = 1.f; //< particles per second
         glm::vec3 spawnRadius;
         uint32 textureID = 0;

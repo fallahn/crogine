@@ -34,13 +34,16 @@ source distribution.
 using namespace cro;
 
 //protected
-void Renderable::applyViewport(FloatRect vp)
+IntRect Renderable::applyViewport(FloatRect vp)
 {
     glm::vec2 size(App::getWindow().getSize());
 
     glCheck(glGetIntegerv(GL_VIEWPORT, m_previousViewport.data()));
-    glViewport(static_cast<int32>(size.x * vp.left), static_cast<int32>(size.y * vp.bottom),
+    IntRect rect(static_cast<int32>(size.x * vp.left), static_cast<int32>(size.y * vp.bottom),
                 static_cast<int32>(size.x * vp.width), static_cast<int32>(size.y * vp.height));
+    glViewport(rect.left, rect.bottom, rect.width, rect.height);
+
+    return rect;
 }
 
 void Renderable::restorePreviousViewport()

@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Constants.hpp>
 
 #include "../../detail/GLCheck.hpp"
 
@@ -63,14 +64,18 @@ namespace
         attribute MED vec3 a_normal; //this actually stores rotation and size
 
         uniform mat4 u_projection;
+        uniform mat4 u_viewProjection;
+        uniform LOW float u_viewportHeight;
+        uniform LOW float u_particleSize;
 
         varying LOW vec4 v_colour;
 
         void main()
         {
             v_colour = a_colour;
-            gl_PointSize = 40.0;
-            gl_Position = u_projection * a_position;
+
+            gl_Position = u_viewProjection * a_position;
+            gl_PointSize = u_viewportHeight * u_projection[1][1] / gl_Position.w * u_particleSize;
         }
     )";
 
@@ -92,13 +97,16 @@ namespace
 }
 
 ParticleSystem::ParticleSystem(MessageBus& mb)
-    : System        (mb, typeid(ParticleSystem)),
-    m_dataBuffer    (MaxVertData),
-    m_vboIDs        (MaxParticleSystems),
-    m_nextBuffer    (0),
-    m_bufferCount   (0),
-    m_matrixUniform (-1),
-    m_textureUniform(-1)
+    : System            (mb, typeid(ParticleSystem)),
+    m_dataBuffer        (MaxVertData),
+    m_vboIDs            (MaxParticleSystems),
+    m_nextBuffer        (0),
+    m_bufferCount       (0),
+    m_projectionUniform (-1),
+    m_textureUniform    (-1),
+    m_viewProjUniform   (-1),
+    m_viewportUniform   (-1),
+    m_sizeUniform       (-1)
 {
     for (auto& vbo : m_vboIDs) vbo = 0;
 
@@ -113,8 +121,11 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     {
         //fetch uniforms.
         const auto& uniforms = m_shader.getUniformMap();
-        m_matrixUniform = uniforms.find("u_projection")->second;
+        m_projectionUniform = uniforms.find("u_projection")->second;
         m_textureUniform = uniforms.find("u_texture")->second;
+        m_viewProjUniform = uniforms.find("u_viewProjection")->second;
+        m_viewportUniform = uniforms.find("u_viewportHeight")->second;
+        m_sizeUniform = uniforms.find("u_particleSize")->second;
 
         //map attributes
         const auto& attribMap = m_shader.getAttribMap();
@@ -172,10 +183,9 @@ void ParticleSystem::process(Time dt)
                 //TODO transform initial velocity with parent
                 p.velocity = settings.initialVelocity;// glm::vec3(worldMat * glm::vec4(settings.initialVelocity, 1.f));
                 
-                
-
                 //spawn particle in world position
                 p.position = tx.getWorldPosition();
+                p.rotation = Util::Random::value(-Util::Const::TAU, Util::Const::TAU);
 
                 //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
                 /*p.position.x += Util::Random::value(-settings.spawnRadius.x, settings.spawnRadius.x);
@@ -199,7 +209,7 @@ void ParticleSystem::process(Time dt)
             p.lifetime -= dtSec;
             p.colour.setAlpha(std::max(p.lifetime / p.maxLifeTime, 0.f));
 
-            //TODO rotation
+            p.rotation += emitter.m_emitterSettings.rotationSpeed * dtSec;
         }
 
         //go over again and remove dead particles with pop/swap
@@ -254,16 +264,20 @@ void ParticleSystem::render(Entity camera)
     const auto& tx = camera.getComponent<Transform>();
     const auto cam = camera.getComponent<Camera>();
     glm::mat4 viewProj = cam.projection * glm::inverse(tx.getWorldTransform());
+    glm::vec3 camWorldPos = tx.getWorldPosition();
 
-    applyViewport(cam.viewport);
+    auto vp = applyViewport(cam.viewport);
 
     //bind shader
     glCheck(glUseProgram(m_shader.getGLHandle()));
 
     //set shader uniforms (texture/projection)
-    glCheck(glUniformMatrix4fv(m_matrixUniform, 1, GL_FALSE, glm::value_ptr(viewProj)));
+    glCheck(glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projection)));
+    glCheck(glUniformMatrix4fv(m_viewProjUniform, 1, GL_FALSE, glm::value_ptr(viewProj)));
+    glCheck(glUniform1f(m_viewportUniform, vp.height));
     glCheck(glUniform1i(m_textureUniform, 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
+    
 
     //foreach entity
     auto& entities = getEntities();
@@ -272,6 +286,7 @@ void ParticleSystem::render(Entity camera)
         const auto& emitter = e.getComponent<ParticleEmitter>();
         //bind emitter texture
         glCheck(glBindTexture(GL_TEXTURE_2D, emitter.m_emitterSettings.textureID));
+        glCheck(glUniform1f(m_sizeUniform, emitter.m_emitterSettings.size));
         
         //bind emitter vbo
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
