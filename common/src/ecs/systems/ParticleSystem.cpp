@@ -69,10 +69,15 @@ namespace
         uniform LOW float u_particleSize;
 
         varying LOW vec4 v_colour;
+        varying MED mat2 v_rotation;
 
         void main()
         {
             v_colour = a_colour;
+
+            vec2 rot = vec2(sin(a_normal.x), cos(a_normal.x));
+            v_rotation[0] = vec2(rot.y, -rot.x);
+            v_rotation[1]= rot;
 
             gl_Position = u_viewProjection * a_position;
             gl_PointSize = u_viewportHeight * u_projection[1][1] / gl_Position.w * u_particleSize;
@@ -83,10 +88,12 @@ namespace
         uniform sampler2D u_texture;
 
         varying LOW vec4 v_colour;
+        varying MED mat2 v_rotation;
 
         void main()
         {
-            gl_FragColor = v_colour * texture2D(u_texture, gl_PointCoord) * v_colour.a;
+            vec2 texCoord = v_rotation * (gl_PointCoord - vec2(0.5));
+            gl_FragColor = v_colour * texture2D(u_texture, texCoord + vec2(0.5)) * v_colour.a;
         }
     )";
 
@@ -170,27 +177,24 @@ void ParticleSystem::process(Time dt)
             if (emitter.m_nextFreeParticle < emitter.m_particles.size() - 1)
             {
                 auto& tx = e.getComponent<Transform>();
-                /*auto worldMat = tx.getLocalTransform();
-                glm::vec3 forward = glm::vec3(-worldMat[2][0], -worldMat[2][1], -worldMat[2][2]);
-                */
+                glm::quat rotation = glm::quat_cast(tx.getLocalTransform());
+
                 const auto& settings = emitter.m_emitterSettings;
                 auto& p = emitter.m_particles[emitter.m_nextFreeParticle];
                 p.colour = settings.colour;
-                p.forces = settings.forces;
                 p.gravity = settings.gravity;
                 p.lifetime = p.maxLifeTime = settings.lifetime;
-                //p.rotation; //TODO random initial rotation
-                //TODO transform initial velocity with parent
-                p.velocity = settings.initialVelocity;// glm::vec3(worldMat * glm::vec4(settings.initialVelocity, 1.f));
-                
-                //spawn particle in world position
-                p.position = tx.getWorldPosition();
+                p.velocity = rotation * settings.initialVelocity;
                 p.rotation = Util::Random::value(-Util::Const::TAU, Util::Const::TAU);
 
+                //spawn particle in world position
+                p.position = tx.getWorldPosition();
+                
                 //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
-                /*p.position.x += Util::Random::value(-settings.spawnRadius.x, settings.spawnRadius.x);
-                p.position.y += Util::Random::value(-settings.spawnRadius.y, settings.spawnRadius.y);
-                p.position.z += Util::Random::value(-settings.spawnRadius.z, settings.spawnRadius.z);*/
+                static const float epsilon = 0.0001f;
+                p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+                p.position.y += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+                p.position.z += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
 
                 emitter.m_nextFreeParticle++;
             }
@@ -203,7 +207,7 @@ void ParticleSystem::process(Time dt)
             auto& p = emitter.m_particles[i];
 
             p.velocity += p.gravity * dtSec;
-            for (auto f : p.forces) p.velocity += f * dtSec;
+            for (auto f : emitter.m_emitterSettings.forces) p.velocity += f * dtSec;
             p.position += p.velocity * dtSec;            
            
             p.lifetime -= dtSec;
@@ -217,8 +221,8 @@ void ParticleSystem::process(Time dt)
         {
             if (emitter.m_particles[i].lifetime < 0)
             {
-                std::swap(emitter.m_particles[i], emitter.m_particles[emitter.m_nextFreeParticle]);
                 emitter.m_nextFreeParticle--;
+                std::swap(emitter.m_particles[i], emitter.m_particles[emitter.m_nextFreeParticle]);                
             }
         }
         //DPRINT("Next free Particle", std::to_string(emitter.m_nextFreeParticle));
@@ -243,7 +247,7 @@ void ParticleSystem::process(Time dt)
             m_dataBuffer[idx++] = p.colour.getAlpha();
 
             //rotation/size
-            m_dataBuffer[idx++] = 0.f;
+            m_dataBuffer[idx++] = p.rotation;
             m_dataBuffer[idx++] = 0.f;
             m_dataBuffer[idx++] = 0.f;
         }
@@ -258,13 +262,14 @@ void ParticleSystem::render(Entity camera)
 {
     glCheck(glEnable(GL_CULL_FACE));
     glCheck(glEnable(GL_BLEND));
+    glCheck(glEnable(GL_DEPTH_TEST));
+    glCheck(glDepthMask(GL_FALSE));
     ENABLE_POINT_SPRITES;
         
     //particles are already in world space so just need viewProj
     const auto& tx = camera.getComponent<Transform>();
     const auto cam = camera.getComponent<Camera>();
     glm::mat4 viewProj = cam.projection * glm::inverse(tx.getWorldTransform());
-    glm::vec3 camWorldPos = tx.getWorldPosition();
 
     auto vp = applyViewport(cam.viewport);
 
@@ -274,7 +279,7 @@ void ParticleSystem::render(Entity camera)
     //set shader uniforms (texture/projection)
     glCheck(glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projection)));
     glCheck(glUniformMatrix4fv(m_viewProjUniform, 1, GL_FALSE, glm::value_ptr(viewProj)));
-    glCheck(glUniform1f(m_viewportUniform, vp.height));
+    glCheck(glUniform1f(m_viewportUniform, static_cast<float>(vp.height)));
     glCheck(glUniform1i(m_textureUniform, 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
     
@@ -292,7 +297,7 @@ void ParticleSystem::render(Entity camera)
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
 
         //bind vertex attribs
-        for (auto i = 0u; i < /*m_attribData.size()*/2; ++i)
+        for (auto i = 0u; i < m_attribData.size(); ++i)
         {
             glCheck(glEnableVertexAttribArray(m_attribData[i].index));
             glCheck(glVertexAttribPointer(m_attribData[i].index, m_attribData[i].attribSize,
@@ -301,13 +306,25 @@ void ParticleSystem::render(Entity camera)
         }
 
         //apply blend mode
-        applyBlendMode(emitter.m_emitterSettings.blendmode);
+        switch (emitter.m_emitterSettings.blendmode)
+        {
+        default: break;
+        case EmitterSettings::Alpha:
+            glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+            break;
+        case EmitterSettings::Multiply:
+            glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
+            break;
+        case EmitterSettings::Add:
+            glCheck(glBlendFunc(GL_ONE, GL_ONE));
+            break;
+        }
 
         //draw
         glCheck(glDrawArrays(GL_POINTS, 0, emitter.m_nextFreeParticle));
 
         //unbind attribs
-        for (auto i = 0u; i < /*m_attribData.size()*/2; ++i)
+        for (auto i = 0u; i < m_attribData.size(); ++i)
         {
             glCheck(glDisableVertexAttribArray(m_attribData[i].index));
         }
@@ -362,26 +379,4 @@ void ParticleSystem::allocateBuffer()
     glCheck(glBufferData(GL_ARRAY_BUFFER, MaxVertData * sizeof(float), nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     m_bufferCount++;
-}
-
-void ParticleSystem::applyBlendMode(int32 mode)
-{
-    switch (mode)
-    {
-    default: break;
-    case EmitterSettings::Alpha:
-        glCheck(glDepthMask(GL_FALSE));
-        glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-        break;
-    case EmitterSettings::Multiply:
-        glCheck(glEnable(GL_DEPTH_TEST));
-        glCheck(glDepthMask(GL_FALSE));
-        glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
-        break;
-    case EmitterSettings::Add:
-        glCheck(glEnable(GL_DEPTH_TEST));
-        glCheck(glDepthMask(GL_FALSE));
-        glCheck(glBlendFunc(GL_ONE, GL_ONE));
-        break;
-    }
 }

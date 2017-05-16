@@ -72,6 +72,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         createScene();
     });
     //context.appInstance.setClearColour(cro::Colour::White());
+    //context.mainWindow.setVsyncEnabled(false);
 
     updateView();
 
@@ -244,19 +245,21 @@ void GameState::createScene()
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::PlayerShip), m_materialResource.get(MaterialID::PlayerShip));
 
     cro::EmitterSettings settings;
-    settings.emitRate = 20.f;
-    settings.initialVelocity = { 1.f, 2.f, -3.f };
-    settings.gravity = { 0.f, -2.f, 0.f };
+    settings.emitRate = 30.f;
+    settings.initialVelocity = { 2.f, 7.f, -3.f };
+    settings.gravity = { 0.f, -9.f, 0.f };
     settings.colour = cro::Colour::White();
     settings.lifetime = 2.f;
-    settings.rotationSpeed = 2.f;
+    settings.rotationSpeed = 5.f;
     settings.size = 0.3f;
     settings.blendmode = cro::EmitterSettings::Add;
+    settings.spawnRadius = 0.2f;
     settings.textureID = m_textureResource.get("assets/particles/ball.png").getGLHandle();
+    //settings.forces[0].x = -2.f;
     entity.addComponent<cro::ParticleEmitter>().applySettings(settings);
 
     auto& rotator = entity.addComponent<Rotator>();
-    rotator.axis.x = 1.f;
+    rotator.axis.y = 1.f;
     rotator.speed = 1.f;
 
     //3D camera
