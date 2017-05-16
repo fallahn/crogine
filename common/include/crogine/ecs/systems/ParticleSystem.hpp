@@ -83,8 +83,6 @@ namespace cro
             int32 offset = 0;
         };
         std::array<AttribData, 3u> m_attribData;
-
-        void applyBlendMode(int32);
     };
 }
 

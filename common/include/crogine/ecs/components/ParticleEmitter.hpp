@@ -50,7 +50,6 @@ namespace cro
         glm::vec3 position;
         glm::vec3 velocity;
         glm::vec3 gravity;
-        std::array<glm::vec3, 4> forces{};
         float lifetime = 0.f;
         float maxLifeTime = 1.f;
         Colour colour;
@@ -77,7 +76,7 @@ namespace cro
         float rotationSpeed = 0.f;
         float size = 1.f; //diameter of particle
         float emitRate = 1.f; //< particles per second
-        glm::vec3 spawnRadius;
+        float spawnRadius = 0.f;
         uint32 textureID = 0;
         bool loadFromFile(const std::string&) { return false; };
     };
