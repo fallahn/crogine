@@ -259,7 +259,7 @@ void GameState::createScene()
     entity.addComponent<cro::ParticleEmitter>().applySettings(settings);
 
     auto& rotator = entity.addComponent<Rotator>();
-    rotator.axis.y = 1.f;
+    rotator.axis.x = 1.f;
     rotator.speed = 1.f;
 
     //3D camera
