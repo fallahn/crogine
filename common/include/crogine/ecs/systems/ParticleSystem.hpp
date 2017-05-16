@@ -67,6 +67,9 @@ namespace cro
         std::vector<uint32> m_vboIDs;
         std::size_t m_nextBuffer;
         std::size_t m_bufferCount;
+
+        std::size_t m_visibleCount;
+        std::vector<Entity> m_visibleSystems;
         void allocateBuffer();
 
         Shader m_shader;

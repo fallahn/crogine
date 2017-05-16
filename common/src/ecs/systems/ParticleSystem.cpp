@@ -109,6 +109,7 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     m_vboIDs            (MaxParticleSystems),
     m_nextBuffer        (0),
     m_bufferCount       (0),
+    m_visibleCount      (0),
     m_projectionUniform (-1),
     m_textureUniform    (-1),
     m_viewProjUniform   (-1),
@@ -148,6 +149,13 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
         m_attribData[2].attribSize = 3;
         m_attribData[2].offset = (3 + 4) * sizeof(float);
     }
+
+    //reserve some space
+    m_visibleSystems.reserve(MaxParticleSystems);
+    for (auto i = 0u; i < MaxParticleSystems; ++i)
+    {
+        m_visibleSystems.emplace_back(-1, -1);
+    }
 }
 
 ParticleSystem::~ParticleSystem()
@@ -165,8 +173,10 @@ ParticleSystem::~ParticleSystem()
 //public
 void ParticleSystem::process(Time dt)
 {
+    m_visibleCount = 0;
+
     auto& entities = getEntities();
-    for (auto& e : entities) //TODO frustum cull!
+    for (auto& e : entities)
     {
         //check each emitter to see if it should spawn a new particle
         auto& emitter = e.getComponent<ParticleEmitter>();
@@ -252,7 +262,14 @@ void ParticleSystem::process(Time dt)
             m_dataBuffer[idx++] = 0.f;
         }
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
-        glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, idx * sizeof(float), m_dataBuffer.data()));        
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, idx * sizeof(float), m_dataBuffer.data()));
+
+
+        //check if not empty and within frustum and add to draw list
+        if (emitter.m_nextFreeParticle > 0 /*TODO frustum cull*/)
+        {
+            m_visibleSystems[m_visibleCount++] = e;
+        }
     }
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -284,11 +301,9 @@ void ParticleSystem::render(Entity camera)
     glCheck(glActiveTexture(GL_TEXTURE0));
     
 
-    //foreach entity
-    auto& entities = getEntities();
-    for (auto& e : entities)
+    for(auto i = 0u; i < m_visibleCount; ++i)
     {
-        const auto& emitter = e.getComponent<ParticleEmitter>();
+        const auto& emitter = m_visibleSystems[i].getComponent<ParticleEmitter>();
         //bind emitter texture
         glCheck(glBindTexture(GL_TEXTURE_2D, emitter.m_emitterSettings.textureID));
         glCheck(glUniform1f(m_sizeUniform, emitter.m_emitterSettings.size));
@@ -344,7 +359,7 @@ void ParticleSystem::render(Entity camera)
 
 //private
 void ParticleSystem::onEntityAdded(Entity entity)
-{
+{    
     //check VBO count and increase if needed
     if (m_nextBuffer == m_bufferCount)
     {
