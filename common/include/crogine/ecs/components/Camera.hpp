@@ -33,9 +33,12 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/Window.hpp>
+#include <crogine/graphics/Spatial.hpp>
 
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include <array>
 
 namespace cro
 {
@@ -64,11 +67,23 @@ namespace cro
         */
         FloatRect viewport;
 
+        /*!
+        \brief Returns the camera frustum including any parent transformation,
+        IE the frustum of the ViewProjection matrix. Only guaranteed to be up
+        to date if this is currently the active scene camera
+        */
+        std::array<Plane, 6u> getFrustum() const {return m_frustum; }
+
         Camera() : viewport(0.f, 0.f, 1.f, 1.f)
         {
             glm::vec2 windowSize(App::getWindow().getSize());
             projection = glm::perspective(0.6f, windowSize.x / windowSize.y, 0.1f, 150.f);
         }
+
+    private:
+
+        std::array<Plane, 6u> m_frustum;
+        friend class Scene;
     };
 }
 

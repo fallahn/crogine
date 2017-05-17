@@ -168,6 +168,8 @@ namespace cro
 
         void postRenderPath();
         std::function<void()> currentRenderPath;
+
+        void updateFrustum();
     };
 
     template <typename T, typename... Args>

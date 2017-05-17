@@ -57,70 +57,9 @@ MeshSorter::MeshSorter(MessageBus& mb, SceneRenderer& renderer)
 //public
 void MeshSorter::process(cro::Time)
 {
-    auto& entities = getEntities();
-    auto activeCamera = getScene()->getActiveCamera();
-    
-    //build the frustum from the view-projection matrix
-    auto viewProj = activeCamera.getComponent<Camera>().projection
-        * glm::inverse(activeCamera.getComponent<Transform>().getWorldTransform());
-    
-    std::array<Plane, 6u> frustum = 
-    {
-        {Plane //left
-        (
-            viewProj[0][3] + viewProj[0][0],
-            viewProj[1][3] + viewProj[1][0],
-            viewProj[2][3] + viewProj[2][0],
-            viewProj[3][3] + viewProj[3][0]
-        ),
-        Plane //right
-        (
-            viewProj[0][3] - viewProj[0][0],
-            viewProj[1][3] - viewProj[1][0],
-            viewProj[2][3] - viewProj[2][0],
-            viewProj[3][3] - viewProj[3][0]
-        ),
-        Plane //bottom
-        (
-            viewProj[0][3] + viewProj[0][1],
-            viewProj[1][3] + viewProj[1][1],
-            viewProj[2][3] + viewProj[2][1],
-            viewProj[3][3] + viewProj[3][1]
-        ),
-        Plane //top
-        (
-            viewProj[0][3] - viewProj[0][1],
-            viewProj[1][3] - viewProj[1][1],
-            viewProj[2][3] - viewProj[2][1],
-            viewProj[3][3] - viewProj[3][1]
-        ),
-        Plane //near
-        (
-            viewProj[0][3] + viewProj[0][2],
-            viewProj[1][3] + viewProj[1][2],
-            viewProj[2][3] + viewProj[2][2],
-            viewProj[3][3] + viewProj[3][2]
-        ),
-        Plane //far
-        (
-            viewProj[0][3] - viewProj[0][2],
-            viewProj[1][3] - viewProj[1][2],
-            viewProj[2][3] - viewProj[2][2],
-            viewProj[3][3] - viewProj[3][2]
-        )}
-    };
+    auto& entities = getEntities();   
+    auto frustum = getScene()->getActiveCamera().getComponent<Camera>().getFrustum();
 
-    //normalise the planes
-    for (auto& p : frustum)
-    {
-        const float factor = 1.f / std::sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
-        p.x *= factor;
-        p.y *= factor;
-        p.z *= factor;
-        p.w *= factor;
-    }
-    //DPRINT("Near Plane", std::to_string(frustum[1].w));
-    
     //cull entities by viewable into draw lists by pass
     m_visibleEntities.reserve(entities.size() * 2);
     for (auto& entity : entities)
