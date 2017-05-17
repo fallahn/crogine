@@ -298,6 +298,7 @@
     <ClCompile Include="src\MenuScores.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\PostRadial.cpp" />
+    <ClCompile Include="src\RandomTranslation.cpp" />
     <ClCompile Include="src\RockFallSystem.cpp" />
     <ClCompile Include="src\RotateSystem.cpp" />
     <ClCompile Include="src\SliderSystem.cpp" />
@@ -316,6 +317,7 @@
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\PostRadial.hpp" />
+    <ClInclude Include="src\RandomTranslation.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\RockFallSystem.hpp" />
     <ClInclude Include="src\RotateSystem.hpp" />

@@ -81,6 +81,9 @@
     <ClCompile Include="src\RockFallSystem.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\RandomTranslation.cpp">
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -138,6 +141,9 @@
       <Filter>Header Files\TL</Filter>
     </ClInclude>
     <ClInclude Include="src\RockFallSystem.hpp">
+      <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RandomTranslation.hpp">
       <Filter>Header Files\systems</Filter>
     </ClInclude>
   </ItemGroup>

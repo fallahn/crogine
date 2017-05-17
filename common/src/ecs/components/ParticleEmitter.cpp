@@ -34,7 +34,7 @@ using namespace cro;
 ParticleEmitter::ParticleEmitter()
     : m_vbo             (0),
     m_nextFreeParticle  (0),
-    m_running           (true)
+    m_running           (false)
 {
 
 }
