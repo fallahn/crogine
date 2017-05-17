@@ -31,6 +31,7 @@ source distribution.
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
@@ -176,6 +177,7 @@ void ParticleSystem::process(Time dt)
     m_visibleCount = 0;
 
     auto& entities = getEntities();
+    auto frustum = getScene()->getActiveCamera().getComponent<Camera>().getFrustum();
     for (auto& e : entities)
     {
         //check each emitter to see if it should spawn a new particle
@@ -212,6 +214,8 @@ void ParticleSystem::process(Time dt)
 
         //update each particle
         const float dtSec = dt.asSeconds();
+        glm::vec3 minBounds(std::numeric_limits<float>::max());
+        glm::vec3 maxBounds;
         for (auto i = 0u; i < emitter.m_nextFreeParticle; ++i)
         {
             auto& p = emitter.m_particles[i];
@@ -224,7 +228,19 @@ void ParticleSystem::process(Time dt)
             p.colour.setAlpha(std::max(p.lifetime / p.maxLifeTime, 0.f));
 
             p.rotation += emitter.m_emitterSettings.rotationSpeed * dtSec;
+
+            //update bounds for culling
+            if (p.position.x < minBounds.x) minBounds.x = p.position.x;
+            if (p.position.y < minBounds.y) minBounds.y = p.position.y;
+            if (p.position.z < minBounds.z) minBounds.z = p.position.z;
+
+            if (p.position.x > maxBounds.x) maxBounds.x = p.position.x;
+            if (p.position.y > maxBounds.y) maxBounds.y = p.position.y;
+            if (p.position.z > maxBounds.z) maxBounds.z = p.position.z;
         }
+        auto dist = (maxBounds - minBounds) / 2.f;
+        emitter.m_bounds.centre = dist + minBounds;
+        emitter.m_bounds.radius = glm::length(dist);
 
         //go over again and remove dead particles with pop/swap
         for (auto i = 0u; i < emitter.m_nextFreeParticle; ++i)
@@ -266,7 +282,17 @@ void ParticleSystem::process(Time dt)
 
 
         //check if not empty and within frustum and add to draw list
-        if (emitter.m_nextFreeParticle > 0 /*TODO frustum cull*/)
+        auto inView = [&frustum, &emitter]()->bool
+        {
+            bool visible = true;
+            std::size_t i = 0;
+            while (visible && i < frustum.size())
+            {
+                visible = (Spatial::intersects(frustum[i++], emitter.m_bounds) != Planar::Back);
+            }
+            return visible;
+        };
+        if (emitter.m_nextFreeParticle > 0 && inView())
         {
             m_visibleSystems[m_visibleCount++] = e;
         }
