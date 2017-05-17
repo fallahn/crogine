@@ -70,14 +70,7 @@ namespace cro
         */
         SceneRenderer(MessageBus& mb);
 
-        /*!
-        \brief Supplies a list of entities to render.
-        This would normally be supplied by a MeshSorter ECS system, but
-        can come from any source such as a UI manager which can supply a list of entities.
-        The vectors are swapped by this function so the vector being passed
-        in will be cleared.
-        */
-        void setDrawableList(MaterialList& drawableList);
+        void process(Time) override;
 
         /*!
         \brief Attempts to render the scene based on the current entity lists
