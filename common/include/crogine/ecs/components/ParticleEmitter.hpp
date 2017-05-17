@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/graphics/Spatial.hpp>
 
 #include <glm/vec3.hpp>
 
@@ -106,6 +107,7 @@ namespace cro
 
         bool m_running;
         Clock m_emissionClock;
+        Sphere m_bounds;
 
         friend class ParticleSystem;
     };
