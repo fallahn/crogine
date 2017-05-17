@@ -183,7 +183,7 @@ void ParticleSystem::process(Time dt)
         //check each emitter to see if it should spawn a new particle
         auto& emitter = e.getComponent<ParticleEmitter>();
         if (emitter.m_running &&
-            emitter.m_emissionClock.elapsed().asSeconds() > (1.f / emitter.m_emitterSettings.emitRate))
+            emitter.m_emissionClock.elapsed().asSeconds() > (1.f / emitter.emitterSettings.emitRate))
         {
             emitter.m_emissionClock.restart();
             if (emitter.m_nextFreeParticle < emitter.m_particles.size() - 1)
@@ -191,7 +191,9 @@ void ParticleSystem::process(Time dt)
                 auto& tx = e.getComponent<Transform>();
                 glm::quat rotation = glm::quat_cast(tx.getLocalTransform());
 
-                const auto& settings = emitter.m_emitterSettings;
+                const auto& settings = emitter.emitterSettings;
+                CRO_ASSERT(settings.emitRate > 0, "Emit rate must be grater than 0");
+                CRO_ASSERT(settings.lifetime > 0, "Lifetime must be greater than 0");
                 auto& p = emitter.m_particles[emitter.m_nextFreeParticle];
                 p.colour = settings.colour;
                 p.gravity = settings.gravity;
@@ -221,13 +223,13 @@ void ParticleSystem::process(Time dt)
             auto& p = emitter.m_particles[i];
 
             p.velocity += p.gravity * dtSec;
-            for (auto f : emitter.m_emitterSettings.forces) p.velocity += f * dtSec;
+            for (auto f : emitter.emitterSettings.forces) p.velocity += f * dtSec;
             p.position += p.velocity * dtSec;            
            
             p.lifetime -= dtSec;
             p.colour.setAlpha(std::max(p.lifetime / p.maxLifeTime, 0.f));
 
-            p.rotation += emitter.m_emitterSettings.rotationSpeed * dtSec;
+            p.rotation += emitter.emitterSettings.rotationSpeed * dtSec;
 
             //update bounds for culling
             if (p.position.x < minBounds.x) minBounds.x = p.position.x;
@@ -331,8 +333,8 @@ void ParticleSystem::render(Entity camera)
     {
         const auto& emitter = m_visibleSystems[i].getComponent<ParticleEmitter>();
         //bind emitter texture
-        glCheck(glBindTexture(GL_TEXTURE_2D, emitter.m_emitterSettings.textureID));
-        glCheck(glUniform1f(m_sizeUniform, emitter.m_emitterSettings.size));
+        glCheck(glBindTexture(GL_TEXTURE_2D, emitter.emitterSettings.textureID));
+        glCheck(glUniform1f(m_sizeUniform, emitter.emitterSettings.size));
         
         //bind emitter vbo
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
@@ -347,7 +349,7 @@ void ParticleSystem::render(Entity camera)
         }
 
         //apply blend mode
-        switch (emitter.m_emitterSettings.blendmode)
+        switch (emitter.emitterSettings.blendmode)
         {
         default: break;
         case EmitterSettings::Alpha:
