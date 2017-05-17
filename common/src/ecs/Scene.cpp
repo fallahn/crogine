@@ -72,6 +72,9 @@ void Scene::simulate(Time dt)
     }
     m_destroyedEntities.clear();
 
+
+    updateFrustum();
+
     m_systemManager.process(dt);
     for (auto& p : m_postEffects) p->process(dt);
 }
@@ -122,6 +125,7 @@ Entity Scene::setActiveCamera(Entity entity)
     CRO_ASSERT(m_entityManager.owns(entity), "This entity must belong to this scene!");
     auto oldCam = m_entityManager.getEntity(m_activeCamera);
     m_activeCamera = entity.getIndex();
+    updateFrustum();
     return oldCam;
 }
 
@@ -164,4 +168,68 @@ void Scene::postRenderPath()
     m_sceneBuffer.display();
 
     m_postEffects[0]->apply(m_sceneBuffer);
+}
+
+void Scene::updateFrustum()
+{
+    auto activeCamera = getActiveCamera();
+    auto& camComponent = activeCamera.getComponent<Camera>();
+    auto viewProj = camComponent.projection
+        * glm::inverse(activeCamera.getComponent<Transform>().getWorldTransform());
+
+    camComponent.m_frustum =
+    {
+        { Plane //left
+        (
+            viewProj[0][3] + viewProj[0][0],
+            viewProj[1][3] + viewProj[1][0],
+            viewProj[2][3] + viewProj[2][0],
+            viewProj[3][3] + viewProj[3][0]
+        ),
+        Plane //right
+        (
+            viewProj[0][3] - viewProj[0][0],
+            viewProj[1][3] - viewProj[1][0],
+            viewProj[2][3] - viewProj[2][0],
+            viewProj[3][3] - viewProj[3][0]
+        ),
+        Plane //bottom
+        (
+            viewProj[0][3] + viewProj[0][1],
+            viewProj[1][3] + viewProj[1][1],
+            viewProj[2][3] + viewProj[2][1],
+            viewProj[3][3] + viewProj[3][1]
+        ),
+        Plane //top
+        (
+            viewProj[0][3] - viewProj[0][1],
+            viewProj[1][3] - viewProj[1][1],
+            viewProj[2][3] - viewProj[2][1],
+            viewProj[3][3] - viewProj[3][1]
+        ),
+        Plane //near
+        (
+            viewProj[0][3] + viewProj[0][2],
+            viewProj[1][3] + viewProj[1][2],
+            viewProj[2][3] + viewProj[2][2],
+            viewProj[3][3] + viewProj[3][2]
+        ),
+        Plane //far
+        (
+            viewProj[0][3] - viewProj[0][2],
+            viewProj[1][3] - viewProj[1][2],
+            viewProj[2][3] - viewProj[2][2],
+            viewProj[3][3] - viewProj[3][2]
+        ) }
+    };
+
+    //normalise the planes
+    for (auto& p : camComponent.m_frustum)
+    {
+        const float factor = 1.f / std::sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
+        p.x *= factor;
+        p.y *= factor;
+        p.z *= factor;
+        p.w *= factor;
+    }
 }

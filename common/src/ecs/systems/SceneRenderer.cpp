@@ -47,7 +47,7 @@ SceneRenderer::SceneRenderer(MessageBus& mb)
     m_currentTextureUnit(0)
 {
     requireComponent<Transform>();
-    //requireComponent<Model>();
+    requireComponent<Model>();
 }
 
 //public
