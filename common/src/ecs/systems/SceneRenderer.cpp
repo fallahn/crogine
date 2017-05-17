@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
 
 #include "../../detail/GLCheck.hpp"
@@ -51,10 +52,75 @@ SceneRenderer::SceneRenderer(MessageBus& mb)
 }
 
 //public
-void SceneRenderer::setDrawableList(MaterialList& entities)
+void SceneRenderer::process(Time)
 {
-    m_visibleEntities.swap(entities);
-    entities.clear();
+    auto& entities = getEntities();
+    auto frustum = getScene()->getActiveCamera().getComponent<Camera>().getFrustum();
+
+    //cull entities by viewable into draw lists by pass
+    m_visibleEntities.clear();
+    m_visibleEntities.reserve(entities.size() * 2);
+    for (auto& entity : entities)
+    {
+        auto model = entity.getComponent<Model>();
+        auto sphere = model.m_meshData.boundingSphere;
+        auto tx = entity.getComponent<Transform>();
+        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre.x, sphere.centre.y, sphere.centre.z, 1.f));
+        auto scale = tx.getScale();
+        sphere.radius *= (scale.x + scale.y + scale.z) / 3.f;
+
+        bool visible = true;
+        std::size_t i = 0;
+        while (visible && i < frustum.size())
+        {
+            visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
+        }
+
+        if (visible)
+        {
+            auto opaque = std::make_pair(entity, SortData());
+            auto transparent = std::make_pair(entity, SortData());
+
+            auto worldPos = tx.getWorldPosition();
+
+            //foreach material
+            //add ent/index pair to alpha or opaque list
+            for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
+            {
+                if (model.m_materials[i].blendMode != Material::BlendMode::None)
+                {
+                    transparent.second.matIDs.push_back(i);
+                    transparent.second.flags = static_cast<int64>(worldPos.z * 1000000.f); //suitably large number to shift decimal point
+                    transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
+                }
+                else
+                {
+                    opaque.second.matIDs.push_back(i);
+                    opaque.second.flags = static_cast<int64>(-worldPos.z * 1000000.f);
+                }
+            }
+
+            //if (!opaque.second.matIDs.empty())
+            {
+                m_visibleEntities.push_back(opaque);
+            }
+
+            //if (!transparent.second.matIDs.empty())
+            {
+                m_visibleEntities.push_back(transparent);
+            }
+        }
+    }
+    //DPRINT("Visible ents", std::to_string(m_visibleEntities.size()));
+    //DPRINT("Total ents", std::to_string(entities.size()));
+
+    //sort lists by depth
+    //sort opaque materials front to back
+    std::sort(std::begin(m_visibleEntities), std::end(m_visibleEntities),
+        [](MaterialPair& a, MaterialPair& b)
+    {
+        return a.second.flags < b.second.flags;
+    });
 }
 
 void SceneRenderer::render(Entity camera)

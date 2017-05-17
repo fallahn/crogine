@@ -44,7 +44,6 @@ source distribution.
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 
-#include <crogine/ecs/systems/MeshSorter.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/SceneRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
@@ -128,8 +127,7 @@ void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::SceneGraph>(mb);
-    auto& sceneRenderer = m_scene.addSystem<cro::SceneRenderer>(mb);
-    m_scene.addSystem<cro::MeshSorter>(mb, sceneRenderer);
+    m_scene.addSystem<cro::SceneRenderer>(mb);
     backgroundController = &m_scene.addSystem<BackgroundController>(mb);
     backgroundController->setScrollSpeed(0.2f);
     m_scene.addSystem<ChunkSystem>(mb);
