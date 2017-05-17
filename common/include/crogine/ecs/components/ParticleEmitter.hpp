@@ -91,17 +91,17 @@ namespace cro
         ParticleEmitter();
         /*~ParticleEmitter();*/
 
-        void applySettings(const EmitterSettings&);
+        //void applySettings(const EmitterSettings&);
 
         void start();
         void stop();
 
         static const uint32 MaxParticles = 1000u;
+        EmitterSettings emitterSettings;
 
     private:
-        uint32 m_vbo; //< if this is 0 the system manager knows to allocate the next free VBO to it
+        uint32 m_vbo;
         
-        EmitterSettings m_emitterSettings;
         std::array<Particle, MaxParticles> m_particles;
         std::size_t m_nextFreeParticle;
 

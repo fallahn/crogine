@@ -39,13 +39,13 @@ ParticleEmitter::ParticleEmitter()
 
 }
 
-void ParticleEmitter::applySettings(const EmitterSettings& es)
-{
-    CRO_ASSERT(es.emitRate > 0, "Emit rate must be grater than 0");
-    CRO_ASSERT(es.lifetime > 0, "Lifetime must be greater than 0");
-    
-    m_emitterSettings = es;
-}
+//void ParticleEmitter::applySettings(const EmitterSettings& es)
+//{
+//    CRO_ASSERT(es.emitRate > 0, "Emit rate must be grater than 0");
+//    CRO_ASSERT(es.lifetime > 0, "Lifetime must be greater than 0");
+//    
+//    m_emitterSettings = es;
+//}
 
 void ParticleEmitter::start()
 {

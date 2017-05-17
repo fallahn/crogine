@@ -136,10 +136,42 @@ void GameState::handleMessage(const cro::Message& msg)
                 }
             };
             m_commandSystem->sendCommand(cmd);
+
+            cmd.targetFlags = CommandID::SnowParticles;
+            cmd.action = [start](cro::Entity entity, cro::Time)
+            {
+                auto& rt = entity.getComponent<RandomTranslation>();
+                if (start)
+                {
+                    for (auto& p : rt.translations)
+                    {
+                        p.x = cro::Util::Random::value(-5.5f, 5.1f);
+                        p.y = 3.1f;
+                        p.z = -9.2f;
+                    }
+                }
+                else
+                {
+                    for (auto& p : rt.translations)
+                    {
+                        p.x = cro::Util::Random::value(-3.5f, 12.1f);
+                        p.y = 3.1f;
+                        p.z = -9.2f;
+                    }
+                }
+            };
+            m_commandSystem->sendCommand(cmd);
+
         }
         else if (data.type == BackgroundEvent::SpeedChange)
         {
-
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::SnowParticles;
+            cmd.action = [=](cro::Entity entity, cro::Time)
+            {
+                entity.getComponent<cro::ParticleEmitter>().emitterSettings.initialVelocity.x = (data.value * -11.f);
+            };
+            m_commandSystem->sendCommand(cmd);
         }
     }
 }
@@ -284,42 +316,44 @@ void GameState::createScene()
 
 
     //particle systems - TODO add command to adjust speed with background
-    cro::EmitterSettings settings;
+    entity = m_scene.createEntity();
+    auto& snowEmitter = entity.addComponent<cro::ParticleEmitter>();
+    auto& settings = snowEmitter.emitterSettings;
     settings.emitRate = 30.f;
-    settings.initialVelocity = { -6.f, 0.f, 0.f };
+    settings.initialVelocity = { -2.4f, -0.1f, 0.f };
+    settings.gravity = { 0.f, -1.f, 0.f };
     settings.colour = cro::Colour::White();
-    settings.lifetime = 2.f;
+    settings.lifetime = 5.f;
     settings.rotationSpeed = 5.f;
     settings.size = 0.03f;
     settings.spawnRadius = 0.8f;
     settings.textureID = m_textureResource.get("assets/particles/snowflake.png").getGLHandle();
     settings.blendmode = cro::EmitterSettings::Add;
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::ParticleEmitter>().applySettings(settings);
-    entity.getComponent<cro::ParticleEmitter>().start();
+    snowEmitter.start();
     entity.addComponent<cro::Transform>();
     auto& translator = entity.addComponent<RandomTranslation>();
     for (auto& p : translator.translations)
     {
-        p.x = 5.1f;
-        p.y = cro::Util::Random::value(-2.f, 3.f);
+        p.x = cro::Util::Random::value(-3.5f, 12.1f);
+        p.y = 3.1f;
         p.z = -9.2f;
     }
     entity.addComponent<cro::CommandTarget>().ID = CommandID::SnowParticles;
 
     //rock fragments from ceiling
-    settings.emitRate = 4.f;
-    settings.initialVelocity = {};
-    settings.lifetime = 2.f;
-    settings.rotationSpeed = 8.f;
-    settings.size = 0.06f;
-    settings.textureID = m_textureResource.get("assets/particles/rock_fragment.png").getGLHandle();
-    settings.blendmode = cro::EmitterSettings::Alpha;
-    settings.gravity = { 0.f, -9.f, 0.f };
-
     entity = m_scene.createEntity();
-    entity.addComponent<cro::ParticleEmitter>().applySettings(settings);
+    auto& rockEmitter = entity.addComponent<cro::ParticleEmitter>();
+    auto& rockSettings = rockEmitter.emitterSettings;
+    rockSettings.emitRate = 4.f;
+    rockSettings.initialVelocity = {};
+    rockSettings.lifetime = 2.f;
+    rockSettings.rotationSpeed = 8.f;
+    rockSettings.size = 0.06f;
+    rockSettings.textureID = m_textureResource.get("assets/particles/rock_fragment.png").getGLHandle();
+    rockSettings.blendmode = cro::EmitterSettings::Alpha;
+    rockSettings.gravity = { 0.f, -9.f, 0.f };
+
     entity.addComponent<cro::Transform>();
     auto& rockTrans = entity.addComponent<RandomTranslation>();
     for (auto& p : rockTrans.translations)
