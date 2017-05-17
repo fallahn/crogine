@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,32 +27,28 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/components/ParticleEmitter.hpp>
+#include "RandomTranslation.hpp"
 
-using namespace cro;
+#include <crogine/core/Clock.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 
-ParticleEmitter::ParticleEmitter()
-    : m_vbo             (0),
-    m_nextFreeParticle  (0),
-    m_running           (false)
+Translator::Translator(cro::MessageBus& mb)
+    : cro::System(mb, typeid(Translator))
 {
-
+    requireComponent<cro::Transform>();
+    requireComponent<RandomTranslation>();
 }
 
-void ParticleEmitter::applySettings(const EmitterSettings& es)
+//public
+void Translator::process(cro::Time)
 {
-    CRO_ASSERT(es.emitRate > 0, "Emit rate must be grater than 0");
-    CRO_ASSERT(es.lifetime > 0, "Lifetime must be greater than 0");
-    
-    m_emitterSettings = es;
-}
+    auto& entities = getEntities();
+    for (auto& e : entities)
+    {
+        auto& tx = e.getComponent<cro::Transform>();
+        auto& translator = e.getComponent<RandomTranslation>();
 
-void ParticleEmitter::start()
-{
-    m_running = true;
-}
-
-void ParticleEmitter::stop()
-{
-    m_running = false;
+        tx.setPosition(translator.translations[translator.idx]);
+        translator.idx = (translator.idx + 1) % translator.translations.size();
+    }
 }

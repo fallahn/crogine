@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,32 +27,30 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/components/ParticleEmitter.hpp>
+#ifndef CRO_RANDOM_TRANSLATION_HPP_
+#define CRO_RANDOM_TRANSLATION_HPP_
 
-using namespace cro;
+#include <crogine/ecs/System.hpp>
 
-ParticleEmitter::ParticleEmitter()
-    : m_vbo             (0),
-    m_nextFreeParticle  (0),
-    m_running           (false)
+#include <glm/vec3.hpp>
+
+#include <array>
+
+struct RandomTranslation final
 {
+    std::size_t idx = 0;
+    std::array<glm::vec3, 12u> translations;
+};
 
-}
-
-void ParticleEmitter::applySettings(const EmitterSettings& es)
+class Translator final : public cro::System
 {
-    CRO_ASSERT(es.emitRate > 0, "Emit rate must be grater than 0");
-    CRO_ASSERT(es.lifetime > 0, "Lifetime must be greater than 0");
-    
-    m_emitterSettings = es;
-}
+public:
+    Translator(cro::MessageBus&);
 
-void ParticleEmitter::start()
-{
-    m_running = true;
-}
+    void process(cro::Time) override;
 
-void ParticleEmitter::stop()
-{
-    m_running = false;
-}
+private:
+
+};
+
+#endif //CRO_RANDOM_TRANSLATION_HPP_

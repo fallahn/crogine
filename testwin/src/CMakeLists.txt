@@ -13,6 +13,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/MenuScores.cpp
   ${PROJECT_DIR}/MyApp.cpp 
   ${PROJECT_DIR}/PostRadial.cpp
+  ${PROJECT_DIR}/RandomTranslator.cpp
   ${PROJECT_DIR}/RockFallSystem.cpp
   ${PROJECT_DIR}/RotateSystem.cpp
   ${PROJECT_DIR}/SliderSystem.cpp

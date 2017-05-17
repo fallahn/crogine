@@ -37,6 +37,7 @@ source distribution.
 #include "ChunkBuilder.hpp"
 #include "Messages.hpp"
 #include "RockFallSystem.hpp"
+#include "RandomTranslation.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -47,11 +48,15 @@ source distribution.
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/SceneRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/CommandID.hpp>
+
+#include <crogine/util/Random.hpp>
 
 namespace
 {
@@ -109,6 +114,34 @@ void GameState::handleMessage(const cro::Message& msg)
             updateView();
         }
     }
+    else if (msg.id == MessageID::BackgroundSystem)
+    {
+        const auto& data = msg.getData<BackgroundEvent>();
+        if (data.type == BackgroundEvent::ModeChanged)
+        {
+            bool start = (data.value != 0.f);
+            
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::RockParticles;
+            cmd.action = [start](cro::Entity entity, cro::Time)
+            {
+                auto& ps = entity.getComponent<cro::ParticleEmitter>();
+                if (start)
+                {
+                    ps.start();
+                }
+                else
+                {
+                    ps.stop();
+                }
+            };
+            m_commandSystem->sendCommand(cmd);
+        }
+        else if (data.type == BackgroundEvent::SpeedChange)
+        {
+
+        }
+    }
 }
 
 bool GameState::simulate(cro::Time dt)
@@ -134,6 +167,8 @@ void GameState::addSystems()
     m_scene.addSystem<RockFallSystem>(mb);
     m_scene.addSystem<RotateSystem>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
+    m_scene.addSystem<Translator>(mb);
+    m_commandSystem = &m_scene.addSystem<cro::CommandSystem>(mb);
 
     m_scene.addPostProcess<PostRadial>();
 }
@@ -242,23 +277,59 @@ void GameState::createScene()
     playerTx.setScale({ 0.5f, 0.5f, 0.5f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::PlayerShip), m_materialResource.get(MaterialID::PlayerShip));
 
-    cro::EmitterSettings settings;
-    settings.emitRate = 30.f;
-    settings.initialVelocity = { 2.f, 7.f, -3.f };
-    settings.gravity = { 0.f, -9.f, 0.f };
-    settings.colour = cro::Colour::White();
-    settings.lifetime = 2.f;
-    settings.rotationSpeed = 5.f;
-    settings.size = 0.3f;
-    settings.blendmode = cro::EmitterSettings::Add;
-    settings.spawnRadius = 0.2f;
-    settings.textureID = m_textureResource.get("assets/particles/ball.png").getGLHandle();
-    //settings.forces[0].x = -2.f;
-    entity.addComponent<cro::ParticleEmitter>().applySettings(settings);
-
     auto& rotator = entity.addComponent<Rotator>();
     rotator.axis.x = 1.f;
     rotator.speed = 1.f;
+
+
+
+    //particle systems - TODO add command to adjust speed with background
+    cro::EmitterSettings settings;
+    settings.emitRate = 30.f;
+    settings.initialVelocity = { -6.f, 0.f, 0.f };
+    settings.colour = cro::Colour::White();
+    settings.lifetime = 2.f;
+    settings.rotationSpeed = 5.f;
+    settings.size = 0.03f;
+    settings.spawnRadius = 0.8f;
+    settings.textureID = m_textureResource.get("assets/particles/snowflake.png").getGLHandle();
+    settings.blendmode = cro::EmitterSettings::Add;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::ParticleEmitter>().applySettings(settings);
+    entity.getComponent<cro::ParticleEmitter>().start();
+    entity.addComponent<cro::Transform>();
+    auto& translator = entity.addComponent<RandomTranslation>();
+    for (auto& p : translator.translations)
+    {
+        p.x = 5.1f;
+        p.y = cro::Util::Random::value(-2.f, 3.f);
+        p.z = -9.2f;
+    }
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::SnowParticles;
+
+    //rock fragments from ceiling
+    settings.emitRate = 4.f;
+    settings.initialVelocity = {};
+    settings.lifetime = 2.f;
+    settings.rotationSpeed = 8.f;
+    settings.size = 0.06f;
+    settings.textureID = m_textureResource.get("assets/particles/rock_fragment.png").getGLHandle();
+    settings.blendmode = cro::EmitterSettings::Alpha;
+    settings.gravity = { 0.f, -9.f, 0.f };
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::ParticleEmitter>().applySettings(settings);
+    entity.addComponent<cro::Transform>();
+    auto& rockTrans = entity.addComponent<RandomTranslation>();
+    for (auto& p : rockTrans.translations)
+    {
+        p.x = cro::Util::Random::value(-4.2f, 4.2f);
+        p.y = 3.f;
+        p.z = -8.6f;
+    }
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::RockParticles;
+
 
     //3D camera
     auto ent = m_scene.createEntity();

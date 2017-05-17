@@ -84,7 +84,9 @@ namespace CommandID
 {
     enum
     {
-        MenuController = 0x1
+        MenuController = 0x1,
+        RockParticles = 0x2,
+        SnowParticles = 0x4
     };
 }
 
