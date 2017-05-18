@@ -27,42 +27,25 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_BACKGROUND_CONTROLLER_HPP_
-#define TL_BACKGROUND_CONTROLLER_HPP_
+#ifndef TL_VELOCITY_SYSTEM_HPP_
+#define TL_VELOCITY_SYSTEM_HPP_
 
 #include <crogine/ecs/System.hpp>
 
-struct BackgroundComponent final
+#include <glm/vec3.hpp>
+
+struct Velocity final
 {
-    cro::uint32 shaderID = 0;
-    cro::uint32 uniformLocation = 0;
+    glm::vec3 velocity;
+    float friction = 0.f;
+    float minSpeed = 0.1f; //len^2 before velocity forced to stop
 };
 
-class BackgroundController final : public cro::System
+class VelocitySystem final : public cro::System
 {
 public:
-    enum class Mode
-    {
-        Scroll, Shake
-    };
-
-    explicit BackgroundController(cro::MessageBus&);
-
+    VelocitySystem(cro::MessageBus&);
     void process(cro::Time) override;
-
-    void setScrollSpeed(float);
-    void setColourAngle(float);
-
-    void setMode(Mode);
-
-private:
-    glm::vec2 m_offset;
-    float m_speed;
-    float m_currentSpeed;
-    Mode m_currentMode;
-    std::size_t m_currentIndex;
-    float m_colourAngle;
-    float m_currentColourAngle;
 };
 
-#endif //TL_BACKGROUND_CONTROLLER_HPP_
+#endif //TL_VELOCITY_SYSTEM_HPP_

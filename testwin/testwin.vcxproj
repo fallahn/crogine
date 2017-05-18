@@ -297,12 +297,14 @@
     <ClCompile Include="src\MenuOptions.cpp" />
     <ClCompile Include="src\MenuScores.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
+    <ClCompile Include="src\PlayerController.cpp" />
     <ClCompile Include="src\PostRadial.cpp" />
     <ClCompile Include="src\RandomTranslation.cpp" />
     <ClCompile Include="src\RockFallSystem.cpp" />
     <ClCompile Include="src\RotateSystem.cpp" />
     <ClCompile Include="src\SliderSystem.cpp" />
     <ClCompile Include="src\TerrainChunk.cpp" />
+    <ClCompile Include="src\VelocitySystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\BackgroundController.hpp" />
@@ -316,6 +318,7 @@
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
+    <ClInclude Include="src\PlayerController.hpp" />
     <ClInclude Include="src\PostRadial.hpp" />
     <ClInclude Include="src\RandomTranslation.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
@@ -325,6 +328,7 @@
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\MainState.hpp" />
     <ClInclude Include="src\TerrainChunk.hpp" />
+    <ClInclude Include="src\VelocitySystem.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\PostRadial.inl" />

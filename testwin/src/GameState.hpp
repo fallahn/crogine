@@ -40,6 +40,7 @@ source distribution.
 
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
+#include "PlayerController.hpp"
 
 namespace cro
 {
@@ -72,6 +73,8 @@ private:
 
     cro::CommandSystem* m_commandSystem;
     //cro::UISystem* m_uiSystem;
+
+    PlayerController m_playerController;
 
     void addSystems();
     void loadAssets();

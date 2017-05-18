@@ -38,6 +38,7 @@ source distribution.
 #include "Messages.hpp"
 #include "RockFallSystem.hpp"
 #include "RandomTranslation.hpp"
+#include "VelocitySystem.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -99,6 +100,9 @@ bool GameState::handleEvent(const cro::Event& evt)
             backgroundController->setScrollSpeed(0.2f);
         }
     }
+
+    m_playerController.handleEvent(evt);
+
     return true;
 }
 
@@ -178,6 +182,8 @@ void GameState::handleMessage(const cro::Message& msg)
 
 bool GameState::simulate(cro::Time dt)
 {
+    m_playerController.update(m_commandSystem);
+    
     m_scene.simulate(dt);
     return true;
 }
@@ -201,6 +207,7 @@ void GameState::addSystems()
     m_scene.addSystem<cro::ParticleSystem>(mb);
     m_scene.addSystem<Translator>(mb);
     m_commandSystem = &m_scene.addSystem<cro::CommandSystem>(mb);
+    m_scene.addSystem<VelocitySystem>(mb);
 
     m_scene.addPostProcess<PostRadial>();
 }
@@ -308,14 +315,15 @@ void GameState::createScene()
     playerTx.setPosition({ -3.4f, 0.f, -9.25f });
     playerTx.setScale({ 0.5f, 0.5f, 0.5f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::PlayerShip), m_materialResource.get(MaterialID::PlayerShip));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
+    entity.addComponent<Velocity>().friction = 2.5f;
+    //auto& rotator = entity.addComponent<Rotator>();
+    //rotator.axis.x = 1.f;
+    //rotator.speed = 1.f;
 
-    auto& rotator = entity.addComponent<Rotator>();
-    rotator.axis.x = 1.f;
-    rotator.speed = 1.f;
 
 
-
-    //particle systems - TODO add command to adjust speed with background
+    //particle systems
     entity = m_scene.createEntity();
     auto& snowEmitter = entity.addComponent<cro::ParticleEmitter>();
     auto& settings = snowEmitter.emitterSettings;
