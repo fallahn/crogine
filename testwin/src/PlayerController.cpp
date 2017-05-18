@@ -115,9 +115,51 @@ void PlayerController::handleEvent(const cro::Event& evt)
         //m_currentInput |= StateChanged;
         break;
     case SDL_CONTROLLERAXISMOTION:
-        if (evt.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT)
+        /*if (evt.caxis.axis == SDL_CONTROLLER_AXIS_LEFTX)
         {
             DPRINT("Axis value", std::to_string(evt.caxis.value));
+        }*/
+        break;
+    case SDL_CONTROLLERBUTTONDOWN:
+        switch(evt.cbutton.button)
+        {
+        default: break;
+        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            m_currentInput |= Up;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            m_currentInput |= Down;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            m_currentInput |= Left;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            m_currentInput |= Right;
+            break;
+        case SDL_CONTROLLER_BUTTON_A:
+            m_currentInput |= Fire;
+            break;
+        }
+        break;
+    case SDL_CONTROLLERBUTTONUP:
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            m_currentInput &= ~Up;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            m_currentInput &= ~Down;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            m_currentInput &= ~Left;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            m_currentInput &= ~Right;
+            break;
+        case SDL_CONTROLLER_BUTTON_A:
+            m_currentInput &= ~Fire;
+            break;
         }
         break;
     }
