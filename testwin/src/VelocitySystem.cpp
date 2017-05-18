@@ -27,42 +27,42 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_BACKGROUND_CONTROLLER_HPP_
-#define TL_BACKGROUND_CONTROLLER_HPP_
+#include "VelocitySystem.hpp"
 
-#include <crogine/ecs/System.hpp>
+#include <crogine/core/Clock.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 
-struct BackgroundComponent final
+#include <glm/gtx/norm.hpp>
+
+VelocitySystem::VelocitySystem(cro::MessageBus& mb)
+    : cro::System(mb, typeid(VelocitySystem))
 {
-    cro::uint32 shaderID = 0;
-    cro::uint32 uniformLocation = 0;
-};
+    requireComponent<cro::Transform>();
+    requireComponent<Velocity>();
+}
 
-class BackgroundController final : public cro::System
+//public
+void VelocitySystem::process(cro::Time dt)
 {
-public:
-    enum class Mode
+    const float dtSec = dt.asSeconds();
+
+    auto& entities = getEntities();
+    for (auto& entity : entities)
     {
-        Scroll, Shake
-    };
+        auto& tx = entity.getComponent<cro::Transform>();
+        auto& velocity = entity.getComponent<Velocity>();
 
-    explicit BackgroundController(cro::MessageBus&);
+        //reduce velocity with friction
+        tx.move(velocity.velocity * dtSec);
+        velocity.velocity *= (1.f - (velocity.friction * dtSec));
 
-    void process(cro::Time) override;
+        //clamp to zero when below min speed to stop drifting
+        if (glm::length2(velocity.velocity) < velocity.minSpeed)
+        {
+            velocity.velocity = {};
+        }
 
-    void setScrollSpeed(float);
-    void setColourAngle(float);
-
-    void setMode(Mode);
-
-private:
-    glm::vec2 m_offset;
-    float m_speed;
-    float m_currentSpeed;
-    Mode m_currentMode;
-    std::size_t m_currentIndex;
-    float m_colourAngle;
-    float m_currentColourAngle;
-};
-
-#endif //TL_BACKGROUND_CONTROLLER_HPP_
+        //reset rotation
+        tx.setRotation(tx.getRotation() - (tx.getRotation() * (dtSec * 2.f)));
+    }
+}

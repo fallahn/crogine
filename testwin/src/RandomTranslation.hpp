@@ -39,7 +39,7 @@ source distribution.
 struct RandomTranslation final
 {
     std::size_t idx = 0;
-    std::array<glm::vec3, 12u> translations;
+    std::array<glm::vec3, 24u> translations;
 };
 
 class Translator final : public cro::System

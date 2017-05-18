@@ -12,9 +12,11 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/MenuOptions.cpp
   ${PROJECT_DIR}/MenuScores.cpp
   ${PROJECT_DIR}/MyApp.cpp 
+  ${PROJECT_DIR}/PlayerController.cpp
   ${PROJECT_DIR}/PostRadial.cpp
   ${PROJECT_DIR}/RandomTranslation.cpp
   ${PROJECT_DIR}/RockFallSystem.cpp
   ${PROJECT_DIR}/RotateSystem.cpp
   ${PROJECT_DIR}/SliderSystem.cpp
-  ${PROJECT_DIR}/TerrainChunk.cpp)
+  ${PROJECT_DIR}/TerrainChunk.cpp
+  ${PROJECT_DIR}/VelocitySystem.cpp)

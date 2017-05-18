@@ -43,11 +43,13 @@ namespace
 
 
 BackgroundController::BackgroundController(cro::MessageBus& mb)
-    : cro::System   (mb, typeid(BackgroundController)),
-    m_speed         (0.f),
-    m_currentSpeed  (0.f),
-    m_currentMode   (Mode::Scroll),
-    m_currentIndex  (0)
+    : cro::System       (mb, typeid(BackgroundController)),
+    m_speed             (0.f),
+    m_currentSpeed      (0.f),
+    m_currentMode       (Mode::Scroll),
+    m_currentIndex      (0),
+    m_colourAngle       (0.f),
+    m_currentColourAngle(0.f)
 {
     requireComponent<BackgroundComponent>();
     requireComponent<cro::Model>();
@@ -62,6 +64,9 @@ BackgroundController::BackgroundController(cro::MessageBus& mb)
 void BackgroundController::process(cro::Time dt)
 {
     float dtSec = dt.asSeconds();
+
+    m_currentColourAngle += ((m_colourAngle - m_currentColourAngle) * dtSec);
+
     m_currentSpeed += ((m_speed - m_currentSpeed) * dtSec);
 
     m_offset.x += m_currentSpeed * dtSec;
@@ -82,7 +87,9 @@ void BackgroundController::process(cro::Time dt)
     for (auto& entity : entities)
     {
         //TODO... aren't the shader properties stored in the component?
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_textureOffset", m_offset);
+        auto& model = entity.getComponent<cro::Model>();
+        model.setMaterialProperty(0, "u_textureOffset", m_offset);
+        model.setMaterialProperty(0, "u_colourAngle", m_currentColourAngle);
     }
 }
 
@@ -93,6 +100,11 @@ void BackgroundController::setScrollSpeed(float speed)
     auto* msg = postMessage<BackgroundEvent>(MessageID::BackgroundSystem);
     msg->type = BackgroundEvent::SpeedChange;
     msg->value = m_speed;
+}
+
+void BackgroundController::setColourAngle(float angle)
+{
+    m_colourAngle = angle;
 }
 
 void BackgroundController::setMode(Mode mode)

@@ -27,42 +27,27 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_BACKGROUND_CONTROLLER_HPP_
-#define TL_BACKGROUND_CONTROLLER_HPP_
+#ifndef TL_PLAYER_CONTROLLER_HPP_
+#define TL_PLAYER_CONTROLLER_HPP_
 
-#include <crogine/ecs/System.hpp>
+#include <crogine/detail/Types.hpp>
 
-struct BackgroundComponent final
+namespace cro
 {
-    cro::uint32 shaderID = 0;
-    cro::uint32 uniformLocation = 0;
-};
+    class CommandSystem;
+}
 
-class BackgroundController final : public cro::System
+class PlayerController final
 {
 public:
-    enum class Mode
-    {
-        Scroll, Shake
-    };
+    PlayerController();
 
-    explicit BackgroundController(cro::MessageBus&);
-
-    void process(cro::Time) override;
-
-    void setScrollSpeed(float);
-    void setColourAngle(float);
-
-    void setMode(Mode);
+    void handleEvent(const cro::Event&);
+    void update(cro::CommandSystem*);
 
 private:
-    glm::vec2 m_offset;
-    float m_speed;
-    float m_currentSpeed;
-    Mode m_currentMode;
-    std::size_t m_currentIndex;
-    float m_colourAngle;
-    float m_currentColourAngle;
+
+    cro::uint16 m_currentInput;
 };
 
-#endif //TL_BACKGROUND_CONTROLLER_HPP_
+#endif //TL_PLAYER_CONTROLLER_HPP_
