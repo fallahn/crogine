@@ -36,10 +36,13 @@ source distribution.
 #include <SDL.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
+#include <SDL_joystick.h>
 
 #include "../detail/GLCheck.hpp"
 #include "../imgui/imgui_render.h"
 #include "../imgui/imgui.h"
+
+#include <algorithm>
 
 using namespace cro;
 
@@ -58,7 +61,7 @@ App::App()
 {
 	CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
+	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
 	{
 		const std::string err(SDL_GetError());
 		Logger::log("Failed init: " + err, Logger::Type::Error);
@@ -70,12 +73,36 @@ App::App()
         {
             Logger::log("Something when wrong initialising TTF fonts!", Logger::Type::Error);
         }
+
+        for (auto i = 0; i < SDL_NumJoysticks(); ++i)
+        {
+            if (SDL_IsGameController(i))
+            {
+                //add to game controllers
+                m_controllers.push_back(std::make_pair(i, SDL_GameControllerOpen(i)));
+            }
+            else
+            {
+                //add to joysticks
+                m_joysticks.push_back(std::make_pair(i, SDL_JoystickOpen(i)));
+            }
+        }
 	}
 }
 
 App::~App()
 {
-	//SDL cleanup
+    for (auto js : m_joysticks)
+    {
+        SDL_JoystickClose(js.second);
+    }
+
+    for (auto ct : m_controllers)
+    {
+        SDL_GameControllerClose(ct.second);
+    }
+    
+    //SDL cleanup
     TTF_Quit();
 	SDL_Quit();
 }
@@ -83,7 +110,7 @@ App::~App()
 //public
 void App::run()
 {
-	if (m_window.create(800, 600, "crogine game"))
+	if (m_window.create(1600, 900, "crogine game"))
 	{
 		//load opengl
 		if (!gladLoadGLES2Loader(SDL_GL_GetProcAddress))
@@ -175,17 +202,61 @@ void App::handleEvents()
     cro::Event evt;
     while (m_window.pollEvent(evt))
     {
-        if (evt.type == SDL_QUIT)
+        switch (evt.type)
         {
+        default: break;
+        case SDL_QUIT:
             quit();
-        }
-        else if (evt.type == SDL_WINDOWEVENT)
+            break;
+        case SDL_WINDOWEVENT:
         {
             auto* msg = m_messageBus.post<Message::WindowEvent>(Message::Type::WindowMessage);
             msg->event = evt.window.event;
             msg->windowID = evt.window.windowID;
             msg->data0 = evt.window.data1;
             msg->data1 = evt.window.data2;
+        }
+            break;
+        case SDL_CONTROLLERDEVICEADDED:
+        {
+            auto id = evt.cdevice.which;
+            if (SDL_IsGameController(id))
+            {
+                m_controllers.push_back(std::make_pair(id, SDL_GameControllerOpen(id)));
+            }
+            else
+            {
+                m_joysticks.push_back(std::make_pair(id, SDL_JoystickOpen(id)));
+            }
+        }
+            break;
+        case SDL_CONTROLLERDEVICEREMOVED:
+        {
+            auto id = evt.cdevice.which;
+            m_controllers.erase(std::remove_if(std::begin(m_controllers), std::end(m_controllers), 
+                [id](const std::pair<int32, SDL_GameController*>& p)
+            {
+                if (p.first == id)
+                {
+                    SDL_GameControllerClose(p.second);
+                    return true;
+                }
+                return false;
+            }), std::end(m_controllers));
+
+            m_joysticks.erase(std::remove_if(std::begin(m_joysticks), std::end(m_joysticks),
+                [id](const std::pair<int32, SDL_Joystick*>& p)
+            {
+                if (p.first == id)
+                {
+                    SDL_JoystickClose(p.second);
+                    return true;
+                }
+                return false;
+            }), std::end(m_joysticks));
+
+        }
+            break;
         }
 
         IMGUI_EVENTS(evt) handleEvent(evt);

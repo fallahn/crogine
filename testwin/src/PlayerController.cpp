@@ -114,6 +114,12 @@ void PlayerController::handleEvent(const cro::Event& evt)
         }
         //m_currentInput |= StateChanged;
         break;
+    case SDL_CONTROLLERAXISMOTION:
+        if (evt.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT)
+        {
+            DPRINT("Axis value", std::to_string(evt.caxis.value));
+        }
+        break;
     }
 
 #ifndef PLATFORM_DESKTOP //handle touch separately
@@ -155,8 +161,13 @@ void PlayerController::update(cro::CommandSystem* commandSystem)
                 acceleration.x += 1.f;
             }
             
+            float len = glm::length2(acceleration);
+            if (len > 1)
+            {
+                acceleration /= std::sqrt(len);
+            }
             auto& velocity = entity.getComponent<Velocity>();
-            velocity.velocity += glm::normalize(acceleration) * playerAcceleration * dtSec;
+            velocity.velocity += acceleration * playerAcceleration * dtSec;
 
             const float currSpeed = glm::length2(velocity.velocity);
             //DPRINT("Current speed", std::to_string(currSpeed));

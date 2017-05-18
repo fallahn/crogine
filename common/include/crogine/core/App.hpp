@@ -137,6 +137,9 @@ namespace cro
         void doImGui();
 //#endif
 		static App* m_instance;
+
+        std::vector<std::pair<int32, SDL_GameController*>> m_controllers;
+        std::vector<std::pair<int32, SDL_Joystick*>> m_joysticks;
 	};
 }
 
