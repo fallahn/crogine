@@ -53,7 +53,7 @@ namespace
         StateChanged = (1 << 15)
     };
 
-    const float playerAcceleration = 30.f;
+    const float playerAcceleration = 0.5f;
     const float playerMaxSpeeedSqr = 25.f;
     const float maxRotation = 1.f;
 }
@@ -209,7 +209,7 @@ void PlayerController::update(cro::CommandSystem* commandSystem)
                 acceleration /= std::sqrt(len);
             }
             auto& velocity = entity.getComponent<Velocity>();
-            velocity.velocity += acceleration * playerAcceleration * dtSec;
+            velocity.velocity += acceleration * (playerAcceleration/* * dtSec*/);
 
             const float currSpeed = glm::length2(velocity.velocity);
             //DPRINT("Current speed", std::to_string(currSpeed));
