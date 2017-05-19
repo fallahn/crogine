@@ -46,7 +46,12 @@ namespace MaterialID
         GameBackgroundNear,
         PlayerShip,
         TerrainChunk,
-        Rockfall, Rockfall2 //hmm a bit hacky but we want a variant for each entity
+        Rockfall, Rockfall2, //hmm a bit hacky but we want a variant for each entity
+        BattCollectable, BombCollectable,
+        BotCollectable, HeartCollectable,
+        ShieldCollectable,
+        NPCElite, NPCChoppa,
+        NPCTurretBase, NPCTurretCannon
     };
 }
 
@@ -60,7 +65,10 @@ namespace MeshID
         PlayerShip,
         TerrainChunkA,
         TerrainChunkB,
-        RockQuad
+        RockQuad,
+        Collectable,
+        NPCElite, NPCChoppa,
+        NPCTurretBase, NPCTurretCannon
     };
 }
 

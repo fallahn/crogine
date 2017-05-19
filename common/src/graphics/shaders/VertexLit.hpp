@@ -59,6 +59,9 @@ namespace cro
                 uniform mat4 u_worldViewMatrix;
                 uniform mat3 u_normalMatrix;                
                 uniform mat4 u_projectionMatrix;
+                #if defined (SUBRECTS)
+                uniform MED vec4 u_subrect;
+                #endif
                 
                 varying vec3 v_worldPosition;
                 #if defined (VERTEX_COLOUR)
@@ -96,7 +99,11 @@ namespace cro
                 #endif
 
                 #if defined(TEXTURED)
-                    v_texCoord0 = a_texCoord0;
+                #if defined (SUBRECTS)
+                    v_texCoord0 = u_subrect.xy + (a_texCoord0 * u_subrect.zw);
+                #else
+                    v_texCoord0 = a_texCoord0;                    
+                #endif
                 #if defined(LIGHTMAPPED)
                     v_texCoord1 = a_texCoord1;
                 #endif
