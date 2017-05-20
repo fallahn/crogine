@@ -36,8 +36,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{BE8D5B67-F8B4-46FC-A739-50D44550A090}</ProjectGuid>
-    <RootNamespace>testwin</RootNamespace>
+    <ProjectGuid>{FE09628A-80DC-46B6-BDE4-4C93387AE21C}</ProjectGuid>
+    <RootNamespace>DynaHouse</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -131,7 +131,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <PostBuildEvent>
       <Command>
@@ -286,53 +286,19 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\BackgroundController.cpp" />
-    <ClCompile Include="src\ChunkBuilder.cpp" />
-    <ClCompile Include="src\ColourSystem.cpp" />
-    <ClCompile Include="src\DriftSystem.cpp" />
     <ClCompile Include="src\GameState.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\MainState.cpp" />
-    <ClCompile Include="src\MenuMain.cpp" />
-    <ClCompile Include="src\MenuOptions.cpp" />
-    <ClCompile Include="src\MenuScores.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
-    <ClCompile Include="src\PlayerController.cpp" />
-    <ClCompile Include="src\PostRadial.cpp" />
-    <ClCompile Include="src\RandomTranslation.cpp" />
-    <ClCompile Include="src\RockFallSystem.cpp" />
-    <ClCompile Include="src\RotateSystem.cpp" />
-    <ClCompile Include="src\SliderSystem.cpp" />
-    <ClCompile Include="src\TerrainChunk.cpp" />
-    <ClCompile Include="src\VelocitySystem.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\BackgroundController.hpp" />
-    <ClInclude Include="src\BackgroundShader.hpp" />
-    <ClInclude Include="src\ChunkBuilder.hpp" />
-    <ClInclude Include="src\ColourSystem.hpp" />
-    <ClInclude Include="src\DriftSystem.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
-    <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
-    <ClInclude Include="src\PlayerController.hpp" />
-    <ClInclude Include="src\PostRadial.hpp" />
-    <ClInclude Include="src\RandomTranslation.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
-    <ClInclude Include="src\RockFallSystem.hpp" />
-    <ClInclude Include="src\RotateSystem.hpp" />
-    <ClInclude Include="src\Slider.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
-    <ClInclude Include="src\MainState.hpp" />
-    <ClInclude Include="src\TerrainChunk.hpp" />
-    <ClInclude Include="src\VelocitySystem.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\PostRadial.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
