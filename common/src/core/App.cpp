@@ -110,7 +110,7 @@ App::~App()
 //public
 void App::run()
 {
-	if (m_window.create(800, 600, "crogine game"))
+	if (m_window.create(1600, 900, "crogine game"))
 	{
 		//load opengl
 		if (!gladLoadGLES2Loader(SDL_GL_GetProcAddress))

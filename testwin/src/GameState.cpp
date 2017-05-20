@@ -429,7 +429,7 @@ void GameState::createScene()
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCElite), m_materialResource.get(MaterialID::NPCElite));
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 2.6f, -2.f, -8.9f });
+    entity.addComponent<cro::Transform>().setPosition({ 2.6f, -0.6f, -8.9f });
     entity.getComponent<cro::Transform>().setScale({ 0.3f, 0.3f, 0.3f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCTurretBase), m_materialResource.get(MaterialID::NPCTurretBase));
 

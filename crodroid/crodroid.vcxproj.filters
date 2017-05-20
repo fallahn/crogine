@@ -31,6 +31,9 @@
     <Filter Include="src\util">
       <UniqueIdentifier>{2127def2-6bb4-4b9e-85dd-9b34d42c93df}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\detail\enet">
+      <UniqueIdentifier>{65b763b7-0fc4-4a55-9f71-f271ca3f67d9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -191,6 +194,30 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\Renderable.cpp">
       <Filter>src\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\callbacks.c">
+      <Filter>src\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\compress.c">
+      <Filter>src\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\host.c">
+      <Filter>src\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\list.c">
+      <Filter>src\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\packet.c">
+      <Filter>src\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\peer.c">
+      <Filter>src\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\protocol.c">
+      <Filter>src\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\unix.c">
+      <Filter>src\detail\enet</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

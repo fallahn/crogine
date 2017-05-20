@@ -51,6 +51,9 @@ source distribution.
 //for vc compilers we also need to turn off this annoying C4251 warning
 #ifdef _MSC_VER
 #pragma warning(disable: 4251)
+#ifdef _DEBUG_
+#define _ITERATOR_DEBUG_LEVEL 0
+#endif //_DEBUG_
 #endif //_MSC_VER
 
 #else //linux, FreeBSD, Mac OS X
