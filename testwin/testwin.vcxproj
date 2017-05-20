@@ -131,6 +131,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <PostBuildEvent>
       <Command>

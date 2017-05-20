@@ -142,7 +142,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PreprocessorDefinitions>_DEBUG_</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG_;HAS_SOCKLEN_T</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>
@@ -194,6 +194,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PreprocessorDefinitions>HAS_SOCKLEN_T;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>
@@ -232,6 +233,14 @@
     <ClCompile Include="..\common\src\core\StateStack.cpp" />
     <ClCompile Include="..\common\src\core\Wavetable.cpp" />
     <ClCompile Include="..\common\src\core\Window.cpp" />
+    <ClCompile Include="..\common\src\detail\enet\callbacks.c" />
+    <ClCompile Include="..\common\src\detail\enet\compress.c" />
+    <ClCompile Include="..\common\src\detail\enet\host.c" />
+    <ClCompile Include="..\common\src\detail\enet\list.c" />
+    <ClCompile Include="..\common\src\detail\enet\packet.c" />
+    <ClCompile Include="..\common\src\detail\enet\peer.c" />
+    <ClCompile Include="..\common\src\detail\enet\protocol.c" />
+    <ClCompile Include="..\common\src\detail\enet\unix.c" />
     <ClCompile Include="..\common\src\detail\glad.c" />
     <ClCompile Include="..\common\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
