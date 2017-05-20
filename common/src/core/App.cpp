@@ -79,12 +79,12 @@ App::App()
             if (SDL_IsGameController(i))
             {
                 //add to game controllers
-                m_controllers.push_back(std::make_pair(i, SDL_GameControllerOpen(i)));
+                m_controllers.insert(std::make_pair(i, SDL_GameControllerOpen(i)));
             }
             else
             {
                 //add to joysticks
-                m_joysticks.push_back(std::make_pair(i, SDL_JoystickOpen(i)));
+                m_joysticks.insert(std::make_pair(i, SDL_JoystickOpen(i)));
             }
         }
 	}
@@ -222,39 +222,29 @@ void App::handleEvents()
             auto id = evt.cdevice.which;
             if (SDL_IsGameController(id))
             {
-                m_controllers.push_back(std::make_pair(id, SDL_GameControllerOpen(id)));
+                m_controllers.insert(std::make_pair(id, SDL_GameControllerOpen(id)));
             }
             else
             {
-                m_joysticks.push_back(std::make_pair(id, SDL_JoystickOpen(id)));
+                m_joysticks.insert(std::make_pair(id, SDL_JoystickOpen(id)));
             }
         }
             break;
         case SDL_CONTROLLERDEVICEREMOVED:
         {
             auto id = evt.cdevice.which;
-            m_controllers.erase(std::remove_if(std::begin(m_controllers), std::end(m_controllers), 
-                [id](const std::pair<int32, SDL_GameController*>& p)
-            {
-                if (p.first == id)
-                {
-                    SDL_GameControllerClose(p.second);
-                    return true;
-                }
-                return false;
-            }), std::end(m_controllers));
 
-            m_joysticks.erase(std::remove_if(std::begin(m_joysticks), std::end(m_joysticks),
-                [id](const std::pair<int32, SDL_Joystick*>& p)
+            if (m_controllers.count(id) > 0)
             {
-                if (p.first == id)
-                {
-                    SDL_JoystickClose(p.second);
-                    return true;
-                }
-                return false;
-            }), std::end(m_joysticks));
+                SDL_GameControllerClose(m_controllers[id]);
+                m_controllers.erase(id);
+            }
 
+            if (m_joysticks.count(id) > 0)
+            {
+                SDL_JoystickClose(m_joysticks[id]);
+                m_joysticks.erase(id);
+            }
         }
             break;
         }

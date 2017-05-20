@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/util/Maths.hpp>
 
 #include <SDL_events.h>
@@ -56,6 +57,11 @@ namespace
     const float playerAcceleration = 0.5f;
     const float playerMaxSpeeedSqr = 25.f;
     const float maxRotation = 1.f;
+
+    const cro::uint16 JoyThresh = 2500;
+    const cro::uint16 JoyMax = 32767;
+    const float JoyMaxSqr = static_cast<float>(JoyMax * JoyMax);
+    const float JoySpeedMin = static_cast<float>(JoyThresh) / JoyMax;
 }
 
 PlayerController::PlayerController()
@@ -115,51 +121,54 @@ void PlayerController::handleEvent(const cro::Event& evt)
         //m_currentInput |= StateChanged;
         break;
     case SDL_CONTROLLERAXISMOTION:
-        /*if (evt.caxis.axis == SDL_CONTROLLER_AXIS_LEFTX)
-        {
-            DPRINT("Axis value", std::to_string(evt.caxis.value));
-        }*/
+        
         break;
     case SDL_CONTROLLERBUTTONDOWN:
-        switch(evt.cbutton.button)
+        if (evt.cbutton.which == 0)
         {
-        default: break;
-        case SDL_CONTROLLER_BUTTON_DPAD_UP:
-            m_currentInput |= Up;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-            m_currentInput |= Down;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-            m_currentInput |= Left;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-            m_currentInput |= Right;
-            break;
-        case SDL_CONTROLLER_BUTTON_A:
-            m_currentInput |= Fire;
-            break;
+            switch (evt.cbutton.button)
+            {
+            default: break;
+            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                m_currentInput |= Up;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                m_currentInput |= Down;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                m_currentInput |= Left;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                m_currentInput |= Right;
+                break;
+            case SDL_CONTROLLER_BUTTON_A:
+                m_currentInput |= Fire;
+                break;
+            }
         }
         break;
     case SDL_CONTROLLERBUTTONUP:
-        switch (evt.cbutton.button)
+        if (evt.cbutton.which == 0)
         {
-        default: break;
-        case SDL_CONTROLLER_BUTTON_DPAD_UP:
-            m_currentInput &= ~Up;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-            m_currentInput &= ~Down;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-            m_currentInput &= ~Left;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-            m_currentInput &= ~Right;
-            break;
-        case SDL_CONTROLLER_BUTTON_A:
-            m_currentInput &= ~Fire;
-            break;
+            switch (evt.cbutton.button)
+            {
+            default: break;
+            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                m_currentInput &= ~Up;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                m_currentInput &= ~Down;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                m_currentInput &= ~Left;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                m_currentInput &= ~Right;
+                break;
+            case SDL_CONTROLLER_BUTTON_A:
+                m_currentInput &= ~Fire;
+                break;
+            }
         }
         break;
     }
@@ -173,6 +182,33 @@ void PlayerController::handleEvent(const cro::Event& evt)
 void PlayerController::update(cro::CommandSystem* commandSystem)
 {
     CRO_ASSERT(commandSystem, "Missing command system");
+
+    
+    glm::vec3 joyVec = {
+        static_cast<float>(cro::GameController::getAxis(0, cro::GameController::AxisLeftX)),
+        static_cast<float>(cro::GameController::getAxis(0, cro::GameController::AxisLeftY)), 0.f };
+    joyVec.y = -joyVec.y;
+    float joystickAmount = glm::length2(joyVec) / JoyMaxSqr;
+    if (joystickAmount < JoySpeedMin) joystickAmount = 0.f;
+
+    if (joystickAmount > 0)
+    {
+        joyVec = glm::normalize(joyVec);
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Player;
+        cmd.action = [=](cro::Entity entity, cro::Time dt)
+        {
+            auto& velocity = entity.getComponent<Velocity>();
+            velocity.velocity += joyVec * playerAcceleration * joystickAmount;
+
+            float rotation = -maxRotation * joyVec.y;
+            auto& tx = entity.getComponent<cro::Transform>();
+            const float currRotation = tx.getRotation().x;
+            tx.setRotation({ currRotation + ((rotation - currRotation) * (dt.asSeconds() * 4.f)), 0.f, 0.f });
+
+        };
+        commandSystem->sendCommand(cmd);
+    }
 
     if ((m_currentInput & 0xf) != 0) //only want movement input
     {

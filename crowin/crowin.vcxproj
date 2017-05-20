@@ -39,6 +39,7 @@
     <ClInclude Include="..\common\include\crogine\Config.hpp" />
     <ClInclude Include="..\common\include\crogine\core\App.hpp" />
     <ClInclude Include="..\common\include\crogine\core\Clock.hpp" />
+    <ClInclude Include="..\common\include\crogine\core\GameController.hpp" />
     <ClInclude Include="..\common\include\crogine\core\Log.hpp" />
     <ClInclude Include="..\common\include\crogine\core\Message.hpp" />
     <ClInclude Include="..\common\include\crogine\core\MessageBus.hpp" />
@@ -118,6 +119,7 @@
     <ClCompile Include="..\common\src\core\App.cpp" />
     <ClCompile Include="..\common\src\core\Clock.cpp" />
     <ClCompile Include="..\common\src\core\DefaultLoadingScreen.cpp" />
+    <ClCompile Include="..\common\src\core\GameController.cpp" />
     <ClCompile Include="..\common\src\core\MessageBus.cpp" />
     <ClCompile Include="..\common\src\core\State.cpp" />
     <ClCompile Include="..\common\src\core\StateStack.cpp" />
