@@ -203,7 +203,7 @@ glm::vec2 UISystem::toScreenCoords(float x, float y)
     return { worldPos };
 }
 
-glm::mat4 UISystem::getProjectionMatrix() const
+glm::mat4 UISystem::getProjectionMatrix()
 {
     const auto& tx = getScene()->getActiveCamera().getComponent<Transform>();
     const auto& cam = getScene()->getActiveCamera().getComponent<Camera>();

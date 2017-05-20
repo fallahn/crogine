@@ -56,11 +56,11 @@ Entity::Generation Entity::getGeneration() const
     return (m_id >> Detail::IndexBits) & GenerationMask;
 }
 
-void Entity::destroy()
-{
-    CRO_ASSERT(m_entityManager, "Invalid Entity instance");
-    m_entityManager->destroyEntity(*this);
-}
+//void Entity::destroy() //TODO fix this so that it goes through its parent scene
+//{
+//    CRO_ASSERT(m_entityManager, "Invalid Entity instance");
+//    m_entityManager->destroyEntity(*this);
+//}
 
 bool Entity::destroyed() const
 {

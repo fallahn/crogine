@@ -170,7 +170,10 @@ void SceneGraph::handleMessage(const Message& msg)
             {
                 auto entity = getScene()->getEntity(c);
                 destroyChildren(entity.getComponent<Transform>().m_children);
-                entity.destroy();
+                //entity.destroy();
+
+                getScene()->destroyEntity(entity);
+
                 c = -1; //mark the child as gone else the message from destroying this
                 //entity will become infinitely recursive...
             }
@@ -192,7 +195,7 @@ void SceneGraph::handleMessage(const Message& msg)
             auto& children = entity.getComponent<Transform>().m_children;
             destroyChildren(children);
         }
-        LOG("Removing children from dead entity", Logger::Type::Info);
+        //LOG("Removing children from dead entity", Logger::Type::Info);
     }
 }
 

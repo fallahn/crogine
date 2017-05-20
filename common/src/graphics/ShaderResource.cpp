@@ -101,6 +101,10 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     {
         defines += "\n#define SUBRECTS";
     }
+    if (flags & BuiltInFlags::DiffuseColour)
+    {
+        defines += "\n#define COLOURED";
+    }
     defines += "\n";
 
     bool success = false;

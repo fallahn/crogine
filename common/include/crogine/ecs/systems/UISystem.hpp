@@ -100,7 +100,7 @@ namespace cro
         glm::vec2 toScreenCoords(int32 x, int32 y); //converts screen coords
         glm::vec2 toScreenCoords(float, float); //converts normalised coords
 
-        glm::mat4 getProjectionMatrix() const;
+        glm::mat4 getProjectionMatrix();
     };
 }
 

@@ -36,7 +36,11 @@ namespace MaterialID
 {
     enum
     {
-        Square
+        GreenOne,
+        GreenTwo,
+        Brown,
+        Red,
+        Blue
     };
 }
 
@@ -66,7 +70,10 @@ namespace ShaderID
 
 namespace CommandID
 {
-
+    enum
+    {
+        Camera = 0x1
+    };
 }
 
 #endif //DH_RESOURCE_IDS_HPP_
