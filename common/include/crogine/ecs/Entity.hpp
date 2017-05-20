@@ -84,7 +84,7 @@ namespace cro
 		/*!
 		\brief Marks the entity for destruction
 		*/
-		void destroy();
+		//void destroy();
 
 		/*!
 		\brief Returns true if the entity is marked for destruction

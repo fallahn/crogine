@@ -144,7 +144,7 @@ namespace cro
         /*!
         \brief Returns a pointer to the scene to which this system belongs
         */
-        const Scene* getScene() const;
+        Scene* getScene();
 
     private:
 

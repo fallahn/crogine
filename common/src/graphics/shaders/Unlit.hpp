@@ -94,6 +94,9 @@ namespace cro
                 uniform sampler2D u_lightMap;
                 #endif
                 #endif
+                #if defined(COLOURED)
+                uniform LOW vec4 u_colour;
+                #endif
 
                 #if defined (VERTEX_COLOUR)
                 varying LOW vec4 v_colour;
@@ -117,6 +120,9 @@ namespace cro
                 #if defined (LIGHTMAPPED)
                     gl_FragColor *= texture2D(u_lightMap, v_texCoord1);
                 #endif
+                #endif
+                #if defined(COLOURED)
+                    gl_FragColor *= u_colour;
                 #endif
                 })";
         }

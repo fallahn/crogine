@@ -73,7 +73,7 @@ void System::setScene(Scene& scene)
     m_scene = &scene;
 }
 
-const Scene* System::getScene() const
+Scene* System::getScene()
 {
     CRO_ASSERT(m_scene, "Scene is nullptr - something went wrong!");
     return m_scene;
