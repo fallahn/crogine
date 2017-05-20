@@ -219,5 +219,8 @@
     <ClCompile Include="..\common\src\detail\enet\unix.c">
       <Filter>src\detail\enet</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\core\GameController.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

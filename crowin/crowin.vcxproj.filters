@@ -303,6 +303,9 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\ParticleSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\core\GameController.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -466,6 +469,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\Renderable.cpp">
       <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\core\GameController.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

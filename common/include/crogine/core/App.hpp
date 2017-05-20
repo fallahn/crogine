@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/graphics/Colour.hpp>
 
 #include <vector>
+#include <map>
 
 #ifdef _DEBUG_
 #define DPRINT(x, y) cro::App::debugPrint(x, y)
@@ -138,8 +139,9 @@ namespace cro
 //#endif
 		static App* m_instance;
 
-        std::vector<std::pair<int32, SDL_GameController*>> m_controllers;
-        std::vector<std::pair<int32, SDL_Joystick*>> m_joysticks;
+        std::map<int32, SDL_GameController*> m_controllers;
+        std::map<int32, SDL_Joystick*> m_joysticks;
+        friend class GameController;
 	};
 }
 
