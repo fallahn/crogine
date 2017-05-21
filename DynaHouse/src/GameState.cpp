@@ -278,6 +278,21 @@ void GameState::loadAssets()
 
     cro::QuadBuilder qb({ 1.f, 1.f });
     m_meshResource.loadMesh(qb, cro::Mesh::QuadMesh);
+
+
+    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
+
+    auto& roomOne = m_materialResource.add(MaterialID::RoomOne, m_shaderResource.get(shaderID));
+    roomOne.setProperty("u_diffuseMap", m_textureResource.get("assets/textures/room1x1.png"));
+
+    auto& roomTwo = m_materialResource.add(MaterialID::RoomTwo, m_shaderResource.get(shaderID));
+    roomTwo.setProperty("u_diffuseMap", m_textureResource.get("assets/textures/room2x1.png"));
+
+    cro::StaticMeshBuilder r1("assets/models/room1x1.cmf");
+    m_meshResource.loadMesh(r1, MeshID::RoomOne);
+
+    cro::StaticMeshBuilder r2("assets/models/room2x1.cmf");
+    m_meshResource.loadMesh(r2, MeshID::RoomTwo);
 }
 
 void GameState::createScene()
@@ -378,7 +393,7 @@ void GameState::addSingle(std::size_t floor, cro::int32 position)
 {
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ static_cast<float>(position) + 0.5f, static_cast<float>(floor), 0.f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), m_materialResource.get(MaterialID::GreenOne));
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::RoomOne), m_materialResource.get(MaterialID::RoomOne));
     entity.addComponent<cro::CommandTarget>().ID = (1 << (rowCount * rowWidth));
 }
 

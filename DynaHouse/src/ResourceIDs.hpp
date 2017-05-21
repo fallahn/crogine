@@ -40,7 +40,9 @@ namespace MaterialID
         GreenTwo,
         Brown,
         Red,
-        Blue
+        Blue,
+        RoomOne,
+        RoomTwo
     };
 }
 
@@ -48,7 +50,8 @@ namespace MeshID
 {
     enum
     {
-        Room = cro::Mesh::ID::Count,
+        RoomOne = cro::Mesh::ID::Count,
+        RoomTwo
     };
 }
 

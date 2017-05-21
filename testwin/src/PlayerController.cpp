@@ -33,6 +33,8 @@ source distribution.
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/GameController.hpp>
@@ -64,8 +66,10 @@ namespace
     const float JoySpeedMin = static_cast<float>(JoyThresh) / JoyMax;
 }
 
-PlayerController::PlayerController()
-    : m_currentInput(0)
+PlayerController::PlayerController(cro::Scene& scene)
+    : m_scene       (scene),
+    m_currentInput  (0),
+    m_fingerDown    (false)
 {
 
 }
@@ -171,19 +175,30 @@ void PlayerController::handleEvent(const cro::Event& evt)
             }
         }
         break;
-    }
+
 
 #ifndef PLATFORM_DESKTOP //handle touch separately
-
-
+    case SDL_FINGERDOWN:
+        m_fingerDown = true;
+        m_currentInput |= Fire;
+    case SDL_FINGERMOTION:
+        m_touchCoords.x = evt.tfinger.x;
+        m_touchCoords.y = evt.tfinger.y;
+        break;
+    case SDL_FINGERUP:
+        m_fingerDown = false;
+        m_currentInput &= ~Fire;
+        break;
 #endif //PLATFORM_DESKTOP
+
+    }
 }
 
 void PlayerController::update(cro::CommandSystem* commandSystem)
 {
     CRO_ASSERT(commandSystem, "Missing command system");
 
-    
+    //controller analogue
     glm::vec3 joyVec = {
         static_cast<float>(cro::GameController::getAxis(0, cro::GameController::AxisLeftX)),
         static_cast<float>(cro::GameController::getAxis(0, cro::GameController::AxisLeftY)), 0.f };
@@ -210,6 +225,7 @@ void PlayerController::update(cro::CommandSystem* commandSystem)
         commandSystem->sendCommand(cmd);
     }
 
+    //keyboard input
     if ((m_currentInput & 0xf) != 0) //only want movement input
     {
         cro::Command cmd;
@@ -262,4 +278,59 @@ void PlayerController::update(cro::CommandSystem* commandSystem)
         commandSystem->sendCommand(cmd);
         m_currentInput &= ~StateChanged;
     }
+
+#ifdef PLATFORM_MOBILE
+    if (m_fingerDown)
+    {
+        auto worldTarget = getWorldCoords();
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Player;
+        cmd.action = [worldTarget](cro::Entity entity, cro::Time dt)
+        {
+            auto& tx = entity.getComponent<cro::Transform>();
+            auto dist = worldTarget - tx.getWorldPosition();
+            auto length = glm::length2(dist);
+            if (length > 0 && length < 1) //only move if touch is within a 1 unit radius of player
+            {
+                dist /= std::sqrt(length);
+                entity.getComponent<Velocity>().velocity += dist * playerAcceleration;
+            }
+        };
+        commandSystem->sendCommand(cmd);
+
+        DPRINT("Touch", std::to_string(worldTarget.x) + ", " + std::to_string(worldTarget.y));
+    }
+#endif //PLATFORM_MOBILE
+}
+
+//private
+glm::vec3 PlayerController::getWorldCoords()
+{
+    auto& camera = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    
+    //invert Y
+    auto y = 1.f - m_touchCoords.y;
+
+    //scale to vp
+    auto vp = camera.viewport;
+    y -= vp.bottom;
+    y /= vp.height;
+
+    //convert to NDC
+    auto x = m_touchCoords.x;
+    x *= 2.f; x -= 1.f;
+    y *= 2.f; y -= 1.f;
+
+
+    //depth needs to be player depth relative to near/far plane (-1, 1)
+    //for now we kludge player depth at 9.25 with a farplane of 150
+    float z = 9.25f / 150.f;
+    z *= 2.f; z -= 1.f;
+
+    //and unproject - remember view matrix if we decide to move the camera!!
+    auto worldPos = glm::inverse(camera.projection) * glm::vec4(x, y, z, 1.f);
+    glm::vec3 retVal(worldPos);
+    retVal *= worldPos.w; //sure this is supposed to be division, but what the fudge.
+    return retVal;
+    //return { worldPos };
 }
