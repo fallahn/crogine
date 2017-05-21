@@ -32,22 +32,29 @@ source distribution.
 
 #include <crogine/detail/Types.hpp>
 
+#include <glm/vec3.hpp>
+
 namespace cro
 {
     class CommandSystem;
+    class Scene;
 }
 
 class PlayerController final
 {
 public:
-    PlayerController();
+    PlayerController(cro::Scene&);
 
     void handleEvent(const cro::Event&);
     void update(cro::CommandSystem*);
 
 private:
-
+    cro::Scene& m_scene;
     cro::uint16 m_currentInput;
+
+    glm::vec2 m_touchCoords;
+    bool m_fingerDown;
+    glm::vec3 getWorldCoords();
 };
 
 #endif //TL_PLAYER_CONTROLLER_HPP_

@@ -101,7 +101,7 @@ void UISystem::handleEvent(const Event& evt)
         m_previousEventPosition = m_eventPosition;
         //TODO check finger IDs for gestures etc
         m_downEvents.push_back(Finger);
-        Logger::log("Touch pos: " + std::to_string(m_eventPosition.x) + ", " + std::to_string(m_eventPosition.y), Logger::Type::Info);
+        //Logger::log("Touch pos: " + std::to_string(m_eventPosition.x) + ", " + std::to_string(m_eventPosition.y), Logger::Type::Info);
         break;
     case SDL_FINGERUP:
         m_eventPosition = toScreenCoords(evt.tfinger.x, evt.tfinger.y);

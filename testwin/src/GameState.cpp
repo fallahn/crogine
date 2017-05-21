@@ -67,9 +67,10 @@ namespace
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
-    : cro::State    (stack, context),
-    m_scene         (context.appInstance.getMessageBus()),
-    m_commandSystem (nullptr)
+    : cro::State        (stack, context),
+    m_scene             (context.appInstance.getMessageBus()),
+    m_commandSystem     (nullptr),
+    m_playerController  (m_scene)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
