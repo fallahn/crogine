@@ -316,6 +316,10 @@
     <Content Include="assets\assets\particles\snowflake.png" />
     <Content Include="assets\assets\sprites\loading.png" />
     <Content Include="assets\assets\sprites\menu.png" />
+    <Content Include="Resources\drawable-hdpi\icon.png" />
+    <Content Include="Resources\drawable-xhdpi\icon.png" />
+    <Content Include="Resources\drawable-xxhdpi\icon.png" />
+    <Content Include="Resources\drawable\icon.png" />
     <Content Include="res\values\strings.xml" />
     <AntBuildXml Include="build.xml" />
     <AndroidManifest Include="AndroidManifest.xml" />
