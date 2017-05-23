@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/graphics/IQMBuilder.hpp>
+#include <crogine/graphics/IqmBuilder.hpp>
 #include "../detail/GLCheck.hpp"
 
 #include <glm/mat4x4.hpp>
