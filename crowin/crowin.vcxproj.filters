@@ -306,6 +306,9 @@
     <ClInclude Include="..\common\include\crogine\core\GameController.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\IqmBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -472,6 +475,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\core\GameController.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\IqmBuilder.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -40,7 +40,7 @@ namespace cro
     \brief Static Mesh builder class.
     Static meshes have no skeletal animation, but support
     lightmapping via prebaked maps. The meshes are pre-compiled
-    as a *.cmf file using the Model convert program. The format
+    as a *.cmf file using the Model converter program. The format
     is as follows:
 
     uint8 Flags. A single byte containing the following flags
@@ -95,7 +95,7 @@ namespace cro
         mutable SDL_RWops* m_file;
         Mesh::Data build() const override;
 
-        bool checkError(size_t readCount) const;
+        bool checkError(std::size_t readCount) const;
     };
 }
 

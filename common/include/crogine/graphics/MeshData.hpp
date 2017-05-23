@@ -70,6 +70,8 @@ namespace cro
             Bitangent,
             UV0,
             UV1,
+            BlendIndices,
+            BlendWeights,
             Total
         };
 

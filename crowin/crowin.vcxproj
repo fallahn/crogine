@@ -77,6 +77,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\Font.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\FontResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Image.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\IqmBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\LoadingScreen.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MaterialData.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MaterialResource.hpp" />
@@ -152,6 +153,7 @@
     <ClCompile Include="..\common\src\graphics\Font.cpp" />
     <ClCompile Include="..\common\src\graphics\FontResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Image.cpp" />
+    <ClCompile Include="..\common\src\graphics\IqmBuilder.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialData.cpp" />
     <ClCompile Include="..\common\src\graphics\MaterialResource.cpp" />
     <ClCompile Include="..\common\src\graphics\MeshBuilder.cpp" />

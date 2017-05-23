@@ -222,5 +222,8 @@
     <ClCompile Include="..\common\src\core\GameController.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\graphics\IqmBuilder.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
