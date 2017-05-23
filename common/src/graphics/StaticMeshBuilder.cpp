@@ -54,7 +54,7 @@ StaticMeshBuilder::~StaticMeshBuilder()
 //private
 Mesh::Data StaticMeshBuilder::build() const
 {
-    auto m_file = SDL_RWFromFile(m_path.c_str(), "rb");
+    m_file = SDL_RWFromFile(m_path.c_str(), "rb");
     if (m_file)
     {
         uint8 flags, arrayCount;
@@ -87,6 +87,7 @@ Mesh::Data StaticMeshBuilder::build() const
         }
 
         SDL_RWclose(m_file);
+        m_file = nullptr;
 
         CRO_ASSERT(flags && (flags & (1 << Mesh::Position)), "Invalid flag value");
 
@@ -170,7 +171,7 @@ Mesh::Data StaticMeshBuilder::build() const
     return {};
 }
 
-bool StaticMeshBuilder::checkError(size_t readCount) const
+bool StaticMeshBuilder::checkError(std::size_t readCount) const
 {
     if (readCount == 0)
     {

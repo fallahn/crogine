@@ -45,6 +45,7 @@ source distribution.
 
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
+#include <crogine/graphics/IqmBuilder.hpp>
 
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/SceneRenderer.hpp>
@@ -325,6 +326,9 @@ void GameState::loadAssets()
 
     cro::StaticMeshBuilder collectableMesh("assets/models/collectable.cmf");
     m_meshResource.loadMesh(collectableMesh, MeshID::Collectable);
+
+    cro::IqmBuilder choppaMesh("assets/models/choppa_pod.iqm");
+    m_meshResource.loadMesh(choppaMesh, MeshID::NPCChoppa);
 }
 
 void GameState::createScene()
