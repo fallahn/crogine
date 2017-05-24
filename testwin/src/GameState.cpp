@@ -59,6 +59,7 @@ source distribution.
 #include <crogine/ecs/components/CommandID.hpp>
 
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Constants.hpp>
 
 namespace
 {
@@ -274,6 +275,14 @@ void GameState::loadAssets()
     m_meshResource.loadMesh(turretCannon, MeshID::NPCTurretCannon);
 
 
+    auto& choppaMat = m_materialResource.add(MaterialID::NPCChoppa, m_shaderResource.get(shaderID));
+    choppaMat.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/npc/choppa_diffuse.png"));
+    choppaMat.setProperty("u_maskMap", m_textureResource.get("assets/materials/npc/choppa_mask.png"));
+
+    cro::IqmBuilder choppaMesh("assets/models/choppa_pod.iqm");
+    m_meshResource.loadMesh(choppaMesh, MeshID::NPCChoppa);
+
+
     shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
     m_materialResource.add(MaterialID::TerrainChunk, m_shaderResource.get(shaderID));
 
@@ -326,9 +335,6 @@ void GameState::loadAssets()
 
     cro::StaticMeshBuilder collectableMesh("assets/models/collectable.cmf");
     m_meshResource.loadMesh(collectableMesh, MeshID::Collectable);
-
-    cro::IqmBuilder choppaMesh("assets/models/choppa_pod.iqm");
-    m_meshResource.loadMesh(choppaMesh, MeshID::NPCChoppa);
 }
 
 void GameState::createScene()
@@ -431,7 +437,9 @@ void GameState::createScene()
     //NPCs
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 2.7f, 0.5f, -9.3f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCElite), m_materialResource.get(MaterialID::NPCElite));
+    entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCChoppa), m_materialResource.get(MaterialID::NPCChoppa));
+
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 2.6f, -0.6f, -8.9f });
