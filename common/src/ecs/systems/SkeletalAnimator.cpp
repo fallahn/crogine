@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,30 +27,41 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_RANDOM_TRANSLATION_HPP_
-#define CRO_RANDOM_TRANSLATION_HPP_
+#include <crogine/core/Clock.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
+#include <crogine/ecs/components/Model.hpp>
+//#include <crogine/graphics/MaterialData.hpp>
 
-#include <crogine/ecs/System.hpp>
+using namespace cro;
 
-#include <glm/vec3.hpp>
-
-#include <array>
-
-struct RandomTranslation final
+SkeletalAnimator::SkeletalAnimator(MessageBus& mb)
+    : System(mb, typeid(SkeletalAnimator))
 {
-    std::size_t idx = 0;
-    std::array<glm::vec3, 24u> translations;
-};
+    requireComponent<Model>();
+    requireComponent<Skeleton>();
+}
 
-class Translator final : public cro::System
+//public
+void SkeletalAnimator::process(Time dt)
 {
-public:
-    explicit Translator(cro::MessageBus&);
+    auto& entities = getEntities();
+    for (auto& entity : entities)
+    {
+        //get skeleton
 
-    void process(cro::Time) override;
+        //update current frame if running
+        //only interpolate if visible (frustum cull?)
 
-private:
+        //get model then for each material set uniform for current frame
+        //if we can cache the uniform ID somewhere, then even better.
 
-};
+        //TODO applying matrix arrays in renderer
+        //TODO applying skinning in shader
+    }
+}
 
-#endif //CRO_RANDOM_TRANSLATION_HPP_
+//private
+void SkeletalAnimator::interpolate(const Skeleton::Frame& a, const Skeleton::Frame& b, float time, Skeleton::Frame& output)
+{
+
+}

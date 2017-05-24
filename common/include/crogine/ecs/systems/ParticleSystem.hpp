@@ -46,7 +46,7 @@ namespace cro
     class CRO_EXPORT_API ParticleSystem final : public Renderable, public System
     {
     public:
-        ParticleSystem(MessageBus&);
+        explicit ParticleSystem(MessageBus&);
         ~ParticleSystem();
 
         ParticleSystem(const ParticleSystem&) = delete;

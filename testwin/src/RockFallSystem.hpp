@@ -52,7 +52,7 @@ struct RockFall final
 class RockFallSystem final : public cro::System
 {
 public:
-    RockFallSystem(cro::MessageBus&);
+    explicit RockFallSystem(cro::MessageBus&);
 
     void process(cro::Time) override;
 

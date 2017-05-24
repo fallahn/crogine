@@ -68,7 +68,7 @@ namespace cro
         \brief Constructor.
         \param mb Reference to the system message bus
         */
-        SceneRenderer(MessageBus& mb);
+        explicit SceneRenderer(MessageBus& mb);
 
         void process(Time) override;
 

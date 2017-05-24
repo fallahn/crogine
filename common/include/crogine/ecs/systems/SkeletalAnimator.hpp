@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,30 +27,27 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_RANDOM_TRANSLATION_HPP_
-#define CRO_RANDOM_TRANSLATION_HPP_
+#ifndef CRO_SKELETAL_ANIMATOR_HPP_
+#define CRO_SKELETAL_ANIMATOR_HPP_
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/ecs/components/Skeleton.hpp>
 
-#include <glm/vec3.hpp>
-
-#include <array>
-
-struct RandomTranslation final
+namespace cro
 {
-    std::size_t idx = 0;
-    std::array<glm::vec3, 24u> translations;
-};
+    /*!
+    \brief System used to update any models which have a skeleton component
+    */
+    class CRO_EXPORT_API SkeletalAnimator : public System
+    {
+    public:
+        explicit SkeletalAnimator(MessageBus&);
 
-class Translator final : public cro::System
-{
-public:
-    explicit Translator(cro::MessageBus&);
+        void process(Time) override;
 
-    void process(cro::Time) override;
+    private:
+        void interpolate(const Skeleton::Frame& a, const Skeleton::Frame& b, float time, Skeleton::Frame& output);
+    };
+}
 
-private:
-
-};
-
-#endif //CRO_RANDOM_TRANSLATION_HPP_
+#endif //CRO_SKELETAL_ANIMATOR_HPP_

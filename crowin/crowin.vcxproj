@@ -56,6 +56,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\CommandID.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\ParticleEmitter.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\Skeleton.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Sprite.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Text.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp" />
@@ -69,6 +70,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\ParticleSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneGraph.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneRenderer.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\SkeletalAnimator.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SpriteRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\TextRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\UISystem.hpp" />
@@ -146,6 +148,7 @@
     <ClCompile Include="..\common\src\ecs\systems\ParticleSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneGraph.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\SkeletalAnimator.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\TextRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\UISystem.cpp" />

@@ -309,6 +309,12 @@
     <ClInclude Include="..\common\include\crogine\graphics\IqmBuilder.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\components\Skeleton.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\SkeletalAnimator.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -478,6 +484,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\graphics\IqmBuilder.cpp">
       <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\SkeletalAnimator.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
