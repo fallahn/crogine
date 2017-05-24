@@ -75,8 +75,8 @@ cro::Mesh::Data IqmBuilder::build() const
     if (m_file)
     {
         //do some file checks
-        auto fileSize = SDL_RWsize(m_file);
-        if (fileSize < sizeof(Iqm::Header))
+        int32 fileSize = SDL_RWsize(m_file);
+        if (fileSize < static_cast<int32>(sizeof(Iqm::Header)))
         {
             Logger::log(m_path + ": Invalid file size", Logger::Type::Error);
             SDL_RWclose(m_file);
@@ -228,7 +228,7 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
         char* triangleData = dataStart + header.triangleOffset + (mesh.firstTriangle * sizeof(triangle.vertex));
         std::vector<uint16> indices;
 
-        for (auto j = 0; j < mesh.triangleCount; ++j)
+        for (auto j = 0u; j < mesh.triangleCount; ++j)
         {
             std::memcpy(triangle.vertex, triangleData, sizeof(triangle.vertex));
             triangleData += sizeof(triangle.vertex);
