@@ -275,6 +275,7 @@ void GameState::loadAssets()
     m_meshResource.loadMesh(turretCannon, MeshID::NPCTurretCannon);
 
 
+    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::Skinning);
     auto& choppaMat = m_materialResource.add(MaterialID::NPCChoppa, m_shaderResource.get(shaderID));
     choppaMat.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/npc/choppa_diffuse.png"));
     choppaMat.setProperty("u_maskMap", m_textureResource.get("assets/materials/npc/choppa_mask.png"));

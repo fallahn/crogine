@@ -50,6 +50,12 @@ namespace cro
                 #endif
                 #endif
 
+                #if defined(SKINNED)
+                attribute vec4 a_boneIndices;
+                attribute vec4 a_boneWeights;
+                uniform mat4 u_boneMatrices[MAX_BONES];
+                #endif
+
                 uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;               
                 uniform mat4 u_projectionMatrix;
@@ -70,7 +76,17 @@ namespace cro
                 void main()
                 {
                     mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
-                    gl_Position = wvp * a_position;
+                    vec4 position = a_position;
+
+                #if defined(SKINNED)
+                	mat4 skinMatrix = u_boneMatrices[int(a_boneIndices.x)] * a_boneWeights.x;
+                	skinMatrix += u_boneMatrices[int(a_boneIndices.y)] * a_boneWeights.y;
+                	skinMatrix += u_boneMatrices[int(a_boneIndices.z)] * a_boneWeights.z;
+                	skinMatrix += u_boneMatrices[int(a_boneIndices.w)] * a_boneWeights.w;
+                	position = skinMatrix * position;
+                #endif
+
+                    gl_Position = wvp * position;
 
                 #if defined (VERTEX_COLOUR)
                     v_colour = a_colour;

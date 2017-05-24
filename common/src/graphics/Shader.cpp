@@ -281,6 +281,14 @@ bool Shader::fillAttribMap()
                 {
                     m_attribMap[Mesh::UV1] = attribLocation;
                 }
+                else if (name == "a_boneIndices")
+                {
+                    m_attribMap[Mesh::BlendIndices] = attribLocation;
+                }
+                else if (name == "a_boneWeights")
+                {
+                    m_attribMap[Mesh::BlendWeights] = attribLocation;
+                }
                 else
                 {
                     Logger::log(name + ": unknown vertex attribute. Shader compilation failed.", Logger::Type::Error);

@@ -62,7 +62,7 @@ namespace cro
     public:
         using Frame = std::vector<glm::mat4>;
 
-        std::vector<Frame> frames;
+        std::vector<Frame> frames; //TODO make this a single array with all the frames as sub arrays
         Frame currentFrame; //current interpolated output
 
         std::vector<SkeletalAnim> animations;

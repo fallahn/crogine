@@ -31,8 +31,14 @@ source distribution.
 #include "shaders/Default.hpp"
 #include "shaders/Unlit.hpp"
 #include "shaders/VertexLit.hpp"
+#include "../detail/GLCheck.hpp"
 
 using namespace cro;
+
+namespace
+{
+    int32 MAX_BONES = 0;
+}
 
 ShaderResource::ShaderResource()
 {
@@ -83,7 +89,6 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     int32 id = type | flags;
 
     //create shader defines based on flags
-    //TODO finish list
     std::string defines;
     if (flags & BuiltInFlags::DiffuseMap)
     {
@@ -104,6 +109,18 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     if (flags & BuiltInFlags::DiffuseColour)
     {
         defines += "\n#define COLOURED";
+    }
+    if (flags & BuiltInFlags::Skinning)
+    {
+        if (MAX_BONES == 0)
+        {
+            //query opengl for the limit (this can be pretty low on mobile!!)
+            GLint maxVec;
+            glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
+            MAX_BONES = maxVec / 4; //4 x 4-components make up a mat4.
+            MAX_BONES = std::min(MAX_BONES - 1, 255); //VMs can incorrectly report this :(
+        }
+        defines += "\n#define SKINNED\n #define MAX_BONES " + std::to_string(MAX_BONES);
     }
     defines += "\n";
 

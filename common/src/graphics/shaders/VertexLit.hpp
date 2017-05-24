@@ -55,6 +55,12 @@ namespace cro
                 #endif
                 #endif
 
+                #if defined(SKINNED)
+                attribute vec4 a_boneIndices;
+                attribute vec4 a_boneWeights;
+                uniform mat4 u_boneMatrices[64];
+                #endif
+
                 uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;
                 uniform mat3 u_normalMatrix;                
@@ -83,19 +89,42 @@ namespace cro
                 void main()
                 {
                     mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
-                    gl_Position = wvp * a_position;
+                    vec4 position = a_position;
+
+                #if defined(SKINNED)
+                	//int idx = 0;//int(a_boneIndices.x);
+                    mat4 skinMatrix = u_boneMatrices[int(a_boneIndices.x)] * a_boneWeights.x;
+                	skinMatrix += u_boneMatrices[int(a_boneIndices.y)] * a_boneWeights.y;
+                	skinMatrix += u_boneMatrices[int(a_boneIndices.z)] * a_boneWeights.z;
+                	skinMatrix += u_boneMatrices[int(a_boneIndices.w)] * a_boneWeights.w;
+                	position = skinMatrix * position;
+                #endif
+
+                    gl_Position = wvp * position;
 
                     v_worldPosition = (u_worldMatrix * a_position).xyz;
                 #if defined(VERTEX_COLOUR)
                     v_colour = a_colour;
                 #endif
 
+                vec3 normal = a_normal;
+
+                #if defined(SKINNED)
+                    normal = (skinMatrix * vec4(normal, 0.0)).xyz;
+                #endif
+
                 #if defined (BUMP)
-                    v_tbn[0] = normalize(u_worldMatrix * vec4(a_tangent, 0.0)).xyz;
-                    v_tbn[1] = normalize(u_worldMatrix * vec4(a_bitangent, 0.0)).xyz;
-                    v_tbn[2] = normalize(u_worldMatrix * vec4(a_normal, 0.0)).xyz;
+                    vec4 tangent = vec4(a_tangent, 0.0);
+                    vec4 bitangent = vec4(a_bitangent, 0.0);
+                #if defined (SKINNED)
+                    tangent = skinMatrix * tangent;
+                    bitangent = skinMatrix * bitangent;
+                #endif
+                    v_tbn[0] = normalize(u_worldMatrix * tangent).xyz;
+                    v_tbn[1] = normalize(u_worldMatrix * bitangent).xyz;
+                    v_tbn[2] = normalize(u_worldMatrix * vec4(normal, 0.0)).xyz;
                 #else
-                    v_normalVector = u_normalMatrix * a_normal;
+                    v_normalVector = u_normalMatrix * normal;
                 #endif
 
                 #if defined(TEXTURED)
