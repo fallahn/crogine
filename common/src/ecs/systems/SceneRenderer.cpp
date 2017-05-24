@@ -27,8 +27,6 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#define _ITERATOR_DEBUG_LEVEL 0
-
 #include <crogine/ecs/systems/SceneRenderer.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/ecs/components/Camera.hpp>
