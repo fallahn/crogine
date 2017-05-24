@@ -27,20 +27,50 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_DEBUG_INFO_HPP_
-#define CRO_DEBUG_INFO_HPP_
+#ifndef CRO_SKELETON_HPP_
+#define CRO_SKELETON_HPP_
 
-#include <crogine/ecs/System.hpp>
+#include <crogine/Config.hpp>
+#include <crogine/detail/Types.hpp>
+
+#include <glm/mat4x4.hpp>
+
+#include <vector> //TODO replace this with our own type
+#include <string>
 
 namespace cro
 {
-    class CRO_EXPORT_API DebugInfo final : public System
+    /*!
+    \brief Describes an animation made up from a series of
+    frames within a skeleton
+    */
+    struct CRO_EXPORT_API SkeletalAnim final
+    {
+        std::string name;
+        uint32 startFrame = 0;
+        uint32 frameCount = 0;
+        float frameRate = 12.f;
+        bool looped = true;
+    };
+
+    /*!
+    \brief A hierarchy of bones stored as
+    transforms, used to animate 3D models.
+    */
+    class CRO_EXPORT_API Skeleton final
     {
     public:
-        explicit DebugInfo(MessageBus&);
+        using Frame = std::vector<glm::mat4>;
 
-        void process(Time) override;
+        std::vector<Frame> frames;
+        Frame currentFrame; //current interpolated output
+
+        std::vector<SkeletalAnim> animations;
+        std::size_t currentAnimation = 0;
+        std::size_t nextAnimation = 0;
+
+    private:
     };
 }
 
-#endif //CRO_DEBUG_INFO_HPP_
+#endif //CRO_SKELETON_HPP_

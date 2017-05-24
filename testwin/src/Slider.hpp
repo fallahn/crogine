@@ -45,7 +45,7 @@ struct Slider final
 class SliderSystem final : public cro::System
 {
 public:
-    SliderSystem(cro::MessageBus&);
+    explicit SliderSystem(cro::MessageBus&);
 
     void process(cro::Time) override;
 };

@@ -45,7 +45,7 @@ struct TerrainChunk final
 class ChunkSystem final : public cro::System
 {
 public:
-    ChunkSystem(cro::MessageBus&);
+    explicit ChunkSystem(cro::MessageBus&);
 
     void process(cro::Time) override;
 

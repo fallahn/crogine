@@ -44,7 +44,7 @@ struct Velocity final
 class VelocitySystem final : public cro::System
 {
 public:
-    VelocitySystem(cro::MessageBus&);
+    explicit VelocitySystem(cro::MessageBus&);
     void process(cro::Time) override;
 };
 
