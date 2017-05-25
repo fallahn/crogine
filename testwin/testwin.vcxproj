@@ -39,6 +39,7 @@
     <ProjectGuid>{BE8D5B67-F8B4-46FC-A739-50D44550A090}</ProjectGuid>
     <RootNamespace>testwin</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
+    <ProjectName>ThreatLevel</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
