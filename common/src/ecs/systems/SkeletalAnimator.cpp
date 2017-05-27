@@ -48,20 +48,30 @@ void SkeletalAnimator::process(Time dt)
     for (auto& entity : entities)
     {
         //get skeleton
+        auto& skel = entity.getComponent<Skeleton>();
 
         //update current frame if running
-        //only interpolate if visible (frustum cull?)
-
-        //get model then for each material set uniform for current frame
-        //if we can cache the uniform ID somewhere, then even better.
-
-        //TODO applying matrix arrays in renderer
-        //TODO applying skinning in shader
+        if (skel.nextAnimation < 0)
+        {
+            //update current animation
+        }
+        else
+        {
+            //blend to next animation
+        }
     }
 }
 
 //private
-void SkeletalAnimator::interpolate(const Skeleton::Frame& a, const Skeleton::Frame& b, float time, Skeleton::Frame& output)
+void SkeletalAnimator::onEntityAdded(Entity entity)
 {
+    auto& skeleton = entity.getComponent<Skeleton>();
+    entity.getComponent<Model>().setSkeleton(&skeleton.currentFrame[0], skeleton.frameSize);
+}
 
+void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Skeleton& skeleton)
+{
+    //TODO interpolate hit boxes for key frames
+
+    //only interpolate if visible (frustum cull?)
 }

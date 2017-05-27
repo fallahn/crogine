@@ -42,6 +42,7 @@ source distribution.
 namespace cro
 {
     class MessageBus;
+    class Model;
 
     //don't export this, used internally.
     struct SortData final
@@ -82,7 +83,7 @@ namespace cro
         //TODO list of lighting
 
         uint32 m_currentTextureUnit;
-        void applyProperties(const Material::PropertyList&);
+        void applyProperties(const Material::PropertyList&, const Model&);
 
         void applyBlendMode(Material::BlendMode);
     };

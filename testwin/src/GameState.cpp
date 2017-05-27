@@ -51,6 +51,7 @@ source distribution.
 #include <crogine/ecs/systems/SceneRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -66,6 +67,8 @@ namespace
     BackgroundController* backgroundController = nullptr;
     const glm::vec2 backgroundSize(21.3f, 7.2f);
     std::size_t rockfallCount = 2;
+
+    cro::Skeleton choppaSkel;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -200,6 +203,7 @@ void GameState::render()
 void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+
     m_scene.addSystem<cro::SceneGraph>(mb);
     m_scene.addSystem<cro::SceneRenderer>(mb);
     backgroundController = &m_scene.addSystem<BackgroundController>(mb);
@@ -211,6 +215,7 @@ void GameState::addSystems()
     m_scene.addSystem<Translator>(mb);
     m_commandSystem = &m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<VelocitySystem>(mb);
+    m_scene.addSystem<cro::SkeletalAnimator>(mb);
 
     m_scene.addPostProcess<PostRadial>();
 }
@@ -282,7 +287,7 @@ void GameState::loadAssets()
 
     cro::IqmBuilder choppaMesh("assets/models/choppa_pod.iqm");
     m_meshResource.loadMesh(choppaMesh, MeshID::NPCChoppa);
-
+    choppaSkel = choppaMesh.getSkeleton();
 
     shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
     m_materialResource.add(MaterialID::TerrainChunk, m_shaderResource.get(shaderID));
@@ -440,7 +445,7 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 2.7f, 0.5f, -9.3f });
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCChoppa), m_materialResource.get(MaterialID::NPCChoppa));
-
+    entity.addComponent<cro::Skeleton>() = choppaSkel;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 2.6f, -0.6f, -8.9f });

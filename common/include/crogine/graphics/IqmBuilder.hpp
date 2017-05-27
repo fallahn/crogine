@@ -31,6 +31,7 @@ source distribution.
 #define CRO_IQM_BUILDER_HPP_
 
 #include <crogine/graphics/MeshBuilder.hpp>
+#include <crogine/ecs/components/Skeleton.hpp>
 
 #include <SDL_rwops.h>
 
@@ -39,9 +40,10 @@ namespace cro
     /*!
     \brief Parser for IQM format model files.
     IQM files are a binary mesh format which, unlike cmf files, support
-    skinned / skeletal animation. While IQM models may also be static
+    skinned / skeletal animation. While IQM models may also have static meshes
     they do not support secondary UV coordinates for lightmapping - in
-    which case cmf mesh should be preferred.
+    which case cmf mesh (via the StaticMeshBuilder) should be preferred.
+    <a href="http://sauerbraten.org/iqm/">IQM File Format</a>
     */
     class CRO_EXPORT_API IqmBuilder final : public MeshBuilder
     {
@@ -53,11 +55,22 @@ namespace cro
         explicit IqmBuilder(const std::string& path);
         ~IqmBuilder();
 
+        /*!
+        \brief Returns any skeletal animation which exists in the
+        IQM file.
+        The returned Skeleton struct can be used directly as a component
+        on entities which also use the IQM mesh data in a Model component.
+        This data is not valid until after the mesh data has been loaded into
+        a MeshResource. Usually you would keep a copy of the Skeleton stuct
+        somewhere so that it may be added to entities as required.
+        */
+        Skeleton getSkeleton() const { return m_skeleton; }
+
     private:
         std::string m_path;
         mutable SDL_RWops* m_file;
         Mesh::Data build() const override;
-
+        mutable Skeleton m_skeleton;
     };
 }
 

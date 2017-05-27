@@ -234,33 +234,6 @@ namespace
         LoadingScreen* loadingScreen = nullptr;
     };
 
-//    int threadFunc(void* data)
-//    {
-//        ThreadData* threadData = static_cast<ThreadData*>(data);
-//        
-//        SDL_GL_MakeCurrent(threadData->window, threadData->context);
-//
-//        const auto loadFunc = *static_cast<const std::function<void()>*>(threadData->function);
-//        loadFunc();
-//
-//        //this ensures all GL ops are complete before signalling we are done loading
-//#ifdef PLATFORM_MOBILE
-//        //ES2 doesn't support sync commands - so we have to rely on glFinish();
-//        glFinish();
-//#else
-//        GLsync fenceId = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-//        while (true)
-//        {
-//            GLenum result = glClientWaitSync(fenceId, GL_SYNC_FLUSH_COMMANDS_BIT, GLuint64(5000000000)); //5 Second timeout
-//            if (result != GL_TIMEOUT_EXPIRED) break; //we ignore timeouts and wait until all OpenGL commands are processed!
-//        }
-//#endif //PLATFORM_MOBILE
-//        SDL_AtomicIncRef(&threadData->threadFlag);
-//
-//        SDL_GL_MakeCurrent(threadData->window, nullptr);
-//        return 0;
-//    }
-
     int loadingDisplayFunc(void* data)
     {
         ThreadData* threadData = static_cast<ThreadData*>(data);
@@ -285,7 +258,8 @@ void Window::loadResources(const std::function<void()>& loader)
     {
         m_loadingScreen = std::make_unique<DefaultLoadingScreen>();
     }
-    
+  
+#ifdef PLATFORM_DESKTOP
     //create thread
     ThreadData data;
     data.context = m_threadContext;
@@ -304,6 +278,18 @@ void Window::loadResources(const std::function<void()>& loader)
     SDL_WaitThread(thread, &result);
 
     //SDL_GL_MakeCurrent(m_window, m_mainContext);
+#else
+
+    //android doesn't appear to like running the thread - so we'll display the loading screen once
+    //before loading resources
+    m_loadingScreen->update();
+    glCheck(glClear(GL_COLOR_BUFFER_BIT));
+    m_loadingScreen->draw();
+    SDL_GL_SwapWindow(m_window);
+
+    loader();
+
+#endif //PLATFORM_DESKTOP
 }
 
 //private

@@ -94,6 +94,10 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
         {
             //add to list of material properties
             data.properties.insert(std::make_pair(uniform.first, std::make_pair(uniform.second, Material::Property())));
+            if (uniform.first == "u_boneMatrices[0]")
+            {
+                data.properties.find(uniform.first)->second.second.type = Material::Property::Skinning;
+            }
         }
     }
 

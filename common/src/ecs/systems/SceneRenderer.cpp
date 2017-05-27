@@ -151,7 +151,7 @@ void SceneRenderer::render(Entity camera)
 
             //apply shader uniforms from material
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-            applyProperties(model.m_materials[i].properties);
+            applyProperties(model.m_materials[i].properties, model);
 
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
@@ -201,7 +201,7 @@ void SceneRenderer::render(Entity camera)
 }
 
 //private
-void SceneRenderer::applyProperties(const Material::PropertyList& properties)
+void SceneRenderer::applyProperties(const Material::PropertyList& properties, const Model& model)
 {
     m_currentTextureUnit = 0;
     for (const auto& prop : properties)
@@ -231,6 +231,9 @@ void SceneRenderer::applyProperties(const Material::PropertyList& properties)
         case Material::Property::Vec4:
             glCheck(glUniform4f(prop.second.first, prop.second.second.vecValue[0],
                 prop.second.second.vecValue[1], prop.second.second.vecValue[2], prop.second.second.vecValue[3]));
+            break;
+        case Material::Property::Skinning:           
+            glCheck(glUniformMatrix4fv(prop.second.first, model.m_jointCount, GL_FALSE, &model.m_skeleton[0][0].x));
             break;
         }
     }

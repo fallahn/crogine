@@ -290,10 +290,11 @@ void PlayerController::update(cro::CommandSystem* commandSystem)
             auto& tx = entity.getComponent<cro::Transform>();
             auto dist = worldTarget - tx.getWorldPosition();
             auto length = glm::length2(dist);
-            if (length > 0 && length < 1) //only move if touch is within a 1 unit radius of player
+            if (length > 0 && length < 5) //only move if touch is within a 1 unit radius of player
             {
-                dist /= std::sqrt(length);
-                entity.getComponent<Velocity>().velocity += dist * playerAcceleration;
+                //dist /= std::sqrt(length);
+                entity.getComponent<Velocity>().velocity += dist;// *playerAcceleration;
+                //entity.getComponent<cro::Transform>().move(dist);
             }
         };
         commandSystem->sendCommand(cmd);
