@@ -118,7 +118,10 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
             GLint maxVec;
             glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
             MAX_BONES = maxVec / 4; //4 x 4-components make up a mat4.
-            MAX_BONES = std::min(MAX_BONES - 1, 255); //VMs can incorrectly report this :(
+            //17 vectors are used by other uniforms (not sure how we can measure this at run time)
+            //17 / 4 = 4 r1 (rounded to 5)
+            MAX_BONES = std::min(MAX_BONES - 5, 255); //VMs can incorrectly report this :(
+            LOG("MAX BONES " + std::to_string(MAX_BONES), Logger::Type::Info);
         }
         defines += "\n#define SKINNED\n #define MAX_BONES " + std::to_string(MAX_BONES);
     }

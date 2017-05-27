@@ -72,6 +72,7 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
 void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Skeleton& skeleton)
 {
     //TODO interpolate hit boxes for key frames
+    //TODO interp tx and rot seperately and convert to 4x3 to free up some uniform space
 
     //only interpolate if visible (frustum cull?)
 }

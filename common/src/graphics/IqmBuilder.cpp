@@ -297,9 +297,9 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
             //calc face normal
             std::array<glm::vec3, 3u> face =
             {
-                Iqm::vec3FromArray(t.vertex[0], positions),
+                {Iqm::vec3FromArray(t.vertex[0], positions),
                 Iqm::vec3FromArray(t.vertex[1], positions),
-                Iqm::vec3FromArray(t.vertex[2], positions)
+                Iqm::vec3FromArray(t.vertex[2], positions)}
             };
             glm::vec3 deltaPos1 = face[1] - face[0];
             glm::vec3 deltaPos2 = face[2] - face[0];
@@ -311,9 +311,9 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
 
             std::array<glm::vec2, 3u> faceCoords =
             {
-                Iqm::vec2FromArray(t.vertex[0], texCoords),
+                {Iqm::vec2FromArray(t.vertex[0], texCoords),
                 Iqm::vec2FromArray(t.vertex[1], texCoords),
-                Iqm::vec2FromArray(t.vertex[2], texCoords)
+                Iqm::vec2FromArray(t.vertex[2], texCoords)}
             };
             glm::vec2 deltaUV1 = faceCoords[1] - faceCoords[0];
             glm::vec2 deltaUV2 = faceCoords[2] - faceCoords[0];
@@ -567,7 +567,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         skAnim.frameCount = anim.frameCount;
         skAnim.frameRate = anim.framerate;
         skAnim.looped = ((anim.flags & Iqm::IQM_LOOP) != 0);
-        skAnim.name = { &strings[anim.name] };
+        skAnim.name =  &strings[anim.name];
         skAnim.startFrame = anim.firstFrame;       
     }
 }
