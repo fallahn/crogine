@@ -58,7 +58,7 @@ namespace cro
                 #if defined(SKINNED)
                 attribute vec4 a_boneIndices;
                 attribute vec4 a_boneWeights;
-                uniform mat4 u_boneMatrices[64];
+                uniform mat4 u_boneMatrices[MAX_BONES];
                 #endif
 
                 uniform mat4 u_worldMatrix;

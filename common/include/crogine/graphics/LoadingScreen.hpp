@@ -40,7 +40,9 @@ namespace cro
     Loading screens are displayed by the window class when loading resources.
     A loading screen can be used to reasonably draw anything - but bear in mind
     loading screen resources themselves are not loaded in a thread and will block
-    so loading as few resources as possible is preferred.
+    so loading as few resources as possible is preferred. Some mobile devices
+    do not support running a separate thread for a loading screen, so instead only
+    the first frame will be drawn.
     */
     class CRO_EXPORT_API LoadingScreen : public Detail::SDLResource
     {

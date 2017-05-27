@@ -59,12 +59,12 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     m_depthAxis         (DepthAxis::Z),
     m_pendingRebuild    (false)
 {
-    //this has been known to fail on some platforms - but android can be as low as 63
+    //this has been known to fail on some platforms - but android can be as low as 64
     //which almost negates the usefulness of GPU bound transforms... :S
     GLint maxVec;
     glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
     MaxSprites = maxVec / 4; //4 x 4-components make up a mat4.
-    MaxSprites = std::min(MaxSprites - 1, 255u);
+    MaxSprites = std::min(MaxSprites - 1, 255u); //one component is used by the projection matrix
     LOG(std::to_string(MaxSprites) + " sprites are available per batch", Logger::Type::Info);
     
     //load shader
