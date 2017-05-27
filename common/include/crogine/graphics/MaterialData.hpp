@@ -77,7 +77,8 @@ namespace cro
                 Vec2,
                 Vec3,
                 Vec4,
-                Texture
+                Texture,
+                Skinning
             }type = None;
 
             union
@@ -88,11 +89,11 @@ namespace cro
             };
 
             //used to interpolate when rendering
-            union
+            /*union
             {
                 float lastNumberValue;
                 float lastVecValue[4];
-            };
+            };*/
 
             Property();
         };

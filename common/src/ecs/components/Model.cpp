@@ -35,7 +35,9 @@ source distribution.
 using namespace cro;
 
 Model::Model(Mesh::Data data, Material::Data material)
-    : m_meshData(data)
+    : m_meshData    (data),
+    m_skeleton      (nullptr),
+    m_jointCount    (0)
 {
     //sets all materials to given default
     bindMaterial(material);
@@ -50,6 +52,12 @@ void Model::setMaterial(std::size_t idx, Material::Data data)
     CRO_ASSERT(idx < m_materials.size(), "Index out of range");
     bindMaterial(data);
     m_materials[idx] = data;
+}
+
+void Model::setSkeleton(glm::mat4* frame, std::size_t jointCount)
+{
+    m_skeleton = frame;
+    m_jointCount = jointCount;
 }
 
 //private

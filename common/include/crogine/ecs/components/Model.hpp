@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 
+#include <glm/mat4x4.hpp>
+
 namespace cro
 {
     class CRO_EXPORT_API Model final
@@ -66,13 +68,24 @@ namespace cro
         */
         Mesh::Data& getMeshData() { return m_meshData; };
 
+        /*!
+        \brief Sets a model's optional skeleton
+        \param frame Pointer to the first transform in the skeleton
+        \param size Number of joints in the skeleton.
+        This is used internally by the SkeletalAnimator system, setting this
+        manually will most likely cause undefined results
+        */
+        void setSkeleton(glm::mat4* frame, std::size_t size);
+
     private:
         Mesh::Data m_meshData;
         std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_materials{};
         
         void bindMaterial(Material::Data&);
         
-        friend class MeshSorter;
+        glm::mat4* m_skeleton;
+        std::size_t m_jointCount;
+
         friend class SceneRenderer;
     };
 }

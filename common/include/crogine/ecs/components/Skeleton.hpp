@@ -35,14 +35,16 @@ source distribution.
 
 #include <glm/mat4x4.hpp>
 
-#include <vector> //TODO replace this with our own type
+#include <vector> //TODO if performance requires switch to fixed size arrays
 #include <string>
 
 namespace cro
 {
     /*!
     \brief Describes an animation made up from a series of
-    frames within a skeleton
+    frames within a skeleton.
+    This is used as part of a Skeleton component, rather than
+    as a stand-alone component itself
     */
     struct CRO_EXPORT_API SkeletalAnim final
     {
@@ -51,23 +53,30 @@ namespace cro
         uint32 frameCount = 0;
         float frameRate = 12.f;
         bool looped = true;
+        bool playing = true;
     };
 
     /*!
     \brief A hierarchy of bones stored as
     transforms, used to animate 3D models.
+    These are updated by the SkeletalAnimation system.
     */
     class CRO_EXPORT_API Skeleton final
     {
     public:
-        using Frame = std::vector<glm::mat4>;
+        std::size_t frameSize = 0; //joints in a frame
+        std::size_t frameCount = 0;
+        std::vector<glm::mat4> frames; //indexed by steps of frameSize
+        std::vector<glm::mat4> currentFrame; //current interpolated output
 
-        std::vector<Frame> frames; //TODO make this a single array with all the frames as sub arrays
-        Frame currentFrame; //current interpolated output
+        std::vector<int32> jointIndices;
 
         std::vector<SkeletalAnim> animations;
-        std::size_t currentAnimation = 0;
-        std::size_t nextAnimation = 0;
+        int32 currentAnimation = 0;
+        int32 nextAnimation = -1;
+
+        float blendTime = 1.f;
+        float curentBlendTime = 0.f;
 
     private:
     };

@@ -100,7 +100,9 @@ namespace cro
 		virtual void handleEvent(const Event&) = 0;
 		virtual void handleMessage(const cro::Message&) = 0;
 		/*!
-        \brief Used to updat ethe simulation with a fixed timestep of 1/60 second
+        \brief Used to update the simulation with the time elapsed since the last update.
+        It is left to the user to decide if a specific system (such as physics)
+        requires fixed updates or not, which can be implemeted with a simple accumulator.
         */
         virtual void simulate(Time) = 0;
         /*!
@@ -109,7 +111,7 @@ namespace cro
 		virtual void render() = 0;
 
 		/*!
-        \brief Called on startup after winbdow is created.
+        \brief Called on startup after window is created.
         Use it to perform initial operations such as setting the 
         window title, icon or custom loading screen
         */

@@ -46,7 +46,9 @@ namespace cro
         void process(Time) override;
 
     private:
-        void interpolate(const Skeleton::Frame& a, const Skeleton::Frame& b, float time, Skeleton::Frame& output);
+        void onEntityAdded(Entity) override;
+
+        void interpolate(std::size_t a, std::size_t b, float time, Skeleton& skelteton);
     };
 }
 

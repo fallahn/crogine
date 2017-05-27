@@ -48,7 +48,7 @@ namespace
 }
 
 void loadVertexData(const Iqm::Header& header, char* data, const std::string& strings, cro::Mesh::Data& out);
-void loadAnimationData(const Iqm::Header& header, char* data, const std::string& strings, cro::Mesh::Data& out);
+void loadAnimationData(const Iqm::Header& header, char* data, const std::string& strings, cro::Skeleton& out);
 
 IqmBuilder::IqmBuilder(const std::string& path)
     : m_path    (path),
@@ -132,7 +132,7 @@ cro::Mesh::Data IqmBuilder::build() const
         {
             Logger::log("No vertex data was found in " + m_path + ", this file may contain only animation data", Logger::Type::Warning);
         }
-        loadAnimationData(header, fileData.data(), strings, returnData);
+        loadAnimationData(header, fileData.data(), strings, m_skeleton);
     }
     else
     {
@@ -446,8 +446,128 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
-void loadAnimationData(const Iqm::Header& header, char* data, const std::string& strings, cro::Mesh::Data& out)
+void loadAnimationData(const Iqm::Header& header, char* data, const std::string& strings, cro::Skeleton& out)
 {
-    //TODO - this.
-    //TODO warn if bone count > 64 as this is the limit on mobile devices (or even lower!)
+    //load joints into bind pose
+    char* jointIter = data + header.jointOffset;
+    std::vector<glm::mat4> bindPose(header.jointCount);
+    std::vector<glm::mat4> inverseBindPose(header.jointCount);
+    out.jointIndices.resize(header.jointCount);
+    out.frameSize = header.jointCount;
+    out.frameCount = header.frameCount;
+
+    //warn if bone count > 64 as this is the limit on mobile devices (or even lower!)
+    if (header.jointCount > 64)
+    {
+        Logger::log("IQM joint count greater than 64 - this may exceed limits on mobile devices", Logger::Type::Warning);
+    }
+
+    for (auto i = 0u; i < header.jointCount; ++i)
+    {
+        Iqm::Joint joint;
+        jointIter = readJoint(jointIter, joint);
+
+        glm::quat rotation;
+        rotation.w = joint.rotate[3];
+        rotation.x = joint.rotate[0];
+        rotation.y = joint.rotate[1];
+        rotation.z = joint.rotate[2];
+
+        glm::vec3 translation(joint.translate[0], joint.translate[1], joint.translate[2]);
+        glm::vec3 scale(joint.scale[0], joint.scale[1], joint.scale[2]);
+
+        bindPose[i] = Iqm::createBoneMatrix(rotation, translation, scale);
+        inverseBindPose[i] = glm::inverse(bindPose[i]);
+
+        //TODO will this be better to store components separately in a joint
+        //so that they are easier to interpolate separately?
+        if (joint.parent >= 0)
+        {
+            //multiply by parent's transform - IQM's matrix multiplication is reversed
+            bindPose[i] = bindPose[joint.parent] * bindPose[i];
+            inverseBindPose[i] *= inverseBindPose[joint.parent];
+
+        }
+        out.jointIndices[i] = joint.parent; //we need to track these for blending frames during animation
+    }
+
+
+    //load keyframes - a 'pose' is a single posed joint, and a set of poses makes up one frame equivalent to a posed skeleton
+    //std::vector<std::vector<glm::mat4>> keyframes(header.frameCount);
+    if (header.frameCount > 0)
+    {
+        out.frames.resize(header.frameCount * header.jointCount);
+        std::uint16_t* frameIter = (std::uint16_t*)(data + header.frameOffset);
+        if (bindPose.size() > 0)
+        {
+            for (auto frameIndex = 0u; frameIndex < header.frameCount; frameIndex += header.poseCount)
+            {
+                char* poseIter = data + header.poseOffset;
+                for (auto poseIndex = 0u; poseIndex < header.poseCount; ++poseIndex)
+                {
+                    Iqm::Pose pose;
+                    poseIter = readPose(poseIter, pose);
+
+                    //keyframes[frameIndex].resize(header.poseCount);
+
+                    glm::quat rotation;
+                    glm::vec3 translation, scale;
+
+                    translation.x = pose.channelOffset[0];
+                    if (pose.mask & 0x01) translation.x += *frameIter++ * pose.channelScale[0];
+                    translation.y = pose.channelOffset[1];
+                    if (pose.mask & 0x02) translation.y += *frameIter++ * pose.channelScale[1];
+                    translation.z = pose.channelOffset[2];
+                    if (pose.mask & 0x04) translation.z += *frameIter++ * pose.channelScale[2];
+
+                    rotation.x = pose.channelOffset[3];
+                    if (pose.mask & 0x08) rotation.x += *frameIter++ * pose.channelScale[3];
+                    rotation.y = pose.channelOffset[4];
+                    if (pose.mask & 0x10) rotation.y += *frameIter++ * pose.channelScale[4];
+                    rotation.z = pose.channelOffset[5];
+                    if (pose.mask & 0x20) rotation.z += *frameIter++ * pose.channelScale[5];
+                    rotation.w = pose.channelOffset[6];
+                    if (pose.mask & 0x40) rotation.w += *frameIter++ * pose.channelScale[6];
+
+                    scale.x = pose.channelOffset[7];
+                    if (pose.mask & 0x80) scale.x += *frameIter++ * pose.channelScale[7];
+                    scale.y = pose.channelOffset[8];
+                    if (pose.mask & 0x100) scale.y += *frameIter++ * pose.channelScale[8];
+                    scale.z = pose.channelOffset[9];
+                    if (pose.mask & 0x200) scale.z += *frameIter++ * pose.channelScale[9];
+
+                    glm::mat4 mat = Iqm::createBoneMatrix(rotation, translation, scale);
+                    if (pose.parent >= 0)
+                    {
+                        out.frames[frameIndex + poseIndex] = bindPose[pose.parent] * mat * inverseBindPose[poseIndex];
+                    }
+                    else
+                    {
+                        out.frames[frameIndex + poseIndex] = mat * inverseBindPose[poseIndex];
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        out.frames.resize(bindPose.size()); //use an empty frame in case we haven't loaded any animations
+    }
+    out.currentFrame.resize(bindPose.size());
+
+    //parse animations
+    char*  animIter = data + header.animOffset;
+    for (auto animIndex = 0u; animIndex < header.animCount; ++animIndex)
+    {
+        Iqm::Anim anim;
+        animIter = readAnim(animIter, anim);
+
+        out.animations.emplace_back();
+        SkeletalAnim& skAnim = out.animations.back();
+        skAnim.frameCount = anim.frameCount;
+        skAnim.frameRate = anim.framerate;
+        skAnim.looped = ((anim.flags & Iqm::IQM_LOOP) != 0);
+        skAnim.name = { &strings[anim.name] };
+        skAnim.startFrame = anim.firstFrame;       
+    }
 }
