@@ -57,6 +57,7 @@ namespace
     };
 
     const float playerAcceleration = 0.5f;
+    const float playerJoyAcceleration = playerAcceleration * 60.f;
     const float playerMaxSpeeedSqr = 25.f;
     const float maxRotation = 1.f;
 
@@ -213,8 +214,16 @@ void PlayerController::update(cro::CommandSystem* commandSystem)
         cmd.targetFlags = CommandID::Player;
         cmd.action = [=](cro::Entity entity, cro::Time dt)
         {
-            auto& velocity = entity.getComponent<Velocity>();
-            velocity.velocity += joyVec * playerAcceleration * joystickAmount;
+            static const float updateTime = 1.f / 60.f;
+            static float accumulator = 0.f;
+
+            accumulator += dt.asSeconds();
+            while (accumulator > updateTime)
+            {
+                auto& velocity = entity.getComponent<Velocity>();
+                velocity.velocity += joyVec * joystickAmount * playerJoyAcceleration * updateTime;
+                accumulator -= updateTime;
+            }
 
             float rotation = -maxRotation * joyVec.y;
             auto& tx = entity.getComponent<cro::Transform>();
