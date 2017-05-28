@@ -51,6 +51,7 @@ namespace cro
         std::string name;
         uint32 startFrame = 0;
         uint32 frameCount = 0;
+        uint32 currentFrame = 0;
         float frameRate = 12.f;
         bool looped = true;
         bool playing = true;
@@ -76,7 +77,23 @@ namespace cro
         int32 nextAnimation = -1;
 
         float blendTime = 1.f;
-        float curentBlendTime = 0.f;
+        float currentBlendTime = 0.f;
+
+        float frameTime = 1.f;
+        float currentFrameTime = 0.f;
+
+        /*!
+        \brief Plays the animation at the given index
+        \param idx Index of the animation to play
+        \param blendTime time in seconds to blend / overlap the new animation
+        with any previously playing animation
+        */
+        void play(std::size_t idx, float blendTime = 0.f);
+
+        /*!
+        \brief Stops any active animations
+        */
+        void stop();
 
     private:
     };

@@ -493,22 +493,19 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 
 
     //load keyframes - a 'pose' is a single posed joint, and a set of poses makes up one frame equivalent to a posed skeleton
-    //std::vector<std::vector<glm::mat4>> keyframes(header.frameCount);
     if (header.frameCount > 0)
     {
         out.frames.resize(header.frameCount * header.jointCount);
         std::uint16_t* frameIter = (std::uint16_t*)(data + header.frameOffset);
         if (bindPose.size() > 0)
         {
-            for (auto frameIndex = 0u; frameIndex < header.frameCount; frameIndex += header.poseCount)
+            for (auto frameIndex = 0u; frameIndex < out.frames.size(); frameIndex += header.poseCount)
             {
                 char* poseIter = data + header.poseOffset;
                 for (auto poseIndex = 0u; poseIndex < header.poseCount; ++poseIndex)
                 {
                     Iqm::Pose pose;
                     poseIter = readPose(poseIter, pose);
-
-                    //keyframes[frameIndex].resize(header.poseCount);
 
                     glm::quat rotation;
                     glm::vec3 translation, scale;

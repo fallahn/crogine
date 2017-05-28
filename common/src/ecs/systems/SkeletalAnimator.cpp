@@ -28,9 +28,9 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/App.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/components/Model.hpp>
-//#include <crogine/graphics/MaterialData.hpp>
 
 using namespace cro;
 
@@ -54,6 +54,28 @@ void SkeletalAnimator::process(Time dt)
         if (skel.nextAnimation < 0)
         {
             //update current animation
+            auto& anim = skel.animations[skel.currentAnimation];
+            if (anim.playing)
+            {
+                auto nextFrame = (anim.currentFrame + 1) % anim.frameCount;
+
+                skel.currentFrameTime += dt.asSeconds();
+                float interpTime = std::min(1.f, skel.currentFrameTime / skel.frameTime);
+                interpolate(anim.currentFrame, nextFrame, interpTime, skel);
+
+                if (skel.currentFrameTime > skel.frameTime)
+                {
+                    //frame is done, move to next
+                    if (nextFrame < anim.currentFrame && !anim.looped)
+                    {
+                        anim.playing = false;
+                    }
+
+                    anim.currentFrame = nextFrame;
+                    skel.currentFrameTime = 0.f;                  
+                }
+                //DPRINT("Current Frame", std::to_string(anim.currentFrame));
+            }
         }
         else
         {
@@ -67,6 +89,7 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
 {
     auto& skeleton = entity.getComponent<Skeleton>();
     entity.getComponent<Model>().setSkeleton(&skeleton.currentFrame[0], skeleton.frameSize);
+    skeleton.frameTime = 1.f / skeleton.animations[0].frameRate;
 }
 
 void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Skeleton& skeleton)
@@ -75,4 +98,21 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
     //TODO interp tx and rot seperately and convert to 4x3 to free up some uniform space
 
     //only interpolate if visible (frustum cull?)
+
+    //NOTE a and b are FRAME INDICES not indices into the frame array
+    std::size_t startA = a * skeleton.frameSize;
+    std::size_t startB = b * skeleton.frameSize;
+    for (auto i = 0u; i < skeleton.frameSize; ++i)
+    {
+        if (skeleton.jointIndices[i] < 0)
+        {
+            //root bone
+            skeleton.currentFrame[i] = glm::mix(skeleton.frames[startA + i], skeleton.frames[startB + i], time);
+        }
+        else
+        {
+            //multiply by our parent
+            skeleton.currentFrame[i] = skeleton.currentFrame[skeleton.jointIndices[i]] * glm::mix(skeleton.frames[startA + i], skeleton.frames[startB + i], time);
+        }
+    }
 }

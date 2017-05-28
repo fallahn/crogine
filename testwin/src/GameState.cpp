@@ -444,6 +444,7 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 2.7f, 0.5f, -9.3f });
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
+    //entity.getComponent<cro::Transform>().setScale({ 0.02f, 0.02f, 0.02f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCChoppa), m_materialResource.get(MaterialID::NPCChoppa));
     entity.addComponent<cro::Skeleton>() = choppaSkel;
 
