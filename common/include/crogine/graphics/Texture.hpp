@@ -115,7 +115,7 @@ namespace cro
         bool isSmooth() const;
 
         /*!
-        \brief Enables of disables texture repeating
+        \brief Enables or disables texture repeating
         */
         void setRepeated(bool);
 
