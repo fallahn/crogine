@@ -505,5 +505,8 @@
     <None Include="..\common\include\crogine\graphics\Rectangle.inl">
       <Filter>Header Files\graphics</Filter>
     </None>
+    <None Include="..\common\include\crogine\ecs\Scene.inl">
+      <Filter>Header Files\ecs</Filter>
+    </None>
   </ItemGroup>
 </Project>

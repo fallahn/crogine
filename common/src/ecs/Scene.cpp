@@ -149,6 +149,16 @@ void Scene::forwardMessage(const Message& msg)
                 m_sceneBuffer.create(data.data0, data.data1);
                 for (auto& p : m_postEffects) p->resizeBuffer(data.data0, data.data1);
             }
+
+            if (m_postBuffers[0].available())
+            {
+                m_postBuffers[0].create(data.data0, data.data1);
+            }
+
+            if (m_postBuffers[1].available())
+            {
+                m_postBuffers[1].create(data.data0, data.data1);
+            }
         }
     }
 }
@@ -167,7 +177,19 @@ void Scene::postRenderPath()
     for (auto r : m_renderables) r->render(camera);
     m_sceneBuffer.display();
 
-    m_postEffects[0]->apply(m_sceneBuffer);
+    RenderTexture* inTex = &m_sceneBuffer;
+    RenderTexture* outTex = nullptr;
+
+    for (auto i = 0u; i < m_postEffects.size() - 1; ++i)
+    {
+        outTex = &m_postBuffers[i % 2];
+        outTex->clear();
+        m_postEffects[i]->apply(*inTex);
+        outTex->display();
+        inTex = outTex;
+    }
+
+    m_postEffects.back()->apply(*inTex);
 }
 
 void Scene::updateFrustum()
