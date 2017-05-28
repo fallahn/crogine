@@ -179,6 +179,7 @@
   <ItemGroup>
     <None Include="..\common\include\crogine\ecs\Entity.inl" />
     <None Include="..\common\include\crogine\ecs\EntityManager.inl" />
+    <None Include="..\common\include\crogine\ecs\Scene.inl" />
     <None Include="..\common\include\crogine\ecs\System.inl" />
     <None Include="..\common\include\crogine\ecs\SystemManager.inl" />
     <None Include="..\common\include\crogine\graphics\Rectangle.inl" />

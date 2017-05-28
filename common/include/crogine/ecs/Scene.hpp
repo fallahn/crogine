@@ -164,6 +164,7 @@ namespace cro
         std::vector<Renderable*> m_renderables;
 
         RenderTexture m_sceneBuffer;
+        std::array<RenderTexture, 2u> m_postBuffers;
         std::vector<std::unique_ptr<PostProcess>> m_postEffects;
 
         void postRenderPath();
@@ -172,44 +173,7 @@ namespace cro
         void updateFrustum();
     };
 
-    template <typename T, typename... Args>
-    T& Scene::addSystem(Args&&... args)
-    {
-        auto& system = m_systemManager.addSystem<T>(std::forward<Args>(args)...);
-        if (std::is_base_of<Renderable, T>::value)
-        {
-            m_renderables.push_back(dynamic_cast<Renderable*>(&system));
-        }
-        return system;
-    }
-
-    template <typename T>
-    T& Scene::getSystem()
-    {
-        return m_systemManager.getSystem<T>();
-    }
-
-    template <typename T, typename... Args>
-    T& Scene::addPostProcess(Args&&... args)
-    {
-        static_assert(std::is_base_of<PostProcess, T>::value, "Must be a post process type");
-        auto size = App::getWindow().getSize();
-        if (!m_sceneBuffer.available())
-        {           
-            if (m_sceneBuffer.create(size.x, size.y))
-            {
-                //set render path
-                currentRenderPath = std::bind(&Scene::postRenderPath, this);
-            }
-            else
-            {
-                Logger::log("Failed settings scene render buffer - post process is disabled", Logger::Type::Error, Logger::Output::All);
-            }
-        }
-        m_postEffects.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-        m_postEffects.back()->resizeBuffer(size.x, size.y);
-        return *dynamic_cast<T*>(m_postEffects.back().get());
-    }
+#include "Scene.inl"
 }
 
 #endif //CRO_SCENE_HPP_
