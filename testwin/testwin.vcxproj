@@ -299,7 +299,7 @@
     <ClCompile Include="src\MenuOptions.cpp" />
     <ClCompile Include="src\MenuScores.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
-    <ClCompile Include="src\PlayerController.cpp" />
+    <ClCompile Include="src\PlayerDirector.cpp" />
     <ClCompile Include="src\PostRadial.cpp" />
     <ClCompile Include="src\RandomTranslation.cpp" />
     <ClCompile Include="src\RockFallSystem.cpp" />
@@ -320,7 +320,7 @@
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
-    <ClInclude Include="src\PlayerController.hpp" />
+    <ClInclude Include="src\PlayerDirector.hpp" />
     <ClInclude Include="src\PostRadial.hpp" />
     <ClInclude Include="src\RandomTranslation.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />

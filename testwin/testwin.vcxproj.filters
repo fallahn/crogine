@@ -87,7 +87,7 @@
     <ClCompile Include="src\VelocitySystem.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
-    <ClCompile Include="src\PlayerController.cpp">
+    <ClCompile Include="src\PlayerDirector.cpp">
       <Filter>Source Files\TL</Filter>
     </ClCompile>
   </ItemGroup>
@@ -152,11 +152,11 @@
     <ClInclude Include="src\RandomTranslation.hpp">
       <Filter>Header Files\systems</Filter>
     </ClInclude>
-    <ClInclude Include="src\PlayerController.hpp">
-      <Filter>Header Files\TL</Filter>
-    </ClInclude>
     <ClInclude Include="src\VelocitySystem.hpp">
       <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlayerDirector.hpp">
+      <Filter>Header Files\TL</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

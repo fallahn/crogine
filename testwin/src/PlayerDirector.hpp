@@ -27,29 +27,25 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_PLAYER_CONTROLLER_HPP_
-#define TL_PLAYER_CONTROLLER_HPP_
+#ifndef TL_PLAYER_DIRECTOR_HPP_
+#define TL_PLAYER_DIRECTOR_HPP_
 
-#include <crogine/detail/Types.hpp>
+#include <crogine/ecs/Director.hpp>
 
 #include <glm/vec3.hpp>
 
-namespace cro
-{
-    class CommandSystem;
-    class Scene;
-}
 
-class PlayerController final
+class PlayerDirector final : public cro::Director
 {
 public:
-    PlayerController(cro::Scene&);
+    PlayerDirector();
 
-    void handleEvent(const cro::Event&);
-    void update(cro::CommandSystem*);
+    void handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override {};
+    void process(cro::Time) override;
 
 private:
-    cro::Scene& m_scene;
+
     cro::uint16 m_currentInput;
 
     glm::vec2 m_touchCoords;
@@ -57,4 +53,4 @@ private:
     glm::vec3 getWorldCoords();
 };
 
-#endif //TL_PLAYER_CONTROLLER_HPP_
+#endif //TL_PLAYER_DIRECTOR_HPP_

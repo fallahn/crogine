@@ -57,11 +57,16 @@ void SkeletalAnimator::process(Time dt)
             auto& anim = skel.animations[skel.currentAnimation];
             if (anim.playing)
             {
-                auto nextFrame = (anim.currentFrame + 1) % anim.frameCount;
+                auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
+                nextFrame += anim.startFrame;
 
                 skel.currentFrameTime += dt.asSeconds();
                 float interpTime = std::min(1.f, skel.currentFrameTime / skel.frameTime);
-                interpolate(anim.currentFrame, nextFrame, interpTime, skel);
+                
+                if (entity.getComponent<Model>().isVisible())
+                {
+                    interpolate(anim.currentFrame, nextFrame, interpTime, skel);
+                }
 
                 if (skel.currentFrameTime > skel.frameTime)
                 {
@@ -79,7 +84,11 @@ void SkeletalAnimator::process(Time dt)
         }
         else
         {
-            //blend to next animation
+            //TODO blend to next animation
+            skel.currentAnimation = skel.nextAnimation;
+            skel.nextAnimation = -1;
+            skel.frameTime = 1.f / skel.animations[skel.currentAnimation].frameRate;
+            skel.currentFrameTime = 0.f;
         }
     }
 }

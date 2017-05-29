@@ -36,12 +36,14 @@ source distribution.
 
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
+#include <crogine/graphics/IqmBuilder.hpp>
 
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -49,9 +51,11 @@ source distribution.
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/components/CommandID.hpp>
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Skeleton.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Constants.hpp>
 
 #include <glm/gtx/norm.hpp>
 
@@ -65,6 +69,8 @@ namespace
     {
         Up = 0x1, Down = 0x2, Left = 0x4, Right = 0x8
     };
+
+    cro::Skeleton batCatSkeleton;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -90,7 +96,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 //public
 bool GameState::handleEvent(const cro::Event& evt)
 {
-    auto rebuild = [&](cro::int32 target)
+    /*auto rebuild = [&](cro::int32 target)
     {
         cro::Command cmd;
         cmd.targetFlags = target;
@@ -104,14 +110,14 @@ bool GameState::handleEvent(const cro::Event& evt)
         {
             buildRow(i);
         }
-    };
+    };*/
 
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_UP:
+        /*case SDLK_UP:
         {
             cro::int32 target = (1 << (rowCount * rowWidth));
             auto old = rowCount;
@@ -142,18 +148,18 @@ bool GameState::handleEvent(const cro::Event& evt)
             rowWidth = std::min(rowWidth + 1, 8);
             if(old != rowWidth) rebuild(target);
         }
-            break;
+            break;*/
         case SDLK_w:
-            camFlags &= ~Up;
+            //camFlags &= ~Up;
             break;
         case SDLK_s:
-            camFlags &= ~Down;
+            //camFlags &= ~Down;
             break;
         case SDLK_a:
-            camFlags &= ~Left;
+            //camFlags &= ~Left;
             break;
         case SDLK_d:
-            camFlags &= ~Right;
+            //camFlags &= ~Right;
             break;
         }
     }
@@ -164,32 +170,32 @@ bool GameState::handleEvent(const cro::Event& evt)
         {
         default:break;
         case SDLK_w:
-            camFlags |= Up;
+            //camFlags |= Up;
             break;
         case SDLK_s:
-            camFlags |= Down;
+            //camFlags |= Down;
             break;
         case SDLK_a:
-            camFlags |= Left;
+            //camFlags |= Left;
             break;
         case SDLK_d:
-            camFlags |= Right;
+            //camFlags |= Right;
             break;
         }
     }
 
-    else if (evt.type == SDL_MOUSEWHEEL)
-    {
-        //DPRINT("Wheel", std::to_string(evt.wheel.y));
-        auto amount = -evt.wheel.y;
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::Camera;
-        cmd.action = [amount](cro::Entity entity, cro::Time)
-        {
-            entity.getComponent<cro::Transform>().move({ 0.f, 0.f, static_cast<float>(amount) });
-        };
-        m_commandSystem->sendCommand(cmd);
-    }
+    //else if (evt.type == SDL_MOUSEWHEEL)
+    //{
+    //    //DPRINT("Wheel", std::to_string(evt.wheel.y));
+    //    auto amount = -evt.wheel.y;
+    //    cro::Command cmd;
+    //    cmd.targetFlags = CommandID::Camera;
+    //    cmd.action = [amount](cro::Entity entity, cro::Time)
+    //    {
+    //        entity.getComponent<cro::Transform>().move({ 0.f, 0.f, static_cast<float>(amount) });
+    //    };
+    //    m_commandSystem->sendCommand(cmd);
+    //}
 
     return true;
 }
@@ -247,6 +253,7 @@ void GameState::addSystems()
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
     m_commandSystem = &m_scene.addSystem<cro::CommandSystem>(mb);
+    m_scene.addSystem<cro::SkeletalAnimator>(mb);
 
     m_overlayScene.addSystem<cro::TextRenderer>(mb);
     m_overlayScene.addSystem<cro::SceneGraph>(mb);
@@ -254,33 +261,33 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
-    auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseColour | cro::ShaderResource::DiffuseMap);
+    //auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseColour | cro::ShaderResource::DiffuseMap);
 
-    auto& greenOne = m_materialResource.add(MaterialID::GreenOne, m_shaderResource.get(shaderID));
-    greenOne.setProperty("u_colour", cro::Colour(cro::uint8(21), 178u, 55u));
-    greenOne.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
+    //auto& greenOne = m_materialResource.add(MaterialID::GreenOne, m_shaderResource.get(shaderID));
+    //greenOne.setProperty("u_colour", cro::Colour(cro::uint8(21), 178u, 55u));
+    //greenOne.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
 
-    auto& greenTwo = m_materialResource.add(MaterialID::GreenTwo, m_shaderResource.get(shaderID));
-    greenTwo.setProperty("u_colour", cro::Colour(cro::uint8(127), 206u, 61u));
-    greenTwo.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
+    //auto& greenTwo = m_materialResource.add(MaterialID::GreenTwo, m_shaderResource.get(shaderID));
+    //greenTwo.setProperty("u_colour", cro::Colour(cro::uint8(127), 206u, 61u));
+    //greenTwo.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
 
-    auto& brown = m_materialResource.add(MaterialID::Brown, m_shaderResource.get(shaderID));
-    brown.setProperty("u_colour", cro::Colour(cro::uint8(199), 66u, 9u));
-    brown.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
+    //auto& brown = m_materialResource.add(MaterialID::Brown, m_shaderResource.get(shaderID));
+    //brown.setProperty("u_colour", cro::Colour(cro::uint8(199), 66u, 9u));
+    //brown.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
 
-    auto& red = m_materialResource.add(MaterialID::Red, m_shaderResource.get(shaderID));
-    red.setProperty("u_colour", cro::Colour(cro::uint8(140), 30u, 18u));
-    red.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
+    //auto& red = m_materialResource.add(MaterialID::Red, m_shaderResource.get(shaderID));
+    //red.setProperty("u_colour", cro::Colour(cro::uint8(140), 30u, 18u));
+    //red.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
 
-    auto& blue = m_materialResource.add(MaterialID::Blue, m_shaderResource.get(shaderID));
-    blue.setProperty("u_colour", cro::Colour(cro::uint8(18), 105u, 142u));
-    blue.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
+    //auto& blue = m_materialResource.add(MaterialID::Blue, m_shaderResource.get(shaderID));
+    //blue.setProperty("u_colour", cro::Colour(cro::uint8(18), 105u, 142u));
+    //blue.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
 
-    cro::QuadBuilder qb({ 1.f, 1.f });
-    m_meshResource.loadMesh(qb, cro::Mesh::QuadMesh);
+    //cro::QuadBuilder qb({ 1.f, 1.f });
+    //m_meshResource.loadMesh(qb, cro::Mesh::QuadMesh);
 
 
-    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
+    auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
 
     auto& roomOne = m_materialResource.add(MaterialID::RoomOne, m_shaderResource.get(shaderID));
     roomOne.setProperty("u_diffuseMap", m_textureResource.get("assets/textures/room1x1.png"));
@@ -289,22 +296,52 @@ void GameState::loadAssets()
     roomTwo.setProperty("u_diffuseMap", m_textureResource.get("assets/textures/room2x1.png"));
 
     cro::StaticMeshBuilder r1("assets/models/room1x1.cmf");
-    m_meshResource.loadMesh(r1, MeshID::RoomOne);
+    m_meshResource.loadMesh(MeshID::RoomOne, r1);
 
     cro::StaticMeshBuilder r2("assets/models/room2x1.cmf");
-    m_meshResource.loadMesh(r2, MeshID::RoomTwo);
+    m_meshResource.loadMesh(MeshID::RoomTwo, r2);
+
+    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap /*| cro::ShaderResource::NormalMap*/ | cro::ShaderResource::Skinning);
+    auto& batMat = m_materialResource.add(MaterialID::BatCat, m_shaderResource.get(shaderID));
+    auto& batDiff = m_textureResource.get("assets/textures/batcat_diffuse.png");
+    batDiff.setRepeated(true);
+    batMat.setProperty("u_diffuseMap", batDiff);
+    /*auto& batMask = m_textureResource.get("assets/textures/batcat_mask.png");
+    batMask.setRepeated(true);
+    batMat.setProperty("u_maskMap", batMask);
+    auto& batNormal = m_textureResource.get("assets/textures/batcat_normal.png");
+    batNormal.setRepeated(true);
+    batMat.setProperty("u_normalMap", batNormal);*/
+
+    cro::IqmBuilder catBuilder("assets/models/batcat.iqm");
+    m_meshResource.loadMesh(MeshID::BatCat, catBuilder);
+    batCatSkeleton = catBuilder.getSkeleton();
+    batCatSkeleton.currentAnimation = AnimationID::BatCat::Idle;
+    batCatSkeleton.animations[AnimationID::BatCat::Idle].playing = true;
 }
 
 void GameState::createScene()
 {
-    for (auto i = 0; i < rowCount; ++i)
-    {
-        buildRow(i);
-    }
+    //for (auto i = 0; i < rowCount; ++i)
+    //{
+    //    buildRow(i);
+    //}
+
+    //dat cat man
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::BatCat), m_materialResource.get(MaterialID::BatCat));
+    entity.addComponent<cro::Transform>().setScale({ 0.002f, 0.002f, 0.002f });
+    entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, cro::Util::Const::PI / 2.f, 0.f });
+    entity.addComponent<cro::Skeleton>() = batCatSkeleton;
+
+    //starting room
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::RoomTwo), m_materialResource.get(MaterialID::RoomTwo));
+    entity.addComponent<cro::Transform>().move({ 0.f, 0.5f, 0.5f });
 
     //3D camera
     auto ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 0.5f, 5.f, 20.f });
+    ent.addComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 2.3f });
     ent.addComponent<cro::Camera>();
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
     m_scene.setActiveCamera(ent);
@@ -321,7 +358,8 @@ void GameState::createScene()
     font.loadFromFile("assets/VeraMono.ttf");
     auto& text = ent.addComponent<cro::Text>(font);
     text.setColour(cro::Colour::Blue());
-    text.setString("WASD/MouseWheel to control view\nCursor keys to regenerate");
+    //text.setString("WASD/MouseWheel to control view\nCursor keys to regenerate");
+    text.setString("WASD to move");
     ent.addComponent<cro::Transform>().setPosition({ 50.f, 1060.f, 0.f });
 }
 
