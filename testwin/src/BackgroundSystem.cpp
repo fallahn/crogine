@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "BackgroundController.hpp"
+#include "BackgroundSystem.hpp"
 #include "Messages.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -42,8 +42,8 @@ namespace
 }
 
 
-BackgroundController::BackgroundController(cro::MessageBus& mb)
-    : cro::System       (mb, typeid(BackgroundController)),
+BackgroundSystem::BackgroundSystem(cro::MessageBus& mb)
+    : cro::System       (mb, typeid(BackgroundSystem)),
     m_speed             (0.f),
     m_currentSpeed      (0.f),
     m_currentMode       (Mode::Scroll),
@@ -61,7 +61,7 @@ BackgroundController::BackgroundController(cro::MessageBus& mb)
 }
 
 //public
-void BackgroundController::process(cro::Time dt)
+void BackgroundSystem::process(cro::Time dt)
 {
     float dtSec = dt.asSeconds();
 
@@ -93,7 +93,7 @@ void BackgroundController::process(cro::Time dt)
     }
 }
 
-void BackgroundController::setScrollSpeed(float speed)
+void BackgroundSystem::setScrollSpeed(float speed)
 {
     m_speed = speed;
 
@@ -102,12 +102,12 @@ void BackgroundController::setScrollSpeed(float speed)
     msg->value = m_speed;
 }
 
-void BackgroundController::setColourAngle(float angle)
+void BackgroundSystem::setColourAngle(float angle)
 {
     m_colourAngle = angle;
 }
 
-void BackgroundController::setMode(Mode mode)
+void BackgroundSystem::setMode(Mode mode)
 {
     m_currentMode = mode;
     if (mode == Mode::Shake)

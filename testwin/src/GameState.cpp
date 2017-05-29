@@ -30,7 +30,7 @@ source distribution.
 #include "GameState.hpp"
 #include "ResourceIDs.hpp"
 #include "BackgroundShader.hpp"
-#include "BackgroundController.hpp"
+#include "BackgroundSystem.hpp"
 #include "PostRadial.hpp"
 #include "RotateSystem.hpp"
 #include "TerrainChunk.hpp"
@@ -40,6 +40,7 @@ source distribution.
 #include "RandomTranslation.hpp"
 #include "VelocitySystem.hpp"
 #include "PlayerDirector.hpp"
+#include "BackgroundDirector.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -65,7 +66,7 @@ source distribution.
 
 namespace
 {
-    BackgroundController* backgroundController = nullptr;
+    BackgroundSystem* backgroundController = nullptr;
     const glm::vec2 backgroundSize(21.3f, 7.2f);
     std::size_t rockfallCount = 2;
 
@@ -74,8 +75,7 @@ namespace
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State        (stack, context),
-    m_scene             (context.appInstance.getMessageBus()),
-    m_commandSystem     (nullptr)
+    m_scene             (context.appInstance.getMessageBus())
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -98,11 +98,11 @@ bool GameState::handleEvent(const cro::Event& evt)
     {
         if (evt.key.keysym.sym == SDLK_SPACE)
         {
-            backgroundController->setMode(BackgroundController::Mode::Shake);
+            backgroundController->setMode(BackgroundSystem::Mode::Shake);
         }
         else if (evt.key.keysym.sym == SDLK_RETURN)
         {
-            backgroundController->setMode(BackgroundController::Mode::Scroll);
+            backgroundController->setMode(BackgroundSystem::Mode::Scroll);
             backgroundController->setScrollSpeed(0.2f);
         }
     }
@@ -121,66 +121,6 @@ void GameState::handleMessage(const cro::Message& msg)
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             updateView();
-        }
-    }
-    else if (msg.id == MessageID::BackgroundSystem)
-    {
-        const auto& data = msg.getData<BackgroundEvent>();
-        if (data.type == BackgroundEvent::ModeChanged)
-        {
-            bool start = (data.value != 0.f);
-            
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::RockParticles;
-            cmd.action = [start](cro::Entity entity, cro::Time)
-            {
-                auto& ps = entity.getComponent<cro::ParticleEmitter>();
-                if (start)
-                {
-                    ps.start();
-                }
-                else
-                {
-                    ps.stop();
-                }
-            };
-            m_commandSystem->sendCommand(cmd);
-
-            cmd.targetFlags = CommandID::SnowParticles;
-            cmd.action = [start](cro::Entity entity, cro::Time)
-            {
-                auto& rt = entity.getComponent<RandomTranslation>();
-                if (start)
-                {
-                    for (auto& p : rt.translations)
-                    {
-                        p.x = cro::Util::Random::value(-5.5f, 5.1f);
-                        p.y = 3.1f;
-                        p.z = -9.2f;
-                    }
-                }
-                else
-                {
-                    for (auto& p : rt.translations)
-                    {
-                        p.x = cro::Util::Random::value(-3.5f, 12.1f);
-                        p.y = 3.1f;
-                        p.z = -9.2f;
-                    }
-                }
-            };
-            m_commandSystem->sendCommand(cmd);
-
-        }
-        else if (data.type == BackgroundEvent::SpeedChange)
-        {
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::SnowParticles;
-            cmd.action = [=](cro::Entity entity, cro::Time)
-            {
-                entity.getComponent<cro::ParticleEmitter>().emitterSettings.initialVelocity.x = (data.value * -11.f);
-            };
-            m_commandSystem->sendCommand(cmd);
         }
     }
 }
@@ -203,18 +143,19 @@ void GameState::addSystems()
 
     m_scene.addSystem<cro::SceneGraph>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
-    backgroundController = &m_scene.addSystem<BackgroundController>(mb);
+    backgroundController = &m_scene.addSystem<BackgroundSystem>(mb);
     backgroundController->setScrollSpeed(0.2f);
     m_scene.addSystem<ChunkSystem>(mb);
     m_scene.addSystem<RockFallSystem>(mb);
     m_scene.addSystem<RotateSystem>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
     m_scene.addSystem<Translator>(mb);
-    m_commandSystem = &m_scene.addSystem<cro::CommandSystem>(mb);
+    m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<VelocitySystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
 
     m_scene.addDirector<PlayerDirector>();
+    m_scene.addDirector<BackgroundDirector>();
 
     m_scene.addPostProcess<PostRadial>();
 }

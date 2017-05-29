@@ -287,7 +287,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\BackgroundController.cpp" />
+    <ClCompile Include="src\BackgroundSystem.cpp" />
+    <ClCompile Include="src\BackgroundDirector.cpp" />
     <ClCompile Include="src\ChunkBuilder.cpp" />
     <ClCompile Include="src\ColourSystem.cpp" />
     <ClCompile Include="src\DriftSystem.cpp" />
@@ -309,7 +310,8 @@
     <ClCompile Include="src\VelocitySystem.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\BackgroundController.hpp" />
+    <ClInclude Include="src\BackgroundSystem.hpp" />
+    <ClInclude Include="src\BackgroundDirector.hpp" />
     <ClInclude Include="src\BackgroundShader.hpp" />
     <ClInclude Include="src\ChunkBuilder.hpp" />
     <ClInclude Include="src\ColourSystem.hpp" />
