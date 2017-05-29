@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,71 +27,24 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef DH_RESOURCE_IDS_HPP_
-#define DH_RESOURCE_IDS_HPP_
+#include <crogine/ecs/Director.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 
-#include <crogine/graphics/MeshResource.hpp>
+using namespace cro;
 
-namespace MaterialID
+Director::Director()
+    : m_messageBus(nullptr),
+    m_commandSystem(nullptr),
+    m_scene(nullptr){}
+
+void Director::sendCommand(const Command& cmd)
 {
-    enum
-    {
-        GreenOne,
-        GreenTwo,
-        Brown,
-        Red,
-        Blue,
-        RoomOne,
-        RoomTwo,
-        BatCat
-    };
+    CRO_ASSERT(m_commandSystem, "Missing command system!");
+    m_commandSystem->sendCommand(cmd);
 }
 
-namespace MeshID
+Scene& Director::getScene()
 {
-    enum
-    {
-        RoomOne = cro::Mesh::ID::Count,
-        RoomTwo,
-        BatCat
-    };
+    CRO_ASSERT(m_scene, "Missing scene - are you using this correctly?");
+    return *m_scene;
 }
-
-namespace FontID
-{
-    enum
-    {
-        MenuFont
-    };
-}
-
-namespace ShaderID
-{
-    enum
-    {
-        Background
-    };
-}
-
-namespace CommandID
-{
-    enum
-    {
-        Camera = 0x1
-    };
-}
-
-namespace AnimationID
-{
-    namespace BatCat
-    {
-        enum
-        {
-            Run = 0,
-            Idle,
-            Jump
-        };
-    }
-}
-
-#endif //DH_RESOURCE_IDS_HPP_

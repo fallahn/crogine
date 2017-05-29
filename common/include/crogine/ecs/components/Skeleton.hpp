@@ -53,8 +53,8 @@ namespace cro
         uint32 frameCount = 0;
         uint32 currentFrame = 0;
         float frameRate = 12.f;
-        bool looped = true;
-        bool playing = true;
+        bool looped = false;
+        bool playing = false;
     };
 
     /*!
@@ -88,7 +88,13 @@ namespace cro
         \param blendTime time in seconds to blend / overlap the new animation
         with any previously playing animation
         */
-        void play(std::size_t idx, float blendTime = 0.f);
+        void play(std::size_t idx, float blendingTime = 0.f)
+        {
+            CRO_ASSERT(idx < animations.size(), "Index out of range");
+            nextAnimation = idx;
+            blendTime = blendingTime;
+            currentBlendTime = 0.f;
+        }
 
         /*!
         \brief Stops any active animations

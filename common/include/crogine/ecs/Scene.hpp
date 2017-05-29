@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/System.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/Director.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/PostProcess.hpp>
 
@@ -105,6 +107,15 @@ namespace cro
         T& getSystem();
 
         /*!
+        \brief Adds a Director to the Scene.
+        Directors are used to control in game entities and events through
+        observed messages and events.
+        \see Director
+        */
+        template <typename T, typename... Args>
+        void addDirector(Args&&... args);
+
+        /*!
         \brief Adds a post process effect to the scene.
         Any post processes added to the scene are performed on the *entire* output.
         To add post processes to a portion of the scene such as only 3D parts then
@@ -141,6 +152,11 @@ namespace cro
         Entity getActiveCamera() const;
 
         /*!
+        \brief Forwards any events to Directors in the Scene
+        */
+        void forwardEvent(const Event&);
+
+        /*!
         \brief Forwards messages to the systems in the scene
         */
         void forwardMessage(const Message&);
@@ -160,6 +176,8 @@ namespace cro
 
         EntityManager m_entityManager;
         SystemManager m_systemManager;
+
+        std::vector<std::unique_ptr<Director>> m_directors;
 
         std::vector<Renderable*> m_renderables;
 

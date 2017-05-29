@@ -59,6 +59,12 @@ Scene::Scene(MessageBus& mb)
 //public
 void Scene::simulate(Time dt)
 {
+    //update directors first as they'll be working on data from the last frame
+    for (auto& d : m_directors)
+    {
+        d->process(dt);
+    }
+
     for (const auto& entity : m_pendingEntities)
     {
         m_systemManager.addToSystems(entity);
@@ -134,9 +140,21 @@ Entity Scene::getActiveCamera() const
     return m_entityManager.getEntity(m_activeCamera);
 }
 
+void Scene::forwardEvent(const Event& evt)
+{
+    for (auto& d : m_directors)
+    {
+        d->handleEvent(evt);
+    }
+}
+
 void Scene::forwardMessage(const Message& msg)
 {
     m_systemManager.forwardMessage(msg);
+    for (auto& d : m_directors)
+    {
+        d->handleMessage(msg);
+    }
 
     if (msg.id == Message::WindowMessage)
     {

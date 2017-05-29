@@ -189,16 +189,16 @@ void MainState::loadAssets()
 
 
     cro::SphereBuilder sb(2.2f, 8);
-    m_meshResource.loadMesh(sb, cro::Mesh::SphereMesh);
+    m_meshResource.loadMesh(cro::Mesh::SphereMesh, sb);
 
     cro::QuadBuilder qb(glm::vec2(16.f, 9.f), glm::vec2(16.f / 9.f, 1.f));
-    m_meshResource.loadMesh(qb, cro::Mesh::QuadMesh);
+    m_meshResource.loadMesh(cro::Mesh::QuadMesh, qb);
 
     cro::StaticMeshBuilder smb("assets/models/roid_belt.cmf");
-    m_meshResource.loadMesh(smb, MeshID::Roids);
+    m_meshResource.loadMesh(MeshID::Roids, smb);
 
     cro::StaticMeshBuilder msmb("assets/models/moon.cmf");
-    m_meshResource.loadMesh(msmb, MeshID::Moon);
+    m_meshResource.loadMesh(MeshID::Moon, msmb);
 
     //test sprite sheet
     auto& testFont = m_fontResource.get(FontID::MenuFont);

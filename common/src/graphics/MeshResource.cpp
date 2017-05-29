@@ -67,7 +67,7 @@ MeshResource::~MeshResource()
 }
 
 //public
-bool MeshResource::loadMesh(const MeshBuilder& mb, int32 ID)
+bool MeshResource::loadMesh(int32 ID, const MeshBuilder& mb)
 {
     //don't forget to check ID doesn't exist
     if (m_meshData.count(ID) != 0)

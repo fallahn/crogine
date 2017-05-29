@@ -39,6 +39,7 @@ source distribution.
 #include "RockFallSystem.hpp"
 #include "RandomTranslation.hpp"
 #include "VelocitySystem.hpp"
+#include "PlayerDirector.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -74,8 +75,7 @@ namespace
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State        (stack, context),
     m_scene             (context.appInstance.getMessageBus()),
-    m_commandSystem     (nullptr),
-    m_playerController  (m_scene)
+    m_commandSystem     (nullptr)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -107,8 +107,7 @@ bool GameState::handleEvent(const cro::Event& evt)
         }
     }
 
-    m_playerController.handleEvent(evt);
-
+    m_scene.forwardEvent(evt);
     return true;
 }
 
@@ -188,8 +187,6 @@ void GameState::handleMessage(const cro::Message& msg)
 
 bool GameState::simulate(cro::Time dt)
 {
-    m_playerController.update(m_commandSystem);
-   
     m_scene.simulate(dt);
     return true;
 }
@@ -216,6 +213,8 @@ void GameState::addSystems()
     m_commandSystem = &m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<VelocitySystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
+
+    m_scene.addDirector<PlayerDirector>();
 
     m_scene.addPostProcess<PostRadial>();
 }
@@ -244,7 +243,7 @@ void GameState::loadAssets()
     nearMaterial.blendMode = cro::Material::BlendMode::Alpha;
 
     cro::QuadBuilder qb(backgroundSize);
-    m_meshResource.loadMesh(qb, MeshID::GameBackground);
+    m_meshResource.loadMesh(MeshID::GameBackground, qb);
 
     auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::BuiltIn::VertexLit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::NormalMap);
     auto& playerMaterial = m_materialResource.add(MaterialID::PlayerShip, m_shaderResource.get(shaderID));
@@ -253,7 +252,7 @@ void GameState::loadAssets()
     playerMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/player_normal.png"));
 
     cro::StaticMeshBuilder playerMesh("assets/models/player_ship.cmf");
-    m_meshResource.loadMesh(playerMesh, MeshID::PlayerShip);
+    m_meshResource.loadMesh(MeshID::PlayerShip, playerMesh);
 
     auto& eliteMaterial = m_materialResource.add(MaterialID::NPCElite, m_shaderResource.get(shaderID));
     eliteMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/npc/elite_diffuse.png"));
@@ -261,7 +260,7 @@ void GameState::loadAssets()
     eliteMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/npc/elite_normal.png"));
 
     cro::StaticMeshBuilder eliteMesh("assets/models/elite.cmf");
-    m_meshResource.loadMesh(eliteMesh, MeshID::NPCElite);
+    m_meshResource.loadMesh(MeshID::NPCElite, eliteMesh);
 
 
     shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap);
@@ -274,10 +273,10 @@ void GameState::loadAssets()
     turrCanMat.setProperty("u_maskMap", m_textureResource.get("assets/materials/npc/turret_cannon_mask.png"));
 
     cro::StaticMeshBuilder turretBase("assets/models/turret_base.cmf");
-    m_meshResource.loadMesh(turretBase, MeshID::NPCTurretBase);
+    m_meshResource.loadMesh(MeshID::NPCTurretBase, turretBase);
 
     cro::StaticMeshBuilder turretCannon("assets/models/turret_cannon.cmf");
-    m_meshResource.loadMesh(turretCannon, MeshID::NPCTurretCannon);
+    m_meshResource.loadMesh(MeshID::NPCTurretCannon, turretCannon);
 
 
     shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::Skinning);
@@ -286,15 +285,16 @@ void GameState::loadAssets()
     choppaMat.setProperty("u_maskMap", m_textureResource.get("assets/materials/npc/choppa_mask.png"));
 
     cro::IqmBuilder choppaMesh("assets/models/choppa_pod.iqm");
-    m_meshResource.loadMesh(choppaMesh, MeshID::NPCChoppa);
+    m_meshResource.loadMesh(MeshID::NPCChoppa, choppaMesh);
     choppaSkel = choppaMesh.getSkeleton();
+    choppaSkel.animations[0].playing = true;
 
     shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
     m_materialResource.add(MaterialID::TerrainChunk, m_shaderResource.get(shaderID));
 
     ChunkBuilder chunkBuilder;
-    m_meshResource.loadMesh(chunkBuilder, MeshID::TerrainChunkA);
-    m_meshResource.loadMesh(chunkBuilder, MeshID::TerrainChunkB);
+    m_meshResource.loadMesh(MeshID::TerrainChunkA, chunkBuilder);
+    m_meshResource.loadMesh(MeshID::TerrainChunkB, chunkBuilder);
 
 
     shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::Subrects);
@@ -306,7 +306,7 @@ void GameState::loadAssets()
         rockMat.blendMode = cro::Material::BlendMode::Alpha;
     }
     cro::QuadBuilder rockQuad({ 1.f, 1.f });
-    m_meshResource.loadMesh(rockQuad, MeshID::RockQuad);
+    m_meshResource.loadMesh(MeshID::RockQuad, rockQuad);
 
     shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::NormalMap | cro::ShaderResource::Subrects);
     auto& battMaterial = m_materialResource.add(MaterialID::BattCollectable, m_shaderResource.get(shaderID));
@@ -340,7 +340,7 @@ void GameState::loadAssets()
     shieldMaterial.setProperty("u_subrect", glm::vec4(0.f, 0.5f, 0.5f, 0.5f));
 
     cro::StaticMeshBuilder collectableMesh("assets/models/collectable.cmf");
-    m_meshResource.loadMesh(collectableMesh, MeshID::Collectable);
+    m_meshResource.loadMesh(MeshID::Collectable, collectableMesh);
 }
 
 void GameState::createScene()

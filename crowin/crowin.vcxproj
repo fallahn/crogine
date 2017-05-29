@@ -61,6 +61,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\Text.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\UIInput.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\Director.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Renderable.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp" />
@@ -137,6 +138,7 @@
     <ClCompile Include="..\common\src\ecs\components\Sprite.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Text.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp" />
+    <ClCompile Include="..\common\src\ecs\Director.cpp" />
     <ClCompile Include="..\common\src\ecs\Entity.cpp" />
     <ClCompile Include="..\common\src\ecs\EntityManager.cpp" />
     <ClCompile Include="..\common\src\ecs\Renderable.cpp" />

@@ -332,7 +332,7 @@
     <ClCompile Include="..\testwin\src\MenuOptions.cpp" />
     <ClCompile Include="..\testwin\src\MenuScores.cpp" />
     <ClCompile Include="..\testwin\src\MyApp.cpp" />
-    <ClCompile Include="..\testwin\src\PlayerController.cpp" />
+    <ClCompile Include="..\testwin\src\PlayerDirector.cpp" />
     <ClCompile Include="..\testwin\src\PostRadial.cpp" />
     <ClCompile Include="..\testwin\src\RandomTranslation.cpp" />
     <ClCompile Include="..\testwin\src\RockFallSystem.cpp" />

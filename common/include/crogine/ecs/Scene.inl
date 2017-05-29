@@ -46,6 +46,23 @@ T& Scene::getSystem()
 }
 
 template <typename T, typename... Args>
+void Scene::addDirector(Args&&... args)
+{
+    static_assert(std::is_base_of<Director, T>::value, "Must be a director type");
+    m_directors.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+
+    //add a command system if it doesn't exist
+    if (!m_systemManager.hasSystem<CommandSystem>())
+    {
+        addSystem<CommandSystem>(m_messageBus);
+    }
+
+    m_directors.back()->m_commandSystem = &m_systemManager.getSystem<CommandSystem>();
+    m_directors.back()->m_messageBus = &m_messageBus;
+    m_directors.back()->m_scene = this;
+}
+
+template <typename T, typename... Args>
 T& Scene::addPostProcess(Args&&... args)
 {
     static_assert(std::is_base_of<PostProcess, T>::value, "Must be a post process type");

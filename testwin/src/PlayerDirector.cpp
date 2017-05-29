@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "PlayerController.hpp"
+#include "PlayerDirector.hpp"
 #include "ResourceIDs.hpp"
 #include "VelocitySystem.hpp"
 
@@ -67,16 +67,15 @@ namespace
     const float JoySpeedMin = static_cast<float>(JoyThresh) / JoyMax;
 }
 
-PlayerController::PlayerController(cro::Scene& scene)
-    : m_scene       (scene),
-    m_currentInput  (0),
+PlayerDirector::PlayerDirector()
+    : m_currentInput(0),
     m_fingerDown    (false)
 {
 
 }
 
 //public
-void PlayerController::handleEvent(const cro::Event& evt)
+void PlayerDirector::handleEvent(const cro::Event& evt)
 {
     switch (evt.type)
     {
@@ -195,10 +194,8 @@ void PlayerController::handleEvent(const cro::Event& evt)
     }
 }
 
-void PlayerController::update(cro::CommandSystem* commandSystem)
+void PlayerDirector::process(cro::Time)
 {
-    CRO_ASSERT(commandSystem, "Missing command system");
-
     //controller analogue
     glm::vec3 joyVec = {
         static_cast<float>(cro::GameController::getAxis(0, cro::GameController::AxisLeftX)),
@@ -231,7 +228,7 @@ void PlayerController::update(cro::CommandSystem* commandSystem)
             tx.setRotation({ currRotation + ((rotation - currRotation) * (dt.asSeconds() * 4.f)), 0.f, 0.f });
 
         };
-        commandSystem->sendCommand(cmd);
+        sendCommand(cmd);
     }
 
     //keyboard input
@@ -284,7 +281,7 @@ void PlayerController::update(cro::CommandSystem* commandSystem)
             const float currRotation = tx.getRotation().x;
             tx.setRotation({ currRotation + ((rotation - currRotation) * (dtSec * 4.f)), 0.f, 0.f });
         };
-        commandSystem->sendCommand(cmd);
+        sendCommand(cmd);
         m_currentInput &= ~StateChanged;
     }
 
@@ -306,7 +303,7 @@ void PlayerController::update(cro::CommandSystem* commandSystem)
                 //entity.getComponent<cro::Transform>().move(dist);
             }
         };
-        commandSystem->sendCommand(cmd);
+        sendCommand(cmd);
 
         DPRINT("Touch", std::to_string(worldTarget.x) + ", " + std::to_string(worldTarget.y));
     }
@@ -314,9 +311,9 @@ void PlayerController::update(cro::CommandSystem* commandSystem)
 }
 
 //private
-glm::vec3 PlayerController::getWorldCoords()
+glm::vec3 PlayerDirector::getWorldCoords()
 {
-    auto& camera = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    auto& camera = getScene().getActiveCamera().getComponent<cro::Camera>();
     
     //invert Y
     auto y = 1.f - m_touchCoords.y;
