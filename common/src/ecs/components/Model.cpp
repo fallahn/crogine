@@ -35,7 +35,8 @@ source distribution.
 using namespace cro;
 
 Model::Model(Mesh::Data data, Material::Data material)
-    : m_meshData    (data),
+    : m_visible     (true),
+    m_meshData      (data),
     m_skeleton      (nullptr),
     m_jointCount    (0)
 {

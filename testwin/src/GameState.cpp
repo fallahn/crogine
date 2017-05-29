@@ -48,7 +48,7 @@ source distribution.
 #include <crogine/graphics/IqmBuilder.hpp>
 
 #include <crogine/ecs/systems/SceneGraph.hpp>
-#include <crogine/ecs/systems/SceneRenderer.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
@@ -205,7 +205,7 @@ void GameState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_scene.addSystem<cro::SceneGraph>(mb);
-    m_scene.addSystem<cro::SceneRenderer>(mb);
+    m_scene.addSystem<cro::ModelRenderer>(mb);
     backgroundController = &m_scene.addSystem<BackgroundController>(mb);
     backgroundController->setScrollSpeed(0.2f);
     m_scene.addSystem<ChunkSystem>(mb);

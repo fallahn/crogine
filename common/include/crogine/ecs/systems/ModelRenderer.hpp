@@ -27,8 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SCENE_RENDERER_HPP_
-#define CRO_SCENE_RENDERER_HPP_
+#ifndef CRO_MODEL_RENDERER_HPP_
+#define CRO_MODEL_RENDERER_HPP_
 
 #include <crogine/Config.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -56,21 +56,23 @@ namespace cro
 
 
     /*!
-    \brief Used to draw a given list of meshes.
-    Provide an instance of this to systems such as the MeshSorter
-    or LightSorter so that they may, in turn, update the entity lists
-    required to render a scene. Note that this will not render any
-    Sprite components - these should be drawn with SpriteRenderer
+    \brief Used to draw scene Models.
+    The system frustum-culls then renders any entities with a Model component
+    in the scene. Note this only renders Models - Sprite and Texxt components
+    have their own respective rendering systems.
     */
-    class CRO_EXPORT_API SceneRenderer final : public System, public Renderable
+    class CRO_EXPORT_API ModelRenderer final : public System, public Renderable
     {
     public:
         /*!
         \brief Constructor.
         \param mb Reference to the system message bus
         */
-        explicit SceneRenderer(MessageBus& mb);
+        explicit ModelRenderer(MessageBus& mb);
 
+        /*!
+        \brief Performs frustum culling and Material sorting by depth and blend mode
+        */
         void process(Time) override;
 
         /*!
@@ -90,4 +92,4 @@ namespace cro
 
 }
 
-#endif //CRO_SCENE_RENDERER_HPP_
+#endif //CRO_MODEL_RENDERER_HPP_
