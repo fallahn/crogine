@@ -1,6 +1,7 @@
 #source files used by crogine test app
 set(PROJECT_SRC
-  ${PROJECT_DIR}/BackgroundController.cpp
+  ${PROJECT_DIR}/BackgroundSystem.cpp
+  ${PROJECT_DIR}/BackgroundDirector.cpp
   ${PROJECT_DIR}/ChunkBuilder.cpp
   ${PROJECT_DIR}/ColourSystem.cpp
   ${PROJECT_DIR}/DriftSystem.cpp

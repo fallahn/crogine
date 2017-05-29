@@ -70,7 +70,6 @@ private:
     cro::TextureResource m_textureResource;
     cro::FontResource m_fontResource;
 
-    cro::CommandSystem* m_commandSystem;
     //cro::UISystem* m_uiSystem;
 
     void addSystems();
