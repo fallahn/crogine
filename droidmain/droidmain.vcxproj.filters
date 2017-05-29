@@ -45,9 +45,6 @@
     <ClCompile Include="..\testwin\src\SliderSystem.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
-    <ClCompile Include="..\testwin\src\BackgroundController.cpp">
-      <Filter>src\TL</Filter>
-    </ClCompile>
     <ClCompile Include="..\testwin\src\PostRadial.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
@@ -70,6 +67,12 @@
       <Filter>src\TL</Filter>
     </ClCompile>
     <ClCompile Include="..\testwin\src\PlayerDirector.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\testwin\src\BackgroundDirector.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\testwin\src\BackgroundSystem.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
   </ItemGroup>

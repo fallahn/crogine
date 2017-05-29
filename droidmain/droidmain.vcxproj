@@ -320,7 +320,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\SDL2-android\src\main\android\SDL_android_main.c" />
-    <ClCompile Include="..\testwin\src\BackgroundController.cpp" />
+    <ClCompile Include="..\testwin\src\BackgroundDirector.cpp" />
+    <ClCompile Include="..\testwin\src\BackgroundSystem.cpp" />
     <ClCompile Include="..\testwin\src\ChunkBuilder.cpp" />
     <ClCompile Include="..\testwin\src\ColourSystem.cpp" />
     <ClCompile Include="..\testwin\src\DriftSystem.cpp" />
