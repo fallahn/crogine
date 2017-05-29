@@ -27,72 +27,26 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef DH_RESOURCE_IDS_HPP_
-#define DH_RESOURCE_IDS_HPP_
+#ifndef DH_PLAYER_DIRECTOR_HPP_
+#define DH_PLAYER_DIRECTOR_HPP_
 
-#include <crogine/graphics/MeshResource.hpp>
+#include <crogine/ecs/Director.hpp>
 
-namespace MaterialID
+class PlayerDirector final : public cro::Director
 {
-    enum
-    {
-        GreenOne,
-        GreenTwo,
-        Brown,
-        Red,
-        Blue,
-        RoomOne,
-        RoomTwo,
-        BatCat
-    };
-}
+public:
+    PlayerDirector();
 
-namespace MeshID
-{
-    enum
-    {
-        RoomOne = cro::Mesh::ID::Count,
-        RoomTwo,
-        BatCat
-    };
-}
+private:
 
-namespace FontID
-{
-    enum
-    {
-        MenuFont
-    };
-}
+    cro::uint16 m_flags;
+    float m_accumulator;
+    float m_playerRotation;
+    float m_playerXPosition;
 
-namespace ShaderID
-{
-    enum
-    {
-        Background
-    };
-}
+    void handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
+    void process(cro::Time)override;
+};
 
-namespace CommandID
-{
-    enum
-    {
-        Camera = 0x1,
-        Player = 0x2
-    };
-}
-
-namespace AnimationID
-{
-    namespace BatCat
-    {
-        enum
-        {
-            Run = 0,
-            Idle,
-            Jump
-        };
-    }
-}
-
-#endif //DH_RESOURCE_IDS_HPP_
+#endif //DH_PLAYER_DIRECTOR_HPP_

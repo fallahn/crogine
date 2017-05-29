@@ -30,6 +30,7 @@ source distribution.
 #include "GameState.hpp"
 #include "ResourceIDs.hpp"
 #include "Messages.hpp"
+#include "PlayerDirector.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -64,20 +65,13 @@ namespace
     cro::int32 rowCount = 3;
     cro::int32 rowWidth = 6;
 
-    cro::uint8 camFlags = 0;
-    enum
-    {
-        Up = 0x1, Down = 0x2, Left = 0x4, Right = 0x8
-    };
-
     cro::Skeleton batCatSkeleton;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_scene         (context.appInstance.getMessageBus()),
-    m_overlayScene  (context.appInstance.getMessageBus()),
-    m_commandSystem (nullptr)
+    m_overlayScene  (context.appInstance.getMessageBus())
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -96,107 +90,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 //public
 bool GameState::handleEvent(const cro::Event& evt)
 {
-    /*auto rebuild = [&](cro::int32 target)
-    {
-        cro::Command cmd;
-        cmd.targetFlags = target;
-        cmd.action = [&](cro::Entity entity, cro::Time)
-        {
-            m_scene.destroyEntity(entity);
-        };
-        m_commandSystem->sendCommand(cmd);
-
-        for (auto i = 0; i < rowCount; ++i)
-        {
-            buildRow(i);
-        }
-    };*/
-
-    if (evt.type == SDL_KEYUP)
-    {
-        switch (evt.key.keysym.sym)
-        {
-        default: break;
-        /*case SDLK_UP:
-        {
-            cro::int32 target = (1 << (rowCount * rowWidth));
-            auto old = rowCount;
-            rowCount = std::min(rowCount + 1, 11);
-            if(old != rowCount) rebuild(target);
-        }
-            break;
-        case SDLK_DOWN:
-        {
-            cro::int32 target = (1 << (rowCount * rowWidth));
-            auto old = rowCount;
-            rowCount = std::max(1, rowCount - 1);
-            if(old != rowCount) rebuild(target);
-        }
-            break;
-        case SDLK_LEFT:
-        {
-            cro::int32 target = (1 << (rowCount * rowWidth));
-            auto old = rowWidth;
-            rowWidth = std::max(2, rowWidth - 1);
-            if(old != rowWidth) rebuild(target);
-        }
-            break;
-        case SDLK_RIGHT:
-        {
-            cro::int32 target = (1 << (rowCount * rowWidth));
-            auto old = rowWidth;
-            rowWidth = std::min(rowWidth + 1, 8);
-            if(old != rowWidth) rebuild(target);
-        }
-            break;*/
-        case SDLK_w:
-            //camFlags &= ~Up;
-            break;
-        case SDLK_s:
-            //camFlags &= ~Down;
-            break;
-        case SDLK_a:
-            //camFlags &= ~Left;
-            break;
-        case SDLK_d:
-            //camFlags &= ~Right;
-            break;
-        }
-    }
-
-    else if (evt.type == SDL_KEYDOWN)
-    {
-        switch (evt.key.keysym.sym)
-        {
-        default:break;
-        case SDLK_w:
-            //camFlags |= Up;
-            break;
-        case SDLK_s:
-            //camFlags |= Down;
-            break;
-        case SDLK_a:
-            //camFlags |= Left;
-            break;
-        case SDLK_d:
-            //camFlags |= Right;
-            break;
-        }
-    }
-
-    //else if (evt.type == SDL_MOUSEWHEEL)
-    //{
-    //    //DPRINT("Wheel", std::to_string(evt.wheel.y));
-    //    auto amount = -evt.wheel.y;
-    //    cro::Command cmd;
-    //    cmd.targetFlags = CommandID::Camera;
-    //    cmd.action = [amount](cro::Entity entity, cro::Time)
-    //    {
-    //        entity.getComponent<cro::Transform>().move({ 0.f, 0.f, static_cast<float>(amount) });
-    //    };
-    //    m_commandSystem->sendCommand(cmd);
-    //}
-
+    m_scene.forwardEvent(evt);
     return true;
 }
 
@@ -216,24 +110,6 @@ void GameState::handleMessage(const cro::Message& msg)
 
 bool GameState::simulate(cro::Time dt)
 {
-    glm::vec3 camVec;
-    if (camFlags & Up) camVec.y = 1.f;
-    if (camFlags & Down) camVec.y -= 1.f;
-    if (camFlags & Left) camVec.x -= 1.f;
-    if (camFlags & Right) camVec.x += 1.f;
-    if (glm::length2(camVec) > 0)
-    {
-        camVec = glm::normalize(camVec) * 0.5f;
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::Camera;
-        cmd.action = [camVec](cro::Entity entity, cro::Time dt)
-        {
-            auto& tx = entity.getComponent<cro::Transform>();
-            tx.move(camVec * tx.getPosition().z * dt.asSeconds());
-        };
-        m_commandSystem->sendCommand(cmd);
-    }
-
     m_scene.simulate(dt);
     m_overlayScene.simulate(dt);
     return true;
@@ -252,8 +128,11 @@ void GameState::addSystems()
     m_scene.addSystem<cro::SceneGraph>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
-    m_commandSystem = &m_scene.addSystem<cro::CommandSystem>(mb);
+    m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
+    m_scene.addSystem<cro::TextRenderer>(mb);
+
+    m_scene.addDirector<PlayerDirector>();
 
     m_overlayScene.addSystem<cro::TextRenderer>(mb);
     m_overlayScene.addSystem<cro::SceneGraph>(mb);
@@ -322,22 +201,19 @@ void GameState::loadAssets()
 
 void GameState::createScene()
 {
-    //for (auto i = 0; i < rowCount; ++i)
-    //{
-    //    buildRow(i);
-    //}
-
-    //dat cat man
+    //starting room
     auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::RoomTwo), m_materialResource.get(MaterialID::RoomTwo));
+    entity.addComponent<cro::Transform>().move({ 0.f, 0.5f, 0.5f });
+        
+    //dat cat man
+    entity = m_scene.createEntity();
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::BatCat), m_materialResource.get(MaterialID::BatCat));
     entity.addComponent<cro::Transform>().setScale({ 0.002f, 0.002f, 0.002f });
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, cro::Util::Const::PI / 2.f, 0.f });
     entity.addComponent<cro::Skeleton>() = batCatSkeleton;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
 
-    //starting room
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::RoomTwo), m_materialResource.get(MaterialID::RoomTwo));
-    entity.addComponent<cro::Transform>().move({ 0.f, 0.5f, 0.5f });
 
     //3D camera
     auto ent = m_scene.createEntity();
@@ -358,9 +234,12 @@ void GameState::createScene()
     font.loadFromFile("assets/VeraMono.ttf");
     auto& text = ent.addComponent<cro::Text>(font);
     text.setColour(cro::Colour::Blue());
-    //text.setString("WASD/MouseWheel to control view\nCursor keys to regenerate");
     text.setString("WASD to move");
     ent.addComponent<cro::Transform>().setPosition({ 50.f, 1060.f, 0.f });
+
+    //auto& catText = entity.addComponent<cro::Text>(font);
+    //catText.setColour(cro::Colour::Red());
+    //catText.setString("Hello, my name is Charles");
 }
 
 void GameState::updateView()

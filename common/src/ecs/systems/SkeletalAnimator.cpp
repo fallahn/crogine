@@ -85,10 +85,12 @@ void SkeletalAnimator::process(Time dt)
         else
         {
             //TODO blend to next animation
+            skel.animations[skel.currentAnimation].playing = false;
             skel.currentAnimation = skel.nextAnimation;
             skel.nextAnimation = -1;
             skel.frameTime = 1.f / skel.animations[skel.currentAnimation].frameRate;
             skel.currentFrameTime = 0.f;
+            skel.animations[skel.currentAnimation].playing = true;
         }
     }
 }

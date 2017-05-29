@@ -404,6 +404,7 @@ void TextRenderer::updateVerts(Text& text)
     1-------3
     */
     CRO_ASSERT(text.m_font, "Must construct text with a font!");
+    if (text.m_string.empty()) return;
 
     text.m_vertices.clear();
     text.m_vertices.reserve(text.m_string.size() * 6); //4 verts per char + degen tri
