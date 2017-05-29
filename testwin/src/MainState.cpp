@@ -38,7 +38,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 
-#include <crogine/ecs/systems/SceneRenderer.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
@@ -142,7 +142,7 @@ void MainState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_backgroundScene.addSystem<cro::SceneGraph>(mb);
-    m_backgroundScene.addSystem<cro::SceneRenderer>(mb);
+    m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<RotateSystem>(mb);
     m_backgroundScene.addSystem<DriftSystem>(mb);
 

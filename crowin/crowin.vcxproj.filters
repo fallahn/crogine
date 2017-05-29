@@ -195,9 +195,6 @@
     <ClInclude Include="..\common\include\crogine\graphics\StaticMeshBuilder.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\include\crogine\ecs\systems\SceneRenderer.hpp">
-      <Filter>Header Files\ecs\systems</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\include\crogine\ecs\components\Sprite.hpp">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
@@ -315,6 +312,9 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\SkeletalAnimator.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\ModelRenderer.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -391,9 +391,6 @@
     </ClCompile>
     <ClCompile Include="..\common\src\android\Android.cpp">
       <Filter>Source Files\android</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\ecs\systems\SceneRenderer.cpp">
-      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\components\Sprite.cpp">
       <Filter>Source Files\ecs\components</Filter>
@@ -486,6 +483,9 @@
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\SkeletalAnimator.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\ModelRenderer.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>

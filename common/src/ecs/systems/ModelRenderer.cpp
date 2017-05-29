@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/systems/SceneRenderer.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -43,8 +43,8 @@ source distribution.
 
 using namespace cro;
 
-SceneRenderer::SceneRenderer(MessageBus& mb)
-    : System            (mb, typeid(SceneRenderer)),
+ModelRenderer::ModelRenderer(MessageBus& mb)
+    : System            (mb, typeid(ModelRenderer)),
     m_currentTextureUnit(0)
 {
     requireComponent<Transform>();
@@ -52,7 +52,7 @@ SceneRenderer::SceneRenderer(MessageBus& mb)
 }
 
 //public
-void SceneRenderer::process(Time)
+void ModelRenderer::process(Time)
 {
     auto& entities = getEntities();
     auto frustum = getScene()->getActiveCamera().getComponent<Camera>().getFrustum();
@@ -69,14 +69,14 @@ void SceneRenderer::process(Time)
         auto scale = tx.getScale();
         sphere.radius *= (scale.x + scale.y + scale.z) / 3.f;
 
-        bool visible = true;
+        model.m_visible = true;
         std::size_t i = 0;
-        while (visible && i < frustum.size())
+        while (model.m_visible && i < frustum.size())
         {
-            visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
+            model.m_visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
         }
 
-        if (visible)
+        if (model.m_visible)
         {
             auto opaque = std::make_pair(entity, SortData());
             auto transparent = std::make_pair(entity, SortData());
@@ -115,7 +115,8 @@ void SceneRenderer::process(Time)
     //DPRINT("Total ents", std::to_string(entities.size()));
 
     //sort lists by depth
-    //sort opaque materials front to back
+    //flag values make sure transparent materials are rendered last
+    //with opaque going front to back and transparent back to front
     std::sort(std::begin(m_visibleEntities), std::end(m_visibleEntities),
         [](MaterialPair& a, MaterialPair& b)
     {
@@ -123,7 +124,7 @@ void SceneRenderer::process(Time)
     });
 }
 
-void SceneRenderer::render(Entity camera)
+void ModelRenderer::render(Entity camera)
 {
     const auto& camTx = camera.getComponent<Transform>();
     const auto& camComponent = camera.getComponent<Camera>();
@@ -201,7 +202,7 @@ void SceneRenderer::render(Entity camera)
 }
 
 //private
-void SceneRenderer::applyProperties(const Material::PropertyList& properties, const Model& model)
+void ModelRenderer::applyProperties(const Material::PropertyList& properties, const Model& model)
 {
     m_currentTextureUnit = 0;
     for (const auto& prop : properties)
@@ -239,7 +240,7 @@ void SceneRenderer::applyProperties(const Material::PropertyList& properties, co
     }
 }
 
-void SceneRenderer::applyBlendMode(Material::BlendMode mode)
+void ModelRenderer::applyBlendMode(Material::BlendMode mode)
 {
     switch (mode)
     {

@@ -77,7 +77,16 @@ namespace cro
         */
         void setSkeleton(glm::mat4* frame, std::size_t size);
 
+        /*!
+        \brief returns whether or not the model is currently inside the
+        frustum of the active camera according the the last render pass.
+        This may be out of date by a frame when switching active scene cameras
+        */
+        bool isVisible() const { return m_visible; }
+
     private:
+        bool m_visible;
+
         Mesh::Data m_meshData;
         std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_materials{};
         
@@ -86,7 +95,7 @@ namespace cro
         glm::mat4* m_skeleton;
         std::size_t m_jointCount;
 
-        friend class SceneRenderer;
+        friend class ModelRenderer;
     };
 }
 

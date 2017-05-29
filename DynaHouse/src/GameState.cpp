@@ -38,7 +38,7 @@ source distribution.
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 
 #include <crogine/ecs/systems/SceneGraph.hpp>
-#include <crogine/ecs/systems/SceneRenderer.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
@@ -244,7 +244,7 @@ void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::SceneGraph>(mb);
-    m_scene.addSystem<cro::SceneRenderer>(mb);
+    m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
     m_commandSystem = &m_scene.addSystem<cro::CommandSystem>(mb);
 
@@ -401,8 +401,8 @@ void GameState::addDouble(std::size_t floor, cro::int32 position)
 {
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ static_cast<float>(position) + 1.f, static_cast<float>(floor), 0.f });
-    entity.getComponent<cro::Transform>().setScale({ 2.f, 1.f, 1.f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), m_materialResource.get(MaterialID::GreenTwo));
+    //entity.getComponent<cro::Transform>().setScale({ 2.f, 1.f, 1.f });
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::RoomTwo), m_materialResource.get(MaterialID::RoomTwo));
     entity.addComponent<cro::CommandTarget>().ID = (1 << (rowCount * rowWidth));
 }
 

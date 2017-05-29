@@ -46,7 +46,7 @@ void SkeletalAnimator::process(Time dt)
 {
     auto& entities = getEntities();
     for (auto& entity : entities)
-    {
+    {      
         //get skeleton
         auto& skel = entity.getComponent<Skeleton>();
 
@@ -97,9 +97,7 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
     //TODO interpolate hit boxes for key frames
     //TODO interp tx and rot seperately and convert to 4x3 to free up some uniform space
 
-    //only interpolate if visible (frustum cull?)
-
-    //NOTE a and b are FRAME INDICES not indices into the frame array
+    //NOTE a and b are FRAME INDICES not indices directly into the frame array
     std::size_t startA = a * skeleton.frameSize;
     std::size_t startB = b * skeleton.frameSize;
     for (auto i = 0u; i < skeleton.frameSize; ++i)

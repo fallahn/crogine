@@ -30,9 +30,9 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/ecs/systems/CommandSystem.cpp
   ${PROJECT_DIR}/ecs/systems/DebugInfo.cpp
+  ${PROJECT_DIR}/ecs/systems/ModelRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/ParticleSystem.cpp
   ${PROJECT_DIR}/ecs/systems/SceneGraph.cpp
-  ${PROJECT_DIR}/ecs/systems/SceneRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/SkeletalAnimator.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/TextRenderer.cpp
