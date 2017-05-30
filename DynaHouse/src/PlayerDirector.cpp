@@ -55,13 +55,16 @@ namespace
     {
         Up = 0x1, Down = 0x2, Left = 0x4, Right = 0x8
     };
+
+    const glm::vec3 gravity(0.f, -9.f, 0.f);
 }
 
 PlayerDirector::PlayerDirector()
     : m_flags           (0),
     m_accumulator       (0.f),
     m_playerRotation    (maxRotation),
-    m_playerXPosition   (0.f)
+    m_playerXPosition   (0.f),
+    m_canJump           (true)
 {
 
 }
@@ -69,24 +72,19 @@ PlayerDirector::PlayerDirector()
 //private
 void PlayerDirector::handleEvent(const cro::Event& evt)
 {
-    cro::int32 animID = -1;
-
-    if (evt.type == SDL_KEYDOWN && evt.key.repeat == 0)
+    if (evt.type == SDL_KEYDOWN)
     {
         switch (evt.key.keysym.sym)
         {
         default: break;
         case SDLK_a:
             m_flags |= Left;
-            //set rotation dest left
-            m_playerRotation = -maxRotation;
-            animID = AnimationID::BatCat::Run;
             break;
         case SDLK_d:
             m_flags |= Right;
-            //set rotation dest right
-            m_playerRotation = maxRotation;
-            animID = AnimationID::BatCat::Run;
+            break;
+        case SDLK_w:
+            m_flags |= Up;
             break;
         }
     }
@@ -97,25 +95,15 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
         default:break;
         case SDLK_a:
             m_flags &= ~Left;
-            animID = AnimationID::BatCat::Idle;
             break;
         case SDLK_d:
             m_flags &= ~Right;
-            animID = AnimationID::BatCat::Idle;
+            break;
+        case SDLK_w:
+            m_flags &= ~Up;
+            m_canJump = true;
             break;
         }
-    }
-        
-    if (animID > -1)
-    {
-        //play new anim
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::Player;
-        cmd.action = [animID](cro::Entity entity, cro::Time)
-        {
-            entity.getComponent<cro::Skeleton>().play(animID, 0.1f);
-        };
-        sendCommand(cmd);
     }
 }
 
@@ -126,6 +114,7 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
 
 void PlayerDirector::process(cro::Time dt)
 {  
+    static cro::int32 animID = -1;    
     //do fixed update for player input
 
     //we need to set a limit because if there's a long loading
@@ -139,7 +128,9 @@ void PlayerDirector::process(cro::Time dt)
         cmd.targetFlags = CommandID::Player;
         cmd.action = [this](cro::Entity entity, cro::Time)
         {
+            //update orientation
             auto& tx = entity.getComponent<cro::Transform>();
+            auto& playerState = entity.getComponent<Player>();
             float rotation = m_playerRotation - tx.getRotation().y;
 
             if (std::abs(rotation) < 0.1f)
@@ -148,14 +139,76 @@ void PlayerDirector::process(cro::Time dt)
             }
 
             tx.rotate({ 0.f, 0.f, 1.f }, fixedUpdate * rotation * turnSpeed);
+            //update if jumping
+            if (playerState.state == Player::State::Jumping)
+            {
+                tx.move(m_playerVelocity * fixedUpdate);
+                m_playerVelocity += (gravity * fixedUpdate);
+                if (tx.getWorldPosition().y < 0)
+                {
+                    tx.move({ 0.f, -tx.getWorldPosition().y, 0.f });
+                    playerState.state = Player::State::Idle;
+                    animID = AnimationID::BatCat::Idle;
+                }
+            }
 
+
+            //update input
             float movement = 0.f;
             if (m_flags & Right) movement = 1.f;
             if (m_flags & Left) movement -= 1.f;
 
             tx.move({ movement * fixedUpdate, 0.f, 0.f });
-
             m_playerXPosition = tx.getWorldPosition().x;
+
+
+            //update state           
+            auto oldState = playerState.state;
+            if ((m_flags & Up) && m_canJump)
+            {
+                playerState.state = Player::State::Jumping;
+                m_canJump = false;
+            }
+
+            if (playerState.state != Player::State::Jumping)
+            {
+                if (movement != 0)
+                {
+                    playerState.state = Player::State::Running;
+                    m_playerRotation = maxRotation * movement;
+                }
+                else
+                {
+                    playerState.state = Player::State::Idle;
+                }
+            }
+            else
+            {
+                if (movement != 0)
+                {
+                    m_playerRotation = maxRotation * movement;
+                }
+            }
+
+            if (playerState.state != oldState)
+            {
+                switch (playerState.state)
+                {
+                default: break;
+                case Player::State::Idle:
+                    animID = AnimationID::BatCat::Idle;
+                    break;
+                case Player::State::Running:
+                    animID = AnimationID::BatCat::Run;
+                    break;
+                case Player::State::Jumping:
+                    animID = AnimationID::BatCat::Jump;
+                    m_playerVelocity.y = 3.f;
+                    break;
+                }
+            }
+
+            //DPRINT("Player State", std::to_string((int)playerState.state));
         };
         sendCommand(cmd);
     }
@@ -171,4 +224,18 @@ void PlayerDirector::process(cro::Time dt)
         tx.move({ travel * cameraSpeed * time.asSeconds(), 0.f, 0.f });
     };
     sendCommand(cmd);
+
+    if (animID != -1)
+    {
+        auto id = animID;
+        //play new anim
+        cro::Command animCommand;
+        animCommand.targetFlags = CommandID::Player;
+        animCommand.action = [id](cro::Entity entity, cro::Time)
+        {
+            entity.getComponent<cro::Skeleton>().play(id, 0.1f);
+        };
+        sendCommand(animCommand);
+        animID = -1;
+    }
 }

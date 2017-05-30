@@ -213,7 +213,7 @@ void GameState::createScene()
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, cro::Util::Const::PI / 2.f, 0.f });
     entity.addComponent<cro::Skeleton>() = batCatSkeleton;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
-
+    entity.addComponent<Player>();
 
     //3D camera
     auto ent = m_scene.createEntity();
