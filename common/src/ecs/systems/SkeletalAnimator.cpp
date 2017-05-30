@@ -32,6 +32,9 @@ source distribution.
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/components/Model.hpp>
 
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 using namespace cro;
 
 SkeletalAnimator::SkeletalAnimator(MessageBus& mb)
@@ -61,10 +64,10 @@ void SkeletalAnimator::process(Time dt)
                 nextFrame += anim.startFrame;
 
                 skel.currentFrameTime += dt.asSeconds();
-                float interpTime = std::min(1.f, skel.currentFrameTime / skel.frameTime);
-                
+                              
                 if (entity.getComponent<Model>().isVisible())
                 {
+                    float interpTime = std::min(1.f, skel.currentFrameTime / skel.frameTime);
                     interpolate(anim.currentFrame, nextFrame, interpTime, skel);
                 }
 
@@ -85,12 +88,26 @@ void SkeletalAnimator::process(Time dt)
         else
         {
             //TODO blend to next animation
-            skel.animations[skel.currentAnimation].playing = false;
-            skel.currentAnimation = skel.nextAnimation;
-            skel.nextAnimation = -1;
-            skel.frameTime = 1.f / skel.animations[skel.currentAnimation].frameRate;
-            skel.currentFrameTime = 0.f;
-            skel.animations[skel.currentAnimation].playing = true;
+            //this is a bit of a kludge which blends from the current frame to the
+            //first frame of the next anim. Really we should interpolate the current
+            //position of both animations, and then blend the results according to
+            //the current blend time.
+            skel.currentBlendTime += dt.asSeconds();
+            if (entity.getComponent<Model>().isVisible())
+            {
+                float interpTime = std::min(1.f, skel.currentBlendTime / skel.blendTime);
+                interpolate(skel.animations[skel.currentAnimation].currentFrame, skel.animations[skel.nextAnimation].startFrame, interpTime, skel);
+            }
+
+            if (skel.currentBlendTime > skel.blendTime)
+            {
+                skel.animations[skel.currentAnimation].playing = false;
+                skel.currentAnimation = skel.nextAnimation;
+                skel.nextAnimation = -1;
+                skel.frameTime = 1.f / skel.animations[skel.currentAnimation].frameRate;
+                skel.currentFrameTime = 0.f;
+                skel.animations[skel.currentAnimation].playing = true;
+            }
         }
     }
 }
@@ -106,7 +123,29 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
 void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Skeleton& skeleton)
 {
     //TODO interpolate hit boxes for key frames
-    //TODO interp tx and rot seperately and convert to 4x3 to free up some uniform space
+
+    //interp tx and rot separately
+    //TODO convert to 4x3 to free up some uniform space
+    auto mix = [](const glm::mat4& a, const glm::mat4& b, float time) -> glm::mat4
+    {
+        glm::vec3 scaleA, scaleB;
+        glm::quat rotA, rotB;
+        glm::vec3 transA, transB;
+        glm::vec3 skewA, skewB;
+        glm::vec4 perspA, perspB;
+        glm::decompose(a, scaleA, rotA, transA, skewA, perspA);
+        glm::decompose(b, scaleB, rotB, transB, skewB, perspB);
+
+        glm::vec3 scale = glm::mix(scaleA, scaleB, time);
+        glm::quat rot = glm::slerp(glm::conjugate(rotA), glm::conjugate(rotB), time);
+        glm::vec3 trans = glm::mix(transA, transB, time);
+
+        glm::mat4 result = glm::translate(glm::mat4(), trans);
+        result *= glm::toMat4(rot);
+        return glm::scale(result, scale);
+
+        //return glm::mix(a, b, time);
+    };
 
     //NOTE a and b are FRAME INDICES not indices directly into the frame array
     std::size_t startA = a * skeleton.frameSize;
@@ -116,12 +155,12 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
         if (skeleton.jointIndices[i] < 0)
         {
             //root bone
-            skeleton.currentFrame[i] = glm::mix(skeleton.frames[startA + i], skeleton.frames[startB + i], time);
+            skeleton.currentFrame[i] = mix(skeleton.frames[startA + i], skeleton.frames[startB + i], time);
         }
         else
         {
             //multiply by our parent
-            skeleton.currentFrame[i] = skeleton.currentFrame[skeleton.jointIndices[i]] * glm::mix(skeleton.frames[startA + i], skeleton.frames[startB + i], time);
+            skeleton.currentFrame[i] = skeleton.currentFrame[skeleton.jointIndices[i]] * mix(skeleton.frames[startA + i], skeleton.frames[startB + i], time);
         }
     }
 }
