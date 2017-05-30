@@ -39,12 +39,12 @@ TextureResource::TextureResource()
 }
 
 //public
-Texture& TextureResource::get(const std::string& path)
+Texture& TextureResource::get(const std::string& path, bool createMipMaps)
 {
     if (m_textures.count(path) == 0)
     {
         std::unique_ptr<Texture> tex = std::make_unique<Texture>();
-        if (!tex->loadFromFile(path))
+        if (!tex->loadFromFile(path, createMipMaps))
         {
             //find the fallback
             if (m_fallbackTextures.count(m_fallbackColour) == 0)

@@ -261,6 +261,7 @@
     <ClCompile Include="..\common\src\ecs\systems\DebugInfo.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\ModelRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\ParticleSystem.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\ProjectionMapSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneGraph.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SkeletalAnimator.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />
