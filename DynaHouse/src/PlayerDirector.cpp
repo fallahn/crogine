@@ -113,7 +113,7 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
         cmd.targetFlags = CommandID::Player;
         cmd.action = [animID](cro::Entity entity, cro::Time)
         {
-            entity.getComponent<cro::Skeleton>().play(animID);
+            entity.getComponent<cro::Skeleton>().play(animID, 0.1f);
         };
         sendCommand(cmd);
     }

@@ -88,7 +88,7 @@ namespace cro
         \param blendTime time in seconds to blend / overlap the new animation
         with any previously playing animation
         */
-        void play(std::size_t idx, float blendingTime = 0.f)
+        void play(std::size_t idx, float blendingTime = 0.1f)
         {
             CRO_ASSERT(idx < animations.size(), "Index out of range");
             nextAnimation = idx;
@@ -99,7 +99,7 @@ namespace cro
         /*!
         \brief Stops any active animations
         */
-        void stop();
+        //void stop();
 
     private:
     };
