@@ -113,6 +113,16 @@ void Data::setProperty(const std::string& name, glm::vec4 value)
     }
 }
 
+void Data::setProperty(const std::string& name, glm::mat4 value)
+{
+    auto result = properties.find(name);
+    if (result != properties.end())
+    {
+        result->second.second.matrixValue = value;
+        result->second.second.type = Property::Mat4;
+    }
+}
+
 void Data::setProperty(const std::string& name, Colour value)
 {
     VERIFY(name, properties);

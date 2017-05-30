@@ -318,6 +318,12 @@
     <ClInclude Include="..\common\include\crogine\ecs\Director.hpp">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\components\ProjectionMap.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\ProjectionMapSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -493,6 +499,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\Director.cpp">
       <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\ProjectionMapSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

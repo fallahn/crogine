@@ -125,6 +125,12 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
         }
         defines += "\n#define SKINNED\n #define MAX_BONES " + std::to_string(MAX_BONES);
     }
+    else if (flags & BuiltInFlags::ReceiveProjection)
+    {
+        //on mobile devices (which projection mapping is really aimed at) there are too
+        //few vectors available for both bone matrices and projection matrices :(
+        defines += "\n#define PROJECTIONS";
+    }
     defines += "\n";
 
     bool success = false;

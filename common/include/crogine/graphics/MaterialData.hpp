@@ -37,6 +37,7 @@ source distribution.
 
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
 
 #include <unordered_map>
 
@@ -77,8 +78,10 @@ namespace cro
                 Vec2,
                 Vec3,
                 Vec4,
+                Mat4,
                 Texture,
-                Skinning
+                Skinning,
+                ProjectionMap
             }type = None;
 
             union
@@ -86,6 +89,7 @@ namespace cro
                 float numberValue;
                 float vecValue[4];
                 int32 textureID;
+                glm::mat4 matrixValue;
             };
 
             //used to interpolate when rendering
@@ -149,6 +153,12 @@ namespace cro
             \param value Value of the unform
             */
             void setProperty(const std::string& name, glm::vec4 value);
+            /*!
+            \brief Sets a Mat4x4 uniform.
+            \param name String containing the name of the uniform
+            \param value The 4x4 matrix to set
+            */
+            void setProperty(const std::string& name, glm::mat4 value);            
             /*!
             \brief Sets a colour value uniform
             \param name String containing the name of the uniform

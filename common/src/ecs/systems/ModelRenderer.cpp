@@ -233,8 +233,17 @@ void ModelRenderer::applyProperties(const Material::PropertyList& properties, co
             glCheck(glUniform4f(prop.second.first, prop.second.second.vecValue[0],
                 prop.second.second.vecValue[1], prop.second.second.vecValue[2], prop.second.second.vecValue[3]));
             break;
+        case Material::Property::Mat4:
+            glCheck(glUniformMatrix4fv(prop.second.first, 1, GL_FALSE, &prop.second.second.matrixValue[0].x));
+            break;
         case Material::Property::Skinning:           
             glCheck(glUniformMatrix4fv(prop.second.first, model.m_jointCount, GL_FALSE, &model.m_skeleton[0][0].x));
+            break;
+        case Material::Property::ProjectionMap:
+        {
+            const auto p = getScene()->getActiveProjectionMaps();
+            glCheck(glUniformMatrix4fv(prop.second.first, p.second, GL_FALSE, p.first));
+        }
             break;
         }
     }
