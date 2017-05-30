@@ -38,9 +38,10 @@ source distribution.
 using namespace cro;
 
 Scene::Scene(MessageBus& mb)
-    : m_messageBus  (mb),
-    m_entityManager (mb),
-    m_systemManager (*this)
+    : m_messageBus      (mb),
+    m_entityManager     (mb),
+    m_systemManager     (*this),
+    m_projectionMapCount(0)
 {
     auto defaultCamera = createEntity();
     defaultCamera.addComponent<Transform>();
@@ -184,6 +185,11 @@ void Scene::forwardMessage(const Message& msg)
 void Scene::render()
 {
     currentRenderPath();
+}
+
+std::pair<const float*, std::size_t> Scene::getActiveProjectionMaps() const
+{
+    return std::pair<const float*, std::size_t>(&m_projectionMaps[0][0].x, m_projectionMapCount);
 }
 
 //private

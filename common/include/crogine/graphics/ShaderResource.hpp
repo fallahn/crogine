@@ -60,7 +60,8 @@ namespace cro
             NormalMap = 0x8,
             /*MaskMap = 0x10,*/ //currently always assumed if using a diffuse map
             Skinning = 0x20,
-            Subrects = 0x40
+            Subrects = 0x40,
+            ReceiveProjection = 0x80
         };
         
         ShaderResource();

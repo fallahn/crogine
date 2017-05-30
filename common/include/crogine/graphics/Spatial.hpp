@@ -59,7 +59,7 @@ namespace cro
         */
         float CRO_EXPORT_API distance(Plane plane, glm::vec3 point);
         /*!
-        \brief Checks for planer intersection with a sphere.
+        \brief Checks for planar intersection with a sphere.
         \returns Planar::Front if the sphere is in front of the plane (positive to plane normal),
         Planar::Intersects when intersecting or Planar::Back if it behind the plane.
         */

@@ -98,6 +98,10 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
             {
                 data.properties.find(uniform.first)->second.second.type = Material::Property::Skinning;
             }
+            else if (uniform.first == "u_projectionMapMatrix[0]")
+            {
+                data.properties.find(uniform.first)->second.second.type = Material::Property::ProjectionMap;
+            }
         }
     }
 

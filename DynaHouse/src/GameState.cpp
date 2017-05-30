@@ -45,6 +45,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
+#include <crogine/ecs/systems/ProjectionMapSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -53,6 +54,7 @@ source distribution.
 #include <crogine/ecs/components/CommandID.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
+#include <crogine/ecs/components/ProjectionMap.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -131,6 +133,7 @@ void GameState::addSystems()
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::TextRenderer>(mb);
+    m_scene.addSystem<cro::ProjectionMapSystem>(mb);
 
     m_scene.addDirector<PlayerDirector>();
 
@@ -166,13 +169,15 @@ void GameState::loadAssets()
     //m_meshResource.loadMesh(qb, cro::Mesh::QuadMesh);
 
 
-    auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
+    auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::ReceiveProjection);
 
     auto& roomOne = m_materialResource.add(MaterialID::RoomOne, m_shaderResource.get(shaderID));
     roomOne.setProperty("u_diffuseMap", m_textureResource.get("assets/textures/room1x1.png"));
 
     auto& roomTwo = m_materialResource.add(MaterialID::RoomTwo, m_shaderResource.get(shaderID));
     roomTwo.setProperty("u_diffuseMap", m_textureResource.get("assets/textures/room2x1.png"));
+    roomTwo.setProperty("u_projectionMap", m_textureResource.get("assets/textures/shadow.png"));
+    m_textureResource.get("assets/test.png").setSmooth(true);
 
     cro::StaticMeshBuilder r1("assets/models/room1x1.cmf");
     m_meshResource.loadMesh(MeshID::RoomOne, r1);
@@ -214,6 +219,12 @@ void GameState::createScene()
     entity.addComponent<cro::Skeleton>() = batCatSkeleton;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
+
+    auto mapEntity = m_scene.createEntity();
+    mapEntity.addComponent<cro::ProjectionMap>();
+    mapEntity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
+    mapEntity.getComponent<cro::Transform>().setParent(entity);
+    //mapEntity.getComponent<cro::Transform>().rotate({ 1.f, 0.f, 0.f }, -cro::Util::Const::PI / 2.f);
 
     //3D camera
     auto ent = m_scene.createEntity();

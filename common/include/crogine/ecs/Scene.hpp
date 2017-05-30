@@ -166,6 +166,11 @@ namespace cro
         */
         void render();
 
+        /*!
+        \brief Returns a pointer to the array of active projection maps, with the count.
+        */
+        std::pair<const float*, std::size_t> getActiveProjectionMaps() const;
+
     private:
         MessageBus& m_messageBus;
         Entity::ID m_defaultCamera;
@@ -180,6 +185,10 @@ namespace cro
         std::vector<std::unique_ptr<Director>> m_directors;
 
         std::vector<Renderable*> m_renderables;
+
+        std::array<glm::mat4, 8u> m_projectionMaps;
+        std::size_t m_projectionMapCount;
+        friend class ProjectionMapSystem;
 
         RenderTexture m_sceneBuffer;
         std::array<RenderTexture, 2u> m_postBuffers;

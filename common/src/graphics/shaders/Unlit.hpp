@@ -56,6 +56,11 @@ namespace cro
                 uniform mat4 u_boneMatrices[MAX_BONES];
                 #endif
 
+                #if defined(PROJECTIONS)
+                #define MAX_PROJECTIONS 8
+                uniform mat4 u_projectionMapMatrix[MAX_PROJECTIONS]; //VP matrices for texture projection
+                #endif
+
                 uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;               
                 uniform mat4 u_projectionMatrix;
@@ -73,10 +78,18 @@ namespace cro
                 #endif
                 #endif
 
+                #if defined(PROJECTIONS)
+                varying LOW vec4 v_projectionCoords;
+                #endif
+
                 void main()
                 {
                     mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
                     vec4 position = a_position;
+
+                #if defined(PROJECTIONS)
+                    v_projectionCoords = u_projectionMapMatrix[0] * a_position;
+                #endif
 
                 #if defined(SKINNED)
                 	mat4 skinMatrix = u_boneMatrices[int(a_boneIndices.x)] * a_boneWeights.x;
@@ -103,7 +116,7 @@ namespace cro
                 #endif
                 })";
 
-            const static std::string Fragment = R"(
+                const static std::string Fragment = R"(
                 #if defined (TEXTURED)
                 uniform sampler2D u_diffuseMap;
                 #if defined (LIGHTMAPPED)
@@ -112,6 +125,9 @@ namespace cro
                 #endif
                 #if defined(COLOURED)
                 uniform LOW vec4 u_colour;
+                #endif
+                #if defined(PROJECTIONS)
+                uniform sampler2D u_projectionMap;
                 #endif
 
                 #if defined (VERTEX_COLOUR)
@@ -124,6 +140,10 @@ namespace cro
                 #endif
                 #endif
                 
+                #if defined(PROJECTIONS)
+                varying LOW vec4 v_projectionCoords;
+                #endif
+
                 void main()
                 {
                 #if defined (VERTEX_COLOUR)
@@ -140,6 +160,14 @@ namespace cro
                 #if defined(COLOURED)
                     gl_FragColor *= u_colour;
                 #endif
+                #if defined(PROJECTIONS)
+                    if(v_projectionCoords.w >= -0.1)
+                    {
+                        vec2 coords = v_projectionCoords.xy / v_projectionCoords.w / 2.0 + 0.5;
+                        gl_FragColor *= texture2D(u_projectionMap, coords);
+                    }
+                #endif
+
                 })";
         }
     }
