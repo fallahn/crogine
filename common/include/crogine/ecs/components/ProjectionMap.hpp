@@ -66,7 +66,7 @@ namespace cro
         glm::mat4 projection;
         ProjectionMap()
         {
-            projection = glm::perspective(0.8f, 1.f, 0.01f, 4.f);
+            projection = glm::perspective(0.9f, 1.f, 0.8f, 4.f);
         }
     };
 }

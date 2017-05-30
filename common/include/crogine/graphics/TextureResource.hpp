@@ -73,8 +73,12 @@ namespace cro
         returns a reference to it.
         If the texture fails to load then a texture containing the current
         fallback colour is returned.
+        \param path String containing the path of the image to attempt to load
+        \param createMipMaps Attempts to create the default MipMap levels 
+        when loading the texture the first time. If the texture is already
+        loaded then this has no effect.
         */
-        Texture& get(const std::string& path);
+        Texture& get(const std::string& path, bool createMipMaps = true);
 
         /*!
         \brief Sets the current fallback colour.

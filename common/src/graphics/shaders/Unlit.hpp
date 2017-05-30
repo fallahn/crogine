@@ -88,7 +88,7 @@ namespace cro
                     vec4 position = a_position;
 
                 #if defined(PROJECTIONS)
-                    v_projectionCoords = u_projectionMapMatrix[0] * a_position;
+                    v_projectionCoords = u_projectionMapMatrix[0] * u_worldMatrix * a_position;
                 #endif
 
                 #if defined(SKINNED)
@@ -161,7 +161,7 @@ namespace cro
                     gl_FragColor *= u_colour;
                 #endif
                 #if defined(PROJECTIONS)
-                    if(v_projectionCoords.w >= -0.1)
+                    if(v_projectionCoords.w > 0.0)
                     {
                         vec2 coords = v_projectionCoords.xy / v_projectionCoords.w / 2.0 + 0.5;
                         gl_FragColor *= texture2D(u_projectionMap, coords);

@@ -176,8 +176,8 @@ void GameState::loadAssets()
 
     auto& roomTwo = m_materialResource.add(MaterialID::RoomTwo, m_shaderResource.get(shaderID));
     roomTwo.setProperty("u_diffuseMap", m_textureResource.get("assets/textures/room2x1.png"));
-    roomTwo.setProperty("u_projectionMap", m_textureResource.get("assets/textures/shadow.png"));
-    m_textureResource.get("assets/test.png").setSmooth(true);
+    roomTwo.setProperty("u_projectionMap", m_textureResource.get("assets/textures/shadow.png", false));
+    m_textureResource.get("assets/textures/shadow.png").setSmooth(true);
 
     cro::StaticMeshBuilder r1("assets/models/room1x1.cmf");
     m_meshResource.loadMesh(MeshID::RoomOne, r1);
@@ -222,9 +222,9 @@ void GameState::createScene()
 
     auto mapEntity = m_scene.createEntity();
     mapEntity.addComponent<cro::ProjectionMap>();
-    mapEntity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
+    mapEntity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 300.f });
     mapEntity.getComponent<cro::Transform>().setParent(entity);
-    //mapEntity.getComponent<cro::Transform>().rotate({ 1.f, 0.f, 0.f }, -cro::Util::Const::PI / 2.f);
+    //mapEntity.getComponent<cro::Transform>().rotate({ 1.f, 0.f, 0.f }, -cro::Util::Const::PI/* / 2.f*/);
 
     //3D camera
     auto ent = m_scene.createEntity();
