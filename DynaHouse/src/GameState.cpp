@@ -62,6 +62,8 @@ source distribution.
 
 #include <glm/gtx/norm.hpp>
 
+#include <crogine/core/ConfigFile.hpp>
+
 namespace
 {
     cro::int32 rowCount = 3;
@@ -143,30 +145,8 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
-    //auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseColour | cro::ShaderResource::DiffuseMap);
-
-    //auto& greenOne = m_materialResource.add(MaterialID::GreenOne, m_shaderResource.get(shaderID));
-    //greenOne.setProperty("u_colour", cro::Colour(cro::uint8(21), 178u, 55u));
-    //greenOne.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
-
-    //auto& greenTwo = m_materialResource.add(MaterialID::GreenTwo, m_shaderResource.get(shaderID));
-    //greenTwo.setProperty("u_colour", cro::Colour(cro::uint8(127), 206u, 61u));
-    //greenTwo.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
-
-    //auto& brown = m_materialResource.add(MaterialID::Brown, m_shaderResource.get(shaderID));
-    //brown.setProperty("u_colour", cro::Colour(cro::uint8(199), 66u, 9u));
-    //brown.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
-
-    //auto& red = m_materialResource.add(MaterialID::Red, m_shaderResource.get(shaderID));
-    //red.setProperty("u_colour", cro::Colour(cro::uint8(140), 30u, 18u));
-    //red.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
-
-    //auto& blue = m_materialResource.add(MaterialID::Blue, m_shaderResource.get(shaderID));
-    //blue.setProperty("u_colour", cro::Colour(cro::uint8(18), 105u, 142u));
-    //blue.setProperty("u_diffuseMap", m_textureResource.get("assets/square.png"));
-
-    //cro::QuadBuilder qb({ 1.f, 1.f });
-    //m_meshResource.loadMesh(qb, cro::Mesh::QuadMesh);
+    cro::ConfigFile cfg;
+    cfg.loadFromFile("assets/models/batcat.cmt");
 
 
     auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::ReceiveProjection);
