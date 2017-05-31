@@ -50,7 +50,7 @@ bool ConfigObject::loadFromFile(const std::string& path)
     if (file.fail())
     {
         Logger::log(path + " file invalid or not found.", Logger::Type::Error);
-        return nullptr;
+        return false;
     }
     
     //file not empty
@@ -59,7 +59,7 @@ bool ConfigObject::loadFromFile(const std::string& path)
     if (fileLength <= 0)
     {
         Logger::log(path + " invalid file size.", Logger::Type::Error);
-        return nullptr;
+        return false;
     }
     file.seekg(file.beg);
 
@@ -76,7 +76,7 @@ bool ConfigObject::loadFromFile(const std::string& path)
         if (isProperty(data))
         {
             Logger::log(path + " Cannot start configuration file with a property", Logger::Type::Error);
-            return nullptr;
+            return false;
         }
 
         //make sure next line is a brace to ensure we have an object
@@ -96,7 +96,7 @@ bool ConfigObject::loadFromFile(const std::string& path)
         else
         {
             Logger::log(path + " Invalid configuration header (missing '{' ?)", Logger::Type::Error);
-            return nullptr;
+            return false;
         }
 
         ConfigObject* currentObject = this;
