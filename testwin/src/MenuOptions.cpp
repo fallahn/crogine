@@ -48,6 +48,7 @@ source distribution.
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/detail/GlobalConsts.hpp>
 
 void MainState::createOptionsMenu()
 {

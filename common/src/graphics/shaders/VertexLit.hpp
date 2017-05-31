@@ -61,6 +61,12 @@ namespace cro
                 uniform mat4 u_boneMatrices[MAX_BONES];
                 #endif
 
+                #if defined(PROJECTIONS)
+                #define MAX_PROJECTIONS 8
+                uniform mat4 u_projectionMapMatrix[MAX_PROJECTIONS]; //VP matrices for texture projection
+                uniform int u_projectionMapCount; //how many to actually draw
+                #endif
+
                 uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;
                 uniform mat3 u_normalMatrix;                
@@ -90,6 +96,13 @@ namespace cro
                 {
                     mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
                     vec4 position = a_position;
+
+                #if defined(PROJECTIONS)
+                    for(int i = 0; i < u_projectionMapCount; ++i)
+                    {
+                        v_projectionCoords[i] = u_projectionMapMatrix[i] * u_worldMatrix * a_position;
+                    }
+                #endif
 
                 #if defined(SKINNED)
                 	//int idx = 0;//int(a_boneIndices.x);
@@ -156,6 +169,12 @@ namespace cro
                 uniform LOW vec4 u_colour;
                 #endif
 
+                #if defined(PROJECTIONS)
+                #define MAX_PROJECTIONS 8
+                uniform sampler2D u_projectionMap;
+                uniform int u_projectionMapCount;
+                #endif
+
                 varying HIGH vec3 v_worldPosition;
                 #if defined(VERTEX_COLOUR)
                 varying LOW vec4 v_colour;
@@ -219,6 +238,17 @@ namespace cro
                     gl_FragColor.rgb = blendedColour;
                 #endif
                     gl_FragColor.a = diffuse.a;
+
+                #if defined(PROJECTIONS)
+                    for(int i = 0; i < u_projectionMapCount; ++i)
+                    {
+                        if(v_projectionCoords[i].w > 0.0)
+                        {
+                            vec2 coords = v_projectionCoords[i].xy / v_projectionCoords[i].w / 2.0 + 0.5;
+                            gl_FragColor *= texture2D(u_projectionMap, coords);
+                        }
+                    }
+                #endif
                 })";
         }
     }

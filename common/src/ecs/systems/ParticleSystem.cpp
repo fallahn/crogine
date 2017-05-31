@@ -364,7 +364,7 @@ void ParticleSystem::render(Entity camera)
         }
 
         //draw
-        glCheck(glDrawArrays(GL_POINTS, 0, emitter.m_nextFreeParticle));
+        glCheck(glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(emitter.m_nextFreeParticle)));
 
         //unbind attribs
         for (auto i = 0u; i < m_attribData.size(); ++i)

@@ -160,6 +160,7 @@
       <AdditionalIncludeDirectories>..\common\include;..\DynaHouse\src;..\SDL2-android\include;$(Sysroot)\usr\include;$(StlIncludeDirectories)%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\ARM\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -173,6 +174,7 @@
       <AdditionalIncludeDirectories>..\common\include;..\DynaHouse\src;..\SDL2-android\include;$(Sysroot)\usr\include;$(StlIncludeDirectories)%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\ARM\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

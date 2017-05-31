@@ -143,6 +143,7 @@
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PreprocessorDefinitions>_DEBUG_;HAS_SOCKLEN_T</PreprocessorDefinitions>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <AdditionalDependencies>
@@ -162,6 +163,7 @@
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PreprocessorDefinitions>_DEBUG_</PreprocessorDefinitions>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <AdditionalDependencies>
@@ -195,6 +197,7 @@
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PreprocessorDefinitions>HAS_SOCKLEN_T;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <AdditionalDependencies>
@@ -213,6 +216,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <AdditionalDependencies>
@@ -227,6 +231,7 @@
     <ClCompile Include="..\common\src\android\Android.cpp" />
     <ClCompile Include="..\common\src\core\App.cpp" />
     <ClCompile Include="..\common\src\core\Clock.cpp" />
+    <ClCompile Include="..\common\src\core\ConfigFile.cpp" />
     <ClCompile Include="..\common\src\core\DefaultLoadingScreen.cpp" />
     <ClCompile Include="..\common\src\core\GameController.cpp" />
     <ClCompile Include="..\common\src\core\MessageBus.cpp" />

@@ -32,8 +32,8 @@ source distribution.
 
 #include <crogine/ecs/Director.hpp>
 
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-
 
 class PlayerDirector final : public cro::Director
 {

@@ -89,7 +89,10 @@ namespace cro
                     vec4 position = a_position;
 
                 #if defined(PROJECTIONS)
-                    v_projectionCoords[0] = u_projectionMapMatrix[0] * u_worldMatrix * a_position;
+                    for(int i = 0; i < u_projectionMapCount; ++i)
+                    {
+                        v_projectionCoords[i] = u_projectionMapMatrix[i] * u_worldMatrix * a_position;
+                    }
                 #endif
 
                 #if defined(SKINNED)
@@ -164,10 +167,13 @@ namespace cro
                     gl_FragColor *= u_colour;
                 #endif
                 #if defined(PROJECTIONS)
-                    if(v_projectionCoords[0].w > 0.0)
+                    for(int i = 0; i < u_projectionMapCount; ++i)
                     {
-                        vec2 coords = v_projectionCoords[0].xy / v_projectionCoords[0].w / 2.0 + 0.5;
-                        gl_FragColor *= texture2D(u_projectionMap, coords);
+                        if(v_projectionCoords[i].w > 0.0)
+                        {
+                            vec2 coords = v_projectionCoords[i].xy / v_projectionCoords[i].w / 2.0 + 0.5;
+                            gl_FragColor *= texture2D(u_projectionMap, coords);
+                        }
                     }
                 #endif
 

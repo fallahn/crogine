@@ -359,7 +359,7 @@ void TextRenderer::rebuildBatch()
             }
 
             //increase the start point
-            start += text.m_vertices.size();
+            start += static_cast<uint32>(text.m_vertices.size());
 
             //and append data
             text.m_vboOffset = static_cast<int32>(vertexData.size() * sizeof(float));

@@ -172,7 +172,7 @@ void UISystem::handleMessage(const Message& msg)
 uint32 UISystem::addCallback(const Callback& cb)
 {
     m_callbacks.push_back(cb);
-    return m_callbacks.size() - 1;
+    return static_cast<uint32>(m_callbacks.size() - 1);
 }
 
 //private

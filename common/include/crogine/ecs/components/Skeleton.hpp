@@ -91,7 +91,7 @@ namespace cro
         void play(std::size_t idx, float blendingTime = 0.1f)
         {
             CRO_ASSERT(idx < animations.size(), "Index out of range");
-            nextAnimation = idx;
+            nextAnimation = static_cast<cro::int32>(idx);
             blendTime = blendingTime;
             currentBlendTime = 0.f;
         }
