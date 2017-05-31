@@ -39,6 +39,7 @@
     <ClInclude Include="..\common\include\crogine\Config.hpp" />
     <ClInclude Include="..\common\include\crogine\core\App.hpp" />
     <ClInclude Include="..\common\include\crogine\core\Clock.hpp" />
+    <ClInclude Include="..\common\include\crogine\core\ConfigFile.hpp" />
     <ClInclude Include="..\common\include\crogine\core\GameController.hpp" />
     <ClInclude Include="..\common\include\crogine\core\Log.hpp" />
     <ClInclude Include="..\common\include\crogine\core\Message.hpp" />
@@ -104,6 +105,7 @@
     <ClInclude Include="..\common\include\crogine\util\Constants.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Maths.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Random.hpp" />
+    <ClInclude Include="..\common\include\crogine\util\String.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Wavetable.hpp" />
     <ClInclude Include="..\common\src\core\DefaultLoadingScreen.hpp" />
     <ClInclude Include="..\common\src\detail\DistanceField.hpp" />
@@ -124,6 +126,7 @@
     <ClCompile Include="..\common\src\android\Android.cpp" />
     <ClCompile Include="..\common\src\core\App.cpp" />
     <ClCompile Include="..\common\src\core\Clock.cpp" />
+    <ClCompile Include="..\common\src\core\ConfigFile.cpp" />
     <ClCompile Include="..\common\src\core\DefaultLoadingScreen.cpp" />
     <ClCompile Include="..\common\src\core\GameController.cpp" />
     <ClCompile Include="..\common\src\core\MessageBus.cpp" />
@@ -182,6 +185,7 @@
     <ClCompile Include="..\common\src\util\Random.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\common\include\crogine\core\ConfigFile.inl" />
     <None Include="..\common\include\crogine\ecs\Entity.inl" />
     <None Include="..\common\include\crogine\ecs\EntityManager.inl" />
     <None Include="..\common\include\crogine\ecs\Scene.inl" />

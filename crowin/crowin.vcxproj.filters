@@ -324,6 +324,12 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\ProjectionMapSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\core\ConfigFile.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\util\String.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -503,6 +509,9 @@
     <ClCompile Include="..\common\src\ecs\systems\ProjectionMapSystem.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\core\ConfigFile.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\common\include\crogine\ecs\Entity.inl">
@@ -522,6 +531,9 @@
     </None>
     <None Include="..\common\include\crogine\ecs\Scene.inl">
       <Filter>Header Files\ecs</Filter>
+    </None>
+    <None Include="..\common\include\crogine\core\ConfigFile.inl">
+      <Filter>Header Files\core</Filter>
     </None>
   </ItemGroup>
 </Project>
