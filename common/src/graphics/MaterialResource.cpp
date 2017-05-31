@@ -60,6 +60,12 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
     {
         uniform = -1;
     }
+
+    /*for (auto& optional : data.optionalUniforms)
+    {
+        optional = -1;
+    }*/
+
     for (const auto& uniform : uniformMap)
     {
         if (uniform.first == "u_worldMatrix")
@@ -90,20 +96,24 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
         {
             data.uniforms[Material::Camera] = uniform.second;
         }
+        //these are optionally standard so they are added to 'optional' list to to mark that they exist
+        //but not added as a property as they are not user settable - rather they are used internally by renderers
         else if (uniform.first == "u_boneMatrices[0]")
         {
             data.uniforms[Material::Skinning] = uniform.second;
-            //data.properties.find(uniform.first)->second.second.type = Material::Property::Skinning; //TODO remove these
+            data.optionalUniforms[data.optionalUniformCount++] = Material::Skinning;
         }
         else if (uniform.first == "u_projectionMapMatrix[0]")
         {
             data.uniforms[Material::ProjectionMap] = uniform.second;
-            //data.properties.find(uniform.first)->second.second.type = Material::Property::ProjectionMap;
+            data.optionalUniforms[data.optionalUniformCount++] = Material::ProjectionMap;
         }
         else if (uniform.first == "u_projectionMapCount")
         {
             data.uniforms[Material::ProjectionMapCount] = uniform.second;
+            data.optionalUniforms[data.optionalUniformCount++] = Material::ProjectionMapCount;
         }
+        //else these are user settable uniforms - ie optional, but set by user such as textures
         else
         {
             //add to list of material properties

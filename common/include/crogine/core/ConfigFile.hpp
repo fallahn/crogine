@@ -40,6 +40,7 @@ source distribution.
 
 #include <string>
 #include <vector>
+#include <sstream>
 
 namespace cro
 {
@@ -86,7 +87,7 @@ namespace cro
         glm::vec3, glm::vec4
         */
         template <typename T>
-        T getValue() const = delete;
+        T getValue() const;// = delete;
 
         //sets the property's value
         void setValue(const std::string& v);
@@ -102,7 +103,7 @@ namespace cro
         std::vector<float> valueAsArray() const;
     };
 
-#include "ConfigFile.inl"
+//#include "ConfigFile.inl"
 
     /*!
     \brief A configuration object can hold one or more nested objects
@@ -113,7 +114,7 @@ namespace cro
     {
     public:
         using NameValue = std::pair<std::string, std::string>;
-        ConfigObject(const std::string& name = "", const std::string& id = "-1");
+        ConfigObject(const std::string& name = "", const std::string& id = "");
 
         /*! 
         \brief Get the id of the object

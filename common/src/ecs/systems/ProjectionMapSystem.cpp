@@ -35,13 +35,9 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 
 #include <crogine/graphics/Spatial.hpp>
+#include <crogine/detail/GlobalConsts.hpp>
 
 using namespace cro;
-
-namespace
-{
-    const std::size_t MAX_MAPS = 8;
-}
 
 ProjectionMapSystem::ProjectionMapSystem(MessageBus& mb)
     : System(mb, typeid(ProjectionMapSystem))
@@ -69,13 +65,13 @@ void ProjectionMapSystem::process(Time)
             if (!visible) break;
         }
       
-        if (visible && scene->m_projectionMapCount < MAX_MAPS)
+        if (visible && scene->m_projectionMapCount < MAX_PROJECTION_MAPS)
         {
             const auto& projectionComponent = entity.getComponent<ProjectionMap>();
             scene->m_projectionMaps[scene->m_projectionMapCount++] = projectionComponent.projection * glm::inverse(tx.getWorldTransform());
         }
 
-        if (scene->m_projectionMapCount == MAX_MAPS)
+        if (scene->m_projectionMapCount == MAX_PROJECTION_MAPS)
         {
             break;
         }

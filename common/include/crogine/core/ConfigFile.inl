@@ -27,87 +27,92 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-//template <typename T>
-//T ConfigProperty::getValue() const = delete;
-
-template <>
-std::string ConfigProperty::getValue<std::string>() const
-{
-    return m_value;
-}
-
-template <>
-int32 ConfigProperty::getValue<int32>() const
-{
-    int32 retVal = 0;
-    try
-    {
-        retVal = std::stoi(m_value);
-    }
-    catch (...)
-    {
-        Logger::log("Failed to convert value for " + getName() + " to integer", Logger::Type::Warning);
-    }
-
-    return retVal;
-}
-
-template <>
-float ConfigProperty::getValue<float>() const
-{
-    float retVal = 0.f;
-    try
-    {
-        retVal = std::stof(m_value);
-    }
-    catch (...)
-    {
-        Logger::log("Failed to convert value for " + getName() + " to float", Logger::Type::Warning);
-    }
-    return retVal;
-}
-
-template <>
-bool ConfigProperty::getValue<bool>() const
-{
-    return (m_value == "true");
-}
-
-template <>
-glm::vec2 ConfigProperty::getValue<glm::vec2>() const
-{
-    auto values = valueAsArray();
-    glm::vec2 retval; //loop allows for values to be the wrong size
-    for (auto i = 0u; i < values.size() && i < 2; ++i)
-    {
-        retval[i] = values[i];
-    }
-
-    return retval;
-}
-
-template <>
-glm::vec3 ConfigProperty::getValue<glm::vec3>() const
-{
-    auto values = valueAsArray();
-    glm::vec3 retval;
-    for (auto i = 0u; i < values.size() && i < 3; ++i)
-    {
-        retval[i] = values[i];
-    }
-
-    return retval;
-}
-
-template <>
-glm::vec4 ConfigProperty::getValue<glm::vec4>() const
-{
-    auto values = valueAsArray();
-    glm::vec4 retval;
-    for (auto i = 0u; i < values.size() && i < 4; ++i)
-    {
-        retval[i] = values[i];
-    }
-
-    return retval;
-}
+//template <>
+//std::string ConfigProperty::getValue<std::string>() const
+//{
+//    return m_value;
+//}
+//
+//template <>
+//int32 ConfigProperty::getValue<int32>() const
+//{
+//    //int32 retVal = 0;
+//    //try
+//    //{
+//    //    retVal = std::stoi(m_value);
+//    //}
+//    //catch (...)
+//    //{
+//    //    Logger::log("Failed to convert value for " + getName() + " to integer", Logger::Type::Warning);
+//    //}
+//
+//    int32 retVal;
+//    std::istringstream is(m_value);
+//    if (is >> retVal) return retVal;
+//    return 0;
+//}
+//
+//template <>
+//float ConfigProperty::getValue<float>() const
+//{
+//    //float retVal = 0.f;
+//    //try
+//    //{
+//    //    retVal = std::stof(m_value);
+//    //}
+//    //catch (...)
+//    //{
+//    //    Logger::log("Failed to convert value for " + getName() + " to float", Logger::Type::Warning);
+//    //}
+//    //return retVal;
+//
+//    float retVal;
+//    std::istringstream is(m_value);
+//    if (is >> retVal) return retVal;
+//    return 0.f;
+//}
+//
+//template <>
+//bool ConfigProperty::getValue<bool>() const
+//{
+//    return (m_value == "true");
+//}
+//
+//template <>
+//glm::vec2 ConfigProperty::getValue<glm::vec2>() const
+//{
+//    auto values = valueAsArray();
+//    glm::vec2 retval; //loop allows for values to be the wrong size
+//    for (auto i = 0u; i < values.size() && i < 2; ++i)
+//    {
+//        retval[i] = values[i];
+//    }
+//
+//    return retval;
+//}
+//
+//template <>
+//glm::vec3 ConfigProperty::getValue<glm::vec3>() const
+//{
+//    auto values = valueAsArray();
+//    glm::vec3 retval;
+//    for (auto i = 0u; i < values.size() && i < 3; ++i)
+//    {
+//        retval[i] = values[i];
+//    }
+//
+//    return retval;
+//}
+//
+//template <>
+//glm::vec4 ConfigProperty::getValue<glm::vec4>() const
+//{
+//    auto values = valueAsArray();
+//    glm::vec4 retval;
+//    for (auto i = 0u; i < values.size() && i < 4; ++i)
+//    {
+//        retval[i] = values[i];
+//    }
+//
+//    return retval;
+//}

@@ -34,6 +34,7 @@ source distribution.
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>

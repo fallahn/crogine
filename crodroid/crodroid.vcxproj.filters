@@ -234,5 +234,8 @@
     <ClCompile Include="..\common\src\ecs\systems\ProjectionMapSystem.cpp">
       <Filter>src\ecs\systems</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\core\ConfigFile.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

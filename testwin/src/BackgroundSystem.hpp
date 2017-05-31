@@ -32,6 +32,8 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 
+#include <glm/vec2.hpp>
+
 struct BackgroundComponent final
 {
     cro::uint32 shaderID = 0;

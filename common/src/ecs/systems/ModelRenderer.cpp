@@ -236,13 +236,23 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         case Material::Property::Mat4:
             glCheck(glUniformMatrix4fv(prop.second.first, 1, GL_FALSE, &prop.second.second.matrixValue[0].x));
             break;
-        case Material::Property::Skinning:           
-            glCheck(glUniformMatrix4fv(prop.second.first, model.m_jointCount, GL_FALSE, &model.m_skeleton[0][0].x));
+        }
+    }
+
+    //apply 'optional' uniforms
+    for (auto i = 0u; i < material.optionalUniformCount; ++i)
+    {
+        switch (material.optionalUniforms[i])
+        {
+        default: break;
+        case Material::Skinning:
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::Skinning], static_cast<GLsizei>(model.m_jointCount), GL_FALSE, &model.m_skeleton[0][0].x));
             break;
-        case Material::Property::ProjectionMap:
+        case Material::ProjectionMap:
         {
             const auto p = getScene()->getActiveProjectionMaps();
-            glCheck(glUniformMatrix4fv(prop.second.first, p.second, GL_FALSE, p.first));
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::ProjectionMap], static_cast<GLsizei>(p.second), GL_FALSE, p.first));
+            glCheck(glUniform1i(material.uniforms[Material::ProjectionMapCount], static_cast<GLint>(p.second)));
         }
             break;
         }

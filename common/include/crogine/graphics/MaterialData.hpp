@@ -82,9 +82,7 @@ namespace cro
                 Vec3,
                 Vec4,
                 Mat4,
-                Texture,
-                Skinning,
-                ProjectionMap
+                Texture
             }type = None;
 
             union
@@ -127,6 +125,11 @@ namespace cro
             std::size_t attribCount = 0; //< count of attributes successfully mapped
             //maps uniform locations by indexing via Uniform enum
             std::array<int32, Uniform::Total> uniforms{};
+            //optional uniforms are added to this list if they exist
+            //for example skinning and projection map data which is
+            //used internally, and nor user-definable
+            std::size_t optionalUniformCount = 0;
+            std::array<int32, 3> optionalUniforms{};
 
             BlendMode blendMode = BlendMode::None;
 

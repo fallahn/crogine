@@ -41,6 +41,136 @@ namespace
     const std::string indentBlock("    ");
 }
 
+//--------------------//
+ConfigProperty::ConfigProperty(const std::string& name, const std::string& value)
+    : ConfigItem(name),
+    m_value(value) {}
+
+template <>
+std::string ConfigProperty::getValue<std::string>() const
+{
+    return m_value;
+}
+
+template <>
+int32 ConfigProperty::getValue<int32>() const
+{
+    int32 retVal;
+    std::istringstream is(m_value);
+    if (is >> retVal) return retVal;
+    return 0;
+}
+
+template <>
+float ConfigProperty::getValue<float>() const
+{
+    float retVal;
+    std::istringstream is(m_value);
+    if (is >> retVal) return retVal;
+    return 0.f;
+}
+
+template <>
+bool ConfigProperty::getValue<bool>() const
+{
+    return (m_value == "true");
+}
+
+template <>
+glm::vec2 ConfigProperty::getValue<glm::vec2>() const
+{
+    auto values = valueAsArray();
+    glm::vec2 retval; //loop allows for values to be the wrong size
+    for (auto i = 0u; i < values.size() && i < 2; ++i)
+    {
+        retval[i] = values[i];
+    }
+
+    return retval;
+}
+
+template <>
+glm::vec3 ConfigProperty::getValue<glm::vec3>() const
+{
+    auto values = valueAsArray();
+    glm::vec3 retval;
+    for (auto i = 0u; i < values.size() && i < 3; ++i)
+    {
+        retval[i] = values[i];
+    }
+
+    return retval;
+}
+
+template <>
+glm::vec4 ConfigProperty::getValue<glm::vec4>() const
+{
+    auto values = valueAsArray();
+    glm::vec4 retval;
+    for (auto i = 0u; i < values.size() && i < 4; ++i)
+    {
+        retval[i] = values[i];
+    }
+
+    return retval;
+}
+
+void ConfigProperty::setValue(const std::string& value)
+{
+    m_value = value;
+}
+
+void ConfigProperty::setValue(int32 value)
+{
+    m_value = std::to_string(value);
+}
+
+void ConfigProperty::setValue(float value)
+{
+    m_value = std::to_string(value);
+}
+
+void ConfigProperty::setValue(bool value)
+{
+    m_value = (value) ? "true" : "false";
+}
+
+void ConfigProperty::setValue(const glm::vec2& v)
+{
+    m_value = std::to_string(v.x) + "," + std::to_string(v.y);
+}
+
+void ConfigProperty::setValue(const glm::vec3& v)
+{
+    m_value = std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z);
+}
+
+void ConfigProperty::setValue(const glm::vec4& v)
+{
+    m_value = std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z) + "," + std::to_string(v.w);
+}
+
+std::vector<float> ConfigProperty::valueAsArray() const
+{
+    std::vector<float> retval;
+    auto start = 0u;
+    auto next = m_value.find_first_of(',');
+    while (next != std::string::npos && start < m_value.length())
+    {
+        float val;
+        std::istringstream is(m_value.substr(start, next));
+        if (is >> val) retval.push_back(val);
+        else retval.push_back(0.f);
+
+        start = ++next;
+        next = m_value.find_first_of(',', start);
+        if (next > m_value.length()) next = m_value.length();
+    }
+    return retval;
+}
+
+//-------------------------------------
+
 ConfigObject::ConfigObject(const std::string& name, const std::string& id)
     : ConfigItem	(name), m_id(id){}
 
@@ -413,68 +543,6 @@ void ConfigObject::write(std::ofstream& file, uint16 depth)
         o.write(file, depth + 1);
     }
     file << indent << "}" << std::endl;
-}
-
-//--------------------//
-ConfigProperty::ConfigProperty(const std::string& name, const std::string& value)
-    : ConfigItem	(name),
-    m_value			(value){}
-
-void ConfigProperty::setValue(const std::string& value)
-{
-    m_value = value;
-}
-
-void ConfigProperty::setValue(int32 value)
-{
-    m_value = std::to_string(value);
-}
-
-void ConfigProperty::setValue(float value)
-{
-    m_value = std::to_string(value);
-}
-
-void ConfigProperty::setValue(bool value)
-{
-    m_value = (value) ? "true" : "false";
-}
-
-void ConfigProperty::setValue(const glm::vec2& v)
-{
-    m_value = std::to_string(v.x) + "," + std::to_string(v.y);
-}
-
-void ConfigProperty::setValue(const glm::vec3& v)
-{
-    m_value = std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z);
-}
-
-void ConfigProperty::setValue(const glm::vec4& v)
-{
-    m_value = std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z) + "," + std::to_string(v.w);
-}
-
-std::vector<float> ConfigProperty::valueAsArray() const
-{
-    std::vector<float> retval;
-    auto start = 0u;
-    auto next = m_value.find_first_of(',');
-    while (next != std::string::npos && start < m_value.length())
-    {
-        try
-        {
-            retval.push_back(std::stof(m_value.substr(start, next)));
-        }
-        catch (...)
-        {
-            retval.push_back(0.f);
-        }
-        start = ++next;
-        next = m_value.find_first_of(',', start);
-        if (next > m_value.length()) next = m_value.length();
-    }
-    return retval;
 }
 
 //--------------------//

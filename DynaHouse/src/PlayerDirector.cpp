@@ -45,7 +45,7 @@ namespace
 {
     constexpr float fixedUpdate = 1.f / 60.f;
 
-    const float walkSpeed = 1.f;
+    //const float walkSpeed = 1.f;
     const float turnSpeed = 10.f;
     const float maxRotation = cro::Util::Const::PI / 2.f;
 
