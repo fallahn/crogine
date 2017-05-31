@@ -58,6 +58,9 @@ namespace cro
             WorldViewProjection,
             Normal,
             Camera,
+            Skinning,
+            ProjectionMap,
+            ProjectionMapCount,
             Total
         };
         

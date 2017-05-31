@@ -27,40 +27,25 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_TYPES_HPP_
-#define CRO_TYPES_HPP_
+#ifndef CRO_GLOBAL_CONSTS_HPP_
+#define CRO_GLOBAL_CONSTS_HPP_
 
-#include <crogine/Config.hpp>
+#include "Types.hpp"
 
-#include <SDL_stdinc.h>
-#include <SDL_events.h>
-
-/*
-Aliases for SDL types
-*/
+#include <glm/vec2.hpp>
 
 namespace cro
 {
-	using uint8 = Uint8;
-	using int8 = Sint8;
-	using uint16 = Uint16;
-	using int16 = Sint16;
-	using uint32 = Uint32;
-	using int32 = Sint32;
-	using uint64 = Uint64;
-	using int64 = Sint64;
 
-	using Event = SDL_Event;
+    //Used by orthogonal renderers
+    static const glm::uvec2 DefaultSceneSize(1920, 1080);
 
-    namespace ImageFormat
-    {
-        enum Type
-        {
-            None,
-            RGB,
-            RGBA,
-            A
-        };
-    }
+    //this is the maximum number of projection maps
+    //which can be received by a material using a built-in
+    //shader compiled with the ShaderResource::ReceiveShadowMaps flag
+    //this is only a preferred amount and is dependent on MAX_VARYING_VECTORS
+    //available on the current hardware
+    static const int32 MAX_PROJECTION_MAPS = 8;
 }
-#endif //CRO_TYPES_HPP_
+
+#endif //CRO_GLOBAL_CONSTS_HPP_

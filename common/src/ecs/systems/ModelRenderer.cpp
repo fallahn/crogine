@@ -152,7 +152,7 @@ void ModelRenderer::render(Entity camera)
 
             //apply shader uniforms from material
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-            applyProperties(model.m_materials[i].properties, model);
+            applyProperties(model.m_materials[i], model);
 
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
@@ -202,10 +202,10 @@ void ModelRenderer::render(Entity camera)
 }
 
 //private
-void ModelRenderer::applyProperties(const Material::PropertyList& properties, const Model& model)
+void ModelRenderer::applyProperties(const Material::Data& material, const Model& model)
 {
     m_currentTextureUnit = 0;
-    for (const auto& prop : properties)
+    for (const auto& prop : material.properties)
     {
         switch (prop.second.second.type)
         {

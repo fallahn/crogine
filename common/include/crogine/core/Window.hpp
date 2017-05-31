@@ -38,6 +38,8 @@ source distribution.
 #include <SDL_events.h>
 #include <SDL_atomic.h>
 
+#include <glm/vec2.hpp>
+
 #include <string>
 #include <vector>
 #include <functional>

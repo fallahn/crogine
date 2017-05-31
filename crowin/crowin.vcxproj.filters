@@ -330,6 +330,9 @@
     <ClInclude Include="..\common\include\crogine\util\String.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\detail\GlobalConsts.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
