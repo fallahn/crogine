@@ -86,7 +86,7 @@ namespace cro
         glm::vec3, glm::vec4
         */
         template <typename T>
-        T getValue() const;
+        T getValue() const = delete;
 
         //sets the property's value
         void setValue(const std::string& v);

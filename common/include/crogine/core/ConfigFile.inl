@@ -27,8 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-template <typename T>
-T ConfigProperty::getValue() const = delete;
+//template <typename T>
+//T ConfigProperty::getValue() const = delete;
 
 template <>
 std::string ConfigProperty::getValue<std::string>() const
