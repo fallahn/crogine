@@ -32,8 +32,11 @@ source distribution.
 #include "Messages.hpp"
 #include "PlayerDirector.hpp"
 
+#include <crogine/detail/GlobalConsts.hpp>
+
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/ConfigFile.hpp>
 
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
@@ -61,8 +64,6 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 
 #include <glm/gtx/norm.hpp>
-
-#include <crogine/core/ConfigFile.hpp>
 
 namespace
 {

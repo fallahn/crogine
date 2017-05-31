@@ -59,6 +59,7 @@ namespace cro
                 #if defined(PROJECTIONS)
                 #define MAX_PROJECTIONS 8
                 uniform mat4 u_projectionMapMatrix[MAX_PROJECTIONS]; //VP matrices for texture projection
+                uniform int u_projectionMapCount; //how many to actually draw
                 #endif
 
                 uniform mat4 u_worldMatrix;
@@ -79,7 +80,7 @@ namespace cro
                 #endif
 
                 #if defined(PROJECTIONS)
-                varying LOW vec4 v_projectionCoords;
+                varying LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
                 #endif
 
                 void main()
@@ -88,7 +89,7 @@ namespace cro
                     vec4 position = a_position;
 
                 #if defined(PROJECTIONS)
-                    v_projectionCoords = u_projectionMapMatrix[0] * u_worldMatrix * a_position;
+                    v_projectionCoords[0] = u_projectionMapMatrix[0] * u_worldMatrix * a_position;
                 #endif
 
                 #if defined(SKINNED)
@@ -127,7 +128,9 @@ namespace cro
                 uniform LOW vec4 u_colour;
                 #endif
                 #if defined(PROJECTIONS)
+                #define MAX_PROJECTIONS 8
                 uniform sampler2D u_projectionMap;
+                uniform int u_projectionMapCount;
                 #endif
 
                 #if defined (VERTEX_COLOUR)
@@ -141,7 +144,7 @@ namespace cro
                 #endif
                 
                 #if defined(PROJECTIONS)
-                varying LOW vec4 v_projectionCoords;
+                varying LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
                 #endif
 
                 void main()
@@ -161,9 +164,9 @@ namespace cro
                     gl_FragColor *= u_colour;
                 #endif
                 #if defined(PROJECTIONS)
-                    if(v_projectionCoords.w > 0.0)
+                    if(v_projectionCoords[0].w > 0.0)
                     {
-                        vec2 coords = v_projectionCoords.xy / v_projectionCoords.w / 2.0 + 0.5;
+                        vec2 coords = v_projectionCoords[0].xy / v_projectionCoords[0].w / 2.0 + 0.5;
                         gl_FragColor *= texture2D(u_projectionMap, coords);
                     }
                 #endif

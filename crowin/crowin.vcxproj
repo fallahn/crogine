@@ -49,6 +49,7 @@
     <ClInclude Include="..\common\include\crogine\core\Wavetable.hpp" />
     <ClInclude Include="..\common\include\crogine\core\Window.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\Assert.hpp" />
+    <ClInclude Include="..\common\include\crogine\detail\GlobalConsts.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Component.hpp" />

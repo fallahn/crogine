@@ -90,18 +90,24 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
         {
             data.uniforms[Material::Camera] = uniform.second;
         }
+        else if (uniform.first == "u_boneMatrices[0]")
+        {
+            data.uniforms[Material::Skinning] = uniform.second;
+            //data.properties.find(uniform.first)->second.second.type = Material::Property::Skinning; //TODO remove these
+        }
+        else if (uniform.first == "u_projectionMapMatrix[0]")
+        {
+            data.uniforms[Material::ProjectionMap] = uniform.second;
+            //data.properties.find(uniform.first)->second.second.type = Material::Property::ProjectionMap;
+        }
+        else if (uniform.first == "u_projectionMapCount")
+        {
+            data.uniforms[Material::ProjectionMapCount] = uniform.second;
+        }
         else
         {
             //add to list of material properties
             data.properties.insert(std::make_pair(uniform.first, std::make_pair(uniform.second, Material::Property())));
-            if (uniform.first == "u_boneMatrices[0]")
-            {
-                data.properties.find(uniform.first)->second.second.type = Material::Property::Skinning;
-            }
-            else if (uniform.first == "u_projectionMapMatrix[0]")
-            {
-                data.properties.find(uniform.first)->second.second.type = Material::Property::ProjectionMap;
-            }
         }
     }
 

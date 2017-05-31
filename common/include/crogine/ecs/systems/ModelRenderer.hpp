@@ -85,7 +85,7 @@ namespace cro
         //TODO list of lighting
 
         uint32 m_currentTextureUnit;
-        void applyProperties(const Material::PropertyList&, const Model&);
+        void applyProperties(const Material::Data&, const Model&);
 
         void applyBlendMode(Material::BlendMode);
     };
