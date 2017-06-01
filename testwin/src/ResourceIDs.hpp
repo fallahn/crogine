@@ -95,7 +95,8 @@ namespace CommandID
         MenuController = 0x1,
         RockParticles = 0x2,
         SnowParticles = 0x4,
-        Player = 0x8
+        Player = 0x8,
+        Collectable = 0x10
     };
 }
 

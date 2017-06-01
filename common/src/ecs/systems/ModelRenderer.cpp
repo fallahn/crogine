@@ -62,12 +62,12 @@ void ModelRenderer::process(Time)
     m_visibleEntities.reserve(entities.size() * 2);
     for (auto& entity : entities)
     {
-        auto model = entity.getComponent<Model>();
+        auto& model = entity.getComponent<Model>();
         auto sphere = model.m_meshData.boundingSphere;
-        auto tx = entity.getComponent<Transform>();
+        const auto& tx = entity.getComponent<Transform>();
         sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre.x, sphere.centre.y, sphere.centre.z, 1.f));
         auto scale = tx.getScale();
-        sphere.radius *= (scale.x + scale.y + scale.z) / 3.f;
+        sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
         model.m_visible = true;
         std::size_t i = 0;
@@ -100,12 +100,12 @@ void ModelRenderer::process(Time)
                 }
             }
 
-            //if (!opaque.second.matIDs.empty())
+            if (!opaque.second.matIDs.empty())
             {
                 m_visibleEntities.push_back(opaque);
             }
 
-            //if (!transparent.second.matIDs.empty())
+            if (!transparent.second.matIDs.empty())
             {
                 m_visibleEntities.push_back(transparent);
             }

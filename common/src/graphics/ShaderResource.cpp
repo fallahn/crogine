@@ -88,6 +88,12 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     CRO_ASSERT(type >= BuiltIn::Unlit && flags > 0, "Invalid type of flags value");
     int32 id = type | flags;
 
+    //check not already loaded
+    if (m_shaders.count(id) > 0)
+    {
+        return id;
+    }
+
     //create shader defines based on flags
     std::string defines;
     if (flags & BuiltInFlags::DiffuseMap)

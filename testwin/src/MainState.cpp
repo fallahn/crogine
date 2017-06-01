@@ -263,6 +263,9 @@ void MainState::createScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Camera>();
 
+    /*auto &camRot = entity.addComponent<Rotator>();
+    camRot.axis.y = 1.f; camRot.speed = 0.7f;*/
+
     entity.addComponent<Drifter>().amplitude = 0.1f;
     m_backgroundScene.setActiveCamera(entity);
 

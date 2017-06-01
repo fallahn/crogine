@@ -178,6 +178,11 @@ ConfigObject::ConfigObject(const std::string& name, const std::string& id)
 
 bool ConfigObject::loadFromFile(const std::string& path)
 {
+    m_id = "";
+    setName("");
+    m_properties.clear();
+    m_objects.clear();
+
     RaiiRWops rr;
     rr.file = SDL_RWFromFile(path.c_str(), "r");
 
@@ -515,6 +520,8 @@ void ConfigObject::removeComment(std::string& line)
 
 bool ConfigObject::save(const std::string& path)
 {
+    //TODO convert this to use RWops
+#ifndef PLATFORM_MOBILE
     std::ofstream file(path);
     if (file.good())
     {
@@ -524,7 +531,10 @@ bool ConfigObject::save(const std::string& path)
 
     Logger::log("failed to write configuration to: \'" + path + "\'", Logger::Type::Error);
     return false;
-
+#else
+    Logger::log("File writing not yet implemented", Logger::Type::Info);
+    return false;
+#endif
 }
 
 void ConfigObject::write(std::ofstream& file, uint16 depth)
