@@ -59,7 +59,7 @@ namespace
     {
         STBIMG_stbio_RWops* io = (STBIMG_stbio_RWops*)user;
 
-        int32 ret = SDL_RWread(io->src, data, sizeof(char), size);
+        auto ret = SDL_RWread(io->src, data, sizeof(char), size);
         if (ret == 0)
         {
             //we're at EOF or some error happened

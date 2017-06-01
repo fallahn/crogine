@@ -31,6 +31,8 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 #include <crogine/util/String.hpp>
 
+#include <SDL_rwops.h>
+
 #include <fstream>
 #include <algorithm>
 
@@ -176,31 +178,30 @@ ConfigObject::ConfigObject(const std::string& name, const std::string& id)
 
 bool ConfigObject::loadFromFile(const std::string& path)
 {
-    std::fstream file(path);
-    if (file.fail())
+    RaiiRWops rr;
+    rr.file = SDL_RWFromFile(path.c_str(), "r");
+
+    if (!rr.file)
     {
         Logger::log(path + " file invalid or not found.", Logger::Type::Error);
         return false;
     }
     
-    //file not empty
-    file.seekg(0, file.end);
-    auto fileLength = file.tellg();
-    if (fileLength <= 0)
-    {
-        Logger::log(path + " invalid file size.", Logger::Type::Error);
-        return false;
-    }
-    file.seekg(file.beg);
+    //fetch file size
+    auto fileSize = SDL_RWsize(rr.file);
+    CRO_ASSERT(fileSize > 0, "File empty!");
 
-    if (file)
+    if (rr.file)
     {
         //remove any opening comments
         std::string data;
-        while (data.empty() && !file.eof())
+        int64 readTotal = 0;
+        static const int32 DEST_SIZE = 256;
+        char dest[DEST_SIZE];
+        while (data.empty() && readTotal < fileSize)
         {
-            std::getline(file, data); //read first line
-            removeComment(data);
+            data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
+            removeComment(data);       
         }
         //check config is not opened with a property
         if (isProperty(data))
@@ -208,14 +209,14 @@ bool ConfigObject::loadFromFile(const std::string& path)
             Logger::log(path + " Cannot start configuration file with a property", Logger::Type::Error);
             return false;
         }
-
+        
         //make sure next line is a brace to ensure we have an object
         std::string lastLine = data;
-        std::getline(file, data);
+        data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
         removeComment(data);
         int32 braceCount = 0;
 
-        if (data == "{")
+        if (data[0] == '{')
         {
             //we have our opening object
             auto objectName = getObjectName(lastLine);
@@ -231,12 +232,13 @@ bool ConfigObject::loadFromFile(const std::string& path)
 
         ConfigObject* currentObject = this;
 
-        while (std::getline(file, data))
+        while (readTotal < fileSize)
         {
+            data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
             removeComment(data);
             if (!data.empty())
             {
-                if (data == "}")
+                if (data[0] == '}')
                 {
                     //close current object and move to parent
                     braceCount--;
@@ -264,9 +266,9 @@ bool ConfigObject::loadFromFile(const std::string& path)
                 {
                     //add a new object and make it current
                     std::string lastLine = data;
-                    std::getline(file, data);
+                    data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
                     removeComment(data);
-                    if (data == "{")
+                    if (data[0] == '{')
                     {
                         braceCount++;
                         auto name = getObjectName(lastLine);
@@ -275,10 +277,10 @@ bool ConfigObject::loadFromFile(const std::string& path)
                             Logger::log("Object with ID \'" + name.second + "\' already exists, skipping...", Logger::Type::Warning);
                             //object with duplicate id already exists
                             while (data.find('}') == std::string::npos
-                                && !file.eof()) //just incase of infinite loop
+                                && readTotal < fileSize) //just incase of infinite loop
                             {
                                 //skip all the object properties before continuing
-                                std::getline(file, data);
+                                data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
                             }
                             braceCount--;
                             continue;
