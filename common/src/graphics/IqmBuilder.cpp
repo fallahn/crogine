@@ -75,7 +75,7 @@ cro::Mesh::Data IqmBuilder::build() const
     if (m_file)
     {
         //do some file checks
-        int32 fileSize = SDL_RWsize(m_file);
+        auto fileSize = SDL_RWsize(m_file);
         if (fileSize < static_cast<int32>(sizeof(Iqm::Header)))
         {
             Logger::log(m_path + ": Invalid file size", Logger::Type::Error);

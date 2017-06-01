@@ -186,7 +186,6 @@
     <ClCompile Include="..\common\src\util\Random.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\common\include\crogine\core\ConfigFile.inl" />
     <None Include="..\common\include\crogine\ecs\Entity.inl" />
     <None Include="..\common\include\crogine\ecs\EntityManager.inl" />
     <None Include="..\common\include\crogine\ecs\Scene.inl" />

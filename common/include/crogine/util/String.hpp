@@ -30,6 +30,8 @@ source distribution.
 #ifndef CRO_UTIL_STRING_HPP_
 #define CRO_UTIL_STRING_HPP_
 
+#include <SDL_rwops.h>
+
 #include <string>
 #include <algorithm>
 
@@ -39,12 +41,17 @@ namespace cro
     {
         namespace String
         {
+            /*!
+            \brief Remove all isntances of c from line
+            */
             static inline void removeChar(std::string& line, const char c)
             {
                 line.erase(std::remove(line.begin(), line.end(), c), line.end());
             }
 
-            //replaces all instances of c with r
+            /*!
+            \brief Replaces all instances of c with r
+            */
             static inline void replace(std::string& str, const char c, const char r)
             {
                 auto start = 0u;
@@ -58,11 +65,35 @@ namespace cro
                 }
             }
 
+            /*!
+            \brief Converts the given string to lowercase
+            */
             static inline std::string toLower(const std::string& str)
             {
                 std::string retVal(str);
                 std::transform(retVal.begin(), retVal.end(), retVal.begin(), ::tolower);
                 return retVal;
+            }
+
+            /*!
+            \brief Emulates the C function fgets with an SDL rwops file
+            */
+            static inline char* rwgets(char* dest, int32 size, SDL_RWops* file, int64* bytesRead)
+            {
+                int32 count;
+                char* compareStr = dest;
+
+                char readChar;
+
+                while (--size > 0 && (count = file->read(file, &readChar, 1, 1)) != 0)
+                {
+                    //if ((*compareStr++ = readChar) == '\n') break;
+                    (*bytesRead)++;
+                    if (readChar != '\r' && readChar != '\n') *compareStr++ = readChar;
+                    if (readChar == '\n') break;
+                }
+                *compareStr = '\0';
+                return (count == 0 && compareStr == dest) ? nullptr : dest;
             }
         }
     }

@@ -34,6 +34,7 @@ source distribution.
 
 #include <SDL_stdinc.h>
 #include <SDL_events.h>
+#include <SDL_rwops.h>
 
 /*
 Aliases for SDL types
@@ -62,5 +63,18 @@ namespace cro
             A
         };
     }
+
+    //used to automatically close RWops files
+    struct RaiiRWops final
+    {
+        SDL_RWops* file = nullptr;
+        ~RaiiRWops()
+        {
+            if (file)
+            {
+                SDL_RWclose(file);
+            }
+        }
+    };
 }
 #endif //CRO_TYPES_HPP_
