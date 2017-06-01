@@ -75,5 +75,11 @@
     <ClCompile Include="..\testwin\src\BackgroundSystem.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
+    <ClCompile Include="..\testwin\src\ItemsDirector.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\testwin\src\ItemSystem.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -535,5 +535,8 @@
     <None Include="..\common\include\crogine\ecs\Scene.inl">
       <Filter>Header Files\ecs</Filter>
     </None>
+    <None Include="..\common\include\crogine\core\ConfigFile.inl">
+      <Filter>Header Files\core</Filter>
+    </None>
   </ItemGroup>
 </Project>

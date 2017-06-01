@@ -103,6 +103,7 @@ namespace cro
         std::vector<float> valueAsArray() const;
     };
 
+#include "ConfigFile.inl"
 
     /*!
     \brief A configuration object can hold one or more nested objects
