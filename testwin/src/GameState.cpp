@@ -41,6 +41,8 @@ source distribution.
 #include "VelocitySystem.hpp"
 #include "PlayerDirector.hpp"
 #include "BackgroundDirector.hpp"
+#include "ItemSystem.hpp"
+#include "ItemsDirector.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -153,9 +155,11 @@ void GameState::addSystems()
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<VelocitySystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
+    m_scene.addSystem<ItemSystem>(mb);
 
     m_scene.addDirector<PlayerDirector>();
     m_scene.addDirector<BackgroundDirector>();
+    m_scene.addDirector<ItemDirector>();
 
     m_scene.addPostProcess<PostRadial>();
 }
@@ -341,44 +345,54 @@ void GameState::createScene()
 
     //collectables
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 1.4f, 1.4f, -9.3f });
+    entity.addComponent<cro::Transform>().setPosition({ 5.41f, 1.4f, -9.3f });
     entity.getComponent<cro::Transform>().setScale({ 0.25f, 0.25f, 0.25f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::BattCollectable));
     auto& battSpin = entity.addComponent<Rotator>();
     battSpin.axis.y = 1.f;
     battSpin.speed = 3.2f;
+    entity.addComponent<CollectableItem>().type = CollectableItem::EMP;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 1.3f, 0.6f, -9.3f });
+    entity.addComponent<cro::Transform>().setPosition({ 5.42f, 0.6f, -9.3f });
     entity.getComponent<cro::Transform>().setScale({ 0.25f, 0.25f, 0.25f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::BombCollectable));
     auto& bombSpin = entity.addComponent<Rotator>();
     bombSpin.axis.y = 1.f;
     bombSpin.speed = 2.9f;
+    entity.addComponent<CollectableItem>().type = CollectableItem::Bomb;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 1.6f, -0.2f, -9.3f });
+    entity.addComponent<cro::Transform>().setPosition({ 5.6f, -0.2f, -9.3f });
     entity.getComponent<cro::Transform>().setScale({ 0.25f, 0.25f, 0.25f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::BotCollectable));
     auto& botSpin = entity.addComponent<Rotator>();
     botSpin.axis.y = 1.f;
     botSpin.speed = 2.994f;
+    entity.addComponent<CollectableItem>().type = CollectableItem::Buddy;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 1.f, -1.f, -9.3f });
+    entity.addComponent<cro::Transform>().setPosition({ 5.38f, -1.f, -9.3f });
     entity.getComponent<cro::Transform>().setScale({ 0.25f, 0.25f, 0.25f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::HeartCollectable));
     auto& heartSpin = entity.addComponent<Rotator>();
     heartSpin.axis.y = 1.f;
     heartSpin.speed = 2.873f;
+    entity.addComponent<CollectableItem>().type = CollectableItem::Life;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 1.4f, -1.7f, -9.3f });
+    entity.addComponent<cro::Transform>().setPosition({ 5.4f, -1.7f, -9.3f });
     entity.getComponent<cro::Transform>().setScale({ 0.25f, 0.25f, 0.25f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::ShieldCollectable));
     auto& shieldSpin = entity.addComponent<Rotator>();
     shieldSpin.axis.y = 1.f;
     shieldSpin.speed = 3.028f;
+    entity.addComponent<CollectableItem>().type = CollectableItem::Shield;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
 
 
     //NPCs
