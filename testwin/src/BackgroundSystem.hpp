@@ -50,12 +50,8 @@ public:
 
     explicit BackgroundSystem(cro::MessageBus&);
 
+    void handleMessage(const cro::Message&) override;
     void process(cro::Time) override;
-
-    void setScrollSpeed(float);
-    void setColourAngle(float);
-
-    void setMode(Mode);
 
 private:
     glm::vec2 m_offset;
@@ -65,6 +61,11 @@ private:
     std::size_t m_currentIndex;
     float m_colourAngle;
     float m_currentColourAngle;
+
+    void setScrollSpeed(float);
+    void setColourAngle(float);
+
+    void setMode(Mode);
 };
 
 #endif //TL_BACKGROUND_SYSTEM_HPP_

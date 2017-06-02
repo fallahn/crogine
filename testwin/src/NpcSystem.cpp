@@ -92,7 +92,7 @@ void NpcSystem::process(cro::Time dt)
 
         for (auto& entity : entities) 
         {
-            //chekc if entity has moved off-screen and
+            //check if entity has moved off-screen and
             //reset it if it has
             auto& status = entity.getComponent<Npc>();
             auto& tx = entity.getComponent<cro::Transform>();
@@ -185,7 +185,12 @@ void NpcSystem::processChoppa(cro::Entity entity)
 
 void NpcSystem::processTurret(cro::Entity entity)
 {
+    auto& tx = entity.getComponent<cro::Transform>();
     
+    glm::vec3 target = m_playerPosition - tx.getWorldPosition();
+
+    float rotation = atan2(target.x, target.y);
+    tx.setRotation({ 0.f, -rotation, 0.f });
 }
 
 void NpcSystem::onEntityAdded(cro::Entity entity)
@@ -207,7 +212,7 @@ void NpcSystem::onEntityAdded(cro::Entity entity)
         status.choppa.tableIndex = cro::Util::Random::value(0, m_choppaTable.size() - 1);
         break;
     case Npc::Turret:
-
+        status.active = true;
         break;
     }
 }

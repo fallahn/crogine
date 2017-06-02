@@ -97,7 +97,9 @@ namespace CommandID
         SnowParticles = 0x4,
         Player = 0x8,
         Collectable = 0x10,
-        Turret = 0x20
+        Turret = 0x20,
+        Elite = 0x40,
+        Choppa = 0x80
     };
 }
 

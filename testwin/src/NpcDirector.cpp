@@ -30,12 +30,22 @@ source distribution.
 #include "NpcDirector.hpp"
 #include "Messages.hpp"
 #include "ResourceIDs.hpp"
+#include "NPCSystem.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/util/Random.hpp>
+
+namespace
+{
+    const float eliteSpawnTime = 24.f;
+    const float choppaSpawnTime = 13.f;
+}
 
 NpcDirector::NpcDirector()
+    : m_eliteRespawn(eliteSpawnTime / 4.f),
+    m_choppaRespawn(choppaSpawnTime / 2.f)
 {
 
 }
@@ -71,7 +81,51 @@ void NpcDirector::handleMessage(const cro::Message& msg)
     }
 }
 
-void NpcDirector::process(cro::Time)
+void NpcDirector::process(cro::Time dt)
 {
+    //TODO track how many enemies spawned / died
+    //then switch to boss mode when needed
+    float dtSec = dt.asSeconds();
+    
+    m_eliteRespawn -= dtSec;
+    if (m_eliteRespawn < 0)
+    {
+        m_eliteRespawn = eliteSpawnTime + cro::Util::Random::value(0.1f, 2.3f);
 
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Elite;
+        cmd.action = [](cro::Entity entity, cro::Time)
+        {
+            auto& status = entity.getComponent<Npc>();
+            if (!status.active)
+            {
+                status.active = true;
+                status.elite.destination.x = cro::Util::Random::value(1.f, 4.f);
+                status.elite.movementCount = cro::Util::Random::value(4, 8);
+                status.elite.pauseTime = cro::Util::Random::value(1.2f, 2.2f);
+            }
+        };
+        sendCommand(cmd);
+    }
+
+    m_choppaRespawn -= dtSec;
+    if (m_choppaRespawn < 0)
+    {
+        m_choppaRespawn = choppaSpawnTime + cro::Util::Random::value(-2.f, 3.6439f);
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Choppa;
+        cmd.action = [](cro::Entity entity, cro::Time)
+        {
+            auto& status = entity.getComponent<Npc>();
+            if (!status.active)
+            {
+                status.active = true;
+                status.choppa.moveSpeed = cro::Util::Random::value(-1.3f, -0.8f);
+                status.choppa.deathVelocity.x = status.choppa.moveSpeed;
+                status.choppa.tableIndex = cro::Util::Random::value(0, 40); //hmm don't have table size here (see NpcSystem)
+            }
+        };
+        sendCommand(cmd);
+    }
 }

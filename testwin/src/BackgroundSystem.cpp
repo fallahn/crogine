@@ -61,6 +61,27 @@ BackgroundSystem::BackgroundSystem(cro::MessageBus& mb)
 }
 
 //public
+void BackgroundSystem::handleMessage(const cro::Message& msg)
+{
+    switch (msg.id)
+    {
+    default: break;
+
+    case MessageID::GameMessage:
+    {
+        const auto& data = msg.getData<GameEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case GameEvent::RoundStart:
+            setScrollSpeed(0.2f);
+            break;
+        }
+    }
+        break;
+    }
+}
+
 void BackgroundSystem::process(cro::Time dt)
 {
     float dtSec = dt.asSeconds();
@@ -93,6 +114,8 @@ void BackgroundSystem::process(cro::Time dt)
     }
 }
 
+
+//private
 void BackgroundSystem::setScrollSpeed(float speed)
 {
     m_speed = speed;
