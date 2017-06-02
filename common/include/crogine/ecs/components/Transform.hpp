@@ -141,6 +141,12 @@ namespace cro
         void removeParent();
 
         /*!
+        \brief Returns the ID of the entity to which this transform's
+        Entity is parented.
+        */
+        int32 getParentID() const { return m_parent; }
+
+        /*!
         \brief Sets the child node at the given index.
         \param id ID of the entity to add as a child.
         No more than MaxChildren may be added to any one transform.

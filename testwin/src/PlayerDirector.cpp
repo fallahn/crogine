@@ -30,6 +30,7 @@ source distribution.
 #include "PlayerDirector.hpp"
 #include "ResourceIDs.hpp"
 #include "VelocitySystem.hpp"
+#include "Messages.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -308,6 +309,17 @@ void PlayerDirector::process(cro::Time)
         DPRINT("Touch", std::to_string(worldTarget.x) + ", " + std::to_string(worldTarget.y));
     }
 #endif //PLATFORM_MOBILE
+
+    //TODO is there a better way to broadcast player position?
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Player;
+    cmd.action = [this](cro::Entity entity, cro::Time)
+    {
+        auto msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+        msg->type = PlayerEvent::Moved;
+        msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+    };
+    sendCommand(cmd);
 }
 
 //private

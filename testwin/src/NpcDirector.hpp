@@ -27,55 +27,20 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_MESSAGES_HPP_
-#define TL_MESSAGES_HPP_
+#ifndef TL_NPC_DIRECTOR_HPP_
+#define TL_NPC_DIRECTOR_HPP_
 
-#include <crogine/core/Message.hpp>
+#include <crogine/ecs/Director.hpp>
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-
-namespace MessageID
+class NpcDirector final : public cro::Director
 {
-    enum
-    {
-        BackgroundSystem = cro::Message::Count,
-        GameMessage,
-        PlayerMessage
-    };
-}
+public:
+    NpcDirector();
 
-struct BackgroundEvent final
-{
-    enum
-    {
-        SpeedChange,
-        Shake,
-        ModeChanged,
-        MountCreated
-    } type;
-    float value = 0.f;
-    glm::vec2 position;
-    cro::uint32 entityID = 0;
+private:
+    void handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
+    void process(cro::Time) override;
 };
 
-struct GameEvent final
-{
-    enum
-    {
-        RoundStart
-    }type;
-};
-
-struct PlayerEvent final
-{
-    enum
-    {
-        Spawned,
-        Died,
-        Moved
-    }type;
-    glm::vec3 position;
-};
-
-#endif //TL_MESSAGES_HPP_
+#endif //TL_NPC_DIRECTOR_HPP_

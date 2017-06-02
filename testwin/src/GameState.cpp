@@ -43,6 +43,8 @@ source distribution.
 #include "BackgroundDirector.hpp"
 #include "ItemSystem.hpp"
 #include "ItemsDirector.hpp"
+#include "NPCSystem.hpp"
+#include "NpcDirector.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -156,10 +158,12 @@ void GameState::addSystems()
     m_scene.addSystem<VelocitySystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<ItemSystem>(mb);
+    m_scene.addSystem<NpcSystem>(mb);
 
     m_scene.addDirector<PlayerDirector>();
     m_scene.addDirector<BackgroundDirector>();
     m_scene.addDirector<ItemDirector>();
+    m_scene.addDirector<NpcDirector>();
 
     m_scene.addPostProcess<PostRadial>();
 }
@@ -307,16 +311,20 @@ void GameState::createScene()
     //terrain chunks
     entity = m_scene.createEntity();
     auto& chunkTxA = entity.addComponent<cro::Transform>();
-    chunkTxA.setPosition({ 0.f, 0.f, -9.f });
+    chunkTxA.setPosition({ 0.f, 0.f, -8.8f });
     //chunkTxA.setScale({ 0.5f, 0.5f, 1.f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::TerrainChunkA), m_materialResource.get(MaterialID::TerrainChunk));
     entity.addComponent<TerrainChunk>();
 
+    auto chunkEntityA = entity; //keep this so we can attach turrets to it
+
     entity = m_scene.createEntity();
     auto& chunkTxB = entity.addComponent<cro::Transform>();
-    chunkTxB.setPosition({ backgroundSize.x, 0.f, -9.f });
+    chunkTxB.setPosition({ backgroundSize.x, 0.f, -8.8f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::TerrainChunkB), m_materialResource.get(MaterialID::TerrainChunk));
     entity.addComponent<TerrainChunk>();
+
+    auto chunkEntityB = entity;
 
     //some rockfall parts
     for (auto i = 0u; i < rockfallCount; ++i)
@@ -397,20 +405,43 @@ void GameState::createScene()
 
     //NPCs
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 2.7f, 0.5f, -9.3f });
+    entity.addComponent<cro::Transform>().setPosition({ 5.9f, 1.5f, -9.3f });
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCElite), m_materialResource.get(MaterialID::NPCElite));
+    entity.addComponent<Npc>().type = Npc::Elite;
+    
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 5.9f, 0.5f, -9.3f });
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
     //entity.getComponent<cro::Transform>().setScale({ 0.02f, 0.02f, 0.02f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCChoppa), m_materialResource.get(MaterialID::NPCChoppa));
     entity.addComponent<cro::Skeleton>() = choppaSkel;
+    entity.addComponent<Npc>().type = Npc::Choppa;
 
+    //attach turret to each of the terrain chunks
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 2.6f, -0.6f, -8.9f });
+    entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f }); //places off screen to start
     entity.getComponent<cro::Transform>().setScale({ 0.3f, 0.3f, 0.3f });
+    entity.getComponent<cro::Transform>().setParent(chunkEntityA); //attach to scenery
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCTurretBase), m_materialResource.get(MaterialID::NPCTurretBase));
-
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Turret;
+    
     auto canEnt = m_scene.createEntity();
     canEnt.addComponent<cro::Transform>().setParent(entity);
     canEnt.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCTurretCannon), m_materialResource.get(MaterialID::NPCTurretCannon));
+    canEnt.addComponent<Npc>().type = Npc::Turret;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
+    entity.getComponent<cro::Transform>().setScale({ 0.3f, 0.3f, 0.3f });
+    entity.getComponent<cro::Transform>().setParent(chunkEntityB); //attach to scenery
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCTurretBase), m_materialResource.get(MaterialID::NPCTurretBase));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Turret;
+
+    canEnt = m_scene.createEntity();
+    canEnt.addComponent<cro::Transform>().setParent(entity);
+    canEnt.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCTurretCannon), m_materialResource.get(MaterialID::NPCTurretCannon));
+    canEnt.addComponent<Npc>().type = Npc::Turret;
+
 
     //particle systems
     entity = m_scene.createEntity();

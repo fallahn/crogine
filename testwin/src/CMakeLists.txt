@@ -15,6 +15,8 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/MenuOptions.cpp
   ${PROJECT_DIR}/MenuScores.cpp
   ${PROJECT_DIR}/MyApp.cpp 
+  ${PROJECT_DIR}/NpcDirector.cpp
+  ${PROJECT_DIR}/NpcSystem.cpp 
   ${PROJECT_DIR}/PlayerDirector.cpp
   ${PROJECT_DIR}/PostRadial.cpp
   ${PROJECT_DIR}/RandomTranslation.cpp

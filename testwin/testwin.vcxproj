@@ -302,6 +302,8 @@
     <ClCompile Include="src\MenuOptions.cpp" />
     <ClCompile Include="src\MenuScores.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
+    <ClCompile Include="src\NpcDirector.cpp" />
+    <ClCompile Include="src\NpcSystem.cpp" />
     <ClCompile Include="src\PlayerDirector.cpp" />
     <ClCompile Include="src\PostRadial.cpp" />
     <ClCompile Include="src\RandomTranslation.cpp" />
@@ -326,6 +328,8 @@
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
+    <ClInclude Include="src\NpcDirector.hpp" />
+    <ClInclude Include="src\NPCSystem.hpp" />
     <ClInclude Include="src\PlayerDirector.hpp" />
     <ClInclude Include="src\PostRadial.hpp" />
     <ClInclude Include="src\RandomTranslation.hpp" />
