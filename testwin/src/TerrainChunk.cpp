@@ -183,6 +183,15 @@ void ChunkSystem::rebuildChunk(cro::Entity entity)
              : chunkComponent.points[i + offset].y -= (curve[i] * cro::Util::Random::value(1.f, 1.6f));
     }
 
+    //send a message with approx centre of hump to position this chunk's turret
+    auto centreIndex = offset + (curve.size() / 2);
+    auto msg = postMessage<BackgroundEvent>(MessageID::BackgroundSystem);
+    msg->type = BackgroundEvent::MountCreated;
+    msg->position = chunkComponent.points[centreIndex];
+    bottom ? msg->position.y -= 1.f : msg->position.y += 1.f;
+    msg->entityID = entity.getIndex();
+
+    //store the last point so that it lines up with next chunk
     chunkComponent.points[0].y = m_lastBottom;
     chunkComponent.points[halfCount].y = m_lastTop;
     m_lastBottom = chunkComponent.points[halfCount - 1].y;

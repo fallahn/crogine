@@ -96,7 +96,8 @@ namespace CommandID
         RockParticles = 0x2,
         SnowParticles = 0x4,
         Player = 0x8,
-        Collectable = 0x10
+        Collectable = 0x10,
+        Turret = 0x20
     };
 }
 

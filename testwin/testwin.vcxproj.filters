@@ -99,6 +99,12 @@
     <ClCompile Include="src\ItemsDirector.cpp">
       <Filter>Source Files\TL</Filter>
     </ClCompile>
+    <ClCompile Include="src\NpcSystem.cpp">
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NpcDirector.cpp">
+      <Filter>Source Files\TL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -175,6 +181,12 @@
     </ClInclude>
     <ClInclude Include="src\ItemSystem.hpp">
       <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NPCSystem.hpp">
+      <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NpcDirector.hpp">
+      <Filter>Header Files\TL</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

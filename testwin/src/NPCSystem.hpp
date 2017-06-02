@@ -27,55 +27,70 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_MESSAGES_HPP_
-#define TL_MESSAGES_HPP_
+#ifndef TL_NPC_SYSTEM_HPP_
+#define TL_NPC_SYSTEM_HPP_
 
-#include <crogine/core/Message.hpp>
+#include <crogine/ecs/System.hpp>
 
-#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
-namespace MessageID
-{
-    enum
-    {
-        BackgroundSystem = cro::Message::Count,
-        GameMessage,
-        PlayerMessage
-    };
-}
+#include <vector>
 
-struct BackgroundEvent final
+struct EliteNavigator final
 {
-    enum
-    {
-        SpeedChange,
-        Shake,
-        ModeChanged,
-        MountCreated
-    } type;
-    float value = 0.f;
-    glm::vec2 position;
-    cro::uint32 entityID = 0;
+    glm::vec3 destination;
+    bool active = false;
+    float pauseTime = 1.f;
+    cro::uint16 movementCount = 5;
 };
 
-struct GameEvent final
+struct ChoppaNavigator final
+{
+    std::size_t tableIndex = 0;
+    float moveSpeed = -0.9f;
+    bool inCombat = true;
+    glm::vec3 deathVelocity;
+};
+
+struct Npc final
 {
     enum
     {
-        RoundStart
+        Elite,
+        Choppa,
+        Turret
     }type;
+
+    bool active = true;
+    bool wantsReset = false;
+    float health = 0.f;
+
+
+    EliteNavigator elite;
+    ChoppaNavigator choppa;
 };
 
-struct PlayerEvent final
+class NpcSystem final : public cro::System
 {
-    enum
-    {
-        Spawned,
-        Died,
-        Moved
-    }type;
-    glm::vec3 position;
+public:
+    NpcSystem(cro::MessageBus&);
+
+    void handleMessage(const cro::Message&) override;
+    void process(cro::Time) override;
+
+private:
+
+    float m_accumulator;
+    glm::vec3 m_playerPosition;
+
+    std::vector<glm::vec3> m_elitePositions;
+    std::vector<float> m_choppaTable;
+
+    void processElite(cro::Entity);
+    void processChoppa(cro::Entity);
+    void processTurret(cro::Entity);
+
+    void onEntityAdded(cro::Entity) override;
 };
 
-#endif //TL_MESSAGES_HPP_
+#endif //TL_NPC_SYSTEM_HPP_

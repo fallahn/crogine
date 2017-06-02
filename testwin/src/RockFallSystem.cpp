@@ -48,7 +48,7 @@ namespace
 RockFallSystem::RockFallSystem(cro::MessageBus& mb)
     : cro::System   (mb, typeid(RockFallSystem)),
     m_running       (false),
-    m_wavetable     (cro::Wavetable::Waveform::Sine, 10.f, 0.02f)
+    m_wavetable     (cro::Wavetable::Waveform::Sine, 10.f, 1.2f)
 {
     requireComponent<cro::Transform>();
     requireComponent<RockFall>();
@@ -105,7 +105,7 @@ void RockFallSystem::process(cro::Time dt)
             break;
         case RockFall::Shaking:
             rockfall.stateTime -= dtSec;
-            tx.move({ m_wavetable.fetch(dt), 0.f, 0.f });
+            tx.move({ m_wavetable.fetch(dt) * dt.asSeconds(), 0.f, 0.f });
             if (rockfall.stateTime <= 0)
             {
                 rockfall.state = RockFall::Falling;

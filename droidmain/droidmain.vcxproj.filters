@@ -81,5 +81,11 @@
     <ClCompile Include="..\testwin\src\ItemSystem.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
+    <ClCompile Include="..\testwin\src\NpcSystem.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\testwin\src\NpcDirector.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
