@@ -61,10 +61,9 @@ struct Npc final
         Turret
     }type;
 
-    bool active = true;
+    bool active = false;
     bool wantsReset = false;
     float health = 0.f;
-
 
     EliteNavigator elite;
     ChoppaNavigator choppa;

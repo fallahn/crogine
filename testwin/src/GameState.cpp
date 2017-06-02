@@ -70,7 +70,6 @@ source distribution.
 
 namespace
 {
-    BackgroundSystem* backgroundController = nullptr;
     const glm::vec2 backgroundSize(21.3f, 7.2f);
     std::size_t rockfallCount = 2;
 
@@ -100,15 +99,7 @@ bool GameState::handleEvent(const cro::Event& evt)
 {
     if (evt.type == SDL_KEYUP)
     {
-        if (evt.key.keysym.sym == SDLK_SPACE)
-        {
-            backgroundController->setMode(BackgroundSystem::Mode::Shake);
-        }
-        else if (evt.key.keysym.sym == SDLK_RETURN)
-        {
-            backgroundController->setMode(BackgroundSystem::Mode::Scroll);
-            backgroundController->setScrollSpeed(0.2f);
-        }
+
     }
 
     m_scene.forwardEvent(evt);
@@ -145,20 +136,19 @@ void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
-    m_scene.addSystem<cro::SceneGraph>(mb);
-    m_scene.addSystem<cro::ModelRenderer>(mb);
-    backgroundController = &m_scene.addSystem<BackgroundSystem>(mb);
-    backgroundController->setScrollSpeed(0.2f);
+    m_scene.addSystem<BackgroundSystem>(mb);
     m_scene.addSystem<ChunkSystem>(mb);
     m_scene.addSystem<RockFallSystem>(mb);
-    m_scene.addSystem<RotateSystem>(mb);
-    m_scene.addSystem<cro::ParticleSystem>(mb);
+    m_scene.addSystem<RotateSystem>(mb);   
     m_scene.addSystem<Translator>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<VelocitySystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<ItemSystem>(mb);
     m_scene.addSystem<NpcSystem>(mb);
+    m_scene.addSystem<cro::SceneGraph>(mb);
+    m_scene.addSystem<cro::ModelRenderer>(mb);
+    m_scene.addSystem<cro::ParticleSystem>(mb);
 
     m_scene.addDirector<PlayerDirector>();
     m_scene.addDirector<BackgroundDirector>();
@@ -408,6 +398,7 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 5.9f, 1.5f, -9.3f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCElite), m_materialResource.get(MaterialID::NPCElite));
     entity.addComponent<Npc>().type = Npc::Elite;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Elite;
     
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.9f, 0.5f, -9.3f });
@@ -416,6 +407,7 @@ void GameState::createScene()
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCChoppa), m_materialResource.get(MaterialID::NPCChoppa));
     entity.addComponent<cro::Skeleton>() = choppaSkel;
     entity.addComponent<Npc>().type = Npc::Choppa;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Choppa;
 
     //attach turret to each of the terrain chunks
     entity = m_scene.createEntity();

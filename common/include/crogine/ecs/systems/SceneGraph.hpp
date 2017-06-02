@@ -36,7 +36,15 @@ namespace cro
 {
     /*!
     \brief System in charge of making sure parent and child
-    transforms correctly update each other
+    transforms correctly update each other.
+    An instance of this system is required in order to properly
+    create world transforms which are parented in a hierarchy.
+    It should be added to the scene as the last system
+    before any renderers, to ensure that all other systems which
+    have need to update entity transforms have done so. If child
+    entities appear to 'rubber band' slightly when the parent entity
+    moves check that this system is the last system added, before any
+    rendererable systems.
     */
     class CRO_EXPORT_API SceneGraph final : public System
     {

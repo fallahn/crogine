@@ -38,6 +38,9 @@ public:
     NpcDirector();
 
 private:
+    float m_eliteRespawn;
+    float m_choppaRespawn;
+
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
     void process(cro::Time) override;
