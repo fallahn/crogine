@@ -145,12 +145,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Content Include="assets\assets\models\batcat.iqm" />
-    <Content Include="assets\assets\models\room2x1.cmf" />
+    <Content Include="assets\assets\models\test_room.cmf" />
     <Content Include="assets\assets\textures\batcat_diffuse.png" />
     <Content Include="assets\assets\textures\batcat_mask.png" />
     <Content Include="assets\assets\textures\batcat_normal.png" />
-    <Content Include="assets\assets\textures\room2x1.png" />
+    <Content Include="assets\assets\textures\computerwall005a.png" />
     <Content Include="assets\assets\textures\shadow.png" />
+    <Content Include="assets\assets\textures\test_room_lightmap.png" />
     <Content Include="assets\assets\ui\ui_buttons.png" />
     <Content Include="assets\assets\VeraMono.ttf" />
     <Content Include="res\values\strings.xml" />

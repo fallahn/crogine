@@ -45,9 +45,9 @@ namespace cro
                 #endif
                 #if defined(TEXTURED)
                 attribute MED vec2 a_texCoord0;
+                #endif
                 #if defined(LIGHTMAPPED)
                 attribute MED vec2 a_texCoord1;
-                #endif
                 #endif
 
                 #if defined(SKINNED)
@@ -74,9 +74,9 @@ namespace cro
                 #endif
                 #if defined (TEXTURED)
                 varying MED vec2 v_texCoord0;
+                #endif
                 #if defined (LIGHTMAPPED)
                 varying MED vec2 v_texCoord1;
-                #endif
                 #endif
 
                 #if defined(PROJECTIONS)
@@ -114,18 +114,18 @@ namespace cro
                 #else
                     v_texCoord0 = a_texCoord0;                    
                 #endif
+                #endif
                 #if defined (LIGHTMAPPED)
                     v_texCoord1 = a_texCoord1;
-                #endif
                 #endif
                 })";
 
                 const static std::string Fragment = R"(
                 #if defined (TEXTURED)
                 uniform sampler2D u_diffuseMap;
+                #endif
                 #if defined (LIGHTMAPPED)
                 uniform sampler2D u_lightMap;
-                #endif
                 #endif
                 #if defined(COLOURED)
                 uniform LOW vec4 u_colour;
@@ -141,11 +141,12 @@ namespace cro
                 #endif
                 #if defined (TEXTURED)
                 varying MED vec2 v_texCoord0;
+                #endif
                 #if defined (LIGHTMAPPED)
                 varying MED vec2 v_texCoord1;
-                #endif
-                #endif
-                
+                #endif                
+
+
                 #if defined(PROJECTIONS)
                 varying LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
                 #endif
@@ -159,10 +160,11 @@ namespace cro
                 #endif
                 #if defined (TEXTURED)
                     gl_FragColor *= texture2D(u_diffuseMap, v_texCoord0);
+                #endif
                 #if defined (LIGHTMAPPED)
                     gl_FragColor *= texture2D(u_lightMap, v_texCoord1);
                 #endif
-                #endif
+
                 #if defined(COLOURED)
                     gl_FragColor *= u_colour;
                 #endif

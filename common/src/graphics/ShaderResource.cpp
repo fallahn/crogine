@@ -104,6 +104,10 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     {
         defines += "\n#define BUMP";
     }
+    if (flags & BuiltInFlags::LightMap)
+    {
+        defines += "\n#define LIGHTMAPPED";
+    }
     if (flags & BuiltInFlags::VertexColour)
     {
         defines += "\n#define VERTEX_COLOUR";
