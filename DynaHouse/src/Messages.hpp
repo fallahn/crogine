@@ -36,7 +36,8 @@ namespace MessageID
 {
     enum
     {
-        GameMessage = cro::Message::Count
+        GameMessage = cro::Message::Count,
+        UIMessage
     };
 }
 
@@ -47,6 +48,23 @@ struct GameEvent final
     {
         RoundStart
     }type;
+};
+
+struct UIEvent final
+{
+    enum
+    {
+        ButtonPressed,
+        ButtonReleased
+    }type;
+
+    enum Button
+    {
+        Left,
+        Right,
+        Jump,
+        Fire
+    }button;
 };
 
 #endif //DH_MESSAGES_HPP_

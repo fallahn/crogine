@@ -151,6 +151,7 @@
     <Content Include="assets\assets\textures\batcat_normal.png" />
     <Content Include="assets\assets\textures\room2x1.png" />
     <Content Include="assets\assets\textures\shadow.png" />
+    <Content Include="assets\assets\ui\ui_buttons.png" />
     <Content Include="assets\assets\VeraMono.ttf" />
     <Content Include="res\values\strings.xml" />
     <AntBuildXml Include="build.xml" />

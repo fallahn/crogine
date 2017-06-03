@@ -152,11 +152,11 @@ bool Texture::loadFromFile(const std::string& path, bool createMipMaps)
     if (image.loadFromFile(path))
     {
         auto size = image.getSize();
-        if (!((size.x & (size.x - 1)) == 0) && ((size.y & (size.y - 1)) == 0))
+        /*if (!((size.x & (size.x - 1)) == 0) && ((size.y & (size.y - 1)) == 0))
         {
             LOG("Image not POW2", Logger::Type::Error);
             return false;
-        }
+        }*/
         
         create(size.x, size.y, image.getFormat());
         return update(image.getPixelData(), createMipMaps);
