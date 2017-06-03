@@ -70,12 +70,10 @@ private:
     cro::TextureResource m_textureResource;
     cro::FontResource m_fontResource;
 
-    //cro::UISystem* m_uiSystem;
-
-
     void addSystems();
     void loadAssets();
     void createScene();
+    void createUI();
 
     void updateView();
 

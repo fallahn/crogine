@@ -29,6 +29,7 @@ source distribution.
 
 #include "PlayerDirector.hpp"
 #include "ResourceIDs.hpp"
+#include "Messages.hpp"
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/Message.hpp>
@@ -109,7 +110,49 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
 
 void PlayerDirector::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == MessageID::UIMessage)
+    {
+        const auto& data = msg.getData<UIEvent>();
+        if (data.type == UIEvent::ButtonPressed)
+        {
+            switch (data.button)
+            {
+            default: break;
+            case UIEvent::Left:
+                m_flags |= Left;
+                break;
+            case UIEvent::Right:
+                m_flags |= Right;
+                break;
+            case UIEvent::Jump:
+                m_flags |= Up;
+                break;
+            case UIEvent::Fire:
 
+                break;
+            }
+        }
+        else
+        {
+            switch (data.button)
+            {
+            default: break;
+            case UIEvent::Left:
+                m_flags &= ~Left;
+                break;
+            case UIEvent::Right:
+                m_flags &= ~Right;
+                break;
+            case UIEvent::Jump:
+                m_flags &= ~Up;
+                m_canJump = true;
+                break;
+            case UIEvent::Fire:
+
+                break;
+            }
+        }
+    }
 }
 
 void PlayerDirector::process(cro::Time dt)
