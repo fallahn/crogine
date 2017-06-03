@@ -90,7 +90,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         createScene();
         createUI();
     });
-    context.appInstance.setClearColour(cro::Colour::White());
+    context.appInstance.setClearColour(cro::Colour(0.4f, 0.58f, 0.92f));
     //context.mainWindow.setVsyncEnabled(false);
 
     updateView();
@@ -160,20 +160,30 @@ void GameState::loadAssets()
     cfg.loadFromFile("assets/models/batcat.cmt");
 
 
-    auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::ReceiveProjection);
+    auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, 
+        cro::ShaderResource::DiffuseMap | cro::ShaderResource::LightMap | cro::ShaderResource::ReceiveProjection);
 
     auto& roomOne = m_materialResource.add(MaterialID::RoomOne, m_shaderResource.get(shaderID));
-    roomOne.setProperty("u_diffuseMap", m_textureResource.get("assets/textures/room1x1.png"));
+    roomOne.setProperty("u_diffuseMap", m_textureResource.get("assets/textures/computerwall005a.png"));
+    //roomOne.setProperty("u_colour", cro::Colour(0.39f, 0.45f, 1.f));
+    roomOne.setProperty("u_lightMap", m_textureResource.get("assets/textures/test_room_lightmap.png"));
+    roomOne.setProperty("u_projectionMap", m_textureResource.get("assets/textures/shadow.png", false));
+
+    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit,
+        cro::ShaderResource::DiffuseColour | cro::ShaderResource::LightMap | cro::ShaderResource::ReceiveProjection);
 
     auto& roomTwo = m_materialResource.add(MaterialID::RoomTwo, m_shaderResource.get(shaderID));
-    roomTwo.setProperty("u_diffuseMap", m_textureResource.get("assets/textures/room2x1.png"));
+    //roomTwo.setProperty("u_diffuseMap", m_textureResource.get("assets/textures/room2xx1.png"));
+    roomTwo.setProperty("u_colour", cro::Colour::White());
+    roomTwo.setProperty("u_lightMap", m_textureResource.get("assets/textures/test_room_lightmap.png"));
     roomTwo.setProperty("u_projectionMap", m_textureResource.get("assets/textures/shadow.png", false));
     m_textureResource.get("assets/textures/shadow.png").setSmooth(true);
+    m_textureResource.get("assets/textures/test_room_lightmap.png").setSmooth(true);
 
     cro::StaticMeshBuilder r1("assets/models/room1x1.cmf");
     m_meshResource.loadMesh(MeshID::RoomOne, r1);
 
-    cro::StaticMeshBuilder r2("assets/models/room2x1.cmf");
+    cro::StaticMeshBuilder r2("assets/models/test_room.cmf");
     m_meshResource.loadMesh(MeshID::RoomTwo, r2);
 
     shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap /*| cro::ShaderResource::NormalMap*/ | cro::ShaderResource::Skinning);
@@ -200,7 +210,10 @@ void GameState::createScene()
     //starting room
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::RoomTwo), m_materialResource.get(MaterialID::RoomTwo));
-    entity.addComponent<cro::Transform>().move({ 0.f, 0.5f, 0.5f });
+    entity.getComponent<cro::Model>().setMaterial(6, m_materialResource.get(MaterialID::RoomOne));
+    entity.getComponent<cro::Model>().setMaterial(9, m_materialResource.get(MaterialID::RoomOne));
+    entity.getComponent<cro::Model>().setMaterial(13, m_materialResource.get(MaterialID::RoomOne));
+    entity.addComponent<cro::Transform>().scale({ 0.1f, 0.1f, 0.1f });
         
     //dat cat man
     entity = m_scene.createEntity();
@@ -219,7 +232,7 @@ void GameState::createScene()
 
     //3D camera
     auto ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 2.3f });
+    ent.addComponent<cro::Transform>().setPosition({ 0.f, 0.6f, 2.3f });
     ent.addComponent<cro::Camera>();
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
     m_scene.setActiveCamera(ent);

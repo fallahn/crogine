@@ -60,6 +60,12 @@ NpcSystem::NpcSystem(cro::MessageBus& mb)
         m_elitePositions.emplace_back(p, zDepth);
     }
 
+    poissonPos = cro::Util::Random::poissonDiscDistribution({ -0.8f, -0.8f, 1.6f, 1.6f }, 0.6f, 6);
+    for (auto p : poissonPos)
+    {
+        m_eliteIdlePositions.emplace_back(p, 0.f);
+    }
+
     m_choppaTable = cro::Util::Wavetable::sine(1.f, 0.4f);
 }
 
@@ -135,22 +141,31 @@ void NpcSystem::processElite(cro::Entity entity)
 {
     auto& tx = entity.getComponent<cro::Transform>();
     auto& status = entity.getComponent<Npc>();
-
-    if (status.elite.active)
+    
+    //move toward target
+    auto movement = status.elite.destination - tx.getWorldPosition();
+      
+    if (status.elite.active) //big movements
     {
-        //move toward target
-        auto movement = status.elite.destination - tx.getWorldPosition();
-        tx.move(movement * fixedUpdate * 4.f);
-
-        if (glm::length2(movement) < 0.2f)
+        movement *= 4.f;
+        if (glm::length2(movement) < 1.f)
         {
             status.elite.active = false;
             status.elite.pauseTime = cro::Util::Random::value(1.4f, 2.1f);
             status.elite.movementCount--;
+
+            status.elite.destination = m_eliteIdlePositions[status.elite.idleIndex] + tx.getWorldPosition();
         }
     }
     else
     {
+        //do some floaty bobbins               
+        /*if (glm::length2(movement) < 0.2f)
+        {
+            status.elite.idleIndex = (status.elite.idleIndex + 1) % m_eliteIdlePositions.size();
+            status.elite.destination = m_eliteIdlePositions[status.elite.idleIndex] + tx.getWorldPosition();
+        }*/
+
         //count down to next movement
         status.elite.pauseTime -= fixedUpdate;
         if (status.elite.pauseTime < 0)
@@ -161,6 +176,7 @@ void NpcSystem::processElite(cro::Entity entity)
                 : glm::vec3(-7.f, tx.getWorldPosition().y, zDepth);
         }
     }
+    tx.move(movement * fixedUpdate);
 }
 
 void NpcSystem::processChoppa(cro::Entity entity)
@@ -171,7 +187,9 @@ void NpcSystem::processChoppa(cro::Entity entity)
     if (status.choppa.inCombat)
     {
         //fly / shoot
-        tx.move({ status.choppa.moveSpeed * fixedUpdate, m_choppaTable[status.choppa.tableIndex] * fixedUpdate, 0.f });
+        glm::vec3 movement(status.choppa.moveSpeed, m_choppaTable[status.choppa.tableIndex], 0.f);
+        movement.y += (m_playerPosition.y - tx.getWorldPosition().y) * 0.17f;
+        tx.move(movement * fixedUpdate);
         status.choppa.tableIndex = (status.choppa.tableIndex + 1) % m_choppaTable.size();
     }
     else
@@ -205,6 +223,7 @@ void NpcSystem::onEntityAdded(cro::Entity entity)
         status.elite.destination = m_elitePositions[0];
         status.elite.movementCount = cro::Util::Random::value(4, 8);
         status.elite.pauseTime = cro::Util::Random::value(1.2f, 2.2f);
+        status.elite.idleIndex = cro::Util::Random::value(0, m_eliteIdlePositions.size());
         break;
     case Npc::Choppa:
         status.choppa.moveSpeed = cro::Util::Random::value(-1.3f, -0.8f);

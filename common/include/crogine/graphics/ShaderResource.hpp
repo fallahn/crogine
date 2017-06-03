@@ -58,7 +58,7 @@ namespace cro
             DiffuseColour = 0x2,
             DiffuseMap = 0x4,
             NormalMap = 0x8,
-            /*MaskMap = 0x10,*/ //currently always assumed if using a diffuse map
+            LightMap = 0x10,
             Skinning = 0x20,
             Subrects = 0x40,
             ReceiveProjection = 0x80

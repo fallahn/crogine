@@ -42,6 +42,7 @@ struct EliteNavigator final
     bool active = false;
     float pauseTime = 1.f;
     cro::uint16 movementCount = 5;
+    std::size_t idleIndex = 0;
 };
 
 struct ChoppaNavigator final
@@ -83,6 +84,7 @@ private:
     glm::vec3 m_playerPosition;
 
     std::vector<glm::vec3> m_elitePositions;
+    std::vector<glm::vec3> m_eliteIdlePositions;
     std::vector<float> m_choppaTable;
 
     void processElite(cro::Entity);

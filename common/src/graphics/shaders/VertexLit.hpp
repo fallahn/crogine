@@ -50,9 +50,9 @@ namespace cro
                 #endif
                 #if defined(TEXTURED)
                 attribute MED vec2 a_texCoord0;
+                #endif
                 #if defined (LIGHTMAPPED)
                 attribute MED vec2 a_texCoord1;
-                #endif
                 #endif
 
                 #if defined(SKINNED)
@@ -86,11 +86,10 @@ namespace cro
                 #endif
                 #if defined(TEXTURED)
                 varying MED vec2 v_texCoord0;
+                #endif
                 #if defined(LIGHTMAPPED)
                 varying MED vec2 v_texCoord1;
                 #endif
-                #endif
-
 
                 void main()
                 {
@@ -146,9 +145,9 @@ namespace cro
                 #else
                     v_texCoord0 = a_texCoord0;                    
                 #endif
+                #endif
                 #if defined(LIGHTMAPPED)
                     v_texCoord1 = a_texCoord1;
-                #endif
                 #endif
                 })";
 
@@ -158,10 +157,10 @@ namespace cro
                 uniform sampler2D u_maskMap;
                 #if defined(BUMP)
                 uniform sampler2D u_normalMap;
+                #endif
+                #endif
                 #if defined(LIGHTMAPPED)
                 uniform sampler2D u_lightMap;
-                #endif
-                #endif
                 #endif
 
                 uniform HIGH vec3 u_cameraWorldPosition;
@@ -186,9 +185,9 @@ namespace cro
                 #endif
                 #if defined(TEXTURED)
                 varying MED vec2 v_texCoord0;
+                #endif
                 #if defined(LIGHTMAPPED)
                 varying MED vec2 v_texCoord1;
-                #endif
                 #endif
                 
                 HIGH vec3 lightDir = vec3(0.1, -0.8, -0.2);
@@ -236,6 +235,9 @@ namespace cro
                     gl_FragColor.rgb = mix(blendedColour, diffuseColour, mask.b);
                 #else     
                     gl_FragColor.rgb = blendedColour;
+                #endif
+                #if defined (LIGHTMAPPED)
+                    gl_FragColor *= texture2D(u_lightMap, v_texCoord1);
                 #endif
                     gl_FragColor.a = diffuse.a;
 
