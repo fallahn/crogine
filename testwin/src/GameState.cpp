@@ -280,6 +280,23 @@ void GameState::loadAssets()
 
     cro::StaticMeshBuilder collectableMesh("assets/models/collectable.cmf");
     m_meshResource.loadMesh(MeshID::Collectable, collectableMesh);
+
+    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseColour);
+    auto& blackMaterial = m_materialResource.add(MaterialID::BackgroundBlack, m_shaderResource.get(shaderID));
+    blackMaterial.setProperty("u_colour", cro::Colour(0.22f, 0.22f, 0.22f));
+    blackMaterial.setProperty("u_maskColour", cro::Colour(0.01f, 0.4f, 0.f));
+
+    auto& glassMaterial = m_materialResource.add(MaterialID::BackgroundGlass, m_shaderResource.get(shaderID));
+    glassMaterial.setProperty("u_colour", cro::Colour(0.2f, 0.1f, 0.1f, 0.2f));
+    glassMaterial.setProperty("u_maskColour", cro::Colour(1.f, 1.f, 0.f));
+    glassMaterial.blendMode = cro::Material::BlendMode::Alpha;
+
+    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseColour);
+    auto& lightMaterial = m_materialResource.add(MaterialID::BackgroundUnlit, m_shaderResource.get(shaderID));
+    lightMaterial.setProperty("u_colour", cro::Colour(0.9f, 0.f, 0.f));
+
+    cro::StaticMeshBuilder outpost("assets/models/arctic_outpost.cmf");
+    m_meshResource.loadMesh(MeshID::ArcticOutpost, outpost);
 }
 
 void GameState::createScene()
@@ -297,6 +314,13 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -11.f });
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::GameBackground), m_materialResource.get(MaterialID::GameBackgroundNear));
     entity.addComponent<BackgroundComponent>();
+
+    //background objects
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -13.f });
+    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::ArcticOutpost), m_materialResource.get(MaterialID::BackgroundBlack));
+    entity.getComponent<cro::Model>().setMaterial(1, m_materialResource.get(MaterialID::BackgroundGlass));
+    entity.getComponent<cro::Model>().setMaterial(2, m_materialResource.get(MaterialID::BackgroundUnlit));
 
     //terrain chunks
     entity = m_scene.createEntity();
@@ -342,9 +366,10 @@ void GameState::createScene()
 
 
     //collectables
+    static const glm::vec3 coinScale(0.15f);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.41f, 1.4f, -9.3f });
-    entity.getComponent<cro::Transform>().setScale({ 0.25f, 0.25f, 0.25f });
+    entity.getComponent<cro::Transform>().setScale(coinScale);
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::BattCollectable));
     auto& battSpin = entity.addComponent<Rotator>();
     battSpin.axis.y = 1.f;
@@ -354,7 +379,7 @@ void GameState::createScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.42f, 0.6f, -9.3f });
-    entity.getComponent<cro::Transform>().setScale({ 0.25f, 0.25f, 0.25f });
+    entity.getComponent<cro::Transform>().setScale(coinScale);
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::BombCollectable));
     auto& bombSpin = entity.addComponent<Rotator>();
     bombSpin.axis.y = 1.f;
@@ -364,7 +389,7 @@ void GameState::createScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.6f, -0.2f, -9.3f });
-    entity.getComponent<cro::Transform>().setScale({ 0.25f, 0.25f, 0.25f });
+    entity.getComponent<cro::Transform>().setScale(coinScale);
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::BotCollectable));
     auto& botSpin = entity.addComponent<Rotator>();
     botSpin.axis.y = 1.f;
@@ -374,7 +399,7 @@ void GameState::createScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.38f, -1.f, -9.3f });
-    entity.getComponent<cro::Transform>().setScale({ 0.25f, 0.25f, 0.25f });
+    entity.getComponent<cro::Transform>().setScale(coinScale);
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::HeartCollectable));
     auto& heartSpin = entity.addComponent<Rotator>();
     heartSpin.axis.y = 1.f;
@@ -384,7 +409,7 @@ void GameState::createScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.4f, -1.7f, -9.3f });
-    entity.getComponent<cro::Transform>().setScale({ 0.25f, 0.25f, 0.25f });
+    entity.getComponent<cro::Transform>().setScale(coinScale);
     entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::ShieldCollectable));
     auto& shieldSpin = entity.addComponent<Rotator>();
     shieldSpin.axis.y = 1.f;
