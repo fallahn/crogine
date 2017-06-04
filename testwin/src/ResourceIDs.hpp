@@ -51,7 +51,9 @@ namespace MaterialID
         BotCollectable, HeartCollectable,
         ShieldCollectable,
         NPCElite, NPCChoppa,
-        NPCTurretBase, NPCTurretCannon
+        NPCTurretBase, NPCTurretCannon,
+        BackgroundBlack, BackgroundGlass,
+        BackgroundUnlit
     };
 }
 
@@ -68,7 +70,8 @@ namespace MeshID
         RockQuad,
         Collectable,
         NPCElite, NPCChoppa,
-        NPCTurretBase, NPCTurretCannon
+        NPCTurretBase, NPCTurretCannon,
+        ArcticOutpost
     };
 }
 

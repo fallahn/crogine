@@ -151,7 +151,7 @@ namespace cro
                 #endif
                 })";
 
-            const static std::string Fragment = R"(
+                const static std::string Fragment = R"(
                 #if defined(TEXTURED)
                 uniform sampler2D u_diffuseMap;
                 uniform sampler2D u_maskMap;
@@ -166,6 +166,7 @@ namespace cro
                 uniform HIGH vec3 u_cameraWorldPosition;
                 #if defined(COLOURED)
                 uniform LOW vec4 u_colour;
+                uniform LOW vec4 u_maskColour;
                 #endif
 
                 #if defined(PROJECTIONS)
@@ -194,7 +195,7 @@ namespace cro
 
                 LOW vec3 diffuseColour;
                 HIGH vec3 eyeDirection;
-                LOW vec3 mask;
+                LOW vec3 mask = vec3(1.0, 1.0, 0.0);
                 vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
                 {
                     MED float diffuseAmount = max(dot(normal, lightDirection), 0.0);
@@ -221,10 +222,13 @@ namespace cro
                     mask = texture2D(u_maskMap, v_texCoord0).rgb;
                 #elif defined(COLOURED)
                     LOW vec4 diffuse = u_colour;
+                    mask = u_maskColour.rgb;
                 #elif defined(VERTEX_COLOURED)
                     LOW vec4 diffuse = v_colour;
+                    mask = u_maskColour.rgb;
                 #else
                     LOW vec4 diffuse = vec4(1.0);
+                    mask = u_maskColour.rgb;
                 #endif
                     diffuseColour = diffuse.rgb;
                     LOW vec3 blendedColour = diffuse.rgb * 0.2; //ambience

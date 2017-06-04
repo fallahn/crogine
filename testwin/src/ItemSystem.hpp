@@ -57,6 +57,10 @@ public:
     ItemSystem(cro::MessageBus&);
 
     void process(cro::Time) override;
+    void handleMessage(const cro::Message&) override;
+
+private:
+    glm::vec3 m_playerPosition;
 };
 
 #endif //TL_ITEM_SYSTEM_HPP_

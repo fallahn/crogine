@@ -28,12 +28,21 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ItemSystem.hpp"
+#include "Messages.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/util/Random.hpp>
+
+#include <glm/gtx/norm.hpp>
+
+namespace
+{
+    const float minPlayerDistance = 4.4f; //squared dist
+    const float magnetSpeed = 1.4f;
+}
 
 ItemSystem::ItemSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(ItemSystem))
@@ -46,6 +55,8 @@ ItemSystem::ItemSystem(cro::MessageBus& mb)
 //public
 void ItemSystem::process(cro::Time dt)
 {
+    const float dtSec = dt.asSeconds();
+
     auto& entities = getEntities();
     for (auto& entity : entities)
     {
@@ -54,7 +65,22 @@ void ItemSystem::process(cro::Time dt)
         {
             //move item
             auto& tx = entity.getComponent<cro::Transform>();
-            tx.move({ status.speed * dt.asSeconds(), 0.f, 0.f });
+            tx.move({ status.speed * dtSec, 0.f, 0.f });
+
+            tx.move(status.impulse * dtSec);
+            status.impulse *= 0.94f;
+
+            //if near the player get closer
+            auto dir = m_playerPosition - tx.getWorldPosition();
+            auto dist = glm::length2(dir);
+            if (dist < minPlayerDistance)
+            {
+                float ratio = 1.f - (dist / minPlayerDistance);
+                auto movement = glm::normalize(dir);
+                tx.move(movement * magnetSpeed * ratio * dtSec);
+
+                status.impulse += movement * 0.15f;
+            }
 
             //if item out of view move back to beginning
             bool visible = entity.getComponent<cro::Model>().isVisible();
@@ -83,6 +109,21 @@ void ItemSystem::process(cro::Time dt)
             //if laser move
             //if player die
             //else nothing
+        }
+    }
+}
+
+void ItemSystem::handleMessage(const cro::Message& msg)
+{
+    if (msg.id == MessageID::PlayerMessage)
+    {
+        const auto& data = msg.getData<PlayerEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case PlayerEvent::Moved:
+            m_playerPosition = data.position;
+            break;
         }
     }
 }
