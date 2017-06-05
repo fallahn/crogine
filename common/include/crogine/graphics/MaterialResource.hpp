@@ -66,13 +66,20 @@ namespace cro
         Material::Data& add(int32 ID, const Shader& shader);
 
         /*!
+        \brief Adds a material to the resource.
+        The material ID is auto generated before being mapped to the new material.
+        This is usually used by the resource automation, but is also useful
+        for storing IDs of materials generated on the fly.
+        \param shader Reference to the shader to use for this material.
+        */
+        int32 add(const Shader& shader);
+
+        /*!
         \brief Returns a copy of the material data for the given ID
         if it has been found to have been added to the MaterialResource.
         \param ID Integer value previously mapped to a material.
-        Material data returns is a copy so that it may be configured independently
-        of other instances, before being added to a model component.
         */
-        Material::Data get(int32 ID) const;
+        Material::Data& get(int32 ID);
 
     private:
         std::unordered_map<int32, Material::Data> m_materials;

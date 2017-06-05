@@ -33,11 +33,13 @@ source distribution.
 
 #include "../detail/GLCheck.hpp"
 
+#include <limits>
+
 using namespace cro;
 
 namespace
 {
-
+    int32 autoID = std::numeric_limits<int32>::max();
 }
 
 MeshResource::MeshResource()
@@ -84,6 +86,24 @@ bool MeshResource::loadMesh(int32 ID, const MeshBuilder& mb)
     }
     LOG("Invalid mesh data was returned from MeshBuilder", Logger::Type::Error);
     return false;
+}
+
+int32 MeshResource::loadMesh(const MeshBuilder& mb)
+{
+    CRO_ASSERT(autoID > 0, "Christ you've loaded a lot of meshes!");
+    int32 nextID = autoID--;
+    if (m_meshData.count(nextID) != 0)
+    {
+        LOG(std::to_string(nextID) + ": ID already assigned to mesh", Logger::Type::Info);
+        return nextID;
+    }
+
+    if (loadMesh(nextID, mb))
+    {
+        return nextID;
+    }
+
+    return -1;
 }
 
 const Mesh::Data MeshResource::getMesh(int32 id) const

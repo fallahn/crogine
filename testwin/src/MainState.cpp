@@ -158,51 +158,14 @@ void MainState::addSystems()
 
 void MainState::loadAssets()
 {
-    cro::int32 shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::NormalMap);
-    auto& moonMaterial = m_materialResource.add(MaterialID::Moon, m_shaderResource.get(shaderID));
-    moonMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/moon_diffuse.png"));
-    moonMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/moon_normal.png"));
-    moonMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/moon_mask.png"));
-
-    auto& planetMaterial = m_materialResource.add(MaterialID::Planet, m_shaderResource.get(shaderID));
-    planetMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/gas_diffuse.png"));
-    auto& normalTex = m_textureResource.get("assets/materials/gas_normal.png");
-    normalTex.setSmooth(true);
-    planetMaterial.setProperty("u_normalMap", normalTex);
-    planetMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/gas_mask.png"));
-    
-    auto& roidMaterial = m_materialResource.add(MaterialID::Roids, m_shaderResource.get(shaderID));
-    roidMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/roid_diffuse.png"));
-    roidMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/roid_normal.png"));
-    roidMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/roid_mask.png"));
-    
-    /*shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap);
-    auto& cloudMaterial = m_materialResource.add(MaterialID::PlanetClouds, m_shaderResource.get(shaderID));
-    cloudMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/gas_clouds.png"));
-    cloudMaterial.blendMode = cro::Material::BlendMode::Alpha;*/
-    
-    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
-    auto& starTexture = m_textureResource.get("assets/materials/stars.png");
-    starTexture.setRepeated(true);
-    auto& skyMaterial = m_materialResource.add(MaterialID::Stars, m_shaderResource.get(shaderID));
-    skyMaterial.setProperty("u_diffuseMap", starTexture);
-    skyMaterial.blendMode = cro::Material::BlendMode::Additive;
-
-
-    cro::SphereBuilder sb(2.2f, 8);
-    m_meshResource.loadMesh(cro::Mesh::SphereMesh, sb);
-
-    cro::QuadBuilder qb(glm::vec2(16.f, 9.f), glm::vec2(16.f / 9.f, 1.f));
-    m_meshResource.loadMesh(cro::Mesh::QuadMesh, qb);
-
-    cro::StaticMeshBuilder smb("assets/models/roid_belt.cmf");
-    m_meshResource.loadMesh(MeshID::Roids, smb);
-
-    cro::StaticMeshBuilder msmb("assets/models/moon.cmf");
-    m_meshResource.loadMesh(MeshID::Moon, msmb);
+    m_modelDefs[ModelID::LookoutBase].loadFromFile("assets/models/lookout_base.cmt", m_resources);
+    m_modelDefs[ModelID::GasPlanet].loadFromFile("assets/models/planet.cmt", m_resources);
+    m_modelDefs[ModelID::Moon].loadFromFile("assets/models/moon.cmt", m_resources);
+    m_modelDefs[ModelID::Roids].loadFromFile("assets/models/roid_belt.cmt", m_resources);
+    m_modelDefs[ModelID::Stars].loadFromFile("assets/models/stars.cmt", m_resources);
 
     //test sprite sheet
-    auto& testFont = m_fontResource.get(FontID::MenuFont);
+    auto& testFont = m_resources.fonts.get(FontID::MenuFont);
     testFont.loadFromFile("assets/fonts/VeraMono.ttf");
 }
 
@@ -213,7 +176,8 @@ void MainState::createScene()
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 2.3f, -0.7f, -6.f });
     entity.getComponent<cro::Transform>().setRotation({ -0.5f, 0.f, 0.4f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(MaterialID::Planet));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[ModelID::GasPlanet].meshID),
+                                    m_resources.materials.get(m_modelDefs[ModelID::GasPlanet].materialIDs[0]));
     auto& planetRotator = entity.addComponent<Rotator>();
     planetRotator.speed = 0.02f;
     planetRotator.axis.y = 0.2f;
@@ -226,17 +190,31 @@ void MainState::createScene()
     auto moonEntity = m_backgroundScene.createEntity();
     auto& moonTx = moonEntity.addComponent<cro::Transform>();
     moonTx.setScale({ 0.22f, 0.22f, 0.22f });
-    moonTx.setOrigin({ -5.2f, 0.f, 0.f });
+    moonTx.setOrigin({ 0.f, 0.f, -5.2f });
     moonTx.setParent(entity);
-    moonEntity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Moon), m_materialResource.get(MaterialID::Moon));
+    moonEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[ModelID::Moon].meshID),
+                                        m_resources.materials.get(m_modelDefs[ModelID::Moon].materialIDs[0]));
     //auto& moonRotator = moonEntity.addComponent<Rotator>();
     //moonRotator.axis.y = 1.f;
     //moonRotator.speed = 0.4f;
 
+    auto lookoutEntity = m_backgroundScene.createEntity();
+    auto& lookoutTx = lookoutEntity.addComponent<cro::Transform>();
+    lookoutTx.setScale(glm::vec3(0.4f));
+    lookoutTx.setOrigin({ -6.f, 0.f, -1.f });
+    lookoutTx.setParent(entity);
+    auto& lookoutModel = lookoutEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[ModelID::LookoutBase].meshID), 
+                                                                m_resources.materials.get(m_modelDefs[ModelID::LookoutBase].materialIDs[0]));
+    for (auto i = 0u; i < m_modelDefs[ModelID::LookoutBase].materialCount; ++i)
+    {
+        lookoutModel.setMaterial(i, m_resources.materials.get(m_modelDefs[ModelID::LookoutBase].materialIDs[i]));
+    }
+
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
     roidEntity.getComponent<cro::Transform>().setParent(entity);
-    roidEntity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Roids), m_materialResource.get(MaterialID::Roids));
+    roidEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[ModelID::Roids].meshID),
+                                        m_resources.materials.get(m_modelDefs[ModelID::Roids].materialIDs[0]));
     auto& roidRotator = roidEntity.addComponent<Rotator>();
     roidRotator.speed = -0.03f;
     roidRotator.axis.y = 1.f;
@@ -249,12 +227,14 @@ void MainState::createScene()
     //create stars
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -19.f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), m_materialResource.get(MaterialID::Stars));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[ModelID::Stars].meshID),
+                                    m_resources.materials.get(m_modelDefs[ModelID::Stars].materialIDs[0]));
 
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -12.f });
     entity.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, 3.14f);
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::QuadMesh), m_materialResource.get(MaterialID::Stars));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[ModelID::Stars].meshID),
+                                    m_resources.materials.get(m_modelDefs[ModelID::Stars].materialIDs[0]));
     entity.addComponent<Drifter>().amplitude = -0.1f;
 
 

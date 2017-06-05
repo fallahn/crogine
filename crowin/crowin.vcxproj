@@ -95,6 +95,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\QuadBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Rectangle.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\RenderTexture.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\ResourceAutomation.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Shader.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\ShaderResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\shaders\PostVertex.hpp" />
@@ -173,6 +174,7 @@
     <ClCompile Include="..\common\src\graphics\PostProcess.cpp" />
     <ClCompile Include="..\common\src\graphics\PrimitiveBuilders.cpp" />
     <ClCompile Include="..\common\src\graphics\RenderTexture.cpp" />
+    <ClCompile Include="..\common\src\graphics\ResourceAutomation.cpp" />
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Spatial.cpp" />
@@ -349,7 +351,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)extlibs\SDL2_ttf\lib\x64;$(SolutionDir)extlibs\SDL2_mixer\lib\x64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -411,7 +413,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

@@ -110,9 +110,6 @@
     <ClInclude Include="src\MyApp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\MenuState.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\StateIDs.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

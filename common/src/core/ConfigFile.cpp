@@ -142,7 +142,7 @@ bool ConfigObject::loadFromFile(const std::string& path)
         //check config is not opened with a property
         if (isProperty(data))
         {
-            Logger::log(path + " Cannot start configuration file with a property", Logger::Type::Error);
+            Logger::log(path + ": Cannot start configuration file with a property", Logger::Type::Error);
             return false;
         }
         
@@ -208,19 +208,19 @@ bool ConfigObject::loadFromFile(const std::string& path)
                     {
                         braceCount++;
                         auto name = getObjectName(lastLine);
-                        if (currentObject->findObjectWithId(name.second))
-                        {
-                            Logger::log("Object with ID \'" + name.second + "\' already exists, skipping...", Logger::Type::Warning);
-                            //object with duplicate id already exists
-                            while (data.find('}') == std::string::npos
-                                && readTotal < fileSize) //just incase of infinite loop
-                            {
-                                //skip all the object properties before continuing
-                                data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
-                            }
-                            braceCount--;
-                            continue;
-                        }
+                        //if (currentObject->findObjectWithId(name.second))
+                        //{
+                        //    Logger::log("Object with ID \'" + name.second + "\' already exists, skipping...", Logger::Type::Warning);
+                        //    //object with duplicate id already exists
+                        //    while (data.find('}') == std::string::npos
+                        //        && readTotal < fileSize) //just incase of infinite loop
+                        //    {
+                        //        //skip all the object properties before continuing
+                        //        data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
+                        //    }
+                        //    braceCount--;
+                        //    continue;
+                        //}
 
                         currentObject = currentObject->addObject(name.first, name.second);
                     }

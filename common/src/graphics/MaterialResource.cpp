@@ -32,13 +32,20 @@ source distribution.
 
 #include <crogine/detail/Assert.hpp>
 
+#include <limits>
+
 using namespace cro;
+
+namespace
+{
+    int32 autoID = std::numeric_limits<int32>::max();
+}
 
 Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
 {
     if (m_materials.count(ID) > 0)
     {
-        Logger::log("Material with this ID already exists!", Logger::Type::Error);
+        Logger::log("Material with this ID already exists!", Logger::Type::Warning);
         return m_materials.find(ID)->second;
     }
 
@@ -125,7 +132,14 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
     return m_materials.find(ID)->second;
 }
 
-Material::Data MaterialResource::get(int32 ID) const
+int32 MaterialResource::add(const Shader& shader)
+{
+    int32 nextID = autoID--;
+    add(nextID, shader);
+    return nextID;
+}
+
+Material::Data& MaterialResource::get(int32 ID)
 {
     CRO_ASSERT(m_materials.count(ID) > 0, "Material doesn't exist");
     return m_materials.find(ID)->second;

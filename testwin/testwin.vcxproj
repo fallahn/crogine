@@ -325,7 +325,6 @@
     <ClInclude Include="src\ItemsDirector.hpp" />
     <ClInclude Include="src\ItemSystem.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
-    <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\NpcDirector.hpp" />

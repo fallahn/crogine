@@ -73,6 +73,13 @@ namespace cro
         bool loadMesh(int32 ID, const MeshBuilder& mb);
 
         /*!
+        \brief Preloads a mesh and automatically assigns an ID.
+        \param mb Reference to the MeshBuilder instance containing the data to preload.
+        \returns Automatically generated ID, or -1 if loading failed.
+        */
+        int32 loadMesh(const MeshBuilder& mb);
+
+        /*!
         \brief Returns the mesh data for the given ID.
         */
         const Mesh::Data getMesh(int32 ID) const;

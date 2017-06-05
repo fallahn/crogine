@@ -52,7 +52,7 @@ source distribution.
 
 void MainState::createOptionsMenu()
 {
-    auto& testFont = m_fontResource.get(FontID::MenuFont);
+    auto& testFont = m_resources.fonts.get(FontID::MenuFont);
 
     cro::FloatRect buttonArea(0.f, 0.f, 256.f, 64.f);
 
@@ -85,7 +85,7 @@ void MainState::createOptionsMenu()
     titleTextTx.setPosition({ -60.f, 80.f, 0.f });
     titleTextTx.setParent(controlEntity);
     
-    auto& uiTexture = m_textureResource.get("assets/sprites/menu.png");
+    auto& uiTexture = m_resources.textures.get("assets/sprites/menu.png");
     auto entity = m_menuScene.createEntity();
     auto& backSprite = entity.addComponent<cro::Sprite>();
     backSprite.setTexture(uiTexture);
