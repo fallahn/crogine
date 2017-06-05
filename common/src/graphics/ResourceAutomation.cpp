@@ -170,6 +170,8 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         //enable shader attribs based on what the material requests
         //TODO this doesn't check valid combinations
         int32 flags = 0;
+        bool smoothTextures = false;
+        bool repeatTextures = false;
         const auto& properties = mat.getProperties();
         for (const auto& p : properties)
         {
@@ -222,6 +224,14 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                     flags |= ShaderResource::ReceiveProjection;
                 }
             }
+            else if (name == "smooth")
+            {
+                smoothTextures = p.getValue<bool>();
+            }
+            else if (name == "repeat")
+            {
+                repeatTextures = p.getValue<bool>();
+            }
         }
 
         //load the material then check properties again for material properties
@@ -234,15 +244,24 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             const auto& name = Util::String::toLower(p.getName());
             if (name == "diffuse")
             {
-                material.setProperty("u_diffuseMap", rc.textures.get(p.getValue<std::string>()));
+                auto& tex = rc.textures.get(p.getValue<std::string>());
+                tex.setSmooth(smoothTextures);
+                tex.setRepeated(repeatTextures);
+                material.setProperty("u_diffuseMap", tex);
             }
             else if (name == "mask")
             {
-                material.setProperty("u_maskMap", rc.textures.get(p.getValue<std::string>()));
+                auto& tex = rc.textures.get(p.getValue<std::string>());
+                tex.setSmooth(smoothTextures);
+                tex.setRepeated(repeatTextures);
+                material.setProperty("u_maskMap", tex);
             }
             else if (name == "normal")
             {
-                material.setProperty("u_normalMap", rc.textures.get(p.getValue<std::string>()));
+                auto& tex = rc.textures.get(p.getValue<std::string>());
+                tex.setSmooth(smoothTextures);
+                tex.setRepeated(repeatTextures);
+                material.setProperty("u_normalMap", tex);
             }
             else if (name == "colour")
             {
