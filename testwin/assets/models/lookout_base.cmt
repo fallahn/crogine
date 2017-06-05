@@ -1,0 +1,17 @@
+model LookOutBase
+{
+	mesh = "assets/models/lookout_base.cmf"
+
+	material VertexLit
+	{
+		diffuse = "assets/materials/lookout_diffuse.png"
+		mask = "assets/materials/lookout_mask.png"
+	}
+
+	material VertexLit
+	{
+		colour = 0.1, 0.1, 0.1, 0.2
+		mask_colour = 1.0, 1.0, 0.0
+		blendmode = alpha
+	}
+}

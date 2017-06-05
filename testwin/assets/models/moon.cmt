@@ -1,0 +1,11 @@
+model Moon
+{
+	mesh = "assets/models/moon.cmf"
+
+	material VertexLit
+	{
+		diffuse = "assets/materials/moon_diffuse.png"
+		mask = "assets/materials/moon_mask.png"
+		normal = "assets/materials/moon_normal.png"
+	}
+}

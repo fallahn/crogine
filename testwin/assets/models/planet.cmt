@@ -1,0 +1,12 @@
+model GasPlanet
+{
+	mesh = sphere
+	radius = 2.2
+
+	material VertexLit
+	{
+		diffuse = "assets/materials/gas_diffuse.png"
+		mask = "assets/materials/gas_mask.png"
+		normal = "assets/materials/gas_normal.png"
+	}
+}

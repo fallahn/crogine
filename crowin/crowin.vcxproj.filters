@@ -333,6 +333,9 @@
     <ClInclude Include="..\common\include\crogine\detail\GlobalConsts.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\ResourceAutomation.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -514,6 +517,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\core\ConfigFile.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\ResourceAutomation.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

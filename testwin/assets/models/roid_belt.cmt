@@ -1,0 +1,11 @@
+model Roids
+{
+	mesh = "assets/models/roid_belt.cmf"
+
+	material VertexLit
+	{
+		diffuse = "assets/materials/roid_diffuse.png"
+		mask = "assets/materials/roid_mask.png"
+		normal = "assets/materials/roid_normal.png"
+	}
+}

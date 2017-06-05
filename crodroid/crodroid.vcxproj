@@ -142,7 +142,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PreprocessorDefinitions>_DEBUG_;HAS_SOCKLEN_T</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_IMGUI;_DEBUG_;HAS_SOCKLEN_T</PreprocessorDefinitions>
       <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
     <Link>
@@ -196,7 +196,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PreprocessorDefinitions>HAS_SOCKLEN_T;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_IMGUI;HAS_SOCKLEN_T;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
     <Link>

@@ -73,7 +73,7 @@ void MainState::createMainMenu()
     controlEntity.addComponent<Slider>();
 
     //title image
-    auto& uiTexture = m_textureResource.get("assets/sprites/menu.png");
+    auto& uiTexture = m_resources.textures.get("assets/sprites/menu.png");
     auto entity = m_menuScene.createEntity();
     auto& titleSprite = entity.addComponent<cro::Sprite>();
     titleSprite.setTexture(uiTexture);
@@ -103,7 +103,7 @@ void MainState::createMainMenu()
     });
     gameControl.area = buttonArea;
 
-    auto& testFont = m_fontResource.get(FontID::MenuFont);
+    auto& testFont = m_resources.fonts.get(FontID::MenuFont);
     auto textEnt = m_menuScene.createEntity();
     auto& gameText = textEnt.addComponent<cro::Text>(testFont);
     gameText.setString("Play");

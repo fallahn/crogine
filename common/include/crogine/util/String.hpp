@@ -95,6 +95,80 @@ namespace cro
                 *compareStr = '\0';
                 return (count == 0 && compareStr == dest) ? nullptr : dest;
             }
+
+            /*!
+            \brief Attempts to return a string containing the file extension
+            of a given path, including the period (.)
+            */
+            static inline std::string getFileExtension(const std::string& path)
+            {
+                if (path.find_last_of(".") != std::string::npos)
+                {
+                    return toLower(path.substr(path.find_last_of(".")));
+                }
+                else
+                {
+                    return {};
+                }
+            }
+
+            /*!
+            \brief Attempts to return the name of a file at the end of
+            a given file path
+            */
+            static inline std::string getFileName(const std::string& path)
+            {
+                //TODO this doesn't actually check that there is a file at the
+                //end of the path, or that it's even a valid path...
+
+                static auto searchFunc = [](const char seperator, const std::string& path)->std::string
+                {
+                    std::size_t i = path.rfind(seperator, path.length());
+                    if (i != std::string::npos)
+                    {
+                        return(path.substr(i + 1, path.length() - i));
+                    }
+
+                    return {};
+                };
+
+
+#ifdef _WIN32 //try windows formatted paths first
+                std::string retVal = searchFunc('\\', path);
+                if (!retVal.empty()) return retVal;
+#endif
+
+                return searchFunc('/', path);
+            }
+
+            /*!
+            \brief Attempts to return the path of a given filepath without
+            the file name, including trailing separator char.
+            */
+            static inline std::string getFilePath(const std::string& path)
+            {
+                //TODO this doesn't actually check that there is a file at the
+                //end of the path, or that it's even a valid path...
+
+                static auto searchFunc = [](const char seperator, const std::string& path)->std::string
+                {
+                    std::size_t i = path.rfind(seperator, path.length());
+                    if (i != std::string::npos)
+                    {
+                        return(path.substr(0, i + 1));
+                    }
+
+                    return {};
+                };
+
+
+#ifdef _WIN32 //try windows formatted paths first
+                std::string retVal = searchFunc('\\', path);
+                if (!retVal.empty()) return retVal;
+#endif
+
+                return searchFunc('/', path);
+            }
         }
     }
 }

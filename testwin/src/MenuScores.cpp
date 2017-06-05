@@ -52,7 +52,7 @@ source distribution.
 
 void MainState::createScoreMenu()
 {
-    auto& testFont = m_fontResource.get(FontID::MenuFont);
+    auto& testFont = m_resources.fonts.get(FontID::MenuFont);
 
     //TODO centralise UI dimensions
     cro::FloatRect buttonArea(0.f, 0.f, 256.f, 64.f);
@@ -85,7 +85,7 @@ void MainState::createScoreMenu()
     titleTextTx.setPosition({ -60.f, 80.f, 0.f });
     titleTextTx.setParent(controlEntity);
 
-    auto& uiTexture = m_textureResource.get("assets/sprites/menu.png");
+    auto& uiTexture = m_resources.textures.get("assets/sprites/menu.png");
     uiTexture.setSmooth(true);
     auto entity = m_menuScene.createEntity();
     auto& backSprite = entity.addComponent<cro::Sprite>();

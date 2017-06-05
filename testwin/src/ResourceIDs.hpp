@@ -36,11 +36,7 @@ namespace MaterialID
 {
     enum
     {
-        Moon,
-        Stars,
-        Planet,
         PlanetClouds,
-        Roids,
         GameBackgroundFar,
         GameBackgroundMid,
         GameBackgroundNear,
@@ -61,9 +57,7 @@ namespace MeshID
 {
     enum
     {
-        Roids = cro::Mesh::ID::Count,
-        Moon,
-        GameBackground,
+        GameBackground = cro::Mesh::ID::Count,
         PlayerShip,
         TerrainChunkA,
         TerrainChunkB,
@@ -72,6 +66,19 @@ namespace MeshID
         NPCElite, NPCChoppa,
         NPCTurretBase, NPCTurretCannon,
         ArcticOutpost
+    };
+}
+
+namespace ModelID
+{
+    enum
+    {
+        LookoutBase = 0,
+        GasPlanet,
+        Moon,
+        Roids,
+        Stars,
+        Count
     };
 }
 
@@ -87,7 +94,7 @@ namespace ShaderID
 {
     enum
     {
-        Background
+        Background //< scrolling game background
     };
 }
 
