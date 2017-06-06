@@ -151,7 +151,7 @@ namespace cro
                 #endif
                 })";
 
-                const static std::string Fragment = R"(
+            const static std::string Fragment = R"(
                 #if defined(TEXTURED)
                 uniform sampler2D u_diffuseMap;
                 uniform sampler2D u_maskMap;

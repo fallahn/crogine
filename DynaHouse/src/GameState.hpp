@@ -32,11 +32,7 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/MeshResource.hpp>
-#include <crogine/graphics/ShaderResource.hpp>
-#include <crogine/graphics/MaterialResource.hpp>
-#include <crogine/graphics/TextureResource.hpp>
-#include <crogine/graphics/FontResource.hpp>
+#include <crogine/graphics/ResourceAutomation.hpp>
 
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
@@ -64,11 +60,8 @@ private:
     cro::Scene m_scene;
     cro::Scene m_overlayScene;
 
-    cro::MeshResource m_meshResource;
-    cro::ShaderResource m_shaderResource;
-    cro::MaterialResource m_materialResource;
-    cro::TextureResource m_textureResource;
-    cro::FontResource m_fontResource;
+    cro::ResourceCollection m_resources;
+    std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs;
 
     void addSystems();
     void loadAssets();

@@ -16,6 +16,7 @@ namespace ModelConverter
         {
             InitializeComponent();
             this.StartPosition = FormStartPosition.CenterScreen;
+            comboBoxShaderType.SelectedIndex = 0;
         }
 
 
@@ -48,6 +49,7 @@ namespace ModelConverter
                     }
                 }
                 outputFile(sd.FileName);
+                outputCMT(sd.FileName);
             }
             //outputFile("");
         }
@@ -323,156 +325,119 @@ namespace ModelConverter
             return flags;
         }
 
-        //private void processOutput(string output, Assimp.Mesh mesh)
-        //{
-        //    const int Position = 0; //NOTE this must match the Mesh::Attribute enum of cro
-        //    const int Colour = 1;
-        //    const int Normal = 2;
-        //    const int Tangent = 3;
-        //    const int Bitangent = 4;
-        //    const int UV0 = 5;
-        //    const int UV1 = 6;
-        //    byte flags = (1 << Position) | (1 << Normal);
+        private string colourToString(Assimp.Color4D colour)
+        {
+            return colour.R.ToString() + "," + colour.G.ToString() + "," + colour.B.ToString() + "," + colour.A.ToString();
+        }
 
-        //    //append any messages to info label
-        //    if (!mesh.HasVertices)
-        //    {
-        //        textBoxInfo.Text += "\nNo vertex positions found. File not written.";
-        //        return;
-        //    }
-        //    if(mesh.HasVertexColors(0))
-        //    {
-        //        flags |= (1 << Colour);
-        //    }
+        private void outputCMT(string path)
+        {
+            //writes material / model data to a cmt file
+            string outpath = path.Substring(0, path.Length -1);
+            outpath += 't';
 
-        //    if (!mesh.HasNormals)
-        //    {
-        //        textBoxInfo.Text += "\nNo normals found. File not written.";
-        //        return;
-        //    }
-        //    if(!mesh.HasTangentBasis)
-        //    {
-        //        textBoxInfo.Text += "\nMesh tangents were missing...";
-        //    }
-        //    else
-        //    {
-        //        flags |= (1 << Tangent) | (1 << Bitangent);
-        //    }
+            try
+            {
+                string modelName = Path.GetFileNameWithoutExtension(path);
 
-        //    if (!mesh.HasTextureCoords(0))
-        //    {
-        //        textBoxInfo.Text += "\nPrimary texture coords are missing, textures will appear undefined.";
-        //    }
-        //    else
-        //    {
-        //        flags |= (1 << UV0);
-        //    }
-        //    if (!mesh.HasTextureCoords(1))
-        //    {
-        //        textBoxInfo.Text += "\nSecondary texture coords are missing,\n\tlightmapping will be unavailable for this mesh.";
-        //    }
-        //    else
-        //    {
-        //        flags |= (1 << UV1);
-        //    }
-        //    //textBoxInfo.Text += "\n" + flags.ToString();
+                StreamWriter file = new StreamWriter(outpath, false);
+                file.WriteLine("model " + modelName);
+                file.WriteLine("{");
+                file.WriteLine("\tmesh = \"" + path + "\"");
 
-        //    // cmf FILE FORMAT
-        //    /* HEADER
-        //     * flags byte
-        //     * byte index array count (max 32, default 1)
-        //     * <index count> int values representing index array offsets
-        //     * <index count> int values holding index array sizes
-        //     * -------------------------------------------------
-        //     * VBO data interleaved as flags, starts at HEADER size
-        //     * IBO data starts at IBOOFFSET[0] for IBOSIZE[0]
-        //     * All index buffer values are uint32
-        //     * */
+                bool unlit = (comboBoxShaderType.SelectedIndex == 0);
+                foreach(var material in m_scene.Materials)
+                {
+                    file.WriteLine("\tmaterial " + comboBoxShaderType.SelectedItem.ToString());
+                    file.WriteLine("\t{");
 
-        //    //build VBO data
-        //    List<float> vboData = new List<float>();
-        //    for(var i = 0; i < mesh.VertexCount; ++i)
-        //    {
-        //        var pos = mesh.Vertices[i];
-        //        vboData.Add(pos.X);
-        //        vboData.Add(pos.Y);
-        //        vboData.Add(pos.Z);
+                    string textureName = "";
+                    if (material.HasTextureDiffuse)
+                    {
+                        var texture = m_scene.Textures[material.TextureDiffuse.TextureIndex];
+                        textureName = texture.ToString();
 
-        //        if((flags & (1 << Colour)) != 0)
-        //        {
-        //            var colour = mesh.VertexColorChannels[0][i];
-        //            vboData.Add(colour.R);
-        //            vboData.Add(colour.G);
-        //            vboData.Add(colour.B);
-        //        }
+                        //TODO wrapping
+                        //Assimp.TextureWrapMode.Wrap;
+                        
+                        file.WriteLine("\t\tdiffuse = " + textureName + "_mask.png");
 
-        //        var normal = mesh.Normals[i];
-        //        vboData.Add(normal.X);
-        //        vboData.Add(normal.Y);
-        //        vboData.Add(normal.Z);
+                        if (!unlit)
+                        {
+                            //don't ignore mask and normal maps
+                            if (material.HasTextureDiffuse)
+                            {
+                                file.WriteLine("\t\tmask = " + textureName + "_mask.png");
+                                if (checkBoxBump.Checked)
+                                {
+                                    file.WriteLine("\t\tnormal = " + textureName + "_normal.png");
+                                }
+                            }
+                        }
+                        
+                    }
 
-        //        if((flags & (1 << Tangent))  != 0)
-        //        {
-        //            var tan = mesh.Tangents[i];
-        //            var bitan = mesh.BiTangents[i];
-        //            vboData.Add(tan.X);
-        //            vboData.Add(tan.Y);
-        //            vboData.Add(tan.Z);
+                    if (material.HasColorDiffuse)
+                    {
+                        file.WriteLine("\t\tcolour = " + colourToString(material.ColorDiffuse));
+                        if(!unlit)
+                        {
+                            float intensity = 1f;
+                            float specAmount = 1f;
+                            float emissive = 0f;
 
-        //            vboData.Add(bitan.X);
-        //            vboData.Add(bitan.Y);
-        //            vboData.Add(bitan.Z);
-        //        }
+                            if (material.HasShininessStrength)
+                            {
+                                intensity = material.ShininessStrength; //TODO clamp 0-1
+                            }
 
-        //        if((flags & (1 << UV0)) != 0)
-        //        {
-        //            var uv = mesh.TextureCoordinateChannels[0][i];
-        //            vboData.Add(uv.X);
-        //            vboData.Add(uv.Y);
-        //        }
+                            if (material.HasColorSpecular)
+                            {
+                                specAmount = (material.ColorSpecular.R + material.ColorSpecular.G + material.ColorSpecular.B) / 3f;
+                            }
 
-        //        if((flags & (1 << UV1)) != 0)
-        //        {
-        //            var uv = mesh.TextureCoordinateChannels[1][i];
-        //            vboData.Add(uv.X);
-        //            vboData.Add(uv.Y);
-        //        }
-        //    }
+                            if(material.HasColorEmissive)
+                            {
+                                emissive = (material.ColorEmissive.R + material.ColorEmissive.G + material.ColorEmissive.B) / 3f;
+                            }
 
-        //    //var indexArray = mesh.GetUnsignedIndices();
-        //    //mesh.
+                            file.WriteLine("\t\tmask_colour = "+ intensity.ToString() +"," + specAmount.ToString() + "," + emissive.ToString() +",1.0");
+                        }
+                    }
 
-        //    List<int> indexArray = new List<int>();
-        //    for(var i = 0; i < mesh.FaceCount; ++i)
-        //    {
-        //        indexArray.AddRange(mesh.Faces[i].Indices);
-        //    }
+                    //blendmodes
+                    if(material.HasBlendMode)
+                    {
+                        switch(material.BlendMode)
+                        {
+                            case Assimp.BlendMode.Additive:
+                                file.WriteLine("\t\tblendmode = add");
+                                break;
+                            default:
+                                if(material.Opacity < 1)
+                                {
+                                    file.WriteLine("\t\tblendmode = alpha");
+                                }
+                                break;
+                        }
+                    }
 
-        //    byte arrayCount = 1;
-        //    int arrayOffset = (sizeof(int) * 2) + 2; //(array offset + array size) + array count + flags
-        //    arrayOffset += (vboData.Count * sizeof(float));
-        //    int arraySize = indexArray.Count * sizeof(int);
+                    //lightmap
+                    if(m_scene.Meshes[0].HasTextureCoords(1))
+                    {
+                        file.WriteLine("\t\tlightmap = " + modelName + "_lightmap.png");
+                    }
 
-        //    using (BinaryWriter writer = new BinaryWriter(File.Open(output, FileMode.Create)))
-        //    {
-        //        writer.Write(flags);
-        //        writer.Write(arrayCount);
-        //        writer.Write(arrayOffset);
-        //        writer.Write(arraySize);
-        //        foreach(var v in vboData)
-        //        {
-        //            writer.Write(v);
-        //        }
-        //        foreach(var i in indexArray)
-        //        {
-        //            writer.Write(i);
-        //        }
-        //    }
-        //}
+                    file.WriteLine("\t}");
+                }
 
-        //private void showGroupBoxMessage(string msg)
-        //{
-        //    textBoxInfo.Text = msg;
-        //}
+                file.WriteLine("}");
+                file.Close();
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("Failed writing cmt file: " + ex.Message);
+            }
+        }
     }
 }

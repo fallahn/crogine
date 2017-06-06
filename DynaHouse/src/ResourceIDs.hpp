@@ -36,14 +36,8 @@ namespace MaterialID
 {
     enum
     {
-        GreenOne,
-        GreenTwo,
-        Brown,
-        Red,
-        Blue,
         RoomOne,
-        RoomTwo,
-        BatCat
+        RoomTwo
     };
 }
 
@@ -52,8 +46,16 @@ namespace MeshID
     enum
     {
         RoomOne = cro::Mesh::ID::Count,
-        RoomTwo,
-        BatCat
+        RoomTwo
+    };
+}
+
+namespace GameModelID
+{
+    enum
+    {
+        BatCat = 0,
+        Count
     };
 }
 
