@@ -43,7 +43,7 @@ namespace
 {
     std::array<std::string, 2u> materialTypes =
     {
-        "VertexLit", "Unlit"
+        {"VertexLit", "Unlit"}
     };
 }
 
@@ -51,7 +51,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 {
     if (Util::String::getFileExtension(path) != ".cmt")
     {
-        Logger::log(path + ": unusual file extention...", Logger::Type::Warning);
+        Logger::log(path + ": unusual file extension...", Logger::Type::Warning);
     }
 
     ConfigFile cfg;
@@ -228,12 +228,19 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                     flags |= ShaderResource::VertexColour;
                 }
             }
-            else if (name == "projection_maps")
+            else if (name == "projection")
             {
                 //receive projection maps
-                if (p.getValue<bool>())
+                if (!p.getValue<std::string>().empty())
                 {
                     flags |= ShaderResource::ReceiveProjection;
+                }
+            }
+            else if (name == "lightmap")
+            {
+                if (!p.getValue<std::string>().empty())
+                {
+                    flags |= ShaderResource::LightMap;
                 }
             }
             else if (name == "smooth")
@@ -274,6 +281,18 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_normalMap", tex);
+            }
+            else if (name == "lightmap")
+            {
+                auto& tex = rc.textures.get(p.getValue<std::string>());
+                tex.setSmooth(true);
+                material.setProperty("u_lightMap", tex);
+            }
+            else if (name == "projection")
+            {
+                auto& tex = rc.textures.get(p.getValue<std::string>(), false);
+                tex.setSmooth(smoothTextures);
+                material.setProperty("u_projectionMap", tex);
             }
             else if (name == "subrect")
             {

@@ -237,5 +237,8 @@
     <ClCompile Include="..\common\src\core\ConfigFile.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\graphics\ResourceAutomation.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -34,20 +34,18 @@ source distribution.
 
 namespace MaterialID
 {
-    enum
+    /*enum
     {
-        RoomOne,
-        RoomTwo
-    };
+
+    };*/
 }
 
 namespace MeshID
 {
-    enum
+    /*enum
     {
-        RoomOne = cro::Mesh::ID::Count,
-        RoomTwo
-    };
+        
+    };*/
 }
 
 namespace GameModelID
@@ -55,6 +53,7 @@ namespace GameModelID
     enum
     {
         BatCat = 0,
+        TestRoom,
         Count
     };
 }

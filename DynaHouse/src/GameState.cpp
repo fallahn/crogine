@@ -71,9 +71,6 @@ source distribution.
 
 namespace
 {
-    cro::int32 rowCount = 3;
-    cro::int32 rowWidth = 6;
-
     cro::UISystem* uiSystem = nullptr;
 }
 
@@ -154,33 +151,8 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
-    auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::Unlit, 
-        cro::ShaderResource::DiffuseMap | cro::ShaderResource::LightMap | cro::ShaderResource::ReceiveProjection);
-
-    auto& roomOne = m_resources.materials.add(MaterialID::RoomOne, m_resources.shaders.get(shaderID));
-    roomOne.setProperty("u_diffuseMap", m_resources.textures.get("assets/textures/computerwall005a.png"));
-    //roomOne.setProperty("u_colour", cro::Colour(0.39f, 0.45f, 1.f));
-    roomOne.setProperty("u_lightMap", m_resources.textures.get("assets/textures/test_room_lightmap.png"));
-    roomOne.setProperty("u_projectionMap", m_resources.textures.get("assets/textures/shadow.png", false));
-
-    shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::Unlit,
-        cro::ShaderResource::DiffuseColour | cro::ShaderResource::LightMap | cro::ShaderResource::ReceiveProjection);
-
-    auto& roomTwo = m_resources.materials.add(MaterialID::RoomTwo, m_resources.shaders.get(shaderID));
-    //roomTwo.setProperty("u_diffuseMap", m_resources.textures.get("assets/textures/room2xx1.png"));
-    roomTwo.setProperty("u_colour", cro::Colour::White());
-    roomTwo.setProperty("u_lightMap", m_resources.textures.get("assets/textures/test_room_lightmap.png"));
-    roomTwo.setProperty("u_projectionMap", m_resources.textures.get("assets/textures/shadow.png", false));
-    m_resources.textures.get("assets/textures/shadow.png").setSmooth(true);
-    m_resources.textures.get("assets/textures/test_room_lightmap.png").setSmooth(true);
-
-    cro::StaticMeshBuilder r1("assets/models/room1x1.cmf");
-    m_resources.meshes.loadMesh(MeshID::RoomOne, r1);
-
-    cro::StaticMeshBuilder r2("assets/models/test_room.cmf");
-    m_resources.meshes.loadMesh(MeshID::RoomTwo, r2);
-
     m_modelDefs[GameModelID::BatCat].loadFromFile("assets/models/batcat.cmt", m_resources);
+    m_modelDefs[GameModelID::TestRoom].loadFromFile("assets/models/test_room.cmt", m_resources);
 
     CRO_ASSERT(m_modelDefs[GameModelID::BatCat].skeleton, "missing batcat anims");
     m_modelDefs[GameModelID::BatCat].skeleton->play(AnimationID::BatCat::Idle);
@@ -190,10 +162,12 @@ void GameState::createScene()
 {
     //starting room
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::RoomTwo), m_resources.materials.get(MaterialID::RoomTwo));
-    entity.getComponent<cro::Model>().setMaterial(6, m_resources.materials.get(MaterialID::RoomOne));
-    entity.getComponent<cro::Model>().setMaterial(9, m_resources.materials.get(MaterialID::RoomOne));
-    entity.getComponent<cro::Model>().setMaterial(13, m_resources.materials.get(MaterialID::RoomOne));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TestRoom].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[0]));
+    for (auto i = 0u; i < m_modelDefs[GameModelID::TestRoom].materialCount; ++i)
+    {
+        entity.getComponent<cro::Model>().setMaterial(i, m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[i]));
+    }
     entity.addComponent<cro::Transform>().scale({ 0.1f, 0.1f, 0.1f });
         
     //dat cat man
@@ -359,84 +333,4 @@ void GameState::updateView()
 
     auto& cam2D = m_overlayScene.getActiveCamera().getComponent<cro::Camera>();
     cam2D.viewport = cam3D.viewport;
-}
-
-void GameState::buildRow(std::size_t floor)
-{
-    addStairs(floor);
-
-    cro::int32 position = 1;
-    while (position < rowWidth)
-    {
-        cro::int32 step = (1 + (cro::Util::Random::value(2, 3) % 2));
-        if (step == 1)
-        {
-            addSingle(floor, position);
-        }
-        else
-        {
-            addDouble(floor, position);
-        }
-        position += step;
-    }
-
-    cro::int32 endSize = (position > rowWidth) ? 1 : 2;
-    addEnd(floor, position, endSize);
-
-    position = 0;
-    while (position > -(rowWidth - 1))
-    {
-        cro::int32 step = (1 + (cro::Util::Random::value(2, 3) % 2));
-        position -= step;        
-        if (step == 1)
-        {
-            addSingle(floor, position);
-        }
-        else
-        {
-            addDouble(floor, position);
-        }
-    }
-
-    endSize = (position <= -rowWidth) ? 1 : 2;
-    addEnd(floor, position - endSize, endSize);
-}
-
-void GameState::addStairs(std::size_t floor)
-{
-    //auto entity = m_scene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ 0.5f, static_cast<float>(floor), 0.f });
-    //entity.addComponent<cro::Model>(m_resources.meshes.getMesh(cro::Mesh::QuadMesh), m_resources.materials.get(floor == 0 ? MaterialID::Blue : MaterialID::Red));
-    //entity.addComponent<cro::CommandTarget>().ID = (1 << (rowCount * rowWidth));
-}
-
-void GameState::addSingle(std::size_t floor, cro::int32 position)
-{
-    auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ static_cast<float>(position) + 0.5f, static_cast<float>(floor), 0.f });
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::RoomOne), m_resources.materials.get(MaterialID::RoomOne));
-    entity.addComponent<cro::CommandTarget>().ID = (1 << (rowCount * rowWidth));
-}
-
-void GameState::addDouble(std::size_t floor, cro::int32 position)
-{
-    auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ static_cast<float>(position) + 1.f, static_cast<float>(floor), 0.f });
-    //entity.getComponent<cro::Transform>().setScale({ 2.f, 1.f, 1.f });
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::RoomTwo), m_resources.materials.get(MaterialID::RoomTwo));
-    entity.addComponent<cro::CommandTarget>().ID = (1 << (rowCount * rowWidth));
-}
-
-void GameState::addEnd(std::size_t floor, cro::int32 position, std::size_t width)
-{
-    //auto entity = m_scene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ static_cast<float>(position) + (static_cast<float>(width) / 2.f), static_cast<float>(floor), 0.f });
-
-    //if (width > 1)
-    //{
-    //    entity.getComponent<cro::Transform>().setScale({ static_cast<float>(width), 1.f, 1.f });
-    //}
-
-    //entity.addComponent<cro::Model>(m_resources.meshes.getMesh(cro::Mesh::QuadMesh), m_resources.materials.get(MaterialID::Brown));
-    //entity.addComponent<cro::CommandTarget>().ID = (1 << (rowCount * rowWidth));
 }
