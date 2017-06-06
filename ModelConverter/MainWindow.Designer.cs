@@ -33,6 +33,9 @@
             this.buttonSave = new System.Windows.Forms.Button();
             this.groupBoxInfo = new System.Windows.Forms.GroupBox();
             this.textBoxInfo = new System.Windows.Forms.TextBox();
+            this.comboBoxShaderType = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.checkBoxBump = new System.Windows.Forms.CheckBox();
             this.groupBoxInfo.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -84,11 +87,45 @@
             this.textBoxInfo.Size = new System.Drawing.Size(361, 173);
             this.textBoxInfo.TabIndex = 0;
             // 
+            // comboBoxShaderType
+            // 
+            this.comboBoxShaderType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxShaderType.FormattingEnabled = true;
+            this.comboBoxShaderType.Items.AddRange(new object[] {
+            "Unlit",
+            "VertexLit"});
+            this.comboBoxShaderType.Location = new System.Drawing.Point(87, 244);
+            this.comboBoxShaderType.Name = "comboBoxShaderType";
+            this.comboBoxShaderType.Size = new System.Drawing.Size(76, 21);
+            this.comboBoxShaderType.TabIndex = 4;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(10, 247);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(71, 13);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "Shader Type:";
+            // 
+            // checkBoxBump
+            // 
+            this.checkBoxBump.AutoSize = true;
+            this.checkBoxBump.Location = new System.Drawing.Point(186, 248);
+            this.checkBoxBump.Name = "checkBoxBump";
+            this.checkBoxBump.Size = new System.Drawing.Size(113, 17);
+            this.checkBoxBump.TabIndex = 6;
+            this.checkBoxBump.Text = "Enable Bump Map";
+            this.checkBoxBump.UseVisualStyleBackColor = true;
+            // 
             // ModelConverter
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(398, 274);
+            this.Controls.Add(this.checkBoxBump);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.comboBoxShaderType);
             this.Controls.Add(this.groupBoxInfo);
             this.Controls.Add(this.buttonSave);
             this.Controls.Add(this.buttonOpen);
@@ -109,6 +146,9 @@
         private System.Windows.Forms.Button buttonSave;
         private System.Windows.Forms.GroupBox groupBoxInfo;
         private System.Windows.Forms.TextBox textBoxInfo;
+        private System.Windows.Forms.ComboBox comboBoxShaderType;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.CheckBox checkBoxBump;
     }
 }
 

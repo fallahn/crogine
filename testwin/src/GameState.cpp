@@ -72,8 +72,6 @@ namespace
 {
     const glm::vec2 backgroundSize(21.3f, 7.2f);
     std::size_t rockfallCount = 2;
-
-    cro::Skeleton choppaSkel;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
