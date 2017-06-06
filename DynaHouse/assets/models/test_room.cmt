@@ -1,0 +1,112 @@
+model test_room
+{
+	mesh = "assets/models/test_room.cmf"
+	material Unlit
+	{
+		colour = 0.9176471,0,1,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 1,0.9647059,0.5882353,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 1,0,0,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 1,0.4705883,0,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 0.1333333,0.1333333,0.1333333,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 1,0.5882353,0.937255,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 0.6352941,0.5882353,1,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 0.9647059,1,0,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 0.588,0.588,0.588,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 0,0.5647059,0.4901961,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 0.7725491,1,0.5882353,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 0,0.282353,1,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 0.5882353,0.8980393,1,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 0.588,0.588,0.588,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 1,0.2705882,0.2705882,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 0.5882353,1,0.7058824,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 0,1,0.282353,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+	material Unlit
+	{
+		colour = 1,1,1,1
+		lightmap = "assets/textures/test_room_lightmap.png"
+		projection = "assets/textures/shadow.png"
+	}
+}

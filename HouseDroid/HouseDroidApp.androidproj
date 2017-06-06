@@ -144,8 +144,10 @@
     </AntPackage>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Content Include="assets\assets\models\batcat.cmt" />
     <Content Include="assets\assets\models\batcat.iqm" />
     <Content Include="assets\assets\models\test_room.cmf" />
+    <Content Include="assets\assets\models\test_room.cmt" />
     <Content Include="assets\assets\textures\batcat_diffuse.png" />
     <Content Include="assets\assets\textures\batcat_mask.png" />
     <Content Include="assets\assets\textures\batcat_normal.png" />

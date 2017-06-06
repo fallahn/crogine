@@ -69,12 +69,5 @@ private:
     void createUI();
 
     void updateView();
-
-    void buildRow(std::size_t = 0);
-
-    void addStairs(std::size_t);
-    void addSingle(std::size_t, cro::int32);
-    void addDouble(std::size_t, cro::int32);
-    void addEnd(std::size_t, cro::int32, std::size_t);
 };
 #endif //DH_GAME_STATE_HPP_
