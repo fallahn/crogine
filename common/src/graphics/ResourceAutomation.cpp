@@ -49,6 +49,11 @@ namespace
 
 bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& rc)
 {
+    if (Util::String::getFileExtension(path) != ".cmt")
+    {
+        Logger::log(path + ": unusual file extention...", Logger::Type::Warning);
+    }
+
     ConfigFile cfg;
     if (!cfg.loadFromFile(path))
     {
@@ -192,6 +197,13 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                     flags |= ShaderResource::NormalMap;
                 }
             }
+            else if (name == "subrect")
+            {
+                if (!p.getValue<std::string>().empty())
+                {
+                    flags |= ShaderResource::Subrects;
+                }
+            }
             else if (name == "colour")
             {
                 //colour tint
@@ -262,6 +274,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_normalMap", tex);
+            }
+            else if (name == "subrect")
+            {
+                material.setProperty("u_subrect", p.getValue<glm::vec4>());
             }
             else if (name == "colour")
             {

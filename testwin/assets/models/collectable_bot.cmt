@@ -1,0 +1,12 @@
+model Collectable_Bot
+{
+	mesh = "assets/models/collectable.cmf"
+
+	material VertexLit
+	{
+		diffuse = "assets/materials/collectables/collectables01_diffuse.png"
+		mask = "assets/materials/collectables/collectables01_mask.png"
+		normal = "assets/materials/collectables/collectables01_normal.png"
+		subrect = 0.0,0.0,0.5,0.5
+	}
+}

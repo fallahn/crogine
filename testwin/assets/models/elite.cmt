@@ -1,0 +1,11 @@
+model Elite
+{
+	mesh = "assets/models/elite.cmf"
+
+	material VertexLit
+	{
+		diffuse = "assets/materials/npc/elite_diffuse.png"
+		mask = "assets/materials/npc/elite_mask.png"
+		normal = "assets/materials/npc/elite_normal.png"
+	}
+}

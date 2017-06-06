@@ -1,0 +1,11 @@
+model Player
+{
+	mesh = "assets/models/player_ship.cmf"
+
+	material VertexLit
+	{
+		diffuse = "assets/materials/player_diffuse.png"
+		mask = "assets/materials/player_mask.png"
+		normal = "assets/materials/player_normal.png"
+	}
+}

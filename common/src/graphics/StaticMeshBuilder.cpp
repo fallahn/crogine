@@ -37,10 +37,11 @@ using namespace cro;
 
 StaticMeshBuilder::StaticMeshBuilder(const std::string& path)
     : m_path    (path),
+    m_uid       (0),
     m_file      (nullptr)
 {
-
-
+    std::hash<std::string> hashAttack;
+    m_uid = hashAttack(path);
 }
 
 StaticMeshBuilder::~StaticMeshBuilder()

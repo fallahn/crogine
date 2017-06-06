@@ -64,6 +64,13 @@ namespace cro
         MeshBuilder& operator = (const MeshBuilder&) = default;
         MeshBuilder& operator = (MeshBuilder&&) = default;
 
+        /*!
+        \brief If creating a builder which loads a mesh from disk, for example,
+        create a Unique ID based on the hash of the file path to prevent the
+        same mesh being loaded more than once if using the ResourceAutomation
+        */
+        virtual int32 getUID() const { return 0; }
+
     protected:
         friend class MeshResource;
         /*!

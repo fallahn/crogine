@@ -52,9 +52,11 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 
 IqmBuilder::IqmBuilder(const std::string& path)
     : m_path    (path),
+    m_uid       (0),
     m_file      (nullptr)
 {
-
+    std::hash<std::string> hashAttack;
+    m_uid = hashAttack(path);
 }
 
 IqmBuilder::~IqmBuilder()
@@ -63,6 +65,12 @@ IqmBuilder::~IqmBuilder()
     {
         SDL_RWclose(m_file);
     }
+}
+
+//public
+int32 IqmBuilder::getUID() const
+{
+    return m_uid;
 }
 
 //private
