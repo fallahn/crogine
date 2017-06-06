@@ -1,0 +1,12 @@
+model Collectable_Shield
+{
+	mesh = "assets/models/collectable.cmf"
+
+	material VertexLit
+	{
+		diffuse = "assets/materials/collectables/collectables02_diffuse.png"
+		mask = "assets/materials/collectables/collectables02_mask.png"
+		normal = "assets/materials/collectables/collectables02_normal.png"
+		subrect = 0.0,0.5,0.5,0.5
+	}
+}

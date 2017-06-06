@@ -158,11 +158,11 @@ void MainState::addSystems()
 
 void MainState::loadAssets()
 {
-    m_modelDefs[ModelID::LookoutBase].loadFromFile("assets/models/lookout_base.cmt", m_resources);
-    m_modelDefs[ModelID::GasPlanet].loadFromFile("assets/models/planet.cmt", m_resources);
-    m_modelDefs[ModelID::Moon].loadFromFile("assets/models/moon.cmt", m_resources);
-    m_modelDefs[ModelID::Roids].loadFromFile("assets/models/roid_belt.cmt", m_resources);
-    m_modelDefs[ModelID::Stars].loadFromFile("assets/models/stars.cmt", m_resources);
+    m_modelDefs[MenuModelID::LookoutBase].loadFromFile("assets/models/lookout_base.cmt", m_resources);
+    m_modelDefs[MenuModelID::GasPlanet].loadFromFile("assets/models/planet.cmt", m_resources);
+    m_modelDefs[MenuModelID::Moon].loadFromFile("assets/models/moon.cmt", m_resources);
+    m_modelDefs[MenuModelID::Roids].loadFromFile("assets/models/roid_belt.cmt", m_resources);
+    m_modelDefs[MenuModelID::Stars].loadFromFile("assets/models/stars.cmt", m_resources);
 
     //test sprite sheet
     auto& testFont = m_resources.fonts.get(FontID::MenuFont);
@@ -176,8 +176,8 @@ void MainState::createScene()
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 2.3f, -0.7f, -6.f });
     entity.getComponent<cro::Transform>().setRotation({ -0.5f, 0.f, 0.4f });
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[ModelID::GasPlanet].meshID),
-                                    m_resources.materials.get(m_modelDefs[ModelID::GasPlanet].materialIDs[0]));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::GasPlanet].meshID),
+                                    m_resources.materials.get(m_modelDefs[MenuModelID::GasPlanet].materialIDs[0]));
     auto& planetRotator = entity.addComponent<Rotator>();
     planetRotator.speed = 0.02f;
     planetRotator.axis.y = 0.2f;
@@ -192,8 +192,8 @@ void MainState::createScene()
     moonTx.setScale({ 0.22f, 0.22f, 0.22f });
     moonTx.setOrigin({ 0.f, 0.f, -5.2f });
     moonTx.setParent(entity);
-    moonEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[ModelID::Moon].meshID),
-                                        m_resources.materials.get(m_modelDefs[ModelID::Moon].materialIDs[0]));
+    moonEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Moon].meshID),
+                                        m_resources.materials.get(m_modelDefs[MenuModelID::Moon].materialIDs[0]));
     //auto& moonRotator = moonEntity.addComponent<Rotator>();
     //moonRotator.axis.y = 1.f;
     //moonRotator.speed = 0.4f;
@@ -203,18 +203,18 @@ void MainState::createScene()
     lookoutTx.setScale(glm::vec3(0.4f));
     lookoutTx.setOrigin({ -6.f, 0.f, -1.f });
     lookoutTx.setParent(entity);
-    auto& lookoutModel = lookoutEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[ModelID::LookoutBase].meshID), 
-                                                                m_resources.materials.get(m_modelDefs[ModelID::LookoutBase].materialIDs[0]));
-    for (auto i = 0u; i < m_modelDefs[ModelID::LookoutBase].materialCount; ++i)
+    auto& lookoutModel = lookoutEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::LookoutBase].meshID),
+                                                                m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[0]));
+    for (auto i = 0u; i < m_modelDefs[MenuModelID::LookoutBase].materialCount; ++i)
     {
-        lookoutModel.setMaterial(i, m_resources.materials.get(m_modelDefs[ModelID::LookoutBase].materialIDs[i]));
+        lookoutModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[i]));
     }
 
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
     roidEntity.getComponent<cro::Transform>().setParent(entity);
-    roidEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[ModelID::Roids].meshID),
-                                        m_resources.materials.get(m_modelDefs[ModelID::Roids].materialIDs[0]));
+    roidEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Roids].meshID),
+                                        m_resources.materials.get(m_modelDefs[MenuModelID::Roids].materialIDs[0]));
     auto& roidRotator = roidEntity.addComponent<Rotator>();
     roidRotator.speed = -0.03f;
     roidRotator.axis.y = 1.f;
@@ -227,14 +227,14 @@ void MainState::createScene()
     //create stars
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -19.f });
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[ModelID::Stars].meshID),
-                                    m_resources.materials.get(m_modelDefs[ModelID::Stars].materialIDs[0]));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Stars].meshID),
+                                    m_resources.materials.get(m_modelDefs[MenuModelID::Stars].materialIDs[0]));
 
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -12.f });
     entity.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, 3.14f);
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[ModelID::Stars].meshID),
-                                    m_resources.materials.get(m_modelDefs[ModelID::Stars].materialIDs[0]));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Stars].meshID),
+                                    m_resources.materials.get(m_modelDefs[MenuModelID::Stars].materialIDs[0]));
     entity.addComponent<Drifter>().amplitude = -0.1f;
 
 

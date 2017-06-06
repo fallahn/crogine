@@ -51,9 +51,12 @@ namespace cro
         */
         QuadBuilder(glm::vec2 size, glm::vec2 texRepeat = glm::vec2(1.f, 1.f));
 
+        int32 getUID() const override { return m_uid; }
+
     private:
         glm::vec2 m_size;
         glm::vec2 m_repeat;
+        int32 m_uid;
         Mesh::Data build() const override;
     };
 }

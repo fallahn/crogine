@@ -87,7 +87,7 @@ void NpcSystem::handleMessage(const cro::Message& msg)
 
 void NpcSystem::process(cro::Time dt)
 {
-    DPRINT("Player Position", std::to_string(m_playerPosition.x) + ", " + std::to_string(m_playerPosition.y));
+    //DPRINT("Player Position", std::to_string(m_playerPosition.x) + ", " + std::to_string(m_playerPosition.y));
     
     auto& entities = getEntities();
     m_accumulator += std::min(dt.asSeconds(), 1.f);
@@ -142,9 +142,20 @@ void NpcSystem::processElite(cro::Entity entity)
     auto& tx = entity.getComponent<cro::Transform>();
     auto& status = entity.getComponent<Npc>();
     
+    auto wp = tx.getWorldPosition();
+    DPRINT("Elite", std::to_string(wp.x) + ", " + std::to_string(wp.y) + ", " + std::to_string(wp.z));
+
     //move toward target
     auto movement = status.elite.destination - tx.getWorldPosition();
-      
+    
+    //clamp max movement
+    static const float maxMoveSqr = 181.f;
+    float l2 = glm::length2(movement);
+    if (l2 > maxMoveSqr)
+    {
+        movement *= (maxMoveSqr / l2);
+    }
+
     if (status.elite.active) //big movements
     {
         movement *= 4.f;

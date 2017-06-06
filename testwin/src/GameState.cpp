@@ -160,143 +160,61 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
-    m_shaderResource.preloadFromString(Shaders::Background::Vertex, Shaders::Background::Fragment, ShaderID::Background);
-    auto& farTexture = m_textureResource.get("assets/materials/background_far.png");
+    m_resources.shaders.preloadFromString(Shaders::Background::Vertex, Shaders::Background::Fragment, ShaderID::Background);
+    auto& farTexture = m_resources.textures.get("assets/materials/background_far.png");
     farTexture.setRepeated(true);
     farTexture.setSmooth(true);
-    auto& farMaterial = m_materialResource.add(MaterialID::GameBackgroundFar, m_shaderResource.get(ShaderID::Background));
+    auto& farMaterial = m_resources.materials.add(MaterialID::GameBackgroundFar, m_resources.shaders.get(ShaderID::Background));
     farMaterial.setProperty("u_diffuseMap", farTexture);
 
-    auto& midTexture = m_textureResource.get("assets/materials/background_mid.png");
+    auto& midTexture = m_resources.textures.get("assets/materials/background_mid.png");
     midTexture.setRepeated(true);
     midTexture.setSmooth(true);
-    auto& midMaterial = m_materialResource.add(MaterialID::GameBackgroundMid, m_shaderResource.get(ShaderID::Background));
+    auto& midMaterial = m_resources.materials.add(MaterialID::GameBackgroundMid, m_resources.shaders.get(ShaderID::Background));
     midMaterial.setProperty("u_diffuseMap", midTexture);
     midMaterial.blendMode = cro::Material::BlendMode::Alpha;
 
-    auto& nearTexture = m_textureResource.get("assets/materials/background_near.png");
+    auto& nearTexture = m_resources.textures.get("assets/materials/background_near.png");
     nearTexture.setRepeated(true);
     nearTexture.setSmooth(true);
-    auto& nearMaterial = m_materialResource.add(MaterialID::GameBackgroundNear, m_shaderResource.get(ShaderID::Background));
+    auto& nearMaterial = m_resources.materials.add(MaterialID::GameBackgroundNear, m_resources.shaders.get(ShaderID::Background));
     nearMaterial.setProperty("u_diffuseMap", nearTexture);
     nearMaterial.blendMode = cro::Material::BlendMode::Alpha;
 
     cro::QuadBuilder qb(backgroundSize);
-    m_meshResource.loadMesh(MeshID::GameBackground, qb);
-
-    auto shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::BuiltIn::VertexLit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::NormalMap);
-    auto& playerMaterial = m_materialResource.add(MaterialID::PlayerShip, m_shaderResource.get(shaderID));
-    playerMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/player_diffuse.png"));
-    playerMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/player_mask.png"));
-    playerMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/player_normal.png"));
-
-    cro::StaticMeshBuilder playerMesh("assets/models/player_ship.cmf");
-    m_meshResource.loadMesh(MeshID::PlayerShip, playerMesh);
-
-    auto& eliteMaterial = m_materialResource.add(MaterialID::NPCElite, m_shaderResource.get(shaderID));
-    eliteMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/npc/elite_diffuse.png"));
-    eliteMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/npc/elite_mask.png"));
-    eliteMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/npc/elite_normal.png"));
-
-    cro::StaticMeshBuilder eliteMesh("assets/models/elite.cmf");
-    m_meshResource.loadMesh(MeshID::NPCElite, eliteMesh);
+    m_resources.meshes.loadMesh(MeshID::GameBackground, qb);
 
 
-    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap);
-    auto& turrBaseMat = m_materialResource.add(MaterialID::NPCTurretBase, m_shaderResource.get(shaderID));
-    turrBaseMat.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/npc/turret_base_diffuse.png"));
-    turrBaseMat.setProperty("u_maskMap", m_textureResource.get("assets/materials/npc/turret_base_mask.png"));
-
-    auto& turrCanMat = m_materialResource.add(MaterialID::NPCTurretCannon, m_shaderResource.get(shaderID));
-    turrCanMat.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/npc/turret_cannon_diffuse.png"));
-    turrCanMat.setProperty("u_maskMap", m_textureResource.get("assets/materials/npc/turret_cannon_mask.png"));
-
-    cro::StaticMeshBuilder turretBase("assets/models/turret_base.cmf");
-    m_meshResource.loadMesh(MeshID::NPCTurretBase, turretBase);
-
-    cro::StaticMeshBuilder turretCannon("assets/models/turret_cannon.cmf");
-    m_meshResource.loadMesh(MeshID::NPCTurretCannon, turretCannon);
+    m_modelDefs[GameModelID::Player].loadFromFile("assets/models/player.cmt", m_resources);
+    m_modelDefs[GameModelID::CollectableBatt].loadFromFile("assets/models/collectable_batt.cmt", m_resources);
+    m_modelDefs[GameModelID::CollectableBomb].loadFromFile("assets/models/collectable_bomb.cmt", m_resources);
+    m_modelDefs[GameModelID::CollectableBot].loadFromFile("assets/models/collectable_bot.cmt", m_resources);
+    m_modelDefs[GameModelID::CollectableHeart].loadFromFile("assets/models/collectable_heart.cmt", m_resources);
+    m_modelDefs[GameModelID::CollectableShield].loadFromFile("assets/models/collectable_shield.cmt", m_resources);
+    m_modelDefs[GameModelID::Elite].loadFromFile("assets/models/elite.cmt", m_resources);
+    m_modelDefs[GameModelID::TurretBase].loadFromFile("assets/models/turret_base.cmt", m_resources);
+    m_modelDefs[GameModelID::TurretCannon].loadFromFile("assets/models/turret_cannon.cmt", m_resources);
+    m_modelDefs[GameModelID::Choppa].loadFromFile("assets/models/choppa.cmt", m_resources);
 
 
-    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::Skinning);
-    auto& choppaMat = m_materialResource.add(MaterialID::NPCChoppa, m_shaderResource.get(shaderID));
-    choppaMat.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/npc/choppa_diffuse.png"));
-    choppaMat.setProperty("u_maskMap", m_textureResource.get("assets/materials/npc/choppa_mask.png"));
-
-    cro::IqmBuilder choppaMesh("assets/models/choppa_pod.iqm");
-    m_meshResource.loadMesh(MeshID::NPCChoppa, choppaMesh);
-    choppaSkel = choppaMesh.getSkeleton();
-    choppaSkel.animations[0].playing = true;
-
-    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
-    m_materialResource.add(MaterialID::TerrainChunk, m_shaderResource.get(shaderID));
+    auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
+    m_resources.materials.add(MaterialID::TerrainChunk, m_resources.shaders.get(shaderID));
 
     ChunkBuilder chunkBuilder;
-    m_meshResource.loadMesh(MeshID::TerrainChunkA, chunkBuilder);
-    m_meshResource.loadMesh(MeshID::TerrainChunkB, chunkBuilder);
+    m_resources.meshes.loadMesh(MeshID::TerrainChunkA, chunkBuilder);
+    m_resources.meshes.loadMesh(MeshID::TerrainChunkB, chunkBuilder);
 
 
-    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::Subrects);
+    shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::Subrects);
     for (auto i = 0u; i < rockfallCount; ++i)
     {
-        auto& rockMat = m_materialResource.add(MaterialID::Rockfall + i, m_shaderResource.get(shaderID));
-        rockMat.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/npc/tites.png"));
+        auto& rockMat = m_resources.materials.add(MaterialID::Rockfall + i, m_resources.shaders.get(shaderID));
+        rockMat.setProperty("u_diffuseMap", m_resources.textures.get("assets/materials/npc/tites.png"));
         rockMat.setProperty("u_subrect", glm::vec4(0.f, 0.f, 0.25f, 1.f));
         rockMat.blendMode = cro::Material::BlendMode::Alpha;
     }
     cro::QuadBuilder rockQuad({ 1.f, 1.f });
-    m_meshResource.loadMesh(MeshID::RockQuad, rockQuad);
-
-    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::NormalMap | cro::ShaderResource::Subrects);
-    auto& battMaterial = m_materialResource.add(MaterialID::BattCollectable, m_shaderResource.get(shaderID));
-    battMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/collectables/collectables01_diffuse.png"));
-    battMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/collectables/collectables01_mask.png"));
-    battMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/collectables/collectables01_normal.png"));
-    battMaterial.setProperty("u_subrect", glm::vec4(0.f, 0.5f, 0.5f, 0.5f));
-
-    auto& bombMaterial = m_materialResource.add(MaterialID::BombCollectable, m_shaderResource.get(shaderID));
-    bombMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/collectables/collectables01_diffuse.png"));
-    bombMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/collectables/collectables01_mask.png"));
-    bombMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/collectables/collectables01_normal.png"));
-    bombMaterial.setProperty("u_subrect", glm::vec4(0.5f, 0.5f, 0.5f, 0.5f));
-
-    auto& botMaterial = m_materialResource.add(MaterialID::BotCollectable, m_shaderResource.get(shaderID));
-    botMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/collectables/collectables01_diffuse.png"));
-    botMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/collectables/collectables01_mask.png"));
-    botMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/collectables/collectables01_normal.png"));
-    botMaterial.setProperty("u_subrect", glm::vec4(0.f, 0.f, 0.5f, 0.5f));
-
-    auto& heartMaterial = m_materialResource.add(MaterialID::HeartCollectable, m_shaderResource.get(shaderID));
-    heartMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/collectables/collectables01_diffuse.png"));
-    heartMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/collectables/collectables01_mask.png"));
-    heartMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/collectables/collectables01_normal.png"));
-    heartMaterial.setProperty("u_subrect", glm::vec4(0.5f, 0.f, 0.5f, 0.5f));
-
-    auto& shieldMaterial = m_materialResource.add(MaterialID::ShieldCollectable, m_shaderResource.get(shaderID));
-    shieldMaterial.setProperty("u_diffuseMap", m_textureResource.get("assets/materials/collectables/collectables02_diffuse.png"));
-    shieldMaterial.setProperty("u_maskMap", m_textureResource.get("assets/materials/collectables/collectables02_mask.png"));
-    shieldMaterial.setProperty("u_normalMap", m_textureResource.get("assets/materials/collectables/collectables02_normal.png"));
-    shieldMaterial.setProperty("u_subrect", glm::vec4(0.f, 0.5f, 0.5f, 0.5f));
-
-    cro::StaticMeshBuilder collectableMesh("assets/models/collectable.cmf");
-    m_meshResource.loadMesh(MeshID::Collectable, collectableMesh);
-
-    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseColour);
-    auto& blackMaterial = m_materialResource.add(MaterialID::BackgroundBlack, m_shaderResource.get(shaderID));
-    blackMaterial.setProperty("u_colour", cro::Colour(0.22f, 0.22f, 0.22f));
-    blackMaterial.setProperty("u_maskColour", cro::Colour(0.01f, 0.4f, 0.f));
-
-    auto& glassMaterial = m_materialResource.add(MaterialID::BackgroundGlass, m_shaderResource.get(shaderID));
-    glassMaterial.setProperty("u_colour", cro::Colour(0.2f, 0.1f, 0.1f, 0.2f));
-    glassMaterial.setProperty("u_maskColour", cro::Colour(1.f, 1.f, 0.f));
-    glassMaterial.blendMode = cro::Material::BlendMode::Alpha;
-
-    shaderID = m_shaderResource.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseColour);
-    auto& lightMaterial = m_materialResource.add(MaterialID::BackgroundUnlit, m_shaderResource.get(shaderID));
-    lightMaterial.setProperty("u_colour", cro::Colour(0.9f, 0.f, 0.f));
-
-    cro::StaticMeshBuilder outpost("assets/models/arctic_outpost.cmf");
-    m_meshResource.loadMesh(MeshID::ArcticOutpost, outpost);
+    m_resources.meshes.loadMesh(MeshID::RockQuad, rockQuad);
 }
 
 void GameState::createScene()
@@ -304,30 +222,23 @@ void GameState::createScene()
     //background layers
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -18.f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::GameBackground), m_materialResource.get(MaterialID::GameBackgroundFar));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::GameBackground), m_resources.materials.get(MaterialID::GameBackgroundFar));
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -14.f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::GameBackground), m_materialResource.get(MaterialID::GameBackgroundMid));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::GameBackground), m_resources.materials.get(MaterialID::GameBackgroundMid));
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -11.f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::GameBackground), m_materialResource.get(MaterialID::GameBackgroundNear));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::GameBackground), m_resources.materials.get(MaterialID::GameBackgroundNear));
     entity.addComponent<BackgroundComponent>();
-
-    //background objects
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -13.f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::ArcticOutpost), m_materialResource.get(MaterialID::BackgroundBlack));
-    entity.getComponent<cro::Model>().setMaterial(1, m_materialResource.get(MaterialID::BackgroundGlass));
-    entity.getComponent<cro::Model>().setMaterial(2, m_materialResource.get(MaterialID::BackgroundUnlit));
 
     //terrain chunks
     entity = m_scene.createEntity();
     auto& chunkTxA = entity.addComponent<cro::Transform>();
     chunkTxA.setPosition({ 0.f, 0.f, -8.8f });
     //chunkTxA.setScale({ 0.5f, 0.5f, 1.f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::TerrainChunkA), m_materialResource.get(MaterialID::TerrainChunk));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::TerrainChunkA), m_resources.materials.get(MaterialID::TerrainChunk));
     entity.addComponent<TerrainChunk>();
 
     auto chunkEntityA = entity; //keep this so we can attach turrets to it
@@ -335,7 +246,7 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     auto& chunkTxB = entity.addComponent<cro::Transform>();
     chunkTxB.setPosition({ backgroundSize.x, 0.f, -8.8f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::TerrainChunkB), m_materialResource.get(MaterialID::TerrainChunk));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::TerrainChunkB), m_resources.materials.get(MaterialID::TerrainChunk));
     entity.addComponent<TerrainChunk>();
 
     auto chunkEntityB = entity;
@@ -349,7 +260,7 @@ void GameState::createScene()
         tx.setScale({ 0.6f, 1.2f, 1.f });
         tx.setPosition({ 0.f, 3.4f, -9.1f });
 
-        entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::RockQuad), m_materialResource.get(MaterialID::Rockfall + i));
+        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::RockQuad), m_resources.materials.get(MaterialID::Rockfall + i));
     }
 
     //player ship
@@ -357,7 +268,8 @@ void GameState::createScene()
     auto& playerTx = entity.addComponent<cro::Transform>();
     playerTx.setPosition({ -3.4f, 0.f, -9.25f });
     playerTx.setScale({ 0.6f, 0.6f, 0.6f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::PlayerShip), m_materialResource.get(MaterialID::PlayerShip));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::Player].materialIDs[0]));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Velocity>().friction = 2.5f;
     //auto& rotator = entity.addComponent<Rotator>();
@@ -370,7 +282,8 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.41f, 1.4f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::BattCollectable));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBatt].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableBatt].materialIDs[0]));
     auto& battSpin = entity.addComponent<Rotator>();
     battSpin.axis.y = 1.f;
     battSpin.speed = 3.2f;
@@ -380,7 +293,8 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.42f, 0.6f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::BombCollectable));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBomb].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableBomb].materialIDs[0]));
     auto& bombSpin = entity.addComponent<Rotator>();
     bombSpin.axis.y = 1.f;
     bombSpin.speed = 2.9f;
@@ -390,7 +304,8 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.6f, -0.2f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::BotCollectable));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBot].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableBot].materialIDs[0]));
     auto& botSpin = entity.addComponent<Rotator>();
     botSpin.axis.y = 1.f;
     botSpin.speed = 2.994f;
@@ -400,7 +315,8 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.38f, -1.f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::HeartCollectable));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableHeart].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableHeart].materialIDs[0]));
     auto& heartSpin = entity.addComponent<Rotator>();
     heartSpin.axis.y = 1.f;
     heartSpin.speed = 2.873f;
@@ -410,7 +326,8 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.4f, -1.7f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::Collectable), m_materialResource.get(MaterialID::ShieldCollectable));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableShield].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableShield].materialIDs[0]));
     auto& shieldSpin = entity.addComponent<Rotator>();
     shieldSpin.axis.y = 1.f;
     shieldSpin.speed = 3.028f;
@@ -421,7 +338,8 @@ void GameState::createScene()
     //NPCs
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.9f, 1.5f, -9.3f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCElite), m_materialResource.get(MaterialID::NPCElite));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Elite].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::Elite].materialIDs[0]));
     entity.addComponent<Npc>().type = Npc::Elite;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Elite;
     
@@ -429,8 +347,11 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 5.9f, 0.5f, -9.3f });
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
     //entity.getComponent<cro::Transform>().setScale({ 0.02f, 0.02f, 0.02f });
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCChoppa), m_materialResource.get(MaterialID::NPCChoppa));
-    entity.addComponent<cro::Skeleton>() = choppaSkel;
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::Choppa].materialIDs[0]));
+    CRO_ASSERT(m_modelDefs[GameModelID::Choppa].skeleton, "Skelton missing from choppa!");
+    entity.addComponent<cro::Skeleton>() = *m_modelDefs[GameModelID::Choppa].skeleton;
+    entity.getComponent<cro::Skeleton>().play(0);
     entity.addComponent<Npc>().type = Npc::Choppa;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Choppa;
 
@@ -439,24 +360,28 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f }); //places off screen to start
     entity.getComponent<cro::Transform>().setScale({ 0.3f, 0.3f, 0.3f });
     entity.getComponent<cro::Transform>().setParent(chunkEntityA); //attach to scenery
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCTurretBase), m_materialResource.get(MaterialID::NPCTurretBase));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TurretBase].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::TurretBase].materialIDs[0]));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Turret;
     
     auto canEnt = m_scene.createEntity();
     canEnt.addComponent<cro::Transform>().setParent(entity);
-    canEnt.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCTurretCannon), m_materialResource.get(MaterialID::NPCTurretCannon));
+    canEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TurretCannon].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::TurretCannon].materialIDs[0]));
     canEnt.addComponent<Npc>().type = Npc::Turret;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
     entity.getComponent<cro::Transform>().setScale({ 0.3f, 0.3f, 0.3f });
     entity.getComponent<cro::Transform>().setParent(chunkEntityB); //attach to scenery
-    entity.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCTurretBase), m_materialResource.get(MaterialID::NPCTurretBase));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TurretBase].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::TurretBase].materialIDs[0]));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Turret;
 
     canEnt = m_scene.createEntity();
     canEnt.addComponent<cro::Transform>().setParent(entity);
-    canEnt.addComponent<cro::Model>(m_meshResource.getMesh(MeshID::NPCTurretCannon), m_materialResource.get(MaterialID::NPCTurretCannon));
+    canEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TurretCannon].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::TurretCannon].materialIDs[0]));
     canEnt.addComponent<Npc>().type = Npc::Turret;
 
 
@@ -472,7 +397,7 @@ void GameState::createScene()
     settings.rotationSpeed = 5.f;
     settings.size = 0.03f;
     settings.spawnRadius = 0.8f;
-    settings.textureID = m_textureResource.get("assets/particles/snowflake.png").getGLHandle();
+    settings.textureID = m_resources.textures.get("assets/particles/snowflake.png").getGLHandle();
     settings.blendmode = cro::EmitterSettings::Add;
 
     snowEmitter.start();
@@ -495,7 +420,7 @@ void GameState::createScene()
     rockSettings.lifetime = 2.f;
     rockSettings.rotationSpeed = 8.f;
     rockSettings.size = 0.06f;
-    rockSettings.textureID = m_textureResource.get("assets/particles/rock_fragment.png").getGLHandle();
+    rockSettings.textureID = m_resources.textures.get("assets/particles/rock_fragment.png").getGLHandle();
     rockSettings.blendmode = cro::EmitterSettings::Alpha;
     rockSettings.gravity = { 0.f, -9.f, 0.f };
 

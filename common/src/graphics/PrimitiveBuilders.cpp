@@ -50,9 +50,14 @@ namespace
 
 QuadBuilder::QuadBuilder(glm::vec2 size, glm::vec2 texRepeat)
     : m_size(size),
-    m_repeat(texRepeat)
+    m_repeat(texRepeat),
+    m_uid   (0)
 {
     CRO_ASSERT(size.x > 0 && size.y > 0, "Invalid size");
+
+    std::hash<std::string> hashIt;
+    //this isn't flawless, for example if dimensions are swapped....
+    m_uid = hashIt(std::to_string(size.x) + std::to_string(size.y) + std::to_string(texRepeat.x) + std::to_string(texRepeat.y));
 }
 
 Mesh::Data QuadBuilder::build() const
@@ -176,10 +181,14 @@ Mesh::Data CubeBuilder::build() const
 
 SphereBuilder::SphereBuilder(float radius, std::size_t resolution)
     :m_radius       (radius),
-    m_resolution    (resolution)
+    m_resolution    (resolution),
+    m_uid           (0)
 {
     CRO_ASSERT(radius > 0, "Invalid radius");
     CRO_ASSERT(resolution > 0, "Invalid face resolution");
+
+    std::hash<std::string> hashIt;
+    m_uid = hashIt(std::to_string(radius) + std::to_string(resolution));
 }
 
 Mesh::Data SphereBuilder::build() const

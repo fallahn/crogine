@@ -62,7 +62,7 @@ private:
     cro::Scene m_menuScene;
 
     cro::ResourceCollection m_resources;
-    std::array<cro::ModelDefinition, ModelID::Count> m_modelDefs;
+    std::array<cro::ModelDefinition, MenuModelID::Count> m_modelDefs;
 
     cro::CommandSystem* m_commandSystem;
     cro::UISystem* m_uiSystem;

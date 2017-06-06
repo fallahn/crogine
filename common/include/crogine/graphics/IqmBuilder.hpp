@@ -66,8 +66,14 @@ namespace cro
         */
         Skeleton getSkeleton() const { return m_skeleton; }
 
+        /*!
+        \brief Implenets the UID based on the file path given in the constructor
+        */
+        int32 getUID() const override;
+
     private:
         std::string m_path;
+        int32 m_uid;
         mutable SDL_RWops* m_file;
         Mesh::Data build() const override;
         mutable Skeleton m_skeleton;

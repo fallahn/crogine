@@ -1,0 +1,10 @@
+model Turret_Cannon
+{
+	mesh = "assets/models/turret_cannon.cmf"
+
+	material VertexLit
+	{
+		diffuse = "assets/materials/npc/turret_cannon_diffuse.png"
+		mask = "assets/materials/npc/turret_cannon_mask.png"
+	}
+}

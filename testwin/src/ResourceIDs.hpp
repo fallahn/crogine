@@ -36,20 +36,11 @@ namespace MaterialID
 {
     enum
     {
-        PlanetClouds,
         GameBackgroundFar,
         GameBackgroundMid,
         GameBackgroundNear,
-        PlayerShip,
         TerrainChunk,
-        Rockfall, Rockfall2, //hmm a bit hacky but we want a variant for each entity
-        BattCollectable, BombCollectable,
-        BotCollectable, HeartCollectable,
-        ShieldCollectable,
-        NPCElite, NPCChoppa,
-        NPCTurretBase, NPCTurretCannon,
-        BackgroundBlack, BackgroundGlass,
-        BackgroundUnlit
+        Rockfall, Rockfall2
     };
 }
 
@@ -58,18 +49,13 @@ namespace MeshID
     enum
     {
         GameBackground = cro::Mesh::ID::Count,
-        PlayerShip,
         TerrainChunkA,
         TerrainChunkB,
-        RockQuad,
-        Collectable,
-        NPCElite, NPCChoppa,
-        NPCTurretBase, NPCTurretCannon,
-        ArcticOutpost
+        RockQuad
     };
 }
 
-namespace ModelID
+namespace MenuModelID
 {
     enum
     {
@@ -78,6 +64,23 @@ namespace ModelID
         Moon,
         Roids,
         Stars,
+        Count
+    };
+}
+
+namespace GameModelID
+{
+    enum
+    {
+        Player = 0,
+        CollectableBatt,
+        CollectableBomb,
+        CollectableBot,
+        CollectableHeart,
+        CollectableShield,
+        Elite,
+        TurretBase, TurretCannon,
+        Choppa,
         Count
     };
 }
