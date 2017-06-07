@@ -151,7 +151,7 @@ namespace cro
                 #endif
                 })";
 
-            const static std::string Fragment = R"(
+                const static std::string Fragment = R"(
                 #if defined(TEXTURED)
                 uniform sampler2D u_diffuseMap;
                 uniform sampler2D u_maskMap;
@@ -173,6 +173,11 @@ namespace cro
                 #define MAX_PROJECTIONS 8
                 uniform sampler2D u_projectionMap;
                 uniform LOW int u_projectionMapCount;
+                #endif
+
+                #if defined(RIMMING)
+                uniform LOW vec4 u_rimColour;
+                uniform LOW float u_rimFalloff;
                 #endif
 
                 varying HIGH vec3 v_worldPosition;
@@ -254,6 +259,13 @@ namespace cro
                             gl_FragColor *= texture2D(u_projectionMap, coords);
                         }
                     }
+                #endif
+
+                #if defined (RIMMING)
+                    LOW float rim = 1.0 - dot(normal, eyeDirection);
+                    rim = smoothstep(u_rimFalloff, 1.0, rim);
+                    //gl_FragColor.rgb = mix(gl_FragColor.rgb, u_rimColour.rgb, rim);
+                    gl_FragColor += u_rimColour * rim ;//* 0.5;
                 #endif
                 })";
         }
