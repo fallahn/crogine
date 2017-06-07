@@ -5,8 +5,8 @@ model BatCat
 	material Unlit
 	{
 		diffuse = "assets/textures/batcat_diffuse.png"
-		mask = "assets/textures/batcat_mask.png"
+		//mask = "assets/textures/batcat_mask.png"
 		skinned = true
-		repeat = true
+		repeat = true		
 	}
 }
