@@ -43,6 +43,7 @@ namespace cro
                 #if defined(VERTEX_COLOUR)
                 attribute vec4 a_colour;
                 #endif
+
                 #if defined(TEXTURED)
                 attribute MED vec2 a_texCoord0;
                 #endif
@@ -65,6 +66,7 @@ namespace cro
                 uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;               
                 uniform mat4 u_projectionMatrix;
+
                 #if defined (SUBRECTS)
                 uniform MED vec4 u_subrect;
                 #endif
@@ -83,6 +85,7 @@ namespace cro
                 varying LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
                 #endif
 
+
                 void main()
                 {
                     mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
@@ -94,6 +97,7 @@ namespace cro
                         v_projectionCoords[i] = u_projectionMapMatrix[i] * u_worldMatrix * a_position;
                     }
                 #endif
+
 
                 #if defined(SKINNED)
                 	mat4 skinMatrix = u_boneMatrices[int(a_boneIndices.x)] * a_boneWeights.x;
@@ -136,11 +140,6 @@ namespace cro
                 uniform LOW int u_projectionMapCount;
                 #endif
 
-                #if defined(RIMMING)
-                uniform LOW vec4 u_rimColour;
-                uniform LOW float u_rimFalloff;
-                #endif
-
                 #if defined (VERTEX_COLOUR)
                 varying LOW vec4 v_colour;
                 #endif
@@ -150,7 +149,6 @@ namespace cro
                 #if defined (LIGHTMAPPED)
                 varying MED vec2 v_texCoord1;
                 #endif                
-
 
                 #if defined(PROJECTIONS)
                 varying LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
@@ -182,12 +180,6 @@ namespace cro
                             gl_FragColor *= texture2D(u_projectionMap, coords);
                         }
                     }
-                #endif
-                #if defined (RIMMING)
-                    LOW float rim = 1.0 - dot(normal, eyeDirection);
-                    rim = smoothstep(u_rimFalloff, 1.0, rim);
-                    //gl_FragColor.rgb = mix(gl_FragColor.rgb, u_rimColour.rgb, rim);
-                    gl_FragColor += u_rimColour * rim ;//* 0.5;
                 #endif
                 })";
         }
