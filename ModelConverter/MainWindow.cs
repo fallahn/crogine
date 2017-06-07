@@ -360,17 +360,17 @@ namespace ModelConverter
                         //TODO wrapping
                         //Assimp.TextureWrapMode.Wrap;
                         
-                        file.WriteLine("\t\tdiffuse = " + textureName + "_mask.png");
+                        file.WriteLine("\t\tdiffuse = \"" + textureName + "_mask.png\"");
 
                         if (!unlit)
                         {
                             //don't ignore mask and normal maps
                             if (material.HasTextureDiffuse)
                             {
-                                file.WriteLine("\t\tmask = " + textureName + "_mask.png");
+                                file.WriteLine("\t\tmask = \"" + textureName + "_mask.png\"");
                                 if (checkBoxBump.Checked)
                                 {
-                                    file.WriteLine("\t\tnormal = " + textureName + "_normal.png");
+                                    file.WriteLine("\t\tnormal = \"" + textureName + "_normal.png\"");
                                 }
                             }
                         }

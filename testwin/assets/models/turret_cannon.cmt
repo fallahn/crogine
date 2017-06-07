@@ -6,5 +6,7 @@ model Turret_Cannon
 	{
 		diffuse = "assets/materials/npc/turret_cannon_diffuse.png"
 		mask = "assets/materials/npc/turret_cannon_mask.png"
+		rim = 0.9,0.87,0.7,1.0
+		rim_falloff = 0.4
 	}
 }

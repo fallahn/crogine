@@ -61,7 +61,8 @@ namespace cro
             LightMap = 0x10,
             Skinning = 0x20,
             Subrects = 0x40,
-            ReceiveProjection = 0x80
+            ReceiveProjection = 0x80,
+            RimLighting = 0x100
         };
         
         ShaderResource();

@@ -7,5 +7,6 @@ model Player
 		diffuse = "assets/materials/player_diffuse.png"
 		mask = "assets/materials/player_mask.png"
 		normal = "assets/materials/player_normal.png"
+		rim = 0.9,0.87,0.7,1.0
 	}
 }

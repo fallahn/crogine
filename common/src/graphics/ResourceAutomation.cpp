@@ -228,6 +228,13 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                     flags |= ShaderResource::VertexColour;
                 }
             }
+            else if (name == "rim")
+            {
+                //if (p.getValue<glm::vec4>().a == 1)
+                {
+                    flags |= ShaderResource::RimLighting;
+                }
+            }
             else if (name == "projection")
             {
                 //receive projection maps
@@ -287,6 +294,20 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                 auto& tex = rc.textures.get(p.getValue<std::string>());
                 tex.setSmooth(true);
                 material.setProperty("u_lightMap", tex);
+            }
+            else if (name == "rim")
+            {
+                auto c = p.getValue<glm::vec4>();
+                material.setProperty("u_rimColour", Colour(c.r, c.g, c.b, c.a));
+
+                if (auto* rimProperty = mat.findProperty("rim_falloff"))
+                {
+                    material.setProperty("u_rimFalloff", rimProperty->getValue<float>());
+                }
+                else
+                {
+                    material.setProperty("u_rimFalloff", 0.6);
+                }
             }
             else if (name == "projection")
             {

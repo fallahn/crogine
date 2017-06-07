@@ -120,6 +120,10 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     {
         defines += "\n#define COLOURED";
     }
+    if (flags & BuiltInFlags::RimLighting)
+    {
+        defines += "\n#define RIMMING";
+    }
     if (flags & BuiltInFlags::Skinning)
     {
         if (MAX_BONES == 0)
