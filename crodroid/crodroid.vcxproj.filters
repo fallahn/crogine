@@ -240,5 +240,8 @@
     <ClCompile Include="..\common\src\graphics\ResourceAutomation.cpp">
       <Filter>src\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\CollisionSystem.cpp">
+      <Filter>src\ecs\systems</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

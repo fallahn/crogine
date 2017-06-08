@@ -142,8 +142,8 @@ void NpcSystem::processElite(cro::Entity entity)
     auto& tx = entity.getComponent<cro::Transform>();
     auto& status = entity.getComponent<Npc>();
     
-    auto wp = tx.getWorldPosition();
-    DPRINT("Elite", std::to_string(wp.x) + ", " + std::to_string(wp.y) + ", " + std::to_string(wp.z));
+    //auto wp = tx.getWorldPosition();
+    //DPRINT("Elite", std::to_string(wp.x) + ", " + std::to_string(wp.y) + ", " + std::to_string(wp.z));
 
     //move toward target
     auto movement = status.elite.destination - tx.getWorldPosition();
