@@ -25,6 +25,7 @@ SET (CMAKE_CXX_FLAGS_RELEASE "-O4 -DNDEBUG")
 find_package(CROGINE REQUIRED)
 #find_package(TMXLITE REQUIRED)
 find_package(SDL2 REQUIRED)
+find_package(Bullet REQUIRED)
 find_package(OpenGL REQUIRED)
 #find_package(GLM REQUIRED)
 
@@ -32,6 +33,7 @@ include_directories(
   ${CROGINE_INCLUDE_DIR}
   #${TMXLITE_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
+  ${BULLET_INCLUDE_DIRS}
   ${OPENGL_INCLUDE_DIR}
   #${GLM_INCLUDE_DIR}
   src)
@@ -45,4 +47,5 @@ target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
   #${TMXLITE_LIBRARIES}
   ${SDL2_LIBRARY}
+  ${BULLET_LIBRARIES}
   ${OPENGL_LIBRARIES})

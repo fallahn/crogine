@@ -24,12 +24,14 @@ SET (CMAKE_DEBUG_POSTFIX -d)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_mixer REQUIRED)
 find_package(SDL2_ttf REQUIRED)
+find_package(Bullet REQUIRED)
 find_package(OpenGL REQUIRED)
 
 include_directories(
   ${SDL2_INCLUDE_DIR}
   ${SDL2_MIXER_INCLUDE_DIR}
   ${SDL2_TTF_INCLUDE_DIR}
+  ${BULLET_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/common/include)
 
 
@@ -46,6 +48,7 @@ target_link_libraries(${PROJECT_NAME}
   ${SDL2_LIBRARY}
   ${SDL2_MIXER_LIBRARY}
   ${SDL2_TTF_LIBRARIES}
+  ${BULLET_LIBRARIES}
   ${OPENGL_LIBRARIES})
 
 
