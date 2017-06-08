@@ -69,6 +69,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\Renderable.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\System.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\CollisionSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\CommandSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\DebugInfo.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\ParticleSystem.hpp" />
@@ -152,6 +153,7 @@
     <ClCompile Include="..\common\src\ecs\Scene.cpp" />
     <ClCompile Include="..\common\src\ecs\System.cpp" />
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\CollisionSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\CommandSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\DebugInfo.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\ParticleSystem.cpp" />
@@ -320,16 +322,16 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\SDL2_ttf\lib\x86;$(SolutionDir)extlibs\SDL2_mixer\lib\x86;$(SolutionDir)extlibs\sdl2\lib\x86;$(SolutionDir)extlibs\enet\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>enet.lib;SDL2.lib;SDL2_mixer.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\lib\x86\Debug;$(SolutionDir)extlibs\SDL2_ttf\lib\x86;$(SolutionDir)extlibs\SDL2_mixer\lib\x86;$(SolutionDir)extlibs\sdl2\lib\x86;$(SolutionDir)extlibs\enet\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>BulletCollision_Debug.lib;BulletDynamics_Debug.lib;BulletSoftBody_Debug.lib;LinearMath_Debug.lib;enet.lib;SDL2.lib;SDL2_mixer.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|Win32'">
@@ -350,12 +352,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\SDL2_ttf\lib\x64;$(SolutionDir)extlibs\SDL2_mixer\lib\x64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>enet.lib;SDL2.lib;SDL2_mixer.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\lib\x64\Debug;$(SolutionDir)extlibs\SDL2_ttf\lib\x64;$(SolutionDir)extlibs\SDL2_mixer\lib\x64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>BulletCollision_Debug.lib;LinearMath_Debug.lib;enet.lib;SDL2.lib;SDL2_mixer.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|x64'">
@@ -373,19 +375,19 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\SDL2_ttf\lib\x86;$(SolutionDir)extlibs\SDL2_mixer\lib\x86;$(SolutionDir)extlibs\sdl2\lib\x86;$(SolutionDir)extlibs\enet\lib\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>enet.lib;SDL2.lib;SDL2_mixer.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\SDL2_ttf\lib\x86;$(SolutionDir)extlibs\SDL2_mixer\lib\x86;$(SolutionDir)extlibs\sdl2\lib\x86;$(SolutionDir)extlibs\bullet\lib\x86\Release;$(SolutionDir)extlibs\enet\lib\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>BulletCollision.lib;BulletDynamics.lib;BulletSoftBody.lib;LinearMath.lib;enet.lib;SDL2.lib;SDL2_mixer.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tools|Win32'">
@@ -412,14 +414,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\SDL2_ttf\lib\x64;$(SolutionDir)extlibs\SDL2_mixer\lib\x64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>enet.lib;SDL2.lib;SDL2_mixer.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\lib\x64\Release;$(SolutionDir)extlibs\SDL2_ttf\lib\x64;$(SolutionDir)extlibs\SDL2_mixer\lib\x64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>BulletCollision.lib;LinearMath.lib;enet.lib;SDL2.lib;SDL2_mixer.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tools|x64'">

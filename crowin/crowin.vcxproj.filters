@@ -336,6 +336,9 @@
     <ClInclude Include="..\common\include\crogine\graphics\ResourceAutomation.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\CollisionSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -520,6 +523,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\graphics\ResourceAutomation.cpp">
       <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\CollisionSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

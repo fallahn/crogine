@@ -30,6 +30,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/components/Text.cpp
   ${PROJECT_DIR}/ecs/components/Transform.cpp
 
+  ${PROJECT_DIR}/ecs/systems/CollisionSystem.cpp
   ${PROJECT_DIR}/ecs/systems/CommandSystem.cpp
   ${PROJECT_DIR}/ecs/systems/DebugInfo.cpp
   ${PROJECT_DIR}/ecs/systems/ModelRenderer.cpp

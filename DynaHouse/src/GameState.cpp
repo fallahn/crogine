@@ -51,6 +51,7 @@ source distribution.
 #include <crogine/ecs/systems/ProjectionMapSystem.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
+#include <crogine/ecs/systems/CollisionSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -140,6 +141,7 @@ void GameState::addSystems()
     m_scene.addSystem<cro::TextRenderer>(mb);
     m_scene.addSystem<cro::SceneGraph>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
+    m_scene.addSystem<cro::CollisionSystem>(mb);
 
     m_scene.addDirector<PlayerDirector>();
 
