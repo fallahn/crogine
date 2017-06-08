@@ -164,6 +164,7 @@
     <JavaCompile Include="src\org\libsdl\app\SDLActivity.java" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BulletDroid\Bullet3.vcxproj" />
     <ProjectReference Include="..\crodroid\crodroid.vcxproj" />
     <ProjectReference Include="..\HouseDroidLib\HouseDroidLib.vcxproj" />
     <ProjectReference Include="..\SDL2-android\SDL2-android.vcxproj" />
