@@ -63,6 +63,7 @@ source distribution.
 #include <crogine/ecs/components/ProjectionMap.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
+#include <crogine/ecs/components/PhysicsObject.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -187,6 +188,12 @@ void GameState::createScene()
     mapEntity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 300.f });
     mapEntity.getComponent<cro::Transform>().setParent(entity);
     //mapEntity.getComponent<cro::Transform>().rotate({ 1.f, 0.f, 0.f }, -cro::Util::Const::PI/* / 2.f*/);
+
+    auto& phys = entity.addComponent<cro::PhysicsObject>();
+    cro::PhysicsShape ps;
+    ps.type = cro::PhysicsShape::Type::Sphere;
+    ps.radius = 1.f;
+    phys.addShape(ps);
 
     //3D camera
     auto ent = m_scene.createEntity();

@@ -339,6 +339,9 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\CollisionSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\components\PhysicsObject.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -526,6 +529,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\CollisionSystem.cpp">
       <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\components\PhysicsObject.cpp">
+      <Filter>Source Files\ecs\components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
