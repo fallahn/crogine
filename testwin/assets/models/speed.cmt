@@ -1,0 +1,18 @@
+model Speed
+{
+	mesh = "assets/models/speed.cmf"
+
+	material VertexLit
+	{
+		diffuse = "assets/materials/npc/speed_diffuse.png"
+		mask = "assets/materials/speed_mask.png"
+		rim = 0.9,0.87,0.7,1.0
+	}
+
+	material VertexLit
+	{
+		colour = 0.1, 0.1, 0.1, 0.2
+		mask_colour = 1.0, 1.0, 0.0
+		blendmode = alpha
+	}	
+}
