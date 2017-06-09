@@ -31,10 +31,12 @@ source distribution.
 #define CRO_COLLISION_SYSTEM_HPP_
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/ecs/Entity.hpp>
 
 #include <btBulletCollisionCommon.h>
 
 #include <memory>
+#include <array>
 
 namespace cro
 {
@@ -51,6 +53,12 @@ namespace cro
     {
     public:
         explicit CollisionSystem(cro::MessageBus& mb);
+        ~CollisionSystem();
+
+        CollisionSystem(const CollisionSystem&) = delete;
+        CollisionSystem& operator = (const CollisionSystem&) = delete;
+        CollisionSystem(CollisionSystem&&) = delete;
+        CollisionSystem& operator = (CollisionSystem&&) = delete;
 
         void process(cro::Time) override;
 
@@ -62,6 +70,14 @@ namespace cro
         std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;
         std::unique_ptr<btBroadphaseInterface> m_broadphaseInterface;
         std::unique_ptr<btCollisionWorld> m_collisionWorld;
+
+        struct CollisionData final
+        {
+            btCollisionShape* shape = nullptr;
+            std::unique_ptr<btCollisionObject> object;
+        };
+        std::array<CollisionData, Detail::MinFreeIDs> m_collisionData;
+        std::vector<std::unique_ptr<btCollisionShape>> m_shapeCache;
     };
 }
 

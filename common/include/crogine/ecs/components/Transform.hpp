@@ -112,6 +112,10 @@ namespace cro
         */
         glm::vec3 getRotation() const;
         /*!
+        \brief Returns the rotation as a quaternion
+        */
+        glm::quat getRotationQuat() const;
+        /*!
         \brief Returns the current scale of the transform
         */
         glm::vec3 getScale() const;

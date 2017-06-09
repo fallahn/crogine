@@ -58,6 +58,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\CommandID.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\ParticleEmitter.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\PhysicsObject.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\ProjectionMap.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Skeleton.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Sprite.hpp" />
@@ -143,6 +144,7 @@
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\common\src\ecs\components\ParticleEmitter.cpp" />
+    <ClCompile Include="..\common\src\ecs\components\PhysicsObject.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Sprite.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Text.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp" />

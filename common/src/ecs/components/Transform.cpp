@@ -109,6 +109,11 @@ glm::vec3 Transform::getRotation() const
     return glm::eulerAngles(m_rotation);
 }
 
+glm::quat Transform::getRotationQuat() const
+{
+    return m_rotation;
+}
+
 glm::vec3 Transform::getScale() const
 {
     return m_scale;
