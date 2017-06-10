@@ -8,5 +8,6 @@ model Stars
 	{
 		diffuse = "assets/materials/stars.png"
 		repeat = true
+		blendmode = add
 	}
 }

@@ -42,6 +42,7 @@ namespace
     const float eliteSpawnTime = 24.f;
     const float choppaSpawnTime = 13.f;
 }
+const float ChoppaNavigator::choppaSpacing = 1.8f;
 
 NpcDirector::NpcDirector()
     : m_eliteRespawn(eliteSpawnTime / 4.f),
@@ -121,7 +122,7 @@ void NpcDirector::process(cro::Time dt)
             if (!status.active)
             {
                 status.active = true;
-                status.choppa.moveSpeed = cro::Util::Random::value(-1.3f, -0.8f);
+                status.choppa.moveSpeed = cro::Util::Random::value(-8.3f, -7.8f);
                 status.choppa.deathVelocity.x = status.choppa.moveSpeed;
                 status.choppa.tableIndex = cro::Util::Random::value(0, 40); //hmm don't have table size here (see NpcSystem)
             }

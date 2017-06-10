@@ -163,6 +163,7 @@ void MainState::loadAssets()
     m_modelDefs[MenuModelID::Moon].loadFromFile("assets/models/moon.cmt", m_resources);
     m_modelDefs[MenuModelID::Roids].loadFromFile("assets/models/roid_belt.cmt", m_resources);
     m_modelDefs[MenuModelID::Stars].loadFromFile("assets/models/stars.cmt", m_resources);
+    m_modelDefs[MenuModelID::Sun].loadFromFile("assets/models/sun.cmt", m_resources);
 
     //test sprite sheet
     auto& testFont = m_resources.fonts.get(FontID::MenuFont);
@@ -224,7 +225,7 @@ void MainState::createScene()
     cloudEntity.getComponent<cro::Transform>().setParent(entity);
     cloudEntity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(MaterialID::PlanetClouds));
 */
-    //create stars
+    //create stars / sun
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -19.f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Stars].meshID),
@@ -237,6 +238,10 @@ void MainState::createScene()
                                     m_resources.materials.get(m_modelDefs[MenuModelID::Stars].materialIDs[0]));
     entity.addComponent<Drifter>().amplitude = -0.1f;
 
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -4.f, 2.6f, -11.9f });
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Sun].meshID),
+                                    m_resources.materials.get(m_modelDefs[MenuModelID::Sun].materialIDs[0]));
 
     //2D and 3D cameras
     entity = m_backgroundScene.createEntity();

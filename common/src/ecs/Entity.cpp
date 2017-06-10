@@ -56,7 +56,10 @@ Entity::Generation Entity::getGeneration() const
     return (m_id >> Detail::IndexBits) & GenerationMask;
 }
 
-//void Entity::destroy() //TODO fix this so that it goes through its parent scene
+//TODO fix this so that it goes through its parent scene.
+//destroying here is not enough as it will not unregister
+//from all the active scene systems
+//void Entity::destroy() 
 //{
 //    CRO_ASSERT(m_entityManager, "Invalid Entity instance");
 //    m_entityManager->destroyEntity(*this);

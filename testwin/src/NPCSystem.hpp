@@ -51,6 +51,8 @@ struct ChoppaNavigator final
     float moveSpeed = -0.9f;
     bool inCombat = true;
     glm::vec3 deathVelocity;
+    cro::uint8 ident = 0;
+    static const float choppaSpacing;
 };
 
 struct Npc final
