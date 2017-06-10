@@ -55,13 +55,22 @@ struct ChoppaNavigator final
     static const float choppaSpacing;
 };
 
+struct SpeedrayNavigator final
+{
+    std::size_t tableIndex = 0;
+    float moveSpeed = -5.f;
+    cro::uint8 ident = 0;
+    static const std::size_t speedrayCount;
+};
+
 struct Npc final
 {
     enum
     {
         Elite,
         Choppa,
-        Turret
+        Turret,
+        Speedray
     }type;
 
     bool active = false;
@@ -70,6 +79,7 @@ struct Npc final
 
     EliteNavigator elite;
     ChoppaNavigator choppa;
+    SpeedrayNavigator speedray;
 };
 
 class NpcSystem final : public cro::System
@@ -88,10 +98,12 @@ private:
     std::vector<glm::vec3> m_elitePositions;
     std::vector<glm::vec3> m_eliteIdlePositions;
     std::vector<float> m_choppaTable;
+    std::vector<float> m_speedrayTable;
 
     void processElite(cro::Entity);
     void processChoppa(cro::Entity);
     void processTurret(cro::Entity);
+    void processSpeedray(cro::Entity);
 
     void onEntityAdded(cro::Entity) override;
 };

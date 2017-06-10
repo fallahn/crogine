@@ -40,13 +40,14 @@ source distribution.
 namespace
 {
     const float eliteSpawnTime = 24.f;
-    const float choppaSpawnTime = 13.f;
+const float choppaSpawnTime = 9.f;
+const float zDepth = -9.3f; //bums, this is replicated from NpcSystem.cpp
 }
-const float ChoppaNavigator::choppaSpacing = 1.8f;
 
 NpcDirector::NpcDirector()
     : m_eliteRespawn(eliteSpawnTime / 4.f),
-    m_choppaRespawn(choppaSpawnTime / 2.f)
+    m_choppaRespawn(choppaSpawnTime / 2.f),
+    m_speedrayRespawn(choppaSpawnTime)
 {
 
 }
@@ -87,7 +88,7 @@ void NpcDirector::process(cro::Time dt)
     //TODO track how many enemies spawned / died
     //then switch to boss mode when needed
     float dtSec = dt.asSeconds();
-    
+
     m_eliteRespawn -= dtSec;
     if (m_eliteRespawn < 0)
     {
@@ -104,6 +105,9 @@ void NpcDirector::process(cro::Time dt)
                 status.elite.destination.x = cro::Util::Random::value(1.f, 4.f);
                 status.elite.movementCount = cro::Util::Random::value(4, 8);
                 status.elite.pauseTime = cro::Util::Random::value(1.2f, 2.2f);
+
+                auto& tx = entity.getComponent<cro::Transform>();
+                tx.setPosition({ 5.6f, cro::Util::Random::value(-2.f, 2.f) , zDepth });
             }
         };
         sendCommand(cmd);
@@ -125,8 +129,33 @@ void NpcDirector::process(cro::Time dt)
                 status.choppa.moveSpeed = cro::Util::Random::value(-8.3f, -7.8f);
                 status.choppa.deathVelocity.x = status.choppa.moveSpeed;
                 status.choppa.tableIndex = cro::Util::Random::value(0, 40); //hmm don't have table size here (see NpcSystem)
+
+                //reset position
+                auto& tx = entity.getComponent<cro::Transform>();
+                tx.setPosition({ 7.f, -ChoppaNavigator::choppaSpacing + (status.choppa.ident * ChoppaNavigator::choppaSpacing), zDepth });
             }
         };
         sendCommand(cmd);
+    }
+
+    m_speedrayRespawn -= dtSec;
+    if(m_speedrayRespawn < 0)
+    {
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Speedray;
+        cmd.action = [](cro::Entity entity, cro::Time)
+        {
+            auto& status = entity.getComponent<Npc>();
+            if (!status.active)
+            {
+                status.active = true;
+                //reset position
+                auto& tx = entity.getComponent<cro::Transform>();
+                tx.setPosition({ 7.f, 0.f, zDepth });
+            }
+        };
+        sendCommand(cmd);
+
+        m_speedrayRespawn = choppaSpawnTime;
     }
 }

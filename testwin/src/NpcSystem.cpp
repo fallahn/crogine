@@ -45,6 +45,8 @@ namespace
     const float zDepth = -9.3f;
     const glm::vec3 gravity(0.f, -9.f, 0.f);
 }
+const float ChoppaNavigator::choppaSpacing = 1.8f;
+const std::size_t SpeedrayNavigator::speedrayCount = 5;
 
 NpcSystem::NpcSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(NpcSystem)),
@@ -67,6 +69,8 @@ NpcSystem::NpcSystem(cro::MessageBus& mb)
     }
 
     m_choppaTable = cro::Util::Wavetable::sine(1.f, 0.4f);
+
+    m_speedrayTable = cro::Util::Wavetable::sine(0.5f, 1.6f);
 }
 
 //public
@@ -101,7 +105,6 @@ void NpcSystem::process(cro::Time dt)
             //check if entity has moved off-screen and
             //reset it if it has
             auto& status = entity.getComponent<Npc>();
-            auto& tx = entity.getComponent<cro::Transform>();
             if (status.active)
             {               
                 //process logic based on type
@@ -117,14 +120,14 @@ void NpcSystem::process(cro::Time dt)
                 case Npc::Turret:
                     processTurret(entity);
                     continue; //turrets are parented to terrain entities - so don't need following update
+                case Npc::Speedray:
+                    processSpeedray(entity);
+                    break;
                 }  
 
                 bool visible = entity.getComponent<cro::Model>().isVisible();
                 if (!visible && status.wantsReset) //moved out of area
                 {
-                    float yPos = -ChoppaNavigator::choppaSpacing + (status.choppa.ident * ChoppaNavigator::choppaSpacing);
-                   
-                    tx.setPosition({ 7.f, yPos, zDepth });
                     status.wantsReset = false;
                     status.active = false;
                 }
@@ -224,6 +227,21 @@ void NpcSystem::processTurret(cro::Entity entity)
     tx.setRotation({ 0.f, -rotation, 0.f });
 }
 
+void NpcSystem::processSpeedray(cro::Entity entity)
+{
+    auto& status = entity.getComponent<Npc>();
+    
+    std::size_t cosIdx = (status.speedray.tableIndex + (m_speedrayTable.size() / 2)) % m_speedrayTable.size();
+    const float zOffset = m_speedrayTable[cosIdx] / 2.f;
+
+    auto& tx = entity.getComponent<cro::Transform>();
+    tx.setPosition({ tx.getPosition().x, m_speedrayTable[status.speedray.tableIndex], zDepth + zOffset });
+
+    status.speedray.tableIndex = (status.speedray.tableIndex + 1) % m_speedrayTable.size();
+
+    tx.move({ status.speedray.moveSpeed * fixedUpdate, 0.f, 0.f });
+}
+
 void NpcSystem::onEntityAdded(cro::Entity entity)
 {
 
@@ -245,6 +263,10 @@ void NpcSystem::onEntityAdded(cro::Entity entity)
         break;
     case Npc::Turret:
         status.active = true;
+        break;
+    case Npc::Speedray:
+        status.speedray.tableIndex = (m_speedrayTable.size() / SpeedrayNavigator::speedrayCount) * status.speedray.ident;
+        status.speedray.tableIndex %= m_speedrayTable.size();
         break;
     }
 }

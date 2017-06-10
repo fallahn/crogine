@@ -295,6 +295,8 @@
     <Content Include="assets\assets\materials\npc\elite_diffuse.png" />
     <Content Include="assets\assets\materials\npc\elite_mask.png" />
     <Content Include="assets\assets\materials\npc\elite_normal.png" />
+    <Content Include="assets\assets\materials\npc\speed_diffuse.png" />
+    <Content Include="assets\assets\materials\npc\speed_mask.png" />
     <Content Include="assets\assets\materials\npc\tites.png" />
     <Content Include="assets\assets\materials\npc\turret_base_diffuse.png" />
     <Content Include="assets\assets\materials\npc\turret_base_mask.png" />
@@ -307,6 +309,7 @@
     <Content Include="assets\assets\materials\roid_mask.png" />
     <Content Include="assets\assets\materials\roid_normal.png" />
     <Content Include="assets\assets\materials\stars.png" />
+    <Content Include="assets\assets\materials\sun.png" />
     <Content Include="assets\assets\models\choppa.cmt" />
     <Content Include="assets\assets\models\choppa_pod.iqm" />
     <Content Include="assets\assets\models\collectable.cmf" />
@@ -326,7 +329,10 @@
     <Content Include="assets\assets\models\player_ship.cmf" />
     <Content Include="assets\assets\models\roid_belt.cmf" />
     <Content Include="assets\assets\models\roid_belt.cmt" />
+    <Content Include="assets\assets\models\speed.cmf" />
+    <Content Include="assets\assets\models\speed.cmt" />
     <Content Include="assets\assets\models\stars.cmt" />
+    <Content Include="assets\assets\models\sun.cmt" />
     <Content Include="assets\assets\models\turret_base.cmf" />
     <Content Include="assets\assets\models\turret_base.cmt" />
     <Content Include="assets\assets\models\turret_cannon.cmf" />

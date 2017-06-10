@@ -40,6 +40,7 @@ public:
 private:
     float m_eliteRespawn;
     float m_choppaRespawn;
+    float m_speedrayRespawn;
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
