@@ -66,6 +66,8 @@ namespace
     const cro::uint16 JoyMax = 32767;
     const float JoyMaxSqr = static_cast<float>(JoyMax * JoyMax);
     const float JoySpeedMin = static_cast<float>(JoyThresh) / JoyMax;
+
+    const float maxTouchMoveSqr = 4.f;
 }
 
 PlayerDirector::PlayerDirector()
@@ -181,14 +183,41 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
 #ifndef PLATFORM_DESKTOP //handle touch separately
     case SDL_FINGERDOWN:
         m_fingerDown = true;
-        m_currentInput |= Fire;
-    case SDL_FINGERMOTION:
+        m_currentInput |= Fire;    
         m_touchCoords.x = evt.tfinger.x;
         m_touchCoords.y = evt.tfinger.y;
+        m_touchVector = {};
+        break;
+    case SDL_FINGERMOTION:
+        m_touchVector = getWorldCoords();
+
+        m_touchCoords.x = evt.tfinger.x;
+        m_touchCoords.y = evt.tfinger.y;
+
+        m_touchVector = getWorldCoords() - m_touchVector;
         break;
     case SDL_FINGERUP:
         m_fingerDown = false;
         m_currentInput &= ~Fire;
+
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Player;
+            cmd.action = [&](cro::Entity entity, cro::Time)
+            {
+                auto vel = m_touchVector * 60.f;
+                const float vel2 = glm::length2(vel);
+                {
+                    if (vel2 > playerMaxSpeeedSqr)
+                    {
+                        vel *= playerMaxSpeeedSqr / vel2;
+                    }
+                }
+                entity.getComponent<Velocity>().velocity += vel;
+            };
+            sendCommand(cmd);
+        }
+
         break;
 #endif //PLATFORM_DESKTOP
 
@@ -289,24 +318,28 @@ void PlayerDirector::process(cro::Time)
 #ifdef PLATFORM_MOBILE
     if (m_fingerDown)
     {
-        auto worldTarget = getWorldCoords();
         cro::Command cmd;
         cmd.targetFlags = CommandID::Player;
-        cmd.action = [worldTarget](cro::Entity entity, cro::Time dt)
+        cmd.action = [&](cro::Entity entity, cro::Time dt)
         {
             auto& tx = entity.getComponent<cro::Transform>();
-            auto dist = worldTarget - tx.getWorldPosition();
-            auto length = glm::length2(dist);
-            if (length > 0 && length < 5) //only move if touch is within a 1 unit radius of player
+            glm::vec3 movement(m_touchVector.x, m_touchVector.y, 0.f);
+
+            const float lenSqr = glm::length2(movement);
+            if (lenSqr > maxTouchMoveSqr)
             {
-                //dist /= std::sqrt(length);
-                entity.getComponent<Velocity>().velocity += dist;// *playerAcceleration;
-                //entity.getComponent<cro::Transform>().move(dist);
+                movement *= (maxTouchMoveSqr / lenSqr);
             }
+
+            tx.move(movement);
+
+            float rotation = -m_touchVector.y / 0.1f * maxRotation;
+            const float currRotation = tx.getRotation().x;
+            tx.setRotation({ currRotation + ((rotation - currRotation) * (dt.asSeconds() * 4.f)), 0.f, 0.f });
         };
         sendCommand(cmd);
 
-        DPRINT("Touch", std::to_string(worldTarget.x) + ", " + std::to_string(worldTarget.y));
+        //DPRINT("Touch", std::to_string(m_touchVector.x) + ", " + std::to_string(m_touchVector.y));
     }
 #endif //PLATFORM_MOBILE
 

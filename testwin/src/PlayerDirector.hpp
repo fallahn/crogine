@@ -49,6 +49,7 @@ private:
     cro::uint16 m_currentInput;
 
     glm::vec2 m_touchCoords;
+    glm::vec3 m_touchVector;
     bool m_fingerDown;
     glm::vec3 getWorldCoords();
 };
