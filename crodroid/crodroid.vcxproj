@@ -252,6 +252,7 @@
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\common\src\ecs\components\ParticleEmitter.cpp" />
+    <ClCompile Include="..\common\src\ecs\components\PhysicsObject.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Sprite.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Text.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Transform.cpp" />

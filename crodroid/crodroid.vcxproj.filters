@@ -243,5 +243,8 @@
     <ClCompile Include="..\common\src\ecs\systems\CollisionSystem.cpp">
       <Filter>src\ecs\systems</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\components\PhysicsObject.cpp">
+      <Filter>src\ecs\components</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

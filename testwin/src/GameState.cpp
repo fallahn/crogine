@@ -152,8 +152,9 @@ void GameState::addSystems()
     m_scene.addDirector<BackgroundDirector>();
     m_scene.addDirector<ItemDirector>();
     m_scene.addDirector<NpcDirector>();
-
+#ifdef PLATFORM_DESKTOP
     m_scene.addPostProcess<PostRadial>();
+#endif
 }
 
 void GameState::loadAssets()
