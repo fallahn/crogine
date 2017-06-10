@@ -82,6 +82,7 @@ namespace GameModelID
         Elite,
         TurretBase, TurretCannon,
         Choppa,
+        Speedray,
         Count
     };
 }
@@ -113,7 +114,8 @@ namespace CommandID
         Collectable = 0x10,
         Turret = 0x20,
         Elite = 0x40,
-        Choppa = 0x80
+        Choppa = 0x80,
+        Speedray = 0x100
     };
 }
 

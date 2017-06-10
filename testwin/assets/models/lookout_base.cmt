@@ -11,7 +11,7 @@ model LookOutBase
 
 	material VertexLit
 	{
-		colour = 0.1, 0.1, 0.1, 0.2
+		colour = 0.1, 0.1, 0.1, 0.4
 		mask_colour = 1.0, 1.0, 0.0
 		blendmode = alpha
 	}

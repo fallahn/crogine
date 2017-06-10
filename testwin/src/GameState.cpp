@@ -194,6 +194,7 @@ void GameState::loadAssets()
     m_modelDefs[GameModelID::TurretBase].loadFromFile("assets/models/turret_base.cmt", m_resources);
     m_modelDefs[GameModelID::TurretCannon].loadFromFile("assets/models/turret_cannon.cmt", m_resources);
     m_modelDefs[GameModelID::Choppa].loadFromFile("assets/models/choppa.cmt", m_resources);
+    m_modelDefs[GameModelID::Speedray].loadFromFile("assets/models/speed.cmt", m_resources);
 
 
     auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
@@ -351,13 +352,31 @@ void GameState::createScene()
         entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
         entity.getComponent<cro::Transform>().setScale({ 0.8f, 0.8f, 0.8f });
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].meshID),
-            m_resources.materials.get(m_modelDefs[GameModelID::Choppa].materialIDs[0]));
-        CRO_ASSERT(m_modelDefs[GameModelID::Choppa].skeleton, "Skelton missing from choppa!");
+                                        m_resources.materials.get(m_modelDefs[GameModelID::Choppa].materialIDs[0]));
+        CRO_ASSERT(m_modelDefs[GameModelID::Choppa].skeleton, "Skeleton missing from choppa!");
         entity.addComponent<cro::Skeleton>() = *m_modelDefs[GameModelID::Choppa].skeleton;
         entity.getComponent<cro::Skeleton>().play(0);
         entity.addComponent<Npc>().type = Npc::Choppa;
         entity.getComponent<Npc>().choppa.ident = i;
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Choppa;
+    }
+
+    for (auto i = 0; i < SpeedrayNavigator::speedrayCount; ++i)
+    {
+        const float rotateOffset = (cro::Util::Const::PI / SpeedrayNavigator::speedrayCount) * i;
+        
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 6.f, 0.f, -9.3f });
+        entity.getComponent<cro::Transform>().rotate(glm::vec3(1.f, 0.f, 0.f), cro::Util::Const::PI - rotateOffset);
+        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Speedray].meshID),
+            m_resources.materials.get(m_modelDefs[GameModelID::Speedray].materialIDs[0]));
+        entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(m_modelDefs[GameModelID::Speedray].materialIDs[1]));
+        auto& speedRot = entity.addComponent<Rotator>();
+        speedRot.axis.x = 1.f;
+        speedRot.speed = -cro::Util::Const::TAU / 2.f;
+        entity.addComponent<Npc>().type = Npc::Speedray;
+        entity.getComponent<Npc>().speedray.ident = i;
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::Speedray;
     }
 
     //attach turret to each of the terrain chunks

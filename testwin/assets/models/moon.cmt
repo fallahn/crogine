@@ -7,6 +7,6 @@ model Moon
 		diffuse = "assets/materials/moon_diffuse.png"
 		mask = "assets/materials/moon_mask.png"
 		normal = "assets/materials/moon_normal.png"
-		rim = 0.97,0.9,0.85,1.0
+		rim = 0.485,0.45,0.425,1.0
 	}
 }
