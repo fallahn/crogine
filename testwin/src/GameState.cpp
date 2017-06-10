@@ -266,7 +266,7 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     auto& playerTx = entity.addComponent<cro::Transform>();
     playerTx.setPosition({ -3.4f, 0.f, -9.25f });
-    playerTx.setScale({ 0.6f, 0.6f, 0.6f });
+    playerTx.setScale({ 0.5f, 0.5f, 0.5f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::Player].materialIDs[0]));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
@@ -337,22 +337,28 @@ void GameState::createScene()
     //NPCs
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.9f, 1.5f, -9.3f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.8f));
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Elite].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::Elite].materialIDs[0]));
     entity.addComponent<Npc>().type = Npc::Elite;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Elite;
     
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 5.9f, 0.5f, -9.3f });
-    entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
-    //entity.getComponent<cro::Transform>().setScale({ 0.02f, 0.02f, 0.02f });
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::Choppa].materialIDs[0]));
-    CRO_ASSERT(m_modelDefs[GameModelID::Choppa].skeleton, "Skelton missing from choppa!");
-    entity.addComponent<cro::Skeleton>() = *m_modelDefs[GameModelID::Choppa].skeleton;
-    entity.getComponent<cro::Skeleton>().play(0);
-    entity.addComponent<Npc>().type = Npc::Choppa;
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Choppa;
+    const float choppaSpacing = ChoppaNavigator::choppaSpacing;
+    for (auto i = 0; i < 3; ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 5.9f, -choppaSpacing + (i * choppaSpacing), -9.3f });
+        entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
+        entity.getComponent<cro::Transform>().setScale({ 0.8f, 0.8f, 0.8f });
+        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].meshID),
+            m_resources.materials.get(m_modelDefs[GameModelID::Choppa].materialIDs[0]));
+        CRO_ASSERT(m_modelDefs[GameModelID::Choppa].skeleton, "Skelton missing from choppa!");
+        entity.addComponent<cro::Skeleton>() = *m_modelDefs[GameModelID::Choppa].skeleton;
+        entity.getComponent<cro::Skeleton>().play(0);
+        entity.addComponent<Npc>().type = Npc::Choppa;
+        entity.getComponent<Npc>().choppa.ident = i;
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::Choppa;
+    }
 
     //attach turret to each of the terrain chunks
     entity = m_scene.createEntity();

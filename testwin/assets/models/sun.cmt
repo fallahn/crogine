@@ -1,0 +1,13 @@
+model Sun
+{
+	mesh = quad
+	size = 9.0,9.0
+	//uv = 1.78, 1.0
+
+	material Unlit
+	{
+		diffuse = "assets/materials/sun.png"
+		repeat = true
+		blendmode = add
+	}
+}

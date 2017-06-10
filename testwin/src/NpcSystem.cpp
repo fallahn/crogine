@@ -120,9 +120,11 @@ void NpcSystem::process(cro::Time dt)
                 }  
 
                 bool visible = entity.getComponent<cro::Model>().isVisible();
-                if (!visible && status.wantsReset)
+                if (!visible && status.wantsReset) //moved out of area
                 {
-                    tx.setPosition({ 7.f, cro::Util::Random::value(-2.f, 2.f), zDepth });
+                    float yPos = -ChoppaNavigator::choppaSpacing + (status.choppa.ident * ChoppaNavigator::choppaSpacing);
+                   
+                    tx.setPosition({ 7.f, yPos, zDepth });
                     status.wantsReset = false;
                     status.active = false;
                 }
@@ -237,7 +239,7 @@ void NpcSystem::onEntityAdded(cro::Entity entity)
         status.elite.idleIndex = cro::Util::Random::value(0, m_eliteIdlePositions.size());
         break;
     case Npc::Choppa:
-        status.choppa.moveSpeed = cro::Util::Random::value(-1.3f, -0.8f);
+        status.choppa.moveSpeed = cro::Util::Random::value(-8.3f, -7.8f);
         status.choppa.deathVelocity.x = status.choppa.moveSpeed;
         status.choppa.tableIndex = cro::Util::Random::value(0, m_choppaTable.size() - 1);
         break;

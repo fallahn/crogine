@@ -64,6 +64,7 @@ namespace MenuModelID
         Moon,
         Roids,
         Stars,
+        Sun,
         Count
     };
 }
