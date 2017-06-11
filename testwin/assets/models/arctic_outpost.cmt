@@ -1,0 +1,18 @@
+model arctic_outpost
+{
+	mesh = "assets/models/arctic_outpost.cmf"
+	material VertexLit
+	{
+		diffuse = "assets/materials/arctic_outpost_diffuse.png"
+		mask = "assets/materials/arctic_outpost_mask.png"
+		normal = "assets/materials/arctic_outpost_normal.png"
+		rim = 0.97,0.9,0.85,1.0
+		rim_falloff = 0.4
+	}
+	material VertexLit
+	{
+		colour = 0.1, 0.1, 0.1, 0.4
+		mask_colour = 1.0, 1.0, 0.0
+		blendmode = alpha
+	}
+}
