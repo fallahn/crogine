@@ -9,5 +9,6 @@ model Sun
 		diffuse = "assets/materials/sun.png"
 		repeat = true
 		blendmode = add
+		smooth = true
 	}
 }

@@ -51,6 +51,7 @@ source distribution.
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/util/Constants.hpp>
 #include <iomanip>
 namespace
 {
@@ -159,6 +160,7 @@ void MainState::addSystems()
 void MainState::loadAssets()
 {
     m_modelDefs[MenuModelID::LookoutBase].loadFromFile("assets/models/lookout_base.cmt", m_resources);
+    m_modelDefs[MenuModelID::ArcticPost].loadFromFile("assets/models/arctic_outpost.cmt", m_resources);
     m_modelDefs[MenuModelID::GasPlanet].loadFromFile("assets/models/planet.cmt", m_resources);
     m_modelDefs[MenuModelID::Moon].loadFromFile("assets/models/moon.cmt", m_resources);
     m_modelDefs[MenuModelID::Roids].loadFromFile("assets/models/roid_belt.cmt", m_resources);
@@ -175,7 +177,7 @@ void MainState::createScene()
     //-----background-----//
     //create planet / moon
     auto entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 2.3f, -0.7f, -6.f });
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, -0.7f, -8.f });
     entity.getComponent<cro::Transform>().setRotation({ -0.5f, 0.f, 0.4f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::GasPlanet].meshID),
                                     m_resources.materials.get(m_modelDefs[MenuModelID::GasPlanet].materialIDs[0]));
@@ -190,8 +192,8 @@ void MainState::createScene()
     
     auto moonEntity = m_backgroundScene.createEntity();
     auto& moonTx = moonEntity.addComponent<cro::Transform>();
-    moonTx.setScale({ 0.22f, 0.22f, 0.22f });
-    moonTx.setOrigin({ 0.f, 0.f, -5.2f });
+    moonTx.setScale(glm::vec3(0.44f));
+    moonTx.setOrigin({ 0.f, 0.f, -8.2f });
     moonTx.setParent(entity);
     moonEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Moon].meshID),
                                         m_resources.materials.get(m_modelDefs[MenuModelID::Moon].materialIDs[0]));
@@ -199,13 +201,25 @@ void MainState::createScene()
     //moonRotator.axis.y = 1.f;
     //moonRotator.speed = 0.4f;
 
+    auto arcticEntity = m_backgroundScene.createEntity();
+    auto& arcticTx = arcticEntity.addComponent<cro::Transform>();
+    arcticTx.setScale(glm::vec3(0.8f));
+    arcticTx.setOrigin({ -30.f, 0.f, -2.f });
+    arcticTx.setParent(entity);
+    auto& arcticModel = arcticEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::ArcticPost].meshID),
+                                                                m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[0]));
+    for (auto i = 0u; i < m_modelDefs[MenuModelID::ArcticPost].materialCount; ++i)
+    {
+        arcticModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[i]));
+    }
+
     auto lookoutEntity = m_backgroundScene.createEntity();
     auto& lookoutTx = lookoutEntity.addComponent<cro::Transform>();
-    lookoutTx.setScale(glm::vec3(0.4f));
-    lookoutTx.setOrigin({ -6.f, 0.f, -1.f });
+    lookoutTx.setScale(glm::vec3(0.7f));
+    lookoutTx.setOrigin({ 18.f, 0.f, 2.f });
     lookoutTx.setParent(entity);
     auto& lookoutModel = lookoutEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::LookoutBase].meshID),
-                                                                m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[0]));
+        m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[0]));
     for (auto i = 0u; i < m_modelDefs[MenuModelID::LookoutBase].materialCount; ++i)
     {
         lookoutModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[i]));
@@ -227,12 +241,12 @@ void MainState::createScene()
 */
     //create stars / sun
     entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -19.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -39.f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Stars].meshID),
                                     m_resources.materials.get(m_modelDefs[MenuModelID::Stars].materialIDs[0]));
 
     entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -12.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -28.f });
     entity.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, 3.14f);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Stars].meshID),
                                     m_resources.materials.get(m_modelDefs[MenuModelID::Stars].materialIDs[0]));

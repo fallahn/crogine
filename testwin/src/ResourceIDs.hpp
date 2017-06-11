@@ -60,6 +60,7 @@ namespace MenuModelID
     enum
     {
         LookoutBase = 0,
+        ArcticPost,
         GasPlanet,
         Moon,
         Roids,
