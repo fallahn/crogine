@@ -94,6 +94,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\MeshData.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MeshResource.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\PostProcess.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\postprocess\PostChromeAB.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\QuadBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Rectangle.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\RenderTexture.hpp" />
@@ -175,7 +176,8 @@
     <ClCompile Include="..\common\src\graphics\MaterialResource.cpp" />
     <ClCompile Include="..\common\src\graphics\MeshBuilder.cpp" />
     <ClCompile Include="..\common\src\graphics\MeshResource.cpp" />
-    <ClCompile Include="..\common\src\graphics\PostProcess.cpp" />
+    <ClCompile Include="..\common\src\graphics\postprocess\PostChromeAB.cpp" />
+    <ClCompile Include="..\common\src\graphics\postprocess\PostProcess.cpp" />
     <ClCompile Include="..\common\src\graphics\PrimitiveBuilders.cpp" />
     <ClCompile Include="..\common\src\graphics\RenderTexture.cpp" />
     <ClCompile Include="..\common\src\graphics\ResourceAutomation.cpp" />
@@ -199,6 +201,7 @@
     <None Include="..\common\include\crogine\ecs\System.inl" />
     <None Include="..\common\include\crogine\ecs\SystemManager.inl" />
     <None Include="..\common\include\crogine\graphics\Rectangle.inl" />
+    <None Include="..\common\src\graphics\postprocess\PostChromeAB.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

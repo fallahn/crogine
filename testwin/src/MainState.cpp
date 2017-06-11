@@ -52,6 +52,8 @@ source distribution.
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/graphics/postprocess/PostChromeAB.hpp>
+
 #include <iomanip>
 namespace
 {
@@ -130,6 +132,10 @@ bool MainState::simulate(cro::Time dt)
 {
     m_backgroundScene.simulate(dt);
     m_menuScene.simulate(dt);
+
+    //auto size = getContext().mainWindow.getSize();
+    //DPRINT("window size", std::to_string(size.x) + ", " + std::to_string(size.y));
+
     return true;
 }
 
@@ -147,7 +153,9 @@ void MainState::addSystems()
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<RotateSystem>(mb);
     m_backgroundScene.addSystem<DriftSystem>(mb);
-
+#ifdef PLATFORM_DESKTOP
+    m_backgroundScene.addPostProcess<cro::PostChromeAB>();
+#endif
     m_menuScene.addSystem<cro::SpriteRenderer>(mb).setDepthAxis(cro::SpriteRenderer::DepthAxis::Z);   
     m_menuScene.addSystem<cro::TextRenderer>(mb);
     m_menuScene.addSystem<cro::SceneGraph>(mb);
@@ -280,6 +288,8 @@ void MainState::updateView()
     glm::vec2 size(cro::App::getWindow().getSize());
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
+
+    //cro::Logger::log("resized to: " + std::to_string(size.x) + ", " + std::to_string(size.y));
 
     auto& cam3D = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
     cam3D.projection = glm::perspective(0.6f, 16.f / 9.f, 0.1f, 100.f);

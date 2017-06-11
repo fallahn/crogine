@@ -49,7 +49,8 @@ namespace
 Window::Window()
 	: m_window	    (nullptr),
     m_threadContext (nullptr),
-	m_mainContext	(nullptr)
+	m_mainContext	(nullptr),
+    m_fullscreen    (false)
 {
 
 }
@@ -76,7 +77,9 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
 	if (borderless) styleMask |= SDL_WINDOW_BORDERLESS;
 	//TODO set up proper masks for all window options
 
-	
+    /*SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);*/
+
     m_window = SDL_CreateWindow(title.c_str(),SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, styleMask);
 
 	if (!m_window)
@@ -85,7 +88,7 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
 		return false;
 	}
 	else
-	{
+	{       
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
         m_threadContext = SDL_GL_CreateContext(m_window);
 		m_mainContext = SDL_GL_CreateContext(m_window);
@@ -148,7 +151,16 @@ glm::uvec2 Window::getSize() const
 #ifdef PLATFORM_MOBILE
     SDL_GL_GetDrawableSize(m_window, &x, &y);
 #else
-    SDL_GetWindowSize(m_window, &x, &y);
+    if (!m_fullscreen)
+    {
+        SDL_GetWindowSize(m_window, &x, &y);
+    }
+    else
+    {
+        SDL_DisplayMode mode;
+        SDL_GetDesktopDisplayMode(0, &mode);
+        x = mode.w; y = mode.h;
+    }
 #endif //PLATFORM_MOBILE
     return { x, y };
 }
@@ -162,7 +174,10 @@ void Window::setSize(glm::uvec2 size)
 void Window::setFullScreen(bool fullscreen)
 {
     CRO_ASSERT(m_window, "window not created");
-    SDL_SetWindowFullscreen(m_window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
+    if (SDL_SetWindowFullscreen(m_window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0) == 0)
+    {
+        m_fullscreen = fullscreen;
+    }
 }
 
 void Window::setPosition(int32 x, int32 y)

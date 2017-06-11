@@ -283,7 +283,8 @@
     <ClCompile Include="..\common\src\graphics\MaterialResource.cpp" />
     <ClCompile Include="..\common\src\graphics\MeshBuilder.cpp" />
     <ClCompile Include="..\common\src\graphics\MeshResource.cpp" />
-    <ClCompile Include="..\common\src\graphics\PostProcess.cpp" />
+    <ClCompile Include="..\common\src\graphics\postprocess\PostChromeAB.cpp" />
+    <ClCompile Include="..\common\src\graphics\postprocess\PostProcess.cpp" />
     <ClCompile Include="..\common\src\graphics\PrimitiveBuilders.cpp" />
     <ClCompile Include="..\common\src\graphics\RenderTexture.cpp" />
     <ClCompile Include="..\common\src\graphics\ResourceAutomation.cpp" />

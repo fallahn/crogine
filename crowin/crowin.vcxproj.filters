@@ -70,6 +70,12 @@
     <Filter Include="Source Files\util">
       <UniqueIdentifier>{cc32c5c7-3cde-4fa9-ba3f-f2b3fa4cde07}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\graphics\post process">
+      <UniqueIdentifier>{b6e764e4-2879-4700-be8c-a4454d5bb9f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphics\post process">
+      <UniqueIdentifier>{5a25d020-2efb-4c50-948e-8518503cd439}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\Config.hpp">
@@ -342,6 +348,9 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\PhysicsObject.hpp">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\postprocess\PostChromeAB.hpp">
+      <Filter>Header Files\graphics\post process</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -485,9 +494,6 @@
     <ClCompile Include="..\common\src\graphics\RenderTexture.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\src\graphics\PostProcess.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\src\core\DefaultLoadingScreen.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
@@ -533,6 +539,12 @@
     <ClCompile Include="..\common\src\ecs\components\PhysicsObject.cpp">
       <Filter>Source Files\ecs\components</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\graphics\postprocess\PostChromeAB.cpp">
+      <Filter>Source Files\graphics\post process</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\postprocess\PostProcess.cpp">
+      <Filter>Source Files\graphics\post process</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\common\include\crogine\ecs\Entity.inl">
@@ -555,6 +567,9 @@
     </None>
     <None Include="..\common\include\crogine\core\ConfigFile.inl">
       <Filter>Header Files\core</Filter>
+    </None>
+    <None Include="..\common\src\graphics\postprocess\PostChromeAB.inl">
+      <Filter>Header Files\graphics\post process</Filter>
     </None>
   </ItemGroup>
 </Project>

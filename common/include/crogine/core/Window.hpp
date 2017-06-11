@@ -113,6 +113,10 @@ namespace cro
         */
         void setFullScreen(bool);
         /*!
+        \brief returns true if window is currently full screen
+        */
+        bool isFullscreen() const { return m_fullscreen; }
+        /*!
         \brief Set the window position in desktop coordinates.
         \param x Horizontal position to place the window. A negative number
         will centre the window horizonally
@@ -161,6 +165,8 @@ namespace cro
         std::unique_ptr<LoadingScreen> m_loadingScreen;
 
         mutable std::vector<glm::uvec2> m_resolutions;
+
+        bool m_fullscreen;
 
 		void destroy();
 

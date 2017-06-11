@@ -272,6 +272,9 @@
   <ItemGroup>
     <Content Include="assets\assets\fonts\charset.png" />
     <Content Include="assets\assets\fonts\VeraMono.ttf" />
+    <Content Include="assets\assets\materials\arctic_outpost_diffuse.png" />
+    <Content Include="assets\assets\materials\arctic_outpost_mask.png" />
+    <Content Include="assets\assets\materials\arctic_outpost_normal.png" />
     <Content Include="assets\assets\materials\background_far.png" />
     <Content Include="assets\assets\materials\background_mid.png" />
     <Content Include="assets\assets\materials\background_near.png" />
@@ -310,6 +313,8 @@
     <Content Include="assets\assets\materials\roid_normal.png" />
     <Content Include="assets\assets\materials\stars.png" />
     <Content Include="assets\assets\materials\sun.png" />
+    <Content Include="assets\assets\models\arctic_outpost.cmf" />
+    <Content Include="assets\assets\models\arctic_outpost.cmt" />
     <Content Include="assets\assets\models\choppa.cmt" />
     <Content Include="assets\assets\models\choppa_pod.iqm" />
     <Content Include="assets\assets\models\collectable.cmf" />
