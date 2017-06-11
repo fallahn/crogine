@@ -37,7 +37,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/Director.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
-#include <crogine/graphics/PostProcess.hpp>
+#include <crogine/graphics/postprocess/PostProcess.hpp>
 
 #include <functional>
 

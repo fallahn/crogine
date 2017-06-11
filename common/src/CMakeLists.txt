@@ -52,7 +52,6 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/MaterialResource.cpp
   ${PROJECT_DIR}/graphics/MeshBuilder.cpp
   ${PROJECT_DIR}/graphics/MeshResource.cpp
-  ${PROJECT_DIR}/graphics/PostProcess.cpp
   ${PROJECT_DIR}/graphics/PrimitiveBuilders.cpp
   ${PROJECT_DIR}/graphics/RenderTexture.cpp
   ${PROJECT_DIR}/graphics/ResourceAutomation.cpp
@@ -62,6 +61,9 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/StaticMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/Texture.cpp
   ${PROJECT_DIR}/graphics/TextureResource.cpp
+  
+  ${PROJECT_DIR}/graphics/postprocess/PostChromeAB.cpp
+  ${PROJECT_DIR}/graphics/postprocess/PostProcess.cpp
 
   ${PROJECT_DIR}/imgui/imgui.cpp
   ${PROJECT_DIR}/imgui/imgui_demo.cpp

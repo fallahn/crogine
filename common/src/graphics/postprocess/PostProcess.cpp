@@ -27,12 +27,12 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/graphics/PostProcess.hpp>
+#include <crogine/graphics/postprocess/PostProcess.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/Texture.hpp>
 
-#include "../detail/GLCheck.hpp"
+#include "../../detail/GLCheck.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>

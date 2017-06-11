@@ -174,9 +174,6 @@
     <ClCompile Include="..\common\src\graphics\RenderTexture.cpp">
       <Filter>src\graphics</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\src\graphics\PostProcess.cpp">
-      <Filter>src\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\src\core\DefaultLoadingScreen.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
@@ -245,6 +242,12 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\components\PhysicsObject.cpp">
       <Filter>src\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\postprocess\PostChromeAB.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\postprocess\PostProcess.cpp">
+      <Filter>src\graphics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -27,50 +27,30 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "PostRadial.hpp"
-
+#include <crogine/graphics/postprocess/PostChromeAB.hpp>
 #include <crogine/graphics/postprocess/PostVertex.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+
+using namespace cro;
 
 namespace
 {
-    const std::string fragment = R"(
-        uniform sampler2D u_texture;
-
-        varying vec2 v_texCoord;
-        
-        void main()
-        {
-            gl_FragColor = texture2D(u_texture, v_texCoord);
-        }       
-    )";
-
-#include "PostRadial.inl"
+#include "PostChromeAB.inl"
 }
 
-PostRadial::PostRadial()
+PostChromeAB::PostChromeAB()
 {
-    m_inputShader.loadFromString(cro::PostVertex, extractionFrag);
-    m_outputShader.loadFromString(cro::PostVertex, blueDream);
+    if (!m_postShader.loadFromString(PostVertex, FragChromeAB))
+    {
+        Logger::log("Failed loading chromatic abberation shader", Logger::Type::Error);
+    }
 }
 
 //public
-void PostRadial::apply(const cro::RenderTexture& source)
+void PostChromeAB::apply(const RenderTexture& input)
 {
-    glm::vec2 size(getCurrentBufferSize());
-    setUniform("u_texture", source.getTexture(), m_inputShader);
-    m_blurBuffer.clear();
-    drawQuad(m_inputShader, { 0.f, 0.f, size.x / 2.f, size.y / 2.f });
-    m_blurBuffer.display();
-    
-    setUniform("u_baseTexture", source.getTexture(), m_outputShader);
-    drawQuad(m_outputShader, { 0.f, 0.f, size.x, size.y });
-}
+    setUniform("u_input", input.getTexture(), m_postShader);
 
-//private
-void PostRadial::bufferResized()
-{
-    auto size = getCurrentBufferSize() / 2u;
-    
-    m_blurBuffer.create(size.x, size.y, false);
-    setUniform("u_texture", m_blurBuffer.getTexture(), m_outputShader);
+    auto size = glm::vec2(getCurrentBufferSize());
+    drawQuad(m_postShader, { 0.f, 0.f, size.x, size.y });
 }

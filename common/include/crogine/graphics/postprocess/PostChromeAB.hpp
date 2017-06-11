@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,26 +27,27 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_POST_RADIAL_HPP_
-#define TL_POST_RADIAL_HPP_
+#ifndef CRO_POST_CHROME_AB_HPP_
+#define CRO_POST_CHROME_AB_HPP_
 
 #include <crogine/graphics/postprocess/PostProcess.hpp>
 #include <crogine/graphics/Shader.hpp>
-#include <crogine/graphics/RenderTexture.hpp>
 
-class PostRadial final : public cro::PostProcess
+namespace cro
 {
-public:
-    PostRadial();
+    /*!
+    \brief Post process simulating chromatic abberation
+    */
+    class CRO_EXPORT_API PostChromeAB final : public PostProcess
+    {
+    public:
+        PostChromeAB();
 
-    void apply(const cro::RenderTexture& source) override;
+        void apply(const RenderTexture& source) override;
 
-private:
-    cro::Shader m_inputShader;
-    cro::Shader m_outputShader;
-    cro::RenderTexture m_blurBuffer;
+    private:
+        Shader m_postShader;
+    };
+}
 
-    void bufferResized() override;
-};
-
-#endif //TL_POST_RADIAL_HPP_
+#endif //CRO_POST_CHROME_AB_HPP_
