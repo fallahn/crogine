@@ -50,6 +50,7 @@
     <ClInclude Include="..\common\include\crogine\core\Window.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\GlobalConsts.hpp" />
+    <ClInclude Include="..\common\include\crogine\detail\PhysicsDebug.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Component.hpp" />
@@ -141,6 +142,7 @@
     <ClCompile Include="..\common\src\core\Window.cpp" />
     <ClCompile Include="..\common\src\detail\DistanceField.cpp" />
     <ClCompile Include="..\common\src\detail\glad.c" />
+    <ClCompile Include="..\common\src\detail\PhysicsDebug.cpp" />
     <ClCompile Include="..\common\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />

@@ -351,6 +351,9 @@
     <ClInclude Include="..\common\include\crogine\graphics\postprocess\PostChromeAB.hpp">
       <Filter>Header Files\graphics\post process</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\detail\PhysicsDebug.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -544,6 +547,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\graphics\postprocess\PostProcess.cpp">
       <Filter>Source Files\graphics\post process</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\PhysicsDebug.cpp">
+      <Filter>Source Files\detail</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

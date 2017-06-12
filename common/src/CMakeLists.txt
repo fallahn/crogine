@@ -13,7 +13,8 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/detail/DistanceField.cpp
   ${PROJECT_DIR}/detail/glad.c
-  ${PROJECT_DIR}/detail/SDLResource.cpp 
+  ${PROJECT_DIR}/detail/PhysicsDebug.cpp 
+  ${PROJECT_DIR}/detail/SDLResource.cpp
 
   ${PROJECT_DIR}/ecs/Component.cpp
   ${PROJECT_DIR}/ecs/Director.cpp

@@ -249,5 +249,8 @@
     <ClCompile Include="..\common\src\graphics\postprocess\PostProcess.cpp">
       <Filter>src\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\detail\PhysicsDebug.cpp">
+      <Filter>src\detail</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

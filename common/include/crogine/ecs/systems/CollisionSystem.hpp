@@ -32,6 +32,8 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Entity.hpp>
+#include <crogine/ecs/Renderable.hpp>
+#include <crogine/detail/PhysicsDebug.hpp>
 
 #include <btBulletCollisionCommon.h>
 
@@ -49,7 +51,7 @@ namespace cro
     of collision between complex shapes with the option of user defined response or
     physics simulation.
     */
-    class CRO_EXPORT_API CollisionSystem : public cro::System
+    class CRO_EXPORT_API CollisionSystem : public cro::System, public Renderable
     {
     public:
         explicit CollisionSystem(cro::MessageBus& mb);
@@ -61,6 +63,8 @@ namespace cro
         CollisionSystem& operator = (CollisionSystem&&) = delete;
 
         void process(cro::Time) override;
+
+        void render(Entity) override;
 
     private:
         void onEntityAdded(cro::Entity) override;
@@ -78,6 +82,8 @@ namespace cro
         };
         std::array<CollisionData, Detail::MinFreeIDs> m_collisionData;
         std::vector<std::unique_ptr<btCollisionShape>> m_shapeCache;
+
+        Detail::BulletDebug m_debugDrawer;
     };
 }
 
