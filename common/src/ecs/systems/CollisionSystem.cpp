@@ -47,56 +47,56 @@ namespace
     const std::size_t maxObjects = 10000;
 }
 
-    template<>
-    struct StructHash<PhysicsShape>
+template<>
+struct StructHash<PhysicsShape>
+{
+    std::size_t operator()(const PhysicsShape& s) const
     {
-        std::size_t operator()(const PhysicsShape& s) const
+        std::size_t res = 0;
+
+        hash_combine(res, static_cast<int32>(s.type));
+        hash_combine(res, s.position.x);
+        hash_combine(res, s.position.y);
+        hash_combine(res, s.position.z);
+        hash_combine(res, s.rotation.x);
+        hash_combine(res, s.rotation.y);
+        hash_combine(res, s.rotation.z);
+        hash_combine(res, s.rotation.w);
+
+        switch (s.type)
         {
-            std::size_t res = 0;
-
-            hash_combine(res, static_cast<int32>(s.type));
-            hash_combine(res, s.position.x);
-            hash_combine(res, s.position.y);
-            hash_combine(res, s.position.z);
-            hash_combine(res, s.rotation.x);
-            hash_combine(res, s.rotation.y);
-            hash_combine(res, s.rotation.z);
-            hash_combine(res, s.rotation.w);
-
-            switch (s.type)
-            {
-            default: break;
-            case PhysicsShape::Type::Box:
-                hash_combine(res, s.extent.x);
-                hash_combine(res, s.extent.y);
-                hash_combine(res, s.extent.z);
-                break;
-            case PhysicsShape::Type::Capsule:
-                hash_combine(res, s.radius);
-                hash_combine(res, s.length);
-                hash_combine(res, static_cast<int32>(s.orientation));
-                break;
-            case PhysicsShape::Type::Cone:
-                hash_combine(res, s.radius);
-                hash_combine(res, s.length);
-                hash_combine(res, static_cast<int32>(s.orientation));
-                break;
-            case PhysicsShape::Type::Cylinder:
-                hash_combine(res, s.extent.x);
-                hash_combine(res, s.extent.y);
-                hash_combine(res, s.extent.z);
-                hash_combine(res, static_cast<int32>(s.orientation));
-                break;
-            case PhysicsShape::Type::Sphere:
-                hash_combine(res, s.radius);
-                break;
-            case PhysicsShape::Type::Compound:
-                hash_combine(res, s.length);
-                break;
-            }
-            return res;
+        default: break;
+        case PhysicsShape::Type::Box:
+            hash_combine(res, s.extent.x);
+            hash_combine(res, s.extent.y);
+            hash_combine(res, s.extent.z);
+            break;
+        case PhysicsShape::Type::Capsule:
+            hash_combine(res, s.radius);
+            hash_combine(res, s.length);
+            hash_combine(res, static_cast<int32>(s.orientation));
+            break;
+        case PhysicsShape::Type::Cone:
+            hash_combine(res, s.radius);
+            hash_combine(res, s.length);
+            hash_combine(res, static_cast<int32>(s.orientation));
+            break;
+        case PhysicsShape::Type::Cylinder:
+            hash_combine(res, s.extent.x);
+            hash_combine(res, s.extent.y);
+            hash_combine(res, s.extent.z);
+            hash_combine(res, static_cast<int32>(s.orientation));
+            break;
+        case PhysicsShape::Type::Sphere:
+            hash_combine(res, s.radius);
+            break;
+        case PhysicsShape::Type::Compound:
+            hash_combine(res, s.length);
+            break;
         }
-    };
+        return res;
+    }
+};
 
 CollisionSystem::CollisionSystem(cro::MessageBus&mb)
     : cro::System(mb, typeid(CollisionSystem))
