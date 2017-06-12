@@ -49,15 +49,15 @@ using namespace cro;
 cro::App* App::m_instance = nullptr;
 
 namespace
-{
-	const Time frameTime = seconds(1.f / 60.f);
+{    
+    const Time frameTime = seconds(1.f / 60.f);
 	Time timeSinceLastUpdate;
 
 #include "../detail/DefaultIcon.inl"
 }
 
 App::App()
-    : m_running (false)
+    : m_running (false), m_showStats(false)
 {
 	CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
@@ -185,7 +185,7 @@ void App::quit()
 void App::debugPrint(const std::string& name, const std::string& value)
 {
     CRO_ASSERT(m_instance, "Not now, fuzznuts");
-#ifdef _DEBUG_
+#if defined _DEBUG_ && defined USE_IMGUI
     m_instance->m_debugLines.emplace_back(name + " : " + value);
 #endif
 }
@@ -205,6 +205,14 @@ void App::handleEvents()
         switch (evt.type)
         {
         default: break;
+        case SDL_KEYUP:
+#ifdef USE_IMGUI
+            if (evt.key.keysym.sym == SDLK_F1)
+            {
+                m_showStats = !m_showStats;
+            }
+#endif //USE_IMGUI
+            break;
         case SDL_QUIT:
             quit();
             break;
@@ -269,12 +277,13 @@ void App::handleMessages()
     }
 }
 
-//#ifndef __ANDROID__
+//#ifdef USE_IMGUI
 void App::doImGui()
 {
     ImGui_ImplSdlGL3_NewFrame(m_window.m_window);
-
-    ImGui::Begin("Stats:");
+    //ImGui::ShowTestWindow(&m_showStats);
+#ifdef USE_IMGUI
+    ImGui::Begin("Stats:", &m_showStats);
     static bool vsync = true;
     bool lastSync = vsync;
     ImGui::Checkbox("Vsync", &vsync);
@@ -305,5 +314,7 @@ void App::doImGui()
 
     m_debugLines.clear();
     m_debugLines.reserve(10);
+
+#endif //USE_IMGUI
 }
 //#endif
