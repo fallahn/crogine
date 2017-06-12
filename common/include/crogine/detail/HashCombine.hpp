@@ -43,11 +43,12 @@ namespace cro
         std::hash<T> h;
         s ^= h(v) + 0x9e3779b9 + (s << 6) + (s >> 2);
     }
-
-    //allows hashing of arbitrary POD structs
-    //via template specialisation
-    template <class T>
-    struct StructHash;
 }
+
+//allows hashing of arbitrary POD structs
+//via template specialisation
+template <class T>
+struct StructHash;
+
 
 #endif //CRO_HASH_COMBINE_HPP_
