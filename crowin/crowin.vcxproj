@@ -50,6 +50,7 @@
     <ClInclude Include="..\common\include\crogine\core\Window.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\GlobalConsts.hpp" />
+    <ClInclude Include="..\common\include\crogine\detail\HashCombine.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\PhysicsDebug.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp" />

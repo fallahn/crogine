@@ -51,7 +51,7 @@ namespace cro
         enum class Type
         {
             Capsule, Cone, Cylinder,
-            Box, Hull, Sphere, Null
+            Box, Hull, Sphere, Compound, Null
         }type = Type::Null;
 
         /*!
