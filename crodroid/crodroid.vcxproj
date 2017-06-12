@@ -248,6 +248,7 @@
     <ClCompile Include="..\common\src\detail\enet\protocol.c" />
     <ClCompile Include="..\common\src\detail\enet\unix.c" />
     <ClCompile Include="..\common\src\detail\glad.c" />
+    <ClCompile Include="..\common\src\detail\PhysicsDebug.cpp" />
     <ClCompile Include="..\common\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />

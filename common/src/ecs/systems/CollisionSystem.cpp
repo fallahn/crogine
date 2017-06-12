@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/ecs/systems/CollisionSystem.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/PhysicsObject.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/core/Clock.hpp>
 
 #include <glm/gtc/type_ptr.hpp>
@@ -57,6 +58,9 @@ CollisionSystem::CollisionSystem(cro::MessageBus&mb)
     //TODO inspect types of broadphase and decide which is best
     m_broadphaseInterface = std::make_unique<bt32BitAxisSweep3>(worldMin, worldMax, maxObjects, nullptr, true);
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
+
+    m_debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawAabb);
+    m_collisionWorld->setDebugDrawer(&m_debugDrawer);
 
     requireComponent<Transform>();
     requireComponent<PhysicsObject>();
@@ -90,6 +94,18 @@ void CollisionSystem::process(cro::Time dt)
     m_collisionWorld->performDiscreteCollisionDetection();
 
     //TODO where do we put the collision data?
+
+    m_collisionWorld->debugDrawWorld();
+}
+
+void CollisionSystem::render(Entity camera)
+{
+    const auto& tx = camera.getComponent<Transform>();
+    const auto& camComponent = camera.getComponent<Camera>();
+
+    auto viewProj = camComponent.projection * glm::inverse(tx.getWorldTransform());
+
+    m_debugDrawer.render(viewProj);
 }
 
 //private
@@ -195,6 +211,9 @@ void CollisionSystem::onEntityAdded(cro::Entity entity)
     {
         m_collisionData[idx].shape = createCollisionShape(po.m_shapes[0]);
     }
+
+    m_collisionData[idx].object->setCollisionShape(m_collisionData[idx].shape);
+    m_collisionWorld->addCollisionObject(m_collisionData[idx].object.get());
 }
 
 void CollisionSystem::onEntityRemoved(cro::Entity entity)
