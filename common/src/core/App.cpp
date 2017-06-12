@@ -282,36 +282,41 @@ void App::doImGui()
 {
     ImGui_ImplSdlGL3_NewFrame(m_window.m_window);
     //ImGui::ShowTestWindow(&m_showStats);
+
+    //TODO show other windows (console etc)
+
 #ifdef USE_IMGUI
-    ImGui::Begin("Stats:", &m_showStats);
-    static bool vsync = true;
-    bool lastSync = vsync;
-    ImGui::Checkbox("Vsync", &vsync);
-    if (lastSync != vsync)
+    if (m_showStats)
     {
-        m_window.setVsyncEnabled(vsync);
+        ImGui::Begin("Stats:", &m_showStats);
+        static bool vsync = true;
+        bool lastSync = vsync;
+        ImGui::Checkbox("Vsync", &vsync);
+        if (lastSync != vsync)
+        {
+            m_window.setVsyncEnabled(vsync);
+        }
+
+        ImGui::SameLine();
+        static bool fullScreen = false;
+        bool lastFS = fullScreen;
+        ImGui::Checkbox("Full Screen", &fullScreen);
+        if (lastFS != fullScreen)
+        {
+            m_window.setFullScreen(fullScreen);
+        }
+
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+        //print any debug lines
+        ImGui::NewLine();
+        for (const auto& p : m_debugLines)
+        {
+            ImGui::Text(p.c_str());
+        }
+
+        ImGui::End();
     }
-
-    ImGui::SameLine();
-    static bool fullScreen = false;
-    bool lastFS = fullScreen;
-    ImGui::Checkbox("Full Screen", &fullScreen);
-    if (lastFS != fullScreen)
-    {
-        m_window.setFullScreen(fullScreen);
-    }
-
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-    //print any debug lines
-    ImGui::NewLine();
-    for (const auto& p : m_debugLines)
-    {
-        ImGui::Text(p.c_str());
-    }
-
-    ImGui::End();
-
     m_debugLines.clear();
     m_debugLines.reserve(10);
 

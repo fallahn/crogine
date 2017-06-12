@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.13
+VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crogine", "crowin\crowin.vcxproj", "{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}"
 EndProject
@@ -334,7 +334,6 @@ Global
 		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.Release|ARM.ActiveCfg = Release|Win32
 		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.Release|ARM64.ActiveCfg = Release|Win32
 		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.Release|x64.ActiveCfg = Release|x64
-		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.Release|x64.Build.0 = Release|x64
 		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.Release|x86.ActiveCfg = Release|Win32
 		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.Release|x86.Build.0 = Release|Win32
 		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.Tools|Any CPU.ActiveCfg = Release|x64
