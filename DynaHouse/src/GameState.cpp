@@ -192,7 +192,13 @@ void GameState::createScene()
     auto& phys = entity.addComponent<cro::PhysicsObject>();
     cro::PhysicsShape ps;
     ps.type = cro::PhysicsShape::Type::Sphere;
-    ps.radius = 1.f;
+    ps.radius = 0.2f;
+    phys.addShape(ps);
+
+    ps.type = cro::PhysicsShape::Type::Capsule;
+    ps.position.z = 0.5f;
+    ps.orientation = cro::PhysicsShape::Orientation::Z;
+    ps.length = 0.5f;
     phys.addShape(ps);
 
     //3D camera

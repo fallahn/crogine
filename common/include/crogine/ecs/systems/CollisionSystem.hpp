@@ -39,6 +39,7 @@ source distribution.
 
 #include <memory>
 #include <array>
+#include <unordered_map>
 
 namespace cro
 {
@@ -81,7 +82,7 @@ namespace cro
             std::unique_ptr<btCollisionObject> object;
         };
         std::array<CollisionData, Detail::MinFreeIDs> m_collisionData;
-        std::vector<std::unique_ptr<btCollisionShape>> m_shapeCache;
+        std::unordered_map<std::size_t, std::unique_ptr<btCollisionShape>> m_shapeCache;
 
         Detail::BulletDebug m_debugDrawer;
     };
