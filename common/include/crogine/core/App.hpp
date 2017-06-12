@@ -135,15 +135,17 @@ namespace cro
         MessageBus m_messageBus;
         void handleMessages();
 
-//#ifndef __ANDROID__
-        std::vector<std::string> m_debugLines;
-        void doImGui();
-//#endif
 		static App* m_instance;
 
         std::map<int32, SDL_GameController*> m_controllers;
         std::map<int32, SDL_Joystick*> m_joysticks;
         friend class GameController;
+//#ifdef USE_IMGUI
+        std::vector<std::string> m_debugLines;
+        void doImGui();
+        bool m_showStats;
+//#endif
+
 	};
 }
 
