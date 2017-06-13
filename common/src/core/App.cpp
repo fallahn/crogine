@@ -32,12 +32,14 @@ source distribution.
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Console.hpp>
+#include <crogine/core/ConfigFile.hpp>
 #include <crogine/detail/Assert.hpp>
 
 #include <SDL.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
 #include <SDL_joystick.h>
+#include <SDL_filesystem.h>
 
 #include "../detail/GLCheck.hpp"
 #include "../imgui/imgui_render.h"
@@ -55,6 +57,15 @@ namespace
 	Time timeSinceLastUpdate;
 
 #include "../detail/DefaultIcon.inl"
+
+#ifndef ORG_PATH
+#define ORG_PATH "Trederia"
+#endif
+#ifndef APP_PATH
+#define APP_PATH "CrogineApp"
+#endif
+
+    const std::string cfgName("cfg.cfg");
 }
 
 App::App()
@@ -88,6 +99,10 @@ App::App()
                 m_joysticks.insert(std::make_pair(i, SDL_JoystickOpen(i)));
             }
         }
+
+        char* pp = SDL_GetPrefPath(ORG_PATH, APP_PATH);;
+        m_prefPath = std::string(pp);
+        SDL_free(pp);
 	}
 }
 
@@ -111,7 +126,32 @@ App::~App()
 //public
 void App::run()
 {
-	if (m_window.create(800, 600, "crogine game"))
+    int32 width = 800;
+    int32 height = 600;
+    bool fullscreen = false;
+
+    ConfigFile cfg;
+    if (cfg.loadFromFile(m_prefPath + cfgName))
+    {
+        const auto& properties = cfg.getProperties();
+        for (const auto& prop : properties)
+        {
+            if (prop.getName() == "width" && prop.getValue<int>() > 0)
+            {
+                width = prop.getValue<int>();
+            }
+            else if (prop.getName() == "height" && prop.getValue<int>() > 0)
+            {
+                height = prop.getValue<int>();
+            }
+            else if (prop.getName() == "fullscreen")
+            {
+                fullscreen = prop.getValue<bool>();
+            }
+        }
+    }
+
+	if (m_window.create(width, height, "crogine game"))
 	{
 		//load opengl
 		if (!gladLoadGLES2Loader(SDL_GL_GetProcAddress))
@@ -121,6 +161,7 @@ void App::run()
 		}
         IMGUI_INIT(m_window.m_window);
         m_window.setIcon(defaultIcon);
+        m_window.setFullScreen(fullscreen);
         Console::init();
 	}
 	else
@@ -158,6 +199,15 @@ void App::run()
 
         //SDL_Delay((frameTime - timeSinceLastUpdate).asMilliseconds());
 	}
+
+    auto size = m_window.getSize();
+    fullscreen = m_window.isFullscreen();
+    ConfigFile saveSettings;
+    saveSettings.addProperty("width", std::to_string(size.x));
+    saveSettings.addProperty("height", std::to_string(size.y));
+    saveSettings.addProperty("fullscreen", fullscreen ? "true" : "false");
+    saveSettings.save(m_prefPath + cfgName);
+
     m_messageBus.disable(); //prevents spamming a load of quit messages
     finalise();
     IMGUI_UNINIT;
@@ -314,7 +364,7 @@ void App::doImGui()
         }
 
         ImGui::SameLine();
-        static bool fullScreen = false;
+        static bool fullScreen = m_window.isFullscreen();
         bool lastFS = fullScreen;
         ImGui::Checkbox("Full Screen", &fullScreen);
         if (lastFS != fullScreen)

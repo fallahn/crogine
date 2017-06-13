@@ -151,16 +151,7 @@ glm::uvec2 Window::getSize() const
 #ifdef PLATFORM_MOBILE
     SDL_GL_GetDrawableSize(m_window, &x, &y);
 #else
-    if (!m_fullscreen)
-    {
-        SDL_GetWindowSize(m_window, &x, &y);
-    }
-    else
-    {
-        SDL_DisplayMode mode;
-        SDL_GetDesktopDisplayMode(0, &mode);
-        x = mode.w; y = mode.h;
-    }
+    SDL_GetWindowSize(m_window, &x, &y);
 #endif //PLATFORM_MOBILE
     return { x, y };
 }
@@ -169,6 +160,7 @@ void Window::setSize(glm::uvec2 size)
 {
     CRO_ASSERT(m_window, "window not created");
     SDL_SetWindowSize(m_window, size.x, size.y);
+    SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 }
 
 void Window::setFullScreen(bool fullscreen)
@@ -177,6 +169,10 @@ void Window::setFullScreen(bool fullscreen)
     if (SDL_SetWindowFullscreen(m_window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0) == 0)
     {
         m_fullscreen = fullscreen;
+        if (!fullscreen)
+        {
+            SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+        }
     }
 }
 

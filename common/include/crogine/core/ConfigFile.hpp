@@ -190,7 +190,7 @@ namespace cro
 
         /*!
         \brief Attempts to load a config file into the object.
-        \returns true on success, else false if somethign went wrong
+        \returns true on success, else false if something went wrong
         */
         bool loadFromFile(const std::string& path);
 

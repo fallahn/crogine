@@ -45,7 +45,6 @@ namespace nim = ImGui;
 namespace
 {
     bool showVideoOptions = false;
-    bool fullScreen = false;
 
     std::vector<glm::uvec2> resolutions;
     //int currentAALevel = 0;
@@ -242,6 +241,7 @@ void Console::draw()
 
     nim::Combo("Resolution", &currentResolution, resolutionNames.data());
 
+    static bool fullScreen = App::getWindow().isFullscreen();
     nim::Checkbox("Full Screen", &fullScreen);
     if (nim::Button("Apply", { 50.f, 20.f }))
     {

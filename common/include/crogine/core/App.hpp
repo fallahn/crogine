@@ -155,6 +155,8 @@ namespace cro
         bool m_showStats;
 //#endif
 
+
+        std::string m_prefPath;
 	};
 }
 
