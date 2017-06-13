@@ -30,6 +30,8 @@ source distribution.
 #ifndef CRO_UTIL_STRING_HPP_
 #define CRO_UTIL_STRING_HPP_
 
+#include <crogine/detail/Types.hpp>
+
 #include <SDL_rwops.h>
 
 #include <string>
@@ -54,7 +56,7 @@ namespace cro
             */
             static inline void replace(std::string& str, const char c, const char r)
             {
-                auto start = 0u;
+                std::size_t start = 0u;
                 auto next = str.find_first_of(c, start);
                 while (next != std::string::npos && start < str.length())
                 {
@@ -78,9 +80,9 @@ namespace cro
             /*!
             \brief Emulates the C function fgets with an SDL rwops file
             */
-            static inline char* rwgets(char* dest, int32 size, SDL_RWops* file, int64* bytesRead)
+            static inline char* rwgets(char* dest, int32 size, SDL_RWops* file, cro::int64* bytesRead)
             {
-                int32 count;
+                std::size_t count;
                 char* compareStr = dest;
 
                 char readChar;

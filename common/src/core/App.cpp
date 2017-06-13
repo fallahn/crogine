@@ -31,6 +31,7 @@ source distribution.
 #include <crogine/core/Log.hpp>
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/Console.hpp>
 #include <crogine/detail/Assert.hpp>
 
 #include <SDL.h>
@@ -57,7 +58,7 @@ namespace
 }
 
 App::App()
-    : m_running (false), m_showStats(false)
+    : m_running (false), m_showStats(true)
 {
 	CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
@@ -120,6 +121,7 @@ void App::run()
 		}
         IMGUI_INIT(m_window.m_window);
         m_window.setIcon(defaultIcon);
+        Console::init();
 	}
 	else
 	{
@@ -190,6 +192,14 @@ void App::debugPrint(const std::string& name, const std::string& value)
 #endif
 }
 
+void App::registerStatusOutput(const std::function<void()>& func)
+{
+    CRO_ASSERT(m_instance, "App not properly instanciated!");
+#ifdef USE_IMGUI
+    m_instance->m_statusControls.push_back(func);
+#endif
+}
+
 Window& App::getWindow()
 {
     CRO_ASSERT(m_instance, "No valid app instance");
@@ -210,6 +220,10 @@ void App::handleEvents()
             if (evt.key.keysym.sym == SDLK_F1)
             {
                 m_showStats = !m_showStats;
+            }
+            else if (evt.key.keysym.scancode == SDL_SCANCODE_GRAVE)
+            {
+                Console::show();
             }
 #endif //USE_IMGUI
             break;
@@ -283,11 +297,13 @@ void App::doImGui()
     ImGui_ImplSdlGL3_NewFrame(m_window.m_window);
     //ImGui::ShowTestWindow(&m_showStats);
 
-    //TODO show other windows (console etc)
+    //show other windows (console etc)
+    Console::draw();
 
 #ifdef USE_IMGUI
     if (m_showStats)
     {
+        ImGui::SetNextWindowSizeConstraints({ 360.f, 200.f }, { 400.f, 1000.f });
         ImGui::Begin("Stats:", &m_showStats);
         static bool vsync = true;
         bool lastSync = vsync;
@@ -307,9 +323,15 @@ void App::doImGui()
         }
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-        //print any debug lines
         ImGui::NewLine();
+
+        //display any registered controls
+        for (const auto& func : m_statusControls)
+        {
+            func();
+        }
+
+        //print any debug lines       
         for (const auto& p : m_debugLines)
         {
             ImGui::Text(p.c_str());

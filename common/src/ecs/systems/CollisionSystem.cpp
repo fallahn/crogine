@@ -32,7 +32,10 @@ source distribution.
 #include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/App.hpp>
 #include <crogine/detail/HashCombine.hpp>
+
+#include "../../imgui/imgui.h"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/norm.hpp>
@@ -111,11 +114,24 @@ CollisionSystem::CollisionSystem(cro::MessageBus&mb)
     m_broadphaseInterface = std::make_unique<bt32BitAxisSweep3>(worldMin, worldMax, maxObjects, nullptr, true);
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
 
-    m_debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawAabb);
     m_collisionWorld->setDebugDrawer(&m_debugDrawer);
 
     requireComponent<Transform>();
     requireComponent<PhysicsObject>();
+
+    //registers a control to toggle debug output
+    //in the status window if it's active
+    App::registerStatusOutput([&]()
+    {
+        static bool showDebug = false;
+        bool status = showDebug;
+        ImGui::Checkbox("Physics Debug", &showDebug);
+        if (status != showDebug)
+        {
+            showDebug ? m_debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawAabb)
+                : m_debugDrawer.setDebugMode(0);
+        }
+    });
 }
 
 CollisionSystem::~CollisionSystem()
