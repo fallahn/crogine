@@ -47,6 +47,7 @@ namespace cro
 
     private:
         Shader m_postShader;
+        int32 m_textureIndex;
     };
 }
 

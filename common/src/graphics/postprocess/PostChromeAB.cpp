@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/graphics/postprocess/PostChromeAB.hpp>
 #include <crogine/graphics/postprocess/PostVertex.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include "../../detail/GLCheck.hpp"
 
 using namespace cro;
 
@@ -39,17 +40,25 @@ namespace
 }
 
 PostChromeAB::PostChromeAB()
+    :   m_textureIndex(0)
 {
     if (!m_postShader.loadFromString(PostVertex, FragChromeAB))
     {
         Logger::log("Failed loading chromatic abberation shader", Logger::Type::Error);
+    }
+    else
+    {
+        m_textureIndex = m_postShader.getUniformMap().find("u_input")->second;
     }
 }
 
 //public
 void PostChromeAB::apply(const RenderTexture& input)
 {
-    setUniform("u_input", input.getTexture(), m_postShader);
+    glCheck(glUseProgram(m_postShader.getGLHandle()));
+    glCheck(glActiveTexture(GL_TEXTURE0));
+    glCheck(glBindTexture(GL_TEXTURE_2D, input.getTexture().getGLHandle()));
+    glCheck(glUniform1i(m_textureIndex, 0));
 
     auto size = glm::vec2(getCurrentBufferSize());
     drawQuad(m_postShader, { 0.f, 0.f, size.x, size.y });

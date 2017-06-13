@@ -132,7 +132,7 @@ void Console::doCommand(const std::string& str)
 }
 
 //private
-void Console::addCommand(const std::string& name, const Command& command, const ConsoleClient* client)
+void Console::addCommand(const std::string& name, const Command& command, const ConsoleClient* client = nullptr)
 {
 #ifdef USE_IMGUI
     CRO_ASSERT(!name.empty(), "Command cannot have an empty string");
@@ -277,6 +277,73 @@ void Console::init()
         }
         resolutionNames[i++] = '\0';
     }
+
+    //------default commands------//
+    //list all available commands to the console
+    addCommand("help",
+        [](const std::string&)
+    {
+        Console::print("Available Commands:");
+        for (const auto& c : commands)
+        {
+            Console::print(c.first);
+        }
+    });
+
+    //search for a command
+    addCommand("find",
+        [](const std::string& param)
+    {
+        if (param.empty())
+        {
+            Console::print("Usage: find <command> where <command> is the name or part of the name of a command to find");
+        }
+        else
+        {           
+            auto term = param;
+            std::size_t p = term.find_first_of(" ");
+            if (p != std::string::npos)
+            {
+                term = term.substr(0, p);
+            }
+            auto searchterm = term;
+            auto len = term.size();
+
+            std::vector<std::string> results;
+            while (len > 0)
+            {
+                for (const auto& c : commands)
+                {
+                    if (c.first.find(term) != std::string::npos
+                        && std::find(results.begin(), results.end(), c.first) == results.end())
+                    {
+                        results.push_back(c.first);
+                    }
+                }
+                term = term.substr(0, len--);
+            }
+
+            if (!results.empty())
+            {
+                Console::print("Results for: " + searchterm);
+                for (const auto& str : results)
+                {
+                    Console::print(str);
+                }
+            }
+            else
+            {
+                Console::print("No results for: " + searchterm);
+            }
+        }
+    });
+
+    //quits
+    addCommand("quit",
+        [](const std::string&)
+    {
+        App::quit();
+    });
 }
 
 int textEditCallback(ImGuiTextEditCallbackData* data)

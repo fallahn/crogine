@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 
+#include "../detail/GLCheck.hpp"
+
 using namespace cro;
 
 Scene::Scene(MessageBus& mb)
@@ -203,6 +205,9 @@ void Scene::postRenderPath()
 
     RenderTexture* inTex = &m_sceneBuffer;
     RenderTexture* outTex = nullptr;
+
+    auto vp = m_sceneBuffer.getDefaultViewport();
+    glViewport(vp.left, vp.bottom, vp.width, vp.height);
 
     for (auto i = 0u; i < m_postEffects.size() - 1; ++i)
     {
