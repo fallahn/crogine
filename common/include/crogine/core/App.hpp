@@ -81,9 +81,17 @@ namespace cro
         static void quit();
 
         /*
-        \brief Print a Name/Value string to the ImGui window in debug mode
+        \brief Print a Name/Value string to the ImGui status window in debug mode
         */
         static void debugPrint(const std::string& name, const std::string& value);
+
+        /*!
+        \brief If crogine is built with imgui support this registers
+        the given function with the status window.
+        The function should contain any imgui commands for drawing controls
+        as they would appear between the Begin and End functions of a window
+        */
+        static void registerStatusOutput(const std::function<void()>&);
 
         /*!
         \brief Returns a reference to the active window
@@ -142,6 +150,7 @@ namespace cro
         friend class GameController;
 //#ifdef USE_IMGUI
         std::vector<std::string> m_debugLines;
+        std::vector<std::function<void()>> m_statusControls;
         void doImGui();
         bool m_showStats;
 //#endif

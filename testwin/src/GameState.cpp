@@ -361,7 +361,7 @@ void GameState::createScene()
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Choppa;
     }
 
-    for (auto i = 0; i < SpeedrayNavigator::speedrayCount; ++i)
+    for (auto i = 0u; i < SpeedrayNavigator::speedrayCount; ++i)
     {
         const float rotateOffset = (cro::Util::Const::PI / SpeedrayNavigator::speedrayCount) * i;
         

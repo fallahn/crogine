@@ -232,6 +232,8 @@
     <ClCompile Include="..\common\src\core\App.cpp" />
     <ClCompile Include="..\common\src\core\Clock.cpp" />
     <ClCompile Include="..\common\src\core\ConfigFile.cpp" />
+    <ClCompile Include="..\common\src\core\Console.cpp" />
+    <ClCompile Include="..\common\src\core\ConsoleClient.cpp" />
     <ClCompile Include="..\common\src\core\DefaultLoadingScreen.cpp" />
     <ClCompile Include="..\common\src\core\GameController.cpp" />
     <ClCompile Include="..\common\src\core\MessageBus.cpp" />

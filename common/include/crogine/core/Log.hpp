@@ -32,9 +32,9 @@ source distribution.
 #ifndef CRO_LOGGER_HPP_
 #define CRO_LOGGER_HPP_
 
-//#include <crogine/FileSystem.hpp>
-
 #include <crogine/Config.hpp>
+#include <crogine/core/Console.hpp>
+#include <crogine/util/String.hpp>
 
 #include <string>
 #include <iostream>
@@ -106,7 +106,7 @@ namespace cro
                     :
                     std::cout << outstring << std::endl;
 
-                //Console::print(outstring);
+                Console::print(outstring);
                 
                 const std::size_t maxBuffer = 30;
                 buffer().push_back(outstring);
@@ -171,6 +171,7 @@ namespace cro
 #else
 #define LOG(message, type) {\
 std::string fileName(__FILE__); \
+fileName = cro::Util::String::getFileName(fileName); \
 std::stringstream ss; \
 ss << message << " (" << fileName << ", " << __LINE__ << ")"; \
 cro::Logger::log(ss.str(), type);}
