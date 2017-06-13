@@ -32,7 +32,7 @@ static const std::string FragChromeAB = R"(
 
     varying MED vec2 v_texCoord;
 
-    const float maxOffset = 1.0 / 450.0;
+    const float maxOffset = 1.0 / 300.0; //decrease the ratio to create a bigger effect
 
     void main()
     {
