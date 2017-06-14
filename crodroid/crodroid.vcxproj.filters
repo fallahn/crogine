@@ -258,5 +258,8 @@
     <ClCompile Include="..\common\src\core\Console.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\imgui\Gui.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

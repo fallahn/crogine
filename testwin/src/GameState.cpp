@@ -58,15 +58,18 @@ source distribution.
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
+#include <crogine/ecs/systems/CollisionSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/components/CommandID.hpp>
+#include <crogine/ecs/components/PhysicsObject.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/graphics/postprocess/PostChromeAB.hpp>
 
 namespace
 {
@@ -145,6 +148,7 @@ void GameState::addSystems()
     m_scene.addSystem<ItemSystem>(mb);
     m_scene.addSystem<NpcSystem>(mb);
     m_scene.addSystem<cro::SceneGraph>(mb);
+    m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
 
@@ -154,6 +158,7 @@ void GameState::addSystems()
     m_scene.addDirector<NpcDirector>();
 #ifdef PLATFORM_DESKTOP
     m_scene.addPostProcess<PostRadial>();
+    //m_scene.addPostProcess<cro::PostChromeAB>();
 #endif
 }
 
@@ -252,14 +257,23 @@ void GameState::createScene()
     auto chunkEntityB = entity;
 
     //some rockfall parts
+    glm::vec3 rockscale(0.6f, 1.2f, 1.f);
+    auto bb = m_resources.meshes.getMesh(m_modelDefs[MeshID::RockQuad].meshID).boundingBox;
+    cro::PhysicsShape ps;
+    ps.type = cro::PhysicsShape::Type::Box;
+    ps.extent = (bb[1] - bb[0]) * rockscale / 2.f;
+    ps.extent.z = 0.1f;
+    
     for (auto i = 0u; i < rockfallCount; ++i)
     {
         entity = m_scene.createEntity();
         entity.addComponent<RockFall>();
         auto& tx = entity.addComponent<cro::Transform>();
-        tx.setScale({ 0.6f, 1.2f, 1.f });
+        tx.setScale(rockscale);
         tx.setPosition({ 0.f, 3.4f, -9.1f });
-
+        entity.addComponent<cro::PhysicsObject>().addShape(ps);
+        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Environment);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::RockQuad), m_resources.materials.get(MaterialID::Rockfall + i));
     }
 
@@ -272,13 +286,16 @@ void GameState::createScene()
                                     m_resources.materials.get(m_modelDefs[GameModelID::Player].materialIDs[0]));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Velocity>().friction = 2.5f;
-    //auto& rotator = entity.addComponent<Rotator>();
-    //rotator.axis.x = 1.f;
-    //rotator.speed = 1.f;
-
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID).boundingBox;
+    ps.extent = (bb[1] = bb[0]) * playerTx.getScale();
+    entity.addComponent<cro::PhysicsObject>().addShape(ps);
+    entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Player);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Collectable | CollisionID::Environment | CollisionID::NPC);
 
     //collectables
     static const glm::vec3 coinScale(0.15f);
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBatt].meshID).boundingBox;
+    ps.extent = (bb[1] = bb[0]) * coinScale;
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.41f, 1.4f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
@@ -289,6 +306,9 @@ void GameState::createScene()
     battSpin.speed = 3.2f;
     entity.addComponent<CollectableItem>().type = CollectableItem::EMP;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
+    entity.addComponent<cro::PhysicsObject>().addShape(ps);
+    entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.42f, 0.6f, -9.3f });
@@ -300,6 +320,9 @@ void GameState::createScene()
     bombSpin.speed = 2.9f;
     entity.addComponent<CollectableItem>().type = CollectableItem::Bomb;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
+    entity.addComponent<cro::PhysicsObject>().addShape(ps);
+    entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.6f, -0.2f, -9.3f });
@@ -311,6 +334,9 @@ void GameState::createScene()
     botSpin.speed = 2.994f;
     entity.addComponent<CollectableItem>().type = CollectableItem::Buddy;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
+    entity.addComponent<cro::PhysicsObject>().addShape(ps);
+    entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.38f, -1.f, -9.3f });
@@ -322,6 +348,9 @@ void GameState::createScene()
     heartSpin.speed = 2.873f;
     entity.addComponent<CollectableItem>().type = CollectableItem::Life;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
+    entity.addComponent<cro::PhysicsObject>().addShape(ps);
+    entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.4f, -1.7f, -9.3f });
@@ -333,6 +362,9 @@ void GameState::createScene()
     shieldSpin.speed = 3.028f;
     entity.addComponent<CollectableItem>().type = CollectableItem::Shield;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
+    entity.addComponent<cro::PhysicsObject>().addShape(ps);
+    entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
 
 
     //NPCs
@@ -343,14 +375,22 @@ void GameState::createScene()
                                     m_resources.materials.get(m_modelDefs[GameModelID::Elite].materialIDs[0]));
     entity.addComponent<Npc>().type = Npc::Elite;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Elite;
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Elite].meshID).boundingBox;
+    ps.extent = (bb[1] - bb[0]) * entity.getComponent<cro::Transform>().getScale() / 2.f;
+    entity.addComponent<cro::PhysicsObject>().addShape(ps);
+    entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
     
     const float choppaSpacing = ChoppaNavigator::choppaSpacing;
+    glm::vec3 choppaScale(0.8f);
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].meshID).boundingBox;
+    ps.extent = (bb[1] - bb[0]) * choppaScale / 2.f;
     for (auto i = 0; i < 3; ++i)
     {
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 5.9f, -choppaSpacing + (i * choppaSpacing), -9.3f });
         entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
-        entity.getComponent<cro::Transform>().setScale({ 0.8f, 0.8f, 0.8f });
+        entity.getComponent<cro::Transform>().setScale(choppaScale);
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].meshID),
                                         m_resources.materials.get(m_modelDefs[GameModelID::Choppa].materialIDs[0]));
         CRO_ASSERT(m_modelDefs[GameModelID::Choppa].skeleton, "Skeleton missing from choppa!");
@@ -359,8 +399,13 @@ void GameState::createScene()
         entity.addComponent<Npc>().type = Npc::Choppa;
         entity.getComponent<Npc>().choppa.ident = i;
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Choppa;
+        entity.addComponent<cro::PhysicsObject>().addShape(ps);
+        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
     }
 
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Speedray].meshID).boundingBox;
+    ps.extent = (bb[1] - bb[0]) / 2.f;
     for (auto i = 0u; i < SpeedrayNavigator::speedrayCount; ++i)
     {
         const float rotateOffset = (cro::Util::Const::PI / SpeedrayNavigator::speedrayCount) * i;
@@ -377,6 +422,9 @@ void GameState::createScene()
         entity.addComponent<Npc>().type = Npc::Speedray;
         entity.getComponent<Npc>().speedray.ident = i;
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Speedray;
+        entity.addComponent<cro::PhysicsObject>().addShape(ps);
+        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
     }
 
     //attach turret to each of the terrain chunks

@@ -116,7 +116,20 @@ namespace CommandID
         Turret = 0x20,
         Elite = 0x40,
         Choppa = 0x80,
-        Speedray = 0x100
+        Speedray = 0x100,
+        Charger = 0x200,
+        Weaver = 0x400
+    };
+}
+
+namespace CollisionID
+{
+    enum
+    {
+        Player = 0x2,
+        NPC = 0x4,
+        Collectable = 0x8,
+        Environment = 0x10
     };
 }
 
