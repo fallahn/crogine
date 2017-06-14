@@ -34,9 +34,9 @@ using namespace cro;
 PhysicsObject::PhysicsObject(float mass, float density)
     : m_mass            (mass),
     m_density           (density),
-    m_shapeCount        (0),
     m_collisionGroups   (1),
     m_collisionFlags    (-1),
+    m_shapeCount        (0),
     m_collisionCount    (0)
 {
 

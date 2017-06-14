@@ -173,12 +173,12 @@ void Scene::forwardMessage(const Message& msg)
 
             if (m_postBuffers[0].available())
             {
-                m_postBuffers[0].create(data.data0, data.data1);
+                m_postBuffers[0].create(data.data0, data.data1, false);
             }
 
             if (m_postBuffers[1].available())
             {
-                m_postBuffers[1].create(data.data0, data.data1);
+                m_postBuffers[1].create(data.data0, data.data1, false);
             }
         }
     }
@@ -206,9 +206,6 @@ void Scene::postRenderPath()
     RenderTexture* inTex = &m_sceneBuffer;
     RenderTexture* outTex = nullptr;
 
-    auto vp = m_sceneBuffer.getDefaultViewport();
-    glViewport(vp.left, vp.bottom, vp.width, vp.height);
-
     for (auto i = 0u; i < m_postEffects.size() - 1; ++i)
     {
         outTex = &m_postBuffers[i % 2];
@@ -218,6 +215,8 @@ void Scene::postRenderPath()
         inTex = outTex;
     }
 
+    auto vp = m_sceneBuffer.getDefaultViewport();
+    glViewport(vp.left, vp.bottom, vp.width, vp.height);
     m_postEffects.back()->apply(*inTex);
 }
 

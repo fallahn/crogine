@@ -43,24 +43,23 @@ namespace cro
     Note these functions are only effective if crogine is built with
     USE_IMGUI defined.
     */
-    class CRO_EXPORT_API Nim final
+    namespace Nim
     {
-    public:
         /*!
         \see ImGui::Begin()
         */
-        static inline void begin(const std::string& title, bool* open = nullptr);
+        CRO_EXPORT_API void begin(const std::string& title, bool* open = nullptr);
 
         /*!
         \see ImGui::CheckBox()
         */
-        static inline void checkbox(const std::string& title, bool* value);
+        CRO_EXPORT_API void checkbox(const std::string& title, bool* value);
 
         /*!
         \see ImGui::End()
         */
-        static inline void end();
-    };
+        CRO_EXPORT_API void end();
+    }
 }
 
 #endif //CRO_GUI_HPP_
