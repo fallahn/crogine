@@ -103,7 +103,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
     });
 
     //context.mainWindow.setVsyncEnabled(false);
-    context.appInstance.setClearColour(cro::Colour::Red());
+    //context.appInstance.setClearColour(cro::Colour::Red());
     updateView();
 }
 
