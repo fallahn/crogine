@@ -111,6 +111,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\StaticMeshBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\TextureResource.hpp" />
+    <ClInclude Include="..\common\include\crogine\gui\Gui.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Constants.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Maths.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Random.hpp" />
@@ -194,6 +195,7 @@
     <ClCompile Include="..\common\src\graphics\StaticMeshBuilder.cpp" />
     <ClCompile Include="..\common\src\graphics\Texture.cpp" />
     <ClCompile Include="..\common\src\graphics\TextureResource.cpp" />
+    <ClCompile Include="..\common\src\imgui\Gui.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_draw.cpp" />

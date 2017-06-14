@@ -31,6 +31,8 @@ source distribution.
 #define CRO_PHYSICS_OBJECT_HPP_
 
 #include <crogine/Config.hpp>
+#include <crogine/detail/Types.hpp>
+#include <crogine/ecs/Entity.hpp>
 
 #include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -126,12 +128,59 @@ namespace cro
         */
         bool addShape(const PhysicsShape&);
 
+        /*!
+        \brief Assigns the group ID of thes object;
+        Used for collision filtering this should be a bitmask
+        containing flags of up to 32 groups to which this object
+        belongs. Other objects which contain a collision flag
+        for one of the corresponding groups will collide with
+        this object.
+        Once the entity to which this component belongs is added
+        to a Physics or Collision system changing this value
+        has no effect.
+        */
+        void setCollisionGroups(int32 groups) { m_collisionGroups = groups; }
+
+        /*!
+        \brief A bitmask of collision flags.
+        Each flag in this mask indicates the group ID of objects
+        with which this object will collide. EG a value of 5
+        will cause the object to collide with objects in groups
+        0x4 and 0x1.
+        Once the entity to which this component belongs is added
+        to a Physics or Collision system changing this value has
+        no effect
+        */
+        void setCollisionFlags(int32 flags) { m_collisionFlags = flags; }
+
+        /*!
+        \brief Returns the number of objects colliding with this one.
+        Check this first before attempting to read getCollisionIDs();
+        */
+        std::size_t getCollisionCount() const { return m_collisionCount; }
+
+        /*!
+        \brief Returns a reference to an array of entity IDs whose 
+        PhysicsObjects are colliding with this one.
+        Use getCollisionCount() to first check the number of collisions
+        before attempting to read the array, as old data may exist.
+        */
+        const std::array<Entity::ID, 100>& getCollisionIDs() const { return m_collisionIDs; }
+
     private:
         float m_mass;
         float m_density;
+
+        int32 m_collisionGroups;
+        int32 m_collisionFlags;
+
         std::array<PhysicsShape, 10> m_shapes;
         std::size_t m_shapeCount;
 
+        static constexpr std::size_t MaxCollisions = 100;
+        std::array<Entity::ID, MaxCollisions> m_collisionIDs;
+        std::size_t m_collisionCount;
+        
         friend class CollisionSystem;
     };
 }

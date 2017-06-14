@@ -76,6 +76,9 @@
     <Filter Include="Source Files\graphics\post process">
       <UniqueIdentifier>{5a25d020-2efb-4c50-948e-8518503cd439}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\gui">
+      <UniqueIdentifier>{40b60dcf-4afe-4ff5-8d34-b85452f23a46}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\Config.hpp">
@@ -363,6 +366,9 @@
     <ClInclude Include="..\common\include\crogine\core\ConsoleClient.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\gui\Gui.hpp">
+      <Filter>Header Files\gui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -565,6 +571,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\core\Console.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\imgui\Gui.cpp">
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

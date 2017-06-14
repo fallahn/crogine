@@ -166,7 +166,7 @@ void Window::setSize(glm::uvec2 size)
 void Window::setFullScreen(bool fullscreen)
 {
     CRO_ASSERT(m_window, "window not created");
-    if (SDL_SetWindowFullscreen(m_window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0) == 0)
+    if (SDL_SetWindowFullscreen(m_window, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0) == 0)
     {
         m_fullscreen = fullscreen;
         if (!fullscreen)

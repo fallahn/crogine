@@ -51,15 +51,17 @@ T& EntityManager::addComponent(Entity entity, Args&&... args)
     return getComponent<T>(entity);
 }
 
-template <typename T>
-void EntityManager::removeComponent(Entity entity)
-{
-    const auto componentID = Component::getID<T>();
-    const auto entityID = entity.getIndex();
-
-    CRO_ASSERT(entityID < m_componentMasks.size(), "Entity index out of range");
-    m_componentMasks[entityID].set(componentID, false);
-}
+//TODO this doesn't remove the entity from active systems...
+//template <typename T>
+//void EntityManager::removeComponent(Entity entity)
+//{
+//    const auto componentID = Component::getID<T>();
+//    const auto entityID = entity.getIndex();
+//
+//    CRO_ASSERT(entityID < m_componentMasks.size(), "Entity index out of range");
+//    m_componentMasks[entityID].set(componentID, false);
+//    
+//}
 
 template <typename T>
 bool EntityManager::hasComponent(Entity entity) const

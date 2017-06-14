@@ -31,8 +31,10 @@ source distribution.
 #include "Messages.hpp"
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include <array>
 
@@ -58,6 +60,25 @@ BackgroundSystem::BackgroundSystem(cro::MessageBus& mb)
     {
         t = cro::Util::Random::value(-0.0008f, 0.0008f);
     }
+
+    cro::App::registerStatusOutput([&]()
+    {
+        static bool bossMode = false;
+        bool lastMode = bossMode;
+        cro::Nim::checkbox("Boss Mode", &bossMode);
+        if (lastMode != bossMode)
+        {
+            if (bossMode)
+            {
+                setMode(Mode::Shake);
+            }
+            else
+            {
+                setMode(Mode::Scroll);
+                setScrollSpeed(0.2f);
+            }
+        }
+    });
 }
 
 //public

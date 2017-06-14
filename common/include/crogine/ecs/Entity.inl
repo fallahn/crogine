@@ -41,12 +41,14 @@ T& Entity::addComponent(Args&&... args)
     return m_entityManager->addComponent<T>(*this, std::forward<Args>(args)...);
 }
 
-template <typename T>
-void Entity::removeComponent()
-{
-    CRO_ASSERT(m_entityManager, "Not a valid Entity");
-    m_entityManager->removeComponent<T>(*this);
-}
+//TODO this doesn't remove the entity from systems
+//which previously required the compnent being removed..
+//template <typename T>
+//void Entity::removeComponent()
+//{
+//    CRO_ASSERT(m_entityManager, "Not a valid Entity");
+//    m_entityManager->removeComponent<T>(*this);
+//}
 
 template <typename T>
 bool Entity::hasComponent() const

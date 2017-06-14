@@ -27,28 +27,24 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/components/PhysicsObject.hpp>
+#include <crogine/gui/Gui.hpp>
+
+#include "imgui.h"
 
 using namespace cro;
 
-PhysicsObject::PhysicsObject(float mass, float density)
-    : m_mass            (mass),
-    m_density           (density),
-    m_shapeCount        (0),
-    m_collisionGroups   (1),
-    m_collisionFlags    (-1),
-    m_collisionCount    (0)
+void Nim::begin(const std::string& title, bool* b)
 {
-
+    ImGui::Begin(title.c_str(), b);
 }
 
-//public
-bool PhysicsObject::addShape(const PhysicsShape& shape)
+void Nim::checkbox(const std::string& title, bool* value)
 {
-    if (m_shapeCount < m_shapes.size())
-    {
-        m_shapes[m_shapeCount++] = shape;
-        return true;
-    }
-    return false;
+    ImGui::Checkbox(title.c_str(), value);
 }
+
+void Nim::end()
+{
+    ImGui::End();
+}
+//I miss you like hell.

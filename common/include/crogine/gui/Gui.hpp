@@ -27,28 +27,40 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/components/PhysicsObject.hpp>
+#ifndef CRO_GUI_HPP_
+#define CRO_GUI_HPP_
 
-using namespace cro;
+#include <crogine/Config.hpp>
 
-PhysicsObject::PhysicsObject(float mass, float density)
-    : m_mass            (mass),
-    m_density           (density),
-    m_shapeCount        (0),
-    m_collisionGroups   (1),
-    m_collisionFlags    (-1),
-    m_collisionCount    (0)
+#include <string>
+
+namespace cro
 {
-
-}
-
-//public
-bool PhysicsObject::addShape(const PhysicsShape& shape)
-{
-    if (m_shapeCount < m_shapes.size())
+    /*!
+    \brief Exposes a selection of ImGui functions to the public API.
+    These can be used to create stand-alone windows or to add useful
+    information to the status window via App::registerStatusOutput().
+    Note these functions are only effective if crogine is built with
+    USE_IMGUI defined.
+    */
+    class CRO_EXPORT_API Nim final
     {
-        m_shapes[m_shapeCount++] = shape;
-        return true;
-    }
-    return false;
+    public:
+        /*!
+        \see ImGui::Begin()
+        */
+        static inline void begin(const std::string& title, bool* open = nullptr);
+
+        /*!
+        \see ImGui::CheckBox()
+        */
+        static inline void checkbox(const std::string& title, bool* value);
+
+        /*!
+        \see ImGui::End()
+        */
+        static inline void end();
+    };
 }
+
+#endif //CRO_GUI_HPP_

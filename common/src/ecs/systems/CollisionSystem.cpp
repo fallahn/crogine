@@ -40,6 +40,8 @@ source distribution.
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/norm.hpp>
 
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
 #include <typeinfo>
 
 using namespace cro;
@@ -157,11 +159,42 @@ void CollisionSystem::process(cro::Time dt)
         auto pos = tx.getWorldPosition();
         btTransform btXf(btQuaternion(rot.x, rot.y, rot.z, rot.w), btVector3(pos.x, pos.y, pos.z));
         m_collisionData[entity.getIndex()].object->setWorldTransform(btXf);
+
+        auto& data = entity.getComponent<PhysicsObject>();
+        data.m_collisionCount = 0;
     }
 
+    //perform collisions
     m_collisionWorld->performDiscreteCollisionDetection();
+    
+    //read out results
+    auto manifoldCount = m_collisionDispatcher->getNumManifolds();    
+    for (auto i = 0; i < manifoldCount; ++i)
+    {
+        auto manifold = m_collisionDispatcher->getManifoldByIndexInternal(i);
+        auto body0 = manifold->getBody0();
+        auto body1 = manifold->getBody1();
 
-    //TODO where do we put the collision data?
+        //update the phys objects with collision data
+        PhysicsObject* po = static_cast<PhysicsObject*>(body0->getUserPointer());
+        if (po->m_collisionCount < PhysicsObject::MaxCollisions)
+        {
+            po->m_collisionIDs[po->m_collisionCount++] = body1->getUserIndex();
+        }
+
+        po = static_cast<PhysicsObject*>(body1->getUserPointer());
+        if (po->m_collisionCount < PhysicsObject::MaxCollisions)
+        {
+            po->m_collisionIDs[po->m_collisionCount++] = body0->getUserIndex();
+        }
+
+        //performs a narrow phase pass
+        /*manifold->refreshContactPoints(body0->getWorldTransform(), body1->getWorldTransform());
+        auto contactCount = manifold->getNumContacts();
+        int l = 0;*/
+    }
+    DPRINT("Collision count", std::to_string(manifoldCount));
+
 
     m_collisionWorld->debugDrawWorld();
 }
@@ -256,10 +289,10 @@ void CollisionSystem::onEntityAdded(cro::Entity entity)
     };
     
     //read component data and create collision object
-    const auto& po = entity.getComponent<PhysicsObject>();
+    auto& po = entity.getComponent<PhysicsObject>();
     auto idx = entity.getIndex();
 
-    m_collisionData[idx].object = std::make_unique<btCollisionObject>();
+    m_collisionData[idx].object = std::make_unique<btGhostObject>();
 
     //if more than one shape create compound shape, else single shape
     if (po.m_shapeCount > 1)
@@ -292,7 +325,18 @@ void CollisionSystem::onEntityAdded(cro::Entity entity)
     }
 
     m_collisionData[idx].object->setCollisionShape(m_collisionData[idx].shape);
-    m_collisionWorld->addCollisionObject(m_collisionData[idx].object.get());
+    m_collisionData[idx].object->setUserIndex(idx);
+    m_collisionData[idx].object->setUserPointer(static_cast<void*>(&po));
+    m_collisionWorld->addCollisionObject(m_collisionData[idx].object.get(), po.m_collisionGroups, po.m_collisionFlags);
+
+    if (m_collisionData[idx].object->isStaticObject())
+    {
+        Logger::log("Added static object", Logger::Type::Info);
+    }
+    else if (m_collisionData[idx].object->isKinematicObject())
+    {
+        Logger::log("Added kinematic object", Logger::Type::Info);
+    }
 }
 
 void CollisionSystem::onEntityRemoved(cro::Entity entity)
