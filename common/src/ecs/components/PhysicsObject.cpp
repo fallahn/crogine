@@ -50,5 +50,6 @@ bool PhysicsObject::addShape(const PhysicsShape& shape)
         m_shapes[m_shapeCount++] = shape;
         return true;
     }
+    LOG("Max shapes for this object reached", Logger::Type::Warning);
     return false;
 }

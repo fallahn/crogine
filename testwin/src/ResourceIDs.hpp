@@ -126,10 +126,10 @@ namespace CollisionID
 {
     enum
     {
-        Player = 0x2,
-        NPC = 0x4,
-        Collectable = 0x8,
-        Environment = 0x10
+        Player = 64,
+        NPC = 128,
+        Collectable = 256,
+        Environment = 512
     };
 }
 

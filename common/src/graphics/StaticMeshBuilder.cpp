@@ -32,6 +32,7 @@ source distribution.
 
 #include <glm/geometric.hpp>
 
+#include <limits>
 
 using namespace cro;
 
@@ -132,6 +133,8 @@ Mesh::Data StaticMeshBuilder::build() const
         }
 
         //boundingbox / sphere
+        meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
+        meshData.boundingBox[1] = glm::vec3(-std::numeric_limits<float>::max());
         for (std::size_t i = 0; i < vboData.size(); i += meshData.vertexSize)
         {
             //min point

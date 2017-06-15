@@ -280,14 +280,14 @@ void GameState::createScene()
     //player ship
     entity = m_scene.createEntity();
     auto& playerTx = entity.addComponent<cro::Transform>();
-    playerTx.setPosition({ -3.4f, 0.f, -9.25f });
+    playerTx.setPosition({ -3.4f, 0.f, -9.3f });
     playerTx.setScale({ 0.5f, 0.5f, 0.5f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::Player].materialIDs[0]));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Velocity>().friction = 2.5f;
     bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID).boundingBox;
-    ps.extent = (bb[1] = bb[0]) * playerTx.getScale();
+    ps.extent = (bb[1] - bb[0]) * playerTx.getScale() / 2.f;
     entity.addComponent<cro::PhysicsObject>().addShape(ps);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Player);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Collectable | CollisionID::Environment | CollisionID::NPC);
@@ -295,7 +295,7 @@ void GameState::createScene()
     //collectables
     static const glm::vec3 coinScale(0.15f);
     bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBatt].meshID).boundingBox;
-    ps.extent = (bb[1] = bb[0]) * coinScale;
+    ps.extent = (bb[1] - bb[0]) * coinScale / 2.f;
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.41f, 1.4f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);

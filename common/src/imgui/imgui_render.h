@@ -27,7 +27,7 @@
 #define IMGUI_UNINIT ImGui_ImplSdlGL3_Shutdown()
 #else
 #define IMGUI_INIT(x) 
-#define IMGUI_EVENTS(x)
+#define IMGUI_EVENTS(x) false
 #define IMGUI_UPDATE
 #define IMGUI_RENDER
 #define IMGUI_UNINIT
