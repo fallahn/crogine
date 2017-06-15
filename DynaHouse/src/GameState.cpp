@@ -163,18 +163,27 @@ void GameState::loadAssets()
 
 void GameState::createScene()
 {
-    //starting room
-    auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TestRoom].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[0]));
-    for (auto i = 0u; i < m_modelDefs[GameModelID::TestRoom].materialCount; ++i)
+    //rooms
+    static const std::size_t roomCount = 6;
+    glm::vec3 houseScale(0.1f);
+    const auto& bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::TestRoom].meshID).boundingBox;
+    const float stride = ((bb[1].x - bb[0].x) * houseScale.x) - 0.01f;
+
+    for (auto i = 0u; i < roomCount; ++i)
     {
-        entity.getComponent<cro::Model>().setMaterial(i, m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[i]));
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TestRoom].meshID),
+            m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[0]));
+        for (auto i = 0u; i < m_modelDefs[GameModelID::TestRoom].materialCount; ++i)
+        {
+            entity.getComponent<cro::Model>().setMaterial(i, m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[i]));
+        }
+        entity.addComponent<cro::Transform>().scale(houseScale);
+        entity.getComponent<cro::Transform>().setPosition({ i * stride, 0.f, 0.f });
     }
-    entity.addComponent<cro::Transform>().scale({ 0.1f, 0.1f, 0.1f });
-        
+
     //dat cat man
-    entity = m_scene.createEntity();
+    auto entity = m_scene.createEntity();
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::BatCat].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::BatCat].materialIDs[0]));
     entity.addComponent<cro::Transform>().setScale({ 0.002f, 0.002f, 0.002f });
@@ -187,32 +196,19 @@ void GameState::createScene()
     mapEntity.addComponent<cro::ProjectionMap>();
     mapEntity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 300.f });
     mapEntity.getComponent<cro::Transform>().setParent(entity);
-    //mapEntity.getComponent<cro::Transform>().rotate({ 1.f, 0.f, 0.f }, -cro::Util::Const::PI/* / 2.f*/);
 
     auto& phys = entity.addComponent<cro::PhysicsObject>();
     cro::PhysicsShape ps;
     ps.type = cro::PhysicsShape::Type::Sphere;
-    ps.radius = 0.2f;
+    ps.radius = 0.1f;
+    ps.position.z = 0.4f;
     phys.addShape(ps);
 
     ps.type = cro::PhysicsShape::Type::Capsule;
-    ps.position.z = 0.5f;
+    ps.length = 0.1f;
+    ps.position.z = 0.14f;
     ps.orientation = cro::PhysicsShape::Orientation::Z;
-    ps.length = 0.5f;
     phys.addShape(ps);
-    phys.setCollisionGroups(1);
-    phys.setCollisionFlags(2);
-
-
-    //temp
-    cro::PhysicsShape buns;
-    buns.type = cro::PhysicsShape::Type::Box;
-    buns.extent = glm::vec3(0.5f);
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 1.f, 0.5f, 0.f });
-    entity.addComponent<cro::PhysicsObject>().addShape(buns);
-    entity.getComponent<cro::PhysicsObject>().setCollisionGroups(2);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(1);
 
     //3D camera
     auto ent = m_scene.createEntity();
