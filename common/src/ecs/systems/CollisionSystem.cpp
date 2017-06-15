@@ -48,8 +48,24 @@ using namespace cro;
 
 namespace
 {
-    btScalar worldSize = 500.f; //TODO make this a variable
-    const std::size_t maxObjects = 10000;
+    //struct MyCallback : public btOverlapFilterCallback
+    //{
+    //    bool needBroadphaseCollision(btBroadphaseProxy* a, btBroadphaseProxy* b) const override
+    //    {
+    //        //bool collides = (a->m_collisionFilterGroup & b->m_collisionFilterMask) != 0;           
+    //        //return collides;
+    //        return true;
+    //    }
+    //};
+    //MyCallback callback;
+
+    //void customNearCallback(btBroadphasePair& pair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& info)
+    //{
+    //    if ((pair.m_pProxy0->m_collisionFilterGroup & pair.m_pProxy1->m_collisionFilterMask) != 0)
+    //    {
+    //        dispatcher.defaultNearCallback(pair, dispatcher, info);
+    //    }
+    //}
 }
 
 template<>
@@ -108,13 +124,12 @@ CollisionSystem::CollisionSystem(cro::MessageBus&mb)
 {
     m_collisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
     m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfiguration.get());
+    //m_collisionDispatcher->setNearCallback(customNearCallback);
 
-    btVector3 worldMin(-worldSize, -worldSize, -worldSize);
-    btVector3 worldMax(worldSize, worldSize, worldSize);
-
-    //TODO inspect types of broadphase and decide which is best
-    m_broadphaseInterface = std::make_unique<bt32BitAxisSweep3>(worldMin, worldMax, maxObjects, nullptr, true);
+    m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
+
+    //m_collisionWorld->getPairCache()->setOverlapFilterCallback(&callback);
 
     m_collisionWorld->setDebugDrawer(&m_debugDrawer);
 
@@ -292,7 +307,7 @@ void CollisionSystem::onEntityAdded(cro::Entity entity)
     auto& po = entity.getComponent<PhysicsObject>();
     auto idx = entity.getIndex();
 
-    m_collisionData[idx].object = std::make_unique<btGhostObject>();
+    m_collisionData[idx].object = std::make_unique<btPairCachingGhostObject>();
 
     //if more than one shape create compound shape, else single shape
     if (po.m_shapeCount > 1)
@@ -329,14 +344,14 @@ void CollisionSystem::onEntityAdded(cro::Entity entity)
     m_collisionData[idx].object->setUserPointer(static_cast<void*>(&po));
     m_collisionWorld->addCollisionObject(m_collisionData[idx].object.get(), po.m_collisionGroups, po.m_collisionFlags);
 
-    if (m_collisionData[idx].object->isStaticObject())
-    {
-        Logger::log("Added static object", Logger::Type::Info);
-    }
-    else if (m_collisionData[idx].object->isKinematicObject())
-    {
-        Logger::log("Added kinematic object", Logger::Type::Info);
-    }
+    //if (m_collisionData[idx].object->isStaticObject())
+    //{
+    //    Logger::log("Added static object: " + std::to_string(po.m_collisionGroups) + ", " + std::to_string(po.m_collisionFlags), Logger::Type::Info);
+    //}
+    //else if (m_collisionData[idx].object->isKinematicObject())
+    //{
+    //    Logger::log("Added kinematic object", Logger::Type::Info);
+    //}
 }
 
 void CollisionSystem::onEntityRemoved(cro::Entity entity)

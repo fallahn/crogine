@@ -262,6 +262,9 @@ void App::handleEvents()
     cro::Event evt;
     while (m_window.pollEvent(evt))
     {
+        bool eventConsumed = false;
+        IMGUI_EVENTS(evt);
+
         switch (evt.type)
         {
         default: break;
@@ -321,7 +324,7 @@ void App::handleEvents()
             break;
         }
 
-        IMGUI_EVENTS(evt) handleEvent(evt);
+        if(!eventConsumed) handleEvent(evt);
     }
 }
 

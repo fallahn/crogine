@@ -174,7 +174,7 @@ bool ImGui_ImplSdlGL3_ProcessEvent(const SDL_Event& event)
             return true;
         }
     }
-    return (io.WantCaptureKeyboard || io.WantCaptureMouse);
+    return (/*io.WantCaptureKeyboard || */io.WantCaptureMouse);
 }
 
 void ImGui_ImplSdlGL3_CreateFontsTexture()

@@ -200,6 +200,19 @@ void GameState::createScene()
     ps.orientation = cro::PhysicsShape::Orientation::Z;
     ps.length = 0.5f;
     phys.addShape(ps);
+    phys.setCollisionGroups(1);
+    phys.setCollisionFlags(2);
+
+
+    //temp
+    cro::PhysicsShape buns;
+    buns.type = cro::PhysicsShape::Type::Box;
+    buns.extent = glm::vec3(0.5f);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 1.f, 0.5f, 0.f });
+    entity.addComponent<cro::PhysicsObject>().addShape(buns);
+    entity.getComponent<cro::PhysicsObject>().setCollisionGroups(2);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(1);
 
     //3D camera
     auto ent = m_scene.createEntity();
