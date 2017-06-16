@@ -45,6 +45,7 @@ source distribution.
 #include "ItemsDirector.hpp"
 #include "NPCSystem.hpp"
 #include "NpcDirector.hpp"
+#include "PlayerSystem.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -86,7 +87,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         loadAssets();
         createScene();
     });
-    context.appInstance.setClearColour(cro::Colour::White());
+    //context.appInstance.setClearColour(cro::Colour::White());
     //context.mainWindow.setVsyncEnabled(false);
 
     updateView();
@@ -147,6 +148,7 @@ void GameState::addSystems()
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<ItemSystem>(mb);
     m_scene.addSystem<NpcSystem>(mb);
+    m_scene.addSystem<PlayerSystem>(mb);
     m_scene.addSystem<cro::SceneGraph>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
@@ -240,6 +242,8 @@ void GameState::createScene()
     entity.addComponent<BackgroundComponent>();
 
     //terrain chunks
+    cro::PhysicsShape boundsShape;
+    boundsShape.type = cro::PhysicsShape::Type::Box;
     entity = m_scene.createEntity();
     auto& chunkTxA = entity.addComponent<cro::Transform>();
     chunkTxA.setPosition({ 0.f, 0.f, -8.8f });
@@ -256,6 +260,17 @@ void GameState::createScene()
     entity.addComponent<TerrainChunk>();
 
     auto chunkEntityB = entity;
+
+    //left/right bounds
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -9.3f });
+    entity.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Bounds);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+    boundsShape.extent = { 0.25f, 4.f, 0.5f };
+    boundsShape.position.x = -5.25f;
+    entity.getComponent<cro::PhysicsObject>().addShape(boundsShape);
+    boundsShape.position.x = 5.25f;
+    entity.getComponent<cro::PhysicsObject>().addShape(boundsShape);
 
     //some rockfall parts
     glm::vec3 rockscale(0.6f, 1.2f, 1.f);
@@ -281,7 +296,7 @@ void GameState::createScene()
     //player ship
     entity = m_scene.createEntity();
     auto& playerTx = entity.addComponent<cro::Transform>();
-    playerTx.setPosition({ -3.4f, 0.f, -9.3f });
+    playerTx.setPosition({ -35.4f, 0.f, -9.3f });
     playerTx.setScale({ 0.5f, 0.5f, 0.5f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::Player].materialIDs[0]));
@@ -291,7 +306,8 @@ void GameState::createScene()
     ps.extent = (bb[1] - bb[0]) * playerTx.getScale() / 2.f;
     entity.addComponent<cro::PhysicsObject>().addShape(ps);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Player);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Collectable | CollisionID::Environment | CollisionID::NPC);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Collectable | CollisionID::Environment | CollisionID::NPC | CollisionID::Bounds);
+    entity.addComponent<PlayerInfo>();
 
     //collectables
     static const glm::vec3 coinScale(0.15f);

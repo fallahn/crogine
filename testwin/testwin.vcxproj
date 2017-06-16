@@ -305,6 +305,7 @@
     <ClCompile Include="src\NpcDirector.cpp" />
     <ClCompile Include="src\NpcSystem.cpp" />
     <ClCompile Include="src\PlayerDirector.cpp" />
+    <ClCompile Include="src\PlayerSystem.cpp" />
     <ClCompile Include="src\PostRadial.cpp" />
     <ClCompile Include="src\RandomTranslation.cpp" />
     <ClCompile Include="src\RockFallSystem.cpp" />
@@ -330,6 +331,7 @@
     <ClInclude Include="src\NpcDirector.hpp" />
     <ClInclude Include="src\NPCSystem.hpp" />
     <ClInclude Include="src\PlayerDirector.hpp" />
+    <ClInclude Include="src\PlayerSystem.hpp" />
     <ClInclude Include="src\PostRadial.hpp" />
     <ClInclude Include="src\RandomTranslation.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />

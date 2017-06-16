@@ -191,22 +191,49 @@ void CollisionSystem::process(cro::Time dt)
         auto body1 = manifold->getBody1();
 
         //update the phys objects with collision data
-        PhysicsObject* po = static_cast<PhysicsObject*>(body0->getUserPointer());
-        if (po->m_collisionCount < PhysicsObject::MaxCollisions)
+        PhysicsObject* po0 = static_cast<PhysicsObject*>(body0->getUserPointer());
+        if (po0->m_collisionCount < PhysicsObject::MaxCollisions)
         {
-            po->m_collisionIDs[po->m_collisionCount++] = body1->getUserIndex();
+            po0->m_collisionIDs[po0->m_collisionCount] = body1->getUserIndex();
         }
 
-        po = static_cast<PhysicsObject*>(body1->getUserPointer());
-        if (po->m_collisionCount < PhysicsObject::MaxCollisions)
+        PhysicsObject* po1 = static_cast<PhysicsObject*>(body1->getUserPointer());
+        if (po1->m_collisionCount < PhysicsObject::MaxCollisions)
         {
-            po->m_collisionIDs[po->m_collisionCount++] = body0->getUserIndex();
+            po1->m_collisionIDs[po1->m_collisionCount] = body0->getUserIndex();
         }
 
-        //performs a narrow phase pass
-        /*manifold->refreshContactPoints(body0->getWorldTransform(), body1->getWorldTransform());
+        //performs a narrow phase pass - TODO make this optional if it is
+        //a bottle neck on mobile platforms for example
+        manifold->refreshContactPoints(body0->getWorldTransform(), body1->getWorldTransform());
+        auto& manifold0 = po0->m_manifolds[po0->m_collisionCount];
+        auto& manifold1 = po1->m_manifolds[po1->m_collisionCount];
+        
         auto contactCount = manifold->getNumContacts();
-        int l = 0;*/
+        for (auto j = 0; j < contactCount; ++j)
+        {
+            const auto& maniPoint = manifold->getContactPoint(j);
+            manifold0.points[j].distance = maniPoint.getDistance();
+            manifold1.points[j].distance = manifold0.points[j].distance;
+
+            auto pointPosA = maniPoint.getPositionWorldOnA();
+            manifold0.points[j].worldPointA.x = pointPosA.x();
+            manifold0.points[j].worldPointA.y = pointPosA.y();
+            manifold0.points[j].worldPointA.z = pointPosA.z();
+            manifold1.points[j].worldPointA = manifold0.points[j].worldPointA;
+
+            auto pointPosB = maniPoint.getPositionWorldOnB();
+            manifold0.points[j].worldPointB.x = pointPosB.x();
+            manifold0.points[j].worldPointB.y = pointPosB.y();
+            manifold0.points[j].worldPointB.z = pointPosB.z();
+            manifold1.points[j].worldPointB = manifold0.points[j].worldPointB;
+        }
+
+        manifold0.pointCount = contactCount;
+        manifold1.pointCount = contactCount;
+
+        po0->m_collisionCount++;
+        po1->m_collisionCount++;
     }
     DPRINT("Collision count", std::to_string(manifoldCount));
 

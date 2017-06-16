@@ -338,6 +338,7 @@
     <ClCompile Include="..\testwin\src\NpcDirector.cpp" />
     <ClCompile Include="..\testwin\src\NpcSystem.cpp" />
     <ClCompile Include="..\testwin\src\PlayerDirector.cpp" />
+    <ClCompile Include="..\testwin\src\PlayerSystem.cpp" />
     <ClCompile Include="..\testwin\src\PostRadial.cpp" />
     <ClCompile Include="..\testwin\src\RandomTranslation.cpp" />
     <ClCompile Include="..\testwin\src\RockFallSystem.cpp" />

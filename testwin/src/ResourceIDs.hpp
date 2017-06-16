@@ -130,7 +130,9 @@ namespace CollisionID
         Player = 1,
         NPC = 2,
         Collectable = 4,
-        Environment = 8
+        Environment = 8,
+        Bounds = 16,
+        PlayerLaser = 32
     };
 }
 
