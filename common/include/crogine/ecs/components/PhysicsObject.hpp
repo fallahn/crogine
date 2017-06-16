@@ -154,6 +154,11 @@ namespace cro
         void setCollisionFlags(int32 flags) { m_collisionFlags = flags; }
 
         /*!
+        \brief Returns the collision group mask for this component
+        */
+        int32 getCollisionGroups() const { return m_collisionGroups; }
+
+        /*!
         \brief Returns the number of objects colliding with this one.
         Check this first before attempting to read getCollisionIDs();
         */
@@ -165,7 +170,29 @@ namespace cro
         Use getCollisionCount() to first check the number of collisions
         before attempting to read the array, as old data may exist.
         */
-        const std::array<Entity::ID, 100>& getCollisionIDs() const { return m_collisionIDs; }
+        const std::array<Entity::ID, 100u>& getCollisionIDs() const { return m_collisionIDs; }
+
+        //up to 4 points which make the overlapping area
+        //of a collision manifold
+        struct ManifoldPoint final
+        {
+            glm::vec3 worldPointA;
+            glm::vec3 worldPointB;
+            float distance = 0.f;
+        };
+
+        struct Manifold final
+        {
+            std::size_t pointCount = 0;
+            std::array<ManifoldPoint, 4u> points;
+        };
+
+        /*!
+        \brief Returns a reference to the collision manifold array.
+        As with collision IDs the size of this should be first checked
+        with getCollisionCount to avoid reading inaccurate data.
+        */
+        const std::array<Manifold, 100u>& getManifolds() const { return m_manifolds; }
 
     private:
         float m_mass;
@@ -174,11 +201,12 @@ namespace cro
         int32 m_collisionGroups;
         int32 m_collisionFlags;
 
-        std::array<PhysicsShape, 10> m_shapes;
+        std::array<PhysicsShape, 10u> m_shapes;
         std::size_t m_shapeCount;
 
         static constexpr std::size_t MaxCollisions = 100;
         std::array<Entity::ID, MaxCollisions> m_collisionIDs;
+        std::array<Manifold, MaxCollisions> m_manifolds;
         std::size_t m_collisionCount;
         
         friend class CollisionSystem;

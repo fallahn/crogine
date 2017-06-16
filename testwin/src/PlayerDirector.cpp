@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "PlayerDirector.hpp"
+#include "PlayerSystem.hpp"
 #include "ResourceIDs.hpp"
 #include "VelocitySystem.hpp"
 #include "Messages.hpp"
@@ -241,6 +242,8 @@ void PlayerDirector::process(cro::Time)
         cmd.targetFlags = CommandID::Player;
         cmd.action = [=](cro::Entity entity, cro::Time dt)
         {
+            if (entity.getComponent<PlayerInfo>().state != PlayerInfo::State::Alive) return;
+
             static const float updateTime = 1.f / 60.f;
             static float accumulator = 0.f;
 
@@ -268,6 +271,8 @@ void PlayerDirector::process(cro::Time)
         cmd.targetFlags = CommandID::Player;
         cmd.action = [this](cro::Entity entity, cro::Time dt)
         {
+            if (entity.getComponent<PlayerInfo>().state != PlayerInfo::State::Alive) return;
+
             glm::vec3 acceleration;
             float rotation = 0.f;
             const float dtSec = dt.asSeconds();
@@ -322,6 +327,8 @@ void PlayerDirector::process(cro::Time)
         cmd.targetFlags = CommandID::Player;
         cmd.action = [&](cro::Entity entity, cro::Time dt)
         {
+            if (entity.getComponent<PlayerInfo>().state != PlayerInfo::State::Alive) return;
+
             auto& tx = entity.getComponent<cro::Transform>();
             glm::vec3 movement(m_touchVector.x, m_touchVector.y, 0.f);
 
