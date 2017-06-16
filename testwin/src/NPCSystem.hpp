@@ -52,7 +52,7 @@ struct ChoppaNavigator final
     bool inCombat = true;
     glm::vec3 deathVelocity;
     cro::uint8 ident = 0;
-    static const float choppaSpacing;
+    static constexpr float spacing = 1.8f;
 };
 
 struct SpeedrayNavigator final
@@ -60,7 +60,18 @@ struct SpeedrayNavigator final
     std::size_t tableIndex = 0;
     float moveSpeed = -5.f;
     cro::uint8 ident = 0;
-    static const std::size_t speedrayCount;
+    static constexpr std::size_t count = 5;
+};
+
+struct WeaverNavigator final
+{
+    std::size_t tableIndex = 0;
+    std::size_t tableStartIndex = 0;
+    float moveSpeed = -3.f;
+    float yPos = 0.5f;
+    cro::uint8 ident = 0;
+    static constexpr float spacing = 0.16f;
+    static constexpr std::size_t count = 9;
 };
 
 struct Npc final
@@ -70,7 +81,8 @@ struct Npc final
         Elite,
         Choppa,
         Turret,
-        Speedray
+        Speedray,
+        Weaver
     }type;
 
     bool active = false;
@@ -80,6 +92,7 @@ struct Npc final
     EliteNavigator elite;
     ChoppaNavigator choppa;
     SpeedrayNavigator speedray;
+    WeaverNavigator weaver;
 };
 
 class NpcSystem final : public cro::System
@@ -99,11 +112,13 @@ private:
     std::vector<glm::vec3> m_eliteIdlePositions;
     std::vector<float> m_choppaTable;
     std::vector<float> m_speedrayTable;
+    std::vector<float> m_weaverTable;
 
     void processElite(cro::Entity);
     void processChoppa(cro::Entity);
     void processTurret(cro::Entity);
     void processSpeedray(cro::Entity);
+    void processWeaver(cro::Entity);
 
     void onEntityAdded(cro::Entity) override;
 };

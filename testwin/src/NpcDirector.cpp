@@ -40,14 +40,16 @@ source distribution.
 namespace
 {
     const float eliteSpawnTime = 24.f;
-const float choppaSpawnTime = 9.f;
-const float zDepth = -9.3f; //bums, this is replicated from NpcSystem.cpp
+    const float choppaSpawnTime = 9.f;
+    const float zDepth = -9.3f; //bums, this is replicated from NpcSystem.cpp
+    const float weaverSpawnTime = 5.f;
 }
 
 NpcDirector::NpcDirector()
     : m_eliteRespawn(eliteSpawnTime / 4.f),
     m_choppaRespawn(choppaSpawnTime / 2.f),
-    m_speedrayRespawn(choppaSpawnTime)
+    m_speedrayRespawn(choppaSpawnTime),
+    m_weaverRespawn(1.f)
 {
 
 }
@@ -132,7 +134,7 @@ void NpcDirector::process(cro::Time dt)
 
                 //reset position
                 auto& tx = entity.getComponent<cro::Transform>();
-                tx.setPosition({ 7.f, -ChoppaNavigator::choppaSpacing + (status.choppa.ident * ChoppaNavigator::choppaSpacing), zDepth });
+                tx.setPosition({ 7.f, -ChoppaNavigator::spacing + (status.choppa.ident * ChoppaNavigator::spacing), zDepth });
             }
         };
         sendCommand(cmd);
@@ -157,5 +159,29 @@ void NpcDirector::process(cro::Time dt)
         sendCommand(cmd);
 
         m_speedrayRespawn = choppaSpawnTime;
+    }
+
+    m_weaverRespawn -= dtSec;
+    if (m_weaverRespawn < 0)
+    {
+        m_weaverRespawn = weaverSpawnTime;
+        auto yPos = cro::Util::Random::value(-1.2f, 1.2f);
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Weaver;
+        cmd.action = [yPos](cro::Entity entity, cro::Time) 
+        {
+            auto& status = entity.getComponent<Npc>();
+            if (!status.active)
+            {
+                status.active = true;
+                status.weaver.yPos = yPos;
+                status.weaver.tableIndex = status.weaver.tableStartIndex;
+
+                auto& tx = entity.getComponent<cro::Transform>();
+                tx.setPosition({ 7.f + (static_cast<float>(status.weaver.ident) * (WeaverNavigator::spacing * tx.getScale().x)), status.weaver.yPos, zDepth });
+            }
+        };
+        sendCommand(cmd);
     }
 }

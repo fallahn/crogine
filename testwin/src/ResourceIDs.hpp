@@ -84,6 +84,7 @@ namespace GameModelID
         TurretBase, TurretCannon,
         Choppa,
         Speedray,
+        Weaver,
         Count
     };
 }
@@ -126,10 +127,10 @@ namespace CollisionID
 {
     enum
     {
-        Player = 64,
-        NPC = 128,
-        Collectable = 256,
-        Environment = 512
+        Player = 1,
+        NPC = 2,
+        Collectable = 4,
+        Environment = 8
     };
 }
 

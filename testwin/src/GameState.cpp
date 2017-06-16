@@ -200,6 +200,7 @@ void GameState::loadAssets()
     m_modelDefs[GameModelID::TurretCannon].loadFromFile("assets/models/turret_cannon.cmt", m_resources);
     m_modelDefs[GameModelID::Choppa].loadFromFile("assets/models/choppa.cmt", m_resources);
     m_modelDefs[GameModelID::Speedray].loadFromFile("assets/models/speed.cmt", m_resources);
+    m_modelDefs[GameModelID::Weaver].loadFromFile("assets/models/weaver.cmt", m_resources);
 
 
     auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
@@ -367,7 +368,8 @@ void GameState::createScene()
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
 
 
-    //NPCs
+    //----NPCs----//
+    //elite
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.9f, 1.5f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(glm::vec3(0.8f));
@@ -381,7 +383,8 @@ void GameState::createScene()
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
     
-    const float choppaSpacing = ChoppaNavigator::choppaSpacing;
+    //choppa
+    const float choppaSpacing = ChoppaNavigator::spacing;
     glm::vec3 choppaScale(0.8f);
     bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].meshID).boundingBox;
     ps.extent = (bb[1] - bb[0]) * choppaScale / 2.f;
@@ -404,11 +407,12 @@ void GameState::createScene()
         entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
     }
 
+    //speedray
     bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Speedray].meshID).boundingBox;
     ps.extent = (bb[1] - bb[0]) / 2.f;
-    for (auto i = 0u; i < SpeedrayNavigator::speedrayCount; ++i)
+    for (auto i = 0u; i < SpeedrayNavigator::count; ++i)
     {
-        const float rotateOffset = (cro::Util::Const::PI / SpeedrayNavigator::speedrayCount) * i;
+        const float rotateOffset = (cro::Util::Const::PI / SpeedrayNavigator::count) * i;
         
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 6.f, 0.f, -9.3f });
@@ -456,6 +460,28 @@ void GameState::createScene()
                                     m_resources.materials.get(m_modelDefs[GameModelID::TurretCannon].materialIDs[0]));
     canEnt.addComponent<Npc>().type = Npc::Turret;
 
+
+    //weaver
+    glm::vec3 weaverScale(1.f);
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Weaver].meshID).boundingBox;
+    for (auto i = 0u; i < WeaverNavigator::count; ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ (static_cast<float>(i) * (WeaverNavigator::spacing * weaverScale.x)) + 10.f, 0.f, -9.3f });
+        entity.getComponent<cro::Transform>().setScale(weaverScale);
+        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Weaver].meshID),
+            m_resources.materials.get(m_modelDefs[GameModelID::Weaver].materialIDs[0]));
+        entity.addComponent<Npc>().type = Npc::Weaver;
+        entity.getComponent<Npc>().weaver.ident = WeaverNavigator::count - i;
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::Weaver;
+
+        ps.extent = ((bb[1] - bb[0]) / 2.f) * weaverScale;
+        entity.addComponent<cro::PhysicsObject>().addShape(ps);
+        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+
+        weaverScale *= 0.93f;
+    }
 
     //particle systems
     entity = m_scene.createEntity();
