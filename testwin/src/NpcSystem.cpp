@@ -45,8 +45,7 @@ namespace
     const float zDepth = -9.3f;
     const glm::vec3 gravity(0.f, -9.f, 0.f);
 }
-const float ChoppaNavigator::choppaSpacing = 1.8f;
-const std::size_t SpeedrayNavigator::speedrayCount = 5;
+
 
 NpcSystem::NpcSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(NpcSystem)),
@@ -69,8 +68,8 @@ NpcSystem::NpcSystem(cro::MessageBus& mb)
     }
 
     m_choppaTable = cro::Util::Wavetable::sine(1.f, 0.4f);
-
     m_speedrayTable = cro::Util::Wavetable::sine(0.5f, 1.6f);
+    m_weaverTable = cro::Util::Wavetable::sine(1.62f, 0.2f);
 }
 
 //public
@@ -122,6 +121,9 @@ void NpcSystem::process(cro::Time dt)
                     continue; //turrets are parented to terrain entities - so don't need following update
                 case Npc::Speedray:
                     processSpeedray(entity);
+                    break;
+                case Npc::Weaver:
+                    processWeaver(entity);
                     break;
                 }  
 
@@ -242,6 +244,17 @@ void NpcSystem::processSpeedray(cro::Entity entity)
     tx.move({ status.speedray.moveSpeed * fixedUpdate, 0.f, 0.f });
 }
 
+void NpcSystem::processWeaver(cro::Entity entity)
+{
+    auto& status = entity.getComponent<Npc>();
+    auto& tx = entity.getComponent<cro::Transform>();
+    tx.setPosition({ tx.getPosition().x, (m_weaverTable[status.weaver.tableIndex]* (1.f / tx.getScale().x)) + status.weaver.yPos, zDepth });
+
+    status.weaver.tableIndex = (status.weaver.tableIndex + 1) % m_weaverTable.size();
+
+    tx.move({ status.weaver.moveSpeed * fixedUpdate, 0.f, 0.f });
+}
+
 void NpcSystem::onEntityAdded(cro::Entity entity)
 {
 
@@ -265,8 +278,12 @@ void NpcSystem::onEntityAdded(cro::Entity entity)
         status.active = true;
         break;
     case Npc::Speedray:
-        status.speedray.tableIndex = (m_speedrayTable.size() / SpeedrayNavigator::speedrayCount) * status.speedray.ident;
+        status.speedray.tableIndex = (m_speedrayTable.size() / SpeedrayNavigator::count) * status.speedray.ident;
         status.speedray.tableIndex %= m_speedrayTable.size();
+        break;
+    case Npc::Weaver:
+        status.weaver.tableStartIndex = 10 + (m_weaverTable.size() / WeaverNavigator::count) * status.weaver.ident;
+        status.weaver.tableStartIndex %= m_weaverTable.size();
         break;
     }
 }

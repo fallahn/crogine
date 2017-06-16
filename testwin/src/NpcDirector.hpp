@@ -41,6 +41,7 @@ private:
     float m_eliteRespawn;
     float m_choppaRespawn;
     float m_speedrayRespawn;
+    float m_weaverRespawn;
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
