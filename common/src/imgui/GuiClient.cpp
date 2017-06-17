@@ -3,7 +3,7 @@
 Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,46 +27,24 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_BACKGROUND_SYSTEM_HPP_
-#define TL_BACKGROUND_SYSTEM_HPP_
-
-#include <crogine/ecs/System.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/core/App.hpp>
 
-#include <glm/vec2.hpp>
+using namespace cro;
 
-struct BackgroundComponent final
+GuiClient::~GuiClient()
 {
-    cro::uint32 shaderID = 0;
-    cro::uint32 uniformLocation = 0;
-};
+    App::removeStatusControls(this);
+    App::removeWindows(this);
+}
 
-class BackgroundSystem final : public cro::System, public cro::GuiClient
+//public
+void GuiClient::registerStatusControls(const std::function<void()>& f)
 {
-public:
-    enum class Mode
-    {
-        Scroll, Shake
-    };
+    App::addStatusControl(f, this);
+}
 
-    explicit BackgroundSystem(cro::MessageBus&);
-
-    void handleMessage(const cro::Message&) override;
-    void process(cro::Time) override;
-
-private:
-    glm::vec2 m_offset;
-    float m_speed;
-    float m_currentSpeed;
-    Mode m_currentMode;
-    std::size_t m_currentIndex;
-    float m_colourAngle;
-    float m_currentColourAngle;
-
-    void setScrollSpeed(float);
-    void setColourAngle(float);
-
-    void setMode(Mode);
-};
-
-#endif //TL_BACKGROUND_SYSTEM_HPP_
+void GuiClient::registerWindow(const std::function<void()>& f)
+{
+    App::addWindow(f, this);
+}

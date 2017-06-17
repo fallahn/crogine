@@ -138,7 +138,7 @@ CollisionSystem::CollisionSystem(cro::MessageBus&mb)
 
     //registers a control to toggle debug output
     //in the status window if it's active
-    App::registerStatusOutput([&]()
+    registerStatusControls([&]()
     {
         static bool showDebug = false;
         bool status = showDebug;

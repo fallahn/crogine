@@ -261,5 +261,8 @@
     <ClCompile Include="..\common\src\imgui\Gui.cpp">
       <Filter>src\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\imgui\GuiClient.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

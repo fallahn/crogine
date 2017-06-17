@@ -298,6 +298,7 @@
     <ClCompile Include="..\common\src\graphics\Texture.cpp" />
     <ClCompile Include="..\common\src\graphics\TextureResource.cpp" />
     <ClCompile Include="..\common\src\imgui\Gui.cpp" />
+    <ClCompile Include="..\common\src\imgui\GuiClient.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_draw.cpp" />
