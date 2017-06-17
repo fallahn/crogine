@@ -202,7 +202,8 @@ void GameState::loadAssets()
     m_modelDefs[GameModelID::TurretCannon].loadFromFile("assets/models/turret_cannon.cmt", m_resources);
     m_modelDefs[GameModelID::Choppa].loadFromFile("assets/models/choppa.cmt", m_resources);
     m_modelDefs[GameModelID::Speedray].loadFromFile("assets/models/speed.cmt", m_resources);
-    m_modelDefs[GameModelID::Weaver].loadFromFile("assets/models/weaver.cmt", m_resources);
+    m_modelDefs[GameModelID::WeaverHead].loadFromFile("assets/models/weaver_head.cmt", m_resources);
+    m_modelDefs[GameModelID::WeaverBody].loadFromFile("assets/models/weaver_body.cmt", m_resources);
 
 
     auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
@@ -478,25 +479,32 @@ void GameState::createScene()
 
 
     //weaver
-    glm::vec3 weaverScale(1.f);
-    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Weaver].meshID).boundingBox;
+    glm::vec3 weaverScale(0.5f);
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::WeaverBody].meshID).boundingBox;
     for (auto i = 0u; i < WeaverNavigator::count; ++i)
     {
+        cro::int32 modelID = (i == 0) ? GameModelID::WeaverHead : GameModelID::WeaverBody;
+        
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ (static_cast<float>(i) * (WeaverNavigator::spacing * weaverScale.x)) + 10.f, 0.f, -9.3f });
         entity.getComponent<cro::Transform>().setScale(weaverScale);
-        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Weaver].meshID),
-            m_resources.materials.get(m_modelDefs[GameModelID::Weaver].materialIDs[0]));
+        entity.getComponent<cro::Transform>().rotate({ 1.f, 0.f, 0.f }, static_cast<float>(i) * 0.3f);
+        entity.getComponent<cro::Transform>().rotate({ 0.f, 1.f, 0.f }, cro::Util::Const::PI / 2.f);
+        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[modelID].meshID),
+                                        m_resources.materials.get(m_modelDefs[modelID].materialIDs[0]));
         entity.addComponent<Npc>().type = Npc::Weaver;
         entity.getComponent<Npc>().weaver.ident = WeaverNavigator::count - i;
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Weaver;
+        auto& rot = entity.addComponent<Rotator>();
+        rot.axis.z = 1.f;
+        rot.speed = 2.f;
 
         ps.extent = ((bb[1] - bb[0]) / 2.f) * weaverScale;
         entity.addComponent<cro::PhysicsObject>().addShape(ps);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
         entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
 
-        weaverScale *= 0.93f;
+        weaverScale *= 0.92f;
     }
 
     //particle systems

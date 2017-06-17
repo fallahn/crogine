@@ -42,7 +42,7 @@ namespace
     const float eliteSpawnTime = 24.f;
     const float choppaSpawnTime = 9.f;
     const float zDepth = -9.3f; //bums, this is replicated from NpcSystem.cpp
-    const float weaverSpawnTime = 5.f;
+    const float weaverSpawnTime = 6.f;
 }
 
 NpcDirector::NpcDirector()

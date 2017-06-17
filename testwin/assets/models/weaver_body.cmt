@@ -1,0 +1,12 @@
+model Weaver_body
+{
+	mesh = "assets/models/weaver_body.cmf"
+
+	material VertexLit
+	{
+		diffuse = "assets/materials/weaver_body_diffuse.png"
+		mask = "assets/materials/weaver_body_mask.png"
+		rim = 0.9,0.87,0.7,1.0
+		rim_falloff = 0.4
+	}
+}

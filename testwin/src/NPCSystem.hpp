@@ -67,11 +67,11 @@ struct WeaverNavigator final
 {
     std::size_t tableIndex = 0;
     std::size_t tableStartIndex = 0;
-    float moveSpeed = -3.f;
+    float moveSpeed = -2.7f;
     float yPos = 0.5f;
     cro::uint8 ident = 0;
-    static constexpr float spacing = 0.16f;
-    static constexpr std::size_t count = 9;
+    static constexpr float spacing = 0.56f;
+    static constexpr std::size_t count = 7;
 };
 
 struct Npc final
