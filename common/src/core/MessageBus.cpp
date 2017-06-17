@@ -39,13 +39,13 @@ namespace
 }
 
 MessageBus::MessageBus()
-    : m_currentBuffer(bufferSize),
-    m_pendingBuffer(bufferSize),
-    m_inPointer(m_pendingBuffer.data()),
-    m_outPointer(m_currentBuffer.data()),
-    m_currentCount(0),
-    m_pendingCount(0),
-    m_enabled(true)
+    : m_currentBuffer   (bufferSize),
+    m_pendingBuffer     (bufferSize),
+    m_inPointer         (m_pendingBuffer.data()),
+    m_outPointer        (m_currentBuffer.data()),
+    m_currentCount      (0),
+    m_pendingCount      (0),
+    m_enabled           (true)
 {}
 
 const Message& MessageBus::poll()

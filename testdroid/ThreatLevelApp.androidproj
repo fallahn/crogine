@@ -342,6 +342,7 @@
     <Content Include="assets\assets\models\turret_base.cmt" />
     <Content Include="assets\assets\models\turret_cannon.cmf" />
     <Content Include="assets\assets\models\turret_cannon.cmt" />
+    <Content Include="assets\assets\models\weaver.cmt" />
     <Content Include="assets\assets\particles\rock_fragment.png" />
     <Content Include="assets\assets\particles\snowflake.png" />
     <Content Include="assets\assets\sprites\loading.png" />

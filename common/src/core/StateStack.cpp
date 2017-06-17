@@ -84,7 +84,8 @@ void StateStack::render()
 
 void StateStack::pushState(StateID id)
 {
-	if (empty() || m_stack.back()->getStateID() != id)
+	if ((empty() || m_stack.back()->getStateID() != id)
+        && !changeExists(Action::Push, id))
 	{
 		m_pendingChanges.emplace_back(Action::Push, id, false);
 	}
@@ -97,7 +98,8 @@ void StateStack::popState()
 
 void StateStack::clearStates()
 {
-	m_pendingChanges.emplace_back(Action::Clear);
+    if (changeExists(Action::Clear)) return;
+    m_pendingChanges.emplace_back(Action::Clear);
 }
 
 bool StateStack::empty() const
@@ -111,6 +113,15 @@ std::size_t StateStack::getStackSize() const
 }
 
 //private
+bool StateStack::changeExists(Action action, int32 id)
+{
+    return std::find_if(m_pendingChanges.begin(), m_pendingChanges.end(),
+        [action, id](const PendingChange& pc)
+    {
+        return (id == pc.id && action == pc.action);
+    }) != m_pendingChanges.end();
+}
+
 State::Ptr StateStack::createState(StateID id)
 {
 	CRO_ASSERT(m_factories.count(id) != 0, "State not registered with statestack");
