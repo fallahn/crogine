@@ -156,6 +156,8 @@ namespace cro
 		State::Context m_context;
 		std::map<StateID, std::function<State::Ptr()>> m_factories;
 		
+        bool changeExists(Action, int32 = -1);
+
 		State::Ptr createState(StateID);
 		void applyPendingChanges();
 	};

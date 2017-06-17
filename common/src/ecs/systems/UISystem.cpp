@@ -92,6 +92,12 @@ void UISystem::handleEvent(const Event& evt)
             break;
         }
         break;
+        /*
+        NOTE!!!
+        SDL registers both touch AND mouse events for a single touch
+        on Android. Be warned this will execute the same callback twice!!
+        */
+
     case SDL_FINGERMOTION:
         m_eventPosition = toScreenCoords(evt.tfinger.x, evt.tfinger.y);
         //TODO check finger IDs for gestures etc

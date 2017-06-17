@@ -165,7 +165,7 @@ void GameState::createScene()
 {
     //rooms
     static const std::size_t roomCount = 6;
-    glm::vec3 houseScale(0.1f);
+    glm::vec3 houseScale(1.3f);
     const auto& bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::TestRoom].meshID).boundingBox;
     const float stride = ((bb[1].x - bb[0].x) * houseScale.x) - 0.01f;
 
@@ -179,7 +179,7 @@ void GameState::createScene()
             entity.getComponent<cro::Model>().setMaterial(i, m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[i]));
         }
         entity.addComponent<cro::Transform>().scale(houseScale);
-        entity.getComponent<cro::Transform>().setPosition({ i * stride, 0.f, 0.f });
+        entity.getComponent<cro::Transform>().setPosition({ i * stride, 0.6f, -0.5f });
     }
 
     //dat cat man
