@@ -84,7 +84,8 @@ namespace GameModelID
         TurretBase, TurretCannon,
         Choppa,
         Speedray,
-        Weaver,
+        WeaverHead,
+        WeaverBody,
         Count
     };
 }

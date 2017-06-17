@@ -313,6 +313,10 @@
     <Content Include="assets\assets\materials\roid_normal.png" />
     <Content Include="assets\assets\materials\stars.png" />
     <Content Include="assets\assets\materials\sun.png" />
+    <Content Include="assets\assets\materials\weaver_body_diffuse.png" />
+    <Content Include="assets\assets\materials\weaver_body_mask.png" />
+    <Content Include="assets\assets\materials\weaver_head_diffuse.png" />
+    <Content Include="assets\assets\materials\weaver_head_mask.png" />
     <Content Include="assets\assets\models\arctic_outpost.cmf" />
     <Content Include="assets\assets\models\arctic_outpost.cmt" />
     <Content Include="assets\assets\models\choppa.cmt" />
@@ -342,7 +346,10 @@
     <Content Include="assets\assets\models\turret_base.cmt" />
     <Content Include="assets\assets\models\turret_cannon.cmf" />
     <Content Include="assets\assets\models\turret_cannon.cmt" />
-    <Content Include="assets\assets\models\weaver.cmt" />
+    <Content Include="assets\assets\models\weaver_body.cmf" />
+    <Content Include="assets\assets\models\weaver_body.cmt" />
+    <Content Include="assets\assets\models\weaver_head.cmf" />
+    <Content Include="assets\assets\models\weaver_head.cmt" />
     <Content Include="assets\assets\particles\rock_fragment.png" />
     <Content Include="assets\assets\particles\snowflake.png" />
     <Content Include="assets\assets\sprites\loading.png" />
