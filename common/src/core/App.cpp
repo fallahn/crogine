@@ -242,14 +242,6 @@ void App::debugPrint(const std::string& name, const std::string& value)
 #endif
 }
 
-void App::registerStatusOutput(const std::function<void()>& func)
-{
-    CRO_ASSERT(m_instance, "App not properly instanciated!");
-#ifdef USE_IMGUI
-    m_instance->m_statusControls.push_back(func);
-#endif
-}
-
 Window& App::getWindow()
 {
     CRO_ASSERT(m_instance, "No valid app instance");
@@ -353,6 +345,8 @@ void App::doImGui()
     //show other windows (console etc)
     Console::draw();
 
+    for (auto& f : m_guiWindows) f.first();
+
 #ifdef USE_IMGUI
     if (m_showStats)
     {
@@ -381,7 +375,7 @@ void App::doImGui()
         //display any registered controls
         for (const auto& func : m_statusControls)
         {
-            func();
+            func.first();
         }
 
         //print any debug lines       
@@ -397,4 +391,55 @@ void App::doImGui()
 
 #endif //USE_IMGUI
 }
+
+void App::addStatusControl(const std::function<void()>& func, const GuiClient* c)
+{
+    CRO_ASSERT(m_instance, "App not properly instanciated!");
+#ifdef USE_IMGUI
+    m_instance->m_statusControls.push_back(std::make_pair(func, c));
+#endif
+}
+
+void App::removeStatusControls(const GuiClient* c)
+{
+    CRO_ASSERT(m_instance, "App not properly instanciated!");
+
+#ifdef USE_IMGUI
+
+    m_instance->m_statusControls.erase(
+        std::remove_if(std::begin(m_instance->m_statusControls), std::end(m_instance->m_statusControls),
+            [c](const std::pair<std::function<void()>, const GuiClient*>& pair)
+    {
+        return pair.second == c;
+    }), std::end(m_instance->m_statusControls));
+
+#endif //USE_IMGUI
+}
+
+void App::addWindow(const std::function<void()>& func, const GuiClient* c)
+{
+    CRO_ASSERT(m_instance, "App not properly instanciated!");
+#ifdef USE_IMGUI
+    m_instance->m_guiWindows.push_back(std::make_pair(func, c));
+#endif
+}
+
+void App::removeWindows(const GuiClient* c)
+{
+    CRO_ASSERT(m_instance, "App not properly instanciated!");
+
+#ifdef USE_IMGUI
+
+    m_instance->m_guiWindows.erase(
+        std::remove_if(std::begin(m_instance->m_guiWindows), std::end(m_instance->m_guiWindows),
+            [c](const std::pair<std::function<void()>, const GuiClient*>& pair)
+    {
+        return pair.second == c;
+    }), std::end(m_instance->m_guiWindows));
+
+#endif //USE_IMGUI
+}
+
+
+
 //#endif

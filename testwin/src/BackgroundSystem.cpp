@@ -61,7 +61,7 @@ BackgroundSystem::BackgroundSystem(cro::MessageBus& mb)
         t = cro::Util::Random::value(-0.0008f, 0.0008f);
     }
 
-    cro::App::registerStatusOutput([&]()
+    registerStatusControls([&]()
     {
         static bool bossMode = false;
         bool lastMode = bossMode;
