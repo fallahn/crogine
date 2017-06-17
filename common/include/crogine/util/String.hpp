@@ -131,7 +131,7 @@ namespace cro
                         return(path.substr(i + 1, path.length() - i));
                     }
 
-                    return {};
+                    return path;
                 };
 
 
