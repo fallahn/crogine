@@ -51,18 +51,29 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 
+namespace
+{
+    const cro::Colour textColourSelected(1.f, 0.77f, 0.f);
+    const cro::Colour textColourNormal = cro::Colour::White();
+    const cro::FloatRect buttonArea(0.f, 0.f, 240.f, 64.f);
+}
+
 void MainState::createMainMenu()
 {
-    cro::FloatRect buttonArea(0.f, 0.f, 256.f, 64.f);
-    auto mouseEnterCallback = m_uiSystem->addCallback([buttonArea](cro::Entity e, cro::uint64)
+    auto mouseEnterCallback = m_uiSystem->addCallback([&](cro::Entity e, cro::uint64)
     {
         auto area = buttonArea;
-        area.left = buttonArea.width;
+        area.left = buttonArea.width + 16;
         e.getComponent<cro::Sprite>().setTextureRect(area);
+
+        auto textEnt = m_menuScene.getEntity(e.getComponent<cro::Transform>().getChildIDs()[0]);
+        textEnt.getComponent<cro::Text>().setColour(textColourSelected);
     });
-    auto mouseExitCallback = m_uiSystem->addCallback([buttonArea](cro::Entity e, cro::uint64)
+    auto mouseExitCallback = m_uiSystem->addCallback([&](cro::Entity e, cro::uint64)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonArea);
+        auto textEnt = m_menuScene.getEntity(e.getComponent<cro::Transform>().getChildIDs()[0]);
+        textEnt.getComponent<cro::Text>().setColour(textColourNormal);
     });
 
     //create an entity to move the menu
@@ -77,7 +88,7 @@ void MainState::createMainMenu()
     auto entity = m_menuScene.createEntity();
     auto& titleSprite = entity.addComponent<cro::Sprite>();
     titleSprite.setTexture(uiTexture);
-    titleSprite.setTextureRect({ 0.f, 64.f, 1024.f, 320.f });
+    titleSprite.setTextureRect({ 0.f, 65.f, 1024.f, 319.f });
     auto& titleTx = entity.addComponent<cro::Transform>();
     titleTx.setOrigin({ 1024.f, 160.f, 0.f });
     titleTx.setPosition({ 960.f - 274.f, 840.f, -20.f });
@@ -107,7 +118,7 @@ void MainState::createMainMenu()
     auto textEnt = m_menuScene.createEntity();
     auto& gameText = textEnt.addComponent<cro::Text>(testFont);
     gameText.setString("Play");
-    gameText.setColour(cro::Colour::Blue());
+    gameText.setColour(textColourNormal);
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
     gameTextTx.setPosition({ 90.f, 50.f, 0.f });
     gameTextTx.setParent(entity);
@@ -148,7 +159,7 @@ void MainState::createMainMenu()
     textEnt = m_menuScene.createEntity();
     auto& optionText = textEnt.addComponent<cro::Text>(testFont);
     optionText.setString("Options");
-    optionText.setColour(cro::Colour::Magenta());
+    optionText.setColour(textColourNormal);
     auto& texTx = textEnt.addComponent<cro::Transform>();
     texTx.setParent(entity);
     texTx.move({ 64.f, 50.f, 0.f });
@@ -190,7 +201,7 @@ void MainState::createMainMenu()
     textEnt = m_menuScene.createEntity();
     auto& scoreText = textEnt.addComponent<cro::Text>(testFont);
     scoreText.setString("Scores");
-    scoreText.setColour(cro::Colour::Green());
+    scoreText.setColour(textColourNormal);
     auto& scoreTexTx = textEnt.addComponent<cro::Transform>();
     scoreTexTx.setParent(entity);
     scoreTexTx.move({ 74.f, 50.f, 0.f });
@@ -209,7 +220,7 @@ void MainState::createMainMenu()
     textEnt = m_menuScene.createEntity();
     auto& quitText = textEnt.addComponent<cro::Text>(testFont);
     quitText.setString("Quit");
-    quitText.setColour(cro::Colour::Red());
+    quitText.setColour(textColourNormal);
     auto& quitTexTx = textEnt.addComponent<cro::Transform>();
     quitTexTx.setParent(entity);
     quitTexTx.move({ 88.f, 50.f, 0.f });
@@ -252,7 +263,7 @@ void MainState::createMainMenu()
     textEnt = m_menuScene.createEntity();
     auto& confText = textEnt.addComponent<cro::Text>(testFont);
     confText.setString("Exit Game?");
-    confText.setColour(cro::Colour::Red());
+    confText.setColour(textColourSelected);
     auto& confTexTx = textEnt.addComponent<cro::Transform>();
     confTexTx.setParent(entity);
     confTexTx.move({ 73.f, 54.f, 0.f });
@@ -272,6 +283,7 @@ void MainState::createMainMenu()
     textEnt = m_menuScene.createEntity();
     auto& buttonText0 = textEnt.addComponent<cro::Text>(testFont);
     buttonText0.setString("OK");
+    buttonText0.setColour(textColourNormal);
     auto& buttonTextTx0 = textEnt.addComponent<cro::Transform>();
     buttonTextTx0.setParent(buttonEnt);
     buttonTextTx0.setPosition({ 107.f, 44.f, 0.f });
@@ -307,6 +319,7 @@ void MainState::createMainMenu()
     textEnt = m_menuScene.createEntity();
     auto& buttonText1 = textEnt.addComponent<cro::Text>(testFont);
     buttonText1.setString("Cancel");
+    buttonText1.setColour(textColourNormal);
     auto& buttonTextTx1 = textEnt.addComponent<cro::Transform>();
     buttonTextTx1.setParent(buttonEnt);
     buttonTextTx1.setPosition({ 81.f, 44.f, 0.f });

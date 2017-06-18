@@ -50,22 +50,32 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 
+namespace
+{
+    const cro::Colour textColourSelected(1.f, 0.77f, 0.f);
+    const cro::Colour textColourNormal = cro::Colour::White();
+    const cro::FloatRect buttonArea(0.f, 0.f, 240.f, 64.f);
+}
+
 void MainState::createOptionsMenu()
 {
     auto& testFont = m_resources.fonts.get(FontID::MenuFont);
 
-    cro::FloatRect buttonArea(0.f, 0.f, 256.f, 64.f);
-
     //TODO not duplicate these
-    auto mouseEnterCallback = m_uiSystem->addCallback([buttonArea](cro::Entity e, cro::uint64)
+    auto mouseEnterCallback = m_uiSystem->addCallback([&](cro::Entity e, cro::uint64)
     {
         auto area = buttonArea;
-        area.left = buttonArea.width;
+        area.left = buttonArea.width + 16;
         e.getComponent<cro::Sprite>().setTextureRect(area);
+
+        auto textEnt = m_menuScene.getEntity(e.getComponent<cro::Transform>().getChildIDs()[0]);
+        textEnt.getComponent<cro::Text>().setColour(textColourSelected);
     });
-    auto mouseExitCallback = m_uiSystem->addCallback([buttonArea](cro::Entity e, cro::uint64)
+    auto mouseExitCallback = m_uiSystem->addCallback([&](cro::Entity e, cro::uint64)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonArea);
+        auto textEnt = m_menuScene.getEntity(e.getComponent<cro::Transform>().getChildIDs()[0]);
+        textEnt.getComponent<cro::Text>().setColour(textColourNormal);
     });
 
     //create an entity to move the menu
@@ -79,7 +89,7 @@ void MainState::createOptionsMenu()
     auto textEnt = m_menuScene.createEntity();
     auto& titleText = textEnt.addComponent<cro::Text>(testFont);
     titleText.setString("Options");
-    titleText.setColour(cro::Colour::White());
+    titleText.setColour(textColourSelected);
     //TODO set font size
     auto& titleTextTx = textEnt.addComponent<cro::Transform>();
     titleTextTx.setPosition({ -60.f, 80.f, 0.f });
@@ -99,7 +109,7 @@ void MainState::createOptionsMenu()
     textEnt = m_menuScene.createEntity();
     auto& backText = textEnt.addComponent<cro::Text>(testFont);
     backText.setString("Back");
-    backText.setColour(cro::Colour::Red());
+    backText.setColour(textColourNormal);
     auto& backTexTx = textEnt.addComponent<cro::Transform>();
     backTexTx.setParent(entity);
     backTexTx.move({ 88.f, 50.f, 0.f });
