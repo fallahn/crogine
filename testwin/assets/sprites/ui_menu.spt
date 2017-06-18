@@ -1,0 +1,20 @@
+sprite_sheet ui_menu
+{
+	src = "assets/sprites/ui_menu.png"
+	blendmode = none
+
+	sprite button_inactive
+	{
+		bounds = 0,0,512,128
+	}
+
+	sprite button_active
+	{
+		bounds = 576,0,512,128
+	}
+
+	sprite menu
+	{
+		bounds = 0,160,1344,512
+	}
+}
