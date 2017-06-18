@@ -1,11 +1,13 @@
 arctic outpost
 lookout base
 speed
+weaver head / body
 http://www.solcommand.com/
 
 choppa pod
 player ship
 moon
+debris
 https://www.artstation.com/artist/joshimon
 
 elite

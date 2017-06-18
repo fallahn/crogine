@@ -352,7 +352,8 @@ namespace ModelConverter
                     file.WriteLine("\t{");
 
                     string textureName = "";
-                    if (material.HasTextureDiffuse)
+                    //for some reason assimp says materials have textures even if the list is empty
+                    if (material.HasTextureDiffuse && m_scene.Textures.Count > 0)
                     {
                         var texture = m_scene.Textures[material.TextureDiffuse.TextureIndex];
                         textureName = texture.ToString();
@@ -423,7 +424,7 @@ namespace ModelConverter
                     }
 
                     //lightmap
-                    if(m_scene.Meshes[0].HasTextureCoords(1))
+                    if (m_scene.Meshes[0].HasTextureCoords(1))
                     {
                         file.WriteLine("\t\tlightmap = " + modelName + "_lightmap.png");
                     }
@@ -434,7 +435,7 @@ namespace ModelConverter
                 file.WriteLine("}");
                 file.Close();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show("Failed writing cmt file: " + ex.Message);
             }

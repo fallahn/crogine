@@ -1,0 +1,10 @@
+model debris
+{
+	mesh = "assets/models/debris.cmf"
+	material VertexLit
+	{
+		diffuse = "assets/materials/debris_diffuse.png"
+		rim = 0.9,0.87,0.7,1.0
+		rim_falloff = 0.4
+	}
+}
