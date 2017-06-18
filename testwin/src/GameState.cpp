@@ -245,12 +245,20 @@ void GameState::createScene()
     //terrain chunks
     cro::PhysicsShape boundsShape;
     boundsShape.type = cro::PhysicsShape::Type::Box;
+    boundsShape.extent = { 10.65f, 0.6f, 0.2f };
+    boundsShape.position = { 0.f, 2.85f, 0.f };
+
     entity = m_scene.createEntity();
     auto& chunkTxA = entity.addComponent<cro::Transform>();
     chunkTxA.setPosition({ 0.f, 0.f, -8.8f });
     //chunkTxA.setScale({ 0.5f, 0.5f, 1.f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::TerrainChunkA), m_resources.materials.get(MaterialID::TerrainChunk));
     entity.addComponent<TerrainChunk>();
+    entity.addComponent<cro::PhysicsObject>().addShape(boundsShape);
+    boundsShape.position.y = -2.85f;
+    entity.getComponent<cro::PhysicsObject>().addShape(boundsShape);
+    entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Environment);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
 
     auto chunkEntityA = entity; //keep this so we can attach turrets to it
 
@@ -259,6 +267,11 @@ void GameState::createScene()
     chunkTxB.setPosition({ backgroundSize.x, 0.f, -8.8f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::TerrainChunkB), m_resources.materials.get(MaterialID::TerrainChunk));
     entity.addComponent<TerrainChunk>();
+    entity.addComponent<cro::PhysicsObject>().addShape(boundsShape);
+    boundsShape.position.y = 2.85f;
+    entity.getComponent<cro::PhysicsObject>().addShape(boundsShape);
+    entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Environment);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
 
     auto chunkEntityB = entity;
 
@@ -268,6 +281,7 @@ void GameState::createScene()
     entity.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Bounds);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
     boundsShape.extent = { 0.25f, 4.f, 0.5f };
+    boundsShape.position.y = 0.f;
     boundsShape.position.x = -5.25f;
     entity.getComponent<cro::PhysicsObject>().addShape(boundsShape);
     boundsShape.position.x = 5.25f;
