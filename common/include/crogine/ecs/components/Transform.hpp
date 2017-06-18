@@ -163,6 +163,10 @@ namespace cro
         */
         void removeChild(uint32 id);
 
+        /*!
+        \brief Returns a read-only list of child IDs
+        */
+        const std::array<int32, MaxChildren>& getChildIDs() const { return m_children; }
 
     private:
         glm::vec3 m_origin;
