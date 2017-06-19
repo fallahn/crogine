@@ -75,11 +75,27 @@ namespace cro
         */
         static void doCommand(const std::string&);
 
+        /*!
+        \brief Adds a convar it if it doesn't exist.
+        \param name Name of the variable as it appears in the console.
+        \param value the default value of the variable
+        \param helpText Optional string describing the variable which appears the console
+        when search for variable names.
+        */
+        static void addConvar(const std::string& name, const std::string& value, const std::string& helpText = "");
+
+        /*!
+        \brief Attempts to retrieve the current value of the given console variable
+        */
+        template <typename T>
+        static T getConvarValue(const std::string& convar);
+
     private:
         friend class App;
         friend class ConsoleClient;
 
         static void init();
+        static void finalise();
 
         static void addCommand(const std::string& name, const Command& cmd, const ConsoleClient* owner);
         static void removeCommands(const ConsoleClient*); //removes all commands belonging to the given client
