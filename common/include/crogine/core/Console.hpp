@@ -31,6 +31,7 @@ source distribution.
 #define CRO_CONSOLE_HPP_
 
 #include <crogine/Config.hpp>
+#include <crogine/core/ConfigFile.hpp>
 
 #include <functional>
 
@@ -94,6 +95,8 @@ namespace cro
         friend class App;
         friend class ConsoleClient;
 
+        static ConfigFile convars;
+
         static void init();
         static void finalise();
 
@@ -102,6 +105,9 @@ namespace cro
 
         static void draw();
     };
+
+#include "Console.inl"
+
 }
 
 #endif //CRO_CONSOLE_HPP_
