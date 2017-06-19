@@ -51,6 +51,13 @@ namespace cro
     class CRO_EXPORT_API Font final : public Detail::SDLResource
     {
     public:
+        struct Glyph final
+        {
+            FloatRect rect;
+            const Texture& texture;
+            Glyph(const Texture& t) : texture(t) {}
+        };
+
         enum Type
         {
             Bitmap = 0,
@@ -84,12 +91,12 @@ namespace cro
         \brief Attempts to return a float rect representing the sub rectangle of the atlas
         for the give character. Currently only ASCII chars are supported.
         */
-        FloatRect getGlyph(char c) const;
+        FloatRect getGlyph(char c, uint32 charSize) const;
 
         /*!
         \brief Returns a reference to the texture used by the font
         */
-        const Texture& getTexture() const;
+        const Texture& getTexture(uint32 charSize) const;
 
         /*!
         \brief Returns the type of this font, either bitmap or signed distance field
@@ -100,15 +107,14 @@ namespace cro
         \brief Returns the lineheight of bitmap fonts or the default height
         of SDF fonts before resizing
         */
-        float getLineHeight() const { return m_lineHeight; }
+        float getLineHeight(uint32 charSize) const;
 
     private:
-        Texture m_texture;
-        float m_lineHeight;
-        Type m_type;
-        std::map<uint8, FloatRect> m_subRects;
 
-        _TTF_Font* m_font;
+        Type m_type;
+        std::string m_path;
+
+        mutable _TTF_Font* m_font;
 
         struct GlyphData final
         {
@@ -120,6 +126,15 @@ namespace cro
         {
             int32 minx, maxx, miny, maxy;
         };
+
+        struct Page final
+        {
+            Texture texture;
+            float lineHeight = 0.f;
+            std::map<uint8, FloatRect> subrects;
+        };
+        mutable std::map<uint32, Page> m_pages;
+        bool createPage(uint32 charSize) const;
     };
 }
 
