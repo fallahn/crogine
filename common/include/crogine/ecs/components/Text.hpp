@@ -61,6 +61,11 @@ namespace cro
         void setString(const std::string&);
 
         /*!
+        \brief Sets the character size
+        */
+        void setCharSize(uint32 charSize);
+
+        /*!
         \brief Sets the colour with which to render the text
         */
         void setColour(Colour);
@@ -71,6 +76,11 @@ namespace cro
         float getLineHeight() const;
 
         /*!
+        \brief Returns the current character size
+        */
+        uint32 getCharSize() const { return m_charSize; }
+
+        /*!
         \brief Returns the local (pre transform) bounds
         */
         const FloatRect& getLocalBounds() const { return m_localBounds; }
@@ -78,11 +88,13 @@ namespace cro
     private:
         const Font* m_font;
         std::string m_string;
+        uint32 m_charSize;
         Colour m_colour;
         uint8 m_dirtyFlags;
+
         enum Flags
         {
-            Verts = 0x1, Colours = 0x2
+            Verts = 0x1, Colours = 0x2, CharSize = 0x4
         };
 
         struct Vertex final

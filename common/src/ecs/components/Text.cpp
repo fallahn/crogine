@@ -34,6 +34,7 @@ using namespace cro;
 
 Text::Text()
     : m_font        (nullptr),
+    m_charSize      (0),
     m_dirtyFlags    (Flags::Verts),
     m_vboOffset     (0)
 {
@@ -42,6 +43,7 @@ Text::Text()
 
 Text::Text(const Font& font)
     : m_font        (&font),
+    m_charSize      (30),
     m_dirtyFlags    (Flags::Verts),
     m_vboOffset     (0)
 {
@@ -53,6 +55,12 @@ void Text::setString(const std::string& str)
 {
     m_string = str;
     m_dirtyFlags |= Flags::Verts;
+}
+
+void Text::setCharSize(uint32 charSize)
+{
+    m_charSize = charSize;
+    m_dirtyFlags |= Flags::CharSize;
 }
 
 void Text::setColour(Colour colour)
@@ -70,7 +78,7 @@ float Text::getLineHeight() const
     //TODO return height depending on whether or
     //not the font is a bitmap or SDF
     CRO_ASSERT(m_font, "Font not loaded!");
-    return m_font->getLineHeight();
+    return m_font->getLineHeight(m_charSize);
 }
 
 //private

@@ -74,6 +74,7 @@ source distribution.
 namespace
 {
     cro::UISystem* uiSystem = nullptr;
+    cro::CommandSystem* commandSystem = nullptr;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -98,7 +99,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
 //public
 bool GameState::handleEvent(const cro::Event& evt)
-{
+{    
     uiSystem->handleEvent(evt);
     m_scene.forwardEvent(evt);
     return true;
@@ -136,7 +137,7 @@ void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::ProjectionMapSystem>(mb);
-    m_scene.addSystem<cro::ParticleSystem>(mb);
+    //m_scene.addSystem<cro::ParticleSystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::TextRenderer>(mb);
@@ -150,6 +151,7 @@ void GameState::addSystems()
     m_overlayScene.addSystem<cro::SceneGraph>(mb);
     m_overlayScene.addSystem<cro::TextRenderer>(mb);
     m_overlayScene.addSystem<cro::SpriteRenderer>(mb);
+    commandSystem = &m_overlayScene.addSystem<cro::CommandSystem>(mb);
 }
 
 void GameState::loadAssets()
@@ -340,7 +342,9 @@ void GameState::createUI()
     auto& text = ent.addComponent<cro::Text>(font);
     text.setColour(cro::Colour::Blue());
     text.setString("WASD to move");
-    ent.addComponent<cro::Transform>().setPosition({ 50.f, 680.f, 0.f });
+    text.setCharSize(60);
+    ent.addComponent<cro::Transform>().setPosition({ 50.f, 700.f, 0.f });
+
 #endif //PLATFORM_MOBILE
 }
 

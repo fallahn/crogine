@@ -100,7 +100,7 @@ App::App()
             }
         }
 
-        char* pp = SDL_GetPrefPath(ORG_PATH, APP_PATH);;
+        char* pp = SDL_GetPrefPath(ORG_PATH, APP_PATH);
         m_prefPath = std::string(pp);
         SDL_free(pp);
 	}
@@ -208,6 +208,7 @@ void App::run()
     saveSettings.addProperty("fullscreen", fullscreen ? "true" : "false");
     saveSettings.save(m_prefPath + cfgName);
 
+    Console::finalise();
     m_messageBus.disable(); //prevents spamming a load of quit messages
     finalise();
     IMGUI_UNINIT;
@@ -246,6 +247,12 @@ Window& App::getWindow()
 {
     CRO_ASSERT(m_instance, "No valid app instance");
     return m_instance->m_window;
+}
+
+const std::string& App::getPreferencePath()
+{
+    CRO_ASSERT(m_instance, "No valid app instance");
+    return m_instance->m_prefPath;
 }
 
 //private

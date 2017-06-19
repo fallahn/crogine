@@ -102,7 +102,7 @@ void TextRenderer::process(Time dt)
     for (auto i = 0u; i < entities.size(); ++i)
     {
         auto& text = entities[i].getComponent<Text>();
-        if (text.m_dirtyFlags & Text::Verts)
+        if (text.m_dirtyFlags & (Text::Verts | Text::CharSize))
         {
             m_pendingRebuild = true;
             break;
@@ -282,7 +282,7 @@ void TextRenderer::fetchShaderData(ShaderData& data)
 void TextRenderer::rebuildBatch()
 {
     auto& entities = getEntities();
-    auto vboCount = (entities.size() > MaxTexts) ? (entities.size() & MaxTexts) + 1 : 1;
+    auto vboCount = (entities.size() > MaxTexts) ? (entities.size() / MaxTexts) + 1 : 1;
 
     //allocate new VBO if needed
     auto neededVBOs = vboCount - m_buffers.size();
@@ -298,17 +298,20 @@ void TextRenderer::rebuildBatch()
     uint32 batchIdx = 0;
     for (auto& batch : m_buffers)
     {
+        auto& currText = entities[batchIdx].getComponent<Text>();
+        
         Batch batchData;
         batchData.start = start;
-        batchData.texture = entities[batchIdx].getComponent<Text>().m_font->getTexture().getGLHandle();
+        batchData.texture = currText.m_font->getTexture(currText.getCharSize()).getGLHandle();
         int32 spritesThisBatch = 0;
+        batch.second.clear();
 
         std::vector<float> vertexData;
         auto maxCount = std::min(static_cast<uint32>(entities.size()), batchIdx + MaxTexts);
         for (auto i = 0u; i < maxCount; ++i)
         {
             auto& text = entities[i + batchIdx].getComponent<Text>();
-            auto texID = text.m_font->getTexture().getGLHandle();
+            auto texID = text.m_font->getTexture(text.m_charSize).getGLHandle();
             if (texID != batchData.texture)
             {
                 //end the batch and start a new one for this buffer
@@ -412,7 +415,7 @@ void TextRenderer::updateVerts(Text& text)
     float xPos = 0.f; //current char offset
     float yPos = -text.getLineHeight();
     float lineHeight = text.getLineHeight();
-    glm::vec2 texSize(text.m_font->getTexture().getSize());
+    glm::vec2 texSize(text.m_font->getTexture(text.m_charSize).getSize());
     CRO_ASSERT(texSize.x > 0 && texSize.y > 0, "Font texture not loaded!");
 
     float top = 0.f;
@@ -428,7 +431,7 @@ void TextRenderer::updateVerts(Text& text)
             continue;
         }
 
-        auto rect = text.m_font->getGlyph(c);
+        auto rect = text.m_font->getGlyph(c, text.m_charSize);
         Text::Vertex v;
         v.position.x = xPos;
         v.position.y = yPos + rect.height;
@@ -487,8 +490,11 @@ void TextRenderer::onEntityAdded(Entity entity)
     std::sort(entities.begin(), entities.end(),
         [](Entity& a, Entity& b)
     {
-        return (a.getComponent<Text>().m_font->getTexture().getGLHandle() >
-            b.getComponent<Text>().m_font->getTexture().getGLHandle());
+        const auto& textA = a.getComponent<Text>();
+        const auto& textB = b.getComponent<Text>();
+
+        return (textA.m_font->getTexture(textA.m_charSize).getGLHandle() >
+            textB.m_font->getTexture(textB.m_charSize).getGLHandle());
         //TODO subsort by type/shader
     });
 
