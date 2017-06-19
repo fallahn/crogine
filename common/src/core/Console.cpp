@@ -65,12 +65,17 @@ namespace
     bool visible = false;
 
     std::unordered_map<std::string, std::pair<Console::Command, const ConsoleClient*>> commands;
+    
+    const std::string convarName("convars.cfg");
 }
 int textEditCallback(ImGuiTextEditCallbackData* data);
+ConfigFile Console::convars;
 
 //public
 void Console::print(const std::string& line)
 {
+    if (line.empty()) return;
+
     std::string timestamp(/*"<" + SysTime::timeString() + */"> ");
 
     buffer.push_back(timestamp + line);
@@ -124,11 +129,41 @@ void Console::doCommand(const std::string& str)
     }
     else
     {
-        print(command + ": command not found!");
+        //check to see if we have a convar
+        auto* convar = convars.findObjectWithName(command);
+        if (convar)
+        {
+            if (!params.empty())
+            {
+                auto* value = convar->findProperty("value");
+                if (value) value->setValue(params);
+                //TODO trigger a callback so systems can act on new value
+            }
+            else
+            {
+                auto* help = convar->findProperty("help");
+                if (help) print(help->getValue<std::string>());
+            }
+        }
+        else
+        {
+            print(command + ": command not found!");
+        }
     }
 
     input[0] = '\0';
 }
+
+void Console::addConvar(const std::string& name, const std::string& defaultValue, const std::string& helpStr)
+{
+    if (!convars.findObjectWithName(name))
+    {
+        auto* obj = convars.addObject(name);
+        obj->addProperty("value", defaultValue);
+        obj->addProperty("help", helpStr);
+    }
+}
+
 
 //private
 void Console::addCommand(const std::string& name, const Command& command, const ConsoleClient* client = nullptr)
@@ -288,6 +323,22 @@ void Console::init()
         {
             Console::print(c.first);
         }
+
+        Console::print("Available Variables:");
+        const auto& objects = convars.getObjects();
+        for (const auto& o : objects)
+        {
+            std::string str = o.getName();
+            const auto& properties = o.getProperties();
+            for (const auto& p : properties)
+            {
+                if (p.getName() == "help")
+                {
+                    str += " " + p.getValue<std::string>();
+                }
+            }
+            Console::print(str);
+        }
     });
 
     //search for a command
@@ -344,6 +395,16 @@ void Console::init()
     {
         App::quit();
     });
+
+
+    //loads any convars which may have been saved
+    convars.loadFromFile(App::getPreferencePath() + convarName);
+    //TODO execute callback for each to make sure values are applied
+}
+
+void Console::finalise()
+{
+    convars.save(App::getPreferencePath() + convarName);
 }
 
 int textEditCallback(ImGuiTextEditCallbackData* data)

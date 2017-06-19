@@ -33,7 +33,7 @@ source distribution.
 
 #include <SDL_rwops.h>
 
-#include <fstream>
+#include <sstream>
 #include <algorithm>
 
 using namespace cro;
@@ -125,7 +125,11 @@ bool ConfigObject::loadFromFile(const std::string& path)
     
     //fetch file size
     auto fileSize = SDL_RWsize(rr.file);
-    CRO_ASSERT(fileSize > 0, "File empty!");
+    if (fileSize == 0)
+    {
+        LOG(path + ": file empty", Logger::Type::Warning);
+        return false;
+    }
 
     if (rr.file)
     {
@@ -451,41 +455,40 @@ void ConfigObject::removeComment(std::string& line)
 
 bool ConfigObject::save(const std::string& path)
 {
-    //TODO convert this to use RWops
-#ifndef PLATFORM_MOBILE
-    std::ofstream file(path);
-    if (file.good())
+    RaiiRWops out;
+    out.file = SDL_RWFromFile(path.c_str(), "w");
+    if (out.file)
     {
-        write(file);
+        write(out.file);
         return true;
     }
 
     Logger::log("failed to write configuration to: \'" + path + "\'", Logger::Type::Error);
     return false;
-#else
-    Logger::log("File writing not yet implemented", Logger::Type::Info);
-    return false;
-#endif
 }
 
-void ConfigObject::write(std::ofstream& file, uint16 depth)
+void ConfigObject::write(SDL_RWops* file, uint16 depth)
 {
     //add the correct amount of indenting based on this objects's depth
     std::string indent;
     for (auto i = 0u; i < depth; ++i)
         indent += indentBlock;
 
-    file << indent << getName() << " " << getId() << std::endl;
-    file << indent << "{" << std::endl;
+    std::stringstream stream;
+    stream << indent << getName() << " " << getId() << std::endl;
+    stream << indent << "{" << std::endl;
     for (const auto& p : m_properties)
     {
-        file << indent << indentBlock << p.getName() << " = " << p.getValue<std::string>() << std::endl;
+        stream << indent << indentBlock << p.getName() << " = " << p.getValue<std::string>() << std::endl;
     }
     for (auto& o : m_objects)
     {
         o.write(file, depth + 1);
     }
-    file << indent << "}" << std::endl;
+    stream << indent << "}" << std::endl;
+
+    std::string str = stream.str();
+    SDL_RWwrite(file, str.data(), sizeof(char) * str.size(), 1); //TODO this assumes single width charstring
 }
 
 //--------------------//

@@ -96,6 +96,12 @@ namespace cro
         */
         MessageBus& getMessageBus() { return m_messageBus; }
 
+        /*!
+        \brief Returns the path to the current platform's directory
+        for storing preference files.
+        */
+        static const std::string& getPreferencePath();
+
 	protected:
 		
 		virtual void handleEvent(const Event&) = 0;
