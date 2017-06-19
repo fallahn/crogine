@@ -30,7 +30,6 @@ source distribution.
 #include <crogine/core/Console.hpp>
 #include <crogine/core/Log.hpp>
 #include <crogine/core/App.hpp>
-#include <crogine/core/ConfigFile.hpp>
 #include <crogine/detail/Assert.hpp>
 
 #include "../imgui/imgui.h"
@@ -67,10 +66,10 @@ namespace
 
     std::unordered_map<std::string, std::pair<Console::Command, const ConsoleClient*>> commands;
     
-    ConfigFile convars;
     const std::string convarName("convars.cfg");
 }
 int textEditCallback(ImGuiTextEditCallbackData* data);
+ConfigFile Console::convars;
 
 //public
 void Console::print(const std::string& line)
@@ -165,57 +164,6 @@ void Console::addConvar(const std::string& name, const std::string& defaultValue
     }
 }
 
-template <>
-std::string Console::getConvarValue(const std::string& name)
-{
-    if (auto* obj = convars.findObjectWithName(name))
-    {
-        if (auto* value = obj->findProperty("value"))
-        {
-            return value->getValue<std::string>();
-        }
-    }
-    return {};
-}
-
-template <>
-int32 Console::getConvarValue(const std::string& name)
-{
-    if (auto* obj = convars.findObjectWithName(name))
-    {
-        if (auto* value = obj->findProperty("value"))
-        {
-            return value->getValue<int32>();
-        }
-    }
-    return 0;
-}
-
-template <>
-float Console::getConvarValue(const std::string& name)
-{
-    if (auto* obj = convars.findObjectWithName(name))
-    {
-        if (auto* value = obj->findProperty("value"))
-        {
-            return value->getValue<float>();
-        }
-    }
-    return 0.f;
-}
-
-template <>
-bool Console::getConvarValue(const std::string& name)
-{
-    if (auto* obj = convars.findObjectWithName(name))
-    {
-        if (auto* value = obj->findProperty("value"))
-        {
-            return value->getValue<bool>();
-        }
-    }
-    return false;
-}
 
 //private
 void Console::addCommand(const std::string& name, const Command& command, const ConsoleClient* client = nullptr)
