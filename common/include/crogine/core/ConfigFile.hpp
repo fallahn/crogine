@@ -204,7 +204,7 @@ namespace cro
         static bool isProperty(const std::string& line);
         static void removeComment(std::string& line);
 
-        void write(SDL_RWops* file, uint16 depth = 0u);
+        int32 write(SDL_RWops* file, uint16 depth = 0u);
     };
 
     using ConfigFile = cro::ConfigObject;

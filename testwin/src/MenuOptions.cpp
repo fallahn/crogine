@@ -90,7 +90,7 @@ void MainState::createOptionsMenu()
     auto& titleText = textEnt.addComponent<cro::Text>(testFont);
     titleText.setString("Options");
     titleText.setColour(textColourSelected);
-    //TODO set font size
+    titleText.setCharSize(80);
     auto& titleTextTx = textEnt.addComponent<cro::Transform>();
     titleTextTx.setPosition({ -60.f, 80.f, 0.f });
     titleTextTx.setParent(controlEntity);
@@ -102,7 +102,7 @@ void MainState::createOptionsMenu()
     backSprite.setTextureRect(buttonArea);
     auto& backTx = entity.addComponent<cro::Transform>();
     backTx.setPosition({ 0.f, -480.f, 0.f });
-    backTx.setScale({ 2.f, 2.f, 2.f });
+    //backTx.setScale({ 2.f, 2.f, 2.f });
     backTx.setParent(controlEntity);
     backTx.setOrigin({ buttonArea.width, buttonArea.height, 0.f });
 
@@ -110,6 +110,7 @@ void MainState::createOptionsMenu()
     auto& backText = textEnt.addComponent<cro::Text>(testFont);
     backText.setString("Back");
     backText.setColour(textColourNormal);
+    backText.setCharSize(60);
     auto& backTexTx = textEnt.addComponent<cro::Transform>();
     backTexTx.setParent(entity);
     backTexTx.move({ 88.f, 50.f, 0.f });

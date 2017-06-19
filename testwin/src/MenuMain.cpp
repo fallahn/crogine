@@ -101,7 +101,7 @@ void MainState::createMainMenu()
     gameSprite.setTextureRect(buttonArea);
     auto& gameTx = entity.addComponent<cro::Transform>();
     gameTx.setOrigin({ buttonArea.width, buttonArea.height, 0.f });
-    gameTx.setScale({ 2.f, 2.f, 2.f });
+    //gameTx.setScale({ 2.f, 2.f, 2.f });
     gameTx.setParent(controlEntity);
     auto& gameControl = entity.addComponent<cro::UIInput>();
     gameControl.callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
@@ -119,8 +119,9 @@ void MainState::createMainMenu()
     auto& gameText = textEnt.addComponent<cro::Text>(testFont);
     gameText.setString("Play");
     gameText.setColour(textColourNormal);
+    gameText.setCharSize(60);
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
-    gameTextTx.setPosition({ 90.f, 50.f, 0.f });
+    gameTextTx.setPosition({ 45.f, 15.f, 0.f });
     gameTextTx.setParent(entity);
 
     //options
@@ -130,7 +131,7 @@ void MainState::createMainMenu()
     optionSprite.setTextureRect(buttonArea);
     auto& optionTx = entity.addComponent<cro::Transform>();
     optionTx.setOrigin({ buttonArea.width, buttonArea.height, 0.f });
-    optionTx.setScale({ 2.f, 2.f, 2.f });
+    //optionTx.setScale({ 2.f, 2.f, 2.f });
     optionTx.setParent(controlEntity);
     optionTx.setPosition({ 0.f, -160.f, -2.f });
     auto& optionControl = entity.addComponent<cro::UIInput>();
@@ -160,6 +161,7 @@ void MainState::createMainMenu()
     auto& optionText = textEnt.addComponent<cro::Text>(testFont);
     optionText.setString("Options");
     optionText.setColour(textColourNormal);
+    optionText.setCharSize(60);
     auto& texTx = textEnt.addComponent<cro::Transform>();
     texTx.setParent(entity);
     texTx.move({ 64.f, 50.f, 0.f });
@@ -171,7 +173,7 @@ void MainState::createMainMenu()
     scoreSprite.setTextureRect(buttonArea);
     auto& scoreTx = entity.addComponent<cro::Transform>();
     scoreTx.setPosition({ 0.f, -320.f, 0.f });
-    scoreTx.setScale({ 2.f, 2.f, 2.f });
+    //scoreTx.setScale({ 2.f, 2.f, 2.f });
     scoreTx.setOrigin({ buttonArea.width, buttonArea.height, 0.f });
     scoreTx.setParent(controlEntity);
     auto& scoreControl = entity.addComponent<cro::UIInput>();
@@ -202,6 +204,7 @@ void MainState::createMainMenu()
     auto& scoreText = textEnt.addComponent<cro::Text>(testFont);
     scoreText.setString("Scores");
     scoreText.setColour(textColourNormal);
+    scoreText.setCharSize(60);
     auto& scoreTexTx = textEnt.addComponent<cro::Transform>();
     scoreTexTx.setParent(entity);
     scoreTexTx.move({ 74.f, 50.f, 0.f });
@@ -213,7 +216,7 @@ void MainState::createMainMenu()
     quitSprite.setTextureRect(buttonArea);
     auto& quitTx = entity.addComponent<cro::Transform>();
     quitTx.setPosition({ 0.f, -480.f, 0.f });
-    quitTx.setScale({ 2.f, 2.f, 2.f });
+    //quitTx.setScale({ 2.f, 2.f, 2.f });
     quitTx.setParent(controlEntity);
     quitTx.setOrigin({ buttonArea.width, buttonArea.height, 0.f });
 
@@ -221,6 +224,7 @@ void MainState::createMainMenu()
     auto& quitText = textEnt.addComponent<cro::Text>(testFont);
     quitText.setString("Quit");
     quitText.setColour(textColourNormal);
+    quitText.setCharSize(60);
     auto& quitTexTx = textEnt.addComponent<cro::Transform>();
     quitTexTx.setParent(entity);
     quitTexTx.move({ 88.f, 50.f, 0.f });

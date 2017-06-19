@@ -278,6 +278,7 @@ bool Font::createPage(uint32 charSize) const
         }
 
         page.texture.create(imgWidth, imgHeight, ImageFormat::A);
+        page.texture.setSmooth(true);
 
         TTF_CloseFont(m_font);
         m_font = nullptr;
