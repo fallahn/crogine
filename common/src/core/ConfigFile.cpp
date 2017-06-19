@@ -459,7 +459,8 @@ bool ConfigObject::save(const std::string& path)
     out.file = SDL_RWFromFile(path.c_str(), "w");
     if (out.file)
     {
-        write(out.file);
+        auto written = write(out.file);
+        Logger::log("Wrote " + std::to_string(written) + " bytes to " + path, Logger::Type::Info);
         return true;
     }
 
@@ -467,7 +468,7 @@ bool ConfigObject::save(const std::string& path)
     return false;
 }
 
-void ConfigObject::write(SDL_RWops* file, uint16 depth)
+int32 ConfigObject::write(SDL_RWops* file, uint16 depth)
 {
     //add the correct amount of indenting based on this objects's depth
     std::string indent;
@@ -481,14 +482,17 @@ void ConfigObject::write(SDL_RWops* file, uint16 depth)
     {
         stream << indent << indentBlock << p.getName() << " = " << p.getValue<std::string>() << std::endl;
     }
+
+    int32 written = 0;
     for (auto& o : m_objects)
     {
-        o.write(file, depth + 1);
+        written += o.write(file, depth + 1);
     }
     stream << indent << "}" << std::endl;
 
     std::string str = stream.str();
-    SDL_RWwrite(file, str.data(), sizeof(char) * str.size(), 1); //TODO this assumes single width charstring
+    written += SDL_RWwrite(file, str.data(), sizeof(char) * str.size(), 1) * str.size(); //TODO this assumes single width charstring
+    return written;
 }
 
 //--------------------//

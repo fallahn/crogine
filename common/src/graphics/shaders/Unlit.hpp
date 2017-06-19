@@ -58,7 +58,7 @@ namespace cro
                 #endif
 
                 #if defined(PROJECTIONS)
-                #define MAX_PROJECTIONS 8
+                #define MAX_PROJECTIONS 4
                 uniform mat4 u_projectionMapMatrix[MAX_PROJECTIONS]; //VP matrices for texture projection
                 uniform LOW int u_projectionMapCount; //how many to actually draw
                 #endif
@@ -135,7 +135,7 @@ namespace cro
                 uniform LOW vec4 u_colour;
                 #endif
                 #if defined(PROJECTIONS)
-                #define MAX_PROJECTIONS 8
+                #define MAX_PROJECTIONS 4
                 uniform sampler2D u_projectionMap;
                 uniform LOW int u_projectionMapCount;
                 #endif

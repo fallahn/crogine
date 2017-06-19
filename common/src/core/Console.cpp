@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/core/Console.hpp>
+#include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/Log.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/detail/Assert.hpp>
@@ -65,11 +66,12 @@ namespace
     bool visible = false;
 
     std::unordered_map<std::string, std::pair<Console::Command, const ConsoleClient*>> commands;
-    
+
+    ConfigFile convars;
     const std::string convarName("convars.cfg");
 }
 int textEditCallback(ImGuiTextEditCallbackData* data);
-ConfigFile Console::convars;
+
 
 //public
 void Console::print(const std::string& line)

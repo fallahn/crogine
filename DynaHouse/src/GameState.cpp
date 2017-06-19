@@ -137,7 +137,6 @@ void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::ProjectionMapSystem>(mb);
-    //m_scene.addSystem<cro::ParticleSystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::TextRenderer>(mb);
