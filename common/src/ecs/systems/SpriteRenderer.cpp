@@ -254,7 +254,7 @@ void SpriteRenderer::process(Time)
             if (sprB.m_textureID < sprA.m_textureID) return false;
 
             if (sprA.m_blendMode < sprB.m_blendMode) return true;
-            if (sprB.m_blendMode < sprA.m_blendMode) return false;
+            //if (sprB.m_blendMode < sprA.m_blendMode) return false;
 
             return false;
         });
@@ -264,12 +264,6 @@ void SpriteRenderer::process(Time)
 
 void SpriteRenderer::render(Entity camera)
 {
-    glCheck(glEnable(GL_CULL_FACE));
-    glCheck(glEnable(GL_DEPTH_TEST));
-    glCheck(glEnable(GL_BLEND));
-    glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-    glCheck(glBlendEquation(GL_FUNC_ADD));
-
     const auto& camComponent = camera.getComponent<Camera>();
     applyViewport(camComponent.viewport);
     
@@ -527,13 +521,6 @@ void SpriteRenderer::applyBlendMode(Material::BlendMode mode)
 
 void SpriteRenderer::onEntityAdded(Entity entity)
 {
-    //auto& entities = getEntities();
-    //std::sort(entities.begin(), entities.end(), 
-    //    [](Entity& a, Entity& b)
-    //{
-    //    return (a.getComponent<Sprite>().m_textureID > b.getComponent<Sprite>().m_textureID);
-    //});
-
     m_pendingRebuild = true;
     m_pendingSorting = true;
 }

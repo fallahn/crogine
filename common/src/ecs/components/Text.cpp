@@ -35,6 +35,7 @@ using namespace cro;
 Text::Text()
     : m_font        (nullptr),
     m_charSize      (0),
+    m_blendMode     (Material::BlendMode::Alpha),
     m_dirtyFlags    (Flags::Verts),
     m_vboOffset     (0)
 {
@@ -44,6 +45,7 @@ Text::Text()
 Text::Text(const Font& font)
     : m_font        (&font),
     m_charSize      (30),
+    m_blendMode     (Material::BlendMode::Alpha),
     m_dirtyFlags    (Flags::Verts),
     m_vboOffset     (0)
 {
@@ -71,6 +73,12 @@ void Text::setColour(Colour colour)
         v.colour = { colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha() };
     }
     m_dirtyFlags |= Flags::Colours;
+}
+
+void Text::setBlendMode(Material::BlendMode mode)
+{
+    m_blendMode = mode;
+    m_dirtyFlags |= Flags::BlendMode;
 }
 
 float Text::getLineHeight() const
