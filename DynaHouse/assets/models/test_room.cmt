@@ -6,5 +6,6 @@ model test_room
 		//colour = 1,1,1,1
 		diffuse = "assets/textures/test_room.png"
 		projection = "assets/textures/shadow.png"
+		smooth = true
 	}
 }

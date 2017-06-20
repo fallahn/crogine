@@ -157,13 +157,15 @@ void MainState::addSystems()
 #ifdef PLATFORM_DESKTOP
     m_backgroundScene.addPostProcess<cro::PostChromeAB>();
 #endif
-    m_menuScene.addSystem<cro::SpriteRenderer>(mb).setDepthAxis(cro::SpriteRenderer::DepthAxis::Z);   
-    m_menuScene.addSystem<cro::TextRenderer>(mb);
-    m_menuScene.addSystem<cro::SceneGraph>(mb);
-    m_uiSystem = &m_menuScene.addSystem<cro::UISystem>(mb);
+    
     m_commandSystem = &m_menuScene.addSystem<cro::CommandSystem>(mb);
     //m_menuScene.addSystem<cro::DebugInfo>(mb);
     m_menuScene.addSystem<SliderSystem>(mb);
+    //m_menuScene.addSystem<RotateSystem>(mb);
+    m_menuScene.addSystem<cro::SceneGraph>(mb);
+    m_menuScene.addSystem<cro::SpriteRenderer>(mb);// .setDepthAxis(cro::SpriteRenderer::DepthAxis::Z);
+    m_menuScene.addSystem<cro::TextRenderer>(mb);
+    m_uiSystem = &m_menuScene.addSystem<cro::UISystem>(mb);
 }
 
 void MainState::loadAssets()
@@ -194,26 +196,26 @@ void MainState::createScene()
     planetRotator.speed = 0.02f;
     planetRotator.axis.y = 0.2f;
 
-    //auto moonAxis = m_backgroundScene.createEntity();
-    //auto& moonAxisTx = moonAxis.addComponent<cro::Transform>();
-    //moonAxisTx.setOrigin({ -5.6f, 0.f, 0.f });
-    //moonAxisTx.setParent(entity);
+    auto moonAxis = m_backgroundScene.createEntity();
+    auto& moonAxisTx = moonAxis.addComponent<cro::Transform>();
+    moonAxisTx.setOrigin({ 0.f, 0.f, -5.6f });
+    moonAxisTx.setParent(entity);
     
     auto moonEntity = m_backgroundScene.createEntity();
     auto& moonTx = moonEntity.addComponent<cro::Transform>();
-    moonTx.setScale(glm::vec3(0.44f));
-    moonTx.setOrigin({ 0.f, 0.f, -8.2f });
-    moonTx.setParent(entity);
+    moonTx.setScale(glm::vec3(0.34f));
+    //moonTx.setOrigin({ 11.f, 0.f, 0.f });
+    moonTx.setParent(moonAxis);
     moonEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Moon].meshID),
                                         m_resources.materials.get(m_modelDefs[MenuModelID::Moon].materialIDs[0]));
-    //auto& moonRotator = moonEntity.addComponent<Rotator>();
-    //moonRotator.axis.y = 1.f;
-    //moonRotator.speed = 0.4f;
+    auto& moonRotator = moonEntity.addComponent<Rotator>();
+    moonRotator.axis.y = 1.f;
+    moonRotator.speed = 0.1f;
 
     auto arcticEntity = m_backgroundScene.createEntity();
     auto& arcticTx = arcticEntity.addComponent<cro::Transform>();
     arcticTx.setScale(glm::vec3(0.8f));
-    arcticTx.setOrigin({ -30.f, 0.f, -2.f });
+    arcticTx.setOrigin({ 5.8f, 0.f, 5.f });
     arcticTx.setParent(entity);
     auto& arcticModel = arcticEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::ArcticPost].meshID),
                                                                 m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[0]));
@@ -225,7 +227,7 @@ void MainState::createScene()
     auto lookoutEntity = m_backgroundScene.createEntity();
     auto& lookoutTx = lookoutEntity.addComponent<cro::Transform>();
     lookoutTx.setScale(glm::vec3(0.7f));
-    lookoutTx.setOrigin({ 18.f, 0.f, 2.f });
+    lookoutTx.setOrigin({ -8.f, 0.f, 2.f });
     lookoutTx.setParent(entity);
     auto& lookoutModel = lookoutEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::LookoutBase].meshID),
         m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[0]));
