@@ -36,7 +36,9 @@ Sprite::Sprite()
     : m_textureID   (0),
     m_dirty         (true),
     m_vboOffset     (0),
-    m_visible       (false)
+    m_visible       (false),
+    m_blendMode     (Material::BlendMode::Alpha),
+    m_needsSorting  (false)
 {
     for (auto& q : m_quad)
     {
@@ -54,6 +56,8 @@ void Sprite::setTexture(const Texture& t)
     m_textureSize.x = size.width;
     m_textureSize.y = size.height;
     setTextureRect(size);
+
+    m_needsSorting = true;
 }
 
 void Sprite::setSize(glm::vec2 size)
@@ -124,4 +128,10 @@ glm::vec2 Sprite::getSize() const
 Colour Sprite::getColour() const
 {
     return  Colour(m_quad[0].colour);
+}
+
+void Sprite::setBlendMode(Material::BlendMode mode)
+{
+    m_blendMode = mode;
+    m_needsSorting = true;
 }

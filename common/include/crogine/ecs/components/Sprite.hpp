@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/MaterialData.hpp>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -46,7 +47,7 @@ namespace cro
     /*!
     \brief 2D Sprite component.
     Sprites are rendered with a sprite renderer system rather than
-    a scene renderer. The 2D renderer can be used on its own, or rendered
+    a model renderer. The 2D renderer can be used on its own, or rendered
     over the top of a 3D scene, for example as a user interface. Sprites
     can exist on entities which are either part of the existing 3D scene
     or an independent scene used for a specific purpose.
@@ -106,6 +107,13 @@ namespace cro
         */
         const FloatRect& getGlobalBounds() const { return m_globalBounds; }
 
+        /*!
+        \brief Sets the blend mode of the sprite.
+        By default sprites are Alpha blended, but can use the Material::BlendModes
+        additive, multiply and none.
+        */
+        void setBlendMode(Material::BlendMode mode);
+
     private:
         int32 m_textureID;
         glm::vec3 m_textureSize;
@@ -123,6 +131,8 @@ namespace cro
         FloatRect m_globalBounds;
 
         bool m_visible; //used in culling
+        Material::BlendMode m_blendMode;
+        bool m_needsSorting;
 
         friend class SpriteRenderer;
     };

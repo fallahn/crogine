@@ -124,6 +124,9 @@ namespace cro
 		template <typename T>
         T& getComponent();
 
+        template <typename T>
+        const T& getComponent() const;
+
         /*!
         \brief Returns a reference to the CompnentMask associated with this entity
         */

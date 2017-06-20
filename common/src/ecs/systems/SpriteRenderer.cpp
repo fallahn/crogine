@@ -57,7 +57,8 @@ SpriteRenderer::SpriteRenderer(MessageBus& mb)
     m_textureIndex      (0),
     m_projectionIndex   (0),
     m_depthAxis         (DepthAxis::Z),
-    m_pendingRebuild    (false)
+    m_pendingRebuild    (false),
+    m_pendingSorting    (true)
 {
     //this has been known to fail on some platforms - but android can be as low as 64
     //which almost negates the usefulness of GPU bound transforms... :S
@@ -150,11 +151,12 @@ void SpriteRenderer::handleMessage(const Message& msg)
 }
 
 void SpriteRenderer::process(Time)
-{
+{ 
+    //have to do this first, at least once
     if (m_pendingRebuild)
     {
         rebuildBatch();
-    }    
+    }
     
     //get list of entities (should already be sorted by addEnt callback)
     auto& entities = getEntities();
@@ -214,10 +216,13 @@ void SpriteRenderer::process(Time)
             updateGlobalBounds(sprite, entities[i].getComponent<Transform>().getWorldTransform());
 
             sprite.m_dirty = false;
+        }
 
-#ifdef DEBUG_DRAW
-            dirtyDebug = true;
-#endif //DEBUG_DRAW
+        if (sprite.m_needsSorting)
+        {
+            sprite.m_needsSorting = false;
+            m_pendingRebuild = true;
+            m_pendingSorting = true;
         }
 
         //if (sprite.m_visible)
@@ -236,9 +241,25 @@ void SpriteRenderer::process(Time)
         }
     }
 
-#ifdef DEBUG_DRAW
-    if (dirtyDebug) buildDebug();
-#endif //DEBUG_DRAW
+    if (m_pendingSorting)
+    {
+        //sort by texture then blend mode
+        std::sort(std::begin(entities), std::end(entities),
+            [](const Entity& a, const Entity& b)
+        {
+            const auto& sprA = a.getComponent<Sprite>();
+            const auto& sprB = b.getComponent<Sprite>();
+
+            if (sprA.m_textureID < sprB.m_textureID) return true;
+            if (sprB.m_textureID < sprA.m_textureID) return false;
+
+            if (sprA.m_blendMode < sprB.m_blendMode) return true;
+            if (sprB.m_blendMode < sprA.m_blendMode) return false;
+
+            return false;
+        });
+        m_pendingSorting = false;
+    }
 }
 
 void SpriteRenderer::render(Entity camera)
@@ -281,6 +302,7 @@ void SpriteRenderer::render(Entity camera)
         for (const auto& batchData : batch.second)
         {
             //CRO_ASSERT(batchData.texture > -1, "Missing sprite texture!");
+            applyBlendMode(batchData.blendMode);
             glCheck(glBindTexture(GL_TEXTURE_2D, batchData.texture));
             glCheck(glDrawArrays(GL_TRIANGLE_STRIP, batchData.start, batchData.count));
         }
@@ -298,6 +320,7 @@ void SpriteRenderer::render(Entity camera)
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_BLEND));
+    glCheck(glDepthMask(GL_TRUE));
 
     restorePreviousViewport();
 }
@@ -322,10 +345,14 @@ void SpriteRenderer::rebuildBatch()
     uint32 batchIdx = 0;
     for (auto& batch : m_buffers)
     {
+        const auto& firstSprite = entities[batchIdx].getComponent<Sprite>();
+        
         Batch batchData;
         batchData.start = start;
-        batchData.texture = entities[batchIdx].getComponent<Sprite>().m_textureID;
+        batchData.texture = firstSprite.m_textureID;
+        batchData.blendMode = firstSprite.m_blendMode;
         int32 spritesThisBatch = 0;
+        batch.second.clear();
 
         std::vector<float> vertexData;
         auto maxCount = std::min(static_cast<uint32>(entities.size()), batchIdx + MaxSprites);
@@ -333,7 +360,8 @@ void SpriteRenderer::rebuildBatch()
         {
             auto& sprite = entities[i + batchIdx].getComponent<Sprite>();
 
-            if (sprite.m_textureID != batchData.texture)
+            if (sprite.m_textureID != batchData.texture
+                || sprite.m_blendMode != batchData.blendMode)
             {
                 //end the batch and start a new one for this buffer
                 batchData.count = start - batchData.start;
@@ -341,6 +369,7 @@ void SpriteRenderer::rebuildBatch()
 
                 batchData.start = start;
                 batchData.texture = sprite.m_textureID;
+                batchData.blendMode = sprite.m_blendMode;
 
                 spritesThisBatch = 0;
             }
@@ -458,16 +487,55 @@ void SpriteRenderer::updateGlobalBounds(Sprite& sprite, const glm::mat4& transfo
     }
 }
 
+void SpriteRenderer::applyBlendMode(Material::BlendMode mode)
+{
+    switch (mode)
+    {
+    default: break;
+    case Material::BlendMode::Additive:
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_TRUE));
+        glCheck(glEnable(GL_CULL_FACE));
+        glCheck(glBlendFunc(GL_ONE, GL_ONE));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
+        break;
+    case Material::BlendMode::Alpha:
+        glCheck(glDisable(GL_CULL_FACE));
+        //glCheck(glDisable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_FALSE));
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
+        break;
+    case Material::BlendMode::Multiply:
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_TRUE));
+        glCheck(glEnable(GL_CULL_FACE));
+        glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
+        break;
+    case Material::BlendMode::None:
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_TRUE));
+        glCheck(glEnable(GL_CULL_FACE));
+        glCheck(glDisable(GL_BLEND));
+        break;
+    }
+}
+
 void SpriteRenderer::onEntityAdded(Entity entity)
 {
-    auto& entities = getEntities();
-    std::sort(entities.begin(), entities.end(), 
-        [](Entity& a, Entity& b)
-    {
-        return (a.getComponent<Sprite>().m_textureID > b.getComponent<Sprite>().m_textureID);
-    });
+    //auto& entities = getEntities();
+    //std::sort(entities.begin(), entities.end(), 
+    //    [](Entity& a, Entity& b)
+    //{
+    //    return (a.getComponent<Sprite>().m_textureID > b.getComponent<Sprite>().m_textureID);
+    //});
 
     m_pendingRebuild = true;
+    m_pendingSorting = true;
 }
 
 void SpriteRenderer::onEntityRemoved(Entity entity)
