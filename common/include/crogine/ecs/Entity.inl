@@ -63,3 +63,10 @@ T& Entity::getComponent()
     CRO_ASSERT(m_entityManager, "Not a valid Entity");
     return m_entityManager->getComponent<T>(*this);
 }
+
+template <typename T>
+const T& Entity::getComponent() const
+{
+    CRO_ASSERT(m_entityManager, "Not a valid Entity");
+    return m_entityManager->getComponent<T>(*this);
+}

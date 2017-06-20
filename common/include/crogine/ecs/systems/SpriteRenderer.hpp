@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/MaterialData.hpp>
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
@@ -105,6 +106,7 @@ namespace cro
             int32 texture = 0;
             uint32 start = 0;
             uint32 count = 0; //this is the COUNT not the final index
+            Material::BlendMode blendMode = Material::BlendMode::Alpha;
         };
         std::vector<std::pair<uint32, std::vector<Batch>>> m_buffers;
         std::vector<std::vector<glm::mat4>> m_bufferTransforms;
@@ -129,9 +131,11 @@ namespace cro
         DepthAxis m_depthAxis;
 
         bool m_pendingRebuild;
+        bool m_pendingSorting;
         void rebuildBatch();
 
         void updateGlobalBounds(Sprite&, const glm::mat4&);
+        void applyBlendMode(Material::BlendMode);
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
