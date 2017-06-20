@@ -158,9 +158,8 @@ void SpriteRenderer::process(Time)
         rebuildBatch();
     }
     
-    //get list of entities (should already be sorted by addEnt callback)
+    //get list of entities
     auto& entities = getEntities();
-
     for (auto i = 0u; i < entities.size(); ++i)
     {
         auto& sprite = entities[i].getComponent<Sprite>();        
