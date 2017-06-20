@@ -1,0 +1,10 @@
+
+sprite_sheet title
+{
+	src = "assets/sprites/menu.png"
+
+	sprite header
+	{
+		bounds = 0,65,1024,319
+	}
+}
