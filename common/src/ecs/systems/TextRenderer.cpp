@@ -52,7 +52,8 @@ namespace
 
 TextRenderer::TextRenderer(MessageBus& mb)
     : System                (mb, typeid(TextRenderer)),
-    m_pendingRebuild        (false)
+    m_pendingRebuild        (false),
+    m_pendingSorting        (false)
 {
     GLint maxVec;
     glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
@@ -97,14 +98,14 @@ void TextRenderer::process(Time dt)
         rebuildBatch();
     }
 
-    //entities are sorted by font on addition
     auto& entities = getEntities();
     for (auto i = 0u; i < entities.size(); ++i)
     {
         auto& text = entities[i].getComponent<Text>();
-        if (text.m_dirtyFlags & (Text::Verts | Text::CharSize))
+        if (text.m_dirtyFlags & (Text::Verts | Text::CharSize | Text::BlendMode))
         {
             m_pendingRebuild = true;
+            m_pendingSorting = true;
             break;
         }
         if (text.m_dirtyFlags & Text::Colours)
@@ -159,23 +160,42 @@ void TextRenderer::process(Time dt)
         std::size_t buffIdx = (i > MaxTexts) ? i % MaxTexts : 0;
         m_bufferTransforms[buffIdx][i - (buffIdx * MaxTexts)] = tx.getWorldTransform();
     }
+
+    if (m_pendingSorting)
+    {
+        m_pendingSorting = false;
+
+        //sort by font
+        std::sort(entities.begin(), entities.end(),
+            [](const Entity& a, const Entity& b)
+        {
+            const auto& textA = a.getComponent<Text>();
+            const auto& textB = b.getComponent<Text>();
+
+            if (textA.m_font->getTexture(textA.m_charSize).getGLHandle() <
+                textB.m_font->getTexture(textB.m_charSize).getGLHandle()) return true;
+
+            if (textB.m_font->getTexture(textB.m_charSize).getGLHandle() <
+                textA.m_font->getTexture(textA.m_charSize).getGLHandle()) return false;
+
+            if (textA.m_blendMode < textB.m_blendMode) return true;
+
+            return false;
+        });
+
+        m_pendingRebuild = true;
+    }
 }
 
 void TextRenderer::render(Entity camera)
 {
-    glCheck(glEnable(GL_CULL_FACE));
-    //glCheck(glEnable(GL_DEPTH_TEST));
-    glCheck(glEnable(GL_BLEND));
-    glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-    glCheck(glBlendEquation(GL_FUNC_ADD));
-
     const auto& camComponent = camera.getComponent<Camera>();
     applyViewport(camComponent.viewport);
 
     const auto& camTx = camera.getComponent<Transform>();
     auto viewMat = glm::inverse(camTx.getWorldTransform());
 
-    //bind shader and attrib arrays - TODO dow this for both shader types
+    //bind shader and attrib arrays - TODO do this for both shader types
     glCheck(glUseProgram(m_shaders[Font::Bitmap].shader.getGLHandle()));
     glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].projectionUniformIndex, 1, GL_FALSE, glm::value_ptr(camComponent.projection * viewMat)));
     glCheck(glActiveTexture(GL_TEXTURE0));
@@ -201,6 +221,7 @@ void TextRenderer::render(Entity camera)
         for (const auto& batchData : batch.second)
         {
             //CRO_ASSERT(batchData.texture > -1, "Missing sprite texture!");
+            applyBlendMode(batchData.blendMode);
             glCheck(glBindTexture(GL_TEXTURE_2D, batchData.texture));
             glCheck(glDrawArrays(GL_TRIANGLE_STRIP, batchData.start, batchData.count));
         }
@@ -215,9 +236,11 @@ void TextRenderer::render(Entity camera)
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
 
-    //glCheck(glDisable(GL_DEPTH_TEST));
+    glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_BLEND));
+    glCheck(glDepthMask(GL_TRUE));
+    
     restorePreviousViewport();
 }
 
@@ -303,6 +326,7 @@ void TextRenderer::rebuildBatch()
         Batch batchData;
         batchData.start = start;
         batchData.texture = currText.m_font->getTexture(currText.getCharSize()).getGLHandle();
+        batchData.blendMode = currText.m_blendMode;
         int32 spritesThisBatch = 0;
         batch.second.clear();
 
@@ -312,7 +336,8 @@ void TextRenderer::rebuildBatch()
         {
             auto& text = entities[i + batchIdx].getComponent<Text>();
             auto texID = text.m_font->getTexture(text.m_charSize).getGLHandle();
-            if (texID != batchData.texture)
+            if (texID != batchData.texture
+                || text.m_blendMode != batchData.blendMode)
             {
                 //end the batch and start a new one for this buffer
                 batchData.count = start - batchData.start;
@@ -320,6 +345,7 @@ void TextRenderer::rebuildBatch()
 
                 batchData.start = start;
                 batchData.texture = texID;
+                batchData.blendMode = text.m_blendMode;
 
                 spritesThisBatch = 0;
             }
@@ -481,24 +507,49 @@ void TextRenderer::updateVerts(Text& text)
     text.m_dirtyFlags = 0;
 }
 
+void TextRenderer::applyBlendMode(Material::BlendMode mode)
+{
+    switch (mode)
+    {
+    default: break;
+    case Material::BlendMode::Additive:
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_TRUE));
+        glCheck(glEnable(GL_CULL_FACE));
+        glCheck(glBlendFunc(GL_ONE, GL_ONE));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
+        break;
+    case Material::BlendMode::Alpha:
+        glCheck(glEnable(GL_CULL_FACE));
+        //glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
+        break;
+    case Material::BlendMode::Multiply:
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_TRUE));
+        glCheck(glEnable(GL_CULL_FACE));
+        glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
+        break;
+    case Material::BlendMode::None:
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_TRUE));
+        glCheck(glEnable(GL_CULL_FACE));
+        glCheck(glDisable(GL_BLEND));
+        break;
+    }
+}
+
 void TextRenderer::onEntityAdded(Entity entity)
 {
     CRO_ASSERT(entity.getComponent<Text>().m_font, "Text must be constructed with a font");
     
-    //sort by font
-    auto& entities = getEntities();
-    std::sort(entities.begin(), entities.end(),
-        [](Entity& a, Entity& b)
-    {
-        const auto& textA = a.getComponent<Text>();
-        const auto& textB = b.getComponent<Text>();
-
-        return (textA.m_font->getTexture(textA.m_charSize).getGLHandle() >
-            textB.m_font->getTexture(textB.m_charSize).getGLHandle());
-        //TODO subsort by type/shader
-    });
-
     m_pendingRebuild = true;
+    m_pendingSorting = true;
 }
 
 void TextRenderer::onEntityRemoved(Entity)

@@ -120,6 +120,7 @@ void MainState::createMainMenu()
     gameText.setString("Play");
     gameText.setColour(textColourNormal);
     gameText.setCharSize(60);
+    gameText.setBlendMode(cro::Material::BlendMode::Additive);
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
     gameTextTx.setPosition({ 45.f, 15.f, 0.f });
     gameTextTx.setParent(entity);
@@ -162,6 +163,7 @@ void MainState::createMainMenu()
     optionText.setString("Options");
     optionText.setColour(textColourNormal);
     optionText.setCharSize(60);
+    optionText.setBlendMode(cro::Material::BlendMode::Alpha);
     auto& texTx = textEnt.addComponent<cro::Transform>();
     texTx.setParent(entity);
     texTx.move({ 64.f, 50.f, 0.f });

@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Rectangle.hpp>
+#include <crogine/graphics/MaterialData.hpp>
 
 #include <string>
 #include <vector>
@@ -71,6 +72,11 @@ namespace cro
         void setColour(Colour);
 
         /*!
+        \brief Sets the blend mode for the text.
+        */
+        void setBlendMode(Material::BlendMode);
+
+        /*!
         \brief Returns the current line height of the text
         */
         float getLineHeight() const;
@@ -90,11 +96,12 @@ namespace cro
         std::string m_string;
         uint32 m_charSize;
         Colour m_colour;
+        Material::BlendMode m_blendMode;
         uint8 m_dirtyFlags;
 
         enum Flags
         {
-            Verts = 0x1, Colours = 0x2, CharSize = 0x4
+            Verts = 0x1, Colours = 0x2, CharSize = 0x4, BlendMode = 0x8
         };
 
         struct Vertex final

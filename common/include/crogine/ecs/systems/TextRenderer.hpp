@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/MaterialData.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
 #include <glm/mat4x4.hpp>
@@ -81,6 +82,7 @@ namespace cro
             int32 texture = 0; //font texture atlas
             uint32 start = 0; //first vert of this batch in the VBO
             uint32 count = 0; //number of verts in the batch
+            Material::BlendMode blendMode = Material::BlendMode::Alpha;
         };
         //maps VBO id to a batch
         std::vector<std::pair<uint32, std::vector<Batch>>> m_buffers;
@@ -110,8 +112,11 @@ namespace cro
         void fetchShaderData(ShaderData&);
         
         bool m_pendingRebuild;
+        bool m_pendingSorting;
         void rebuildBatch();
         void updateVerts(Text&);
+
+        void applyBlendMode(Material::BlendMode);
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
