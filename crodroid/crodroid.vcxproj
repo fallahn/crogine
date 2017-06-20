@@ -294,6 +294,7 @@
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Spatial.cpp" />
+    <ClCompile Include="..\common\src\graphics\SpriteSheet.cpp" />
     <ClCompile Include="..\common\src\graphics\StaticMeshBuilder.cpp" />
     <ClCompile Include="..\common\src\graphics\Texture.cpp" />
     <ClCompile Include="..\common\src\graphics\TextureResource.cpp" />

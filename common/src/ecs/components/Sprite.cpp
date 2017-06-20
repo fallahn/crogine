@@ -109,6 +109,8 @@ void Sprite::setTextureRect(FloatRect subRect)
     m_quad[3].UV.y = subRect.bottom / height;
 
     m_dirty = true;
+
+    m_textureRect = subRect;
 }
 
 void Sprite::setColour(Colour colour)

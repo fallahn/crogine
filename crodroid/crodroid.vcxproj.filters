@@ -264,5 +264,8 @@
     <ClCompile Include="..\common\src\imgui\GuiClient.cpp">
       <Filter>src\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\graphics\SpriteSheet.cpp">
+      <Filter>src\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

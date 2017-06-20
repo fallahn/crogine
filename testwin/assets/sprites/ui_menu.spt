@@ -1,7 +1,7 @@
 sprite_sheet ui_menu
 {
 	src = "assets/sprites/ui_menu.png"
-	blendmode = none
+	blendmode = alpha
 
 	sprite button_inactive
 	{

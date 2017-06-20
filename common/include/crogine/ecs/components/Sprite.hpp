@@ -93,6 +93,11 @@ namespace cro
         glm::vec2 getSize() const;
 
         /*!
+        \brief Returns the current Texture Rectangle
+        */
+        const FloatRect& getTextureRect() const { return m_textureRect; }
+
+        /*!
         \brief Returns the current colour of the sprite
         */
         Colour getColour() const;
@@ -117,6 +122,7 @@ namespace cro
     private:
         int32 m_textureID;
         glm::vec3 m_textureSize;
+        FloatRect m_textureRect;
         struct Vertex final
         {
             glm::vec4 position;

@@ -108,6 +108,7 @@
     <ClInclude Include="..\common\include\crogine\graphics\shaders\PostVertex.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Spatial.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\SphereBuilder.hpp" />
+    <ClInclude Include="..\common\include\crogine\graphics\SpriteSheet.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\StaticMeshBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\TextureResource.hpp" />
@@ -193,6 +194,7 @@
     <ClCompile Include="..\common\src\graphics\Shader.cpp" />
     <ClCompile Include="..\common\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\common\src\graphics\Spatial.cpp" />
+    <ClCompile Include="..\common\src\graphics\SpriteSheet.cpp" />
     <ClCompile Include="..\common\src\graphics\StaticMeshBuilder.cpp" />
     <ClCompile Include="..\common\src\graphics\Texture.cpp" />
     <ClCompile Include="..\common\src\graphics\TextureResource.cpp" />
