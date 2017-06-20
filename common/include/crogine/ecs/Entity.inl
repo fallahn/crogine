@@ -42,7 +42,7 @@ T& Entity::addComponent(Args&&... args)
 }
 
 //TODO this doesn't remove the entity from systems
-//which previously required the compnent being removed..
+//which previously required the component being removed..
 //template <typename T>
 //void Entity::removeComponent()
 //{

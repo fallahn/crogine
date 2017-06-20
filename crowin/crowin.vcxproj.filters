@@ -372,6 +372,9 @@
     <ClInclude Include="..\common\include\crogine\gui\GuiClient.hpp">
       <Filter>Header Files\gui</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\graphics\SpriteSheet.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -580,6 +583,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\imgui\GuiClient.cpp">
       <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\graphics\SpriteSheet.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
