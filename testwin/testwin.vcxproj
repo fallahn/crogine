@@ -304,6 +304,7 @@
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\NpcDirector.cpp" />
     <ClCompile Include="src\NpcSystem.cpp" />
+    <ClCompile Include="src\PlaterWeaponsSystem.cpp" />
     <ClCompile Include="src\PlayerDirector.cpp" />
     <ClCompile Include="src\PlayerSystem.cpp" />
     <ClCompile Include="src\PostRadial.cpp" />
@@ -332,6 +333,7 @@
     <ClInclude Include="src\NPCSystem.hpp" />
     <ClInclude Include="src\PlayerDirector.hpp" />
     <ClInclude Include="src\PlayerSystem.hpp" />
+    <ClInclude Include="src\PlayerWeaponsSystem.hpp" />
     <ClInclude Include="src\PostRadial.hpp" />
     <ClInclude Include="src\RandomTranslation.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
