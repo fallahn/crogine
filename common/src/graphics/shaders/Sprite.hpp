@@ -82,8 +82,8 @@ namespace cro
                 void main()
                 {
                     float value = texture2D(u_texture, v_texCoord0).r;
-                    gl_FragColor = value * v_colour;
-                    //gl_FragColor.a *= value;
+                    gl_FragColor = step(0.5, value) * v_colour;
+                    gl_FragColor.a *= value;
                 })";
 
             const static std::string SDFFragment = R"(
