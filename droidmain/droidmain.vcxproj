@@ -337,6 +337,7 @@
     <ClCompile Include="..\testwin\src\MyApp.cpp" />
     <ClCompile Include="..\testwin\src\NpcDirector.cpp" />
     <ClCompile Include="..\testwin\src\NpcSystem.cpp" />
+    <ClCompile Include="..\testwin\src\PlaterWeaponsSystem.cpp" />
     <ClCompile Include="..\testwin\src\PlayerDirector.cpp" />
     <ClCompile Include="..\testwin\src\PlayerSystem.cpp" />
     <ClCompile Include="..\testwin\src\PostRadial.cpp" />

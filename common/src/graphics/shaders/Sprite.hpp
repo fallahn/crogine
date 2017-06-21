@@ -82,7 +82,7 @@ namespace cro
                 void main()
                 {
                     float value = texture2D(u_texture, v_texCoord0).r;
-                    gl_FragColor = step(0.5, value) * v_colour;
+                    gl_FragColor = smoothstep(0.3, 1.0, value) * v_colour;
                     gl_FragColor.a *= value;
                 })";
 

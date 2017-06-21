@@ -93,7 +93,7 @@ void MainState::createOptionsMenu()
     backgroundEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("menu");
     auto size = backgroundEnt.getComponent<cro::Sprite>().getSize();
     backgroundEnt.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y, 0.f });
-    backgroundEnt.getComponent<cro::Transform>().setPosition({ 0.f, 120.f, -10.f });
+    backgroundEnt.getComponent<cro::Transform>().setPosition({ 0.f, 140.f, -10.f });
     backgroundEnt.getComponent<cro::Transform>().setParent(controlEntity);
 
     auto textEnt = m_menuScene.createEntity();
@@ -102,7 +102,7 @@ void MainState::createOptionsMenu()
     titleText.setColour(textColourSelected);
     titleText.setCharSize(42);
     auto& titleTextTx = textEnt.addComponent<cro::Transform>();
-    titleTextTx.setPosition({ -86.f, 90.f, 0.f });
+    titleTextTx.setPosition({ -86.f, 110.f, 0.f });
     titleTextTx.setParent(controlEntity);
     
     auto entity = m_menuScene.createEntity();

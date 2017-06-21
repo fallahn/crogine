@@ -17,4 +17,9 @@ sprite_sheet ui_menu
 	{
 		bounds = 0,160,1344,512
 	}
+
+	sprite title
+	{
+		bounds = 0,704,1344,320
+	}
 }
