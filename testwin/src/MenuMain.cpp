@@ -123,7 +123,7 @@ void MainState::createMainMenu()
     gameText.setString("Play");
     gameText.setColour(textColourNormal);
     gameText.setCharSize(60);
-    gameText.setBlendMode(cro::Material::BlendMode::Additive);
+    //gameText.setBlendMode(cro::Material::BlendMode::Additive);
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
     gameTextTx.setPosition({ 40.f, 100.f, 0.f });
     gameTextTx.setParent(entity);
@@ -164,7 +164,7 @@ void MainState::createMainMenu()
     optionText.setString("Options");
     optionText.setColour(textColourNormal);
     optionText.setCharSize(60);
-    optionText.setBlendMode(cro::Material::BlendMode::Additive);
+    //optionText.setBlendMode(cro::Material::BlendMode::Additive);
     auto& texTx = textEnt.addComponent<cro::Transform>();
     texTx.setParent(entity);
     texTx.move({ 40.f, 100.f, 0.f });
@@ -206,7 +206,7 @@ void MainState::createMainMenu()
     scoreText.setString("Scores");
     scoreText.setColour(textColourNormal);
     scoreText.setCharSize(60);
-    scoreText.setBlendMode(cro::Material::BlendMode::Additive);
+    //scoreText.setBlendMode(cro::Material::BlendMode::Additive);
     auto& scoreTexTx = textEnt.addComponent<cro::Transform>();
     scoreTexTx.setParent(entity);
     scoreTexTx.move({ 40.f, 100.f, 0.f });
@@ -224,7 +224,7 @@ void MainState::createMainMenu()
     quitText.setString("Quit");
     quitText.setColour(textColourNormal);
     quitText.setCharSize(60);
-    quitText.setBlendMode(cro::Material::BlendMode::Additive);
+    //quitText.setBlendMode(cro::Material::BlendMode::Additive);
     auto& quitTexTx = textEnt.addComponent<cro::Transform>();
     quitTexTx.setParent(entity);
     quitTexTx.move({ 40.f, 100.f, 0.f });
@@ -266,11 +266,11 @@ void MainState::createMainMenu()
     auto& confText = textEnt.addComponent<cro::Text>(testFont);
     confText.setString("Exit Game?");
     confText.setColour(textColourSelected);
-    confText.setBlendMode(cro::Material::BlendMode::Additive);
+    //confText.setBlendMode(cro::Material::BlendMode::Additive);
     confText.setCharSize(42);
     auto& confTexTx = textEnt.addComponent<cro::Transform>();
     confTexTx.setParent(entity);
-    confTexTx.move({ (size.x / 2.f) - 112.f, size.y - 20.f, 0.f });
+    confTexTx.move({ (size.x / 2.f) - 116.f, size.y - 30.f, 0.f });
 
 
     //OK button
@@ -285,11 +285,11 @@ void MainState::createMainMenu()
     auto& buttonText0 = textEnt.addComponent<cro::Text>(testFont);
     buttonText0.setString("OK");
     buttonText0.setColour(textColourNormal);
-    buttonText0.setBlendMode(cro::Material::BlendMode::Additive);
+    //buttonText0.setBlendMode(cro::Material::BlendMode::Additive);
     buttonText0.setCharSize(80);
     auto& buttonTextTx0 = textEnt.addComponent<cro::Transform>();
     buttonTextTx0.setParent(buttonEnt);
-    buttonTextTx0.setPosition({ 107.f, 104.f, 0.f });
+    buttonTextTx0.setPosition({ 60.f, 110.f, 0.f });
 
     auto okCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
@@ -319,11 +319,11 @@ void MainState::createMainMenu()
     auto& buttonText1 = textEnt.addComponent<cro::Text>(testFont);
     buttonText1.setString("Cancel");
     buttonText1.setColour(textColourNormal);
-    buttonText1.setBlendMode(cro::Material::BlendMode::Additive);
+    //buttonText1.setBlendMode(cro::Material::BlendMode::Additive);
     buttonText1.setCharSize(80);
     auto& buttonTextTx1 = textEnt.addComponent<cro::Transform>();
     buttonTextTx1.setParent(buttonEnt);
-    buttonTextTx1.setPosition({ 81.f, 104.f, 0.f });
+    buttonTextTx1.setPosition({ 60.f, 110.f, 0.f });
 
     auto cancelCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
