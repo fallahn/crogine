@@ -88,15 +88,13 @@ void MainState::createMainMenu()
     controlEntity.addComponent<Slider>();
 
     //title image
-    cro::SpriteSheet titleSheet;
-    titleSheet.loadFromFile("assets/sprites/ui_title.spt", m_resources.textures);
     auto entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Sprite>() = titleSheet.getSprite("header");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
     auto size = entity.getComponent<cro::Sprite>().getSize();
     auto& titleTx = entity.addComponent<cro::Transform>();
     titleTx.setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
-    titleTx.setPosition({ 960.f, 960.f, -20.f });
-    titleTx.setScale({ 1.5f, 1.5f, 1.5f });
+    titleTx.setPosition({ 960.f, 920.f, -20.f });
+    //titleTx.setScale({ 1.5f, 1.5f, 1.5f });
 
 
     //start game
@@ -105,6 +103,7 @@ void MainState::createMainMenu()
     auto& gameTx = entity.addComponent<cro::Transform>();
     gameTx.setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     gameTx.setParent(controlEntity);
+    gameTx.setPosition({ 0.f, 60.f, 0.f });
     auto& gameControl = entity.addComponent<cro::UIInput>();
     gameControl.callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
     gameControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
@@ -134,7 +133,7 @@ void MainState::createMainMenu()
     auto& optionTx = entity.addComponent<cro::Transform>();
     optionTx.setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     optionTx.setParent(controlEntity);
-    optionTx.setPosition({ 0.f, -160.f, -2.f });
+    optionTx.setPosition({ 0.f, -120.f, -2.f });
     auto& optionControl = entity.addComponent<cro::UIInput>();
     optionControl.callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
     optionControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
@@ -173,7 +172,7 @@ void MainState::createMainMenu()
     entity = m_menuScene.createEntity();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
     auto& scoreTx = entity.addComponent<cro::Transform>();
-    scoreTx.setPosition({ 0.f, -320.f, 0.f });
+    scoreTx.setPosition({ 0.f, -300.f, 0.f });
     scoreTx.setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     scoreTx.setParent(controlEntity);
     auto& scoreControl = entity.addComponent<cro::UIInput>();

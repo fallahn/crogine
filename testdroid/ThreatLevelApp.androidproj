@@ -270,8 +270,8 @@
     </AntPackage>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Content Include="assets\assets\fonts\Audiowide-Regular.ttf" />
     <Content Include="assets\assets\fonts\charset.png" />
-    <Content Include="assets\assets\fonts\VeraMono.ttf" />
     <Content Include="assets\assets\materials\arctic_outpost_diffuse.png" />
     <Content Include="assets\assets\materials\arctic_outpost_mask.png" />
     <Content Include="assets\assets\materials\arctic_outpost_normal.png" />
@@ -353,7 +353,8 @@
     <Content Include="assets\assets\particles\rock_fragment.png" />
     <Content Include="assets\assets\particles\snowflake.png" />
     <Content Include="assets\assets\sprites\loading.png" />
-    <Content Include="assets\assets\sprites\menu.png" />
+    <Content Include="assets\assets\sprites\ui_menu.png" />
+    <Content Include="assets\assets\sprites\ui_menu.spt" />
     <Content Include="res\drawable-hdpi\icon.png" />
     <Content Include="res\drawable-xhdpi\icon.png" />
     <Content Include="res\drawable-xxhdpi\icon.png" />
