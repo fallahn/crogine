@@ -103,7 +103,7 @@ void MainState::createScoreMenu()
     titleText.setColour(textColourSelected);
     titleText.setCharSize(42);
     auto& titleTextTx = textEnt.addComponent<cro::Transform>();
-    titleTextTx.setPosition({ -76.f, 90.f, 0.f });
+    titleTextTx.setPosition({ -84.f, 90.f, 0.f });
     titleTextTx.setParent(controlEntity);
 
 

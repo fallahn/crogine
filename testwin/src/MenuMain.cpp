@@ -264,13 +264,13 @@ void MainState::createMainMenu()
 
     textEnt = m_menuScene.createEntity();
     auto& confText = textEnt.addComponent<cro::Text>(testFont);
-    confText.setString("Exit Game?");
+    confText.setString("Exit?");
     confText.setColour(textColourSelected);
     //confText.setBlendMode(cro::Material::BlendMode::Additive);
     confText.setCharSize(42);
     auto& confTexTx = textEnt.addComponent<cro::Transform>();
     confTexTx.setParent(entity);
-    confTexTx.move({ (size.x / 2.f) - 116.f, size.y - 30.f, 0.f });
+    confTexTx.move({ (size.x / 2.f) - 56.f, size.y - 30.f, 0.f });
 
 
     //OK button

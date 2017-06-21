@@ -102,7 +102,7 @@ void MainState::createOptionsMenu()
     titleText.setColour(textColourSelected);
     titleText.setCharSize(42);
     auto& titleTextTx = textEnt.addComponent<cro::Transform>();
-    titleTextTx.setPosition({ -78.f, 90.f, 0.f });
+    titleTextTx.setPosition({ -86.f, 90.f, 0.f });
     titleTextTx.setParent(controlEntity);
     
     auto entity = m_menuScene.createEntity();

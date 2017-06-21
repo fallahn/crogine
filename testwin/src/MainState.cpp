@@ -180,7 +180,7 @@ void MainState::loadAssets()
 
     //test sprite sheet
     auto& testFont = m_resources.fonts.get(FontID::MenuFont);
-    testFont.loadFromFile("assets/fonts/VeraMono.ttf");
+    testFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
 }
 
 void MainState::createScene()
