@@ -108,6 +108,9 @@
     <ClCompile Include="src\PlayerSystem.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\PlaterWeaponsSystem.cpp">
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -189,6 +192,9 @@
       <Filter>Header Files\TL</Filter>
     </ClInclude>
     <ClInclude Include="src\PlayerSystem.hpp">
+      <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlayerWeaponsSystem.hpp">
       <Filter>Header Files\systems</Filter>
     </ClInclude>
   </ItemGroup>
