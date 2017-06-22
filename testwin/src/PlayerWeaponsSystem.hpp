@@ -59,6 +59,7 @@ private:
     void onEntityAdded(cro::Entity) override;
 
     bool m_systemActive;
+    bool m_allowFiring;
     enum class FireMode
     {
         Single, Double, Triple, Laser, LaserWide

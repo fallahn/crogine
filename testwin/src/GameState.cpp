@@ -311,7 +311,7 @@ void GameState::createScene()
         tx.setPosition({ 0.f, 3.4f, -9.1f });
         entity.addComponent<cro::PhysicsObject>().addShape(ps);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Environment);
-        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::RockQuad), m_resources.materials.get(MaterialID::Rockfall + i));
     }
 
@@ -348,7 +348,7 @@ void GameState::createScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
     entity.addComponent<cro::PhysicsObject>().addShape(ps);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.42f, 0.6f, -9.3f });
@@ -362,7 +362,7 @@ void GameState::createScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
     entity.addComponent<cro::PhysicsObject>().addShape(ps);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.6f, -0.2f, -9.3f });
@@ -376,7 +376,7 @@ void GameState::createScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
     entity.addComponent<cro::PhysicsObject>().addShape(ps);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.38f, -1.f, -9.3f });
@@ -390,7 +390,7 @@ void GameState::createScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
     entity.addComponent<cro::PhysicsObject>().addShape(ps);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.4f, -1.7f, -9.3f });
@@ -404,7 +404,7 @@ void GameState::createScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
     entity.addComponent<cro::PhysicsObject>().addShape(ps);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
 
 
     //----NPCs----//
@@ -420,7 +420,7 @@ void GameState::createScene()
     ps.extent = (bb[1] - bb[0]) * entity.getComponent<cro::Transform>().getScale() / 2.f;
     entity.addComponent<cro::PhysicsObject>().addShape(ps);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
     
     //choppa
     const float choppaSpacing = ChoppaNavigator::spacing;
@@ -443,7 +443,7 @@ void GameState::createScene()
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Choppa;
         entity.addComponent<cro::PhysicsObject>().addShape(ps);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
-        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
     }
 
     //speedray
@@ -467,7 +467,7 @@ void GameState::createScene()
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Speedray;
         entity.addComponent<cro::PhysicsObject>().addShape(ps);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
-        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
     }
 
     //attach turret to each of the terrain chunks
@@ -524,7 +524,7 @@ void GameState::createScene()
         ps.extent = ((bb[1] - bb[0]) / 2.f) * weaverScale;
         entity.addComponent<cro::PhysicsObject>().addShape(ps);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
-        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
 
         weaverScale *= 0.92f;
     }
@@ -578,7 +578,7 @@ void GameState::createScene()
     }
     entity.addComponent<cro::CommandTarget>().ID = CommandID::RockParticles;
 
-    //weapons sprites
+    //weapon sprites
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/sprites/lasers.spt", m_resources.textures);
     glm::vec3 pulseScale(0.006f);
@@ -610,6 +610,7 @@ void GameState::createScene()
     glm::vec3 laserScale(0.1f, 0.006f, 1.f);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_laser");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
     auto size = entity.getComponent<cro::Sprite>().getSize();
 
     entity.addComponent<cro::Transform>().setScale(laserScale);

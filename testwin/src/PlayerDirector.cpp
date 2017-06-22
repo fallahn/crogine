@@ -361,6 +361,15 @@ void PlayerDirector::process(cro::Time)
         msg->entityID = entity.getIndex();
     };
     sendCommand(cmd);
+
+    static cro::uint16 lastInput = 0;
+    if (lastInput != m_currentInput)
+    {
+        auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+        msg->type = PlayerEvent::WeaponStateChange;       
+        msg->weaponActivated = (m_currentInput & Input::Fire);
+    }
+    lastInput = m_currentInput;
 }
 
 //private

@@ -235,7 +235,7 @@ void CollisionSystem::process(cro::Time dt)
         po0->m_collisionCount++;
         po1->m_collisionCount++;
     }
-    DPRINT("Collision count", std::to_string(manifoldCount));
+    //DPRINT("Collision count", std::to_string(manifoldCount));
 
 
     m_collisionWorld->debugDrawWorld();

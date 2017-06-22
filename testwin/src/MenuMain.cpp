@@ -94,7 +94,6 @@ void MainState::createMainMenu()
     auto& titleTx = entity.addComponent<cro::Transform>();
     titleTx.setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
     titleTx.setPosition({ 960.f, 920.f, -20.f });
-    //titleTx.setScale({ 1.5f, 1.5f, 1.5f });
 
 
     //start game
