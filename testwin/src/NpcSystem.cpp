@@ -93,7 +93,7 @@ void NpcSystem::process(cro::Time dt)
     //DPRINT("Player Position", std::to_string(m_playerPosition.x) + ", " + std::to_string(m_playerPosition.y));
     
     auto& entities = getEntities();
-    m_accumulator += std::min(dt.asSeconds(), 1.f);
+    m_accumulator += dt.asSeconds();// std::min(, 1.f);
        
     while (m_accumulator > fixedUpdate)
     {

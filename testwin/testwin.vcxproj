@@ -304,7 +304,7 @@
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\NpcDirector.cpp" />
     <ClCompile Include="src\NpcSystem.cpp" />
-    <ClCompile Include="src\PlaterWeaponsSystem.cpp" />
+    <ClCompile Include="src\PlayerWeaponsSystem.cpp" />
     <ClCompile Include="src\PlayerDirector.cpp" />
     <ClCompile Include="src\PlayerSystem.cpp" />
     <ClCompile Include="src\PostRadial.cpp" />

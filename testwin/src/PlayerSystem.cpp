@@ -60,7 +60,7 @@ PlayerSystem::PlayerSystem(cro::MessageBus& mb)
 //public
 void PlayerSystem::process(cro::Time dt)
 {
-    m_accumulator += std::min(1.f, dt.asSeconds());
+    m_accumulator += dt.asSeconds();// std::min(1.f, );
 
     auto entities = getEntities();
     while(m_accumulator > fixedStep)

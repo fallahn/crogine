@@ -337,8 +337,11 @@ void CollisionSystem::onEntityAdded(cro::Entity entity)
     m_collisionData[idx].object = std::make_unique<btPairCachingGhostObject>();
 
     //if more than one shape create compound shape, else single shape
-    if (po.m_shapeCount > 1)
+    //ACTUALLY if we always do this then we can offset collision shapes always
+    //if (po.m_shapeCount > 1)
     {
+        //TODO rather than hash index this, use the entity index because we
+        //only want to recycle the shapes not the compounds.
         PhysicsShape shape;
         shape.type = PhysicsShape::Type::Compound;
         shape.length = static_cast<float>(idx);
@@ -361,10 +364,10 @@ void CollisionSystem::onEntityAdded(cro::Entity entity)
             compoundShape->addChildShape(btTransform(rx, tx), createCollisionShape(po.m_shapes[i]));
         }
     }
-    else
-    {
-        m_collisionData[idx].shape = createCollisionShape(po.m_shapes[0]);
-    }
+    //else
+    //{
+    //    m_collisionData[idx].shape = createCollisionShape(po.m_shapes[0]);
+    //}
 
     m_collisionData[idx].object->setCollisionShape(m_collisionData[idx].shape);
     m_collisionData[idx].object->setUserIndex(idx);

@@ -30,7 +30,6 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/Log.hpp>
 #include <crogine/core/Window.hpp>
-#include <crogine/core/Clock.hpp>
 #include <crogine/core/Console.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/detail/Assert.hpp>
@@ -69,7 +68,7 @@ namespace
 }
 
 App::App()
-    : m_running (false), m_showStats(true)
+    : m_frameClock(nullptr), m_running (false), m_showStats(true)
 {
 	CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
@@ -171,7 +170,8 @@ void App::run()
 	}
     initialise();
 
-	Clock frameClock;
+    Clock frameClock;
+    m_frameClock = &frameClock;
     m_running = true;
 	while (m_running)
 	{
@@ -253,6 +253,12 @@ const std::string& App::getPreferencePath()
 {
     CRO_ASSERT(m_instance, "No valid app instance");
     return m_instance->m_prefPath;
+}
+
+void App::resetFrameTime()
+{
+    CRO_ASSERT(m_frameClock, "App not initialised");
+    m_frameClock->restart();
 }
 
 //private
