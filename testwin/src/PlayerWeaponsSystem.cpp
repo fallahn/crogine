@@ -31,6 +31,7 @@ source distribution.
 #include "Messages.hpp"
 #include "ResourceIDs.hpp"
 
+#include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/PhysicsObject.hpp>
@@ -40,7 +41,7 @@ source distribution.
 namespace
 {
     const float pulseMoveSpeed = 18.f;
-    constexpr float pulseFireRate = 0.5f;
+    constexpr float pulseFireRate = 0.4f;
     constexpr float pulseDoubleFireRate = pulseFireRate / 2.f;
     constexpr float pulseTripleFireRate = pulseFireRate / 3.f;
     const float pulseOffset = 0.6f;
@@ -52,8 +53,9 @@ namespace
 
 PlayerWeaponSystem::PlayerWeaponSystem(cro::MessageBus& mb)
     : cro::System   (mb, typeid(PlayerWeaponSystem)),
-    m_systemActive  (true),
-    m_fireMode      (FireMode::Laser),
+    m_systemActive  (false),
+    m_allowFiring   (false),
+    m_fireMode      (FireMode::Single),
     m_playerID      (0),
     m_aliveCount    (0),
     m_deadPulseCount(0),
@@ -67,6 +69,9 @@ PlayerWeaponSystem::PlayerWeaponSystem(cro::MessageBus& mb)
 //public
 void PlayerWeaponSystem::process(cro::Time dt)
 {
+    DPRINT("Dead Pulse", std::to_string(m_deadPulseCount));
+    DPRINT("Alive Pulse", std::to_string(m_aliveCount));
+    
     static float fireTime = 0.f;
     fireTime += dt.asSeconds();
     
@@ -124,7 +129,9 @@ void PlayerWeaponSystem::process(cro::Time dt)
             if (m_deadLaserCount > 0)
             {
                 m_aliveList[m_aliveCount++] = m_deadLasers[--m_deadLaserCount];
-                getScene()->getEntity(m_aliveList[m_aliveCount - 1]).getComponent<cro::Transform>().setPosition(glm::vec3());
+                auto laserEnt = getScene()->getEntity(m_aliveList[m_aliveCount - 1]);
+                laserEnt.getComponent<cro::Transform>().setPosition(glm::vec3(0.f, -0.1f, 0.f));
+                laserEnt.getComponent<cro::Sprite>().setColour(cro::Colour::White());
             }
             break;
         }
@@ -187,6 +194,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
             {
                 //remove from alive list
                 e.getComponent<cro::Transform>().setPosition(idlePos);
+                e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
 
                 //move to dead list
                 m_deadLasers[m_deadLaserCount++] = m_aliveList[i];
@@ -208,20 +216,24 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
         {
         case PlayerEvent::Died:
             m_fireMode = FireMode::Single;
-            //m_systemActive = false;
+            m_systemActive = false;
+            m_allowFiring = false;
             break;
         case PlayerEvent::Moved:
             m_playerPosition = data.position;
             m_playerID = data.entityID;
             break;
         case PlayerEvent::Spawned:
-
+            m_allowFiring = true;
+            break;
+        case PlayerEvent::WeaponStateChange:
+            m_systemActive = (data.weaponActivated && m_allowFiring);
             break;
         default: break;
         }
     }
 
-    //TODO increase fire mode of player collects power up
+    //TODO increase fire mode if player collects power up
 }
 
 //private

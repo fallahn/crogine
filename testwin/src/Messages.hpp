@@ -73,10 +73,12 @@ struct PlayerEvent final
     {
         Spawned,
         Died,
-        Moved
+        Moved,
+        WeaponStateChange
     }type;
     glm::vec3 position;
     cro::uint32 entityID = 0;
+    bool weaponActivated = false;
 };
 
 #endif //TL_MESSAGES_HPP_

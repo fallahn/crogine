@@ -29,11 +29,14 @@ source distribution.
 
 #include "NPCSystem.hpp"
 #include "Messages.hpp"
+#include "ResourceIDs.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/PhysicsObject.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Wavetable.hpp>
 
@@ -53,6 +56,7 @@ NpcSystem::NpcSystem(cro::MessageBus& mb)
 {
     requireComponent<cro::Model>();
     requireComponent<cro::Transform>();
+    requireComponent<cro::PhysicsObject>();
     requireComponent<Npc>();
 
     auto poissonPos = cro::Util::Random::poissonDiscDistribution({ 0.f, -2.f, 4.f, 4.f }, 1.f, 5);
@@ -101,9 +105,23 @@ void NpcSystem::process(cro::Time dt)
 
         for (auto& entity : entities) 
         {
-            //check if entity has moved off-screen and
-            //reset it if it has
             auto& status = entity.getComponent<Npc>();
+
+            //check for collision with player weapons
+            auto& phys = entity.getComponent<cro::PhysicsObject>();
+            bool hasCollision = false;
+            auto count = phys.getCollisionCount();
+            for(auto i = 0u; i < count; ++i)
+            {
+                auto otherEnt = getScene()->getEntity(phys.getCollisionIDs()[i]);
+                if (otherEnt.getComponent<cro::PhysicsObject>().getCollisionGroups() & CollisionID::PlayerLaser)
+                {
+                    //TODO remove some health based on weapon energy
+                    //status.active = false;
+                    entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
+                }
+            }
+            
             if (status.active)
             {               
                 //process logic based on type
@@ -127,6 +145,8 @@ void NpcSystem::process(cro::Time dt)
                     break;
                 }  
 
+                //check if entity has moved off-screen and
+                //reset it if it has
                 bool visible = entity.getComponent<cro::Model>().isVisible();
                 if (!visible && status.wantsReset) //moved out of area
                 {
@@ -137,7 +157,7 @@ void NpcSystem::process(cro::Time dt)
                 {
                     //we've entered the visible area so will eventually want resetting
                     status.wantsReset = true;
-                }
+                }                
             }
         }
     }

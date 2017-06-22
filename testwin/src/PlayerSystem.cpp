@@ -30,6 +30,7 @@ source distribution.
 #include "PlayerSystem.hpp"
 #include "VelocitySystem.hpp"
 #include "ResourceIDs.hpp"
+#include "Messages.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -99,7 +100,10 @@ void PlayerSystem::updateSpawning(cro::Entity entity)
     {
         entity.getComponent<PlayerInfo>().state = PlayerInfo::State::Alive;
         entity.getComponent<Velocity>().velocity = dist * 2.f;
-        //TODO send a spawn message
+        
+        auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+        msg->entityID = entity.getIndex();
+        msg->type = PlayerEvent::Spawned;
     }
 }
 
@@ -117,6 +121,10 @@ void PlayerSystem::updateAlive(cro::Entity entity)
         {
             entity.getComponent<PlayerInfo>().state = PlayerInfo::State::Dying;
             entity.getComponent<Velocity>().velocity.x = -13.f;
+
+            auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+            msg->entityID = entity.getIndex();
+            msg->type = PlayerEvent::Died;
         }
         else if ((otherPo.getCollisionGroups() & (CollisionID::Collectable)) != 0)
         {
