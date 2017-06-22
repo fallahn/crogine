@@ -358,6 +358,7 @@ void PlayerDirector::process(cro::Time)
         auto msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
         msg->type = PlayerEvent::Moved;
         msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+        msg->entityID = entity.getIndex();
     };
     sendCommand(cmd);
 }

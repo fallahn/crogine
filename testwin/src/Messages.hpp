@@ -76,6 +76,7 @@ struct PlayerEvent final
         Moved
     }type;
     glm::vec3 position;
+    cro::uint32 entityID = 0;
 };
 
 #endif //TL_MESSAGES_HPP_

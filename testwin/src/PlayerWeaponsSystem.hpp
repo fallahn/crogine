@@ -31,12 +31,14 @@ source distribution.
 #define TL_PLAYER_WEAPONS_HPP_
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/core/Clock.hpp>
+
+#include <glm/vec3.hpp>
 
 #include <vector>
 
 struct PlayerWeapon final
 {
-    bool active = false;
     enum class Type
     {
         Pulse, Laser
@@ -62,8 +64,14 @@ private:
         Single, Double, Triple, Laser, LaserWide
     }m_fireMode;
 
+    glm::vec3 m_playerPosition;
+    cro::uint32 m_playerID;
+
+    std::size_t m_aliveCount;
     std::vector<cro::int32> m_aliveList;
+    std::size_t m_deadPulseCount;
     std::vector<cro::int32> m_deadPulses;
+    std::size_t m_deadLaserCount;
     std::vector<cro::int32> m_deadLasers;
 };
 

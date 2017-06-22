@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/core/MessageBus.hpp>
 #include <crogine/core/Window.hpp>
+#include <crogine/core/Clock.hpp>
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/graphics/Colour.hpp>
@@ -102,6 +103,13 @@ namespace cro
         */
         static const std::string& getPreferencePath();
 
+        /*!
+        \brief Resets the frame clock.
+        This should only be used when a state finishes loading assets for a long time
+        to prevent the initial delta frame being a large value.
+        */
+        void resetFrameTime();
+
 	protected:
 		
 		virtual void handleEvent(const Event&) = 0;
@@ -135,6 +143,7 @@ namespace cro
 
 		Window m_window;
 		Colour m_clearColour;
+        Clock* m_frameClock;
         bool m_running;
 
         void handleEvents();
@@ -161,9 +170,7 @@ namespace cro
         static void removeWindows(const GuiClient*);
 
         friend class GuiClient;
-//#endif
-
-
+//#endif       
         std::string m_prefPath;
 	};
 }

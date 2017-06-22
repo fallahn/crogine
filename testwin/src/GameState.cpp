@@ -46,6 +46,7 @@ source distribution.
 #include "NPCSystem.hpp"
 #include "NpcDirector.hpp"
 #include "PlayerSystem.hpp"
+#include "PlayerWeaponsSystem.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -53,6 +54,7 @@ source distribution.
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/graphics/IqmBuilder.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
@@ -60,6 +62,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/CollisionSystem.hpp>
+#include <crogine/ecs/systems/SpriteRenderer.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -94,6 +97,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
     auto* msg = getContext().appInstance.getMessageBus().post<GameEvent>(MessageID::GameMessage);
     msg->type = GameEvent::RoundStart;
+
+    context.appInstance.resetFrameTime();
 }
 
 //public
@@ -149,10 +154,12 @@ void GameState::addSystems()
     m_scene.addSystem<ItemSystem>(mb);
     m_scene.addSystem<NpcSystem>(mb);
     m_scene.addSystem<PlayerSystem>(mb);
+    m_scene.addSystem<PlayerWeaponSystem>(mb);
     m_scene.addSystem<cro::SceneGraph>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
+    m_scene.addSystem<cro::SpriteRenderer>(mb);
 
     m_scene.addDirector<PlayerDirector>();
     m_scene.addDirector<BackgroundDirector>();
@@ -279,12 +286,12 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -9.3f });
     entity.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Bounds);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
-    boundsShape.extent = { 0.25f, 4.f, 0.5f };
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
+    boundsShape.extent = { 1.25f, 4.f, 0.5f };
     boundsShape.position.y = 0.f;
-    boundsShape.position.x = -5.25f;
+    boundsShape.position.x = -6.25f;
     entity.getComponent<cro::PhysicsObject>().addShape(boundsShape);
-    boundsShape.position.x = 5.25f;
+    boundsShape.position.x = 6.25f;
     entity.getComponent<cro::PhysicsObject>().addShape(boundsShape);
 
     //some rockfall parts
@@ -323,6 +330,7 @@ void GameState::createScene()
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Player);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Collectable | CollisionID::Environment | CollisionID::NPC | CollisionID::Bounds);
     entity.addComponent<PlayerInfo>();
+    auto playerEntity = entity;
 
     //collectables
     static const glm::vec3 coinScale(0.15f);
@@ -569,6 +577,57 @@ void GameState::createScene()
         p.z = -8.6f;
     }
     entity.addComponent<cro::CommandTarget>().ID = CommandID::RockParticles;
+
+    //weapons sprites
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/sprites/lasers.spt", m_resources.textures);
+    glm::vec3 pulseScale(0.006f);
+    const std::size_t maxPulses = 20;
+    for (auto i = 0u; i < maxPulses; ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_pulse");
+        auto size = entity.getComponent<cro::Sprite>().getSize();
+
+        entity.addComponent<cro::Transform>().setScale(pulseScale);
+        entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
+        entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
+
+        cro::PhysicsShape ps;
+        ps.type = cro::PhysicsShape::Type::Box;
+        ps.extent = { size.x * pulseScale.x, size.y * pulseScale.y, 0.2f };
+        ps.extent /= 2.f;
+        ps.extent *= glm::vec3(0.85f);
+
+        entity.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::PlayerLaser);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Collectable | CollisionID::NPC);
+        entity.getComponent<cro::PhysicsObject>().addShape(ps);
+
+        entity.addComponent<PlayerWeapon>();
+    }
+
+    //use a single laser we'll scale it to make it look bigger or smaller
+    glm::vec3 laserScale(0.1f, 0.006f, 1.f);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_laser");
+    auto size = entity.getComponent<cro::Sprite>().getSize();
+
+    entity.addComponent<cro::Transform>().setScale(laserScale);
+    entity.getComponent<cro::Transform>().setPosition(glm::vec3(-9.3f));
+    //entity.getComponent<cro::Transform>().setOrigin({ 0.f, size.y / 2.f, 0.f });
+    entity.getComponent<cro::Transform>().setParent(playerEntity);
+
+    cro::PhysicsShape laserPhys;
+    laserPhys.type = cro::PhysicsShape::Type::Box;
+    laserPhys.extent = { size.x * laserScale.x, size.y * laserScale.y, 0.2f };
+    laserPhys.extent /= 2.f;
+    laserPhys.extent *= glm::vec3(0.85f);
+
+    entity.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::PlayerLaser);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Collectable | CollisionID::NPC);
+    entity.getComponent<cro::PhysicsObject>().addShape(laserPhys);
+
+    entity.addComponent<PlayerWeapon>().type = PlayerWeapon::Type::Laser;
 
 
     //3D camera

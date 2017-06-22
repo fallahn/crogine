@@ -108,7 +108,7 @@
     <ClCompile Include="src\PlayerSystem.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
-    <ClCompile Include="src\PlaterWeaponsSystem.cpp">
+    <ClCompile Include="src\PlayerWeaponsSystem.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
   </ItemGroup>

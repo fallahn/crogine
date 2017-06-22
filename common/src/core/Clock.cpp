@@ -49,6 +49,7 @@ cro::int32 Time::asMilliseconds() const
 
 //---clock class---//
 Clock::Clock()
+    : m_startTime(milliseconds(SDL_GetTicks()))
 {
 
 }
