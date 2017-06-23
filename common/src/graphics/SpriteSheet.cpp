@@ -72,6 +72,11 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
         else if (mode == "none") blendMode = Material::BlendMode::None;
     }
 
+    if (auto* p = sheetFile.findProperty("smooth"))
+    {
+        texture->setSmooth(p->getValue<bool>());
+    }
+
     const auto& spriteObjs = sheetFile.getObjects();
     for (const auto& spr : spriteObjs)
     {

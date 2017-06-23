@@ -199,6 +199,7 @@ void GameState::loadAssets()
 
 
     m_modelDefs[GameModelID::Player].loadFromFile("assets/models/player.cmt", m_resources);
+    m_modelDefs[GameModelID::PlayerShield].loadFromFile("assets/models/player_shield.cmt", m_resources);
     m_modelDefs[GameModelID::CollectableBatt].loadFromFile("assets/models/collectable_batt.cmt", m_resources);
     m_modelDefs[GameModelID::CollectableBomb].loadFromFile("assets/models/collectable_bomb.cmt", m_resources);
     m_modelDefs[GameModelID::CollectableBot].loadFromFile("assets/models/collectable_bot.cmt", m_resources);
@@ -331,6 +332,14 @@ void GameState::createScene()
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Collectable | CollisionID::Environment | CollisionID::NPC | CollisionID::Bounds);
     entity.addComponent<PlayerInfo>();
     auto playerEntity = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::PlayerShield].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::PlayerShield].materialIDs[0]));
+    entity.addComponent<cro::Transform>().setParent(playerEntity);
+    entity.addComponent<Rotator>().speed = 1.f;
+    entity.getComponent<Rotator>().axis.z = 1.f;
+    playerEntity.getComponent<PlayerInfo>().shieldEntity = entity.getIndex();
 
     //collectables
     static const glm::vec3 coinScale(0.15f);

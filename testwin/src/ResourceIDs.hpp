@@ -75,6 +75,7 @@ namespace GameModelID
     enum
     {
         Player = 0,
+        PlayerShield,
         CollectableBatt,
         CollectableBomb,
         CollectableBot,

@@ -1,0 +1,11 @@
+sprite_sheet player
+{
+	src = "assets/sprites/player_shield.png"
+	smooth = true
+	//blendmode = add
+
+	sprite shield
+	{
+	
+	}
+}

@@ -107,7 +107,7 @@ void ItemSystem::process(cro::Time dt)
             }
 
 
-            //check collision - TODO raise messages
+            //check collision
             const auto& phys = entity.getComponent<cro::PhysicsObject>();
             const auto count = phys.getCollisionCount();
             for (auto i = 0u; i < count; ++i)
@@ -122,7 +122,7 @@ void ItemSystem::process(cro::Time dt)
                 }
                 else if (otherPhys.getCollisionGroups() & CollisionID::Player)
                 {
-                    //if player die
+                    //if player, die
                     auto pos = tx.getWorldPosition();
                     glm::vec3 dest;
                     dest.x += 5.5f;
