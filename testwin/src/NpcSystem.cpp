@@ -30,6 +30,7 @@ source distribution.
 #include "NPCSystem.hpp"
 #include "Messages.hpp"
 #include "ResourceIDs.hpp"
+#include "PlayerWeaponsSystem.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -118,10 +119,16 @@ void NpcSystem::process(cro::Time dt)
                     auto otherEnt = getScene()->getEntity(phys.getCollisionIDs()[i]);
                     if (otherEnt.getComponent<cro::PhysicsObject>().getCollisionGroups() & CollisionID::PlayerLaser)
                     {
-                        //TODO remove some health based on weapon energy
-                        //status.active = false;
-                        entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
-                        hasCollision = true;
+                        //remove some health based on weapon energy
+                        const auto& weapon = otherEnt.getComponent<PlayerWeapon>();
+                        status.health -= weapon.damage;
+                        
+                        if (status.health < 0)
+                        {
+                            entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
+                            hasCollision = true;
+                        }
+                        //TODO raise some messages
                     }
                 }
             }
