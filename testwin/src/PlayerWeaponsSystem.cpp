@@ -48,14 +48,15 @@ namespace
 
     const float laserRate = 0.025f;
 
-    const glm::vec3 idlePos(-10.f);
+    const glm::vec3 idlePos(-100.f);
 }
 
 PlayerWeaponSystem::PlayerWeaponSystem(cro::MessageBus& mb)
     : cro::System   (mb, typeid(PlayerWeaponSystem)),
     m_systemActive  (false),
     m_allowFiring   (false),
-    m_fireMode      (FireMode::Single),
+    m_fireMode      (FireMode::Triple),
+    m_fireTime      (pulseFireRate),
     m_playerID      (0),
     m_aliveCount    (0),
     m_deadPulseCount(0),
@@ -71,14 +72,16 @@ void PlayerWeaponSystem::process(cro::Time dt)
 {
     DPRINT("Dead Pulse", std::to_string(m_deadPulseCount));
     DPRINT("Alive Pulse", std::to_string(m_aliveCount));
-    
-    static float fireTime = 0.f;
-    fireTime += dt.asSeconds();
+    //DPRINT("Fire Time", std::to_string(m_fireTime));
+
+    m_fireTime += dt.asSeconds();
     
     auto spawnPulse = [&](glm::vec3 position)
     {
-        m_aliveList[m_aliveCount++] = m_deadPulses[--m_deadPulseCount];
-        getScene()->getEntity(m_aliveList[m_aliveCount - 1]).getComponent<cro::Transform>().setPosition(m_playerPosition);
+        m_deadPulseCount--;
+        m_aliveList[m_aliveCount] = m_deadPulses[m_deadPulseCount];      
+        getScene()->getEntity(m_aliveList[m_aliveCount]).getComponent<cro::Transform>().setPosition(position);
+        m_aliveCount++;
     };
 
     //if active spawn more pulses or activate laser
@@ -88,15 +91,15 @@ void PlayerWeaponSystem::process(cro::Time dt)
         {
         default:
         case FireMode::Single:
-            if (fireTime > pulseFireRate
+            if (m_fireTime > pulseFireRate
                 && m_deadPulseCount > 0)
             {
                 spawnPulse(m_playerPosition);
-                fireTime = 0.f;
+                m_fireTime = 0.f;
             }
             break;
         case FireMode::Double:
-            if (fireTime > pulseDoubleFireRate
+            if (m_fireTime > pulseDoubleFireRate
                 && m_deadPulseCount > 0)
             {
                 static cro::int32 side = 0;
@@ -107,11 +110,11 @@ void PlayerWeaponSystem::process(cro::Time dt)
                 spawnPulse(offset);
 
                 side = (side + 1) % 2;
-                fireTime = 0.f;
+                m_fireTime = 0.f;
             }
             break;
         case FireMode::Triple:
-            if (fireTime > pulseTripleFireRate
+            if (m_fireTime > pulseTripleFireRate
                 && m_deadPulseCount > 0)
             {
                 static cro::int32 side = 0;
@@ -122,7 +125,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
                 spawnPulse(offset);
 
                 side = (side + 1) % 3;
-                fireTime = 0.f;
+                m_fireTime = 0.f;
             }
             break;
         case FireMode::Laser:
@@ -154,22 +157,16 @@ void PlayerWeaponSystem::process(cro::Time dt)
             const auto& IDs = collision.getCollisionIDs();
             for (auto j = 0u; j < count; ++j)
             {
-                //auto otherEnt = getScene()->getEntity(IDs[i]);
-                //const auto& otherCollision = otherEnt.getComponent<cro::PhysicsObject>();
-                //if (otherCollision.getCollisionGroups() | CollisionID::Bounds)
-                //{ 
-                //    e.getComponent<cro::Transform>().setPosition(m_playerPosition);
-                //    //LOG("Buns", cro::Logger::Type::Info);
-                //}
-
                 //other entities handle their own reaction - we just want to reset the pulse
                 e.getComponent<cro::Transform>().setPosition(idlePos);
 
                 //move to dead list
-                m_deadPulses[m_deadPulseCount++] = m_aliveList[i];
+                m_deadPulses[m_deadPulseCount] = m_aliveList[i];
+                m_deadPulseCount++;
 
                 //and remove from alive list
-                m_aliveList[i] = m_aliveList[--m_aliveCount];
+                m_aliveCount--;
+                m_aliveList[i] = m_aliveList[m_aliveCount];
                 i--; //decrement so the newly inserted ID doesn't get skipped, and we can be sure we're still < m_aliveCount
 
                 count = 0; //only want to handle one collision at most, else we might kill this ent more than once
@@ -215,7 +212,7 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         case PlayerEvent::Died:
-            m_fireMode = FireMode::Single;
+            //m_fireMode = FireMode::Single;
             m_systemActive = false;
             m_allowFiring = false;
             break;
@@ -228,6 +225,10 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
             break;
         case PlayerEvent::WeaponStateChange:
             m_systemActive = (data.weaponActivated && m_allowFiring);
+            if (!data.weaponActivated)
+            {
+                m_fireTime = pulseFireRate;
+            }
             break;
         default: break;
         }

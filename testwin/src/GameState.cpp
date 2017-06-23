@@ -164,7 +164,7 @@ void GameState::addSystems()
     m_scene.addDirector<PlayerDirector>();
     m_scene.addDirector<BackgroundDirector>();
     m_scene.addDirector<ItemDirector>();
-    m_scene.addDirector<NpcDirector>();
+    //m_scene.addDirector<NpcDirector>();
 #ifdef PLATFORM_DESKTOP
     //m_scene.addPostProcess<cro::PostChromeAB>();
     m_scene.addPostProcess<PostRadial>();
@@ -578,11 +578,12 @@ void GameState::createScene()
     }
     entity.addComponent<cro::CommandTarget>().ID = CommandID::RockParticles;
 
+
     //weapon sprites
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/sprites/lasers.spt", m_resources.textures);
     glm::vec3 pulseScale(0.006f);
-    const std::size_t maxPulses = 20;
+    const std::size_t maxPulses = 6;
     for (auto i = 0u; i < maxPulses; ++i)
     {
         entity = m_scene.createEntity();
