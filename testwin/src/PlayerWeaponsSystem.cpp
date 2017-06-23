@@ -47,20 +47,23 @@ namespace
     const float pulseOffset = 0.6f;
 
     const float laserRate = 0.025f;
+    const float laserOverheat = 2.f;
+    const float laserCool = laserOverheat / 2.f;
 
     const glm::vec3 idlePos(-100.f);
 }
 
 PlayerWeaponSystem::PlayerWeaponSystem(cro::MessageBus& mb)
-    : cro::System   (mb, typeid(PlayerWeaponSystem)),
-    m_systemActive  (false),
-    m_allowFiring   (false),
-    m_fireMode      (FireMode::Triple),
-    m_fireTime      (pulseFireRate),
-    m_playerID      (0),
-    m_aliveCount    (0),
-    m_deadPulseCount(0),
-    m_deadLaserCount(0)
+    : cro::System       (mb, typeid(PlayerWeaponSystem)),
+    m_systemActive      (false),
+    m_allowFiring       (false),
+    m_fireMode          (FireMode::Single),
+    m_fireTime          (pulseFireRate),
+    m_laserCooldownTime (0.f),
+    m_playerID          (0),
+    m_aliveCount        (0),
+    m_deadPulseCount    (0),
+    m_deadLaserCount    (0)
 {
     requireComponent<PlayerWeapon>();
     requireComponent<cro::Transform>();
@@ -73,6 +76,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
     DPRINT("Dead Pulse", std::to_string(m_deadPulseCount));
     DPRINT("Alive Pulse", std::to_string(m_aliveCount));
     //DPRINT("Fire Time", std::to_string(m_fireTime));
+    DPRINT("Laser cooldown", std::to_string(m_laserCooldownTime));
 
     m_fireTime += dt.asSeconds();
     
@@ -129,15 +133,24 @@ void PlayerWeaponSystem::process(cro::Time dt)
             }
             break;
         case FireMode::Laser:
-            if (m_deadLaserCount > 0)
+            if (m_deadLaserCount > 0 && m_laserCooldownTime < laserCool)
             {
-                m_aliveList[m_aliveCount++] = m_deadLasers[--m_deadLaserCount];
-                auto laserEnt = getScene()->getEntity(m_aliveList[m_aliveCount - 1]);
+                m_deadLaserCount--;
+                m_aliveList[m_aliveCount] = m_deadLasers[m_deadLaserCount];
+                
+                auto laserEnt = getScene()->getEntity(m_aliveList[m_aliveCount]);
                 laserEnt.getComponent<cro::Transform>().setPosition(glm::vec3(0.f, -0.1f, 0.f));
                 laserEnt.getComponent<cro::Sprite>().setColour(cro::Colour::White());
+                m_aliveCount++;
             }
             break;
         }
+    }
+    else
+    {
+        //cooldown laser
+        m_laserCooldownTime -= dt.asSeconds() * 2.f;
+        m_laserCooldownTime = std::max(m_laserCooldownTime, 0.f);
     }
 
     //update alive
@@ -177,6 +190,8 @@ void PlayerWeaponSystem::process(cro::Time dt)
             static float laserTime = 0.f;
             laserTime += dt.asSeconds();
             
+            m_laserCooldownTime += dt.asSeconds();
+
             if (laserTime > laserRate)
             {
                 //fade laser colour
@@ -187,17 +202,19 @@ void PlayerWeaponSystem::process(cro::Time dt)
                 laserTime = 0.f;
             }
 
-            if (m_fireMode != FireMode::Laser || !m_systemActive)
+            if (m_fireMode != FireMode::Laser || !m_systemActive || m_laserCooldownTime > laserOverheat)
             {
                 //remove from alive list
                 e.getComponent<cro::Transform>().setPosition(idlePos);
                 e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
 
                 //move to dead list
-                m_deadLasers[m_deadLaserCount++] = m_aliveList[i];
+                m_deadLasers[m_deadLaserCount] = m_aliveList[i];
+                m_deadLaserCount++;
 
                 //and remove from alive list
-                m_aliveList[i] = m_aliveList[--m_aliveCount];
+                m_aliveCount--;
+                m_aliveList[i] = m_aliveList[m_aliveCount];
                 i--;
             }
         }

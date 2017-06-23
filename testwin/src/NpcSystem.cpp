@@ -108,17 +108,21 @@ void NpcSystem::process(cro::Time dt)
             auto& status = entity.getComponent<Npc>();
 
             //check for collision with player weapons
-            auto& phys = entity.getComponent<cro::PhysicsObject>();
             bool hasCollision = false;
-            auto count = phys.getCollisionCount();
-            for(auto i = 0u; i < count; ++i)
+            if (status.wantsReset) //we're on screen
             {
-                auto otherEnt = getScene()->getEntity(phys.getCollisionIDs()[i]);
-                if (otherEnt.getComponent<cro::PhysicsObject>().getCollisionGroups() & CollisionID::PlayerLaser)
+                auto& phys = entity.getComponent<cro::PhysicsObject>();
+                auto count = phys.getCollisionCount();
+                for (auto i = 0u; i < count; ++i)
                 {
-                    //TODO remove some health based on weapon energy
-                    //status.active = false;
-                    entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
+                    auto otherEnt = getScene()->getEntity(phys.getCollisionIDs()[i]);
+                    if (otherEnt.getComponent<cro::PhysicsObject>().getCollisionGroups() & CollisionID::PlayerLaser)
+                    {
+                        //TODO remove some health based on weapon energy
+                        //status.active = false;
+                        entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
+                        hasCollision = true;
+                    }
                 }
             }
             
@@ -147,7 +151,7 @@ void NpcSystem::process(cro::Time dt)
 
                 //check if entity has moved off-screen and
                 //reset it if it has
-                bool visible = entity.getComponent<cro::Model>().isVisible();
+                bool visible = (entity.getComponent<cro::Model>().isVisible() && !hasCollision);
                 if (!visible && status.wantsReset) //moved out of area
                 {
                     status.wantsReset = false;

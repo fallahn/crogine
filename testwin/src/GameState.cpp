@@ -164,7 +164,7 @@ void GameState::addSystems()
     m_scene.addDirector<PlayerDirector>();
     m_scene.addDirector<BackgroundDirector>();
     m_scene.addDirector<ItemDirector>();
-    //m_scene.addDirector<NpcDirector>();
+    m_scene.addDirector<NpcDirector>();
 #ifdef PLATFORM_DESKTOP
     //m_scene.addPostProcess<cro::PostChromeAB>();
     m_scene.addPostProcess<PostRadial>();
