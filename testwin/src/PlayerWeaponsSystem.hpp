@@ -66,6 +66,7 @@ private:
     }m_fireMode;
 
     float m_fireTime;
+    float m_laserCooldownTime;
 
     glm::vec3 m_playerPosition;
     cro::uint32 m_playerID;
