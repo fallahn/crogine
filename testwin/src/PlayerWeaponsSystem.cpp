@@ -174,7 +174,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
             //handle collision with NPCs or end of map
             const auto& collision = e.getComponent<cro::PhysicsObject>();
             auto count = collision.getCollisionCount();
-            const auto& IDs = collision.getCollisionIDs();
+            //const auto& IDs = collision.getCollisionIDs();
             for (auto j = 0u; j < count; ++j)
             {
                 //other entities handle their own reaction - we just want to reset the pulse
