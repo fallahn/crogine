@@ -362,14 +362,14 @@ void PlayerDirector::process(cro::Time)
     };
     sendCommand(cmd);
 
-    static cro::uint16 lastInput = 0;
-    if (lastInput != m_currentInput)
+    //static cro::uint16 lastInput = 0;
+    //if (lastInput != m_currentInput)
     {
         auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
         msg->type = PlayerEvent::WeaponStateChange;       
         msg->weaponActivated = (m_currentInput & Input::Fire);
     }
-    lastInput = m_currentInput;
+    //lastInput = m_currentInput;
 }
 
 //private

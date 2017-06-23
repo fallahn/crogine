@@ -90,7 +90,7 @@
     <ClCompile Include="..\testwin\src\PlayerSystem.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
-    <ClCompile Include="..\testwin\src\PlaterWeaponsSystem.cpp">
+    <ClCompile Include="..\testwin\src\PlayerWeaponsSystem.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
   </ItemGroup>

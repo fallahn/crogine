@@ -317,16 +317,17 @@ void GameState::createScene()
     }
 
     //player ship
+    glm::vec3 playerScale(0.4f);
     entity = m_scene.createEntity();
     auto& playerTx = entity.addComponent<cro::Transform>();
     playerTx.setPosition({ -35.4f, 0.f, -9.3f });
-    playerTx.setScale({ 0.5f, 0.5f, 0.5f });
+    playerTx.setScale(playerScale);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::Player].materialIDs[0]));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Velocity>().friction = 2.5f;
     bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID).boundingBox;
-    ps.extent = (bb[1] - bb[0]) * playerTx.getScale() / 2.f;
+    ps.extent = (bb[1] - bb[0]) * playerScale / 2.f;
     entity.addComponent<cro::PhysicsObject>().addShape(ps);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Player);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Collectable | CollisionID::Environment | CollisionID::NPC | CollisionID::Bounds);
@@ -342,7 +343,7 @@ void GameState::createScene()
     playerEntity.getComponent<PlayerInfo>().shieldEntity = entity.getIndex();
 
     //collectables
-    static const glm::vec3 coinScale(0.15f);
+    static const glm::vec3 coinScale(0.12f);
     bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBatt].meshID).boundingBox;
     ps.extent = (bb[1] - bb[0]) * coinScale / 2.f;
     entity = m_scene.createEntity();
@@ -420,7 +421,7 @@ void GameState::createScene()
     //elite
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.9f, 1.5f, -9.3f });
-    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.8f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.6f));
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Elite].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::Elite].materialIDs[0]));
     entity.addComponent<Npc>().type = Npc::Elite;
@@ -433,7 +434,7 @@ void GameState::createScene()
     
     //choppa
     const float choppaSpacing = ChoppaNavigator::spacing;
-    glm::vec3 choppaScale(0.8f);
+    glm::vec3 choppaScale(0.6f);
     bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].meshID).boundingBox;
     ps.extent = (bb[1] - bb[0]) * choppaScale / 2.f;
     for (auto i = 0; i < 3; ++i)
@@ -457,7 +458,8 @@ void GameState::createScene()
 
     //speedray
     bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Speedray].meshID).boundingBox;
-    ps.extent = (bb[1] - bb[0]) / 2.f;
+    glm::vec3 speedrayScale(0.8f);
+    ps.extent = (bb[1] - bb[0]) * speedrayScale / 2.f;
     for (auto i = 0u; i < SpeedrayNavigator::count; ++i)
     {
         const float rotateOffset = (cro::Util::Const::PI / SpeedrayNavigator::count) * i;
@@ -465,6 +467,7 @@ void GameState::createScene()
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 6.f, 0.f, -9.3f });
         entity.getComponent<cro::Transform>().rotate(glm::vec3(1.f, 0.f, 0.f), cro::Util::Const::PI - rotateOffset);
+        entity.getComponent<cro::Transform>().setScale(speedrayScale);
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Speedray].meshID),
             m_resources.materials.get(m_modelDefs[GameModelID::Speedray].materialIDs[0]));
         entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(m_modelDefs[GameModelID::Speedray].materialIDs[1]));
@@ -480,6 +483,9 @@ void GameState::createScene()
     }
 
     //attach turret to each of the terrain chunks
+    cro::PhysicsShape turrShape;
+    turrShape.type = cro::PhysicsShape::Type::Sphere;
+    turrShape.radius = 0.01f;
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f }); //places off screen to start
     entity.getComponent<cro::Transform>().setScale({ 0.3f, 0.3f, 0.3f });
@@ -493,6 +499,7 @@ void GameState::createScene()
     canEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TurretCannon].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::TurretCannon].materialIDs[0]));
     canEnt.addComponent<Npc>().type = Npc::Turret;
+    canEnt.addComponent<cro::PhysicsObject>().addShape(turrShape);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
@@ -507,10 +514,11 @@ void GameState::createScene()
     canEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TurretCannon].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::TurretCannon].materialIDs[0]));
     canEnt.addComponent<Npc>().type = Npc::Turret;
+    canEnt.addComponent<cro::PhysicsObject>().addShape(turrShape);
 
 
     //weaver
-    glm::vec3 weaverScale(0.5f);
+    glm::vec3 weaverScale(0.35f);
     bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::WeaverBody].meshID).boundingBox;
     for (auto i = 0u; i < WeaverNavigator::count; ++i)
     {

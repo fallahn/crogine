@@ -74,7 +74,7 @@ NpcSystem::NpcSystem(cro::MessageBus& mb)
 
     m_choppaTable = cro::Util::Wavetable::sine(1.f, 0.4f);
     m_speedrayTable = cro::Util::Wavetable::sine(0.5f, 1.6f);
-    m_weaverTable = cro::Util::Wavetable::sine(0.62f, 0.2f);
+    m_weaverTable = cro::Util::Wavetable::sine(0.62f, 0.12f);
 }
 
 //public

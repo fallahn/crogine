@@ -39,6 +39,7 @@ struct PlayerInfo final
         Spawning, Alive, Dying, Dead
     }state = State::Spawning;
     cro::uint32 shieldEntity = 0;
+    float health = 100.f;
 };
 
 class PlayerSystem final : public cro::System

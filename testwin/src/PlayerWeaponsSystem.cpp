@@ -78,10 +78,10 @@ PlayerWeaponSystem::PlayerWeaponSystem(cro::MessageBus& mb)
 //public
 void PlayerWeaponSystem::process(cro::Time dt)
 {
-    DPRINT("Dead Pulse", std::to_string(m_deadPulseCount));
-    DPRINT("Alive Pulse", std::to_string(m_aliveCount));
+    //DPRINT("Dead Pulse", std::to_string(m_deadPulseCount));
+    //DPRINT("Alive Pulse", std::to_string(m_aliveCount));
     //DPRINT("Fire Time", std::to_string(m_fireTime));
-    DPRINT("Laser cooldown", std::to_string(m_laserCooldownTime));
+    //DPRINT("Laser cooldown", std::to_string(m_laserCooldownTime));
 
     m_fireTime += dt.asSeconds();
     
@@ -236,7 +236,7 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         case PlayerEvent::Died:
-            //m_fireMode = FireMode::Single;
+            m_fireMode = FireMode::Single;
             m_systemActive = false;
             m_allowFiring = false;
             break;
