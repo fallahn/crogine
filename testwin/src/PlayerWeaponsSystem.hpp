@@ -65,6 +65,8 @@ private:
         Single, Double, Triple, Laser, LaserWide
     }m_fireMode;
 
+    float m_fireTime;
+
     glm::vec3 m_playerPosition;
     cro::uint32 m_playerID;
 
