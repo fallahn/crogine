@@ -43,6 +43,11 @@ namespace
     const float choppaSpawnTime = 9.f;
     const float zDepth = -9.3f; //bums, this is replicated from NpcSystem.cpp
     const float weaverSpawnTime = 6.f;
+
+    const float eliteHealth = 15.f;
+    const float choppaHealth = 8.f;
+    const float speedrayHealth = 2.f;
+    const float weaverHealth = 5.f;
 }
 
 NpcDirector::NpcDirector()
@@ -107,6 +112,7 @@ void NpcDirector::process(cro::Time dt)
                 status.elite.destination.x = cro::Util::Random::value(1.f, 4.f);
                 status.elite.movementCount = cro::Util::Random::value(4, 8);
                 status.elite.pauseTime = cro::Util::Random::value(1.2f, 2.2f);
+                status.health = eliteHealth;
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 tx.setPosition({ 5.6f, cro::Util::Random::value(-2.f, 2.f) , zDepth });
@@ -131,6 +137,7 @@ void NpcDirector::process(cro::Time dt)
                 status.choppa.moveSpeed = cro::Util::Random::value(-8.3f, -7.8f);
                 status.choppa.deathVelocity.x = status.choppa.moveSpeed;
                 status.choppa.tableIndex = cro::Util::Random::value(0, 40); //hmm don't have table size here (see NpcSystem)
+                status.health = choppaHealth;
 
                 //reset position
                 auto& tx = entity.getComponent<cro::Transform>();
@@ -151,6 +158,8 @@ void NpcDirector::process(cro::Time dt)
             if (!status.active)
             {
                 status.active = true;
+                status.health = speedrayHealth;
+
                 //reset position
                 auto& tx = entity.getComponent<cro::Transform>();
                 tx.setPosition({ 7.f, 0.f, zDepth });
@@ -177,6 +186,7 @@ void NpcDirector::process(cro::Time dt)
                 status.active = true;
                 status.weaver.yPos = yPos;
                 status.weaver.tableIndex = status.weaver.tableStartIndex;
+                status.health = weaverHealth;
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 tx.setPosition({ 7.f + (static_cast<float>(status.weaver.ident) * (WeaverNavigator::spacing * tx.getScale().x)), status.weaver.yPos, zDepth });

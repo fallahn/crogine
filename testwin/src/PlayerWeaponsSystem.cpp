@@ -41,10 +41,15 @@ source distribution.
 namespace
 {
     const float pulseMoveSpeed = 18.f;
-    constexpr float pulseFireRate = 0.4f;
+    constexpr float pulseFireRate = 0.2f;
     constexpr float pulseDoubleFireRate = pulseFireRate / 2.f;
     constexpr float pulseTripleFireRate = pulseFireRate / 3.f;
     const float pulseOffset = 0.6f;
+
+    const float pulseDamageSingle = 5.f;
+    const float pulseDamageDouble = 2.5f;
+    const float pulseDamageTriple = 1.2f;
+    const float laserDamage = 0.2f;
 
     const float laserRate = 0.025f;
     const float laserOverheat = 2.f;
@@ -80,11 +85,13 @@ void PlayerWeaponSystem::process(cro::Time dt)
 
     m_fireTime += dt.asSeconds();
     
-    auto spawnPulse = [&](glm::vec3 position)
+    auto spawnPulse = [&](glm::vec3 position, float damage)
     {
         m_deadPulseCount--;
         m_aliveList[m_aliveCount] = m_deadPulses[m_deadPulseCount];      
-        getScene()->getEntity(m_aliveList[m_aliveCount]).getComponent<cro::Transform>().setPosition(position);
+        auto entity = getScene()->getEntity(m_aliveList[m_aliveCount]);
+        entity.getComponent<cro::Transform>().setPosition(position);
+        entity.getComponent<PlayerWeapon>().damage = damage;
         m_aliveCount++;
     };
 
@@ -98,7 +105,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
             if (m_fireTime > pulseFireRate
                 && m_deadPulseCount > 0)
             {
-                spawnPulse(m_playerPosition);
+                spawnPulse(m_playerPosition, pulseDamageSingle);
                 m_fireTime = 0.f;
             }
             break;
@@ -111,7 +118,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
                 offset.z = (side) ? -pulseOffset : pulseOffset;
 
                 offset = getScene()->getEntity(m_playerID).getComponent<cro::Transform>().getWorldTransform() * glm::vec4(offset, 1.f);
-                spawnPulse(offset);
+                spawnPulse(offset, pulseDamageDouble);
 
                 side = (side + 1) % 2;
                 m_fireTime = 0.f;
@@ -126,7 +133,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
                 offset.z = -pulseOffset + (pulseOffset * side);
 
                 offset = getScene()->getEntity(m_playerID).getComponent<cro::Transform>().getWorldTransform() * glm::vec4(offset, 1.f);
-                spawnPulse(offset);
+                spawnPulse(offset, pulseDamageTriple);
 
                 side = (side + 1) % 3;
                 m_fireTime = 0.f;
@@ -267,6 +274,7 @@ void PlayerWeaponSystem::onEntityAdded(cro::Entity entity)
     {
         m_deadLasers.push_back(entity.getIndex());
         m_deadLaserCount = m_deadLasers.size();
+        entity.getComponent<PlayerWeapon>().damage = laserDamage;
     }
 
     //pad alive list to correct size (we're assuming no entities are actually

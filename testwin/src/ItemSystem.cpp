@@ -29,11 +29,14 @@ source distribution.
 
 #include "ItemSystem.hpp"
 #include "Messages.hpp"
+#include "ResourceIDs.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/PhysicsObject.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/util/Random.hpp>
 
 #include <glm/gtx/norm.hpp>
@@ -50,6 +53,7 @@ ItemSystem::ItemSystem(cro::MessageBus& mb)
     requireComponent<CollectableItem>();
     requireComponent<cro::Transform>();
     requireComponent<cro::Model>();
+    requireComponent<cro::PhysicsObject>();
 }
 
 //public
@@ -82,6 +86,7 @@ void ItemSystem::process(cro::Time dt)
                 status.impulse += movement * 0.15f;
             }
 
+
             //if item out of view move back to beginning
             bool visible = entity.getComponent<cro::Model>().isVisible();
             if (!visible && status.wantsReset)
@@ -101,14 +106,34 @@ void ItemSystem::process(cro::Time dt)
                 status.wantsReset = true;
             }
 
-            //DPRINT("Position", std::to_string(tx.getWorldPosition().x));
-            //DPRINT("Wants reset", status.wantsReset ? "true" : "false");
-            //DPRINT("Visible", visible ? "true" : "false");
 
-            //TODO check collision
-            //if laser move
-            //if player die
-            //else nothing
+            //check collision - TODO raise messages
+            const auto& phys = entity.getComponent<cro::PhysicsObject>();
+            const auto count = phys.getCollisionCount();
+            for (auto i = 0u; i < count; ++i)
+            {
+                const auto& otherEnt = getScene()->getEntity(phys.getCollisionIDs()[i]);
+                const auto& otherPhys = otherEnt.getComponent<cro::PhysicsObject>();
+
+                //if laser move
+                if (otherPhys.getCollisionGroups() & CollisionID::PlayerLaser)
+                {
+                    status.impulse.x += 3.f;
+                }
+                else if (otherPhys.getCollisionGroups() & CollisionID::Player)
+                {
+                    //if player die
+                    auto pos = tx.getWorldPosition();
+                    glm::vec3 dest;
+                    dest.x += 5.5f;
+                    dest.y = cro::Util::Random::value(-2.2f, 2.2f);
+                    dest.z = pos.z;
+                    tx.move(dest - pos); //keeps it in world coords
+                    status.wantsReset = false;
+                    status.active = false;
+                }
+                //else nothing
+            }
         }
     }
 }
