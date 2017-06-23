@@ -308,6 +308,7 @@
     <Content Include="assets\assets\materials\player_diffuse.png" />
     <Content Include="assets\assets\materials\player_mask.png" />
     <Content Include="assets\assets\materials\player_normal.png" />
+    <Content Include="assets\assets\materials\player_shield.png" />
     <Content Include="assets\assets\materials\roid_diffuse.png" />
     <Content Include="assets\assets\materials\roid_mask.png" />
     <Content Include="assets\assets\materials\roid_normal.png" />
@@ -335,6 +336,7 @@
     <Content Include="assets\assets\models\moon.cmt" />
     <Content Include="assets\assets\models\planet.cmt" />
     <Content Include="assets\assets\models\player.cmt" />
+    <Content Include="assets\assets\models\player_shield.cmt" />
     <Content Include="assets\assets\models\player_ship.cmf" />
     <Content Include="assets\assets\models\roid_belt.cmf" />
     <Content Include="assets\assets\models\roid_belt.cmt" />
@@ -352,6 +354,8 @@
     <Content Include="assets\assets\models\weaver_head.cmt" />
     <Content Include="assets\assets\particles\rock_fragment.png" />
     <Content Include="assets\assets\particles\snowflake.png" />
+    <Content Include="assets\assets\sprites\lasers.png" />
+    <Content Include="assets\assets\sprites\lasers.spt" />
     <Content Include="assets\assets\sprites\loading.png" />
     <Content Include="assets\assets\sprites\ui_menu.png" />
     <Content Include="assets\assets\sprites\ui_menu.spt" />

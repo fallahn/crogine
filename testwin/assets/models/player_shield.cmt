@@ -5,7 +5,7 @@ model PlayerShield
 
 	material VertexLit
 	{
-		diffuse = "assets/materials/gas_clouds.png"
+		diffuse = "assets/materials/player_shield.png"
 		blendmode = alpha
 		rim = 0.07,0.7,0.85,1.0
 		rim_falloff = 0.1

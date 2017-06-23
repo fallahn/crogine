@@ -80,6 +80,7 @@ void PlayerSystem::process(cro::Time dt)
             shieldEnt.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
             auto& playerInfo = entity.getComponent<PlayerInfo>();
+            DPRINT("Health", std::to_string(playerInfo.health));
             switch (playerInfo.state)
             {
             case PlayerInfo::State::Spawning:
@@ -109,6 +110,7 @@ void PlayerSystem::updateSpawning(cro::Entity entity)
     if (glm::length2(dist) < 0.5f)
     {
         entity.getComponent<PlayerInfo>().state = PlayerInfo::State::Alive;
+        entity.getComponent<PlayerInfo>().health = 100.f;
         entity.getComponent<Velocity>().velocity = dist * 2.f;
         
         auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
@@ -132,12 +134,25 @@ void PlayerSystem::updateAlive(cro::Entity entity)
         if (((otherPo.getCollisionGroups() & (CollisionID::NPC | CollisionID::Environment)) != 0)
             && m_shieldTime == 0)
         {
-            entity.getComponent<PlayerInfo>().state = PlayerInfo::State::Dying;
-            entity.getComponent<Velocity>().velocity.x = -13.f;
+            auto& playerInfo = entity.getComponent<PlayerInfo>();
+            playerInfo.health -= 3.5f; //TODO make this a convar for difficulty levels
 
-            auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
-            msg->entityID = entity.getIndex();
-            msg->type = PlayerEvent::Died;
+            {
+                auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+                msg->entityID = entity.getIndex();
+                msg->type = PlayerEvent::HealthChanged;
+                msg->value = playerInfo.health;
+            }
+
+            if (playerInfo.health < 0)
+            {
+                playerInfo.state = PlayerInfo::State::Dying;
+                entity.getComponent<Velocity>().velocity.x = -13.f;
+
+                auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+                msg->entityID = entity.getIndex();
+                msg->type = PlayerEvent::Died;
+            }
         }
         else if ((otherPo.getCollisionGroups() & (CollisionID::Collectable)) != 0)
         {
