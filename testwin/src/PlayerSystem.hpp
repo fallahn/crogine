@@ -38,6 +38,7 @@ struct PlayerInfo final
     {
         Spawning, Alive, Dying, Dead
     }state = State::Spawning;
+    cro::uint32 shieldEntity = 0;
 };
 
 class PlayerSystem final : public cro::System
@@ -51,6 +52,7 @@ private:
 
     float m_accumulator;
     float m_respawnTime;
+    float m_shieldTime;
 
     void updateSpawning(cro::Entity);
     void updateAlive(cro::Entity);
