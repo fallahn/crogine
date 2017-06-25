@@ -114,14 +114,18 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     normalRect = spriteSheet.getSprite("forest_normal").getTextureRect();
     activeRect = spriteSheet.getSprite("forest_active").getTextureRect();
     entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
-        [activeRect](cro::Entity ent, cro::uint64 flags)
+        [this, activeRect](cro::Entity ent, cro::uint64 flags)
     {
         ent.getComponent<cro::Sprite>().setTextureRect(activeRect);
+        auto textEnt = m_menuScene.getEntity(ent.getComponent<cro::Transform>().getChildIDs()[0]);
+        textEnt.getComponent<cro::Text>().setColour(textColourSelected);
     });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
-        [normalRect](cro::Entity ent, cro::uint64 flags)
+        [this, normalRect](cro::Entity ent, cro::uint64 flags)
     {
         ent.getComponent<cro::Sprite>().setTextureRect(normalRect);
+        auto textEnt = m_menuScene.getEntity(ent.getComponent<cro::Transform>().getChildIDs()[0]);
+        textEnt.getComponent<cro::Text>().setColour(textColourNormal);
     });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback(
         [this](cro::Entity, cro::uint64)
@@ -159,14 +163,18 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     normalRect = spriteSheet.getSprite("desert_normal").getTextureRect();
     activeRect = spriteSheet.getSprite("desert_active").getTextureRect();
     entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
-        [activeRect](cro::Entity ent, cro::uint64 flags)
+        [this, activeRect](cro::Entity ent, cro::uint64 flags)
     {
         ent.getComponent<cro::Sprite>().setTextureRect(activeRect);
+        auto textEnt = m_menuScene.getEntity(ent.getComponent<cro::Transform>().getChildIDs()[0]);
+        textEnt.getComponent<cro::Text>().setColour(textColourSelected);
     });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
-        [normalRect](cro::Entity ent, cro::uint64 flags)
+        [this, normalRect](cro::Entity ent, cro::uint64 flags)
     {
         ent.getComponent<cro::Sprite>().setTextureRect(normalRect);
+        auto textEnt = m_menuScene.getEntity(ent.getComponent<cro::Transform>().getChildIDs()[0]);
+        textEnt.getComponent<cro::Text>().setColour(textColourNormal);
     });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback(
         [this](cro::Entity, cro::uint64)
