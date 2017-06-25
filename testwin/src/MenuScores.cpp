@@ -54,8 +54,7 @@ source distribution.
 //TODO not duplicate these
 namespace
 {
-    const cro::Colour textColourSelected(1.f, 0.77f, 0.f);
-    const cro::Colour textColourNormal = cro::Colour::White();
+#include "MenuConsts.inl"
 }
 
 void MainState::createScoreMenu()

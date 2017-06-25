@@ -30,6 +30,7 @@ source distribution.
 #include "MainState.hpp"
 #include "Slider.hpp"
 #include "StateIDs.hpp"
+#include "RotateSystem.hpp"
 
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
@@ -52,12 +53,10 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 
-#include "RotateSystem.hpp"
 
 namespace
 {
-    const cro::Colour textColourSelected(1.f, 0.77f, 0.f);
-    const cro::Colour textColourNormal = cro::Colour::White();
+#include "MenuConsts.inl"
 }
 
 void MainState::createMainMenu()
@@ -107,10 +106,21 @@ void MainState::createMainMenu()
     gameControl.callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
     gameControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
     gameControl.callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([this]
-    (cro::Entity, cro::uint64)
+    (cro::Entity, cro::uint64 flags)
     {
-        requestStackClear();
-        requestStackPush(States::ID::GamePlaying);
+        if ((flags & cro::UISystem::LeftMouse)
+            || flags & cro::UISystem::Finger)
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::MenuController;
+            cmd.action = [](cro::Entity e, cro::Time)
+            {
+                auto& slider = e.getComponent<Slider>();
+                slider.active = true;
+                slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -static_cast<float>(cro::DefaultSceneSize.y), 0.f);
+            };
+            m_commandSystem->sendCommand(cmd);
+        }
     });
     gameControl.area.width = buttonNormalArea.width;
     gameControl.area.height = buttonNormalArea.height;
@@ -332,9 +342,9 @@ void MainState::createMainMenu()
             cmd.targetFlags = CommandID::MenuController;
             cmd.action = [](cro::Entity e, cro::Time)
             {
-            auto& slider = e.getComponent<Slider>();
-            slider.active = true;
-            slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -static_cast<float>(cro::DefaultSceneSize.y), 0.f);
+                auto& slider = e.getComponent<Slider>();
+                slider.active = true;
+                slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -static_cast<float>(cro::DefaultSceneSize.y), 0.f);
             };
             m_commandSystem->sendCommand(cmd);
         }
@@ -345,4 +355,6 @@ void MainState::createMainMenu()
     cancelControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
     cancelControl.area.width = buttonNormalArea.width;
     cancelControl.area.height = buttonNormalArea.height;
+
+    createMapSelect(controlEntity);
 }

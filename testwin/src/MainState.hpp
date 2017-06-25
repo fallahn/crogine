@@ -71,6 +71,7 @@ private:
     void loadAssets();
     void createScene();
     void createMainMenu();
+    void createMapSelect(cro::Entity);
     void createOptionsMenu();
     void createScoreMenu();
 

@@ -1,0 +1,49 @@
+sprite_sheet
+{
+	src = "assets/sprites/ui_maps.png"
+
+	sprite caves_normal
+	{
+		bounds = 8,8,432,432
+	}
+
+	sprite caves_active
+	{
+		bounds = 8,456,432,432
+	}
+	
+	sprite forest_normal
+	{
+		bounds = 440,8,432,432
+	}
+
+	sprite forest_active
+	{
+		bounds = 440,456,432,432
+	}
+	
+	sprite desert_normal
+	{
+		bounds = 872,8,432,432
+	}
+
+	sprite desert_active
+	{
+		bounds = 872,456,432,432
+	}
+	
+	sprite empty_normal
+	{
+		bounds = 1304,8,432,432
+	}
+
+	sprite empty_active
+	{
+		bounds = 1304,456,432,432
+	}
+
+	sprite padlock
+	{
+		bounds = 1736,40,312,304
+	}
+}

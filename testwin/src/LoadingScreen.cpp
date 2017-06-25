@@ -91,7 +91,7 @@ LoadingScreen::LoadingScreen()
         const auto& uniforms = m_shader.getUniformMap();
         m_transformIndex = uniforms.find("u_worldMatrix")->second;
         m_transform = glm::translate(glm::mat4(), { 60.f, 60.f, 0.f });
-        m_transform = glm::scale(m_transform, { 128.f, 64.f, 1.f });
+        m_transform = glm::scale(m_transform, { m_texture.getSize().x, m_texture.getSize().y, 1.f });
 
         glCheck(glUseProgram(m_shader.getGLHandle()));
         glCheck(glUniformMatrix4fv(uniforms.find("u_projectionMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));

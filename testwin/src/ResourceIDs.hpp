@@ -121,7 +121,8 @@ namespace CommandID
         Choppa = 0x80,
         Speedray = 0x100,
         Charger = 0x200,
-        Weaver = 0x400
+        Weaver = 0x400,
+        MapSelectController = 0x800
     };
 }
 

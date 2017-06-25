@@ -299,6 +299,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MainState.cpp" />
     <ClCompile Include="src\MenuMain.cpp" />
+    <ClCompile Include="src\MenuMapSelect.cpp" />
     <ClCompile Include="src\MenuOptions.cpp" />
     <ClCompile Include="src\MenuScores.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
@@ -346,6 +347,7 @@
     <ClInclude Include="src\VelocitySystem.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\MenuConsts.inl" />
     <None Include="src\PostRadial.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
