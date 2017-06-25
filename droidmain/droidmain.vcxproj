@@ -332,6 +332,7 @@
     <ClCompile Include="..\testwin\src\main.cpp" />
     <ClCompile Include="..\testwin\src\MainState.cpp" />
     <ClCompile Include="..\testwin\src\MenuMain.cpp" />
+    <ClCompile Include="..\testwin\src\MenuMapSelect.cpp" />
     <ClCompile Include="..\testwin\src\MenuOptions.cpp" />
     <ClCompile Include="..\testwin\src\MenuScores.cpp" />
     <ClCompile Include="..\testwin\src\MyApp.cpp" />
