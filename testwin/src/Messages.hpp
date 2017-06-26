@@ -41,7 +41,8 @@ namespace MessageID
     {
         BackgroundSystem = cro::Message::Count,
         GameMessage,
-        PlayerMessage
+        PlayerMessage,
+        NpcMessage
     };
 }
 
@@ -75,7 +76,8 @@ struct PlayerEvent final
         Died,
         Moved,
         WeaponStateChange,
-        HealthChanged
+        HealthChanged,
+        CollectedItem
     }type;
     glm::vec3 position;
     cro::uint32 entityID = 0;
@@ -83,7 +85,19 @@ struct PlayerEvent final
     {
         bool weaponActivated;
         float value;
+        cro::int32 itemID;
     };
+};
+
+struct NpcEvent
+{
+    enum
+    {
+        Died
+    }type;
+    cro::int32 npcType = -1;
+    glm::vec3 position;
+    cro::uint32 entityID = 0;
 };
 
 #endif //TL_MESSAGES_HPP_

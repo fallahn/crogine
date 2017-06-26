@@ -95,8 +95,8 @@ Mesh::Data QuadBuilder::build() const
     createIBO(meshData, idxData.data(), 0, sizeof(uint8));
 
     //spatial bounds
-    meshData.boundingBox[0] = { -halfSizeX, halfSizeY, -0.01f };
-    meshData.boundingBox[1] = { halfSizeX, -halfSizeX, 0.01f };
+    meshData.boundingBox[0] = { -halfSizeX, -halfSizeY, -0.01f };
+    meshData.boundingBox[1] = { halfSizeX, halfSizeX, 0.01f };
     meshData.boundingSphere.radius = glm::length(meshData.boundingBox[0]);
 
     return meshData;

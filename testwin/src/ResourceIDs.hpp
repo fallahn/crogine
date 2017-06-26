@@ -81,6 +81,7 @@ namespace GameModelID
         CollectableBot,
         CollectableHeart,
         CollectableShield,
+        CollectableWeaponUpgrade,
         Elite,
         TurretBase, TurretCannon,
         Choppa,

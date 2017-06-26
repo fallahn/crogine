@@ -205,6 +205,7 @@ void GameState::loadAssets()
     m_modelDefs[GameModelID::CollectableBot].loadFromFile("assets/models/collectable_bot.cmt", m_resources);
     m_modelDefs[GameModelID::CollectableHeart].loadFromFile("assets/models/collectable_heart.cmt", m_resources);
     m_modelDefs[GameModelID::CollectableShield].loadFromFile("assets/models/collectable_shield.cmt", m_resources);
+    m_modelDefs[GameModelID::CollectableWeaponUpgrade].loadFromFile("assets/models/weapon_upgrade.cmt", m_resources);
     m_modelDefs[GameModelID::Elite].loadFromFile("assets/models/elite.cmt", m_resources);
     m_modelDefs[GameModelID::TurretBase].loadFromFile("assets/models/turret_base.cmt", m_resources);
     m_modelDefs[GameModelID::TurretCannon].loadFromFile("assets/models/turret_cannon.cmt", m_resources);
@@ -302,7 +303,7 @@ void GameState::createScene()
     ps.type = cro::PhysicsShape::Type::Box;
     ps.extent = (bb[1] - bb[0]) * rockscale / 2.f;
     ps.extent.z = 0.1f;
-    
+
     for (auto i = 0u; i < rockfallCount; ++i)
     {
         entity = m_scene.createEntity();
@@ -323,7 +324,7 @@ void GameState::createScene()
     playerTx.setPosition({ -35.4f, 0.f, -9.3f });
     playerTx.setScale(playerScale);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::Player].materialIDs[0]));
+        m_resources.materials.get(m_modelDefs[GameModelID::Player].materialIDs[0]));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Velocity>().friction = 2.5f;
     bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID).boundingBox;
@@ -336,7 +337,7 @@ void GameState::createScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::PlayerShield].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::PlayerShield].materialIDs[0]));
+        m_resources.materials.get(m_modelDefs[GameModelID::PlayerShield].materialIDs[0]));
     entity.addComponent<cro::Transform>().setParent(playerEntity);
     entity.addComponent<Rotator>().speed = 1.f;
     entity.getComponent<Rotator>().axis.z = 1.f;
@@ -350,7 +351,7 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 5.41f, 1.4f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBatt].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableBatt].materialIDs[0]));
+        m_resources.materials.get(m_modelDefs[GameModelID::CollectableBatt].materialIDs[0]));
     auto& battSpin = entity.addComponent<Rotator>();
     battSpin.axis.y = 1.f;
     battSpin.speed = 3.2f;
@@ -364,7 +365,7 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 5.42f, 0.6f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBomb].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableBomb].materialIDs[0]));
+        m_resources.materials.get(m_modelDefs[GameModelID::CollectableBomb].materialIDs[0]));
     auto& bombSpin = entity.addComponent<Rotator>();
     bombSpin.axis.y = 1.f;
     bombSpin.speed = 2.9f;
@@ -378,7 +379,7 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 5.6f, -0.2f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBot].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableBot].materialIDs[0]));
+        m_resources.materials.get(m_modelDefs[GameModelID::CollectableBot].materialIDs[0]));
     auto& botSpin = entity.addComponent<Rotator>();
     botSpin.axis.y = 1.f;
     botSpin.speed = 2.994f;
@@ -392,7 +393,7 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 5.38f, -1.f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableHeart].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableHeart].materialIDs[0]));
+        m_resources.materials.get(m_modelDefs[GameModelID::CollectableHeart].materialIDs[0]));
     auto& heartSpin = entity.addComponent<Rotator>();
     heartSpin.axis.y = 1.f;
     heartSpin.speed = 2.873f;
@@ -406,7 +407,7 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 5.4f, -1.7f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableShield].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableShield].materialIDs[0]));
+        m_resources.materials.get(m_modelDefs[GameModelID::CollectableShield].materialIDs[0]));
     auto& shieldSpin = entity.addComponent<Rotator>();
     shieldSpin.axis.y = 1.f;
     shieldSpin.speed = 3.028f;
@@ -416,6 +417,18 @@ void GameState::createScene()
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
 
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableWeaponUpgrade].meshID),
+                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableWeaponUpgrade].materialIDs[0]));
+
+    entity.addComponent<cro::Transform>().setPosition({ 7.f, 0.f, -9.3f });
+    entity.addComponent<CollectableItem>().type = CollectableItem::WeaponUpgrade;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
+    //auto bounds = m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableWeaponUpgrade].meshID).boundingBox;
+    ps.extent = {0.16f, 0.16f, 0.16f};// (bounds[1] - bounds[0]) / 2.f;
+    entity.addComponent<cro::PhysicsObject>().addShape(ps);
+    entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
 
     //----NPCs----//
     //elite

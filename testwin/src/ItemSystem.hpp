@@ -42,7 +42,8 @@ struct CollectableItem final
         Bomb,
         EMP,
         Life,
-        Buddy
+        Buddy,
+        WeaponUpgrade
     }type;
 
     bool active = false;

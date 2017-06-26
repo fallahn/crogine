@@ -30,10 +30,12 @@ source distribution.
 #include "ItemsDirector.hpp"
 #include "ItemSystem.hpp"
 #include "ResourceIDs.hpp"
+#include "Messages.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Random.hpp>
 
 namespace
@@ -48,9 +50,36 @@ ItemDirector::ItemDirector()
 }
 
 //private
-void ItemDirector::handleMessage(const cro::Message&)
+void ItemDirector::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == MessageID::NpcMessage)
+    {
+        const auto& data = msg.getData<NpcEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case NpcEvent::Died:
+            if (m_releaseTime < 6)
+            {
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Collectable;
+                cmd.action = [data](cro::Entity entity, cro::Time)
+                {
+                    auto& collectable = entity.getComponent<CollectableItem>();
+                    if (collectable.type == CollectableItem::WeaponUpgrade && !collectable.active)
+                    {
+                        collectable.active = true;
+                        collectable.speed = moveSpeed - cro::Util::Random::value(0.05f, 0.18f);
+                        entity.getComponent<cro::Transform>().setPosition(data.position);
+                        //LOG("Spawned Weapon Upgrade " + std::to_string(data.position.x) + ", " + std::to_string(data.position.y), cro::Logger::Type::Info);
+                    }
+                };
+                sendCommand(cmd);
+            }
 
+            break;
+        }
+    }
 }
 
 void ItemDirector::handleEvent(const cro::Event&)
@@ -63,7 +92,8 @@ void ItemDirector::process(cro::Time dt)
     m_releaseTime -= dt.asSeconds();
     if (m_releaseTime < 0)
     {
-        auto type = cro::Util::Random::value(0, 4); //TODO better choose this so some are more common than others?
+        //ignore weapon upgrades, these are dropped by NPCs
+        auto type = cro::Util::Random::value(CollectableItem::Shield, CollectableItem::Buddy); //TODO better choose this so some are more common than others?
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Collectable;

@@ -31,6 +31,7 @@ source distribution.
 #include "VelocitySystem.hpp"
 #include "ResourceIDs.hpp"
 #include "Messages.hpp"
+#include "ItemSystem.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -156,7 +157,14 @@ void PlayerSystem::updateAlive(cro::Entity entity)
         }
         else if ((otherPo.getCollisionGroups() & (CollisionID::Collectable)) != 0)
         {
-            //TODO raise message
+            //raise message
+            const auto& item = otherEnt.getComponent<CollectableItem>();
+            auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+            msg->entityID = entity.getIndex();
+            msg->type = PlayerEvent::CollectedItem;
+            msg->itemID = item.type;
+
+            //TODO update player inventory
         }
         else if ((otherPo.getCollisionGroups() & (CollisionID::Bounds)) != 0)
         {

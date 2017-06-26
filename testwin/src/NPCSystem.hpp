@@ -70,6 +70,8 @@ struct WeaverNavigator final
     float moveSpeed = -2.7f;
     float yPos = 0.5f;
     cro::uint8 ident = 0;
+    bool dying = false;
+    float dyingTime = 0.f;
     static constexpr float spacing = 0.24f;
     static constexpr std::size_t count = 7;
 };

@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "PlayerWeaponsSystem.hpp"
+#include "ItemSystem.hpp"
 #include "Messages.hpp"
 #include "ResourceIDs.hpp"
 
@@ -52,8 +53,8 @@ namespace
     const float laserDamage = 0.2f;
 
     const float laserRate = 0.025f;
-    const float laserOverheat = 2.f;
-    const float laserCool = laserOverheat / 2.f;
+    const float laserOverheat = 4.f;
+    const float laserCool = laserOverheat / 4.f;
 
     const glm::vec3 idlePos(-100.f);
 }
@@ -254,11 +255,17 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
                 m_fireTime = pulseFireRate;
             }
             break;
+        case PlayerEvent::CollectedItem:
+            if (data.itemID == CollectableItem::WeaponUpgrade
+                && m_fireMode < FireMode::Laser) //TODO change when laser double implemented
+            {
+                //HAH wtf?
+                m_fireMode = static_cast<FireMode>(static_cast<cro::int32>(m_fireMode) + 1);
+            }
+            break;
         default: break;
         }
     }
-
-    //TODO increase fire mode if player collects power up
 }
 
 //private
