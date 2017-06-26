@@ -125,10 +125,16 @@ void NpcSystem::process(cro::Time dt)
                         
                         if (status.health < 0)
                         {
+                            //raise a message 
+                            auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                            msg->type = NpcEvent::Died;
+                            msg->npcType = status.type;
+                            msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+                            msg->entityID = entity.getIndex();
+
                             entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
                             hasCollision = true;
                         }
-                        //TODO raise some messages
                     }
                 }
             }
@@ -284,6 +290,21 @@ void NpcSystem::processWeaver(cro::Entity entity)
     status.weaver.tableIndex = (status.weaver.tableIndex + 1) % m_weaverTable.size();
 
     tx.move({ status.weaver.moveSpeed * fixedUpdate, 0.f, 0.f });
+
+    //check if part is dying
+    /*if (status.weaver.dying)
+    {
+        status.weaver.dyingTime -= fixedUpdate;
+        if (status.weaver.dyingTime < 0)
+        {
+            tx.setPosition(glm::vec3(-100.f));
+            status.wantsReset = false;
+            status.active = false;
+            status.weaver.dying = false;
+            LOG("Part Died", cro::Logger::Type::Info);
+        }
+        DPRINT("Dying", std::to_string(status.weaver.ident));
+    }*/
 }
 
 void NpcSystem::onEntityAdded(cro::Entity entity)

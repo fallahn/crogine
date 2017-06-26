@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/util/Random.hpp>
 
 namespace
@@ -86,6 +87,46 @@ void NpcDirector::handleMessage(const cro::Message& msg)
                 }
             };
             sendCommand(cmd);
+        }
+    }
+    else if (msg.id == MessageID::NpcMessage)
+    {
+        const auto& data = msg.getData<NpcEvent>();
+        switch (data.type)
+        {
+        default:break;
+        case NpcEvent::Died:
+
+            //if this was a weaver part then set the others to timed destruction
+            if (data.npcType == Npc::Weaver)
+            {
+                const auto entity = getScene().getEntity(data.entityID);
+                auto partID = entity.getComponent<Npc>().weaver.ident;
+
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Weaver;
+                cmd.action = [partID](cro::Entity entity, cro::Time)
+                {
+                    auto& status = entity.getComponent<Npc>();
+                    if (status.active && status.health > 0)
+                    {
+                        auto diff = partID;
+                        if (status.weaver.ident < diff)
+                        {
+                            diff -= status.weaver.ident;
+                        }
+                        else
+                        {
+                            diff = status.weaver.ident - diff;
+                        }
+                        status.weaver.dying = true;
+                        status.weaver.dyingTime = 0.1f * static_cast<float>(diff);
+                    }
+                };
+                sendCommand(cmd);
+            }
+
+            break;
         }
     }
 }
@@ -187,6 +228,7 @@ void NpcDirector::process(cro::Time dt)
                 status.weaver.yPos = yPos;
                 status.weaver.tableIndex = status.weaver.tableStartIndex;
                 status.health = weaverHealth;
+                status.weaver.dying = false;
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 tx.setPosition({ 7.f + (static_cast<float>(status.weaver.ident) * (WeaverNavigator::spacing * tx.getScale().x)), status.weaver.yPos, zDepth });

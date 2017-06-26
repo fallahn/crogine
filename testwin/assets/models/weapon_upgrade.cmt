@@ -1,0 +1,11 @@
+model weapon_upgrade
+{
+	mesh = quad
+	size = 0.32,0.32
+
+	material Unlit
+	{
+		diffuse = "assets/sprites/weapon_up.png"
+		blendmode = alpha
+	}
+}

@@ -44,6 +44,7 @@ struct PlayerWeapon final
         Pulse, Laser
     }type = Type::Pulse;
     float damage = 0.f;
+    float activeTime = 0.f;
 };
 
 class PlayerWeaponSystem final : public cro::System
