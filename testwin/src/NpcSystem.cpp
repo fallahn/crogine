@@ -292,19 +292,19 @@ void NpcSystem::processWeaver(cro::Entity entity)
     tx.move({ status.weaver.moveSpeed * fixedUpdate, 0.f, 0.f });
 
     //check if part is dying
-    /*if (status.weaver.dying)
+    if (status.weaver.dying)
     {
         status.weaver.dyingTime -= fixedUpdate;
         if (status.weaver.dyingTime < 0)
         {
-            tx.setPosition(glm::vec3(-100.f));
+            tx.setPosition(glm::vec3(100.f));
             status.wantsReset = false;
             status.active = false;
             status.weaver.dying = false;
             LOG("Part Died", cro::Logger::Type::Info);
         }
         DPRINT("Dying", std::to_string(status.weaver.ident));
-    }*/
+    }
 }
 
 void NpcSystem::onEntityAdded(cro::Entity entity)
