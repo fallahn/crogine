@@ -638,7 +638,7 @@ void GameState::createScene()
     }
 
     //use a single laser we'll scale it to make it look bigger or smaller
-    glm::vec3 laserScale(0.1f, 0.006f, 1.f);
+    glm::vec3 laserScale(0.15f, 0.006f, 1.f);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_laser");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
