@@ -47,6 +47,7 @@ source distribution.
 #include "NpcDirector.hpp"
 #include "PlayerSystem.hpp"
 #include "PlayerWeaponsSystem.hpp"
+#include "NpcWeaponSystem.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -155,6 +156,7 @@ void GameState::addSystems()
     m_scene.addSystem<NpcSystem>(mb);
     m_scene.addSystem<PlayerSystem>(mb);
     m_scene.addSystem<PlayerWeaponSystem>(mb);
+    m_scene.addSystem<NpcWeaponSystem>(mb);
     m_scene.addSystem<cro::SceneGraph>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
@@ -254,7 +256,7 @@ void GameState::createScene()
     //terrain chunks
     cro::PhysicsShape boundsShape;
     boundsShape.type = cro::PhysicsShape::Type::Box;
-    boundsShape.extent = { 10.65f, 0.6f, 0.2f };
+    boundsShape.extent = { 10.65f, 0.6f, 1.6f };
     boundsShape.position = { 0.f, 2.85f, 0.f };
 
     entity = m_scene.createEntity();
@@ -267,7 +269,7 @@ void GameState::createScene()
     boundsShape.position.y = -2.85f;
     entity.getComponent<cro::PhysicsObject>().addShape(boundsShape);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Environment);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::NpcLaser);
 
     auto chunkEntityA = entity; //keep this so we can attach turrets to it
 
@@ -280,7 +282,7 @@ void GameState::createScene()
     boundsShape.position.y = 2.85f;
     entity.getComponent<cro::PhysicsObject>().addShape(boundsShape);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Environment);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::NpcLaser);
 
     auto chunkEntityB = entity;
 
@@ -288,8 +290,8 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -9.3f });
     entity.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Bounds);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
-    boundsShape.extent = { 1.25f, 4.f, 0.5f };
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser | CollisionID::NpcLaser);
+    boundsShape.extent = { 1.25f, 4.f, 1.5f };
     boundsShape.position.y = 0.f;
     boundsShape.position.x = -6.25f;
     entity.getComponent<cro::PhysicsObject>().addShape(boundsShape);
@@ -505,7 +507,7 @@ void GameState::createScene()
     entity.getComponent<cro::Transform>().setParent(chunkEntityA); //attach to scenery
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TurretBase].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::TurretBase].materialIDs[0]));
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Turret;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::TurretA;
     
     auto canEnt = m_scene.createEntity();
     canEnt.addComponent<cro::Transform>().setParent(entity);
@@ -520,7 +522,7 @@ void GameState::createScene()
     entity.getComponent<cro::Transform>().setParent(chunkEntityB); //attach to scenery
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TurretBase].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::TurretBase].materialIDs[0]));
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Turret;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::TurretB;
 
     canEnt = m_scene.createEntity();
     canEnt.addComponent<cro::Transform>().setParent(entity);
@@ -528,7 +530,6 @@ void GameState::createScene()
                                     m_resources.materials.get(m_modelDefs[GameModelID::TurretCannon].materialIDs[0]));
     canEnt.addComponent<Npc>().type = Npc::Turret;
     canEnt.addComponent<cro::PhysicsObject>().addShape(turrShape);
-
 
     //weaver
     glm::vec3 weaverScale(0.35f);
@@ -661,6 +662,28 @@ void GameState::createScene()
 
     entity.addComponent<PlayerWeapon>().type = PlayerWeapon::Type::Laser;
 
+
+    //npc weapons - orbs
+    auto orbScale = glm::vec3(0.005f);
+    static const std::size_t orbCount = 20;
+    for (auto i = 0u; i < orbCount; ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("npc_orb");
+        size = entity.getComponent<cro::Sprite>().getSize();
+
+        //entity.addComponent<cro::Transform>().setParent((i % 2 == 0) ? cannonOne : cannonTwo);
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, -8.f });
+        entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
+        entity.getComponent<cro::Transform>().setScale(orbScale);
+
+        ps.extent = glm::vec3(size.x / 2.f, size.y / 2.f, 1.f) * orbScale;
+        entity.addComponent<cro::PhysicsObject>().addShape(ps);
+        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NpcLaser);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Environment);
+
+        entity.addComponent<NpcWeapon>().type = NpcWeapon::Orb;
+    }
 
     //3D camera
     auto ent = m_scene.createEntity();

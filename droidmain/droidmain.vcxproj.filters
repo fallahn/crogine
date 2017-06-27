@@ -96,5 +96,8 @@
     <ClCompile Include="..\testwin\src\MenuMapSelect.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
+    <ClCompile Include="..\testwin\src\NpcWeaponSystem.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

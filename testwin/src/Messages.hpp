@@ -93,10 +93,12 @@ struct NpcEvent
 {
     enum
     {
-        Died
+        Died,
+        FiredWeapon
     }type;
     cro::int32 npcType = -1;
     glm::vec3 position;
+    glm::vec3 velocity;
     cro::uint32 entityID = 0;
 };
 
