@@ -50,10 +50,10 @@ namespace
     const float zDepth = -9.3f; //bums, this is replicated from NpcSystem.cpp
     const float weaverSpawnTime = 6.f;
 
-    const float eliteHealth = 15.f;
+    const float eliteHealth = 100.f;
     const float choppaHealth = 8.f;
     const float speedrayHealth = 2.f;
-    const float weaverHealth = 5.f;
+    const float weaverHealth = 4.f;
 
     const float turretOrbTime = 0.5f;
 }

@@ -348,6 +348,7 @@
     <Content Include="assets\assets\models\turret_base.cmt" />
     <Content Include="assets\assets\models\turret_cannon.cmf" />
     <Content Include="assets\assets\models\turret_cannon.cmt" />
+    <Content Include="assets\assets\models\weapon_upgrade.cmt" />
     <Content Include="assets\assets\models\weaver_body.cmf" />
     <Content Include="assets\assets\models\weaver_body.cmt" />
     <Content Include="assets\assets\models\weaver_head.cmf" />
@@ -361,6 +362,7 @@
     <Content Include="assets\assets\sprites\ui_maps.spt" />
     <Content Include="assets\assets\sprites\ui_menu.png" />
     <Content Include="assets\assets\sprites\ui_menu.spt" />
+    <Content Include="assets\assets\sprites\weapon_up.png" />
     <Content Include="res\drawable-hdpi\icon.png" />
     <Content Include="res\drawable-xhdpi\icon.png" />
     <Content Include="res\drawable-xxhdpi\icon.png" />
