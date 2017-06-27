@@ -50,7 +50,7 @@ namespace
     const float pulseDamageSingle = 5.f;
     const float pulseDamageDouble = 2.5f;
     const float pulseDamageTriple = 1.2f;
-    const float laserDamage = 0.5f;
+    const float laserDamage = 0.3f;
 
     const float laserRate = 0.025f;
     const float laserOverheat = 4.f;

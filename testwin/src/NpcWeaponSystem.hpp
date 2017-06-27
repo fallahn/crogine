@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #ifndef TL_NPC_WEAPONS_SYSTEM_HPP_
-#define TL_NPC_WEAPONS_SYSEMM_HPP_
+#define TL_NPC_WEAPONS_SYSTEM_HPP_
 
 #include <crogine/ecs/System.hpp>
 
