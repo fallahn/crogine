@@ -117,13 +117,14 @@ namespace CommandID
         SnowParticles = 0x4,
         Player = 0x8,
         Collectable = 0x10,
-        Turret = 0x20,
-        Elite = 0x40,
-        Choppa = 0x80,
-        Speedray = 0x100,
-        Charger = 0x200,
-        Weaver = 0x400,
-        MapSelectController = 0x800
+        TurretA = 0x20,
+        TurretB = 0x40,
+        Elite = 0x80,
+        Choppa = 0x100,
+        Speedray = 0x200,
+        Charger = 0x400,
+        Weaver = 0x800,
+        MapSelectController = 0x1000
     };
 }
 
@@ -136,7 +137,8 @@ namespace CollisionID
         Collectable = 4,
         Environment = 8,
         Bounds = 16,
-        PlayerLaser = 32
+        PlayerLaser = 32,
+        NpcLaser = 64
     };
 }
 

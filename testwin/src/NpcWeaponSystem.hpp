@@ -27,26 +27,51 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_NPC_DIRECTOR_HPP_
-#define TL_NPC_DIRECTOR_HPP_
+#ifndef TL_NPC_WEAPONS_SYSTEM_HPP_
+#define TL_NPC_WEAPONS_SYSEMM_HPP_
 
-#include <crogine/ecs/Director.hpp>
+#include <crogine/ecs/System.hpp>
 
-class NpcDirector final : public cro::Director
+#include <glm/vec3.hpp>
+
+#include <vector>
+
+struct NpcWeapon final
 {
-public:
-    NpcDirector();
-
-private:
-    float m_eliteRespawn;
-    float m_choppaRespawn;
-    float m_speedrayRespawn;
-    float m_weaverRespawn;
-    float m_turretOrbTime;
-
-    void handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    void process(cro::Time) override;
+    enum
+    {
+        Pulse,
+        Laser,
+        Orb,
+        Missile
+    }type;
+    float damage = 0.f;
+    glm::vec3 velocity;
 };
 
-#endif //TL_NPC_DIRECTOR_HPP_
+class NpcWeaponSystem final : public cro::System
+{
+public:
+    NpcWeaponSystem(cro::MessageBus&);
+
+    void handleMessage(const cro::Message&) override;
+    void process(cro::Time) override;
+
+private:
+    float m_accumulator;
+    float m_backgroundSpeed;
+
+    void onEntityAdded(cro::Entity) override;
+
+    void processPulse(cro::Entity);
+    void processLaser(cro::Entity);
+    void processOrb(std::size_t&, float);
+    void processMissile(cro::Entity);
+
+    std::size_t m_orbCount;
+    std::vector<cro::int32> m_aliveOrbs;
+    std::size_t m_deadOrbCount;
+    std::vector<cro::int32> m_deadOrbs;
+};
+
+#endif //TL_NPC_WEAPONS_SYSTEM_HPP_

@@ -18,6 +18,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/MyApp.cpp 
   ${PROJECT_DIR}/NpcDirector.cpp
   ${PROJECT_DIR}/NpcSystem.cpp 
+  ${PROJECT_DIR}/NpcWeaponSystem.cpp 
   ${PROJECT_DIR}/PlayerDirector.cpp
   ${PROJECT_DIR}/PlayerSystem.cpp
   ${PROJECT_DIR}/PlayerWeaponsSystem.cpp

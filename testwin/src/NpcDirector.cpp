@@ -35,8 +35,12 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/util/Random.hpp>
+
+#include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace
 {
@@ -49,13 +53,16 @@ namespace
     const float choppaHealth = 8.f;
     const float speedrayHealth = 2.f;
     const float weaverHealth = 5.f;
+
+    const float turretOrbTime = 0.5f;
 }
 
 NpcDirector::NpcDirector()
-    : m_eliteRespawn(eliteSpawnTime / 4.f),
-    m_choppaRespawn(choppaSpawnTime / 2.f),
-    m_speedrayRespawn(choppaSpawnTime),
-    m_weaverRespawn(1.f)
+    : m_eliteRespawn    (eliteSpawnTime / 4.f),
+    m_choppaRespawn     (choppaSpawnTime / 2.f),
+    m_speedrayRespawn   (choppaSpawnTime),
+    m_weaverRespawn     (1.f),
+    m_turretOrbTime     (turretOrbTime)
 {
 
 }
@@ -76,7 +83,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
             //if a new chunk is created send a message
             //to the turrets to tell them to reposition
             cro::Command cmd;
-            cmd.targetFlags = CommandID::Turret;
+            cmd.targetFlags = CommandID::TurretA | CommandID::TurretB;
             cmd.action = [data](cro::Entity entity, cro::Time)
             {
                 auto& tx = entity.getComponent<cro::Transform>();
@@ -232,6 +239,36 @@ void NpcDirector::process(cro::Time dt)
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 tx.setPosition({ 7.f + (static_cast<float>(status.weaver.ident) * (WeaverNavigator::spacing * tx.getScale().x)), status.weaver.yPos, zDepth });
+            }
+        };
+        sendCommand(cmd);
+    }
+
+    //TODO switch between turrets, and check player is not too close
+    //when firing
+    m_turretOrbTime -= dtSec;
+    if (m_turretOrbTime < 0)
+    {
+        m_turretOrbTime = cro::Util::Random::value(turretOrbTime - 1.f, turretOrbTime + 1.f);
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::TurretA | CommandID::TurretB;
+        cmd.action = [this](cro::Entity entity, cro::Time)
+        {
+            if (entity.getComponent<cro::Model>().isVisible())
+            {
+                const auto& tx = entity.getComponent<cro::Transform>();
+                float rotation = getScene().getEntity(tx.getChildIDs()[0]).getComponent<cro::Transform>().getRotation().z;
+
+                for (auto i = 0u; i < 2; ++i)
+                {
+                    auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                    msg->entityID = entity.getIndex();
+                    msg->npcType = Npc::Turret;
+                    msg->type = NpcEvent::FiredWeapon;
+                    msg->position = tx.getWorldPosition();
+                    msg->position.z += 0.18f;
+                    msg->velocity = glm::rotate(glm::vec3(0.f, 1.f, 0.f), (rotation - 0.2f) + (static_cast<float>(i) * 0.4f), glm::vec3(0.f, 0.f, 1.f));
+                }
             }
         };
         sendCommand(cmd);

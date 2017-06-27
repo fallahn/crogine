@@ -12,4 +12,19 @@ sprite_sheet
 	{
 		bounds = 0,25,214,35
 	}
+
+	sprite npc_pulse
+	{
+		bounds = 27,62,187,25
+	}
+
+	sprite npc_laser
+	{
+		bounds = 0,87,214,35
+	}
+
+	sprite npc_orb
+	{
+		bounds = 215,84,40,40
+	}
 }

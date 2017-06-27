@@ -50,13 +50,13 @@ namespace
     const float pulseDamageSingle = 5.f;
     const float pulseDamageDouble = 2.5f;
     const float pulseDamageTriple = 1.2f;
-    const float laserDamage = 0.2f;
+    const float laserDamage = 0.5f;
 
     const float laserRate = 0.025f;
     const float laserOverheat = 4.f;
     const float laserCool = laserOverheat / 4.f;
 
-    const glm::vec3 idlePos(-100.f);
+    const glm::vec3 idlePos(-100.f); //be careful with this. When setting inactive actors to the same postion they cause collisions off screen
 }
 
 PlayerWeaponSystem::PlayerWeaponSystem(cro::MessageBus& mb)
