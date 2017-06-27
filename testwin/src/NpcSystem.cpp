@@ -132,8 +132,12 @@ void NpcSystem::process(cro::Time dt)
                             msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
                             msg->entityID = entity.getIndex();
 
-                            entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
-                            hasCollision = true;
+                            if (status.type != Npc::Choppa)
+                            {
+                                //TODO make this a case for all with dying animation
+                                entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
+                                hasCollision = true;
+                            }
                         }
                     }
                 }
@@ -150,6 +154,7 @@ void NpcSystem::process(cro::Time dt)
                     break;
                 case Npc::Choppa:
                     processChoppa(entity);
+                    hasCollision = false; //we want to play dying animation
                     break;
                 case Npc::Turret:
                     processTurret(entity);
@@ -239,6 +244,8 @@ void NpcSystem::processChoppa(cro::Entity entity)
     auto& tx = entity.getComponent<cro::Transform>();
     auto& status = entity.getComponent<Npc>();
 
+    status.choppa.inCombat = (status.health > 0);
+
     if (status.choppa.inCombat)
     {
         //fly / shoot
@@ -250,7 +257,7 @@ void NpcSystem::processChoppa(cro::Entity entity)
     else
     {
         //diiieeeee
-        tx.rotate({ 0.f, 1.f, 0.f }, 3.f + fixedUpdate);
+        tx.rotate({ 0.f, 0.f, 1.f }, 13.f + fixedUpdate);
         tx.move(status.choppa.deathVelocity * fixedUpdate);
         status.choppa.deathVelocity += gravity * fixedUpdate;
     }
@@ -262,8 +269,8 @@ void NpcSystem::processTurret(cro::Entity entity)
     
     glm::vec3 target = m_playerPosition - tx.getWorldPosition();
 
-    float rotation = atan2(target.x, target.y);
-    tx.setRotation({ 0.f, -rotation, 0.f });
+    float rotation = -atan2(target.x, target.y);
+    tx.setRotation({ 0.f, rotation, 0.f });
 }
 
 void NpcSystem::processSpeedray(cro::Entity entity)

@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Constants.hpp>
 
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -186,10 +187,12 @@ void NpcDirector::process(cro::Time dt)
                 status.choppa.deathVelocity.x = status.choppa.moveSpeed;
                 status.choppa.tableIndex = cro::Util::Random::value(0, 40); //hmm don't have table size here (see NpcSystem)
                 status.health = choppaHealth;
+                status.choppa.deathVelocity = {};
 
                 //reset position
                 auto& tx = entity.getComponent<cro::Transform>();
                 tx.setPosition({ 7.f, -ChoppaNavigator::spacing + (status.choppa.ident * ChoppaNavigator::spacing), zDepth });
+                tx.setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
             }
         };
         sendCommand(cmd);
