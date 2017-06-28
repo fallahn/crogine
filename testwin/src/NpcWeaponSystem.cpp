@@ -109,7 +109,7 @@ void NpcWeaponSystem::handleMessage(const cro::Message& msg)
 
                 id = getScene()->getEntity(laserEntID).getComponent<cro::Transform>().getChildIDs()[1];
                 childEnt = getScene()->getEntity(id);
-                //don'tplace here as we'll collide too soon
+                //don't place here as we'll collide too soon
                 //childEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
                 childEnt.getComponent<cro::Sprite>().setColour(cro::Colour::White());
 
@@ -179,7 +179,7 @@ void NpcWeaponSystem::processLaser(cro::Entity entity)
     if (buns > 0.2)
     {
         auto alpha = orbEnt.getComponent<cro::Sprite>().getColour().getAlpha();
-        alpha = std::min(1.f, alpha + (fixedStep * 2.f));
+        alpha = std::min(1.f, alpha + (fixedStep/* * 2.f*/));
         orbEnt.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 1.f, 1.f, alpha));
 
         if (alpha == 1)
