@@ -96,7 +96,7 @@ glm::vec3 Transform::getOrigin() const
 
 glm::vec3 Transform::getPosition() const
 {
-    return m_position + (m_origin * m_scale);
+    return m_position;// +(m_origin * m_scale);
 }
 
 glm::vec3 Transform::getWorldPosition() const
@@ -175,6 +175,7 @@ bool Transform::addChild(uint32 id)
         }
         
         *freeSlot = id;
+        //we have to sort these descending so negative values are last
         std::sort(std::begin(m_children), std::end(m_children), [](int32 i, int32 j) { return i > j; });
 
         //mark for update

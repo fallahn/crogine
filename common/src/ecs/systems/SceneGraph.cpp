@@ -70,9 +70,10 @@ void SceneGraph::process(Time dt)
             {
                 //remove the parent from all the children
                 auto& children = getScene()->getEntity(tx.m_lastParent).getComponent<Transform>().m_children;
-                for (auto& c : children)
+                //for (auto& c : children)
+                for(auto i =0u; children[i] != -1; ++i)
                 {
-                    getScene()->getEntity(c).getComponent<Transform>().removeParent();
+                    getScene()->getEntity(children[i]).getComponent<Transform>().removeParent();
                 }
 
                 tx.m_lastParent = -1;

@@ -152,7 +152,7 @@ void NpcDirector::process(cro::Time dt)
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Elite;
-        cmd.action = [](cro::Entity entity, cro::Time)
+        cmd.action = [this](cro::Entity entity, cro::Time)
         {
             auto& status = entity.getComponent<Npc>();
             if (!status.active)
@@ -161,6 +161,7 @@ void NpcDirector::process(cro::Time dt)
                 status.elite.destination.x = cro::Util::Random::value(1.f, 4.f);
                 status.elite.movementCount = cro::Util::Random::value(4, 8);
                 status.elite.pauseTime = cro::Util::Random::value(1.2f, 2.2f);
+                status.elite.firetime = cro::Util::Random::value(2.5f, 3.2f);
                 status.health = eliteHealth;
 
                 auto& tx = entity.getComponent<cro::Transform>();

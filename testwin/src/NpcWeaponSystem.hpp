@@ -72,6 +72,8 @@ private:
     std::vector<cro::int32> m_aliveOrbs;
     std::size_t m_deadOrbCount;
     std::vector<cro::int32> m_deadOrbs;
+
+    std::vector<cro::int32> m_activeLasers;
 };
 
 #endif //TL_NPC_WEAPONS_SYSTEM_HPP_
