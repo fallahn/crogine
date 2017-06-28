@@ -174,6 +174,11 @@ void NpcSystem::process(cro::Time dt)
                 {
                     status.wantsReset = false;
                     status.active = false;
+
+                    auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                    msg->entityID = entity.getIndex();
+                    msg->npcType = status.type;
+                    msg->type = NpcEvent::ExitScreen;
                 }
                 else if (visible)
                 {
@@ -234,6 +239,20 @@ void NpcSystem::processElite(cro::Entity entity)
             status.elite.destination = (status.elite.movementCount)
                 ? m_elitePositions[cro::Util::Random::value(0, m_elitePositions.size() - 1)]
                 : glm::vec3(-7.f, tx.getWorldPosition().y, zDepth);
+        }
+
+        //check weapon fire
+        status.elite.firetime -= fixedUpdate;
+        if (status.elite.firetime < 0)
+        {
+            LOG("Fired Elite laser", cro::Logger::Type::Info);
+            status.elite.firetime = cro::Util::Random::value(2.5f, 3.2f);
+
+            auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+            msg->entityID = entity.getIndex();
+            msg->npcType = Npc::Elite;
+            msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+            msg->type = NpcEvent::FiredWeapon;
         }
     }
     tx.move(movement * fixedUpdate);
@@ -308,9 +327,9 @@ void NpcSystem::processWeaver(cro::Entity entity)
             status.wantsReset = false;
             status.active = false;
             status.weaver.dying = false;
-            LOG("Part Died", cro::Logger::Type::Info);
+            //LOG("Part Died", cro::Logger::Type::Info);
         }
-        DPRINT("Dying", std::to_string(status.weaver.ident));
+        //DPRINT("Dying", std::to_string(status.weaver.ident));
     }
 }
 

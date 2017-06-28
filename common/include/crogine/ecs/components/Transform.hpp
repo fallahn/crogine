@@ -151,19 +151,6 @@ namespace cro
         int32 getParentID() const { return m_parent; }
 
         /*!
-        \brief Sets the child node at the given index.
-        \param id ID of the entity to add as a child.
-        No more than MaxChildren may be added to any one transform.
-        \returns false if child was not successfully added
-        */
-        bool addChild(uint32 id);
-
-        /*!
-        \brief Removes a child with the given entity ID if it exists.
-        */
-        void removeChild(uint32 id);
-
-        /*!
         \brief Returns a read-only list of child IDs
         */
         const std::array<int32, MaxChildren>& getChildIDs() const { return m_children; }
@@ -192,6 +179,19 @@ namespace cro
         mutable uint8 m_dirtyFlags;
 
         friend class SceneGraph;
+
+        /*!
+        \brief Sets the child node at the given index.
+        \param id ID of the entity to add as a child.
+        No more than MaxChildren may be added to any one transform.
+        \returns false if child was not successfully added
+        */
+        bool addChild(uint32 id);
+
+        /*!
+        \brief Removes a child with the given entity ID if it exists.
+        */
+        void removeChild(uint32 id);
     };
 }
 

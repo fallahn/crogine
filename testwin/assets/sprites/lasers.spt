@@ -25,6 +25,6 @@ sprite_sheet
 
 	sprite npc_orb
 	{
-		bounds = 215,84,40,40
+		bounds = 216,85,39,39
 	}
 }

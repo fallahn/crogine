@@ -94,7 +94,8 @@ struct NpcEvent
     enum
     {
         Died,
-        FiredWeapon
+        FiredWeapon,
+        ExitScreen
     }type;
     cro::int32 npcType = -1;
     glm::vec3 position;

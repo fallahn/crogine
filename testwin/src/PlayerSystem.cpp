@@ -155,6 +155,10 @@ void PlayerSystem::updateAlive(cro::Entity entity)
                 msg->type = PlayerEvent::Died;
             }
         }
+        else if ((otherPo.getCollisionGroups() & (CollisionID::NpcLaser)) != 0)
+        {
+            //TODO subtract health based on weapon type.
+        }
         else if ((otherPo.getCollisionGroups() & (CollisionID::Collectable)) != 0)
         {
             //raise message

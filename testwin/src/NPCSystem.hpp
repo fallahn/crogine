@@ -42,6 +42,7 @@ struct EliteNavigator final
     bool active = false;
     float pauseTime = 1.f;
     cro::uint16 movementCount = 5;
+    float firetime = 4.f;
     std::size_t idleIndex = 0;
 };
 
