@@ -74,7 +74,7 @@ NpcSystem::NpcSystem(cro::MessageBus& mb)
 
     m_choppaTable = cro::Util::Wavetable::sine(1.f, 0.4f);
     m_speedrayTable = cro::Util::Wavetable::sine(0.5f, 1.6f);
-    m_weaverTable = cro::Util::Wavetable::sine(0.62f, 0.12f);
+    m_weaverTable = cro::Util::Wavetable::sine(0.62f, 0.06f);
 }
 
 //public
@@ -219,7 +219,7 @@ void NpcSystem::processElite(cro::Entity entity)
             status.elite.pauseTime = cro::Util::Random::value(1.4f, 2.1f);
             status.elite.movementCount--;
 
-            status.elite.destination = m_eliteIdlePositions[status.elite.idleIndex] + tx.getWorldPosition();
+            status.elite.destination = m_eliteIdlePositions[status.elite.idleIndex] + status.elite.destination;// tx.getWorldPosition();
         }
     }
     else
@@ -276,7 +276,7 @@ void NpcSystem::processChoppa(cro::Entity entity)
     else
     {
         //diiieeeee
-        tx.rotate({ 0.f, 0.f, 1.f }, 13.f + fixedUpdate);
+        tx.rotate({ 1.f, 0.f, 0.f }, 0.1f + fixedUpdate);
         tx.move(status.choppa.deathVelocity * fixedUpdate);
         status.choppa.deathVelocity += gravity * fixedUpdate;
     }

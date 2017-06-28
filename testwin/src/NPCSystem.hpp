@@ -49,19 +49,20 @@ struct EliteNavigator final
 struct ChoppaNavigator final
 {
     std::size_t tableIndex = 0;
-    float moveSpeed = -0.9f;
+    float moveSpeed = -0.8f;
     bool inCombat = true;
     glm::vec3 deathVelocity;
     cro::uint8 ident = 0;
-    static constexpr float spacing = 1.8f;
+    static constexpr float spacing = 1.4f;
 };
 
 struct SpeedrayNavigator final
 {
     std::size_t tableIndex = 0;
-    float moveSpeed = -5.f;
+    float moveSpeed = -3.f;
     cro::uint8 ident = 0;
     static constexpr std::size_t count = 5;
+    static constexpr float spacing = 1.4f;
 };
 
 struct WeaverNavigator final
@@ -73,7 +74,7 @@ struct WeaverNavigator final
     cro::uint8 ident = 0;
     bool dying = false;
     float dyingTime = 0.f;
-    static constexpr float spacing = 0.24f;
+    static constexpr float spacing = 0.3f;
     static constexpr std::size_t count = 7;
 };
 

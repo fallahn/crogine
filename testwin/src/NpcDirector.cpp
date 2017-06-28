@@ -48,7 +48,7 @@ namespace
     const float eliteSpawnTime = 24.f;
     const float choppaSpawnTime = 9.f;
     const float zDepth = -9.3f; //bums, this is replicated from NpcSystem.cpp
-    const float weaverSpawnTime = 6.f;
+    const float weaverSpawnTime = 12.f;
 
     const float eliteHealth = 100.f;
     const float choppaHealth = 8.f;
@@ -62,7 +62,7 @@ NpcDirector::NpcDirector()
     : m_eliteRespawn    (eliteSpawnTime / 4.f),
     m_choppaRespawn     (choppaSpawnTime / 2.f),
     m_speedrayRespawn   (choppaSpawnTime),
-    m_weaverRespawn     (1.f),
+    m_weaverRespawn     (6.f),
     m_turretOrbTime     (turretOrbTime)
 {
 
@@ -175,10 +175,11 @@ void NpcDirector::process(cro::Time dt)
     if (m_choppaRespawn < 0)
     {
         m_choppaRespawn = choppaSpawnTime + cro::Util::Random::value(-2.f, 3.6439f);
+        bool vertical = ((cro::Util::Random::value(0, 1) % 2) == 0);
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Choppa;
-        cmd.action = [](cro::Entity entity, cro::Time)
+        cmd.action = [vertical](cro::Entity entity, cro::Time)
         {
             auto& status = entity.getComponent<Npc>();
             if (!status.active)
@@ -192,7 +193,16 @@ void NpcDirector::process(cro::Time dt)
 
                 //reset position
                 auto& tx = entity.getComponent<cro::Transform>();
-                tx.setPosition({ 7.f, -ChoppaNavigator::spacing + (status.choppa.ident * ChoppaNavigator::spacing), zDepth });
+
+                if (vertical)
+                {
+                    tx.setPosition({ 7.f, -ChoppaNavigator::spacing + (status.choppa.ident * ChoppaNavigator::spacing), zDepth });                    
+                }
+                else
+                {
+                    auto yPos = cro::Util::Random::value(-1.9f, 1.9f);
+                    tx.setPosition({ 7.f + (status.choppa.ident * ChoppaNavigator::spacing), yPos, zDepth });
+                }
                 tx.setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
             }
         };
@@ -214,7 +224,7 @@ void NpcDirector::process(cro::Time dt)
 
                 //reset position
                 auto& tx = entity.getComponent<cro::Transform>();
-                tx.setPosition({ 7.f, 0.f, zDepth });
+                tx.setPosition({ 7.f + static_cast<float>(status.speedray.ident) * SpeedrayNavigator::spacing, 0.f, zDepth });
             }
         };
         sendCommand(cmd);
@@ -226,7 +236,7 @@ void NpcDirector::process(cro::Time dt)
     if (m_weaverRespawn < 0)
     {
         m_weaverRespawn = weaverSpawnTime;
-        auto yPos = cro::Util::Random::value(-1.2f, 1.2f);
+        auto yPos = cro::Util::Random::value(-1.9f, 1.9f);
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Weaver;
