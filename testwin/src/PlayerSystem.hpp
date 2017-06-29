@@ -40,6 +40,7 @@ struct PlayerInfo final
     }state = State::Spawning;
     cro::uint32 shieldEntity = 0;
     float health = 100.f;
+    float maxParticleRate = 0.f;
 };
 
 class PlayerSystem final : public cro::System
@@ -59,6 +60,8 @@ private:
     void updateAlive(cro::Entity);
     void updateDying(cro::Entity);
     void updateDead(cro::Entity);
+
+    void onEntityAdded(cro::Entity) override;
 };
 
 #endif //TL_PLAYER_SYSTEM_HPP_

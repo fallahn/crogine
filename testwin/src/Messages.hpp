@@ -95,11 +95,13 @@ struct NpcEvent
     {
         Died,
         FiredWeapon,
+        HealthChanged,
         ExitScreen
     }type;
     cro::int32 npcType = -1;
     glm::vec3 position;
     glm::vec3 velocity;
+    float value = 0.f;
     cro::uint32 entityID = 0;
 };
 

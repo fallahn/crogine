@@ -354,6 +354,8 @@
     <Content Include="assets\assets\models\weaver_head.cmf" />
     <Content Include="assets\assets\models\weaver_head.cmt" />
     <Content Include="assets\assets\particles\rock_fragment.png" />
+    <Content Include="assets\assets\particles\smoke.cps" />
+    <Content Include="assets\assets\particles\smoke.png" />
     <Content Include="assets\assets\particles\snowflake.png" />
     <Content Include="assets\assets\sprites\lasers.png" />
     <Content Include="assets\assets\sprites\lasers.spt" />

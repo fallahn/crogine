@@ -15,7 +15,7 @@ particle_system smoke
 
 	forces
 	{
-		force = -0.5,0.3,0
+		force = -0.7,0.85,0
 		//force = -1,-0.2,0
 		//force = -1,-0.2,0
 		//force = -1,-0.2,0

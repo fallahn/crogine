@@ -41,7 +41,7 @@ public:
     PlayerDirector();
 
     void handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override {};
+    void handleMessage(const cro::Message&) override;
     void process(cro::Time) override;
 
 private:

@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <glm/gtx/norm.hpp>
 
@@ -159,14 +160,19 @@ void PlayerSystem::updateAlive(cro::Entity entity)
         else if ((otherPo.getCollisionGroups() & (CollisionID::NpcLaser)) != 0)
         {
             //subtract health based on weapon type.
+            auto& playerInfo = entity.getComponent<PlayerInfo>();
             if (otherEnt.hasComponent<NpcWeapon>()) //lasers are parented, and weapon is on that entity
             {
-                entity.getComponent<PlayerInfo>().health -= otherEnt.getComponent<NpcWeapon>().damage;
+                playerInfo.health -= otherEnt.getComponent<NpcWeapon>().damage;
             }
             else
             {
-                entity.getComponent<PlayerInfo>().health = 0.f; //lasers are one hit kill
+                playerInfo.health = 0.f; //lasers are one hit kill
             }
+            auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+            msg->entityID = entity.getIndex();
+            msg->type = PlayerEvent::HealthChanged;
+            msg->value = playerInfo.health;
         }
         else if ((otherPo.getCollisionGroups() & (CollisionID::Collectable)) != 0)
         {
@@ -210,6 +216,8 @@ void PlayerSystem::updateDying(cro::Entity entity)
         entity.getComponent<Velocity>().velocity = glm::vec3();
         entity.getComponent<PlayerInfo>().state = PlayerInfo::State::Dead;
         m_respawnTime = 1.f;
+
+        entity.getComponent<cro::ParticleEmitter>().stop();
     }
 }
 
@@ -222,4 +230,9 @@ void PlayerSystem::updateDead(cro::Entity entity)
         entity.getComponent<PlayerInfo>().state = PlayerInfo::State::Spawning;
         m_shieldTime = shieldTime;
     }
+}
+
+void PlayerSystem::onEntityAdded(cro::Entity entity)
+{
+    entity.getComponent<PlayerInfo>().maxParticleRate = entity.getComponent<cro::ParticleEmitter>().emitterSettings.emitRate;
 }
