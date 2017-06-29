@@ -92,7 +92,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         createScene();
     });
     //context.appInstance.setClearColour(cro::Colour::White());
-    //context.mainWindow.setVsyncEnabled(false);
 
     updateView();
 
@@ -181,6 +180,7 @@ void GameState::loadAssets()
     farTexture.setSmooth(true);
     auto& farMaterial = m_resources.materials.add(MaterialID::GameBackgroundFar, m_resources.shaders.get(ShaderID::Background));
     farMaterial.setProperty("u_diffuseMap", farTexture);
+    farMaterial.blendMode = cro::Material::BlendMode::Alpha;
 
     auto& midTexture = m_resources.textures.get("assets/materials/background_mid.png");
     midTexture.setRepeated(true);
@@ -237,7 +237,32 @@ void GameState::loadAssets()
     m_resources.meshes.loadMesh(MeshID::RockQuad, rockQuad);
 }
 
+namespace
+{
+    //temporarily hold values shared between load functions
+    cro::Entity chunkEntityA(0, 0);
+    cro::Entity chunkEntityB(0, 0);
+    cro::Entity playerEntity(0, 0);
+    cro::Entity weaponEntity(0, 0);
+}
+
 void GameState::createScene()
+{
+    loadTerrain();
+    loadModels();
+    loadParticles();
+    loadWeapons();
+
+    //3D camera
+    auto ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>();
+    ent.addComponent<cro::Camera>();
+    m_scene.setActiveCamera(ent);
+
+    //2D camera (UI)
+}
+
+void GameState::loadTerrain()
 {
     //background layers
     auto entity = m_scene.createEntity();
@@ -271,7 +296,7 @@ void GameState::createScene()
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Environment);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::NpcLaser);
 
-    auto chunkEntityA = entity; //keep this so we can attach turrets to it
+    chunkEntityA = entity; //keep this so we can attach turrets to it
 
     entity = m_scene.createEntity();
     auto& chunkTxB = entity.addComponent<cro::Transform>();
@@ -284,7 +309,7 @@ void GameState::createScene()
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Environment);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::NpcLaser);
 
-    auto chunkEntityB = entity;
+    chunkEntityB = entity;
 
     //left/right bounds
     entity = m_scene.createEntity();
@@ -318,10 +343,13 @@ void GameState::createScene()
         entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::RockQuad), m_resources.materials.get(MaterialID::Rockfall + i));
     }
+}
 
+void GameState::loadModels()
+{
     //player ship
     glm::vec3 playerScale(0.4f);
-    entity = m_scene.createEntity();
+    auto entity = m_scene.createEntity();
     auto& playerTx = entity.addComponent<cro::Transform>();
     playerTx.setPosition({ -35.4f, 0.f, -9.3f });
     playerTx.setScale(playerScale);
@@ -329,13 +357,19 @@ void GameState::createScene()
         m_resources.materials.get(m_modelDefs[GameModelID::Player].materialIDs[0]));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Velocity>().friction = 2.5f;
-    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID).boundingBox;
+    auto bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID).boundingBox;
+    cro::PhysicsShape ps;
+    ps.type = cro::PhysicsShape::Type::Box;
     ps.extent = (bb[1] - bb[0]) * playerScale / 2.f;
     entity.addComponent<cro::PhysicsObject>().addShape(ps);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Player);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Collectable | CollisionID::Environment | CollisionID::NPC | CollisionID::Bounds);
     entity.addComponent<PlayerInfo>();
-    auto playerEntity = entity;
+    
+    entity.addComponent<cro::ParticleEmitter>().emitterSettings.loadFromFile("assets/particles/smoke.cps", m_resources.textures);
+    entity.getComponent<cro::ParticleEmitter>().start();
+    
+    playerEntity = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::PlayerShield].meshID),
@@ -447,7 +481,7 @@ void GameState::createScene()
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
 
-    auto weaponEntity = m_scene.createEntity(); //weapon sprites are added below
+    weaponEntity = m_scene.createEntity(); //weapon sprites are added below
     weaponEntity.addComponent<cro::Transform>().setParent(entity);
     weaponEntity.getComponent<cro::Transform>().move({ -0.6f, -0.1f, 0.f });
     weaponEntity.addComponent<NpcWeapon>().type = NpcWeapon::Laser;
@@ -566,9 +600,12 @@ void GameState::createScene()
 
         weaverScale *= 0.92f;
     }
+}
 
+void GameState::loadParticles()
+{
     //particle systems
-    entity = m_scene.createEntity();
+    auto entity = m_scene.createEntity();
     auto& snowEmitter = entity.addComponent<cro::ParticleEmitter>();
     auto& settings = snowEmitter.emitterSettings;
     settings.emitRate = 30.f;
@@ -615,8 +652,10 @@ void GameState::createScene()
         p.z = -8.6f;
     }
     entity.addComponent<cro::CommandTarget>().ID = CommandID::RockParticles;
+}
 
-
+void GameState::loadWeapons()
+{
     //weapon sprites
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/sprites/lasers.spt", m_resources.textures);
@@ -624,7 +663,7 @@ void GameState::createScene()
     const std::size_t maxPulses = 6;
     for (auto i = 0u; i < maxPulses; ++i)
     {
-        entity = m_scene.createEntity();
+        auto entity = m_scene.createEntity();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_pulse");
         auto size = entity.getComponent<cro::Sprite>().getSize();
 
@@ -647,7 +686,7 @@ void GameState::createScene()
 
     //use a single laser we'll scale it to make it look bigger or smaller
     glm::vec3 laserScale(0.15f, 0.006f, 1.f);
-    entity = m_scene.createEntity();
+    auto entity = m_scene.createEntity();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_laser");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
     auto size = entity.getComponent<cro::Sprite>().getSize();
@@ -671,6 +710,9 @@ void GameState::createScene()
 
 
     //npc weapons - orbs
+    cro::PhysicsShape ps;
+    ps.type = cro::PhysicsShape::Type::Box;
+
     auto orbScale = glm::vec3(0.005f);
     static const std::size_t orbCount = 20;
     for (auto i = 0u; i < orbCount; ++i)
@@ -742,13 +784,6 @@ void GameState::createScene()
 
         entity.addComponent<NpcWeapon>().type = NpcWeapon::Pulse;
     }
-
-
-    //3D camera
-    auto ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>();
-    ent.addComponent<cro::Camera>();
-    m_scene.setActiveCamera(ent);
 }
 
 void GameState::updateView()

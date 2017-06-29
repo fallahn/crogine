@@ -29,6 +29,9 @@ source distribution.
 
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 
+#include <crogine/graphics/TextureResource.hpp>
+#include <crogine/core/ConfigFile.hpp>
+
 using namespace cro;
 
 ParticleEmitter::ParticleEmitter()
@@ -55,4 +58,85 @@ void ParticleEmitter::start()
 void ParticleEmitter::stop()
 {
     m_running = false;
+}
+
+bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource& textures)
+{
+    ConfigFile cfg;
+    if (!cfg.loadFromFile(path)) return false;
+
+    if (cfg.getName() == "particle_system")
+    {
+        const auto& properties = cfg.getProperties();
+        for (const auto& p : properties)
+        {
+            auto name = p.getName();
+            if (name == "src")
+            {
+                textureID = textures.get(p.getValue<std::string>()).getGLHandle();
+            }
+            else if (name == "blendmode")
+            {
+                auto mode = p.getValue<std::string>();
+                if (mode == "add")
+                {
+                    blendmode = EmitterSettings::Add;
+                }
+                else if (mode == "multiply")
+                {
+                    blendmode = EmitterSettings::Multiply;
+                }
+                else
+                {
+                    blendmode = EmitterSettings::Alpha;
+                }
+            }
+            else if (name == "gravity")
+            {
+                gravity = p.getValue<glm::vec3>();
+            }
+            else if (name == "velocity")
+            {
+                initialVelocity = p.getValue<glm::vec3>();
+            }
+            else if (name == "lifetime")
+            {
+                lifetime = p.getValue<float>();
+            }
+            else if (name == "colour")
+            {
+                glm::vec4 c = p.getValue<glm::vec4>();
+                colour = cro::Colour(c.r, c.g, c.b, c.a);
+            }
+            else if (name == "rotation_speed")
+            {
+                rotationSpeed = p.getValue<float>();
+            }
+            else if (name == "size")
+            {
+                size = p.getValue<float>();
+            }
+            else if (name == "emit_rate")
+            {
+                emitRate = p.getValue<float>();
+            }
+            else if (name == "spawn_radius")
+            {
+                spawnRadius = p.getValue<float>();
+            }
+        }
+
+        const auto& objects = cfg.getObjects();
+        for (const auto& o : objects)
+        {
+            //TODO load force array, and affectors
+        }
+
+        if (textureID == 0)
+        {
+            Logger::log(path + ": no texture proeprty found", Logger::Type::Warning);
+        }
+    }
+
+    return false;
 }

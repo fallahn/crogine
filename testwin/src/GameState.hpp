@@ -69,6 +69,11 @@ private:
     void loadAssets();
     void createScene();
 
+    void loadTerrain();
+    void loadModels();
+    void loadParticles();
+    void loadWeapons();
+
     void updateView();
 };
 #endif //TL_GAME_STATE_HPP_
