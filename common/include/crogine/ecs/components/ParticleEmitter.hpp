@@ -43,6 +43,8 @@ source distribution.
 
 namespace cro
 {
+    class TextureResource;
+
     /*!
     \brief Data struct for a single particle
     */
@@ -79,7 +81,7 @@ namespace cro
         float emitRate = 1.f; //< particles per second
         float spawnRadius = 0.f;
         uint32 textureID = 0;
-        bool loadFromFile(const std::string&) { return false; };
+        bool loadFromFile(const std::string&, TextureResource&);
     };
 
     /*!

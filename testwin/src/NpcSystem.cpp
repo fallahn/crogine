@@ -247,7 +247,7 @@ void NpcSystem::processElite(cro::Entity entity)
         status.elite.firetime -= fixedUpdate;
         if (status.elite.firetime < 0)
         {
-            LOG("Fired Elite laser", cro::Logger::Type::Info);
+            //LOG("Fired Elite laser", cro::Logger::Type::Info);
             status.elite.firetime = cro::Util::Random::value(2.5f, 3.2f);
 
             auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
