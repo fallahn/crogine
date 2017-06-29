@@ -32,6 +32,7 @@ source distribution.
 #include "ResourceIDs.hpp"
 #include "Messages.hpp"
 #include "ItemSystem.hpp"
+#include "NpcWeaponSystem.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -157,7 +158,15 @@ void PlayerSystem::updateAlive(cro::Entity entity)
         }
         else if ((otherPo.getCollisionGroups() & (CollisionID::NpcLaser)) != 0)
         {
-            //TODO subtract health based on weapon type.
+            //subtract health based on weapon type.
+            if (otherEnt.hasComponent<NpcWeapon>()) //lasers are parented, and weapon is on that entity
+            {
+                entity.getComponent<PlayerInfo>().health -= otherEnt.getComponent<NpcWeapon>().damage;
+            }
+            else
+            {
+                entity.getComponent<PlayerInfo>().health = 0.f; //lasers are one hit kill
+            }
         }
         else if ((otherPo.getCollisionGroups() & (CollisionID::Collectable)) != 0)
         {

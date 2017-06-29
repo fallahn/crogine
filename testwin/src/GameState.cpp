@@ -471,6 +471,7 @@ void GameState::createScene()
         entity.getComponent<cro::Skeleton>().play(0);
         entity.addComponent<Npc>().type = Npc::Choppa;
         entity.getComponent<Npc>().choppa.ident = i;
+        entity.getComponent<Npc>().choppa.shootTime = cro::Util::Random::value(0.1f, 1.f);
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Choppa;
         entity.addComponent<cro::PhysicsObject>().addShape(ps);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
@@ -714,6 +715,33 @@ void GameState::createScene()
     orbEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.01f)); //approx orbScale * 1/eliteScale. So many magic numbers!!!
     orbEnt.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
     orbEnt.getComponent<cro::Transform>().setPosition({ 0.f, -50.f, 0.f });
+
+
+    //choppa pulses
+    static const std::size_t choppaPulseCount = 18;
+    pulseScale *= 0.5f;
+    for (auto i = 0u; i < choppaPulseCount; ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("npc_pulse");
+        auto size = entity.getComponent<cro::Sprite>().getSize();
+
+        entity.addComponent<cro::Transform>().setScale(pulseScale);
+        entity.getComponent<cro::Transform>().setPosition(glm::vec3(10.f));
+        entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
+
+        cro::PhysicsShape ps;
+        ps.type = cro::PhysicsShape::Type::Box;
+        ps.extent = { size.x * pulseScale.x, size.y * pulseScale.y, 0.2f };
+        ps.extent /= 2.f;
+        ps.extent *= glm::vec3(0.85f);
+
+        entity.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NpcLaser);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Player);
+        entity.getComponent<cro::PhysicsObject>().addShape(ps);
+
+        entity.addComponent<NpcWeapon>().type = NpcWeapon::Pulse;
+    }
 
 
     //3D camera

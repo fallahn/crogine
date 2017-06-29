@@ -53,6 +53,8 @@ struct ChoppaNavigator final
     bool inCombat = true;
     glm::vec3 deathVelocity;
     cro::uint8 ident = 0;
+    float shootTime = 0.f;
+    static constexpr float nextShootTime = 0.08f;
     static constexpr float spacing = 1.4f;
 };
 
@@ -61,6 +63,8 @@ struct SpeedrayNavigator final
     std::size_t tableIndex = 0;
     float moveSpeed = -3.f;
     cro::uint8 ident = 0;
+    float shootTime = 0.f;
+    static constexpr float nextShootTime = 0.8f;
     static constexpr std::size_t count = 5;
     static constexpr float spacing = 1.4f;
 };

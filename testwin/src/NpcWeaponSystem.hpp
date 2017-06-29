@@ -63,7 +63,7 @@ private:
 
     void onEntityAdded(cro::Entity) override;
 
-    void processPulse(cro::Entity);
+    void processPulse(std::size_t&, float);
     void processLaser(cro::Entity);
     void processOrb(std::size_t&, float);
     void processMissile(cro::Entity);
@@ -74,6 +74,11 @@ private:
     std::vector<cro::int32> m_deadOrbs;
 
     std::vector<cro::int32> m_activeLasers;
+
+    std::size_t m_alivePulseCount;
+    std::vector<cro::int32> m_alivePulses;
+    std::size_t m_deadPulseCount;
+    std::vector<cro::int32> m_deadPulses;
 };
 
 #endif //TL_NPC_WEAPONS_SYSTEM_HPP_
