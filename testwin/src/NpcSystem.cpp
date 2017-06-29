@@ -48,6 +48,7 @@ namespace
     const float fixedUpdate = 1.f / 60.f;
     const float zDepth = -9.3f;
     const glm::vec3 gravity(0.f, -9.f, 0.f);
+    const glm::vec3 chopperPulseOffset(-0.1f, -0.06f, 0.f);
 }
 
 
@@ -267,11 +268,24 @@ void NpcSystem::processChoppa(cro::Entity entity)
 
     if (status.choppa.inCombat)
     {
-        //fly / shoot
+        //fly
         glm::vec3 movement(status.choppa.moveSpeed, m_choppaTable[status.choppa.tableIndex], 0.f);
         movement.y += (m_playerPosition.y - tx.getWorldPosition().y) * 0.17f;
         tx.move(movement * fixedUpdate);
         status.choppa.tableIndex = (status.choppa.tableIndex + 1) % m_choppaTable.size();
+
+        //shoot
+        status.choppa.shootTime -= fixedUpdate;
+        if (status.choppa.shootTime < 0)
+        {
+            status.choppa.shootTime = status.choppa.nextShootTime;
+
+            auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+            msg->entityID = entity.getIndex();
+            msg->npcType = Npc::Choppa;
+            msg->position = tx.getWorldPosition() + chopperPulseOffset;
+            msg->type = NpcEvent::FiredWeapon;
+        }
     }
     else
     {
@@ -305,6 +319,19 @@ void NpcSystem::processSpeedray(cro::Entity entity)
     status.speedray.tableIndex = (status.speedray.tableIndex + 1) % m_speedrayTable.size();
 
     tx.move({ status.speedray.moveSpeed * fixedUpdate, 0.f, 0.f });
+
+    //shooting
+    status.speedray.shootTime -= fixedUpdate;
+    if (status.speedray.shootTime < 0)
+    {
+        status.speedray.shootTime = status.speedray.nextShootTime;
+
+        auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+        msg->entityID = entity.getIndex();
+        msg->npcType = Npc::Speedray;
+        msg->position = tx.getWorldPosition();
+        msg->type = NpcEvent::FiredWeapon;
+    }
 }
 
 void NpcSystem::processWeaver(cro::Entity entity)

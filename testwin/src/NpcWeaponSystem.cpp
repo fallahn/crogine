@@ -45,6 +45,7 @@ namespace
     const float speedMultiplier = 21.3f; //approx chunk size of terrain
 
     const float orbSpeed = 4.f;
+    const float pulseSpeed = 24.f;
 }
 
 NpcWeaponSystem::NpcWeaponSystem(cro::MessageBus& mb)
@@ -52,7 +53,9 @@ NpcWeaponSystem::NpcWeaponSystem(cro::MessageBus& mb)
     m_accumulator       (0.f),
     m_backgroundSpeed   (0.f),
     m_orbCount          (0),
-    m_deadOrbCount      (0)
+    m_deadOrbCount      (0),
+    m_alivePulseCount   (0),
+    m_deadPulseCount    (0)
 {
     requireComponent<NpcWeapon>();
     requireComponent<cro::Transform>();
@@ -116,6 +119,22 @@ void NpcWeaponSystem::handleMessage(const cro::Message& msg)
                 m_activeLasers.push_back(laserEntID);
             }
                 break;
+            case Npc::Choppa:
+            case Npc::Speedray:
+            {
+                if (m_deadPulseCount > 0)
+                {
+                    m_deadPulseCount--;
+                    auto entity = getScene()->getEntity(m_deadPulses[m_deadPulseCount]);
+                    m_alivePulses[m_alivePulseCount] = m_deadPulses[m_deadPulseCount];
+                    m_alivePulseCount++;
+
+                    entity.getComponent<cro::Transform>().setPosition(data.position);
+                    entity.getComponent<NpcWeapon>().velocity.x = -pulseSpeed;
+                    entity.getComponent<NpcWeapon>().damage = 10.f;
+                }
+            }
+                break;
             }
         }
         else if (data.type == NpcEvent::Died || data.type == NpcEvent::ExitScreen)
@@ -146,15 +165,21 @@ void NpcWeaponSystem::handleMessage(const cro::Message& msg)
 
 void NpcWeaponSystem::process(cro::Time dt)
 {
+    const float dtSec = dt.asSeconds();
+    
     //update orbs
     for (std::size_t i = 0u; i < m_orbCount; ++i)
     {
-        processOrb(i, dt.asSeconds());
+        processOrb(i, dtSec);
     }    
     
+    //update pulses
+    for (std::size_t i = 0u; i < m_alivePulseCount; ++i)
+    {
+        processPulse(i, dtSec);
+    }
 
-
-    m_accumulator += dt.asSeconds();
+    m_accumulator += dtSec;
 
     while (m_accumulator > fixedStep)
     {
@@ -164,11 +189,33 @@ void NpcWeaponSystem::process(cro::Time dt)
         {
             processLaser(getScene()->getEntity(l));
         }        
-
     }
 }
 
 //private
+void NpcWeaponSystem::processPulse(std::size_t& idx, float dt)
+{
+    auto entity = getScene()->getEntity(m_alivePulses[idx]);
+    auto& status = entity.getComponent<NpcWeapon>();
+
+    auto& tx = entity.getComponent<cro::Transform>();
+    tx.move(status.velocity * dt);
+
+    //collision
+    if (entity.getComponent<cro::PhysicsObject>().getCollisionCount() > 0)
+    {
+        //all collisions cause a reset
+        tx.setPosition(glm::vec3(10.f));
+
+        m_deadPulses[m_deadPulseCount] = m_alivePulses[idx];
+        m_deadPulseCount++;
+
+        m_alivePulseCount--;
+        m_alivePulses[idx] = m_alivePulses[m_alivePulseCount];
+        idx--;
+    }
+}
+
 void NpcWeaponSystem::processLaser(cro::Entity entity) 
 {
     auto orbEnt = getScene()->getEntity(entity.getComponent<cro::Transform>().getChildIDs()[0]);
@@ -209,11 +256,6 @@ void NpcWeaponSystem::processLaser(cro::Entity entity)
     }
 }
 
-void NpcWeaponSystem::processMissile(cro::Entity entity)
-{
-
-}
-
 void NpcWeaponSystem::processOrb(std::size_t& idx, float dt)
 {
     auto entity = getScene()->getEntity(m_aliveOrbs[idx]);
@@ -241,7 +283,7 @@ void NpcWeaponSystem::processOrb(std::size_t& idx, float dt)
     }
 }
 
-void NpcWeaponSystem::processPulse(cro::Entity entity)
+void NpcWeaponSystem::processMissile(cro::Entity entity)
 {
 
 }
@@ -255,6 +297,11 @@ void NpcWeaponSystem::onEntityAdded(cro::Entity entity)
         m_deadOrbs.push_back(entity.getIndex());
         m_aliveOrbs.push_back(-1);
         m_deadOrbCount++;
+        break;
+    case NpcWeapon::Pulse:
+        m_deadPulses.push_back(entity.getIndex());
+        m_alivePulses.push_back(-1);
+        m_deadPulseCount++;
         break;
     }
 }
