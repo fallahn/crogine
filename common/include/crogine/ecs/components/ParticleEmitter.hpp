@@ -57,6 +57,7 @@ namespace cro
         float maxLifeTime = 1.f;
         Colour colour;
         float rotation = 0.f;
+        float scale = 1.f;
     };
 
     /*!
@@ -75,8 +76,10 @@ namespace cro
         glm::vec3 initialVelocity;
         std::array<glm::vec3, 4> forces{};
         float lifetime = 1.f;
+        float lifetimeVariance = 0.f;
         Colour colour;
         float rotationSpeed = 0.f;
+        float scaleModifier = 0.f;
         float size = 1.f; //diameter of particle
         float emitRate = 1.f; //< particles per second
         float spawnRadius = 0.f;
