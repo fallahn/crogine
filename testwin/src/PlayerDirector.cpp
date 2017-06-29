@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/GameController.hpp>
@@ -79,6 +80,33 @@ PlayerDirector::PlayerDirector()
 }
 
 //public
+void PlayerDirector::handleMessage(const cro::Message& msg)
+{
+    if (msg.id == MessageID::PlayerMessage)
+    {
+        const auto& data = msg.getData<PlayerEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case PlayerEvent::HealthChanged:
+            //update the smoke effect
+        {
+            float health = data.value;
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Player;
+            cmd.action = [health](cro::Entity entity, cro::Time)
+            {
+                const auto& playerInfo = entity.getComponent<PlayerInfo>();
+                float emitRate = std::max((1.f - (health / 100.f)) * playerInfo.maxParticleRate, 0.f);
+                entity.getComponent<cro::ParticleEmitter>().emitterSettings.emitRate = emitRate;
+                entity.getComponent<cro::ParticleEmitter>().start();
+            };
+            sendCommand(cmd);
+        }
+        break;
+        }
+    }
+}
 void PlayerDirector::handleEvent(const cro::Event& evt)
 {
     switch (evt.type)

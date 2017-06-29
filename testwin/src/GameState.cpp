@@ -483,7 +483,6 @@ void GameState::loadModels()
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
     entity.addComponent<cro::ParticleEmitter>().emitterSettings = smokeEmitter;
-    entity.addComponent<cro::ParticleEmitter>().start();
 
     weaponEntity = m_scene.createEntity(); //weapon sprites are added below
     weaponEntity.addComponent<cro::Transform>().setParent(entity);
@@ -749,6 +748,7 @@ void GameState::loadWeapons()
     laserEnt.getComponent<cro::Transform>().setOrigin({ size.x, size.y / 2.f, 0.f });
     laserEnt.getComponent<cro::Transform>().setPosition({ 0.f, -50.f, 0.f });
 
+    laserPhys.extent.x = -laserPhys.extent.x;
     laserEnt.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NpcLaser);
     laserEnt.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
     laserEnt.getComponent<cro::PhysicsObject>().addShape(laserPhys);

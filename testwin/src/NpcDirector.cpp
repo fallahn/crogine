@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
@@ -133,10 +134,20 @@ void NpcDirector::handleMessage(const cro::Message& msg)
                 };
                 sendCommand(cmd);
             }
+            else if (data.npcType == Npc::Elite)
+            {
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Elite;
+                cmd.action = [](cro::Entity entity, cro::Time)
+                {
+                    entity.getComponent<cro::ParticleEmitter>().stop();
+                };
+                sendCommand(cmd);
+            }
 
             break;
         case NpcEvent::FiredWeapon:
-            //if a wever fired reset all the other times to prevent more than one
+            //if a weaver fired reset all the other times to prevent more than one
             //part of the weaver firing at once
             if (data.npcType == Npc::Weaver)
             {
@@ -150,6 +161,32 @@ void NpcDirector::handleMessage(const cro::Message& msg)
                 };
                 sendCommand(cmd);
             }
+            break;
+        case NpcEvent::HealthChanged:
+        {
+            if (data.npcType == Npc::Elite)
+            {
+                //update the smoke effects
+                float health = data.value;
+
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Elite;
+                cmd.action = [health](cro::Entity entity, cro::Time)
+                {
+                    float amount = (1.f - (health / 100.f));
+                    if (amount > 0)
+                    {
+                        entity.getComponent<cro::ParticleEmitter>().emitterSettings.emitRate = amount * entity.getComponent<Npc>().elite.maxEmitRate;
+                        entity.getComponent<cro::ParticleEmitter>().start();
+                    }
+                    else
+                    {
+                        entity.getComponent<cro::ParticleEmitter>().stop();
+                    }
+                };
+                sendCommand(cmd);
+            }
+        }
             break;
         }
     }
@@ -182,6 +219,13 @@ void NpcDirector::process(cro::Time dt)
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 tx.setPosition({ 5.6f, cro::Util::Random::value(-2.f, 2.f) , zDepth });
+
+                auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                msg->type = NpcEvent::HealthChanged;
+                msg->npcType = status.type;
+                msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+                msg->entityID = entity.getIndex();
+                msg->value = status.health;
             }
         };
         sendCommand(cmd);
@@ -195,7 +239,7 @@ void NpcDirector::process(cro::Time dt)
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Choppa;
-        cmd.action = [vertical](cro::Entity entity, cro::Time)
+        cmd.action = [this, vertical](cro::Entity entity, cro::Time)
         {
             auto& status = entity.getComponent<Npc>();
             if (!status.active)
@@ -220,6 +264,13 @@ void NpcDirector::process(cro::Time dt)
                     tx.setPosition({ 7.f + (status.choppa.ident * ChoppaNavigator::spacing), yPos, zDepth });
                 }
                 tx.setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
+
+                auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                msg->type = NpcEvent::HealthChanged;
+                msg->npcType = status.type;
+                msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+                msg->entityID = entity.getIndex();
+                msg->value = status.health;
             }
         };
         sendCommand(cmd);
@@ -230,7 +281,7 @@ void NpcDirector::process(cro::Time dt)
     {
         cro::Command cmd;
         cmd.targetFlags = CommandID::Speedray;
-        cmd.action = [](cro::Entity entity, cro::Time)
+        cmd.action = [this](cro::Entity entity, cro::Time)
         {
             auto& status = entity.getComponent<Npc>();
             if (!status.active)
@@ -241,6 +292,13 @@ void NpcDirector::process(cro::Time dt)
                 //reset position
                 auto& tx = entity.getComponent<cro::Transform>();
                 tx.setPosition({ 7.f + static_cast<float>(status.speedray.ident) * SpeedrayNavigator::spacing, 0.f, zDepth });
+
+                auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                msg->type = NpcEvent::HealthChanged;
+                msg->npcType = status.type;
+                msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+                msg->entityID = entity.getIndex();
+                msg->value = status.health;
             }
         };
         sendCommand(cmd);
@@ -256,7 +314,7 @@ void NpcDirector::process(cro::Time dt)
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Weaver;
-        cmd.action = [yPos](cro::Entity entity, cro::Time) 
+        cmd.action = [this, yPos](cro::Entity entity, cro::Time) 
         {
             auto& status = entity.getComponent<Npc>();
             if (!status.active)
@@ -271,6 +329,13 @@ void NpcDirector::process(cro::Time dt)
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 tx.setPosition({ 7.f + (static_cast<float>(status.weaver.ident) * (WeaverNavigator::spacing * tx.getScale().x)), status.weaver.yPos, zDepth });
+
+                auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                msg->type = NpcEvent::HealthChanged;
+                msg->npcType = status.type;
+                msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+                msg->entityID = entity.getIndex();
+                msg->value = status.health;
             }
         };
         sendCommand(cmd);

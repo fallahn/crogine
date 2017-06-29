@@ -44,6 +44,7 @@ struct EliteNavigator final
     cro::uint16 movementCount = 5;
     float firetime = 4.f;
     std::size_t idleIndex = 0;
+    float maxEmitRate = 0.f;
 };
 
 struct ChoppaNavigator final

@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/PhysicsObject.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Wavetable.hpp>
@@ -125,6 +126,15 @@ void NpcSystem::process(cro::Time dt)
                         const auto& weapon = otherEnt.getComponent<PlayerWeapon>();
                         status.health -= weapon.damage;
                         
+                        {
+                            auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                            msg->type = NpcEvent::HealthChanged;
+                            msg->npcType = status.type;
+                            msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+                            msg->entityID = entity.getIndex();
+                            msg->value = status.health;
+                        }
+
                         if (status.health < 0)
                         {
                             //raise a message 
@@ -279,7 +289,7 @@ void NpcSystem::processChoppa(cro::Entity entity)
         status.choppa.shootTime -= fixedUpdate;
         if (status.choppa.shootTime < 0)
         {
-            status.choppa.shootTime = status.choppa.nextShootTime;
+            status.choppa.shootTime = ChoppaNavigator::nextShootTime;
 
             auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
             msg->entityID = entity.getIndex();
@@ -325,7 +335,7 @@ void NpcSystem::processSpeedray(cro::Entity entity)
     status.speedray.shootTime -= fixedUpdate;
     if (status.speedray.shootTime < 0)
     {
-        status.speedray.shootTime = status.speedray.nextShootTime;
+        status.speedray.shootTime = SpeedrayNavigator::nextShootTime;
 
         auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
         msg->entityID = entity.getIndex();
@@ -398,6 +408,7 @@ void NpcSystem::onEntityAdded(cro::Entity entity)
         status.elite.movementCount = cro::Util::Random::value(4, 8);
         status.elite.pauseTime = cro::Util::Random::value(1.2f, 2.2f);
         status.elite.idleIndex = cro::Util::Random::value(0, m_eliteIdlePositions.size());
+        status.elite.maxEmitRate = entity.getComponent<cro::ParticleEmitter>().emitterSettings.emitRate;
         break;
     case Npc::Choppa:
         status.choppa.moveSpeed = cro::Util::Random::value(-8.3f, -7.8f);
