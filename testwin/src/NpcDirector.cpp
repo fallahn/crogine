@@ -135,6 +135,22 @@ void NpcDirector::handleMessage(const cro::Message& msg)
             }
 
             break;
+        case NpcEvent::FiredWeapon:
+            //if a wever fired reset all the other times to prevent more than one
+            //part of the weaver firing at once
+            if (data.npcType == Npc::Weaver)
+            {
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Weaver;
+                cmd.action = [](cro::Entity entity, cro::Time)
+                {
+                    auto& status = entity.getComponent<Npc>();
+                    status.weaver.shootTime = cro::Util::Random::value(WeaverNavigator::nextShootTime - 0.3f, WeaverNavigator::nextShootTime);
+                    
+                };
+                sendCommand(cmd);
+            }
+            break;
         }
     }
 }
@@ -250,6 +266,8 @@ void NpcDirector::process(cro::Time dt)
                 status.weaver.tableIndex = status.weaver.tableStartIndex;
                 status.health = weaverHealth;
                 status.weaver.dying = false;
+                status.weaver.velocity = {};
+                status.weaver.shootTime = cro::Util::Random::value(WeaverNavigator::nextShootTime - 0.5f, WeaverNavigator::nextShootTime + 2.f);
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 tx.setPosition({ 7.f + (static_cast<float>(status.weaver.ident) * (WeaverNavigator::spacing * tx.getScale().x)), status.weaver.yPos, zDepth });

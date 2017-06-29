@@ -88,6 +88,7 @@ void NpcWeaponSystem::handleMessage(const cro::Message& msg)
             {
             default:break;
             case Npc::Turret:
+            case Npc::Weaver:
             {
                 if (m_deadOrbCount > 0)
                 {
@@ -98,6 +99,7 @@ void NpcWeaponSystem::handleMessage(const cro::Message& msg)
 
                     entity.getComponent<cro::Transform>().setPosition(data.position);
                     entity.getComponent<NpcWeapon>().velocity = data.velocity * orbSpeed;
+                    entity.getComponent<NpcWeapon>().damage = 2.f;
                 }
             }
                 break;
