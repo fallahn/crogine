@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/util/Wavetable.hpp>
 
 #include <glm/gtx/norm.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 namespace
 {
@@ -357,6 +358,30 @@ void NpcSystem::processWeaver(cro::Entity entity)
             //LOG("Part Died", cro::Logger::Type::Info);
         }
         //DPRINT("Dying", std::to_string(status.weaver.ident));
+        status.weaver.velocity += gravity * fixedUpdate;
+        tx.move(status.weaver.velocity * fixedUpdate);
+    }
+    else
+    {
+        //shooting
+        status.weaver.shootTime -= fixedUpdate;
+        if (status.weaver.shootTime < 0)
+        {
+            status.weaver.shootTime = cro::Util::Random::value(WeaverNavigator::nextShootTime - 0.5f, WeaverNavigator::nextShootTime + 2.f);
+
+            const float stepCount = 5.f;
+            const float angle = cro::Util::Const::TAU / stepCount;
+
+            for (float i = 0.f; i < stepCount; ++i)
+            {
+                auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                msg->entityID = entity.getIndex();
+                msg->npcType = Npc::Weaver;
+                msg->type = NpcEvent::FiredWeapon;
+                msg->position = tx.getWorldPosition();
+                msg->velocity = glm::rotate(glm::vec3(0.f, 1.f, 0.f), (i * angle), glm::vec3(0.f, 0.f, 1.f));
+            }
+        }
     }
 }
 

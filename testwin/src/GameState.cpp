@@ -687,7 +687,7 @@ void GameState::createScene()
         ps.extent = glm::vec3(size.x / 2.f, size.y / 2.f, 1.f) * orbScale;
         entity.addComponent<cro::PhysicsObject>().addShape(ps);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NpcLaser);
-        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Environment);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Environment | CollisionID::Player);
 
         entity.addComponent<NpcWeapon>().type = NpcWeapon::Orb;
     }

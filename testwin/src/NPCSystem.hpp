@@ -75,9 +75,12 @@ struct WeaverNavigator final
     std::size_t tableStartIndex = 0;
     float moveSpeed = -2.7f;
     float yPos = 0.5f;
+    glm::vec3 velocity;
     cro::uint8 ident = 0;
     bool dying = false;
     float dyingTime = 0.f;
+    float shootTime = 0.f;
+    static constexpr float nextShootTime = 2.f;
     static constexpr float spacing = 0.3f;
     static constexpr std::size_t count = 7;
 };
