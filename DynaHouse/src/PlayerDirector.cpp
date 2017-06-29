@@ -41,6 +41,8 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
+#include <crogine/ecs/components/PhysicsObject.hpp>
+#include <crogine/ecs/Scene.hpp>
 
 namespace
 {
@@ -162,7 +164,7 @@ void PlayerDirector::process(cro::Time dt)
 
     //we need to set a limit because if there's a long loading
     //time the initial DT will be a HUGE dump 0.0
-    m_accumulator += std::min(dt.asSeconds(), 1.f);
+    m_accumulator += dt.asSeconds();// std::min(dt.asSeconds(), 1.f);
     while (m_accumulator > fixedUpdate)
     {
         m_accumulator -= fixedUpdate;
@@ -171,11 +173,41 @@ void PlayerDirector::process(cro::Time dt)
         cmd.targetFlags = CommandID::Player;
         cmd.action = [this](cro::Entity entity, cro::Time)
         {
-            //update orientation
             auto& tx = entity.getComponent<cro::Transform>();
             auto& playerState = entity.getComponent<Player>();
-            float rotation = m_playerRotation - tx.getRotation().y;
+            auto& phys = entity.getComponent<cro::PhysicsObject>();
 
+            //update any collision
+            if (phys.getCollisionCount() > 0)
+            {
+                const auto& ids = phys.getCollisionIDs();
+                const auto& manifolds = phys.getManifolds();
+
+                for (auto i = 0; i < phys.getCollisionCount(); ++i)
+                {
+                    auto otherEnt = getScene().getEntity(ids[i]);
+                    const auto& otherPhys = otherEnt.getComponent<cro::PhysicsObject>();
+                    if (otherPhys.getCollisionGroups() & CollisionID::Wall)
+                    {
+                        const auto& manifold = manifolds[i];
+                        if (manifold.pointCount > 0)
+                        {
+                            for (auto j = 0; j < manifold.pointCount; ++j)
+                            {
+                                auto normal = glm::normalize(manifold.points[j].worldPointB - manifold.points[j].worldPointA);
+                                tx.move(normal * manifold.points[j].distance * 1.3f);
+                                m_playerVelocity = glm::reflect(m_playerVelocity, normal);
+                            }
+                            
+                            m_playerVelocity *= 0.2f;
+                        }
+                    }
+                }
+            }
+
+
+            //update orientation
+            float rotation = m_playerRotation - tx.getRotation().y;
             if (std::abs(rotation) < 0.1f)
             {
                 rotation = 0.f;

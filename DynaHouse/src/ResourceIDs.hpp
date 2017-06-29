@@ -96,4 +96,13 @@ namespace AnimationID
     }
 }
 
+namespace CollisionID
+{
+    enum
+    {
+        Wall = 0x1,
+        Player = 0x2
+    };
+}
+
 #endif //DH_RESOURCE_IDS_HPP_

@@ -95,6 +95,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
     auto* msg = getContext().appInstance.getMessageBus().post<GameEvent>(MessageID::GameMessage);
     msg->type = GameEvent::RoundStart;
+
+    context.appInstance.resetFrameTime();
 }
 
 //public
@@ -181,6 +183,18 @@ void GameState::createScene()
         }
         entity.addComponent<cro::Transform>().scale(houseScale);
         entity.getComponent<cro::Transform>().setPosition({ i * stride, 0.6f, -0.5f });
+
+        cro::PhysicsShape ps;
+        ps.type = cro::PhysicsShape::Type::Box;
+        ps.extent = { 0.01f, 0.2f, 0.25f };
+        ps.extent *= houseScale;
+        ps.position = { -0.67f, 0.25f, 0.4f };
+        ps.position *= houseScale;
+        entity.addComponent<cro::PhysicsObject>().addShape(ps);
+        ps.position.x = -ps.position.x;
+        entity.getComponent<cro::PhysicsObject>().addShape(ps);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Wall);
     }
 
     //dat cat man
@@ -210,6 +224,9 @@ void GameState::createScene()
     ps.position.z = 0.14f;
     ps.orientation = cro::PhysicsShape::Orientation::Z;
     phys.addShape(ps);
+
+    phys.setCollisionFlags(CollisionID::Wall);
+    phys.setCollisionGroups(CollisionID::Player);
 
     //3D camera
     auto ent = m_scene.createEntity();
