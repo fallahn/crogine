@@ -103,6 +103,10 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             {
                 lifetime = p.getValue<float>();
             }
+            else if (name == "lifetime_variance")
+            {
+                lifetimeVariance = p.getValue<float>();
+            }
             else if (name == "colour")
             {
                 glm::vec4 c = p.getValue<glm::vec4>();
@@ -111,6 +115,10 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             else if (name == "rotation_speed")
             {
                 rotationSpeed = p.getValue<float>();
+            }
+            else if (name == "scale_affector")
+            {
+                scaleModifier = p.getValue<float>();
             }
             else if (name == "size")
             {
@@ -129,7 +137,23 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
         const auto& objects = cfg.getObjects();
         for (const auto& o : objects)
         {
-            //TODO load force array, and affectors
+            //load force array
+            if (o.getName() == "forces")
+            {
+                const auto& props = o.getProperties();
+                std::size_t currentForce = 0;
+                for (const auto& force : props)
+                {
+                    if (force.getName() == "force")
+                    {
+                        forces[currentForce++] = force.getValue<glm::vec3>();
+                        if (currentForce == forces.size())
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         if (textureID == 0)

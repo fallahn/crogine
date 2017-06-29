@@ -366,8 +366,10 @@ void GameState::loadModels()
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Collectable | CollisionID::Environment | CollisionID::NPC | CollisionID::Bounds);
     entity.addComponent<PlayerInfo>();
     
-    entity.addComponent<cro::ParticleEmitter>().emitterSettings.loadFromFile("assets/particles/smoke.cps", m_resources.textures);
-    entity.getComponent<cro::ParticleEmitter>().start();
+    cro::EmitterSettings smokeEmitter;
+    smokeEmitter.loadFromFile("assets/particles/smoke.cps", m_resources.textures);
+    entity.addComponent<cro::ParticleEmitter>().emitterSettings = smokeEmitter;
+    //entity.getComponent<cro::ParticleEmitter>().start();
     
     playerEntity = entity;
 
@@ -480,6 +482,8 @@ void GameState::loadModels()
     entity.addComponent<cro::PhysicsObject>().addShape(ps);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
+    entity.addComponent<cro::ParticleEmitter>().emitterSettings = smokeEmitter;
+    entity.addComponent<cro::ParticleEmitter>().start();
 
     weaponEntity = m_scene.createEntity(); //weapon sprites are added below
     weaponEntity.addComponent<cro::Transform>().setParent(entity);

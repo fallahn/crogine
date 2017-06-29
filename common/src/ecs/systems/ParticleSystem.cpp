@@ -62,7 +62,7 @@ namespace
     const std::string vertex = R"(
         attribute vec4 a_position;
         attribute LOW vec4 a_colour;
-        attribute MED vec3 a_normal; //this actually stores rotation and size
+        attribute MED vec3 a_normal; //this actually stores rotation and scale
 
         uniform mat4 u_projection;
         uniform mat4 u_viewProjection;
@@ -81,7 +81,7 @@ namespace
             v_rotation[1]= rot;
 
             gl_Position = u_viewProjection * a_position;
-            gl_PointSize = u_viewportHeight * u_projection[1][1] / gl_Position.w * u_particleSize;
+            gl_PointSize = u_viewportHeight * u_projection[1][1] / gl_Position.w * u_particleSize * a_normal.y;
         }
     )";
 
@@ -186,6 +186,7 @@ void ParticleSystem::process(Time dt)
             emitter.m_emissionClock.elapsed().asSeconds() > (1.f / emitter.emitterSettings.emitRate))
         {
             emitter.m_emissionClock.restart();
+            static const float epsilon = 0.0001f;
             if (emitter.m_nextFreeParticle < emitter.m_particles.size() - 1)
             {
                 auto& tx = e.getComponent<Transform>();
@@ -197,15 +198,16 @@ void ParticleSystem::process(Time dt)
                 auto& p = emitter.m_particles[emitter.m_nextFreeParticle];
                 p.colour = settings.colour;
                 p.gravity = settings.gravity;
-                p.lifetime = p.maxLifeTime = settings.lifetime;
+                p.lifetime = settings.lifetime + cro::Util::Random::value(-settings.lifetimeVariance, settings.lifetimeVariance + epsilon);
+                p.maxLifeTime = p.lifetime;
                 p.velocity = rotation * settings.initialVelocity;
                 p.rotation = Util::Random::value(-Util::Const::TAU, Util::Const::TAU);
+                p.scale = 1.f;
 
                 //spawn particle in world position
                 p.position = tx.getWorldPosition();
                 
                 //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
-                static const float epsilon = 0.0001f;
                 p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
                 p.position.y += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
                 p.position.z += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
@@ -230,6 +232,8 @@ void ParticleSystem::process(Time dt)
             p.colour.setAlpha(std::max(p.lifetime / p.maxLifeTime, 0.f));
 
             p.rotation += emitter.emitterSettings.rotationSpeed * dtSec;
+            p.scale += ((p.scale * emitter.emitterSettings.scaleModifier) * dtSec);
+            //LOG(std::to_string(emitter.emitterSettings.scaleModifier), Logger::Type::Info);
 
             //update bounds for culling
             if (p.position.x < minBounds.x) minBounds.x = p.position.x;
@@ -276,7 +280,7 @@ void ParticleSystem::process(Time dt)
 
             //rotation/size
             m_dataBuffer[idx++] = p.rotation;
-            m_dataBuffer[idx++] = 0.f;
+            m_dataBuffer[idx++] = p.scale;
             m_dataBuffer[idx++] = 0.f;
         }
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
