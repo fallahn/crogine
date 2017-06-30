@@ -306,7 +306,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                 }
                 else
                 {
-                    material.setProperty("u_rimFalloff", 0.6);
+                    material.setProperty("u_rimFalloff", 0.6f);
                 }
             }
             else if (name == "projection")

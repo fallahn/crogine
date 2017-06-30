@@ -64,6 +64,7 @@ source distribution.
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/CollisionSystem.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/SpriteAnimator.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -71,6 +72,7 @@ source distribution.
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/components/CommandID.hpp>
 #include <crogine/ecs/components/PhysicsObject.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
@@ -150,12 +152,13 @@ void GameState::addSystems()
     m_scene.addSystem<Translator>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<VelocitySystem>(mb);
-    m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<ItemSystem>(mb);
     m_scene.addSystem<NpcSystem>(mb);
     m_scene.addSystem<PlayerSystem>(mb);
     m_scene.addSystem<PlayerWeaponSystem>(mb);
     m_scene.addSystem<NpcWeaponSystem>(mb);
+    m_scene.addSystem<cro::SkeletalAnimator>(mb);
+    m_scene.addSystem<cro::SpriteAnimator>(mb);
     m_scene.addSystem<cro::SceneGraph>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
@@ -491,6 +494,8 @@ void GameState::loadModels()
     weaponEntity.getComponent<NpcWeapon>().damage = 1.f;
 
     //choppa
+    cro::EmitterSettings flames;
+    flames.loadFromFile("assets/particles/flames.cps", m_resources.textures);
     const float choppaSpacing = ChoppaNavigator::spacing;
     glm::vec3 choppaScale(0.6f);
     bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].meshID).boundingBox;
@@ -513,6 +518,7 @@ void GameState::loadModels()
         entity.addComponent<cro::PhysicsObject>().addShape(ps);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
         entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
+        entity.addComponent<cro::ParticleEmitter>().emitterSettings = flames;
     }
 
     //speedray
@@ -610,18 +616,7 @@ void GameState::loadParticles()
     //particle systems
     auto entity = m_scene.createEntity();
     auto& snowEmitter = entity.addComponent<cro::ParticleEmitter>();
-    auto& settings = snowEmitter.emitterSettings;
-    settings.emitRate = 30.f;
-    settings.initialVelocity = { -2.4f, -0.1f, 0.f };
-    settings.gravity = { 0.f, -1.f, 0.f };
-    settings.colour = cro::Colour::White();
-    settings.lifetime = 5.f;
-    settings.rotationSpeed = 5.f;
-    settings.size = 0.03f;
-    settings.spawnRadius = 0.8f;
-    settings.textureID = m_resources.textures.get("assets/particles/snowflake.png").getGLHandle();
-    settings.blendmode = cro::EmitterSettings::Add;
-
+    snowEmitter.emitterSettings.loadFromFile("assets/particles/snow.cps", m_resources.textures);
     snowEmitter.start();
     entity.addComponent<cro::Transform>();
     auto& translator = entity.addComponent<RandomTranslation>();
@@ -636,15 +631,7 @@ void GameState::loadParticles()
     //rock fragments from ceiling
     entity = m_scene.createEntity();
     auto& rockEmitter = entity.addComponent<cro::ParticleEmitter>();
-    auto& rockSettings = rockEmitter.emitterSettings;
-    rockSettings.emitRate = 4.f;
-    rockSettings.initialVelocity = {};
-    rockSettings.lifetime = 2.f;
-    rockSettings.rotationSpeed = 8.f;
-    rockSettings.size = 0.06f;
-    rockSettings.textureID = m_resources.textures.get("assets/particles/rock_fragment.png").getGLHandle();
-    rockSettings.blendmode = cro::EmitterSettings::Alpha;
-    rockSettings.gravity = { 0.f, -9.f, 0.f };
+    rockEmitter.emitterSettings.loadFromFile("assets/particles/rocks.cps", m_resources.textures);
 
     entity.addComponent<cro::Transform>();
     auto& rockTrans = entity.addComponent<RandomTranslation>();
@@ -655,6 +642,16 @@ void GameState::loadParticles()
         p.z = -8.6f;
     }
     entity.addComponent<cro::CommandTarget>().ID = CommandID::RockParticles;
+
+    //impact explosions
+    cro::SpriteSheet explosion;
+    explosion.loadFromFile("assets/sprites/explosion02.spt", m_resources.textures);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Sprite>() = explosion.getSprite("explosion");
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -9.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.02f));
+    entity.addComponent<cro::SpriteAnimaton>().play(0);
+
 }
 
 void GameState::loadWeapons()

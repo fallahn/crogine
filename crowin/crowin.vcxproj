@@ -66,6 +66,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\ProjectionMap.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Skeleton.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Sprite.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\SpriteAnimation.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Text.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\UIInput.hpp" />
@@ -82,6 +83,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneGraph.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\ModelRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SkeletalAnimator.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\SpriteAnimator.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SpriteRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\TextRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\UISystem.hpp" />
@@ -174,6 +176,7 @@
     <ClCompile Include="..\common\src\ecs\systems\SceneGraph.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\ModelRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SkeletalAnimator.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\SpriteAnimator.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\TextRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\UISystem.cpp" />

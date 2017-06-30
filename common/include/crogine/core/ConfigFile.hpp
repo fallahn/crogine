@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/Log.hpp>
+#include <crogine/graphics/Rectangle.hpp>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -82,7 +83,7 @@ namespace cro
         ConfigProperty(const std::string& name, const std::string& value);
 
         /*!
-        \brief Attempts to retreive the value as the requested type.
+        \brief Attempts to retrieve the value as the requested type.
         Valid types are : std::string, int32, float, bool, glm::vec2,
         glm::vec3, glm::vec4
         */

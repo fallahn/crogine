@@ -42,6 +42,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/ProjectionMapSystem.cpp
   ${PROJECT_DIR}/ecs/systems/SceneGraph.cpp
   ${PROJECT_DIR}/ecs/systems/SkeletalAnimator.cpp
+  ${PROJECT_DIR}/ecs/systems/SpriteAnimator.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/TextRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp

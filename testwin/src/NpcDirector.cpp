@@ -144,6 +144,10 @@ void NpcDirector::handleMessage(const cro::Message& msg)
                 };
                 sendCommand(cmd);
             }
+            else if (data.npcType == Npc::Choppa)
+            {
+                getScene().getEntity(data.entityID).getComponent<cro::ParticleEmitter>().start();
+            }
 
             break;
         case NpcEvent::FiredWeapon:
@@ -187,6 +191,12 @@ void NpcDirector::handleMessage(const cro::Message& msg)
                 sendCommand(cmd);
             }
         }
+            break;
+        case NpcEvent::ExitScreen:
+            if (data.npcType == Npc::Choppa)
+            {
+                getScene().getEntity(data.entityID).getComponent<cro::ParticleEmitter>().stop();
+            }
             break;
         }
     }

@@ -80,44 +80,66 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
     const auto& spriteObjs = sheetFile.getObjects();
     for (const auto& spr : spriteObjs)
     {
-        if (spr.getName() != "sprite"
-            || spr.getId().empty())
+        if (spr.getName() == "sprite")
         {
-            if (spr.getId().empty()) Logger::log("Sprite has no ID in " + path, Logger::Type::Error);
-            continue;
-        }
+            std::string spriteName = spr.getId();
+            if (m_sprites.count(spriteName) > 0)
+            {
+                Logger::log(spriteName + " already exists in sprite sheet", Logger::Type::Error);
+                continue;
+            }
 
-        std::string spriteName = spr.getId();
-        if (m_sprites.count(spriteName) > 0)
-        {
-            Logger::log(spriteName + " already exists in sprite sheet", Logger::Type::Error);
-            continue;
-        }
+            Sprite spriteComponent;
+            spriteComponent.setTexture(*texture);
 
-        Sprite spriteComponent;
-        spriteComponent.setTexture(*texture);
+            if (auto* p = spr.findProperty("blendmode"))
+            {
+                //override sheet mode
+                std::string mode = p->getValue<std::string>();
+                if (mode == "add") spriteComponent.setBlendMode(Material::BlendMode::Additive);
+                else if (mode == "multiply") spriteComponent.setBlendMode(Material::BlendMode::Multiply);
+                else if (mode == "none") spriteComponent.setBlendMode(Material::BlendMode::None);
+            }
+            else
+            {
+                spriteComponent.setBlendMode(blendMode);
+            }
 
-        if (auto* p = spr.findProperty("blendmode"))
-        {
-            //override sheet mode
-            std::string mode = p->getValue<std::string>();
-            if (mode == "add") spriteComponent.setBlendMode(Material::BlendMode::Additive);
-            else if (mode == "multiply") spriteComponent.setBlendMode(Material::BlendMode::Multiply);
-            else if (mode == "none") spriteComponent.setBlendMode(Material::BlendMode::None);
-        }
-        else
-        {
-            spriteComponent.setBlendMode(blendMode);
-        }
+            if (auto* p = spr.findProperty("bounds"))
+            {
+                spriteComponent.setTextureRect(p->getValue<FloatRect>());
+            }
 
-        if (auto* p = spr.findProperty("bounds"))
-        {
-            auto bounds = p->getValue<glm::vec4>();
-            spriteComponent.setTextureRect({ bounds.x, bounds.y, bounds.z, bounds.w });
-        }
+            const auto& spriteObjs = spr.getObjects();
+            for (const auto& sprOb : spriteObjs)
+            {
+                if (sprOb.getName() == "animation")
+                {
+                    const auto& properties = sprOb.getProperties();
+                    for (const auto& p : properties)
+                    {
+                        std::string name = p.getName();
+                        if (name == "frame")
+                        {
+                            auto& anim = spriteComponent.m_animations[spriteComponent.m_animationCount];
+                            anim.frames[anim.frameCount++] = p.getValue<FloatRect>();
+                        }
+                        else if (name == "framerate")
+                        {
+                            spriteComponent.m_animations[spriteComponent.m_animationCount].framerate = p.getValue<float>();
+                        }
+                        else if (name == "loop")
+                        {
+                            spriteComponent.m_animations[spriteComponent.m_animationCount].looped = p.getValue<bool>();
+                        }
+                    }
+                    spriteComponent.m_animationCount++;
+                }
+            }
 
-        m_sprites.insert(std::make_pair(spriteName, spriteComponent));
-        count++;
+            m_sprites.insert(std::make_pair(spriteName, spriteComponent));
+            count++;
+        }
     }
 
     LOG("Found " + std::to_string(count) + " sprites in " + path, Logger::Type::Info);
