@@ -189,11 +189,13 @@ bool ConfigObject::loadFromFile(const std::string& path)
                 {			
                     //insert name / value property into current object
                     auto prop = getPropertyName(data);
-                    if (currentObject->findProperty(prop.first))
+                    //TODO need to reinstate this and create a property
+                    //capable of storing arrays
+                    /*if (currentObject->findProperty(prop.first))
                     {
                         Logger::log("Property \'" + prop.first + "\' already exists in \'" + currentObject->getName() + "\', skipping entry...", Logger::Type::Warning);
                         continue;
-                    }
+                    }*/
 
                     if (prop.second.empty())
                     {

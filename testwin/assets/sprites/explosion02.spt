@@ -1,0 +1,35 @@
+
+sprite_sheet explosion02
+{
+	src = "assets/sprites/explosion02.png"
+	blendmode = add
+	smooth = true
+
+	sprite explosion
+	{
+		bounds = 32,32,32,32
+
+		animation explode
+		{
+			frame = 1,97,30,30
+			frame = 33,97,30,30
+			frame = 65,97,30,30
+			frame = 97,97,30,30
+			frame = 1,65,30,30
+			frame = 33,65,30,30
+			frame = 65,65,30,30
+			frame = 97,65,30,30
+			frame = 1,33,30,30
+			frame = 33,33,30,30
+			frame = 65,33,30,30
+			frame = 97,33,30,30
+			frame = 1,1,30,30
+			frame = 33,1,30,30
+			frame = 65,1,30,30
+			frame = 97,1,30,30
+
+			framerate = 16
+			loop = false
+		}
+	}
+}

@@ -119,6 +119,29 @@ namespace cro
         */
         void setBlendMode(Material::BlendMode mode);
 
+        /*!
+        \brief Maximum number of frames in an animation
+        */
+        static constexpr std::size_t MaxFrames = 100;
+
+        /*!
+        \brief Maximum number of animations per sprite
+        */
+        static constexpr std::size_t MaxAnimations = 10;
+
+        /*!
+        \brief Represents a single animation
+        */
+        struct Animation final
+        {
+            std::array<FloatRect, MaxFrames> frames;
+            std::size_t frameCount = 0;
+
+            bool looped = false;
+            float framerate = 12.f;
+        };
+
+
     private:
         int32 m_textureID;
         glm::vec3 m_textureSize;
@@ -140,7 +163,12 @@ namespace cro
         Material::BlendMode m_blendMode;
         bool m_needsSorting;
 
+        std::size_t m_animationCount;
+        std::array<Animation, MaxAnimations> m_animations;
+
         friend class SpriteRenderer;
+        friend class SpriteAnimator;
+        friend class SpriteSheet;
     };
 }
 

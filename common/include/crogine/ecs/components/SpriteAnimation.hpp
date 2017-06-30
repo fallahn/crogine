@@ -27,47 +27,41 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SPRITE_SHEET_HPP_
-#define CRO_SPRITE_SHEET_HPP_
+#ifndef CRO_SPRITE_ANIMATION_HPP_
+#define CRO_SPRITE_ANIMATION_HPP_
 
 #include <crogine/Config.hpp>
-#include <crogine/ecs/components/Sprite.hpp>
-
-#include <unordered_map>
-#include <string>
+#include <crogine/detail/Types.hpp>
 
 namespace cro
 {
-    class TextureResource;
-
     /*!
-    \brief Supports loading multiple sprites from a single
-    texture atlas via the ConfigFile format.
+    \brief Component which contains information about the currently
+    playing sprite animation. Requires a SpriteAnimator system in the scene.
     */
-    class CRO_EXPORT_API SpriteSheet final
+    struct CRO_EXPORT_API SpriteAnimaton final
     {
-    public:
-        SpriteSheet();
+        int32 id = -1;
+        bool playing = true;
+        float currentFrameTime = 0.f;
+        uint32 frameID = 0;
 
         /*!
-        \brief Attempts to load a ConfigFile from the given path.
-        A reference to a valid texture resource is required to load
-        the sprite sheet texture.
-        \returns true if successful, else false
+        \brief Play the animation at the given index if it exists
         */
-        bool loadFromFile(const std::string& path, TextureResource& rx);
+        void play(int32 index) { id = index; playing = true; }
 
         /*!
-        \brief Returns a sprite component with the given name as it
-        appears in the sprite sheet. If the sprite does not exist an
-        empty sprite is returned.
+        \brief Pause the playing animation, if there is one
         */
-        Sprite getSprite(const std::string& name);
+        void pause() { playing = false; }
 
-    private:
-        std::unordered_map<std::string, Sprite> m_sprites;
-
+        /*!
+        \brief Stops the current animation if it is playing and
+        rewinds it to the first frame if it is playing or paused
+        */
+        void stop() { playing = false; frameID = 0; }
     };
 }
 
-#endif //CRO_SPRITE_SHEET_HPP_
+#endif //CRO_SPRITE_ANIMATION_HPP_

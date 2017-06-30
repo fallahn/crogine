@@ -27,47 +27,28 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SPRITE_SHEET_HPP_
-#define CRO_SPRITE_SHEET_HPP_
+#ifndef CRO_SPRITE_ANIMATOR_HPP_
+#define CRO_SPRITE_ANIMATOR_HPP_
 
-#include <crogine/Config.hpp>
-#include <crogine/ecs/components/Sprite.hpp>
-
-#include <unordered_map>
-#include <string>
+#include <crogine/ecs/System.hpp>
 
 namespace cro
 {
-    class TextureResource;
-
     /*!
-    \brief Supports loading multiple sprites from a single
-    texture atlas via the ConfigFile format.
+    \brief Sprite Animation system.
+    Updates all active animations on entities which have Sprite and
+    SpriteAnimation components.
     */
-    class CRO_EXPORT_API SpriteSheet final
+    class CRO_EXPORT_API SpriteAnimator final : public System
     {
     public:
-        SpriteSheet();
+        SpriteAnimator(MessageBus&);
 
-        /*!
-        \brief Attempts to load a ConfigFile from the given path.
-        A reference to a valid texture resource is required to load
-        the sprite sheet texture.
-        \returns true if successful, else false
-        */
-        bool loadFromFile(const std::string& path, TextureResource& rx);
-
-        /*!
-        \brief Returns a sprite component with the given name as it
-        appears in the sprite sheet. If the sprite does not exist an
-        empty sprite is returned.
-        */
-        Sprite getSprite(const std::string& name);
+        void process(cro::Time) override;
 
     private:
-        std::unordered_map<std::string, Sprite> m_sprites;
 
     };
 }
 
-#endif //CRO_SPRITE_SHEET_HPP_
+#endif //CRO_SPRITE_ANIMATOR_HPP_

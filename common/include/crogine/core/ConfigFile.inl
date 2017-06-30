@@ -95,3 +95,10 @@ inline glm::vec4 ConfigProperty::getValue<glm::vec4>() const
 
     return retval;
 }
+
+template <>
+inline FloatRect ConfigProperty::getValue<FloatRect>() const
+{
+    auto values = valueAsArray();
+    return { values[0], values[1], values[2], values[3] };
+}

@@ -38,7 +38,8 @@ Sprite::Sprite()
     m_vboOffset     (0),
     m_visible       (false),
     m_blendMode     (Material::BlendMode::Alpha),
-    m_needsSorting  (false)
+    m_needsSorting  (false),
+    m_animationCount(0)
 {
     for (auto& q : m_quad)
     {
