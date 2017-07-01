@@ -117,6 +117,9 @@
     <ClCompile Include="src\NpcWeaponSystem.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\ExplosionSystem.cpp">
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -204,6 +207,9 @@
       <Filter>Header Files\systems</Filter>
     </ClInclude>
     <ClInclude Include="src\NpcWeaponSystem.hpp">
+      <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ExplosionSystem.hpp">
       <Filter>Header Files\systems</Filter>
     </ClInclude>
   </ItemGroup>

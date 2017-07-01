@@ -42,7 +42,7 @@ namespace cro
     struct CRO_EXPORT_API SpriteAnimaton final
     {
         int32 id = -1;
-        bool playing = true;
+        bool playing = false;
         float currentFrameTime = 0.f;
         uint32 frameID = 0;
 

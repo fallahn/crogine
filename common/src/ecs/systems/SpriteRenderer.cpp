@@ -178,43 +178,51 @@ void SpriteRenderer::process(Time)
             //TODO depending on how often this happens it might be worth
             //double buffering the VBOs
 
+
+            //-----TODO THIS DOESN'T UPDATE THE DEGEN TRIANGLES CORRECTLY----//
+
             //create data
-            std::vector<float> vertexData;
-            auto copyVertex = [&](uint32 idx)
-            {
-                vertexData.push_back(sprite.m_quad[idx].position.x);
-                vertexData.push_back(sprite.m_quad[idx].position.y);
-                vertexData.push_back(sprite.m_quad[idx].position.z);
-                vertexData.push_back(1.f);
+            //std::vector<float> vertexData;
+            //auto copyVertex = [&](uint32 idx)
+            //{
+            //    vertexData.push_back(sprite.m_quad[idx].position.x);
+            //    vertexData.push_back(sprite.m_quad[idx].position.y);
+            //    vertexData.push_back(sprite.m_quad[idx].position.z);
+            //    vertexData.push_back(1.f);
 
-                vertexData.push_back(sprite.m_quad[idx].colour.r);
-                vertexData.push_back(sprite.m_quad[idx].colour.g);
-                vertexData.push_back(sprite.m_quad[idx].colour.b);
-                vertexData.push_back(sprite.m_quad[idx].colour.a);
+            //    vertexData.push_back(sprite.m_quad[idx].colour.r);
+            //    vertexData.push_back(sprite.m_quad[idx].colour.g);
+            //    vertexData.push_back(sprite.m_quad[idx].colour.b);
+            //    vertexData.push_back(sprite.m_quad[idx].colour.a);
+            //    
+            //    vertexData.push_back(sprite.m_quad[idx].UV.x);
+            //    vertexData.push_back(sprite.m_quad[idx].UV.y);
 
-                vertexData.push_back(sprite.m_quad[idx].UV.x);
-                vertexData.push_back(sprite.m_quad[idx].UV.y);
+            //    vertexData.push_back(static_cast<float>(i)); //for transform lookup
+            //    vertexData.push_back(0.f);
+            //};
 
-                vertexData.push_back(static_cast<float>(i)); //for transform lookup
-                vertexData.push_back(0.f);
-            };
-            for (auto j = 0; j < 4; ++j)
-            {
-                copyVertex(j);
-            }
+            ////update vert data - TODO update degen!!
+            //for (auto j = 0; j < 4; ++j)
+            //{
+            //    copyVertex(j);
+            //}
 
-            //find offset (and VBO id)
-            auto vboIdx = (i > MaxSprites) ? i % MaxSprites : 0;
+            ////find offset (and VBO id)
+            //auto vboIdx = (i > MaxSprites) ? i % MaxSprites : 0;
 
-            //update sub data
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_buffers[vboIdx].first));
-            glCheck(glBufferSubData(GL_ARRAY_BUFFER, sprite.m_vboOffset,
-                vertexData.size() * sizeof(float), vertexData.data()));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+            ////update sub data
+            //glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_buffers[vboIdx].first));
+            //glCheck(glBufferSubData(GL_ARRAY_BUFFER, sprite.m_vboOffset,
+            //    vertexData.size() * sizeof(float), vertexData.data()));
+            //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-            updateGlobalBounds(sprite, entities[i].getComponent<Transform>().getWorldTransform());
+            //updateGlobalBounds(sprite, entities[i].getComponent<Transform>().getWorldTransform());
+
+            //---------------------EOF---------------------//
 
             sprite.m_dirty = false;
+            m_pendingRebuild = true;
         }
 
         if (sprite.m_needsSorting)
@@ -488,13 +496,13 @@ void SpriteRenderer::applyBlendMode(Material::BlendMode mode)
     case Material::BlendMode::Additive:
         glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
-        glCheck(glDepthMask(GL_TRUE));
+        glCheck(glDepthMask(GL_FALSE));
         glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_ONE, GL_ONE));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
     case Material::BlendMode::Alpha:
-        glCheck(glDisable(GL_CULL_FACE));
+        glCheck(glEnable(GL_CULL_FACE));
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_FALSE));
         glCheck(glEnable(GL_BLEND));
@@ -504,7 +512,7 @@ void SpriteRenderer::applyBlendMode(Material::BlendMode mode)
     case Material::BlendMode::Multiply:
         glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
-        glCheck(glDepthMask(GL_TRUE));
+        glCheck(glDepthMask(GL_FALSE));
         glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
         glCheck(glBlendEquation(GL_FUNC_ADD));

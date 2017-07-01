@@ -91,7 +91,7 @@ BulletDebug::BulletDebug()
         }
         else
         {
-            Logger::log("Cannot find matrix uniform in physices debug shader", Logger::Type::Error);
+            Logger::log("Cannot find matrix uniform in physics debug shader", Logger::Type::Error);
         }
     }
     else

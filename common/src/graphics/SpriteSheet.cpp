@@ -47,6 +47,8 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
         return false;
     }
 
+    m_sprites.clear();
+
     const auto& objs = sheetFile.getObjects();
     std::size_t count = 0;
 
