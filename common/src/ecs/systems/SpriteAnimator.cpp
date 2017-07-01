@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/ecs/components/SpriteAnimation.hpp>
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/Message.hpp>
 
 using namespace cro;
 
@@ -54,7 +55,6 @@ void SpriteAnimator::process(cro::Time dt)
         if (animation.playing)
         {
             auto& sprite = entity.getComponent<Sprite>();
-            
             animation.currentFrameTime -= dtSec;
             if (animation.currentFrameTime < 0)
             {

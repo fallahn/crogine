@@ -237,12 +237,11 @@ void CollisionSystem::process(cro::Time dt)
     }
     //DPRINT("Collision count", std::to_string(manifoldCount));
 
-
-    m_collisionWorld->debugDrawWorld();
+    m_collisionWorld->debugDrawWorld();  
 }
 
 void CollisionSystem::render(Entity camera)
-{
+{   
     const auto& tx = camera.getComponent<Transform>();
     const auto& camComponent = camera.getComponent<Camera>();
 
@@ -271,36 +270,46 @@ void CollisionSystem::onEntityAdded(cro::Entity entity)
             CRO_ASSERT(glm::length2(shape.extent) > 0, "Invalid box points");
             m_shapeCache.insert(std::make_pair(hash, std::make_unique<btBoxShape>(btVector3(shape.extent.x, shape.extent.y, shape.extent.z))));
             return m_shapeCache.find(hash)->second.get();
+            //m_shapeCache.emplace_back(std::make_unique<btBoxShape>(btVector3(shape.extent.x, shape.extent.y, shape.extent.z)));
+            //return m_shapeCache.back().get();
         case PhysicsShape::Type::Capsule:
             CRO_ASSERT(shape.radius > 0, "Capsule requires at least a radius");
             switch (shape.orientation)
             {
             default:
                 m_shapeCache.insert(std::make_pair(hash, std::make_unique<btCapsuleShape>(shape.radius, shape.length)));
+                //m_shapeCache.emplace_back(std::make_unique<btCapsuleShape>(shape.radius, shape.length));
                 break;
             case PhysicsShape::Orientation::X:
                 m_shapeCache.insert(std::make_pair(hash, std::make_unique<btCapsuleShapeX>(shape.radius, shape.length)));
+                //m_shapeCache.emplace_back(std::make_unique<btCapsuleShapeX>(shape.radius, shape.length));
                 break;
             case PhysicsShape::Orientation::Z:
                 m_shapeCache.insert(std::make_pair(hash, std::make_unique<btCapsuleShapeZ>(shape.radius, shape.length)));
+                //m_shapeCache.emplace_back(std::make_unique<btCapsuleShapeZ>(shape.radius, shape.length));
                 break;
             }
             return m_shapeCache.find(hash)->second.get();
+            //return m_shapeCache.back().get();
         case PhysicsShape::Type::Cone:
             CRO_ASSERT(shape.radius > 0 && shape.length > 0, "Cone shape requires length and girth");
             switch (shape.orientation)
             {
             default:
                 m_shapeCache.insert(std::make_pair(hash, std::make_unique<btConeShape>(shape.radius, shape.length)));
+                //m_shapeCache.emplace_back(std::make_unique<btConeShape>(shape.radius, shape.length));
                 break;
             case PhysicsShape::Orientation::X:
                 m_shapeCache.insert(std::make_pair(hash, std::make_unique<btConeShapeX>(shape.radius, shape.length)));
+                //m_shapeCache.emplace_back(std::make_unique<btConeShapeX>(shape.radius, shape.length));
                 break;
             case PhysicsShape::Orientation::Z:
                 m_shapeCache.insert(std::make_pair(hash, std::make_unique<btConeShapeZ>(shape.radius, shape.length)));
+                //m_shapeCache.emplace_back(std::make_unique<btConeShapeZ>(shape.radius, shape.length));
                 break;
             }
             return m_shapeCache.find(hash)->second.get();
+            //return m_shapeCache.back().get();
         case PhysicsShape::Type::Cylinder:
             CRO_ASSERT(glm::length2(shape.extent), "Cylinder shape requires extent");
             {
@@ -309,23 +318,29 @@ void CollisionSystem::onEntityAdded(cro::Entity entity)
                 {
                 default:
                     m_shapeCache.insert(std::make_pair(hash, std::make_unique<btCylinderShape>(extent)));
+                    //m_shapeCache.emplace_back(std::make_unique<btCylinderShape>(extent));
                     break;
                 case PhysicsShape::Orientation::X:
                     m_shapeCache.insert(std::make_pair(hash, std::make_unique<btCylinderShapeX>(extent)));
+                    //m_shapeCache.emplace_back(std::make_unique<btCylinderShapeX>(extent));
                     break;
                 case PhysicsShape::Orientation::Z:
                     m_shapeCache.insert(std::make_pair(hash, std::make_unique<btCylinderShapeZ>(extent)));
+                    //m_shapeCache.emplace_back(std::make_unique<btCylinderShapeZ>(extent));
                     break;
                 }
             }
             return m_shapeCache.find(hash)->second.get();
+            //return m_shapeCache.back().get();
         case PhysicsShape::Type::Hull:
             Logger::log("Hull shapes not yet implemented", Logger::Type::Warning);
             return nullptr;
         case PhysicsShape::Type::Sphere:
             CRO_ASSERT(shape.radius > 0, "Sphere shapes require a radius");
             m_shapeCache.insert(std::make_pair(hash, std::make_unique<btSphereShape>(shape.radius)));
+            //m_shapeCache.emplace_back(std::make_unique<btSphereShape>(shape.radius));
             return m_shapeCache.find(hash)->second.get();
+            //return m_shapeCache.back().get();
             break;
         }
     };
@@ -340,17 +355,8 @@ void CollisionSystem::onEntityAdded(cro::Entity entity)
     //ACTUALLY if we always do this then we can offset collision shapes always
     //if (po.m_shapeCount > 1)
     {
-        //TODO rather than hash index this, use the entity index because we
-        //only want to recycle the shapes not the compounds.
-        PhysicsShape shape;
-        shape.type = PhysicsShape::Type::Compound;
-        shape.length = static_cast<float>(idx);
-        
-        StructHash<PhysicsShape> sh;
-        auto hash = sh(shape);
-
-        m_shapeCache.insert(std::make_pair(hash, std::make_unique<btCompoundShape>(true, po.m_shapeCount)));
-        btCompoundShape* compoundShape = dynamic_cast<btCompoundShape*>(m_shapeCache.find(hash)->second.get());
+        m_compoundShapes[idx] = std::make_unique<btCompoundShape>();
+        auto* compoundShape = m_compoundShapes[idx].get();
         m_collisionData[idx].shape = compoundShape;
 
         for (auto i = 0u; i < po.m_shapeCount; ++i)

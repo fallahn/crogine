@@ -267,5 +267,8 @@
     <ClCompile Include="..\common\src\graphics\SpriteSheet.cpp">
       <Filter>src\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\SpriteAnimator.cpp">
+      <Filter>src\ecs\systems</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

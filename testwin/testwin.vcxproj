@@ -292,6 +292,7 @@
     <ClCompile Include="src\ChunkBuilder.cpp" />
     <ClCompile Include="src\ColourSystem.cpp" />
     <ClCompile Include="src\DriftSystem.cpp" />
+    <ClCompile Include="src\ExplosionSystem.cpp" />
     <ClCompile Include="src\GameState.cpp" />
     <ClCompile Include="src\ItemsDirector.cpp" />
     <ClCompile Include="src\ItemSystem.cpp" />
@@ -325,6 +326,7 @@
     <ClInclude Include="src\ColourSystem.hpp" />
     <ClInclude Include="src\DriftSystem.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
+    <ClInclude Include="src\ExplosionSystem.hpp" />
     <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\ItemsDirector.hpp" />
     <ClInclude Include="src\ItemSystem.hpp" />
