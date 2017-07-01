@@ -367,6 +367,8 @@
     <Content Include="assets\assets\sprites\explosion02.spt" />
     <Content Include="assets\assets\sprites\explosion03.png" />
     <Content Include="assets\assets\sprites\explosion03.spt" />
+    <Content Include="assets\assets\sprites\hud.png" />
+    <Content Include="assets\assets\sprites\hud.spt" />
     <Content Include="assets\assets\sprites\lasers.png" />
     <Content Include="assets\assets\sprites\lasers.spt" />
     <Content Include="assets\assets\sprites\loading.png" />

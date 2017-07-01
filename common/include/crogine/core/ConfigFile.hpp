@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/Log.hpp>
 #include <crogine/graphics/Rectangle.hpp>
+#include <crogine/graphics/Colour.hpp>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -85,7 +86,7 @@ namespace cro
         /*!
         \brief Attempts to retrieve the value as the requested type.
         Valid types are : std::string, int32, float, bool, glm::vec2,
-        glm::vec3, glm::vec4
+        glm::vec3, glm::vec4, cro::FloatRect, cro::Colour
         */
         template <typename T>
         T getValue() const;// = delete;

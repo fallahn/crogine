@@ -129,7 +129,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
                             diff = status.weaver.ident - diff;
                         }
                         status.weaver.dying = true;
-                        status.weaver.dyingTime = 0.1f * static_cast<float>(diff) + 0.1f;
+                        status.weaver.dyingTime = 0.05f * static_cast<float>(diff) + 0.1f;
                     }
                 };
                 sendCommand(cmd);

@@ -1,0 +1,37 @@
+sprite_sheet hud
+{
+	src = "assets/sprites/hud.png"
+	//smooth = true
+
+	sprite bar_inside
+	{
+		bounds = 16,160,400,64
+		colour = 0,1,1,1
+	}
+
+	sprite bar_outside
+	{
+		bounds = 16,224,400,64
+	}
+
+	sprite life
+	{
+		bounds = 0,32,96,128
+		colour = 0,1,1,1
+	}
+
+	sprite bomb
+	{
+		bounds = 112,32,128,128
+	}
+
+	sprite emp
+	{
+		bounds = 240,32,128,128
+	}
+
+	sprite extra_life
+	{
+		bounds = 448,0,256,304
+	}
+}
