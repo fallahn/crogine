@@ -59,6 +59,7 @@ public:
 private:
 
     cro::Scene m_scene;
+    cro::Scene m_uiScene;
 
     cro::ResourceCollection m_resources;
     std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs;
@@ -68,6 +69,7 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
+    void createHUD();
 
     void loadTerrain();
     void loadModels();

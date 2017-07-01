@@ -66,6 +66,7 @@ source distribution.
 #include <crogine/ecs/systems/CollisionSystem.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
+#include <crogine/ecs/systems/TextRenderer.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -74,6 +75,7 @@ source distribution.
 #include <crogine/ecs/components/CommandID.hpp>
 #include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
+#include <crogine/ecs/components/Text.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
@@ -87,12 +89,14 @@ namespace
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State        (stack, context),
-    m_scene             (context.appInstance.getMessageBus())
+    m_scene             (context.appInstance.getMessageBus()),
+    m_uiScene           (context.appInstance.getMessageBus())
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
         loadAssets();
         createScene();
+        createHUD();
     });
     //context.appInstance.setClearColour(cro::Colour::White());
 
@@ -113,12 +117,14 @@ bool GameState::handleEvent(const cro::Event& evt)
     }
 
     m_scene.forwardEvent(evt);
+    m_uiScene.forwardEvent(evt);
     return true;
 }
 
 void GameState::handleMessage(const cro::Message& msg)
 {
     m_scene.forwardMessage(msg);
+    m_uiScene.forwardMessage(msg);
 
     if (msg.id == cro::Message::WindowMessage)
     {
@@ -133,12 +139,14 @@ void GameState::handleMessage(const cro::Message& msg)
 bool GameState::simulate(cro::Time dt)
 {
     m_scene.simulate(dt);
+    m_uiScene.simulate(dt);
     return true;
 }
 
 void GameState::render()
 {
     m_scene.render();
+    m_uiScene.render();
 }
 
 //private
@@ -175,6 +183,11 @@ void GameState::addSystems()
     //m_scene.addPostProcess<cro::PostChromeAB>();
     m_scene.addPostProcess<PostRadial>();
 #endif
+
+    //UI scene
+    m_uiScene.addSystem<cro::SceneGraph>(mb);
+    m_uiScene.addSystem<cro::SpriteRenderer>(mb);
+    m_uiScene.addSystem<cro::TextRenderer>(mb);
 }
 
 void GameState::loadAssets()
@@ -263,8 +276,73 @@ void GameState::createScene()
     ent.addComponent<cro::Transform>();
     ent.addComponent<cro::Camera>();
     m_scene.setActiveCamera(ent);
+}
 
-    //2D camera (UI)
+namespace
+{
+    const float UIPadding = 20.f;
+    const float UISpacing = 6.f;
+
+#ifdef PLATFORM_DESKTOP
+    const glm::vec2 uiRes(1920.f, 1080.f);
+    //const glm::vec2 uiRes(1280.f, 720.f);
+#else
+    const glm::vec2 uiRes(1280.f, 720.f);
+#endif
+}
+
+void GameState::createHUD()
+{
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/sprites/hud.spt", m_resources.textures);
+
+    //health bar
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ UIPadding, UIPadding * 1.5f, 0.f });
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bar_outside");
+
+    auto innerEntity = m_uiScene.createEntity();
+    innerEntity.addComponent<cro::Transform>().setParent(entity);
+    innerEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bar_inside");
+
+    //lives
+    glm::vec3 startPoint(uiRes.x - (((spriteSheet.getSprite("life").getSize().x + UISpacing) * 5.f) + UIPadding), UIPadding, 0.f);
+    for (auto i = 0u; i < 5; ++i)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(startPoint);
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("life");
+        startPoint.x += entity.getComponent<cro::Sprite>().getSize().x + UISpacing;
+    }
+
+    //bonus weapons
+    startPoint.x = uiRes.x - (((spriteSheet.getSprite("bomb").getSize().x + UISpacing) * 2.f) + UIPadding);
+    startPoint.y = uiRes.y - (spriteSheet.getSprite("bomb").getSize().y + UIPadding);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(startPoint);
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bomb");
+
+    startPoint.x += entity.getComponent<cro::Sprite>().getSize().x + UISpacing;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(startPoint);
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("emp");
+
+    //score text
+    auto& scoreFont = m_resources.fonts.get(0);
+    scoreFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ UIPadding, uiRes.y - UIPadding, 0.f });
+    entity.addComponent<cro::Text>(scoreFont);
+    entity.getComponent<cro::Text>().setString("0000000000");
+    entity.getComponent<cro::Text>().setCharSize(50);
+    entity.getComponent<cro::Text>().setColour(cro::Colour::Cyan());
+
+    //camera
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    auto& cam2D = entity.addComponent<cro::Camera>();
+    cam2D.projection = glm::ortho(0.f, uiRes.x, 0.f, uiRes.y, -0.1f, 100.f);
+    m_uiScene.setActiveCamera(entity);
 }
 
 void GameState::loadTerrain()
@@ -832,6 +910,6 @@ void GameState::updateView()
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 
-    /*auto& cam2D = m_menuScene.getActiveCamera().getComponent<cro::Camera>();
-    cam2D.viewport = cam3D.viewport;*/
+    auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
+    cam2D.viewport = cam3D.viewport;
 }

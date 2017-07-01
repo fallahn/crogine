@@ -112,6 +112,11 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
                 spriteComponent.setTextureRect(p->getValue<FloatRect>());
             }
 
+            if (auto* p = spr.findProperty("colour"))
+            {
+                spriteComponent.setColour(p->getValue<Colour>());
+            }
+
             const auto& spriteObjs = spr.getObjects();
             for (const auto& sprOb : spriteObjs)
             {
