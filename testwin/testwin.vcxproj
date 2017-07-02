@@ -294,6 +294,7 @@
     <ClCompile Include="src\DriftSystem.cpp" />
     <ClCompile Include="src\ExplosionSystem.cpp" />
     <ClCompile Include="src\GameState.cpp" />
+    <ClCompile Include="src\HudItems.cpp" />
     <ClCompile Include="src\ItemsDirector.cpp" />
     <ClCompile Include="src\ItemSystem.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
@@ -328,6 +329,7 @@
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\ExplosionSystem.hpp" />
     <ClInclude Include="src\GameState.hpp" />
+    <ClInclude Include="src\HudItems.hpp" />
     <ClInclude Include="src\ItemsDirector.hpp" />
     <ClInclude Include="src\ItemSystem.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />

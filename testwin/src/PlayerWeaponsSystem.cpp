@@ -141,7 +141,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
             }
             break;
         case FireMode::Laser:
-            if (m_deadLaserCount > 0 && m_laserCooldownTime < laserCool)
+            if (m_deadLaserCount > 0 /*&& m_laserCooldownTime < laserCool*/)
             {
                 m_deadLaserCount--;
                 m_aliveList[m_aliveCount] = m_deadLasers[m_deadLaserCount];
@@ -210,7 +210,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
                 laserTime = 0.f;
             }
 
-            if (m_fireMode != FireMode::Laser || !m_systemActive || m_laserCooldownTime > laserOverheat)
+            if (m_fireMode != FireMode::Laser || !m_systemActive /*|| m_laserCooldownTime > laserOverheat*/)
             {
                 //remove from alive list
                 e.getComponent<cro::Transform>().setPosition(idlePos);

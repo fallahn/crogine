@@ -83,7 +83,7 @@ void PlayerSystem::process(cro::Time dt)
             shieldEnt.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
             auto& playerInfo = entity.getComponent<PlayerInfo>();
-            DPRINT("Health", std::to_string(playerInfo.health));
+            //DPRINT("Health", std::to_string(playerInfo.health));
             switch (playerInfo.state)
             {
             case PlayerInfo::State::Spawning:
