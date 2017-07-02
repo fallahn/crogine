@@ -34,4 +34,10 @@ sprite_sheet hud
 	{
 		bounds = 448,0,256,304
 	}
+
+	sprite paws
+	{
+		bounds = 0,304,128,128
+		colour = 0,1,1,1
+	}
 }

@@ -271,7 +271,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Content Include="assets\assets\fonts\Audiowide-Regular.ttf" />
-    <Content Include="assets\assets\fonts\charset.png" />
     <Content Include="assets\assets\materials\arctic_outpost_diffuse.png" />
     <Content Include="assets\assets\materials\arctic_outpost_mask.png" />
     <Content Include="assets\assets\materials\arctic_outpost_normal.png" />

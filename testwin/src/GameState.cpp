@@ -49,6 +49,7 @@ source distribution.
 #include "PlayerWeaponsSystem.hpp"
 #include "NpcWeaponSystem.hpp"
 #include "ExplosionSystem.hpp"
+#include "HudItems.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -185,6 +186,7 @@ void GameState::addSystems()
 #endif
 
     //UI scene
+    m_uiScene.addSystem<HudSystem>(mb);
     m_uiScene.addSystem<cro::SceneGraph>(mb);
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
@@ -298,21 +300,32 @@ void GameState::createHUD()
 
     //health bar
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ UIPadding, UIPadding * 1.5f, 0.f });
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bar_outside");
-
+    entity.addComponent<cro::Transform>().setPosition({ uiRes.x - (entity.getComponent<cro::Sprite>().getSize().x + UIPadding), UIPadding * 1.5f, 0.f });
+    
     auto innerEntity = m_uiScene.createEntity();
     innerEntity.addComponent<cro::Transform>().setParent(entity);
     innerEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bar_inside");
+    innerEntity.addComponent<HudItem>().type = HudItem::Type::HealthBar;
 
     //lives
-    glm::vec3 startPoint(uiRes.x - (((spriteSheet.getSprite("life").getSize().x + UISpacing) * 5.f) + UIPadding), UIPadding, 0.f);
+    glm::vec3 startPoint(UIPadding, UIPadding, 0.f);
     for (auto i = 0u; i < 5; ++i)
     {
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(startPoint);
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("life");
         startPoint.x += entity.getComponent<cro::Sprite>().getSize().x + UISpacing;
+        entity.addComponent<HudItem>().type = HudItem::Type::Life;
+        entity.getComponent<HudItem>().value = static_cast<float>(i);
+        if (i > 2)
+        {
+            entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
+        }
+        else
+        {
+            entity.getComponent<HudItem>().active = true;
+        }
     }
 
     //bonus weapons
@@ -321,11 +334,21 @@ void GameState::createHUD()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(startPoint);
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bomb");
+    entity.addComponent<HudItem>().type = HudItem::Type::Bomb;
 
     startPoint.x += entity.getComponent<cro::Sprite>().getSize().x + UISpacing;
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(startPoint);
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("emp");
+    entity.addComponent<HudItem>().type = HudItem::Type::Emp;
+
+#ifdef PLATFORM_MOBILE
+    //on mobile add a pause icon
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("paws");
+    entity.addComponent<cro::Transform>().setPosition({ (uiRes.x - entity.getComponent<cro::Sprite>().getSize()).x / 2.f, UIPadding, 0.f });
+    entity.addComponent<HudItem>().type = HudItem::Type::Paws;
+#endif
 
     //score text
     auto& scoreFont = m_resources.fonts.get(0);
@@ -336,6 +359,8 @@ void GameState::createHUD()
     entity.getComponent<cro::Text>().setString("0000000000");
     entity.getComponent<cro::Text>().setCharSize(50);
     entity.getComponent<cro::Text>().setColour(cro::Colour::Cyan());
+    entity.addComponent<HudItem>().type = HudItem::Type::Score;
+    entity.getComponent<HudItem>().value = 0.f;
 
     //camera
     entity = m_uiScene.createEntity();
