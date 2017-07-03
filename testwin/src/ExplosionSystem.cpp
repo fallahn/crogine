@@ -38,7 +38,7 @@ source distribution.
 
 namespace
 {
-    const float backgroundMultiplier = 21.3;
+    const float backgroundMultiplier = 21.3f;
 }
 
 ExplosionSystem::ExplosionSystem(cro::MessageBus& mb)

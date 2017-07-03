@@ -53,23 +53,22 @@ namespace
     const float laserDamage = 0.4f;
 
     const float laserRate = 0.025f;
-    const float laserOverheat = 4.f;
-    const float laserCool = laserOverheat / 4.f;
+    const float weaponDowngradeTime = 5.f;
 
     const glm::vec3 idlePos(-100.f); //be careful with this. When setting inactive actors to the same postion they cause collisions off screen
 }
 
 PlayerWeaponSystem::PlayerWeaponSystem(cro::MessageBus& mb)
-    : cro::System       (mb, typeid(PlayerWeaponSystem)),
-    m_systemActive      (false),
-    m_allowFiring       (false),
-    m_fireMode          (FireMode::Single),
-    m_fireTime          (pulseFireRate),
-    m_laserCooldownTime (0.f),
-    m_playerID          (0),
-    m_aliveCount        (0),
-    m_deadPulseCount    (0),
-    m_deadLaserCount    (0)
+    : cro::System           (mb, typeid(PlayerWeaponSystem)),
+    m_systemActive          (false),
+    m_allowFiring           (false),
+    m_fireMode              (FireMode::Single),
+    m_fireTime              (pulseFireRate),
+    m_weaponDowngradeTime   (0.f),
+    m_playerID              (0),
+    m_aliveCount            (0),
+    m_deadPulseCount        (0),
+    m_deadLaserCount        (0)
 {
     requireComponent<PlayerWeapon>();
     requireComponent<cro::Transform>();
@@ -141,7 +140,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
             }
             break;
         case FireMode::Laser:
-            if (m_deadLaserCount > 0 /*&& m_laserCooldownTime < laserCool*/)
+            if (m_deadLaserCount > 0)
             {
                 m_deadLaserCount--;
                 m_aliveList[m_aliveCount] = m_deadLasers[m_deadLaserCount];
@@ -154,11 +153,17 @@ void PlayerWeaponSystem::process(cro::Time dt)
             break;
         }
     }
-    else
+
+    //downgrade weapon over time
+    m_weaponDowngradeTime -= dt.asSeconds();
+    if (m_weaponDowngradeTime < 0)
     {
-        //cooldown laser
-        m_laserCooldownTime -= dt.asSeconds() * 2.f;
-        m_laserCooldownTime = std::max(m_laserCooldownTime, 0.f);
+        m_weaponDowngradeTime = weaponDowngradeTime;
+        if (m_fireMode > FireMode::Single)
+        {
+            m_fireMode = static_cast<FireMode>(static_cast<cro::int32>(m_fireMode) - 1);
+            //LOG("Fire mode downgraded", cro::Logger::Type::Info);
+        }
     }
 
     //update alive
@@ -198,8 +203,6 @@ void PlayerWeaponSystem::process(cro::Time dt)
             static float laserTime = 0.f;
             laserTime += dt.asSeconds();
             
-            m_laserCooldownTime += dt.asSeconds();
-
             if (laserTime > laserRate)
             {
                 //fade laser colour
@@ -210,7 +213,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
                 laserTime = 0.f;
             }
 
-            if (m_fireMode != FireMode::Laser || !m_systemActive /*|| m_laserCooldownTime > laserOverheat*/)
+            if (m_fireMode != FireMode::Laser || !m_systemActive)
             {
                 //remove from alive list
                 e.getComponent<cro::Transform>().setPosition(idlePos);
@@ -256,11 +259,15 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
             }
             break;
         case PlayerEvent::CollectedItem:
-            if (data.itemID == CollectableItem::WeaponUpgrade
-                && m_fireMode < FireMode::Laser) //TODO change when laser double implemented
+            if (data.itemID == CollectableItem::WeaponUpgrade)
             {
+                m_weaponDowngradeTime = weaponDowngradeTime;
+
                 //HAH wtf?
-                m_fireMode = static_cast<FireMode>(static_cast<cro::int32>(m_fireMode) + 1);
+                if (m_fireMode < FireMode::Laser)
+                {
+                    m_fireMode = static_cast<FireMode>(static_cast<cro::int32>(m_fireMode) + 1);
+                }
             }
             break;
         default: break;

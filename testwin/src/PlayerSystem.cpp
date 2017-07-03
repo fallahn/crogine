@@ -52,6 +52,8 @@ namespace
     const float shieldTime = 3.f;
 
     constexpr float fixedStep = 1.f / 60.f;
+
+    const cro::int32 maxLives = 5;
 }
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
@@ -119,12 +121,18 @@ void PlayerSystem::updateSpawning(cro::Entity entity)
         auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
         msg->entityID = entity.getIndex();
         msg->type = PlayerEvent::Spawned;
+
+        msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+        msg->entityID = entity.getIndex();
+        msg->type = PlayerEvent::HealthChanged;
+        msg->value = 100.f;
     }
 }
 
 void PlayerSystem::updateAlive(cro::Entity entity)
 {
     m_shieldTime = std::max(0.f, m_shieldTime - fixedStep);
+    auto& playerInfo = entity.getComponent<PlayerInfo>();
     
     //Do collision stuff
     const auto& po = entity.getComponent<cro::PhysicsObject>();
@@ -136,8 +144,7 @@ void PlayerSystem::updateAlive(cro::Entity entity)
 
         if (((otherPo.getCollisionGroups() & (CollisionID::NPC | CollisionID::Environment)) != 0)
             && m_shieldTime == 0)
-        {
-            auto& playerInfo = entity.getComponent<PlayerInfo>();
+        {          
             playerInfo.health -= 3.5f; //TODO make this a convar for difficulty levels
 
             {
@@ -146,21 +153,10 @@ void PlayerSystem::updateAlive(cro::Entity entity)
                 msg->type = PlayerEvent::HealthChanged;
                 msg->value = playerInfo.health;
             }
-
-            if (playerInfo.health < 0)
-            {
-                playerInfo.state = PlayerInfo::State::Dying;
-                entity.getComponent<Velocity>().velocity.x = -13.f;
-
-                auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
-                msg->entityID = entity.getIndex();
-                msg->type = PlayerEvent::Died;
-            }
         }
         else if ((otherPo.getCollisionGroups() & (CollisionID::NpcLaser)) != 0)
         {
             //subtract health based on weapon type.
-            auto& playerInfo = entity.getComponent<PlayerInfo>();
             if (otherEnt.hasComponent<NpcWeapon>()) //lasers are parented, and weapon is on that entity
             {
                 playerInfo.health -= otherEnt.getComponent<NpcWeapon>().damage;
@@ -183,7 +179,37 @@ void PlayerSystem::updateAlive(cro::Entity entity)
             msg->type = PlayerEvent::CollectedItem;
             msg->itemID = item.type;
 
-            //TODO update player inventory
+            //update player inventory
+            switch (item.type)
+            {
+            default: break;
+            case CollectableItem::Shield:
+            {
+                playerInfo.health = 100.f;
+
+                auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+                msg->entityID = entity.getIndex();
+                msg->type = PlayerEvent::HealthChanged;
+                msg->value = playerInfo.health;
+            }
+                break;
+            case CollectableItem::Bomb:
+                playerInfo.hasBombs = true;
+                break;
+            case CollectableItem::EMP:
+                playerInfo.hasEmp = true;
+                break;
+            case CollectableItem::Life:
+                if (playerInfo.lives < maxLives)
+                {
+                    playerInfo.lives++;
+                    auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+                    msg->entityID = entity.getIndex();
+                    msg->type = PlayerEvent::GotLife;
+                    msg->value = playerInfo.lives;
+                }
+                break;
+            }
         }
         else if ((otherPo.getCollisionGroups() & (CollisionID::Bounds)) != 0)
         {
@@ -199,6 +225,18 @@ void PlayerSystem::updateAlive(cro::Entity entity)
             auto& vel = entity.getComponent<Velocity>();
             vel.velocity = glm::reflect(vel.velocity, normal) * 0.3f;
         }
+    }
+
+    if (playerInfo.health <= 0)
+    {
+        playerInfo.state = PlayerInfo::State::Dying;
+        playerInfo.lives--;
+        entity.getComponent<Velocity>().velocity.x = -13.f;
+
+        auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+        msg->entityID = entity.getIndex();
+        msg->type = PlayerEvent::Died;
+        msg->value = playerInfo.lives;
     }
 }
 
@@ -218,6 +256,8 @@ void PlayerSystem::updateDying(cro::Entity entity)
         m_respawnTime = 1.f;
 
         entity.getComponent<cro::ParticleEmitter>().stop();
+
+        //TODO check number of remaining lives
     }
 }
 

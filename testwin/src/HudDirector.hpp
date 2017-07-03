@@ -27,44 +27,19 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_PLAYER_SYSTEM_HPP_
-#define TL_PLAYER_SYSTEM_HPP_
+#ifndef TL_HUD_DIRECTOR_HPP_
+#define TL_HUD_DIRECTOR_HPP_
 
-#include <crogine/ecs/System.hpp>
+#include <crogine/ecs/Director.hpp>
 
-struct PlayerInfo final
-{
-    enum class State
-    {
-        Spawning, Alive, Dying, Dead
-    }state = State::Spawning;
-    cro::uint32 shieldEntity = 0;
-    float health = 100.f;
-    float maxParticleRate = 0.f;
-    bool hasBombs = false;
-    bool hasEmp = false;
-    cro::int32 lives = 3;
-};
-
-class PlayerSystem final : public cro::System
+class HudDirector final : public cro::Director
 {
 public:
-    PlayerSystem(cro::MessageBus&);
+    HudDirector();
 
-    void process(cro::Time) override;
-
-private:
-
-    float m_accumulator;
-    float m_respawnTime;
-    float m_shieldTime;
-
-    void updateSpawning(cro::Entity);
-    void updateAlive(cro::Entity);
-    void updateDying(cro::Entity);
-    void updateDead(cro::Entity);
-
-    void onEntityAdded(cro::Entity) override;
+    void handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
+    void process(cro::Time)override;
 };
 
-#endif //TL_PLAYER_SYSTEM_HPP_
+#endif //TL_HUD_DIRECTOR_HPP_

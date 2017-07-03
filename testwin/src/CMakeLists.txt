@@ -7,6 +7,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/DriftSystem.cpp
   ${PROJECT_DIR}/ExplosionSystem.cpp
   ${PROJECT_DIR}/GameState.cpp
+  ${PROJECT_DIR}/HudDirector.cpp
   ${PROJECT_DIR}/HudItems.cpp
   ${PROJECT_DIR}/ItemsDirector.cpp
   ${PROJECT_DIR}/ItemSystem.cpp

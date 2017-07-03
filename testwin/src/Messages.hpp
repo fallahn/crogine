@@ -77,7 +77,8 @@ struct PlayerEvent final
         Moved,
         WeaponStateChange,
         HealthChanged,
-        CollectedItem
+        CollectedItem,
+        GotLife
     }type;
     glm::vec3 position;
     cro::uint32 entityID = 0;
