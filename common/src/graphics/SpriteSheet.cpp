@@ -49,7 +49,6 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
 
     m_sprites.clear();
 
-    const auto& objs = sheetFile.getObjects();
     std::size_t count = 0;
 
     Texture* texture = nullptr;
@@ -79,8 +78,8 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
         texture->setSmooth(p->getValue<bool>());
     }
 
-    const auto& spriteObjs = sheetFile.getObjects();
-    for (const auto& spr : spriteObjs)
+    const auto& sheetObjs = sheetFile.getObjects();
+    for (const auto& spr : sheetObjs)
     {
         if (spr.getName() == "sprite")
         {
