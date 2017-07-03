@@ -58,6 +58,7 @@ public:
 
 private:
 
+    float m_playerHealth;
 };
 
 #endif //TL_HUD_ITEMS_HPP_

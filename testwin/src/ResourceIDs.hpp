@@ -124,7 +124,8 @@ namespace CommandID
         Speedray = 0x200,
         Charger = 0x400,
         Weaver = 0x800,
-        MapSelectController = 0x1000
+        MapSelectController = 0x1000,
+        HudElement = 0x2000
     };
 }
 

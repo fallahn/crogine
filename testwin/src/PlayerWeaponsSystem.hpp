@@ -64,11 +64,11 @@ private:
     bool m_allowFiring;
     enum class FireMode
     {
-        Single, Double, Triple, Laser, LaserWide
+        Single, Double, Triple, Laser/*, LaserWide*/
     }m_fireMode;
 
     float m_fireTime;
-    float m_laserCooldownTime;
+    float m_weaponDowngradeTime;
 
     glm::vec3 m_playerPosition;
     cro::uint32 m_playerID;

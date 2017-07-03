@@ -33,9 +33,25 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/graphics/Colour.hpp>
+#include <crogine/util/Maths.hpp>
+
+namespace
+{
+    cro::Colour interp(cro::Colour a, cro::Colour b, float amount)
+    {
+        return cro::Colour(
+            (b.getRed() - a.getRed()) * amount + a.getRed(),
+            (b.getGreen() - a.getGreen()) * amount + a.getGreen(),
+            (b.getBlue() - a.getBlue()) * amount + a.getBlue(),
+            (b.getAlpha() - a.getAlpha()) * amount + a.getAlpha()
+        );
+    }
+}
 
 HudSystem::HudSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(HudSystem))
+    : cro::System   (mb, typeid(HudSystem)),
+    m_playerHealth  (100.f)
 {
     requireComponent<cro::Sprite>();
     requireComponent<cro::Transform>();
@@ -45,10 +61,38 @@ HudSystem::HudSystem(cro::MessageBus& mb)
 //public
 void HudSystem::handleMessage(const cro::Message& msg)
 {
-
+    if (msg.id == MessageID::PlayerMessage)
+    {
+        const auto& data = msg.getData<PlayerEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case PlayerEvent::HealthChanged:
+            m_playerHealth = data.value;
+            break;
+        }
+    }
 }
 
 void HudSystem::process(cro::Time dt)
 {
+    float dtSec = dt.asSeconds();
 
+    auto& entities = getEntities();
+    for (auto& entity : entities)
+    {
+        auto& hudItem = entity.getComponent<HudItem>();
+        switch (hudItem.type)
+        {
+        default: break;
+        case HudItem::Type::HealthBar:
+        {
+            hudItem.value -= (hudItem.value - m_playerHealth) * dtSec;
+            float amount = cro::Util::Maths::clamp(hudItem.value / 100.f, 0.f, 1.f);
+            entity.getComponent<cro::Transform>().setScale({ amount, 1.f, 1.f });
+            entity.getComponent<cro::Sprite>().setColour(interp(cro::Colour(1.f, 0.f, 0.f, 0.f), cro::Colour::Cyan(), amount));
+        }
+        break;
+        }
+    }
 }

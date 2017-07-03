@@ -50,6 +50,7 @@ source distribution.
 #include "NpcWeaponSystem.hpp"
 #include "ExplosionSystem.hpp"
 #include "HudItems.hpp"
+#include "HudDirector.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -190,6 +191,8 @@ void GameState::addSystems()
     m_uiScene.addSystem<cro::SceneGraph>(mb);
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
+
+    m_uiScene.addDirector<HudDirector>();
 }
 
 void GameState::loadAssets()
@@ -313,6 +316,7 @@ void GameState::createHUD()
     for (auto i = 0u; i < 5; ++i)
     {
         entity = m_uiScene.createEntity();
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::HudElement;
         entity.addComponent<cro::Transform>().setPosition(startPoint);
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("life");
         startPoint.x += entity.getComponent<cro::Sprite>().getSize().x + UISpacing;
@@ -335,12 +339,14 @@ void GameState::createHUD()
     entity.addComponent<cro::Transform>().setPosition(startPoint);
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bomb");
     entity.addComponent<HudItem>().type = HudItem::Type::Bomb;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::HudElement;
 
     startPoint.x += entity.getComponent<cro::Sprite>().getSize().x + UISpacing;
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(startPoint);
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("emp");
     entity.addComponent<HudItem>().type = HudItem::Type::Emp;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::HudElement;
 
 #ifdef PLATFORM_MOBILE
     //on mobile add a pause icon
