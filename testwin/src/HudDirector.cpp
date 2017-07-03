@@ -63,6 +63,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
             {
                 auto id = data.itemID;
                 cro::Command cmd;
+                cmd.targetFlags = CommandID::HudElement;
                 cmd.action = [id](cro::Entity entity, cro::Time)
                 {
                     const auto& hudItem = entity.getComponent<HudItem>();
