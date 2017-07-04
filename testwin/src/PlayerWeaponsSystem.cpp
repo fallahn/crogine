@@ -154,16 +154,19 @@ void PlayerWeaponSystem::process(cro::Time dt)
         }
     }
 
-    //downgrade weapon over time
-    m_weaponDowngradeTime -= dt.asSeconds();
-    if (m_weaponDowngradeTime < 0)
+    //downgrade weapon over time    
+    if (m_fireMode > FireMode::Single)
     {
-        m_weaponDowngradeTime = weaponDowngradeTime;
-        if (m_fireMode > FireMode::Single)
+        m_weaponDowngradeTime -= dt.asSeconds();
+        if (m_weaponDowngradeTime < 0)
         {
-            m_fireMode = static_cast<FireMode>(static_cast<cro::int32>(m_fireMode) - 1);
-            //LOG("Fire mode downgraded", cro::Logger::Type::Info);
+            m_weaponDowngradeTime = weaponDowngradeTime;
+            m_fireMode = static_cast<FireMode>(m_fireMode - 1);
         }
+
+        auto* msg = postMessage<WeaponEvent>(MessageID::WeaponMessage);
+        msg->downgradeTime = weaponDowngradeTime - m_weaponDowngradeTime;
+        msg->fireMode = m_fireMode;
     }
 
     //update alive
@@ -243,6 +246,11 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
             m_fireMode = FireMode::Single;
             m_systemActive = false;
             m_allowFiring = false;
+            {
+                auto* msg = postMessage<WeaponEvent>(MessageID::WeaponMessage);
+                msg->downgradeTime = 0.f;
+                msg->fireMode = m_fireMode;
+            }
             break;
         case PlayerEvent::Moved:
             m_playerPosition = data.position;
@@ -266,7 +274,7 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
                 //HAH wtf?
                 if (m_fireMode < FireMode::Laser)
                 {
-                    m_fireMode = static_cast<FireMode>(static_cast<cro::int32>(m_fireMode) + 1);
+                    m_fireMode = static_cast<FireMode>(m_fireMode + 1);
                 }
             }
             break;

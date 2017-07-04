@@ -189,6 +189,7 @@ void GameState::addSystems()
     //UI scene
     m_uiScene.addSystem<HudSystem>(mb);
     m_uiScene.addSystem<cro::SceneGraph>(mb);
+    m_uiScene.addSystem<cro::ModelRenderer>(mb);
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
 
@@ -367,6 +368,18 @@ void GameState::createHUD()
     entity.getComponent<cro::Text>().setColour(cro::Colour::Cyan());
     entity.addComponent<HudItem>().type = HudItem::Type::Score;
     entity.getComponent<HudItem>().value = 0.f;
+
+    //create a quad to render as the timer for weapons
+    const glm::vec2 quadSize(120.f);
+    cro::QuadBuilder quadBuilder(quadSize);
+    m_resources.meshes.loadMesh(MeshID::HudQuad, quadBuilder);
+    m_resources.shaders.preloadFromString(Shaders::Background::Vertex, Shaders::Hud::TimerFragment, ShaderID::HudTimer);
+    m_resources.materials.add(MaterialID::HudTimer, m_resources.shaders.get(ShaderID::HudTimer)).blendMode = cro::Material::BlendMode::Alpha;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, uiRes.y - ((quadSize.y / 2.f) + UIPadding), -2.f });
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::HudQuad), m_resources.materials.get(MaterialID::HudTimer));
+    entity.addComponent<HudItem>().type = HudItem::Type::Timer;
 
     //camera
     entity = m_uiScene.createEntity();

@@ -38,6 +38,41 @@ Used with background elements to make them scroll with time.
 
 namespace Shaders
 {
+    namespace Hud
+    {
+        const static std::string TimerFragment = R"(
+            uniform MED float u_time;
+
+            varying MED vec2 v_texCoord0;
+
+            const MED float pi = 3.1415926535;
+            const MED float duration = 5.0;
+
+            void main()
+            {
+                MED vec2 circlePos = vec2(0.5, 0.5);
+                MED vec2 threshold = normalize(v_texCoord0 - circlePos);
+    
+                MED float T = mod(u_time, duration);
+                MED float deg  = mix(90.0, 270.0, cos(pi / duration  * T - pi) / 2.0 + 0.5);
+                //MED float xReq = cos(radians(deg));
+                MED float yReq = sin(radians(deg));
+
+                MED vec2 sqr = circlePos - v_texCoord0;
+                sqr *= sqr;
+
+                gl_FragColor = vec4(0.0, 1.0, 1.0, 0.0);
+                if (sqr.x + sqr.y > 0.25)
+                {
+                    gl_FragColor.a = 0.0;
+                }
+                else if (threshold.y < yReq)
+                {
+                    gl_FragColor.a = 0.7;
+                }
+            })";
+    }
+
     namespace Background
     {
         const static std::string Vertex = R"(
