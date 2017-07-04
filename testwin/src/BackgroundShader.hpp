@@ -45,6 +45,8 @@ namespace Shaders
 
             varying MED vec2 v_texCoord0;
 
+            const MED float start = 1.5708;
+            const MED float end = 4.71239;
             const MED float pi = 3.1415926535;
             const MED float duration = 5.0;
 
@@ -54,15 +56,16 @@ namespace Shaders
                 MED vec2 threshold = normalize(v_texCoord0 - circlePos);
     
                 MED float T = mod(u_time, duration);
-                MED float deg  = mix(90.0, 270.0, cos(pi / duration  * T - pi) / 2.0 + 0.5);
-                //MED float xReq = cos(radians(deg));
-                MED float yReq = sin(radians(deg));
+                MED float angle  = mix(start, end, cos(pi / duration  * T - pi) / 2.0 + 0.5);
+                //MED float xReq = cos(angle);
+                MED float yReq = sin(angle);
 
                 MED vec2 sqr = circlePos - v_texCoord0;
                 sqr *= sqr;
+                float length = sqr.x + sqr.y;
 
                 gl_FragColor = vec4(0.0, 1.0, 1.0, 0.0);
-                if (sqr.x + sqr.y > 0.25)
+                if (length > 0.25 || length < 0.21)
                 {
                     gl_FragColor.a = 0.0;
                 }

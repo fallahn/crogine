@@ -40,4 +40,28 @@ sprite_sheet hud
 		bounds = 0,304,128,128
 		colour = 0,1,1,1
 	}
+
+	sprite bullet1
+	{
+		bounds = 128,304,128,128
+		colour = 1,0.77,0,1
+	}
+
+	sprite bullet2
+	{
+		bounds = 256,304,128,128
+		colour = 1,0.77,0,1
+	}
+
+	sprite bullet3
+	{
+		bounds = 384,304,128,128
+		colour = 1,0.77,0,1
+	}
+
+	sprite laser
+	{
+		bounds = 512,304,128,128
+		colour = 1,0.77,0,1
+	}	
 }

@@ -40,6 +40,9 @@ public:
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
     void process(cro::Time)override;
+
+private:
+    cro::int32 m_fireMode;
 };
 
 #endif //TL_HUD_DIRECTOR_HPP_

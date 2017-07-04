@@ -45,7 +45,8 @@ struct HudItem final
         Bomb,
         Paws,
         Score,
-        Timer
+        Timer,
+        TimerIcon
     }type;
 
     float value = 100.f;

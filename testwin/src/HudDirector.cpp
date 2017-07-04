@@ -39,6 +39,7 @@ source distribution.
 
 
 HudDirector::HudDirector()
+    : m_fireMode(0)
 {
 
 }
@@ -70,7 +71,8 @@ void HudDirector::handleMessage(const cro::Message& msg)
                     if ((hudItem.type == HudItem::Type::Bomb && id == CollectableItem::Bomb) ||
                         (hudItem.type == HudItem::Type::Emp && id == CollectableItem::EMP))
                     {
-                        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Cyan());
+
+                         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Cyan());
                     }
                 };
                 sendCommand(cmd);
@@ -100,6 +102,30 @@ void HudDirector::handleMessage(const cro::Message& msg)
             sendCommand(cmd);
         }
             break;
+        }
+    }
+    else if (msg.id == MessageID::WeaponMessage)
+    {
+        const auto& data = msg.getData<WeaponEvent>();
+        if (data.fireMode != m_fireMode)
+        {
+            auto mode = data.fireMode + 1;
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::HudElement;
+            cmd.action = [mode](cro::Entity entity, cro::Time)
+            {
+                if (entity.getComponent<HudItem>().type == HudItem::Type::TimerIcon)
+                {
+                    auto& sprite = entity.getComponent<cro::Sprite>();
+                    auto subrect = sprite.getTextureRect();
+                    auto size = sprite.getSize();
+                    subrect.left = mode * size.x;
+                    sprite.setTextureRect(subrect);
+                }
+            };
+            sendCommand(cmd);
+
+            m_fireMode = data.fireMode;
         }
     }
 }

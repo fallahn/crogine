@@ -370,7 +370,7 @@ void GameState::createHUD()
     entity.getComponent<HudItem>().value = 0.f;
 
     //create a quad to render as the timer for weapons
-    const glm::vec2 quadSize(120.f);
+    const glm::vec2 quadSize(160.f);
     cro::QuadBuilder quadBuilder(quadSize);
     m_resources.meshes.loadMesh(MeshID::HudQuad, quadBuilder);
     m_resources.shaders.preloadFromString(Shaders::Background::Vertex, Shaders::Hud::TimerFragment, ShaderID::HudTimer);
@@ -380,6 +380,14 @@ void GameState::createHUD()
     entity.addComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, uiRes.y - ((quadSize.y / 2.f) + UIPadding), -2.f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::HudQuad), m_resources.materials.get(MaterialID::HudTimer));
     entity.addComponent<HudItem>().type = HudItem::Type::Timer;
+
+    auto spriteEntity = m_uiScene.createEntity();
+    spriteEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bullet1");
+    auto spriteSize = spriteEntity.getComponent<cro::Sprite>().getSize() / 2.f;
+    spriteEntity.addComponent<cro::Transform>().setOrigin({ spriteSize.x, spriteSize.y, 0.f });
+    spriteEntity.getComponent<cro::Transform>().setParent(entity);
+    spriteEntity.addComponent<cro::CommandTarget>().ID = CommandID::HudElement;
+    spriteEntity.addComponent<HudItem>().type = HudItem::Type::TimerIcon;
 
     //camera
     entity = m_uiScene.createEntity();
@@ -483,7 +491,7 @@ void GameState::loadModels()
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID),
         m_resources.materials.get(m_modelDefs[GameModelID::Player].materialIDs[0]));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
-    entity.addComponent<Velocity>().friction = 2.5f;
+    entity.addComponent<Velocity>().friction = 3.5f;
     auto bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID).boundingBox;
     cro::PhysicsShape shipShape;
     shipShape.type = cro::PhysicsShape::Type::Box;
