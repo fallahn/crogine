@@ -62,7 +62,7 @@ private:
 
     bool m_systemActive;
     bool m_allowFiring;
-    enum class FireMode
+    enum FireMode
     {
         Single, Double, Triple, Laser/*, LaserWide*/
     }m_fireMode;

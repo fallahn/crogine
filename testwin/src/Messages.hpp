@@ -42,7 +42,8 @@ namespace MessageID
         BackgroundSystem = cro::Message::Count,
         GameMessage,
         PlayerMessage,
-        NpcMessage
+        NpcMessage,
+        WeaponMessage
     };
 }
 
@@ -90,7 +91,7 @@ struct PlayerEvent final
     };
 };
 
-struct NpcEvent
+struct NpcEvent final
 {
     enum
     {
@@ -104,6 +105,12 @@ struct NpcEvent
     glm::vec3 velocity;
     float value = 0.f;
     cro::uint32 entityID = 0;
+};
+
+struct WeaponEvent final
+{
+    float downgradeTime = 0.f;
+    cro::int32 fireMode = 0;
 };
 
 #endif //TL_MESSAGES_HPP_

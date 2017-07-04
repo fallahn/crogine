@@ -32,6 +32,7 @@ source distribution.
 
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/util/Maths.hpp>
@@ -47,13 +48,17 @@ namespace
             (b.getAlpha() - a.getAlpha()) * amount + a.getAlpha()
         );
     }
+
+    //cro::Colour timerColourA(1.f, 1.f, 1.f, 0.7f);
+    //cro::Colour timerColourB(0.f, 1.f, 1.f, 0.7f);
 }
 
 HudSystem::HudSystem(cro::MessageBus& mb)
-    : cro::System   (mb, typeid(HudSystem)),
-    m_playerHealth  (100.f)
+    : cro::System       (mb, typeid(HudSystem)),
+    m_playerHealth      (100.f),
+    m_weaponTime        (0.f)
 {
-    requireComponent<cro::Sprite>();
+    //requireComponent<cro::Sprite>();
     requireComponent<cro::Transform>();
     requireComponent<HudItem>();
 }
@@ -71,6 +76,11 @@ void HudSystem::handleMessage(const cro::Message& msg)
             m_playerHealth = data.value;
             break;
         }
+    }
+    else if (msg.id == MessageID::WeaponMessage)
+    {
+        const auto& data = msg.getData<WeaponEvent>();
+        m_weaponTime = data.downgradeTime;
     }
 }
 
@@ -90,9 +100,22 @@ void HudSystem::process(cro::Time dt)
             hudItem.value -= (hudItem.value - m_playerHealth) * dtSec;
             float amount = cro::Util::Maths::clamp(hudItem.value / 100.f, 0.f, 1.f);
             entity.getComponent<cro::Transform>().setScale({ amount, 1.f, 1.f });
-            entity.getComponent<cro::Sprite>().setColour(interp(cro::Colour(1.f, 0.f, 0.f, 0.f), cro::Colour::Cyan(), amount));
+            entity.getComponent<cro::Sprite>().setColour(interp(cro::Colour(1.f, 0.f, 0.f, 0.1f), cro::Colour::Cyan(), amount));
         }
         break;
+        case HudItem::Type::Timer:
+            hudItem.value += (m_weaponTime - hudItem.value) * dtSec * 4.f;
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_time", hudItem.value);
+            break;
         }
+    }
+}
+
+//private
+void HudSystem::onEntityAdded(cro::Entity entity)
+{
+    if (entity.getComponent<HudItem>().type == HudItem::Type::Timer)
+    {
+        entity.getComponent<HudItem>().value = 0.f;
     }
 }

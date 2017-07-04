@@ -30,6 +30,11 @@ source distribution.
 #ifndef TL_HUD_ITEMS_HPP_
 #define TL_HUD_ITEMS_HPP_
 
+namespace cro
+{
+    class Model;
+}
+
 struct HudItem final
 {
     enum class Type
@@ -39,7 +44,8 @@ struct HudItem final
         Emp,
         Bomb,
         Paws,
-        Score
+        Score,
+        Timer
     }type;
 
     float value = 100.f;
@@ -59,6 +65,9 @@ public:
 private:
 
     float m_playerHealth;
+    float m_weaponTime;
+
+    void onEntityAdded(cro::Entity entity) override;
 };
 
 #endif //TL_HUD_ITEMS_HPP_

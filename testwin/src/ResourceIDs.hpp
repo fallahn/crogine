@@ -40,7 +40,8 @@ namespace MaterialID
         GameBackgroundMid,
         GameBackgroundNear,
         TerrainChunk,
-        Rockfall, Rockfall2
+        Rockfall, Rockfall2,
+        HudTimer
     };
 }
 
@@ -51,7 +52,8 @@ namespace MeshID
         GameBackground = cro::Mesh::ID::Count,
         TerrainChunkA,
         TerrainChunkB,
-        RockQuad
+        RockQuad,
+        HudQuad
     };
 }
 
@@ -104,7 +106,8 @@ namespace ShaderID
 {
     enum
     {
-        Background //< scrolling game background
+        Background, //< scrolling game background
+        HudTimer
     };
 }
 
