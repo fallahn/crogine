@@ -43,6 +43,7 @@ namespace MessageID
         GameMessage,
         PlayerMessage,
         NpcMessage,
+        BuddyMessage,
         WeaponMessage
     };
 }
@@ -106,6 +107,17 @@ struct NpcEvent final
     glm::vec3 velocity;
     float value = 0.f;
     cro::uint32 entityID = 0;
+};
+
+struct BuddyEvent final
+{
+    enum
+    {
+        Spawned,
+        FiredWeapon,
+        Died
+    }type;
+    glm::vec3 position;
 };
 
 struct WeaponEvent final
