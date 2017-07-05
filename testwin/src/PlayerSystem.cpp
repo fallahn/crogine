@@ -60,7 +60,8 @@ PlayerSystem::PlayerSystem(cro::MessageBus& mb)
     : cro::System   (mb, typeid(PlayerSystem)),
     m_accumulator   (0.f),
     m_respawnTime   (0.f),
-    m_shieldTime    (shieldTime)
+    m_shieldTime    (shieldTime),
+    m_score         (0)
 {
     requireComponent<PlayerInfo>();
     requireComponent<cro::Transform>();
@@ -68,6 +69,22 @@ PlayerSystem::PlayerSystem(cro::MessageBus& mb)
 }
 
 //public
+void PlayerSystem::handleMessage(const cro::Message& msg)
+{
+    if (msg.id == MessageID::NpcMessage)
+    {
+        const auto& data = msg.getData<NpcEvent>();
+        if (data.type == NpcEvent::Died)
+        {
+            m_score += static_cast<cro::int32>(data.value);
+
+            auto* scoreMessage = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+            scoreMessage->type = PlayerEvent::Score;
+            scoreMessage->value = static_cast<float>(m_score);
+        }
+    }
+}
+
 void PlayerSystem::process(cro::Time dt)
 {
     m_accumulator += dt.asSeconds();
@@ -179,6 +196,11 @@ void PlayerSystem::updateAlive(cro::Entity entity)
             msg->type = PlayerEvent::CollectedItem;
             msg->itemID = item.type;
 
+            m_score += item.scoreValue;
+            auto* scoreMessage = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+            scoreMessage->type = PlayerEvent::Score;
+            scoreMessage->value = static_cast<float>(m_score);
+
             //update player inventory
             switch (item.type)
             {
@@ -231,6 +253,8 @@ void PlayerSystem::updateAlive(cro::Entity entity)
     {
         playerInfo.state = PlayerInfo::State::Dying;
         playerInfo.lives--;
+        playerInfo.hasBombs = false;
+        playerInfo.hasEmp = false;
         entity.getComponent<Velocity>().velocity.x = -13.f;
 
         auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);

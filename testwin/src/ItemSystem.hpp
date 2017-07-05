@@ -50,6 +50,7 @@ struct CollectableItem final
     bool wantsReset = false;
     float speed = -0.8f;
     glm::vec3 impulse; //applied when getting hit by a laser
+    cro::int32 scoreValue = 40;
 };
 
 class ItemSystem final : public cro::System

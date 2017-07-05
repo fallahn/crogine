@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Text.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/util/Maths.hpp>
@@ -56,7 +57,8 @@ namespace
 HudSystem::HudSystem(cro::MessageBus& mb)
     : cro::System       (mb, typeid(HudSystem)),
     m_playerHealth      (100.f),
-    m_weaponTime        (0.f)
+    m_weaponTime        (0.f),
+    m_score             (0)
 {
     //requireComponent<cro::Sprite>();
     requireComponent<cro::Transform>();
@@ -74,6 +76,9 @@ void HudSystem::handleMessage(const cro::Message& msg)
         default: break;
         case PlayerEvent::HealthChanged:
             m_playerHealth = data.value;
+            break;
+        case PlayerEvent::Score:
+            m_score = static_cast<cro::int32>(data.value);
             break;
         }
     }
@@ -106,6 +111,10 @@ void HudSystem::process(cro::Time dt)
         case HudItem::Type::Timer:
             hudItem.value += (m_weaponTime - hudItem.value) * dtSec * 4.f;
             entity.getComponent<cro::Model>().setMaterialProperty(0, "u_time", hudItem.value);
+            break;
+
+        case HudItem::Type::Score:
+            entity.getComponent<cro::Text>().setString(std::to_string(m_score));
             break;
         }
     }

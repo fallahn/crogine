@@ -51,6 +51,11 @@ namespace
     const float zDepth = -9.3f;
     const glm::vec3 gravity(0.f, -9.f, 0.f);
     const glm::vec3 chopperPulseOffset(-0.1f, -0.06f, 0.f);
+
+    const cro::int32 eliteScore = 1000;
+    const cro::int32 choppaScore = 250;
+    const cro::int32 speedrayScore = 50;
+    const cro::int32 weaverScore = 10;
 }
 
 
@@ -143,6 +148,7 @@ void NpcSystem::process(cro::Time dt)
                             msg->npcType = status.type;
                             msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
                             msg->entityID = entity.getIndex();
+                            msg->value = static_cast<float>(status.scoreValue);
 
                             if (status.type != Npc::Choppa)
                             {
@@ -409,11 +415,13 @@ void NpcSystem::onEntityAdded(cro::Entity entity)
         status.elite.pauseTime = cro::Util::Random::value(1.2f, 2.2f);
         status.elite.idleIndex = cro::Util::Random::value(0, m_eliteIdlePositions.size());
         status.elite.maxEmitRate = entity.getComponent<cro::ParticleEmitter>().emitterSettings.emitRate;
+        status.scoreValue = eliteScore;
         break;
     case Npc::Choppa:
         status.choppa.moveSpeed = cro::Util::Random::value(-8.3f, -7.8f);
         status.choppa.deathVelocity.x = status.choppa.moveSpeed;
         status.choppa.tableIndex = cro::Util::Random::value(0, m_choppaTable.size() - 1);
+        status.scoreValue = choppaScore;
         break;
     case Npc::Turret:
         status.active = true;
@@ -421,10 +429,12 @@ void NpcSystem::onEntityAdded(cro::Entity entity)
     case Npc::Speedray:
         status.speedray.tableIndex = (m_speedrayTable.size() / SpeedrayNavigator::count) * status.speedray.ident;
         status.speedray.tableIndex %= m_speedrayTable.size();
+        status.scoreValue = speedrayScore;
         break;
     case Npc::Weaver:
         status.weaver.tableStartIndex = 10 + (m_weaverTable.size() / WeaverNavigator::count) * status.weaver.ident;
         status.weaver.tableStartIndex %= m_weaverTable.size();
+        status.scoreValue = weaverScore;
         break;
     }
 }

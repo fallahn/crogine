@@ -51,6 +51,7 @@ class PlayerSystem final : public cro::System
 public:
     PlayerSystem(cro::MessageBus&);
 
+    void handleMessage(const cro::Message&) override;
     void process(cro::Time) override;
 
 private:
@@ -58,6 +59,7 @@ private:
     float m_accumulator;
     float m_respawnTime;
     float m_shieldTime;
+    cro::int32 m_score;
 
     void updateSpawning(cro::Entity);
     void updateAlive(cro::Entity);

@@ -100,6 +100,7 @@ struct Npc final
     bool active = false;
     bool wantsReset = false;
     float health = 0.f;
+    cro::int32 scoreValue = 0;
 
     EliteNavigator elite;
     ChoppaNavigator choppa;
