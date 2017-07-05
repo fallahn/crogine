@@ -32,6 +32,7 @@ source distribution.
 #include "ResourceIDs.hpp"
 #include "VelocitySystem.hpp"
 #include "Messages.hpp"
+#include "ItemSystem.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>

@@ -108,5 +108,8 @@
     <ClCompile Include="..\testwin\src\HudDirector.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
+    <ClCompile Include="..\testwin\src\BuddySystem.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
