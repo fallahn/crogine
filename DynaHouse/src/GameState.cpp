@@ -197,7 +197,7 @@ void GameState::createScene()
         entity.addComponent<cro::PhysicsObject>().addShape(ps);
         ps.position.x = -ps.position.x;
         entity.getComponent<cro::PhysicsObject>().addShape(ps);
-        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player |CollisionID::Weapon);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Wall);
     }
 
