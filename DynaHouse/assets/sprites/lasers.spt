@@ -1,0 +1,30 @@
+sprite_sheet
+{
+	src = "assets/sprites/lasers.png"
+	//blendmode = add
+
+	sprite player_pulse
+	{
+		bounds = 0,0,187,25
+	}
+
+	sprite player_laser
+	{
+		bounds = 0,25,214,35
+	}
+
+	sprite npc_pulse
+	{
+		bounds = 27,62,187,25
+	}
+
+	sprite npc_laser
+	{
+		bounds = 0,87,214,35
+	}
+
+	sprite npc_orb
+	{
+		bounds = 216,85,39,39
+	}
+}

@@ -31,6 +31,7 @@ source distribution.
 #include "ResourceIDs.hpp"
 #include "Messages.hpp"
 #include "PlayerDirector.hpp"
+#include "PlayerWeaponSystem.hpp"
 
 #include <crogine/detail/GlobalConsts.hpp>
 
@@ -41,6 +42,7 @@ source distribution.
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/graphics/IqmBuilder.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
@@ -138,13 +140,14 @@ void GameState::render()
 void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::ProjectionMapSystem>(mb);
+    //m_scene.addSystem<cro::ProjectionMapSystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
+    m_scene.addSystem<PlayerWeaponSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
-    m_scene.addSystem<cro::TextRenderer>(mb);
+    m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::SceneGraph>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
-    m_scene.addSystem<cro::CollisionSystem>(mb);
+    m_scene.addSystem<cro::SpriteRenderer>(mb);
 
     m_scene.addDirector<PlayerDirector>();
 
@@ -176,7 +179,7 @@ void GameState::createScene()
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TestRoom].meshID),
-            m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[0]));
+                                        m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[0]));
         for (auto i = 0u; i < m_modelDefs[GameModelID::TestRoom].materialCount; ++i)
         {
             entity.getComponent<cro::Model>().setMaterial(i, m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[i]));
@@ -207,10 +210,10 @@ void GameState::createScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
     //shadow caster for cat
-    auto mapEntity = m_scene.createEntity();
+    /*auto mapEntity = m_scene.createEntity();
     mapEntity.addComponent<cro::ProjectionMap>();
     mapEntity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 300.f });
-    mapEntity.getComponent<cro::Transform>().setParent(entity);
+    mapEntity.getComponent<cro::Transform>().setParent(entity);*/
 
     auto& phys = entity.addComponent<cro::PhysicsObject>();
     cro::PhysicsShape ps;
@@ -228,11 +231,56 @@ void GameState::createScene()
     phys.setCollisionFlags(CollisionID::Wall);
     phys.setCollisionGroups(CollisionID::Player);
 
+
+    //weapon entities
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/sprites/lasers.spt", m_resources.textures);
+    auto laserSize = spriteSheet.getSprite("player_pulse").getSize();
+
+    const glm::vec3 laserScale(0.002f);
+    laserSize *= laserScale.x;
+    laserSize /= 2.f;
+
+    cro::PhysicsShape laserShape;
+    laserShape.type = cro::PhysicsShape::Type::Box;
+    laserShape.extent = { laserSize.x, laserSize.y, 0.001f };
+
+    static const std::size_t laserCount = 12;
+    for (auto i = 0u; i < laserCount; ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(laserScale);
+        entity.getComponent<cro::Transform>().setPosition({ -100.f, 0.f, 0.f });
+        entity.getComponent<cro::Transform>().setOrigin({ laserSize.x / laserScale.x, laserSize.y / laserScale.x, 0.f });
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_pulse");
+        entity.addComponent<PlayerWeapon>().type = PlayerWeapon::Laser;
+        entity.addComponent<cro::PhysicsObject>().addShape(laserShape);
+        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Weapon);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Wall | CollisionID::Npc);
+    }
+
+
     //3D camera
     auto ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 0.f, 0.6f, 2.3f });
     ent.addComponent<cro::Camera>();
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
+
+    cro::PhysicsShape boundsShape;
+    boundsShape.type = cro::PhysicsShape::Type::Box;
+    boundsShape.extent = { 0.01f, 0.5f, 0.5f };
+    boundsShape.position.x = 1.2f;
+    boundsShape.position.z = -ent.getComponent<cro::Transform>().getPosition().z;
+    ent.addComponent<cro::PhysicsObject>().addShape(boundsShape);
+    boundsShape.position.x = -boundsShape.position.x;
+    ent.getComponent<cro::PhysicsObject>().addShape(boundsShape);
+    boundsShape.extent = { 1.2f, 0.01f, 0.5f };
+    boundsShape.position.x = 0.f;
+    boundsShape.position.y = -0.63f;
+    ent.getComponent<cro::PhysicsObject>().addShape(boundsShape);
+    ent.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Bounds);
+    ent.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Weapon);
+
     m_scene.setActiveCamera(ent);
 
 

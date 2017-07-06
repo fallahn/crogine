@@ -101,7 +101,10 @@ namespace CollisionID
     enum
     {
         Wall = 0x1,
-        Player = 0x2
+        Player = 0x2,
+        Npc = 0x4,
+        Bounds = 0x8,
+        Weapon = 0x10
     };
 }
 

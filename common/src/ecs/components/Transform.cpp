@@ -101,7 +101,7 @@ glm::vec3 Transform::getPosition() const
 
 glm::vec3 Transform::getWorldPosition() const
 {
-    return glm::vec3(getWorldTransform()[3]) + (m_origin * m_scale);
+    return glm::vec3(getWorldTransform()[3]) + ((m_origin * m_scale) * m_rotation);
 }
 
 glm::vec3 Transform::getRotation() const
