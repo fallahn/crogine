@@ -43,7 +43,11 @@ namespace
 }
 
 PlayerWeaponSystem::PlayerWeaponSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(PlayerWeaponSystem))
+    : cro::System       (mb, typeid(PlayerWeaponSystem)),
+    m_aliveLaserCount   (0),
+    m_deadLaserCount    (0),
+    m_aliveGrenadeCount (0),
+    m_deadGrenadeCount  (0)
 {
     requireComponent<PlayerWeapon>();
     requireComponent<cro::Transform>();
