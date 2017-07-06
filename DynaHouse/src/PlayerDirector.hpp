@@ -31,6 +31,7 @@ source distribution.
 #define DH_PLAYER_DIRECTOR_HPP_
 
 #include <crogine/ecs/Director.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include <glm/vec3.hpp>
 
@@ -44,7 +45,7 @@ struct Player final
     float health = 100.f;
 };
 
-class PlayerDirector final : public cro::Director
+class PlayerDirector final : public cro::Director, public cro::GuiClient
 {
 public:
     PlayerDirector();

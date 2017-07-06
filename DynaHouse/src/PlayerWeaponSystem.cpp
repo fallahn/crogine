@@ -39,6 +39,7 @@ source distribution.
 namespace
 {
     const float laserSpeed = 9.f;
+    const glm::vec3 gravity(0.f, -9.f, 0.f);
 }
 
 PlayerWeaponSystem::PlayerWeaponSystem(cro::MessageBus& mb)
@@ -54,7 +55,16 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
     if (msg.id == MessageID::WeaponMessage)
     {
         const auto& data = msg.getData<WeaponEvent>();
-        spawnLaser(laserSpeed * data.direction, data.position);
+        switch (data.type)
+        {
+        default:
+        case WeaponEvent::Laser:
+            spawnLaser(laserSpeed * data.direction, data.position);
+            break;
+        case WeaponEvent::Grenade:
+            spawnGrenade(data.direction, data.position);
+            break;
+        }
     }
 }
 
@@ -62,6 +72,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
 {
     float dtSec = dt.asSeconds();
     processLasers(dtSec);
+    processGrenades(dtSec);
 }
 
 //private
@@ -77,10 +88,16 @@ void PlayerWeaponSystem::onEntityAdded(cro::Entity entity)
         m_deadLasers.push_back(entity.getIndex());
         m_aliveLasers.push_back(-1);
         break;
+    case PlayerWeapon::Grenade:
+        weapon.damage = 50.f;
+        m_deadGrenadeCount++;
+        m_deadGrenades.push_back(entity.getIndex());
+        m_aliveGrenades.push_back(-1);
+        break;
     }
 }
 
-void PlayerWeaponSystem::spawnLaser(float velocity, glm::vec3 position)
+void PlayerWeaponSystem::spawnLaser(glm::vec3 velocity, glm::vec3 position)
 {
     if (m_deadLaserCount > 0)
     {
@@ -90,7 +107,7 @@ void PlayerWeaponSystem::spawnLaser(float velocity, glm::vec3 position)
         m_aliveLaserCount++;
 
 
-        if (velocity < 0)
+        if (velocity.x < 0)
         {
             entity.getComponent<cro::Transform>().setRotation({ 0.f, cro::Util::Const::PI, 0.f });
         }
@@ -100,7 +117,7 @@ void PlayerWeaponSystem::spawnLaser(float velocity, glm::vec3 position)
         }
 
         entity.getComponent<cro::Transform>().setPosition(position);
-        entity.getComponent<PlayerWeapon>().velocity.x = velocity;
+        entity.getComponent<PlayerWeapon>().velocity = velocity;
     }
 }
 
@@ -123,6 +140,45 @@ void PlayerWeaponSystem::processLasers(float dtSec)
 
             m_aliveLaserCount--;
             m_aliveLasers[i] = m_aliveLasers[m_aliveLaserCount];
+            i--;
+        }
+    }
+}
+
+void PlayerWeaponSystem::spawnGrenade(glm::vec3 velocity, glm::vec3 position)
+{
+    if (m_deadGrenadeCount > 0)
+    {
+        m_deadGrenadeCount--;
+        auto entity = getScene()->getEntity(m_deadGrenades[m_deadGrenadeCount]);
+        m_aliveGrenades[m_aliveGrenadeCount] = m_deadGrenades[m_deadGrenadeCount];
+        m_aliveGrenadeCount++;
+
+        entity.getComponent<cro::Transform>().setPosition(position);
+        entity.getComponent<PlayerWeapon>().velocity = velocity;
+    }
+}
+
+void PlayerWeaponSystem::processGrenades(float dtSec)
+{
+    for (auto i = 0u; i < m_aliveGrenadeCount; ++i)
+    {
+        auto entity = getScene()->getEntity(m_aliveGrenades[i]);
+        auto& weapon = entity.getComponent<PlayerWeapon>();
+        weapon.velocity += gravity * dtSec;
+
+        entity.getComponent<cro::Transform>().move(weapon.velocity * dtSec);
+
+        const auto& phys = entity.getComponent<cro::PhysicsObject>();
+        if (phys.getCollisionCount() > 0)
+        {
+            entity.getComponent<cro::Transform>().setPosition(glm::vec3(-100.f));
+
+            m_deadGrenades[m_deadGrenadeCount] = m_aliveGrenades[i];
+            m_deadGrenadeCount++;
+
+            m_aliveGrenadeCount--;
+            m_aliveGrenades[i] = m_aliveGrenades[m_aliveGrenadeCount];
             i--;
         }
     }

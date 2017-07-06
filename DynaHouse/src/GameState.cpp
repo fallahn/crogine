@@ -162,6 +162,7 @@ void GameState::loadAssets()
 {
     m_modelDefs[GameModelID::BatCat].loadFromFile("assets/models/batcat.cmt", m_resources);
     m_modelDefs[GameModelID::TestRoom].loadFromFile("assets/models/test_room.cmt", m_resources);
+    m_modelDefs[GameModelID::Grenade].loadFromFile("assets/models/grenade.cmt", m_resources);
 
     CRO_ASSERT(m_modelDefs[GameModelID::BatCat].skeleton, "missing batcat anims");
     m_modelDefs[GameModelID::BatCat].skeleton->play(AnimationID::BatCat::Idle);
@@ -255,6 +256,27 @@ void GameState::createScene()
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_pulse");
         entity.addComponent<PlayerWeapon>().type = PlayerWeapon::Laser;
         entity.addComponent<cro::PhysicsObject>().addShape(laserShape);
+        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Weapon);
+        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Wall | CollisionID::Npc);
+    }
+
+    static const std::size_t grenadeCount = 4;
+    glm::vec3 grenadeScale(0.05f);
+    cro::PhysicsShape grenadeShape;
+    grenadeShape.type = cro::PhysicsShape::Type::Box;
+    grenadeShape.extent = grenadeScale / 2.f;
+
+    for (auto i = 0u; i < grenadeCount; ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(grenadeScale);
+        entity.getComponent<cro::Transform>().setPosition({ -100.f, 0.f, 0.f });
+
+        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Grenade].meshID),
+                                        m_resources.materials.get(m_modelDefs[GameModelID::Grenade].materialIDs[0]));
+
+        entity.addComponent<PlayerWeapon>().type = PlayerWeapon::Grenade;
+        entity.addComponent<cro::PhysicsObject>().addShape(grenadeShape);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Weapon);
         entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Wall | CollisionID::Npc);
     }

@@ -1,0 +1,9 @@
+model grenade
+{
+	mesh = cube
+
+	material Unlit
+	{
+		colour = 1,0.5,0,1
+	}
+}

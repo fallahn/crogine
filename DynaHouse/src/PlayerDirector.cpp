@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -61,6 +62,8 @@ namespace
 
     const glm::vec3 gravity(0.f, -9.f, 0.f);
     const glm::vec3 weaponOffset(0.f, 0.4f, 0.f);
+
+    cro::int32 currentWeapon = WeaponEvent::Laser;
 }
 
 PlayerDirector::PlayerDirector()
@@ -71,7 +74,12 @@ PlayerDirector::PlayerDirector()
     m_playerXPosition   (0.f),
     m_canJump           (true)
 {
-
+    registerStatusControls([]()
+    {
+        static bool useGrenades = false;
+        cro::Nim::checkbox("Grenades", &useGrenades);
+        currentWeapon = (useGrenades) ? WeaponEvent::Grenade : WeaponEvent::Laser;
+    });
 }
 
 //private
@@ -299,8 +307,13 @@ void PlayerDirector::process(cro::Time dt)
             if ((changed & Shoot) && (m_flags & Shoot))
             {
                 auto* msg = postMessage<WeaponEvent>(MessageID::WeaponMessage);
-                msg->type = WeaponEvent::Laser;
-                msg->direction = m_playerRotation / maxRotation;
+                msg->type = (currentWeapon == WeaponEvent::Laser) ? WeaponEvent::Laser : WeaponEvent::Grenade;
+                msg->direction.x = m_playerRotation / maxRotation;
+                if (msg->type == WeaponEvent::Grenade)
+                {
+                    msg->direction.y = std::abs(msg->direction.x);
+                    msg->direction *= 2.f;
+                }
                 msg->position = tx.getWorldPosition() + weaponOffset;
             }
         };
