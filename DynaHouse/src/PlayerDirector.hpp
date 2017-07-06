@@ -52,6 +52,7 @@ public:
 private:
 
     cro::uint16 m_flags;
+    cro::uint16 m_previousFlags;
     float m_accumulator;
     float m_playerRotation;
     float m_playerXPosition;

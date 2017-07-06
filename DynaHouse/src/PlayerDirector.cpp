@@ -56,14 +56,16 @@ namespace
 
     enum
     {
-        Up = 0x1, Down = 0x2, Left = 0x4, Right = 0x8
+        Up = 0x1, Down = 0x2, Left = 0x4, Right = 0x8, Shoot = 0x10
     };
 
     const glm::vec3 gravity(0.f, -9.f, 0.f);
+    const glm::vec3 weaponOffset(0.f, 0.4f, 0.f);
 }
 
 PlayerDirector::PlayerDirector()
     : m_flags           (0),
+    m_previousFlags     (0),
     m_accumulator       (0.f),
     m_playerRotation    (maxRotation),
     m_playerXPosition   (0.f),
@@ -89,6 +91,9 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
         case SDLK_w:
             m_flags |= Up;
             break;
+        case SDLK_SPACE:
+            m_flags |= Shoot;
+            break;
         }
     }
     else if (evt.type == SDL_KEYUP)
@@ -105,6 +110,9 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
         case SDLK_w:
             m_flags &= ~Up;
             m_canJump = true;
+            break;
+        case SDLK_SPACE:
+            m_flags &= ~Shoot;
             break;
         }
     }
@@ -130,7 +138,7 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
                 m_flags |= Up;
                 break;
             case UIEvent::Fire:
-
+                m_flags |= Shoot;
                 break;
             }
         }
@@ -150,7 +158,7 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
                 m_canJump = true;
                 break;
             case UIEvent::Fire:
-
+                m_flags &= ~Shoot;
                 break;
             }
         }
@@ -160,6 +168,8 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
 void PlayerDirector::process(cro::Time dt)
 {  
     static cro::int32 animID = -1;    
+    cro::uint16 changed = m_flags ^ m_previousFlags;
+
     //do fixed update for player input
 
     //we need to set a limit because if there's a long loading
@@ -171,7 +181,7 @@ void PlayerDirector::process(cro::Time dt)
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Player;
-        cmd.action = [this](cro::Entity entity, cro::Time)
+        cmd.action = [this, changed](cro::Entity entity, cro::Time)
         {
             auto& tx = entity.getComponent<cro::Transform>();
             auto& playerState = entity.getComponent<Player>();
@@ -284,6 +294,15 @@ void PlayerDirector::process(cro::Time dt)
             }
 
             //DPRINT("Player State", std::to_string((int)playerState.state));
+
+            //check which flags have change since last input
+            if ((changed & Shoot) && (m_flags & Shoot))
+            {
+                auto* msg = postMessage<WeaponEvent>(MessageID::WeaponMessage);
+                msg->type = WeaponEvent::Laser;
+                msg->direction = m_playerRotation / maxRotation;
+                msg->position = tx.getWorldPosition() + weaponOffset;
+            }
         };
         sendCommand(cmd);
     }
@@ -313,4 +332,7 @@ void PlayerDirector::process(cro::Time dt)
         sendCommand(animCommand);
         animID = -1;
     }
+
+
+    m_previousFlags = m_flags;
 }

@@ -27,71 +27,44 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef DH_MESSAGES_HPP_
-#define DH_MESSAGES_HPP_
+#ifndef DH_PLAYER_WEAPONS_HPP_
+#define DH_PLAYER_WEAPONS_HPP_
 
-#include <crogine/core/Message.hpp>
+#include <crogine/ecs/System.hpp>
 
 #include <glm/vec3.hpp>
 
-namespace MessageID
+struct PlayerWeapon final
 {
+    glm::vec3 velocity;
     enum
     {
-        GameMessage = cro::Message::Count,
-        UIMessage,
-        PlayerMessage,
-        WeaponMessage
-    };
-}
-
-
-struct GameEvent final
-{
-    enum
-    {
-        RoundStart
-    }type;
-};
-
-struct UIEvent final
-{
-    enum
-    {
-        ButtonPressed,
-        ButtonReleased
-    }type;
-
-    enum Button
-    {
-        Left,
-        Right,
-        Jump,
-        Fire
-    }button;
-};
-
-struct PlayerEvent final
-{
-    enum
-    {
-        Spawned,
-        Died
-    }type;
-    glm::vec3 position;
-};
-
-struct WeaponEvent final
-{
-    enum
-    {
+        Bullet,
         Laser,
-        Pistol,
         Grenade
     }type;
-
-    float direction = 0.f;
-    glm::vec3 position;
+    float damage = 0.f;
 };
 
-#endif //DH_MESSAGES_HPP_
+class PlayerWeaponSystem final : public cro::System
+{
+public:
+    PlayerWeaponSystem(cro::MessageBus&);
+
+    void handleMessage(const cro::Message&) override;
+    void process(cro::Time) override;
+
+private:
+    void onEntityAdded(cro::Entity) override;
+
+    std::size_t m_aliveLaserCount;
+    std::size_t m_deadLaserCount;
+    std::vector<cro::int32> m_aliveLasers;
+    std::vector<cro::int32> m_deadLasers;
+
+    void spawnLaser(float, glm::vec3);
+    void processLasers(float);
+};
+
+
+#endif //DH_PLAYER_WEAPONS_HPP_
