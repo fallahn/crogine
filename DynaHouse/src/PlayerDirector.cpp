@@ -201,7 +201,7 @@ void PlayerDirector::process(cro::Time dt)
                 const auto& ids = phys.getCollisionIDs();
                 const auto& manifolds = phys.getManifolds();
 
-                for (auto i = 0; i < phys.getCollisionCount(); ++i)
+                for (auto i = 0u; i < phys.getCollisionCount(); ++i)
                 {
                     auto otherEnt = getScene().getEntity(ids[i]);
                     const auto& otherPhys = otherEnt.getComponent<cro::PhysicsObject>();
@@ -210,7 +210,7 @@ void PlayerDirector::process(cro::Time dt)
                         const auto& manifold = manifolds[i];
                         if (manifold.pointCount > 0)
                         {
-                            for (auto j = 0; j < manifold.pointCount; ++j)
+                            for (auto j = 0u; j < manifold.pointCount; ++j)
                             {
                                 auto normal = glm::normalize(manifold.points[j].worldPointB - manifold.points[j].worldPointA);
                                 tx.move(normal * manifold.points[j].distance * 1.3f);
