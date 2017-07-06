@@ -62,8 +62,16 @@ private:
     std::vector<cro::int32> m_aliveLasers;
     std::vector<cro::int32> m_deadLasers;
 
-    void spawnLaser(float, glm::vec3);
+    void spawnLaser(glm::vec3, glm::vec3);
     void processLasers(float);
+
+    std::size_t m_aliveGrenadeCount;
+    std::size_t m_deadGrenadeCount;
+    std::vector<cro::int32> m_aliveGrenades;
+    std::vector<cro::int32> m_deadGrenades;
+
+    void spawnGrenade(glm::vec3, glm::vec3);
+    void processGrenades(float);
 };
 
 

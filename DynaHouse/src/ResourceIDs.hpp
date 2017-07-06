@@ -54,6 +54,7 @@ namespace GameModelID
     {
         BatCat = 0,
         TestRoom,
+        Grenade,
         Count
     };
 }

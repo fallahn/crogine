@@ -90,7 +90,7 @@ struct WeaponEvent final
         Grenade
     }type;
 
-    float direction = 0.f;
+    glm::vec3 direction;
     glm::vec3 position;
 };
 
