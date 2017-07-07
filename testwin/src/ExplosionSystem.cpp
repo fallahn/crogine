@@ -54,30 +54,46 @@ ExplosionSystem::ExplosionSystem(cro::MessageBus& mb)
 //public
 void ExplosionSystem::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == MessageID::NpcMessage)
+    switch (msg.id)
     {
-        const auto& data = msg.getData<NpcEvent>();
-        if (data.type == NpcEvent::Died ||
-            data.type == NpcEvent::HealthChanged)
+    default: break;
+    case MessageID::NpcMessage:
+        {
+            const auto& data = msg.getData<NpcEvent>();
+            if (data.type == NpcEvent::Died ||
+                data.type == NpcEvent::HealthChanged)
+            {
+                spawnExplosion(data.position);
+            }
+        }
+        break;
+    case MessageID::PlayerMessage:
+        {
+            const auto& data = msg.getData<PlayerEvent>();
+            if (data.type == PlayerEvent::Died)
+            {
+                spawnExplosion(data.position);
+            }
+        }
+        break;
+    case MessageID::BackgroundSystem:
+        {
+            const auto& data = msg.getData<BackgroundEvent>();
+            if (data.type == BackgroundEvent::SpeedChange)
+            {
+                m_backgroundSpeed = data.value * backgroundMultiplier;
+            }
+        }
+        break;
+    case MessageID::BuddyMessage:
+    {
+        const auto& data = msg.getData<BuddyEvent>();
+        if (data.type == BuddyEvent::Died)
         {
             spawnExplosion(data.position);
         }
     }
-    else if (msg.id == MessageID::PlayerMessage)
-    {
-        const auto& data = msg.getData<PlayerEvent>();
-        if (data.type == PlayerEvent::Died)
-        {
-            spawnExplosion(data.position);
-        }
-    }
-    else if (msg.id == MessageID::BackgroundSystem)
-    {
-        const auto& data = msg.getData<BackgroundEvent>();
-        if (data.type == BackgroundEvent::SpeedChange)
-        {
-            m_backgroundSpeed = data.value * backgroundMultiplier;
-        }
+        break;
     }
 }
 

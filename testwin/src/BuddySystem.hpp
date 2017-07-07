@@ -34,7 +34,12 @@ source distribution.
 
 struct Buddy final
 {
-    bool active = false;
+    enum
+    {
+        Inactive, Initialising, Active
+    }state = Inactive;
+    float fireTime = 0.f;
+    float lifespan = 0.f;
 };
 
 class BuddySystem final : public cro::System
@@ -47,6 +52,11 @@ public:
 
 private:
 
+    bool m_requestSpawn;
+    bool m_requestDespawn;
+
+    void processInit(float, cro::Entity);
+    void processActive(float, cro::Entity);
 };
 
 #endif //TL_BUDDY_SYSTEM_HPP_

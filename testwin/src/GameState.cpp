@@ -116,7 +116,12 @@ bool GameState::handleEvent(const cro::Event& evt)
 {
     if (evt.type == SDL_KEYUP)
     {
-
+        if (evt.key.keysym.sym == SDLK_p)
+        {
+            auto* msg = getContext().appInstance.getMessageBus().post<PlayerEvent>(MessageID::PlayerMessage);
+            msg->type = PlayerEvent::CollectedItem;
+            msg->itemID = CollectableItem::Buddy;
+        }
     }
 
     m_scene.forwardEvent(evt);
@@ -523,7 +528,7 @@ void GameState::loadModels()
     //buddy bonus
     auto axisEnt = m_scene.createEntity();
     axisEnt.addComponent<cro::Transform>().setParent(playerEntity);
-    axisEnt.getComponent<cro::Transform>().setPosition({ -100.f, 0.f, 0.f });
+    axisEnt.getComponent<cro::Transform>().setPosition({ -25.f, 0.f, 0.f });
     axisEnt.addComponent<cro::CommandTarget>().ID = CommandID::Buddy;
     auto& axisRotate = axisEnt.addComponent<Rotator>();
     axisRotate.speed = 4.f;
@@ -535,6 +540,7 @@ void GameState::loadModels()
     buddyEnt.addComponent<cro::Transform>().setParent(axisEnt);
     buddyEnt.getComponent<cro::Transform>().setPosition({ 0.f, 1.8f, 0.f });
     buddyEnt.addComponent<Buddy>();
+    buddyEnt.addComponent<cro::ParticleEmitter>().emitterSettings.loadFromFile("assets/particles/buddy_smoke.cps", m_resources.textures);
 
 
     //collectables

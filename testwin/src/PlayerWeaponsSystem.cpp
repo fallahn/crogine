@@ -51,6 +51,7 @@ namespace
     const float pulseDamageDouble = 2.5f;
     const float pulseDamageTriple = 1.2f;
     const float laserDamage = 0.4f;
+    const float buddyDamage = 5.f;
 
     const float laserRate = 0.025f;
     const float weaponDowngradeTime = 5.f;
@@ -279,6 +280,22 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
             }
             break;
         default: break;
+        }
+    }
+    else if (msg.id == MessageID::BuddyMessage)
+    {
+        const auto& data = msg.getData<BuddyEvent>();
+        if (data.type == BuddyEvent::FiredWeapon)
+        {
+            if (m_deadPulseCount > 0)
+            {
+                m_deadPulseCount--;
+                m_aliveList[m_aliveCount] = m_deadPulses[m_deadPulseCount];
+                auto entity = getScene()->getEntity(m_aliveList[m_aliveCount]);
+                entity.getComponent<cro::Transform>().setPosition(data.position);
+                entity.getComponent<PlayerWeapon>().damage = buddyDamage;
+                m_aliveCount++;
+            }
         }
     }
 }
