@@ -41,7 +41,8 @@ namespace MaterialID
         GameBackgroundNear,
         TerrainChunk,
         Rockfall, Rockfall2,
-        HudTimer
+        HudTimer,
+        EmpBlast
     };
 }
 
@@ -53,7 +54,8 @@ namespace MeshID
         TerrainChunkA,
         TerrainChunkB,
         RockQuad,
-        HudQuad
+        HudQuad,
+        EmpQuad
     };
 }
 
@@ -108,7 +110,8 @@ namespace ShaderID
     enum
     {
         Background, //< scrolling game background
-        HudTimer
+        HudTimer,
+        EmpBlast
     };
 }
 
