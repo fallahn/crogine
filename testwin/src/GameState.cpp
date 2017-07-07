@@ -344,11 +344,11 @@ void GameState::createHUD()
     //bonus weapons
     startPoint.x = uiRes.x - (((spriteSheet.getSprite("bomb").getSize().x + UISpacing) * 2.f) + UIPadding);
     startPoint.y = uiRes.y - (spriteSheet.getSprite("bomb").getSize().y + UIPadding);
-    entity = m_uiScene.createEntity();
+    /*entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(startPoint);
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bomb");
     entity.addComponent<HudItem>().type = HudItem::Type::Bomb;
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::HudElement;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::HudElement;*/
 
     startPoint.x += entity.getComponent<cro::Sprite>().getSize().x + UISpacing;
     entity = m_uiScene.createEntity();
@@ -563,7 +563,7 @@ void GameState::loadModels()
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
 
-    entity = m_scene.createEntity();
+    /*entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.42f, 0.6f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBomb].meshID),
@@ -575,7 +575,7 @@ void GameState::loadModels()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
     entity.addComponent<cro::PhysicsObject>().addShape(coinShape);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);*/
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.6f, -0.2f, -9.3f });
