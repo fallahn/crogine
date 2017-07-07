@@ -371,7 +371,7 @@ void GameState::createHUD()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ UIPadding, uiRes.y - UIPadding, 0.f });
     entity.addComponent<cro::Text>(scoreFont);
-    entity.getComponent<cro::Text>().setString("0000000000");
+    //entity.getComponent<cro::Text>().setString("0000000000");
     entity.getComponent<cro::Text>().setCharSize(50);
     entity.getComponent<cro::Text>().setColour(cro::Colour::Cyan());
     entity.addComponent<HudItem>().type = HudItem::Type::Score;
@@ -541,6 +541,17 @@ void GameState::loadModels()
     buddyEnt.getComponent<cro::Transform>().setPosition({ 0.f, 1.8f, 0.f });
     buddyEnt.addComponent<Buddy>();
     buddyEnt.addComponent<cro::ParticleEmitter>().emitterSettings.loadFromFile("assets/particles/buddy_smoke.cps", m_resources.textures);
+
+    //EMP effect - TODO don't parent this to the ship, and move to particle effect loading
+    const glm::vec2 quadSize(6.f);
+    cro::QuadBuilder quadBuilder(quadSize);
+    m_resources.meshes.loadMesh(MeshID::EmpQuad, quadBuilder);
+    m_resources.shaders.preloadFromString(Shaders::Background::Vertex, Shaders::FX::EMPFragment, ShaderID::EmpBlast);
+    m_resources.materials.add(MaterialID::EmpBlast, m_resources.shaders.get(ShaderID::EmpBlast)).blendMode = cro::Material::BlendMode::Alpha;
+
+    auto empEnt = m_scene.createEntity();
+    empEnt.addComponent<cro::Transform>().setParent(playerEntity);
+    empEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::EmpQuad), m_resources.materials.get(MaterialID::EmpBlast));
 
 
     //collectables

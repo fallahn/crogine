@@ -76,6 +76,36 @@ namespace Shaders
             })";
     }
 
+    namespace FX
+    {
+        static const std::string EMPFragment = R"(
+            uniform MED float u_time;
+            
+            varying MED vec2 v_texCoord0;
+
+            const MED float maxRadius = 50.0;
+            const MED float thickness = 5.0;
+            const MED vec2 centre = vec2(0.5);
+            const MED float coordScale = 100.0; //need to scale the values up so that they are properly clamped in the correct range
+
+            void main()
+            {
+                MED float time = fract(u_time);
+                MED float outerRadius = maxRadius * time;
+                MED float innerRadius = outerRadius - (thickness * time);
+                MED vec2 direction = v_texCoord0 - centre;
+                MED float currentRadius = sqrt(dot(direction, direction)) * coordScale;
+
+                MED float strength = clamp(currentRadius - innerRadius, 0.0, 1.0) * clamp(outerRadius - currentRadius, 0.0, 1.0);
+                strength *= (1.0 - (outerRadius / maxRadius)); //fades as outrad grows
+
+                LOW vec4 empColour = vec4(0.7, 0.1, 1.0, 1.0);
+                LOW vec4 clearColour = vec4(1.0, 1.0, 1.0, 0.0);
+
+                gl_FragColor = mix(clearColour, empColour, strength);               
+            })";
+    }
+
     namespace Background
     {
         const static std::string Vertex = R"(
