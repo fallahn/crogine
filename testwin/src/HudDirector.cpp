@@ -71,7 +71,6 @@ void HudDirector::handleMessage(const cro::Message& msg)
                     if ((hudItem.type == HudItem::Type::Bomb && id == CollectableItem::Bomb) ||
                         (hudItem.type == HudItem::Type::Emp && id == CollectableItem::EMP))
                     {
-
                          entity.getComponent<cro::Sprite>().setColour(cro::Colour::Cyan());
                     }
                 };
@@ -79,6 +78,20 @@ void HudDirector::handleMessage(const cro::Message& msg)
             }
             break;
         case PlayerEvent::Died:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::HudElement;
+            cmd.action = [](cro::Entity entity, cro::Time)
+            {
+                const auto& hudItem = entity.getComponent<HudItem>();
+                if (hudItem.type == HudItem::Type::Emp)
+                {
+                    entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
+                }
+            };
+            sendCommand(cmd);
+        }
+        //yes, this is meant to fall through.
         case PlayerEvent::GotLife:
         {
             cro::int32 lives = static_cast<cro::int32>(data.value);
@@ -97,6 +110,21 @@ void HudDirector::handleMessage(const cro::Message& msg)
                     {
                         entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
                     }
+                }
+            };
+            sendCommand(cmd);
+        }
+            break;
+        case PlayerEvent::FiredEmp:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::HudElement;
+            cmd.action = [](cro::Entity entity, cro::Time)
+            {
+                const auto& hudItem = entity.getComponent<HudItem>();
+                if (hudItem.type == HudItem::Type::Emp)
+                {
+                    entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
                 }
             };
             sendCommand(cmd);

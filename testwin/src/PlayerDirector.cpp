@@ -57,6 +57,7 @@ namespace
         Left = 0x4,
         Right = 0x8,
         Fire = 0x10,
+        Special = 0x20,
         StateChanged = (1 << 15)
     };
 
@@ -108,8 +109,10 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
         }
     }
 }
+
 void PlayerDirector::handleEvent(const cro::Event& evt)
 {
+    //TODO: key mappings
     switch (evt.type)
     {
     default: break;
@@ -132,6 +135,9 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
         case SDLK_SPACE:
             m_currentInput |= Fire;
             break;
+        case SDLK_LCTRL:
+            m_currentInput |= Special;
+            break;
         }
         //m_currentInput |= StateChanged;
         break;
@@ -153,6 +159,9 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
             break;
         case SDLK_SPACE:
             m_currentInput &= ~Fire;
+            break;
+        case SDLK_LCTRL:
+            m_currentInput &= ~Special;
             break;
         }
         //m_currentInput |= StateChanged;
@@ -181,6 +190,9 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
             case SDL_CONTROLLER_BUTTON_A:
                 m_currentInput |= Fire;
                 break;
+            case SDL_CONTROLLER_BUTTON_B:
+                m_currentInput |= Special;
+                break;
             }
         }
         break;
@@ -204,6 +216,9 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
                 break;
             case SDL_CONTROLLER_BUTTON_A:
                 m_currentInput &= ~Fire;
+                break;
+            case SDL_CONTROLLER_BUTTON_B:
+                m_currentInput &= ~Special;
                 break;
             }
         }
@@ -384,10 +399,21 @@ void PlayerDirector::process(cro::Time)
     cmd.targetFlags = CommandID::Player;
     cmd.action = [this](cro::Entity entity, cro::Time)
     {
-        auto msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
-        msg->type = PlayerEvent::Moved;
-        msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
-        msg->entityID = entity.getIndex();
+        {
+            auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+            msg->type = PlayerEvent::Moved;
+            msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+            msg->entityID = entity.getIndex();
+        }
+
+        if ((m_currentInput & Special) && entity.getComponent<PlayerInfo>().hasEmp)
+        {
+            entity.getComponent<PlayerInfo>().hasEmp = false;
+            auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+            msg->type = PlayerEvent::FiredEmp;
+            msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+            msg->entityID = entity.getIndex();
+        }
     };
     sendCommand(cmd);
 

@@ -60,8 +60,9 @@ namespace
 
 
 NpcSystem::NpcSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(NpcSystem)),
-    m_accumulator(0.f)
+    : cro::System   (mb, typeid(NpcSystem)),
+    m_accumulator   (0.f),
+    m_empFired      (false)
 {
     requireComponent<cro::Model>();
     requireComponent<cro::Transform>();
@@ -97,6 +98,9 @@ void NpcSystem::handleMessage(const cro::Message& msg)
         case PlayerEvent::Moved:
             m_playerPosition = data.position;
             break;
+        case PlayerEvent::FiredEmp:
+            m_empFired = true;
+            break;
         }
     }
 }
@@ -116,10 +120,11 @@ void NpcSystem::process(cro::Time dt)
         {
             auto& status = entity.getComponent<Npc>();
 
-            //check for collision with player weapons
+            
             bool hasCollision = false;
             if (status.wantsReset) //we're on screen
             {
+                //check for collision with player weapons
                 auto& phys = entity.getComponent<cro::PhysicsObject>();
                 auto count = phys.getCollisionCount();
                 for (auto i = 0u; i < count; ++i)
@@ -139,28 +144,35 @@ void NpcSystem::process(cro::Time dt)
                             msg->entityID = entity.getIndex();
                             msg->value = status.health;
                         }
+                    }
+                }
 
-                        if (status.health < 0)
-                        {
-                            //raise a message 
-                            auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
-                            msg->type = NpcEvent::Died;
-                            msg->npcType = status.type;
-                            msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
-                            msg->entityID = entity.getIndex();
-                            msg->value = static_cast<float>(status.scoreValue);
+                //if EMP was fired kill anyway
+                if (m_empFired)
+                {
+                    status.health = -1.f;
+                    LOG("EMP killed everything", cro::Logger::Type::Info)
+                }
 
-                            if (status.type != Npc::Choppa)
-                            {
-                                //TODO make this a case for all with dying animation
-                                entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
-                                hasCollision = true;
-                            }
-                        }
+                if (status.health <= 0)
+                {
+                    //raise a message 
+                    auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                    msg->type = NpcEvent::Died;
+                    msg->npcType = status.type;
+                    msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+                    msg->entityID = entity.getIndex();
+                    msg->value = static_cast<float>(status.scoreValue);
+
+                    if (status.type != Npc::Choppa)
+                    {
+                        //TODO make this a case for all with dying animation
+                        entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
+                        hasCollision = true;
                     }
                 }
             }
-            
+
             if (status.active)
             {               
                 //process logic based on type
@@ -205,6 +217,7 @@ void NpcSystem::process(cro::Time dt)
                 }                
             }
         }
+        m_empFired = false;
     }
 }
 
