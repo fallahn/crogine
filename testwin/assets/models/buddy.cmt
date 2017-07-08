@@ -1,10 +1,12 @@
 model buddy
 {
-	mesh = sphere
-	radius = 0.25
+	mesh = "assets/models/buddy.cmf"
+	//radius = 0.25
 
 	material VertexLit
 	{
-		colour = 1,0.5,0,1
+		//colour = 1,0.5,0,1
+		diffuse = "assets/materials/buddy_diffuse.png"
+		mask = "assets/materials/buddy_mask.png"
 	}
 }

@@ -541,6 +541,9 @@ void GameState::loadModels()
     buddyEnt.getComponent<cro::Transform>().setPosition({ 0.f, 1.8f, 0.f });
     buddyEnt.addComponent<Buddy>();
     buddyEnt.addComponent<cro::ParticleEmitter>().emitterSettings.loadFromFile("assets/particles/buddy_smoke.cps", m_resources.textures);
+    auto& buddyRot = buddyEnt.addComponent<Rotator>();
+    buddyRot.speed = -4.f;
+    buddyRot.axis.x = 1.f;
 
     //EMP effect - TODO don't parent this to the ship, and move to particle effect loading
     const glm::vec2 quadSize(6.f);
