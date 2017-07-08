@@ -33,6 +33,7 @@ source distribution.
 #include "VelocitySystem.hpp"
 #include "Messages.hpp"
 #include "ItemSystem.hpp"
+#include "EmpSystem.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -104,6 +105,19 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
                 entity.getComponent<cro::ParticleEmitter>().start();
             };
             sendCommand(cmd);
+        }
+        break;
+        case PlayerEvent::FiredEmp:
+        {
+            cro::Command empCommand;
+            empCommand.targetFlags = CommandID::EmpBlast;
+            auto position = data.position;
+            empCommand.action = [this, position](cro::Entity ent, cro::Time)
+            {
+                ent.getComponent<cro::Transform>().setPosition(position);
+                ent.getComponent<Emp>().currentTime = 0.f;
+            };
+            sendCommand(empCommand);
         }
         break;
         }

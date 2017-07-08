@@ -99,8 +99,8 @@ namespace Shaders
                 MED float strength = clamp(currentRadius - innerRadius, 0.0, 1.0) * clamp(outerRadius - currentRadius, 0.0, 1.0);
                 strength *= (1.0 - (outerRadius / maxRadius)); //fades as outrad grows
 
-                LOW vec4 empColour = vec4(0.7, 0.1, 1.0, 1.0);
-                LOW vec4 clearColour = vec4(1.0, 1.0, 1.0, 0.0);
+                LOW vec4 empColour = vec4(0.63, 0.0, 1.0, 1.0);
+                LOW vec4 clearColour = vec4(0.0, 0.0, 0.0, 0.0);
 
                 gl_FragColor = mix(clearColour, empColour, strength);               
             })";

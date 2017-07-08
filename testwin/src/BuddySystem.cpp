@@ -85,6 +85,7 @@ void BuddySystem::process(cro::Time dt)
             if (m_requestSpawn) 
             {
                 entity.getComponent<Buddy>().state = Buddy::Initialising;
+                entity.getComponent<Buddy>().lifespan = lifespan;
                 m_requestSpawn = false;
             }
             break;

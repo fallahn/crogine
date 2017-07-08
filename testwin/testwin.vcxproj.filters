@@ -129,6 +129,9 @@
     <ClCompile Include="src\BuddySystem.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\EmpSystem.cpp">
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -228,6 +231,9 @@
       <Filter>Header Files\TL</Filter>
     </ClInclude>
     <ClInclude Include="src\BuddySystem.hpp">
+      <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EmpSystem.hpp">
       <Filter>Header Files\systems</Filter>
     </ClInclude>
   </ItemGroup>

@@ -133,7 +133,8 @@ namespace CommandID
         Weaver = 0x800,
         MapSelectController = 0x1000,
         HudElement = 0x2000,
-        Buddy = 0x4000
+        Buddy = 0x4000,
+        EmpBlast = 0x8000
     };
 }
 
