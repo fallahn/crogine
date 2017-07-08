@@ -6,6 +6,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ChunkBuilder.cpp
   ${PROJECT_DIR}/ColourSystem.cpp
   ${PROJECT_DIR}/DriftSystem.cpp
+  ${PROJECT_DIR}/EmpSystem.cpp
   ${PROJECT_DIR}/ExplosionSystem.cpp
   ${PROJECT_DIR}/GameState.cpp
   ${PROJECT_DIR}/HudDirector.cpp

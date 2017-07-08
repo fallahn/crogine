@@ -268,7 +268,7 @@ void ModelRenderer::applyBlendMode(Material::BlendMode mode)
     case Material::BlendMode::Additive:
         glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
-        glCheck(glDepthMask(GL_TRUE));
+        glCheck(glDepthMask(GL_FALSE));
         glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_ONE, GL_ONE));
         glCheck(glBlendEquation(GL_FUNC_ADD));
@@ -284,7 +284,7 @@ void ModelRenderer::applyBlendMode(Material::BlendMode mode)
     case Material::BlendMode::Multiply:
         glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
-        glCheck(glDepthMask(GL_TRUE));
+        glCheck(glDepthMask(GL_FALSE));
         glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
         glCheck(glBlendEquation(GL_FUNC_ADD));

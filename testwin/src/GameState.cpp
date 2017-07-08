@@ -52,6 +52,7 @@ source distribution.
 #include "HudItems.hpp"
 #include "HudDirector.hpp"
 #include "BuddySystem.hpp"
+#include "EmpSystem.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -122,6 +123,13 @@ bool GameState::handleEvent(const cro::Event& evt)
             msg->type = PlayerEvent::CollectedItem;
             msg->itemID = CollectableItem::Buddy;
         }
+        else if (evt.key.keysym.sym == SDLK_o)
+        {
+            auto* msg = getContext().appInstance.getMessageBus().post<PlayerEvent>(MessageID::PlayerMessage);
+            msg->type = PlayerEvent::FiredEmp;
+            msg->position = { 0.f, 0.f, -9.3f };// entity.getComponent<cro::Transform>().getWorldPosition();
+            //msg->entityID = entity.getIndex();
+        }
     }
 
     m_scene.forwardEvent(evt);
@@ -175,6 +183,7 @@ void GameState::addSystems()
     m_scene.addSystem<NpcWeaponSystem>(mb);
     m_scene.addSystem<ExplosionSystem>(mb);
     m_scene.addSystem<BuddySystem>(mb);
+    m_scene.addSystem<EmpSystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::SpriteAnimator>(mb);
@@ -545,16 +554,6 @@ void GameState::loadModels()
     buddyRot.speed = -4.f;
     buddyRot.axis.x = 1.f;
 
-    //EMP effect - TODO don't parent this to the ship, and move to particle effect loading
-    const glm::vec2 quadSize(6.f);
-    cro::QuadBuilder quadBuilder(quadSize);
-    m_resources.meshes.loadMesh(MeshID::EmpQuad, quadBuilder);
-    m_resources.shaders.preloadFromString(Shaders::Background::Vertex, Shaders::FX::EMPFragment, ShaderID::EmpBlast);
-    m_resources.materials.add(MaterialID::EmpBlast, m_resources.shaders.get(ShaderID::EmpBlast)).blendMode = cro::Material::BlendMode::Alpha;
-
-    auto empEnt = m_scene.createEntity();
-    empEnt.addComponent<cro::Transform>().setParent(playerEntity);
-    empEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::EmpQuad), m_resources.materials.get(MaterialID::EmpBlast));
 
 
     //collectables
@@ -850,6 +849,19 @@ void GameState::loadParticles()
     loadExplosion();
     explosion.loadFromFile("assets/sprites/explosion03.spt", m_resources.textures);
     loadExplosion();
+
+    //this is actually a model which performs the EMP effect
+    const glm::vec2 quadSize(6.f);
+    cro::QuadBuilder quadBuilder(quadSize);
+    m_resources.meshes.loadMesh(MeshID::EmpQuad, quadBuilder);
+    m_resources.shaders.preloadFromString(Shaders::Background::Vertex, Shaders::FX::EMPFragment, ShaderID::EmpBlast);
+    m_resources.materials.add(MaterialID::EmpBlast, m_resources.shaders.get(ShaderID::EmpBlast)).blendMode = cro::Material::BlendMode::Additive;
+
+    auto empEnt = m_scene.createEntity();
+    empEnt.addComponent<cro::Transform>().setPosition({ -80.f, 0.f, -9.3f });
+    empEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::EmpQuad), m_resources.materials.get(MaterialID::EmpBlast));
+    empEnt.addComponent<cro::CommandTarget>().ID = CommandID::EmpBlast;
+    empEnt.addComponent<Emp>();
 }
 
 void GameState::loadWeapons()

@@ -278,6 +278,8 @@
     <Content Include="assets\assets\materials\background_far.png" />
     <Content Include="assets\assets\materials\background_mid.png" />
     <Content Include="assets\assets\materials\background_near.png" />
+    <Content Include="assets\assets\materials\buddy_diffuse.png" />
+    <Content Include="assets\assets\materials\buddy_mask.png" />
     <Content Include="assets\assets\materials\collectables\collectables01_diffuse.png" />
     <Content Include="assets\assets\materials\collectables\collectables01_mask.png" />
     <Content Include="assets\assets\materials\collectables\collectables01_normal.png" />
@@ -320,6 +322,8 @@
     <Content Include="assets\assets\materials\weaver_head_mask.png" />
     <Content Include="assets\assets\models\arctic_outpost.cmf" />
     <Content Include="assets\assets\models\arctic_outpost.cmt" />
+    <Content Include="assets\assets\models\buddy.cmf" />
+    <Content Include="assets\assets\models\buddy.cmt" />
     <Content Include="assets\assets\models\choppa.cmt" />
     <Content Include="assets\assets\models\choppa_pod.iqm" />
     <Content Include="assets\assets\models\collectable.cmf" />
