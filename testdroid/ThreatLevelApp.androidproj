@@ -195,7 +195,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <AntPackage>
       <AndroidAppLibName />
-      <AntTarget>release</AntTarget>
+      <AntTarget>debug</AntTarget>
     </AntPackage>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tools|ARM'">
@@ -357,6 +357,7 @@
     <Content Include="assets\assets\models\weaver_body.cmt" />
     <Content Include="assets\assets\models\weaver_head.cmf" />
     <Content Include="assets\assets\models\weaver_head.cmt" />
+    <Content Include="assets\assets\particles\buddy_smoke.cps" />
     <Content Include="assets\assets\particles\fire.png" />
     <Content Include="assets\assets\particles\flames.cps" />
     <Content Include="assets\assets\particles\rocks.cps" />

@@ -150,7 +150,7 @@ void NpcSystem::process(cro::Time dt)
                 if (m_empFired)
                 {
                     status.health = -1.f;
-                    LOG("EMP killed everything", cro::Logger::Type::Info)
+                    //LOG("EMP killed everything", cro::Logger::Type::Info)
                 }
 
                 if (status.health <= 0)
