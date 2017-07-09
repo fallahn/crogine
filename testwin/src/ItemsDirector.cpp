@@ -44,9 +44,22 @@ namespace
 }
 
 ItemDirector::ItemDirector()
-    : m_releaseTime(10.f)
+    : m_releaseTime (10.f),
+    m_itemIndex     (0)
 {
-
+    m_itemList = 
+    {
+        CollectableItem::Buddy,
+        CollectableItem::Shield,
+        CollectableItem::Shield,
+        CollectableItem::EMP,
+        CollectableItem::Buddy,
+        CollectableItem::Shield,
+        CollectableItem::Shield,
+        CollectableItem::EMP,
+        CollectableItem::Buddy,
+        CollectableItem::Life
+    };
 }
 
 //private
@@ -93,7 +106,8 @@ void ItemDirector::process(cro::Time dt)
     if (m_releaseTime < 0)
     {
         //ignore weapon upgrades, these are dropped by NPCs
-        auto type = cro::Util::Random::value(CollectableItem::Shield, CollectableItem::Buddy); //TODO better choose this so some are more common than others?
+        auto type = m_itemList[m_itemIndex];
+        m_itemIndex = (m_itemIndex + 1) % m_itemList.size();
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Collectable;
