@@ -695,6 +695,7 @@ void GameState::loadModels()
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Elite].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::Elite].materialIDs[0]));
     entity.addComponent<Npc>().type = Npc::Elite;
+    entity.getComponent<Npc>().hasDyingAnim = true;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Elite;
     bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Elite].meshID).boundingBox;
     
@@ -733,6 +734,7 @@ void GameState::loadModels()
         entity.addComponent<cro::Skeleton>() = *m_modelDefs[GameModelID::Choppa].skeleton;
         entity.getComponent<cro::Skeleton>().play(0);
         entity.addComponent<Npc>().type = Npc::Choppa;
+        entity.getComponent<Npc>().hasDyingAnim = true;
         entity.getComponent<Npc>().choppa.ident = i;
         entity.getComponent<Npc>().choppa.shootTime = cro::Util::Random::value(0.1f, 1.f);
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Choppa;

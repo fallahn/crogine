@@ -225,10 +225,13 @@ void NpcDirector::process(cro::Time dt)
                 status.elite.movementCount = cro::Util::Random::value(4, 8);
                 status.elite.pauseTime = cro::Util::Random::value(1.2f, 2.2f);
                 status.elite.firetime = cro::Util::Random::value(2.5f, 3.2f);
+                status.elite.dying = false;
+                status.elite.deathVelocity = { -4.f, 0.f, 0.f };
                 status.health = eliteHealth;
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 tx.setPosition({ 5.6f, cro::Util::Random::value(-2.f, 2.f) , zDepth });
+                tx.setRotation({ 0.f, 0.f, 0.f });
 
                 auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
                 msg->type = NpcEvent::HealthChanged;
@@ -259,7 +262,7 @@ void NpcDirector::process(cro::Time dt)
                 status.choppa.deathVelocity.x = status.choppa.moveSpeed;
                 status.choppa.tableIndex = cro::Util::Random::value(0, 40); //hmm don't have table size here (see NpcSystem)
                 status.health = choppaHealth;
-                status.choppa.deathVelocity = {};
+                status.choppa.deathVelocity = { status.choppa.moveSpeed, 0.f, 0.f };
 
                 //reset position
                 auto& tx = entity.getComponent<cro::Transform>();

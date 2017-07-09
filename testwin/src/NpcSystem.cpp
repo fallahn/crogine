@@ -119,8 +119,7 @@ void NpcSystem::process(cro::Time dt)
         for (auto& entity : entities) 
         {
             auto& status = entity.getComponent<Npc>();
-
-            
+           
             bool hasCollision = false;
             if (status.wantsReset) //we're on screen
             {
@@ -164,7 +163,7 @@ void NpcSystem::process(cro::Time dt)
                     msg->entityID = entity.getIndex();
                     msg->value = static_cast<float>(status.scoreValue);
 
-                    if (status.type != Npc::Choppa)
+                    if (!status.hasDyingAnim)
                     {
                         //TODO make this a case for all with dying animation
                         entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
@@ -227,66 +226,75 @@ void NpcSystem::processElite(cro::Entity entity)
     auto& tx = entity.getComponent<cro::Transform>();
     auto& status = entity.getComponent<Npc>();
     
-    //auto wp = tx.getWorldPosition();
-    //DPRINT("Elite", std::to_string(wp.x) + ", " + std::to_string(wp.y) + ", " + std::to_string(wp.z));
+    status.elite.dying = (status.health <= 0);
 
-    //move toward target
-    auto movement = status.elite.destination - tx.getWorldPosition();
-    
-    //clamp max movement
-    static const float maxMoveSqr = 181.f;
-    float l2 = glm::length2(movement);
-    if (l2 > maxMoveSqr)
+    if (status.elite.dying)
     {
-        movement *= (maxMoveSqr / l2);
-    }
-
-    if (status.elite.active) //big movements
-    {
-        movement *= 4.f;
-        if (glm::length2(movement) < 1.f)
-        {
-            status.elite.active = false;
-            status.elite.pauseTime = cro::Util::Random::value(1.4f, 2.1f);
-            status.elite.movementCount--;
-
-            status.elite.destination = m_eliteIdlePositions[status.elite.idleIndex] + status.elite.destination;// tx.getWorldPosition();
-        }
+        tx.rotate({ 1.f, 0.f, 0.f }, 0.1f + fixedUpdate);
+        tx.move(status.elite.deathVelocity * fixedUpdate);
+        status.elite.deathVelocity += gravity * fixedUpdate;
     }
     else
     {
-        //do some floaty bobbins               
-        /*if (glm::length2(movement) < 0.2f)
-        {
-            status.elite.idleIndex = (status.elite.idleIndex + 1) % m_eliteIdlePositions.size();
-            status.elite.destination = m_eliteIdlePositions[status.elite.idleIndex] + tx.getWorldPosition();
-        }*/
+        //move toward target
+        auto movement = status.elite.destination - tx.getWorldPosition();
 
-        //count down to next movement
-        status.elite.pauseTime -= fixedUpdate;
-        if (status.elite.pauseTime < 0)
+        //clamp max movement
+        static const float maxMoveSqr = 181.f;
+        float l2 = glm::length2(movement);
+        if (l2 > maxMoveSqr)
         {
-            status.elite.active = true;
-            status.elite.destination = (status.elite.movementCount)
-                ? m_elitePositions[cro::Util::Random::value(0, m_elitePositions.size() - 1)]
-                : glm::vec3(-7.f, tx.getWorldPosition().y, zDepth);
+            movement *= (maxMoveSqr / l2);
         }
 
-        //check weapon fire
-        status.elite.firetime -= fixedUpdate;
-        if (status.elite.firetime < 0)
+        if (status.elite.active) //big movements
         {
-            //LOG("Fired Elite laser", cro::Logger::Type::Info);
-            status.elite.firetime = cro::Util::Random::value(2.5f, 3.2f);
+            movement *= 4.f;
+            if (glm::length2(movement) < 1.f)
+            {
+                status.elite.active = false;
+                status.elite.pauseTime = cro::Util::Random::value(1.4f, 2.1f);
+                status.elite.movementCount--;
 
-            auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
-            msg->entityID = entity.getIndex();
-            msg->npcType = Npc::Elite;
-            msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
-            msg->type = NpcEvent::FiredWeapon;
+                status.elite.destination = m_eliteIdlePositions[status.elite.idleIndex] + status.elite.destination;// tx.getWorldPosition();
+            }
         }
+        else
+        {
+            //do some floaty bobbins               
+            /*if (glm::length2(movement) < 0.2f)
+            {
+                status.elite.idleIndex = (status.elite.idleIndex + 1) % m_eliteIdlePositions.size();
+                status.elite.destination = m_eliteIdlePositions[status.elite.idleIndex] + tx.getWorldPosition();
+            }*/
+
+            //count down to next movement
+            status.elite.pauseTime -= fixedUpdate;
+            if (status.elite.pauseTime < 0)
+            {
+                status.elite.active = true;
+                status.elite.destination = (status.elite.movementCount)
+                    ? m_elitePositions[cro::Util::Random::value(0, m_elitePositions.size() - 1)]
+                    : glm::vec3(-7.f, tx.getWorldPosition().y, zDepth);
+            }
+
+            //check weapon fire
+            status.elite.firetime -= fixedUpdate;
+            if (status.elite.firetime < 0)
+            {
+                //LOG("Fired Elite laser", cro::Logger::Type::Info);
+                status.elite.firetime = cro::Util::Random::value(2.5f, 3.2f);
+
+                auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                msg->entityID = entity.getIndex();
+                msg->npcType = Npc::Elite;
+                msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+                msg->type = NpcEvent::FiredWeapon;
+            }
+        }
+        status.elite.deathVelocity = movement;
+        tx.move(movement * fixedUpdate);
     }
-    tx.move(movement * fixedUpdate);
 }
 
 void NpcSystem::processChoppa(cro::Entity entity)
