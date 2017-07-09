@@ -71,6 +71,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/UISystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -80,6 +81,7 @@ source distribution.
 #include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/UIInput.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
@@ -92,9 +94,10 @@ namespace
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
-    : cro::State        (stack, context),
-    m_scene             (context.appInstance.getMessageBus()),
-    m_uiScene           (context.appInstance.getMessageBus())
+    : cro::State    (stack, context),
+    m_scene         (context.appInstance.getMessageBus()),
+    m_uiScene       (context.appInstance.getMessageBus()),
+    m_uiSystem      (nullptr)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -134,6 +137,7 @@ bool GameState::handleEvent(const cro::Event& evt)
 
     m_scene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
+    m_uiSystem->handleEvent(evt);
     return true;
 }
 
@@ -204,6 +208,7 @@ void GameState::addSystems()
 
     //UI scene
     m_uiScene.addSystem<HudSystem>(mb);
+    m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::SceneGraph>(mb);
     m_uiScene.addSystem<cro::ModelRenderer>(mb);
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
@@ -366,12 +371,49 @@ void GameState::createHUD()
     entity.addComponent<HudItem>().type = HudItem::Type::Emp;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::HudElement;
 
+    auto spriteSize = spriteSheet.getSprite("emp").getSize();
+    auto empPressedCallback = m_uiSystem->addCallback([this](cro::Entity entity, cro::uint64 flags)
+    {
+        auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);
+        msg->button = UIEvent::Emp;
+        msg->type = UIEvent::ButtonPressed;
+    });
+    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = empPressedCallback;
+    auto empReleasedCallback = m_uiSystem->addCallback([this](cro::Entity entity, cro::uint64 flags)
+    {
+        auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);
+        msg->button = UIEvent::Emp;
+        msg->type = UIEvent::ButtonReleased;
+    });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = empReleasedCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = empReleasedCallback; //in case mouse leaves while still pressed
+    entity.getComponent<cro::UIInput>().area = { 0.f, 0.f, spriteSize.x, spriteSize.y };
+
 #ifdef PLATFORM_MOBILE
     //on mobile add a pause icon
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("paws");
     entity.addComponent<cro::Transform>().setPosition({ (uiRes.x - entity.getComponent<cro::Sprite>().getSize()).x / 2.f, UIPadding, 0.f });
     entity.addComponent<HudItem>().type = HudItem::Type::Paws;
+
+    spriteSize = spriteSheet.getSprite("paws").getSize();
+    auto pawsPressedCallback = m_uiSystem->addCallback([this](cro::Entity entity, cro::uint64 flags)
+    {
+        auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);
+        msg->button = UIEvent::Pause;
+        msg->type = UIEvent::ButtonPressed;
+    });
+    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = pawsPressedCallback;
+    auto pawsReleasedCallback = m_uiSystem->addCallback([this](cro::Entity entity, cro::uint64 flags)
+    {
+        auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);
+        msg->button = UIEvent::Pause;
+        msg->type = UIEvent::ButtonReleased;
+    });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = pawsReleasedCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = pawsReleasedCallback; //in case mouse leaves while still pressed
+    entity.getComponent<cro::UIInput>().area = { 0.f, 0.f, spriteSize.x, spriteSize.y };
+
 #endif
 
     //score text
@@ -400,7 +442,7 @@ void GameState::createHUD()
 
     auto spriteEntity = m_uiScene.createEntity();
     spriteEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bullet1");
-    auto spriteSize = spriteEntity.getComponent<cro::Sprite>().getSize() / 2.f;
+    spriteSize = spriteEntity.getComponent<cro::Sprite>().getSize() / 2.f;
     spriteEntity.addComponent<cro::Transform>().setOrigin({ spriteSize.x, spriteSize.y, 0.f });
     spriteEntity.getComponent<cro::Transform>().setParent(entity);
     spriteEntity.addComponent<cro::CommandTarget>().ID = CommandID::HudElement;

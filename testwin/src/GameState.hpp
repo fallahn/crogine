@@ -64,7 +64,7 @@ private:
     cro::ResourceCollection m_resources;
     std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs;
 
-    //cro::UISystem* m_uiSystem;
+    cro::UISystem* m_uiSystem;
 
     void addSystems();
     void loadAssets();
