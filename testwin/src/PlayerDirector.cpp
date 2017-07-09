@@ -122,6 +122,23 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
         break;
         }
     }
+    else if (msg.id == MessageID::UIMessage)
+    {
+        const auto& data = msg.getData<UIEvent>();
+        if (data.button == UIEvent::Emp)
+        {
+            if (data.type == UIEvent::ButtonPressed)
+            {
+                m_currentInput |= Special;
+                //LOG("Pressed", cro::Logger::Type::Info);
+            }
+            else if (data.type == UIEvent::ButtonReleased)
+            {
+                m_currentInput &= ~Special;
+                //LOG("Released", cro::Logger::Type::Info);
+            }
+        }
+    }
 }
 
 void PlayerDirector::handleEvent(const cro::Event& evt)

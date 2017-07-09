@@ -44,7 +44,8 @@ namespace MessageID
         PlayerMessage,
         NpcMessage,
         BuddyMessage,
-        WeaponMessage
+        WeaponMessage,
+        UIMessage
     };
 }
 
@@ -125,6 +126,21 @@ struct WeaponEvent final
 {
     float downgradeTime = 0.f;
     cro::int32 fireMode = 0;
+};
+
+struct UIEvent final
+{
+    enum
+    {
+        ButtonPressed,
+        ButtonReleased
+    }type;
+
+    enum
+    {
+        Emp,
+        Pause
+    }button;
 };
 
 #endif //TL_MESSAGES_HPP_
