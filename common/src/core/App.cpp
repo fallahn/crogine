@@ -296,6 +296,12 @@ void App::handleEvents()
             msg->data0 = evt.window.data1;
             msg->data1 = evt.window.data2;
         }
+        //prevents spamming the next frame with a giant DT
+        if (evt.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+        {
+            resetFrameTime();
+        }
+
             break;
         case SDL_CONTROLLERDEVICEADDED:
         {

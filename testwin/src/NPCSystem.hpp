@@ -45,6 +45,8 @@ struct EliteNavigator final
     float firetime = 4.f;
     std::size_t idleIndex = 0;
     float maxEmitRate = 0.f;
+    bool dying = false;
+    glm::vec3 deathVelocity;
 };
 
 struct ChoppaNavigator final
@@ -101,6 +103,7 @@ struct Npc final
     bool wantsReset = false;
     float health = 0.f;
     cro::int32 scoreValue = 0;
+    bool hasDyingAnim = false;
 
     EliteNavigator elite;
     ChoppaNavigator choppa;
