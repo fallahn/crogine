@@ -114,5 +114,8 @@
     <ClCompile Include="..\testwin\src\EmpSystem.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
+    <ClCompile Include="..\testwin\src\GameOverState.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

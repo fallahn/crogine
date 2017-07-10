@@ -295,6 +295,7 @@
     <ClCompile Include="src\DriftSystem.cpp" />
     <ClCompile Include="src\EmpSystem.cpp" />
     <ClCompile Include="src\ExplosionSystem.cpp" />
+    <ClCompile Include="src\GameOverState.cpp" />
     <ClCompile Include="src\GameState.cpp" />
     <ClCompile Include="src\HudDirector.cpp" />
     <ClCompile Include="src\HudItems.cpp" />
@@ -333,6 +334,7 @@
     <ClInclude Include="src\EmpSystem.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\ExplosionSystem.hpp" />
+    <ClInclude Include="src\GameOverState.hpp" />
     <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\HudDirector.hpp" />
     <ClInclude Include="src\HudItems.hpp" />

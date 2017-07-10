@@ -27,8 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_GAME_STATE_HPP_
-#define TL_GAME_STATE_HPP_
+#ifndef TL_GAMEOVER_STATE_HPP_
+#define TL_GAMEOVER_STATE_HPP_
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -42,13 +42,13 @@ namespace cro
     class UISystem;
 }
 
-class GameState final : public cro::State
+class GameOverState final : public cro::State
 {
 public:
-    GameState(cro::StateStack&, cro::State::Context);
-    ~GameState() = default;
+    GameOverState(cro::StateStack&, cro::State::Context);
+    ~GameOverState() = default;
 
-    cro::StateID getStateID() const override { return States::GamePlaying; }
+    cro::StateID getStateID() const override { return States::GameOver; }
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
@@ -57,24 +57,13 @@ public:
 
 private:
 
-    cro::Scene m_scene;
     cro::Scene m_uiScene;
-
     cro::ResourceCollection m_resources;
-    std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs;
 
     cro::UISystem* m_uiSystem;
 
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createHUD();
-
-    void loadTerrain();
-    void loadModels();
-    void loadParticles();
-    void loadWeapons();
-
+    void load();
     void updateView();
 };
-#endif //TL_GAME_STATE_HPP_
+
+#endif //TL_GAMEOVER_STATE_HPP_

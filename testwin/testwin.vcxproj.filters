@@ -132,6 +132,9 @@
     <ClCompile Include="src\EmpSystem.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\GameOverState.cpp">
+      <Filter>Source Files\TL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -235,6 +238,9 @@
     </ClInclude>
     <ClInclude Include="src\EmpSystem.hpp">
       <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameOverState.hpp">
+      <Filter>Header Files\TL</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

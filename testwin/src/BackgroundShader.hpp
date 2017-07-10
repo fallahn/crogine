@@ -78,6 +78,24 @@ namespace Shaders
 
     namespace FX
     {
+        const static std::string Vertex = R"(
+            attribute vec4 a_position;
+            attribute MED vec2 a_texCoord0;
+
+            uniform mat4 u_worldMatrix;
+            uniform mat4 u_worldViewMatrix;               
+            uniform mat4 u_projectionMatrix;
+                
+            varying MED vec2 v_texCoord0;
+
+            void main()
+            {
+                mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+                gl_Position = wvp * a_position;
+
+                v_texCoord0 = a_texCoord0;
+            })";
+
         static const std::string EMPFragment = R"(
             uniform MED float u_time;
             

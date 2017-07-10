@@ -44,9 +44,11 @@ cro::Mesh::Data ChunkBuilder::build() const
     data.submeshCount = 2;
     data.vertexCount = TerrainChunk::PointCount * 2;
     data.vertexSize = (data.attributes[cro::Mesh::Position] + data.attributes[cro::Mesh::Colour] + data.attributes[cro::Mesh::Normal]) * sizeof(float);
+    //fill with empty data so we don't accidentally render any garbage
+    std::vector<char> vertData(data.vertexCount * data.vertexSize);
     glCheck(glGenBuffers(1, &data.vbo));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, data.vertexCount * data.vertexSize, nullptr, GL_DYNAMIC_DRAW));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, data.vertexCount * data.vertexSize, vertData.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     
     //index array for top and bottom parts

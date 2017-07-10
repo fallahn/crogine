@@ -67,8 +67,10 @@ struct GameEvent final
 {
     enum
     {
-        RoundStart
+        RoundStart,
+        GameOver
     }type;
+    float score = 0.f;
 };
 
 struct PlayerEvent final

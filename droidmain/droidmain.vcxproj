@@ -328,6 +328,7 @@
     <ClCompile Include="..\testwin\src\DriftSystem.cpp" />
     <ClCompile Include="..\testwin\src\EmpSystem.cpp" />
     <ClCompile Include="..\testwin\src\ExplosionSystem.cpp" />
+    <ClCompile Include="..\testwin\src\GameOverState.cpp" />
     <ClCompile Include="..\testwin\src\GameState.cpp" />
     <ClCompile Include="..\testwin\src\HudDirector.cpp" />
     <ClCompile Include="..\testwin\src\HudItems.cpp" />
