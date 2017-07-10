@@ -113,6 +113,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     msg->type = GameEvent::RoundStart;
 
     context.appInstance.resetFrameTime();
+
+    requestStackPush(States::ID::GameOver);
 }
 
 //public
@@ -432,7 +434,7 @@ void GameState::createHUD()
     const glm::vec2 quadSize(160.f);
     cro::QuadBuilder quadBuilder(quadSize);
     m_resources.meshes.loadMesh(MeshID::HudQuad, quadBuilder);
-    m_resources.shaders.preloadFromString(Shaders::Background::Vertex, Shaders::Hud::TimerFragment, ShaderID::HudTimer);
+    m_resources.shaders.preloadFromString(Shaders::FX::Vertex, Shaders::Hud::TimerFragment, ShaderID::HudTimer);
     m_resources.materials.add(MaterialID::HudTimer, m_resources.shaders.get(ShaderID::HudTimer)).blendMode = cro::Material::BlendMode::Alpha;
 
     entity = m_uiScene.createEntity();
@@ -481,7 +483,6 @@ void GameState::loadTerrain()
     entity = m_scene.createEntity();
     auto& chunkTxA = entity.addComponent<cro::Transform>();
     chunkTxA.setPosition({ 0.f, 0.f, -8.8f });
-    //chunkTxA.setScale({ 0.5f, 0.5f, 1.f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::TerrainChunkA), m_resources.materials.get(MaterialID::TerrainChunk));
     entity.addComponent<TerrainChunk>();
     entity.addComponent<cro::PhysicsObject>().addShape(boundsShape);
@@ -618,7 +619,7 @@ void GameState::loadModels()
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
 
-    /*entity = m_scene.createEntity();
+    entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.42f, 0.6f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBomb].meshID),
@@ -630,7 +631,7 @@ void GameState::loadModels()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
     entity.addComponent<cro::PhysicsObject>().addShape(coinShape);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
-    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);*/
+    entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.6f, -0.2f, -9.3f });
@@ -681,8 +682,7 @@ void GameState::loadModels()
     entity.addComponent<cro::Transform>().setPosition({ 7.f, 0.f, -9.3f });
     entity.addComponent<CollectableItem>().type = CollectableItem::WeaponUpgrade;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
-    //auto bounds = m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableWeaponUpgrade].meshID).boundingBox;
-    coinShape.extent = { 0.16f, 0.16f, 0.16f };// (bounds[1] - bounds[0]) / 2.f;
+    coinShape.extent = { 0.16f, 0.16f, 0.16f };
     entity.addComponent<cro::PhysicsObject>().addShape(coinShape);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
@@ -898,7 +898,7 @@ void GameState::loadParticles()
     const glm::vec2 quadSize(6.f);
     cro::QuadBuilder quadBuilder(quadSize);
     m_resources.meshes.loadMesh(MeshID::EmpQuad, quadBuilder);
-    m_resources.shaders.preloadFromString(Shaders::Background::Vertex, Shaders::FX::EMPFragment, ShaderID::EmpBlast);
+    m_resources.shaders.preloadFromString(Shaders::FX::Vertex, Shaders::FX::EMPFragment, ShaderID::EmpBlast);
     m_resources.materials.add(MaterialID::EmpBlast, m_resources.shaders.get(ShaderID::EmpBlast)).blendMode = cro::Material::BlendMode::Additive;
 
     auto empEnt = m_scene.createEntity();

@@ -38,7 +38,7 @@ namespace States
         PauseMenu,
         GamePlaying,
         RoundEnd,
-        GameEnd
+        GameOver
 	};
 }
 

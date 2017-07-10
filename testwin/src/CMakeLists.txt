@@ -9,6 +9,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/EmpSystem.cpp
   ${PROJECT_DIR}/ExplosionSystem.cpp
   ${PROJECT_DIR}/GameState.cpp
+  ${PROJECT_DIR}/GameOverState.cpp
   ${PROJECT_DIR}/HudDirector.cpp
   ${PROJECT_DIR}/HudItems.cpp
   ${PROJECT_DIR}/ItemsDirector.cpp

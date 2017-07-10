@@ -291,8 +291,18 @@ void PlayerSystem::updateDead(cro::Entity entity)
     m_respawnTime -= fixedStep;
     if (m_respawnTime < 0)
     {
-        entity.getComponent<PlayerInfo>().state = PlayerInfo::State::Spawning;
-        m_shieldTime = shieldTime;
+        //only respawn if lives remain
+        if (entity.getComponent<PlayerInfo>().lives > 0)
+        {
+            entity.getComponent<PlayerInfo>().state = PlayerInfo::State::Spawning;
+            m_shieldTime = shieldTime;
+        }
+        else
+        {
+            auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
+            msg->type = GameEvent::GameOver;
+            msg->score = m_score;
+        }
     }
 }
 
