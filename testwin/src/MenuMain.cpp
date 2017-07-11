@@ -59,25 +59,12 @@ namespace
 #include "MenuConsts.inl"
 }
 
-void MainState::createMainMenu()
+void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback)
 {
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/sprites/ui_menu.spt", m_resources.textures);
-    const auto buttonNormalArea = spriteSheet.getSprite("button_inactive").getTextureRect();
-    const auto buttonHighlightArea = spriteSheet.getSprite("button_active").getTextureRect();
-
-    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, cro::uint64)
-    {
-        e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
-        auto textEnt = m_menuScene.getEntity(e.getComponent<cro::Transform>().getChildIDs()[0]);
-        textEnt.getComponent<cro::Text>().setColour(textColourSelected);
-    });
-    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, cro::uint64)
-    {
-        e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
-        auto textEnt = m_menuScene.getEntity(e.getComponent<cro::Transform>().getChildIDs()[0]);
-        textEnt.getComponent<cro::Text>().setColour(textColourNormal);
-    });
+    cro::SpriteSheet spriteSheetButtons;
+    spriteSheetButtons.loadFromFile("assets/sprites/ui_menu.spt", m_resources.textures);
+    const auto buttonNormalArea = spriteSheetButtons.getSprite("button_inactive").getTextureRect();
+    const auto buttonHighlightArea = spriteSheetButtons.getSprite("button_active").getTextureRect();
 
     //create an entity to move the menu
     auto controlEntity = m_menuScene.createEntity();
@@ -88,16 +75,18 @@ void MainState::createMainMenu()
 
     //title image
     auto entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("title");
     auto size = entity.getComponent<cro::Sprite>().getSize();
     auto& titleTx = entity.addComponent<cro::Transform>();
     titleTx.setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
     titleTx.setPosition({ 960.f, 920.f, -20.f });
 
+    cro::SpriteSheet icons;
+    icons.loadFromFile("assets/sprites/ui_icons.spt", m_resources.textures);
 
     //start game
     entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& gameTx = entity.addComponent<cro::Transform>();
     gameTx.setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     gameTx.setParent(controlEntity);
@@ -125,9 +114,9 @@ void MainState::createMainMenu()
     gameControl.area.width = buttonNormalArea.width;
     gameControl.area.height = buttonNormalArea.height;
 
-    auto& testFont = m_resources.fonts.get(FontID::MenuFont);
+    auto& menuFont = m_resources.fonts.get(FontID::MenuFont);
     auto textEnt = m_menuScene.createEntity();
-    auto& gameText = textEnt.addComponent<cro::Text>(testFont);
+    auto& gameText = textEnt.addComponent<cro::Text>(menuFont);
     gameText.setString("Play");
     gameText.setColour(textColourNormal);
     gameText.setCharSize(60);
@@ -135,10 +124,14 @@ void MainState::createMainMenu()
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
     gameTextTx.setPosition({ 40.f, 100.f, 0.f });
     gameTextTx.setParent(entity);
+    auto iconEnt = m_menuScene.createEntity();
+    iconEnt.addComponent<cro::Transform>().setParent(entity);
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.addComponent<cro::Sprite>() = icons.getSprite("play");
 
     //options
     entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& optionTx = entity.addComponent<cro::Transform>();
     optionTx.setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     optionTx.setParent(controlEntity);
@@ -168,7 +161,7 @@ void MainState::createMainMenu()
     });
 
     textEnt = m_menuScene.createEntity();
-    auto& optionText = textEnt.addComponent<cro::Text>(testFont);
+    auto& optionText = textEnt.addComponent<cro::Text>(menuFont);
     optionText.setString("Options");
     optionText.setColour(textColourNormal);
     optionText.setCharSize(60);
@@ -176,10 +169,14 @@ void MainState::createMainMenu()
     auto& texTx = textEnt.addComponent<cro::Transform>();
     texTx.setParent(entity);
     texTx.move({ 40.f, 100.f, 0.f });
+    iconEnt = m_menuScene.createEntity();
+    iconEnt.addComponent<cro::Transform>().setParent(entity);
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.addComponent<cro::Sprite>() = icons.getSprite("settings");
 
     //high scores
     entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& scoreTx = entity.addComponent<cro::Transform>();
     scoreTx.setPosition({ 0.f, -300.f, 0.f });
     scoreTx.setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
@@ -210,7 +207,7 @@ void MainState::createMainMenu()
     scoreControl.callbacks[cro::UIInput::MouseUp] = scoreCallback;
 
     textEnt = m_menuScene.createEntity();
-    auto& scoreText = textEnt.addComponent<cro::Text>(testFont);
+    auto& scoreText = textEnt.addComponent<cro::Text>(menuFont);
     scoreText.setString("Scores");
     scoreText.setColour(textColourNormal);
     scoreText.setCharSize(60);
@@ -218,17 +215,21 @@ void MainState::createMainMenu()
     auto& scoreTexTx = textEnt.addComponent<cro::Transform>();
     scoreTexTx.setParent(entity);
     scoreTexTx.move({ 40.f, 100.f, 0.f });
+    iconEnt = m_menuScene.createEntity();
+    iconEnt.addComponent<cro::Transform>().setParent(entity);
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.addComponent<cro::Sprite>() = icons.getSprite("scores");
 
     //quit button
     entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& quitTx = entity.addComponent<cro::Transform>();
     quitTx.setPosition({ 0.f, -480.f, 0.f });
     quitTx.setParent(controlEntity);
     quitTx.setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
 
     textEnt = m_menuScene.createEntity();
-    auto& quitText = textEnt.addComponent<cro::Text>(testFont);
+    auto& quitText = textEnt.addComponent<cro::Text>(menuFont);
     quitText.setString("Quit");
     quitText.setColour(textColourNormal);
     quitText.setCharSize(60);
@@ -236,6 +237,10 @@ void MainState::createMainMenu()
     auto& quitTexTx = textEnt.addComponent<cro::Transform>();
     quitTexTx.setParent(entity);
     quitTexTx.move({ 40.f, 100.f, 0.f });
+    iconEnt = m_menuScene.createEntity();
+    iconEnt.addComponent<cro::Transform>().setParent(entity);
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.addComponent<cro::Sprite>() = icons.getSprite("exit");
 
     auto quitCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
@@ -262,7 +267,7 @@ void MainState::createMainMenu()
 
     //quit confirmation
     entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("menu");
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("menu");
     size = entity.getComponent<cro::Sprite>().getSize();
     auto& confTx = entity.addComponent<cro::Transform>();
     confTx.setParent(controlEntity);
@@ -271,7 +276,7 @@ void MainState::createMainMenu()
     
 
     textEnt = m_menuScene.createEntity();
-    auto& confText = textEnt.addComponent<cro::Text>(testFont);
+    auto& confText = textEnt.addComponent<cro::Text>(menuFont);
     confText.setString("Exit?");
     confText.setColour(textColourSelected);
     //confText.setBlendMode(cro::Material::BlendMode::Additive);
@@ -283,14 +288,14 @@ void MainState::createMainMenu()
 
     //OK button
     auto buttonEnt = m_menuScene.createEntity();
-    buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
+    buttonEnt.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& buttonTx0 = buttonEnt.addComponent<cro::Transform>();
     buttonTx0.setParent(entity);
     buttonTx0.setPosition({ size.x / 4.f, 82.f, 1.f });
     buttonTx0.setOrigin({ buttonNormalArea.width / 2.f, 0.f, 0.f });
 
     textEnt = m_menuScene.createEntity();
-    auto& buttonText0 = textEnt.addComponent<cro::Text>(testFont);
+    auto& buttonText0 = textEnt.addComponent<cro::Text>(menuFont);
     buttonText0.setString("OK");
     buttonText0.setColour(textColourNormal);
     //buttonText0.setBlendMode(cro::Material::BlendMode::Additive);
@@ -298,6 +303,10 @@ void MainState::createMainMenu()
     auto& buttonTextTx0 = textEnt.addComponent<cro::Transform>();
     buttonTextTx0.setParent(buttonEnt);
     buttonTextTx0.setPosition({ 60.f, 110.f, 0.f });
+    iconEnt = m_menuScene.createEntity();
+    iconEnt.addComponent<cro::Transform>().setParent(buttonEnt);
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.addComponent<cro::Sprite>() = icons.getSprite("exit");
 
     auto okCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
@@ -317,14 +326,14 @@ void MainState::createMainMenu()
 
     //cancel button
     buttonEnt = m_menuScene.createEntity();
-    buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
+    buttonEnt.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& buttonTx1 = buttonEnt.addComponent<cro::Transform>();
     buttonTx1.setParent(entity);
     buttonTx1.setPosition({ (size.x / 4.f) + (size.x / 2.f), 82.f, 1.f });
     buttonTx1.setOrigin({ buttonNormalArea.width / 2.f, 0.f, 0.f });
 
     textEnt = m_menuScene.createEntity();
-    auto& buttonText1 = textEnt.addComponent<cro::Text>(testFont);
+    auto& buttonText1 = textEnt.addComponent<cro::Text>(menuFont);
     buttonText1.setString("Cancel");
     buttonText1.setColour(textColourNormal);
     //buttonText1.setBlendMode(cro::Material::BlendMode::Additive);
@@ -332,6 +341,10 @@ void MainState::createMainMenu()
     auto& buttonTextTx1 = textEnt.addComponent<cro::Transform>();
     buttonTextTx1.setParent(buttonEnt);
     buttonTextTx1.setPosition({ 60.f, 110.f, 0.f });
+    iconEnt = m_menuScene.createEntity();
+    iconEnt.addComponent<cro::Transform>().setParent(buttonEnt);
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.addComponent<cro::Sprite>() = icons.getSprite("back");
 
     auto cancelCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {

@@ -38,6 +38,8 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
@@ -50,6 +52,7 @@ source distribution.
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 
+#include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/graphics/postprocess/PostChromeAB.hpp>
@@ -57,6 +60,8 @@ source distribution.
 #include <iomanip>
 namespace
 {
+#include "MenuConsts.inl"
+
     void outputIcon(const cro::Image& img)
     {
         CRO_ASSERT(img.getFormat() == cro::ImageFormat::RGBA, "");
@@ -97,9 +102,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context)
         addSystems();
         loadAssets();
         createScene();
-        createMainMenu();
-        createOptionsMenu();
-        createScoreMenu();
+        createMenus();
     });
 
     //context.mainWindow.setVsyncEnabled(false);
@@ -284,6 +287,57 @@ void MainState::createScene()
     auto& cam2D = entity.addComponent<cro::Camera>();
     cam2D.projection = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -0.1f, 100.f);
     m_menuScene.setActiveCamera(entity);
+}
+
+void MainState::createMenus()
+{
+    cro::SpriteSheet spriteSheetButtons;
+    spriteSheetButtons.loadFromFile("assets/sprites/ui_menu.spt", m_resources.textures);
+    const auto buttonNormalArea = spriteSheetButtons.getSprite("button_inactive").getTextureRect();
+    const auto buttonHighlightArea = spriteSheetButtons.getSprite("button_active").getTextureRect();
+
+    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, cro::uint64)
+    {
+        e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
+        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
+        std::size_t i = 0;
+        while (children[i] != -1)
+        {
+            auto c = children[i++];
+            auto child = m_menuScene.getEntity(c);
+            if (child.hasComponent<cro::Text>())
+            {
+                child.getComponent<cro::Text>().setColour(textColourSelected);
+            }
+            else if (child.hasComponent<cro::Sprite>())
+            {
+                child.getComponent<cro::Sprite>().setColour(textColourSelected);
+            }
+        }
+    });
+    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, cro::uint64)
+    {
+        e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
+        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
+        std::size_t i = 0;
+        while (children[i] != -1)
+        {
+            auto c = children[i++];
+            auto child = m_menuScene.getEntity(c);
+            if (child.hasComponent<cro::Text>())
+            {
+                child.getComponent<cro::Text>().setColour(textColourNormal);
+            }
+            else if (child.hasComponent<cro::Sprite>())
+            {
+                child.getComponent<cro::Sprite>().setColour(textColourNormal);
+            }
+        }
+    });
+
+    createMainMenu(mouseEnterCallback, mouseExitCallback);
+    createOptionsMenu(mouseEnterCallback, mouseExitCallback);
+    createScoreMenu(mouseEnterCallback, mouseExitCallback);
 }
 
 void MainState::updateView()

@@ -1,0 +1,34 @@
+spritesheet icons
+{
+	src = "assets/sprites/ui_icons.png"
+
+	sprite settings
+	{
+		bounds = 1,1,126,126
+	}
+
+	sprite back
+	{
+		bounds = 128,0,128,128
+	}
+
+	sprite exit
+	{
+		bounds = 257,1,126,126
+	}
+
+	sprite scores
+	{
+		bounds = 384,0,128,128
+	}
+
+	sprite menu
+	{
+		bounds = 0,128,128,128
+	}
+
+	sprite play
+	{
+		bounds = 256,128,128,128
+	}
+}
