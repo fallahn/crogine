@@ -70,11 +70,11 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
-    void createMainMenu();
+    void createMainMenu(cro::uint32, cro::uint32);
     void createMapSelect(cro::Entity);
-    void createOptionsMenu();
-    void createScoreMenu();
-
+    void createOptionsMenu(cro::uint32, cro::uint32);
+    void createScoreMenu(cro::uint32, cro::uint32);
+    void createMenus();
     void updateView();
 };
 #endif //TL_MAIN_STATE_HPP_

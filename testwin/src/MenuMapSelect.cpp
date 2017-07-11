@@ -258,6 +258,13 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     textEnt.getComponent<cro::Transform>().setParent(entity);
     textEnt.getComponent<cro::Transform>().move({ 40.f, 100.f, 0.f });
 
+    spriteSheet.loadFromFile("assets/sprites/ui_icons.spt", m_resources.textures);
+    auto iconEnt = m_menuScene.createEntity();
+    iconEnt.addComponent<cro::Transform>().setParent(entity);
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("back");
+
+
     auto backCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
         if ((flags & cro::UISystem::LeftMouse)
@@ -278,14 +285,40 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, cro::uint64)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
-        auto textEnt = m_menuScene.getEntity(e.getComponent<cro::Transform>().getChildIDs()[0]);
-        textEnt.getComponent<cro::Text>().setColour(textColourSelected);
+        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
+        std::size_t i = 0;
+        while (children[i] != -1)
+        {
+            auto c = children[i++];
+            auto child = m_menuScene.getEntity(c);
+            if (child.hasComponent<cro::Text>())
+            {
+                child.getComponent<cro::Text>().setColour(textColourSelected);
+            }
+            else if (child.hasComponent<cro::Sprite>())
+            {
+                child.getComponent<cro::Sprite>().setColour(textColourSelected);
+            }
+        }
     });
     auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, cro::uint64)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
-        auto textEnt = m_menuScene.getEntity(e.getComponent<cro::Transform>().getChildIDs()[0]);
-        textEnt.getComponent<cro::Text>().setColour(textColourNormal);
+        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
+        std::size_t i = 0;
+        while (children[i] != -1)
+        {
+            auto c = children[i++];
+            auto child = m_menuScene.getEntity(c);
+            if (child.hasComponent<cro::Text>())
+            {
+                child.getComponent<cro::Text>().setColour(textColourNormal);
+            }
+            else if (child.hasComponent<cro::Sprite>())
+            {
+                child.getComponent<cro::Sprite>().setColour(textColourNormal);
+            }
+        }
     });
 
     auto& backControl = entity.addComponent<cro::UIInput>();

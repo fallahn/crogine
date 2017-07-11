@@ -57,30 +57,15 @@ namespace
 #include "MenuConsts.inl"
 }
 
-void MainState::createScoreMenu()
+void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback)
 {
-    auto& testFont = m_resources.fonts.get(FontID::MenuFont);
+    auto& menuFont = m_resources.fonts.get(FontID::MenuFont);
     
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/sprites/ui_menu.spt", m_resources.textures);
 
     const auto buttonNormalArea = spriteSheet.getSprite("button_inactive").getTextureRect();
     const auto buttonHighlightArea = spriteSheet.getSprite("button_active").getTextureRect();
-
-    //TODO not duplicate these
-    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, cro::uint64)
-    {
-        e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
-
-        auto textEnt = m_menuScene.getEntity(e.getComponent<cro::Transform>().getChildIDs()[0]);
-        textEnt.getComponent<cro::Text>().setColour(textColourSelected);
-    });
-    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, cro::uint64)
-    {
-        e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
-        auto textEnt = m_menuScene.getEntity(e.getComponent<cro::Transform>().getChildIDs()[0]);
-        textEnt.getComponent<cro::Text>().setColour(textColourNormal);
-    });
 
     //create an entity to move the menu
     auto controlEntity = m_menuScene.createEntity();
@@ -97,7 +82,7 @@ void MainState::createScoreMenu()
     backgroundEnt.getComponent<cro::Transform>().setParent(controlEntity);
 
     auto textEnt = m_menuScene.createEntity();
-    auto& titleText = textEnt.addComponent<cro::Text>(testFont);
+    auto& titleText = textEnt.addComponent<cro::Text>(menuFont);
     titleText.setString("Scores");
     titleText.setColour(textColourSelected);
     titleText.setCharSize(42);
@@ -114,13 +99,19 @@ void MainState::createScoreMenu()
     backTx.setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
 
     textEnt = m_menuScene.createEntity();
-    auto& backText = textEnt.addComponent<cro::Text>(testFont);
+    auto& backText = textEnt.addComponent<cro::Text>(menuFont);
     backText.setString("Back");
     backText.setColour(textColourNormal);
     backText.setCharSize(60);
     auto& backTexTx = textEnt.addComponent<cro::Transform>();
     backTexTx.setParent(entity);
     backTexTx.move({ 40.f, 100.f, 0.f });
+
+    spriteSheet.loadFromFile("assets/sprites/ui_icons.spt", m_resources.textures);
+    auto iconEnt = m_menuScene.createEntity();
+    iconEnt.addComponent<cro::Transform>().setParent(entity);
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("back");
 
     auto backCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
