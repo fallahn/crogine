@@ -377,6 +377,8 @@
     <Content Include="assets\assets\sprites\lasers.png" />
     <Content Include="assets\assets\sprites\lasers.spt" />
     <Content Include="assets\assets\sprites\loading.png" />
+    <Content Include="assets\assets\sprites\ui_icons.png" />
+    <Content Include="assets\assets\sprites\ui_icons.spt" />
     <Content Include="assets\assets\sprites\ui_maps.png" />
     <Content Include="assets\assets\sprites\ui_maps.spt" />
     <Content Include="assets\assets\sprites\ui_menu.png" />
