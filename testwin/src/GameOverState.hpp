@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/graphics/Texture.hpp>
 
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
@@ -42,10 +43,13 @@ namespace cro
     class UISystem;
 }
 
+struct SharedResources;
+using ResourcePtr = std::unique_ptr<SharedResources>;
+
 class GameOverState final : public cro::State
 {
 public:
-    GameOverState(cro::StateStack&, cro::State::Context);
+    GameOverState(cro::StateStack&, cro::State::Context, ResourcePtr&);
     ~GameOverState() = default;
 
     cro::StateID getStateID() const override { return States::GameOver; }
@@ -58,9 +62,10 @@ public:
 private:
 
     cro::Scene m_uiScene;
+    SharedResources& m_sharedResources;
     cro::ResourceCollection m_resources;
-
     cro::UISystem* m_uiSystem;
+    cro::Texture m_backgroundTexture;
 
     void load();
     void updateView();

@@ -43,10 +43,13 @@ namespace cro
     class UISystem;
 }
 
+struct SharedResources;
+using ResourcePtr = std::unique_ptr<SharedResources>;
+
 class MainState final : public cro::State
 {
 public:
-    MainState(cro::StateStack&, cro::State::Context);
+    MainState(cro::StateStack&, cro::State::Context, ResourcePtr&);
     ~MainState() = default;
 
     cro::StateID getStateID() const override { return States::MainMenu; }
@@ -60,6 +63,7 @@ private:
 
     cro::Scene m_backgroundScene;
     cro::Scene m_menuScene;
+    SharedResources& m_sharedResources;
 
     cro::ResourceCollection m_resources;
     std::array<cro::ModelDefinition, MenuModelID::Count> m_modelDefs;

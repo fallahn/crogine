@@ -43,13 +43,13 @@ MyApp::MyApp()
 	//register states
 #ifdef PLATFORM_MOBILE
     //m_stateStack.registerState<MenuState>(States::ID::MainMenu);
-    m_stateStack.registerState<MainState>(States::ID::MainMenu);
+    m_stateStack.registerState<MainState>(States::ID::MainMenu, m_sharedResources);
 #else
-	m_stateStack.registerState<MainState>(States::ID::MainMenu);
+	m_stateStack.registerState<MainState>(States::ID::MainMenu, m_sharedResources);
 #endif //PLATFORM_MOBILE
 
     m_stateStack.registerState<GameState>(States::ID::GamePlaying);
-    m_stateStack.registerState<GameOverState>(States::ID::GameOver);
+    m_stateStack.registerState<GameOverState>(States::ID::GameOver, m_sharedResources);
 	m_stateStack.pushState(States::MainMenu);
 }
 
@@ -91,10 +91,14 @@ void MyApp::initialise()
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setIcon(icon);
     getWindow().setTitle("Threat Level");
+
+    m_sharedResources = std::make_unique<SharedResources>();
 }
 
 void MyApp::finalise()
 {
     m_stateStack.clearStates();
     m_stateStack.simulate(cro::Time());
+
+    m_sharedResources.reset();
 }

@@ -29,6 +29,7 @@ source distribution.
 
 #include "MainState.hpp"
 #include "Slider.hpp"
+#include "MyApp.hpp"
 
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
@@ -58,13 +59,12 @@ namespace
 
 void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback)
 {
-    auto& menuFont = m_resources.fonts.get(FontID::MenuFont);
+    auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
 
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/sprites/ui_menu.spt", m_resources.textures);
+    spriteSheet.loadFromFile("assets/sprites/ui_menu.spt", m_sharedResources.textures);
 
     const auto buttonNormalArea = spriteSheet.getSprite("button_inactive").getTextureRect();
-    const auto buttonHighlightArea = spriteSheet.getSprite("button_active").getTextureRect();
 
     //create an entity to move the menu
     auto controlEntity = m_menuScene.createEntity();
@@ -105,7 +105,7 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     backTexTx.setParent(entity);
     backTexTx.move({ 40.f, 100.f, 0.f });
 
-    spriteSheet.loadFromFile("assets/sprites/ui_icons.spt", m_resources.textures);
+    spriteSheet.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
     auto iconEnt = m_menuScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
     iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });

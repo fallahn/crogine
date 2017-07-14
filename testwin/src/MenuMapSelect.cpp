@@ -30,6 +30,7 @@ source distribution.
 #include "MainState.hpp"
 #include "ResourceIDs.hpp"
 #include "Slider.hpp"
+#include "MyApp.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -56,10 +57,10 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     menuController.addComponent<Slider>();
     menuController.addComponent<cro::CommandTarget>().ID = CommandID::MapSelectController;
 
-    auto& font = m_resources.fonts.get(FontID::MenuFont);
+    auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
 
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/sprites/ui_maps.spt", m_resources.textures);
+    spriteSheet.loadFromFile("assets/sprites/ui_maps.spt", m_sharedResources.textures);
 
     //caves button
     auto entity = m_menuScene.createEntity();
@@ -141,7 +142,7 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     size = lockEnt.getComponent<cro::Sprite>().getSize();
     lockEnt.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
     lockEnt.getComponent<cro::Transform>().setParent(entity);
-    lockEnt.getComponent<cro::Transform>().setPosition({ normalRect.width / 2.f, normalRect.height / 2.f, 0.f });
+    lockEnt.getComponent<cro::Transform>().setPosition({ normalRect.width / 2.f, normalRect.height / 2.f, 0.1f });
 
     textEnt = m_menuScene.createEntity();
     textEnt.addComponent<cro::Text>(font);
@@ -190,7 +191,7 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     size = lockEnt.getComponent<cro::Sprite>().getSize();
     lockEnt.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
     lockEnt.getComponent<cro::Transform>().setParent(entity);
-    lockEnt.getComponent<cro::Transform>().setPosition({ normalRect.width / 2.f, normalRect.height / 2.f, 0.f });
+    lockEnt.getComponent<cro::Transform>().setPosition({ normalRect.width / 2.f, normalRect.height / 2.f, 0.1f });
 
     textEnt = m_menuScene.createEntity();
     textEnt.addComponent<cro::Text>(font);
@@ -238,7 +239,7 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     textEnt.getComponent<cro::Transform>().move({ 25.f, 56.f, 0.f });
 
     //back button
-    spriteSheet.loadFromFile("assets/sprites/ui_menu.spt", m_resources.textures);
+    spriteSheet.loadFromFile("assets/sprites/ui_menu.spt", m_sharedResources.textures);
     const auto buttonNormalArea = spriteSheet.getSprite("button_inactive").getTextureRect();
     const auto buttonHighlightArea = spriteSheet.getSprite("button_active").getTextureRect();
 
@@ -258,7 +259,7 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     textEnt.getComponent<cro::Transform>().setParent(entity);
     textEnt.getComponent<cro::Transform>().move({ 40.f, 100.f, 0.f });
 
-    spriteSheet.loadFromFile("assets/sprites/ui_icons.spt", m_resources.textures);
+    spriteSheet.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
     auto iconEnt = m_menuScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
     iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
