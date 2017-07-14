@@ -89,4 +89,28 @@ float Text::getLineHeight() const
     return m_font->getLineHeight(m_charSize);
 }
 
+const FloatRect& Text::getLocalBounds() const
+{
+    if (m_dirtyFlags & (Flags::CharSize | Flags::Verts))
+    {
+        updateLocalBounds();
+    }
+    return m_localBounds;
+}
+
 //private
+void Text::updateLocalBounds() const
+{
+    m_localBounds.width = 0.f;
+    m_localBounds.height = 0.f;
+
+    for (auto c : m_string)
+    {
+        auto glyph = m_font->getGlyph(c, m_charSize);
+        m_localBounds.width += glyph.width;
+        if (m_localBounds.height < glyph.height)
+        {
+            m_localBounds.height = glyph.height;
+        }
+    }
+}

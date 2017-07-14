@@ -31,6 +31,7 @@ source distribution.
 #include "Slider.hpp"
 #include "StateIDs.hpp"
 #include "RotateSystem.hpp"
+#include "MyApp.hpp"
 
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
@@ -62,9 +63,8 @@ namespace
 void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback)
 {
     cro::SpriteSheet spriteSheetButtons;
-    spriteSheetButtons.loadFromFile("assets/sprites/ui_menu.spt", m_resources.textures);
+    spriteSheetButtons.loadFromFile("assets/sprites/ui_menu.spt", m_sharedResources.textures);
     const auto buttonNormalArea = spriteSheetButtons.getSprite("button_inactive").getTextureRect();
-    const auto buttonHighlightArea = spriteSheetButtons.getSprite("button_active").getTextureRect();
 
     //create an entity to move the menu
     auto controlEntity = m_menuScene.createEntity();
@@ -82,7 +82,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     titleTx.setPosition({ 960.f, 920.f, -20.f });
 
     cro::SpriteSheet icons;
-    icons.loadFromFile("assets/sprites/ui_icons.spt", m_resources.textures);
+    icons.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
 
     //start game
     entity = m_menuScene.createEntity();
@@ -114,7 +114,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     gameControl.area.width = buttonNormalArea.width;
     gameControl.area.height = buttonNormalArea.height;
 
-    auto& menuFont = m_resources.fonts.get(FontID::MenuFont);
+    auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
     auto textEnt = m_menuScene.createEntity();
     auto& gameText = textEnt.addComponent<cro::Text>(menuFont);
     gameText.setString("Play");

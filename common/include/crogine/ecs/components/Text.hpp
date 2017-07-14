@@ -89,7 +89,7 @@ namespace cro
         /*!
         \brief Returns the local (pre transform) bounds
         */
-        const FloatRect& getLocalBounds() const { return m_localBounds; }
+        const FloatRect& getLocalBounds() const;
 
     private:
         const Font* m_font;
@@ -113,7 +113,8 @@ namespace cro
         std::vector<Vertex> m_vertices;
         int32 m_vboOffset; //starting index in parent VBO
 
-        FloatRect m_localBounds;
+        mutable FloatRect m_localBounds;
+        void updateLocalBounds() const;
 
         friend class TextRenderer;
     };

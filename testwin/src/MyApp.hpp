@@ -35,6 +35,16 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/StateStack.hpp>
 
+#include <crogine/graphics/FontResource.hpp>
+#include <crogine/graphics/TextureResource.hpp>
+
+struct SharedResources final
+{
+    cro::FontResource fonts;
+    cro::TextureResource textures;
+};
+using ResourcePtr = std::unique_ptr<SharedResources>;
+
 class MyApp final : public cro::App
 {
 public:
@@ -51,6 +61,8 @@ private:
 	void render() override;
     void initialise() override;
     void finalise() override;
+
+    ResourcePtr m_sharedResources;
 };
 
 #endif //MY_APP_HPP_

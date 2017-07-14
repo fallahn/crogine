@@ -29,6 +29,7 @@ source distribution.
 
 #include "GameOverState.hpp"
 #include "Messages.hpp"
+#include "MyApp.hpp"
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -39,6 +40,8 @@ source distribution.
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
+
+#include <crogine/graphics/Image.hpp>
 
 namespace
 {
@@ -51,10 +54,11 @@ namespace
 #include "MenuConsts.inl"
 }
 
-GameOverState::GameOverState(cro::StateStack& stack, cro::State::Context context)
-    : cro::State    (stack, context),
-    m_uiScene       (context.appInstance.getMessageBus()),
-    m_uiSystem      (nullptr)
+GameOverState::GameOverState(cro::StateStack& stack, cro::State::Context context, ResourcePtr& sharedResources)
+    : cro::State        (stack, context),
+    m_uiScene           (context.appInstance.getMessageBus()),
+    m_sharedResources   (*sharedResources),
+    m_uiSystem          (nullptr)
 {
     load();
     updateView();
@@ -103,15 +107,26 @@ void GameOverState::load()
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
 
-    auto& font = m_resources.fonts.get(FontID::MenuFont);
-    font.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
+    auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
+    //font.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
 
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.getComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, uiRes.y / 2.f, 2.f });
     entity.addComponent<cro::Text>(font).setString("GAME OVER");
     entity.getComponent<cro::Text>().setCharSize(80);
     entity.getComponent<cro::Text>().setColour(textColourSelected);
+    auto textSize = entity.getComponent<cro::Text>().getLocalBounds();
+    entity.addComponent<cro::Transform>();
+    entity.getComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, uiRes.y / 2.f, 2.f });
+    entity.getComponent<cro::Transform>().setOrigin({ textSize.width / 2.f, -textSize.height / 2.f, 0.f });
+
+    cro::Image img;
+    img.create(2, 2, cro::Colour(0.f, 0.f, 0.f, 0.5f));
+    m_backgroundTexture.create(2, 2);
+    m_backgroundTexture.update(img.getPixelData(), false);
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale({ uiRes.x / 2.f, uiRes.y / 2.f, 1.f });
+    entity.addComponent<cro::Sprite>().setTexture(m_backgroundTexture);
 
     //camera
     entity = m_uiScene.createEntity();

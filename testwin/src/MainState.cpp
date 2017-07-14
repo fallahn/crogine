@@ -31,6 +31,7 @@ source distribution.
 #include "RotateSystem.hpp"
 #include "DriftSystem.hpp"
 #include "Slider.hpp"
+#include "MyApp.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -90,10 +91,11 @@ namespace
     }
 }
 
-MainState::MainState(cro::StateStack& stack, cro::State::Context context)
+MainState::MainState(cro::StateStack& stack, cro::State::Context context, ResourcePtr& sharedResources)
     : cro::State        (stack, context),
     m_backgroundScene   (context.appInstance.getMessageBus()),
     m_menuScene         (context.appInstance.getMessageBus()),
+    m_sharedResources   (*sharedResources),
     m_commandSystem     (nullptr),
     m_uiSystem          (nullptr)
 {
@@ -166,7 +168,7 @@ void MainState::addSystems()
     m_menuScene.addSystem<SliderSystem>(mb);
     //m_menuScene.addSystem<RotateSystem>(mb);
     m_menuScene.addSystem<cro::SceneGraph>(mb);
-    m_menuScene.addSystem<cro::SpriteRenderer>(mb);// .setDepthAxis(cro::SpriteRenderer::DepthAxis::Z);
+    m_menuScene.addSystem<cro::SpriteRenderer>(mb).setDepthAxis(cro::SpriteRenderer::DepthAxis::Z);
     m_menuScene.addSystem<cro::TextRenderer>(mb);
     m_uiSystem = &m_menuScene.addSystem<cro::UISystem>(mb);
 }
@@ -182,8 +184,8 @@ void MainState::loadAssets()
     m_modelDefs[MenuModelID::Sun].loadFromFile("assets/models/sun.cmt", m_resources);
 
     //test sprite sheet
-    auto& testFont = m_resources.fonts.get(FontID::MenuFont);
-    testFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
+    auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
+    menuFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
 }
 
 void MainState::createScene()
@@ -292,7 +294,7 @@ void MainState::createScene()
 void MainState::createMenus()
 {
     cro::SpriteSheet spriteSheetButtons;
-    spriteSheetButtons.loadFromFile("assets/sprites/ui_menu.spt", m_resources.textures);
+    spriteSheetButtons.loadFromFile("assets/sprites/ui_menu.spt", m_sharedResources.textures);
     const auto buttonNormalArea = spriteSheetButtons.getSprite("button_inactive").getTextureRect();
     const auto buttonHighlightArea = spriteSheetButtons.getSprite("button_active").getTextureRect();
 
