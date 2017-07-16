@@ -1,5 +1,6 @@
 #source files used by crogine library
 set(PROJECT_SRC
+  ${PROJECT_DIR}/audio/AudioBuffer.cpp
   ${PROJECT_DIR}/audio/AudioRenderer.cpp
   ${PROJECT_DIR}/audio/OpenALImpl.cpp
   ${PROJECT_DIR}/audio/SDLMixerImpl.cpp
@@ -32,6 +33,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/System.cpp
   ${PROJECT_DIR}/ecs/SystemManager.cpp
 
+  ${PROJECT_DIR}/ecs/components/AudioSource.cpp
   ${PROJECT_DIR}/ecs/components/Model.cpp
   ${PROJECT_DIR}/ecs/components/ParticleEmitter.cpp
   ${PROJECT_DIR}/ecs/components/PhysicsObject.cpp
@@ -39,6 +41,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/components/Text.cpp
   ${PROJECT_DIR}/ecs/components/Transform.cpp
 
+  ${PROJECT_DIR}/ecs/systems/AudioSystem.cpp
   ${PROJECT_DIR}/ecs/systems/CollisionSystem.cpp
   ${PROJECT_DIR}/ecs/systems/CommandSystem.cpp
   ${PROJECT_DIR}/ecs/systems/DebugInfo.cpp

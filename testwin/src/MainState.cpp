@@ -110,6 +110,8 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
     //context.mainWindow.setVsyncEnabled(false);
     //context.appInstance.setClearColour(cro::Colour::Red());
     updateView();
+
+    m_audioBuffer.loadFromFile("assets/audio/test.wav");
 }
 
 //public

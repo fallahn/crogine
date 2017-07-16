@@ -7,6 +7,8 @@ if(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 endif()
 
+SET(USE_OPENAL TRUE CACHE BOOL "Choose whether to use OpenAL for audio or SDL_Mixer.")
+
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -22,17 +24,28 @@ SET (CMAKE_CXX_FLAGS_RELEASE "-O4 -DNDEBUG")
 SET (CMAKE_DEBUG_POSTFIX -d)
 
 find_package(SDL2 REQUIRED)
-find_package(SDL2_mixer REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(OpenGL REQUIRED)
 
+if(USE_OPENAL)
+find_package(OpenAL REQUIRED)
+else()
+find_package(SDL2_mixer REQUIRED)
+endif()
+
 include_directories(
-  ${SDL2_INCLUDE_DIR}
-  ${SDL2_MIXER_INCLUDE_DIR}
+  ${SDL2_INCLUDE_DIR}  
   ${SDL2_TTF_INCLUDE_DIR}
-  ${BULLET_INCLUDE_DIRS}
+  ${BULLET_INCLUDE_DIRS}  
   ${CMAKE_SOURCE_DIR}/common/include)
+  
+  
+if(USE_OPENAL)
+include_directories(${OPENAL_INCLUDE_DIR})
+else()
+include_directories(${SDL2_MIXER_INCLUDE_DIR})
+endif()
 
 
 SET(PROJECT_DIR ${CMAKE_SOURCE_DIR}/src)
@@ -45,11 +58,16 @@ else()
 endif()
 
 target_link_libraries(${PROJECT_NAME}
-  ${SDL2_LIBRARY}
-  ${SDL2_MIXER_LIBRARY}
+  ${SDL2_LIBRARY} 
   ${SDL2_TTF_LIBRARIES}
   ${BULLET_LIBRARIES}
   ${OPENGL_LIBRARIES})
+
+if(USE_OPENAL)
+target_link_libraries(${OPENAL_LIBRARY})
+else()
+target_link_libraries(${SDL2_MIXER_LIBRARY})
+endif()
 
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

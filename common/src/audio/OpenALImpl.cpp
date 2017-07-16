@@ -32,6 +32,7 @@ source distribution.
 #include "WavLoader.hpp"
 
 #include <crogine/detail/Assert.hpp>
+#include <crogine/util/String.hpp>
 
 #include <array>
 
@@ -92,13 +93,26 @@ void OpenALImpl::setListenerVolume(float volume)
 
 cro::int32 OpenALImpl::requestNewBuffer(const std::string& path)
 {
-    WavLoader loader;
-    if (loader.open(path))
+    auto ext = Util::String::getFileExtension(path);
+    PCMData data;
+    if (ext == ".wav")
+    {
+        WavLoader loader;
+        if (loader.open(path))
+        {
+            data = loader.getData();;
+        }
+    }
+    else
+    {
+        Logger::log(ext + ": format not supported", Logger::Type::Error);
+    }
+
+    if(data.data)
     {
         ALuint buff;
         alCheck(alGenBuffers(1, &buff));
-        auto data = loader.getData();
-
+        
         ALenum format;
         switch (data.format)
         {
