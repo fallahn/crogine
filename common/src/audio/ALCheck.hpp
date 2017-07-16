@@ -48,7 +48,9 @@ namespace al
             std::string message;
             switch (error)
             {
-            default: break;
+            default: 
+                message = std::to_string(error);
+                break;
             case AL_INVALID_ENUM:
                 message = "AL_INVALID_ENUM: error in enumerated argument";
                 break;
