@@ -1,5 +1,10 @@
 #source files used by crogine library
 set(PROJECT_SRC
+  ${PROJECT_DIR}/audio/AudioRenderer.cpp
+  ${PROJECT_DIR}/audio/OpenALImpl.cpp
+  ${PROJECT_DIR}/audio/SDLMixerImpl.cpp
+  ${PROJECT_DIR}/audio/WavLoader.cpp
+  
   ${PROJECT_DIR}/core/App.cpp
   ${PROJECT_DIR}/core/Clock.cpp
   ${PROJECT_DIR}/core/ConfigFile.cpp

@@ -121,6 +121,12 @@
     <ClInclude Include="..\common\include\crogine\util\Random.hpp" />
     <ClInclude Include="..\common\include\crogine\util\String.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Wavetable.hpp" />
+    <ClInclude Include="..\common\src\audio\ALCheck.hpp" />
+    <ClInclude Include="..\common\src\audio\AudioRenderer.hpp" />
+    <ClInclude Include="..\common\src\audio\OpenALImpl.hpp" />
+    <ClInclude Include="..\common\src\audio\PCMData.hpp" />
+    <ClInclude Include="..\common\src\audio\SDLMixerImpl.hpp" />
+    <ClInclude Include="..\common\src\audio\WavLoader.hpp" />
     <ClInclude Include="..\common\src\core\DefaultLoadingScreen.hpp" />
     <ClInclude Include="..\common\src\detail\DistanceField.hpp" />
     <ClInclude Include="..\common\src\detail\glad.hpp" />
@@ -138,6 +144,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\android\Android.cpp" />
+    <ClCompile Include="..\common\src\audio\AudioRenderer.cpp" />
+    <ClCompile Include="..\common\src\audio\OpenALImpl.cpp" />
+    <ClCompile Include="..\common\src\audio\SDLMixerImpl.cpp" />
+    <ClCompile Include="..\common\src\audio\WavLoader.cpp" />
     <ClCompile Include="..\common\src\core\App.cpp" />
     <ClCompile Include="..\common\src\core\Clock.cpp" />
     <ClCompile Include="..\common\src\core\ConfigFile.cpp" />
@@ -373,12 +383,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\lib\x64\Debug;$(SolutionDir)extlibs\SDL2_ttf\lib\x64;$(SolutionDir)extlibs\SDL2_mixer\lib\x64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>BulletCollision_Debug.lib;LinearMath_Debug.lib;enet.lib;SDL2.lib;SDL2_mixer.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\lib\x64\Debug;$(SolutionDir)extlibs\SDL2_ttf\lib\x64;$(SolutionDir)extlibs\SDL2_mixer\lib\x64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\debug;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>openal32.lib;BulletCollision_Debug.lib;LinearMath_Debug.lib;enet.lib;SDL2.lib;SDL2_mixer.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|x64'">
@@ -386,7 +396,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include;../extlibs/openal/include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -435,14 +445,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\lib\x64\Release;$(SolutionDir)extlibs\SDL2_ttf\lib\x64;$(SolutionDir)extlibs\SDL2_mixer\lib\x64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>BulletCollision.lib;LinearMath.lib;enet.lib;SDL2.lib;SDL2_mixer.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\lib\x64\Release;$(SolutionDir)extlibs\SDL2_ttf\lib\x64;$(SolutionDir)extlibs\SDL2_mixer\lib\x64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\release;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>openal32.lib;BulletCollision.lib;LinearMath.lib;enet.lib;SDL2.lib;SDL2_mixer.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tools|x64'">
@@ -452,7 +462,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include;../extlibs/openal/include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>

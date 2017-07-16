@@ -130,7 +130,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>

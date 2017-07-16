@@ -34,6 +34,9 @@
     <Filter Include="src\detail\enet">
       <UniqueIdentifier>{65b763b7-0fc4-4a55-9f71-f271ca3f67d9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\audio">
+      <UniqueIdentifier>{44441809-b04f-46a4-b4e2-351321d12349}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -269,6 +272,12 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\SpriteAnimator.cpp">
       <Filter>src\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\audio\OpenALImpl.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\audio\SDLMixerImpl.cpp">
+      <Filter>src\audio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

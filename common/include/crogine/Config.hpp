@@ -36,6 +36,13 @@ source distribution.
 #define PLATFORM_DESKTOP 1
 #endif //platform check
 
+//check for audio backend defines and define a fallback if there are none
+#if defined(PLATFORM_MOBILE) && !defined(AL_AUDIO)
+#define SDL_AUDIO 1
+#elif defined(PLATFORM_DESKTOP) && !defined(SDL_AUDIO)
+#define AL_AUDIO 1
+#endif
+
 //check which platform we're on and create export macros as necessary
 #if !defined(CRO_STATIC)
 
