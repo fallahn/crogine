@@ -405,6 +405,15 @@
     <ClInclude Include="..\common\src\audio\WavLoader.hpp">
       <Filter>Header Files\audio</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\audio\AudioBuffer.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\components\AudioSource.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\systems\AudioSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -631,6 +640,15 @@
     </ClCompile>
     <ClCompile Include="..\common\src\audio\WavLoader.cpp">
       <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\audio\AudioBuffer.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\AudioSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\components\AudioSource.cpp">
+      <Filter>Source Files\ecs\components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

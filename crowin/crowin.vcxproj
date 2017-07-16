@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\android\Android.hpp" />
+    <ClInclude Include="..\common\include\crogine\audio\AudioBuffer.hpp" />
     <ClInclude Include="..\common\include\crogine\Config.hpp" />
     <ClInclude Include="..\common\include\crogine\core\App.hpp" />
     <ClInclude Include="..\common\include\crogine\core\Clock.hpp" />
@@ -58,6 +59,7 @@
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Component.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\ComponentPool.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\AudioSource.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Camera.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\CommandID.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Model.hpp" />
@@ -75,6 +77,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\Renderable.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\System.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\AudioSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\CollisionSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\CommandSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\DebugInfo.hpp" />
@@ -144,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\android\Android.cpp" />
+    <ClCompile Include="..\common\src\audio\AudioBuffer.cpp" />
     <ClCompile Include="..\common\src\audio\AudioRenderer.cpp" />
     <ClCompile Include="..\common\src\audio\OpenALImpl.cpp" />
     <ClCompile Include="..\common\src\audio\SDLMixerImpl.cpp" />
@@ -165,6 +169,7 @@
     <ClCompile Include="..\common\src\detail\PhysicsDebug.cpp" />
     <ClCompile Include="..\common\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
+    <ClCompile Include="..\common\src\ecs\components\AudioSource.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\common\src\ecs\components\ParticleEmitter.cpp" />
     <ClCompile Include="..\common\src\ecs\components\PhysicsObject.cpp" />
@@ -178,6 +183,7 @@
     <ClCompile Include="..\common\src\ecs\Scene.cpp" />
     <ClCompile Include="..\common\src\ecs\System.cpp" />
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\AudioSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\CollisionSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\CommandSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\DebugInfo.cpp" />
