@@ -261,7 +261,10 @@ void SpriteRenderer::process(Time)
             if (sprB.m_textureID < sprA.m_textureID) return false;
 
             if (sprA.m_blendMode < sprB.m_blendMode) return true;
-            //if (sprB.m_blendMode < sprA.m_blendMode) return false;
+            if (sprB.m_blendMode < sprA.m_blendMode) return false;
+
+            //TODO sub-sort by depth
+            if (a.getComponent<cro::Transform>().getWorldPosition().z < b.getComponent<cro::Transform>().getWorldPosition().z) return true;
 
             return false;
         });

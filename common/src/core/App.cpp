@@ -44,6 +44,8 @@ source distribution.
 #include "../imgui/imgui_render.h"
 #include "../imgui/imgui.h"
 
+#include "../audio/AudioRenderer.hpp"
+
 #include <algorithm>
 
 using namespace cro;
@@ -72,7 +74,9 @@ App::App()
 {
 	CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
-	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+    //audio should be initialised specifically only if the
+    //audio implementation requires it (and therefore by the implementation itself)
+	if (SDL_Init(SDL_INIT_EVERYTHING & ~SDL_INIT_AUDIO) < 0)
 	{
 		const std::string err(SDL_GetError());
 		Logger::log("Failed init: " + err, Logger::Type::Error);
@@ -99,6 +103,11 @@ App::App()
             }
         }
 
+        if (!AudioRenderer::init())
+        {
+            Logger::log("Failed to initialise audio renderer", Logger::Type::Error);
+        }
+
         char* pp = SDL_GetPrefPath(ORG_PATH, APP_PATH);
         m_prefPath = std::string(pp);
         SDL_free(pp);
@@ -107,6 +116,8 @@ App::App()
 
 App::~App()
 {
+    AudioRenderer::shutdown();
+    
     for (auto js : m_joysticks)
     {
         SDL_JoystickClose(js.second);
