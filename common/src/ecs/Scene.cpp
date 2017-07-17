@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/Renderable.hpp>
 
 #include <crogine/core/Clock.hpp>
@@ -48,9 +49,11 @@ Scene::Scene(MessageBus& mb)
     auto defaultCamera = createEntity();
     defaultCamera.addComponent<Transform>();
     defaultCamera.addComponent<Camera>();
+    defaultCamera.addComponent<AudioListener>();
 
     m_defaultCamera = defaultCamera.getIndex();
     m_activeCamera = m_defaultCamera;
+    m_activeListener = m_defaultCamera;
 
     currentRenderPath = [this]()
     {
@@ -136,6 +139,20 @@ Entity Scene::setActiveCamera(Entity entity)
     m_activeCamera = entity.getIndex();
     updateFrustum();
     return oldCam;
+}
+
+Entity Scene::setActiveListener(Entity entity)
+{
+    CRO_ASSERT(entity.hasComponent<Transform>() && entity.hasComponent<AudioListener>(), "Entity requires at least a transform and a camera component");
+    CRO_ASSERT(m_entityManager.owns(entity), "This entity must belong to this scene!");
+    auto oldListener = m_entityManager.getEntity(m_activeListener);
+    m_activeListener = entity.getIndex();
+    return oldListener;
+}
+
+Entity Scene::getActiveListener() const
+{
+    return m_entityManager.getEntity(m_activeListener);
 }
 
 Entity Scene::getActiveCamera() const

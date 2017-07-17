@@ -93,11 +93,12 @@ void OpenALImpl::setListenerVolume(float volume)
 
 cro::int32 OpenALImpl::requestNewBuffer(const std::string& path)
 {
+    WavLoader loader;
+    
     auto ext = Util::String::getFileExtension(path);
     PCMData data;
     if (ext == ".wav")
-    {
-        WavLoader loader;
+    {      
         if (loader.open(path))
         {
             data = loader.getData();;
@@ -145,6 +146,7 @@ void OpenALImpl::deleteBuffer(cro::int32 buffer)
     {
         auto buf = static_cast<ALuint>(buffer);
         alCheck(alDeleteBuffers(1, &buf));
+        LOG("Deleted audio buffer", Logger::Type::Info);
     }
 }
 
@@ -164,6 +166,70 @@ cro::int32 OpenALImpl::requestAudioSource(cro::int32 buffer)
 void OpenALImpl::deleteAudioSource(cro::int32 source)
 {
     CRO_ASSERT(source > 0, "Invalid source ID");
+
+    //if the src is playing stop it and wait for it to finish
+    stopSource(source);
+
     auto src = static_cast<ALuint>(source);
+    ALenum state;
+    alCheck(alGetSourcei(src, AL_SOURCE_STATE, &state));
+    while (state == AL_PLAYING)
+    {
+        alCheck(alGetSourcei(src, AL_SOURCE_STATE, &state));
+    }
+
+    alCheck(alSourcei(src, AL_BUFFER, 0));
     alCheck(alDeleteSources(1, &src));
+
+    LOG("Deleted audio source", Logger::Type::Info);
+}
+
+void OpenALImpl::playSource(int32 source, bool looped)
+{
+    ALuint src = static_cast<ALuint>(source);
+    alCheck(alSourcei(src, AL_LOOPING, looped ? AL_TRUE : AL_FALSE));
+    alCheck(alSourcePlay(src));
+}
+
+void OpenALImpl::pauseSource(int32 source)
+{
+    ALuint src = static_cast<ALuint>(source);
+    alCheck(alSourcePause(src));
+}
+
+void OpenALImpl::stopSource(int32 source)
+{
+    ALuint src = static_cast<ALuint>(source);
+    alCheck(alSourceStop(src));
+}
+
+int32 OpenALImpl::getSourceState(int32 source) const
+{
+    ALuint src = static_cast<ALuint>(source);
+    ALenum state;
+    alCheck(alGetSourcei(src, AL_SOURCE_STATE, &state));
+
+    if (state == AL_PLAYING) return 0;
+    if (state == AL_PAUSED) return 1;
+    return 2;
+}
+
+void OpenALImpl::setSourcePosition(int32 source, glm::vec3 position)
+{
+    alCheck(alSource3f(source, AL_POSITION, position.x, position.y, position.z));
+}
+
+void OpenALImpl::setSourcePitch(int32 src, float pitch)
+{
+    alCheck(alSourcef(src, AL_PITCH, pitch));
+}
+
+void OpenALImpl::setSourceVolume(int32 src, float volume)
+{
+    alCheck(alSourcef(src, AL_GAIN, volume));
+}
+
+void OpenALImpl::setSourceRolloff(int32 src, float rolloff)
+{
+    alCheck(alSourcef(src, AL_ROLLOFF_FACTOR, rolloff));
 }

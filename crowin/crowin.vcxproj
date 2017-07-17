@@ -59,6 +59,7 @@
     <ClInclude Include="..\common\include\crogine\detail\Types.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Component.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\ComponentPool.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\AudioListener.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\AudioSource.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Camera.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\CommandID.hpp" />
@@ -121,6 +122,7 @@
     <ClInclude Include="..\common\include\crogine\gui\GuiClient.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Constants.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Maths.hpp" />
+    <ClInclude Include="..\common\include\crogine\util\Matrix.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Random.hpp" />
     <ClInclude Include="..\common\include\crogine\util\String.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Wavetable.hpp" />

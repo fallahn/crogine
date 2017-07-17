@@ -39,7 +39,7 @@ void EntityManager::addComponent(Entity entity, T component)
         pool.resize(m_generations.size());
     }
 
-    pool[entID] = component;
+    pool[entID] = std::move(component);
     m_componentMasks[entID].set(componentID);
 }
 
@@ -47,7 +47,7 @@ template <typename T, typename... Args>
 T& EntityManager::addComponent(Entity entity, Args&&... args)
 {
     T component(std::forward<Args>(args)...);
-    addComponent<T>(entity, component);
+    addComponent<T>(entity, std::move(component));
     return getComponent<T>(entity);
 }
 

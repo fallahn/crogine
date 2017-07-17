@@ -87,5 +87,57 @@ cro::int32 AudioRenderer::requestAudioSource(cro::int32 buffer)
 
 void AudioRenderer::deleteAudioSource(cro::int32 source)
 {
-    m_impl->deleteAudioSource(source);
+    if (source > 0)
+    {
+        m_impl->deleteAudioSource(source);
+    }
+}
+
+void AudioRenderer::playSource(int32 src, bool loop)
+{
+    CRO_ASSERT(src > 0, "Not a valid src ID");
+    m_impl->playSource(src, loop);
+}
+
+void AudioRenderer::pauseSource(int32 src)
+{
+    CRO_ASSERT(src > 0, "Not a valid src ID");
+    m_impl->pauseSource(src);
+}
+
+void AudioRenderer::stopSource(int32 src)
+{
+    CRO_ASSERT(src > 0, "Not a valid src ID");
+    m_impl->stopSource(src);
+}
+
+int32 AudioRenderer::getSourceState(int32 src)
+{
+    if (src < 1) return 2;
+
+    return m_impl->getSourceState(src);
+}
+
+void AudioRenderer::setSourcePosition(int32 src, glm::vec3 position)
+{
+    CRO_ASSERT(src > 0, "Not a valid src ID");
+    m_impl->setSourcePosition(src, position);
+}
+
+void AudioRenderer::setSourcePitch(int32 src, float pitch)
+{
+    CRO_ASSERT(src > 0, "Not a valid src ID");
+    m_impl->setSourcePitch(src, pitch);
+}
+
+void AudioRenderer::setSourceVolume(int32 src, float vol)
+{
+    CRO_ASSERT(src > 0, "Not a valid src ID");
+    m_impl->setSourceVolume(src, vol);
+}
+
+void AudioRenderer::setSourceRolloff(int32 src, float rolloff)
+{
+    CRO_ASSERT(src > 0, "Not a valid src ID");
+    m_impl->setSourceRolloff(src, rolloff);
 }

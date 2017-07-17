@@ -152,6 +152,20 @@ namespace cro
         Entity getActiveCamera() const;
 
         /*!
+        \brief Sets the active listener when processing audio.
+        Usually this will be on the same entity as the active camera,
+        although effects such as remote monitoring can be used by setting
+        a different listener.
+        \returns Entity containing the component used as the previous active listener.
+        */
+        Entity setActiveListener(Entity);
+
+        /*!
+        \brief Returns the entity containing the active AudioListener component
+        */
+        Entity getActiveListener() const;
+
+        /*!
         \brief Forwards any events to Directors in the Scene
         */
         void forwardEvent(const Event&);
@@ -175,6 +189,7 @@ namespace cro
         MessageBus& m_messageBus;
         Entity::ID m_defaultCamera;
         Entity::ID m_activeCamera;
+        Entity::ID m_activeListener;
 
         std::vector<Entity> m_pendingEntities;
         std::vector<Entity> m_destroyedEntities;
