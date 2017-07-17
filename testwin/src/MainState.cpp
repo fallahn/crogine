@@ -194,10 +194,7 @@ void MainState::loadAssets()
     menuFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
 
     //audio
-    if (m_audioBuffer.loadFromFile("assets/audio/boop_loop.wav"))
-    {
-        cro::Logger::log("Loaded sample audio", cro::Logger::Type::Info);
-    }
+    m_resources.audio.load(AudioID::Test, "assets/audio/boop_loop.wav");
 }
 
 void MainState::createScene()
@@ -240,7 +237,7 @@ void MainState::createScene()
     {
         arcticModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[i]));
     }
-    arcticEntity.addComponent<cro::AudioSource>(m_audioBuffer).play(true);
+    arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
     //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
 
     auto lookoutEntity = m_backgroundScene.createEntity();
@@ -254,7 +251,7 @@ void MainState::createScene()
     {
         lookoutModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[i]));
     }
-    lookoutEntity.addComponent<cro::AudioSource>(m_audioBuffer).play(true);
+    lookoutEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
     lookoutEntity.getComponent<cro::AudioSource>().setPitch(2.4f);
     //lookoutEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
 

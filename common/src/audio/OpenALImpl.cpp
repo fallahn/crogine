@@ -101,7 +101,7 @@ cro::int32 OpenALImpl::requestNewBuffer(const std::string& path)
     {      
         if (loader.open(path))
         {
-            data = loader.getData();;
+            data = loader.getData();
         }
     }
     else

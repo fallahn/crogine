@@ -37,6 +37,7 @@
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\android\Android.hpp" />
     <ClInclude Include="..\common\include\crogine\audio\AudioBuffer.hpp" />
+    <ClInclude Include="..\common\include\crogine\audio\AudioResource.hpp" />
     <ClInclude Include="..\common\include\crogine\Config.hpp" />
     <ClInclude Include="..\common\include\crogine\core\App.hpp" />
     <ClInclude Include="..\common\include\crogine\core\Clock.hpp" />
@@ -151,6 +152,7 @@
     <ClCompile Include="..\common\src\android\Android.cpp" />
     <ClCompile Include="..\common\src\audio\AudioBuffer.cpp" />
     <ClCompile Include="..\common\src\audio\AudioRenderer.cpp" />
+    <ClCompile Include="..\common\src\audio\AudioResource.cpp" />
     <ClCompile Include="..\common\src\audio\OpenALImpl.cpp" />
     <ClCompile Include="..\common\src\audio\SDLMixerImpl.cpp" />
     <ClCompile Include="..\common\src\audio\WavLoader.cpp" />

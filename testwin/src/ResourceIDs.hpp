@@ -152,4 +152,12 @@ namespace CollisionID
     };
 }
 
+namespace AudioID
+{
+    enum
+    {
+        Test
+    };
+}
+
 #endif //TL_RESOURCE_IDS_HPP_
