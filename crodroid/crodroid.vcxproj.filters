@@ -273,10 +273,28 @@
     <ClCompile Include="..\common\src\ecs\systems\SpriteAnimator.cpp">
       <Filter>src\ecs\systems</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\audio\SDLMixerImpl.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\audio\AudioBuffer.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\audio\AudioRenderer.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\audio\AudioResource.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\audio\WavLoader.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
     <ClCompile Include="..\common\src\audio\OpenALImpl.cpp">
       <Filter>src\audio</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\src\audio\SDLMixerImpl.cpp">
+    <ClCompile Include="..\common\src\ecs\components\AudioSource.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\AudioSystem.cpp">
       <Filter>src\audio</Filter>
     </ClCompile>
   </ItemGroup>

@@ -42,7 +42,8 @@ bool AudioRenderer::init()
 #ifdef AL_AUDIO
     m_impl = std::make_unique<Detail::OpenALImpl>();
 #elif defined(SDL_AUDIO)
-    m_impl = std::make_unique<SDLMixerImpl>();
+    m_impl = std::make_unique<Detail::SDLMixerImpl>();
+    //m_impl = std::make_unique<Detail::OpenALImpl>();
 #endif
 
     return m_impl->init();

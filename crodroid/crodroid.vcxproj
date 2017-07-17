@@ -138,7 +138,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\BulletDroid\src;$(SolutionDir)extlibs\SDL2_ttf\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\sdl2\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\BulletDroid\src;$(SolutionDir)extlibs\SDL2_ttf\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\sdl2\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;$(SolutionDir)extlibs\openal\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -148,10 +148,10 @@
     <Link>
       <AdditionalDependencies>
       </AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration);$(SolutionDir)extlibs/openal/android/armeabi-v7a</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
-      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_ttf;Bullet</LibraryDependencies>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_ttf;Bullet;openal</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|ARM'">
@@ -192,7 +192,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\BulletDroid\src;$(SolutionDir)extlibs\SDL2_ttf\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\sdl2\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\BulletDroid\src;$(SolutionDir)extlibs\SDL2_ttf\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\sdl2\include;$(VS_NdkRoot)/sources/android/support/include;..\common\include;$(Sysroot)\usr\include;$(SolutionDir)extlibs\openal\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <CLanguageStandard>Default</CLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -202,10 +202,10 @@
     <Link>
       <AdditionalDependencies>
       </AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration);$(SolutionDir)extlibs/openal/android/armeabi-v7a</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
-      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_ttf;Bullet</LibraryDependencies>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_ttf;Bullet;openal</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tools|ARM'">
@@ -229,8 +229,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\android\Android.cpp" />
+    <ClCompile Include="..\common\src\audio\AudioBuffer.cpp" />
+    <ClCompile Include="..\common\src\audio\AudioRenderer.cpp" />
+    <ClCompile Include="..\common\src\audio\AudioResource.cpp" />
     <ClCompile Include="..\common\src\audio\OpenALImpl.cpp" />
     <ClCompile Include="..\common\src\audio\SDLMixerImpl.cpp" />
+    <ClCompile Include="..\common\src\audio\WavLoader.cpp" />
     <ClCompile Include="..\common\src\core\App.cpp" />
     <ClCompile Include="..\common\src\core\Clock.cpp" />
     <ClCompile Include="..\common\src\core\ConfigFile.cpp" />
@@ -255,6 +259,7 @@
     <ClCompile Include="..\common\src\detail\PhysicsDebug.cpp" />
     <ClCompile Include="..\common\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\common\src\ecs\Component.cpp" />
+    <ClCompile Include="..\common\src\ecs\components\AudioSource.cpp" />
     <ClCompile Include="..\common\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\common\src\ecs\components\ParticleEmitter.cpp" />
     <ClCompile Include="..\common\src\ecs\components\PhysicsObject.cpp" />
@@ -268,6 +273,7 @@
     <ClCompile Include="..\common\src\ecs\Scene.cpp" />
     <ClCompile Include="..\common\src\ecs\System.cpp" />
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\AudioSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\CollisionSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\CommandSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\DebugInfo.cpp" />
