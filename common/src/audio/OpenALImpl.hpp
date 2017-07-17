@@ -57,6 +57,17 @@ namespace cro
             cro::int32 requestAudioSource(cro::int32) override;
             void deleteAudioSource(cro::int32) override;
 
+            void playSource(cro::int32, bool) override;
+            void pauseSource(cro::int32) override;
+            void stopSource(cro::int32) override;
+
+            int32 getSourceState(int32 src) const override;
+
+            void setSourcePosition(int32, glm::vec3) override;
+            void setSourcePitch(int32, float) override;
+            void setSourceVolume(int32, float) override;
+            void setSourceRolloff(int32, float) override;
+
         private:
             ALCdevice* m_device;
             ALCcontext* m_context;

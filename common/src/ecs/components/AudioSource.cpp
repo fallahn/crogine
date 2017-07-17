@@ -32,10 +32,16 @@ source distribution.
 
 #include "../../audio/AudioRenderer.hpp"
 
+#include <algorithm>
+
 using namespace cro;
 
 AudioSource::AudioSource()
-    : m_transportFlags  (0),
+    : m_state           (State::Stopped),
+    m_pitch             (1.f),
+    m_volume            (1.f),
+    m_rolloff           (1.f),
+    m_transportFlags    (0),
     m_newBuffer         (false),
     m_ID                (-1),
     m_bufferID          (-1)
@@ -44,10 +50,14 @@ AudioSource::AudioSource()
 }
 
 AudioSource::AudioSource(const AudioBuffer& buffer)
-    : m_transportFlags(0),
-    m_newBuffer(true),
-    m_ID(-1),
-    m_bufferID(buffer.m_bufferID)
+    : m_state           (State::Stopped),
+    m_pitch             (1.f),
+    m_volume            (1.f),
+    m_rolloff           (1.f),
+    m_transportFlags    (0),
+    m_newBuffer         (true),
+    m_ID                (-1),
+    m_bufferID          (buffer.m_bufferID)
 {
 
 }
@@ -58,6 +68,56 @@ AudioSource::~AudioSource()
     {
         AudioRenderer::deleteAudioSource(m_ID);
     }
+}
+
+AudioSource::AudioSource(AudioSource&& other)
+{
+    m_pitch = other.m_pitch;
+    other.m_pitch = 1.f;
+
+    m_volume = other.m_volume;
+    other.m_volume = 1.f;
+
+    m_rolloff = other.m_rolloff;
+    other.m_rolloff = 1.f;
+    
+    m_ID = other.m_ID;
+    other.m_ID = -1;
+
+    m_bufferID = other.m_bufferID;
+    other.m_bufferID = -1;
+
+    m_newBuffer = true;
+    other.m_newBuffer = false;
+
+    other.m_state = State::Stopped;
+}
+
+AudioSource& AudioSource::operator=(AudioSource&& other)
+{
+    if (&other != this)
+    {
+        m_pitch = other.m_pitch;
+        other.m_pitch = 1.f;
+
+        m_volume = other.m_volume;
+        other.m_volume = 1.f;
+
+        m_rolloff = other.m_rolloff;
+        other.m_rolloff = 1.f;
+        
+        m_ID = other.m_ID;
+        other.m_ID = -1;
+
+        m_bufferID = other.m_bufferID;
+        other.m_bufferID = -1;
+
+        m_newBuffer = true;
+        other.m_newBuffer = false;
+
+        other.m_state = State::Stopped;
+    }    
+    return *this;
 }
 
 //public
@@ -90,4 +150,19 @@ void AudioSource::pause()
 void AudioSource::stop()
 {
     m_transportFlags |= Stop;
+}
+
+void AudioSource::setPitch(float pitch)
+{
+    m_pitch = std::max(0.f, pitch);
+}
+
+void AudioSource::setVolume(float volume)
+{
+    m_volume = std::max(0.f, volume);
+}
+
+void AudioSource::setRolloff(float rolloff)
+{
+    m_rolloff = std::max(0.f, rolloff);
 }

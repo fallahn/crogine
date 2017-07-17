@@ -27,34 +27,34 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_AUDIO_SYSTEM_HPP_
-#define CRO_AUDIO_SYSTEM_HPP_
+#ifndef CRO_UTIL_MATRIX_HPP_
+#define CRO_UTIL_MATRIX_HPP_
 
-#include <crogine/ecs/System.hpp>
+#include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
 
 namespace cro
 {
-    /*!
-    \brief Processes the Scene's AudioSource components
-    based on the Scene's active AudioListener.
-    Because the audio subsystem at a hardware level only has a 
-    single listener point when using multiple scenes (for
-    example a second 2D scene to render a UI) onnly one of
-    these scenes should have an AudioSystem active within it.
-    Multiple systems will work, however spatialisation will
-    not be calculated correctly.
-    */
-    class CRO_EXPORT_API AudioSystem final : public System
+    namespace Util
     {
-    public:
-        AudioSystem(MessageBus&);
+        namespace Matrix
+        {
+            static inline glm::vec3 getForwardVector(const glm::mat4& mat)
+            {
+                return glm::vec3(-mat[2][0], -mat[2][1], -mat[2][2]);
+            }
 
-        void process(cro::Time) override;
+            static inline glm::vec3 getUpVector(const glm::mat4& mat)
+            {
+                return glm::vec3(mat[1][0], mat[1][1], mat[1][2]);
+            }
 
-    private:
-
-        void onEntityAdded(Entity) override;
-    };
+            static inline glm::vec3 getRightVector(const glm::mat4& mat)
+            {
+                return glm::vec3(mat[0][0], mat[0][1], mat[0][2]);
+            }
+        }
+    }
 }
 
-#endif //CRO_AUDIO_SYSTEM_HPP_
+#endif //CRO_UTIL_MATRIX_HPP_

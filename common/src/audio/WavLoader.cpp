@@ -135,7 +135,7 @@ bool WavLoader::open(const std::string& path)
             return false;
         }
 
-        m_dataSize = chunk.size;
+        m_dataSize = chunk.size - sizeof(WavChunk); //don't include the chunk header in the data!
         m_dataStart = m_file.file->seek(m_file.file, sizeof(WavChunk::size), RW_SEEK_CUR);
 
         m_dataChunk.frequency = m_header.sampleRate;

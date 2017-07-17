@@ -41,6 +41,8 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/AudioSource.hpp>
+#include <crogine/ecs/components/AudioListener.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
@@ -48,6 +50,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
@@ -110,8 +113,6 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
     //context.mainWindow.setVsyncEnabled(false);
     //context.appInstance.setClearColour(cro::Colour::Red());
     updateView();
-
-    m_audioBuffer.loadFromFile("assets/audio/test.wav");
 }
 
 //public
@@ -157,10 +158,13 @@ void MainState::render()
 void MainState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_backgroundScene.addSystem<cro::SceneGraph>(mb);
-    m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
+
     m_backgroundScene.addSystem<RotateSystem>(mb);
     m_backgroundScene.addSystem<DriftSystem>(mb);
+    m_backgroundScene.addSystem<cro::AudioSystem>(mb);
+    m_backgroundScene.addSystem<cro::SceneGraph>(mb);
+    m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
+
 #ifdef PLATFORM_DESKTOP
     m_backgroundScene.addPostProcess<cro::PostChromeAB>();
 #endif
@@ -170,7 +174,7 @@ void MainState::addSystems()
     m_menuScene.addSystem<SliderSystem>(mb);
     //m_menuScene.addSystem<RotateSystem>(mb);
     m_menuScene.addSystem<cro::SceneGraph>(mb);
-    m_menuScene.addSystem<cro::SpriteRenderer>(mb).setDepthAxis(cro::SpriteRenderer::DepthAxis::Z);
+    m_menuScene.addSystem<cro::SpriteRenderer>(mb);
     m_menuScene.addSystem<cro::TextRenderer>(mb);
     m_uiSystem = &m_menuScene.addSystem<cro::UISystem>(mb);
 }
@@ -185,9 +189,15 @@ void MainState::loadAssets()
     m_modelDefs[MenuModelID::Stars].loadFromFile("assets/models/stars.cmt", m_resources);
     m_modelDefs[MenuModelID::Sun].loadFromFile("assets/models/sun.cmt", m_resources);
 
-    //test sprite sheet
+    //sprite sheet
     auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
     menuFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
+
+    //audio
+    if (m_audioBuffer.loadFromFile("assets/audio/boop_loop.wav"))
+    {
+        cro::Logger::log("Loaded sample audio", cro::Logger::Type::Info);
+    }
 }
 
 void MainState::createScene()
@@ -230,6 +240,8 @@ void MainState::createScene()
     {
         arcticModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[i]));
     }
+    arcticEntity.addComponent<cro::AudioSource>(m_audioBuffer).play(true);
+    //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
 
     auto lookoutEntity = m_backgroundScene.createEntity();
     auto& lookoutTx = lookoutEntity.addComponent<cro::Transform>();
@@ -237,11 +249,14 @@ void MainState::createScene()
     lookoutTx.setOrigin({ -8.f, 0.f, 2.f });
     lookoutTx.setParent(entity);
     auto& lookoutModel = lookoutEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::LookoutBase].meshID),
-        m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[0]));
+                                                                m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[0]));
     for (auto i = 0u; i < m_modelDefs[MenuModelID::LookoutBase].materialCount; ++i)
     {
         lookoutModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[i]));
     }
+    lookoutEntity.addComponent<cro::AudioSource>(m_audioBuffer).play(true);
+    lookoutEntity.getComponent<cro::AudioSource>().setPitch(2.4f);
+    //lookoutEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
 
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
@@ -279,12 +294,15 @@ void MainState::createScene()
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Camera>();
+    entity.addComponent<cro::AudioListener>();
 
     /*auto &camRot = entity.addComponent<Rotator>();
     camRot.axis.y = 1.f; camRot.speed = 0.7f;*/
 
     entity.addComponent<Drifter>().amplitude = 0.1f;
     m_backgroundScene.setActiveCamera(entity);
+    m_backgroundScene.setActiveListener(entity);
+
 
     entity = m_menuScene.createEntity();
     entity.addComponent<cro::Transform>();

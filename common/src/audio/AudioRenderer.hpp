@@ -70,6 +70,17 @@ namespace cro
 
         virtual cro::int32 requestAudioSource(cro::int32) = 0;
         virtual void deleteAudioSource(cro::int32) = 0;
+
+        virtual void playSource(cro::int32, bool) = 0;
+        virtual void pauseSource(cro::int32) = 0;
+        virtual void stopSource(cro::int32) = 0;
+
+        virtual int32 getSourceState(cro::int32) const = 0;
+
+        virtual void setSourcePosition(int32, glm::vec3) = 0;
+        virtual void setSourcePitch(int32, float) = 0;
+        virtual void setSourceVolume(int32, float) = 0;
+        virtual void setSourceRolloff(int32, float) = 0;
     };
 
 
@@ -115,7 +126,7 @@ namespace cro
         /*!
         \brief Sets the master volum of the listener.
         \param volume A positive value to set as the max gain of the
-        listener. Negative values are automaticcaly clamped to 0.
+        listener. Negative values are automatically clamped to 0.
         */
         static void setListenerVolume(float volume);
 
@@ -150,6 +161,53 @@ namespace cro
         This MUST be called for all audio sources allocated with requestAudioSource()
         */
         static void deleteAudioSource(cro::int32 source);
+
+        /*!
+        \brief Attempts to play the given source.
+        \param src ID of the audio source to play
+        \param looped true to loop this source, else false
+        */
+        static void playSource(int32 src, bool looped);
+
+        /*!
+        \brief Pauses the given source if it is playing.
+        \param src ID of the source to pause
+        */
+        static void pauseSource(int32 src);
+
+        /*!
+        \brief Stops the source if it is playing
+        \param src ID of the source to stop
+        */
+        static void stopSource(int32 src);
+
+        /*!
+        \brief Returns the current state of the give source
+        \returns 0 - Playing, 1 - Paused, 2 - Stopped
+        */
+        static int32 getSourceState(int32 src);
+
+        /*!
+        \brief Sets the position of the given source
+        \param source Source ID of which to set the position
+        \param position Vector3 containing the world position of the source
+        */
+        static void setSourcePosition(int32 source, glm::vec3 position);
+
+        /*!
+        \brief Sets the given source pitch
+        */
+        static void setSourcePitch(int32 src, float pitch);
+
+        /*!
+        \brief Sets the given source volume
+        */
+        static void setSourceVolume(int32 src, float vol);
+
+        /*!
+        \brief Sets the give source rolloff
+        */
+        static void setSourceRolloff(int32 src, float rolloff);
 
     private:
         static std::unique_ptr<AudioRendererImpl> m_impl;

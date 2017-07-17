@@ -53,6 +53,12 @@ namespace cro
         AudioSource(const AudioBuffer&);
         ~AudioSource();
 
+        AudioSource(const AudioSource&) = delete;
+        AudioSource(AudioSource&&);
+
+        AudioSource& operator = (const AudioSource&) = delete;
+        AudioSource& operator = (AudioSource&&);
+
         /*!
         \brief Sets the AudioBuffer used by this AudioSource.
         If an AudioBuffer is deleted while in use results are undefined.
@@ -76,11 +82,43 @@ namespace cro
         */
         void stop();
 
-        //TODO pitch, volume, mixer channel
+        /*!
+        \brief Sets the playback pitch of the sound.
+        Must be a positive value, where 1 is normal speed.
+        */
+        void setPitch(float);
+
+        /*!
+        \brief Sets the volume of the AudioSource.
+        Must be a positve value, where 0 is silent, 1 is normal.
+        Anything above will attempt to amplify the sound.
+        */
+        void setVolume(float);
+
+        /*!
+        \brief Sets the volume rolloff of the sound.
+        The larger this value the more quickly the sounds
+        volume will fade with distance from the active listener.
+        The default value is 1.0, and a value of 0 will cause the
+        AudioSource to not fade at all.
+        */
+        void setRolloff(float);
+
+        enum class State{Playing = 0, Paused = 1, Stopped = 2};
+        /*!
+        \brief Returns the current state of the AudioSource 
+        */
+        State getState() const { return m_state; }
 
     private:
 
         friend class AudioSystem;
+
+        State m_state;
+
+        float m_pitch;
+        float m_volume;
+        float m_rolloff;
 
         enum
         {

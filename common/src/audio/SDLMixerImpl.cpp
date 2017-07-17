@@ -76,3 +76,43 @@ void SDLMixerImpl::deleteAudioSource(cro::int32 source)
 {
 
 }
+
+void SDLMixerImpl::playSource(cro::int32 source, bool looped)
+{
+
+}
+
+void SDLMixerImpl::pauseSource(cro::int32 source)
+{
+
+}
+
+void SDLMixerImpl::stopSource(cro::int32 source)
+{
+
+}
+
+int32 SDLMixerImpl::getSourceState(int32 source) const
+{
+    return 2;
+}
+
+void SDLMixerImpl::setSourcePosition(int32 source, glm::vec3 position)
+{
+
+}
+
+void SDLMixerImpl::setSourcePitch(int32 src, float pitch)
+{
+
+}
+
+void SDLMixerImpl::setSourceVolume(int32 src, float vol)
+{
+
+}
+
+void SDLMixerImpl::setSourceRolloff(int32 src, float rolloff)
+{
+
+}
