@@ -36,6 +36,8 @@ source distribution.
 #include <crogine/graphics/ShaderResource.hpp>
 #include <crogine/graphics/TextureResource.hpp>
 
+#include <crogine/audio/AudioResource.hpp>
+
 #include <crogine/ecs/components/Skeleton.hpp>
 
 #include <array>
@@ -54,6 +56,7 @@ namespace cro
         MeshResource meshes;
         ShaderResource shaders;
         TextureResource textures;
+        AudioResource audio;
     };
 
     /*!

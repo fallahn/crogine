@@ -34,8 +34,6 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ResourceAutomation.hpp>
 
-#include <crogine/audio/AudioBuffer.hpp>
-
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
 
@@ -62,8 +60,6 @@ public:
     void render() override;
 
 private:
-
-    cro::AudioBuffer m_audioBuffer;
 
     cro::Scene m_backgroundScene;
     cro::Scene m_menuScene;

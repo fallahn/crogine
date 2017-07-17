@@ -134,7 +134,7 @@ namespace cro
 
         /*!
         \brief Sets the parent entity if this node in the scene graph.
-        Parents must have both a Transform and SceneNode component
+        Parents must have a Transform component
         */
         void setParent(Entity);
 
