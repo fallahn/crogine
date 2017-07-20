@@ -57,12 +57,14 @@ bool OpenALImpl::init()
     alCheck(m_device = alcOpenDevice(nullptr));
     if (!m_device)
     {
+        LOG("Failed opening valid OpenAL device", Logger::Type::Error);        
         return false;
     }
 
     alCheck(m_context = alcCreateContext(m_device, nullptr));
     if (!m_context)
     {
+        LOG("Failed creating OpenAL context", Logger::Type::Error);
         return false;
     }
 
