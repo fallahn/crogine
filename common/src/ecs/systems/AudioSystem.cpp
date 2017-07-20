@@ -47,7 +47,7 @@ AudioSystem::AudioSystem(MessageBus& mb)
 }
 
 //public
-void AudioSystem::process(cro::Time)
+void AudioSystem::process(cro::Time dt)
 {
     //update the scene's listener details
     const auto& listener = getScene()->getActiveListener();
@@ -56,8 +56,8 @@ void AudioSystem::process(cro::Time)
     auto worldPos = tx.getWorldPosition();
     AudioRenderer::setListenerPosition(worldPos);
     const auto& worldTx = tx.getWorldTransform();
-    AudioRenderer::setListenerOrientation(-Util::Matrix::getForwardVector(worldTx), Util::Matrix::getUpVector(worldTx));
-
+    AudioRenderer::setListenerOrientation(Util::Matrix::getForwardVector(worldTx), Util::Matrix::getUpVector(worldTx));
+    //AudioRenderer::setListenerOrientation({ 0.f ,0.f, -1.f }, { 0.f, 1.f, 0.f });
     DPRINT("Listener Position", std::to_string(worldPos.x) + ", " + std::to_string(worldPos.y) + ", " + std::to_string(worldPos.z));
 
     //for each entity
@@ -99,7 +99,7 @@ void AudioSystem::process(cro::Time)
             //set position
             auto worldPos = entity.getComponent<Transform>().getWorldPosition();
             AudioRenderer::setSourcePosition(audioSource.m_ID, worldPos);
-            //DPRINT("Sound Position", std::to_string(worldPos.x) + ", " + std::to_string(worldPos.y) + ", " + std::to_string(worldPos.z));
+            DPRINT("Sound Position", std::to_string(worldPos.x) + ", " + std::to_string(worldPos.y) + ", " + std::to_string(worldPos.z));
         }
 
         //check properties such as pitch and gain

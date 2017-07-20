@@ -238,7 +238,7 @@ void MainState::createScene()
         arcticModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[i]));
     }
     arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
-    //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
+    arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
 
     auto lookoutEntity = m_backgroundScene.createEntity();
     auto& lookoutTx = lookoutEntity.addComponent<cro::Transform>();
@@ -253,7 +253,7 @@ void MainState::createScene()
     }
     lookoutEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
     lookoutEntity.getComponent<cro::AudioSource>().setPitch(2.4f);
-    //lookoutEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
+    lookoutEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
 
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
@@ -289,12 +289,12 @@ void MainState::createScene()
 
     //2D and 3D cameras
     entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>();// .setPosition({ 0.f, 0.f, 4.f });
     entity.addComponent<cro::Camera>();
     entity.addComponent<cro::AudioListener>();
 
     /*auto &camRot = entity.addComponent<Rotator>();
-    camRot.axis.y = 1.f; camRot.speed = 0.7f;*/
+    camRot.axis.y = 1.f; camRot.speed = 0.2f;*/
 
     entity.addComponent<Drifter>().amplitude = 0.1f;
     m_backgroundScene.setActiveCamera(entity);

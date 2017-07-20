@@ -37,6 +37,11 @@ source distribution.
 using namespace cro;
 std::unique_ptr<AudioRendererImpl> AudioRenderer::m_impl;
 
+namespace
+{
+    bool valid = false;
+}
+
 bool AudioRenderer::init()
 {
 #ifdef AL_AUDIO
@@ -46,13 +51,19 @@ bool AudioRenderer::init()
     //m_impl = std::make_unique<Detail::OpenALImpl>();
 #endif
 
-    return m_impl->init();
+    valid = m_impl->init();
+    return valid;
 }
 
 void AudioRenderer::shutdown()
 {
     CRO_ASSERT(m_impl, "Audio not initialised");
     m_impl->shutdown();
+}
+
+bool AudioRenderer::isValid()
+{
+    return valid;
 }
 
 void AudioRenderer::setListenerPosition(glm::vec3 position)

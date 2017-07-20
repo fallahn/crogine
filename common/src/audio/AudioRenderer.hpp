@@ -105,6 +105,11 @@ namespace cro
         static void shutdown();
 
         /*!
+        \brief Returns true if there is a valid AudioRenderer initialised
+        */
+        static bool isValid();
+
+        /*!
         \brief Sets the listener position in the scene.
         \param position The listener position in world coordinates.
         Sounds are positioned and attenuated depending on where they
