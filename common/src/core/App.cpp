@@ -74,9 +74,7 @@ App::App()
 {
 	CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
-    //audio should be initialised specifically only if the
-    //audio implementation requires it (and therefore by the implementation itself)
-	if (SDL_Init(SDL_INIT_EVERYTHING & ~SDL_INIT_AUDIO) < 0)
+	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
 	{
 		const std::string err(SDL_GetError());
 		Logger::log("Failed init: " + err, Logger::Type::Error);
@@ -161,6 +159,7 @@ void App::run()
         }
     }
 
+    
 	if (m_window.create(width, height, "crogine game"))
 	{
 		//load opengl
@@ -180,7 +179,7 @@ void App::run()
 		return;
 	}
     initialise();
-
+    
     Clock frameClock;
     m_frameClock = &frameClock;
     m_running = true;

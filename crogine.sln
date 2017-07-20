@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.15
+VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crogine", "crowin\crowin.vcxproj", "{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}"
 EndProject
@@ -99,7 +99,6 @@ Global
 		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}.Debug|x64.ActiveCfg = Debug|x64
 		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}.Debug|x64.Build.0 = Debug|x64
 		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}.Debug|x86.ActiveCfg = Debug|Win32
-		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}.Debug|x86.Build.0 = Debug|Win32
 		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}.Release|Any CPU.ActiveCfg = Release|Win32
 		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}.Release|ARM.ActiveCfg = Release|Win32
 		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}.Release|ARM64.ActiveCfg = Release|Win32
@@ -435,7 +434,6 @@ Global
 		{8CBD5728-0ACE-4FC4-858A-09F3D2966803}.Debug|ARM64.Build.0 = Debug|ARM64
 		{8CBD5728-0ACE-4FC4-858A-09F3D2966803}.Debug|x64.ActiveCfg = Debug|x64
 		{8CBD5728-0ACE-4FC4-858A-09F3D2966803}.Debug|x86.ActiveCfg = Debug|x86
-		{8CBD5728-0ACE-4FC4-858A-09F3D2966803}.Debug|x86.Build.0 = Debug|x86
 		{8CBD5728-0ACE-4FC4-858A-09F3D2966803}.Release|Any CPU.ActiveCfg = Release|x86
 		{8CBD5728-0ACE-4FC4-858A-09F3D2966803}.Release|ARM.ActiveCfg = Release|ARM
 		{8CBD5728-0ACE-4FC4-858A-09F3D2966803}.Release|ARM.Build.0 = Release|ARM

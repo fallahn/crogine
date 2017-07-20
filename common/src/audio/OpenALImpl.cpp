@@ -33,11 +33,15 @@ source distribution.
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/util/String.hpp>
+#include <crogine/core/App.hpp>
+
+#include <AL/alc.h>
 
 #include <array>
 
 using namespace cro;
 using namespace cro::Detail;
+
 
 OpenALImpl::OpenALImpl()
     : m_device  (nullptr),
@@ -217,6 +221,7 @@ int32 OpenALImpl::getSourceState(int32 source) const
 void OpenALImpl::setSourcePosition(int32 source, glm::vec3 position)
 {
     alCheck(alSource3f(source, AL_POSITION, position.x, position.y, position.z));
+    //DPRINT("source Pos", std::to_string(position.x) + ", " + std::to_string(position.y) + ", " + std::to_string(position.z));
 }
 
 void OpenALImpl::setSourcePitch(int32 src, float pitch)
