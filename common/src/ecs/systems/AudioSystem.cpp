@@ -114,12 +114,19 @@ void AudioSystem::onEntityAdded(Entity entity)
 {
     //check if buffer already added and summon new audio source
     auto& audioSource = entity.getComponent<AudioSource>();
-    if (audioSource.m_newBuffer)
+    if(AudioRenderer::isValid() && audioSource.m_bufferID > 0)
     {
-        CRO_ASSERT(audioSource.m_bufferID > 0, "Not a valid buffer ID");
+        if (audioSource.m_newBuffer)
+        {
+            CRO_ASSERT(audioSource.m_bufferID > 0, "Not a valid buffer ID");
 
-        AudioRenderer::deleteAudioSource(audioSource.m_ID);
-        audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_bufferID);
-        audioSource.m_newBuffer = false;
+            AudioRenderer::deleteAudioSource(audioSource.m_ID);
+            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_bufferID);
+            audioSource.m_newBuffer = false;
+        }
+    }
+    else
+    {
+        getEntities().pop_back(); //no entity for you!
     }
 }
