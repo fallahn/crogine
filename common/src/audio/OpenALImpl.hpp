@@ -31,6 +31,7 @@ source distribution.
 #define CRO_OPENAL_IMPL_HPP_
 
 #include "AudioRenderer.hpp"
+#include "PCMData.hpp"
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -52,6 +53,7 @@ namespace cro
             void setListenerVolume(float) override;
 
             cro::int32 requestNewBuffer(const std::string& path) override;
+            cro::int32 requestNewBuffer(const PCMData&) override;
             void deleteBuffer(cro::int32) override;
 
             cro::int32 requestAudioSource(cro::int32) override;

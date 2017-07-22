@@ -40,6 +40,11 @@ source distribution.
 
 namespace cro
 {
+    namespace Detail
+    {
+        struct PCMData;
+    }
+    
     /*!
     \brief Defines the interface for an audio renderer.
     Allows for definining multiple rendersystems for targetting different
@@ -66,6 +71,7 @@ namespace cro
         virtual void setListenerVolume(float) = 0;
 
         virtual cro::int32 requestNewBuffer(const std::string&) = 0;
+        virtual cro::int32 requestNewBuffer(const Detail::PCMData&) = 0;
         virtual void deleteBuffer(cro::int32) = 0;
 
         virtual cro::int32 requestAudioSource(cro::int32) = 0;
@@ -143,6 +149,12 @@ namespace cro
         sure buffers are properly released with deleteBuffer()
         */
         static cro::int32 requestNewBuffer(const std::string& path);
+
+        /*!
+        \brief Requests a new buffer from the given PCMData struct.
+        The data pointer may be null
+        */
+        static cro::int32 requestNewBuffer(const Detail::PCMData&);
 
         /*!
         \brief Deletes a buffer with the given ID, freeing it from memory.

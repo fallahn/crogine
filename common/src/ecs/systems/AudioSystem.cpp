@@ -99,7 +99,7 @@ void AudioSystem::process(cro::Time dt)
             //set position
             auto worldPos = entity.getComponent<Transform>().getWorldPosition();
             AudioRenderer::setSourcePosition(audioSource.m_ID, worldPos);
-            DPRINT("Sound Position", std::to_string(worldPos.x) + ", " + std::to_string(worldPos.y) + ", " + std::to_string(worldPos.z));
+            //DPRINT("Sound Position", std::to_string(worldPos.x) + ", " + std::to_string(worldPos.y) + ", " + std::to_string(worldPos.z));
         }
 
         //check properties such as pitch and gain
