@@ -61,11 +61,11 @@ public:
 
 private:
 
+    cro::ResourceCollection m_resources; //destruction order important!
     cro::Scene m_backgroundScene;
     cro::Scene m_menuScene;
     SharedResources& m_sharedResources;
 
-    cro::ResourceCollection m_resources;
     std::array<cro::ModelDefinition, MenuModelID::Count> m_modelDefs;
 
     cro::CommandSystem* m_commandSystem;

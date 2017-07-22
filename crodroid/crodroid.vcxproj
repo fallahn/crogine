@@ -205,7 +205,7 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\ARM\$(Configuration);$(SolutionDir)extlibs/openal/android/armeabi-v7a</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
-      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_mixer;SDL2_ttf;Bullet;openal</LibraryDependencies>
+      <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;dl;GLESv1_CM;GLESv2;log;android;SDL2;SDL2_ttf;Bullet;openal</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tools|ARM'">

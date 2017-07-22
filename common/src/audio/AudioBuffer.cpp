@@ -28,8 +28,10 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/audio/AudioBuffer.hpp>
+#include <crogine/detail/Assert.hpp>
 
 #include "AudioRenderer.hpp"
+#include "PCMData.hpp"
 
 using namespace cro;
 
@@ -79,5 +81,21 @@ bool AudioBuffer::loadFromFile(const std::string& path)
 
 bool AudioBuffer::loadFromMemory(void* data, uint8 bitDepth, uint32 sampleRate, bool stereo, std::size_t size)
 {
-    return false;
+    CRO_ASSERT(bitDepth == 8 || bitDepth == 16, "Invalid bitdepth value, must be 8 or 16");
+
+    Detail::PCMData pcmData;
+    pcmData.data = data;
+    if (stereo)
+    {
+        pcmData.format = (bitDepth == 8) ? Detail::PCMData::Format::STEREO8 : Detail::PCMData::Format::STEREO16;
+    }
+    else
+    {
+        pcmData.format = (bitDepth == 8) ? Detail::PCMData::Format::MONO8 : Detail::PCMData::Format::MONO16;
+    }
+    pcmData.frequency = sampleRate;
+    pcmData.size = size;
+        
+    m_bufferID = AudioRenderer::requestNewBuffer(pcmData);
+    return m_bufferID != -1;
 }

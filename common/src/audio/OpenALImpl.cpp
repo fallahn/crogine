@@ -54,14 +54,14 @@ OpenALImpl::OpenALImpl()
 //public
 bool OpenALImpl::init()
 {
-    alCheck(m_device = alcOpenDevice(nullptr));
+    /*alCheck*/(m_device = alcOpenDevice(nullptr));
     if (!m_device)
     {
         LOG("Failed opening valid OpenAL device", Logger::Type::Error);        
         return false;
     }
 
-    alCheck(m_context = alcCreateContext(m_device, nullptr));
+    /*alCheck*/(m_context = alcCreateContext(m_device, nullptr));
     if (!m_context)
     {
         LOG("Failed creating OpenAL context", Logger::Type::Error);
@@ -69,16 +69,16 @@ bool OpenALImpl::init()
     }
 
     bool current = false;
-    alCheck(current = alcMakeContextCurrent(m_context));
+    /*alCheck*/(current = alcMakeContextCurrent(m_context));
 
     return current;
 }
 
 void OpenALImpl::shutdown()
 {
-    alCheck(alcMakeContextCurrent(nullptr));
-    alCheck(alcDestroyContext(m_context));
-    alCheck(alcCloseDevice(m_device));
+    /*alCheck*/(alcMakeContextCurrent(nullptr));
+    /*alCheck*/(alcDestroyContext(m_context));
+    /*alCheck*/(alcCloseDevice(m_device));
 }
 
 void OpenALImpl::setListenerPosition(glm::vec3 position)
@@ -117,33 +117,38 @@ cro::int32 OpenALImpl::requestNewBuffer(const std::string& path)
 
     if(data.data)
     {
-        ALuint buff;
-        alCheck(alGenBuffers(1, &buff));
-        
-        ALenum format;
-        switch (data.format)
-        {
-        default:
-        case PCMData::Format::MONO8:
-            format = AL_FORMAT_MONO8;
-            break;
-        case PCMData::Format::MONO16:
-            format = AL_FORMAT_MONO16;
-            break;
-        case PCMData::Format::STEREO8:
-            format = AL_FORMAT_STEREO8;
-            break;
-        case PCMData::Format::STEREO16:
-            format = AL_FORMAT_STEREO16;
-            break;
-        }
-
-        alCheck(alBufferData(buff, format, data.data, data.size, data.frequency));
-
-        return buff;
+        return requestNewBuffer(data);
     }
     
     return -1;
+}
+
+cro::int32 OpenALImpl::requestNewBuffer(const PCMData& data)
+{
+    ALuint buff;
+    alCheck(alGenBuffers(1, &buff));
+
+    ALenum format;
+    switch (data.format)
+    {
+    default:
+    case PCMData::Format::MONO8:
+        format = AL_FORMAT_MONO8;
+        break;
+    case PCMData::Format::MONO16:
+        format = AL_FORMAT_MONO16;
+        break;
+    case PCMData::Format::STEREO8:
+        format = AL_FORMAT_STEREO8;
+        break;
+    case PCMData::Format::STEREO16:
+        format = AL_FORMAT_STEREO16;
+        break;
+    }
+
+    alCheck(alBufferData(buff, format, data.data, data.size, data.frequency));
+
+    return buff;
 }
 
 void OpenALImpl::deleteBuffer(cro::int32 buffer)

@@ -37,9 +37,10 @@ source distribution.
 #endif //platform check
 
 //check for audio backend defines and define a fallback if there are none
-#if defined(PLATFORM_MOBILE) && !defined(AL_AUDIO)
-#define SDL_AUDIO 1
-#elif defined(PLATFORM_DESKTOP) && !defined(SDL_AUDIO)
+//#if defined(PLATFORM_MOBILE) && !defined(AL_AUDIO)
+//#define SDL_AUDIO 1
+//#elif defined(PLATFORM_DESKTOP) && !defined(SDL_AUDIO)
+#if !defined(AL_AUDIO) || !defined (SDL_AUDIO)
 #define AL_AUDIO 1
 #endif
 

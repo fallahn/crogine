@@ -37,13 +37,16 @@ source distribution.
 #include <AL/al.h>
 #include <crogine/core/Log.hpp>
 
-#define alCheck(x) x; al::errorCheck(__FILE__, __LINE__);
+#include <sstream>
+
+#define alCheck(x) alGetError(); x; al::errorCheck(__FILE__, __LINE__);
 namespace al
 {
     static inline void errorCheck(const char* file, int line)
     {
         auto error = alGetError();
-        if (error != AL_NO_ERROR)
+        auto errorCount = 20; //just to stop infinite loops
+        while (error != AL_NO_ERROR && errorCount)
         {
             std::string message;
             switch (error)
@@ -67,9 +70,12 @@ namespace al
                 message = "AL_OUT_OF_MEMORY: not enough memory left for current operation (too many sounds exist?)";
                 break;
             }
-            std::stringstream ss;
-            ss << "open al error - " << message << " in " << file << " line " << line << std::endl;
-            LOG(ss.str(), cro::Logger::Type::Error);
+            std::stringstream sts;
+            sts << "open al error - " << message << " in " << file << " line " << line << std::endl;
+            LOG(sts.str(), cro::Logger::Type::Error);
+
+            error = alGetError();
+            errorCount--;
         }
     }
 }

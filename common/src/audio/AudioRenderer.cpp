@@ -86,6 +86,11 @@ cro::int32 AudioRenderer::requestNewBuffer(const std::string& path)
     return m_impl->requestNewBuffer(path);
 }
 
+cro::int32 AudioRenderer::requestNewBuffer(const Detail::PCMData& data)
+{
+    return m_impl->requestNewBuffer(data);
+}
+
 void AudioRenderer::deleteBuffer(cro::int32 buffer)
 {
     m_impl->deleteBuffer(buffer);
