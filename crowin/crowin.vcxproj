@@ -129,6 +129,7 @@
     <ClInclude Include="..\common\include\crogine\util\String.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Wavetable.hpp" />
     <ClInclude Include="..\common\src\audio\ALCheck.hpp" />
+    <ClInclude Include="..\common\src\audio\AudioFile.hpp" />
     <ClInclude Include="..\common\src\audio\AudioRenderer.hpp" />
     <ClInclude Include="..\common\src\audio\OpenALImpl.hpp" />
     <ClInclude Include="..\common\src\audio\PCMData.hpp" />

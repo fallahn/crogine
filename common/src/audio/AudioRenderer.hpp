@@ -74,6 +74,10 @@ namespace cro
         virtual cro::int32 requestNewBuffer(const Detail::PCMData&) = 0;
         virtual void deleteBuffer(cro::int32) = 0;
 
+        virtual cro::int32 requestNewStream(const std::string&) = 0;
+        virtual void updateStream(int32) = 0;
+        virtual void deleteStream(cro::int32) = 0;
+
         virtual cro::int32 requestAudioSource(cro::int32) = 0;
         virtual void deleteAudioSource(cro::int32) = 0;
 

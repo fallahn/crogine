@@ -30,7 +30,7 @@ source distribution.
 #ifndef CRO_WAV_LOADER_HPP_
 #define CRO_WAV_LOADER_HPP_
 
-#include "PCMData.hpp"
+#include "AudioFile.hpp"
 
 #include <string>
 #include <array>
@@ -43,9 +43,9 @@ namespace cro
         /*!
         \brief Opens a wav file from the given path and allows reading
         in chunks.
-        Note this only supports uncompressed PCKMK wav files.
+        Note this only supports uncompressed LPCM wav files.
         */
-        class WavLoader final
+        class WavLoader final : public AudioFile
         {
         public:
             WavLoader();
@@ -54,14 +54,14 @@ namespace cro
             \brief Attempts to open the file at the given path
             \returns true if file was opened, else false.
             */
-            bool open(const std::string&);
+            bool open(const std::string&) override;
 
             /*!
             \brief Returns a PCMData struct containing the
             information pertinent to the requested data size.
             The struct is null/empty if no file is opened.
             \param chunkSize Number of bytes of the file to read.
-            This may be smaller if the file has reached the end,
+            The amount may be smaller if the file has reached the end,
             so the actual size read is stored in the PCMData struct.
             Passing 0 (default) will attempt to read the entire file.
             The data pointed to by the returned struct is only valid while
@@ -70,7 +70,7 @@ namespace cro
             the data after the WavLoader has been destroyed results in
             undefined behaviour.
             */
-            const PCMData& getData(std::size_t chunkSize = 0) const;
+            const PCMData& getData(std::size_t chunkSize = 0) const override;
 
         private:
             RaiiRWops m_file;

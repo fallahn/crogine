@@ -42,6 +42,56 @@ source distribution.
 using namespace cro;
 using namespace cro::Detail;
 
+namespace
+{
+    const std::size_t STREAM_CHUNK_SIZE = 4096u;
+
+    ALenum getFormatFromData(const PCMData& data)
+    {
+        switch (data.format)
+        {
+        default:
+        case PCMData::Format::MONO8:
+            return AL_FORMAT_MONO8;
+        case PCMData::Format::MONO16:
+            return AL_FORMAT_MONO16;
+        case PCMData::Format::STEREO8:
+            return AL_FORMAT_STEREO8;
+        case PCMData::Format::STEREO16:
+            return AL_FORMAT_STEREO16;
+        }
+    }
+
+    //called in its own thread to update stream buffers
+    int streamUpdate(void* s)
+    {
+        OpenALStream& stream = *(OpenALStream*)s;
+
+        for (auto i = 0; i < stream.processed; ++i)
+        {
+            //unqueue
+            alCheck(alSourceUnqueueBuffers(stream.sourceID, 1, &stream.buffers[stream.currentBuffer]));
+            
+            //fill buffer
+            auto data = stream.audioFile->getData(STREAM_CHUNK_SIZE);
+            if (data.size > 0) //only update if we have data else we'll loop even if we don't want to
+            {
+                alCheck(alBufferData(stream.buffers[stream.currentBuffer], getFormatFromData(data), data.data, data.size, data.frequency));
+
+                //requeue
+                alCheck(alSourceQueueBuffers(stream.sourceID, 1, &stream.buffers[stream.currentBuffer]));
+
+                //increment currentBuffer
+                stream.currentBuffer = (stream.currentBuffer + 1) % stream.buffers.size();
+            }
+        }
+
+        stream.updating = false;
+        stream.processed = 0;
+
+        return 0;
+    }
+}
 
 OpenALImpl::OpenALImpl()
     : m_device  (nullptr),
@@ -54,6 +104,8 @@ OpenALImpl::OpenALImpl()
 //public
 bool OpenALImpl::init()
 {
+    //alCheck doesn't work on alc* functions, dummy.
+    
     /*alCheck*/(m_device = alcOpenDevice(nullptr));
     if (!m_device)
     {
@@ -76,6 +128,12 @@ bool OpenALImpl::init()
 
 void OpenALImpl::shutdown()
 {
+    //make sure to close any open streams
+    for (auto i = 0u; i < m_streams.size(); ++i)
+    {
+        deleteStream(i);
+    }
+
     /*alCheck*/(alcMakeContextCurrent(nullptr));
     /*alCheck*/(alcDestroyContext(m_context));
     /*alCheck*/(alcCloseDevice(m_device));
@@ -99,15 +157,16 @@ void OpenALImpl::setListenerVolume(float volume)
 
 cro::int32 OpenALImpl::requestNewBuffer(const std::string& path)
 {
-    WavLoader loader;
+    std::unique_ptr<AudioFile> loader;
     
     auto ext = Util::String::getFileExtension(path);
     PCMData data;
     if (ext == ".wav")
     {      
-        if (loader.open(path))
+        loader = std::make_unique<WavLoader>();
+        if (loader->open(path))
         {
-            data = loader.getData();
+            data = loader->getData();
         }
     }
     else
@@ -128,24 +187,7 @@ cro::int32 OpenALImpl::requestNewBuffer(const PCMData& data)
     ALuint buff;
     alCheck(alGenBuffers(1, &buff));
 
-    ALenum format;
-    switch (data.format)
-    {
-    default:
-    case PCMData::Format::MONO8:
-        format = AL_FORMAT_MONO8;
-        break;
-    case PCMData::Format::MONO16:
-        format = AL_FORMAT_MONO16;
-        break;
-    case PCMData::Format::STEREO8:
-        format = AL_FORMAT_STEREO8;
-        break;
-    case PCMData::Format::STEREO16:
-        format = AL_FORMAT_STEREO16;
-        break;
-    }
-
+    ALenum format = getFormatFromData(data);
     alCheck(alBufferData(buff, format, data.data, data.size, data.frequency));
 
     return buff;
@@ -158,6 +200,101 @@ void OpenALImpl::deleteBuffer(cro::int32 buffer)
         auto buf = static_cast<ALuint>(buffer);
         alCheck(alDeleteBuffers(1, &buf));
         LOG("Deleted audio buffer", Logger::Type::Info);
+    }
+}
+
+cro::int32 OpenALImpl::requestNewStream(const std::string& path)
+{
+    //check we have available streams
+    if (m_nextStream >= m_streams.size())
+    {
+        Logger::log("Maximum number of streams has been reached!", Logger::Type::Warning);
+        return -1;
+    }
+
+    //attempt to open the file
+    auto& stream = m_streams[m_nextStream];
+    auto ext = Util::String::getFileExtension(path);
+    if (ext == ".wav")
+    {
+        stream.audioFile = std::make_unique<WavLoader>();
+        if (!stream.audioFile->open(path))
+        {
+            stream.audioFile.reset();
+            Logger::log("Failed to open " + path, Logger::Type::Error);
+            return -1;
+        }
+    }
+    else if (ext == ".ogg")
+    {
+        Logger::log("Ogg file support not yet implemented!", Logger::Type::Error);
+        return - 1;
+    }
+    else
+    {
+        Logger::log(ext + ": Unsupported file type.", Logger::Type::Error);
+        return -1;
+    }
+    
+    alCheck(alGenBuffers(stream.buffers.size(), stream.buffers.data()));
+    //fill buffers from file
+    for (auto b : stream.buffers)
+    {
+        auto audioData = stream.audioFile->getData(STREAM_CHUNK_SIZE);
+        alCheck(alBufferData(b, getFormatFromData(audioData), audioData.data, audioData.size, audioData.frequency));
+    }
+
+    //hurrah we has stream
+    auto streamID = m_nextStream;
+
+    while (m_streams[m_nextStream].audioFile
+        && m_nextStream < m_streams.size())
+    {
+        m_nextStream++;
+    }
+    
+    return streamID;
+}
+
+void OpenALImpl::updateStream(int32 streamID)
+{
+    auto& stream = m_streams[streamID];
+    if (!stream.updating)
+    {
+        alCheck(alGetSourcei(stream.sourceID, AL_PROCESSED, &stream.processed));
+        if (stream.processed > 0)
+        {
+            stream.updating = true;
+            SDL_DetachThread(stream.thread); //make sure to clean up any old threads
+            stream.thread = SDL_CreateThread(streamUpdate, nullptr, &stream);
+        }
+    }
+}
+
+void OpenALImpl::deleteStream(cro::int32 id)
+{
+    auto& stream = m_streams[id];
+    
+    if (stream.updating)
+    {
+        stream.updating = false;
+        //wait for thread to finish - we have to wait else
+        //we can't be sure it's safe to delete the buffers
+        SDL_WaitThread(stream.thread, nullptr);
+        stream.thread = nullptr;
+    } 
+
+    if (stream.buffers[0])
+    {        
+        alCheck(alDeleteBuffers(stream.buffers.size(), stream.buffers.data()));
+    }
+    stream.audioFile.reset();
+    stream.currentBuffer = 0;
+    stream.processed = 0;
+
+    if (id < m_nextStream)
+    {
+        m_nextStream = id;
     }
 }
 

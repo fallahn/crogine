@@ -31,15 +31,31 @@ source distribution.
 #define CRO_OPENAL_IMPL_HPP_
 
 #include "AudioRenderer.hpp"
-#include "PCMData.hpp"
+#include "AudioFile.hpp"
 
 #include <AL/al.h>
 #include <AL/alc.h>
+
+#include <SDL_thread.h>
+
+#include <atomic>
+#include <array>
 
 namespace cro
 {
     namespace Detail
     {
+        struct OpenALStream final
+        {
+            std::array<ALuint, 3> buffers{};
+            std::size_t currentBuffer = 0;
+            std::unique_ptr<AudioFile> audioFile;
+            std::atomic<bool> updating = false;
+            ALint processed = 0;
+            SDL_Thread* thread = nullptr;
+            int32 sourceID = -1;
+        };
+
         class OpenALImpl final : public cro::AudioRendererImpl
         {
         public:
@@ -55,6 +71,10 @@ namespace cro
             cro::int32 requestNewBuffer(const std::string& path) override;
             cro::int32 requestNewBuffer(const PCMData&) override;
             void deleteBuffer(cro::int32) override;
+
+            cro::int32 requestNewStream(const std::string&) override;
+            void updateStream(cro::int32) override;
+            void deleteStream(cro::int32) override;
 
             cro::int32 requestAudioSource(cro::int32) override;
             void deleteAudioSource(cro::int32) override;
@@ -73,6 +93,9 @@ namespace cro
         private:
             ALCdevice* m_device;
             ALCcontext* m_context;
+
+            std::array<OpenALStream, 64> m_streams;
+            int32 m_nextStream;
         };
     }
 }
