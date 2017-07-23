@@ -158,9 +158,14 @@ const PCMData& WavLoader::getData(std::size_t size) const
     auto currPos = m_file.file->seek(m_file.file, 0, RW_SEEK_CUR);
 
     //rewind if at the end
-    if (currPos >= (m_dataStart + m_dataSize))
+    if (currPos >= (m_dataStart + m_dataSize) || currPos == -1)
     {
         currPos = m_file.file->seek(m_file.file, m_dataStart, RW_SEEK_SET);
+
+        //return empty so we know we reached the end
+        m_dataChunk.size = 0;
+        m_dataChunk.data = nullptr;
+        return m_dataChunk;
     }
 
     std::size_t remain = (m_dataStart + m_dataSize) - currPos;
