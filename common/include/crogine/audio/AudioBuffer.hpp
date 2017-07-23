@@ -30,8 +30,7 @@ source distribution.
 #ifndef CRO_AUDIO_BUFFER_HPP_
 #define CRO_AUDIO_BUFFER_HPP_
 
-#include <crogine/Config.hpp>
-#include <crogine/detail/Types.hpp>
+#include <crogine/Audio/AudioDataSource.hpp>
 
 #include <string>
 
@@ -49,7 +48,7 @@ namespace cro
     still in use by one or more AudioSources will result in undefined
     behviour, depending on the audio renderer currently in use.
     */
-    class CRO_EXPORT_API AudioBuffer final
+    class CRO_EXPORT_API AudioBuffer final : public AudioDataSource
     {
     public:
         AudioBuffer();
@@ -87,10 +86,13 @@ namespace cro
         */
         bool loadFromMemory(void* data, uint8 bitDepth, uint32 sampleRate, bool stereo, std::size_t size);
 
-    private:
-        friend class AudioSource;
+        /*!
+        \brief Identifies this as an AudioBuffer
+        */
+        AudioDataSource::Type getType() const override { return AudioDataSource::Type::Buffer; }
 
-        int32 m_bufferID;
+    private:
+
     };
 }
 

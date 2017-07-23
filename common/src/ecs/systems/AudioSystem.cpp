@@ -67,11 +67,11 @@ void AudioSystem::process(cro::Time dt)
         auto& audioSource = entity.getComponent<AudioSource>();
         
         //check its flags and update
-        if (audioSource.m_newBuffer)
+        if (audioSource.m_newDataSource)
         {
             AudioRenderer::deleteAudioSource(audioSource.m_ID);
-            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_bufferID);
-            audioSource.m_newBuffer = false;
+            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID);
+            audioSource.m_newDataSource = false;
         }
 
         if (audioSource.m_transportFlags & AudioSource::Play)
@@ -114,15 +114,15 @@ void AudioSystem::onEntityAdded(Entity entity)
 {
     //check if buffer already added and summon new audio source
     auto& audioSource = entity.getComponent<AudioSource>();
-    if(AudioRenderer::isValid() && audioSource.m_bufferID > 0)
+    if(AudioRenderer::isValid() && audioSource.m_dataSourceID > 0)
     {
-        if (audioSource.m_newBuffer)
+        if (audioSource.m_newDataSource)
         {
-            CRO_ASSERT(audioSource.m_bufferID > 0, "Not a valid buffer ID");
+            //CRO_ASSERT(audioSource.m_bufferID > 0, "Not a valid buffer ID");
 
             AudioRenderer::deleteAudioSource(audioSource.m_ID);
-            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_bufferID);
-            audioSource.m_newBuffer = false;
+            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID);
+            audioSource.m_newDataSource = false;
         }
     }
     else

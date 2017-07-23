@@ -238,7 +238,7 @@ void MainState::createScene()
         arcticModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[i]));
     }
     arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
-    arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
+    //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
 
     auto lookoutEntity = m_backgroundScene.createEntity();
     auto& lookoutTx = lookoutEntity.addComponent<cro::Transform>();
@@ -253,7 +253,7 @@ void MainState::createScene()
     }
     lookoutEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
     lookoutEntity.getComponent<cro::AudioSource>().setPitch(2.4f);
-    lookoutEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
+    //lookoutEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
 
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });

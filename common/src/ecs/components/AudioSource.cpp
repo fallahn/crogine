@@ -42,22 +42,24 @@ AudioSource::AudioSource()
     m_volume            (1.f),
     m_rolloff           (1.f),
     m_transportFlags    (0),
-    m_newBuffer         (false),
+    m_newDataSource     (false),
     m_ID                (-1),
-    m_bufferID          (-1)
+    m_dataSourceID      (-1),
+    m_sourceType        (AudioDataSource::Type::None)
 {
 
 }
 
-AudioSource::AudioSource(const AudioBuffer& buffer)
+AudioSource::AudioSource(const AudioDataSource& dataSource)
     : m_state           (State::Stopped),
     m_pitch             (1.f),
     m_volume            (1.f),
     m_rolloff           (1.f),
     m_transportFlags    (0),
-    m_newBuffer         (true),
+    m_newDataSource     (true),
     m_ID                (-1),
-    m_bufferID          (buffer.m_bufferID)
+    m_dataSourceID      (dataSource.getID()),
+    m_sourceType        (dataSource.getType())
 {
 
 }
@@ -84,11 +86,14 @@ AudioSource::AudioSource(AudioSource&& other)
     m_ID = other.m_ID;
     other.m_ID = -1;
 
-    m_bufferID = other.m_bufferID;
-    other.m_bufferID = -1;
+    m_dataSourceID = other.m_dataSourceID;
+    other.m_dataSourceID = -1;
 
-    m_newBuffer = true;
-    other.m_newBuffer = false;
+    m_sourceType = other.m_sourceType;
+    other.m_sourceType = AudioDataSource::Type::None;
+
+    m_newDataSource = true;
+    other.m_newDataSource = false;
 
     other.m_state = State::Stopped;
 }
@@ -109,11 +114,14 @@ AudioSource& AudioSource::operator=(AudioSource&& other)
         m_ID = other.m_ID;
         other.m_ID = -1;
 
-        m_bufferID = other.m_bufferID;
-        other.m_bufferID = -1;
+        m_dataSourceID = other.m_dataSourceID;
+        other.m_dataSourceID = -1;
 
-        m_newBuffer = true;
-        other.m_newBuffer = false;
+        m_sourceType = other.m_sourceType;
+        other.m_sourceType = AudioDataSource::Type::None;
+
+        m_newDataSource = true;
+        other.m_newDataSource = false;
 
         other.m_state = State::Stopped;
     }    
@@ -121,7 +129,7 @@ AudioSource& AudioSource::operator=(AudioSource&& other)
 }
 
 //public
-void AudioSource::setBuffer(const AudioBuffer& buffer)
+void AudioSource::setAudioDataSource(const AudioDataSource& dataSource)
 {
     if (m_ID > 0)
     {
@@ -129,8 +137,9 @@ void AudioSource::setBuffer(const AudioBuffer& buffer)
         m_ID = -1;
     }
 
-    m_bufferID = buffer.m_bufferID;
-    m_newBuffer = true;
+    m_dataSourceID = dataSource.getID();
+    m_sourceType = dataSource.getType();
+    m_newDataSource = true;
 }
 
 void AudioSource::play(bool looped)

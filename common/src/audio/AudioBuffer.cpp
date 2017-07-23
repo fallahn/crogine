@@ -36,32 +36,31 @@ source distribution.
 using namespace cro;
 
 AudioBuffer::AudioBuffer()
-    : m_bufferID(-1)
 {
 
 }
 
 AudioBuffer::~AudioBuffer()
 {
-    if (m_bufferID > 0)
+    if (getID() > 0)
     {
-        AudioRenderer::deleteBuffer(m_bufferID);
-        m_bufferID = -1;
+        AudioRenderer::deleteBuffer(getID());
+        setID(-1);
     }
 }
 
 AudioBuffer::AudioBuffer(AudioBuffer&& other)
 {
-    m_bufferID = other.m_bufferID;
-    other.m_bufferID = -1;
+    setID(other.getID());
+    other.setID(-1);
 }
 
 AudioBuffer& AudioBuffer::operator=(AudioBuffer&& other)
 {
     if (&other != this)
     {
-        m_bufferID = other.m_bufferID;
-        other.m_bufferID = -1;
+        setID(other.getID());
+        other.setID(-1);
     }
     return *this;
 }
@@ -69,14 +68,14 @@ AudioBuffer& AudioBuffer::operator=(AudioBuffer&& other)
 //public
 bool AudioBuffer::loadFromFile(const std::string& path)
 {
-    if (m_bufferID > 0)
+    if (getID() > 0)
     {
-        AudioRenderer::deleteBuffer(m_bufferID);
-        m_bufferID = -1;
+        AudioRenderer::deleteBuffer(getID());
+        setID(-1);
     }
     
-    m_bufferID = AudioRenderer::requestNewBuffer(path);
-    return m_bufferID != -1;
+    setID(AudioRenderer::requestNewBuffer(path));
+    return getID() != -1;
 }
 
 bool AudioBuffer::loadFromMemory(void* data, uint8 bitDepth, uint32 sampleRate, bool stereo, std::size_t size)
@@ -96,6 +95,6 @@ bool AudioBuffer::loadFromMemory(void* data, uint8 bitDepth, uint32 sampleRate, 
     pcmData.frequency = sampleRate;
     pcmData.size = size;
         
-    m_bufferID = AudioRenderer::requestNewBuffer(pcmData);
-    return m_bufferID != -1;
+    setID(AudioRenderer::requestNewBuffer(pcmData));
+    return getID() != -1;
 }
