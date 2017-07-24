@@ -70,7 +70,7 @@ struct GameEvent final
         RoundStart,
         GameOver
     }type;
-    float score = 0.f;
+    cro::int32 score = 0.f;
 };
 
 struct PlayerEvent final

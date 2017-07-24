@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/ecs/systems/TextRenderer.hpp>
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 
 namespace
 {
@@ -50,6 +51,11 @@ namespace
 #else
     glm::vec2 uiRes(1280.f, 720.f);
 #endif //PLATFORM_DESKTOP
+
+    enum GUID
+    {
+        ScoreText = 0x1
+    };
 
 #include "MenuConsts.inl"
 }
@@ -116,9 +122,39 @@ void GameOverState::load()
     entity.getComponent<cro::Text>().setColour(textColourSelected);
     auto textSize = entity.getComponent<cro::Text>().getLocalBounds();
     entity.addComponent<cro::Transform>();
-    entity.getComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, uiRes.y / 2.f, 2.f });
+    entity.getComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 4.f) * 3.f, 2.f });
     entity.getComponent<cro::Transform>().setOrigin({ textSize.width / 2.f, -textSize.height / 2.f, 0.f });
 
+
+    //quit button
+    cro::SpriteSheet sprites;
+    sprites.loadFromFile("assets/sprites/ui_menu.spt", m_sharedResources.textures);
+    cro::SpriteSheet icons;
+    icons.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Sprite>() = sprites.getSprite("button_inactive");
+    auto area = entity.getComponent<cro::Sprite>().getLocalBounds();
+    auto& buttonTx = entity.addComponent<cro::Transform>();
+    buttonTx.setOrigin({ area.width / 2.f, area.height / 2.f, 0.f });
+    buttonTx.setPosition({ uiRes.x / 2.f, (uiRes.y / 4.f), 2.f });
+
+    auto textEnt = m_uiScene.createEntity();
+    auto& gameText = textEnt.addComponent<cro::Text>(font);
+    gameText.setString("OK");
+    gameText.setColour(textColourNormal);
+    gameText.setCharSize(60);
+    auto& gameTextTx = textEnt.addComponent<cro::Transform>();
+    gameTextTx.setPosition({ 40.f, 100.f, 0.f });
+    gameTextTx.setParent(entity);
+    auto iconEnt = m_uiScene.createEntity();
+    iconEnt.addComponent<cro::Transform>().setParent(entity);
+    iconEnt.getComponent<cro::Transform>().setPosition({ area.width - buttonIconOffset, 0.f, 0.2f });
+    iconEnt.addComponent<cro::Sprite>() = icons.getSprite("menu");
+
+
+
+    //background image
     cro::Image img;
     img.create(2, 2, cro::Colour(0.f, 0.f, 0.f, 0.5f));
     m_backgroundTexture.create(2, 2);
@@ -127,6 +163,8 @@ void GameOverState::load()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ uiRes.x / 2.f, uiRes.y / 2.f, 1.f });
     entity.addComponent<cro::Sprite>().setTexture(m_backgroundTexture);
+
+
 
     //camera
     entity = m_uiScene.createEntity();
