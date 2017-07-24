@@ -42,6 +42,8 @@ struct SharedResources final
 {
     cro::FontResource fonts;
     cro::TextureResource textures;
+    std::string playerName;
+    cro::int32 score = 0;
 };
 using ResourcePtr = std::unique_ptr<SharedResources>;
 

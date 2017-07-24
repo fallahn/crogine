@@ -34,6 +34,7 @@ source distribution.
 #include "GameOverState.hpp"
 #include "LoadingScreen.hpp"
 #include "icon.hpp"
+#include "Messages.hpp"
 
 #include <crogine/core/Clock.hpp>
 
@@ -73,6 +74,22 @@ void MyApp::handleEvent(const cro::Event& evt)
 
 void MyApp::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == MessageID::GameMessage)
+    {
+        const auto& data = msg.getData<GameEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case GameEvent::RoundStart:
+            m_sharedResources->playerName = "";
+            m_sharedResources->score = 0;
+            break;
+        case GameEvent::GameOver:
+            m_sharedResources->score = data.score;
+            break;
+        }
+    }
+
     m_stateStack.handleMessage(msg);
 }
 
