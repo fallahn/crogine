@@ -30,7 +30,7 @@ source distribution.
 #ifndef CRO_AUDIO_BUFFER_HPP_
 #define CRO_AUDIO_BUFFER_HPP_
 
-#include <crogine/Audio/AudioDataSource.hpp>
+#include <crogine/audio/AudioDataSource.hpp>
 
 #include <string>
 
