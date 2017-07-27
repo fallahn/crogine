@@ -86,7 +86,6 @@ GameOverState::GameOverState(cro::StateStack& stack, cro::State::Context context
 {
     load();
     updateView();
-    SDL_StartTextInput();
 }
 
 //public
@@ -98,7 +97,6 @@ bool GameOverState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYUP)
     {
-        //TODO make sure all is well on android.
         if (evt.key.keysym.sym == SDLK_RETURN)
         {
             SDL_StopTextInput();
@@ -118,7 +116,11 @@ bool GameOverState::handleEvent(const cro::Event& evt)
             };
             commandSystem->sendCommand(cmd);
         }
-        else if (evt.key.keysym.sym == SDLK_BACKSPACE && !m_sharedResources.playerName.empty())
+    }
+    else if (evt.type == SDL_KEYDOWN)
+    {
+        //android only produces key down for backspace events :S
+        if (evt.key.keysym.sym == SDLK_BACKSPACE && !m_sharedResources.playerName.empty())
         {
             m_sharedResources.playerName.pop_back();
             updateTextBox();
@@ -178,11 +180,10 @@ void GameOverState::load()
     commandSystem = &m_uiScene.addSystem<cro::CommandSystem>(mb);
 
     auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
-    //font.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
 
     //background image
     cro::Image img;
-    img.create(2, 2, cro::Colour(0.f, 0.f, 0.f, 0.8f));
+    img.create(2, 2, cro::Colour(0.f, 0.f, 0.f, 0.6f));
     m_backgroundTexture.create(2, 2);
     m_backgroundTexture.update(img.getPixelData(), false);
 
@@ -193,7 +194,7 @@ void GameOverState::load()
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Text>(font).setString("GAME OVER");
-    entity.getComponent<cro::Text>().setCharSize(90);
+    entity.getComponent<cro::Text>().setCharSize(TextXL);
     entity.getComponent<cro::Text>().setColour(textColourSelected);
     auto textSize = entity.getComponent<cro::Text>().getLocalBounds();
     entity.addComponent<cro::Transform>();
@@ -218,7 +219,7 @@ void GameOverState::load()
     auto& gameText = textEnt.addComponent<cro::Text>(font);
     gameText.setString("OK");
     gameText.setColour(textColourNormal);
-    gameText.setCharSize(60);
+    gameText.setCharSize(TextLarge);
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
     gameTextTx.setPosition({ 40.f, 100.f, 0.f });
     gameTextTx.setParent(entity);
@@ -289,9 +290,9 @@ void GameOverState::load()
     auto scoreEnt = m_uiScene.createEntity();
     auto& scoreText = scoreEnt.addComponent<cro::Text>(font);
     scoreText.setString("Score: 0000");
-    scoreText.setCharSize(80);
+    scoreText.setCharSize(TextXL);
     scoreText.setColour(textColourSelected);
-    scoreEnt.addComponent<cro::Transform>().setPosition({uiRes.x / 2.f, (uiRes.y / 3.f) * 2.3f, uiDepth});
+    scoreEnt.addComponent<cro::Transform>().setPosition({uiRes.x / 2.f, (uiRes.y / 2.f) * 1.1f, uiDepth});
     scoreEnt.addComponent<cro::CommandTarget>().ID = UICommand::ScoreText;
 
     createTextBox(sprites);
@@ -318,13 +319,13 @@ void GameOverState::updateView()
 void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
 {
     auto parentEnt = m_uiScene.createEntity();
-    parentEnt.addComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, uiRes.y / 2.f, uiDepth });
+    parentEnt.addComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 3.f) * 2.f, uiDepth });
 
     auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
 
     auto textEnt = m_uiScene.createEntity();
     textEnt.addComponent<cro::Text>(font).setString("Enter Your Name:");
-    textEnt.getComponent<cro::Text>().setCharSize(50);
+    textEnt.getComponent<cro::Text>().setCharSize(TextMedium);
     textEnt.getComponent<cro::Text>().setColour(textColourSelected);
 
     auto textSize = textEnt.getComponent<cro::Text>().getLocalBounds();
@@ -353,8 +354,8 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     boxEnt.addComponent<cro::CommandTarget>().ID = UICommand::InputBox;
 
     auto inputEnt = m_uiScene.createEntity();
-    inputEnt.addComponent<cro::Text>(font).setString(names[cro::Util::Random::value(0, names.size())]);
-    inputEnt.getComponent<cro::Text>().setCharSize(60);
+    inputEnt.addComponent<cro::Text>(font).setString(names[cro::Util::Random::value(0, names.size()-1)]);
+    inputEnt.getComponent<cro::Text>().setCharSize(TextLarge);
     inputEnt.getComponent<cro::Text>().setColour(textColourSelected);
     inputEnt.addComponent<cro::Transform>().setParent(parentEnt);
     inputEnt.getComponent<cro::Transform>().setPosition({ (-textArea.width / 2.f) + 32.f, -22.f, 0.f });
