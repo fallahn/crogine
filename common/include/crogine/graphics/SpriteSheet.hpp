@@ -62,10 +62,10 @@ namespace cro
         appears in the sprite sheet. If the sprite does not exist an
         empty sprite is returned.
         */
-        Sprite getSprite(const std::string& name);
+        Sprite getSprite(const std::string& name) const;
 
     private:
-        std::unordered_map<std::string, Sprite> m_sprites;
+        mutable std::unordered_map<std::string, Sprite> m_sprites;
 
     };
 }

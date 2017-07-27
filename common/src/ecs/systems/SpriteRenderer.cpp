@@ -257,14 +257,16 @@ void SpriteRenderer::process(Time)
             const auto& sprA = a.getComponent<Sprite>();
             const auto& sprB = b.getComponent<Sprite>();
 
-            if (sprA.m_textureID < sprB.m_textureID) return true;
+            //sub-sort by depth
+            if (a.getComponent<cro::Transform>().getWorldPosition().z < b.getComponent<cro::Transform>().getWorldPosition().z) return true;  
+
+            //HMMMM grouping by texture breaks depth sorting :(
+
+            /*if (sprA.m_textureID < sprB.m_textureID) return true;
             if (sprB.m_textureID < sprA.m_textureID) return false;
 
             if (sprA.m_blendMode < sprB.m_blendMode) return true;
-            if (sprB.m_blendMode < sprA.m_blendMode) return false;
-
-            //TODO sub-sort by depth
-            if (a.getComponent<cro::Transform>().getWorldPosition().z < b.getComponent<cro::Transform>().getWorldPosition().z) return true;
+            if (sprB.m_blendMode < sprA.m_blendMode) return false;*/
 
             return false;
         });

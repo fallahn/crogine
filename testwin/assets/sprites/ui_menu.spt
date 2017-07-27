@@ -22,4 +22,14 @@ sprite_sheet ui_menu
 	{
 		bounds = 0,704,1344,320
 	}
+
+	sprite textbox_inactive
+	{
+		bounds = 0,1024,896,128
+	}
+
+	sprite textbox_active
+	{
+		bounds = 0,1216,896,128
+	}
 }

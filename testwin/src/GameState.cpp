@@ -113,8 +113,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     msg->type = GameEvent::RoundStart;
 
     context.appInstance.resetFrameTime();
-
-    requestStackPush(States::ID::GameOver);
 }
 
 //public
