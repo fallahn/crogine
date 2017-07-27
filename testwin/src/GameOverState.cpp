@@ -48,6 +48,8 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Random.hpp>
 
+#include <SDL_keyboard.h>
+
 namespace
 {
 #ifdef PLATFORM_DESKTOP
@@ -60,10 +62,12 @@ namespace
     enum UICommand
     {
         ScoreText = 0x1,
-        NameText = 0x2
+        NameText = 0x2,
+        InputBox = 0x4
     };
     cro::CommandSystem* commandSystem = nullptr;
     const float uiDepth = 1.f;
+    cro::FloatRect inactiveArea;
 
     const std::array<std::string, 10u> names = 
     {
@@ -82,11 +86,45 @@ GameOverState::GameOverState(cro::StateStack& stack, cro::State::Context context
 {
     load();
     updateView();
+    SDL_StartTextInput();
 }
 
 //public
 bool GameOverState::handleEvent(const cro::Event& evt)
 {
+    if (evt.type == SDL_TEXTINPUT)
+    {
+        handleTextEvent(evt);
+    }
+    else if (evt.type == SDL_KEYUP)
+    {
+        //TODO make sure all is well on android.
+        if (evt.key.keysym.sym == SDLK_RETURN)
+        {
+            SDL_StopTextInput();
+
+            cro::Command cmd;
+            cmd.targetFlags = UICommand::NameText;
+            cmd.action = [&](cro::Entity entity, cro::Time)
+            {
+                entity.getComponent<cro::Text>().setString(m_sharedResources.playerName);
+            };
+            commandSystem->sendCommand(cmd);
+
+            cmd.targetFlags = UICommand::InputBox;
+            cmd.action = [](cro::Entity entity, cro::Time)
+            {
+                entity.getComponent<cro::Sprite>().setTextureRect(inactiveArea);
+            };
+            commandSystem->sendCommand(cmd);
+        }
+        else if (evt.key.keysym.sym == SDLK_BACKSPACE && !m_sharedResources.playerName.empty())
+        {
+            m_sharedResources.playerName.pop_back();
+            updateTextBox();
+        }
+    }
+    
     m_uiScene.forwardEvent(evt);
     m_uiSystem->handleEvent(evt);
     return false;
@@ -231,12 +269,15 @@ void GameOverState::load()
             }
         }
     });
-    gameControl.callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([this]
+    gameControl.callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([&]
     (cro::Entity, cro::uint64 flags)
     {
         if ((flags & cro::UISystem::LeftMouse)
             || flags & cro::UISystem::Finger)
         {
+            //TODO insert name / score into high score list
+            
+            SDL_StopTextInput();
             requestStackClear();
             requestStackPush(States::MainMenu);
         }
@@ -295,6 +336,21 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     auto textArea = boxEnt.getComponent<cro::Sprite>().getLocalBounds();
     boxEnt.addComponent<cro::Transform>().setParent(parentEnt);
     boxEnt.getComponent<cro::Transform>().setOrigin({ textArea.width / 2.f, textArea.height, 0.f });
+    boxEnt.addComponent<cro::UIInput>().area = textArea;
+    inactiveArea = boxEnt.getComponent<cro::Sprite>().getTextureRect();
+    auto activeArea = spriteSheet.getSprite("textbox_active").getTextureRect();
+    boxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback(
+        [&, activeArea](cro::Entity ent, cro::uint64 flags)
+    {
+        if ((flags & cro::UISystem::LeftMouse)
+            || flags & cro::UISystem::Finger)
+        {
+            SDL_StartTextInput();
+            ent.getComponent<cro::Sprite>().setTextureRect(activeArea);
+            updateTextBox();
+        }
+    });
+    boxEnt.addComponent<cro::CommandTarget>().ID = UICommand::InputBox;
 
     auto inputEnt = m_uiScene.createEntity();
     inputEnt.addComponent<cro::Text>(font).setString(names[cro::Util::Random::value(0, names.size())]);
@@ -303,4 +359,33 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     inputEnt.addComponent<cro::Transform>().setParent(parentEnt);
     inputEnt.getComponent<cro::Transform>().setPosition({ (-textArea.width / 2.f) + 32.f, -22.f, 0.f });
     inputEnt.addComponent<cro::CommandTarget>().ID = UICommand::NameText;
+}
+
+void GameOverState::handleTextEvent(const cro::Event& evt)
+{
+    auto text = *evt.text.text;
+
+    //send command to text to update it
+    cro::Command cmd;
+    cmd.targetFlags = UICommand::NameText;
+    cmd.action = [&, text](cro::Entity entity, cro::Time)
+    {
+        if (entity.getComponent<cro::Text>().getLocalBounds().width < inactiveArea.width - 100.f)
+        {
+            m_sharedResources.playerName += text;
+            entity.getComponent<cro::Text>().setString(m_sharedResources.playerName + "_");
+        }
+    };
+    commandSystem->sendCommand(cmd);
+}
+
+void GameOverState::updateTextBox()
+{
+    cro::Command cmd;
+    cmd.targetFlags = UICommand::NameText;
+    cmd.action = [&](cro::Entity entity, cro::Time)
+    {
+        entity.getComponent<cro::Text>().setString(m_sharedResources.playerName + "_");
+    };
+    commandSystem->sendCommand(cmd);
 }

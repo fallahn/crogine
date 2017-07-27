@@ -72,6 +72,8 @@ private:
     void updateView();
 
     void createTextBox(const cro::SpriteSheet&);
+    void handleTextEvent(const cro::Event&);
+    void updateTextBox();
 };
 
 #endif //TL_GAMEOVER_STATE_HPP_
