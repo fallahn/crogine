@@ -31,3 +31,8 @@ source distribution.
 const cro::Colour textColourSelected(1.f, 0.77f, 0.f);
 const cro::Colour textColourNormal = cro::Colour::White();
 const float buttonIconOffset = 156.f;
+
+const cro::uint32 TextXL = 80;
+const cro::uint32 TextLarge = 60;
+const cro::uint32 TextMedium = 42;
+const cro::uint32 TextSmall = 32;

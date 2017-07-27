@@ -110,7 +110,6 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
         createMenus();
     });
 
-    requestStackPush(States::GameOver);
     updateView();
 }
 

@@ -85,7 +85,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     auto& titleText = textEnt.addComponent<cro::Text>(menuFont);
     titleText.setString("Scores");
     titleText.setColour(textColourSelected);
-    titleText.setCharSize(42);
+    titleText.setCharSize(TextMedium);
     auto& titleTextTx = textEnt.addComponent<cro::Transform>();
     titleTextTx.setPosition({ -84.f, 110.f, 0.f });
     titleTextTx.setParent(controlEntity);
@@ -102,7 +102,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     auto& backText = textEnt.addComponent<cro::Text>(menuFont);
     backText.setString("Back");
     backText.setColour(textColourNormal);
-    backText.setCharSize(60);
+    backText.setCharSize(TextLarge);
     auto& backTexTx = textEnt.addComponent<cro::Transform>();
     backTexTx.setParent(entity);
     backTexTx.move({ 40.f, 100.f, 0.f });
