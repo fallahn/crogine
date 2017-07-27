@@ -110,8 +110,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
         createMenus();
     });
 
-    //context.mainWindow.setVsyncEnabled(false);
-    //context.appInstance.setClearColour(cro::Colour::Red());
+    requestStackPush(States::GameOver);
     updateView();
 }
 

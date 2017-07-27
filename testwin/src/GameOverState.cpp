@@ -35,26 +35,40 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/CommandID.hpp>
+#include <crogine/ecs/components/UIInput.hpp>
 
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/util/Random.hpp>
 
 namespace
 {
 #ifdef PLATFORM_DESKTOP
     glm::vec2 uiRes(1920.f, 1080.f);
+    //glm::vec2 uiRes(1280.f, 720.f);
 #else
     glm::vec2 uiRes(1280.f, 720.f);
 #endif //PLATFORM_DESKTOP
 
-    enum GUID
+    enum UICommand
     {
-        ScoreText = 0x1
+        ScoreText = 0x1,
+        NameText = 0x2
+    };
+    cro::CommandSystem* commandSystem = nullptr;
+    const float uiDepth = 1.f;
+
+    const std::array<std::string, 10u> names = 
+    {
+        "Bob", "Margaret", "Hannah", "Kafoor", "Roman",
+        "Naomi", "Joe", "Violet", "Amy", "Robert"
     };
 
 #include "MenuConsts.inl"
@@ -75,7 +89,7 @@ bool GameOverState::handleEvent(const cro::Event& evt)
 {
     m_uiScene.forwardEvent(evt);
     m_uiSystem->handleEvent(evt);
-    return true;
+    return false;
 }
 
 void GameOverState::handleMessage(const cro::Message& msg)
@@ -94,6 +108,17 @@ void GameOverState::handleMessage(const cro::Message& msg)
 
 bool GameOverState::simulate(cro::Time dt)
 {
+    cro::Command cmd;
+    cmd.targetFlags = UICommand::ScoreText;
+    cmd.action = [&](cro::Entity entity, cro::Time)
+    {
+        auto& txt = entity.getComponent<cro::Text>();
+        txt.setString("Score: " + std::to_string(m_sharedResources.score));
+        auto bounds = txt.getLocalBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
+    };
+    commandSystem->sendCommand(cmd);
+    
     m_uiScene.simulate(dt);
     return true;
 }
@@ -112,17 +137,29 @@ void GameOverState::load()
     m_uiScene.addSystem<cro::SceneGraph>(mb);
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
+    commandSystem = &m_uiScene.addSystem<cro::CommandSystem>(mb);
 
     auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
     //font.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
 
+    //background image
+    cro::Image img;
+    img.create(2, 2, cro::Colour(0.f, 0.f, 0.f, 0.8f));
+    m_backgroundTexture.create(2, 2);
+    m_backgroundTexture.update(img.getPixelData(), false);
+
     auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale({ uiRes.x / 2.f, uiRes.y / 2.f, 0.5f });
+    entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    entity.addComponent<cro::Sprite>().setTexture(m_backgroundTexture);
+
+    entity = m_uiScene.createEntity();
     entity.addComponent<cro::Text>(font).setString("GAME OVER");
-    entity.getComponent<cro::Text>().setCharSize(80);
+    entity.getComponent<cro::Text>().setCharSize(90);
     entity.getComponent<cro::Text>().setColour(textColourSelected);
     auto textSize = entity.getComponent<cro::Text>().getLocalBounds();
     entity.addComponent<cro::Transform>();
-    entity.getComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 4.f) * 3.f, 2.f });
+    entity.getComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 4.f) * 3.4f, uiDepth });
     entity.getComponent<cro::Transform>().setOrigin({ textSize.width / 2.f, -textSize.height / 2.f, 0.f });
 
 
@@ -137,7 +174,7 @@ void GameOverState::load()
     auto area = entity.getComponent<cro::Sprite>().getLocalBounds();
     auto& buttonTx = entity.addComponent<cro::Transform>();
     buttonTx.setOrigin({ area.width / 2.f, area.height / 2.f, 0.f });
-    buttonTx.setPosition({ uiRes.x / 2.f, (uiRes.y / 4.f), 2.f });
+    buttonTx.setPosition({ uiRes.x / 2.f, 144.f, uiDepth });
 
     auto textEnt = m_uiScene.createEntity();
     auto& gameText = textEnt.addComponent<cro::Text>(font);
@@ -149,22 +186,74 @@ void GameOverState::load()
     gameTextTx.setParent(entity);
     auto iconEnt = m_uiScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
-    iconEnt.getComponent<cro::Transform>().setPosition({ area.width - buttonIconOffset, 0.f, 0.2f });
+    iconEnt.getComponent<cro::Transform>().setPosition({ area.width - buttonIconOffset, 0.f, 0.f });
     iconEnt.addComponent<cro::Sprite>() = icons.getSprite("menu");
 
+    auto activeArea = sprites.getSprite("button_active").getTextureRect();
+    auto& gameControl = entity.addComponent<cro::UIInput>();
+    gameControl.callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback([&,activeArea]
+    (cro::Entity e, cro::uint64 flags)
+    {
+        e.getComponent<cro::Sprite>().setTextureRect(activeArea);
+        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
+        std::size_t i = 0;
+        while (children[i] != -1)
+        {
+            auto c = children[i++];
+            auto child = m_uiScene.getEntity(c);
+            if (child.hasComponent<cro::Text>())
+            {
+                child.getComponent<cro::Text>().setColour(textColourSelected);
+            }
+            else if (child.hasComponent<cro::Sprite>())
+            {
+                child.getComponent<cro::Sprite>().setColour(textColourSelected);
+            }
+        }
+    });
+    gameControl.callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback([&, area]
+    (cro::Entity e, cro::uint64 flags)
+    {
+        e.getComponent<cro::Sprite>().setTextureRect(area);
+        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
+        std::size_t i = 0;
+        while (children[i] != -1)
+        {
+            auto c = children[i++];
+            auto child = m_uiScene.getEntity(c);
+            if (child.hasComponent<cro::Text>())
+            {
+                child.getComponent<cro::Text>().setColour(textColourNormal);
+            }
+            else if (child.hasComponent<cro::Sprite>())
+            {
+                child.getComponent<cro::Sprite>().setColour(textColourNormal);
+            }
+        }
+    });
+    gameControl.callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([this]
+    (cro::Entity, cro::uint64 flags)
+    {
+        if ((flags & cro::UISystem::LeftMouse)
+            || flags & cro::UISystem::Finger)
+        {
+            requestStackClear();
+            requestStackPush(States::MainMenu);
+        }
+    });
+    gameControl.area.width = area.width;
+    gameControl.area.height = area.height;
 
 
-    //background image
-    cro::Image img;
-    img.create(2, 2, cro::Colour(0.f, 0.f, 0.f, 0.5f));
-    m_backgroundTexture.create(2, 2);
-    m_backgroundTexture.update(img.getPixelData(), false);
+    auto scoreEnt = m_uiScene.createEntity();
+    auto& scoreText = scoreEnt.addComponent<cro::Text>(font);
+    scoreText.setString("Score: 0000");
+    scoreText.setCharSize(80);
+    scoreText.setColour(textColourSelected);
+    scoreEnt.addComponent<cro::Transform>().setPosition({uiRes.x / 2.f, (uiRes.y / 3.f) * 2.3f, uiDepth});
+    scoreEnt.addComponent<cro::CommandTarget>().ID = UICommand::ScoreText;
 
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setScale({ uiRes.x / 2.f, uiRes.y / 2.f, 1.f });
-    entity.addComponent<cro::Sprite>().setTexture(m_backgroundTexture);
-
-
+    createTextBox(sprites);
 
     //camera
     entity = m_uiScene.createEntity();
@@ -183,4 +272,35 @@ void GameOverState::updateView()
     auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam2D.viewport.bottom = (1.f - size.y) / 2.f;
     cam2D.viewport.height = size.y;
+}
+
+void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
+{
+    auto parentEnt = m_uiScene.createEntity();
+    parentEnt.addComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, uiRes.y / 2.f, uiDepth });
+
+    auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
+
+    auto textEnt = m_uiScene.createEntity();
+    textEnt.addComponent<cro::Text>(font).setString("Enter Your Name:");
+    textEnt.getComponent<cro::Text>().setCharSize(50);
+    textEnt.getComponent<cro::Text>().setColour(textColourSelected);
+
+    auto textSize = textEnt.getComponent<cro::Text>().getLocalBounds();
+    textEnt.addComponent<cro::Transform>().setParent(parentEnt);
+    textEnt.getComponent<cro::Transform>().setOrigin({ textSize.width / 2.f, -textSize.height, 0.f });
+
+    auto boxEnt = m_uiScene.createEntity();
+    boxEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("textbox_inactive");
+    auto textArea = boxEnt.getComponent<cro::Sprite>().getLocalBounds();
+    boxEnt.addComponent<cro::Transform>().setParent(parentEnt);
+    boxEnt.getComponent<cro::Transform>().setOrigin({ textArea.width / 2.f, textArea.height, 0.f });
+
+    auto inputEnt = m_uiScene.createEntity();
+    inputEnt.addComponent<cro::Text>(font).setString(names[cro::Util::Random::value(0, names.size())]);
+    inputEnt.getComponent<cro::Text>().setCharSize(60);
+    inputEnt.getComponent<cro::Text>().setColour(textColourSelected);
+    inputEnt.addComponent<cro::Transform>().setParent(parentEnt);
+    inputEnt.getComponent<cro::Transform>().setPosition({ (-textArea.width / 2.f) + 32.f, -22.f, 0.f });
+    inputEnt.addComponent<cro::CommandTarget>().ID = UICommand::NameText;
 }

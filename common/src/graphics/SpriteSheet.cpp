@@ -152,7 +152,7 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
     return count > 0;
 }
 
-Sprite SpriteSheet::getSprite(const std::string& name)
+Sprite SpriteSheet::getSprite(const std::string& name) const
 {
     if (m_sprites.count(name) != 0)
     {

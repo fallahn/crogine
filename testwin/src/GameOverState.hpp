@@ -41,6 +41,7 @@ source distribution.
 namespace cro
 {
     class UISystem;
+    class SpriteSheet;
 }
 
 struct SharedResources;
@@ -69,6 +70,8 @@ private:
 
     void load();
     void updateView();
+
+    void createTextBox(const cro::SpriteSheet&);
 };
 
 #endif //TL_GAMEOVER_STATE_HPP_
