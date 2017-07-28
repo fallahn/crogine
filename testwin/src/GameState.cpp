@@ -430,6 +430,11 @@ void GameState::createHUD()
         auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);
         msg->button = UIEvent::Pause;
         msg->type = UIEvent::ButtonReleased;
+
+        if (flags & cro::UISystem::LeftMouse)
+        {
+            requestStackPush(States::PauseMenu);
+        }
     });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = pawsReleasedCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = pawsReleasedCallback; //in case mouse leaves while still pressed
