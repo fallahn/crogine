@@ -302,7 +302,7 @@ void MainState::createScene()
     entity = m_menuScene.createEntity();
     entity.addComponent<cro::Transform>();
     auto& cam2D = entity.addComponent<cro::Camera>();
-    cam2D.projection = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -0.1f, 100.f);
+    cam2D.projection = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
     m_menuScene.setActiveCamera(entity);
 }
 

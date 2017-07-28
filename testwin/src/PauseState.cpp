@@ -294,10 +294,11 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback(
         [&](cro::Entity, cro::uint64 flags)
     {
-        if ((flags & cro::UISystem::LeftMouse)
-            || flags & cro::UISystem::Finger)
+        if ((flags & cro::UISystem::LeftMouse) //gets raised even on touch
+            /*|| flags & cro::UISystem::Finger*/)
         {
             requestStackPop();
+            //LOG("POP!", cro::Logger::Type::Info);
         }
     });
     entity.getComponent<cro::UIInput>().area.width = buttonNormalArea.width;

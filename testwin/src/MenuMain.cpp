@@ -126,7 +126,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     gameTextTx.setParent(entity);
     auto iconEnt = m_menuScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
-    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.2f });
     iconEnt.addComponent<cro::Sprite>() = icons.getSprite("play");
 
     //options
@@ -171,7 +171,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     texTx.move({ 40.f, 100.f, 0.f });
     iconEnt = m_menuScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
-    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.2f });
     iconEnt.addComponent<cro::Sprite>() = icons.getSprite("settings");
 
     //high scores
@@ -217,7 +217,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     scoreTexTx.move({ 40.f, 100.f, 0.f });
     iconEnt = m_menuScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
-    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.2f });
     iconEnt.addComponent<cro::Sprite>() = icons.getSprite("scores");
 
     //quit button
@@ -239,7 +239,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     quitTexTx.move({ 40.f, 100.f, 0.f });
     iconEnt = m_menuScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
-    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.2f });
     iconEnt.addComponent<cro::Sprite>() = icons.getSprite("exit");
 
     auto quitCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
@@ -305,7 +305,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     buttonTextTx0.setPosition({ 60.f, 110.f, 0.f });
     iconEnt = m_menuScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(buttonEnt);
-    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.2f });
     iconEnt.addComponent<cro::Sprite>() = icons.getSprite("exit");
 
     auto okCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
@@ -343,7 +343,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     buttonTextTx1.setPosition({ 60.f, 110.f, 0.f });
     iconEnt = m_menuScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(buttonEnt);
-    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
+    iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.2f });
     iconEnt.addComponent<cro::Sprite>() = icons.getSprite("back");
 
     auto cancelCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
