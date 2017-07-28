@@ -31,6 +31,7 @@ source distribution.
 #include "MainState.hpp"
 #include "MenuState.hpp"
 #include "GameState.hpp"
+#include "PauseState.hpp"
 #include "GameOverState.hpp"
 #include "LoadingScreen.hpp"
 #include "icon.hpp"
@@ -50,6 +51,7 @@ MyApp::MyApp()
 #endif //PLATFORM_MOBILE
 
     m_stateStack.registerState<GameState>(States::ID::GamePlaying);
+    m_stateStack.registerState<PauseState>(States::ID::PauseMenu, m_sharedResources);
     m_stateStack.registerState<GameOverState>(States::ID::GameOver, m_sharedResources);
 	m_stateStack.pushState(States::MainMenu);
 }

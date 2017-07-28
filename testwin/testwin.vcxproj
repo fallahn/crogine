@@ -312,6 +312,7 @@
     <ClCompile Include="src\NpcDirector.cpp" />
     <ClCompile Include="src\NpcSystem.cpp" />
     <ClCompile Include="src\NpcWeaponSystem.cpp" />
+    <ClCompile Include="src\PauseState.cpp" />
     <ClCompile Include="src\PlayerWeaponsSystem.cpp" />
     <ClCompile Include="src\PlayerDirector.cpp" />
     <ClCompile Include="src\PlayerSystem.cpp" />
@@ -346,6 +347,7 @@
     <ClInclude Include="src\NpcDirector.hpp" />
     <ClInclude Include="src\NPCSystem.hpp" />
     <ClInclude Include="src\NpcWeaponSystem.hpp" />
+    <ClInclude Include="src\PauseState.hpp" />
     <ClInclude Include="src\PlayerDirector.hpp" />
     <ClInclude Include="src\PlayerSystem.hpp" />
     <ClInclude Include="src\PlayerWeaponsSystem.hpp" />
