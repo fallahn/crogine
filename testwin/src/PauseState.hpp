@@ -27,8 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TL_GAMEOVER_STATE_HPP_
-#define TL_GAMEOVER_STATE_HPP_
+#ifndef TL_PAUSE_STATE_HPP_
+#define TL_PAUSE_STATE_HPP_
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -47,13 +47,13 @@ namespace cro
 struct SharedResources;
 using ResourcePtr = std::unique_ptr<SharedResources>;
 
-class GameOverState final : public cro::State
+class PauseState final : public cro::State
 {
 public:
-    GameOverState(cro::StateStack&, cro::State::Context, ResourcePtr&);
-    ~GameOverState() = default;
+    PauseState(cro::StateStack&, cro::State::Context, ResourcePtr&);
+    ~PauseState() = default;
 
-    cro::StateID getStateID() const override { return States::GameOver; }
+    cro::StateID getStateID() const override { return States::PauseMenu; }
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
@@ -64,16 +64,14 @@ private:
 
     cro::Scene m_uiScene;
     SharedResources& m_sharedResources;
-    //cro::ResourceCollection m_resources;
     cro::UISystem* m_uiSystem;
     cro::Texture m_backgroundTexture;
 
     void load();
+    void createMenu(const cro::SpriteSheet&, const cro::SpriteSheet&, cro::uint32, cro::uint32);
+    void createOptions(const cro::SpriteSheet&, const cro::SpriteSheet&, cro::uint32, cro::uint32);
     void updateView();
-
-    void createTextBox(const cro::SpriteSheet&);
-    void handleTextEvent(const cro::Event&);
-    void updateTextBox();
 };
 
-#endif //TL_GAMEOVER_STATE_HPP_
+
+#endif //TL_PAUSE_STATE_HPP_

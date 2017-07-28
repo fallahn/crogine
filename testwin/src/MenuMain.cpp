@@ -69,7 +69,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     //create an entity to move the menu
     auto controlEntity = m_menuScene.createEntity();
     auto& controlTx = controlEntity.addComponent<cro::Transform>();
-    controlTx.setPosition({ 960.f, 624.f, 0.f });
+    controlTx.setPosition({ cro::DefaultSceneSize.x / 2.f, 624.f, 0.f });
     controlEntity.addComponent<cro::CommandTarget>().ID = CommandID::MenuController;
     controlEntity.addComponent<Slider>();
 

@@ -135,6 +135,9 @@
     <ClCompile Include="src\GameOverState.cpp">
       <Filter>Source Files\TL</Filter>
     </ClCompile>
+    <ClCompile Include="src\PauseState.cpp">
+      <Filter>Source Files\TL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -240,6 +243,9 @@
       <Filter>Header Files\systems</Filter>
     </ClInclude>
     <ClInclude Include="src\GameOverState.hpp">
+      <Filter>Header Files\TL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PauseState.hpp">
       <Filter>Header Files\TL</Filter>
     </ClInclude>
   </ItemGroup>

@@ -120,18 +120,28 @@ bool GameState::handleEvent(const cro::Event& evt)
 {
     if (evt.type == SDL_KEYUP)
     {
-        if (evt.key.keysym.sym == SDLK_p)
+        /*if (evt.key.keysym.sym == SDLK_p)
         {
             auto* msg = getContext().appInstance.getMessageBus().post<PlayerEvent>(MessageID::PlayerMessage);
             msg->type = PlayerEvent::CollectedItem;
             msg->itemID = CollectableItem::Buddy;
+
         }
         else if (evt.key.keysym.sym == SDLK_o)
         {
             auto* msg = getContext().appInstance.getMessageBus().post<PlayerEvent>(MessageID::PlayerMessage);
             msg->type = PlayerEvent::FiredEmp;
-            msg->position = { 0.f, 0.f, -9.3f };// entity.getComponent<cro::Transform>().getWorldPosition();
-            //msg->entityID = entity.getIndex();
+            msg->position = { 0.f, 0.f, -9.3f };
+        }*/
+
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_p:
+        case SDLK_PAUSE:
+            //case SDLK_ESCAPE:
+            requestStackPush(States::PauseMenu);
+            break;
         }
     }
 
@@ -152,6 +162,17 @@ void GameState::handleMessage(const cro::Message& msg)
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             updateView();
+        }
+    }
+    else if (msg.id == MessageID::GameMessage)
+    {
+        const auto& data = msg.getData<GameEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case GameEvent::GameOver:
+            requestStackPush(States::GameOver);
+            break;
         }
     }
 }
