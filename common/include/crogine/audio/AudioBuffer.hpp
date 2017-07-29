@@ -66,7 +66,7 @@ namespace cro
         or *.ogg vorbis files (mono or stereo).
         \returns true on success, else false
         */
-        bool loadFromFile(const std::string&);
+        bool loadFromFile(const std::string&) override;
 
         /*!
         \brief Attempts to load the buffer with data stored in memory.

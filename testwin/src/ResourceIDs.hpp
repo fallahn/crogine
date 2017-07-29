@@ -156,7 +156,8 @@ namespace AudioID
 {
     enum
     {
-        Test
+        Test,
+        TestStream
     };
 }
 
