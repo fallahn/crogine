@@ -144,6 +144,13 @@ bool GameState::handleEvent(const cro::Event& evt)
             break;
         }
     }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        if (evt.cbutton.button == SDL_CONTROLLER_BUTTON_START)
+        {
+            requestStackPush(States::PauseMenu);
+        }
+    }
 
     m_scene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);

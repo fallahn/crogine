@@ -93,6 +93,8 @@ namespace
         file << ss.rdbuf();
         file.close();
     }
+
+    //cro::CommandSystem* buns = nullptr;
 }
 
 MainState::MainState(cro::StateStack& stack, cro::State::Context context, ResourcePtr& sharedResources)
@@ -157,7 +159,7 @@ void MainState::render()
 void MainState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-
+    //buns = &m_backgroundScene.addSystem<cro::CommandSystem>(mb);
     m_backgroundScene.addSystem<RotateSystem>(mb);
     m_backgroundScene.addSystem<DriftSystem>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
@@ -237,7 +239,7 @@ void MainState::createScene()
     {
         arcticModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[i]));
     }
-    arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::TestStream)).play(/*true*/);
+    arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::TestStream)).play(true);
     //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
     arcticEntity.getComponent<cro::AudioSource>().setVolume(0.1f);
     arcticEntity.addComponent<cro::CommandTarget>().ID = (1 << 30);
