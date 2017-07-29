@@ -78,11 +78,6 @@ void AudioSystem::process(cro::Time dt)
             && audioSource.m_state != AudioSource::State::Playing)
         {
             bool loop = (audioSource.m_transportFlags & AudioSource::Looped);
-            if (audioSource.m_sourceType == AudioDataSource::Type::Stream)
-            {
-                //set stream property to loop instead
-                loop = false;
-            }
             AudioRenderer::playSource(audioSource.m_ID, loop);
         }
         else if (audioSource.m_transportFlags & AudioSource::Pause)

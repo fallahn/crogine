@@ -237,7 +237,7 @@ void MainState::createScene()
     {
         arcticModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[i]));
     }
-    arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::TestStream)).play(true);
+    arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::TestStream)).play(/*true*/);
     //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
     arcticEntity.getComponent<cro::AudioSource>().setVolume(0.1f);
     arcticEntity.addComponent<cro::CommandTarget>().ID = (1 << 30);

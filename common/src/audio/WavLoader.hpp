@@ -72,6 +72,14 @@ namespace cro
             */
             const PCMData& getData(std::size_t chunkSize = 0) const override;
 
+            /*!
+            \brief Seek to a specific offset in the file.
+            \param offset Time struct containing the amount of time offset
+            from the beginning of the stream.
+            \returns true if successful else false if out of bounds.
+            */
+            bool seek(cro::Time) override;
+
         private:
             RaiiRWops m_file;
 
@@ -98,6 +106,7 @@ namespace cro
 
             cro::int64 m_dataStart;
             cro::uint32 m_dataSize;
+            cro::uint64 m_bytesPerSecond;
 
             mutable PCMData m_dataChunk;
             mutable std::vector<cro::uint8> m_sampleBuffer;

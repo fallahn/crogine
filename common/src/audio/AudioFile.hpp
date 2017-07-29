@@ -32,6 +32,8 @@ source distribution.
 
 #include "PCMData.hpp"
 
+#include <crogine/core/Clock.hpp>
+
 #include <string>
 
 namespace cro
@@ -61,7 +63,11 @@ namespace cro
             */
             virtual const PCMData& getData(std::size_t chunkSize = 0) const = 0;
 
-            //TODO functions to seek within the file
+            /*!
+            \brief seek to a specific offset in the file
+            \returns true if seek is successful, else false if out of bounds
+            */
+            virtual bool seek(cro::Time) = 0;
         };
     }
 }
