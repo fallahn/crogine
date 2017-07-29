@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/audio/AudioStream.hpp>
 #include <crogine/core/Log.hpp>
 
+#include <vector>
+
 using namespace cro;
 
 AudioResource::AudioResource()
