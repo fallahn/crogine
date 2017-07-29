@@ -78,7 +78,7 @@ namespace cro
         virtual void updateStream(int32) = 0;
         virtual void deleteStream(cro::int32) = 0;
 
-        virtual cro::int32 requestAudioSource(cro::int32) = 0;
+        virtual cro::int32 requestAudioSource(cro::int32, bool) = 0;
         virtual void deleteAudioSource(cro::int32) = 0;
 
         virtual void playSource(cro::int32, bool) = 0;
@@ -167,14 +167,33 @@ namespace cro
         static void deleteBuffer(cro::int32 buffer);
 
         /*!
+        \brief Requests a new audio stram from a file on disk.
+        \param path Path to file to stream.
+        \returns ID of stream, or -1 if opening the file failed
+        */
+        static int32 requestNewStream(const std::string& path);
+
+        /*!
+        \brief Updates the stream belonging to the given ID
+        */
+        static void updateStream(int32);
+
+        /*!
+        \brief Deletes the stream with the given ID, if it exists
+        */
+        static void deleteStream(int32);
+
+        /*!
         \brief Requests a new audio source bound to the given buffer.
         \param buffer ID of the buffer to which to bind the audio source.
+        \param streaming Should be true if the buffer ID is associated with a
+        and AudioStream data source, else false for an AudioBuffer.
         \returns A unique ID for the audio sourceon success else returns - 1
         NOTE these audio sources are not resource managed in anyway and is left
         entirely to the caller to make sucre that the audio source is properly
         deleted with deleteAudioSource() when it needs to be disposed
         */
-        static cro::int32 requestAudioSource(cro::int32 buffer);
+        static cro::int32 requestAudioSource(cro::int32 buffer, bool streaming);
 
         /*!
         \brief Attempts to delete the audio source with the given ID.

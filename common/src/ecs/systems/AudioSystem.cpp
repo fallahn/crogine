@@ -70,13 +70,18 @@ void AudioSystem::process(cro::Time dt)
         if (audioSource.m_newDataSource)
         {
             AudioRenderer::deleteAudioSource(audioSource.m_ID);
-            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID);
+            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioDataSource::Type::Stream));
             audioSource.m_newDataSource = false;
         }
 
         if (audioSource.m_transportFlags & AudioSource::Play)
         {
             bool loop = (audioSource.m_transportFlags & AudioSource::Looped);
+            if (audioSource.m_sourceType == AudioDataSource::Type::Stream)
+            {
+                //set stream property to loop instead
+                loop = false;
+            }
             AudioRenderer::playSource(audioSource.m_ID, loop);
         }
         else if (audioSource.m_transportFlags & AudioSource::Pause)
@@ -106,6 +111,12 @@ void AudioSystem::process(cro::Time dt)
         AudioRenderer::setSourcePitch(audioSource.m_ID, audioSource.m_pitch);
         AudioRenderer::setSourceVolume(audioSource.m_ID, audioSource.m_volume);
         AudioRenderer::setSourceRolloff(audioSource.m_ID, audioSource.m_rolloff);
+
+        //if we're steaming make sure to update the stream buffer
+        if (audioSource.m_sourceType == AudioDataSource::Type::Stream)
+        {
+            AudioRenderer::updateStream(audioSource.m_dataSourceID);
+        }
     }
 }
 
@@ -114,14 +125,18 @@ void AudioSystem::onEntityAdded(Entity entity)
 {
     //check if buffer already added and summon new audio source
     auto& audioSource = entity.getComponent<AudioSource>();
-    if(AudioRenderer::isValid() && audioSource.m_dataSourceID > 0)
-    {
+    if(AudioRenderer::isValid())
+    {           
+        if (audioSource.m_dataSourceID < 0) //we don't have a valid buffer yet (remember streams are 0 based)
+        {
+            getEntities().pop_back();
+            return;
+        }                     
+
         if (audioSource.m_newDataSource)
         {
-            //CRO_ASSERT(audioSource.m_bufferID > 0, "Not a valid buffer ID");
-
             AudioRenderer::deleteAudioSource(audioSource.m_ID);
-            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID);
+            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioDataSource::Type::Stream));
             audioSource.m_newDataSource = false;
         }
     }

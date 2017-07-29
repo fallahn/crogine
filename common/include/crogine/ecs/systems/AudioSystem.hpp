@@ -54,6 +54,10 @@ namespace cro
     private:
 
         void onEntityAdded(Entity) override;
+        //void onEntityRemoved(Entity) override;
+
+        //std::vector<Entity> m_sounds;
+        //std::vector<Entity> m_streams;
     };
 }
 

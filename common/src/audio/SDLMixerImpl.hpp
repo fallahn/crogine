@@ -50,7 +50,7 @@ namespace cro
             cro::int32 requestNewBuffer(const std::string& path) override;
             void deleteBuffer(cro::int32) override;
 
-            cro::int32 requestAudioSource(cro::int32) override;
+            cro::int32 requestAudioSource(cro::int32, bool) override;
             void deleteAudioSource(cro::int32) override;
 
             void playSource(cro::int32, bool) override;

@@ -76,7 +76,7 @@ namespace cro
             void updateStream(cro::int32) override;
             void deleteStream(cro::int32) override;
 
-            cro::int32 requestAudioSource(cro::int32) override;
+            cro::int32 requestAudioSource(cro::int32, bool) override;
             void deleteAudioSource(cro::int32) override;
 
             void playSource(cro::int32, bool) override;

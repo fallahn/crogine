@@ -37,6 +37,8 @@ source distribution.
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
 
+#include <crogine/audio/AudioStream.hpp>
+
 namespace cro
 {
     class CommandSystem;
@@ -60,6 +62,7 @@ public:
     void render() override;
 
 private:
+    cro::AudioStream m_testStream;
 
     cro::ResourceCollection m_resources; //destruction order important!
     cro::Scene m_backgroundScene;

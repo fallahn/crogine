@@ -27,33 +27,31 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/audio/AudioBuffer.hpp>
-#include <crogine/detail/Assert.hpp>
-
 #include "AudioRenderer.hpp"
-#include "PCMData.hpp"
+
+#include <crogine/audio/AudioStream.hpp>
 
 using namespace cro;
 
-AudioBuffer::AudioBuffer()
+AudioStream::AudioStream()
 {
 
 }
 
-AudioBuffer::~AudioBuffer()
+AudioStream::~AudioStream()
 {
     if (getID() > 0)
     {
-        AudioRenderer::deleteBuffer(getID());
+        AudioRenderer::deleteStream(getID());
         setID(-1);
     }
 }
 
-AudioBuffer::AudioBuffer(AudioBuffer&& other)
+AudioStream::AudioStream(AudioStream&& other)
 {
     if (getID() > 0)
     {
-        AudioRenderer::deleteBuffer(getID());
+        AudioRenderer::deleteStream(getID());
         setID(-1);
     }
     
@@ -61,13 +59,13 @@ AudioBuffer::AudioBuffer(AudioBuffer&& other)
     other.setID(-1);
 }
 
-AudioBuffer& AudioBuffer::operator=(AudioBuffer&& other)
+AudioStream& AudioStream::operator=(AudioStream&& other)
 {
     if (&other != this)
     {
         if (getID() > 0)
         {
-            AudioRenderer::deleteBuffer(getID());
+            AudioRenderer::deleteStream(getID());
             setID(-1);
         }
         
@@ -78,35 +76,14 @@ AudioBuffer& AudioBuffer::operator=(AudioBuffer&& other)
 }
 
 //public
-bool AudioBuffer::loadFromFile(const std::string& path)
+bool AudioStream::loadFromFile(const std::string& path)
 {
     if (getID() > 0)
     {
-        AudioRenderer::deleteBuffer(getID());
+        AudioRenderer::deleteStream(getID());
         setID(-1);
     }
-    
-    setID(AudioRenderer::requestNewBuffer(path));
-    return getID() != -1;
-}
 
-bool AudioBuffer::loadFromMemory(void* data, uint8 bitDepth, uint32 sampleRate, bool stereo, std::size_t size)
-{
-    CRO_ASSERT(bitDepth == 8 || bitDepth == 16, "Invalid bitdepth value, must be 8 or 16");
-
-    Detail::PCMData pcmData;
-    pcmData.data = data;
-    if (stereo)
-    {
-        pcmData.format = (bitDepth == 8) ? Detail::PCMData::Format::STEREO8 : Detail::PCMData::Format::STEREO16;
-    }
-    else
-    {
-        pcmData.format = (bitDepth == 8) ? Detail::PCMData::Format::MONO8 : Detail::PCMData::Format::MONO16;
-    }
-    pcmData.frequency = sampleRate;
-    pcmData.size = size;
-        
-    setID(AudioRenderer::requestNewBuffer(pcmData));
+    setID(AudioRenderer::requestNewStream(path));
     return getID() != -1;
 }

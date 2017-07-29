@@ -148,7 +148,7 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
         }
     }
 
-    LOG("Found " + std::to_string(count) + " sprites in " + path, Logger::Type::Info);
+    //LOG("Found " + std::to_string(count) + " sprites in " + path, Logger::Type::Info);
     return count > 0;
 }
 
