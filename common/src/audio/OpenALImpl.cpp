@@ -84,6 +84,11 @@ namespace
                 //increment currentBuffer
                 stream.currentBuffer = (stream.currentBuffer + 1) % stream.buffers.size();
             }
+            else if(stream.looped)
+            {
+                //rewind
+                stream.audioFile->seek(cro::Time());
+            }
         }
 
         stream.updating = false;
@@ -365,7 +370,21 @@ void OpenALImpl::deleteAudioSource(cro::int32 source)
 void OpenALImpl::playSource(int32 source, bool looped)
 {
     ALuint src = static_cast<ALuint>(source);
-    alCheck(alSourcei(src, AL_LOOPING, looped ? AL_TRUE : AL_FALSE));
+
+    auto result = std::find_if(std::begin(m_streams), std::end(m_streams),
+        [src](const OpenALStream& str)
+    {
+        return str.sourceID == src;
+    });
+
+    if (result == m_streams.end())
+    {
+        alCheck(alSourcei(src, AL_LOOPING, looped ? AL_TRUE : AL_FALSE));
+    }
+    else
+    {
+        result->looped = looped;
+    }
     alCheck(alSourcePlay(src));
 }
 

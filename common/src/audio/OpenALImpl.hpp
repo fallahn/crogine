@@ -50,10 +50,11 @@ namespace cro
             std::array<ALuint, 3> buffers{};
             std::size_t currentBuffer = 0;
             std::unique_ptr<AudioFile> audioFile;
-            std::atomic<bool> updating{false};
+            std::atomic<bool> updating{ false };
             ALint processed = 0;
             SDL_Thread* thread = nullptr;
             int32 sourceID = -1;
+            std::atomic<bool> looped{ false };
         };
 
         class OpenALImpl final : public cro::AudioRendererImpl

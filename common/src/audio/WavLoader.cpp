@@ -61,7 +61,8 @@ namespace
 
 WavLoader::WavLoader()
     : m_dataStart   (0),
-    m_dataSize      (0)
+    m_dataSize      (0),
+    m_bytesPerSecond(0)
 {
 
 }
@@ -148,6 +149,8 @@ bool WavLoader::open(const std::string& path)
             m_dataChunk.format = (m_header.bitsPerSample == 8) ? PCMData::Format::STEREO8 : PCMData::Format::STEREO16;
         }
 
+        m_bytesPerSecond = m_header.sampleRate * m_header.channelCount * (m_header.bitsPerSample / 8);
+
         return true;
     }
     return false; //no file :(
@@ -157,11 +160,9 @@ const PCMData& WavLoader::getData(std::size_t size) const
 {
     auto currPos = m_file.file->seek(m_file.file, 0, RW_SEEK_CUR);
 
-    //rewind if at the end
+    //return null if at the end
     if (currPos >= ((m_dataStart + m_dataSize) - 1) || currPos == -1)
     {
-        currPos = m_file.file->seek(m_file.file, m_dataStart, RW_SEEK_SET);
-
         //return empty so we know we reached the end
         m_dataChunk.size = 0;
         m_dataChunk.data = nullptr;
@@ -182,3 +183,18 @@ const PCMData& WavLoader::getData(std::size_t size) const
     m_dataChunk.data = m_sampleBuffer.data();
     return m_dataChunk;
 }
+
+bool WavLoader::seek(cro::Time offset)
+{
+    if (!m_file.file) return false;
+
+    auto offsetMillis = offset.asMilliseconds();
+    auto dest = m_bytesPerSecond * offsetMillis / 1000;
+
+    if (dest < m_dataSize)
+    {
+        auto result = m_file.file->seek(m_file.file, m_dataStart + dest, RW_SEEK_SET);
+        return result = (m_dataStart + dest);
+    }
+    return false;
+} 
