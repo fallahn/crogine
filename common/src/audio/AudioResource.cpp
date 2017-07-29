@@ -28,40 +28,49 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/audio/AudioResource.hpp>
+#include <crogine/audio/AudioBuffer.hpp>
+#include <crogine/audio/AudioStream.hpp>
 #include <crogine/core/Log.hpp>
 
 using namespace cro;
 
 AudioResource::AudioResource()
 {
-    //TODO implement fallback
-    /*if (!m_fallback.loadFromMemory(nullptr, 0, 0, false, 0))
-    {
-        Logger::log("Failed creating fallback audio buffer", Logger::Type::Warning);
-    }*/
+    m_fallback = std::make_unique<AudioBuffer>();
+    std::vector<uint8> data(10);
+    dynamic_cast<AudioBuffer*>(m_fallback.get())->loadFromMemory(data.data(), 8, 22500, false, 10);
 }
 
 //public
 bool AudioResource::load(int32 ID, const std::string& path, bool streaming)
 {
-    //TODO implement streaming
-    if (m_buffers.count(ID) > 0)
+    if (m_sources.count(ID) > 0)
     {
-        Logger::log("Buffer with ID " + std::to_string(ID) + " alread exists", Logger::Type::Error);
+        Logger::log("Data Source with ID " + std::to_string(ID) + " alread exists", Logger::Type::Error);
         return false;
     }
 
-    AudioBuffer buffer;
-    auto result = buffer.loadFromFile(path);
+    std::unique_ptr<AudioDataSource> buffer;
+    
+    if (streaming)
+    {
+        buffer = std::make_unique<AudioStream>();
+    }
+    else
+    {
+        buffer = std::make_unique<AudioBuffer>();
+    }
+    
+    auto result = buffer->loadFromFile(path);
     if (result)
     {
-        m_buffers.insert(std::make_pair(ID, std::move(buffer)));
+        m_sources.insert(std::make_pair(ID, std::move(buffer)));
     }
     return result;
 }
 
-const AudioBuffer& AudioResource::get(int32 id) const
+const AudioDataSource& AudioResource::get(int32 id) const
 {
-    if (m_buffers.count(id) == 0) return m_fallback;
-    return m_buffers.find(id)->second;
+    if (m_sources.count(id) == 0) return *m_fallback;
+    return *m_sources.find(id)->second;
 }

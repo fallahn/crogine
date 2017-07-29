@@ -63,8 +63,11 @@ namespace cro
         \brief Attempts to open the *.ogg or *.wav file fomr the given path.
         \returns true on success else false.
         */
-        bool loadFromFile(const std::string& path);
+        bool loadFromFile(const std::string& path) override;
 
+        /*!
+        \brief Returns the underlying data type
+        */
         AudioDataSource::Type getType() const override { return AudioDataSource::Type::Stream; }
 
     private:

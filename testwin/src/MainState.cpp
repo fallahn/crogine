@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/AudioSource.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
+#include <crogine/ecs/components/CommandID.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
@@ -136,7 +137,7 @@ void MainState::handleMessage(const cro::Message& msg)
 }
 
 bool MainState::simulate(cro::Time dt)
-{
+{    
     m_backgroundScene.simulate(dt);
     m_menuScene.simulate(dt);
 
@@ -193,7 +194,7 @@ void MainState::loadAssets()
 
     //audio
     m_resources.audio.load(AudioID::Test, "assets/audio/boop_loop.wav");
-    m_testStream.loadFromFile("assets/audio/music.wav");
+    m_resources.audio.load(AudioID::TestStream, "assets/audio/short_music.wav", true);
 }
 
 void MainState::createScene()
@@ -236,9 +237,10 @@ void MainState::createScene()
     {
         arcticModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[i]));
     }
-    arcticEntity.addComponent<cro::AudioSource>(/*m_resources.audio.get(AudioID::Test)*/m_testStream).play(true);
+    arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::TestStream)).play(true);
     //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
     arcticEntity.getComponent<cro::AudioSource>().setVolume(0.1f);
+    arcticEntity.addComponent<cro::CommandTarget>().ID = (1 << 30);
     
     auto lookoutEntity = m_backgroundScene.createEntity();
     auto& lookoutTx = lookoutEntity.addComponent<cro::Transform>();
@@ -254,7 +256,7 @@ void MainState::createScene()
     lookoutEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
     lookoutEntity.getComponent<cro::AudioSource>().setPitch(2.4f);
     //lookoutEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
-    lookoutEntity.getComponent<cro::AudioSource>().setVolume(2.4f);
+    //lookoutEntity.getComponent<cro::AudioSource>().setVolume(2.4f);
 
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });

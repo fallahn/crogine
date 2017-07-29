@@ -232,6 +232,7 @@
     <ClCompile Include="..\common\src\audio\AudioBuffer.cpp" />
     <ClCompile Include="..\common\src\audio\AudioRenderer.cpp" />
     <ClCompile Include="..\common\src\audio\AudioResource.cpp" />
+    <ClCompile Include="..\common\src\audio\AudioStream.cpp" />
     <ClCompile Include="..\common\src\audio\OpenALImpl.cpp" />
     <ClCompile Include="..\common\src\audio\SDLMixerImpl.cpp" />
     <ClCompile Include="..\common\src\audio\WavLoader.cpp" />

@@ -74,7 +74,8 @@ void AudioSystem::process(cro::Time dt)
             audioSource.m_newDataSource = false;
         }
 
-        if (audioSource.m_transportFlags & AudioSource::Play)
+        if ((audioSource.m_transportFlags & AudioSource::Play)
+            && audioSource.m_state != AudioSource::State::Playing)
         {
             bool loop = (audioSource.m_transportFlags & AudioSource::Looped);
             if (audioSource.m_sourceType == AudioDataSource::Type::Stream)

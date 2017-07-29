@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 
+#include <string>
+
 namespace cro
 {
     /*!
@@ -58,6 +60,11 @@ namespace cro
         \brief Returns the resource ID as assigned by the active AudioRenderer
         */
         int32 getID() const { return m_id; }
+
+        /*!
+        \brief Attempts to load the file at the given path.
+        */
+        virtual bool loadFromFile(const std::string&) = 0;
 
     protected:
         void setID(int32 id) { m_id = id; }

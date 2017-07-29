@@ -32,18 +32,18 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
-#include <crogine/audio/AudioBuffer.hpp>
+#include <crogine/audio/AudioDataSource.hpp>
 
 #include <string>
 #include <unordered_map>
+#include <memory>
 
 namespace cro
 {
     /*!
-    \brief Resource management for audio buffers.
-    Audio buffers provide the audio data required by AudioSources.
-    Buffers can be mapped to arbitrary integer values, such as that
-    of an enum.
+    \brief Resource management for audio data sources.
+    AudioBuffers and AudioStreams provide the audio data required by AudioSources.
+    Data can be mapped to arbitrary integer values, such as that of an enum.
     */
     class CRO_EXPORT_API AudioResource final
     {
@@ -58,8 +58,8 @@ namespace cro
         AudioResource& operator = (AudioResource&&) = default;
 
         /*!
-        \brief Loads an audio file and maps the resulting buffer to the given ID
-        \param id Unique ID to map to the new buffer. If the ID is in use this will fail.
+        \brief Loads an audio file and maps the resulting data to the given ID
+        \param id Unique ID to map to the new data source. If the ID is in use this will fail.
         \param path String containing the path to the file to load.
         \param streaming If set to true the requested file should be streamed from storage
         rather than loaded entirely into RAM
@@ -67,15 +67,15 @@ namespace cro
         bool load(int32 id, const std::string& path, bool streaming = false);
 
         /*!
-        \brief Attempts to return the loaded buffer mapped to the given ID
+        \brief Attempts to return the loaded data mapped to the given ID
         If the requested ID is not found an empty buffer will be returned
         */
-        const AudioBuffer& get(int32 id) const;
+        const AudioDataSource& get(int32 id) const;
 
     private:
 
-        AudioBuffer m_fallback;
-        std::unordered_map<int32, AudioBuffer> m_buffers;
+        std::unique_ptr<AudioDataSource> m_fallback;
+        std::unordered_map<int32, std::unique_ptr<AudioDataSource>> m_sources;
     };
 }
 
