@@ -429,6 +429,9 @@
     <ClInclude Include="..\common\src\audio\AudioFile.hpp">
       <Filter>Header Files\audio</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\audio\AudioStream.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -666,6 +669,9 @@
       <Filter>Source Files\ecs\components</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\audio\AudioResource.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\audio\AudioStream.cpp">
       <Filter>Source Files\audio</Filter>
     </ClCompile>
   </ItemGroup>

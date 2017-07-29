@@ -96,10 +96,27 @@ void AudioRenderer::deleteBuffer(cro::int32 buffer)
     m_impl->deleteBuffer(buffer);
 }
 
-cro::int32 AudioRenderer::requestAudioSource(cro::int32 buffer)
+int32 AudioRenderer::requestNewStream(const std::string& path)
 {
-    if (buffer < 1) return -1;
-    return m_impl->requestAudioSource(buffer);
+    return m_impl->requestNewStream(path);
+}
+
+void AudioRenderer::updateStream(int32 id)
+{
+    CRO_ASSERT(id > -1, "Must be a valid ID");
+    m_impl->updateStream(id);
+}
+
+void AudioRenderer::deleteStream(int32 id)
+{
+    CRO_ASSERT(id > 0, "Must be a valid ID");
+    m_impl->deleteStream(id);
+}
+
+cro::int32 AudioRenderer::requestAudioSource(cro::int32 buffer, bool streaming)
+{
+    if (buffer < 0) return -1; //streams are 0 based
+    return m_impl->requestAudioSource(buffer, streaming);
 }
 
 void AudioRenderer::deleteAudioSource(cro::int32 source)

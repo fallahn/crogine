@@ -67,7 +67,7 @@ void SDLMixerImpl::deleteBuffer(cro::int32 buffer)
 
 }
 
-cro::int32 SDLMixerImpl::requestAudioSource(cro::int32 buffer)
+cro::int32 SDLMixerImpl::requestAudioSource(cro::int32 buffer, bool streaming)
 {
     return -1;
 }

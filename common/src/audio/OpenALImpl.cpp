@@ -44,7 +44,7 @@ using namespace cro::Detail;
 
 namespace
 {
-    const std::size_t STREAM_CHUNK_SIZE = 4096u;
+    constexpr std::size_t STREAM_CHUNK_SIZE = 48000u * sizeof(uint16); //1 sec of stereo @ highest quality
 
     ALenum getFormatFromData(const PCMData& data)
     {
@@ -261,12 +261,18 @@ void OpenALImpl::updateStream(int32 streamID)
     auto& stream = m_streams[streamID];
     if (!stream.updating)
     {
-        alCheck(alGetSourcei(stream.sourceID, AL_PROCESSED, &stream.processed));
+        alCheck(alGetSourcei(stream.sourceID, AL_BUFFERS_PROCESSED, &stream.processed));
+
+        ALint queued;
+        alCheck(alGetSourcei(stream.sourceID, AL_BUFFERS_QUEUED, &queued));
+        //DPRINT("Queued Buffers", std::to_string(queued));
+
         if (stream.processed > 0)
         {
             stream.updating = true;
             SDL_DetachThread(stream.thread); //make sure to clean up any old threads
             stream.thread = SDL_CreateThread(streamUpdate, nullptr, &stream);
+            //LOG("Processed " + std::to_string(stream.processed) + " buffers", Logger::Type::Info);
         }
     }
 }
@@ -287,6 +293,7 @@ void OpenALImpl::deleteStream(cro::int32 id)
     if (stream.buffers[0])
     {        
         alCheck(alDeleteBuffers(stream.buffers.size(), stream.buffers.data()));
+        LOG("Deleted audio stream", Logger::Type::Info);
     }
     stream.audioFile.reset();
     stream.currentBuffer = 0;
@@ -298,14 +305,23 @@ void OpenALImpl::deleteStream(cro::int32 id)
     }
 }
 
-cro::int32 OpenALImpl::requestAudioSource(cro::int32 buffer)
+cro::int32 OpenALImpl::requestAudioSource(cro::int32 buffer, bool streaming)
 {
-    CRO_ASSERT(buffer > 0, "Invalid audio buffer");
+    CRO_ASSERT(buffer > -1, "Invalid audio buffer");
     ALuint source;
     alCheck(alGenSources(1, &source));
     if (source > 0)
     {
-        alCheck(alSourcei(source, AL_BUFFER, buffer));
+        if (!streaming)
+        {
+            alCheck(alSourcei(source, AL_BUFFER, buffer));
+        }
+        else
+        {
+            auto& stream = m_streams[buffer];
+            stream.sourceID = source;
+            alCheck(alSourceQueueBuffers(source, stream.buffers.size(), stream.buffers.data()));
+        }
         return source;
     }
     return -1;
@@ -324,6 +340,20 @@ void OpenALImpl::deleteAudioSource(cro::int32 source)
     while (state == AL_PLAYING)
     {
         alCheck(alGetSourcei(src, AL_SOURCE_STATE, &state));
+    }
+
+    //if this is associated with a stream, delete the stream
+    //TODO this should just unassociate the stream and unqueue
+    auto result = std::find_if(std::begin(m_streams), std::end(m_streams),
+        [source](const OpenALStream& str)
+    {
+        return str.sourceID == source;
+    });
+    if (result != m_streams.end())
+    {
+        /*auto idx = std::distance(std::begin(m_streams), result);
+        deleteStream(idx);*/
+        result->sourceID = -1;
     }
 
     alCheck(alSourcei(src, AL_BUFFER, 0));

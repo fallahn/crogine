@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/ecs/components/AudioSource.hpp>
 #include <crogine/audio/AudioBuffer.hpp>
+#include <crogine/audio/AudioStream.hpp>
 
 #include "../../audio/AudioRenderer.hpp"
 
