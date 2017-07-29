@@ -81,6 +81,18 @@ bool PauseState::handleEvent(const cro::Event& evt)
             break;
         }
     }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        switch (evt.cbutton.button)
+        {
+        default:break;
+        case SDL_CONTROLLER_BUTTON_B:
+        case SDL_CONTROLLER_BUTTON_START:
+        case SDL_CONTROLLER_BUTTON_BACK:
+            requestStackPop();
+            break;
+        }
+    }
     
     m_uiSystem->handleEvent(evt);
     return false;

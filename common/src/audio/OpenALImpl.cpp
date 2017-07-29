@@ -44,7 +44,7 @@ using namespace cro::Detail;
 
 namespace
 {
-    constexpr std::size_t STREAM_CHUNK_SIZE = 48000u * sizeof(uint16); //1 sec of stereo @ highest quality
+    constexpr std::size_t STREAM_CHUNK_SIZE = 48000u * sizeof(uint16); //1 sec of stereo @ highest quality (mono)
 
     ALenum getFormatFromData(const PCMData& data)
     {
@@ -69,13 +69,14 @@ namespace
 
         for (auto i = 0; i < stream.processed; ++i)
         {
-            //unqueue
-            alCheck(alSourceUnqueueBuffers(stream.sourceID, 1, &stream.buffers[stream.currentBuffer]));
-            
             //fill buffer
             auto data = stream.audioFile->getData(STREAM_CHUNK_SIZE);
             if (data.size > 0) //only update if we have data else we'll loop even if we don't want to
             {
+                //unqueue
+                alCheck(alSourceUnqueueBuffers(stream.sourceID, 1, &stream.buffers[stream.currentBuffer]));
+                
+                //refill
                 alCheck(alBufferData(stream.buffers[stream.currentBuffer], getFormatFromData(data), data.data, data.size, data.frequency));
 
                 //requeue
@@ -267,10 +268,18 @@ void OpenALImpl::updateStream(int32 streamID)
     if (!stream.updating)
     {
         alCheck(alGetSourcei(stream.sourceID, AL_BUFFERS_PROCESSED, &stream.processed));
-
-        ALint queued;
+        /*ALint queued;
         alCheck(alGetSourcei(stream.sourceID, AL_BUFFERS_QUEUED, &queued));
-        //DPRINT("Queued Buffers", std::to_string(queued));
+        DPRINT("Queued Buffers", std::to_string(queued));*/
+        //if stopped rewind file and load buffers
+        ALenum state;
+        alCheck(alGetSourcei(stream.sourceID, AL_SOURCE_STATE, &state));
+        if (state == AL_STOPPED && state != stream.state)
+        {
+            stream.audioFile->seek(cro::Time());
+            stream.processed = stream.buffers.size();
+        }
+        stream.state = state;
 
         if (stream.processed > 0)
         {

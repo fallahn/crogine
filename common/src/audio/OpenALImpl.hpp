@@ -55,6 +55,7 @@ namespace cro
             SDL_Thread* thread = nullptr;
             int32 sourceID = -1;
             std::atomic<bool> looped{ false };
+            ALenum state = AL_STOPPED;
         };
 
         class OpenALImpl final : public cro::AudioRendererImpl
