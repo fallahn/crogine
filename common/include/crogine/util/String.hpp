@@ -78,6 +78,15 @@ namespace cro
             }
 
             /*!
+            \brief Emulates the C function fgetc with a RWops file/stream
+            */
+            static inline int rwgetc(SDL_RWops *file)
+            {
+                char c;
+                return SDL_RWread(file, &c, 1, 1) == 1 ? c : EOF;
+            }
+
+            /*!
             \brief Emulates the C function fgets with an SDL rwops file
             */
             static inline char* rwgets(char* dest, int32 size, SDL_RWops* file, cro::int64* bytesRead)

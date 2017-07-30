@@ -300,5 +300,11 @@
     <ClCompile Include="..\common\src\audio\AudioStream.cpp">
       <Filter>src\audio</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\audio\VorbisLoader.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\audio\stb_vorbis.c">
+      <Filter>src\audio</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

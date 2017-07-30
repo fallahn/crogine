@@ -432,6 +432,9 @@
     <ClInclude Include="..\common\include\crogine\audio\AudioStream.hpp">
       <Filter>Header Files\audio</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\src\audio\VorbisLoader.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -672,6 +675,12 @@
       <Filter>Source Files\audio</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\audio\AudioStream.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\audio\VorbisLoader.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\audio\stb_vorbis.c">
       <Filter>Source Files\audio</Filter>
     </ClCompile>
   </ItemGroup>
