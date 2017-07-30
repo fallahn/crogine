@@ -30,6 +30,7 @@ source distribution.
 #include "OpenALImpl.hpp"
 #include "ALCheck.hpp"
 #include "WavLoader.hpp"
+#include "VorbisLoader.hpp"
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/util/String.hpp>
@@ -233,8 +234,15 @@ cro::int32 OpenALImpl::requestNewStream(const std::string& path)
     }
     else if (ext == ".ogg")
     {
-        Logger::log("Ogg file support not yet implemented!", Logger::Type::Error);
-        return - 1;
+        //Logger::log("Ogg file support not yet implemented!", Logger::Type::Error);
+        //return - 1;
+        stream.audioFile = std::make_unique<VorbisLoader>();
+        if (!stream.audioFile->open(path))
+        {
+            stream.audioFile.reset();
+            Logger::log("Failed to open " + path, Logger::Type::Error);
+            return -1;
+        }
     }
     else
     {

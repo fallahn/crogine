@@ -27,58 +27,44 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_TYPES_HPP_
-#define CRO_TYPES_HPP_
+#ifndef CRO_VORBIS_LOADER_HPP_
+#define CRO_VORBIS_LOADER_HPP_
 
-#include <crogine/Config.hpp>
+#define STB_VORBIS_HEADER_ONLY
 
-#include <SDL_stdinc.h>
-#include <SDL_events.h>
-#include <SDL_rwops.h>
+#include "stb_vorbis.c"
+#include "AudioFile.hpp"
 
-/*
-Aliases for SDL types
-*/
+#include <vector>
 
 namespace cro
 {
-	using uint8 = Uint8;
-	using int8 = Sint8;
-	using uint16 = Uint16;
-	using int16 = Sint16;
-	using uint32 = Uint32;
-	using int32 = Sint32;
-	using uint64 = Uint64;
-	using int64 = Sint64;
-
-	using Event = SDL_Event;
-
-    namespace ImageFormat
+    namespace Detail
     {
-        enum Type
+        /*!
+        \brief File loader for opening ogg vorbis files using stb_vorbis
+        */
+        class VorbisLoader final : public AudioFile
         {
-            None,
-            RGB,
-            RGBA,
-            A
+        public:
+            VorbisLoader();
+            ~VorbisLoader();
+
+            bool open(const std::string&) override;
+
+            const PCMData& getData(std::size_t = 0) const override;
+
+            bool seek(cro::Time) override;
+
+        private:
+            RaiiRWops m_file;
+            stb_vorbis* m_vorbisFile;
+            int32 m_channelCount;
+
+            mutable PCMData m_dataChunk;
+            mutable std::vector<int16> m_buffer;
         };
     }
-
-    //used to automatically close RWops files
-    struct RaiiRWops final
-    {
-        SDL_RWops* file;
-        ~RaiiRWops()
-        {
-            if (file)
-            {
-                SDL_RWclose(file);
-            }
-        }
-        RaiiRWops() : file(nullptr) {}
-        RaiiRWops(const RaiiRWops&) = delete;
-        RaiiRWops& operator = (const RaiiRWops&) = delete;
-        //TODO this should be moveable but it's just a util
-    };
 }
-#endif //CRO_TYPES_HPP_
+
+#endif //CRO_VORBIS_LOADER_HPP_

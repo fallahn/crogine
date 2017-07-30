@@ -135,6 +135,7 @@
     <ClInclude Include="..\common\src\audio\OpenALImpl.hpp" />
     <ClInclude Include="..\common\src\audio\PCMData.hpp" />
     <ClInclude Include="..\common\src\audio\SDLMixerImpl.hpp" />
+    <ClInclude Include="..\common\src\audio\VorbisLoader.hpp" />
     <ClInclude Include="..\common\src\audio\WavLoader.hpp" />
     <ClInclude Include="..\common\src\core\DefaultLoadingScreen.hpp" />
     <ClInclude Include="..\common\src\detail\DistanceField.hpp" />
@@ -159,6 +160,8 @@
     <ClCompile Include="..\common\src\audio\AudioStream.cpp" />
     <ClCompile Include="..\common\src\audio\OpenALImpl.cpp" />
     <ClCompile Include="..\common\src\audio\SDLMixerImpl.cpp" />
+    <ClCompile Include="..\common\src\audio\stb_vorbis.c" />
+    <ClCompile Include="..\common\src\audio\VorbisLoader.cpp" />
     <ClCompile Include="..\common\src\audio\WavLoader.cpp" />
     <ClCompile Include="..\common\src\core\App.cpp" />
     <ClCompile Include="..\common\src\core\Clock.cpp" />

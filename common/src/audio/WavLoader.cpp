@@ -70,6 +70,12 @@ WavLoader::WavLoader()
 //public
 bool WavLoader::open(const std::string& path)
 {
+    if (m_file.file)
+    {
+        SDL_RWclose(m_file.file);
+        m_file.file = nullptr;
+    }
+    
     m_file.file = SDL_RWFromFile(path.c_str(), "rb");
     if (m_file.file)
     {
@@ -77,6 +83,9 @@ bool WavLoader::open(const std::string& path)
         auto read = m_file.file->read(m_file.file, &m_header, sizeof(m_header), 1);
         if (read != 1)
         {
+            SDL_RWclose(m_file.file);
+            m_file.file = nullptr;
+            
             Logger::log("Failed to read wav header for " + path, Logger::Type::Error);
             return false;
         }
@@ -84,6 +93,9 @@ bool WavLoader::open(const std::string& path)
         cro::uint32 ID = asUint(m_header.chunkID);
         if (ID != riffID)
         {
+            SDL_RWclose(m_file.file);
+            m_file.file = nullptr;
+
             Logger::log("Header file invalid ID: " + path, Logger::Type::Error);
             return false;
         }
@@ -91,6 +103,9 @@ bool WavLoader::open(const std::string& path)
         ID = asUint(m_header.format);
         if (ID != formatID)
         {
+            SDL_RWclose(m_file.file);
+            m_file.file = nullptr;
+
             Logger::log(path + " is not a WAV format file", Logger::Type::Error);
             return false;
         }
@@ -98,24 +113,36 @@ bool WavLoader::open(const std::string& path)
         ID = asUint(m_header.subchunk1ID);
         if (ID != subchunk1ID)
         {
+            SDL_RWclose(m_file.file);
+            m_file.file = nullptr;
+
             Logger::log(path + ": Invalid header data chunk", Logger::Type::Error);
             return false;
         }
 
         if (m_header.audioFormat != AudioFormat::PCM)
         {
+            SDL_RWclose(m_file.file);
+            m_file.file = nullptr;
+            
             Logger::log(path + ": not in PCM format, only PCM wav files are supported", Logger::Type::Error);
             return false;
         }
 
         if (m_header.bitsPerSample < 8 || m_header.bitsPerSample > 16)
         {
+            SDL_RWclose(m_file.file);
+            m_file.file = nullptr;
+            
             Logger::log(path + ": Invalid Bits per sample, must be 8 or 16", Logger::Type::Error);
             return false;
         }
 
         if (m_header.channelCount > 2 || m_header.channelCount < 1)
         {
+            SDL_RWclose(m_file.file);
+            m_file.file = nullptr;
+            
             Logger::log(path + ": invalid channel count, only mono or stereo wav files are supported", Logger::Type::Error);
             return false;
         }
@@ -132,6 +159,9 @@ bool WavLoader::open(const std::string& path)
 
         if (read != 1)
         {
+            SDL_RWclose(m_file.file);
+            m_file.file = nullptr;
+
             Logger::log("Failed to find data chunk in " + path, Logger::Type::Error);
             return false;
         }

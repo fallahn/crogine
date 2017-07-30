@@ -235,6 +235,8 @@
     <ClCompile Include="..\common\src\audio\AudioStream.cpp" />
     <ClCompile Include="..\common\src\audio\OpenALImpl.cpp" />
     <ClCompile Include="..\common\src\audio\SDLMixerImpl.cpp" />
+    <ClCompile Include="..\common\src\audio\stb_vorbis.c" />
+    <ClCompile Include="..\common\src\audio\VorbisLoader.cpp" />
     <ClCompile Include="..\common\src\audio\WavLoader.cpp" />
     <ClCompile Include="..\common\src\core\App.cpp" />
     <ClCompile Include="..\common\src\core\Clock.cpp" />
