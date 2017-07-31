@@ -90,8 +90,10 @@ namespace cro
 
         /*!
         \brief Sets the volume of the AudioSource.
-        Must be a positve value, where 0 is silent, 1 is normal.
-        Anything above will attempt to amplify the sound.
+        Must be a positive value, where 0 is silent, 1 is normal.
+        Anything above will attempt to amplify the sound. This
+        value will be multiplied by the value of the AudioMixer
+        channel to which this AudioSource is assigned.
         */
         void setVolume(float);
 
@@ -103,6 +105,25 @@ namespace cro
         AudioSource to not fade at all.
         */
         void setRolloff(float);
+
+        /*!
+        \brief Sets the AudioMixer channel for the AudioSource.
+        AudioSources may be grouped via AudioMixer channels, which
+        in turn affect the playback volume of the sources. For example
+        an AudioSource which plays music could be routed through a
+        different channel than AudioSources which play sound effects
+        so that music may be quickly and easily adusted or muted
+        independently of soud effect. By default all sound sources
+        are mapped to channel 0
+        \see AudioMixer
+        */
+        void setMixerChannel(uint8 channel);
+
+        /*!
+        \brief Returns the current ID of the mixer channel to which
+        the AudioSource is assigned.
+        */
+        uint8 getMixerChannel() const { return m_mixerChannel; }
 
         enum class State{Playing = 0, Paused = 1, Stopped = 2};
         /*!
@@ -119,6 +140,8 @@ namespace cro
         float m_pitch;
         float m_volume;
         float m_rolloff;
+
+        uint8 m_mixerChannel;
 
         enum
         {
