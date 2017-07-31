@@ -43,6 +43,11 @@ void Nim::checkbox(const std::string& title, bool* value)
     ImGui::Checkbox(title.c_str(), value);
 }
 
+void Nim::slider(const std::string& title, float& value, float min, float max)
+{
+    ImGui::SliderFloat(title.c_str(), &value, min, max);
+}
+
 void Nim::end()
 {
     ImGui::End();
