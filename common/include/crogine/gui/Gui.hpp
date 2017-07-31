@@ -56,6 +56,11 @@ namespace cro
         CRO_EXPORT_API void checkbox(const std::string& title, bool* value);
 
         /*!
+        \see ImGui::FloatSlider()
+        */
+        CRO_EXPORT_API void slider(const std::string& title, float& value, float min, float max);
+
+        /*!
         \see ImGui::End()
         */
         CRO_EXPORT_API void end();

@@ -59,8 +59,11 @@ source distribution.
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/Image.hpp>
-#include <crogine/util/Constants.hpp>
 #include <crogine/graphics/postprocess/PostChromeAB.hpp>
+
+#include <crogine/util/Constants.hpp>
+#include <crogine/gui/Gui.hpp>
+#include <crogine/audio/AudioMixer.hpp>
 
 #include <iomanip>
 namespace
@@ -105,6 +108,19 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
     m_commandSystem     (nullptr),
     m_uiSystem          (nullptr)
 {
+    registerStatusControls(
+        []()
+    {
+        static float value;
+        value = cro::AudioMixer::getMasterVolume();
+        cro::Nim::slider("Master Volume", value, 0.f, 5.f);
+        cro::AudioMixer::setMasterVolume(value);
+
+        value = cro::AudioMixer::getVolume(0);
+        cro::Nim::slider("Channel 0", value, 0.f, 5.f);
+        cro::AudioMixer::setVolume(value, 0);
+    });
+    
     context.mainWindow.loadResources([this, &context]()
     {
         addSystems();

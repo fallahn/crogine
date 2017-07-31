@@ -33,11 +33,11 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
 
-#include <crogine/audio/AudioStream.hpp>
 
 namespace cro
 {
@@ -48,7 +48,7 @@ namespace cro
 struct SharedResources;
 using ResourcePtr = std::unique_ptr<SharedResources>;
 
-class MainState final : public cro::State
+class MainState final : public cro::State, public cro::GuiClient
 {
 public:
     MainState(cro::StateStack&, cro::State::Context, ResourcePtr&);
@@ -62,8 +62,6 @@ public:
     void render() override;
 
 private:
-    cro::AudioStream m_testStream;
-
     cro::ResourceCollection m_resources; //destruction order important!
     cro::Scene m_backgroundScene;
     cro::Scene m_menuScene;
