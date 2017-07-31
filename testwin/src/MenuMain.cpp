@@ -98,7 +98,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     (cro::Entity, cro::uint64 flags)
     {
         if ((flags & cro::UISystem::LeftMouse)
-            || flags & cro::UISystem::Finger)
+            /*|| flags & cro::UISystem::Finger*/)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
@@ -146,7 +146,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     (cro::Entity, cro::uint64 flags)
     {
         if ((flags & cro::UISystem::LeftMouse)
-            || (flags & cro::UISystem::Finger))
+            /*|| (flags & cro::UISystem::Finger)*/)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
@@ -191,7 +191,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     (cro::Entity e, cro::uint64 flags)
     {
         if ((flags & cro::UISystem::LeftMouse)
-            || (flags & cro::UISystem::Finger))
+            /*|| (flags & cro::UISystem::Finger)*/)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
@@ -245,7 +245,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     auto quitCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
         if ((flags & cro::UISystem::LeftMouse)
-            || flags & cro::UISystem::Finger)
+            /*|| flags & cro::UISystem::Finger*/)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
