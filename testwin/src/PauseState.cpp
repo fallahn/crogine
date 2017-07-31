@@ -211,7 +211,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
 {
     auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
     const auto buttonNormalArea = spriteSheet.getSprite("button_inactive").getTextureRect();
-    
+
     //title
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Text>(font).setCharSize(TextXL);
@@ -224,7 +224,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     //control to make slidey woo
     auto controlEntity = m_uiScene.createEntity();
     controlEntity.addComponent<cro::Transform>().setPosition({ sceneSize.x / 2.f, 624.f, 0.f });
-    controlEntity.addComponent<cro::CommandTarget > ().ID = CommandID::MenuController;
+    controlEntity.addComponent<cro::CommandTarget >().ID = CommandID::MenuController;
     controlEntity.addComponent<Slider>();
 
     //options
@@ -278,6 +278,22 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     entity.addComponent<cro::UIInput>();
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
+    {
+        if ((flags & cro::UISystem::LeftMouse)
+            || flags & cro::UISystem::Finger)
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::MenuController;
+            cmd.action = [](cro::Entity e, cro::Time)
+            {
+                auto& slider = e.getComponent<Slider>();
+                slider.active = true;
+                slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, sceneSize.y, 0.f);
+            };
+            commandSystem->sendCommand(cmd);
+        }
+    });
     entity.getComponent<cro::UIInput>().area.width = buttonNormalArea.width;
     entity.getComponent<cro::UIInput>().area.height = buttonNormalArea.height;
 
@@ -329,7 +345,95 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     iconEntity.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
     iconEntity.addComponent<cro::Sprite>() = iconSheet.getSprite("play");
 
-    //TODO add quit confirm
+    //quit confirm
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("menu");
+    auto size = entity.getComponent<cro::Sprite>().getSize();
+    entity.addComponent<cro::Transform>().setParent(controlEntity);
+    entity.getComponent<cro::Transform>().setPosition({ 0.f, -1180.f, 0.1f });
+    entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.2f });
+
+    textEntity = m_uiScene.createEntity();
+    textEntity.addComponent<cro::Text>(font).setString("Exit?");
+    textEntity.getComponent<cro::Text>().setColour(textColourSelected);
+    textEntity.getComponent<cro::Text>().setCharSize(TextMedium);
+    textEntity.addComponent<cro::Transform>().setParent(entity);
+    textEntity.getComponent<cro::Transform>().move({ (size.x / 2.f) - 56.f, size.y - 30.f, 0.2f });
+
+    //ok button
+    auto buttonEntity = m_uiScene.createEntity();
+    buttonEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
+    buttonEntity.addComponent<cro::Transform>().setParent(entity);
+    buttonEntity.getComponent<cro::Transform>().setPosition({ size.x / 4.f, 82.f, 1.f });
+    buttonEntity.getComponent<cro::Transform>().setOrigin({ buttonNormalArea.width / 2.f, 0.f, 0.2f });
+
+    textEntity = m_uiScene.createEntity();
+    textEntity.addComponent<cro::Text>(font).setString("OK");
+    textEntity.getComponent<cro::Text>().setColour(textColourNormal);
+    textEntity.getComponent<cro::Text>().setCharSize(TextXL);
+    textEntity.addComponent<cro::Transform>().setParent(buttonEntity);
+    textEntity.getComponent<cro::Transform>().setPosition({ 60.f, 110.f, 0.2f });
+
+    iconEntity = m_uiScene.createEntity();
+    iconEntity.addComponent<cro::Transform>().setParent(buttonEntity);
+    iconEntity.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.2f });
+    iconEntity.addComponent<cro::Sprite>() = iconSheet.getSprite("exit");
+
+    buttonEntity.addComponent<cro::UIInput>();
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
+    {
+        if ((flags & cro::UISystem::LeftMouse)
+            /*|| flags & cro::UISystem::Finger*/)
+        {
+            requestStackClear();
+            requestStackPush(States::MainMenu);
+        }
+    });
+    buttonEntity.getComponent<cro::UIInput>().area.width = buttonNormalArea.width;
+    buttonEntity.getComponent<cro::UIInput>().area.height = buttonNormalArea.height;
+
+    //cancel button
+    buttonEntity = m_uiScene.createEntity();
+    buttonEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
+    buttonEntity.addComponent<cro::Transform>().setParent(entity);
+    buttonEntity.getComponent<cro::Transform>().setPosition({ (size.x / 4.f) + (size.x / 2.f), 82.f, 1.f });
+    buttonEntity.getComponent<cro::Transform>().setOrigin({ buttonNormalArea.width / 2.f, 0.f, 0.2f });
+
+    textEntity = m_uiScene.createEntity();
+    textEntity.addComponent<cro::Text>(font).setString("Cancel");
+    textEntity.getComponent<cro::Text>().setColour(textColourNormal);
+    textEntity.getComponent<cro::Text>().setCharSize(TextXL);
+    textEntity.addComponent<cro::Transform>().setParent(buttonEntity);
+    textEntity.getComponent<cro::Transform>().setPosition({ 60.f, 110.f, 0.2f });
+
+    iconEntity = m_uiScene.createEntity();
+    iconEntity.addComponent<cro::Transform>().setParent(buttonEntity);
+    iconEntity.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.2f });
+    iconEntity.addComponent<cro::Sprite>() = iconSheet.getSprite("back");
+
+    buttonEntity.addComponent<cro::UIInput>();
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
+    {
+        if ((flags & cro::UISystem::LeftMouse))
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::MenuController;
+            cmd.action = [](cro::Entity e, cro::Time)
+            {
+                auto& slider = e.getComponent<Slider>();
+                slider.active = true;
+                slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -sceneSize.y, 0.f);
+            };
+            commandSystem->sendCommand(cmd);
+        }
+    });
+    buttonEntity.getComponent<cro::UIInput>().area.width = buttonNormalArea.width;
+    buttonEntity.getComponent<cro::UIInput>().area.height = buttonNormalArea.height;
+
 }
 
 void PauseState::createOptions(const cro::SpriteSheet& spriteSheet, const cro::SpriteSheet& iconSheet, cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback)
