@@ -31,6 +31,7 @@ source distribution.
 #include "OpenALImpl.hpp"
 #include "SDLMixerImpl.hpp"
 
+#include <crogine/audio/AudioMixer.hpp>
 #include <crogine/detail/Assert.hpp>
 
 

@@ -30,6 +30,8 @@ source distribution.
 #include <crogine/ecs/components/AudioSource.hpp>
 #include <crogine/audio/AudioBuffer.hpp>
 #include <crogine/audio/AudioStream.hpp>
+#include <crogine/audio/AudioMixer.hpp>
+#include <crogine/detail/Assert.hpp>
 
 #include "../../audio/AudioRenderer.hpp"
 
@@ -42,6 +44,7 @@ AudioSource::AudioSource()
     m_pitch             (1.f),
     m_volume            (1.f),
     m_rolloff           (1.f),
+    m_mixerChannel      (0),
     m_transportFlags    (0),
     m_newDataSource     (false),
     m_ID                (-1),
@@ -56,6 +59,7 @@ AudioSource::AudioSource(const AudioDataSource& dataSource)
     m_pitch             (1.f),
     m_volume            (1.f),
     m_rolloff           (1.f),
+    m_mixerChannel      (0),
     m_transportFlags    (0),
     m_newDataSource     (true),
     m_ID                (-1),
@@ -84,6 +88,9 @@ AudioSource::AudioSource(AudioSource&& other)
     m_rolloff = other.m_rolloff;
     other.m_rolloff = 1.f;
     
+    m_mixerChannel = other.m_mixerChannel;
+    other.m_mixerChannel = 0;
+
     m_ID = other.m_ID;
     other.m_ID = -1;
 
@@ -112,6 +119,9 @@ AudioSource& AudioSource::operator=(AudioSource&& other)
         m_rolloff = other.m_rolloff;
         other.m_rolloff = 1.f;
         
+        m_mixerChannel = other.m_mixerChannel;
+        other.m_mixerChannel = 0;
+
         m_ID = other.m_ID;
         other.m_ID = -1;
 
@@ -175,4 +185,10 @@ void AudioSource::setVolume(float volume)
 void AudioSource::setRolloff(float rolloff)
 {
     m_rolloff = std::max(0.f, rolloff);
+}
+
+void AudioSource::setMixerChannel(uint8 channel)
+{
+    CRO_ASSERT(channel < AudioMixer::MaxChannels, "Channel value out of range");
+    m_mixerChannel = channel; 
 }

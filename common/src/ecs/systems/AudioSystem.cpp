@@ -28,6 +28,8 @@ source distribution.
 -----------------------------------------------------------------------*/
 #include "../../audio/AudioRenderer.hpp"
 
+#include <crogine/audio/AudioMixer.hpp>
+
 #include <crogine/ecs/systems/AudioSystem.hpp>
 #include <crogine/ecs/components/AudioSource.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
@@ -51,7 +53,7 @@ void AudioSystem::process(cro::Time dt)
 {
     //update the scene's listener details
     const auto& listener = getScene()->getActiveListener();
-    AudioRenderer::setListenerVolume(listener.getComponent<AudioListener>().getVolume());
+    AudioRenderer::setListenerVolume(listener.getComponent<AudioListener>().getVolume() * AudioMixer::m_masterVol);
     const auto& tx = listener.getComponent<Transform>();
     auto worldPos = tx.getWorldPosition();
     AudioRenderer::setListenerPosition(worldPos);
@@ -105,7 +107,7 @@ void AudioSystem::process(cro::Time dt)
 
         //check properties such as pitch and gain
         AudioRenderer::setSourcePitch(audioSource.m_ID, audioSource.m_pitch);
-        AudioRenderer::setSourceVolume(audioSource.m_ID, audioSource.m_volume);
+        AudioRenderer::setSourceVolume(audioSource.m_ID, audioSource.m_volume * AudioMixer::m_channels[audioSource.m_mixerChannel]);
         AudioRenderer::setSourceRolloff(audioSource.m_ID, audioSource.m_rolloff);
 
         //if we're steaming make sure to update the stream buffer

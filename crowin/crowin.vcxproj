@@ -38,6 +38,7 @@
     <ClInclude Include="..\common\include\crogine\android\Android.hpp" />
     <ClInclude Include="..\common\include\crogine\audio\AudioBuffer.hpp" />
     <ClInclude Include="..\common\include\crogine\audio\AudioDataSource.hpp" />
+    <ClInclude Include="..\common\include\crogine\audio\AudioMixer.hpp" />
     <ClInclude Include="..\common\include\crogine\audio\AudioResource.hpp" />
     <ClInclude Include="..\common\include\crogine\audio\AudioStream.hpp" />
     <ClInclude Include="..\common\include\crogine\Config.hpp" />
@@ -155,6 +156,7 @@
   <ItemGroup>
     <ClCompile Include="..\common\src\android\Android.cpp" />
     <ClCompile Include="..\common\src\audio\AudioBuffer.cpp" />
+    <ClCompile Include="..\common\src\audio\AudioMixer.cpp" />
     <ClCompile Include="..\common\src\audio\AudioRenderer.cpp" />
     <ClCompile Include="..\common\src\audio\AudioResource.cpp" />
     <ClCompile Include="..\common\src\audio\AudioStream.cpp" />
