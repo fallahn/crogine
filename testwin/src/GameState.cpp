@@ -355,7 +355,8 @@ void GameState::createHUD()
     //health bar
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bar_outside");
-    entity.addComponent<cro::Transform>().setPosition({ uiRes.x - (entity.getComponent<cro::Sprite>().getSize().x + UIPadding), UIPadding * 1.5f, 0.f });
+    auto size = entity.getComponent<cro::Sprite>().getSize();
+    entity.addComponent<cro::Transform>().setPosition({ uiRes.x - (size.x + UIPadding), uiRes.y - (size.y * 1.5f), 0.f });
     
     auto innerEntity = m_uiScene.createEntity();
     innerEntity.addComponent<cro::Transform>().setParent(entity);
@@ -363,7 +364,8 @@ void GameState::createHUD()
     innerEntity.addComponent<HudItem>().type = HudItem::Type::HealthBar;
 
     //lives
-    glm::vec3 startPoint(UIPadding, UIPadding, 0.f);
+    size = spriteSheet.getSprite("life").getSize();
+    glm::vec3 startPoint(UIPadding, uiRes.y - (size.y + UISpacing), 0.f);
     for (auto i = 0u; i < 5; ++i)
     {
         entity = m_uiScene.createEntity();
@@ -385,7 +387,7 @@ void GameState::createHUD()
 
     //bonus weapons
     startPoint.x = uiRes.x - (((spriteSheet.getSprite("bomb").getSize().x + UISpacing) * 2.f) + UIPadding);
-    startPoint.y = uiRes.y - (spriteSheet.getSprite("bomb").getSize().y + UIPadding);
+    startPoint.y = UIPadding;// uiRes.y - (spriteSheet.getSprite("bomb").getSize().y + UIPadding);
     /*entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(startPoint);
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bomb");
@@ -452,12 +454,12 @@ void GameState::createHUD()
     //score text
     auto& scoreFont = m_resources.fonts.get(0);
     scoreFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ UIPadding, uiRes.y - UIPadding, 0.f });
+    entity = m_uiScene.createEntity();   
     entity.addComponent<cro::Text>(scoreFont);
     //entity.getComponent<cro::Text>().setString("0000000000");
     entity.getComponent<cro::Text>().setCharSize(50);
     entity.getComponent<cro::Text>().setColour(cro::Colour::Cyan());
+    entity.addComponent<cro::Transform>().setPosition({ UIPadding, UIPadding + entity.getComponent<cro::Text>().getLineHeight(), 0.f });
     entity.addComponent<HudItem>().type = HudItem::Type::Score;
     entity.getComponent<HudItem>().value = 0.f;
 
