@@ -64,7 +64,7 @@
 #include <SDL_rwops.h>
 static inline int rwgetc(SDL_RWops *file)
 {
-    char c;
+    unsigned char c;
     return SDL_RWread(file, &c, 1, 1) == 1 ? c : -1;
 }
 
@@ -345,6 +345,9 @@ extern int stb_vorbis_get_samples_short(stb_vorbis *f, int channels, short **buf
 // samples in the file, returns 0.
 
 #endif
+
+extern int stb_vorbis_get_length_in_bytes(stb_vorbis* f);
+// utility to get the uncompressed data size based on number of samples
 
 ////////   ERROR CODES
 
@@ -4232,6 +4235,11 @@ int stb_vorbis_get_error(stb_vorbis *f)
    return e;
 }
 
+int stb_vorbis_get_length_in_bytes(stb_vorbis *f)
+{
+    return f->total_samples * 2;
+}
+
 static stb_vorbis * vorbis_alloc(stb_vorbis *f)
 {
    stb_vorbis *p = (stb_vorbis *) setup_malloc(f, sizeof(*p));
@@ -4966,7 +4974,6 @@ stb_vorbis * stb_vorbis_open_file_section(SDL_RWops *file, int close_on_free, in
    p.stream_len   = length;
    p.close_on_free = close_on_free;
    if (start_decoder(&p)) {
-       auto ffthing = SDL_RWtell(file);
       f = vorbis_alloc(&p);
       if (f) {
          *f = p;
@@ -4983,9 +4990,7 @@ stb_vorbis * stb_vorbis_open_file(SDL_RWops *file, int close_on_free, int *error
 {
    unsigned int len, start;
    start = (unsigned int) SDL_RWtell(file);
-   //SDL_RWseek(file, 0, RW_SEEK_END);
-   len = file->size(file) - start;// (unsigned int)(SDL_RWtell(file) - start);
-   //SDL_RWseek(file, start, RW_SEEK_SET);
+   len = file->size(file) - start;
    return stb_vorbis_open_file_section(file, close_on_free, error, alloc, len);
 }
 

@@ -176,6 +176,14 @@ cro::int32 OpenALImpl::requestNewBuffer(const std::string& path)
             data = loader->getData();
         }
     }
+    else if (ext == ".ogg")
+    {
+        loader = std::make_unique<VorbisLoader>();
+        if (loader->open(path))
+        {
+            data = loader->getData();
+        }
+    }
     else
     {
         Logger::log(ext + ": format not supported", Logger::Type::Error);

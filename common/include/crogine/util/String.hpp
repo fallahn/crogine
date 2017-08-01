@@ -82,7 +82,7 @@ namespace cro
             */
             static inline int rwgetc(SDL_RWops *file)
             {
-                char c;
+                unsigned char c;
                 return SDL_RWread(file, &c, 1, 1) == 1 ? c : EOF;
             }
 
