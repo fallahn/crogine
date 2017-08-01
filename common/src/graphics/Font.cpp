@@ -270,7 +270,7 @@ bool Font::createPage(uint32 charSize) const
         std::vector<uint8> flippedData(imgData.size());
         auto dst = flippedData.data();
         auto src = imgData.data() + ((flippedData.size()) - imgWidth);
-        for (auto i = 0u; i < imgHeight; ++i)
+        for (i = 0u; i < imgHeight; ++i)
         {
             std::memcpy(dst, src, imgWidth);
             dst += imgWidth;

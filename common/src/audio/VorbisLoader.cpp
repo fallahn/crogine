@@ -32,6 +32,11 @@ source distribution.
 using namespace cro;
 using namespace cro::Detail;
 
+namespace
+{
+    std::vector<unsigned char> funt;
+}
+
 VorbisLoader::VorbisLoader()
     : m_vorbisFile  (nullptr),
     m_channelCount  (0)
@@ -69,9 +74,15 @@ bool VorbisLoader::open(const std::string& path)
         return false;
     }
     
+    auto size = m_file.file->size(m_file.file);
+    funt.resize(size);
+    auto read = SDL_RWread(m_file.file, funt.data(), size, 1);
+    SDL_RWseek(m_file.file, 0, RW_SEEK_SET);
+
     //read header
     int32 err;
     m_vorbisFile = stb_vorbis_open_file(m_file.file, 0, &err, nullptr);
+    //m_vorbisFile = stb_vorbis_open_memory(funt.data(), funt.size(), &err, nullptr);
     if (!m_vorbisFile)
     {
         SDL_RWclose(m_file.file);
@@ -95,10 +106,13 @@ bool VorbisLoader::open(const std::string& path)
         return false;
     }
 
-    //TODO unlike opus the format may be 8 or 24 bit
+    //apparently decoded audio is always 16 bit (unless we decoded floats, but we aren't...)
     m_dataChunk.format = (info.channels == 1) ? PCMData::Format::MONO16 : PCMData::Format::STEREO16;
     m_dataChunk.frequency = info.sample_rate;
     m_channelCount = info.channels;
+
+    //auto len = stb_vorbis_stream_length_in_samples(m_vorbisFile);
+    auto off = stb_vorbis_get_file_offset(m_vorbisFile);
 
     return true;
 }
@@ -106,7 +120,7 @@ bool VorbisLoader::open(const std::string& path)
 const PCMData& VorbisLoader::getData(std::size_t size) const
 {
     CRO_ASSERT(m_vorbisFile, "File not open");
-    
+
     //TODO read entire file if size == 0
 
     auto shortSize = size / 2;
@@ -115,8 +129,26 @@ const PCMData& VorbisLoader::getData(std::size_t size) const
         m_buffer.resize(shortSize);
     }
 
-    m_dataChunk.size = stb_vorbis_get_samples_short_interleaved(m_vorbisFile, m_channelCount, m_buffer.data(), shortSize);
-    m_dataChunk.size *= m_channelCount * 2; //TODO replace '2' with bytes per sample based on bit depth
+    //according to stb the Vorbis spec allows reading no more than 4096 samples per channel at once
+    static const std::size_t readSize = 2048;
+    static const cro::int32 bytesPerSample = 2;
+
+    m_dataChunk.size = 0;
+
+    std::size_t idx = 0;
+    while (shortSize > 0)
+    {
+        auto amount = std::min(readSize, shortSize);
+        auto read = stb_vorbis_get_frame_short_interleaved(m_vorbisFile, m_channelCount, &m_buffer[idx], amount) * m_channelCount;
+
+        shortSize -= read;
+        idx += read;
+        m_dataChunk.size += read;
+
+        if (read == 0) break; //EOF
+    }
+    
+    m_dataChunk.size *= bytesPerSample;
     m_dataChunk.data = (m_dataChunk.size) ? m_buffer.data() : nullptr;
 
     return m_dataChunk;

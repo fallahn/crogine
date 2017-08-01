@@ -344,12 +344,12 @@ void ParticleSystem::render(Entity camera)
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
 
         //bind vertex attribs
-        for (auto i = 0u; i < m_attribData.size(); ++i)
+        for (auto j = 0u; j < m_attribData.size(); ++j)
         {
-            glCheck(glEnableVertexAttribArray(m_attribData[i].index));
-            glCheck(glVertexAttribPointer(m_attribData[i].index, m_attribData[i].attribSize,
+            glCheck(glEnableVertexAttribArray(m_attribData[j].index));
+            glCheck(glVertexAttribPointer(m_attribData[j].index, m_attribData[j].attribSize,
                 GL_FLOAT, GL_FALSE, VertexSize,
-                reinterpret_cast<void*>(static_cast<intptr_t>(m_attribData[i].offset))));
+                reinterpret_cast<void*>(static_cast<intptr_t>(m_attribData[j].offset))));
         }
 
         //apply blend mode
@@ -371,9 +371,9 @@ void ParticleSystem::render(Entity camera)
         glCheck(glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(emitter.m_nextFreeParticle)));
 
         //unbind attribs
-        for (auto i = 0u; i < m_attribData.size(); ++i)
+        for (auto j = 0u; j < m_attribData.size(); ++j)
         {
-            glCheck(glDisableVertexAttribArray(m_attribData[i].index));
+            glCheck(glDisableVertexAttribArray(m_attribData[j].index));
         }
     }
 

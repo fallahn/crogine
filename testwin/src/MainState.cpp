@@ -212,7 +212,7 @@ void MainState::loadAssets()
 
     //audio
     m_resources.audio.load(AudioID::Test, "assets/audio/boop_loop.wav");
-    m_resources.audio.load(AudioID::TestStream, "assets/audio/giblet_tickler.ogg", true);
+    m_resources.audio.load(AudioID::TestStream, "assets/audio/game.ogg", true);
 }
 
 void MainState::createScene()
