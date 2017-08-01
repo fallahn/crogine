@@ -271,8 +271,8 @@
     </AntPackage>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Content Include="assets\assets\audio\boop_loop.wav" />
-    <Content Include="assets\assets\audio\short_music.wav" />
+    <Content Include="assets\assets\audio\boop_loop.ogg" />
+    <Content Include="assets\assets\audio\game.ogg" />
     <Content Include="assets\assets\fonts\Audiowide-Regular.ttf" />
     <Content Include="assets\assets\materials\arctic_outpost_diffuse.png" />
     <Content Include="assets\assets\materials\arctic_outpost_mask.png" />

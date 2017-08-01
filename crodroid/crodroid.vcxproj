@@ -230,6 +230,7 @@
   <ItemGroup>
     <ClCompile Include="..\common\src\android\Android.cpp" />
     <ClCompile Include="..\common\src\audio\AudioBuffer.cpp" />
+    <ClCompile Include="..\common\src\audio\AudioMixer.cpp" />
     <ClCompile Include="..\common\src\audio\AudioRenderer.cpp" />
     <ClCompile Include="..\common\src\audio\AudioResource.cpp" />
     <ClCompile Include="..\common\src\audio\AudioStream.cpp" />
