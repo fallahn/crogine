@@ -211,8 +211,8 @@ void MainState::loadAssets()
     menuFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
 
     //audio
-    m_resources.audio.load(AudioID::Test, "assets/audio/boop_loop.wav");
-    m_resources.audio.load(AudioID::TestStream, "assets/audio/game.ogg", true);
+    //m_resources.audio.load(AudioID::Test, "assets/audio/boop_loop.ogg");
+    m_resources.audio.load(AudioID::TestStream, "assets/audio/giblet_tickler.ogg", true);
 }
 
 void MainState::createScene()

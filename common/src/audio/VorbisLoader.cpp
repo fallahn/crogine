@@ -34,12 +34,12 @@ using namespace cro::Detail;
 
 namespace
 {
-    std::vector<unsigned char> funt;
+
 }
 
 VorbisLoader::VorbisLoader()
-    : m_vorbisFile  (nullptr),
-    m_channelCount  (0)
+    : m_vorbisFile(nullptr),
+    m_channelCount(0)
 {
 
 }
@@ -66,29 +66,23 @@ bool VorbisLoader::open(const std::string& path)
         stb_vorbis_close(m_vorbisFile);
         m_vorbisFile = nullptr;
     }
-    
+
     m_file.file = SDL_RWFromFile(path.c_str(), "rb");
     if (!m_file.file)
     {
         Logger::log("Failed opening " + path, Logger::Type::Error);
         return false;
     }
-    
-    auto size = m_file.file->size(m_file.file);
-    funt.resize(size);
-    auto read = SDL_RWread(m_file.file, funt.data(), size, 1);
-    SDL_RWseek(m_file.file, 0, RW_SEEK_SET);
+
 
     //read header
-    int32 err;
-    m_vorbisFile = stb_vorbis_open_file(m_file.file, 0, &err, nullptr);
-    //m_vorbisFile = stb_vorbis_open_memory(funt.data(), funt.size(), &err, nullptr);
+    m_vorbisFile = stb_vorbis_open_file(m_file.file, 0, nullptr, nullptr);
     if (!m_vorbisFile)
     {
         SDL_RWclose(m_file.file);
         m_file.file = nullptr;
 
-        Logger::log("Failed opening vorbis file, error " + std::to_string(err), Logger::Type::Error);
+        Logger::log("Failed opening vorbis file, error "/* + std::to_string(err)*/, Logger::Type::Error);
         return false;
     }
 
@@ -111,27 +105,31 @@ bool VorbisLoader::open(const std::string& path)
     m_dataChunk.frequency = info.sample_rate;
     m_channelCount = info.channels;
 
-    //auto len = stb_vorbis_stream_length_in_samples(m_vorbisFile);
-    auto off = stb_vorbis_get_file_offset(m_vorbisFile);
-
     return true;
 }
 
 const PCMData& VorbisLoader::getData(std::size_t size) const
 {
     CRO_ASSERT(m_vorbisFile, "File not open");
+    
+    //according to stb the Vorbis spec allows reading no more than 4096 samples per channel at once
+    static const std::size_t readSize = 4096;
+    static const cro::int32 bytesPerSample = 2;
+    
+    
+    //read entire file if size == 0
+    if(!size)
+    {
+        //limit this to ~ 1mb
+        //larger files should be streamed
+        size = 1024000;
+    }
 
-    //TODO read entire file if size == 0
-
-    auto shortSize = size / 2;
+    auto shortSize = size / bytesPerSample;
     if (shortSize > m_buffer.size())
     {
         m_buffer.resize(shortSize);
     }
-
-    //according to stb the Vorbis spec allows reading no more than 4096 samples per channel at once
-    static const std::size_t readSize = 2048;
-    static const cro::int32 bytesPerSample = 2;
 
     m_dataChunk.size = 0;
 
@@ -139,7 +137,7 @@ const PCMData& VorbisLoader::getData(std::size_t size) const
     while (shortSize > 0)
     {
         auto amount = std::min(readSize, shortSize);
-        auto read = stb_vorbis_get_frame_short_interleaved(m_vorbisFile, m_channelCount, &m_buffer[idx], amount) * m_channelCount;
+        auto read = stb_vorbis_get_samples_short_interleaved(m_vorbisFile, m_channelCount, &m_buffer[idx], amount) * m_channelCount;
 
         shortSize -= read;
         idx += read;
