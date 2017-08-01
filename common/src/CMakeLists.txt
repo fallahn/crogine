@@ -8,6 +8,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/audio/OpenALImpl.cpp
   ${PROJECT_DIR}/audio/SDLMixerImpl.cpp
   ${PROJECT_DIR}/audio/stb_vorbis.c
+  ${PROJECT_DIR}/audio/VorbisLoader.cpp
   ${PROJECT_DIR}/audio/WavLoader.cpp
   
   ${PROJECT_DIR}/core/App.cpp
