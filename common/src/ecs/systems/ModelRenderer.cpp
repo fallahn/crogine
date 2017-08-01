@@ -85,7 +85,7 @@ void ModelRenderer::process(Time)
 
             //foreach material
             //add ent/index pair to alpha or opaque list
-            for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
+            for (i = 0u; i < model.m_meshData.submeshCount; ++i)
             {
                 if (model.m_materials[i].blendMode != Material::BlendMode::None)
                 {

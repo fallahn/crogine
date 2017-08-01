@@ -94,14 +94,14 @@ void AudioSystem::process(cro::Time dt)
         audioSource.m_transportFlags = 0;
         //set current state
         audioSource.m_state = static_cast<AudioSource::State>(AudioRenderer::getSourceState(audioSource.m_ID));
-        //DPRINT("Audio State", (audioSource.m_state == AudioSource::State::Playing) ? "Playing" : "Stopped");
+        DPRINT("Audio State", (audioSource.m_state == AudioSource::State::Playing) ? "Playing" : "Stopped");
 
         //check its position and update
         if (entity.hasComponent<Transform>())
         {
             //set position
-            auto worldPos = entity.getComponent<Transform>().getWorldPosition();
-            AudioRenderer::setSourcePosition(audioSource.m_ID, worldPos);
+            auto pos = entity.getComponent<Transform>().getWorldPosition();
+            AudioRenderer::setSourcePosition(audioSource.m_ID, pos);
             //DPRINT("Sound Position", std::to_string(worldPos.x) + ", " + std::to_string(worldPos.y) + ", " + std::to_string(worldPos.z));
         }
 

@@ -59,6 +59,8 @@
 #ifndef STB_VORBIS_INCLUDE_STB_VORBIS_H
 #define STB_VORBIS_INCLUDE_STB_VORBIS_H
 
+#define STB_VORBIS_NO_PUSHDATA_API
+
 #include <SDL_rwops.h>
 static inline int rwgetc(SDL_RWops *file)
 {
@@ -1304,9 +1306,13 @@ static uint8 get8(vorb *z)
 
    #ifndef STB_VORBIS_NO_STDIO
    {
-   int c = rwgetc(z->f);
-   if (c == EOF) { z->eof = TRUE; return 0; }
-   return c;
+       int c = rwgetc(z->f);
+       if (c == EOF)
+       {
+           z->eof = TRUE;
+           return 0;
+       }
+       return c;
    }
    #endif
 }
@@ -1349,8 +1355,10 @@ static void skip(vorb *z, int n)
    }
    #ifndef STB_VORBIS_NO_STDIO
    {
-      long x = SDL_RWtell(z->f);
-      SDL_RWseek(z->f, x+n, RW_SEEK_SET);
+      //long x = SDL_RWtell(z->f);
+      //SDL_RWseek(z->f, x+n, RW_SEEK_SET);
+       auto result = SDL_RWseek(z->f, n, RW_SEEK_CUR);
+       if (result == -1) z->eof = 1;
    }
    #endif
 }
@@ -1358,7 +1366,8 @@ static void skip(vorb *z, int n)
 static int set_file_offset(stb_vorbis *f, unsigned int loc)
 {
    #ifndef STB_VORBIS_NO_PUSHDATA_API
-   if (f->push_mode) return 0;
+   if (f->push_mode) 
+       return 0;
    #endif
    f->eof = 0;
    if (USE_MEMORY(f)) {
@@ -1378,7 +1387,7 @@ static int set_file_offset(stb_vorbis *f, unsigned int loc)
    } else {
       loc += f->f_start;
    }
-   if (!SDL_RWseek(f->f, loc, RW_SEEK_SET))
+   if (SDL_RWseek(f->f, loc, RW_SEEK_SET) > -1) //unlike fseek returns the final position rather than 0 on success
       return 1;
    f->eof = 1;
    SDL_RWseek(f->f, f->f_start, RW_SEEK_END);
@@ -4454,7 +4463,10 @@ static uint32 vorbis_find_page(stb_vorbis *f, uint32 *end, uint32 *last)
 {
    for(;;) {
       int n;
-      if (f->eof) return 0;
+      if (f->eof)
+      {
+          return 0;
+      }
       n = get8(f);
       if (n == 0x4f) { // page header candidate
          unsigned int retry_loc = stb_vorbis_get_file_offset(f);
@@ -4466,7 +4478,10 @@ static uint32 vorbis_find_page(stb_vorbis *f, uint32 *end, uint32 *last)
          for (i=1; i < 4; ++i)
             if (get8(f) != ogg_page_header[i])
                break;
-         if (f->eof) return 0;
+         if (f->eof)
+         {
+             return 0;
+         }
          if (i == 4) {
             uint8 header[27];
             uint32 i, crc, goal, len;
@@ -4474,7 +4489,10 @@ static uint32 vorbis_find_page(stb_vorbis *f, uint32 *end, uint32 *last)
                header[i] = ogg_page_header[i];
             for (; i < 27; ++i)
                header[i] = get8(f);
-            if (f->eof) return 0;
+            if (f->eof)
+            {
+                return 0;
+            }
             if (header[4] != 0) goto invalid;
             goal = header[22] + (header[23] << 8) + (header[24]<<16) + (header[25]<<24);
             for (i=22; i < 26; ++i)
@@ -4488,7 +4506,10 @@ static uint32 vorbis_find_page(stb_vorbis *f, uint32 *end, uint32 *last)
                crc = crc32_update(crc, s);
                len += s;
             }
-            if (len && f->eof) return 0;
+            if (len && f->eof)
+            {
+                return 0;
+            }
             for (i=0; i < len; ++i)
                crc = crc32_update(crc, get8(f));
             // finished parsing probable page
@@ -4945,6 +4966,7 @@ stb_vorbis * stb_vorbis_open_file_section(SDL_RWops *file, int close_on_free, in
    p.stream_len   = length;
    p.close_on_free = close_on_free;
    if (start_decoder(&p)) {
+       auto ffthing = SDL_RWtell(file);
       f = vorbis_alloc(&p);
       if (f) {
          *f = p;
@@ -4961,9 +4983,9 @@ stb_vorbis * stb_vorbis_open_file(SDL_RWops *file, int close_on_free, int *error
 {
    unsigned int len, start;
    start = (unsigned int) SDL_RWtell(file);
-   SDL_RWseek(file, 0, RW_SEEK_END);
-   len = (unsigned int) (SDL_RWtell(file) - start);
-   SDL_RWseek(file, start, RW_SEEK_SET);
+   //SDL_RWseek(file, 0, RW_SEEK_END);
+   len = file->size(file) - start;// (unsigned int)(SDL_RWtell(file) - start);
+   //SDL_RWseek(file, start, RW_SEEK_SET);
    return stb_vorbis_open_file_section(file, close_on_free, error, alloc, len);
 }
 

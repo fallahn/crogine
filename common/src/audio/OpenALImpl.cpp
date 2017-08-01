@@ -234,8 +234,6 @@ cro::int32 OpenALImpl::requestNewStream(const std::string& path)
     }
     else if (ext == ".ogg")
     {
-        //Logger::log("Ogg file support not yet implemented!", Logger::Type::Error);
-        //return - 1;
         stream.audioFile = std::make_unique<VorbisLoader>();
         if (!stream.audioFile->open(path))
         {
