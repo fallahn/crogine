@@ -306,5 +306,8 @@
     <ClCompile Include="..\common\src\audio\stb_vorbis.c">
       <Filter>src\audio</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\audio\AudioMixer.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
