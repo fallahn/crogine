@@ -302,7 +302,8 @@ void GameState::createScene()
     ent.addComponent<cro::Transform>().setPosition({ 0.f, 0.6f, 2.3f });
     ent.addComponent<cro::Camera>();
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
-    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 0.4f, -2.3f });
+    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 1.4f, -2.3f });
+    m_scene.getSunlight().setDirection({ -0.1f, -1.f, 0.f });
 
     cro::PhysicsShape boundsShape;
     boundsShape.type = cro::PhysicsShape::Type::Box;
