@@ -275,6 +275,7 @@
     <ClCompile Include="..\common\src\ecs\EntityManager.cpp" />
     <ClCompile Include="..\common\src\ecs\Renderable.cpp" />
     <ClCompile Include="..\common\src\ecs\Scene.cpp" />
+    <ClCompile Include="..\common\src\ecs\Sunlight.cpp" />
     <ClCompile Include="..\common\src\ecs\System.cpp" />
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\AudioSystem.cpp" />
@@ -285,6 +286,7 @@
     <ClCompile Include="..\common\src\ecs\systems\ParticleSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\ProjectionMapSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneGraph.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\ShadowMapRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SkeletalAnimator.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteAnimator.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />

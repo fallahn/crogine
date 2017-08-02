@@ -1,6 +1,8 @@
 model test_room
 {
 	mesh = "assets/models/test_room.cmf"
+	cast_shadows = true
+	
 	material Unlit
 	{
 		//colour = 1,1,1,1

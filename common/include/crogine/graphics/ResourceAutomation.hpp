@@ -70,8 +70,10 @@ namespace cro
     {
         int32 meshID = -1; //< ID of the mesh in the mesh resource
         std::array<int32, Mesh::IndexData::MaxBuffers> materialIDs{}; //< list of material IDs in the order in which they appear on the model
+        std::array<int32, Mesh::IndexData::MaxBuffers> shadowIDs{}; //< IDs of shadow map materials if this model casts shadows
         std::size_t materialCount = 0; //< number of active materials
         std::unique_ptr<Skeleton> skeleton; //< nullptr if no skeleton exists
+        bool castShadows = false; //< if this is true the model entity also requires a shadow cast component
 
         /*!
         \brief Attempts to load a definition from a ConfigFile at a given path.

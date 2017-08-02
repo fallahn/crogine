@@ -149,6 +149,13 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         return false;
     }
 
+    //check to see if this model ought to cast shadows
+    auto shadowProp = cfg.findProperty("cast_shadows");
+    if (shadowProp)
+    {
+        castShadows = shadowProp->getValue<bool>();
+    }
+
     //do all the resource loading last when we know properties are valid,
     //to prevent partially loading a model and wasting resources.
     meshID = rc.meshes.loadMesh(*meshBuilder.get());
@@ -347,6 +354,19 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         }
 
         materialIDs[materialCount] = matID;
+
+        if (castShadows)
+        {
+            //skinning is the only flag valid for shadow
+            //map materials so make sure we don't end up with
+            //needless variants.
+            flags = ShaderResource::DepthMap | (flags & ShaderResource::Skinning);
+
+            shaderID = rc.shaders.preloadBuiltIn(ShaderResource::ShadowMap, flags);
+            matID = rc.materials.add(rc.shaders.get(shaderID));
+            shadowIDs[materialCount] = matID;
+        }
+
         materialCount++;
     }
 

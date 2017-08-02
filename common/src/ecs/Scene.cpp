@@ -126,6 +126,21 @@ void Scene::setPostEnabled(bool enabled)
     }
 }
 
+void Scene::setSunlight(const Sunlight& sunlight)
+{
+    m_sunlight = sunlight;
+}
+
+const Sunlight& Scene::getSunlight() const
+{
+    return m_sunlight;
+}
+
+Sunlight& Scene::getSunlight()
+{
+    return m_sunlight;
+}
+
 Entity Scene::getDefaultCamera() const
 {
     return m_entityManager.getEntity(m_defaultCamera);

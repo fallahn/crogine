@@ -78,6 +78,13 @@ namespace cro
         void setSkeleton(glm::mat4* frame, std::size_t size);
 
         /*!
+        brief Sets the material used when casting shadows.
+        This material is used by ShadowMap systems to render the depth data
+        of the model.
+        */
+        void setShadowMaterial(std::size_t idx, Material::Data material);
+
+        /*!
         \brief returns whether or not the model is currently inside the
         frustum of the active camera according the the last render pass.
         This may be out of date by a frame when switching active scene cameras
@@ -88,14 +95,16 @@ namespace cro
         bool m_visible;
 
         Mesh::Data m_meshData;
-        std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_materials{};
-        
+        std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_materials{};       
+        std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_shadowMaterials{};
+
         void bindMaterial(Material::Data&);
         
         glm::mat4* m_skeleton;
         std::size_t m_jointCount;
 
         friend class ModelRenderer;
+        friend class ShadowMapRenderer;
     };
 }
 

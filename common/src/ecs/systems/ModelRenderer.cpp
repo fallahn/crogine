@@ -135,7 +135,7 @@ void ModelRenderer::render(Entity camera)
     applyViewport(camComponent.viewport);
 
     //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
-    for (auto& e : m_visibleEntities)
+    for (const auto& e : m_visibleEntities)
     {
         //calc entity transform
         const auto& tx = e.first.getComponent<Transform>();

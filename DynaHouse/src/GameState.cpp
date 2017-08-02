@@ -54,6 +54,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CollisionSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -66,6 +67,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/PhysicsObject.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -146,6 +148,7 @@ void GameState::addSystems()
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::SceneGraph>(mb);
+    m_scene.addSystem<cro::ShadowMapRenderer>(mb, m_shadowMap);
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::SpriteRenderer>(mb);
 
@@ -166,6 +169,8 @@ void GameState::loadAssets()
 
     CRO_ASSERT(m_modelDefs[GameModelID::BatCat].skeleton, "missing batcat anims");
     m_modelDefs[GameModelID::BatCat].skeleton->play(AnimationID::BatCat::Idle);
+
+    m_shadowMap.create(512, 512); //TODO adjust size based on platform
 }
 
 void GameState::createScene()
@@ -199,22 +204,32 @@ void GameState::createScene()
         entity.getComponent<cro::PhysicsObject>().addShape(ps);
         entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player |CollisionID::Weapon);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Wall);
+
+        entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].shadowIDs[0]));
+        entity.addComponent<cro::ShadowCaster>();
     }
 
     //dat cat man
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::BatCat].meshID),
                                     m_resources.materials.get(m_modelDefs[GameModelID::BatCat].materialIDs[0]));
+    //shadow caster for cat
+    if (m_modelDefs[GameModelID::BatCat].castShadows)
+    {
+        entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_modelDefs[GameModelID::BatCat].shadowIDs[0]));
+        entity.addComponent<cro::ShadowCaster>();
+        if (m_modelDefs[GameModelID::BatCat].skeleton)
+        {
+            entity.getComponent<cro::ShadowCaster>().skinned = true;
+        }
+    }
+
     entity.addComponent<cro::Transform>().setScale({ 0.002f, 0.002f, 0.002f });
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, cro::Util::Const::PI / 2.f, 0.f });
     entity.addComponent<cro::Skeleton>() = *m_modelDefs[GameModelID::BatCat].skeleton;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
-    //shadow caster for cat
-    /*auto mapEntity = m_scene.createEntity();
-    mapEntity.addComponent<cro::ProjectionMap>();
-    mapEntity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 300.f });
-    mapEntity.getComponent<cro::Transform>().setParent(entity);*/
+
 
     auto& phys = entity.addComponent<cro::PhysicsObject>();
     cro::PhysicsShape ps;
@@ -287,6 +302,7 @@ void GameState::createScene()
     ent.addComponent<cro::Transform>().setPosition({ 0.f, 0.6f, 2.3f });
     ent.addComponent<cro::Camera>();
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
+    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 0.4f, -2.3f });
 
     cro::PhysicsShape boundsShape;
     boundsShape.type = cro::PhysicsShape::Type::Box;
@@ -325,6 +341,11 @@ void GameState::createUI()
     auto& cam2D = ent.addComponent<cro::Camera>();
     cam2D.projection = glm::ortho(0.f, /*static_cast<float>(cro::DefaultSceneSize.x)*/1280.f, 0.f, /*static_cast<float>(cro::DefaultSceneSize.y)*/720.f, -0.1f, 100.f);
     m_overlayScene.setActiveCamera(ent);
+
+    //preview shadow map
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>().setPosition({ 20.f, 20.f, 0.f });
+    ent.addComponent<cro::Sprite>().setTexture(m_shadowMap.getTexture());
 
 #ifdef PLATFORM_MOBILE
     m_resources.textures.get("assets/ui/ui_buttons.png", false).setSmooth(true);
