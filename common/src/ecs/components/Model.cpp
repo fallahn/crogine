@@ -61,6 +61,13 @@ void Model::setSkeleton(glm::mat4* frame, std::size_t jointCount)
     m_jointCount = jointCount;
 }
 
+void Model::setShadowMaterial(std::size_t idx, Material::Data material)
+{
+    CRO_ASSERT(idx < m_shadowMaterials.size(), "Index out of range");
+    bindMaterial(material);
+    m_shadowMaterials[idx] = material;
+}
+
 //private
 void Model::bindMaterial(Material::Data& material)
 {

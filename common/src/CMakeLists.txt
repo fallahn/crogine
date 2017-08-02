@@ -35,6 +35,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/EntityManager.cpp
   ${PROJECT_DIR}/ecs/Renderable.cpp
   ${PROJECT_DIR}/ecs/Scene.cpp
+  ${PROJECT_DIR}/ecs/Sunlight.cpp
   ${PROJECT_DIR}/ecs/System.cpp
   ${PROJECT_DIR}/ecs/SystemManager.cpp
 
@@ -54,6 +55,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/ParticleSystem.cpp
   ${PROJECT_DIR}/ecs/systems/ProjectionMapSystem.cpp
   ${PROJECT_DIR}/ecs/systems/SceneGraph.cpp
+  ${PROJECT_DIR}/ecs/systems/ShadowMapRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/SkeletalAnimator.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteAnimator.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteRenderer.cpp

@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/Director.hpp>
+#include <crogine/ecs/Sunlight.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/postprocess/PostProcess.hpp>
 
@@ -130,6 +131,19 @@ namespace cro
         void setPostEnabled(bool);
 
         /*!
+        \brief Sets the active Sunlight object.
+        \see Sunlight
+        */
+        void setSunlight(const Sunlight&);
+
+        /*!
+        \brief Returns a reference to the active Sunlight object.
+        \see Sunlight
+        */
+        const Sunlight& getSunlight() const;
+        Sunlight& getSunlight();
+
+        /*!
         \brief Returns a copy of the entity containing the default camera
         */
         Entity getDefaultCamera() const;
@@ -190,6 +204,7 @@ namespace cro
         Entity::ID m_defaultCamera;
         Entity::ID m_activeCamera;
         Entity::ID m_activeListener;
+        Sunlight m_sunlight;
 
         std::vector<Entity> m_pendingEntities;
         std::vector<Entity> m_destroyedEntities;

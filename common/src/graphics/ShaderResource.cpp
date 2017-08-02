@@ -31,6 +31,7 @@ source distribution.
 #include "shaders/Default.hpp"
 #include "shaders/Unlit.hpp"
 #include "shaders/VertexLit.hpp"
+#include "shaders/ShadowMap.hpp"
 #include "../detail/GLCheck.hpp"
 
 using namespace cro;
@@ -156,6 +157,10 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
         break;
     case BuiltIn::VertexLit:
         success = preloadFromString(Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, id, defines);
+        break;
+    case BuiltIn::ShadowMap:
+        //TODO assess platform and load desktop version when necessary
+        success = preloadFromString(Shaders::ShadowMap::Vertex, Shaders::ShadowMap::FragmentMobile, id, defines);
         break;
     }
 

@@ -254,8 +254,8 @@ void SpriteRenderer::process(Time)
         std::sort(std::begin(entities), std::end(entities),
             [](const Entity& a, const Entity& b)
         {
-            const auto& sprA = a.getComponent<Sprite>();
-            const auto& sprB = b.getComponent<Sprite>();
+            //const auto& sprA = a.getComponent<Sprite>();
+            //const auto& sprB = b.getComponent<Sprite>();
 
             //sub-sort by depth
             if (a.getComponent<cro::Transform>().getWorldPosition().z < b.getComponent<cro::Transform>().getWorldPosition().z) return true;  

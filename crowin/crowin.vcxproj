@@ -71,6 +71,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\ParticleEmitter.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\PhysicsObject.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\ProjectionMap.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\ShadowCaster.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Skeleton.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Sprite.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\SpriteAnimation.hpp" />
@@ -81,6 +82,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Renderable.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Scene.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\Sunlight.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\System.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\AudioSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\CollisionSystem.hpp" />
@@ -90,6 +92,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\systems\ProjectionMapSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SceneGraph.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\ModelRenderer.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\ShadowMapRenderer.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SkeletalAnimator.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SpriteAnimator.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\SpriteRenderer.hpp" />
@@ -144,6 +147,7 @@
     <ClInclude Include="..\common\src\detail\GLCheck.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Debug.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Default.hpp" />
+    <ClInclude Include="..\common\src\graphics\shaders\ShadowMap.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Sprite.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\Unlit.hpp" />
     <ClInclude Include="..\common\src\graphics\shaders\VertexLit.hpp" />
@@ -194,6 +198,7 @@
     <ClCompile Include="..\common\src\ecs\EntityManager.cpp" />
     <ClCompile Include="..\common\src\ecs\Renderable.cpp" />
     <ClCompile Include="..\common\src\ecs\Scene.cpp" />
+    <ClCompile Include="..\common\src\ecs\Sunlight.cpp" />
     <ClCompile Include="..\common\src\ecs\System.cpp" />
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\AudioSystem.cpp" />
@@ -204,6 +209,7 @@
     <ClCompile Include="..\common\src\ecs\systems\ProjectionMapSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SceneGraph.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\ModelRenderer.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\ShadowMapRenderer.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SkeletalAnimator.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteAnimator.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\SpriteRenderer.cpp" />

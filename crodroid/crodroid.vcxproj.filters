@@ -309,5 +309,11 @@
     <ClCompile Include="..\common\src\audio\AudioMixer.cpp">
       <Filter>src\audio</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\ecs\systems\ShadowMapRenderer.cpp">
+      <Filter>src\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\ecs\Sunlight.cpp">
+      <Filter>src\ecs</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

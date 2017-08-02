@@ -48,8 +48,9 @@ namespace cro
     public:
         enum BuiltIn
         {
-            Unlit = 0x7FFE0000,
-            VertexLit = 0x7FFF0000
+            Unlit = 0x7FFD0000,
+            VertexLit = 0x7FFE0000,
+            ShadowMap = 0x7FFF0000
         };
 
         enum BuiltInFlags
@@ -62,7 +63,8 @@ namespace cro
             Skinning = 0x20,
             Subrects = 0x40,
             ReceiveProjection = 0x80,
-            RimLighting = 0x100
+            RimLighting = 0x100,
+            DepthMap = 0x200
         };
         
         ShaderResource();
