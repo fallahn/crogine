@@ -50,6 +50,8 @@ namespace cro
                 uniform mat4 u_worldViewMatrix;
                 uniform mat4 u_projectionMatrix;
 
+                varying vec4 v_position;
+
                 void main()
                 {
                     mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
@@ -64,6 +66,7 @@ namespace cro
                 #endif                    
 
                     gl_Position = wvp * position;
+                    v_position = gl_Position;
                 })";
 
             const static std::string FragmentMobile = R"(
@@ -73,6 +76,8 @@ namespace cro
                 #else
                 #define PREC mediump
                 #endif
+
+                varying vec4 v_position;
 
                 PREC vec4 pack(const float depth)
                 {
@@ -85,7 +90,9 @@ namespace cro
 
                 void main()
                 {
-                    gl_FragColor = pack(gl_FragCoord.z);
+                    PREC float distanceNorm = v_position.z /v_position.w;
+                    distanceNorm = (distanceNorm + 1.0) / 2.0;
+                    gl_FragColor = pack(distanceNorm);
                 })";
 
             const static std::string FragmentDesktop = R"()";

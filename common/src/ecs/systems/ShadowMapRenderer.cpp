@@ -70,32 +70,28 @@ void ShadowMapRenderer::process(cro::Time dt)
         if (entity.getComponent<cro::Model>().isVisible())
         {
             m_visibleEntities.push_back(entity);
-
-            //if (entity.hasComponent<cro::Skeleton>())
-            //{
-            //    //TODO need to only update materials which are skinned
-            //}
         }
     }
 }
 
 void ShadowMapRenderer::render(Entity camera)
 {
-    //TODO enable face culling and render rear faces
+    //enable face culling and render rear faces
+    glCheck(glEnable(GL_CULL_FACE));
+    glCheck(glCullFace(GL_FRONT));
+    glCheck(glEnable(GL_DEPTH_TEST));
     
     const auto& camTx = camera.getComponent<Transform>();
-
-    auto sunpos = camTx.getWorldPosition() + m_projectionOffset;
-    //auto viewMat = glm::inverse(glm::lookAt(sunpos, sunpos - getScene()->getSunlight().getDirection(), { 0.f, 1.f, 0.f }));
-
-    auto viewMat = glm::inverse(camTx.getWorldTransform());
+    auto sunPos = camTx.getWorldPosition() + m_projectionOffset;
+    auto viewMat = glm::inverse(glm::lookAt(sunPos, sunPos + getScene()->getSunlight().getDirection(), { 0.f, 0.f, -1.f }));
+    //auto viewMat = glm::inverse(camTx.getWorldTransform());
 
     auto projMat = getScene()->getSunlight().getProjectionMatrix();
     getScene()->getSunlight().setViewProjectionMatrix(projMat * viewMat);
 
     m_target.clear(cro::Colour::White());
 
-    glCheck(glEnable(GL_DEPTH_TEST));
+    
     for (const auto& e : m_visibleEntities)
     {
         //calc entity transform
@@ -158,7 +154,8 @@ void ShadowMapRenderer::render(Entity camera)
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     glCheck(glDisable(GL_DEPTH_TEST));
-
+    glCheck(glDisable(GL_CULL_FACE));
+    glCheck(glCullFace(GL_BACK));
     m_target.display();
 }
 

@@ -55,7 +55,7 @@ cro::Colour Sunlight::getColour() const
 
 void Sunlight::setDirection(glm::vec3 direction)
 {
-    m_direction = direction;
+    m_direction = glm::normalize(direction);
 }
 
 glm::vec3 Sunlight::getDirection() const
