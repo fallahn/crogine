@@ -1,6 +1,8 @@
 model arctic_outpost
 {
 	mesh = "assets/models/arctic_outpost.cmf"
+	cast_shadows = true
+
 	material VertexLit
 	{
 		diffuse = "assets/materials/arctic_outpost_diffuse.png"

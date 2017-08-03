@@ -59,6 +59,7 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
 #else
     m_target.create(512, 512);
 #endif
+    //m_target.setRepeated(true);
 }
 
 

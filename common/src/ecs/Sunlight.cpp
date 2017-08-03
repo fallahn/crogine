@@ -36,8 +36,9 @@ source distribution.
 using namespace cro;
 
 Sunlight::Sunlight()
-    : m_colour(1.f, 1.f, 1.f),
-    m_direction(0.f, -1.f, 0.f)
+    : m_colour  (1.f, 1.f, 1.f),
+    m_direction (0.f, -1.f, 0.f),
+    m_textureID (0)
 {
     //m_projection = glm::perspective(0.52f, 1.f, 0.1f, 100.f);
     m_projection = glm::ortho(-0.6f, 0.6f, -0.6f, 0.6f, 0.1f, 10.f);
@@ -69,6 +70,11 @@ glm::vec3 Sunlight::getDirection() const
 const glm::mat4& Sunlight::getRotation() const
 {
     return m_rotation;
+}
+
+void Sunlight::setProjectionMatrix(const glm::mat4& mat)
+{
+    m_projection = mat;
 }
 
 const glm::mat4& Sunlight::getProjectionMatrix() const
