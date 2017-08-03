@@ -172,7 +172,6 @@
     <ProjectReference Include="..\HouseDroidLib\HouseDroidLib.vcxproj" />
     <ProjectReference Include="..\SDL2-android\SDL2-android.vcxproj" />
     <ProjectReference Include="..\SDL2_ttf\SDL2_ttf.vcxproj" />
-    <ProjectReference Include="..\SDL_mixer\SDL_mixer.vcxproj" />
   </ItemGroup>
   <Import Project="$(AndroidTargetsPath)\Android.targets" />
   <ImportGroup Label="ExtensionTargets" />
