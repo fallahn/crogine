@@ -257,6 +257,13 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                     flags |= ShaderResource::LightMap;
                 }
             }
+            else if (name == "rx_shadows")
+            {
+                if (p.getValue<bool>())
+                {
+                    flags |= ShaderResource::RxShadows;
+                }
+            }
             else if (name == "smooth")
             {
                 smoothTextures = p.getValue<bool>();

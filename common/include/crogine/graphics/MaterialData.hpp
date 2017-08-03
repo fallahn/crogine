@@ -61,6 +61,8 @@ namespace cro
             Skinning,
             ProjectionMap,
             ProjectionMapCount,
+            ShadowMapLight,
+            ShadowMapSampler,
             Total
         };
         

@@ -64,7 +64,8 @@ namespace cro
             Subrects = 0x40,
             ReceiveProjection = 0x80,
             RimLighting = 0x100,
-            DepthMap = 0x200
+            DepthMap = 0x200,
+            RxShadows = 0x400
         };
         
         ShaderResource();

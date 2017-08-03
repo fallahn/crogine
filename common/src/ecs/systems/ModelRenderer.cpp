@@ -256,6 +256,14 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             glCheck(glUniform1i(material.uniforms[Material::ProjectionMapCount], static_cast<GLint>(p.second)));
         }
             break;
+        case Material::ShadowMapLight:
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapLight], 1, GL_FALSE, glm::value_ptr(getScene()->getSunlight().getViewProjectionMatrix())));
+            break;
+        case Material::ShadowMapSampler:
+            glCheck(glActiveTexture(GL_TEXTURE0 + m_currentTextureUnit));
+            glCheck(glBindTexture(GL_TEXTURE_2D, getScene()->getSunlight().getMapID()));
+            glCheck(glUniform1i(material.uniforms[Material::ShadowMapSampler], m_currentTextureUnit++));
+            break;
         }
     }
 }

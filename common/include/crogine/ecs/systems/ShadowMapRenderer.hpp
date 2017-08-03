@@ -32,16 +32,17 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 namespace cro
 {
-    class RenderTexture;
+    class Texture;
 
     /*!
     \brief Shadow map renderer.
     Any entities with a shadow caster component and
     appropriate shadow map material assigned to the Model
-    component will be rendered by this system into a given
+    component will be rendered by this system into a
     render target. This system should be added to the scene
     before the ModelRenderer system (or any system which
     employs the depth map rendered by this system) in order
@@ -53,9 +54,8 @@ namespace cro
         /*!
         \brief Constructor.
         \param mb Message bus instance
-        \param target Reference to a render texture into which the depth map is rendered
         */
-        ShadowMapRenderer(MessageBus& mb, RenderTexture& target);
+        ShadowMapRenderer(MessageBus& mb);
 
         void process(cro::Time) override;
 
@@ -68,9 +68,13 @@ namespace cro
         */
         void setProjectionOffset(glm::vec3);
 
+        /*!
+        \brief Returns a reference to the texture used to render the depth map
+        */
+        const Texture& getDepthMapTexture() const;
 
     private:
-        RenderTexture& m_target;
+        RenderTexture m_target;
         std::vector<Entity> m_visibleEntities;
         glm::vec3 m_projectionOffset;
     };
