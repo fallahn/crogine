@@ -450,6 +450,9 @@
     <ClInclude Include="..\common\include\crogine\ecs\Sunlight.hpp">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\src\audio\NullImpl.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">

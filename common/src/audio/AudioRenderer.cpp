@@ -30,6 +30,7 @@ source distribution.
 #include "AudioRenderer.hpp"
 #include "OpenALImpl.hpp"
 #include "SDLMixerImpl.hpp"
+#include "NullImpl.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/detail/Assert.hpp>
@@ -53,6 +54,9 @@ bool AudioRenderer::init()
 #endif
 
     valid = m_impl->init();
+
+    if (!valid) m_impl = std::make_unique<Detail::NullImpl>();
+
     return valid;
 }
 
