@@ -34,7 +34,6 @@ source distribution.
 #include <crogine/ecs/components/Skeleton.hpp>
 #include <crogine/ecs/Scene.hpp>
 
-#include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/core/Clock.hpp>
 
 #include "../../detail/GLCheck.hpp"
@@ -46,15 +45,20 @@ source distribution.
 
 using namespace cro;
 
-ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb, RenderTexture& target)
-    : System(mb, typeid(ShadowMapRenderer)),
-    m_target(target)
+ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
+    : System(mb, typeid(ShadowMapRenderer))
 {
     requireComponent<cro::Model>();
     requireComponent<cro::Transform>();
     requireComponent<cro::ShadowCaster>();
 
     m_projectionOffset = { 0.f, 0.5f, -0.5f };
+
+#ifdef PLATFORM_DESKTOP
+    m_target.create(1024, 1024);
+#else
+    m_target.create(512, 512);
+#endif
 }
 
 
@@ -72,6 +76,8 @@ void ShadowMapRenderer::process(cro::Time dt)
             m_visibleEntities.push_back(entity);
         }
     }
+
+    getScene()->getSunlight().m_textureID = m_target.getTexture().getGLHandle();
 }
 
 void ShadowMapRenderer::render(Entity camera)
@@ -82,8 +88,9 @@ void ShadowMapRenderer::render(Entity camera)
     glCheck(glEnable(GL_DEPTH_TEST));
     
     const auto& camTx = camera.getComponent<Transform>();
-    auto sunPos = camTx.getWorldPosition() + m_projectionOffset;
-    auto viewMat = glm::inverse(glm::lookAt(sunPos, sunPos + getScene()->getSunlight().getDirection(), { 0.f, 0.f, -1.f }));
+
+    auto dir = glm::translate(getScene()->getSunlight().getRotation(), (camTx.getWorldPosition() - m_projectionOffset));
+    auto viewMat = glm::inverse(dir);
     //auto viewMat = glm::inverse(camTx.getWorldTransform());
 
     auto projMat = getScene()->getSunlight().getProjectionMatrix();
@@ -162,4 +169,9 @@ void ShadowMapRenderer::render(Entity camera)
 void ShadowMapRenderer::setProjectionOffset(glm::vec3 offset)
 {
     m_projectionOffset = offset;
+}
+
+const Texture& ShadowMapRenderer::getDepthMapTexture() const
+{
+    return m_target.getTexture();
 }

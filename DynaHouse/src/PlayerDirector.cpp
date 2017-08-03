@@ -61,7 +61,7 @@ namespace
     };
 
     const glm::vec3 gravity(0.f, -9.f, 0.f);
-    const glm::vec3 weaponOffset(0.f, 0.4f, 0.f);
+    const glm::vec3 weaponOffset(0.f, 0.34f, 0.f);
 
     cro::int32 currentWeapon = WeaponEvent::Laser;
 }

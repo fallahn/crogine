@@ -83,6 +83,12 @@ namespace cro
         glm::vec3 getDirection() const;
 
         /*!
+        \brief Gets the rotation of the light object as a matrix
+        with a forward vector equivalent to the direction.
+        */
+        const glm::mat4& getRotation() const;
+
+        /*!
         \brief Returns the projection matrix (without transformation)
         of the Sunlight - useful for shadow mapping.
         */
@@ -101,11 +107,21 @@ namespace cro
         */
         const glm::mat4& getViewProjectionMatrix() const;
 
+        /*!
+        \brief Returns the GL handle of the texture the sunlight
+        was last rendered to.
+        */
+        int32 getMapID() const;
+
     private:
         cro::Colour m_colour;
         glm::vec3 m_direction;
+        glm::mat4 m_rotation;
         glm::mat4 m_projection;
         glm::mat4 m_viewProjection;
+
+        cro::int32 m_textureID;
+        friend class ShadowMapRenderer;
     };
 }
 

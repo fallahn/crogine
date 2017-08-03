@@ -125,6 +125,10 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     {
         defines += "\n#define RIMMING";
     }
+    if (flags & BuiltInFlags::RxShadows)
+    {
+        defines += "\n#define RX_SHADOWS";
+    }
     if (flags & BuiltInFlags::Skinning)
     {
         if (MAX_BONES == 0)

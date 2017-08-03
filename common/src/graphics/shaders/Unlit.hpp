@@ -67,6 +67,10 @@ namespace cro
                 uniform mat4 u_worldViewMatrix;               
                 uniform mat4 u_projectionMatrix;
 
+                #if defined(RX_SHADOWS)
+                uniform mat4 u_lightViewProjectionMatrix;
+                #endif
+
                 #if defined (SUBRECTS)
                 uniform MED vec4 u_subrect;
                 #endif
@@ -85,6 +89,9 @@ namespace cro
                 varying LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
                 #endif
 
+                #if defined(RX_SHADOWS)
+                varying LOW vec4 v_lightWorldPosition;
+                #endif
 
                 void main()
                 {
@@ -109,6 +116,10 @@ namespace cro
 
                     gl_Position = wvp * position;
 
+                #if defined (RX_SHADOWS)
+                    v_lightWorldPosition = u_lightViewProjectionMatrix * u_worldMatrix * position;
+                #endif
+
                 #if defined (VERTEX_COLOUR)
                     v_colour = a_colour;
                 #endif
@@ -124,7 +135,7 @@ namespace cro
                 #endif
                 })";
 
-            const static std::string Fragment = R"(
+                const static std::string Fragment = R"(
                 #if defined (TEXTURED)
                 uniform sampler2D u_diffuseMap;
                 #endif
@@ -140,6 +151,10 @@ namespace cro
                 uniform LOW int u_projectionMapCount;
                 #endif
 
+                #if defined (RX_SHADOWS)
+                uniform sampler2D u_shadowMap;
+                #endif
+
                 #if defined (VERTEX_COLOUR)
                 varying LOW vec4 v_colour;
                 #endif
@@ -152,6 +167,74 @@ namespace cro
 
                 #if defined(PROJECTIONS)
                 varying LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
+                #endif
+
+                #if defined(RX_SHADOWS)
+                varying LOW vec4 v_lightWorldPosition;
+
+                #if defined (GL_FRAGMENT_PRECISION_HIGH)
+                #define PREC highp
+                #else
+                #define PREC mediump
+                #endif
+
+                PREC float unpack(PREC vec4 colour)
+                {
+                    const PREC vec4 bitshift = vec4(1.0 / 16777216.0, 1.0 / 65536.0, 1.0 / 256.0, 1.0);
+                    return dot(colour, bitshift);
+                }
+                
+                #if defined(MOBILE)
+                PREC float shadowAmount(LOW vec4 lightWorldPos)
+                {
+                    PREC vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+                    projectionCoords = projectionCoords * 0.5 + 0.5;
+                    PREC float depthSample = unpack(texture2D(u_shadowMap, projectionCoords.xy));
+                    PREC float currDepth = projectionCoords.z - 0.005;
+                    return (currDepth < depthSample) ? 1.0 : 0.4;
+                }
+                #else
+                //some fancier pcf on desktop
+                const vec2 kernel[16] = vec2[](
+                    vec2(-0.94201624, -0.39906216),
+                    vec2(0.94558609, -0.76890725),
+                    vec2(-0.094184101, -0.92938870),
+                    vec2(0.34495938, 0.29387760),
+                    vec2(-0.91588581, 0.45771432),
+                    vec2(-0.81544232, -0.87912464),
+                    vec2(-0.38277543, 0.27676845),
+                    vec2(0.97484398, 0.75648379),
+                    vec2(0.44323325, -0.97511554),
+                    vec2(0.53742981, -0.47373420),
+                    vec2(-0.26496911, -0.41893023),
+                    vec2(0.79197514, 0.19090188),
+                    vec2(-0.24188840, 0.99706507),
+                    vec2(-0.81409955, 0.91437590),
+                    vec2(0.19984126, 0.78641367),
+                    vec2(0.14383161, -0.14100790)
+                );
+                const int filterSize = 3;
+                float shadowAmount(vec4 lightWorldPos)
+                {
+                    vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+                    projectionCoords = projectionCoords * 0.5 + 0.5;
+
+                    if(projectionCoords.z > 1.0) return 1.0;
+
+                    float shadow = 0.0;
+                    vec2 texelSize = 1.0 / textureSize(u_shadowMap, 0).xy;
+                    for(int x = 0; x < filterSize; ++x)
+                    {
+                        for(int y = 0; y < filterSize; ++y)
+                        {
+                            float pcfDepth = unpack(texture2D(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize));
+                            shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
+                        }
+                    }
+                    return 1.0 - (shadow / 9.0);
+                }
+                #endif
+
                 #endif
 
                 void main()
@@ -181,6 +264,11 @@ namespace cro
                         }
                     }
                 #endif
+
+                #if defined (RX_SHADOWS)
+                    gl_FragColor *= shadowAmount(v_lightWorldPosition);
+                #endif
+
                 })";
         }
     }

@@ -120,6 +120,16 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
             data.uniforms[Material::ProjectionMapCount] = uniform.second;
             data.optionalUniforms[data.optionalUniformCount++] = Material::ProjectionMapCount;
         }
+        else if (uniform.first == "u_lightViewProjectionMatrix")
+        {
+            data.uniforms[Material::ShadowMapLight] = uniform.second;
+            data.optionalUniforms[data.optionalUniformCount++] = Material::ShadowMapLight;
+        }
+        else if (uniform.first == "u_shadowMap")
+        {
+            data.uniforms[Material::ShadowMapSampler] = uniform.second;
+            data.optionalUniforms[data.optionalUniformCount++] = Material::ShadowMapSampler;
+        }
         //else these are user settable uniforms - ie optional, but set by user such as textures
         else
         {

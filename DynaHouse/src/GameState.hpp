@@ -33,7 +33,6 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ResourceAutomation.hpp>
-#include <crogine/graphics/RenderTexture.hpp>
 
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
@@ -63,8 +62,6 @@ private:
 
     cro::ResourceCollection m_resources;
     std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs;
-
-    cro::RenderTexture m_shadowMap;
 
     void addSystems();
     void loadAssets();

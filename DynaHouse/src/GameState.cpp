@@ -148,7 +148,7 @@ void GameState::addSystems()
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::SceneGraph>(mb);
-    m_scene.addSystem<cro::ShadowMapRenderer>(mb, m_shadowMap);
+    m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::SpriteRenderer>(mb);
 
@@ -169,8 +169,6 @@ void GameState::loadAssets()
 
     CRO_ASSERT(m_modelDefs[GameModelID::BatCat].skeleton, "missing batcat anims");
     m_modelDefs[GameModelID::BatCat].skeleton->play(AnimationID::BatCat::Idle);
-
-    m_shadowMap.create(512, 512); //TODO adjust size based on platform
 }
 
 void GameState::createScene()
@@ -191,7 +189,7 @@ void GameState::createScene()
             entity.getComponent<cro::Model>().setMaterial(i, m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[i]));
         }
         entity.addComponent<cro::Transform>().scale(houseScale);
-        entity.getComponent<cro::Transform>().setPosition({ i * stride, 0.6f, -0.5f });
+        entity.getComponent<cro::Transform>().setPosition({ i * stride, 0.63f, -0.5f });
 
         cro::PhysicsShape ps;
         ps.type = cro::PhysicsShape::Type::Box;
@@ -204,9 +202,6 @@ void GameState::createScene()
         entity.getComponent<cro::PhysicsObject>().addShape(ps);
         entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player |CollisionID::Weapon);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Wall);
-
-        entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].shadowIDs[0]));
-        entity.addComponent<cro::ShadowCaster>();
     }
 
     //dat cat man
@@ -224,7 +219,7 @@ void GameState::createScene()
         }
     }
 
-    entity.addComponent<cro::Transform>().setScale({ 0.002f, 0.002f, 0.002f });
+    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.0017f));
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, cro::Util::Const::PI / 2.f, 0.f });
     entity.addComponent<cro::Skeleton>() = *m_modelDefs[GameModelID::BatCat].skeleton;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
@@ -234,13 +229,13 @@ void GameState::createScene()
     auto& phys = entity.addComponent<cro::PhysicsObject>();
     cro::PhysicsShape ps;
     ps.type = cro::PhysicsShape::Type::Sphere;
-    ps.radius = 0.1f;
-    ps.position.z = 0.4f;
+    ps.radius = 0.085f;
+    ps.position.z = 0.34f;
     phys.addShape(ps);
 
     ps.type = cro::PhysicsShape::Type::Capsule;
-    ps.length = 0.1f;
-    ps.position.z = 0.14f;
+    ps.length = 0.085f;
+    ps.position.z = 0.12f;
     ps.orientation = cro::PhysicsShape::Orientation::Z;
     phys.addShape(ps);
 
@@ -302,8 +297,8 @@ void GameState::createScene()
     ent.addComponent<cro::Transform>().setPosition({ 0.f, 0.6f, 2.3f });
     ent.addComponent<cro::Camera>();
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
-    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 1.4f, -2.3f });
-    m_scene.getSunlight().setDirection({ -0.1f, -1.f, 0.f });
+    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 0.4f, -1.3f });
+    m_scene.getSunlight().setDirection({ -0.f, -1.f, 0.f });
 
     cro::PhysicsShape boundsShape;
     boundsShape.type = cro::PhysicsShape::Type::Box;
@@ -344,9 +339,10 @@ void GameState::createUI()
     m_overlayScene.setActiveCamera(ent);
 
     //preview shadow map
-    ent = m_overlayScene.createEntity();
+    /*ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 20.f, 20.f, 0.f });
-    ent.addComponent<cro::Sprite>().setTexture(m_shadowMap.getTexture());
+    ent.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
+    ent.addComponent<cro::Sprite>().setTexture(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture());*/
 
 #ifdef PLATFORM_MOBILE
     m_resources.textures.get("assets/ui/ui_buttons.png", false).setSmooth(true);

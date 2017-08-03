@@ -39,7 +39,9 @@ Sunlight::Sunlight()
     : m_colour(1.f, 1.f, 1.f),
     m_direction(0.f, -1.f, 0.f)
 {
-    m_projection = glm::perspective(1.6f, 1.f, 0.1f, 100.f);
+    //m_projection = glm::perspective(0.52f, 1.f, 0.1f, 100.f);
+    m_projection = glm::ortho(-0.6f, 0.6f, -0.6f, 0.6f, 0.1f, 10.f);
+    setDirection(m_direction);
 }
 
 //public
@@ -56,11 +58,17 @@ cro::Colour Sunlight::getColour() const
 void Sunlight::setDirection(glm::vec3 direction)
 {
     m_direction = glm::normalize(direction);
+    m_rotation = glm::inverse(glm::lookAt(-m_direction, glm::vec3(), { m_direction.x, m_direction.z, m_direction.y }));
 }
 
 glm::vec3 Sunlight::getDirection() const
 {
     return m_direction;
+}
+
+const glm::mat4& Sunlight::getRotation() const
+{
+    return m_rotation;
 }
 
 const glm::mat4& Sunlight::getProjectionMatrix() const
@@ -76,4 +84,9 @@ void Sunlight::setViewProjectionMatrix(const glm::mat4& mat)
 const glm::mat4& Sunlight::getViewProjectionMatrix() const
 {
     return m_viewProjection;
+}
+
+int32 Sunlight::getMapID() const
+{
+    return m_textureID;
 }
