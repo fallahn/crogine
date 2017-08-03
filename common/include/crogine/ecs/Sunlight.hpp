@@ -89,6 +89,15 @@ namespace cro
         const glm::mat4& getRotation() const;
 
         /*!
+        \brief Sets the projection matrix.
+        Usually shadow mapping with a directional light such as sunlight
+        requires is best perfomed with an orthogonal projection. Setting
+        this allows the user to define the area and depth of the scene
+        covered by the Sunlight shadow map
+        */
+        void setProjectionMatrix(const glm::mat4&);
+
+        /*!
         \brief Returns the projection matrix (without transformation)
         of the Sunlight - useful for shadow mapping.
         */

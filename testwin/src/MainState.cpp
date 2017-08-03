@@ -44,6 +44,7 @@ source distribution.
 #include <crogine/ecs/components/AudioSource.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/components/CommandID.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
@@ -52,6 +53,7 @@ source distribution.
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
@@ -180,10 +182,11 @@ void MainState::addSystems()
     m_backgroundScene.addSystem<DriftSystem>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
     m_backgroundScene.addSystem<cro::SceneGraph>(mb);
+    m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
 
 #ifdef PLATFORM_DESKTOP
-    m_backgroundScene.addPostProcess<cro::PostChromeAB>();
+    //m_backgroundScene.addPostProcess<cro::PostChromeAB>();
 #endif
     
     m_commandSystem = &m_menuScene.addSystem<cro::CommandSystem>(mb);
@@ -240,9 +243,11 @@ void MainState::createScene()
     moonTx.setParent(moonAxis);
     moonEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Moon].meshID),
                                         m_resources.materials.get(m_modelDefs[MenuModelID::Moon].materialIDs[0]));
+    moonEntity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_modelDefs[MenuModelID::Moon].shadowIDs[0]));
+    moonEntity.addComponent<cro::ShadowCaster>();
     auto& moonRotator = moonEntity.addComponent<Rotator>();
     moonRotator.axis.y = 1.f;
-    moonRotator.speed = 0.1f;
+    moonRotator.speed = 0.1f;   
 
     auto arcticEntity = m_backgroundScene.createEntity();
     auto& arcticTx = arcticEntity.addComponent<cro::Transform>();
@@ -254,11 +259,15 @@ void MainState::createScene()
     for (auto i = 0u; i < m_modelDefs[MenuModelID::ArcticPost].materialCount; ++i)
     {
         arcticModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[i]));
+        arcticModel.setShadowMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].shadowIDs[i]));
     }
+    arcticEntity.addComponent<cro::ShadowCaster>();
+
     arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::TestStream)).play(true);
     //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
     arcticEntity.getComponent<cro::AudioSource>().setVolume(0.1f);
     arcticEntity.addComponent<cro::CommandTarget>().ID = (1 << 30);
+    
     
     auto lookoutEntity = m_backgroundScene.createEntity();
     auto& lookoutTx = lookoutEntity.addComponent<cro::Transform>();
@@ -270,11 +279,14 @@ void MainState::createScene()
     for (auto i = 0u; i < m_modelDefs[MenuModelID::LookoutBase].materialCount; ++i)
     {
         lookoutModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[i]));
+        lookoutModel.setShadowMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].shadowIDs[i]));
     }
+    lookoutEntity.addComponent<cro::ShadowCaster>();
     lookoutEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
     lookoutEntity.getComponent<cro::AudioSource>().setPitch(2.4f);
     //lookoutEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
     //lookoutEntity.getComponent<cro::AudioSource>().setVolume(2.4f);
+    
 
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
@@ -308,6 +320,13 @@ void MainState::createScene()
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Sun].meshID),
                                     m_resources.materials.get(m_modelDefs[MenuModelID::Sun].materialIDs[0]));
 
+    //set up lighting
+    m_backgroundScene.getSunlight().setDirection({ 0.1f, -0.8f, -0.2f });
+    //m_backgroundScene.getSunlight().setColour(cro::Colour(0.48f, 0.48f, 0.48f));
+    m_backgroundScene.getSunlight().setProjectionMatrix(glm::ortho(-4.f, 4.f, -4.f, 4.f, 0.1f, 20.f));
+    m_backgroundScene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ -0.1f, 1.2f, 0.2f });
+
+
     //2D and 3D cameras
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>();// .setPosition({ 0.f, 0.f, 4.f });
@@ -321,7 +340,7 @@ void MainState::createScene()
     m_backgroundScene.setActiveCamera(entity);
     m_backgroundScene.setActiveListener(entity);
 
-
+    //used for menu scene
     entity = m_menuScene.createEntity();
     entity.addComponent<cro::Transform>();
     auto& cam2D = entity.addComponent<cro::Camera>();
@@ -378,6 +397,12 @@ void MainState::createMenus()
     createMainMenu(mouseEnterCallback, mouseExitCallback);
     createOptionsMenu(mouseEnterCallback, mouseExitCallback);
     createScoreMenu(mouseEnterCallback, mouseExitCallback);
+
+    //preview shadow map
+    auto entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Sprite>().setTexture(m_backgroundScene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture());
+    entity.addComponent<cro::Transform>().setPosition({ 10.f, 10.f, 0.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
 }
 
 void MainState::updateView()

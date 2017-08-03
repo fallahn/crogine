@@ -1,7 +1,8 @@
 model LookOutBase
 {
 	mesh = "assets/models/lookout_base.cmf"
-
+	cast_shadows = true
+	
 	material VertexLit
 	{
 		diffuse = "assets/materials/lookout_diffuse.png"

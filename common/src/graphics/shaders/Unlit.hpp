@@ -135,7 +135,7 @@ namespace cro
                 #endif
                 })";
 
-                const static std::string Fragment = R"(
+            const static std::string Fragment = R"(
                 #if defined (TEXTURED)
                 uniform sampler2D u_diffuseMap;
                 #endif
@@ -266,7 +266,7 @@ namespace cro
                 #endif
 
                 #if defined (RX_SHADOWS)
-                    gl_FragColor *= shadowAmount(v_lightWorldPosition);
+                    gl_FragColor.rgb *= shadowAmount(v_lightWorldPosition);
                 #endif
 
                 })";

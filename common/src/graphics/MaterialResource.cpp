@@ -122,13 +122,23 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
         }
         else if (uniform.first == "u_lightViewProjectionMatrix")
         {
-            data.uniforms[Material::ShadowMapLight] = uniform.second;
-            data.optionalUniforms[data.optionalUniformCount++] = Material::ShadowMapLight;
+            data.uniforms[Material::ShadowMapProjection] = uniform.second;
+            data.optionalUniforms[data.optionalUniformCount++] = Material::ShadowMapProjection;
         }
         else if (uniform.first == "u_shadowMap")
         {
             data.uniforms[Material::ShadowMapSampler] = uniform.second;
             data.optionalUniforms[data.optionalUniformCount++] = Material::ShadowMapSampler;
+        }
+        else if(uniform.first == "u_lightDirection")
+        {
+            data.uniforms[Material::SunlightDirection] = uniform.second;
+            data.optionalUniforms[data.optionalUniformCount++] = Material::SunlightDirection;
+        }
+        else if (uniform.first == "u_lightColour")
+        {
+            data.uniforms[Material::SunlightColour] = uniform.second;
+            data.optionalUniforms[data.optionalUniformCount++] = Material::SunlightColour;
         }
         //else these are user settable uniforms - ie optional, but set by user such as textures
         else
