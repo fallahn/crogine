@@ -63,6 +63,7 @@ void ModelRenderer::process(Time)
     for (auto& entity : entities)
     {
         auto& model = entity.getComponent<Model>();
+
         auto sphere = model.m_meshData.boundingSphere;
         const auto& tx = entity.getComponent<Transform>();
         sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre.x, sphere.centre.y, sphere.centre.z, 1.f));
@@ -133,6 +134,8 @@ void ModelRenderer::render(Entity camera)
     auto viewMat = glm::inverse(camTx.getWorldTransform());
     auto projMat = camComponent.projection;
     applyViewport(camComponent.viewport);
+
+    glCheck(glCullFace(GL_BACK));
 
     //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
     for (const auto& e : m_visibleEntities)

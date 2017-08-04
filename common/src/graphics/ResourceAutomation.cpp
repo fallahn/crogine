@@ -37,6 +37,10 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/util/String.hpp>
 
+#include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
+#include <crogine/ecs/Entity.hpp>
+
 using namespace cro;
 
 namespace
@@ -378,4 +382,28 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     }
 
     return true;
+}
+
+bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
+{
+    if (meshID > -1)
+    {
+        auto& model = entity.addComponent<cro::Model>(rc.meshes.getMesh(meshID), rc.materials.get(materialIDs[0]));
+        for (auto i = 1u; i < materialCount; ++i)
+        {
+            model.setMaterial(i, rc.materials.get(materialIDs[i]));
+        }
+
+        if (castShadows)
+        {
+            for (auto i = 0u; i < materialCount; ++i)
+            {
+                model.setShadowMaterial(i, rc.materials.get(shadowIDs[i]));
+            }
+            entity.addComponent<ShadowCaster>().skinned = (skeleton != nullptr);
+            //TODO should we be adding animation component too?
+        }
+        return true;
+    }
+    return false;
 }

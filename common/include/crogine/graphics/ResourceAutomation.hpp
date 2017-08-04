@@ -45,6 +45,8 @@ source distribution.
 
 namespace cro
 {
+    class Entity;
+
     /*!
     \brief Struct of resource managers.
     Utility to pass multiple resource managers as a single parameter
@@ -86,6 +88,12 @@ namespace cro
         \see ConfigFile
         */
         bool loadFromFile(const std::string& path, ResourceCollection& resources);
+
+        /*!
+        \brief Creates a Model component from the loaded config on the given entity.
+        \returns true on success, else false (no model definition has been loaded)
+        */
+        bool createModel(Entity, ResourceCollection&);
     };
 }
 
