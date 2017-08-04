@@ -184,7 +184,7 @@ void MainState::addSystems()
     m_backgroundScene.addSystem<DriftSystem>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
     m_backgroundScene.addSystem<cro::SceneGraph>(mb);
-    m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
+    //m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
 
 #ifdef PLATFORM_DESKTOP
@@ -292,7 +292,7 @@ void MainState::createScene()
 
 
     //set up lighting
-    m_backgroundScene.getSunlight().setDirection({ 0.1f, -0.f, -0.02f });
+    m_backgroundScene.getSunlight().setDirection({ 0.1f, -0.6f, -0.02f });
     //m_backgroundScene.getSunlight().setColour(cro::Colour(0.48f, 0.48f, 0.48f));
     m_backgroundScene.getSunlight().setProjectionMatrix(glm::ortho(-3.f, 3.f, -3.f, 3.f, 0.1f, 20.f));
     m_backgroundScene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ -5.7f, 4.5f, -2.f });
@@ -370,10 +370,10 @@ void MainState::createMenus()
     createScoreMenu(mouseEnterCallback, mouseExitCallback);
 
     //preview shadow map
-    auto entity = m_menuScene.createEntity();
+    /*auto entity = m_menuScene.createEntity();
     entity.addComponent<cro::Sprite>().setTexture(m_backgroundScene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture());
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 10.f, 0.f });
-    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));*/
 }
 
 void MainState::updateView()

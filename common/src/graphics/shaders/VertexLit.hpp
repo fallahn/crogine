@@ -287,14 +287,14 @@ namespace cro
 
                 #endif               
 
-                LOW vec3 diffuseColour;
+                LOW vec4 diffuseColour;
                 HIGH vec3 eyeDirection;
                 LOW vec3 mask = vec3(1.0, 1.0, 0.0);
                 vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
                 {
                     MED float diffuseAmount = max(dot(normal, lightDirection), 0.0);
                     //diffuseAmount = pow((diffuseAmount * 0.5) + 5.0, 2.0);
-                    MED vec3 mixedColour = diffuseColour * lightDiffuse * diffuseAmount * falloff;
+                    MED vec3 mixedColour = diffuseColour.rgb * lightDiffuse * diffuseAmount * falloff;
 
                     MED vec3 halfVec = normalize(eyeDirection + lightDirection);
                     MED float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
@@ -312,36 +312,36 @@ namespace cro
                     MED vec3 normal = normalize(v_normalVector);
                 #endif
                 #if defined (TEXTURED)
-                    LOW vec4 diffuse = texture2D(u_diffuseMap, v_texCoord0);
+                    diffuseColour = texture2D(u_diffuseMap, v_texCoord0);
                     mask = texture2D(u_maskMap, v_texCoord0).rgb;
                 #elif defined(COLOURED)
-                    LOW vec4 diffuse = u_colour;
+                    diffuseColour = u_colour;
                     mask = u_maskColour.rgb;
                 #elif defined(VERTEX_COLOURED)
-                    LOW vec4 diffuse = v_colour;
+                    diffuseColour = v_colour;
                     mask = u_maskColour.rgb;
                 #else
-                    LOW vec4 diffuse = vec4(1.0);
+                    diffuseColour = vec4(1.0);
                     mask = u_maskColour.rgb;
                 #endif
-                    diffuseColour = diffuse.rgb;
-                    LOW vec3 blendedColour = diffuse.rgb * 0.2; //ambience
+                    //diffuseColour = vec3(0.0, 0.0, 1.0);//diffuse.rgb;
+                    LOW vec3 blendedColour = diffuseColour.rgb * 0.2; //ambience
                     eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
 
                     blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, vec3(1.0), 1.0);
                 #if defined (RX_SHADOWS)
-                    //blendedColour = vec3(shadowAmount(v_lightWorldPosition), 0.0, 1.0);
+                    blendedColour *= shadowAmount(v_lightWorldPosition);
                 #endif
 
                 #if defined(TEXTURED)
-                    gl_FragColor.rgb = mix(blendedColour, diffuseColour, mask.b);
+                    gl_FragColor.rgb = mix(blendedColour, diffuseColour.rgb, mask.b);
                 #else     
                     gl_FragColor.rgb = blendedColour;
                 #endif
                 #if defined (LIGHTMAPPED)
                     gl_FragColor *= texture2D(u_lightMap, v_texCoord1);
                 #endif
-                    gl_FragColor.a = diffuse.a;
+                    gl_FragColor.a = diffuseColour.a;
 
                 #if defined(PROJECTIONS)
                     for(int i = 0; i < u_projectionMapCount; ++i)
@@ -358,7 +358,7 @@ namespace cro
                     LOW float rim = 1.0 - dot(normal, eyeDirection);
                     rim = smoothstep(u_rimFalloff, 1.0, rim);
                     //gl_FragColor.rgb = mix(gl_FragColor.rgb, u_rimColour.rgb, rim);
-                    gl_FragColor += u_rimColour * rim ;//* 0.5;
+                    gl_FragColor.rgb += u_rimColour.rgb * rim ;//* 0.5;
                 #endif
                 })";
         }
