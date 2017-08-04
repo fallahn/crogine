@@ -163,7 +163,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     //do all the resource loading last when we know properties are valid,
     //to prevent partially loading a model and wasting resources.
     meshID = rc.meshes.loadMesh(*meshBuilder.get());
-    if (meshID == -1)
+    if (meshID == 0)
     {
         Logger::log(path + ": preloading mesh failed", Logger::Type::Error);
         return false;
@@ -386,7 +386,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 
 bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
 {
-    if (meshID > -1)
+    if (meshID != 0)
     {
         auto& model = entity.addComponent<cro::Model>(rc.meshes.getMesh(meshID), rc.materials.get(materialIDs[0]));
         for (auto i = 1u; i < materialCount; ++i)

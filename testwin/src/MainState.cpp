@@ -216,19 +216,19 @@ void MainState::loadAssets()
     menuFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
 
     //audio
-    m_resources.audio.load(AudioID::Test, "assets/audio/boop_loop.ogg");
+    //m_resources.audio.load(AudioID::Test, "assets/audio/boop_loop.ogg");
     m_resources.audio.load(AudioID::TestStream, "assets/audio/game.ogg", true);
 }
 
 void MainState::createScene()
 {
     //-----background-----//
+
+    const glm::vec3 planetPos(4.f, -0.7f, -8.f);
     //create planet / moon
     auto entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, -0.7f, -8.f });
+    entity.addComponent<cro::Transform>().setPosition(planetPos);
     entity.getComponent<cro::Transform>().setRotation({ -0.5f, 0.f, 0.4f });
-    //entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::GasPlanet].meshID),
-    //                                m_resources.materials.get(m_modelDefs[MenuModelID::GasPlanet].materialIDs[0]));
     m_modelDefs[MenuModelID::GasPlanet].createModel(entity, m_resources);
     auto& planetRotator = entity.addComponent<Rotator>();
     planetRotator.speed = 0.02f;
@@ -244,11 +244,7 @@ void MainState::createScene()
     moonTx.setScale(glm::vec3(0.34f));
     //moonTx.setOrigin({ 11.f, 0.f, 0.f });
     moonTx.setParent(moonAxis);
-    moonEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Moon].meshID),
-                                        m_resources.materials.get(m_modelDefs[MenuModelID::Moon].materialIDs[0]));
-    moonEntity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_modelDefs[MenuModelID::Moon].shadowIDs[0]));
-    moonEntity.addComponent<cro::ShadowCaster>();
-    //m_modelDefs[MenuModelID::Moon].createModel(moonEntity, m_resources);
+    m_modelDefs[MenuModelID::Moon].createModel(moonEntity, m_resources);
     auto& moonRotator = moonEntity.addComponent<Rotator>();
     moonRotator.axis.y = 1.f;
     moonRotator.speed = 0.1f;   
@@ -258,79 +254,48 @@ void MainState::createScene()
     arcticTx.setScale(glm::vec3(0.8f));
     arcticTx.setOrigin({ 5.8f, 0.f, 5.f });
     arcticTx.setParent(entity);
-    auto& arcticModel = arcticEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::ArcticPost].meshID),
-                                                                m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[0]));
-    for (auto i = 0u; i < m_modelDefs[MenuModelID::ArcticPost].materialCount; ++i)
-    {
-        arcticModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].materialIDs[i]));
-        arcticModel.setShadowMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].shadowIDs[i]));
-    }
-    arcticEntity.addComponent<cro::ShadowCaster>();
-    //m_modelDefs[MenuModelID::ArcticPost].createModel(arcticEntity, m_resources);
-
+    m_modelDefs[MenuModelID::ArcticPost].createModel(arcticEntity, m_resources);
     arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::TestStream)).play(true);
     //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
     arcticEntity.getComponent<cro::AudioSource>().setVolume(0.1f);
     arcticEntity.addComponent<cro::CommandTarget>().ID = (1 << 30);
-    
-    
+       
     auto lookoutEntity = m_backgroundScene.createEntity();
     auto& lookoutTx = lookoutEntity.addComponent<cro::Transform>();
     lookoutTx.setScale(glm::vec3(0.7f));
     lookoutTx.setOrigin({ -8.f, 0.f, 2.f });
     lookoutTx.setParent(entity);
-    /*auto& lookoutModel = lookoutEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::LookoutBase].meshID),
-                                                                m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[0]));
-    for (auto i = 0u; i < m_modelDefs[MenuModelID::LookoutBase].materialCount; ++i)
-    {
-        lookoutModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[i]));
-        lookoutModel.setShadowMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].shadowIDs[i]));
-    }
-    lookoutEntity.addComponent<cro::ShadowCaster>();*/
     m_modelDefs[MenuModelID::LookoutBase].createModel(lookoutEntity, m_resources);
-    lookoutEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
-    lookoutEntity.getComponent<cro::AudioSource>().setPitch(2.4f);
-    //lookoutEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
-    //lookoutEntity.getComponent<cro::AudioSource>().setVolume(2.4f);
     
-
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
     roidEntity.getComponent<cro::Transform>().setParent(entity);
-    roidEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Roids].meshID),
-                                        m_resources.materials.get(m_modelDefs[MenuModelID::Roids].materialIDs[0]));
+    m_modelDefs[MenuModelID::Roids].createModel(roidEntity, m_resources);
     auto& roidRotator = roidEntity.addComponent<Rotator>();
     roidRotator.speed = -0.03f;
     roidRotator.axis.y = 1.f;
 
-    /*auto cloudEntity = m_backgroundScene.createEntity();
-    cloudEntity.addComponent<cro::Transform>().setScale({ 1.01f, 1.01f, 1.01f });
-    cloudEntity.getComponent<cro::Transform>().setParent(entity);
-    cloudEntity.addComponent<cro::Model>(m_meshResource.getMesh(cro::Mesh::SphereMesh), m_materialResource.get(MaterialID::PlanetClouds));
-*/
     //create stars / sun
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -39.f });
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Stars].meshID),
-                                    m_resources.materials.get(m_modelDefs[MenuModelID::Stars].materialIDs[0]));
+    m_modelDefs[MenuModelID::Stars].createModel(entity, m_resources);
 
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -28.f });
     entity.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, 3.14f);
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Stars].meshID),
-                                    m_resources.materials.get(m_modelDefs[MenuModelID::Stars].materialIDs[0]));
+    m_modelDefs[MenuModelID::Stars].createModel(entity, m_resources);
     entity.addComponent<Drifter>().amplitude = -0.1f;
 
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ -4.f, 2.6f, -11.9f });
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::Sun].meshID),
-                                    m_resources.materials.get(m_modelDefs[MenuModelID::Sun].materialIDs[0]));
+    m_modelDefs[MenuModelID::Sun].createModel(entity, m_resources);
+
 
     //set up lighting
-    m_backgroundScene.getSunlight().setDirection({ 0.1f, -0.8f, -0.2f });
+    m_backgroundScene.getSunlight().setDirection({ 0.1f, -0.f, -0.02f });
     //m_backgroundScene.getSunlight().setColour(cro::Colour(0.48f, 0.48f, 0.48f));
-    m_backgroundScene.getSunlight().setProjectionMatrix(glm::ortho(-6.f, 6.f, -6.f, 6.f, 0.1f, 20.f));
-    m_backgroundScene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ -0.1f, 1.6f, 0.2f });
+    m_backgroundScene.getSunlight().setProjectionMatrix(glm::ortho(-3.f, 3.f, -3.f, 3.f, 0.1f, 20.f));
+    m_backgroundScene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ -5.7f, 4.5f, -2.f });
 
 
     //2D and 3D cameras
