@@ -1360,7 +1360,7 @@ static void skip(vorb *z, int n)
    {
       //long x = SDL_RWtell(z->f);
       //SDL_RWseek(z->f, x+n, RW_SEEK_SET);
-       auto result = SDL_RWseek(z->f, n, RW_SEEK_CUR);
+       long result = SDL_RWseek(z->f, n, RW_SEEK_CUR);
        if (result == -1) z->eof = 1;
    }
    #endif
