@@ -3,6 +3,8 @@ model GasPlanet
 	mesh = sphere
 	radius = 2.2
 
+	//cast_shadows = true
+
 	material VertexLit
 	{
 		diffuse = "assets/materials/gas_diffuse.png"
@@ -11,5 +13,6 @@ model GasPlanet
 		//rim = 0.97,0.9,0.85,1.0
 		//rim_falloff = 0.1
 		rx_shadows = true
+
 	}
 }
