@@ -110,7 +110,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
     m_commandSystem     (nullptr),
     m_uiSystem          (nullptr)
 {
-    registerStatusControls(
+    /*registerStatusControls(
         []()
     {
         static float value;
@@ -121,7 +121,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
         value = cro::AudioMixer::getVolume(0);
         cro::Nim::slider("Channel 0", value, 0.f, 5.f);
         cro::AudioMixer::setVolume(value, 0);
-    });
+    });*/
     
     context.mainWindow.loadResources([this, &context]()
     {
@@ -227,8 +227,9 @@ void MainState::createScene()
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 4.f, -0.7f, -8.f });
     entity.getComponent<cro::Transform>().setRotation({ -0.5f, 0.f, 0.4f });
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::GasPlanet].meshID),
-                                    m_resources.materials.get(m_modelDefs[MenuModelID::GasPlanet].materialIDs[0]));
+    //entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::GasPlanet].meshID),
+    //                                m_resources.materials.get(m_modelDefs[MenuModelID::GasPlanet].materialIDs[0]));
+    m_modelDefs[MenuModelID::GasPlanet].createModel(entity, m_resources);
     auto& planetRotator = entity.addComponent<Rotator>();
     planetRotator.speed = 0.02f;
     planetRotator.axis.y = 0.2f;
@@ -247,6 +248,7 @@ void MainState::createScene()
                                         m_resources.materials.get(m_modelDefs[MenuModelID::Moon].materialIDs[0]));
     moonEntity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_modelDefs[MenuModelID::Moon].shadowIDs[0]));
     moonEntity.addComponent<cro::ShadowCaster>();
+    //m_modelDefs[MenuModelID::Moon].createModel(moonEntity, m_resources);
     auto& moonRotator = moonEntity.addComponent<Rotator>();
     moonRotator.axis.y = 1.f;
     moonRotator.speed = 0.1f;   
@@ -264,6 +266,7 @@ void MainState::createScene()
         arcticModel.setShadowMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::ArcticPost].shadowIDs[i]));
     }
     arcticEntity.addComponent<cro::ShadowCaster>();
+    //m_modelDefs[MenuModelID::ArcticPost].createModel(arcticEntity, m_resources);
 
     arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::TestStream)).play(true);
     //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
@@ -276,14 +279,15 @@ void MainState::createScene()
     lookoutTx.setScale(glm::vec3(0.7f));
     lookoutTx.setOrigin({ -8.f, 0.f, 2.f });
     lookoutTx.setParent(entity);
-    auto& lookoutModel = lookoutEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::LookoutBase].meshID),
+    /*auto& lookoutModel = lookoutEntity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[MenuModelID::LookoutBase].meshID),
                                                                 m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[0]));
     for (auto i = 0u; i < m_modelDefs[MenuModelID::LookoutBase].materialCount; ++i)
     {
         lookoutModel.setMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].materialIDs[i]));
         lookoutModel.setShadowMaterial(i, m_resources.materials.get(m_modelDefs[MenuModelID::LookoutBase].shadowIDs[i]));
     }
-    lookoutEntity.addComponent<cro::ShadowCaster>();
+    lookoutEntity.addComponent<cro::ShadowCaster>();*/
+    m_modelDefs[MenuModelID::LookoutBase].createModel(lookoutEntity, m_resources);
     lookoutEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
     lookoutEntity.getComponent<cro::AudioSource>().setPitch(2.4f);
     //lookoutEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
@@ -325,8 +329,8 @@ void MainState::createScene()
     //set up lighting
     m_backgroundScene.getSunlight().setDirection({ 0.1f, -0.8f, -0.2f });
     //m_backgroundScene.getSunlight().setColour(cro::Colour(0.48f, 0.48f, 0.48f));
-    m_backgroundScene.getSunlight().setProjectionMatrix(glm::ortho(-4.f, 4.f, -4.f, 4.f, 0.1f, 20.f));
-    m_backgroundScene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ -0.1f, 1.2f, 0.2f });
+    m_backgroundScene.getSunlight().setProjectionMatrix(glm::ortho(-6.f, 6.f, -6.f, 6.f, 0.1f, 20.f));
+    m_backgroundScene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ -0.1f, 1.6f, 0.2f });
 
 
     //2D and 3D cameras

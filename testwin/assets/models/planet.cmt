@@ -8,8 +8,8 @@ model GasPlanet
 		diffuse = "assets/materials/gas_diffuse.png"
 		mask = "assets/materials/gas_mask.png"
 		normal = "assets/materials/gas_normal.png"
-		rim = 0.97,0.9,0.85,1.0
-		rim_falloff = 0.1
+		//rim = 0.97,0.9,0.85,1.0
+		//rim_falloff = 0.1
 		rx_shadows = true
 	}
 }

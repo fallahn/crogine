@@ -234,8 +234,8 @@ namespace cro
                     return dot(colour, bitshift);
                 }
                 
-                //#if defined(MOBILE)
-                PREC float shadowAmountM(LOW vec4 lightWorldPos)
+                #if defined(MOBILE)
+                PREC float shadowAmount(LOW vec4 lightWorldPos)
                 {
                     PREC vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
                     projectionCoords = projectionCoords * 0.5 + 0.5;
@@ -243,7 +243,7 @@ namespace cro
                     PREC float currDepth = projectionCoords.z - 0.005;
                     return (currDepth < depthSample) ? 1.0 : 0.4;
                 }
-                //#else
+                #else
                 //some fancier pcf on desktop
                 const vec2 kernel[16] = vec2[](
                     vec2(-0.94201624, -0.39906216),
@@ -283,7 +283,7 @@ namespace cro
                     }
                     return 1.0 - (shadow / 9.0);
                 }
-                //#endif
+                #endif
 
                 #endif               
 
@@ -300,7 +300,7 @@ namespace cro
                     MED float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
                     LOW vec3 specularColour = lightSpecular * vec3(pow(specularAngle, ((254.0 * mask.r) + 1.0))) * falloff;
 
-                    return mixedColour + (specularColour * mask.g);
+                    return clamp(mixedColour + (specularColour * mask.g), 0.0, 1.0);
                 }
 
                 void main()
@@ -330,7 +330,7 @@ namespace cro
 
                     blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, vec3(1.0), 1.0);
                 #if defined (RX_SHADOWS)
-                    //blendedColour *= shadowAmountM(v_lightWorldPosition);
+                    //blendedColour = vec3(shadowAmount(v_lightWorldPosition), 0.0, 1.0);
                 #endif
 
                 #if defined(TEXTURED)
