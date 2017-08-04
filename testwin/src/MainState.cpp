@@ -132,6 +132,8 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
     });
 
     updateView();
+
+    //context.appInstance.setClearColour(cro::Colour::Red());
 }
 
 //public
@@ -186,7 +188,7 @@ void MainState::addSystems()
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
 
 #ifdef PLATFORM_DESKTOP
-    //m_backgroundScene.addPostProcess<cro::PostChromeAB>();
+    m_backgroundScene.addPostProcess<cro::PostChromeAB>();
 #endif
     
     m_commandSystem = &m_menuScene.addSystem<cro::CommandSystem>(mb);

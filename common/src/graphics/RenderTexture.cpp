@@ -33,10 +33,25 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    /*
+    Using this to track the active frame buffer ID avoids calls
+    to glGetIntegerv - but potentially introduces bugs because
+    the assumption is that only RenderTextures update the active
+    framebuffer. I'm leaving this here for performance reasons
+    on mobile platforms, but bear in mind this needs to be
+    potentially altered should a new class introduct changing the
+    active FBO.
+    */
+    int32 activeBuffer = 0;
+}
+
 RenderTexture::RenderTexture()
     : m_fboID   (0),
     m_rboID     (0),
-    m_clearBits (0)
+    m_clearBits (0),
+    m_lastBuffer(0)
 {
 
 }
@@ -59,6 +74,7 @@ RenderTexture::RenderTexture(RenderTexture&& other)
     m_texture = std::move(other.m_texture);
     m_viewport = other.m_viewport;
     m_lastViewport = other.m_lastViewport;
+    m_lastBuffer = other.m_lastBuffer;
 
     other.m_fboID = 0;
 }
@@ -71,6 +87,7 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other)
         m_texture = std::move(other.m_texture);
         m_viewport = other.m_viewport;
         m_lastViewport = other.m_lastViewport;
+        m_lastBuffer = other.m_lastBuffer;
 
         other.m_fboID = 0;
     }
@@ -175,8 +192,13 @@ void RenderTexture::clear(Colour colour)
     glCheck(glGetIntegerv(GL_VIEWPORT, m_lastViewport.data()));
     glCheck(glViewport(m_viewport.left, m_viewport.bottom, m_viewport.width, m_viewport.height));
 
+    //store active buffer
+    //glCheck(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_lastBuffer));
+    m_lastBuffer = activeBuffer;
+
     //set buffer active
     glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
+    activeBuffer = m_fboID;
 
     //clear buffer - UH OH this will clear the main buffer if FBO is null
     glCheck(glGetFloatv(GL_COLOR_CLEAR_VALUE, m_lastClearColour.data()));
@@ -193,7 +215,8 @@ void RenderTexture::display()
     glCheck(glClearColor(m_lastClearColour[0], m_lastClearColour[1], m_lastClearColour[2], m_lastClearColour[3]));
 
     //unbind buffer
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_lastBuffer));
+    activeBuffer = m_lastBuffer;
 }
 
 void RenderTexture::setViewport(URect viewport)

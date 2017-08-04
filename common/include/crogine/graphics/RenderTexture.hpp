@@ -153,6 +153,7 @@ namespace cro
         URect m_viewport;
         std::array<int32, 4u> m_lastViewport;
         std::array<float, 4u> m_lastClearColour;
+        int32 m_lastBuffer;
     };
 }
 
