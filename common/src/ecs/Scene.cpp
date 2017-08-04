@@ -247,6 +247,7 @@ void Scene::postRenderPath()
         inTex = outTex;
     }
 
+
     auto vp = m_sceneBuffer.getDefaultViewport();
     glViewport(vp.left, vp.bottom, vp.width, vp.height);
     m_postEffects.back()->apply(*inTex);
