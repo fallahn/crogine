@@ -553,7 +553,7 @@ void GameState::loadTerrain()
 
     //some rockfall parts
     glm::vec3 rockscale(0.6f, 1.2f, 1.f);
-    auto bb = m_resources.meshes.getMesh(m_modelDefs[MeshID::RockQuad].meshID).boundingBox;
+    auto bb = m_resources.meshes.getMesh(m_modelDefs[MeshID::RockQuad].getMeshID()).boundingBox;
     cro::PhysicsShape ps;
     ps.type = cro::PhysicsShape::Type::Box;
     ps.extent = (bb[1] - bb[0]) * rockscale / 2.f;
@@ -581,11 +581,10 @@ void GameState::loadModels()
     auto& playerTx = entity.addComponent<cro::Transform>();
     playerTx.setPosition({ -35.4f, 0.f, -9.3f });
     playerTx.setScale(playerScale);
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::Player].materialIDs[0]));
+    m_modelDefs[GameModelID::Player].createModel(entity, m_resources);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Velocity>().friction = 3.5f;
-    auto bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].meshID).boundingBox;
+    auto bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].getMeshID()).boundingBox;
     cro::PhysicsShape shipShape;
     shipShape.type = cro::PhysicsShape::Type::Box;
     shipShape.extent = (bb[1] - bb[0]) * playerScale / 2.f;
@@ -603,8 +602,7 @@ void GameState::loadModels()
 
     //shield
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::PlayerShield].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::PlayerShield].materialIDs[0]));
+    m_modelDefs[GameModelID::PlayerShield].createModel(entity, m_resources);
     entity.addComponent<cro::Transform>().setParent(playerEntity);
     entity.addComponent<Rotator>().speed = 1.f;
     entity.getComponent<Rotator>().axis.z = 1.f;
@@ -620,8 +618,7 @@ void GameState::loadModels()
     axisRotate.axis.x = 1.f;
 
     auto buddyEnt = m_scene.createEntity();
-    buddyEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Buddy].meshID),
-                                      m_resources.materials.get(m_modelDefs[GameModelID::Buddy].materialIDs[0]));
+    m_modelDefs[GameModelID::Buddy].createModel(buddyEnt, m_resources);
     buddyEnt.addComponent<cro::Transform>().setParent(axisEnt);
     buddyEnt.getComponent<cro::Transform>().setPosition({ 0.f, 1.8f, 0.f });
     buddyEnt.addComponent<Buddy>();
@@ -636,13 +633,12 @@ void GameState::loadModels()
     static const glm::vec3 coinScale(0.12f);
     cro::PhysicsShape coinShape;
     coinShape.type = cro::PhysicsShape::Type::Box;
-    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBatt].meshID).boundingBox;
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBatt].getMeshID()).boundingBox;
     coinShape.extent = (bb[1] - bb[0]) * coinScale / 2.f;
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.41f, 1.4f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBatt].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableBatt].materialIDs[0]));
+    m_modelDefs[GameModelID::CollectableBatt].createModel(entity, m_resources);
     auto& battSpin = entity.addComponent<Rotator>();
     battSpin.axis.y = 1.f;
     battSpin.speed = 3.2f;
@@ -655,8 +651,7 @@ void GameState::loadModels()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.42f, 0.6f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBomb].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableBomb].materialIDs[0]));
+    m_modelDefs[GameModelID::CollectableBomb].createModel(entity, m_resources);
     auto& bombSpin = entity.addComponent<Rotator>();
     bombSpin.axis.y = 1.f;
     bombSpin.speed = 2.9f;
@@ -669,8 +664,7 @@ void GameState::loadModels()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.6f, -0.2f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBot].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableBot].materialIDs[0]));
+    m_modelDefs[GameModelID::CollectableBot].createModel(entity, m_resources);
     auto& botSpin = entity.addComponent<Rotator>();
     botSpin.axis.y = 1.f;
     botSpin.speed = 2.994f;
@@ -683,8 +677,7 @@ void GameState::loadModels()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.38f, -1.f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableHeart].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableHeart].materialIDs[0]));
+    m_modelDefs[GameModelID::CollectableHeart].createModel(entity, m_resources);
     auto& heartSpin = entity.addComponent<Rotator>();
     heartSpin.axis.y = 1.f;
     heartSpin.speed = 2.873f;
@@ -697,8 +690,7 @@ void GameState::loadModels()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.4f, -1.7f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableShield].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableShield].materialIDs[0]));
+    m_modelDefs[GameModelID::CollectableShield].createModel(entity, m_resources);
     auto& shieldSpin = entity.addComponent<Rotator>();
     shieldSpin.axis.y = 1.f;
     shieldSpin.speed = 3.028f;
@@ -709,9 +701,7 @@ void GameState::loadModels()
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableWeaponUpgrade].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::CollectableWeaponUpgrade].materialIDs[0]));
-
+    m_modelDefs[GameModelID::CollectableWeaponUpgrade].createModel(entity, m_resources);
     entity.addComponent<cro::Transform>().setPosition({ 7.f, 0.f, -9.3f });
     entity.addComponent<CollectableItem>().type = CollectableItem::WeaponUpgrade;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Collectable;
@@ -725,12 +715,11 @@ void GameState::loadModels()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.9f, 1.5f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(glm::vec3(0.6f));
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Elite].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::Elite].materialIDs[0]));
+    m_modelDefs[GameModelID::Elite].createModel(entity, m_resources);
     entity.addComponent<Npc>().type = Npc::Elite;
     entity.getComponent<Npc>().hasDyingAnim = true;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Elite;
-    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Elite].meshID).boundingBox;
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Elite].getMeshID()).boundingBox;
     
     cro::PhysicsShape eliteShape;
     eliteShape.type = cro::PhysicsShape::Type::Box;
@@ -751,7 +740,7 @@ void GameState::loadModels()
     flames.loadFromFile("assets/particles/flames.cps", m_resources.textures);
     const float choppaSpacing = ChoppaNavigator::spacing;
     glm::vec3 choppaScale(0.6f);
-    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].meshID).boundingBox;
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].getMeshID()).boundingBox;
     cro::PhysicsShape choppaShape;
     choppaShape.type = cro::PhysicsShape::Type::Box;
     choppaShape.extent = (bb[1] - bb[0]) * choppaScale / 2.f;
@@ -761,10 +750,9 @@ void GameState::loadModels()
         entity.addComponent<cro::Transform>().setPosition({ 5.9f, -choppaSpacing + (i * choppaSpacing), -9.3f });
         entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
         entity.getComponent<cro::Transform>().setScale(choppaScale);
-        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].meshID),
-                                        m_resources.materials.get(m_modelDefs[GameModelID::Choppa].materialIDs[0]));
-        CRO_ASSERT(m_modelDefs[GameModelID::Choppa].skeleton, "Skeleton missing from choppa!");
-        entity.addComponent<cro::Skeleton>() = *m_modelDefs[GameModelID::Choppa].skeleton;
+        m_modelDefs[GameModelID::Choppa].createModel(entity, m_resources);
+        CRO_ASSERT(m_modelDefs[GameModelID::Choppa].hasSkeleton(), "Skeleton missing from choppa!");
+        
         entity.getComponent<cro::Skeleton>().play(0);
         entity.addComponent<Npc>().type = Npc::Choppa;
         entity.getComponent<Npc>().hasDyingAnim = true;
@@ -778,7 +766,7 @@ void GameState::loadModels()
     }
 
     //speedray
-    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Speedray].meshID).boundingBox;
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Speedray].getMeshID()).boundingBox;
     glm::vec3 speedrayScale(0.8f);
     cro::PhysicsShape speedrayShape;
     speedrayShape.type = cro::PhysicsShape::Type::Box;
@@ -791,9 +779,7 @@ void GameState::loadModels()
         entity.addComponent<cro::Transform>().setPosition({ 6.f, 0.f, -9.3f });
         entity.getComponent<cro::Transform>().rotate(glm::vec3(1.f, 0.f, 0.f), cro::Util::Const::PI - rotateOffset);
         entity.getComponent<cro::Transform>().setScale(speedrayScale);
-        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Speedray].meshID),
-                                        m_resources.materials.get(m_modelDefs[GameModelID::Speedray].materialIDs[0]));
-        entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(m_modelDefs[GameModelID::Speedray].materialIDs[1]));
+        m_modelDefs[GameModelID::Speedray].createModel(entity, m_resources);
         auto& speedRot = entity.addComponent<Rotator>();
         speedRot.axis.x = 1.f;
         speedRot.speed = -cro::Util::Const::TAU / 2.f;
@@ -813,14 +799,12 @@ void GameState::loadModels()
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f }); //places off screen to start
     entity.getComponent<cro::Transform>().setScale({ 0.3f, 0.3f, 0.3f });
     entity.getComponent<cro::Transform>().setParent(chunkEntityA); //attach to scenery
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TurretBase].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::TurretBase].materialIDs[0]));
+    m_modelDefs[GameModelID::TurretBase].createModel(entity, m_resources);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::TurretA;
 
     auto canEnt = m_scene.createEntity();
     canEnt.addComponent<cro::Transform>().setParent(entity);
-    canEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TurretCannon].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::TurretCannon].materialIDs[0]));
+    m_modelDefs[GameModelID::TurretCannon].createModel(canEnt, m_resources);
     canEnt.addComponent<Npc>().type = Npc::Turret;
     canEnt.addComponent<cro::PhysicsObject>().addShape(turrShape);
 
@@ -828,20 +812,18 @@ void GameState::loadModels()
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
     entity.getComponent<cro::Transform>().setScale({ 0.3f, 0.3f, 0.3f });
     entity.getComponent<cro::Transform>().setParent(chunkEntityB); //attach to scenery
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TurretBase].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::TurretBase].materialIDs[0]));
+    m_modelDefs[GameModelID::TurretBase].createModel(entity, m_resources);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::TurretB;
 
     canEnt = m_scene.createEntity();
     canEnt.addComponent<cro::Transform>().setParent(entity);
-    canEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TurretCannon].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::TurretCannon].materialIDs[0]));
+    m_modelDefs[GameModelID::TurretCannon].createModel(canEnt, m_resources);
     canEnt.addComponent<Npc>().type = Npc::Turret;
     canEnt.addComponent<cro::PhysicsObject>().addShape(turrShape);
 
     //weaver
     glm::vec3 weaverScale(0.35f);
-    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::WeaverBody].meshID).boundingBox;
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::WeaverBody].getMeshID()).boundingBox;
     cro::PhysicsShape weaverShape;
     weaverShape.type = cro::PhysicsShape::Type::Box;
     for (auto i = 0u; i < WeaverNavigator::count; ++i)
@@ -853,8 +835,7 @@ void GameState::loadModels()
         entity.getComponent<cro::Transform>().setScale(weaverScale);
         entity.getComponent<cro::Transform>().rotate({ 1.f, 0.f, 0.f }, static_cast<float>(i) * 0.3f);
         entity.getComponent<cro::Transform>().rotate({ 0.f, 1.f, 0.f }, cro::Util::Const::PI / 2.f);
-        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[modelID].meshID),
-                                        m_resources.materials.get(m_modelDefs[modelID].materialIDs[0]));
+        m_modelDefs[modelID].createModel(entity, m_resources);
         entity.addComponent<Npc>().type = Npc::Weaver;
         entity.getComponent<Npc>().weaver.ident = WeaverNavigator::count - i;
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Weaver;

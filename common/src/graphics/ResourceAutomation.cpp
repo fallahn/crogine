@@ -157,13 +157,13 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     auto shadowProp = cfg.findProperty("cast_shadows");
     if (shadowProp)
     {
-        castShadows = shadowProp->getValue<bool>();
+        m_castShadows = shadowProp->getValue<bool>();
     }
 
     //do all the resource loading last when we know properties are valid,
     //to prevent partially loading a model and wasting resources.
-    meshID = rc.meshes.loadMesh(*meshBuilder.get());
-    if (meshID == 0)
+    m_meshID = rc.meshes.loadMesh(*meshBuilder.get());
+    if (m_meshID == 0)
     {
         Logger::log(path + ": preloading mesh failed", Logger::Type::Error);
         return false;
@@ -174,7 +174,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         auto skel = dynamic_cast<IqmBuilder*>(meshBuilder.get())->getSkeleton();
         if (skel.frameCount > 0)
         {
-            skeleton = std::make_unique<Skeleton>(skel);
+            m_skeleton = std::make_unique<Skeleton>(skel);
         }
     }
 
@@ -364,9 +364,9 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             }
         }
 
-        materialIDs[materialCount] = matID;
+        m_materialIDs[m_materialCount] = matID;
 
-        if (castShadows)
+        if (m_castShadows)
         {
             //skinning is the only flag valid for shadow
             //map materials so make sure we don't end up with
@@ -375,10 +375,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 
             shaderID = rc.shaders.preloadBuiltIn(ShaderResource::ShadowMap, flags);
             matID = rc.materials.add(rc.shaders.get(shaderID));
-            shadowIDs[materialCount] = matID;
+            m_shadowIDs[m_materialCount] = matID;
         }
 
-        materialCount++;
+        m_materialCount++;
     }
 
     return true;
@@ -386,23 +386,29 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 
 bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
 {
-    if (meshID != 0)
+    if (m_meshID != 0)
     {
-        auto& model = entity.addComponent<cro::Model>(rc.meshes.getMesh(meshID), rc.materials.get(materialIDs[0]));
-        for (auto i = 1u; i < materialCount; ++i)
+        auto& model = entity.addComponent<cro::Model>(rc.meshes.getMesh(m_meshID), rc.materials.get(m_materialIDs[0]));
+        for (auto i = 1u; i < m_materialCount; ++i)
         {
-            model.setMaterial(i, rc.materials.get(materialIDs[i]));
+            model.setMaterial(i, rc.materials.get(m_materialIDs[i]));
         }
 
-        if (castShadows)
+        if (m_castShadows)
         {
-            for (auto i = 0u; i < materialCount; ++i)
+            for (auto i = 0u; i < m_materialCount; ++i)
             {
-                model.setShadowMaterial(i, rc.materials.get(shadowIDs[i]));
+                model.setShadowMaterial(i, rc.materials.get(m_shadowIDs[i]));
             }
-            entity.addComponent<ShadowCaster>().skinned = (skeleton != nullptr);
-            //TODO should we be adding animation component too?
+            entity.addComponent<ShadowCaster>().skinned = (m_skeleton != nullptr);
+
         }
+
+        if (hasSkeleton())
+        {
+            entity.addComponent<cro::Skeleton>() = *m_skeleton;
+        }
+
         return true;
     }
     return false;
