@@ -68,15 +68,9 @@ namespace cro
     to a valid ConfigFile. The information can then
     be used to load data into a model component at run time
     */
-    struct CRO_EXPORT_API ModelDefinition final
+    class CRO_EXPORT_API ModelDefinition final
     {
-        int32 meshID = -1; //< ID of the mesh in the mesh resource
-        std::array<int32, Mesh::IndexData::MaxBuffers> materialIDs{}; //< list of material IDs in the order in which they appear on the model
-        std::array<int32, Mesh::IndexData::MaxBuffers> shadowIDs{}; //< IDs of shadow map materials if this model casts shadows
-        std::size_t materialCount = 0; //< number of active materials
-        std::unique_ptr<Skeleton> skeleton; //< nullptr if no skeleton exists
-        bool castShadows = false; //< if this is true the model entity also requires a shadow cast component
-
+    public:
         /*!
         \brief Attempts to load a definition from a ConfigFile at a given path.
         \param path String containing the path to a configuration file. These are
@@ -94,6 +88,35 @@ namespace cro
         \returns true on success, else false (no model definition has been loaded)
         */
         bool createModel(Entity, ResourceCollection&);
+
+        /*!
+        \brief Returns true if the material for this model requested that it casts
+        shadows.
+        Models created with createModel() will also have a ShadowCaster components added
+        if this is true.
+        */
+        bool castShadows() const { return m_castShadows; }
+
+        /*!
+        \brief Returns the loaded MeshID within the mesh resource supplied
+        when the definition was loaded, or 0 if no mesh has been parsed
+        */
+        int32 getMeshID() const { return m_meshID; }
+
+        /*!
+        \brief Returns true if the loaded model has a skeleton.
+        If this is true models created with createModel(() will have a skeleton
+        component added
+        */
+        bool hasSkeleton() const { return m_skeleton != nullptr; }
+
+    private:
+        int32 m_meshID = 0; //< ID of the mesh in the mesh resource
+        std::array<int32, Mesh::IndexData::MaxBuffers> m_materialIDs{}; //< list of material IDs in the order in which they appear on the model
+        std::array<int32, Mesh::IndexData::MaxBuffers> m_shadowIDs{}; //< IDs of shadow map materials if this model casts shadows
+        std::size_t m_materialCount = 0; //< number of active materials
+        std::unique_ptr<Skeleton> m_skeleton; //< nullptr if no skeleton exists
+        bool m_castShadows = false; //< if this is true the model entity also requires a shadow cast component
     };
 }
 
