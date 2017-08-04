@@ -10,7 +10,7 @@ model arctic_outpost
 		normal = "assets/materials/arctic_outpost_normal.png"
 		rim = 0.97,0.9,0.85,1.0
 		rim_falloff = 0.4
-		rx_shadows = true
+		//rx_shadows = true
 	}
 	material VertexLit
 	{

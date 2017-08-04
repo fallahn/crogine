@@ -1,6 +1,7 @@
 model Roids
 {
 	mesh = "assets/models/roid_belt.cmf"
+	cast_shadows = true
 
 	material VertexLit
 	{
