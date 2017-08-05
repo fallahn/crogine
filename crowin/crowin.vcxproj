@@ -65,6 +65,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\ComponentPool.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\AudioListener.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\AudioSource.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\Callback.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Camera.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\CommandID.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Model.hpp" />
@@ -85,6 +86,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\Sunlight.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\System.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\AudioSystem.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\systems\CallbackSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\CollisionSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\CommandSystem.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\systems\DebugInfo.hpp" />
@@ -203,6 +205,7 @@
     <ClCompile Include="..\common\src\ecs\System.cpp" />
     <ClCompile Include="..\common\src\ecs\SystemManager.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\AudioSystem.cpp" />
+    <ClCompile Include="..\common\src\ecs\systems\CallbackSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\CollisionSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\CommandSystem.cpp" />
     <ClCompile Include="..\common\src\ecs\systems\DebugInfo.cpp" />

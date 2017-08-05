@@ -248,6 +248,9 @@
     <ClInclude Include="src\PauseState.hpp">
       <Filter>Header Files\TL</Filter>
     </ClInclude>
+    <ClInclude Include="src\MeatMan.hpp">
+      <Filter>Header Files\TL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\PostRadial.inl">

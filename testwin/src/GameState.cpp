@@ -53,6 +53,7 @@ source distribution.
 #include "HudDirector.hpp"
 #include "BuddySystem.hpp"
 #include "EmpSystem.hpp"
+#include "MeatMan.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -72,6 +73,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -82,6 +84,7 @@ source distribution.
 #include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
@@ -91,6 +94,8 @@ namespace
 {
     const glm::vec2 backgroundSize(21.3f, 7.2f);
     std::size_t rockfallCount = 2;
+
+    cro::CommandSystem* buns = nullptr;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -127,12 +132,17 @@ bool GameState::handleEvent(const cro::Event& evt)
             msg->itemID = CollectableItem::Buddy;
 
         }
-        else if (evt.key.keysym.sym == SDLK_o)
+        else */
+        if (evt.key.keysym.sym == SDLK_o)
         {
-            auto* msg = getContext().appInstance.getMessageBus().post<PlayerEvent>(MessageID::PlayerMessage);
-            msg->type = PlayerEvent::FiredEmp;
-            msg->position = { 0.f, 0.f, -9.3f };
-        }*/
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::MeatMan;
+            cmd.action = [](cro::Entity entity, cro::Time)
+            {
+                entity.getComponent<cro::Callback>().active = true;
+            };
+            buns->sendCommand(cmd);
+        }
 
         switch (evt.key.keysym.sym)
         {
@@ -237,10 +247,13 @@ void GameState::addSystems()
     //UI scene
     m_uiScene.addSystem<HudSystem>(mb);
     m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SceneGraph>(mb);
     m_uiScene.addSystem<cro::ModelRenderer>(mb);
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
+
+    buns = &m_uiScene.addSystem<cro::CommandSystem>(mb);
 
     m_uiScene.addDirector<HudDirector>();
 }
@@ -357,7 +370,7 @@ void GameState::createHUD()
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bar_outside");
     auto size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setPosition({ uiRes.x - (size.x + UIPadding), uiRes.y - (size.y * 1.5f), 0.f });
-    
+
     auto innerEntity = m_uiScene.createEntity();
     innerEntity.addComponent<cro::Transform>().setParent(entity);
     innerEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bar_inside");
@@ -454,7 +467,7 @@ void GameState::createHUD()
     //score text
     auto& scoreFont = m_resources.fonts.get(0);
     scoreFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
-    entity = m_uiScene.createEntity();   
+    entity = m_uiScene.createEntity();
     entity.addComponent<cro::Text>(scoreFont);
     //entity.getComponent<cro::Text>().setString("0000000000");
     entity.getComponent<cro::Text>().setCharSize(50);
@@ -462,6 +475,51 @@ void GameState::createHUD()
     entity.addComponent<cro::Transform>().setPosition({ UIPadding, UIPadding + entity.getComponent<cro::Text>().getLineHeight(), 0.f });
     entity.addComponent<HudItem>().type = HudItem::Type::Score;
     entity.getComponent<HudItem>().value = 0.f;
+
+    entity = m_uiScene.createEntity();  
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("mighty_meaty");
+    size = entity.getComponent<cro::Sprite>().getSize();
+    entity.addComponent<cro::Transform>().setPosition({ uiRes.x, -size.y, 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ size.x, 0.f, 0.f });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::MeatMan;
+    entity.addComponent<MeatMan>();
+    entity.addComponent<cro::Callback>().function = 
+        [](cro::Entity entity, cro::Time dt)
+    {
+        static const glm::vec3 movespeed(0.f, 1000.f, 0.f);
+        auto& meat = entity.getComponent<MeatMan>();
+        if (!meat.shown)
+        {
+            auto& tx = entity.getComponent<cro::Transform>();
+            tx.move(movespeed * dt.asSeconds());
+            if (tx.getPosition().y > 0.f)
+            {
+                tx.move({ 0.f, -tx.getPosition().y, 0.f });
+                meat.shown = true;
+                meat.currentTime = 1.6f;
+            }
+        }
+        else
+        {
+            if (meat.currentTime > 0)
+            {
+                meat.currentTime -= dt.asSeconds();
+            }
+            else
+            {
+                auto& tx = entity.getComponent<cro::Transform>();
+                tx.move(-movespeed * dt.asSeconds());
+
+                if (tx.getPosition().y < -entity.getComponent<cro::Sprite>().getSize().y)
+                {
+                    meat.shown = false;
+                    meat.currentTime = 0.f;
+                    entity.getComponent<cro::Callback>().active = false;
+                }
+            }
+        }
+    };
+    entity.getComponent<cro::Callback>().active = true;
 
     //create a quad to render as the timer for weapons
     const glm::vec2 quadSize(160.f);

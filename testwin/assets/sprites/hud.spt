@@ -64,4 +64,9 @@ sprite_sheet hud
 		bounds = 512,304,128,128
 		colour = 1,0.77,0,1
 	}	
+
+	sprite mighty_meaty
+	{
+		bounds = 448,0,256,304
+	}
 }
