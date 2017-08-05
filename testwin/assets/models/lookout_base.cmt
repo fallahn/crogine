@@ -1,7 +1,7 @@
 model LookOutBase
 {
 	mesh = "assets/models/lookout_base.cmf"
-	cast_shadows = true
+	//cast_shadows = true
 	
 	material VertexLit
 	{

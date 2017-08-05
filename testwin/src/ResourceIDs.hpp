@@ -134,7 +134,8 @@ namespace CommandID
         MapSelectController = 0x1000,
         HudElement = 0x2000,
         Buddy = 0x4000,
-        EmpBlast = 0x8000
+        EmpBlast = 0x8000,
+        MeatMan = 0x10000
     };
 }
 

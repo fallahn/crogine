@@ -295,7 +295,7 @@ void MainState::createScene()
     m_backgroundScene.getSunlight().setDirection({ 0.1f, -0.6f, -0.02f });
     //m_backgroundScene.getSunlight().setColour(cro::Colour(0.48f, 0.48f, 0.48f));
     m_backgroundScene.getSunlight().setProjectionMatrix(glm::ortho(-3.f, 3.f, -3.f, 3.f, 0.1f, 20.f));
-    m_backgroundScene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ -5.7f, 4.5f, -2.f });
+    //m_backgroundScene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ -5.7f, 4.5f, -2.f });
 
 
     //2D and 3D cameras

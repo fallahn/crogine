@@ -167,8 +167,8 @@ void GameState::loadAssets()
     m_modelDefs[GameModelID::TestRoom].loadFromFile("assets/models/test_room.cmt", m_resources);
     m_modelDefs[GameModelID::Grenade].loadFromFile("assets/models/grenade.cmt", m_resources);
 
-    CRO_ASSERT(m_modelDefs[GameModelID::BatCat].skeleton, "missing batcat anims");
-    m_modelDefs[GameModelID::BatCat].skeleton->play(AnimationID::BatCat::Idle);
+    CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
+    //m_modelDefs[GameModelID::BatCat].skeleton->play(AnimationID::BatCat::Idle);
 }
 
 void GameState::createScene()
@@ -176,18 +176,13 @@ void GameState::createScene()
     //rooms
     static const std::size_t roomCount = 6;
     glm::vec3 houseScale(1.3f);
-    const auto& bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::TestRoom].meshID).boundingBox;
+    const auto& bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::TestRoom].getMeshID()).boundingBox;
     const float stride = ((bb[1].x - bb[0].x) * houseScale.x) - 0.01f;
 
     for (auto i = 0u; i < roomCount; ++i)
     {
         auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::TestRoom].meshID),
-                                        m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[0]));
-        for (auto i = 0u; i < m_modelDefs[GameModelID::TestRoom].materialCount; ++i)
-        {
-            entity.getComponent<cro::Model>().setMaterial(i, m_resources.materials.get(m_modelDefs[GameModelID::TestRoom].materialIDs[i]));
-        }
+        m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
         entity.addComponent<cro::Transform>().scale(houseScale);
         entity.getComponent<cro::Transform>().setPosition({ i * stride, 0.63f, -0.5f });
 
@@ -206,22 +201,11 @@ void GameState::createScene()
 
     //dat cat man
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::BatCat].meshID),
-                                    m_resources.materials.get(m_modelDefs[GameModelID::BatCat].materialIDs[0]));
-    //shadow caster for cat
-    if (m_modelDefs[GameModelID::BatCat].castShadows)
-    {
-        entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_modelDefs[GameModelID::BatCat].shadowIDs[0]));
-        entity.addComponent<cro::ShadowCaster>();
-        if (m_modelDefs[GameModelID::BatCat].skeleton)
-        {
-            entity.getComponent<cro::ShadowCaster>().skinned = true;
-        }
-    }
+    m_modelDefs[GameModelID::BatCat].createModel(entity, m_resources);
 
     entity.addComponent<cro::Transform>().setScale(glm::vec3(0.0017f));
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, cro::Util::Const::PI / 2.f, 0.f });
-    entity.addComponent<cro::Skeleton>() = *m_modelDefs[GameModelID::BatCat].skeleton;
+    entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Idle);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
 
@@ -282,8 +266,7 @@ void GameState::createScene()
         entity.addComponent<cro::Transform>().setScale(grenadeScale);
         entity.getComponent<cro::Transform>().setPosition({ -100.f, 0.f, 0.f });
 
-        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_modelDefs[GameModelID::Grenade].meshID),
-                                        m_resources.materials.get(m_modelDefs[GameModelID::Grenade].materialIDs[0]));
+        m_modelDefs[GameModelID::Grenade].createModel(entity, m_resources);
 
         entity.addComponent<PlayerWeapon>().type = PlayerWeapon::Grenade;
         entity.addComponent<cro::PhysicsObject>().addShape(grenadeShape);

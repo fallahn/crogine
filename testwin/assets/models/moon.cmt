@@ -1,7 +1,7 @@
 model Moon
 {
 	mesh = "assets/models/moon.cmf"
-	cast_shadows = true
+	//cast_shadows = true
 
 	material VertexLit
 	{
