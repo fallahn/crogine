@@ -74,6 +74,7 @@ source distribution.
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -85,6 +86,8 @@ source distribution.
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/AudioSource.hpp>
+#include <crogine/ecs/components/AudioListener.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
@@ -252,6 +255,7 @@ void GameState::addSystems()
     m_uiScene.addSystem<cro::ModelRenderer>(mb);
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
+    m_uiScene.addSystem<cro::AudioSystem>(mb);
 
     buns = &m_uiScene.addSystem<cro::CommandSystem>(mb);
 
@@ -322,6 +326,8 @@ void GameState::loadAssets()
     }
     cro::QuadBuilder rockQuad({ 1.f, 1.f });
     m_resources.meshes.loadMesh(MeshID::RockQuad, rockQuad);
+
+    m_resources.audio.load(AudioID::Meaty, "assets/audio/effects/meaty.wav");
 }
 
 namespace
@@ -497,6 +503,7 @@ void GameState::createHUD()
                 tx.move({ 0.f, -tx.getPosition().y, 0.f });
                 meat.shown = true;
                 meat.currentTime = 1.6f;
+                entity.getComponent<cro::AudioSource>().play();
             }
         }
         else
@@ -519,7 +526,9 @@ void GameState::createHUD()
             }
         }
     };
-    entity.getComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().active = true;
+    entity.addComponent<cro::AudioSource>().setAudioDataSource(m_resources.audio.get(AudioID::Meaty));
+    entity.getComponent<cro::AudioSource>().setRolloff(0.f);
 
     //create a quad to render as the timer for weapons
     const glm::vec2 quadSize(160.f);
@@ -544,9 +553,11 @@ void GameState::createHUD()
     //camera
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioListener>();
     auto& cam2D = entity.addComponent<cro::Camera>();
     cam2D.projection = glm::ortho(0.f, uiRes.x, 0.f, uiRes.y, -0.1f, 100.f);
     m_uiScene.setActiveCamera(entity);
+    m_uiScene.setActiveListener(entity);
 }
 
 void GameState::loadTerrain()
