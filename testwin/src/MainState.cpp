@@ -216,8 +216,8 @@ void MainState::loadAssets()
     menuFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
 
     //audio
-    //m_resources.audio.load(AudioID::Test, "assets/audio/boop_loop.ogg");
-    //m_resources.audio.load(AudioID::TestStream, "assets/audio/game.ogg", true);
+    //m_resources.audio.load(AudioID::Test, "assets/audio/effects/meaty.wav");
+    m_resources.audio.load(AudioID::TestStream, "assets/audio/music/background.ogg", true);
 }
 
 void MainState::createScene()
@@ -257,7 +257,7 @@ void MainState::createScene()
     m_modelDefs[MenuModelID::ArcticPost].createModel(arcticEntity, m_resources);
     arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::TestStream)).play(true);
     //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
-    arcticEntity.getComponent<cro::AudioSource>().setVolume(0.1f);
+    arcticEntity.getComponent<cro::AudioSource>().setVolume(0.5f);
     arcticEntity.addComponent<cro::CommandTarget>().ID = (1 << 30);
        
     auto lookoutEntity = m_backgroundScene.createEntity();
@@ -266,6 +266,7 @@ void MainState::createScene()
     lookoutTx.setOrigin({ -8.f, 0.f, 2.f });
     lookoutTx.setParent(entity);
     m_modelDefs[MenuModelID::LookoutBase].createModel(lookoutEntity, m_resources);
+    //lookoutEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
     
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });

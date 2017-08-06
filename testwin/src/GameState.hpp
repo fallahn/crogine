@@ -56,11 +56,12 @@ public:
     void render() override;
 
 private:
+    cro::ResourceCollection m_resources; //how many times??? ORDER IS IMPORTANT
 
     cro::Scene m_scene;
     cro::Scene m_uiScene;
 
-    cro::ResourceCollection m_resources;
+
     std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs;
 
     cro::UISystem* m_uiSystem;
