@@ -327,6 +327,13 @@ void GameState::loadAssets()
     cro::QuadBuilder rockQuad({ 1.f, 1.f });
     m_resources.meshes.loadMesh(MeshID::RockQuad, rockQuad);
 
+    //this is actually a model which performs the EMP effect
+    const glm::vec2 quadSize(6.f);
+    cro::QuadBuilder quadBuilder(quadSize);
+    m_resources.meshes.loadMesh(MeshID::EmpQuad, quadBuilder);
+    m_resources.shaders.preloadFromString(Shaders::FX::Vertex, Shaders::FX::EMPFragment, ShaderID::EmpBlast);
+    m_resources.materials.add(MaterialID::EmpBlast, m_resources.shaders.get(ShaderID::EmpBlast)).blendMode = cro::Material::BlendMode::Additive;
+
     m_resources.audio.load(AudioID::Meaty, "assets/audio/effects/meaty.wav");
 }
 
@@ -437,6 +444,21 @@ void GameState::createHUD()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = empReleasedCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = empReleasedCallback; //in case mouse leaves while still pressed
     entity.getComponent<cro::UIInput>().area = { 0.f, 0.f, spriteSize.x, spriteSize.y };
+
+    //pulse effect on EMP icon
+    auto pulseEnt = m_uiScene.createEntity();
+    pulseEnt.addComponent<cro::Transform>().setParent(entity);
+    pulseEnt.getComponent<cro::Transform>().setScale(glm::vec3(40.f));
+    pulseEnt.getComponent<cro::Transform>().setPosition({ spriteSize.x / 2.f, spriteSize.y / 2.f, 0.f });
+    pulseEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::EmpQuad), m_resources.materials.get(MaterialID::EmpBlast));
+    pulseEnt.addComponent<Emp>();
+    pulseEnt.addComponent<cro::Callback>().function = [](cro::Entity entity, cro::Time dt)
+    {
+        auto& emp = entity.getComponent<Emp>();
+        emp.currentTime += dt.asSeconds();
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_time", emp.currentTime);
+    };
+
 
 #ifdef PLATFORM_MOBILE
     //on mobile add a pause icon
@@ -977,12 +999,7 @@ void GameState::loadParticles()
     explosion.loadFromFile("assets/sprites/explosion03.spt", m_resources.textures);
     loadExplosion();
 
-    //this is actually a model which performs the EMP effect
-    const glm::vec2 quadSize(6.f);
-    cro::QuadBuilder quadBuilder(quadSize);
-    m_resources.meshes.loadMesh(MeshID::EmpQuad, quadBuilder);
-    m_resources.shaders.preloadFromString(Shaders::FX::Vertex, Shaders::FX::EMPFragment, ShaderID::EmpBlast);
-    m_resources.materials.add(MaterialID::EmpBlast, m_resources.shaders.get(ShaderID::EmpBlast)).blendMode = cro::Material::BlendMode::Additive;
+
 
     auto empEnt = m_scene.createEntity();
     empEnt.addComponent<cro::Transform>().setPosition({ -80.f, 0.f, -9.3f });

@@ -102,7 +102,7 @@ namespace Shaders
             varying MED vec2 v_texCoord0;
 
             const MED float maxRadius = 50.0;
-            const MED float thickness = 5.0;
+            const MED float thickness = 7.0;
             const MED vec2 centre = vec2(0.5);
             const MED float coordScale = 100.0; //need to scale the values up so that they are properly clamped in the correct range
 
