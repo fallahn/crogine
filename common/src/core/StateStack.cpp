@@ -138,6 +138,7 @@ void StateStack::applyPendingChanges()
 		{
 		default: break;
 		case Action::Push:
+        {
 			if (change.suspendPrevious && !m_stack.empty())
 			{
 				m_suspended.push_back(std::make_pair(change.id, std::move(m_stack.back())));  
@@ -148,6 +149,7 @@ void StateStack::applyPendingChanges()
             msg->id = change.id;
 
 			m_stack.emplace_back(createState(change.id));
+        }
 			break;
 		case Action::Pop:
 		{
@@ -170,10 +172,10 @@ void StateStack::applyPendingChanges()
 		case Action::Clear:
 			m_stack.clear();
 			m_suspended.clear();
-
+        {
             auto* msg = m_messageBus.post<Message::StateEvent>(Message::StateMessage);
             msg->action = Message::StateEvent::Cleared;
-
+        }
 			break;
 		}
 	}
