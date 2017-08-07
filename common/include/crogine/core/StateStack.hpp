@@ -40,6 +40,7 @@ namespace cro
 {
 	class Window;
 	class Time;
+    class MessageBus;
 
 	/*!
 	\brief Maintains a stack of active states.
