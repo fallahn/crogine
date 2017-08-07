@@ -95,12 +95,15 @@ void BackgroundSystem::handleMessage(const cro::Message& msg)
         {
         default: break;
         case GameEvent::RoundStart:
+            setMode(Mode::Scroll);
             setScrollSpeed(0.2f);
             break;
         case GameEvent::BossStart:
             setMode(Mode::Shake);
             break;
         case GameEvent::GameOver:
+        case GameEvent::RoundEnd:
+            setMode(Mode::Scroll);
             setScrollSpeed(0.00001f);
             break;
         }    

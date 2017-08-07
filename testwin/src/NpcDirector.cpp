@@ -71,7 +71,11 @@ NpcDirector::NpcDirector()
     m_releaseActive     (true),
     m_roundCount        (0)
 {
-
+    m_eliteRespawn *= cro::Util::Random::value(0.1f, 1.f);
+    m_choppaRespawn *= cro::Util::Random::value(0.1f, 1.f);
+    m_speedrayRespawn *= cro::Util::Random::value(0.1f, 1.f);
+    m_weaverRespawn *= cro::Util::Random::value(0.1f, 1.f);
+    m_turretOrbTime *= cro::Util::Random::value(0.1f, 1.f);
 }
 
 //private
@@ -214,7 +218,23 @@ void NpcDirector::handleMessage(const cro::Message& msg)
         case GameEvent::RoundStart:
             m_releaseActive = true;
             break;
+        case GameEvent::GameOver:
+            m_releaseActive = false;
+            break;
         }
+
+        //remember to reset times else everything spawns at once!
+        m_eliteRespawn = eliteSpawnTime + cro::Util::Random::value(0.1f, 2.3f);
+        m_choppaRespawn = choppaSpawnTime + cro::Util::Random::value(-2.f, 3.6439f);
+        m_speedrayRespawn = choppaSpawnTime;
+        m_weaverRespawn = weaverSpawnTime;
+        m_turretOrbTime = cro::Util::Random::value(turretOrbTime - 1.f, turretOrbTime + 1.f);
+
+        m_eliteRespawn *= cro::Util::Random::value(0.1f, 1.f);
+        m_choppaRespawn *= cro::Util::Random::value(0.1f, 1.f);
+        m_speedrayRespawn *= cro::Util::Random::value(0.1f, 1.f);
+        m_weaverRespawn *= cro::Util::Random::value(0.1f, 1.f);
+        m_turretOrbTime *= cro::Util::Random::value(0.1f, 1.f);
     }
 }
 
@@ -236,8 +256,7 @@ void NpcDirector::process(cro::Time dt)
         {
             //EOR
             auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
-            msg->type = GameEvent::RoundEnd;
-            //hmm how to get the score from here? or is that necessary?
+            msg->type = GameEvent::BossStart;// RoundEnd;
         }
         else
         {
@@ -283,6 +302,7 @@ void NpcDirector::process(cro::Time dt)
             }
         };
         sendCommand(cmd);
+        m_totalReleaseCount++;
     }
 
     m_choppaRespawn -= dtSec;
@@ -328,6 +348,7 @@ void NpcDirector::process(cro::Time dt)
             }
         };
         sendCommand(cmd);
+        m_totalReleaseCount++;
     }
 
     m_speedrayRespawn -= dtSec;
@@ -358,6 +379,7 @@ void NpcDirector::process(cro::Time dt)
         sendCommand(cmd);
 
         m_speedrayRespawn = choppaSpawnTime;
+        m_totalReleaseCount++;
     }
 
     m_weaverRespawn -= dtSec;
@@ -393,6 +415,7 @@ void NpcDirector::process(cro::Time dt)
             }
         };
         sendCommand(cmd);
+        m_totalReleaseCount++;
     }
 
     //TODO switch between turrets, and check player is not too close

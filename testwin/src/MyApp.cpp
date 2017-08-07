@@ -82,13 +82,18 @@ void MyApp::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
-        case GameEvent::RoundStart:
+        case GameEvent::GameStart:
             m_sharedResources->playerName = "";
             m_sharedResources->score = 0;
             break;
-        case GameEvent::GameOver:
-            m_sharedResources->score = data.score;
-            break;
+        }
+    }
+    else if (msg.id == MessageID::StatsMessage)
+    {
+        const auto& data = msg.getData<StatsEvent>();
+        if (data.type == StatsEvent::Score)
+        {
+            m_sharedResources->score = data.value;
         }
     }
 

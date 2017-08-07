@@ -118,6 +118,9 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     updateView();
 
     auto* msg = getContext().appInstance.getMessageBus().post<GameEvent>(MessageID::GameMessage);
+    msg->type = GameEvent::GameStart;
+
+    msg = getContext().appInstance.getMessageBus().post<GameEvent>(MessageID::GameMessage);
     msg->type = GameEvent::RoundStart;
 
     context.appInstance.resetFrameTime();
