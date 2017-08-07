@@ -57,6 +57,7 @@ namespace cro
             UIMessage,
             WindowMessage,
             SceneMessage,
+            StateMessage,
             Count
         };
 
@@ -90,6 +91,17 @@ namespace cro
                 EntityDestroyed
             }event;
             int32 entityID = -1;
+        };
+
+        struct StateEvent final
+        {
+            enum
+            {
+                Pushed,
+                Popped,
+                Cleared
+            }action;
+            int32 id = -1;
         };
 
         ID id = -1;

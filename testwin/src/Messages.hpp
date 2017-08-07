@@ -68,6 +68,8 @@ struct GameEvent final
     enum
     {
         RoundStart,
+        RoundEnd,
+        BossStart,
         GameOver
     }type;
     cro::int32 score = 0.f;

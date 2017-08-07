@@ -61,7 +61,7 @@ BackgroundSystem::BackgroundSystem(cro::MessageBus& mb)
         t = cro::Util::Random::value(-0.0008f, 0.0008f);
     }
 
-    registerStatusControls([&]()
+    /*registerStatusControls([&]()
     {
         static bool bossMode = false;
         bool lastMode = bossMode;
@@ -78,7 +78,7 @@ BackgroundSystem::BackgroundSystem(cro::MessageBus& mb)
                 setScrollSpeed(0.2f);
             }
         }
-    });
+    });*/
 }
 
 //public
@@ -97,7 +97,13 @@ void BackgroundSystem::handleMessage(const cro::Message& msg)
         case GameEvent::RoundStart:
             setScrollSpeed(0.2f);
             break;
-        }
+        case GameEvent::BossStart:
+            setMode(Mode::Shake);
+            break;
+        case GameEvent::GameOver:
+            setScrollSpeed(0.00001f);
+            break;
+        }    
     }
         break;
     }
