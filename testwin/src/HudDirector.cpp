@@ -34,9 +34,12 @@ source distribution.
 #include "ResourceIDs.hpp"
 
 #include <crogine/ecs/components/Sprite.hpp>
-#include <crogine/core/Clock.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
-
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/core/Clock.hpp>
 
 HudDirector::HudDirector()
     : m_fireMode(0)
@@ -65,13 +68,18 @@ void HudDirector::handleMessage(const cro::Message& msg)
                 auto id = data.itemID;
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::HudElement;
-                cmd.action = [id](cro::Entity entity, cro::Time)
+                cmd.action = [&, id](cro::Entity entity, cro::Time)
                 {
                     const auto& hudItem = entity.getComponent<HudItem>();
                     if ((hudItem.type == HudItem::Type::Bomb && id == CollectableItem::Bomb) ||
                         (hudItem.type == HudItem::Type::Emp && id == CollectableItem::EMP))
                     {
                          entity.getComponent<cro::Sprite>().setColour(cro::Colour::Cyan());
+                         if (hudItem.type == HudItem::Type::Emp)
+                         {
+                             auto childEnt = getScene().getEntity(entity.getComponent<cro::Transform>().getChildIDs()[0]);
+                             childEnt.getComponent<cro::Callback>().active = true;
+                         }
                     }
                 };
                 sendCommand(cmd);
@@ -81,12 +89,15 @@ void HudDirector::handleMessage(const cro::Message& msg)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::HudElement;
-            cmd.action = [](cro::Entity entity, cro::Time)
+            cmd.action = [&](cro::Entity entity, cro::Time)
             {
                 const auto& hudItem = entity.getComponent<HudItem>();
                 if (hudItem.type == HudItem::Type::Emp)
                 {
                     entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
+                    auto childEnt = getScene().getEntity(entity.getComponent<cro::Transform>().getChildIDs()[0]);
+                    childEnt.getComponent<cro::Callback>().active = false;
+                    childEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_time", 0.f);
                 }
             };
             sendCommand(cmd);
@@ -119,12 +130,15 @@ void HudDirector::handleMessage(const cro::Message& msg)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::HudElement;
-            cmd.action = [](cro::Entity entity, cro::Time)
+            cmd.action = [&](cro::Entity entity, cro::Time)
             {
                 const auto& hudItem = entity.getComponent<HudItem>();
                 if (hudItem.type == HudItem::Type::Emp)
                 {
                     entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
+                    auto childEnt = getScene().getEntity(entity.getComponent<cro::Transform>().getChildIDs()[0]);
+                    childEnt.getComponent<cro::Callback>().active = false;
+                    childEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_time", 0.f);
                 }
             };
             sendCommand(cmd);
