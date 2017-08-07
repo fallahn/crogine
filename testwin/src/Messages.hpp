@@ -45,6 +45,7 @@ namespace MessageID
         NpcMessage,
         BuddyMessage,
         WeaponMessage,
+        StatsMessage,
         UIMessage
     };
 }
@@ -67,12 +68,23 @@ struct GameEvent final
 {
     enum
     {
+        GameStart,
         RoundStart,
         RoundEnd,
         BossStart,
+        BossEnd,
         GameOver
     }type;
-    cro::int32 score = 0.f;
+    //cro::int32 score = 0.f;
+};
+
+struct StatsEvent final
+{
+    enum
+    {
+        Score
+    }type;
+    cro::int32 value;
 };
 
 struct PlayerEvent final
@@ -86,7 +98,6 @@ struct PlayerEvent final
         HealthChanged,
         CollectedItem,
         GotLife,
-        Score,
         FiredEmp
     }type;
     glm::vec3 position;

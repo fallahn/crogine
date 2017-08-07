@@ -77,15 +77,20 @@ void HudSystem::handleMessage(const cro::Message& msg)
         case PlayerEvent::HealthChanged:
             m_playerHealth = data.value;
             break;
-        case PlayerEvent::Score:
-            m_score = static_cast<cro::int32>(data.value);
-            break;
         }
     }
     else if (msg.id == MessageID::WeaponMessage)
     {
         const auto& data = msg.getData<WeaponEvent>();
         m_weaponTime = data.downgradeTime;
+    }
+    else if (msg.id == MessageID::StatsMessage)
+    {
+        const auto& data = msg.getData<StatsEvent>();
+        if (data.type == StatsEvent::Score)
+        {
+            m_score = data.value;
+        }
     }
 }
 

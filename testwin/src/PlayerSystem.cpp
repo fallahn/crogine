@@ -78,10 +78,16 @@ void PlayerSystem::handleMessage(const cro::Message& msg)
         {
             m_score += static_cast<cro::int32>(data.value);
 
-            auto* scoreMessage = postMessage<PlayerEvent>(MessageID::PlayerMessage);
-            scoreMessage->type = PlayerEvent::Score;
-            scoreMessage->value = static_cast<float>(m_score);
+            auto* scoreMsg = postMessage<StatsEvent>(MessageID::StatsMessage);
+            scoreMsg->type = StatsEvent::Score;
+            scoreMsg->value = m_score;
         }
+    }
+    else if (msg.id == cro::Message::StateMessage)
+    {
+        auto* scoreMsg = postMessage<StatsEvent>(MessageID::StatsMessage);
+        scoreMsg->type = StatsEvent::Score;
+        scoreMsg->value = m_score;
     }
 }
 
@@ -197,9 +203,9 @@ void PlayerSystem::updateAlive(cro::Entity entity)
             msg->itemID = item.type;
 
             m_score += item.scoreValue;
-            auto* scoreMessage = postMessage<PlayerEvent>(MessageID::PlayerMessage);
-            scoreMessage->type = PlayerEvent::Score;
-            scoreMessage->value = static_cast<float>(m_score);
+            auto* scoreMsg = postMessage<StatsEvent>(MessageID::StatsMessage);
+            scoreMsg->type = StatsEvent::Score;
+            scoreMsg->value = m_score;
 
             //update player inventory
             switch (item.type)
@@ -280,8 +286,6 @@ void PlayerSystem::updateDying(cro::Entity entity)
         m_respawnTime = 1.f;
 
         entity.getComponent<cro::ParticleEmitter>().stop();
-
-        //TODO check number of remaining lives
     }
 }
 
@@ -301,7 +305,7 @@ void PlayerSystem::updateDead(cro::Entity entity)
         {
             auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
             msg->type = GameEvent::GameOver;
-            msg->score = m_score;
+            //msg->score = m_score;
         }
     }
 }
