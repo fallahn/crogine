@@ -57,6 +57,8 @@ namespace
     const float weaverHealth = 4.f;
 
     const float turretOrbTime = 0.5f;
+
+    std::size_t totalReleaseCount = 20;
 }
 
 NpcDirector::NpcDirector()
@@ -64,7 +66,10 @@ NpcDirector::NpcDirector()
     m_choppaRespawn     (choppaSpawnTime / 2.f),
     m_speedrayRespawn   (choppaSpawnTime),
     m_weaverRespawn     (6.f),
-    m_turretOrbTime     (turretOrbTime)
+    m_turretOrbTime     (turretOrbTime),
+    m_totalReleaseCount (0),
+    m_releaseActive     (true),
+    m_roundCount        (0)
 {
 
 }
@@ -200,12 +205,48 @@ void NpcDirector::handleMessage(const cro::Message& msg)
             break;
         }
     }
+    else if (msg.id == MessageID::GameMessage)
+    {
+        const auto& data = msg.getData<GameEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case GameEvent::RoundStart:
+            m_releaseActive = true;
+            break;
+        }
+    }
 }
 
 void NpcDirector::process(cro::Time dt)
 {
-    //TODO track how many enemies spawned / died
+    if (!m_releaseActive) return;    
+    
+    //track how many enemies spawned / died
     //then switch to boss mode when needed
+    if (m_totalReleaseCount > totalReleaseCount)
+    {
+        m_releaseActive = false;
+        m_roundCount++;
+        m_totalReleaseCount = 0;
+
+        //create boss mode message
+        //or end of round message if first round
+        if (m_roundCount == 1)
+        {
+            //EOR
+            auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
+            msg->type = GameEvent::RoundEnd;
+            //hmm how to get the score from here? or is that necessary?
+        }
+        else
+        {
+            //Boss fight
+            auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
+            msg->type = GameEvent::BossStart;
+        }
+    }
+
     float dtSec = dt.asSeconds();
 
     m_eliteRespawn -= dtSec;

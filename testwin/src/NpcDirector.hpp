@@ -44,6 +44,10 @@ private:
     float m_weaverRespawn;
     float m_turretOrbTime;
 
+    std::size_t m_totalReleaseCount;
+    bool m_releaseActive;
+    cro::int32 m_roundCount;
+
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
     void process(cro::Time) override;

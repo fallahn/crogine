@@ -1,7 +1,8 @@
 model PlayerShield
 {
-	mesh = sphere
-	radius = 1.2
+	//mesh = sphere
+	//radius = 1.2
+	mesh = "assets/models/quad_sphere.cmf"
 
 	material VertexLit
 	{

@@ -37,7 +37,8 @@ source distribution.
 using namespace cro;
 
 StateStack::StateStack(State::Context context)
-	: m_context(context)
+	: m_context (context),
+    m_messageBus(context.appInstance.getMessageBus())
 {
 
 }
@@ -139,15 +140,23 @@ void StateStack::applyPendingChanges()
 		case Action::Push:
 			if (change.suspendPrevious && !m_stack.empty())
 			{
-				m_suspended.push_back(std::make_pair(change.id, std::move(m_stack.back())));
+				m_suspended.push_back(std::make_pair(change.id, std::move(m_stack.back())));  
 				m_stack.pop_back();
 			}
+            auto* msg = m_messageBus.post<Message::StateEvent>(Message::StateMessage);
+            msg->action = Message::StateEvent::Pushed;
+            msg->id = change.id;
 
 			m_stack.emplace_back(createState(change.id));
 			break;
 		case Action::Pop:
 		{
 			auto id = m_stack.back()->getStateID();
+
+            auto* msg = m_messageBus.post<Message::StateEvent>(Message::StateMessage);
+            msg->action = Message::StateEvent::Popped;
+            msg->id = id;
+
 			m_stack.pop_back();
 
 			if (!m_suspended.empty() && m_suspended.back().first == id)
@@ -161,6 +170,10 @@ void StateStack::applyPendingChanges()
 		case Action::Clear:
 			m_stack.clear();
 			m_suspended.clear();
+
+            auto* msg = m_messageBus.post<Message::StateEvent>(Message::StateMessage);
+            msg->action = Message::StateEvent::Cleared;
+
 			break;
 		}
 	}

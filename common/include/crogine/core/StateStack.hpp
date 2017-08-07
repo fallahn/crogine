@@ -155,6 +155,7 @@ namespace cro
 		std::vector<PendingChange> m_activeChanges;
 		State::Context m_context;
 		std::map<StateID, std::function<State::Ptr()>> m_factories;
+        MessageBus& m_messageBus;
 		
         bool changeExists(Action, int32 = -1);
 

@@ -99,7 +99,7 @@ void PlayerSystem::process(cro::Time dt)
             float scale = m_shieldTime / shieldTime;
 
             auto shieldEnt = getScene()->getEntity(entity.getComponent<PlayerInfo>().shieldEntity);
-            shieldEnt.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+            shieldEnt.getComponent<cro::Transform>().setScale(glm::vec3(scale * 2.4f)); //kludge because default sphere models is R0.5
 
             auto& playerInfo = entity.getComponent<PlayerInfo>();
             //DPRINT("Health", std::to_string(playerInfo.health));
