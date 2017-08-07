@@ -219,7 +219,29 @@ void NpcDirector::handleMessage(const cro::Message& msg)
             m_releaseActive = true;
             break;
         case GameEvent::GameOver:
+        case GameEvent::RoundEnd:
+        case GameEvent::BossStart:
             m_releaseActive = false;
+            {
+                //remove the turrets
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::TurretA | CommandID::TurretB;
+                cmd.action = [&](cro::Entity entity, cro::Time)
+                {
+                    auto& tx = entity.getComponent<cro::Transform>();
+                    auto oldPos = tx.getWorldPosition();
+                    tx.setPosition({ -1000.f, -200.f, 0.f });
+
+                    //raise a message so we get explodies
+                    auto* deathMsg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                    deathMsg->npcType = Npc::Turret;
+                    deathMsg->type = NpcEvent::Died;
+                    deathMsg->position = oldPos;
+                    deathMsg->entityID = tx.getChildIDs()[0];
+                };
+                sendCommand(cmd);
+
+            }
             break;
         }
 
@@ -256,7 +278,7 @@ void NpcDirector::process(cro::Time dt)
         {
             //EOR
             auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
-            msg->type = GameEvent::BossStart;// RoundEnd;
+            msg->type = GameEvent::RoundEnd;
         }
         else
         {

@@ -45,7 +45,8 @@ namespace
 
 ItemDirector::ItemDirector()
     : m_releaseTime (10.f),
-    m_itemIndex     (0)
+    m_itemIndex     (0),
+    m_active        (true)
 {
     m_itemList = 
     {
@@ -93,6 +94,20 @@ void ItemDirector::handleMessage(const cro::Message& msg)
             break;
         }
     }
+    else if (msg.id == MessageID::GameMessage)
+    {
+        const auto& data = msg.getData<GameEvent>();
+        switch (data.type)
+        {
+        case GameEvent::GameStart:
+        case GameEvent::RoundStart:
+            m_active = true;
+            break;
+        default:
+            m_active = false;
+            break;
+        }
+    }
 }
 
 void ItemDirector::handleEvent(const cro::Event&)
@@ -102,25 +117,28 @@ void ItemDirector::handleEvent(const cro::Event&)
 
 void ItemDirector::process(cro::Time dt)
 {
-    m_releaseTime -= dt.asSeconds();
-    if (m_releaseTime < 0)
+    if (m_active)
     {
-        //ignore weapon upgrades, these are dropped by NPCs
-        auto type = m_itemList[m_itemIndex];
-        m_itemIndex = (m_itemIndex + 1) % m_itemList.size();
-
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::Collectable;
-        cmd.action = [type](cro::Entity entity, cro::Time)
+        m_releaseTime -= dt.asSeconds();
+        if (m_releaseTime < 0)
         {
-            auto& item = entity.getComponent<CollectableItem>();
-            if (item.type == type && !item.active)
+            //ignore weapon upgrades, these are dropped by NPCs
+            auto type = m_itemList[m_itemIndex];
+            m_itemIndex = (m_itemIndex + 1) % m_itemList.size();
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Collectable;
+            cmd.action = [type](cro::Entity entity, cro::Time)
             {
-                item.active = true;
-                item.speed = moveSpeed - cro::Util::Random::value(0.05f, 0.18f);
-            }
-        };
-        sendCommand(cmd);
-        m_releaseTime = cro::Util::Random::value(8.f, 16.f);
+                auto& item = entity.getComponent<CollectableItem>();
+                if (item.type == type && !item.active)
+                {
+                    item.active = true;
+                    item.speed = moveSpeed - cro::Util::Random::value(0.05f, 0.18f);
+                }
+            };
+            sendCommand(cmd);
+            m_releaseTime = cro::Util::Random::value(8.f, 16.f);
+        }
     }
 }

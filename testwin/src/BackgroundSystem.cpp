@@ -104,7 +104,7 @@ void BackgroundSystem::handleMessage(const cro::Message& msg)
         case GameEvent::GameOver:
         case GameEvent::RoundEnd:
             setMode(Mode::Scroll);
-            setScrollSpeed(0.00001f);
+            setScrollSpeed(0.001f);
             break;
         }    
     }
