@@ -103,6 +103,19 @@ void NpcSystem::handleMessage(const cro::Message& msg)
             break;
         }
     }
+    else if (msg.id == MessageID::GameMessage)
+    {
+        const auto& data = msg.getData<GameEvent>();
+        switch (data.type)
+        {
+        default:
+            m_empFired = true; //just to kill all active NPCs
+            break;
+        case GameEvent::GameStart:
+        case GameEvent::RoundStart:
+            break;
+        }
+    }
 }
 
 void NpcSystem::process(cro::Time dt)
