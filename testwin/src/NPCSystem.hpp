@@ -124,6 +124,7 @@ private:
     float m_accumulator;
     glm::vec3 m_playerPosition;
     bool m_empFired;
+    bool m_awardPoints;
 
     std::vector<glm::vec3> m_elitePositions;
     std::vector<glm::vec3> m_eliteIdlePositions;

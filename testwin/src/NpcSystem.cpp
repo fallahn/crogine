@@ -62,7 +62,8 @@ namespace
 NpcSystem::NpcSystem(cro::MessageBus& mb)
     : cro::System   (mb, typeid(NpcSystem)),
     m_accumulator   (0.f),
-    m_empFired      (false)
+    m_empFired      (false),
+    m_awardPoints   (true)
 {
     requireComponent<cro::Model>();
     requireComponent<cro::Transform>();
@@ -110,9 +111,11 @@ void NpcSystem::handleMessage(const cro::Message& msg)
         {
         default:
             m_empFired = true; //just to kill all active NPCs
+            m_awardPoints = false;
             break;
         case GameEvent::GameStart:
         case GameEvent::RoundStart:
+            m_awardPoints = true;
             break;
         }
     }
@@ -174,7 +177,7 @@ void NpcSystem::process(cro::Time dt)
                     msg->npcType = status.type;
                     msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
                     msg->entityID = entity.getIndex();
-                    msg->value = static_cast<float>(status.scoreValue);
+                    msg->value = m_awardPoints ? static_cast<float>(status.scoreValue) : 0;
 
                     if (!status.hasDyingAnim)
                     {

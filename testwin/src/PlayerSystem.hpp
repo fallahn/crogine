@@ -36,7 +36,7 @@ struct PlayerInfo final
 {
     enum class State
     {
-        Spawning, Alive, Dying, Dead
+        Spawning, Alive, Dying, Dead, EndingRound
     }state = State::Spawning;
     cro::uint32 shieldEntity = 0;
     float health = 100.f;
@@ -44,6 +44,7 @@ struct PlayerInfo final
     bool hasBombs = false;
     bool hasEmp = false;
     cro::int32 lives = 3;
+    bool pendingRoundEnd = false;
 };
 
 class PlayerSystem final : public cro::System
@@ -65,6 +66,7 @@ private:
     void updateAlive(cro::Entity);
     void updateDying(cro::Entity);
     void updateDead(cro::Entity);
+    void updateRoundEnd(cro::Entity);
 
     void onEntityAdded(cro::Entity) override;
 };

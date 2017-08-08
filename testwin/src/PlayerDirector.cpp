@@ -139,6 +139,46 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
             }
         }
     }
+    else if (msg.id == MessageID::GameMessage)
+    {
+        const auto& data = msg.getData<GameEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case GameEvent::RoundEnd:
+        {
+            m_currentInput = 0; //stop firing all weapons
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Player;
+            cmd.action = [](cro::Entity entity, cro::Time)
+            {
+                entity.getComponent<PlayerInfo>().pendingRoundEnd = true;
+            };
+            sendCommand(cmd);
+            LOG("buns", cro::Logger::Type::Info);
+        }
+        break;
+
+        case GameEvent::RoundStart:
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Player;
+            cmd.action = [](cro::Entity entity, cro::Time)
+            {
+                auto& pi = entity.getComponent<PlayerInfo>();
+                if (pi.state == PlayerInfo::State::EndingRound)
+                {
+                    pi.state = PlayerInfo::State::Dead;
+
+                    entity.getComponent<cro::Transform>().setRotation({ 0.f, 0.f, 0.f });
+                    entity.getComponent<cro::Transform>().setPosition({ -15.4f, 0.f, -9.3f });
+                    entity.getComponent<Velocity>().velocity = glm::vec3();
+                    entity.getComponent<cro::ParticleEmitter>().stop();
+                }
+            };
+            sendCommand(cmd);
+            break;
+        }
+    }
 }
 
 void PlayerDirector::handleEvent(const cro::Event& evt)

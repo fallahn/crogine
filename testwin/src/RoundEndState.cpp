@@ -85,6 +85,7 @@ RoundEndState::RoundEndState(cro::StateStack& stack, cro::State::Context context
 //public
 bool RoundEndState::handleEvent(const cro::Event& evt)
 {
+    m_uiSystem->handleEvent(evt);
     m_uiScene.forwardEvent(evt);
     return false;
 }
@@ -150,7 +151,7 @@ void RoundEndState::load()
     entity.getComponent<cro::Text>().setColour(textColourSelected);
     auto textSize = entity.getComponent<cro::Text>().getLocalBounds();
     entity.addComponent<cro::Transform>();
-    entity.getComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 4.f) * 3.4f, uiDepth });
+    entity.getComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 4.f) * 3.f, uiDepth });
     entity.getComponent<cro::Transform>().setOrigin({ textSize.width / 2.f, -textSize.height / 2.f, 0.f });
 
 
@@ -175,10 +176,10 @@ void RoundEndState::load()
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
     gameTextTx.setPosition({ 40.f, 100.f, 0.f });
     gameTextTx.setParent(entity);
-    /*auto iconEnt = m_uiScene.createEntity();
+    auto iconEnt = m_uiScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
     iconEnt.getComponent<cro::Transform>().setPosition({ area.width - buttonIconOffset, 0.f, 0.f });
-    iconEnt.addComponent<cro::Sprite>() = icons.getSprite("menu");*/
+    iconEnt.addComponent<cro::Sprite>() = icons.getSprite("continue");
 
     auto activeArea = sprites.getSprite("button_active").getTextureRect();
     auto& gameControl = entity.addComponent<cro::UIInput>();
