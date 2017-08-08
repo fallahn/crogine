@@ -64,7 +64,7 @@ private:
 
     cro::Scene m_uiScene;
     SharedResources& m_sharedResources;
-    //cro::ResourceCollection m_resources;
+    
     cro::UISystem* m_uiSystem;
     cro::Texture m_backgroundTexture;
 

@@ -33,6 +33,7 @@ source distribution.
 #include "GameState.hpp"
 #include "PauseState.hpp"
 #include "GameOverState.hpp"
+#include "RoundEndState.hpp"
 #include "LoadingScreen.hpp"
 #include "icon.hpp"
 #include "Messages.hpp"
@@ -53,6 +54,7 @@ MyApp::MyApp()
     m_stateStack.registerState<GameState>(States::ID::GamePlaying);
     m_stateStack.registerState<PauseState>(States::ID::PauseMenu, m_sharedResources);
     m_stateStack.registerState<GameOverState>(States::ID::GameOver, m_sharedResources);
+    m_stateStack.registerState<RoundEndState>(States::ID::RoundEnd, m_sharedResources);
 	m_stateStack.pushState(States::MainMenu);
 }
 

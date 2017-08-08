@@ -353,6 +353,7 @@
     <ClCompile Include="..\testwin\src\RandomTranslation.cpp" />
     <ClCompile Include="..\testwin\src\RockFallSystem.cpp" />
     <ClCompile Include="..\testwin\src\RotateSystem.cpp" />
+    <ClCompile Include="..\testwin\src\RoundEndState.cpp" />
     <ClCompile Include="..\testwin\src\SliderSystem.cpp" />
     <ClCompile Include="..\testwin\src\TerrainChunk.cpp" />
     <ClCompile Include="..\testwin\src\VelocitySystem.cpp" />

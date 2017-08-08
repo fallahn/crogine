@@ -33,6 +33,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/RandomTranslation.cpp
   ${PROJECT_DIR}/RockFallSystem.cpp
   ${PROJECT_DIR}/RotateSystem.cpp
+  ${PROJECT_DIR}/RoundEndState.cpp
   ${PROJECT_DIR}/SliderSystem.cpp
   ${PROJECT_DIR}/TerrainChunk.cpp
   ${PROJECT_DIR}/VelocitySystem.cpp)

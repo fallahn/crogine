@@ -138,7 +138,7 @@ void PauseState::load()
     m_uiScene.addSystem<cro::TextRenderer>(mb);
 
     cro::Image img;
-    img.create(2, 2, cro::Colour(0.f, 0.f, 0.f, 0.6f));
+    img.create(2, 2, stateBackgroundColour);
 
     m_backgroundTexture.create(2, 2);
     m_backgroundTexture.update(img.getPixelData(), false);
