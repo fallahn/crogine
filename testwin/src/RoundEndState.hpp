@@ -27,14 +27,49 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-//const values used when building the menus
-const cro::Colour textColourSelected(1.f, 0.77f, 0.f);
-const cro::Colour textColourNormal = cro::Colour::White();
-const float buttonIconOffset = 156.f;
+#ifndef TL_ROUNDEND_STATE_HPP_
+#define TL_ROUNDEND_STATE_HPP_
 
-const cro::uint32 TextXL = 80;
-const cro::uint32 TextLarge = 60;
-const cro::uint32 TextMedium = 42;
-const cro::uint32 TextSmall = 32;
+#include <crogine/core/State.hpp>
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/graphics/Texture.hpp>
 
-const cro::Colour stateBackgroundColour(0.f, 0.f, 0.f, 0.6f);
+#include "StateIDs.hpp"
+#include "ResourceIDs.hpp"
+
+namespace cro
+{
+    class UISystem;
+}
+
+struct SharedResources;
+using ResourcePtr = std::unique_ptr<SharedResources>;
+
+class RoundEndState final : public cro::State
+{
+public:
+    RoundEndState(cro::StateStack&, cro::State::Context, ResourcePtr&);
+    
+    cro::StateID getStateID() const override { return States::ID::RoundEnd; }
+
+    bool handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
+    bool simulate(cro::Time) override;
+    void render() override;
+
+private:
+
+    cro::Scene m_uiScene;
+    SharedResources& m_sharedResources;
+
+    cro::UISystem* m_uiSystem;
+    cro::Texture m_backgroundTexture;
+
+    void load();
+    void updateView();
+
+
+};
+
+#endif //TL_ROUND_END_STATE_HPP_

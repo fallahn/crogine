@@ -120,5 +120,8 @@
     <ClCompile Include="..\testwin\src\PauseState.cpp">
       <Filter>src\TL</Filter>
     </ClCompile>
+    <ClCompile Include="..\testwin\src\RoundEndState.cpp">
+      <Filter>src\TL</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

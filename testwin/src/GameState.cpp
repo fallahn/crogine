@@ -193,6 +193,9 @@ void GameState::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GameEvent::RoundEnd:
+            requestStackPush(States::ID::RoundEnd);
+            break;
         case GameEvent::GameOver:
             requestStackPush(States::GameOver);
             break;

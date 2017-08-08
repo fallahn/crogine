@@ -81,7 +81,13 @@ NpcDirector::NpcDirector()
 //private
 void NpcDirector::handleEvent(const cro::Event& evt)
 {
-
+    if (evt.type == SDL_KEYUP)
+    {
+        if (evt.key.keysym.sym == SDLK_l)
+        {
+            m_totalReleaseCount = 100;
+        }
+    }
 }
 
 void NpcDirector::handleMessage(const cro::Message& msg)
