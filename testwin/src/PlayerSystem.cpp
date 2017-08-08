@@ -123,6 +123,9 @@ void PlayerSystem::process(cro::Time dt)
             case PlayerInfo::State::Dead:
                 updateDead(entity);
                 break;
+            case PlayerInfo::State::EndingRound:
+                updateRoundEnd(entity);
+                break;
             }
         }
     }
@@ -156,6 +159,13 @@ void PlayerSystem::updateAlive(cro::Entity entity)
 {
     m_shieldTime = std::max(0.f, m_shieldTime - fixedStep);
     auto& playerInfo = entity.getComponent<PlayerInfo>();
+
+    if (playerInfo.pendingRoundEnd)
+    {
+        playerInfo.state = PlayerInfo::State::EndingRound;
+        playerInfo.pendingRoundEnd = false;
+        return;
+    }
     
     //Do collision stuff
     const auto& po = entity.getComponent<cro::PhysicsObject>();
@@ -307,6 +317,15 @@ void PlayerSystem::updateDead(cro::Entity entity)
             msg->type = GameEvent::GameOver;
             //msg->score = m_score;
         }
+    }
+}
+
+void PlayerSystem::updateRoundEnd(cro::Entity entity)
+{
+    auto& tx = entity.getComponent<cro::Transform>();
+    if (tx.getWorldPosition().x < 20.f)
+    {
+        tx.move({ 8.f * fixedStep, 0.f, 0.f });
     }
 }
 

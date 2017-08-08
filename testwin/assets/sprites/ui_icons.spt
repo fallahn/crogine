@@ -31,4 +31,9 @@ spritesheet icons
 	{
 		bounds = 256,128,128,128
 	}
+
+	sprite continue
+	{
+		bounds = 128,128,128,128
+	}
 }
