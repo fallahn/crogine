@@ -125,13 +125,16 @@ void HudDirector::handleMessage(const cro::Message& msg)
             };
             sendCommand(cmd);
 
-            //do a popup
-            cmd.targetFlags = CommandID::MeatMan;
-            cmd.action = [](cro::Entity entity, cro::Time)
+            if (data.type != PlayerEvent::Died)
             {
-                entity.getComponent<cro::Callback>().active = true;
-            };
-            sendCommand(cmd);
+                //do a popup
+                cmd.targetFlags = CommandID::MeatMan;
+                cmd.action = [](cro::Entity entity, cro::Time)
+                {
+                    entity.getComponent<cro::Callback>().active = true;
+                };
+                sendCommand(cmd);
+            }
         }
             break;
         case PlayerEvent::FiredEmp:

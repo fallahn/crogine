@@ -97,12 +97,12 @@ void PlayerSystem::handleMessage(const cro::Message& msg)
                     
                     if (playerInfo.lives < maxLives)
                     {
+                        playerInfo.lives++; 
+
                         auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
                         msg->entityID = entity.getIndex();
                         msg->type = PlayerEvent::GotLife;
                         msg->value = playerInfo.lives;
-
-                        playerInfo.lives++;
                     }
                 };
                 getScene()->getSystem<cro::CommandSystem>().sendCommand(cmd);
