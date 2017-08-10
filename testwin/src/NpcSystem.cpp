@@ -110,12 +110,17 @@ void NpcSystem::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default:
-            m_empFired = true; //just to kill all active NPCs
-            m_awardPoints = false;
+        {
+            /*for (auto& ent : getEntities())
+            {
+                ent.getComponent<Npc>().wantsReset = false;
+                ent.getComponent<Npc>().active = false;
+            }*/
+        }
             break;
         case GameEvent::GameStart:
         case GameEvent::RoundStart:
-            m_awardPoints = true;
+            //m_awardPoints = true;
             break;
         }
     }

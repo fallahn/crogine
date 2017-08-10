@@ -259,6 +259,7 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
             break;
         case PlayerEvent::Spawned:
             m_allowFiring = true;
+            LOG("Enabled weapon", cro::Logger::Type::Info);
             break;
         case PlayerEvent::WeaponStateChange:
             m_systemActive = (data.weaponActivated && m_allowFiring);
@@ -296,6 +297,16 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
                 entity.getComponent<PlayerWeapon>().damage = buddyDamage;
                 m_aliveCount++;
             }
+        }
+    }
+    else if (msg.id == MessageID::GameMessage)
+    {
+        const auto& data = msg.getData<GameEvent>();
+        if (data.type == GameEvent::RoundStart)
+        {
+            m_aliveCount = 0;
+            m_deadPulseCount = m_deadPulses.size();
+            m_deadLaserCount = m_deadLasers.size();
         }
     }
 }

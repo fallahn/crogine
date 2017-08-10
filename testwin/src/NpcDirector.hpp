@@ -48,6 +48,8 @@ private:
     bool m_releaseActive;
     cro::int32 m_roundCount;
 
+    std::size_t m_npcCount;
+
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
     void process(cro::Time) override;

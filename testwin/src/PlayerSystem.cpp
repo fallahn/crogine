@@ -40,6 +40,8 @@ source distribution.
 #include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 
 #include <glm/gtx/norm.hpp>
 
@@ -54,6 +56,8 @@ namespace
     constexpr float fixedStep = 1.f / 60.f;
 
     const cro::int32 maxLives = 5;
+
+    const cro::int32 bonusScore = 100000;
 }
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
@@ -76,7 +80,33 @@ void PlayerSystem::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<NpcEvent>();
         if (data.type == NpcEvent::Died)
         {
+            auto oldScore = m_score / bonusScore;
+            
             m_score += static_cast<cro::int32>(data.value);
+
+            //check if we got a bonus extra life
+            auto newScore = m_score / bonusScore;
+            if (newScore > oldScore)
+            {
+                //raise extra life message
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Player;
+                cmd.action = [&](cro::Entity entity, cro::Time)
+                {
+                    auto& playerInfo = entity.getComponent<PlayerInfo>();
+                    
+                    if (playerInfo.lives < maxLives)
+                    {
+                        auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+                        msg->entityID = entity.getIndex();
+                        msg->type = PlayerEvent::GotLife;
+                        msg->value = playerInfo.lives;
+
+                        playerInfo.lives++;
+                    }
+                };
+                getScene()->getSystem<cro::CommandSystem>().sendCommand(cmd);
+            }
 
             auto* scoreMsg = postMessage<StatsEvent>(MessageID::StatsMessage);
             scoreMsg->type = StatsEvent::Score;
