@@ -50,6 +50,7 @@ namespace
     const float choppaSpawnTime = 9.f;
     const float zDepth = -9.3f; //bums, this is replicated from NpcSystem.cpp
     const float weaverSpawnTime = 12.f;
+    const float startX = 7.f;
 
     const float eliteHealth = 100.f;
     const float choppaHealth = 8.f;
@@ -164,7 +165,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
                 getScene().getEntity(data.entityID).getComponent<cro::ParticleEmitter>().start();
             }
 
-            if(m_npcCount > 0) m_npcCount--;
+            if(m_npcCount > 0 && data.npcType != Npc::Turret) m_npcCount--;
             break;
         case NpcEvent::FiredWeapon:
             //if a weaver fired reset all the other times to prevent more than one
@@ -213,7 +214,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
             {
                 getScene().getEntity(data.entityID).getComponent<cro::ParticleEmitter>().stop();
             }
-            if (m_npcCount > 0) m_npcCount--;
+            if (m_npcCount > 0 && data.npcType != Npc::Turret) m_npcCount--;
             break;
         }
     }
@@ -299,7 +300,7 @@ void NpcDirector::process(cro::Time dt)
                 msg->type = GameEvent::BossStart;
             }
             //temp - DELETE!
-            m_roundCount = 0;
+            //m_roundCount = 0;
         }
     }
     if (!m_releaseActive) return;
@@ -315,6 +316,8 @@ void NpcDirector::process(cro::Time dt)
         cmd.targetFlags = CommandID::Elite;
         cmd.action = [this](cro::Entity entity, cro::Time)
         {
+            if (!m_releaseActive) return;
+            
             auto& status = entity.getComponent<Npc>();
             if (!status.active)
             {
@@ -337,11 +340,12 @@ void NpcDirector::process(cro::Time dt)
                 msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
                 msg->entityID = entity.getIndex();
                 msg->value = status.health;
+
+                m_npcCount++;
             }
         };
         sendCommand(cmd);
-        m_totalReleaseCount++;
-        m_npcCount++;
+        m_totalReleaseCount++;      
     }
 
     m_choppaRespawn -= dtSec;
@@ -354,6 +358,8 @@ void NpcDirector::process(cro::Time dt)
         cmd.targetFlags = CommandID::Choppa;
         cmd.action = [this, vertical](cro::Entity entity, cro::Time)
         {
+            if (!m_releaseActive) return;
+            
             auto& status = entity.getComponent<Npc>();
             if (!status.active)
             {
@@ -369,12 +375,12 @@ void NpcDirector::process(cro::Time dt)
 
                 if (vertical)
                 {
-                    tx.setPosition({ 7.f, -ChoppaNavigator::spacing + (status.choppa.ident * ChoppaNavigator::spacing), zDepth });                    
+                    tx.setPosition({ startX, -ChoppaNavigator::spacing + (status.choppa.ident * ChoppaNavigator::spacing), zDepth });
                 }
                 else
                 {
                     auto yPos = cro::Util::Random::value(-1.9f, 1.9f);
-                    tx.setPosition({ 7.f + (status.choppa.ident * ChoppaNavigator::spacing), yPos, zDepth });
+                    tx.setPosition({ startX + (status.choppa.ident * ChoppaNavigator::spacing), yPos, zDepth });
                 }
                 tx.setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
 
@@ -399,6 +405,8 @@ void NpcDirector::process(cro::Time dt)
         cmd.targetFlags = CommandID::Speedray;
         cmd.action = [this](cro::Entity entity, cro::Time)
         {
+            if (!m_releaseActive) return;
+
             auto& status = entity.getComponent<Npc>();
             if (!status.active)
             {
@@ -407,7 +415,7 @@ void NpcDirector::process(cro::Time dt)
 
                 //reset position
                 auto& tx = entity.getComponent<cro::Transform>();
-                tx.setPosition({ 7.f + static_cast<float>(status.speedray.ident) * SpeedrayNavigator::spacing, 0.f, zDepth });
+                tx.setPosition({ startX + static_cast<float>(status.speedray.ident) * SpeedrayNavigator::spacing, 0.f, zDepth });
 
                 auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
                 msg->type = NpcEvent::HealthChanged;
@@ -435,6 +443,8 @@ void NpcDirector::process(cro::Time dt)
         cmd.targetFlags = CommandID::Weaver;
         cmd.action = [this, yPos](cro::Entity entity, cro::Time) 
         {
+            if (!m_releaseActive) return;
+            
             auto& status = entity.getComponent<Npc>();
             //if (!status.active) //we want to reset all parts, regardless
             {
@@ -449,7 +459,7 @@ void NpcDirector::process(cro::Time dt)
                 status.weaver.shootTime = cro::Util::Random::value(WeaverNavigator::nextShootTime - 0.5f, WeaverNavigator::nextShootTime + 2.f);
 
                 auto& tx = entity.getComponent<cro::Transform>();
-                tx.setPosition({ 7.f + (static_cast<float>(status.weaver.ident) * (WeaverNavigator::spacing * tx.getScale().x)), status.weaver.yPos, zDepth });
+                tx.setPosition({ startX + (static_cast<float>(status.weaver.ident) * (WeaverNavigator::spacing * tx.getScale().x)), status.weaver.yPos, zDepth });
 
                 auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
                 msg->type = NpcEvent::HealthChanged;
@@ -473,6 +483,8 @@ void NpcDirector::process(cro::Time dt)
         cmd.targetFlags = CommandID::TurretA | CommandID::TurretB;
         cmd.action = [this](cro::Entity entity, cro::Time)
         {
+            if (!m_releaseActive) return;
+            
             if (entity.getComponent<cro::Model>().isVisible())
             {
                 const auto& tx = entity.getComponent<cro::Transform>();

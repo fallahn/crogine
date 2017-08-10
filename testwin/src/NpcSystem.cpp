@@ -111,11 +111,16 @@ void NpcSystem::handleMessage(const cro::Message& msg)
         {
         default:
         {
-            /*for (auto& ent : getEntities())
+            for (auto& ent : getEntities())
             {
-                ent.getComponent<Npc>().wantsReset = false;
-                ent.getComponent<Npc>().active = false;
-            }*/
+                auto& npc = ent.getComponent<Npc>();
+                if (npc.type != Npc::Turret)
+                {
+                    ent.getComponent<Npc>().wantsReset = true;
+                    ent.getComponent<Npc>().health = 100.f;
+                    ent.getComponent<cro::Transform>().move({ -20.f, 0.f, 0.f });
+                }
+            }
         }
             break;
         case GameEvent::GameStart:

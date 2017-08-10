@@ -344,6 +344,7 @@
     <Content Include="assets\assets\models\player.cmt" />
     <Content Include="assets\assets\models\player_shield.cmt" />
     <Content Include="assets\assets\models\player_ship.cmf" />
+    <Content Include="assets\assets\models\quad_sphere.cmf" />
     <Content Include="assets\assets\models\roid_belt.cmf" />
     <Content Include="assets\assets\models\roid_belt.cmt" />
     <Content Include="assets\assets\models\speed.cmf" />
