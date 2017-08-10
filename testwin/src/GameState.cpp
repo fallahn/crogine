@@ -97,8 +97,6 @@ namespace
 {
     const glm::vec2 backgroundSize(21.3f, 7.2f);
     std::size_t rockfallCount = 2;
-
-    cro::CommandSystem* buns = nullptr;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -139,7 +137,7 @@ bool GameState::handleEvent(const cro::Event& evt)
 
         }
         else */
-        if (evt.key.keysym.sym == SDLK_o)
+        /*if (evt.key.keysym.sym == SDLK_o)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MeatMan;
@@ -148,7 +146,7 @@ bool GameState::handleEvent(const cro::Event& evt)
                 entity.getComponent<cro::Callback>().active = true;
             };
             buns->sendCommand(cmd);
-        }
+        }*/
 
         switch (evt.key.keysym.sym)
         {
@@ -262,8 +260,6 @@ void GameState::addSystems()
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
     m_uiScene.addSystem<cro::AudioSystem>(mb);
-
-    buns = &m_uiScene.addSystem<cro::CommandSystem>(mb);
 
     m_uiScene.addDirector<HudDirector>();
 }

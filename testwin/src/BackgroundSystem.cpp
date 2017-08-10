@@ -99,10 +99,12 @@ void BackgroundSystem::handleMessage(const cro::Message& msg)
             setScrollSpeed(0.2f);
             break;
         case GameEvent::BossStart:
+            setColourAngle(-25.f);
             setMode(Mode::Shake);
             break;
-        case GameEvent::GameOver:
         case GameEvent::RoundEnd:
+            setColourAngle(-50.f);
+        case GameEvent::GameOver:
             setMode(Mode::Scroll);
             setScrollSpeed(0.001f);
             break;

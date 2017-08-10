@@ -85,99 +85,106 @@ PlayerDirector::PlayerDirector()
 //public
 void PlayerDirector::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == MessageID::PlayerMessage)
+    switch (msg.id)
     {
-        const auto& data = msg.getData<PlayerEvent>();
-        switch (data.type)
+    case MessageID::PlayerMessage:
         {
-        default: break;
-        case PlayerEvent::HealthChanged:
-            //update the smoke effect
-        {
-            float health = data.value;
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::Player;
-            cmd.action = [health](cro::Entity entity, cro::Time)
+            const auto& data = msg.getData<PlayerEvent>();
+            switch (data.type)
             {
-                const auto& playerInfo = entity.getComponent<PlayerInfo>();
-                float emitRate = std::max((1.f - (health / 100.f)) * playerInfo.maxParticleRate, 0.f);
-                entity.getComponent<cro::ParticleEmitter>().emitterSettings.emitRate = emitRate;
-                entity.getComponent<cro::ParticleEmitter>().start();
-            };
-            sendCommand(cmd);
-        }
-        break;
-        case PlayerEvent::FiredEmp:
-        {
-            cro::Command empCommand;
-            empCommand.targetFlags = CommandID::EmpBlast;
-            auto position = data.position;
-            empCommand.action = [this, position](cro::Entity ent, cro::Time)
+            default: break;
+            case PlayerEvent::HealthChanged:
+                //update the smoke effect
             {
-                ent.getComponent<cro::Transform>().setPosition(position);
-                ent.getComponent<Emp>().currentTime = 0.f;
-            };
-            sendCommand(empCommand);
-        }
-        break;
-        }
-    }
-    else if (msg.id == MessageID::UIMessage)
-    {
-        const auto& data = msg.getData<UIEvent>();
-        if (data.button == UIEvent::Emp)
-        {
-            if (data.type == UIEvent::ButtonPressed)
-            {
-                m_currentInput |= Special;
-                //LOG("Pressed", cro::Logger::Type::Info);
-            }
-            else if (data.type == UIEvent::ButtonReleased)
-            {
-                m_currentInput &= ~Special;
-                //LOG("Released", cro::Logger::Type::Info);
-            }
-        }
-    }
-    else if (msg.id == MessageID::GameMessage)
-    {
-        const auto& data = msg.getData<GameEvent>();
-        switch (data.type)
-        {
-        default: break;
-        case GameEvent::RoundEnd:
-        {
-            m_currentInput = 0; //stop firing all weapons
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::Player;
-            cmd.action = [](cro::Entity entity, cro::Time)
-            {
-                entity.getComponent<PlayerInfo>().pendingRoundEnd = true;
-            };
-            sendCommand(cmd);
-            LOG("buns", cro::Logger::Type::Info);
-        }
-        break;
-
-        case GameEvent::RoundStart:
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::Player;
-            cmd.action = [](cro::Entity entity, cro::Time)
-            {
-                auto& pi = entity.getComponent<PlayerInfo>();
-                if (pi.state == PlayerInfo::State::EndingRound)
+                float health = data.value;
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Player;
+                cmd.action = [health](cro::Entity entity, cro::Time)
                 {
-                    pi.state = PlayerInfo::State::Dead;
-
-                    entity.getComponent<cro::Transform>().setRotation({ 0.f, 0.f, 0.f });
-                    entity.getComponent<cro::Transform>().setPosition({ -15.4f, 0.f, -9.3f });
-                    entity.getComponent<Velocity>().velocity = glm::vec3();
-                    entity.getComponent<cro::ParticleEmitter>().stop();
-                }
-            };
-            sendCommand(cmd);
+                    const auto& playerInfo = entity.getComponent<PlayerInfo>();
+                    float emitRate = std::max((1.f - (health / 100.f)) * playerInfo.maxParticleRate, 0.f);
+                    entity.getComponent<cro::ParticleEmitter>().emitterSettings.emitRate = emitRate;
+                    entity.getComponent<cro::ParticleEmitter>().start();
+                };
+                sendCommand(cmd);
+            }
             break;
+            case PlayerEvent::FiredEmp:
+            {
+                cro::Command empCommand;
+                empCommand.targetFlags = CommandID::EmpBlast;
+                auto position = data.position;
+                empCommand.action = [this, position](cro::Entity ent, cro::Time)
+                {
+                    ent.getComponent<cro::Transform>().setPosition(position);
+                    ent.getComponent<Emp>().currentTime = 0.f;
+                };
+                sendCommand(empCommand);
+            }
+            break;
+            }
         }
+        break;
+    case MessageID::UIMessage:
+        {
+            const auto& data = msg.getData<UIEvent>();
+            if (data.button == UIEvent::Emp)
+            {
+                if (data.type == UIEvent::ButtonPressed)
+                {
+                    m_currentInput |= Special;
+                    //LOG("Pressed", cro::Logger::Type::Info);
+                }
+                else if (data.type == UIEvent::ButtonReleased)
+                {
+                    m_currentInput &= ~Special;
+                    //LOG("Released", cro::Logger::Type::Info);
+                }
+            }
+        }
+        break;
+    case MessageID::GameMessage:
+        {
+            const auto& data = msg.getData<GameEvent>();
+            switch (data.type)
+            {
+            default: break;
+            case GameEvent::RoundEnd:
+            {
+                m_currentInput = 0; //stop firing all weapons
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Player;
+                cmd.action = [](cro::Entity entity, cro::Time)
+                {
+                    entity.getComponent<PlayerInfo>().pendingRoundEnd = true;
+                };
+                sendCommand(cmd);
+                //LOG("buns", cro::Logger::Type::Info);
+            }
+            break;
+
+            case GameEvent::RoundStart:
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Player;
+                cmd.action = [](cro::Entity entity, cro::Time)
+                {
+                    auto& pi = entity.getComponent<PlayerInfo>();
+                    if (pi.state == PlayerInfo::State::EndingRound)
+                    {
+                        pi.state = PlayerInfo::State::Dead;
+
+                        entity.getComponent<cro::Transform>().setRotation({ 0.f, 0.f, 0.f });
+                        entity.getComponent<cro::Transform>().setPosition({ -15.4f, 0.f, -9.3f });
+                        entity.getComponent<Velocity>().velocity = glm::vec3();
+                        entity.getComponent<cro::ParticleEmitter>().stop();
+                    }
+                };
+                sendCommand(cmd);
+                break;
+            }
+        }
+        break;
+    default: break;
     }
 }
 

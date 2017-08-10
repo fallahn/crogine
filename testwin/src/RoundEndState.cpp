@@ -158,8 +158,8 @@ void RoundEndState::load()
     //OK Button
     cro::SpriteSheet sprites;
     sprites.loadFromFile("assets/sprites/ui_menu.spt", m_sharedResources.textures);
-    cro::SpriteSheet icons;
-    icons.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
+    /*cro::SpriteSheet icons;
+    icons.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);*/
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Sprite>() = sprites.getSprite("button_inactive");
@@ -170,16 +170,16 @@ void RoundEndState::load()
 
     auto textEnt = m_uiScene.createEntity();
     auto& gameText = textEnt.addComponent<cro::Text>(font);
-    gameText.setString("Continue");
+    gameText.setString("Continue...");
     gameText.setColour(textColourNormal);
     gameText.setCharSize(TextLarge);
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
     gameTextTx.setPosition({ 40.f, 100.f, 0.f });
     gameTextTx.setParent(entity);
-    auto iconEnt = m_uiScene.createEntity();
+    /*auto iconEnt = m_uiScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
     iconEnt.getComponent<cro::Transform>().setPosition({ area.width - buttonIconOffset, 0.f, 0.f });
-    iconEnt.addComponent<cro::Sprite>() = icons.getSprite("continue");
+    iconEnt.addComponent<cro::Sprite>() = icons.getSprite("continue");*/
 
     auto activeArea = sprites.getSprite("button_active").getTextureRect();
     auto& gameControl = entity.addComponent<cro::UIInput>();

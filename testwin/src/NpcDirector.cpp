@@ -69,7 +69,8 @@ NpcDirector::NpcDirector()
     m_turretOrbTime     (turretOrbTime),
     m_totalReleaseCount (0),
     m_releaseActive     (true),
-    m_roundCount        (0)
+    m_roundCount        (0),
+    m_npcCount          (0) //this counts individual parts for multipart NPCs
 {
     m_eliteRespawn *= cro::Util::Random::value(0.1f, 1.f);
     m_choppaRespawn *= cro::Util::Random::value(0.1f, 1.f);
@@ -120,7 +121,6 @@ void NpcDirector::handleMessage(const cro::Message& msg)
         {
         default:break;
         case NpcEvent::Died:
-
             //if this was a weaver part then set the others to timed destruction
             if (data.npcType == Npc::Weaver)
             {
@@ -164,6 +164,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
                 getScene().getEntity(data.entityID).getComponent<cro::ParticleEmitter>().start();
             }
 
+            if(m_npcCount > 0) m_npcCount--;
             break;
         case NpcEvent::FiredWeapon:
             //if a weaver fired reset all the other times to prevent more than one
@@ -212,6 +213,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
             {
                 getScene().getEntity(data.entityID).getComponent<cro::ParticleEmitter>().stop();
             }
+            if (m_npcCount > 0) m_npcCount--;
             break;
         }
     }
@@ -267,32 +269,40 @@ void NpcDirector::handleMessage(const cro::Message& msg)
 }
 
 void NpcDirector::process(cro::Time dt)
-{
-    if (!m_releaseActive) return;    
+{   
+    DPRINT("NPC Count", std::to_string(m_npcCount));
     
     //track how many enemies spawned / died
     //then switch to boss mode when needed
     if (m_totalReleaseCount > totalReleaseCount)
     {
         m_releaseActive = false;
-        m_roundCount++;
-        m_totalReleaseCount = 0;
 
-        //create boss mode message
-        //or end of round message if first round
-        if (m_roundCount == 1)
+        //wait until all NPCs died
+        if (m_npcCount == 0)
         {
-            //EOR
-            auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
-            msg->type = GameEvent::RoundEnd;
-        }
-        else
-        {
-            //Boss fight
-            auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
-            msg->type = GameEvent::BossStart;
+            m_roundCount++;
+            m_totalReleaseCount = 0;
+
+            //create boss mode message
+            //or end of round message if first round
+            if (m_roundCount == 1)
+            {
+                //EOR
+                auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
+                msg->type = GameEvent::RoundEnd;
+            }
+            else
+            {
+                //Boss fight
+                auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
+                msg->type = GameEvent::BossStart;
+            }
+            //temp - DELETE!
+            m_roundCount = 0;
         }
     }
+    if (!m_releaseActive) return;
 
     float dtSec = dt.asSeconds();
 
@@ -331,6 +341,7 @@ void NpcDirector::process(cro::Time dt)
         };
         sendCommand(cmd);
         m_totalReleaseCount++;
+        m_npcCount++;
     }
 
     m_choppaRespawn -= dtSec;
@@ -373,6 +384,8 @@ void NpcDirector::process(cro::Time dt)
                 msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
                 msg->entityID = entity.getIndex();
                 msg->value = status.health;
+
+                m_npcCount++;
             }
         };
         sendCommand(cmd);
@@ -402,6 +415,8 @@ void NpcDirector::process(cro::Time dt)
                 msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
                 msg->entityID = entity.getIndex();
                 msg->value = status.health;
+
+                m_npcCount++;
             }
         };
         sendCommand(cmd);
@@ -421,8 +436,10 @@ void NpcDirector::process(cro::Time dt)
         cmd.action = [this, yPos](cro::Entity entity, cro::Time) 
         {
             auto& status = entity.getComponent<Npc>();
-            if (!status.active)
+            //if (!status.active) //we want to reset all parts, regardless
             {
+                if (!status.active) m_npcCount++;
+
                 status.active = true;
                 status.weaver.yPos = yPos;
                 status.weaver.tableIndex = status.weaver.tableStartIndex;
