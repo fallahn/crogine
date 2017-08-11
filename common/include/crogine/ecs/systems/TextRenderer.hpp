@@ -115,6 +115,7 @@ namespace cro
         bool m_pendingSorting;
         void rebuildBatch();
         void updateVerts(Text&);
+        void updateScissor(Text&);
 
         void applyBlendMode(Material::BlendMode);
 

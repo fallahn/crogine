@@ -88,7 +88,23 @@ TextRenderer::~TextRenderer()
 //public
 void TextRenderer::handleMessage(const Message& msg)
 {
-
+    if (msg.id == Message::WindowMessage)
+    {
+        const auto& data = msg.getData<Message::WindowEvent>();
+        //if the window is resized mark the scissor area
+        //to be resized
+        if (data.event == SDL_WINDOWEVENT_RESIZED)
+        {
+            auto& entities = getEntities();
+            for (auto& e : entities)
+            {
+                if (e.getComponent<Text>().m_scissor == GL_TRUE)
+                {
+                    e.getComponent<Text>().m_dirtyFlags |= Text::ScissorArea;
+                }
+            }
+        }
+    }
 }
 
 void TextRenderer::process(Time dt)
@@ -107,6 +123,10 @@ void TextRenderer::process(Time dt)
             m_pendingRebuild = true;
             m_pendingSorting = true;
             break;
+        }
+        if (text.m_dirtyFlags & Text::ScissorArea)
+        {
+            updateScissor(text);
         }
         if (text.m_dirtyFlags & Text::Colours)
         {
@@ -505,6 +525,14 @@ void TextRenderer::updateVerts(Text& text)
         v.colour = { text.m_colour.getRed(), text.m_colour.getGreen(), text.m_colour.getBlue(), text.m_colour.getAlpha() };
     }
     text.m_dirtyFlags = 0;
+}
+
+void TextRenderer::updateScissor(Text& text)
+{
+
+
+    text.m_scissor = GL_TRUE;
+    text.m_dirtyFlags &= ~Text::ScissorArea;
 }
 
 void TextRenderer::applyBlendMode(Material::BlendMode mode)

@@ -38,3 +38,5 @@ const cro::uint32 TextMedium = 42;
 const cro::uint32 TextSmall = 32;
 
 const cro::Colour stateBackgroundColour(0.f, 0.f, 0.f, 0.6f);
+
+const std::string highscoreFile("high.scores");
