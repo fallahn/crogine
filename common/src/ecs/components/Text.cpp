@@ -37,6 +37,7 @@ Text::Text()
     m_charSize      (0),
     m_blendMode     (Material::BlendMode::Alpha),
     m_dirtyFlags    (Flags::Verts),
+    m_scissor       (0),
     m_vboOffset     (0)
 {
 
@@ -47,6 +48,7 @@ Text::Text(const Font& font)
     m_charSize      (30),
     m_blendMode     (Material::BlendMode::Alpha),
     m_dirtyFlags    (Flags::Verts),
+    m_scissor       (0),
     m_vboOffset     (0)
 {
 
@@ -98,19 +100,43 @@ const FloatRect& Text::getLocalBounds() const
     return m_localBounds;
 }
 
+void Text::setCroppingArea(FloatRect area)
+{
+    m_croppingArea = area;
+    m_dirtyFlags |= Flags::ScissorArea;
+}
+
 //private
 void Text::updateLocalBounds() const
 {
     m_localBounds.width = 0.f;
     m_localBounds.height = 0.f;
 
+    float currWidth = 0.f;
+    float currHeight = 0.f;
+
     for (auto c : m_string)
     {
-        auto glyph = m_font->getGlyph(c, m_charSize);
-        m_localBounds.width += glyph.width;
-        if (m_localBounds.height < glyph.height)
+        if (c == '\n' || c == '\r')
         {
-            m_localBounds.height = glyph.height;
+            if (currWidth > m_localBounds.width)
+            {
+                m_localBounds.width = currWidth;
+            }
+            currWidth = 0.f;
+
+            m_localBounds.height += currHeight;
+            currHeight = 0.f;
         }
+        else
+        {
+            auto glyph = m_font->getGlyph(c, m_charSize);
+            currWidth += glyph.width;
+            if (currHeight < glyph.height)
+            {
+                currHeight = glyph.height;
+            }
+        }
+
     }
 }

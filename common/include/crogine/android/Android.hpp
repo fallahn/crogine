@@ -44,6 +44,15 @@ namespace std
 		os << value;
 		return os.str();
 	}
+
+    //merely for base compatibility - does not contain the size nor base params...
+    int stoi(const std::String& str)
+    {
+        int retVal;
+        std::istringstream is(str);
+        if (is >> retVal) return retVal;
+        return 0;
+    }
 }
 
 //no iostreams for apk so override fopen

@@ -50,18 +50,23 @@ source distribution.
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/ConfigFile.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
+#include <crogine/util/Random.hpp>
     
-//TODO not duplicate these
+#include <crogine/android/Android.hpp>
+
 namespace
 {
 #include "MenuConsts.inl"
 }
 
+using Score = std::pair<std::string, std::string>;
+
 void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback)
 {
     auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
-    
+
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/sprites/ui_menu.spt", m_sharedResources.textures);
 
@@ -135,4 +140,66 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     backControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
     backControl.area.width = buttonNormalArea.width;
     backControl.area.height = buttonNormalArea.height;
+
+
+    //load scores if we can, fill with fake if not yet created
+    //yes these are plain text but you're daft to rig your own high scores
+    cro::ConfigFile scores;
+    if (!scores.loadFromFile(cro::App::getPreferencePath() + highscoreFile))
+    {
+        std::array<std::string, 10u> names =
+        {
+            "Jo", "Rick", "Sam", "Dmitri", "Lela",
+            "Jeff", "Karen", "Marcus", "Chloe", "Cole"
+        };
+        for (auto i = 0u; i < 10u; ++i)
+        {
+            scores.addProperty(names[i], std::to_string(cro::Util::Random::value(10000, 500000)));
+        }
+        if (!scores.save(cro::App::getPreferencePath() + highscoreFile))
+        {
+            cro::Logger::log("Failed saving default score file", cro::Logger::Type::Warning);
+        }
+    }
+
+    std::vector<Score> scoreList;
+    const auto& scoreValues = scores.getProperties();
+    for (const auto& s : scoreValues)
+    {
+        scoreList.push_back(std::make_pair(s.getName(), s.getValue<std::string>()));
+    }
+    std::sort(std::begin(scoreList), std::end(scoreList), [](const Score& scoreA, const Score& scoreB)
+    {
+        try
+        {
+            //int conversion may fail :(
+            return(std::stoi(scoreA.second) > std::stoi(scoreB.second));
+        }
+        catch (...)
+        {
+            return false;
+        }
+    });
+
+    std::string scoreString;
+    for (auto i = 0u; i < scoreList.size(); ++i)
+    {
+        scoreString += std::to_string(i + 1) + " " + scoreList[i].first + " " + scoreList[i].second + "\n";
+    }
+
+    entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Transform>().setParent(controlEntity);
+    entity.addComponent<cro::Text>(menuFont).setString(scoreString);
+    entity.getComponent<cro::Text>().setCharSize(TextLarge);
+    entity.getComponent<cro::Text>().setColour(textColourSelected);
+
+    size = backgroundEnt.getComponent<cro::Sprite>().getSize();
+    auto pos = controlEntity.getComponent<cro::Transform>().getWorldPosition() - backgroundEnt.getComponent<cro::Transform>().getOrigin();
+    cro::FloatRect croppingArea(pos.x, pos.y, size.x, size.y);
+    entity.getComponent<cro::Text>().setCroppingArea(croppingArea);
+
+    auto bounds = entity.getComponent<cro::Text>().getLocalBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
+
+    //TODO if shared resources contains a player name/score, scroll to it
 }

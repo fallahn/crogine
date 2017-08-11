@@ -47,6 +47,7 @@ source distribution.
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/core/ConfigFile.hpp>
 
 #include <SDL_keyboard.h>
 
@@ -276,8 +277,14 @@ void GameOverState::load()
         if ((flags & cro::UISystem::LeftMouse)
             /*|| flags & cro::UISystem::Finger*/)
         {
-            //TODO insert name / score into high score list
-            
+            //insert name / score into high score list           
+            cro::ConfigFile scores;
+            if (scores.loadFromFile(cro::App::getPreferencePath() + highscoreFile))
+            {
+                scores.addProperty(m_sharedResources.playerName, std::to_string(m_sharedResources.score));
+                scores.save(cro::App::getPreferencePath() + highscoreFile);
+            }
+
             SDL_StopTextInput();
             requestStackClear();
             requestStackPush(States::MainMenu);
