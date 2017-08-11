@@ -137,6 +137,11 @@ void Text::updateLocalBounds() const
                 currHeight = glyph.height;
             }
         }
-
     }
+
+    if (currWidth > m_localBounds.width)
+    {
+        m_localBounds.width = currWidth;
+    }
+    m_localBounds.height += currHeight;
 }

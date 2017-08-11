@@ -56,6 +56,8 @@ source distribution.
     
 #include <crogine/android/Android.hpp>
 
+#include <string>
+
 namespace
 {
 #include "MenuConsts.inl"

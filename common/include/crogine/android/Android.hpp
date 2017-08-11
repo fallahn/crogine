@@ -46,7 +46,7 @@ namespace std
 	}
 
     //merely for base compatibility - does not contain the size nor base params...
-    int stoi(const std::String& str)
+    static inline int stoi(const std::string& str)
     {
         int retVal;
         std::istringstream is(str);

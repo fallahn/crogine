@@ -273,6 +273,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PreprocessorDefinitions>_DEBUG_</PreprocessorDefinitions>
+      <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;SDL2;Bullet;crodroid</LibraryDependencies>
@@ -299,6 +300,7 @@
       <AdditionalIncludeDirectories>..\BulletDroid\src;..\common\include;..\testwin\src;..\SDL2-android\include;$(Sysroot)\usr\include;$(StlIncludeDirectories)%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <LibraryDependencies>$(StlLibraryName);%(LibraryDependencies);m;SDL2;Bullet;crodroid</LibraryDependencies>

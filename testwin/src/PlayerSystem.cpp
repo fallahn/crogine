@@ -57,7 +57,7 @@ namespace
 
     const cro::int32 maxLives = 5;
 
-    const cro::int32 bonusScore = 100000;
+    const cro::int32 bonusScore = 250000;
 }
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
