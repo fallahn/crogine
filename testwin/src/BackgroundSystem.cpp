@@ -103,7 +103,7 @@ void BackgroundSystem::handleMessage(const cro::Message& msg)
             setMode(Mode::Shake);
             break;
         case GameEvent::RoundEnd:
-            setColourAngle(-50.f);
+            //setColourAngle(-50.f);
         case GameEvent::GameOver:
             setMode(Mode::Scroll);
             setScrollSpeed(0.001f);
@@ -146,6 +146,10 @@ void BackgroundSystem::process(cro::Time dt)
     }
 }
 
+void BackgroundSystem::setColourAngle(float angle)
+{
+    m_colourAngle = angle;
+}
 
 //private
 void BackgroundSystem::setScrollSpeed(float speed)
@@ -155,11 +159,6 @@ void BackgroundSystem::setScrollSpeed(float speed)
     auto* msg = postMessage<BackgroundEvent>(MessageID::BackgroundSystem);
     msg->type = BackgroundEvent::SpeedChange;
     msg->value = m_speed;
-}
-
-void BackgroundSystem::setColourAngle(float angle)
-{
-    m_colourAngle = angle;
 }
 
 void BackgroundSystem::setMode(Mode mode)

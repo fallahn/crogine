@@ -47,6 +47,7 @@ private:
     std::size_t m_totalReleaseCount;
     bool m_releaseActive;
     cro::int32 m_roundCount;
+    float m_roundDelay;
 
     std::size_t m_npcCount;
 

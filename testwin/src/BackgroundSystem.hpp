@@ -54,6 +54,8 @@ public:
     void handleMessage(const cro::Message&) override;
     void process(cro::Time) override;
 
+    void setColourAngle(float);
+
 private:
     glm::vec2 m_offset;
     float m_speed;
@@ -64,8 +66,6 @@ private:
     float m_currentColourAngle;
 
     void setScrollSpeed(float);
-    void setColourAngle(float);
-
     void setMode(Mode);
 };
 
