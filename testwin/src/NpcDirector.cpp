@@ -31,6 +31,7 @@ source distribution.
 #include "Messages.hpp"
 #include "ResourceIDs.hpp"
 #include "NPCSystem.hpp"
+#include "BackgroundSystem.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -60,6 +61,7 @@ namespace
     const float turretOrbTime = 0.5f;
 
     std::size_t totalReleaseCount = 20;
+    const float roundPauseTime = 3.f; //number of seconds after last NPC to wait before calling round change
 }
 
 NpcDirector::NpcDirector()
@@ -71,6 +73,7 @@ NpcDirector::NpcDirector()
     m_totalReleaseCount (0),
     m_releaseActive     (true),
     m_roundCount        (0),
+    m_roundDelay        (roundPauseTime),
     m_npcCount          (0) //this counts individual parts for multipart NPCs
 {
     m_eliteRespawn *= cro::Util::Random::value(0.1f, 1.f);
@@ -282,22 +285,29 @@ void NpcDirector::process(cro::Time dt)
         //wait until all NPCs died
         if (m_npcCount == 0)
         {
-            m_roundCount++;
-            m_totalReleaseCount = 0;
+            m_roundDelay -= dt.asSeconds();
+            getScene().getSystem<BackgroundSystem>().setColourAngle(-50.f);
 
-            //create boss mode message
-            //or end of round message if first round
-            if (m_roundCount == 1)
+            if (m_roundDelay < 0)
             {
-                //EOR
-                auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
-                msg->type = GameEvent::RoundEnd;
-            }
-            else
-            {
-                //Boss fight
-                auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
-                msg->type = GameEvent::BossStart;
+                m_roundCount++;
+                m_totalReleaseCount = 0;
+                m_roundDelay = roundPauseTime;
+
+                //create boss mode message
+                //or end of round message if first round
+                if (m_roundCount == 1)
+                {
+                    //EOR
+                    auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
+                    msg->type = GameEvent::RoundEnd;
+                }
+                else
+                {
+                    //Boss fight
+                    auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
+                    msg->type = GameEvent::BossStart;
+                }
             }
             //temp - DELETE!
             //m_roundCount = 0;
