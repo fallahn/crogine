@@ -88,23 +88,7 @@ TextRenderer::~TextRenderer()
 //public
 void TextRenderer::handleMessage(const Message& msg)
 {
-    if (msg.id == Message::WindowMessage)
-    {
-        const auto& data = msg.getData<Message::WindowEvent>();
-        //if the window is resized mark the scissor area
-        //to be resized
-        if (data.event == SDL_WINDOWEVENT_RESIZED)
-        {
-            auto& entities = getEntities();
-            for (auto& e : entities)
-            {
-                if (e.getComponent<Text>().m_scissor == GL_TRUE)
-                {
-                    e.getComponent<Text>().m_dirtyFlags |= Text::ScissorArea;
-                }
-            }
-        }
-    }
+
 }
 
 void TextRenderer::process(Time dt)
@@ -118,16 +102,13 @@ void TextRenderer::process(Time dt)
     for (auto i = 0u; i < entities.size(); ++i)
     {
         auto& text = entities[i].getComponent<Text>();
-        if (text.m_dirtyFlags & (Text::Verts | Text::CharSize | Text::BlendMode))
+        if (text.m_dirtyFlags & (Text::Verts | Text::CharSize | Text::BlendMode | Text::Scissor))
         {
             m_pendingRebuild = true;
             m_pendingSorting = true;
             break;
         }
-        if (text.m_dirtyFlags & Text::ScissorArea)
-        {
-            updateScissor(text);
-        }
+
         if (text.m_dirtyFlags & Text::Colours)
         {
             //vert attribs changed so update sub buffer data
@@ -169,16 +150,13 @@ void TextRenderer::process(Time dt)
         }
 
         auto tx = entities[i].getComponent<Transform>();
-        ////if depth sorted set Z to -Y
-        //if (m_depthAxis == DepthAxis::Y)
-        //{
-        //    auto pos = tx.getPosition();
-        //    pos.z = -(pos.y / 100.f); //reduce this else we surpass clip plane
-        //    tx.setPosition(pos);
-        //}
+
         //get current transforms
         std::size_t buffIdx = (i > MaxTexts) ? i % MaxTexts : 0;
-        m_bufferTransforms[buffIdx][i - (buffIdx * MaxTexts)] = tx.getWorldTransform();
+        std::size_t batchIdx = i - (buffIdx * MaxTexts);
+        auto worldTx = tx.getWorldTransform();
+        m_bufferTransforms[buffIdx][batchIdx] = worldTx;
+        //m_buffers[buffIdx].second[batchIdx].worldScissor = text.m_croppingArea.transform(worldTx);
     }
 
     if (m_pendingSorting)
@@ -210,14 +188,15 @@ void TextRenderer::process(Time dt)
 void TextRenderer::render(Entity camera)
 {
     const auto& camComponent = camera.getComponent<Camera>();
-    applyViewport(camComponent.viewport);
+    m_currentViewport = applyViewport(camComponent.viewport);
 
     const auto& camTx = camera.getComponent<Transform>();
     auto viewMat = glm::inverse(camTx.getWorldTransform());
+    auto viewProjMat = camComponent.projection * viewMat;
 
     //bind shader and attrib arrays - TODO do this for both shader types
     glCheck(glUseProgram(m_shaders[Font::Bitmap].shader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].projectionUniformIndex, 1, GL_FALSE, glm::value_ptr(camComponent.projection * viewMat)));
+    glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].projectionUniformIndex, 1, GL_FALSE, &viewProjMat[0][0]));
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glUniform1i(m_shaders[Font::Bitmap].textureUniformIndex, 0));
 
@@ -242,8 +221,15 @@ void TextRenderer::render(Entity camera)
         {
             //CRO_ASSERT(batchData.texture > -1, "Missing sprite texture!");
             applyBlendMode(batchData.blendMode);
+
+            /*if (batchData.scissor)
+            {
+                applyScissor(batchData.worldScissor, viewProjMat);
+            }*/
+
             glCheck(glBindTexture(GL_TEXTURE_2D, batchData.texture));
             glCheck(glDrawArrays(GL_TRIANGLE_STRIP, batchData.start, batchData.count));
+            //glCheck(glDisable(GL_SCISSOR_TEST));
         }
 
         //unbind attrib pointers
@@ -342,11 +328,14 @@ void TextRenderer::rebuildBatch()
     for (auto& batch : m_buffers)
     {
         auto& currText = entities[batchIdx].getComponent<Text>();
+        if (currText.m_scissor) std::cout << "batched with scissor" << std::endl;
         
         Batch batchData;
         batchData.start = start;
         batchData.texture = currText.m_font->getTexture(currText.getCharSize()).getGLHandle();
         batchData.blendMode = currText.m_blendMode;
+        //batchData.scissor = currText.m_scissor;
+        //scissor area is updated during processing
         int32 spritesThisBatch = 0;
         batch.second.clear();
 
@@ -366,6 +355,9 @@ void TextRenderer::rebuildBatch()
                 batchData.start = start;
                 batchData.texture = texID;
                 batchData.blendMode = text.m_blendMode;
+                //batchData.scissor = text.m_scissor;
+
+                if (text.m_scissor) std::cout << "batched with scissor" << std::endl;
 
                 spritesThisBatch = 0;
             }
@@ -527,14 +519,6 @@ void TextRenderer::updateVerts(Text& text)
     text.m_dirtyFlags = 0;
 }
 
-void TextRenderer::updateScissor(Text& text)
-{
-
-
-    text.m_scissor = GL_TRUE;
-    text.m_dirtyFlags &= ~Text::ScissorArea;
-}
-
 void TextRenderer::applyBlendMode(Material::BlendMode mode)
 {
     switch (mode)
@@ -572,10 +556,33 @@ void TextRenderer::applyBlendMode(Material::BlendMode mode)
     }
 }
 
+void TextRenderer::applyScissor(const FloatRect& localBox, const glm::mat4& viewProj)
+{
+    glm::vec4 pos = viewProj * glm::vec4(localBox.left, localBox.bottom, 0.f, 1.f);
+    pos.x /= pos.w;
+    pos.y /= pos.w;
+    //pos.z /= pos.w;
+
+    GLint x = ((pos.x + 1.f) / 2.f) * m_currentViewport.left;
+    GLint y = ((pos.y + 1.f) / 2.f) * m_currentViewport.bottom;
+
+    glm::vec4 size = viewProj * glm::vec4(localBox.width, localBox.height, 0.f, 1.f);
+    size.x /= size.w;
+    size.y /= size.w;
+
+    GLint w = ((size.x + 1.f) / 2.f) * m_currentViewport.width;
+    GLint h = ((size.y + 1.f) / 2.f) * m_currentViewport.height;
+
+    glCheck(glScissor(x, y, w, h));
+    glCheck(glEnable(GL_SCISSOR_TEST));
+}
+
 void TextRenderer::onEntityAdded(Entity entity)
 {
     CRO_ASSERT(entity.getComponent<Text>().m_font, "Text must be constructed with a font");
     
+    if (entity.getComponent<Text>().m_scissor) std::cout << "added with scissor" << std::endl;
+
     m_pendingRebuild = true;
     m_pendingSorting = true;
 }

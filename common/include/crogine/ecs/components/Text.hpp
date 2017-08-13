@@ -94,7 +94,7 @@ namespace cro
         /*!
         \brief Sets the cropping area for this instance.
         For example text may need to be cropped when used within
-        a text box. The given area should be in world coords.
+        a text box. The given area should be in local coords.
         */
         void setCroppingArea(FloatRect area);
 
@@ -106,13 +106,12 @@ namespace cro
         Material::BlendMode m_blendMode;
         uint8 m_dirtyFlags;
 
-        int32 m_scissor; //for easy conversion to GL_BOOL
+        bool m_scissor;
         FloatRect m_croppingArea;
-        IntRect m_scissorArea;
 
         enum Flags
         {
-            Verts = 0x1, Colours = 0x2, CharSize = 0x4, BlendMode = 0x8, ScissorArea = 0x10
+            Verts = 0x1, Colours = 0x2, CharSize = 0x4, BlendMode = 0x8, Scissor = 0x10
         };
 
         struct Vertex final

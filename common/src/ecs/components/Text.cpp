@@ -37,7 +37,7 @@ Text::Text()
     m_charSize      (0),
     m_blendMode     (Material::BlendMode::Alpha),
     m_dirtyFlags    (Flags::Verts),
-    m_scissor       (0),
+    m_scissor       (false),
     m_vboOffset     (0)
 {
 
@@ -48,7 +48,7 @@ Text::Text(const Font& font)
     m_charSize      (30),
     m_blendMode     (Material::BlendMode::Alpha),
     m_dirtyFlags    (Flags::Verts),
-    m_scissor       (0),
+    m_scissor       (false),
     m_vboOffset     (0)
 {
 
@@ -103,7 +103,8 @@ const FloatRect& Text::getLocalBounds() const
 void Text::setCroppingArea(FloatRect area)
 {
     m_croppingArea = area;
-    m_dirtyFlags |= Flags::ScissorArea;
+    m_scissor = true;
+    m_dirtyFlags |= Flags::Scissor;
 }
 
 //private
