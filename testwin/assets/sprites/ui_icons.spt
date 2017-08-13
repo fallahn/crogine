@@ -32,8 +32,13 @@ spritesheet icons
 		bounds = 256,128,128,128
 	}
 
-	sprite continue
+	sprite music
 	{
 		bounds = 128,128,128,128
+	}
+
+	sprite effects
+	{
+		bounds = 384,128,128,128
 	}
 }

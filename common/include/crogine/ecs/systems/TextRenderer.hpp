@@ -83,10 +83,13 @@ namespace cro
             uint32 start = 0; //first vert of this batch in the VBO
             uint32 count = 0; //number of verts in the batch
             Material::BlendMode blendMode = Material::BlendMode::Alpha;
+            //bool scissor = false;
+            //FloatRect worldScissor;
         };
         //maps VBO id to a batch
         std::vector<std::pair<uint32, std::vector<Batch>>> m_buffers;
         std::vector<std::vector<glm::mat4>> m_bufferTransforms;
+
 
         enum AttribLocation
         {
@@ -115,9 +118,11 @@ namespace cro
         bool m_pendingSorting;
         void rebuildBatch();
         void updateVerts(Text&);
-        void updateScissor(Text&);
 
         void applyBlendMode(Material::BlendMode);
+        void applyScissor(const FloatRect&, const glm::mat4&);
+
+        IntRect m_currentViewport;
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
