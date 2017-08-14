@@ -197,7 +197,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
 
     size = backgroundEnt.getComponent<cro::Sprite>().getSize();
     //auto pos = controlEntity.getComponent<cro::Transform>().getWorldPosition() - backgroundEnt.getComponent<cro::Transform>().getOrigin();
-    cro::FloatRect croppingArea(0.f, 0.f, size.x, size.y);
+    cro::FloatRect croppingArea(0.f, 24.f, size.x, size.y);
     entity.getComponent<cro::Text>().setCroppingArea(croppingArea);
 
     auto bounds = entity.getComponent<cro::Text>().getLocalBounds();

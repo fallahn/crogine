@@ -104,7 +104,6 @@ void Text::setCroppingArea(FloatRect area)
 {
     m_croppingArea = area;
     m_scissor = true;
-    m_dirtyFlags |= Flags::Scissor;
 }
 
 //private
