@@ -350,7 +350,7 @@ void TextRenderer::rebuildBatch()
             //new batches are created within the VBO for each new text, blend mode or scissor mode
             if (texID != batchData.texture
                 || text.m_blendMode != batchData.blendMode
-                || text.m_scissor/* != batchData.scissor*/) //every scissor usually has its own batch, as the cropping area will be different
+                || text.m_scissor != batchData.scissor) //TODO every scissor usually has its own batch, as the cropping area will be different
             {
                 //end the batch and start a new one for this buffer
                 batchData.count = start - batchData.start;
