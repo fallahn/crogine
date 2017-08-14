@@ -224,7 +224,7 @@ bool WavLoader::seek(cro::Time offset)
     if (dest < m_dataSize)
     {
         auto result = m_file.file->seek(m_file.file, m_dataStart + dest, RW_SEEK_SET);
-        return result = (m_dataStart + dest);
+        return (result == (m_dataStart + dest));
     }
     return false;
 } 
