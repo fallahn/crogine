@@ -195,13 +195,13 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.getComponent<cro::Text>().setCharSize(TextLarge);
     entity.getComponent<cro::Text>().setColour(textColourSelected);
 
-    size = backgroundEnt.getComponent<cro::Sprite>().getSize();
-    //auto pos = controlEntity.getComponent<cro::Transform>().getWorldPosition() - backgroundEnt.getComponent<cro::Transform>().getOrigin();
-    cro::FloatRect croppingArea(0.f, 24.f, size.x, size.y);
-    entity.getComponent<cro::Text>().setCroppingArea(croppingArea);
-
     auto bounds = entity.getComponent<cro::Text>().getLocalBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
+
+    size = backgroundEnt.getComponent<cro::Sprite>().getSize();
+    cro::FloatRect croppingArea(0.f, backgroundEnt.getComponent<cro::Transform>().getPosition().y, size.x, -size.y + 36.f); //remember text origin is at top
+    entity.getComponent<cro::Text>().setCroppingArea(croppingArea);
+
 
     //TODO if shared resources contains a player name/score, scroll to it
 }

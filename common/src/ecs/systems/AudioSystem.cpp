@@ -59,8 +59,7 @@ void AudioSystem::process(cro::Time dt)
     AudioRenderer::setListenerPosition(worldPos);
     const auto& worldTx = tx.getWorldTransform();
     AudioRenderer::setListenerOrientation(Util::Matrix::getForwardVector(worldTx), Util::Matrix::getUpVector(worldTx));
-    //AudioRenderer::setListenerOrientation({ 0.f ,0.f, -1.f }, { 0.f, 1.f, 0.f });
-    DPRINT("Listener Position", std::to_string(worldPos.x) + ", " + std::to_string(worldPos.y) + ", " + std::to_string(worldPos.z));
+    //DPRINT("Listener Position", std::to_string(worldPos.x) + ", " + std::to_string(worldPos.y) + ", " + std::to_string(worldPos.z));
 
     //for each entity
     auto& entities = getEntities();
@@ -94,7 +93,7 @@ void AudioSystem::process(cro::Time dt)
         audioSource.m_transportFlags = 0;
         //set current state
         audioSource.m_state = static_cast<AudioSource::State>(AudioRenderer::getSourceState(audioSource.m_ID));
-        DPRINT("Audio State", (audioSource.m_state == AudioSource::State::Playing) ? "Playing" : "Stopped");
+        //DPRINT("Audio State", (audioSource.m_state == AudioSource::State::Playing) ? "Playing" : "Stopped");
 
         //check its position and update
         if (entity.hasComponent<Transform>())

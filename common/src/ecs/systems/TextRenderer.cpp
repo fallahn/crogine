@@ -569,17 +569,16 @@ void TextRenderer::applyScissor(const FloatRect& worldBox, const glm::mat4& view
     pos.y /= pos.w;
     //pos.z /= pos.w;
 
-    GLint x = ((pos.x + 1.f) / 2.f) *  m_currentViewport.width;
-    GLint y = ((pos.y + 1.f) / 2.f) *  m_currentViewport.height;
-    y -= m_currentViewport.bottom;
+    GLint x = ((pos.x + 1.f) / 2.f) *  m_currentViewport.width + m_currentViewport.left;
+    GLint y = (((pos.y + 1.f) / 2.f) *  m_currentViewport.height) + m_currentViewport.bottom;
 
     glm::vec4 size = viewProj * glm::vec4(worldBox.width + worldBox.left, worldBox.height + worldBox.bottom, 0.f, 1.f);
     size.x /= size.w;
     size.y /= size.w;
 
-    GLint w = ((size.x + 1.f) / 2.f) * m_currentViewport.width;
+    GLint w = ((size.x + 1.f) / 2.f) * m_currentViewport.width + m_currentViewport.left;
     w -= x;
-    GLint h = ((size.y + 1.f) / 2.f) * m_currentViewport.height;
+    GLint h = (((size.y + 1.f) / 2.f) * m_currentViewport.height) + m_currentViewport.bottom;
     h -= y;
 
     //DPRINT("Scissor Pre", std::to_string(worldBox.left) + ", " + std::to_string(worldBox.bottom) + ", " + std::to_string(worldBox.width) + ", " + std::to_string(worldBox.height));
