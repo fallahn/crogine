@@ -202,6 +202,8 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     cro::FloatRect croppingArea(0.f, backgroundEnt.getComponent<cro::Transform>().getPosition().y, size.x, -size.y + 36.f); //remember text origin is at top
     entity.getComponent<cro::Text>().setCroppingArea(croppingArea);
 
+    //TODO add a scrollbar
+    //TODO add click /drag
 
     //TODO if shared resources contains a player name/score, scroll to it
 }
