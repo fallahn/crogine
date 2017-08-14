@@ -111,7 +111,7 @@ namespace cro
 
         enum Flags
         {
-            Verts = 0x1, Colours = 0x2, CharSize = 0x4, BlendMode = 0x8, Scissor = 0x10
+            Verts = 0x1, Colours = 0x2, CharSize = 0x4, BlendMode = 0x8
         };
 
         struct Vertex final
@@ -122,6 +122,7 @@ namespace cro
         };
         std::vector<Vertex> m_vertices;
         int32 m_vboOffset; //starting index in parent VBO
+        std::array<std::size_t, 2u> m_batchIndex;
 
         mutable FloatRect m_localBounds;
         void updateLocalBounds() const;

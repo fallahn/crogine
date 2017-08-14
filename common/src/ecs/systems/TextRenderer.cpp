@@ -102,7 +102,7 @@ void TextRenderer::process(Time dt)
     for (auto i = 0u; i < entities.size(); ++i)
     {
         auto& text = entities[i].getComponent<Text>();
-        if (text.m_dirtyFlags & (Text::Verts | Text::CharSize | Text::BlendMode | Text::Scissor))
+        if (text.m_dirtyFlags & (Text::Verts | Text::CharSize | Text::BlendMode))
         {
             m_pendingRebuild = true;
             m_pendingSorting = true;
@@ -156,7 +156,7 @@ void TextRenderer::process(Time dt)
         std::size_t batchIdx = i - (buffIdx * MaxTexts);
         auto worldTx = tx.getWorldTransform();
         m_bufferTransforms[buffIdx][batchIdx] = worldTx;
-        //m_buffers[buffIdx].second[batchIdx].worldScissor = text.m_croppingArea.transform(worldTx);
+        m_buffers[text.m_batchIndex[0]].second[text.m_batchIndex[1]].worldScissor = text.m_croppingArea.transform(worldTx);
     }
 
     if (m_pendingSorting)
@@ -222,14 +222,14 @@ void TextRenderer::render(Entity camera)
             //CRO_ASSERT(batchData.texture > -1, "Missing sprite texture!");
             applyBlendMode(batchData.blendMode);
 
-            /*if (batchData.scissor)
+            if (batchData.scissor)
             {
                 applyScissor(batchData.worldScissor, viewProjMat);
-            }*/
+            }
 
             glCheck(glBindTexture(GL_TEXTURE_2D, batchData.texture));
             glCheck(glDrawArrays(GL_TRIANGLE_STRIP, batchData.start, batchData.count));
-            //glCheck(glDisable(GL_SCISSOR_TEST));
+            glCheck(glDisable(GL_SCISSOR_TEST));
         }
 
         //unbind attrib pointers
@@ -328,14 +328,16 @@ void TextRenderer::rebuildBatch()
     for (auto& batch : m_buffers)
     {
         auto& currText = entities[batchIdx].getComponent<Text>();
-        if (currText.m_scissor) std::cout << "batched with scissor" << std::endl;
         
         Batch batchData;
         batchData.start = start;
         batchData.texture = currText.m_font->getTexture(currText.getCharSize()).getGLHandle();
         batchData.blendMode = currText.m_blendMode;
-        //batchData.scissor = currText.m_scissor;
-        //scissor area is updated during processing
+        batchData.scissor = currText.m_scissor;
+        //scissor area is updated during processing, so we store the batch ID in the text component
+        currText.m_batchIndex[0] = batchIdx;
+        currText.m_batchIndex[1] = batch.second.size();
+
         int32 spritesThisBatch = 0;
         batch.second.clear();
 
@@ -345,8 +347,10 @@ void TextRenderer::rebuildBatch()
         {
             auto& text = entities[i + batchIdx].getComponent<Text>();
             auto texID = text.m_font->getTexture(text.m_charSize).getGLHandle();
+            //new batches are created within the VBO for each new text, blend mode or scissor mode
             if (texID != batchData.texture
-                || text.m_blendMode != batchData.blendMode)
+                || text.m_blendMode != batchData.blendMode
+                || text.m_scissor != batchData.scissor)
             {
                 //end the batch and start a new one for this buffer
                 batchData.count = start - batchData.start;
@@ -355,13 +359,15 @@ void TextRenderer::rebuildBatch()
                 batchData.start = start;
                 batchData.texture = texID;
                 batchData.blendMode = text.m_blendMode;
-                //batchData.scissor = text.m_scissor;
-
-                if (text.m_scissor) std::cout << "batched with scissor" << std::endl;
+                batchData.scissor = text.m_scissor;
+                batchData.worldScissor = text.m_croppingArea;
 
                 spritesThisBatch = 0;
             }
             updateVerts(text);
+
+            text.m_batchIndex[0] = batchIdx;
+            text.m_batchIndex[1] = batch.second.size();
 
             //copies vertex data at a given index
             auto copyVertex = [&](uint32 idx)
@@ -556,33 +562,38 @@ void TextRenderer::applyBlendMode(Material::BlendMode mode)
     }
 }
 
-void TextRenderer::applyScissor(const FloatRect& localBox, const glm::mat4& viewProj)
+void TextRenderer::applyScissor(const FloatRect& worldBox, const glm::mat4& viewProj)
 {
-    glm::vec4 pos = viewProj * glm::vec4(localBox.left, localBox.bottom, 0.f, 1.f);
+    glm::vec4 pos = viewProj * glm::vec4(worldBox.left, worldBox.bottom, 0.f, 1.f);
     pos.x /= pos.w;
     pos.y /= pos.w;
     //pos.z /= pos.w;
 
-    GLint x = ((pos.x + 1.f) / 2.f) * m_currentViewport.left;
-    GLint y = ((pos.y + 1.f) / 2.f) * m_currentViewport.bottom;
+    GLint x = ((pos.x + 1.f) / 2.f) *  m_currentViewport.width;
+    GLint y = ((pos.y + 1.f) / 2.f) *  m_currentViewport.height;
+    y -= m_currentViewport.bottom;
 
-    glm::vec4 size = viewProj * glm::vec4(localBox.width, localBox.height, 0.f, 1.f);
+    glm::vec4 size = viewProj * glm::vec4(worldBox.width + worldBox.left, worldBox.height + worldBox.bottom, 0.f, 1.f);
     size.x /= size.w;
     size.y /= size.w;
 
     GLint w = ((size.x + 1.f) / 2.f) * m_currentViewport.width;
+    w -= x;
     GLint h = ((size.y + 1.f) / 2.f) * m_currentViewport.height;
+    h -= y;
+
+    //DPRINT("Scissor Pre", std::to_string(worldBox.left) + ", " + std::to_string(worldBox.bottom) + ", " + std::to_string(worldBox.width) + ", " + std::to_string(worldBox.height));
+    //DPRINT("Scissor Post", std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(w) + ", " + std::to_string(h));
 
     glCheck(glScissor(x, y, w, h));
     glCheck(glEnable(GL_SCISSOR_TEST));
+    //LOG("Scissor Applied", Logger::Type::Info);
 }
 
 void TextRenderer::onEntityAdded(Entity entity)
 {
     CRO_ASSERT(entity.getComponent<Text>().m_font, "Text must be constructed with a font");
     
-    if (entity.getComponent<Text>().m_scissor) std::cout << "added with scissor" << std::endl;
-
     m_pendingRebuild = true;
     m_pendingSorting = true;
 }
