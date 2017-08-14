@@ -94,9 +94,17 @@ namespace cro
         /*!
         \brief Sets the cropping area for this instance.
         For example text may need to be cropped when used within
-        a text box. The given area should be in local coords.
+        a text box. The given area should be in local coords,
+        with the text origin at the top (because text lines run downwards).
+        This means that the either the height or the bottom parameter of
+        the rectangle should be negative.
         */
         void setCroppingArea(FloatRect area);
+
+        /*!
+        \brief Returns the current cropping area
+        */
+        const FloatRect& getCroppingArea() const { return m_croppingArea; }
 
     private:
         const Font* m_font;
