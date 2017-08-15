@@ -37,6 +37,7 @@ source distribution.
 
 #include <glm/vec2.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/norm.hpp>
 
 using namespace cro;
 
@@ -46,7 +47,8 @@ UISystem::UISystem(MessageBus& mb)
     requireComponent<UIInput>();
     requireComponent<Transform>();
 
-    m_callbacks.push_back([](Entity, uint64) {}); //default callback for components which don't have one assigned
+    m_buttonCallbacks.push_back([](Entity, uint64) {}); //default callback for components which don't have one assigned
+    m_movementCallbacks.push_back([](Entity, glm::vec2) {});
 
     m_windowSize = App::getWindow().getSize();
 }
@@ -57,10 +59,12 @@ void UISystem::handleEvent(const Event& evt)
     {
     default: break;
     case SDL_MOUSEMOTION:
-        m_eventPosition = toScreenCoords(evt.motion.x, evt.motion.y);
+        m_eventPosition = toWorldCoords(evt.motion.x, evt.motion.y);
+        m_movementDelta = m_eventPosition - m_prevMousePosition;
+        m_prevMousePosition = m_eventPosition;
         break;
     case SDL_MOUSEBUTTONDOWN:
-        m_eventPosition = toScreenCoords(evt.button.x, evt.button.y);
+        m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
         m_previousEventPosition = m_eventPosition;
         switch (evt.button.button)
         {
@@ -77,7 +81,7 @@ void UISystem::handleEvent(const Event& evt)
         }
         break;
     case SDL_MOUSEBUTTONUP:
-        m_eventPosition = toScreenCoords(evt.button.x, evt.button.y);
+        m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
         switch (evt.button.button)
         {
         default: break;
@@ -99,18 +103,18 @@ void UISystem::handleEvent(const Event& evt)
         */
 
     case SDL_FINGERMOTION:
-        m_eventPosition = toScreenCoords(evt.tfinger.x, evt.tfinger.y);
+        m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         //TODO check finger IDs for gestures etc
         break;
     case SDL_FINGERDOWN:
-        m_eventPosition = toScreenCoords(evt.tfinger.x, evt.tfinger.y);
+        m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         m_previousEventPosition = m_eventPosition;
         //TODO check finger IDs for gestures etc
         m_downEvents.push_back(Finger);
         //Logger::log("Touch pos: " + std::to_string(m_eventPosition.x) + ", " + std::to_string(m_eventPosition.y), Logger::Type::Info);
         break;
     case SDL_FINGERUP:
-        m_eventPosition = toScreenCoords(evt.tfinger.x, evt.tfinger.y);
+        m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         m_upEvents.push_back(Finger);
         break;
     }
@@ -133,15 +137,19 @@ void UISystem::process(Time dt)
             {
                 //mouse has entered
                 input.active = true;
-                m_callbacks[input.callbacks[UIInput::MouseEnter]](e, 0);
+                m_movementCallbacks[input.callbacks[UIInput::MouseEnter]](e, m_movementDelta);
             }
             for (auto f : m_downEvents)
             {
-                m_callbacks[input.callbacks[UIInput::MouseDown]](e, f);
+                m_buttonCallbacks[input.callbacks[UIInput::MouseDown]](e, f);
             }
             for (auto f : m_upEvents)
             {
-                m_callbacks[input.callbacks[UIInput::MouseUp]](e, f);
+                m_buttonCallbacks[input.callbacks[UIInput::MouseUp]](e, f);
+            }
+            if (glm::length2(m_movementDelta) > 0)
+            {
+                m_movementCallbacks[input.callbacks[UIInput::MouseMotion]](e, m_movementDelta);
             }
         }
         else
@@ -150,7 +158,7 @@ void UISystem::process(Time dt)
             {
                 //mouse left
                 input.active = false;
-                m_callbacks[input.callbacks[UIInput::MouseExit]](e, 0);
+                m_movementCallbacks[input.callbacks[UIInput::MouseExit]](e, m_movementDelta);
             }
         }
     }
@@ -160,6 +168,7 @@ void UISystem::process(Time dt)
     m_previousEventPosition = m_eventPosition;
     m_upEvents.clear();
     m_downEvents.clear();
+    m_movementDelta = {};
 }
 
 void UISystem::handleMessage(const Message& msg)
@@ -175,22 +184,28 @@ void UISystem::handleMessage(const Message& msg)
     }
 }
 
-uint32 UISystem::addCallback(const Callback& cb)
+uint32 UISystem::addCallback(const ButtonCallback& cb)
 {
-    m_callbacks.push_back(cb);
-    return static_cast<uint32>(m_callbacks.size() - 1);
+    m_buttonCallbacks.push_back(cb);
+    return static_cast<uint32>(m_buttonCallbacks.size() - 1);
+}
+
+uint32 UISystem::addCallback(const MovementCallback& cb)
+{
+    m_movementCallbacks.push_back(cb);
+    return static_cast<uint32>(m_movementCallbacks.size() - 1);
 }
 
 //private
-glm::vec2 UISystem::toScreenCoords(int32 x, int32 y)
+glm::vec2 UISystem::toWorldCoords(int32 x, int32 y)
 {
     auto vpX = static_cast<float>(x) / m_windowSize.x;
     auto vpY = static_cast<float>(y) / m_windowSize.y;
 
-    return toScreenCoords(vpX, vpY);
+    return toWorldCoords(vpX, vpY);
 }
 
-glm::vec2 UISystem::toScreenCoords(float x, float y)
+glm::vec2 UISystem::toWorldCoords(float x, float y)
 {
     //invert Y
     y = 1.f - y;

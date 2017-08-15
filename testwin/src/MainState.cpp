@@ -53,7 +53,8 @@ source distribution.
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
-#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
+//#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
@@ -195,6 +196,7 @@ void MainState::addSystems()
     //m_menuScene.addSystem<cro::DebugInfo>(mb);
     m_menuScene.addSystem<SliderSystem>(mb);
     //m_menuScene.addSystem<RotateSystem>(mb);
+    m_menuScene.addSystem<cro::CallbackSystem>(mb);
     m_menuScene.addSystem<cro::SceneGraph>(mb);
     m_menuScene.addSystem<cro::SpriteRenderer>(mb);
     m_menuScene.addSystem<cro::TextRenderer>(mb);
@@ -327,7 +329,7 @@ void MainState::createMenus()
     const auto buttonNormalArea = spriteSheetButtons.getSprite("button_inactive").getTextureRect();
     const auto buttonHighlightArea = spriteSheetButtons.getSprite("button_active").getTextureRect();
 
-    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, cro::uint64)
+    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
         const auto& children = e.getComponent<cro::Transform>().getChildIDs();
@@ -346,7 +348,7 @@ void MainState::createMenus()
             }
         }
     });
-    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, cro::uint64)
+    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
         const auto& children = e.getComponent<cro::Transform>().getChildIDs();

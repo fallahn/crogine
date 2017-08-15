@@ -157,7 +157,7 @@ void PauseState::load()
     const auto buttonNormalArea = spriteSheet.getSprite("button_inactive").getTextureRect();
     const auto buttonHighlightArea = spriteSheet.getSprite("button_active").getTextureRect();
 
-    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, cro::uint64)
+    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
         const auto& children = e.getComponent<cro::Transform>().getChildIDs();
@@ -176,7 +176,7 @@ void PauseState::load()
             }
         }
     });
-    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, cro::uint64)
+    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
         const auto& children = e.getComponent<cro::Transform>().getChildIDs();

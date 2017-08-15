@@ -78,6 +78,7 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\SpriteAnimation.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Text.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\Transform.hpp" />
+    <ClInclude Include="..\common\include\crogine\ecs\components\UIDraggable.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\components\UIInput.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Director.hpp" />
     <ClInclude Include="..\common\include\crogine\ecs\Entity.hpp" />

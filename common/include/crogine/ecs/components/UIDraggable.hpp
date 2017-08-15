@@ -27,38 +27,25 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_UI_INPUT_HPP_
-#define CRO_UI_INPUT_HPP_
+#ifndef CRO_UI_DRAGGABLE_HPP_
+#define CRO_UI_DRAGGABLE_HPP_
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
-#include <crogine/graphics/Rectangle.hpp>
 
-#include <array>
+#include <glm/vec2.hpp>
 
 namespace cro
 {
     /*!
-    \brief Used to trigger callbacks when events occur in the Input's area
+    \brief Data struct for making UI controls draggable.
+    This would be used for elements such as sliders or scrolling items.
     */
-    class CRO_EXPORT_API UIInput final
+    struct CRO_EXPORT_API UIDraggable final
     {
-    public:
-        enum CallbackID
-        {
-            MouseEnter = 1,
-            MouseExit,
-            MouseDown,
-            MouseUp,
-            MouseMotion,
-            Count
-        };
-
-        FloatRect area;
-        bool active;
-        std::array<uint32, CallbackID::Count> callbacks{};
-        int32 ID = -1;
+        uint64 flags = 0; //! <button flags - see UISystem
+        glm::vec2 velocity;
     };
 }
 
-#endif //CRO_UI_INPUT_HPP_
+#endif //CRO_UI_DRAGGABLE_HPP_
