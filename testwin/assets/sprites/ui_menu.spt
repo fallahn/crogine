@@ -32,4 +32,14 @@ sprite_sheet ui_menu
 	{
 		bounds = 0,1216,896,128
 	}
+
+	sprite arrow_inactive
+	{
+		bounds = 1152,64,64,64
+	}
+
+	sprite arrow_active
+	{
+		bounds = 1152,0,64,64
+	}
 }

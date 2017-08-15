@@ -56,6 +56,7 @@ source distribution.
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Constants.hpp>
     
 #include <crogine/android/Android.hpp>
 
@@ -66,6 +67,8 @@ source distribution.
 namespace
 {
 #include "MenuConsts.inl"
+
+    const float scrollSpeed = 6.f;
 }
 
 using Score = std::pair<std::string, std::string>;
@@ -119,11 +122,12 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     backTexTx.setParent(entity);
     backTexTx.move({ 40.f, 100.f, 0.f });
 
-    spriteSheet.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
+    cro::SpriteSheet iconSheet;
+    iconSheet.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
     auto iconEnt = m_menuScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
     iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
-    iconEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("back");
+    iconEnt.addComponent<cro::Sprite>() = iconSheet.getSprite("back");
 
     auto backCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
@@ -272,13 +276,104 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
         auto& tx = entity.getComponent<cro::Transform>();
 
         scroll(entity, drag.velocity.y * dt.asSeconds());
-        drag.velocity *= 0.999f;
+        drag.velocity *= 0.993f;
 
         if (glm::length2(drag.velocity) < 0.1f)
         {
             entity.getComponent<cro::Callback>().active = false;
         }
     };
+    auto scoreEnt = entity;
+
+    //scroll arrows
+    auto activeArrow = spriteSheet.getSprite("arrow_active").getTextureRect();
+    auto inactiveArrow = spriteSheet.getSprite("arrow_inactive").getTextureRect();
+
+    auto arrowEnter = m_uiSystem->addCallback(
+        [activeArrow](cro::Entity e, glm::vec2)
+    {
+        e.getComponent<cro::Sprite>().setTextureRect(activeArrow);
+    });
+    auto arrowExit = m_uiSystem->addCallback(
+        [inactiveArrow](cro::Entity e, glm::vec2)
+    {
+        e.getComponent<cro::Sprite>().setTextureRect(inactiveArrow);
+        e.getComponent<cro::Callback>().active = false;
+    });
+
+    entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_inactive");
+    size = entity.getComponent<cro::Sprite>().getSize();
+    entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
+    entity.getComponent<cro::Transform>().setParent(controlEntity);
+    entity.getComponent<cro::Transform>().setPosition({ (croppingArea.width / 2.f) * 0.89f, 60.f, 0.f });
+
+    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = arrowEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = arrowExit;
+    entity.getComponent<cro::UIInput>().area.width = activeArrow.width;
+    entity.getComponent<cro::UIInput>().area.height = activeArrow.height;
+
+    entity.addComponent<cro::Callback>().function = [scroll, scoreEnt](cro::Entity entity, cro::Time dt)
+    {
+        scroll(scoreEnt, scrollSpeed);
+    };
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback(
+        [](cro::Entity entity, cro::uint64 flags)
+    {
+        if (flags & cro::UISystem::LeftMouse)
+        {
+            entity.getComponent<cro::Callback>().active = true;
+        }
+    });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback(
+        [scoreEnt](cro::Entity entity, cro::uint64 flags) mutable
+    {
+        if (flags & cro::UISystem::LeftMouse)
+        {
+            entity.getComponent<cro::Callback>().active = false;
+            scoreEnt.getComponent<cro::UIDraggable>().velocity.y = scrollSpeed * 20.f;
+            scoreEnt.getComponent<cro::Callback>().active = true;
+        }
+    });
+    auto upArrow = entity;
+
+
+
+    entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Sprite>() = upArrow.getComponent<cro::Sprite>();
+    entity.addComponent<cro::Transform>().setParent(controlEntity);
+    entity.getComponent<cro::Transform>().setOrigin(upArrow.getComponent<cro::Transform>().getOrigin());
+    entity.getComponent<cro::Transform>().setPosition(upArrow.getComponent<cro::Transform>().getPosition());
+    entity.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, cro::Util::Const::PI);
+    entity.getComponent<cro::Transform>().move({ 0.f, croppingArea.height, 0.f });
+
+    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = arrowEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = arrowExit;
+    entity.getComponent<cro::UIInput>().area.width = activeArrow.width;
+    entity.getComponent<cro::UIInput>().area.height = activeArrow.height;
+
+    entity.addComponent<cro::Callback>().function = [scroll, scoreEnt](cro::Entity entity, cro::Time dt)
+    {
+        scroll(scoreEnt, -scrollSpeed);
+    };
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback(
+        [](cro::Entity entity, cro::uint64 flags)
+    {
+        if (flags & cro::UISystem::LeftMouse)
+        {
+            entity.getComponent<cro::Callback>().active = true;
+        }
+    });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback(
+        [scoreEnt](cro::Entity entity, cro::uint64 flags) mutable
+    {
+        if (flags & cro::UISystem::LeftMouse)
+        {
+            entity.getComponent<cro::Callback>().active = false;
+            scoreEnt.getComponent<cro::UIDraggable>().velocity.y = -scrollSpeed * 20.f;
+            scoreEnt.getComponent<cro::Callback>().active = true;
+        }
+    });
 
     //TODO if shared resources contains a player name/score, scroll to it
 }
