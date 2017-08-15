@@ -213,7 +213,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.getComponent<cro::Text>().setCroppingArea(croppingArea);
 
     //add click /drag
-    auto& scroll = [](cro::Entity entity, float delta)->float
+    const auto& scroll = [](cro::Entity entity, float delta)->float
     {
         auto& text = entity.getComponent<cro::Text>();
         auto crop = text.getCroppingArea();
