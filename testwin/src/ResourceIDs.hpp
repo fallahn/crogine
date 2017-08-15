@@ -101,7 +101,8 @@ namespace FontID
 {
     enum
     {
-        MenuFont
+        MenuFont,
+        ScoreboardFont
     };
 }
 

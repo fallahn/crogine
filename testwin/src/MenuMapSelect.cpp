@@ -73,14 +73,14 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     auto normalRect = spriteSheet.getSprite("caves_normal").getTextureRect();
     auto activeRect = spriteSheet.getSprite("caves_active").getTextureRect();
     entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
-        [this, activeRect](cro::Entity ent, cro::uint64 flags)
+        [this, activeRect](cro::Entity ent, glm::vec2)
     {
         ent.getComponent<cro::Sprite>().setTextureRect(activeRect);
         auto textEnt = m_menuScene.getEntity(ent.getComponent<cro::Transform>().getChildIDs()[0]);
         textEnt.getComponent<cro::Text>().setColour(textColourSelected);
     });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
-        [this, normalRect](cro::Entity ent, cro::uint64 flags)
+        [this, normalRect](cro::Entity ent, glm::vec2)
     {
         ent.getComponent<cro::Sprite>().setTextureRect(normalRect);
         auto textEnt = m_menuScene.getEntity(ent.getComponent<cro::Transform>().getChildIDs()[0]);
@@ -115,14 +115,14 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     normalRect = spriteSheet.getSprite("forest_normal").getTextureRect();
     activeRect = spriteSheet.getSprite("forest_active").getTextureRect();
     entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
-        [this, activeRect](cro::Entity ent, cro::uint64 flags)
+        [this, activeRect](cro::Entity ent, glm::vec2)
     {
         ent.getComponent<cro::Sprite>().setTextureRect(activeRect);
         auto textEnt = m_menuScene.getEntity(ent.getComponent<cro::Transform>().getChildIDs()[0]);
         textEnt.getComponent<cro::Text>().setColour(textColourSelected);
     });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
-        [this, normalRect](cro::Entity ent, cro::uint64 flags)
+        [this, normalRect](cro::Entity ent, glm::vec2)
     {
         ent.getComponent<cro::Sprite>().setTextureRect(normalRect);
         auto textEnt = m_menuScene.getEntity(ent.getComponent<cro::Transform>().getChildIDs()[0]);
@@ -164,14 +164,14 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     normalRect = spriteSheet.getSprite("desert_normal").getTextureRect();
     activeRect = spriteSheet.getSprite("desert_active").getTextureRect();
     entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
-        [this, activeRect](cro::Entity ent, cro::uint64 flags)
+        [this, activeRect](cro::Entity ent, glm::vec2 flags)
     {
         ent.getComponent<cro::Sprite>().setTextureRect(activeRect);
         auto textEnt = m_menuScene.getEntity(ent.getComponent<cro::Transform>().getChildIDs()[0]);
         textEnt.getComponent<cro::Text>().setColour(textColourSelected);
     });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
-        [this, normalRect](cro::Entity ent, cro::uint64 flags)
+        [this, normalRect](cro::Entity ent, glm::vec2)
     {
         ent.getComponent<cro::Sprite>().setTextureRect(normalRect);
         auto textEnt = m_menuScene.getEntity(ent.getComponent<cro::Transform>().getChildIDs()[0]);
@@ -213,14 +213,14 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     normalRect = spriteSheet.getSprite("empty_normal").getTextureRect();
     activeRect = spriteSheet.getSprite("empty_active").getTextureRect();
     entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
-        [this, activeRect](cro::Entity ent, cro::uint64 flags)
+        [this, activeRect](cro::Entity ent, glm::vec2)
     {
         ent.getComponent<cro::Sprite>().setTextureRect(activeRect);
         auto textEnt = m_menuScene.getEntity(ent.getComponent<cro::Transform>().getChildIDs()[0]);
         textEnt.getComponent<cro::Text>().setColour(textColourSelected);
     });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
-        [this, normalRect](cro::Entity ent, cro::uint64 flags)
+        [this, normalRect](cro::Entity ent, glm::vec2)
     {
         ent.getComponent<cro::Sprite>().setTextureRect(normalRect);
         auto textEnt = m_menuScene.getEntity(ent.getComponent<cro::Transform>().getChildIDs()[0]);
@@ -269,7 +269,7 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     auto backCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
         if ((flags & cro::UISystem::LeftMouse)
-            || flags & cro::UISystem::Finger)
+            /*|| flags & cro::UISystem::Finger*/)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
@@ -283,7 +283,7 @@ void MainState::createMapSelect(cro::Entity parentEnt)
         }
     });
 
-    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, cro::uint64)
+    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
         const auto& children = e.getComponent<cro::Transform>().getChildIDs();
@@ -302,7 +302,7 @@ void MainState::createMapSelect(cro::Entity parentEnt)
             }
         }
     });
-    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, cro::uint64)
+    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
         const auto& children = e.getComponent<cro::Transform>().getChildIDs();

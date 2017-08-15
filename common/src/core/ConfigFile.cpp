@@ -482,7 +482,17 @@ int32 ConfigObject::write(SDL_RWops* file, uint16 depth)
     stream << indent << "{" << std::endl;
     for (const auto& p : m_properties)
     {
-        stream << indent << indentBlock << p.getName() << " = " << p.getValue<std::string>() << std::endl;
+        stream << indent << indentBlock << p.getName() << " = ";
+        auto str = p.getValue<std::string>();
+        if (str.find(' ') == std::string::npos)
+        {
+            stream << str;
+        }
+        else
+        {
+            stream << "\"" << str << "\"";        }
+        
+        stream << std::endl;
     }
 
     int32 written = 0;
