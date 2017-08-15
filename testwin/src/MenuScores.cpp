@@ -76,6 +76,7 @@ using Score = std::pair<std::string, std::string>;
 void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback)
 {
     auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
+    auto& scoreboardFont = m_sharedResources.fonts.get(FontID::ScoreboardFont);
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/sprites/ui_menu.spt", m_sharedResources.textures);
@@ -165,7 +166,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
         };
         for (auto i = 0u; i < 10u; ++i)
         {
-            scores.addProperty(names[i], std::to_string(cro::Util::Random::value(10000, 500000)));
+            scores.addProperty(std::to_string(cro::Util::Random::value(10000, 500000)), names[i]);
         }
         if (!scores.save(cro::App::getPreferencePath() + highscoreFile))
         {
@@ -177,7 +178,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     const auto& scoreValues = scores.getProperties();
     for (const auto& s : scoreValues)
     {
-        scoreList.push_back(std::make_pair(s.getName(), s.getValue<std::string>()));
+        scoreList.push_back(std::make_pair(s.getValue<std::string>(), s.getName()));
     }
     std::sort(std::begin(scoreList), std::end(scoreList), [](const Score& scoreA, const Score& scoreB)
     {
@@ -200,7 +201,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
 
     entity = m_menuScene.createEntity();
     entity.addComponent<cro::Transform>().setParent(controlEntity);
-    entity.addComponent<cro::Text>(menuFont).setString(scoreString);
+    entity.addComponent<cro::Text>(scoreboardFont).setString(scoreString);
     entity.getComponent<cro::Text>().setCharSize(TextLarge);
     entity.getComponent<cro::Text>().setColour(textColourSelected);
 
@@ -315,7 +316,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
 
     entity.addComponent<cro::Callback>().function = [scroll, scoreEnt](cro::Entity entity, cro::Time dt)
     {
-        scroll(scoreEnt, scrollSpeed);
+        scroll(scoreEnt, -scrollSpeed);
     };
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback(
         [](cro::Entity entity, cro::uint64 flags)
@@ -331,7 +332,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
         if (flags & cro::UISystem::LeftMouse)
         {
             entity.getComponent<cro::Callback>().active = false;
-            scoreEnt.getComponent<cro::UIDraggable>().velocity.y = scrollSpeed * 20.f;
+            scoreEnt.getComponent<cro::UIDraggable>().velocity.y = -scrollSpeed * 20.f;
             scoreEnt.getComponent<cro::Callback>().active = true;
         }
     });
@@ -354,7 +355,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
 
     entity.addComponent<cro::Callback>().function = [scroll, scoreEnt](cro::Entity entity, cro::Time dt)
     {
-        scroll(scoreEnt, -scrollSpeed);
+        scroll(scoreEnt, scrollSpeed);
     };
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback(
         [](cro::Entity entity, cro::uint64 flags)
@@ -370,7 +371,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
         if (flags & cro::UISystem::LeftMouse)
         {
             entity.getComponent<cro::Callback>().active = false;
-            scoreEnt.getComponent<cro::UIDraggable>().velocity.y = -scrollSpeed * 20.f;
+            scoreEnt.getComponent<cro::UIDraggable>().velocity.y = scrollSpeed * 20.f;
             scoreEnt.getComponent<cro::Callback>().active = true;
         }
     });

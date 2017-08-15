@@ -281,7 +281,7 @@ void GameOverState::load()
             cro::ConfigFile scores;
             if (scores.loadFromFile(cro::App::getPreferencePath() + highscoreFile))
             {
-                scores.addProperty(m_sharedResources.playerName, std::to_string(m_sharedResources.score));
+                scores.addProperty(std::to_string(m_sharedResources.score), m_sharedResources.playerName);
                 scores.save(cro::App::getPreferencePath() + highscoreFile);
             }
 
@@ -328,7 +328,7 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     auto parentEnt = m_uiScene.createEntity();
     parentEnt.addComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 3.f) * 2.f, uiDepth });
 
-    auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
+    auto& font = m_sharedResources.fonts.get(FontID::ScoreboardFont);
 
     auto textEnt = m_uiScene.createEntity();
     textEnt.addComponent<cro::Text>(font).setString("Enter Your Name:");

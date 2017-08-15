@@ -217,6 +217,9 @@ void MainState::loadAssets()
     auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
     menuFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
 
+    auto& scoreboardFont = m_sharedResources.fonts.get(FontID::ScoreboardFont);
+    scoreboardFont.loadFromFile("assets/fonts/VeraMono.ttf");
+
     //audio
     //m_resources.audio.load(AudioID::Test, "assets/audio/effects/meaty.wav");
     m_resources.audio.load(AudioID::TestStream, "assets/audio/music/background.ogg", true);
