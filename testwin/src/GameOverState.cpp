@@ -232,7 +232,7 @@ void GameOverState::load()
     auto activeArea = sprites.getSprite("button_active").getTextureRect();
     auto& gameControl = entity.addComponent<cro::UIInput>();
     gameControl.callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback([&,activeArea]
-    (cro::Entity e, cro::uint64 flags)
+    (cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(activeArea);
         const auto& children = e.getComponent<cro::Transform>().getChildIDs();
@@ -252,7 +252,7 @@ void GameOverState::load()
         }
     });
     gameControl.callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback([&, area]
-    (cro::Entity e, cro::uint64 flags)
+    (cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(area);
         const auto& children = e.getComponent<cro::Transform>().getChildIDs();

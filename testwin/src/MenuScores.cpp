@@ -41,8 +41,10 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
+#include <crogine/ecs/components/UIDraggable.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/CommandID.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/Font.hpp>
@@ -53,8 +55,11 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Maths.hpp>
     
 #include <crogine/android/Android.hpp>
+
+#include <glm/gtx/norm.hpp>
 
 #include <string>
 
@@ -137,7 +142,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
         }
     });
     auto& backControl = entity.addComponent<cro::UIInput>();
-    backControl.callbacks[cro::UIInput::MouseUp] = backCallback;
+    backControl.callbacks[cro::UIInput::MouseDown] = backCallback;
     backControl.callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
     backControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
     backControl.area.width = buttonNormalArea.width;
@@ -199,11 +204,81 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
 
     size = backgroundEnt.getComponent<cro::Sprite>().getSize();
-    cro::FloatRect croppingArea(0.f, backgroundEnt.getComponent<cro::Transform>().getPosition().y, size.x, -size.y + 36.f); //remember text origin is at top
+    cro::FloatRect croppingArea(0.f, 0.f, size.x, -(size.y - backgroundEnt.getComponent<cro::Transform>().getPosition().y - 36.f)); //remember text origin is at top
     entity.getComponent<cro::Text>().setCroppingArea(croppingArea);
 
-    //TODO add a scrollbar
-    //TODO add click /drag
+    //add click /drag
+    auto& scroll = [](cro::Entity entity, float delta)->float
+    {
+        auto& text = entity.getComponent<cro::Text>();
+        auto crop = text.getCroppingArea();
+
+        //clamp movement
+        float movement = 0.f;
+        if (delta > 0)
+        {
+            movement = cro::Util::Maths::clamp((text.getLocalBounds().height + crop.height) - entity.getComponent<cro::Transform>().getPosition().y, 0.f, delta);
+        }
+        else
+        {
+            movement = std::max(-entity.getComponent<cro::Transform>().getPosition().y, delta);
+        }
+        entity.getComponent<cro::Transform>().move({ 0.f, movement, 0.f });
+
+        //update the cropping area
+        crop.bottom -= movement;
+        text.setCroppingArea(crop);
+
+        //update the input area
+        entity.getComponent<cro::UIInput>().area.bottom -= movement;
+
+        return movement;
+    };
+
+
+    entity.addComponent<cro::UIDraggable>();
+    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseMotion] = m_uiSystem->addCallback(
+        [scroll](cro::Entity entity, glm::vec2 delta)
+    {
+        if (entity.getComponent<cro::UIDraggable>().flags & cro::UISystem::LeftMouse)
+        {
+            //add some momentum
+            entity.getComponent<cro::UIDraggable>().velocity.y += scroll(entity, delta.y);
+            entity.getComponent<cro::Callback>().active = true;
+        }
+    });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback(
+        [](cro::Entity entity, cro::uint64 flags)
+    {
+        entity.getComponent<cro::UIDraggable>().flags |= flags;
+    });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback(
+        [](cro::Entity entity, cro::uint64 flags)
+    {
+        entity.getComponent<cro::UIDraggable>().flags &= ~flags;
+    });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
+        [](cro::Entity entity, glm::vec2)
+    {
+        entity.getComponent<cro::UIDraggable>().flags = 0;
+    });
+    entity.getComponent<cro::UIInput>().area = croppingArea;
+
+    //callback gives scrolling some momentum
+    entity.addComponent<cro::Callback>().function = 
+        [scroll](cro::Entity entity, cro::Time dt)
+    {
+        auto& drag = entity.getComponent<cro::UIDraggable>();
+        auto& tx = entity.getComponent<cro::Transform>();
+
+        scroll(entity, drag.velocity.y * dt.asSeconds());
+        drag.velocity *= 0.999f;
+
+        if (glm::length2(drag.velocity) < 0.1f)
+        {
+            entity.getComponent<cro::Callback>().active = false;
+        }
+    };
 
     //TODO if shared resources contains a player name/score, scroll to it
 }

@@ -459,6 +459,9 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\Callback.hpp">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\ecs\components\UIDraggable.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">

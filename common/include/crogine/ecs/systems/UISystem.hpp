@@ -44,7 +44,8 @@ namespace cro
     public:
         //passes in the entity for whom the callback was triggered and a copy of the flags
         //which contain the input which triggered it. Use the Flags enum to find the input type
-        using Callback = std::function<void(Entity, uint64 flags)>;
+        using ButtonCallback = std::function<void(Entity, uint64 flags)>;
+        using MovementCallback = std::function<void(Entity, glm::vec2)>;
 
         explicit UISystem(MessageBus&);
 
@@ -64,13 +65,21 @@ namespace cro
         void handleMessage(const Message&) override;
 
         /*!
-        \brief Adds a callback.
+        \brief Adds a button event callback.
         \returns ID of the callback. This should be used to assigned the callback
         to the relative callback slot of a UIInput component. eg:
         auto id = system.addCallback(cb);
-        component.callbacks[UIInput::MouseEnter] = id;
+        component.callbacks[UIInput::MouseDown] = id;
         */
-        uint32 addCallback(const Callback&);
+        uint32 addCallback(const ButtonCallback&);
+
+        /*!
+        \brief Adds a mouse or touch input movement callback.
+        This is similar to button even callbacks, only the movement delta is
+        passed in as a parameter instead of a button ID. These are also used for
+        mouse enter/exit events
+        */
+        uint32 addCallback(const MovementCallback&);
 
         /*!
         \brief Input flags.
@@ -86,10 +95,13 @@ namespace cro
 
     private:
 
-        std::vector<Callback> m_callbacks;
+        std::vector<ButtonCallback> m_buttonCallbacks;
+        std::vector<MovementCallback> m_movementCallbacks;
 
+        glm::vec2 m_prevMousePosition;
         glm::vec2 m_previousEventPosition; //in screen coords
         glm::vec2 m_eventPosition;
+        glm::vec2 m_movementDelta; //in world coords
 
         std::vector<Flags> m_downEvents;
         std::vector<Flags> m_upEvents;
@@ -97,8 +109,8 @@ namespace cro
         glm::uvec2 m_windowSize;
 
         //void setViewPort(int32, int32);
-        glm::vec2 toScreenCoords(int32 x, int32 y); //converts screen coords
-        glm::vec2 toScreenCoords(float, float); //converts normalised coords
+        glm::vec2 toWorldCoords(int32 x, int32 y); //converts screen coords
+        glm::vec2 toWorldCoords(float, float); //converts normalised coords
 
         glm::mat4 getProjectionMatrix();
     };
