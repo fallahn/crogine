@@ -350,7 +350,8 @@ void TextRenderer::rebuildBatch()
             //new batches are created within the VBO for each new text, blend mode or scissor mode
             if (texID != batchData.texture
                 || text.m_blendMode != batchData.blendMode
-                || text.m_scissor != batchData.scissor) //TODO every scissor usually has its own batch, as the cropping area will be different
+                || text.m_scissor //every scissor usually has its own batch, as the cropping area will be different
+                || text.m_scissor != batchData.scissor) 
             {
                 //end the batch and start a new one for this buffer
                 batchData.count = start - batchData.start;
@@ -456,7 +457,26 @@ void TextRenderer::updateVerts(Text& text)
     text.m_vertices.clear();
     text.m_vertices.reserve(text.m_string.size() * 6); //4 verts per char + degen tri
 
-    float xPos = 0.f; //current char offset
+    auto getStart = [](std::size_t idx, const Text& text)->float
+    {
+        float pos = 0.f;
+        if (text.m_alignment == Text::Right)
+        {
+            float maxWidth = text.getLocalBounds().width;
+            float rowWidth = text.getLineWidth(idx);
+            pos = maxWidth - rowWidth;
+        }
+        else if (text.m_alignment == Text::Centre)
+        {
+            float maxWidth = text.getLocalBounds().width;
+            float rowWidth = text.getLineWidth(idx);
+            pos = maxWidth - rowWidth;
+            pos /= 2.f;
+        }
+        return pos;
+    };
+
+    float xPos = getStart(0, text);
     float yPos = -text.getLineHeight();
     float lineHeight = text.getLineHeight();
     glm::vec2 texSize(text.m_font->getTexture(text.m_charSize).getSize());
@@ -464,14 +484,18 @@ void TextRenderer::updateVerts(Text& text)
 
     float top = 0.f;
     float width = 0.f;
+    std::size_t lineCount = 0;
 
     for (auto c : text.m_string)
     {
         //check for end of lines
-        if (c == '\r' || c == '\n')
+        if (/*c == '\r' ||*/ c == '\n') //newline is a new line!!
         {
-            xPos = 0.f;
+            lineCount++;
+
+            xPos = getStart(lineCount, text);
             yPos -= lineHeight;
+            
             continue;
         }
 

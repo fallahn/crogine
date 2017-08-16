@@ -68,20 +68,18 @@ namespace
 {
 #include "MenuConsts.inl"
 
-    const float scrollSpeed = 6.f;
+    const float scrollSpeed = 360.f;
 }
 
 using Score = std::pair<std::string, std::string>;
 
-void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback)
+void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback,
+    const cro::SpriteSheet& spriteSheetButtons, const cro::SpriteSheet& spriteSheetIcons)
 {
     auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
     auto& scoreboardFont = m_sharedResources.fonts.get(FontID::ScoreboardFont);
 
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/sprites/ui_menu.spt", m_sharedResources.textures);
-
-    const auto buttonNormalArea = spriteSheet.getSprite("button_inactive").getTextureRect();
+    const auto buttonNormalArea = spriteSheetButtons.getSprite("button_inactive").getTextureRect();
 
     //create an entity to move the menu
     auto controlEntity = m_menuScene.createEntity();
@@ -91,7 +89,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     controlEntity.addComponent<Slider>();
 
     auto backgroundEnt = m_menuScene.createEntity();
-    backgroundEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("menu");
+    backgroundEnt.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("menu");
     auto size = backgroundEnt.getComponent<cro::Sprite>().getSize();
     backgroundEnt.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y, 0.f });
     backgroundEnt.getComponent<cro::Transform>().setPosition({ 0.f, 140.f, -10.f });
@@ -108,7 +106,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
 
 
     auto entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& backTx = entity.addComponent<cro::Transform>();
     backTx.setPosition({ 0.f, -480.f, 0.f });
     backTx.setParent(controlEntity);
@@ -123,12 +121,11 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     backTexTx.setParent(entity);
     backTexTx.move({ 40.f, 100.f, 0.f });
 
-    cro::SpriteSheet iconSheet;
-    iconSheet.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
+
     auto iconEnt = m_menuScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
     iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
-    iconEnt.addComponent<cro::Sprite>() = iconSheet.getSprite("back");
+    iconEnt.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("back");
 
     auto backCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
@@ -204,6 +201,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.addComponent<cro::Text>(scoreboardFont).setString(scoreString);
     entity.getComponent<cro::Text>().setCharSize(TextLarge);
     entity.getComponent<cro::Text>().setColour(textColourSelected);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
 
     auto bounds = entity.getComponent<cro::Text>().getLocalBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
@@ -274,7 +272,6 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
         [scroll](cro::Entity entity, cro::Time dt)
     {
         auto& drag = entity.getComponent<cro::UIDraggable>();
-        auto& tx = entity.getComponent<cro::Transform>();
 
         scroll(entity, drag.velocity.y * dt.asSeconds());
         drag.velocity *= 0.993f;
@@ -287,8 +284,8 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     auto scoreEnt = entity;
 
     //scroll arrows
-    auto activeArrow = spriteSheet.getSprite("arrow_active").getTextureRect();
-    auto inactiveArrow = spriteSheet.getSprite("arrow_inactive").getTextureRect();
+    auto activeArrow = spriteSheetButtons.getSprite("arrow_active").getTextureRect();
+    auto inactiveArrow = spriteSheetButtons.getSprite("arrow_inactive").getTextureRect();
 
     auto arrowEnter = m_uiSystem->addCallback(
         [activeArrow](cro::Entity e, glm::vec2)
@@ -303,7 +300,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     });
 
     entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_inactive");
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("arrow_inactive");
     size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
     entity.getComponent<cro::Transform>().setParent(controlEntity);
@@ -316,7 +313,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
 
     entity.addComponent<cro::Callback>().function = [scroll, scoreEnt](cro::Entity entity, cro::Time dt)
     {
-        scroll(scoreEnt, -scrollSpeed);
+        scroll(scoreEnt, -scrollSpeed * dt.asSeconds());
     };
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback(
         [](cro::Entity entity, cro::uint64 flags)
@@ -332,7 +329,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
         if (flags & cro::UISystem::LeftMouse)
         {
             entity.getComponent<cro::Callback>().active = false;
-            scoreEnt.getComponent<cro::UIDraggable>().velocity.y = -scrollSpeed * 20.f;
+            scoreEnt.getComponent<cro::UIDraggable>().velocity.y = -scrollSpeed / 2.f;
             scoreEnt.getComponent<cro::Callback>().active = true;
         }
     });
@@ -355,7 +352,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
 
     entity.addComponent<cro::Callback>().function = [scroll, scoreEnt](cro::Entity entity, cro::Time dt)
     {
-        scroll(scoreEnt, scrollSpeed);
+        scroll(scoreEnt, scrollSpeed * dt.asSeconds());
     };
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback(
         [](cro::Entity entity, cro::uint64 flags)
@@ -371,7 +368,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
         if (flags & cro::UISystem::LeftMouse)
         {
             entity.getComponent<cro::Callback>().active = false;
-            scoreEnt.getComponent<cro::UIDraggable>().velocity.y = scrollSpeed * 20.f;
+            scoreEnt.getComponent<cro::UIDraggable>().velocity.y = scrollSpeed / 2.f;
             scoreEnt.getComponent<cro::Callback>().active = true;
         }
     });
