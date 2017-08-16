@@ -255,7 +255,7 @@ bool Font::createPage(uint32 charSize) const
                 auto index = i - firstChar;
                 subRect.left = static_cast<float>(cx);
                 subRect.bottom = static_cast<float>(imgHeight - (cy + celHeight));
-                subRect.width = static_cast<float>((metricData[index].maxx < 1) ? celWidth : metricData[index].maxx + 1);
+                subRect.width = static_cast<float>((metricData[index].maxx < 1) ? celWidth / 2 : metricData[index].maxx + 1);
                 page.subrects.insert(std::make_pair(static_cast<uint8>(i), subRect));
 
                 //copy row by row

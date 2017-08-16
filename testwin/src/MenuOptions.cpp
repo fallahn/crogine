@@ -51,20 +51,18 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
+#include <crogine/util/Constants.hpp>
 
 namespace
 {
 #include "MenuConsts.inl"
 }
 
-void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback)
+void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback,
+    const cro::SpriteSheet& spriteSheetButtons, const cro::SpriteSheet& spriteSheetIcons)
 {
     auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
-
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/sprites/ui_menu.spt", m_sharedResources.textures);
-
-    const auto buttonNormalArea = spriteSheet.getSprite("button_inactive").getTextureRect();
+    const auto buttonNormalArea = spriteSheetButtons.getSprite("button_inactive").getTextureRect();
 
     //create an entity to move the menu
     auto controlEntity = m_menuScene.createEntity();
@@ -74,7 +72,7 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     controlEntity.addComponent<Slider>();
 
     auto backgroundEnt = m_menuScene.createEntity();
-    backgroundEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("menu");
+    backgroundEnt.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("menu");
     auto size = backgroundEnt.getComponent<cro::Sprite>().getSize();
     backgroundEnt.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y, 0.f });
     backgroundEnt.getComponent<cro::Transform>().setPosition({ 0.f, 140.f, -10.f });
@@ -90,7 +88,7 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     titleTextTx.setParent(controlEntity);
     
     auto entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& backTx = entity.addComponent<cro::Transform>();
     backTx.setPosition({ 0.f, -480.f, 0.f });
     backTx.setParent(controlEntity);
@@ -105,11 +103,10 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     backTexTx.setParent(entity);
     backTexTx.move({ 40.f, 100.f, 0.f });
 
-    spriteSheet.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
     auto iconEnt = m_menuScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
     iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
-    iconEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("back");
+    iconEnt.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("back");
 
     auto backCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
@@ -133,4 +130,72 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     backControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
     backControl.area.width = buttonNormalArea.width;
     backControl.area.height = buttonNormalArea.height;
+
+    //build the actual controls
+
+    //music
+    entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("music");
+    entity.getComponent<cro::Sprite>().setColour(textColourSelected);
+    entity.addComponent<cro::Transform>().setParent(backgroundEnt);
+    entity.getComponent<cro::Transform>().setPosition({ 120.f, 280.f, 0.2f });
+
+
+    //sfx
+    entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("effects");
+    entity.getComponent<cro::Sprite>().setColour(textColourSelected);
+    entity.addComponent<cro::Transform>().setParent(backgroundEnt);
+    entity.getComponent<cro::Transform>().setPosition({ 120.f, 140.f, 0.2f });
+
+#ifdef PLATFORM_DESKTOP
+    //resolution
+    entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("arrow_inactive");
+    size = entity.getComponent<cro::Sprite>().getSize();
+    entity.addComponent<cro::Transform>().setParent(backgroundEnt);
+    entity.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, cro::Util::Const::PI / 2.f);
+    entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
+    entity.getComponent<cro::Transform>().setPosition({ 166.f, 86.f, 0.2f });
+
+    const auto& resList = cro::App::getWindow().getAvailableResolutions();
+    std::string resString;
+    for (const auto& r : resList)
+    {
+        resString += std::to_string(r.x) + "x" + std::to_string(r.y) + "\n";
+    }
+    resString.pop_back();
+    entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Text>(m_sharedResources.fonts.get(FontID::ScoreboardFont)).setString(resString);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Centre);
+    entity.getComponent<cro::Text>().setCharSize(TextLarge);
+    entity.getComponent<cro::Text>().setColour(textColourSelected);
+    entity.addComponent<cro::Transform>().setParent(backgroundEnt);
+    entity.getComponent<cro::Transform>().setPosition({ 260.f, 118.f, 0.f });
+    entity.getComponent<cro::Text>().setCroppingArea({ 0.f, 0.f, 600.f, -64.f });
+
+    entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("arrow_inactive");
+    size = entity.getComponent<cro::Sprite>().getSize();
+    entity.addComponent<cro::Transform>().setParent(backgroundEnt);
+    entity.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, -cro::Util::Const::PI / 2.f);
+    entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
+    entity.getComponent<cro::Transform>().setPosition({ 686.f, 86.f, 0.2f });
+
+    //full screen
+    entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("unchecked_inactive");
+    entity.addComponent<cro::Transform>().setParent(backgroundEnt);
+    entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
+    entity.getComponent<cro::Transform>().setPosition({ 866.f, 86.f, 0.2f });
+
+
+    entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Text>(menuFont).setString("Full Screen");
+    entity.getComponent<cro::Text>().setCharSize(TextMedium);
+    entity.getComponent<cro::Text>().setColour(textColourSelected);
+    entity.addComponent<cro::Transform>().setParent(backgroundEnt);
+    entity.getComponent<cro::Transform>().setPosition({ 920.f, 106.f, 0.f });
+
+#endif
 }

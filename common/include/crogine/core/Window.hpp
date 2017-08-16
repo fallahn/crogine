@@ -132,7 +132,7 @@ namespace cro
         */
         void setIcon(const uint8*);
         /*!
-        \brief Returns a refernce to a vector containing a list of available
+        \brief Returns a reference to a vector containing a list of available
         display resolutions of the first monitor.
         */
         const std::vector<glm::uvec2>& getAvailableResolutions() const;

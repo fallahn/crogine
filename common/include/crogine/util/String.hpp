@@ -180,6 +180,35 @@ namespace cro
 
                 return searchFunc('/', path);
             }
+
+            /*!
+            \brief Returns the position of the nth instance of char c
+            or std::string::npos if not found
+            */
+
+            static inline std::size_t findNthOf(const std::string& str, char c, uint32 n)
+            {
+                if (n == 0)
+                {
+                    return std::string::npos;
+                }
+
+                std::size_t currPos = 0;
+                std::size_t currOffset = 0;
+                std::size_t i = 0;
+
+                while (i < n)
+                {
+                    currPos = str.find(c, currOffset);
+                    if (currPos == std::string::npos)
+                    {
+                        break;
+                    }
+                    currOffset = currPos + 1;
+                    ++i;
+                }
+                return currPos;
+            }
         }
     }
 }

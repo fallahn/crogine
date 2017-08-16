@@ -38,7 +38,8 @@ Text::Text()
     m_blendMode     (Material::BlendMode::Alpha),
     m_dirtyFlags    (Flags::Verts),
     m_scissor       (false),
-    m_vboOffset     (0)
+    m_vboOffset     (0),
+    m_alignment     (Left)
 {
 
 }
@@ -49,7 +50,8 @@ Text::Text(const Font& font)
     m_blendMode     (Material::BlendMode::Alpha),
     m_dirtyFlags    (Flags::Verts),
     m_scissor       (false),
-    m_vboOffset     (0)
+    m_vboOffset     (0),
+    m_alignment     (Left)
 {
 
 }
@@ -106,6 +108,35 @@ void Text::setCroppingArea(FloatRect area)
     m_scissor = true;
 }
 
+void Text::setAlignment(Alignment a)
+{
+    if (a != m_alignment) m_dirtyFlags |= Flags::Verts;
+    m_alignment = a;
+}
+
+float Text::getLineWidth(std::size_t idx) const
+{
+    CRO_ASSERT(m_font, "No font assigned!");
+    
+    auto start = (idx) ? Util::String::findNthOf(m_string, '\n', idx) : 0;
+    if (start == std::string::npos)
+    {
+        return 0.f;
+    }
+
+    float width = 0.f;
+    for (auto i = start + 1; i < m_string.length(); ++i)
+    {
+        if (m_string[i] == '\n')
+        {
+            break;
+        }
+        width += m_font->getGlyph(m_string[i], m_charSize).width;
+    }
+
+    return width;
+}
+
 //private
 void Text::updateLocalBounds() const
 {
@@ -117,7 +148,7 @@ void Text::updateLocalBounds() const
 
     for (auto c : m_string)
     {
-        if (c == '\n' || c == '\r')
+        if (c == '\n'/* || c == '\r'*/) //only newline is a new line!!
         {
             if (currWidth > m_localBounds.width)
             {

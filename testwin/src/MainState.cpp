@@ -213,15 +213,13 @@ void MainState::loadAssets()
     m_modelDefs[MenuModelID::Stars].loadFromFile("assets/models/stars.cmt", m_resources);
     m_modelDefs[MenuModelID::Sun].loadFromFile("assets/models/sun.cmt", m_resources);
 
-    //sprite sheet
     auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
     menuFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
 
     auto& scoreboardFont = m_sharedResources.fonts.get(FontID::ScoreboardFont);
-    scoreboardFont.loadFromFile("assets/fonts/VeraMono.ttf");
+    scoreboardFont.loadFromFile("assets/fonts/Now-Bold.otf");
 
     //audio
-    //m_resources.audio.load(AudioID::Test, "assets/audio/effects/meaty.wav");
     m_resources.audio.load(AudioID::TestStream, "assets/audio/music/background.ogg", true);
 }
 
@@ -332,6 +330,9 @@ void MainState::createMenus()
     const auto buttonNormalArea = spriteSheetButtons.getSprite("button_inactive").getTextureRect();
     const auto buttonHighlightArea = spriteSheetButtons.getSprite("button_active").getTextureRect();
 
+    cro::SpriteSheet spriteSheetIcons;
+    spriteSheetIcons.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
+
     auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
@@ -371,9 +372,9 @@ void MainState::createMenus()
         }
     });
 
-    createMainMenu(mouseEnterCallback, mouseExitCallback);
-    createOptionsMenu(mouseEnterCallback, mouseExitCallback);
-    createScoreMenu(mouseEnterCallback, mouseExitCallback);
+    createMainMenu(mouseEnterCallback, mouseExitCallback, spriteSheetButtons, spriteSheetIcons);
+    createOptionsMenu(mouseEnterCallback, mouseExitCallback, spriteSheetButtons, spriteSheetIcons);
+    createScoreMenu(mouseEnterCallback, mouseExitCallback, spriteSheetButtons, spriteSheetIcons);
 
     //preview shadow map
     /*auto entity = m_menuScene.createEntity();

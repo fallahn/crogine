@@ -49,7 +49,8 @@ namespace
 #include "MenuConsts.inl"
 }
 
-void MainState::createMapSelect(cro::Entity parentEnt)
+void MainState::createMapSelect(cro::Entity parentEnt,
+    const cro::SpriteSheet& spriteSheetButtons, const cro::SpriteSheet& spriteSheetIcons)
 {
     auto menuController = m_menuScene.createEntity();
     menuController.addComponent<cro::Transform>().setPosition({ 0.f, buttonPosition, 0.f });
@@ -239,12 +240,11 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     textEnt.getComponent<cro::Transform>().move({ 25.f, 56.f, 0.f });
 
     //back button
-    spriteSheet.loadFromFile("assets/sprites/ui_menu.spt", m_sharedResources.textures);
-    const auto buttonNormalArea = spriteSheet.getSprite("button_inactive").getTextureRect();
-    const auto buttonHighlightArea = spriteSheet.getSprite("button_active").getTextureRect();
+    const auto buttonNormalArea = spriteSheetButtons.getSprite("button_inactive").getTextureRect();
+    const auto buttonHighlightArea = spriteSheetButtons.getSprite("button_active").getTextureRect();
 
     entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
+    entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& quitTx = entity.addComponent<cro::Transform>();
     quitTx.setPosition({ 0.f, 1080.f - 480.f, 0.f });
     quitTx.setParent(parentEnt);
@@ -259,11 +259,11 @@ void MainState::createMapSelect(cro::Entity parentEnt)
     textEnt.getComponent<cro::Transform>().setParent(entity);
     textEnt.getComponent<cro::Transform>().move({ 40.f, 100.f, 0.f });
 
-    spriteSheet.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
+
     auto iconEnt = m_menuScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
     iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
-    iconEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("back");
+    iconEnt.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("back");
 
 
     auto backCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)

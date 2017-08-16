@@ -42,4 +42,24 @@ sprite_sheet ui_menu
 	{
 		bounds = 1152,0,64,64
 	}
+
+	sprite checked_inactive
+	{
+		bounds = 960,1024,64,64
+	}
+
+	sprite checked_active
+	{
+		bounds = 1024,1024,64,64
+	}
+
+	sprite unchecked_inactive
+	{
+		bounds = 960,1088,64,64
+	}
+
+	sprite unchecked_active
+	{
+		bounds = 1024,1088,64,64
+	}
 }

@@ -106,6 +106,30 @@ namespace cro
         */
         const FloatRect& getCroppingArea() const { return m_croppingArea; }
 
+        /*!
+        \brief Alignment enum
+        */
+        enum Alignment
+        {
+            Left, Centre, Right
+        };
+
+        /*!
+        \brief Sets the text alignment
+        */
+        void setAlignment(Alignment);
+
+        /*!
+        \brief Returns the current alignment
+        */
+        Alignment getAlignment() const { return m_alignment; }
+
+        /*!
+        \brief Returns the width of the line at the given index
+        or 0 if that line does not exist
+        */
+        float getLineWidth(std::size_t) const;
+
     private:
         const Font* m_font;
         std::string m_string;
@@ -134,6 +158,8 @@ namespace cro
 
         mutable FloatRect m_localBounds;
         void updateLocalBounds() const;
+
+        Alignment m_alignment;
 
         friend class TextRenderer;
     };

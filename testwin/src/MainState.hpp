@@ -43,6 +43,7 @@ namespace cro
 {
     class CommandSystem;
     class UISystem;
+    class SpriteSheet;
 }
 
 struct SharedResources;
@@ -75,10 +76,10 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
-    void createMainMenu(cro::uint32, cro::uint32);
-    void createMapSelect(cro::Entity);
-    void createOptionsMenu(cro::uint32, cro::uint32);
-    void createScoreMenu(cro::uint32, cro::uint32);
+    void createMainMenu(cro::uint32, cro::uint32, const cro::SpriteSheet&, const cro::SpriteSheet&);
+    void createMapSelect(cro::Entity, const cro::SpriteSheet&, const cro::SpriteSheet&);
+    void createOptionsMenu(cro::uint32, cro::uint32, const cro::SpriteSheet&, const cro::SpriteSheet&);
+    void createScoreMenu(cro::uint32, cro::uint32, const cro::SpriteSheet&, const cro::SpriteSheet&);
     void createMenus();
     void updateView();
 };
