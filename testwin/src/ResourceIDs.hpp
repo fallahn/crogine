@@ -93,6 +93,7 @@ namespace GameModelID
         WeaverHead,
         WeaverBody,
         Buddy,
+        Boss,
         Count
     };
 }
@@ -136,7 +137,8 @@ namespace CommandID
         HudElement = 0x2000,
         Buddy = 0x4000,
         EmpBlast = 0x8000,
-        MeatMan = 0x10000
+        MeatMan = 0x10000,
+        Boss = 0x200000
     };
 }
 

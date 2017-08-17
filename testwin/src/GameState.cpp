@@ -308,6 +308,7 @@ void GameState::loadAssets()
     m_modelDefs[GameModelID::WeaverHead].loadFromFile("assets/models/weaver_head.cmt", m_resources);
     m_modelDefs[GameModelID::WeaverBody].loadFromFile("assets/models/weaver_body.cmt", m_resources);
     m_modelDefs[GameModelID::Buddy].loadFromFile("assets/models/buddy.cmt", m_resources);
+    m_modelDefs[GameModelID::Boss].loadFromFile("assets/models/placeholder.cmt", m_resources);
 
 
     auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
@@ -720,7 +721,13 @@ void GameState::loadModels()
     buddyRot.speed = -4.f;
     buddyRot.axis.x = 1.f;
 
-
+    //boss model
+    auto bossEnt = m_scene.createEntity();
+    m_modelDefs[GameModelID::Boss].createModel(bossEnt, m_resources);
+    bossEnt.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, -9.3f });
+    bossEnt.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.5f, -cro::Util::Const::PI / 2.f, 0.f });
+    bossEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
+    bossEnt.addComponent<cro::CommandTarget>().ID = CommandID::Boss;
 
     //collectables
     static const glm::vec3 coinScale(0.12f);
