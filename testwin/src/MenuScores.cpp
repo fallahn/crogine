@@ -207,7 +207,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
 
     size = backgroundEnt.getComponent<cro::Sprite>().getSize();
-    cro::FloatRect croppingArea(0.f, 0.f, size.x, -(size.y - backgroundEnt.getComponent<cro::Transform>().getPosition().y - 36.f)); //remember text origin is at top
+    cro::FloatRect croppingArea(0.f, 0.f, size.x * 0.8f, -(size.y - backgroundEnt.getComponent<cro::Transform>().getPosition().y - 36.f)); //remember text origin is at top
     entity.getComponent<cro::Text>().setCroppingArea(croppingArea);
 
     //add click /drag
@@ -304,7 +304,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
     entity.getComponent<cro::Transform>().setParent(controlEntity);
-    entity.getComponent<cro::Transform>().setPosition({ (croppingArea.width / 2.f) * 0.89f, 60.f, 0.f });
+    entity.getComponent<cro::Transform>().setPosition({ (croppingArea.width / 2.f) + (size.x / 2.f) /** 0.89f*/, 60.f, 0.f });
 
     entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = arrowEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = arrowExit;
