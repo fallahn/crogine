@@ -54,6 +54,7 @@ source distribution.
 #include "BuddySystem.hpp"
 #include "EmpSystem.hpp"
 #include "MeatMan.hpp"
+#include "BossSystem.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -233,6 +234,7 @@ void GameState::addSystems()
     m_scene.addSystem<ExplosionSystem>(mb);
     m_scene.addSystem<BuddySystem>(mb);
     m_scene.addSystem<EmpSystem>(mb);
+    m_scene.addSystem<BossSystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::SpriteAnimator>(mb);
@@ -728,6 +730,8 @@ void GameState::loadModels()
     bossEnt.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.5f, -cro::Util::Const::PI / 2.f, 0.f });
     bossEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
     bossEnt.addComponent<cro::CommandTarget>().ID = CommandID::Boss;
+    bossEnt.addComponent<Boss>();
+    //TODO add some particle effects
 
     //collectables
     static const glm::vec3 coinScale(0.12f);

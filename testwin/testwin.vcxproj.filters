@@ -141,6 +141,9 @@
     <ClCompile Include="src\RoundEndState.cpp">
       <Filter>Source Files\TL</Filter>
     </ClCompile>
+    <ClCompile Include="src\BossSystem.cpp">
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -256,6 +259,9 @@
     </ClInclude>
     <ClInclude Include="src\RoundEndState.hpp">
       <Filter>Header Files\TL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BossSystem.hpp">
+      <Filter>Header Files\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
