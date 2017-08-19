@@ -2,6 +2,7 @@
 set(PROJECT_SRC
   ${PROJECT_DIR}/BackgroundSystem.cpp
   ${PROJECT_DIR}/BackgroundDirector.cpp
+  ${PROJECT_DIR}/BossSystem.cpp
   ${PROJECT_DIR}/BuddySystem.cpp
   ${PROJECT_DIR}/ChunkBuilder.cpp
   ${PROJECT_DIR}/ColourSystem.cpp

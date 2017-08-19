@@ -289,6 +289,7 @@
   <ItemGroup>
     <ClCompile Include="src\BackgroundSystem.cpp" />
     <ClCompile Include="src\BackgroundDirector.cpp" />
+    <ClCompile Include="src\BossSystem.cpp" />
     <ClCompile Include="src\BuddySystem.cpp" />
     <ClCompile Include="src\ChunkBuilder.cpp" />
     <ClCompile Include="src\ColourSystem.cpp" />
@@ -329,6 +330,7 @@
     <ClInclude Include="src\BackgroundSystem.hpp" />
     <ClInclude Include="src\BackgroundDirector.hpp" />
     <ClInclude Include="src\BackgroundShader.hpp" />
+    <ClInclude Include="src\BossSystem.hpp" />
     <ClInclude Include="src\BuddySystem.hpp" />
     <ClInclude Include="src\ChunkBuilder.hpp" />
     <ClInclude Include="src\ColourSystem.hpp" />
