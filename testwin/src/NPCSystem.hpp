@@ -114,7 +114,7 @@ struct Npc final
 class NpcSystem final : public cro::System
 {
 public:
-    NpcSystem(cro::MessageBus&);
+    explicit NpcSystem(cro::MessageBus&);
 
     void handleMessage(const cro::Message&) override;
     void process(cro::Time) override;

@@ -56,7 +56,7 @@ struct CollectableItem final
 class ItemSystem final : public cro::System
 {
 public:
-    ItemSystem(cro::MessageBus&);
+    explicit ItemSystem(cro::MessageBus&);
 
     void process(cro::Time) override;
     void handleMessage(const cro::Message&) override;

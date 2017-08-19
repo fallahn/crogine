@@ -45,7 +45,7 @@ struct Buddy final
 class BuddySystem final : public cro::System
 {
 public:
-    BuddySystem(cro::MessageBus&);
+    explicit BuddySystem(cro::MessageBus&);
 
     void handleMessage(const cro::Message&) override;
     void process(cro::Time) override;

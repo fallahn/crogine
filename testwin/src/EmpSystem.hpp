@@ -40,7 +40,7 @@ struct Emp final
 class EmpSystem final : public cro::System
 {
 public:
-    EmpSystem(cro::MessageBus&);
+    explicit EmpSystem(cro::MessageBus&);
 
     void process(cro::Time) override;
 

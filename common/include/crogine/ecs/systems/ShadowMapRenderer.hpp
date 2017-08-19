@@ -55,7 +55,7 @@ namespace cro
         \brief Constructor.
         \param mb Message bus instance
         */
-        ShadowMapRenderer(MessageBus& mb);
+        explicit ShadowMapRenderer(MessageBus& mb);
 
         void process(cro::Time) override;
 

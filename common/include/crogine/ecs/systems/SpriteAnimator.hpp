@@ -42,7 +42,7 @@ namespace cro
     class CRO_EXPORT_API SpriteAnimator final : public System
     {
     public:
-        SpriteAnimator(MessageBus&);
+        explicit SpriteAnimator(MessageBus&);
 
         void process(cro::Time) override;
 
