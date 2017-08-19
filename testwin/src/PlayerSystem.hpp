@@ -50,7 +50,7 @@ struct PlayerInfo final
 class PlayerSystem final : public cro::System
 {
 public:
-    PlayerSystem(cro::MessageBus&);
+    explicit PlayerSystem(cro::MessageBus&);
 
     void handleMessage(const cro::Message&) override;
     void process(cro::Time) override;

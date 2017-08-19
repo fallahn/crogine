@@ -58,7 +58,7 @@ struct HudItem final
 class HudSystem final : public cro::System
 {
 public:
-    HudSystem(cro::MessageBus&);
+    explicit HudSystem(cro::MessageBus&);
 
     void handleMessage(const cro::Message&) override;
     void process(cro::Time) override;

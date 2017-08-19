@@ -365,7 +365,7 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     inputEnt.getComponent<cro::Text>().setCharSize(TextLarge);
     inputEnt.getComponent<cro::Text>().setColour(textColourSelected);
     inputEnt.addComponent<cro::Transform>().setParent(parentEnt);
-    inputEnt.getComponent<cro::Transform>().setPosition({ (-textArea.width / 2.f) + 32.f, -22.f, 0.f });
+    inputEnt.getComponent<cro::Transform>().setPosition({ (-textArea.width / 2.f) + 32.f, -32.f, 0.f });
     inputEnt.addComponent<cro::CommandTarget>().ID = UICommand::NameText;
 }
 

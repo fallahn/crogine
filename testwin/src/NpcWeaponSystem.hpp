@@ -52,7 +52,7 @@ struct NpcWeapon final
 class NpcWeaponSystem final : public cro::System
 {
 public:
-    NpcWeaponSystem(cro::MessageBus&);
+    explicit NpcWeaponSystem(cro::MessageBus&);
 
     void handleMessage(const cro::Message&) override;
     void process(cro::Time) override;

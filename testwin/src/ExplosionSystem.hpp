@@ -44,7 +44,7 @@ struct Explosion final
 class ExplosionSystem final : public cro::System
 {
 public:
-    ExplosionSystem(cro::MessageBus&);
+    explicit ExplosionSystem(cro::MessageBus&);
 
     void handleMessage(const cro::Message&) override;
 

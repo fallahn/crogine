@@ -43,7 +43,7 @@ namespace cro
     class CRO_EXPORT_API ProjectionMapSystem final : public System
     {
     public:
-        ProjectionMapSystem(MessageBus&);
+        explicit ProjectionMapSystem(MessageBus&);
 
         void process(Time) override;
     };

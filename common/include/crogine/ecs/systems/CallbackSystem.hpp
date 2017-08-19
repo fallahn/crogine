@@ -50,7 +50,7 @@ namespace cro
     class CRO_EXPORT_API CallbackSystem final : public cro::System
     {
     public:
-        CallbackSystem(MessageBus&);
+        explicit CallbackSystem(MessageBus&);
 
         void process(cro::Time) override;
     };

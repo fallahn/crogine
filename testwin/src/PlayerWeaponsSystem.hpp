@@ -50,7 +50,7 @@ struct PlayerWeapon final
 class PlayerWeaponSystem final : public cro::System
 {
 public:
-    PlayerWeaponSystem(cro::MessageBus&);
+    explicit PlayerWeaponSystem(cro::MessageBus&);
 
     void process(cro::Time) override;
 

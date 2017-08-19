@@ -47,7 +47,7 @@ namespace cro
     class CRO_EXPORT_API AudioSystem final : public System
     {
     public:
-        AudioSystem(MessageBus&);
+        explicit AudioSystem(MessageBus&);
 
         void process(cro::Time) override;
 
