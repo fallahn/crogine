@@ -43,6 +43,7 @@ namespace cro
     class MessageBus;
     /*!
     \brief Culls and sorts entities into draw lists for renderer.
+    \deprecated - this is done by default in the ModelRenderer system.
     */
     class CRO_EXPORT_API MeshSorter final : public System
     {

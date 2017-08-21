@@ -43,7 +43,7 @@ namespace cro
     it is necessary to step through with accurate timing for visual effects.
     As the default timestep in crogine is not fixed this class wraps the
     wavetable vector and ensures that the returned value is accurate for
-    the givven frame time.
+    the given frame time.
     */
     class CRO_EXPORT_API Wavetable final
     {

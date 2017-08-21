@@ -45,7 +45,7 @@ namespace cro
 {
     /*!
     \brief Represents a camera within the scene.
-    Use MeshRenderer::setActiveCamera() to use an entity with
+    Use Scene::setActiveCamera() to use an entity with
     a camera component as the current view
     */
     struct CRO_EXPORT_API Camera final
