@@ -46,7 +46,7 @@ namespace cro
     \brief CPU side representation of an image.
     Images can be loaded from file formats BMP, GIF, JPEG, LBM, PCX, PNG, PNM, TGA
     (desktop platforms can load all formats supported by SDL2_image).
-    Images can have heir pixels manipulated directly, but can only be drawn once
+    Images can have their pixels manipulated directly, but can only be drawn once
     they have been loaded on to the GPU via cro::Texture. Unlike texture Images 
     are copyable - although this is a heavy operation.
     */

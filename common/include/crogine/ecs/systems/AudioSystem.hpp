@@ -39,7 +39,7 @@ namespace cro
     based on the Scene's active AudioListener.
     Because the audio subsystem at a hardware level only has a 
     single listener point when using multiple scenes (for
-    example a second 2D scene to render a UI) onnly one of
+    example a second 2D scene to render a UI) only one of
     these scenes should have an AudioSystem active within it.
     Multiple systems will work, however spatialisation will
     not be calculated correctly.

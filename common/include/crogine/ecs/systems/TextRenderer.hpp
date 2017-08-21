@@ -47,7 +47,7 @@ namespace cro
 
     /*!
     \brief Text renderer class.
-    Responsible for batching and rendering sprite components.
+    Responsible for batching and rendering Text components.
     */
     class CRO_EXPORT_API TextRenderer final : public System, public Renderable
     {
