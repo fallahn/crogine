@@ -330,13 +330,13 @@ void GameState::createUI()
 #ifdef PLATFORM_MOBILE
     m_resources.textures.get("assets/ui/ui_buttons.png", false).setSmooth(true);
     auto mouseEnter = uiSystem->addCallback(
-        [](cro::Entity entity, cro::uint64)
+        [](cro::Entity entity, glm::vec2)
     {
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Blue());
     });
 
     auto mouseExit = uiSystem->addCallback(
-        [](cro::Entity entity, cro::uint64)
+        [](cro::Entity entity, glm::vec2)
     {
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
     });
