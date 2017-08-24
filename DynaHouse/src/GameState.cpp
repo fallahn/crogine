@@ -185,7 +185,7 @@ void GameState::createScene()
         m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
         //entity.addComponent<cro::Transform>().scale(houseScale);
         //entity.getComponent<cro::Transform>().setPosition({ i * stride, 0.63f, -0.5f });
-        entity.addComponent<cro::Transform>().setPosition({ i * stride, 0.f, -10.f });
+        entity.addComponent<cro::Transform>().setPosition({ i * stride, 0.f, -0.f });
 
         /*cro::PhysicsShape ps;
         ps.type = cro::PhysicsShape::Type::Box;
@@ -206,6 +206,7 @@ void GameState::createScene()
 
     entity.addComponent<cro::Transform>().setScale(glm::vec3(0.035f));
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, cro::Util::Const::PI / 2.f, 0.f });
+    entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 10.f });
     entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Idle);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
@@ -278,12 +279,13 @@ void GameState::createScene()
 
     //3D camera
     auto ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 40.f });
+    ent.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 50.f });
     //projection is set in updateView()
     ent.addComponent<cro::Camera>();// .projection = glm::perspective(45.f, 16.f / 9.f, 0.1f, 20.f);
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
-    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 80.4f, -40.3f });
+    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 20.4f, -10.3f });
     m_scene.getSunlight().setDirection({ -0.f, -1.f, 0.f });
+    m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
     cro::PhysicsShape boundsShape;
     boundsShape.type = cro::PhysicsShape::Type::Box;
@@ -324,10 +326,10 @@ void GameState::createUI()
     m_overlayScene.setActiveCamera(ent);
 
     //preview shadow map
-    ent = m_overlayScene.createEntity();
+    /*ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 20.f, 20.f, 0.f });
     ent.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
-    ent.addComponent<cro::Sprite>().setTexture(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture());
+    ent.addComponent<cro::Sprite>().setTexture(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture());*/
 
 #ifdef PLATFORM_MOBILE
     m_resources.textures.get("assets/ui/ui_buttons.png", false).setSmooth(true);
