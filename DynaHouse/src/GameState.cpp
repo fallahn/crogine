@@ -164,7 +164,7 @@ void GameState::addSystems()
 void GameState::loadAssets()
 {
     m_modelDefs[GameModelID::BatCat].loadFromFile("assets/models/batcat.cmt", m_resources);
-    m_modelDefs[GameModelID::TestRoom].loadFromFile("assets/models/test_room.cmt", m_resources);
+    m_modelDefs[GameModelID::TestRoom].loadFromFile("assets/models/scene01.cmt", m_resources);
     m_modelDefs[GameModelID::Grenade].loadFromFile("assets/models/grenade.cmt", m_resources);
 
     CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
@@ -177,16 +177,17 @@ void GameState::createScene()
     static const std::size_t roomCount = 6;
     glm::vec3 houseScale(1.3f);
     const auto& bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::TestRoom].getMeshID()).boundingBox;
-    const float stride = ((bb[1].x - bb[0].x) * houseScale.x) - 0.01f;
+    const float stride = ((bb[1].x - bb[0].x)/* * houseScale.x*/) - 0.01f;
 
     for (auto i = 0u; i < roomCount; ++i)
     {
         auto entity = m_scene.createEntity();
         m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
-        entity.addComponent<cro::Transform>().scale(houseScale);
-        entity.getComponent<cro::Transform>().setPosition({ i * stride, 0.63f, -0.5f });
+        //entity.addComponent<cro::Transform>().scale(houseScale);
+        //entity.getComponent<cro::Transform>().setPosition({ i * stride, 0.63f, -0.5f });
+        entity.addComponent<cro::Transform>().setPosition({ i * stride, 0.f, -10.f });
 
-        cro::PhysicsShape ps;
+        /*cro::PhysicsShape ps;
         ps.type = cro::PhysicsShape::Type::Box;
         ps.extent = { 0.01f, 0.2f, 0.25f };
         ps.extent *= houseScale;
@@ -196,14 +197,14 @@ void GameState::createScene()
         ps.position.x = -ps.position.x;
         entity.getComponent<cro::PhysicsObject>().addShape(ps);
         entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player |CollisionID::Weapon);
-        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Wall);
+        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Wall);*/
     }
 
     //dat cat man
     auto entity = m_scene.createEntity();
     m_modelDefs[GameModelID::BatCat].createModel(entity, m_resources);
 
-    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.0017f));
+    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.035f));
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, cro::Util::Const::PI / 2.f, 0.f });
     entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Idle);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
@@ -277,10 +278,11 @@ void GameState::createScene()
 
     //3D camera
     auto ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 0.f, 0.6f, 2.3f });
-    ent.addComponent<cro::Camera>();
+    ent.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 40.f });
+    //projection is set in updateView()
+    ent.addComponent<cro::Camera>();// .projection = glm::perspective(45.f, 16.f / 9.f, 0.1f, 20.f);
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
-    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 0.4f, -1.3f });
+    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 80.4f, -40.3f });
     m_scene.getSunlight().setDirection({ -0.f, -1.f, 0.f });
 
     cro::PhysicsShape boundsShape;
@@ -322,10 +324,10 @@ void GameState::createUI()
     m_overlayScene.setActiveCamera(ent);
 
     //preview shadow map
-    /*ent = m_overlayScene.createEntity();
+    ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 20.f, 20.f, 0.f });
     ent.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
-    ent.addComponent<cro::Sprite>().setTexture(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture());*/
+    ent.addComponent<cro::Sprite>().setTexture(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture());
 
 #ifdef PLATFORM_MOBILE
     m_resources.textures.get("assets/ui/ui_buttons.png", false).setSmooth(true);
@@ -442,7 +444,7 @@ void GameState::updateView()
     size.x = 1.f;
 
     auto& cam3D = m_scene.getActiveCamera().getComponent<cro::Camera>();
-    cam3D.projection = glm::perspective(0.6f, 16.f / 9.f, 0.1f, 100.f);
+    cam3D.projection = glm::perspective(0.6f, 16.f / 9.f, 0.1f, 180.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 
