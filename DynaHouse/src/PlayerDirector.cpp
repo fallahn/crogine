@@ -49,8 +49,9 @@ namespace
 {
     constexpr float fixedUpdate = 1.f / 60.f;
 
-    const float walkSpeed = 10.f;
+    const float walkSpeed = 16.f;
     const float turnSpeed = 10.f;
+    const float jumpVelocity = 40.f;
     const float maxRotation = cro::Util::Const::PI / 2.f;
 
     const float cameraSpeed = 12.f;
@@ -60,7 +61,7 @@ namespace
         Up = 0x1, Down = 0x2, Left = 0x4, Right = 0x8, Shoot = 0x10
     };
 
-    const glm::vec3 gravity(0.f, -9.f, 0.f);
+    const glm::vec3 gravity(0.f, -90.f, 0.f);
     const glm::vec3 weaponOffset(0.f, 0.34f, 0.f);
 
     cro::int32 currentWeapon = WeaponEvent::Laser;
@@ -296,7 +297,7 @@ void PlayerDirector::process(cro::Time dt)
                     break;
                 case Player::State::Jumping:
                     animID = AnimationID::BatCat::Jump;
-                    m_playerVelocity.y = 3.f;
+                    m_playerVelocity.y = jumpVelocity;
                     break;
                 }
             }
