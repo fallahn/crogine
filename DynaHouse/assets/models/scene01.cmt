@@ -1,0 +1,11 @@
+model scene01
+{
+	mesh = "assets/models/scene01.cmf"
+	
+	material Unlit
+	{
+		diffuse = "assets/textures/scene01.png"
+		smooth = true
+		rx_shadows = true		
+	}
+}
