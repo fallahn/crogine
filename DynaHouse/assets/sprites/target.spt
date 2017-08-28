@@ -1,0 +1,11 @@
+sprite_sheet
+{
+	src = "assets/sprites/target.png"
+	//blendmode = add
+	smooth = true
+
+	sprite target
+	{
+		bounds = 0,0,64,64
+	}
+}

@@ -27,87 +27,14 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef DH_RESOURCE_IDS_HPP_
-#define DH_RESOURCE_IDS_HPP_
+#ifndef DH_TERRAIN_CHUNK_HPP_
+#define DH_TERRAIN_CHUNK_HPP_
 
-#include <crogine/graphics/MeshResource.hpp>
-
-namespace MaterialID
+struct TerrainChunk final
 {
-    /*enum
-    {
+    float width = 0.f;
+    bool inUse = false;
+    bool followed = false;
+};
 
-    };*/
-}
-
-namespace MeshID
-{
-    /*enum
-    {
-        
-    };*/
-}
-
-namespace GameModelID
-{
-    enum
-    {
-        BatCat = 0,
-        TestRoom,
-        Grenade,
-        Count
-    };
-}
-
-namespace FontID
-{
-    enum
-    {
-        MenuFont
-    };
-}
-
-namespace ShaderID
-{
-    enum
-    {
-        Background
-    };
-}
-
-namespace CommandID
-{
-    enum
-    {
-        Camera = 0x1,
-        Player = 0x2,
-        Cursor = 0x4
-    };
-}
-
-namespace AnimationID
-{
-    namespace BatCat
-    {
-        enum
-        {
-            Run = 0,
-            Idle,
-            Jump
-        };
-    }
-}
-
-namespace CollisionID
-{
-    enum
-    {
-        Wall = 0x1,
-        Player = 0x2,
-        Npc = 0x4,
-        Bounds = 0x8,
-        Weapon = 0x10
-    };
-}
-
-#endif //DH_RESOURCE_IDS_HPP_
+#endif //DH_TERRAIN_CHUNK_HPP_
