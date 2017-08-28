@@ -39,7 +39,7 @@ struct Player final
 {
     enum class State
     {
-        Idle, Running, Jumping
+        Idle, Running
     }state = State::Idle;
     cro::int16 lives = 3;
     float health = 100.f;
@@ -56,9 +56,6 @@ private:
     cro::uint16 m_previousFlags;
     float m_accumulator;
     float m_playerRotation;
-    float m_playerXPosition;
-    glm::vec3 m_playerVelocity;
-    bool m_canJump;
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;

@@ -27,87 +27,21 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef DH_RESOURCE_IDS_HPP_
-#define DH_RESOURCE_IDS_HPP_
+#ifndef DH_TERRAIN_SYSTEM_HPP_
+#define DH_TERRAIN_SYSTEM_HPP_
 
-#include <crogine/graphics/MeshResource.hpp>
+#include <crogine/ecs/System.hpp>
 
-namespace MaterialID
+class TerrainSystem final : public cro::System
 {
-    /*enum
-    {
+public:
 
-    };*/
-}
+    explicit TerrainSystem(cro::MessageBus&);
 
-namespace MeshID
-{
-    /*enum
-    {
-        
-    };*/
-}
+    void process(cro::Time) override;
 
-namespace GameModelID
-{
-    enum
-    {
-        BatCat = 0,
-        TestRoom,
-        Grenade,
-        Count
-    };
-}
+private:
+    void onEntityAdded(cro::Entity) override;
+};
 
-namespace FontID
-{
-    enum
-    {
-        MenuFont
-    };
-}
-
-namespace ShaderID
-{
-    enum
-    {
-        Background
-    };
-}
-
-namespace CommandID
-{
-    enum
-    {
-        Camera = 0x1,
-        Player = 0x2,
-        Cursor = 0x4
-    };
-}
-
-namespace AnimationID
-{
-    namespace BatCat
-    {
-        enum
-        {
-            Run = 0,
-            Idle,
-            Jump
-        };
-    }
-}
-
-namespace CollisionID
-{
-    enum
-    {
-        Wall = 0x1,
-        Player = 0x2,
-        Npc = 0x4,
-        Bounds = 0x8,
-        Weapon = 0x10
-    };
-}
-
-#endif //DH_RESOURCE_IDS_HPP_
+#endif //DH_TERRAIN_SYSTEM_HPP_

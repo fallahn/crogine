@@ -31,7 +31,8 @@ source distribution.
 #include "ResourceIDs.hpp"
 #include "Messages.hpp"
 #include "PlayerDirector.hpp"
-#include "PlayerWeaponSystem.hpp"
+#include "TerrainChunk.hpp"
+#include "TerrainSystem.hpp"
 
 #include <crogine/detail/GlobalConsts.hpp>
 
@@ -106,6 +107,26 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 //public
 bool GameState::handleEvent(const cro::Event& evt)
 {    
+    if (evt.type == SDL_MOUSEMOTION)
+    {
+        auto x = static_cast<float>(evt.motion.x);
+        auto y = static_cast<float>(evt.motion.y); 
+
+        //convert to world coords
+        //bit of a kludge using fixed view size
+        auto windowSize = cro::App::getWindow().getSize();
+        x = (x / windowSize.x) * 1280.f;
+        y = (1.f - (y / windowSize.y)) * 720.f;
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Cursor;
+        cmd.action = [x, y](cro::Entity entity, cro::Time)
+        {
+            entity.getComponent<cro::Transform>().setPosition({ x, y, 0 });
+        };
+        commandSystem->sendCommand(cmd);
+    }
+    
     uiSystem->handleEvent(evt);
     m_scene.forwardEvent(evt);
     return true;
@@ -142,9 +163,10 @@ void GameState::render()
 void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    //m_scene.addSystem<cro::ProjectionMapSystem>(mb);
+
     m_scene.addSystem<cro::CommandSystem>(mb);
-    m_scene.addSystem<PlayerWeaponSystem>(mb);
+    m_scene.addSystem<TerrainSystem>(mb);
+
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::SceneGraph>(mb);
@@ -165,115 +187,56 @@ void GameState::loadAssets()
 {
     m_modelDefs[GameModelID::BatCat].loadFromFile("assets/models/batcat.cmt", m_resources);
     m_modelDefs[GameModelID::TestRoom].loadFromFile("assets/models/scene01.cmt", m_resources);
-    m_modelDefs[GameModelID::Grenade].loadFromFile("assets/models/grenade.cmt", m_resources);
 
     CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
-    //m_modelDefs[GameModelID::BatCat].skeleton->play(AnimationID::BatCat::Idle);
 }
 
 void GameState::createScene()
 {
-    //rooms
-    static const std::size_t roomCount = 6;
-    glm::vec3 houseScale(1.3f);
-    const auto& bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::TestRoom].getMeshID()).boundingBox;
-    const float stride = ((bb[1].x - bb[0].x)/* * houseScale.x*/) - 0.01f;
-
-    for (auto i = 0u; i < roomCount; ++i)
-    {
-        auto entity = m_scene.createEntity();
-        m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
-        //entity.addComponent<cro::Transform>().scale(houseScale);
-        //entity.getComponent<cro::Transform>().setPosition({ i * stride, 0.63f, -0.5f });
-        entity.addComponent<cro::Transform>().setPosition({ i * stride, 0.f, -0.f });
-
-        /*cro::PhysicsShape ps;
-        ps.type = cro::PhysicsShape::Type::Box;
-        ps.extent = { 0.01f, 0.2f, 0.25f };
-        ps.extent *= houseScale;
-        ps.position = { -0.67f, 0.25f, 0.4f };
-        ps.position *= houseScale;
-        entity.addComponent<cro::PhysicsObject>().addShape(ps);
-        ps.position.x = -ps.position.x;
-        entity.getComponent<cro::PhysicsObject>().addShape(ps);
-        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player |CollisionID::Weapon);
-        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Wall);*/
-    }
-
     //dat cat man
     auto entity = m_scene.createEntity();
     m_modelDefs[GameModelID::BatCat].createModel(entity, m_resources);
 
-    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.035f));
+    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.03f));
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, cro::Util::Const::PI / 2.f, 0.f });
-    entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 10.f });
-    entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Idle);
+    entity.getComponent<cro::Transform>().setPosition({ -19.f, 0.f, 6.f });
+    entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Run);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
-
 
     auto& phys = entity.addComponent<cro::PhysicsObject>();
     cro::PhysicsShape ps;
     ps.type = cro::PhysicsShape::Type::Sphere;
-    ps.radius = 0.085f;
-    ps.position.z = 0.34f;
+    ps.radius = 1.7f;
+    ps.position.z = 6.6f;
     phys.addShape(ps);
 
     ps.type = cro::PhysicsShape::Type::Capsule;
-    ps.length = 0.085f;
-    ps.position.z = 0.12f;
+    ps.length = 1.85f;
+    ps.position.z = 2.8f;
     ps.orientation = cro::PhysicsShape::Orientation::Z;
     phys.addShape(ps);
 
     phys.setCollisionFlags(CollisionID::Wall);
     phys.setCollisionGroups(CollisionID::Player);
 
+    //load terrain chunks
+    entity = m_scene.createEntity();
+    m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
+    entity.addComponent<cro::Transform>();
+    auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+    entity.addComponent<TerrainChunk>().inUse = true;
+    entity.getComponent<TerrainChunk>().width = 175.f;// bb[1].x - bb[0].x; //TODO fix this
 
-    //weapon entities
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/sprites/lasers.spt", m_resources.textures);
-    auto laserSize = spriteSheet.getSprite("player_pulse").getSize();
-
-    const glm::vec3 laserScale(0.002f);
-    laserSize *= laserScale.x;
-    laserSize /= 2.f;
-
-    cro::PhysicsShape laserShape;
-    laserShape.type = cro::PhysicsShape::Type::Box;
-    laserShape.extent = { laserSize.x, laserSize.y, 0.001f };
-
-    static const std::size_t laserCount = 12;
-    for (auto i = 0u; i < laserCount; ++i)
+    //TODO these will be different types of chunk
+    static const int count = 3;
+    for (auto i = 0; i < count; ++i)
     {
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setScale(laserScale);
-        entity.getComponent<cro::Transform>().setPosition({ -100.f, 0.f, 0.f });
-        entity.getComponent<cro::Transform>().setOrigin({ laserSize.x / laserScale.x, laserSize.y / laserScale.x, 0.f });
-        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_pulse");
-        entity.addComponent<PlayerWeapon>().type = PlayerWeapon::Laser;
-        entity.addComponent<cro::PhysicsObject>().addShape(laserShape);
-        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Weapon);
-        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Wall | CollisionID::Npc);
-    }
-
-    static const std::size_t grenadeCount = 4;
-    glm::vec3 grenadeScale(0.05f);
-    cro::PhysicsShape grenadeShape;
-    grenadeShape.type = cro::PhysicsShape::Type::Box;
-    grenadeShape.extent = grenadeScale / 2.f;
-
-    for (auto i = 0u; i < grenadeCount; ++i)
-    {
-        entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setScale(grenadeScale);
-        entity.getComponent<cro::Transform>().setPosition({ -100.f, 0.f, 0.f });
-
-        m_modelDefs[GameModelID::Grenade].createModel(entity, m_resources);
-
-        entity.addComponent<PlayerWeapon>().type = PlayerWeapon::Grenade;
-        entity.addComponent<cro::PhysicsObject>().addShape(grenadeShape);
-        entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Weapon);
-        entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Wall | CollisionID::Npc);
+        m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
+        entity.addComponent<cro::Transform>().setPosition({ 400.f, 0.f, 0.f });
+        auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+        entity.addComponent<TerrainChunk>().width = 175.f;
     }
 
 
@@ -283,11 +246,11 @@ void GameState::createScene()
     //projection is set in updateView()
     ent.addComponent<cro::Camera>();// .projection = glm::perspective(45.f, 16.f / 9.f, 0.1f, 20.f);
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
-    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 20.4f, -10.3f });
+    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 19.f, 16.4f, -10.3f });
     m_scene.getSunlight().setDirection({ -0.f, -1.f, 0.f });
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
-    cro::PhysicsShape boundsShape;
+    /*cro::PhysicsShape boundsShape;
     boundsShape.type = cro::PhysicsShape::Type::Box;
     boundsShape.extent = { 0.01f, 0.5f, 0.5f };
     boundsShape.position.x = 1.2f;
@@ -300,15 +263,9 @@ void GameState::createScene()
     boundsShape.position.y = -0.63f;
     ent.getComponent<cro::PhysicsObject>().addShape(boundsShape);
     ent.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Bounds);
-    ent.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Weapon);
+    ent.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Weapon);*/
 
     m_scene.setActiveCamera(ent);
-
-
-
-    //auto& catText = entity.addComponent<cro::Text>(font);
-    //catText.setColour(cro::Colour::Red());
-    //catText.setString("Hello, my name is Charles");
 }
 
 namespace
@@ -330,6 +287,16 @@ void GameState::createUI()
     ent.addComponent<cro::Transform>().setPosition({ 20.f, 20.f, 0.f });
     ent.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
     ent.addComponent<cro::Sprite>().setTexture(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture());*/
+
+
+    cro::SpriteSheet targetSheet;
+    targetSheet.loadFromFile("assets/sprites/target.spt", m_resources.textures);
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Sprite>() = targetSheet.getSprite("target");
+    auto size = ent.getComponent<cro::Sprite>().getSize();
+    ent.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
+    ent.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
+    ent.addComponent<cro::CommandTarget>().ID = CommandID::Cursor;
 
 #ifdef PLATFORM_MOBILE
     m_resources.textures.get("assets/ui/ui_buttons.png", false).setSmooth(true);
@@ -426,16 +393,6 @@ void GameState::createUI()
     ui4.callbacks[cro::UIInput::MouseExit] = mouseExit;
     ui4.callbacks[cro::UIInput::MouseDown] = mouseDown;
     ui4.callbacks[cro::UIInput::MouseUp] = mouseUp;
-#else
-    ent = m_overlayScene.createEntity();
-    auto& font = m_resources.fonts.get(0);
-    font.loadFromFile("assets/VeraMono.ttf");
-    auto& text = ent.addComponent<cro::Text>(font);
-    text.setColour(cro::Colour::Blue());
-    text.setString("WASD to move");
-    text.setCharSize(60);
-    ent.addComponent<cro::Transform>().setPosition({ 50.f, 700.f, 0.f });
-
 #endif //PLATFORM_MOBILE
 }
 

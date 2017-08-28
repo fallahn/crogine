@@ -9,4 +9,4 @@ set(PROJECT_SRC
   #${PROJECT_DIR}/MenuScores.cpp
   ${PROJECT_DIR}/MyApp.cpp
   ${PROJECT_DIR}/PlayerDirector.cpp
-  ${PROJECT_DIR}/PlayerWeaponSystem.cpp)
+  ${PROJECT_DIR}/TerrainSystem.cpp)
