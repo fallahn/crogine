@@ -85,6 +85,9 @@
     <Filter Include="Source Files\audio">
       <UniqueIdentifier>{b30beaa5-af59-4c3f-90d2-cebd9ba9527e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\detail\enet">
+      <UniqueIdentifier>{b9fee0d2-1727-4f26-a4ca-17662ff6c485}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\Config.hpp">
@@ -721,6 +724,30 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\CallbackSystem.cpp">
       <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\callbacks.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\compress.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\host.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\list.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\packet.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\peer.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\protocol.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\detail\enet\win32.c">
+      <Filter>Source Files\detail\enet</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

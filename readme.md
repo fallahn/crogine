@@ -5,6 +5,24 @@ CROssplatform enGINE.
 
 SDL2 Based game engine which runs on Windows, linux and Android.
 
+#### Building
+Using the CMake file included in the common directory first generate  
+project files for your compiler/environment of choice, then build and  
+install the crogine library. To build the testwin project (which is a  
+misnomer - it actually targets all desktop platforms supported by SDL2)  
+use the CMake file to create build files for your preferred environment.  
+The included FindCROGINE.cmake file should find the installed library if  
+it was installed in the default location - else you need to manually  
+point CMake to the crogine lib.
+
+On windows you can use the included Visual Studio 2017 solution to build  
+crogine and the demo projects for both Windows, and Android if the  
+cross platform tools for Visual Studio are installed.
+
+Currently there are no Android.mk files for the android build - if  
+anyone wants to submit a pull request I'll be happy to review :)
+
+
 -----------------------------------------------------------------------
 
 Matt Marchant 2017  
