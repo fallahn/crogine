@@ -130,6 +130,9 @@
     <ClInclude Include="..\common\include\crogine\graphics\TextureResource.hpp" />
     <ClInclude Include="..\common\include\crogine\gui\Gui.hpp" />
     <ClInclude Include="..\common\include\crogine\gui\GuiClient.hpp" />
+    <ClInclude Include="..\common\include\crogine\network\NetClient.hpp" />
+    <ClInclude Include="..\common\include\crogine\network\NetData.hpp" />
+    <ClInclude Include="..\common\include\crogine\network\NetHost.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Constants.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Maths.hpp" />
     <ClInclude Include="..\common\include\crogine\util\Matrix.hpp" />
@@ -160,6 +163,7 @@
     <ClInclude Include="..\common\src\imgui\imgui.h" />
     <ClInclude Include="..\common\src\imgui\imgui_render.h" />
     <ClInclude Include="..\common\src\imgui\imgui_internal.h" />
+    <ClInclude Include="..\common\src\network\NetConf.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\android\Android.cpp" />
@@ -255,6 +259,11 @@
     <ClCompile Include="..\common\src\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\common\src\imgui\imgui_render.cpp" />
+    <ClCompile Include="..\common\src\network\NetClient.cpp" />
+    <ClCompile Include="..\common\src\network\NetConf.cpp" />
+    <ClCompile Include="..\common\src\network\NetEvent.cpp" />
+    <ClCompile Include="..\common\src\network\NetHost.cpp" />
+    <ClCompile Include="..\common\src\network\NetPeer.cpp" />
     <ClCompile Include="..\common\src\util\Random.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -265,6 +274,9 @@
     <None Include="..\common\include\crogine\ecs\System.inl" />
     <None Include="..\common\include\crogine\ecs\SystemManager.inl" />
     <None Include="..\common\include\crogine\graphics\Rectangle.inl" />
+    <None Include="..\common\include\crogine\network\NetClient.inl" />
+    <None Include="..\common\include\crogine\network\NetData.inl" />
+    <None Include="..\common\include\crogine\network\NetHost.inl" />
     <None Include="..\common\src\graphics\postprocess\PostChromeAB.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -395,7 +407,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <AdditionalOptions>/w34457 /w34456 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -423,7 +435,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/w34457 /w34456 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -452,7 +464,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
