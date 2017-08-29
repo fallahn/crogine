@@ -29,6 +29,19 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/detail/PhysicsDebug.cpp 
   ${PROJECT_DIR}/detail/SDLResource.cpp
 
+  ${PROJECT_DIR}/detail/enet/callbacks.c
+  ${PROJECT_DIR}/detail/enet/compress.c
+  ${PROJECT_DIR}/detail/enet/host.c
+  ${PROJECT_DIR}/detail/enet/list.c
+  ${PROJECT_DIR}/detail/enet/packet.c
+  ${PROJECT_DIR}/detail/enet/peer.c
+  ${PROJECT_DIR}/detail/enet/protocol.c
+if(WIN32)
+  ${PROJECT_DIR}/detail/enet/win32.c
+else()
+  ${PROJECT_DIR}/detail/enet/unix.c
+endif()
+
   ${PROJECT_DIR}/ecs/Component.cpp
   ${PROJECT_DIR}/ecs/Director.cpp
   ${PROJECT_DIR}/ecs/Entity.cpp
