@@ -88,6 +88,12 @@
     <Filter Include="Source Files\detail\enet">
       <UniqueIdentifier>{b9fee0d2-1727-4f26-a4ca-17662ff6c485}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\network">
+      <UniqueIdentifier>{c01dba85-8666-4b88-9330-b6bd57bd879e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\network">
+      <UniqueIdentifier>{fa1e5bf3-dca2-4170-8dac-ee0fc176c9ed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\include\crogine\Config.hpp">
@@ -465,6 +471,18 @@
     <ClInclude Include="..\common\include\crogine\ecs\components\UIDraggable.hpp">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\include\crogine\network\NetClient.hpp">
+      <Filter>Header Files\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\network\NetData.hpp">
+      <Filter>Header Files\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\crogine\network\NetHost.hpp">
+      <Filter>Header Files\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\src\network\NetConf.hpp">
+      <Filter>Source Files\network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -749,6 +767,21 @@
     <ClCompile Include="..\common\src\detail\enet\win32.c">
       <Filter>Source Files\detail\enet</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\src\network\NetClient.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\network\NetConf.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\network\NetEvent.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\network\NetHost.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\network\NetPeer.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\common\include\crogine\ecs\Entity.inl">
@@ -774,6 +807,15 @@
     </None>
     <None Include="..\common\src\graphics\postprocess\PostChromeAB.inl">
       <Filter>Header Files\graphics\post process</Filter>
+    </None>
+    <None Include="..\common\include\crogine\network\NetClient.inl">
+      <Filter>Header Files\network</Filter>
+    </None>
+    <None Include="..\common\include\crogine\network\NetData.inl">
+      <Filter>Header Files\network</Filter>
+    </None>
+    <None Include="..\common\include\crogine\network\NetHost.inl">
+      <Filter>Header Files\network</Filter>
     </None>
   </ItemGroup>
 </Project>

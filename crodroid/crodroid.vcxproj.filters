@@ -37,6 +37,9 @@
     <Filter Include="src\audio">
       <UniqueIdentifier>{44441809-b04f-46a4-b4e2-351321d12349}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\network">
+      <UniqueIdentifier>{20373a0e-5624-434a-85ca-d78a2f97b36b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\ecs\Entity.cpp">
@@ -317,6 +320,21 @@
     </ClCompile>
     <ClCompile Include="..\common\src\ecs\systems\CallbackSystem.cpp">
       <Filter>src\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\network\NetClient.cpp">
+      <Filter>src\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\network\NetConf.cpp">
+      <Filter>src\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\network\NetEvent.cpp">
+      <Filter>src\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\network\NetHost.cpp">
+      <Filter>src\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\network\NetPeer.cpp">
+      <Filter>src\network</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
