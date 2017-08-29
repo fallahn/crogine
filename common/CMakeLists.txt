@@ -25,8 +25,8 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   endif()
 endif()
 
-SET (CMAKE_CXX_FLAGS_DEBUG "-g -D_DEBUG_ -DUSE_IMGUI")
-SET (CMAKE_CXX_FLAGS_RELEASE "-O4 -DNDEBUG")
+SET (CMAKE_CXX_FLAGS_DEBUG "-g -D_DEBUG_ -DUSE_IMGUI -DHAS_SOCKLEN_T")
+SET (CMAKE_CXX_FLAGS_RELEASE "-O4 -DNDEBUG -DHAS_SOCKLEN_T")
 SET (CMAKE_DEBUG_POSTFIX -d)
 
 find_package(SDL2 REQUIRED)
@@ -56,6 +56,13 @@ endif()
 
 SET(PROJECT_DIR ${CMAKE_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
+
+#add platform specific source files
+if(WIN32)
+  SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_win32})
+else()
+  SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_nix})
+endif()
 
 if(PROJECT_STATIC_RUNTIME)
   add_library(${PROJECT_NAME} STATIC ${PROJECT_SRC})

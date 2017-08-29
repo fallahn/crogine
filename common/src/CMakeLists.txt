@@ -36,11 +36,6 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/detail/enet/packet.c
   ${PROJECT_DIR}/detail/enet/peer.c
   ${PROJECT_DIR}/detail/enet/protocol.c
-if(WIN32)
-  ${PROJECT_DIR}/detail/enet/win32.c
-else()
-  ${PROJECT_DIR}/detail/enet/unix.c
-endif()
 
   ${PROJECT_DIR}/ecs/Component.cpp
   ${PROJECT_DIR}/ecs/Director.cpp
@@ -113,3 +108,11 @@ endif()
   ${PROJECT_DIR}/network/NetPeer.cpp
 
   ${PROJECT_DIR}/util/Random.cpp)
+
+SET(project_src_win32
+  ${PROJECT_DIR}/detail/enet/win32.c
+  )
+
+SET(project_src_nix
+  ${PROJECT_DIR}/detail/enet/unix.c
+  )
