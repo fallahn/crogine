@@ -41,6 +41,7 @@
     <ClCompile Include="..\DynaHouse\src\MyApp.cpp" />
     <ClCompile Include="..\DynaHouse\src\PlayerDirector.cpp" />
     <ClCompile Include="..\DynaHouse\src\PlayerWeaponSystem.cpp" />
+    <ClCompile Include="..\DynaHouse\src\TerrainSystem.cpp" />
     <ClCompile Include="..\SDL2-android\src\main\android\SDL_android_main.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

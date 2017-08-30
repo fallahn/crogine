@@ -146,17 +146,14 @@
   <ItemGroup>
     <Content Include="assets\assets\models\batcat.cmt" />
     <Content Include="assets\assets\models\batcat.iqm" />
-    <Content Include="assets\assets\models\grenade.cmt" />
-    <Content Include="assets\assets\models\test_room.cmf" />
-    <Content Include="assets\assets\models\test_room.cmt" />
-    <Content Include="assets\assets\sprites\lasers.png" />
-    <Content Include="assets\assets\sprites\lasers.spt" />
+    <Content Include="assets\assets\models\scene01.cmf" />
+    <Content Include="assets\assets\models\scene01.cmt" />
+    <Content Include="assets\assets\sprites\target.png" />
+    <Content Include="assets\assets\sprites\target.spt" />
     <Content Include="assets\assets\textures\batcat_diffuse.png" />
     <Content Include="assets\assets\textures\batcat_mask.png" />
     <Content Include="assets\assets\textures\batcat_normal.png" />
-    <Content Include="assets\assets\textures\computerwall005a.png" />
-    <Content Include="assets\assets\textures\shadow.png" />
-    <Content Include="assets\assets\textures\test_room.png" />
+    <Content Include="assets\assets\textures\scene01.png" />
     <Content Include="assets\assets\ui\ui_buttons.png" />
     <Content Include="assets\assets\VeraMono.ttf" />
     <Content Include="res\values\strings.xml" />

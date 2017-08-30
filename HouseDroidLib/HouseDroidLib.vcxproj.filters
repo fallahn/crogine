@@ -27,5 +27,8 @@
     <ClCompile Include="..\DynaHouse\src\PlayerWeaponSystem.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\DynaHouse\src\TerrainSystem.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

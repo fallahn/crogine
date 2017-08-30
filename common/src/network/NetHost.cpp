@@ -104,7 +104,7 @@ bool NetHost::start(const std::string& address, uint16 port, std::size_t maxClie
     }
     else
     {
-        if (!enet_address_set_host(&add, address.c_str()) == 0)
+        if (enet_address_set_host(&add, address.c_str()) != 0)
         {
             Logger::log("Failed setting host listen address", Logger::Type::Error);
             return false;
