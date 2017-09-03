@@ -40,7 +40,7 @@ SpriteAnimator::SpriteAnimator(MessageBus& mb)
     : System(mb, typeid(SpriteAnimator))
 {
     requireComponent<Sprite>();
-    requireComponent<SpriteAnimaton>();
+    requireComponent<SpriteAnimation>();
 }
 
 //public
@@ -51,7 +51,7 @@ void SpriteAnimator::process(cro::Time dt)
     auto& entities = getEntities();
     for (auto& entity : entities) 
     {
-        auto& animation = entity.getComponent<SpriteAnimaton>();
+        auto& animation = entity.getComponent<SpriteAnimation>();
         if (animation.playing)
         {
             auto& sprite = entity.getComponent<Sprite>();

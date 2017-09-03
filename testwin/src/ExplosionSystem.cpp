@@ -48,7 +48,7 @@ ExplosionSystem::ExplosionSystem(cro::MessageBus& mb)
     m_backgroundSpeed   (0.f)
 {
     requireComponent<Explosion>();
-    requireComponent<cro::SpriteAnimaton>();
+    requireComponent<cro::SpriteAnimation>();
 }
 
 //public
@@ -103,7 +103,7 @@ void ExplosionSystem::process(cro::Time dt)
     {
         auto entity = getScene()->getEntity(m_aliveExplosions[i]);
         entity.getComponent<cro::Transform>().move({ -m_backgroundSpeed * dt.asSeconds(), 0.f, 0.f });
-        if (!entity.getComponent<cro::SpriteAnimaton>().playing)
+        if (!entity.getComponent<cro::SpriteAnimation>().playing)
         {
             //animation ended, move to dead list and off screen
             entity.getComponent<cro::Transform>().setPosition({ 0.f, 16.f, 9.5f });
@@ -143,7 +143,7 @@ void ExplosionSystem::spawnExplosion(glm::vec3 position)
         m_aliveCount++;
 
         entity.getComponent<cro::Transform>().setPosition(position);
-        entity.getComponent<cro::SpriteAnimaton>().play(0);
+        entity.getComponent<cro::SpriteAnimation>().play(0);
         //LOG("Spawned explosion: " + std::to_string(position.x) + ", " + std::to_string(position.y) + ", " + std::to_string(position.z), cro::Logger::Type::Info);
     }
 }

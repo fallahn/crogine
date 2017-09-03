@@ -1000,7 +1000,7 @@ void GameState::loadParticles()
             entity.addComponent<cro::Transform>().setPosition({ 0.f, 160.f, -9.3f });
             entity.getComponent<cro::Transform>().setScale(glm::vec3(0.04f));
             entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
-            entity.addComponent<cro::SpriteAnimaton>();
+            entity.addComponent<cro::SpriteAnimation>();
             entity.addComponent<Explosion>().ident = i;
         }
     };

@@ -39,7 +39,7 @@ namespace cro
     \brief Component which contains information about the currently
     playing sprite animation. Requires a SpriteAnimator system in the scene.
     */
-    struct CRO_EXPORT_API SpriteAnimaton final
+    struct CRO_EXPORT_API SpriteAnimation final
     {
         int32 id = -1;
         bool playing = false;
