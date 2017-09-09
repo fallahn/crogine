@@ -93,7 +93,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         createScene();
         createUI();
     });
-    context.appInstance.setClearColour(cro::Colour(0.4f, 0.58f, 0.92f));
+    //context.appInstance.setClearColour(cro::Colour(0.4f, 0.58f, 0.92f));
     //context.mainWindow.setVsyncEnabled(false);
 
     updateView();
@@ -186,7 +186,9 @@ void GameState::addSystems()
 void GameState::loadAssets()
 {
     m_modelDefs[GameModelID::BatCat].loadFromFile("assets/models/batcat.cmt", m_resources);
-    m_modelDefs[GameModelID::TestRoom].loadFromFile("assets/models/scene01.cmt", m_resources);
+    m_modelDefs[GameModelID::TestRoom].loadFromFile("assets/models/scene03.cmt", m_resources);
+    m_modelDefs[GameModelID::Moon].loadFromFile("assets/models/moon.cmt", m_resources);
+    m_modelDefs[GameModelID::Stars].loadFromFile("assets/models/stars.cmt", m_resources);
 
     CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
 }
@@ -223,10 +225,10 @@ void GameState::createScene()
     //load terrain chunks
     entity = m_scene.createEntity();
     m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale({ 200.f / 175.f, 1.f, 1.f });
     auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
     entity.addComponent<TerrainChunk>().inUse = true;
-    entity.getComponent<TerrainChunk>().width = 175.f;// bb[1].x - bb[0].x; //TODO fix this
+    entity.getComponent<TerrainChunk>().width = 200.f;// bb[1].x - bb[0].x; //TODO fix this
 
     //TODO these will be different types of chunk
     static const int count = 3;
@@ -235,10 +237,22 @@ void GameState::createScene()
         entity = m_scene.createEntity();
         m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
         entity.addComponent<cro::Transform>().setPosition({ 400.f, 0.f, 0.f });
+        entity.getComponent<cro::Transform>().setScale({ 200.f / 175.f, 1.f, 1.f });
         auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
-        entity.addComponent<TerrainChunk>().width = 175.f;
+        entity.addComponent<TerrainChunk>().width = 200.f;
     }
 
+
+    //moon and stars background
+    entity = m_scene.createEntity();
+    m_modelDefs[GameModelID::Moon].createModel(entity, m_resources);
+    entity.addComponent<cro::Transform>().setPosition({ -60.f, 70.f, -180.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(6.f));
+
+    entity = m_scene.createEntity();
+    m_modelDefs[GameModelID::Stars].createModel(entity, m_resources);
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.5, -200.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(3.f));
 
     //3D camera
     auto ent = m_scene.createEntity();
@@ -247,7 +261,7 @@ void GameState::createScene()
     ent.addComponent<cro::Camera>();// .projection = glm::perspective(45.f, 16.f / 9.f, 0.1f, 20.f);
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
     m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 19.f, 16.4f, -10.3f });
-    m_scene.getSunlight().setDirection({ -0.f, -1.f, 0.f });
+    m_scene.getSunlight().setDirection({ -0.f, -1.f, -0.4f });
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
     /*cro::PhysicsShape boundsShape;
@@ -403,7 +417,7 @@ void GameState::updateView()
     size.x = 1.f;
 
     auto& cam3D = m_scene.getActiveCamera().getComponent<cro::Camera>();
-    cam3D.projection = glm::perspective(45.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 180.f);
+    cam3D.projection = glm::perspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 280.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 

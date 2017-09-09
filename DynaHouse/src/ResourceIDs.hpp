@@ -55,6 +55,8 @@ namespace GameModelID
         BatCat = 0,
         TestRoom,
         Grenade,
+        Moon,
+        Stars,
         Count
     };
 }

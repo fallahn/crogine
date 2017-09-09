@@ -1,0 +1,14 @@
+model Stars
+{
+	mesh = quad
+	size = 175.0,98.3
+	uv = 3.56, 2.0
+
+	material Unlit
+	{
+		diffuse = "assets/textures/stars.png"
+		repeat = true
+		blendmode = add
+		smooth = true
+	}
+}
