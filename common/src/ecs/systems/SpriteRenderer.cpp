@@ -38,8 +38,8 @@ source distribution.
 #include "../../detail/GLCheck.hpp"
 #include "../../graphics/shaders/Sprite.hpp"
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
 
 #include <cfloat>
 

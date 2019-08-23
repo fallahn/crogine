@@ -32,8 +32,8 @@ source distribution.
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/components/Model.hpp>
 
-#include <glm/gtx/matrix_decompose.hpp>
-#include <glm/gtx/quaternion.hpp>
+#include <crogine/detail/glm/gtx/matrix_decompose.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
 
 using namespace cro;
 

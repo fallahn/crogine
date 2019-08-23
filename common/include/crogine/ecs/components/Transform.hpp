@@ -34,9 +34,9 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/ecs/Entity.hpp>
 
-#include <glm/vec3.hpp>
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
+#include <crogine/detail/glm/gtc/quaternion.hpp>
 
 #include <array>
 #include <vector>

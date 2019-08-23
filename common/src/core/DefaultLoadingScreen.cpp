@@ -32,8 +32,8 @@ source distribution.
 
 #include <crogine/core/App.hpp>
 
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 #include <string>
 #include <vector>

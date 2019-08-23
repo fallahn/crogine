@@ -74,7 +74,7 @@ source distribution.
 #include <crogine/util/Maths.hpp>
 #include <crogine/util/Constants.hpp>
 
-#include <glm/gtx/norm.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 namespace
 {

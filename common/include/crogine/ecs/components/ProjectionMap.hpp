@@ -32,8 +32,8 @@ source distribution.
 
 #include <crogine/Config.hpp>
 
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace cro
 {

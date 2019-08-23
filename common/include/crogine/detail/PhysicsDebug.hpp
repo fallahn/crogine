@@ -34,7 +34,7 @@ source distribution.
 
 #include <LinearMath/btIDebugDraw.h>
 
-#include <glm/mat4x4.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
 
 #include <vector>
 

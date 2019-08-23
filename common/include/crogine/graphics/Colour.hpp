@@ -34,7 +34,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/Assert.hpp>
 
-#include <glm/vec4.hpp>
+#include <crogine/detail/glm/vec4.hpp>
 
 namespace cro
 {

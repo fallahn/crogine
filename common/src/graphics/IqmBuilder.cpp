@@ -30,8 +30,8 @@ source distribution.
 #include <crogine/graphics/IqmBuilder.hpp>
 #include "../detail/GLCheck.hpp"
 
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
+#include <crogine/detail/glm/gtc/quaternion.hpp>
 
 #include <cstring>
 #include <array>

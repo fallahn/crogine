@@ -35,9 +35,9 @@ source distribution.
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/Colour.hpp>
 
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
-#include <glm/mat4x4.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/vec4.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
 
 #include <unordered_map>
 

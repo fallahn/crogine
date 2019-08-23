@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 
-#include <glm/vec2.hpp>
+#include <crogine/detail/glm/vec2.hpp>
 
 namespace cro
 {

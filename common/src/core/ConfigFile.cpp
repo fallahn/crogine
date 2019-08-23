@@ -207,13 +207,13 @@ bool ConfigObject::loadFromFile(const std::string& path)
                 else
                 {
                     //add a new object and make it current
-                    std::string lastLine = data;
+                    std::string prevLine = data;
                     data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
                     removeComment(data);
                     if (data[0] == '{')
                     {
                         braceCount++;
-                        auto name = getObjectName(lastLine);
+                        auto name = getObjectName(prevLine);
                         //if (currentObject->findObjectWithId(name.second))
                         //{
                         //    Logger::log("Object with ID \'" + name.second + "\' already exists, skipping...", Logger::Type::Warning);

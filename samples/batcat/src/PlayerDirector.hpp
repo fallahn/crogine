@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/ecs/Director.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
-#include <glm/vec3.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 struct Player final
 {

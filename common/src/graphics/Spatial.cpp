@@ -29,8 +29,8 @@ source distribution.
 
 #include <crogine/graphics/Spatial.hpp>
 
-#include <glm/vec3.hpp>
-#include <glm/geometric.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/geometric.hpp>
 
 using namespace cro;
 

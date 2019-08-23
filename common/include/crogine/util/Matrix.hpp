@@ -30,8 +30,8 @@ source distribution.
 #ifndef CRO_UTIL_MATRIX_HPP_
 #define CRO_UTIL_MATRIX_HPP_
 
-#include <glm/vec3.hpp>
-#include <glm/mat4x4.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
 
 namespace cro
 {

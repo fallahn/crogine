@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 
-#include <glm/mat4x4.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
 
 #include <vector> //TODO if performance requires switch to fixed size arrays
 #include <string>

@@ -32,7 +32,7 @@ source distribution.
 
 #include <crogine/graphics/MeshBuilder.hpp>
 
-#include <glm/vec2.hpp>
+#include <crogine/detail/glm/vec2.hpp>
 
 namespace cro
 {

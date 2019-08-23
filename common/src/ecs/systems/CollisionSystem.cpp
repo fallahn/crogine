@@ -37,8 +37,8 @@ source distribution.
 
 #include "../../imgui/imgui.h"
 
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/norm.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 

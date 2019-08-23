@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
-#include <glm/vec2.hpp>
+#include <crogine/detail/glm/vec2.hpp>
 
 #include <string>
 

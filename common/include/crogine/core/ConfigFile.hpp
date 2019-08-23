@@ -36,9 +36,9 @@ source distribution.
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/Colour.hpp>
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
+#include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/vec4.hpp>
 
 #include <string>
 #include <vector>

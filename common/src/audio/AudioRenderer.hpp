@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 
-#include <glm/vec3.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 #include <memory>
 #include <string>

@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 
-#include <glm/mat4x4.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
 
 namespace cro
 {

@@ -36,9 +36,9 @@ source distribution.
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/core/Clock.hpp>
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
+#include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/vec4.hpp>
 
 #include <map>
 #include <string>

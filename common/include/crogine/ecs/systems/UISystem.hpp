@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
-#include <glm/mat4x4.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
 
 #include <functional>
 

@@ -37,9 +37,9 @@ source distribution.
 
 #include "../../detail/GLCheck.hpp"
 
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/matrix_inverse.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 
 using namespace cro;
 

@@ -33,9 +33,9 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 
-#include <glm/vec2.hpp>
-#include <glm/vec4.hpp>
-#include <glm/mat4x4.hpp>
+#include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/vec4.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
 
 #include <type_traits>
 #include <algorithm>

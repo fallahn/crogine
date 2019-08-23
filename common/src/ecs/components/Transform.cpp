@@ -29,10 +29,10 @@ source distribution.
 
 #include <crogine/ecs/components/Transform.hpp>
 
-#include <glm/gtx/euler_angles.hpp>
-#include <glm/gtx/quaternion.hpp>
+#include <crogine/detail/glm/gtx/euler_angles.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
 
-#include <glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 using namespace cro;
 

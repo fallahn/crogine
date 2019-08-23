@@ -40,7 +40,7 @@ source distribution.
 
 #include "../../detail/GLCheck.hpp"
 
-#include <glm/gtc/type_ptr.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
 
 //why do I have to hack this? there has to be a catch...
 #ifdef PLATFORM_DESKTOP

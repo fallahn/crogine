@@ -34,7 +34,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Spatial.hpp>
 
-#include <glm/vec3.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 #include <cctype>
 #include <array>

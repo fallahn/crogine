@@ -35,9 +35,9 @@ source distribution.
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
+#include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/vec4.hpp>
 
 #include <array>
 

@@ -35,9 +35,9 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 
-#include <glm/vec2.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/norm.hpp>
+#include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 using namespace cro;
 

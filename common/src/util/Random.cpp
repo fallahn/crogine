@@ -34,7 +34,7 @@ Poisson Disc sampling based on article at http://devmag.org.za/2009/05/03/poisso
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
 
-#include <glm/gtx/norm.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 using namespace cro;
 using namespace cro::Util::Random;

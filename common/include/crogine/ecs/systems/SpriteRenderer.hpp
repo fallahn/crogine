@@ -38,7 +38,7 @@ source distribution.
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
-#include <glm/mat4x4.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
 
 #include <map>
 #include <set>

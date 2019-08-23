@@ -29,9 +29,9 @@ source distribution.
 
 #include <crogine/ecs/Sunlight.hpp>
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/euler_angles.hpp>
-#include <glm/gtx/quaternion.hpp>
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/glm/gtx/euler_angles.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
 
 using namespace cro;
 

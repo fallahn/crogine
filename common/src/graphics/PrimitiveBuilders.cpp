@@ -33,8 +33,8 @@ source distribution.
 
 #include <crogine/detail/Assert.hpp>
 
-#include <glm/vec3.hpp>
-#include <glm/gtc/packing.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/gtc/packing.hpp>
 
 #include "../detail/GLCheck.hpp"
 

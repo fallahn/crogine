@@ -37,7 +37,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/graphics/Spatial.hpp>
 
-#include <glm/vec3.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 #include <array>
 

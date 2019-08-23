@@ -37,7 +37,7 @@ source distribution.
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
-#include <glm/mat4x4.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
 
 #include <vector>
 

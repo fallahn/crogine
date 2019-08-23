@@ -32,7 +32,7 @@ source distribution.
 
 #include <crogine/core/Message.hpp>
 
-#include <glm/vec3.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 namespace MessageID
 {

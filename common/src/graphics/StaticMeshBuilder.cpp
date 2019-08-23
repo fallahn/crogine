@@ -30,7 +30,7 @@ source distribution.
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
-#include <glm/geometric.hpp>
+#include <crogine/detail/glm/geometric.hpp>
 
 #include <limits>
 

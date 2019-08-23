@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/core/Clock.hpp>
 
-#include <glm/mat4x4.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
 
 namespace cro
 {
