@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_CAMERA_HPP_
-#define CRO_CAMERA_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/core/App.hpp>
@@ -87,5 +86,3 @@ namespace cro
         friend class Scene;
     };
 }
-
-#endif //CRO_CAMERA_HPP_

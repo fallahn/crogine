@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_AUDIO_BUFFER_HPP_
-#define CRO_AUDIO_BUFFER_HPP_
+#pragma once
 
 #include <crogine/audio/AudioDataSource.hpp>
 
@@ -55,10 +54,10 @@ namespace cro
         ~AudioBuffer();
 
         AudioBuffer(const AudioBuffer&) = delete;
-        AudioBuffer(AudioBuffer&&);
+        AudioBuffer(AudioBuffer&&) noexcept;
 
         AudioBuffer& operator = (const AudioBuffer&) = delete;
-        AudioBuffer& operator = (AudioBuffer&&);
+        AudioBuffer& operator = (AudioBuffer&&) noexcept;
 
         /*!
         \brief Attempts to load a file from the given path.
@@ -95,5 +94,3 @@ namespace cro
 
     };
 }
-
-#endif //CRO_AUDIO_BUFFER_HPP_

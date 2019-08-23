@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_GUI_CLIENT_HPP_
-#define CRO_GUI_CLIENT_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 
@@ -73,5 +72,3 @@ namespace cro
         void registerWindow(const std::function<void()>&);
     };
 }
-
-#endif //CRO_GUI_CLIENT_HPP_

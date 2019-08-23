@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SHADOW_CASTER_HPP_
-#define CRO_SHADOW_CASTER_HPP_
+#pragma once
 
 namespace cro
 {
@@ -39,5 +38,3 @@ namespace cro
         bool skinned = false;
     };
 }
-
-#endif //CRO_SHADOW_CASTER_HPP_

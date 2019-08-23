@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_TEX_RESOURCE_HPP_
-#define CRO_TEX_RESOURCE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/graphics/Texture.hpp>
@@ -64,9 +63,9 @@ namespace cro
         ~TextureResource() = default;
 
         TextureResource(const TextureResource&) = delete;
-        TextureResource(TextureResource&&) = default;
+        TextureResource(TextureResource&&) noexcept = default;
         const TextureResource& operator = (const TextureResource&) = delete;
-        TextureResource& operator = (TextureResource&&) = default;
+        TextureResource& operator = (TextureResource&&) noexcept = default;
         
         /*!
         \brief Attempts to load the given texture if not already loaded and
@@ -99,5 +98,3 @@ namespace cro
         Colour m_fallbackColour;
     };
 }
-
-#endif //CRO_TEX_RESOURCE_HPP_

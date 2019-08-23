@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_RENDERABLE_HPP_
-#define CRO_RENDERABLE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>
@@ -74,5 +73,3 @@ namespace cro
         std::array<int32, 4> m_previousViewport{};
     };
 }
-
-#endif //CRO_RENDERABLE_HPP_

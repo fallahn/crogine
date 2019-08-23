@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_NETHOST_HPP_
-#define CRO_NETHOST_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -161,5 +160,3 @@ namespace cro
 
 #include "NetHost.inl"
 }
-
-#endif //CRO_NETHOST_HPP_

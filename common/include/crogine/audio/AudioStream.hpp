@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_AUDIO_STREAM_HPP_
-#define CRO_AUDIO_STREAM_HPP_
+#pragma once
 
 #include <crogine/audio/AudioDataSource.hpp>
 
@@ -74,5 +73,3 @@ namespace cro
 
     };
 }
-
-#endif //CRO_AUDIO_STREAM_HPP_

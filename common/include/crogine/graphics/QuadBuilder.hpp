@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_QUAD_BUILDER_HPP_
-#define CRO_QUAD_BUILDER_HPP_
+#pragma once
 
 #include <crogine/graphics/MeshBuilder.hpp>
 
@@ -60,6 +59,3 @@ namespace cro
         Mesh::Data build() const override;
     };
 }
-
-
-#endif //CRO_QUADBUILDER_HPP_

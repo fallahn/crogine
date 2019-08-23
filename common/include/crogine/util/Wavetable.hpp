@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_UTIL_WAVE_HPP_
-#define CRO_UTIL_WAVE_HPP_
+#pragma once
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/util/Constants.hpp>
@@ -69,5 +68,3 @@ namespace cro
         }
     }
 }
-
-#endif //CRO_UTIL_WAVE_HPP_

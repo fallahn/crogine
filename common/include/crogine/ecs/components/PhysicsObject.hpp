@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_PHYSICS_OBJECT_HPP_
-#define CRO_PHYSICS_OBJECT_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -205,12 +204,10 @@ namespace cro
         std::size_t m_shapeCount;
 
         static constexpr std::size_t MaxCollisions = 100;
-        std::array<Entity::ID, MaxCollisions> m_collisionIDs;
-        std::array<Manifold, MaxCollisions> m_manifolds;
+        std::array<Entity::ID, MaxCollisions> m_collisionIDs = {};
+        std::array<Manifold, MaxCollisions> m_manifolds = {};
         std::size_t m_collisionCount;
         
         friend class CollisionSystem;
     };
 }
-
-#endif //CRO_PHYSICS_OBJECT_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_UTIL_MATHS_HPP_
-#define CRO_UTIL_MATHS_HPP_
+#pragma once
 
 #ifdef _MSC_VER
 #define NOMINMAX
@@ -52,5 +51,3 @@ namespace cro
         }
     }
 }
-
-#endif //CRO_UTIL_MATHS_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_AUDIO_RESOURCE_HPP_
-#define CRO_AUDIO_RESOURCE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -52,10 +51,10 @@ namespace cro
 
         ~AudioResource() = default;
         AudioResource(const AudioResource&) = delete;
-        AudioResource(AudioResource&&) = default;
+        AudioResource(AudioResource&&) noexcept = default;
 
         AudioResource& operator = (const AudioResource&) = delete;
-        AudioResource& operator = (AudioResource&&) = default;
+        AudioResource& operator = (AudioResource&&) noexcept = default;
 
         /*!
         \brief Loads an audio file and maps the resulting data to the given ID
@@ -78,5 +77,3 @@ namespace cro
         std::unordered_map<int32, std::unique_ptr<AudioDataSource>> m_sources;
     };
 }
-
-#endif //CRO_AUDIO_RESOURCE_HPP_

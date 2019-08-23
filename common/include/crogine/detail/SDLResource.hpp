@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SDLRESOURCE_HPP_
-#define CRO_SDLRESOURCE_HPP_
+#pragma once
 
 #include <crogine/detail/Assert.hpp>
 
@@ -52,5 +51,3 @@ namespace cro
 		};
 	}
 }
-
-#endif //CRO_SDLRESOURCE_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_TEXT_HPP_
-#define CRO_TEXT_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/graphics/Colour.hpp>
@@ -154,7 +153,7 @@ namespace cro
         };
         std::vector<Vertex> m_vertices;
         int32 m_vboOffset; //starting index in parent VBO
-        std::array<std::size_t, 2u> m_batchIndex;
+        std::array<std::size_t, 2u> m_batchIndex = {};
 
         mutable FloatRect m_localBounds;
         void updateLocalBounds() const;
@@ -164,5 +163,3 @@ namespace cro
         friend class TextRenderer;
     };
 }
-
-#endif //CRO_TEXT_HPP_

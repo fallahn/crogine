@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_MESSAGE_BUS_HPP_
-#define CRO_MESSAGE_BUS_HPP_
+#pragma once
 
 #include <crogine/core/Message.hpp>
 
@@ -132,5 +131,3 @@ namespace cro
         bool m_enabled;
     };
 }
-
-#endif //CRO_MESSAGE_BUS_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SCENE_GRAPH_HPP_
-#define CRO_SCENE_GRAPH_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 
@@ -59,5 +58,3 @@ namespace cro
         void onEntityAdded(Entity) override;
     };
 }
-
-#endif //CRO_SCENE_GRAPH_HPP_

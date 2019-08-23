@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SPRITE_RENDERER_HPP_
-#define CRO_SPRITE_RENDERER_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/ecs/System.hpp>
@@ -141,5 +140,3 @@ namespace cro
         void onEntityRemoved(Entity) override;
     };
 }
-
-#endif //CRO_SPRITE_RENDERER_HPP_

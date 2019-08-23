@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_MODEL_RENDERER_HPP_
-#define CRO_MODEL_RENDERER_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -58,7 +57,7 @@ namespace cro
     /*!
     \brief Used to draw scene Models.
     The system frustum-culls then renders any entities with a Model component
-    in the scene. Note this only renders Models - Sprite and Texxt components
+    in the scene. Note this only renders Models - Sprite and Text components
     have their own respective rendering systems.
     */
     class CRO_EXPORT_API ModelRenderer final : public System, public Renderable
@@ -91,5 +90,3 @@ namespace cro
     };
 
 }
-
-#endif //CRO_MODEL_RENDERER_HPP_

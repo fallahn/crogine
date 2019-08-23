@@ -71,12 +71,14 @@ RenderTexture::~RenderTexture()
 RenderTexture::RenderTexture(RenderTexture&& other)
 {
     m_fboID = other.m_fboID;
+    m_rboID = other.m_rboID;
     m_texture = std::move(other.m_texture);
     m_viewport = other.m_viewport;
     m_lastViewport = other.m_lastViewport;
     m_lastBuffer = other.m_lastBuffer;
 
     other.m_fboID = 0;
+    other.m_rboID = 0;
 }
 
 RenderTexture& RenderTexture::operator=(RenderTexture&& other)

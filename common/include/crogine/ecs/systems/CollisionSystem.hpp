@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_COLLISION_SYSTEM_HPP_
-#define CRO_COLLISION_SYSTEM_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -90,5 +89,3 @@ namespace cro
         Detail::BulletDebug m_debugDrawer;
     };
 }
-
-#endif //CRO_COLLISION_SYSTEM_HPP_

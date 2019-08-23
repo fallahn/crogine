@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_FONT_RESOURCE_HPP_
-#define CRO_FONT_RESOURCE_HPP_
+#pragma once
 
 #include <crogine/graphics/Font.hpp>
 
@@ -64,5 +63,3 @@ namespace cro
         std::map<uint32, std::unique_ptr<Font>> m_fonts;
     };
 }
-
-#endif //CRO_FONT_RESOURCE_HPP_

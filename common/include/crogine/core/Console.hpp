@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_CONSOLE_HPP_
-#define CRO_CONSOLE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 
@@ -106,5 +105,3 @@ namespace cro
 //#include "Console.inl"
 
 }
-
-#endif //CRO_CONSOLE_HPP_

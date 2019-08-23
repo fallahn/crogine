@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_GAME_CONTROLLER_HPP_
-#define CRO_GAME_CONTROLLER_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -98,5 +97,3 @@ namespace cro
 
     };
 }
-
-#endif //CRO_GAME_CONTROLLER_HPP_

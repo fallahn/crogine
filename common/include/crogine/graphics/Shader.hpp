@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SHADER_HPP_
-#define CRO_SHADER_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>
@@ -108,5 +107,3 @@ namespace cro
         std::string parseFile(const std::string&);
     };
 }
-
-#endif //CRO_SHADER_HPP_

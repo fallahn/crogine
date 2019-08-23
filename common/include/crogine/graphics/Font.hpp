@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_FONT_HPP_
-#define CRO_FONT_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>
@@ -137,5 +136,3 @@ namespace cro
         bool createPage(uint32 charSize) const;
     };
 }
-
-#endif //CRO_FONT_HPP_

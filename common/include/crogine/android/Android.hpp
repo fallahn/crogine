@@ -30,8 +30,7 @@ source distribution.
 #ifdef __ANDROID__
 //implement missing stl functions on android
 
-#ifndef CRO_ANDROID_HPP_
-#define CRO_ANDROID_HPP_
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -72,7 +71,5 @@ namespace std
 //#ifdef __cplusplus
 //}
 //#endif //__cplusplus
-
-#endif //CRO_ANDROID_HPP_
 
 #endif //__ANDROID__

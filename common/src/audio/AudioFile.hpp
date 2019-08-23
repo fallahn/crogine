@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_AUDIO_FILE_HPP_
-#define CRO_AUDIO_FILE_HPP_
+#pragma once
 
 #include "PCMData.hpp"
 
@@ -71,5 +70,3 @@ namespace cro
         };
     }
 }
-
-#endif //CRO_AUDIO_FILE_HPP_

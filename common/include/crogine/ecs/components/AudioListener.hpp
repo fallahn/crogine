@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_AUDIO_LISTENER_HPP_
-#define CRO_AUDIO_LISTENER_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 
@@ -72,5 +71,3 @@ namespace cro
         float m_volume = 1.f;
     };
 }
-
-#endif //CRO_AUDIO_LISTENER_HPP_

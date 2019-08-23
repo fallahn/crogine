@@ -29,8 +29,7 @@ source distribution.
 
 //custom assertion macro which is more verbose than standard assert
 
-#ifndef CRO_ASSERT_HPP_
-#define CRO_ASSERT_HPP_
+#pragma once
 
 #include <crogine/core/Log.hpp>
 
@@ -69,5 +68,3 @@ do \
 #define CRO_WARNING(condition, message)
 
 #endif //_DEBUG_
-
-#endif //CRO_ASSERT_HPP_

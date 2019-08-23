@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_NET_DATA_HPP_
-#define CRO_NET_DATA_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Assert.hpp>
@@ -156,5 +155,3 @@ namespace cro
         Unreliable = 0x4 //! <packet will be fragments and sent unreliably if it exceeds MTU
     };
 }
-
-#endif //CRO_NET_DATA_HPP_

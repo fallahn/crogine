@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_MESH_RESOURCE_HPP_
-#define CRO_MESH_RESOURCE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -88,6 +87,3 @@ namespace cro
         std::unordered_map<int32, Mesh::Data> m_meshData;
     };
 }
-
-
-#endif //CRO_MESH_RESOURCE_HPP_

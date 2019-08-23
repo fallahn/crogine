@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_MATERIAL_DATA_HPP_
-#define CRO_MATERIAL_DATA_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -93,7 +92,7 @@ namespace cro
             {
                 float numberValue;
                 float vecValue[4];
-                int32 textureID;
+                int32 textureID = 0;
                 glm::mat4 matrixValue;
             };
 
@@ -184,5 +183,3 @@ namespace cro
         };
     }
 }
-
-#endif //CRO_MATERIAL_DATA_HPP_

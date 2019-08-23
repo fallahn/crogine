@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_UTIL_RANDOM_HPP_
-#define CRO_UTIL_RANDOM_HPP_
+#pragma once
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/graphics/Rectangle.hpp>
@@ -79,5 +78,3 @@ namespace cro
         }
     }
 }
-
-#endif //XY_UTIL_RANDOM_HPP_

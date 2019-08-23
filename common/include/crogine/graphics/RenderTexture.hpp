@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_RENDER_TEXTURE_HPP_
-#define CRO_RENDER_TEXTURE_HPP_
+#pragma once
 
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Colour.hpp>
@@ -151,10 +150,8 @@ namespace cro
         uint32 m_clearBits;
         Texture m_texture;
         URect m_viewport;
-        std::array<int32, 4u> m_lastViewport;
-        std::array<float, 4u> m_lastClearColour;
+        std::array<int32, 4u> m_lastViewport = {};
+        std::array<float, 4u> m_lastClearColour = {};
         int32 m_lastBuffer;
     };
 }
-
-#endif //CRO_RENDER_TEXTURE_HPP_

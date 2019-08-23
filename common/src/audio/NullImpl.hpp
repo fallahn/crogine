@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_NULL_IMPL_HPP_
-#define CRO_NULL_IMPL_HPP_
+#pragma once
 
 #include "AudioRenderer.hpp"
 
@@ -71,5 +70,3 @@ namespace cro
         };
     }
 }
-
-#endif //CRO_NULL)MPL_HPP_

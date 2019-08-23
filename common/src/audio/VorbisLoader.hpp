@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_VORBIS_LOADER_HPP_
-#define CRO_VORBIS_LOADER_HPP_
+#pragma once
 
 #define STB_VORBIS_HEADER_ONLY
 
@@ -66,5 +65,3 @@ namespace cro
         };
     }
 }
-
-#endif //CRO_VORBIS_LOADER_HPP_

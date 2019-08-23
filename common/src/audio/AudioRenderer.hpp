@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_AUDIO_RENDERER_HPP_
-#define CRO_AUDIO_RENDERER_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -253,5 +252,3 @@ namespace cro
         static std::unique_ptr<AudioRendererImpl> m_impl;
     };
 }
-
-#endif

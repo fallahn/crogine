@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_PCM_DATA_HPP_
-#define CRO_PCM_DATA_HPP_
+#pragma once
 
 #include <crogine/detail/Types.hpp>
 
@@ -42,13 +41,10 @@ namespace cro
             enum class Format
             {
                 MONO8, MONO16, STEREO8, STEREO16
-            }format;
+            }format = Format::MONO16;
             cro::uint32 size = 0;
             cro::uint32 frequency = 0;
             void* data = nullptr;
         };
     }
 }
-
-
-#endif //CRO_PCM_DATA_HPP_

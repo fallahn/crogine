@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_STATESTACK_HPP_
-#define CRO_STATESTACK_HPP_
+#pragma once
 
 #include <crogine/core/State.hpp>
 
@@ -164,5 +163,3 @@ namespace cro
 		void applyPendingChanges();
 	};
 }
-
-#endif //CRO_STATESTACK_HPP_

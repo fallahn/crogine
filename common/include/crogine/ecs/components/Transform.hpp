@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_TRANSFORM_HPP_
-#define CRO_TRANSFORM_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -166,7 +165,7 @@ namespace cro
         int32 m_parent;
         int32 m_lastParent;
         int32 m_id;
-        std::array<int32, MaxChildren> m_children;
+        std::array<int32, MaxChildren> m_children = {};
         std::vector<int32> m_removedChildren;
 
         enum Flags
@@ -194,6 +193,3 @@ namespace cro
         void removeChild(uint32 id);
     };
 }
-
-
-#endif //CRO_TRANSFORM_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_COMMAND_SYSTEM_HPP_
-#define CRO_COMMAND_SYSTEM_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 
@@ -76,5 +75,3 @@ namespace cro
         std::size_t m_count;
     };
 }
-
-#endif //CRO_COMMAND_SYSTEM_HPP_

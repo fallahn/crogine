@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_PROJECTION_MAP_HPP_
-#define CRO_PROJECTION_MAP_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 
@@ -70,5 +69,3 @@ namespace cro
         }
     };
 }
-
-#endif //CRO_PROJECTION_MAP_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_UTIL_MATRIX_HPP_
-#define CRO_UTIL_MATRIX_HPP_
+#pragma once
 
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
@@ -56,5 +55,3 @@ namespace cro
         }
     }
 }
-
-#endif //CRO_UTIL_MATRIX_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SPRITE_HPP_
-#define CRO_SPRITE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/graphics/Rectangle.hpp>
@@ -171,6 +170,3 @@ namespace cro
         friend class SpriteSheet;
     };
 }
-
-
-#endif //CRO_SPRITE_HPP_

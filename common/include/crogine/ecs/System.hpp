@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SYSTEM_HPP_
-#define CRO_SYSTEM_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -224,5 +223,3 @@ namespace cro
 #include "System.inl"
 #include "SystemManager.inl"
 }
-
-#endif //CRO_SYSTEM_HPP_

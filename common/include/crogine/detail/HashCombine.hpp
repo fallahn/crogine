@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_HASH_COMBINE_HPP_
-#define CRO_HASH_COMBINE_HPP_
+#pragma once
 
 //as seen on https://stackoverflow.com/a/19195373/6740859
 
@@ -49,6 +48,3 @@ namespace cro
 //via template specialisation
 template <class T>
 struct StructHash;
-
-
-#endif //CRO_HASH_COMBINE_HPP_

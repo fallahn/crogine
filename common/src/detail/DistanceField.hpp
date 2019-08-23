@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_DISTANCE_FIELD_HPP_
-#define CRO_DISTANCE_FIELD_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -53,5 +52,3 @@ namespace cro
         };
     }
 }
-
-#endif //CRO_DISTANCE_FIELD_HPP_

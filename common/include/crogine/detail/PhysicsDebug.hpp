@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_PHYS_DEBUG_HPP_
-#define CRO_PHYS_DEBUG_HPP_
+#pragma once
 
 #include <crogine/graphics/Shader.hpp>
 
@@ -78,5 +77,3 @@ namespace cro
         };
     }
 }
-
-#endif //CRO_PHYS_DEBUG_HPP_

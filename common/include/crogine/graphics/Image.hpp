@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_IMAGE_HPP_
-#define CRO_IMAGE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -116,5 +115,3 @@ namespace cro
         bool m_flipped;
     };
 }
-
-#endif //CRO_IMAGE_HPP_

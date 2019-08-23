@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_POST_CHROME_AB_HPP_
-#define CRO_POST_CHROME_AB_HPP_
+#pragma once
 
 #include <crogine/graphics/postprocess/PostProcess.hpp>
 #include <crogine/graphics/Shader.hpp>
@@ -50,5 +49,3 @@ namespace cro
         int32 m_textureIndex;
     };
 }
-
-#endif //CRO_POST_CHROME_AB_HPP_

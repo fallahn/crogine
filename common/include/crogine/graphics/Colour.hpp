@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_COLOUR_HPP_
-#define CRO_COLOUR_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -182,5 +181,3 @@ namespace cro
 	CRO_EXPORT_API Colour& operator -= (Colour&, const Colour&);
 	CRO_EXPORT_API Colour& operator *= (Colour&, const Colour&);
 }
-
-#endif //CRO_COLOUR_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_DEBUG_INFO_HPP_
-#define CRO_DEBUG_INFO_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 
@@ -42,5 +41,3 @@ namespace cro
         void process(Time) override;
     };
 }
-
-#endif //CRO_DEBUG_INFO_HPP_

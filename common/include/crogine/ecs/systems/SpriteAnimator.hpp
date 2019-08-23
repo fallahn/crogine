@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SPRITE_ANIMATOR_HPP_
-#define CRO_SPRITE_ANIMATOR_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 
@@ -50,5 +49,3 @@ namespace cro
 
     };
 }
-
-#endif //CRO_SPRITE_ANIMATOR_HPP_

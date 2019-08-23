@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_CLOCK_HPP_
-#define CRO_CLOCK_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -178,5 +177,3 @@ namespace cro
 		Time m_startTime;
 	};
 }
-
-#endif //CRO_CLOCK_HPP_

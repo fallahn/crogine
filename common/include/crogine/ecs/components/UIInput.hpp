@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_UI_INPUT_HPP_
-#define CRO_UI_INPUT_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -60,5 +59,3 @@ namespace cro
         int32 ID = -1;
     };
 }
-
-#endif //CRO_UI_INPUT_HPP_

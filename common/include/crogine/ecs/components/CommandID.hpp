@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_COMMAND_ID_HPP_
-#define CRO_COMMAND_ID_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -56,5 +55,3 @@ namespace cro
         uint32 ID = 0;
     };
 }
-
-#endif //CRO_COMMAND_ID_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_COMPONENT_HPP_
-#define CRO_COMPONENT_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -60,5 +59,3 @@ namespace cro
         static ID getFromTypeID(std::type_index);
     };
 }
-
-#endif //CRO_COMPONENT_HPP_

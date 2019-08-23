@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_DEF_LOADING_SCREEN_HPP_
-#define CRO_DEF_LOADING_SCREEN_HPP_
+#pragma once
 
 #include <crogine/graphics/LoadingScreen.hpp>
 #include <crogine/detail/Types.hpp>
@@ -60,5 +59,3 @@ namespace cro
         Clock m_clock;
     };
 }
-
-#endif //CRO_DEF_LOADING_SCREEN_HPP_

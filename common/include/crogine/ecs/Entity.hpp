@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_ENTITY_HPP_
-#define CRO_ENTITY_HPP_
+#pragma once
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/Assert.hpp>
@@ -253,6 +252,3 @@ namespace cro
 #include "Entity.inl"
 #include "EntityManager.inl"
 }
-
-
-#endif //CRO_ENTITY_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SKELETAL_ANIMATOR_HPP_
-#define CRO_SKELETAL_ANIMATOR_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
@@ -51,5 +50,3 @@ namespace cro
         void interpolate(std::size_t a, std::size_t b, float time, Skeleton& skelteton);
     };
 }
-
-#endif //CRO_SKELETAL_ANIMATOR_HPP_

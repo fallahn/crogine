@@ -300,12 +300,6 @@
     <ClInclude Include="..\common\include\crogine\graphics\RenderTexture.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\include\crogine\graphics\PostProcess.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\include\crogine\graphics\shaders\PostVertex.hpp">
-      <Filter>Header Files\graphics\shaders</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\include\crogine\graphics\LoadingScreen.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>

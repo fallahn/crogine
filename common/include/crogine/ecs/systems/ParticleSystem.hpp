@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_PARTICLE_SYSTEM_HPP_
-#define CRO_PARTICLE_SYSTEM_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
@@ -88,5 +87,3 @@ namespace cro
         std::array<AttribData, 3u> m_attribData;
     };
 }
-
-#endif //CRO_PARTICLE_SYSTEM_HPP_

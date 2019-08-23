@@ -34,8 +34,7 @@ source distribution.
 #include <string>
 #include <sstream>
 
-#ifndef CRO_GL_CHECK_HPP_
-#define CRO_GL_CHECK_HPP_
+#pragma once
 
 #ifdef _DEBUG_
 #define glCheck(x) do{x; cro::Detail::glErrorCheck(__FILE__, __LINE__, #x);}while (false)
@@ -118,5 +117,3 @@ namespace cro
         }
     }
 }
-
-#endif //CRO_GL_CHECK_HPP_

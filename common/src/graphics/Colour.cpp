@@ -64,6 +64,7 @@ cro::Colour::Colour(float red, float green, float blue, float alpha)
 }
 
 cro::Colour::Colour(glm::vec4 vector)
+    : r(0.f), g(0.f), b(0.f), a(0.f)
 {
     setRed(vector.r);
     setGreen(vector.g);

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_AUDIO_DATA_SOURCE_HPP_
-#define CRO_AUDIO_DATA_SOURCE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -73,5 +72,3 @@ namespace cro
         int32 m_id;
     };
 }
-
-#endif //CRO_AUDIO_DATA_SOURCE

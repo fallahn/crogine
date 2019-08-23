@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_MESSAGE_HPP_
-#define CRO_MESSAGE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -89,7 +88,7 @@ namespace cro
             enum
             {
                 EntityDestroyed
-            }event;
+            }event = EntityDestroyed;
             int32 entityID = -1;
         };
 
@@ -100,7 +99,7 @@ namespace cro
                 Pushed,
                 Popped,
                 Cleared
-            }action;
+            }action = Pushed;
             int32 id = -1;
         };
 
@@ -131,9 +130,7 @@ namespace cro
         }
 
     private:
-        void* m_data;
-        std::size_t m_dataSize;
+        void* m_data = nullptr;
+        std::size_t m_dataSize = 0;
     };
 }
-
-#endif //CRO_MESSAGE_HPP_

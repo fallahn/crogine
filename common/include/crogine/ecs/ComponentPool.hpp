@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_POOL_HPP_
-#define CRO_POOL_HPP_
+#pragma once
 
 #include <crogine/detail/Assert.hpp>
 
@@ -71,5 +70,3 @@ namespace cro
 		};
 	}
 }
-
-#endif //CRO_POOL_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_MATERIAL_RESOURCE_HPP_
-#define CRO_MATERIAL_RESOURCE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -53,7 +52,7 @@ namespace cro
 
         ~MaterialResource() = default;
         MaterialResource(const MaterialResource&) = delete;
-        MaterialResource(MaterialResource&&) = default;
+        MaterialResource(MaterialResource&&) noexcept = default;
         MaterialResource& operator = (const MaterialResource&) = delete;
         MaterialResource& operator = (MaterialResource&&) = default;
 
@@ -85,5 +84,3 @@ namespace cro
         std::unordered_map<int32, Material::Data> m_materials;
     };
 }
-
-#endif //CRO_MATERIAL_RESOURCE_HPP_

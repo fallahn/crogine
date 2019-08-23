@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_UTIL_CONSTS_HPP_
-#define CRO_UTIL_CONSTS_HPP_
+#pragma once
 
 namespace cro
 {
@@ -44,5 +43,3 @@ namespace cro
         }
     }
 }
-
-#endif //CRO_UTIL_CONSTS_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_PROJMAP_SYSTEM_HPP_
-#define CRO_PROJMAP_SYSTEM_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 
@@ -48,5 +47,3 @@ namespace cro
         void process(Time) override;
     };
 }
-
-#endif //CRO_PROJMAP_SYSTEM_HPP_

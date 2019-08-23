@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_GLOBAL_CONSTS_HPP_
-#define CRO_GLOBAL_CONSTS_HPP_
+#pragma once
 
 #include "Types.hpp"
 
@@ -47,5 +46,3 @@ namespace cro
     //available on the current hardware
     static const int32 MAX_PROJECTION_MAPS = 4;
 }
-
-#endif //CRO_GLOBAL_CONSTS_HPP_

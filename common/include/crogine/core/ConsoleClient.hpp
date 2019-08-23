@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_CONSOLE_CLIENT_HPP_
-#define CRO_CONSOLE_CLIENT_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 
@@ -61,5 +60,3 @@ namespace cro
         void registerCommand(const std::string& command, const std::function<void(const std::string&)>& func);
     };
 }
-
-#endif //CRO_CONSOLE_CLIENT_HPP_

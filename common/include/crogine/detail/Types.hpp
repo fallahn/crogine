@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_TYPES_HPP_
-#define CRO_TYPES_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 
@@ -38,6 +37,7 @@ source distribution.
 
 /*
 Aliases for SDL types
+Not strictly necessary as they all boil down to stdint types
 */
 
 namespace cro
@@ -81,4 +81,3 @@ namespace cro
         //TODO this should be moveable but it's just a util
     };
 }
-#endif //CRO_TYPES_HPP_

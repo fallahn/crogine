@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SHADER_VERTEX_HPP_
-#define CRO_SHADER_VERTEX_HPP_
+#pragma once
 
 #include <string>
 
@@ -364,5 +363,3 @@ namespace cro
         }
     }
 }
-
-#endif //CRO_SHADER_VERTEX_HPP_

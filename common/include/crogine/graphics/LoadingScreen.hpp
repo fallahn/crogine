@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_LOADING_SCREEN_HPP_
-#define CRO_LOADING_SCREEN_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>
@@ -70,5 +69,3 @@ namespace cro
 
     };
 }
-
-#endif //CRO_LOADING_SCREEN_HPP_

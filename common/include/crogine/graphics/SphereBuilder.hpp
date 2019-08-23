@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SPHERE_BUILDER_HPP_
-#define CRO_SPHERE_BUILDER_HPP_
+#pragma once
 
 #include <crogine/graphics/MeshBuilder.hpp>
 
@@ -58,5 +57,3 @@ namespace cro
         Mesh::Data build() const override;
     };
 }
-
-#endif //CRO_SPHERE_BUILDER_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_MESH_DATA_HPP_
-#define CRO_MESH_DATA_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -108,5 +107,3 @@ namespace cro
         };
     }
 }
-
-#endif //CRO_MESH_DATA_HPP_

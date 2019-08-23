@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_TEXT_RENDERER_HPP_
-#define CRO_TEXT_RENDERER_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
@@ -128,5 +127,3 @@ namespace cro
         void onEntityRemoved(Entity) override;
     };
 }
-
-#endif //CRO_TEXT_RENDERER_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_WINDOW_HPP_
-#define CRO_WINDOW_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -181,5 +180,3 @@ namespace cro
         m_loadingScreen = std::make_unique<T>(std::forward<Args>(args)...);
     }
 }
-
-#endif //CRO_WINDOW_HPP_

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_ALCHECK_HPP_
-#define CRO_ALCHECK_HPP_
+#pragma once
 
 #ifndef _DEBUG_
 #define alCheck(x) x;
@@ -80,4 +79,3 @@ namespace al
     }
 }
 #endif //_DEBUG_
-#endif //CRO_ALCHECK_HPP_

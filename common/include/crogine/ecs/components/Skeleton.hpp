@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SKELETON_HPP_
-#define CRO_SKELETON_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -104,5 +103,3 @@ namespace cro
     private:
     };
 }
-
-#endif //CRO_SKELETON_HPP_

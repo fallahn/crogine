@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_OPENAL_IMPL_HPP_
-#define CRO_OPENAL_IMPL_HPP_
+#pragma once
 
 #include "AudioRenderer.hpp"
 #include "AudioFile.hpp"
@@ -96,10 +95,8 @@ namespace cro
             ALCdevice* m_device;
             ALCcontext* m_context;
 
-            std::array<OpenALStream, 64> m_streams;
+            std::array<OpenALStream, 64> m_streams = {};
             int32 m_nextStream;
         };
     }
 }
-
-#endif //CRO_OPENAL_IMPL_HPP_

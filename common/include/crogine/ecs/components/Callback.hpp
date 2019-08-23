@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_CALLBACK_HPP_
-#define CRO_CALLBACK_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 
@@ -50,5 +49,3 @@ namespace cro
         CallbackFunction function;
     };
 }
-
-#endif //CRO_CALLBACK_HPP_

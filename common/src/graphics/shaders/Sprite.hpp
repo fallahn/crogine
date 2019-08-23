@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SHADER_SPRITE_HPP_
-#define CRO_SHADER_SPRITE_HPP_
+#pragma once
 
 #include <string>
 
@@ -106,5 +105,3 @@ namespace cro
         }
     }
 }
-
-#endif //CRO_SHADER_SPRITE_HPP_

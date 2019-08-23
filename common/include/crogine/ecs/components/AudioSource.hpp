@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_AUDIO_SOURCE_HPP_
-#define CRO_AUDIO_SOURCE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/audio/AudioDataSource.hpp>
@@ -54,10 +53,10 @@ namespace cro
         ~AudioSource();
 
         AudioSource(const AudioSource&) = delete;
-        AudioSource(AudioSource&&);
+        AudioSource(AudioSource&&) noexcept;
 
         AudioSource& operator = (const AudioSource&) = delete;
-        AudioSource& operator = (AudioSource&&);
+        AudioSource& operator = (AudioSource&&) noexcept;
 
         /*!
         \brief Sets the AudioBuffer or AudioStream used by this AudioSource.
@@ -158,5 +157,3 @@ namespace cro
         AudioDataSource::Type m_sourceType;
     };
 }
-
-#endif //CRO_AUDIO_SOURCE_HPP_

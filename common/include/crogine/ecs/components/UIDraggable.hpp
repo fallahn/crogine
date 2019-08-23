@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_UI_DRAGGABLE_HPP_
-#define CRO_UI_DRAGGABLE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -47,5 +46,3 @@ namespace cro
         glm::vec2 velocity;
     };
 }
-
-#endif //CRO_UI_DRAGGABLE_HPP_

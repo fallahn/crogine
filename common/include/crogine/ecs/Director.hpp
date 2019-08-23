@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_DIRECTOR_HPP_
-#define CRO_DIRECTOR_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -112,5 +111,3 @@ namespace cro
         return m_messageBus->post<T>(id);
     }
 }
-
-#endif //CRO_DIRECTOR_HPP_

@@ -144,7 +144,7 @@ namespace cro
             union
             {
                 float numberValue[4];
-                uint32 textureID;
+                uint32 textureID = 0;
             };
         };
 

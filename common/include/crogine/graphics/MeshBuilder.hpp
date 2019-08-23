@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_MESH_BUILDER_HPP_
-#define CRO_MESH_BUILDER_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>
@@ -84,5 +83,3 @@ namespace cro
         static void createIBO(Mesh::Data& meshData, void* idxData, std::size_t idx, int32 dataSize);
     };
 }
-
-#endif //CRO_MESH_BUILDER_HPP_

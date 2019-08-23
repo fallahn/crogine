@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_RESOURCE_AUTO_HPP_
-#define CRO_RESOURCE_AUTO_HPP_
+#pragma once
 
 #include <crogine/graphics/FontResource.hpp>
 #include <crogine/graphics/MaterialResource.hpp>
@@ -119,5 +118,3 @@ namespace cro
         bool m_castShadows = false; //< if this is true the model entity also requires a shadow cast component
     };
 }
-
-#endif //CRO_RESOURCE_AUTO_HPP_

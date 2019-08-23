@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_TEXTURE_HPP_
-#define CRO_TEXTURE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -138,5 +137,3 @@ namespace cro
         bool m_hasMipMaps;
     };
 }
-
-#endif //CRO_TEXTURE_HPP_

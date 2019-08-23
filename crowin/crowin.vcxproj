@@ -113,7 +113,6 @@
     <ClInclude Include="..\common\include\crogine\graphics\MeshBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MeshData.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\MeshResource.hpp" />
-    <ClInclude Include="..\common\include\crogine\graphics\PostProcess.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\postprocess\PostChromeAB.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\QuadBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Rectangle.hpp" />
@@ -121,7 +120,6 @@
     <ClInclude Include="..\common\include\crogine\graphics\ResourceAutomation.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Shader.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\ShaderResource.hpp" />
-    <ClInclude Include="..\common\include\crogine\graphics\shaders\PostVertex.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\Spatial.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\SphereBuilder.hpp" />
     <ClInclude Include="..\common\include\crogine\graphics\SpriteSheet.hpp" />
@@ -437,6 +435,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/w34457 /w34456 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\lib\x64\Debug;$(SolutionDir)extlibs\SDL2_ttf\lib\x64;$(SolutionDir)extlibs\SDL2_mixer\lib\x64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\debug;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -450,6 +449,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include;../extlibs/openal/include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)extlibs\SDL2_image\lib\x64;$(SolutionDir)extlibs\SDL2_ttf\lib\x64;$(SolutionDir)extlibs\SDL2_mixer\lib\x64;$(SolutionDir)extlibs\sdl2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -499,6 +499,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -516,6 +517,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\SDL2_ttf\include;..\common\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include;../extlibs/openal/include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_RECTANGLE_HPP_
-#define CRO_RECTANGLE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -97,5 +96,3 @@ namespace cro
 
 #include "Rectangle.inl"
 }
-
-#endif //CRO_RECTANGLE_HPP_

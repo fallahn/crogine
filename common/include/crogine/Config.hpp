@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_CONFIG_HPP_
-#define CRO_CONFIG_HPP_
+#pragma once
 
 #if defined  __ANDROID__ || (defined __APPLE__ && TARGET_OS_IPHONE)
 #define PLATFORM_MOBILE 1
@@ -91,5 +90,3 @@ source distribution.
 #endif //CRO_STATIC
 
 #include <crogine/android/Android.hpp>
-
-#endif //CRO_CONFIG_HPP_

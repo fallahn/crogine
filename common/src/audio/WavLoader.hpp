@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_WAV_LOADER_HPP_
-#define CRO_WAV_LOADER_HPP_
+#pragma once
 
 #include "AudioFile.hpp"
 
@@ -113,6 +112,3 @@ namespace cro
         };
     }
 }
-
-
-#endif //CRO_WAV_LOADER_HPP_

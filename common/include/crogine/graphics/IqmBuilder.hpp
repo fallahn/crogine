@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_IQM_BUILDER_HPP_
-#define CRO_IQM_BUILDER_HPP_
+#pragma once
 
 #include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
@@ -79,5 +78,3 @@ namespace cro
         mutable Skeleton m_skeleton;
     };
 }
-
-#endif //CRO_IQM_BULDER_HPP_

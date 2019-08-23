@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_NET_CLIENT_HPP_
-#define CRO_NET_CLIENT_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -150,5 +149,3 @@ namespace cro
 
 #include "NetClient.inl"
 }
-
-#endif //CRO_NET_CLIENT_HPP_

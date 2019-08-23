@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SUNLIGHT_HPP_
-#define CRO_SUNLIGHT_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/graphics/Colour.hpp>
@@ -133,5 +132,3 @@ namespace cro
         friend class ShadowMapRenderer;
     };
 }
-
-#endif //CRO_SUNLIGHT_HPP_

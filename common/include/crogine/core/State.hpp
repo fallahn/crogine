@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_STATE_HPP_
-#define CRO_STATE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -154,5 +153,3 @@ namespace cro
 		Context m_context;
 	};
 }
-
-#endif //CRO_STATE_HPP_

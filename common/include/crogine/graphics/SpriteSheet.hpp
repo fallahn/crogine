@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SPRITE_SHEET_HPP_
-#define CRO_SPRITE_SHEET_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -69,5 +68,3 @@ namespace cro
 
     };
 }
-
-#endif //CRO_SPRITE_SHEET_HPP_

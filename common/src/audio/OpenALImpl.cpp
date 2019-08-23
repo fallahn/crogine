@@ -102,7 +102,8 @@ namespace
 
 OpenALImpl::OpenALImpl()
     : m_device  (nullptr),
-    m_context   (nullptr)
+    m_context   (nullptr),
+    m_nextStream(0)
 {
 
 }

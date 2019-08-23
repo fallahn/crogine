@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_MODEL_COMPONENT_HPP_
-#define CRO_MODEL_COMPONENT_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -92,7 +91,7 @@ namespace cro
         bool isVisible() const { return m_visible; }
 
     private:
-        bool m_visible;
+        bool m_visible = false;
 
         Mesh::Data m_meshData;
         std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_materials{};       
@@ -100,13 +99,10 @@ namespace cro
 
         void bindMaterial(Material::Data&);
         
-        glm::mat4* m_skeleton;
-        std::size_t m_jointCount;
+        glm::mat4* m_skeleton = nullptr;
+        std::size_t m_jointCount = 0;
 
         friend class ModelRenderer;
         friend class ShadowMapRenderer;
     };
 }
-
-
-#endif //CRO_MODEL_COMPONENT_HPP_

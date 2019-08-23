@@ -29,8 +29,7 @@ source distribution.
 
 //flexible logging class
 
-#ifndef CRO_LOGGER_HPP_
-#define CRO_LOGGER_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/core/Console.hpp>
@@ -176,5 +175,3 @@ std::stringstream ss; \
 ss << message << " (" << fileName << ", " << __LINE__ << ")"; \
 cro::Logger::log(ss.str(), type);}
 #endif //_DEBUG_
-//fileName = xy::FileSystem::getFileName(fileName); 
-#endif //CRO_LOGGER_HPP_

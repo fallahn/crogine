@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_CONFIG_FILE_HPP_
-#define CRO_CONFIG_FILE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -212,5 +211,3 @@ namespace cro
     using ConfigFile = cro::ConfigObject;
     
 }
-
-#endif // CRO_CONFIG_FILE_HPP_

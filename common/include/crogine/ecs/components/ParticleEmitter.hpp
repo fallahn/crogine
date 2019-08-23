@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_PARTICLE_EMITTER_HPP_
-#define CRO_PARTICLE_EMITTER_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -117,5 +116,3 @@ namespace cro
         friend class ParticleSystem;
     };
 }
-
-#endif //CRO_PARTICLE_EMITTER_HPP_

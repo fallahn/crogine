@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_WAVETABLE_HPP_
-#define CRO_WAVETABLE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/core/Clock.hpp>
@@ -88,6 +87,3 @@ namespace cro
         std::vector<float> m_wavetable;
     };
 }
-
-
-#endif //CRO_WAVETABLE_HPP_

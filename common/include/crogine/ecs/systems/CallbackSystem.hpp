@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_CALLBACK_SYSTEM_HPP_
-#define CRO_CALLBACK_SYSTEM_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 
@@ -55,5 +54,3 @@ namespace cro
         void process(cro::Time) override;
     };
 }
-
-#endif //CRO_CALLBACK_SYSTEM_HPP_

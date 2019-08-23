@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SCENE_HPP_
-#define CRO_SCENE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/core/App.hpp>
@@ -232,5 +231,3 @@ namespace cro
 
 #include "Scene.inl"
 }
-
-#endif //CRO_SCENE_HPP_

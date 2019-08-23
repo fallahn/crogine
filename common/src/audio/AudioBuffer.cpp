@@ -49,7 +49,7 @@ AudioBuffer::~AudioBuffer()
     }
 }
 
-AudioBuffer::AudioBuffer(AudioBuffer&& other)
+AudioBuffer::AudioBuffer(AudioBuffer&& other) noexcept
 {
     if (getID() > 0)
     {
@@ -61,7 +61,7 @@ AudioBuffer::AudioBuffer(AudioBuffer&& other)
     other.setID(-1);
 }
 
-AudioBuffer& AudioBuffer::operator=(AudioBuffer&& other)
+AudioBuffer& AudioBuffer::operator=(AudioBuffer&& other) noexcept
 {
     if (&other != this)
     {

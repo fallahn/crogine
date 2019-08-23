@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_AUDIO_SYSTEM_HPP_
-#define CRO_AUDIO_SYSTEM_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 
@@ -60,5 +59,3 @@ namespace cro
         //std::vector<Entity> m_streams;
     };
 }
-
-#endif //CRO_AUDIO_SYSTEM_HPP_

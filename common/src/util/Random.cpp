@@ -48,7 +48,7 @@ namespace
     {
     public:
         Grid(const FloatRect& area, std::size_t maxPoints)
-            : m_area(area), m_maxPoints(maxPoints)
+            : m_area(area), m_maxPoints(maxPoints), m_cellSize(0)
         {
             CRO_ASSERT(maxPoints < sizeof(std::size_t), "max points must be less than " + std::to_string(sizeof(std::size_t)));
             resize(area, maxPoints);
@@ -67,7 +67,7 @@ namespace
         void resize(std::size_t maxPoints)
         {
             m_maxPoints = maxPoints;
-            m_cellSize = 1 << m_maxPoints;
+            m_cellSize = std::size_t(1) << m_maxPoints;
             m_cellOffset = { static_cast<int>(std::abs(m_area.left)), static_cast<int>(std::abs(m_area.bottom)) };
             m_cellCount = { static_cast<int>(std::ceil(m_area.width / static_cast<float>(m_cellSize))), static_cast<int>(std::ceil(m_area.height / static_cast<float>(m_cellSize))) };
             m_cells.clear();

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_APP_HPP_
-#define CRO_APP_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/core/MessageBus.hpp>
@@ -174,6 +173,3 @@ namespace cro
         std::string m_prefPath;
 	};
 }
-
-
-#endif //CRO_APP_HPP_

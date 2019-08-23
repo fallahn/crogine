@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_UI_SYSTEM_HPP_
-#define CRO_UI_SYSTEM_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/Rectangle.hpp>
@@ -115,5 +114,3 @@ namespace cro
         glm::mat4 getProjectionMatrix();
     };
 }
-
-#endif //CRO_UI_SYSTEM_HPP_

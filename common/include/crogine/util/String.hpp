@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_UTIL_STRING_HPP_
-#define CRO_UTIL_STRING_HPP_
+#pragma once
 
 #include <crogine/detail/Types.hpp>
 
@@ -91,10 +90,10 @@ namespace cro
             */
             static inline char* rwgets(char* dest, int32 size, SDL_RWops* file, cro::int64* bytesRead)
             {
-                std::size_t count;
+                std::size_t count = 0;
                 char* compareStr = dest;
 
-                char readChar;
+                char readChar = 0;
 
                 while (--size > 0 && (count = file->read(file, &readChar, 1, 1)) != 0)
                 {
@@ -212,5 +211,3 @@ namespace cro
         }
     }
 }
-
-#endif //CRO_UTIL_STRING_HPP_

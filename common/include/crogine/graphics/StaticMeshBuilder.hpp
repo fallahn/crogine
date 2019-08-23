@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_STATIC_MESH_BUILDER_HPP_
-#define CRO_STATIC_MESH_BUILDER_HPP_
+#pragma once
 
 #include <crogine/graphics/MeshBuilder.hpp>
 
@@ -104,5 +103,3 @@ namespace cro
         bool checkError(std::size_t readCount) const;
     };
 }
-
-#endif //CRO_STATIC_MESH_BUILDER_HPP_

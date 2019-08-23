@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_GUI_HPP_
-#define CRO_GUI_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 
@@ -66,5 +65,3 @@ namespace cro
         CRO_EXPORT_API void end();
     }
 }
-
-#endif //CRO_GUI_HPP_

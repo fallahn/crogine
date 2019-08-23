@@ -77,7 +77,7 @@ AudioSource::~AudioSource()
     }
 }
 
-AudioSource::AudioSource(AudioSource&& other)
+AudioSource::AudioSource(AudioSource&& other) noexcept
 {
     m_pitch = other.m_pitch;
     other.m_pitch = 1.f;
@@ -103,10 +103,13 @@ AudioSource::AudioSource(AudioSource&& other)
     m_newDataSource = true;
     other.m_newDataSource = false;
 
+    m_transportFlags = other.m_transportFlags;
+    other.m_transportFlags = 0;
+
     other.m_state = State::Stopped;
 }
 
-AudioSource& AudioSource::operator=(AudioSource&& other)
+AudioSource& AudioSource::operator=(AudioSource&& other) noexcept
 {
     if (&other != this)
     {

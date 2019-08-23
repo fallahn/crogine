@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_PLANE_HPP_
-#define CRO_PLANE_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 
@@ -73,5 +72,3 @@ namespace cro
 
     }
 }
-
-#endif //CRO_PLANE_HPP_

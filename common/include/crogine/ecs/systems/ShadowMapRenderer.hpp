@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_SHADOWMAP_RENDERER_HPP_
-#define CRO_SHADOWMAP_RENDERER_HPP_
+#pragma once
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
@@ -79,5 +78,3 @@ namespace cro
         glm::vec3 m_projectionOffset;
     };
 }
-
-#endif //CRO_SHADOWMAP_RENDERER_HPP_

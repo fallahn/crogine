@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_AUDIO_MIXER_HPP_
-#define CRO_AUDIO_MIXER_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
@@ -92,5 +91,3 @@ namespace cro
         friend class AudioSystem;
     };
 }
-
-#endif //CRO_AUDIO_MIXER_HPP_
