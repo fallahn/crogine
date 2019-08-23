@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/Config.hpp>
 
 #include <functional>
+#include <string>
 
 namespace cro
 {

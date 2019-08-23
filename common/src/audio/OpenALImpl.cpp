@@ -36,7 +36,7 @@ source distribution.
 #include <crogine/util/String.hpp>
 #include <crogine/core/App.hpp>
 
-#include <AL/alc.h>
+#include <OpenAL/alc.h>
 
 #include <array>
 

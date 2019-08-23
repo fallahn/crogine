@@ -70,10 +70,14 @@ namespace cro
 
             const static std::string FragmentMobile = R"(
                 //ideally we want highp but not all mobile hardware supports it in the frag shader :(
+                #if defined(MOBILE)
                 #if defined (GL_FRAGMENT_PRECISION_HIGH)
                 #define PREC highp
                 #else
                 #define PREC mediump
+                #endif
+                #else
+                #define PREC
                 #endif
 
                 varying vec4 v_position;

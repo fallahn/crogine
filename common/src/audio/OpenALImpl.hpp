@@ -32,8 +32,8 @@ source distribution.
 #include "AudioRenderer.hpp"
 #include "AudioFile.hpp"
 
-#include <AL/al.h>
-#include <AL/alc.h>
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
 
 #include <SDL_thread.h>
 

@@ -171,10 +171,14 @@ namespace cro
                 #if defined(RX_SHADOWS)
                 varying LOW vec4 v_lightWorldPosition;
 
+                #if defined(MOBILE)
                 #if defined (GL_FRAGMENT_PRECISION_HIGH)
                 #define PREC highp
                 #else
                 #define PREC mediump
+                #endif
+                #else
+                #define PREC
                 #endif
 
                 PREC float unpack(PREC vec4 colour)
