@@ -1,0 +1,1 @@
+This directory contains the source for the crogine library which is shared between desktop and mobile projects.
