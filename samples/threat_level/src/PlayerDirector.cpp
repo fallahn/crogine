@@ -47,7 +47,7 @@ source distribution.
 
 #include <SDL_events.h>
 
-#include <glm/gtx/norm.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 namespace
 {

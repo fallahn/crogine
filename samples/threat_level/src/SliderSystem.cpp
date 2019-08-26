@@ -32,7 +32,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 
-#include <glm/gtx/norm.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 namespace
 {

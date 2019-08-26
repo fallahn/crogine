@@ -3,13 +3,12 @@ CROGINE
 
 CROssplatform enGINE.
 
-SDL2 Based game engine which runs on Windows, linux and Android. It might also work on Apple devices.
+SDL2 Based game engine which runs on Windows, linux and Android. Due to Apple's attitude towards OpenGL support for macOS and iOS is hit and miss. Mostly miss.
 
 #### Building
-Using the CMake file included in the root directory first generate project files for your compiler/environment of choice, then build and install the crogine library. To build the samples set the cmake variables BUILD_BATCAT or BUILD_TL to true. The included findCROGINE.cmake file should find the installed library if it was installed in the default location - else you need to manually  
-point CMake to the crogine lib.
+Using the CMake file included in the root directory first generate project files for your compiler/environment of choice, then build and install the crogine library. To build the samples set the cmake variables BUILD_BATCAT or BUILD_TL to true. The included findCROGINE.cmake file should find the installed library if it was installed in the default location - else you need to manually point CMake to the crogine lib.
 
-On windows you can use the included Visual Studio 2017 solution to build crogine and the demo projects for both Windows, and Android if the cross platform tools for Visual Studio are installed.
+On windows you can use the included Visual Studio 2019 solution to build crogine and the demo projects for both Windows, and Android if the cross platform tools for Visual Studio are installed.
 
 Currently there are no Android.mk files for the android build - if anyone wants to submit a pull request I'll be happy to review :)
 

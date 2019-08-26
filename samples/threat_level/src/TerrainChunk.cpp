@@ -38,7 +38,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 
-#include <glm/gtc/noise.hpp>
+#include <crogine/detail/glm/gtc/noise.hpp>
 
 
 namespace

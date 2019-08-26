@@ -115,7 +115,7 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
 #ifdef __ANDROID__
     const char* src[] = { "#version 100\n#define MOBILE\n", precision.c_str(), defines.c_str(), vertex.c_str() };
 #else
-    const char* src[] = { "#version 120\n", precision.c_str(), defines.c_str(), vertex.c_str() };
+    const char* src[] = { "#version 130\n", precision.c_str(), defines.c_str(), vertex.c_str() };
 #endif //__ANDROID__
 
     glCheck(glShaderSource(vertID, 4, src, nullptr));

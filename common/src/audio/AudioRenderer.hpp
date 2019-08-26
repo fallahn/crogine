@@ -55,7 +55,7 @@ namespace cro
     {
     public:
         AudioRendererImpl() = default;
-        ~AudioRendererImpl() = default;
+        virtual ~AudioRendererImpl() = default;
 
         AudioRendererImpl(const AudioRendererImpl&) = delete;
         AudioRendererImpl(AudioRendererImpl&&) = delete;

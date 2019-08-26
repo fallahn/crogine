@@ -33,8 +33,8 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/util/Wavetable.hpp>
 
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 #include <string>
 #include <vector>

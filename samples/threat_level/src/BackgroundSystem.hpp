@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
-#include <glm/vec2.hpp>
+#include <crogine/detail/glm/vec2.hpp>
 
 struct BackgroundComponent final
 {

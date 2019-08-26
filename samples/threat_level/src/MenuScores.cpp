@@ -60,7 +60,7 @@ source distribution.
     
 #include <crogine/android/Android.hpp>
 
-#include <glm/gtx/norm.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 #include <string>
 

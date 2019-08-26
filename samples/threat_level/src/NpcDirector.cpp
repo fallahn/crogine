@@ -42,8 +42,8 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
 
-#include <glm/gtx/rotate_vector.hpp>
-#include <glm/gtx/quaternion.hpp>
+#include <crogine/detail/glm/gtx/rotate_vector.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
 
 namespace
 {

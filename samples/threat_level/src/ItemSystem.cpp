@@ -39,7 +39,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/util/Random.hpp>
 
-#include <glm/gtx/norm.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 namespace
 {

@@ -43,7 +43,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 
-#include <glm/gtx/norm.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 namespace
 {

@@ -10,8 +10,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelConverter", "ModelConverter\ModelConverter.csproj", "{4C7E8C37-3F49-4EAD-86E9-BA8CCBB52FA3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BatCat", "samples\batcat\DynaHouse.vcxproj", "{FE09628A-80DC-46B6-BDE4-4C93387AE21C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3} = {72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ThreatLevel", "samples\threat_level\testwin.vcxproj", "{BE8D5B67-F8B4-46FC-A739-50D44550A090}"
+	ProjectSection(ProjectDependencies) = postProject
+		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3} = {72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +44,7 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}.Debug|Any CPU.Build.0 = Debug|Win32
 		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}.Debug|ARM.ActiveCfg = Debug|Win32
 		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}.Debug|x64.ActiveCfg = Debug|x64
@@ -94,6 +101,7 @@ Global
 		{4C7E8C37-3F49-4EAD-86E9-BA8CCBB52FA3}.ToolsDebug|x86.ActiveCfg = ToolsDebug|Any CPU
 		{4C7E8C37-3F49-4EAD-86E9-BA8CCBB52FA3}.ToolsDebug|x86.Build.0 = ToolsDebug|Any CPU
 		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.Debug|Any CPU.Build.0 = Debug|Win32
 		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.Debug|ARM.ActiveCfg = Debug|Win32
 		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.Debug|x64.ActiveCfg = Debug|x64
@@ -122,6 +130,7 @@ Global
 		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.ToolsDebug|x86.ActiveCfg = ToolsDebug|Win32
 		{FE09628A-80DC-46B6-BDE4-4C93387AE21C}.ToolsDebug|x86.Build.0 = ToolsDebug|Win32
 		{BE8D5B67-F8B4-46FC-A739-50D44550A090}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{BE8D5B67-F8B4-46FC-A739-50D44550A090}.Debug|Any CPU.Build.0 = Debug|Win32
 		{BE8D5B67-F8B4-46FC-A739-50D44550A090}.Debug|ARM.ActiveCfg = Debug|Win32
 		{BE8D5B67-F8B4-46FC-A739-50D44550A090}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{BE8D5B67-F8B4-46FC-A739-50D44550A090}.Debug|x64.ActiveCfg = Debug|x64

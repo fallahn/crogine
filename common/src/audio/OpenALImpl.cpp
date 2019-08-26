@@ -36,7 +36,12 @@ source distribution.
 #include <crogine/util/String.hpp>
 #include <crogine/core/App.hpp>
 
+//oh apple you so quirky
+#ifdef __APPLE__
 #include <OpenAL/alc.h>
+#else
+#include <AL/al.h>
+#endif
 
 #include <array>
 

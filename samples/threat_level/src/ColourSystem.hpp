@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/core/MessageBus.hpp>
 
-#include <glm/vec4.hpp>
+#include <crogine/detail/glm/vec4.hpp>
 
 class ColourSystem final : public cro::System
 {

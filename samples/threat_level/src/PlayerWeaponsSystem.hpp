@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/core/Clock.hpp>
 
-#include <glm/vec3.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 #include <vector>
 

@@ -42,8 +42,8 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Wavetable.hpp>
 
-#include <glm/gtx/norm.hpp>
-#include <glm/gtx/vector_angle.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
+#include <crogine/detail/glm/gtx/vector_angle.hpp>
 
 namespace
 {
