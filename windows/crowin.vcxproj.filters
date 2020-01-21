@@ -1,0 +1,824 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\detail">
+      <UniqueIdentifier>{cca3b464-e594-478f-ace8-1a9a2112aed1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\android">
+      <UniqueIdentifier>{3ff2f69b-b8ea-43fc-9074-1ddf2f0f4df4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\detail">
+      <UniqueIdentifier>{9d490ed0-91c3-4e19-bd46-86c69799ed9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ecs">
+      <UniqueIdentifier>{b9ef2428-efc0-47a7-b5bf-9a714b1e22ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ecs">
+      <UniqueIdentifier>{55cab883-a1a5-4329-a46d-3595ecf4242a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ecs\components">
+      <UniqueIdentifier>{58254e31-cfc1-4d6f-919e-0eb64c473565}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ecs\components">
+      <UniqueIdentifier>{e35d44f0-344c-4368-9877-00125b33e822}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ecs\systems">
+      <UniqueIdentifier>{e85527b0-b713-4c1a-9982-184ff577c7b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ecs\systems">
+      <UniqueIdentifier>{787f9ec5-3858-4a70-b3e0-33901acdecfd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\graphics">
+      <UniqueIdentifier>{7d3c92ca-58f2-480c-a836-1945db34012d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\core">
+      <UniqueIdentifier>{a1f1b07a-b73a-4f4e-b95a-1b09c63066bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core">
+      <UniqueIdentifier>{ad54ac99-31ff-4ec9-b60d-eca4f76883bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphics">
+      <UniqueIdentifier>{01e4f279-1f15-4506-a168-e6d673d636e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\graphics\shaders">
+      <UniqueIdentifier>{55950aca-b7eb-4f53-8e66-731dc18179a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\imgui">
+      <UniqueIdentifier>{2a6a4cd8-cec1-432f-a505-12fa39231dc6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\imgui">
+      <UniqueIdentifier>{6866406d-a139-4549-b3d0-999a295ecf2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\android">
+      <UniqueIdentifier>{7001eb83-a98a-4678-ae0a-001b40357845}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{c6fea9cf-8260-46a5-a625-8bae00d3684e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\util">
+      <UniqueIdentifier>{cc32c5c7-3cde-4fa9-ba3f-f2b3fa4cde07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\graphics\post process">
+      <UniqueIdentifier>{b6e764e4-2879-4700-be8c-a4454d5bb9f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphics\post process">
+      <UniqueIdentifier>{5a25d020-2efb-4c50-948e-8518503cd439}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gui">
+      <UniqueIdentifier>{40b60dcf-4afe-4ff5-8d34-b85452f23a46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\audio">
+      <UniqueIdentifier>{13a9635f-482e-471c-874e-1f7cf2e09d2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\audio">
+      <UniqueIdentifier>{b30beaa5-af59-4c3f-90d2-cebd9ba9527e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\detail\enet">
+      <UniqueIdentifier>{b9fee0d2-1727-4f26-a4ca-17662ff6c485}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\network">
+      <UniqueIdentifier>{c01dba85-8666-4b88-9330-b6bd57bd879e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\network">
+      <UniqueIdentifier>{fa1e5bf3-dca2-4170-8dac-ee0fc176c9ed}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\crogine\include\crogine\Config.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\android\Android.hpp">
+      <Filter>Header Files\android</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\Assert.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\SDLResource.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\Types.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\ComponentPool.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\Entity.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\Component.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\System.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\Scene.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\Transform.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\Image.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\Texture.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\Shader.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\Colour.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\App.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\Clock.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\Log.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\State.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\StateStack.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\Window.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\Rectangle.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\Model.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\MeshResource.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\ShaderResource.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\MeshData.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\MaterialResource.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\graphics\shaders\Default.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\MaterialData.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\TextureResource.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\MeshBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\QuadBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\CubeBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\SphereBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\imgui\imconfig.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\imgui\imgui.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\imgui\imgui_internal.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\Camera.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\Spatial.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\StaticMeshBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\Sprite.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteRenderer.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\graphics\shaders\Sprite.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\util\Maths.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\Message.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\MessageBus.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandID.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\CommandSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\graphics\shaders\Debug.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\graphics\shaders\VertexLit.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\graphics\shaders\Unlit.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\util\Wavetable.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\util\Constants.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SceneGraph.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\GLCheck.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\Font.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\Text.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\TextRenderer.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\FontResource.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\DistanceField.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\UIInput.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\UISystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\graphics\stb_image.h">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\DebugInfo.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\util\Random.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\Renderable.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\RenderTexture.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\LoadingScreen.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\core\DefaultLoadingScreen.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\glad.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\Wavetable.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\ParticleEmitter.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\ParticleSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\GameController.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\IqmBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\Skeleton.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SkeletalAnimator.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\ModelRenderer.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\Director.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\ProjectionMap.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\ProjectionMapSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\ConfigFile.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\util\String.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\GlobalConsts.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\ResourceAutomation.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\CollisionSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\PhysicsObject.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostChromeAB.hpp">
+      <Filter>Header Files\graphics\post process</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\PhysicsDebug.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\HashCombine.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\Console.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\ConsoleClient.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\gui\Gui.hpp">
+      <Filter>Header Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\gui\GuiClient.hpp">
+      <Filter>Header Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\SpriteSheet.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\SpriteAnimation.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteAnimator.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\OpenALImpl.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\ALCheck.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\AudioRenderer.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\SDLMixerImpl.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\PCMData.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\WavLoader.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioBuffer.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioSource.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\AudioSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioListener.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\util\Matrix.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioDataSource.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\AudioFile.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioStream.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\VorbisLoader.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioMixer.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\graphics\shaders\ShadowMap.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\ShadowCaster.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\ShadowMapRenderer.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\Sunlight.hpp">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\NullImpl.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\CallbackSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\Callback.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\UIDraggable.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\network\NetClient.hpp">
+      <Filter>Header Files\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\network\NetData.hpp">
+      <Filter>Header Files\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\network\NetHost.hpp">
+      <Filter>Header Files\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\network\NetConf.hpp">
+      <Filter>Source Files\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\imgui\imgui_impl_opengl3.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\imgui\imgui_impl_sdl.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\EntityManager.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\System.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\SystemManager.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\Scene.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\Component.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\Transform.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\Image.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\Texture.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\Shader.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\MeshResource.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\Model.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\ShaderResource.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\MaterialResource.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\MaterialData.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\TextureResource.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\MeshBuilder.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\PrimitiveBuilders.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\imgui.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\imgui_demo.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\imgui_draw.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\Spatial.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\StaticMeshBuilder.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\android\Android.cpp">
+      <Filter>Source Files\android</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\Sprite.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\SpriteRenderer.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\App.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\State.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\StateStack.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\Window.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\Colour.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\glad.c">
+      <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\SDLResource.cpp">
+      <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\MessageBus.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\CommandSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\Clock.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\SceneGraph.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\Font.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\Text.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\TextRenderer.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\FontResource.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\DistanceField.cpp">
+      <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\UISystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\DebugInfo.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\util\Random.cpp">
+      <Filter>Source Files\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\RenderTexture.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\DefaultLoadingScreen.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\Wavetable.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\ParticleEmitter.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\ParticleSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\Renderable.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\GameController.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\IqmBuilder.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\SkeletalAnimator.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\ModelRenderer.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\Director.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\ProjectionMapSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\ConfigFile.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\ResourceAutomation.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\CollisionSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\PhysicsObject.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\postprocess\PostChromeAB.cpp">
+      <Filter>Source Files\graphics\post process</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\postprocess\PostProcess.cpp">
+      <Filter>Source Files\graphics\post process</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\PhysicsDebug.cpp">
+      <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\ConsoleClient.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\Console.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\Gui.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\GuiClient.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\SpriteSheet.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\SpriteAnimator.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\SDLMixerImpl.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioRenderer.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\WavLoader.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioBuffer.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\AudioSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\AudioSource.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioResource.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioStream.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\VorbisLoader.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\stb_vorbis.c">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioMixer.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\ShadowMapRenderer.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\Sunlight.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\CallbackSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\enet\callbacks.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\enet\compress.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\enet\host.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\enet\list.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\enet\packet.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\enet\peer.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\enet\protocol.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\enet\win32.c">
+      <Filter>Source Files\detail\enet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\network\NetClient.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\network\NetConf.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\network\NetEvent.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\network\NetHost.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\network\NetPeer.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\imgui_impl_sdl.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\imgui_widgets.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\crogine\include\crogine\ecs\Entity.inl">
+      <Filter>Header Files\ecs</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\ecs\EntityManager.inl">
+      <Filter>Header Files\ecs</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\ecs\System.inl">
+      <Filter>Header Files\ecs</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\ecs\SystemManager.inl">
+      <Filter>Header Files\ecs</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\graphics\Rectangle.inl">
+      <Filter>Header Files\graphics</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\ecs\Scene.inl">
+      <Filter>Header Files\ecs</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\core\ConfigFile.inl">
+      <Filter>Header Files\core</Filter>
+    </None>
+    <None Include="..\crogine\src\graphics\postprocess\PostChromeAB.inl">
+      <Filter>Header Files\graphics\post process</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\network\NetClient.inl">
+      <Filter>Header Files\network</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\network\NetData.inl">
+      <Filter>Header Files\network</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\network\NetHost.inl">
+      <Filter>Header Files\network</Filter>
+    </None>
+  </ItemGroup>
+</Project>
