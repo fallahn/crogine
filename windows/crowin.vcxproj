@@ -159,7 +159,8 @@
     <ClInclude Include="..\crogine\src\graphics\stb_image.h" />
     <ClInclude Include="..\crogine\src\imgui\imconfig.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui.h" />
-    <ClInclude Include="..\crogine\src\imgui\imgui_render.h" />
+    <ClInclude Include="..\crogine\src\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\crogine\src\imgui\imgui_impl_sdl.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_internal.h" />
     <ClInclude Include="..\crogine\src\network\NetConf.hpp" />
   </ItemGroup>
@@ -256,7 +257,9 @@
     <ClCompile Include="..\crogine\src\imgui\imgui.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\crogine\src\imgui\imgui_render.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\imgui_impl_sdl.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\crogine\src\network\NetClient.cpp" />
     <ClCompile Include="..\crogine\src\network\NetConf.cpp" />
     <ClCompile Include="..\crogine\src\network\NetEvent.cpp" />

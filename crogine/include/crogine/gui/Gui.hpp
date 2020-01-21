@@ -42,7 +42,7 @@ namespace cro
     Note these functions are only effective if crogine is built with
     USE_IMGUI defined.
     */
-    namespace Nim
+    namespace ui
     {
         /*!
         \see ImGui::Begin()

@@ -33,23 +33,22 @@ source distribution.
 
 using namespace cro;
 
-void Nim::begin(const std::string& title, bool* b)
+void ui::begin(const std::string& title, bool* b)
 {
     ImGui::Begin(title.c_str(), b);
 }
 
-void Nim::checkbox(const std::string& title, bool* value)
+void ui::checkbox(const std::string& title, bool* value)
 {
     ImGui::Checkbox(title.c_str(), value);
 }
 
-void Nim::slider(const std::string& title, float& value, float min, float max)
+void ui::slider(const std::string& title, float& value, float min, float max)
 {
     ImGui::SliderFloat(title.c_str(), &value, min, max);
 }
 
-void Nim::end()
+void ui::end()
 {
     ImGui::End();
 }
-//I miss you like hell.

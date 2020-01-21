@@ -210,7 +210,7 @@ void Console::draw()
     if (!visible) return;
 
     nim::SetNextWindowSizeConstraints({ 640, 480 }, { 1024.f, 768.f });
-    if (!nim::Begin("Console", &visible, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_ShowBorders))
+    if (!nim::Begin("Console", &visible, ImGuiWindowFlags_MenuBar))
     {
         //window is collapsed so save your effort..
         nim::End();
@@ -274,7 +274,7 @@ void Console::draw()
     if (!showVideoOptions) return;
 
     nim::SetNextWindowSize({ 305.f, 100.f });
-    nim::Begin("Video Options", &showVideoOptions, ImGuiWindowFlags_ShowBorders);
+    nim::Begin("Video Options", &showVideoOptions);
 
     nim::Combo("Resolution", &currentResolution, resolutionNames.data());
 

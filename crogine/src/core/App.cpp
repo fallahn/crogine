@@ -40,8 +40,9 @@ source distribution.
 #include <SDL_filesystem.h>
 
 #include "../detail/GLCheck.hpp"
-#include "../imgui/imgui_render.h"
 #include "../imgui/imgui.h"
+#include "../imgui/imgui_impl_opengl3.h"
+#include "../imgui/imgui_impl_sdl.h"
 
 #include "../audio/AudioRenderer.hpp"
 
@@ -167,7 +168,12 @@ void App::run()
 			Logger::log("Failed loading OpenGL", Logger::Type::Error);
 			return;
 		}
-        IMGUI_INIT(m_window.m_window);
+        
+        ImGui::CreateContext();
+        ImGui::StyleColorsDark();
+        ImGui_ImplSDL2_InitForOpenGL(m_window.m_window, m_window.m_mainContext);
+        ImGui_ImplOpenGL3_Init(/*version150 if mac - but meh, Apple*/);
+
         m_window.setIcon(defaultIcon);
         m_window.setFullScreen(fullscreen);
         Console::init();
@@ -185,25 +191,24 @@ void App::run()
 	while (m_running)
 	{
 		timeSinceLastUpdate = frameClock.restart();
-        //Let's go with flexible time and let physics systems
-        //themselves worry about fixed steps (may even facilitate threading)
 
-		//while (timeSinceLastUpdate > frameTime)
+		while (timeSinceLastUpdate > frameTime)
 		{
-			//timeSinceLastUpdate -= frameTime;
+			timeSinceLastUpdate -= frameTime;
 
             handleEvents();
             handleMessages();
 
-			//simulate(frameTime);
-            simulate(timeSinceLastUpdate);
+			simulate(frameTime);
+            //simulate(timeSinceLastUpdate);
 		}
         //DPRINT("Frame time", std::to_string(timeSinceLastUpdate.asMilliseconds()));
-        IMGUI_UPDATE;
+        doImGui();
 
+        ImGui::Render();
 		m_window.clear();
         render();
-        IMGUI_RENDER;
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		m_window.display();
 
         //SDL_Delay((frameTime - timeSinceLastUpdate).asMilliseconds());
@@ -220,7 +225,9 @@ void App::run()
     Console::finalise();
     m_messageBus.disable(); //prevents spamming a load of quit messages
     finalise();
-    IMGUI_UNINIT;
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
     m_window.close();
 }
 
@@ -277,7 +284,7 @@ void App::handleEvents()
     while (m_window.pollEvent(evt))
     {
         bool eventConsumed = false;
-        IMGUI_EVENTS(evt);
+        ImGui_ImplSDL2_ProcessEvent(&evt);
 
         switch (evt.type)
         {
@@ -367,8 +374,9 @@ void App::handleMessages()
 //#ifdef USE_IMGUI
 void App::doImGui()
 {
-    ImGui_ImplSdlGL3_NewFrame(m_window.m_window);
-    //ImGui::ShowTestWindow(&m_showStats);
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplSDL2_NewFrame(m_window.m_window);
+    ImGui::NewFrame();
 
     //show other windows (console etc)
     Console::draw();
