@@ -16,6 +16,7 @@ addons:
     - clang
     - libgl1-mesa-dev
     - libsdl2-dev
+    - libpulse-dev
     - libbullet-dev
     sources:
     - ubuntu-toolchain-r-test
