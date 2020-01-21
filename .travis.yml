@@ -17,6 +17,8 @@ addons:
     - libgl1-mesa-dev
     - libsdl2-dev
     - libpulse-dev
+    - libpulse0
+    - libpulse-mainloop-glib0
     - libbullet-dev
     sources:
     - ubuntu-toolchain-r-test
