@@ -50,7 +50,7 @@ include_directories(
   ${SDL2_INCLUDE_DIR}  
   ${SDL2_TTF_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}  
-  ${CMAKE_SOURCE_DIR}/common/include)
+  ${CMAKE_SOURCE_DIR}/crogine/include)
   
   
 if(USE_OPENAL)

@@ -4,7 +4,7 @@ project(cro)
 set(BUILD_BATCAT false CACHE BOOL "Build the batcat sample application")
 set(BUILD_TL false CACHE BOOL "Build the Threat Level sample application")
 
-add_subdirectory(common)
+add_subdirectory(crogine)
 
 if(BUILD_BATCAT)
 add_subdirectory(samples/batcat)
