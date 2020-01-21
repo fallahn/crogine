@@ -30,7 +30,7 @@ source distribution.
 #ifndef ERROR_CHECK_HPP_
 #define ERROR_CHECK_HPP_
 
-#ifdef _DEBUG_
+#ifdef CRO_DEBUG_
 #define glCheck(x) do{x; glErrorCheck(__FILE__, __LINE__, #x);}while (false)
 #else
 #define glCheck(x) (x)

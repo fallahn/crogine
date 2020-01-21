@@ -39,7 +39,7 @@ source distribution.
 #define __func__ __FUNCTION__
 #endif //_MSC_VER
 
-#ifdef _DEBUG_
+#ifdef CRO_DEBUG_
 #define CRO_ASSERT(condition, message) \
 do \
 { \
@@ -67,4 +67,4 @@ do \
 #define CRO_ASSERT(condition, message)
 #define CRO_WARNING(condition, message)
 
-#endif //_DEBUG_
+#endif //CRO_DEBUG_

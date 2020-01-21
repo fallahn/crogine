@@ -34,15 +34,15 @@ source distribution.
 using namespace cro;
 using namespace cro::Material;
 
-#ifdef _DEBUG_
+#ifdef CRO_DEBUG_
 #define  VERIFY(x, y) exists(x, y)
 #else
 #define VERIFY(x, y)
-#endif //_DEBUG_
+#endif //CRO_DEBUG_
 
 namespace
 {
-#ifdef _DEBUG_
+#ifdef CRO_DEBUG_
     void exists(const std::string& name, const Material::PropertyList& properties)
     {
         if (properties.count(name) == 0)
@@ -50,7 +50,7 @@ namespace
             Logger::log("Property " + name + " doesn't exist in shader", Logger::Type::Warning);
         }
     }
-#endif //_DEBUG_
+#endif //CRO_DEBUG_
 }
 
 Property::Property()

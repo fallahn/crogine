@@ -54,16 +54,11 @@ source distribution.
 
 //windows compilers need specific (and different) keywords for export
 #define CRO_EXPORT_API __declspec(dllexport)
+#define IMGUI_API __declspec(dllexport)
 
 //for vc compilers we also need to turn off this annoying C4251 warning
 #ifdef _MSC_VER
 #pragma warning(disable: 4251)
-//#ifdef _DEBUG_
-//#ifdef _ITERATOR_DEBUG_LEVEL
-//#undef _ITERATOR_DEBUG_LEVEL
-//#define _ITERATOR_DEBUG_LEVEL 0
-//#endif
-//#endif //_DEBUG_
 #endif //_MSC_VER
 
 #else //linux, FreeBSD, Mac OS X
@@ -73,11 +68,13 @@ source distribution.
 //gcc 4 has special keywords for showing/hiding symbols,
 //the same keyword is used for both importing and exporting
 #define CRO_EXPORT_API __attribute__ ((__visibility__ ("default")))
+#define IMGUI_API __attribute__ ((__visibility__ ("default")))
 
 #else
 
 //gcc < 4 has no mechanism to explicitly hide symbols, everything's exported
 #define CRO_EXPORT_API
+#define IMGUI_API
 #endif //__GNUC__
 
 #endif //_WIN32
@@ -86,6 +83,7 @@ source distribution.
 
 //static build doesn't need import/export macros
 #define CRO_EXPORT_API
+#define IMGUI_API
 
 #endif //CRO_STATIC
 

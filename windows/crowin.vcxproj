@@ -436,7 +436,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\SDL2_ttf\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\SDL2_mixer\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;CRO_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/w34457 /w34456 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>

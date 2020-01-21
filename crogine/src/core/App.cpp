@@ -383,16 +383,12 @@ void App::removeConsoleTab(const GuiClient* c)
 void App::addWindow(const std::function<void()>& func, const GuiClient* c)
 {
     CRO_ASSERT(m_instance, "App not properly instanciated!");
-#ifdef USE_IMGUI
     m_instance->m_guiWindows.push_back(std::make_pair(func, c));
-#endif
 }
 
 void App::removeWindows(const GuiClient* c)
 {
     CRO_ASSERT(m_instance, "App not properly instanciated!");
-
-#ifdef USE_IMGUI
 
     m_instance->m_guiWindows.erase(
         std::remove_if(std::begin(m_instance->m_guiWindows), std::end(m_instance->m_guiWindows),
@@ -401,5 +397,4 @@ void App::removeWindows(const GuiClient* c)
         return pair.second == c;
     }), std::end(m_instance->m_guiWindows));
 
-#endif //USE_IMGUI
 }

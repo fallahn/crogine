@@ -44,8 +44,6 @@ namespace cro
     The console class provides a feedback window and interface
     with the engine. Any class can register a command with the
     console as long as it inherits the ConsoleClient interface.
-    Note: the console is only available when crogine is built
-    with USE_IMGUI defined.
     */
     class CRO_EXPORT_API Console final
     {

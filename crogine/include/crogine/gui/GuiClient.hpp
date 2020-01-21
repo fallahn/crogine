@@ -38,11 +38,9 @@ namespace cro
     /*!
     \brief Allows registering GUI controls with the default output
     window, or registering custom windows using the Nim namespace.
-    If crogine is built with USE_IMGUI defined then classes which
-    inherit this interface may register controls with the imgui
-    renderer. This is usually used for debugging output or when
-    creating tooling. USE_IMGUI can be undefined for optimisation
-    on platforms such as mobile devices.
+    Classes which inherit this interface may register controls with
+    the imgui renderer. This is usually used for debugging output or
+    when creating tooling.
     */
     class CRO_EXPORT_API GuiClient
     {

@@ -165,7 +165,7 @@ namespace cro
         }
     };
 }
-#ifndef _DEBUG_
+#ifndef CRO_DEBUG_
 #define LOG(message, type)
 #else
 #define LOG(message, type) {\
@@ -174,4 +174,4 @@ fileName = cro::Util::String::getFileName(fileName); \
 std::stringstream ss; \
 ss << message << " (" << fileName << ", " << __LINE__ << ")"; \
 cro::Logger::log(ss.str(), type);}
-#endif //_DEBUG_
+#endif //CRO_DEBUG_

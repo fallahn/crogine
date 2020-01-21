@@ -40,11 +40,11 @@ source distribution.
 #include <vector>
 #include <map>
 
-#ifdef _DEBUG_
+#ifdef CRO_DEBUG_
 #define DPRINT(x, y) cro::Console::printStat(x, y)
 #else
 #define DPRINT(x, y)
-#endif //_DEBUG_
+#endif //CRO_DEBUG_
 
 namespace cro
 {

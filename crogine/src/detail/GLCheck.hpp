@@ -36,11 +36,11 @@ source distribution.
 
 #pragma once
 
-#ifdef _DEBUG_
+#ifdef CRO_DEBUG_
 #define glCheck(x) do{x; cro::Detail::glErrorCheck(__FILE__, __LINE__, #x);}while (false)
 #else
 #define glCheck(x) (x)
-#endif //_DEBUG_
+#endif //CRO_DEBUG_
 
 namespace cro
 {

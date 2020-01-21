@@ -38,9 +38,7 @@ namespace cro
     /*!
     \brief Exposes a selection of ImGui functions to the public API.
     These can be used to create stand-alone windows or to add useful
-    information to the status window via App::registerStatusOutput().
-    Note these functions are only effective if crogine is built with
-    USE_IMGUI defined.
+    information to the status window via Console::registerConsoleTab().
     */
     namespace ui
     {

@@ -178,7 +178,6 @@ void Console::printStat(const std::string& name, const std::string& value)
 //private
 void Console::addCommand(const std::string& name, const Command& command, const ConsoleClient* client = nullptr)
 {
-#ifdef USE_IMGUI
     CRO_ASSERT(!name.empty(), "Command cannot have an empty string");
     if (commands.count(name) != 0)
     {
@@ -189,12 +188,10 @@ void Console::addCommand(const std::string& name, const Command& command, const 
     {
         commands.insert(std::make_pair(name, std::make_pair(command, client)));
     }
-#endif //USE_IMGUI
 }
 
 void Console::removeCommands(const ConsoleClient* client)
 {
-#ifdef USE_IMGUI
     //make sure this isn't nullptr else most if not all commands will get removed..
     CRO_ASSERT(client, "You really don't want to do that");
 
@@ -209,7 +206,6 @@ void Console::removeCommands(const ConsoleClient* client)
             ++i;
         }
     }
-#endif //USE_IMGUI
 }
 
 void Console::draw()

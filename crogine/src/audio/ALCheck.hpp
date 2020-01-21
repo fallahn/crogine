@@ -29,7 +29,7 @@ source distribution.
 
 #pragma once
 
-#ifndef _DEBUG_
+#ifndef CRO_DEBUG_
 #define alCheck(x) x;
 #else
 
