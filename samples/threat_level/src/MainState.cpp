@@ -110,20 +110,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
     m_sharedResources   (*sharedResources),
     m_commandSystem     (nullptr),
     m_uiSystem          (nullptr)
-{
-    /*registerStatusControls(
-        []()
-    {
-        static float value;
-        value = cro::AudioMixer::getMasterVolume();
-        cro::Nim::slider("Master Volume", value, 0.f, 5.f);
-        cro::AudioMixer::setMasterVolume(value);
-
-        value = cro::AudioMixer::getVolume(0);
-        cro::Nim::slider("Channel 0", value, 0.f, 5.f);
-        cro::AudioMixer::setVolume(value, 0);
-    });*/
-    
+{   
     context.mainWindow.loadResources([this, &context]()
     {
         addSystems();
@@ -140,6 +127,11 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
 //public
 bool MainState::handleEvent(const cro::Event& evt)
 {
+    if (cro::ui::wantsKeyboard() || cro::ui::wantsMouse())
+    {
+        return false;
+    }
+
     m_uiSystem->handleEvent(evt);
     return true;
 }

@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/core/Log.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/detail/Assert.hpp>
+#include <crogine/audio/AudioMixer.hpp>
 
 #include "../imgui/imgui.h"
 
@@ -41,16 +42,18 @@ source distribution.
 #include <array>
 
 using namespace cro;
-namespace nim = ImGui;
+namespace ui = ImGui;
 
 namespace
 {
-    bool showVideoOptions = false;
+    using ConsoleTab = std::tuple<std::string, std::function<void()>, const GuiClient*>;
+    std::vector<ConsoleTab> m_consoleTabs;
+
 
     std::vector<glm::uvec2> resolutions;
     //int currentAALevel = 0;
     int currentResolution = 0;
-    std::array<char, 300> resolutionNames{};
+    std::array<char, 1024> resolutionNames{};
     
     std::string output;
 
@@ -72,6 +75,7 @@ namespace
 }
 int textEditCallback(ImGuiTextEditCallbackData* data);
 
+std::vector<std::string> Console::m_debugLines;
 
 //public
 void Console::print(const std::string& line)
@@ -166,6 +170,10 @@ void Console::addConvar(const std::string& name, const std::string& defaultValue
     }
 }
 
+void Console::printStat(const std::string& name, const std::string& value)
+{
+    m_debugLines.push_back(name + ":" + value);
+}
 
 //private
 void Console::addCommand(const std::string& name, const Command& command, const ConsoleClient* client = nullptr)
@@ -206,88 +214,153 @@ void Console::removeCommands(const ConsoleClient* client)
 
 void Console::draw()
 {
-#ifdef USE_IMGUI
-    if (!visible) return;
-
-    nim::SetNextWindowSizeConstraints({ 640, 480 }, { 1024.f, 768.f });
-    if (!nim::Begin("Console", &visible, ImGuiWindowFlags_MenuBar))
+    if (!visible)
     {
-        //window is collapsed so save your effort..
-        nim::End();
+        //read current active values
+        const auto& size = App::getWindow().getSize();
+        for (auto i = 0u; i < resolutions.size(); ++i)
+        {
+            if (resolutions[i].x == size.x && resolutions[i].y == size.y)
+            {
+                currentResolution = i;
+                break;
+            }
+        }
         return;
     }
 
-    //options at top of window
-    if (nim::BeginMenuBar())
+
+
+    //ImGui::ShowDemoWindow();
+    ui::SetNextWindowSizeConstraints({ 640, 480 }, { 1024.f, 768.f });
+    if (ui::Begin("Console", &visible, ImGuiWindowFlags_NoScrollbar))
     {
-        if (nim::BeginMenu("Options"))
+        if (ui::BeginTabBar("Tabs"))
         {
-            if (nim::MenuItem("Video", nullptr, &showVideoOptions))
+            // Console
+            if (ui::BeginTabItem("Console"))
             {
-                //select active resolution
-                const auto& size = App::getWindow().getSize();
-                for (auto i = 0u; i < resolutions.size(); ++i)
+                ui::BeginChild("ScrollingRegion", ImVec2(0, -ui::GetFrameHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar);
+                ui::TextUnformatted(output.c_str(), output.c_str() + output.size());
+                ui::SetScrollHereY(1.f); //TODO track when the user scrolled and set to correct position
+                ui::EndChild();
+
+                ui::Separator();
+
+                ui::PushItemWidth(620.f);
+
+                bool focus = false;
+                if ((focus = ImGui::InputText(" ", input, MAX_INPUT_CHARS,
+                    ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory,
+                    &textEditCallback)))
                 {
-                    if (resolutions[i].x == size.x && resolutions[i].y == size.y)
-                    {
-                        currentResolution = i;
-                        break;
-                    }
+                    doCommand(input);
+                }
+
+                ui::PopItemWidth();
+
+                ImGui::SetItemDefaultFocus();
+                if (focus || ImGui::IsItemHovered()
+                    || (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)
+                        && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
+                {
+                    ImGui::SetKeyboardFocusHere(-1);
+                }
+
+                ui::EndTabItem();
+            }
+
+            // Video options
+            if (ui::BeginTabItem("Video"))
+            {
+                ui::Combo("Resolution", &currentResolution, resolutionNames.data());
+
+                static bool fullScreen = App::getWindow().isFullscreen();
+                ui::Checkbox("Full Screen", &fullScreen);
+
+                static bool vsync = true;
+                bool lastSync = vsync;
+                ImGui::Checkbox("Vsync", &vsync);
+                if (lastSync != vsync)
+                {
+                    App::getWindow().setVsyncEnabled(vsync);
+                }
+
+                if (ui::Button("Apply", { 50.f, 20.f }))
+                {
+                    //apply settings
+                    App::getWindow().setSize(resolutions[currentResolution]);
+                    App::getWindow().setFullScreen(fullScreen);
+                }
+                ui::EndTabItem();
+            }
+
+            // Audio
+            if (ui::BeginTabItem("Audio"))
+            {
+                ui::Text("NOTE: only AudioSystem sounds are affected.");
+
+                static float maxVol = AudioMixer::getMasterVolume();
+                ui::SliderFloat("Master", &maxVol, 0.f, 1.f);
+                AudioMixer::setMasterVolume(maxVol);
+
+                static std::array<float, AudioMixer::MaxChannels> channelVol;
+                for (auto i = 0u; i < AudioMixer::MaxChannels; ++i)
+                {
+                    channelVol[i] = AudioMixer::getVolume(i);
+                    ui::SliderFloat(AudioMixer::getLabel(i).c_str(), &channelVol[i], 0.f, 1.f);
+                    AudioMixer::setVolume(channelVol[i], i);
+                }
+                ui::EndTabItem();
+            }
+
+            //stats
+            if (ui::BeginTabItem("Stats"))
+            {
+                ui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                ui::NewLine();
+                for (auto& line : m_debugLines)
+                {
+                    ImGui::TextUnformatted(line.c_str());
+                }
+                ui::EndTabItem();
+            }
+            m_debugLines.clear();
+            m_debugLines.reserve(10);
+
+
+            //display registered tabs
+            for (const auto& tab : m_consoleTabs)
+            {
+                const auto& [name, func, c] = tab;
+                if (ImGui::BeginTabItem(name.c_str()))
+                {
+                    func();
+                    ui::EndTabItem();
                 }
             }
 
-            if (nim::MenuItem("Quit", nullptr))
-            {
-                cro::App::quit();
-            }
-
-            nim::EndMenu();
+            ui::EndTabBar();
         }
-        nim::EndMenuBar();
     }
 
-    nim::BeginChild("ScrollingRegion", ImVec2(0, -nim::GetItemsLineHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar);
-    nim::TextUnformatted(output.c_str(), output.c_str() + output.size());
-    nim::SetScrollHere();
-    nim::EndChild();
+    ui::End();
+}
 
-    nim::Separator();
+void Console::addConsoleTab(const std::string& name, const std::function<void()>& f, const GuiClient* c)
+{
+    m_consoleTabs.push_back(std::make_tuple(name, f, c));
+}
 
-    nim::PushItemWidth(620.f);
-    if (nim::InputText("", input, MAX_INPUT_CHARS,
-        ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory,
-        textEditCallback))
-    {
-        doCommand(input);
-    }
-    nim::PopItemWidth();
-
-    if (nim::IsItemHovered() || (nim::IsRootWindowOrAnyChildFocused()
-        && !nim::IsAnyItemActive() && !nim::IsMouseClicked(0)))
-    {
-        nim::SetKeyboardFocusHere(-1);
-    }
-
-    nim::End();
-
-    //draw options window if visible
-    if (!showVideoOptions) return;
-
-    nim::SetNextWindowSize({ 305.f, 100.f });
-    nim::Begin("Video Options", &showVideoOptions);
-
-    nim::Combo("Resolution", &currentResolution, resolutionNames.data());
-
-    static bool fullScreen = App::getWindow().isFullscreen();
-    nim::Checkbox("Full Screen", &fullScreen);
-    if (nim::Button("Apply", { 50.f, 20.f }))
-    {
-        //apply settings
-        App::getWindow().setSize(resolutions[currentResolution]);
-        App::getWindow().setFullScreen(fullScreen);
-    }
-    nim::End();
-#endif //USE_IMGUI
+void Console::removeConsoleTab(const GuiClient* c)
+{
+    m_consoleTabs.erase(std::remove_if(std::begin(m_consoleTabs),
+        std::end(m_consoleTabs),
+        [c](const ConsoleTab& tab)
+        {
+            const auto& [name, f, p] = tab;
+            return c == p;
+        }), std::end(m_consoleTabs));
 }
 
 void Console::init()

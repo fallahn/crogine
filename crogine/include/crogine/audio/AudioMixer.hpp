@@ -81,10 +81,26 @@ namespace cro
         */
         static float getVolume(uint8);
 
+        /*!
+        \brief Sets a label for a channel.
+        For example you might want to set channel 0 to 'Effects'
+        and channel 1 to 'Music' for easy reference. Channel names
+        will appear in the console mixer window.
+        \param label String to use as channel label
+        \param channel To to which to apply the label
+        */
+        static void setLabel(const std::string& label, std::uint8_t channel);
+
+        /*!
+        \brief Returns the current label assigned to the requested channel.
+        \param channel Number of the channel from which to retrieve the label
+        */
+        static const std::string& getLabel(std::uint8_t channel);
+
         static constexpr std::size_t MaxChannels = 16;
 
     private:
-        
+        static std::array<std::string, MaxChannels> m_labels;
         static std::array<float, MaxChannels> m_channels;
         static float m_masterVol;
 

@@ -52,3 +52,13 @@ void ui::end()
 {
     ImGui::End();
 }
+
+bool ui::wantsMouse()
+{
+    return ImGui::GetIO().WantCaptureMouse;
+}
+
+bool ui::wantsKeyboard()
+{
+    return ImGui::GetIO().WantCaptureKeyboard;
+}

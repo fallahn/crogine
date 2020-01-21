@@ -34,14 +34,14 @@ using namespace cro;
 
 GuiClient::~GuiClient()
 {
-    App::removeStatusControls(this);
+    App::removeConsoleTab(this);
     App::removeWindows(this);
 }
 
 //public
-void GuiClient::registerStatusControls(const std::function<void()>& f)
+void GuiClient::registerConsoleTab(const std::string& name, const std::function<void()>& f)
 {
-    App::addStatusControl(f, this);
+    App::addConsoleTab(name, f, this);
 }
 
 void GuiClient::registerWindow(const std::function<void()>& f)

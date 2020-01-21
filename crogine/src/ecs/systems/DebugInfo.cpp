@@ -56,6 +56,6 @@ void DebugInfo::process(Time)
 
         op += " World position: " + std::to_string(wtx[3][0]) + ", " + std::to_string(wtx[3][1]);
 
-        App::debugPrint("Entity " + std::to_string(e.getIndex()), op);
+        Console::printStat("Entity " + std::to_string(e.getIndex()), op);
     }
 }

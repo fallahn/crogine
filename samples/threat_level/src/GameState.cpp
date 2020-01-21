@@ -92,6 +92,7 @@ source distribution.
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/postprocess/PostChromeAB.hpp>
 
 namespace
@@ -128,6 +129,11 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 //public
 bool GameState::handleEvent(const cro::Event& evt)
 {
+    if (cro::ui::wantsKeyboard() || cro::ui::wantsMouse())
+    {
+        return false;
+    }
+
     if (evt.type == SDL_KEYUP)
     {
         /*if (evt.key.keysym.sym == SDLK_p)

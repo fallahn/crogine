@@ -70,7 +70,7 @@ namespace
 }
 
 App::App()
-    : m_frameClock(nullptr), m_running (false), m_showStats(true)
+    : m_frameClock(nullptr), m_running (false)
 {
 	CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
@@ -251,14 +251,6 @@ void App::quit()
     }
 }
 
-void App::debugPrint(const std::string& name, const std::string& value)
-{
-    CRO_ASSERT(m_instance, "Not now, fuzznuts");
-#if defined _DEBUG_ && defined USE_IMGUI
-    m_instance->m_debugLines.emplace_back(name + " : " + value);
-#endif
-}
-
 Window& App::getWindow()
 {
     CRO_ASSERT(m_instance, "No valid app instance");
@@ -290,16 +282,11 @@ void App::handleEvents()
         {
         default: break;
         case SDL_KEYUP:
-#ifdef USE_IMGUI
             if (evt.key.keysym.sym == SDLK_F1)
-            {
-                m_showStats = !m_showStats;
-            }
-            else if (evt.key.keysym.scancode == SDL_SCANCODE_GRAVE)
             {
                 Console::show();
             }
-#endif //USE_IMGUI
+
             break;
         case SDL_QUIT:
             quit();
@@ -371,7 +358,6 @@ void App::handleMessages()
     }
 }
 
-//#ifdef USE_IMGUI
 void App::doImGui()
 {
     ImGui_ImplOpenGL3_NewFrame();
@@ -382,74 +368,16 @@ void App::doImGui()
     Console::draw();
 
     for (auto& f : m_guiWindows) f.first();
-
-#ifdef USE_IMGUI
-    if (m_showStats)
-    {
-        ImGui::SetNextWindowSizeConstraints({ 360.f, 200.f }, { 400.f, 1000.f });
-        ImGui::Begin("Stats:", &m_showStats);
-        static bool vsync = true;
-        bool lastSync = vsync;
-        ImGui::Checkbox("Vsync", &vsync);
-        if (lastSync != vsync)
-        {
-            m_window.setVsyncEnabled(vsync);
-        }
-
-        ImGui::SameLine();
-        static bool fullScreen = m_window.isFullscreen();
-        bool lastFS = fullScreen;
-        ImGui::Checkbox("Full Screen", &fullScreen);
-        if (lastFS != fullScreen)
-        {
-            m_window.setFullScreen(fullScreen);
-        }
-
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        ImGui::NewLine();
-
-        //display any registered controls
-        for (const auto& func : m_statusControls)
-        {
-            func.first();
-        }
-
-        //print any debug lines       
-        for (const auto& p : m_debugLines)
-        {
-            ImGui::Text(p.c_str());
-        }
-
-        ImGui::End();
-    }
-    m_debugLines.clear();
-    m_debugLines.reserve(10);
-
-#endif //USE_IMGUI
 }
 
-void App::addStatusControl(const std::function<void()>& func, const GuiClient* c)
+void App::addConsoleTab(const std::string& name, const std::function<void()>& func, const GuiClient* c)
 {
-    CRO_ASSERT(m_instance, "App not properly instanciated!");
-#ifdef USE_IMGUI
-    m_instance->m_statusControls.push_back(std::make_pair(func, c));
-#endif
+    Console::addConsoleTab(name, func, c);
 }
 
-void App::removeStatusControls(const GuiClient* c)
+void App::removeConsoleTab(const GuiClient* c)
 {
-    CRO_ASSERT(m_instance, "App not properly instanciated!");
-
-#ifdef USE_IMGUI
-
-    m_instance->m_statusControls.erase(
-        std::remove_if(std::begin(m_instance->m_statusControls), std::end(m_instance->m_statusControls),
-            [c](const std::pair<std::function<void()>, const GuiClient*>& pair)
-    {
-        return pair.second == c;
-    }), std::end(m_instance->m_statusControls));
-
-#endif //USE_IMGUI
+    Console::removeConsoleTab(c);
 }
 
 void App::addWindow(const std::function<void()>& func, const GuiClient* c)
@@ -475,7 +403,3 @@ void App::removeWindows(const GuiClient* c)
 
 #endif //USE_IMGUI
 }
-
-
-
-//#endif

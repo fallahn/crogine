@@ -138,11 +138,11 @@ CollisionSystem::CollisionSystem(cro::MessageBus&mb)
 
     //registers a control to toggle debug output
     //in the status window if it's active
-    registerStatusControls([&]()
+    registerConsoleTab("Physics", [&]()
     {
         static bool showDebug = false;
         bool status = showDebug;
-        ImGui::Checkbox("Physics Debug", &showDebug);
+        ImGui::Checkbox("Show Debug", &showDebug);
         if (status != showDebug)
         {
             showDebug ? m_debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawAabb)

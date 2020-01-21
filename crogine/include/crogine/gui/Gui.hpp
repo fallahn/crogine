@@ -63,5 +63,15 @@ namespace cro
         \see ImGui::End()
         */
         CRO_EXPORT_API void end();
+
+        /*!
+        \brief Returns true if the ui wants to capture mouse input
+        */
+        CRO_EXPORT_API bool wantsMouse();
+
+        /*!
+        \brief Returns true if the ui wants to caputure keyboard input
+        */
+        CRO_EXPORT_API bool wantsKeyboard();
     }
 }
