@@ -1,4 +1,5 @@
 language: c++
+dist: trusty
 sudo: false
 addons:
   apt:
@@ -15,21 +16,18 @@ addons:
     - gcc-7
     - clang
     - libgl1-mesa-dev
-    - libsdl2-2.0-0
-    - libsdl2-dev
     - libbullet-dev
     sources:
     - ubuntu-toolchain-r-test
+before_install:
+    - sudo apt-get install -qq libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libegl1-mesa-dev libgles2-mesa-dev
 before_script:
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc
   gcc /usr/bin/gcc-7 90; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/g++
   g++ /usr/bin/g++-7 90; fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install enet; fi
-- git clone https://github.com/sfml/sfml && cd sfml
-- git checkout tags/2.5.1
-- mkdir build && cd build
-- cmake .. -G"$GENERATOR" $CMAKE_FLAGS && sudo cmake --build . --target install && cd ../..
+
 - git clone https://github.com/fallahn/tmxlite
 - cd tmxlite/tmxlite && mkdir build && cd build
 - cmake .. -G"$GENERATOR" $CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release && sudo cmake --build
