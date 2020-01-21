@@ -15,10 +15,8 @@ addons:
     - gcc-7
     - clang
     - libgl1-mesa-dev
+    - libsdl2-2.0-0
     - libsdl2-dev
-    - libpulse-dev
-    - libpulse0
-    - libpulse-mainloop-glib0
     - libbullet-dev
     sources:
     - ubuntu-toolchain-r-test
