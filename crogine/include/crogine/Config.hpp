@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2020
 http://trederia.blogspot.com  
 
 crogine - Zlib license.
