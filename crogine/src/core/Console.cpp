@@ -274,7 +274,7 @@ void Console::draw()
                 static bool fullScreen = App::getWindow().isFullscreen();
                 ui::Checkbox("Full Screen", &fullScreen);
 
-                static bool vsync = true;
+                bool vsync = App::getWindow().getVsyncEnabled();
                 bool lastSync = vsync;
                 ImGui::Checkbox("Vsync", &vsync);
                 if (lastSync != vsync)

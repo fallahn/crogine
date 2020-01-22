@@ -54,6 +54,12 @@ namespace cro
             MaxChildren = 16
         };
 
+        /*!
+        TODO this needs to be non-copyable at the least
+        probably with special move operator to account for
+        the fact copies of parented transforms will try to
+        occupy the same child slot in the parent as their clone.
+        */
         Transform();
 
         /*!

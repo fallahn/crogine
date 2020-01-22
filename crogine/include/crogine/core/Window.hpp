@@ -75,6 +75,10 @@ namespace cro
 		\brief Enables or disables vsync
 		*/
 		void setVsyncEnabled(bool);
+        /*!
+        \brief Returns whether or not vsync is enabled
+        */
+        bool getVsyncEnabled() const;
 		/*!
 		\brief Clears the window for drawing with the given colour
 		*/

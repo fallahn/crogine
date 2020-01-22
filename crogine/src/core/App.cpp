@@ -55,7 +55,6 @@ cro::App* App::m_instance = nullptr;
 namespace
 {    
     const Time frameTime = seconds(1.f / 60.f);
-	Time timeSinceLastUpdate;
 
 #include "../detail/DefaultIcon.inl"
 
@@ -162,7 +161,8 @@ void App::run()
     
 	if (m_window.create(width, height, "crogine game"))
 	{
-		//load opengl
+		//load opengl - TODO choose which loader to use based on
+        //current platform, ie mobile or desktop
 		if (!gladLoadGLES2Loader(SDL_GL_GetProcAddress))
 		{
 			Logger::log("Failed loading OpenGL", Logger::Type::Error);
@@ -188,9 +188,12 @@ void App::run()
     Clock frameClock;
     m_frameClock = &frameClock;
     m_running = true;
+
+    Time timeSinceLastUpdate;
+
 	while (m_running)
 	{
-		timeSinceLastUpdate = frameClock.restart();
+		timeSinceLastUpdate += frameClock.restart();
 
 		while (timeSinceLastUpdate > frameTime)
 		{

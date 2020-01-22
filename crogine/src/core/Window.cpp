@@ -123,6 +123,11 @@ void Window::setVsyncEnabled(bool enabled)
     }
 }
 
+bool Window::getVsyncEnabled() const
+{
+    return SDL_GL_GetSwapInterval() != 0;
+}
+
 void Window::clear()
 {
     //glClearColor(1.f, 0.f, 0.f, 1.f);
