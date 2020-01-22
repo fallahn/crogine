@@ -154,7 +154,9 @@ bool ConfigObject::loadFromFile(const std::string& path)
         std::string lastLine = data;
         data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
         removeComment(data);
-        int32 braceCount = 0;
+
+        //tracks brace balance
+        std::vector<ConfigObject*> objStack;
 
         if (data[0] == '{')
         {
@@ -162,7 +164,8 @@ bool ConfigObject::loadFromFile(const std::string& path)
             auto objectName = getObjectName(lastLine);
             setName(objectName.first);
             m_id = objectName.second;
-            braceCount++;
+            
+            objStack.push_back(this);
         }
         else
         {
@@ -170,7 +173,6 @@ bool ConfigObject::loadFromFile(const std::string& path)
             return false;
         }
 
-        ConfigObject* currentObject = this;
 
         while (readTotal < fileSize)
         {
@@ -181,9 +183,7 @@ bool ConfigObject::loadFromFile(const std::string& path)
                 if (data[0] == '}')
                 {
                     //close current object and move to parent
-                    braceCount--;
-                    if (braceCount > 0)
-                        currentObject = dynamic_cast<ConfigObject*>(currentObject->getParent());
+                    objStack.pop_back();
                 }
                 else if (isProperty(data))
                 {			
@@ -199,10 +199,10 @@ bool ConfigObject::loadFromFile(const std::string& path)
 
                     if (prop.second.empty())
                     {
-                        Logger::log("\'" + currentObject->getName() + "\' property \'" + prop.first + "\' has no valid value", Logger::Type::Warning);
+                        Logger::log("\'" + objStack.back()->getName() + "\' property \'" + prop.first + "\' has no valid value", Logger::Type::Warning);
                         continue;
                     }
-                    currentObject->addProperty(prop.first, prop.second);
+                    objStack.back()->addProperty(prop.first, prop.second);
                 }
                 else
                 {
@@ -212,23 +212,27 @@ bool ConfigObject::loadFromFile(const std::string& path)
                     removeComment(data);
                     if (data[0] == '{')
                     {
-                        braceCount++;
+                        //TODO we have to allow mutliple objects with the same name in this instance
+                        //as a model may have multiple material defs.
                         auto name = getObjectName(prevLine);
-                        //if (currentObject->findObjectWithId(name.second))
+                        //if (name.second.empty() || objStack.back()->findObjectWithId(name.second) == nullptr)
                         //{
-                        //    Logger::log("Object with ID \'" + name.second + "\' already exists, skipping...", Logger::Type::Warning);
-                        //    //object with duplicate id already exists
-                        //    while (data.find('}') == std::string::npos
-                        //        && readTotal < fileSize) //just incase of infinite loop
+                        //    //safe to add new object as the name doesn't exist
+                        //    objStack.push_back(objStack.back()->addObject(name.first, name.second));
+                        //}
+                        //else
+                        //{
+                        //    Logger::log("Object with ID " + name.second + " has already been added, duplicate is skipped...", Logger::Type::Warning);
+
+                        //    //fast forward to closing brace
+                        //    while (data[0] != '}')
                         //    {
-                        //        //skip all the object properties before continuing
                         //        data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
+                        //        removeComment(data);
                         //    }
-                        //    braceCount--;
-                        //    continue;
                         //}
 
-                        currentObject = currentObject->addObject(name.first, name.second);
+                        objStack.push_back(objStack.back()->addObject(name.first, name.second));
                     }
                     else //last line was probably garbage
                     {
@@ -238,7 +242,7 @@ bool ConfigObject::loadFromFile(const std::string& path)
             }		
         }
 
-        if (braceCount != 0)
+        if (!objStack.empty())
         {
             Logger::log("Brace count not at 0 after parsing \'" + path + "\'. Config data may not be correct.", Logger::Type::Warning);
         }
@@ -278,6 +282,11 @@ ConfigProperty* ConfigObject::findProperty(const std::string& name) const
 
 ConfigObject* ConfigObject::findObjectWithId(const std::string& id) const
 {
+    if (id.empty())
+    {
+        return nullptr;
+    }
+
     auto result = std::find_if(m_objects.begin(), m_objects.end(),
         [&id](const ConfigObject& p)
     {
@@ -328,7 +337,17 @@ const std::vector<ConfigProperty>& ConfigObject::getProperties() const
     return m_properties;
 }
 
+std::vector<ConfigProperty>& ConfigObject::getProperties()
+{
+    return m_properties;
+}
+
 const std::vector<ConfigObject>& ConfigObject::getObjects() const
+{
+    return m_objects;
+}
+
+std::vector<ConfigObject>& ConfigObject::getObjects()
 {
     return m_objects;
 }
