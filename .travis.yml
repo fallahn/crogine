@@ -19,7 +19,7 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
 before_install:
-    - sudo apt-get install -qq libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libbullet-dev
+    - sudo apt-get install -qq libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
 before_script:
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc
   gcc /usr/bin/gcc-7 90; fi
@@ -31,6 +31,12 @@ before_script:
 - cd tmxlite/tmxlite && mkdir build && cd build
 - cmake .. -G"$GENERATOR" $CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release && sudo cmake --build
   . --target install --config Release && cd ../../../
+
+- git clone https://github.com/bulletphysics/bullet3.git
+- cd bullet3 && mkdir build && cd build
+- cmake .. -G"$GENERATOR" $CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release && sudo cmake --build
+  . --target install --config Release && cd ../../../
+
 script:
 - mkdir build && cd build
 - cmake ../crogine -G"$GENERATOR" $CMAKE_FLAGS && sudo cmake --build . --target install

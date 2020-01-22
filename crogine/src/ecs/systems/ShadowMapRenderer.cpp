@@ -111,7 +111,7 @@ void ShadowMapRenderer::render(Entity camera)
         const auto& model = e.getComponent<Model>();
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
 
-        for (auto i = 0; i < model.m_meshData.submeshCount; ++i)
+        for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
         {
             const auto& mat = model.m_shadowMaterials[i];
 
