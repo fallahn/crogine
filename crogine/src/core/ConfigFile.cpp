@@ -458,20 +458,25 @@ void ConfigObject::removeComment(std::string& line)
     auto result = line.find_first_of("//");
 
     //make sure to only crop comments outside of string literals
-    auto otherResult = line.find_first_of('\"');
-    if (result != std::string::npos && (result < otherResult || otherResult == std::string::npos))
+    //for some reason it appears result also matches '/' so unquoted paths get truncated
+    if (result < line.size() - 1 && line[result + 1] == '/')
     {
-        line = line.substr(0, result);
+        auto otherResult = line.find_last_of('\"');
+        if (result != std::string::npos && (result > otherResult || otherResult == std::string::npos))
+        {
+            line = line.substr(0, result);
+        }
     }
-    
-    otherResult = line.find_last_of('\"');
-    if (result != std::string::npos && (result > otherResult || otherResult == std::string::npos))
-    {
-        line = line.substr(0, result);
-    }
-    
+
     //remove any tabs while we're at it
     Util::String::removeChar(line, '\t');
+
+    //and preceding spaces
+    auto start = line.find_first_not_of(' ');
+    if (start != std::string::npos)
+    {
+        line = line.substr(start);
+    }
 }
 
 bool ConfigObject::save(const std::string& path)
@@ -494,7 +499,9 @@ int32 ConfigObject::write(SDL_RWops* file, uint16 depth)
     //add the correct amount of indenting based on this objects's depth
     std::string indent;
     for (auto i = 0u; i < depth; ++i)
+    {
         indent += indentBlock;
+    }
 
     std::stringstream stream;
     stream << indent << getName() << " " << getId() << std::endl;
@@ -513,16 +520,22 @@ int32 ConfigObject::write(SDL_RWops* file, uint16 depth)
         
         stream << std::endl;
     }
+    stream << "\n";
 
     int32 written = 0;
+    std::string str = stream.str();
+    written += SDL_RWwrite(file, str.data(), sizeof(char) * str.size(), 1) * str.size(); //TODO this assumes single width charstring
+
     for (auto& o : m_objects)
     {
         written += o.write(file, depth + 1);
     }
-    stream << indent << "}" << std::endl;
 
-    std::string str = stream.str();
-    written += SDL_RWwrite(file, str.data(), sizeof(char) * str.size(), 1) * str.size(); //TODO this assumes single width charstring
+    stream = std::stringstream();
+    stream << indent << "}" << std::endl;
+    str = stream.str();
+    written += SDL_RWwrite(file, str.data(), sizeof(char) * str.size(), 1) * str.size();
+
     return written;
 }
 

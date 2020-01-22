@@ -46,7 +46,6 @@ MyApp::MyApp()
 //#endif //PLATFORM_MOBILE
 
     m_stateStack.registerState<GameState>(States::ID::GamePlaying);
-	m_stateStack.pushState(States::GamePlaying);
 }
 
 //public
@@ -82,11 +81,15 @@ void MyApp::render()
 	m_stateStack.render();
 }
 
-void MyApp::initialise()
+bool MyApp::initialise()
 {
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setIcon(icon);
     getWindow().setTitle("House of Woo");
+
+	m_stateStack.pushState(States::GamePlaying);
+
+	return true;
 }
 
 void MyApp::finalise()

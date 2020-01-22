@@ -55,7 +55,6 @@ MyApp::MyApp()
     m_stateStack.registerState<PauseState>(States::ID::PauseMenu, m_sharedResources);
     m_stateStack.registerState<GameOverState>(States::ID::GameOver, m_sharedResources);
     m_stateStack.registerState<RoundEndState>(States::ID::RoundEnd, m_sharedResources);
-	m_stateStack.pushState(States::MainMenu);
 }
 
 //public
@@ -112,13 +111,16 @@ void MyApp::render()
 	m_stateStack.render();
 }
 
-void MyApp::initialise()
+bool MyApp::initialise()
 {
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setIcon(icon);
     getWindow().setTitle("Threat Level");
 
     m_sharedResources = std::make_unique<SharedResources>();
+    m_stateStack.pushState(States::MainMenu);
+
+    return true;
 }
 
 void MyApp::finalise()

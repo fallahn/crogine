@@ -49,7 +49,7 @@ private:
     void handleMessage(const cro::Message&) override;
 	void simulate(cro::Time) override;
 	void render() override;
-    void initialise() override;
+    bool initialise() override;
     void finalise() override;
 };
 

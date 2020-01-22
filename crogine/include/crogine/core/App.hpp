@@ -122,9 +122,11 @@ namespace cro
 		/*!
         \brief Called on startup after window is created.
         Use it to perform initial operations such as setting the 
-        window title, icon or custom loading screen
+        window title, icon or custom loading screen. Return false
+        from this if custom initialisation fails for some reason
+        so that the app may safely shut down while calling finalise().
         */
-        virtual void initialise() {}
+        virtual bool initialise() = 0;
 
         /*!
         \brief Called before the window is destroyed.
@@ -165,5 +167,15 @@ namespace cro
         friend class GuiClient;
       
         std::string m_prefPath;
+        
+        struct WindowSettings final
+        {
+            std::int32_t width = 800;
+            std::int32_t height = 600;
+            bool fullscreen = false;
+            bool vsync = true;
+        };
+        WindowSettings loadSettings();
+        void saveSettings();
 	};
 }

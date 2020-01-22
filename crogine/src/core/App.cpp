@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/core/Console.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/detail/Assert.hpp>
+#include <crogine/audio/AudioMixer.hpp>
 
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -133,33 +134,9 @@ App::~App()
 //public
 void App::run()
 {
-    int32 width = 800;
-    int32 height = 600;
-    bool fullscreen = false;
+    auto settings = loadSettings();
 
-    ConfigFile cfg;
-    if (cfg.loadFromFile(m_prefPath + cfgName))
-    {
-        const auto& properties = cfg.getProperties();
-        for (const auto& prop : properties)
-        {
-            if (prop.getName() == "width" && prop.getValue<int>() > 0)
-            {
-                width = prop.getValue<int>();
-            }
-            else if (prop.getName() == "height" && prop.getValue<int>() > 0)
-            {
-                height = prop.getValue<int>();
-            }
-            else if (prop.getName() == "fullscreen")
-            {
-                fullscreen = prop.getValue<bool>();
-            }
-        }
-    }
-
-    
-	if (m_window.create(width, height, "crogine game"))
+	if (m_window.create(settings.width, settings.height, "crogine game"))
 	{
 		//load opengl - TODO choose which loader to use based on
         //current platform, ie mobile or desktop
@@ -175,7 +152,8 @@ void App::run()
         ImGui_ImplOpenGL3_Init(/*version150 if mac - but meh, Apple*/);
 
         m_window.setIcon(defaultIcon);
-        m_window.setFullScreen(fullscreen);
+        m_window.setFullScreen(settings.fullscreen);
+        m_window.setVsyncEnabled(settings.vsync);
         Console::init();
 	}
 	else
@@ -183,11 +161,11 @@ void App::run()
 		Logger::log("Failed creating main window", Logger::Type::Error);
 		return;
 	}
-    initialise();
+    
     
     Clock frameClock;
     m_frameClock = &frameClock;
-    m_running = true;
+    m_running = initialise();
 
     Time timeSinceLastUpdate;
 
@@ -217,13 +195,7 @@ void App::run()
         //SDL_Delay((frameTime - timeSinceLastUpdate).asMilliseconds());
 	}
 
-    auto size = m_window.getSize();
-    fullscreen = m_window.isFullscreen();
-    ConfigFile saveSettings;
-    saveSettings.addProperty("width", std::to_string(size.x));
-    saveSettings.addProperty("height", std::to_string(size.y));
-    saveSettings.addProperty("fullscreen", fullscreen ? "true" : "false");
-    saveSettings.save(m_prefPath + cfgName);
+    saveSettings();
 
     Console::finalise();
     m_messageBus.disable(); //prevents spamming a load of quit messages
@@ -400,4 +372,96 @@ void App::removeWindows(const GuiClient* c)
         return pair.second == c;
     }), std::end(m_instance->m_guiWindows));
 
+}
+
+App::WindowSettings App::loadSettings() 
+{
+    WindowSettings settings;
+
+    ConfigFile cfg;
+    if (cfg.loadFromFile(m_prefPath + cfgName))
+    {
+        const auto& properties = cfg.getProperties();
+        for (const auto& prop : properties)
+        {
+            if (prop.getName() == "width" && prop.getValue<int>() > 0)
+            {
+                settings.width = prop.getValue<int>();
+            }
+            else if (prop.getName() == "height" && prop.getValue<int>() > 0)
+            {
+                settings.height = prop.getValue<int>();
+            }
+            else if (prop.getName() == "fullscreen")
+            {
+                settings.fullscreen = prop.getValue<bool>();
+            }
+            else if (prop.getName() == "vsync")
+            {
+                settings.vsync = prop.getValue<bool>();
+            }
+        }
+
+        //load mixer settings
+        const auto& objects = cfg.getObjects();
+        auto aObj = std::find_if(objects.begin(), objects.end(),
+            [](const ConfigObject& o)
+            {
+                return o.getName() == "audio";
+            });
+
+        if (aObj != objects.end())
+        {
+            const auto& properties = aObj->getProperties();
+            for (const auto& p : properties)
+            {
+                if (p.getName() == "master")
+                {
+                    AudioMixer::setMasterVolume(p.getValue<float>());
+                }
+                else
+                {
+                    auto name = p.getName();
+                    auto found = name.find("channel");
+                    if (found != std::string::npos)
+                    {
+                        auto ident = name.substr(found + 7);
+                        try
+                        {
+                            auto channel = std::stoi(ident);
+                            AudioMixer::setVolume(p.getValue<float>(), channel);
+                        }
+                        catch (...)
+                        {
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return settings;
+}
+
+void App::saveSettings()
+{
+    auto size = m_window.getSize();
+    auto fullscreen = m_window.isFullscreen();
+    auto vsync = m_window.getVsyncEnabled();
+
+    ConfigFile saveSettings;
+    saveSettings.addProperty("width", std::to_string(size.x));
+    saveSettings.addProperty("height", std::to_string(size.y));
+    saveSettings.addProperty("fullscreen", fullscreen ? "true" : "false");
+    saveSettings.addProperty("vsync", vsync ? "true" : "false");
+
+    auto* aObj = saveSettings.addObject("audio");
+    aObj->addProperty("master", std::to_string(AudioMixer::getMasterVolume()));
+    for (auto i = 0u; i < AudioMixer::MaxChannels; ++i)
+    {
+        aObj->addProperty("channel" + std::to_string(i), std::to_string(AudioMixer::getVolume(i)));
+    }
+
+    saveSettings.save(m_prefPath + cfgName);
 }
