@@ -360,7 +360,7 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
     std::size_t colourIndex = 0;
 
     glm::vec3 boundsMin(std::numeric_limits<float>::max());
-    glm::vec3 boundsMax;
+    glm::vec3 boundsMax(0.f);
     //NOTE these have to match attribute order of Mesh::Data
     for (auto i = 0u; i < header.vertexCount; ++i)
     {
@@ -515,8 +515,9 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     Iqm::Pose pose;
                     poseIter = readPose(poseIter, pose);
 
-                    glm::quat rotation;
-                    glm::vec3 translation, scale;
+                    glm::quat rotation(1.f, 0.f, 0.f, 0.f);
+                    glm::vec3 translation(0.f);
+                    glm::vec3 scale(0.f);
 
                     translation.x = pose.channelOffset[0];
                     if (pose.mask & 0x01) translation.x += *frameIter++ * pose.channelScale[0];

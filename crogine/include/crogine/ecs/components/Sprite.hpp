@@ -147,9 +147,9 @@ namespace cro
         FloatRect m_textureRect;
         struct Vertex final
         {
-            glm::vec4 position;
-            glm::vec4 colour;
-            glm::vec2 UV;
+            glm::vec4 position = glm::vec4(0.f);
+            glm::vec4 colour = glm::vec4(0.f);
+            glm::vec2 UV = glm::vec2(0.f);
         };
         std::array<Vertex, 4u> m_quad;
         bool m_dirty;

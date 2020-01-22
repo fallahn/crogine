@@ -74,9 +74,11 @@ namespace
 }
 
 LoadingScreen::LoadingScreen()
-    : m_vbo(0),
-    m_transformIndex(0),
-    m_wavetableIndex(0)
+    : m_vbo             (0),
+    m_transformIndex    (0),
+    m_transform         (1.f),
+    m_projectionMatrix  (1.f),
+    m_wavetableIndex    (0)
 {
     m_viewport = cro::App::getWindow().getSize();
     m_projectionMatrix = glm::ortho(0.f, static_cast<float>(m_viewport.x), 0.f, static_cast<float>(m_viewport.y), -0.1f, 10.f);
@@ -90,7 +92,7 @@ LoadingScreen::LoadingScreen()
     {
         const auto& uniforms = m_shader.getUniformMap();
         m_transformIndex = uniforms.find("u_worldMatrix")->second;
-        m_transform = glm::translate(glm::mat4(), { 60.f, 60.f, 0.f });
+        m_transform = glm::translate(glm::mat4(1.f), { 60.f, 60.f, 0.f });
         m_transform = glm::scale(m_transform, { 128.f, 64.f, 1.f });
 
         glCheck(glUseProgram(m_shader.getGLHandle()));

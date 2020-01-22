@@ -132,6 +132,7 @@ void ModelRenderer::render(Entity camera)
     
     auto cameraPosition = camTx.getWorldPosition();
     auto viewMat = glm::inverse(camTx.getWorldTransform());
+    DPRINT("TODO", "update cam view matrix once per frame, remove from model render");
     auto projMat = camComponent.projection;
     applyViewport(camComponent.viewport);
 

@@ -97,10 +97,10 @@ namespace cro
         std::vector<ButtonCallback> m_buttonCallbacks;
         std::vector<MovementCallback> m_movementCallbacks;
 
-        glm::vec2 m_prevMousePosition;
-        glm::vec2 m_previousEventPosition; //in screen coords
-        glm::vec2 m_eventPosition;
-        glm::vec2 m_movementDelta; //in world coords
+        glm::vec2 m_prevMousePosition = glm::vec2(0.f);
+        glm::vec2 m_previousEventPosition = glm::vec2(0.f); //in screen coords
+        glm::vec2 m_eventPosition = glm::vec2(0.f);
+        glm::vec2 m_movementDelta = glm::vec2(0.f); //in world coords
 
         std::vector<Flags> m_downEvents;
         std::vector<Flags> m_upEvents;

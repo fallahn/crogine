@@ -60,7 +60,7 @@ struct BackgroundEvent final
         MountCreated
     } type;
     float value = 0.f;
-    glm::vec2 position;
+    glm::vec2 position = glm::vec2(0.f);
     cro::uint32 entityID = 0;
 };
 
@@ -99,7 +99,7 @@ struct PlayerEvent final
         GotLife,
         FiredEmp
     }type;
-    glm::vec3 position;
+    glm::vec3 position = glm::vec3(0.f);
     cro::uint32 entityID = 0;
     union
     {
@@ -119,8 +119,8 @@ struct NpcEvent final
         ExitScreen
     }type;
     cro::int32 npcType = -1;
-    glm::vec3 position;
-    glm::vec3 velocity;
+    glm::vec3 position = glm::vec3(0.f);
+    glm::vec3 velocity = glm::vec3(0.f);
     float value = 0.f;
     cro::uint32 entityID = 0;
 };
@@ -133,7 +133,7 @@ struct BuddyEvent final
         FiredWeapon,
         Died
     }type;
-    glm::vec3 position;
+    glm::vec3 position = glm::vec3(0.f);
 };
 
 struct WeaponEvent final

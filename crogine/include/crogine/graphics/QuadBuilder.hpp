@@ -53,8 +53,8 @@ namespace cro
         int32 getUID() const override { return m_uid; }
 
     private:
-        glm::vec2 m_size;
-        glm::vec2 m_repeat;
+        glm::vec2 m_size = glm::vec2(0.f);
+        glm::vec2 m_repeat = glm::vec2(0.f);
         int32 m_uid;
         Mesh::Data build() const override;
     };

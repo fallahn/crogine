@@ -140,7 +140,7 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
         glm::quat rot = glm::slerp(glm::conjugate(rotA), glm::conjugate(rotB), time);
         glm::vec3 trans = glm::mix(transA, transB, time);
 
-        glm::mat4 result = glm::translate(glm::mat4(), trans);
+        glm::mat4 result = glm::translate(glm::mat4(1.f), trans);
         result *= glm::toMat4(rot);
         return glm::scale(result, scale);
 

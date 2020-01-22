@@ -49,7 +49,7 @@ struct CollectableItem final
     bool active = false;
     bool wantsReset = false;
     float speed = -0.8f;
-    glm::vec3 impulse; //applied when getting hit by a laser
+    glm::vec3 impulse = glm::vec3(0.f); //applied when getting hit by a laser
     cro::int32 scoreValue = 40;
 };
 
@@ -62,7 +62,7 @@ public:
     void handleMessage(const cro::Message&) override;
 
 private:
-    glm::vec3 m_playerPosition;
+    glm::vec3 m_playerPosition = glm::vec3(0.f);
 };
 
 #endif //TL_ITEM_SYSTEM_HPP_

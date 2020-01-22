@@ -61,7 +61,7 @@ template <>
 inline glm::vec2 ConfigProperty::getValue<glm::vec2>() const
 {
     auto values = valueAsArray();
-    glm::vec2 retval; //loop allows for values to be the wrong size
+    glm::vec2 retval(0.f); //loop allows for values to be the wrong size
     for (auto i = 0u; i < values.size() && i < 2; ++i)
     {
         retval[i] = values[i];
@@ -74,7 +74,7 @@ template <>
 inline glm::vec3 ConfigProperty::getValue<glm::vec3>() const
 {
     auto values = valueAsArray();
-    glm::vec3 retval;
+    glm::vec3 retval(0.f);
     for (auto i = 0u; i < values.size() && i < 3; ++i)
     {
         retval[i] = values[i];
@@ -87,7 +87,7 @@ template <>
 inline glm::vec4 ConfigProperty::getValue<glm::vec4>() const
 {
     auto values = valueAsArray();
-    glm::vec4 retval;
+    glm::vec4 retval(0.f);
     for (auto i = 0u; i < values.size() && i < 4; ++i)
     {
         retval[i] = values[i];

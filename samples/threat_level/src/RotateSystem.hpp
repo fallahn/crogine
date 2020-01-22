@@ -49,7 +49,7 @@ private:
 struct Rotator final
 {
     float speed = 0.f;
-    glm::vec3 axis;
+    glm::vec3 axis = glm::vec3(0.f);
 };
 
 #endif //TEST_ROTATE_SYS_HPP_

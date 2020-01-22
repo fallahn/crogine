@@ -81,7 +81,7 @@ namespace cro
         to the first corner, or half the length of a Cylinder
         and its radius
         */
-        glm::vec3 extent;
+        glm::vec3 extent = glm::vec3(0.f);
 
         /*!
         \brief Optional offset relative to parent object.
@@ -89,7 +89,7 @@ namespace cro
         Physics Object which has more than one shape attached
         to it.
         */
-        glm::vec3 position;
+        glm::vec3 position = glm::vec3(0.f);
 
         /*!
         \brief Optional rotation of shape.
@@ -97,7 +97,7 @@ namespace cro
         with more than one Physics shape. The shape is rotated around 
         the PhysicsShape position
         */
-        glm::quat rotation;
+        glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
     };
     
     /*!
@@ -175,8 +175,8 @@ namespace cro
         //of a collision manifold
         struct ManifoldPoint final
         {
-            glm::vec3 worldPointA;
-            glm::vec3 worldPointB;
+            glm::vec3 worldPointA = glm::vec3(0.f);
+            glm::vec3 worldPointB = glm::vec3(0.f);
             float distance = 0.f;
         };
 

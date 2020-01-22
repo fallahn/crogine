@@ -62,7 +62,7 @@ namespace cro
     */
     struct CRO_EXPORT_API ProjectionMap final
     {
-        glm::mat4 projection;
+        glm::mat4 projection = glm::mat4(1.f);
         ProjectionMap()
         {
             projection = glm::perspective(0.9f, 1.f, 0.8f, 4.f);

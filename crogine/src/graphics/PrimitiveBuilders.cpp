@@ -228,7 +228,7 @@ Mesh::Data SphereBuilder::build() const
             //because we're on a grid the tan points to
             //the next vertex position - unless we're
             //at the end of a line
-            glm::vec3 tan;
+            glm::vec3 tan = glm::vec3(0.f);
             if (i % (m_resolution + 1) == (m_resolution))
             {
                 //end of the line
@@ -283,20 +283,20 @@ Mesh::Data SphereBuilder::build() const
     //mapping to 2x3 texture atlas
     const float u = 1.f / 2.f;
     const float v = 1.f / 3.f;
-    buildFace(glm::quat(), { 0.f, v * 2.f }); //Z+
-    glm::quat rotation = glm::rotate(glm::quat(), degToRad * 90.f, glm::vec3(0.f, 1.f, 0.f));
+    buildFace(glm::quat(1.f, 0.f, 0.f, 0.f), { 0.f, v * 2.f }); //Z+
+    glm::quat rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), degToRad * 90.f, glm::vec3(0.f, 1.f, 0.f));
     buildFace(rotation, { u, 0.f }); //X-
 
-    rotation = glm::rotate(glm::quat(), degToRad * 180.f, glm::vec3(0.f, 1.f, 0.f));
+    rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), degToRad * 180.f, glm::vec3(0.f, 1.f, 0.f));
     buildFace(rotation, { u, v * 2.f }); //Z-
 
-    rotation = glm::rotate(glm::quat(), degToRad * 270.f, glm::vec3(0.f, 1.f, 0.f));
+    rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), degToRad * 270.f, glm::vec3(0.f, 1.f, 0.f));
     buildFace(rotation, {}); //X+
 
-    rotation = glm::rotate(glm::quat(), degToRad * 90.f, glm::vec3(1.f, 0.f, 0.f));
+    rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), degToRad * 90.f, glm::vec3(1.f, 0.f, 0.f));
     buildFace(rotation, { u, v }); //Y-
 
-    rotation = glm::rotate(glm::quat(), degToRad * -90.f, glm::vec3(1.f, 0.f, 0.f));
+    rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), degToRad * -90.f, glm::vec3(1.f, 0.f, 0.f));
     buildFace(rotation, { 0.f, v }); //Y+
 
 

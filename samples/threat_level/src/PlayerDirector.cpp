@@ -395,7 +395,7 @@ void PlayerDirector::process(cro::Time)
         {
             if (entity.getComponent<PlayerInfo>().state != PlayerInfo::State::Alive) return;
 
-            glm::vec3 acceleration;
+            glm::vec3 acceleration(0.f);
             float rotation = 0.f;
             const float dtSec = dt.asSeconds();
 

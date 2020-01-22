@@ -37,11 +37,16 @@ source distribution.
 using namespace cro;
 
 Transform::Transform()
-    : m_scale   (1.f, 1.f, 1.f),
-    m_parent    (-1),
-    m_lastParent(-1),
-    m_id        (-1),
-    m_dirtyFlags(0)
+    : m_origin      (0.f, 0.f, 0.f),
+    m_position      (0.f, 0.f, 0.f),
+    m_scale         (1.f, 1.f, 1.f),
+    m_rotation      (0.f, 0.f, 0.f, 1.f),
+    m_transform     (1.f),
+    m_worldTransform(1.f),
+    m_parent        (-1),
+    m_lastParent    (-1),
+    m_id            (-1),
+    m_dirtyFlags    (0)
 {
     for(auto& c : m_children) c = -1;
 }
@@ -125,7 +130,7 @@ const glm::mat4& Transform::getLocalTransform() const
     {
         //m_dirtyFlags &= ~Tx;
 
-        glm::mat4 translation = glm::translate(glm::mat4(), m_position);
+        glm::mat4 translation = glm::translate(glm::mat4(1.f), m_position);
 
         auto rotation = glm::toMat4(m_rotation);
         rotation = glm::scale(rotation, m_scale);

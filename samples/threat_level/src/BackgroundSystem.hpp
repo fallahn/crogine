@@ -57,7 +57,7 @@ public:
     void setColourAngle(float);
 
 private:
-    glm::vec2 m_offset;
+    glm::vec2 m_offset = glm::vec2(0.f);
     float m_speed;
     float m_currentSpeed;
     Mode m_currentMode;

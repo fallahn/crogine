@@ -36,7 +36,7 @@ source distribution.
 
 struct Velocity final
 {
-    glm::vec3 velocity;
+    glm::vec3 velocity = glm::vec3(0.f);
     float friction = 0.f;
     float minSpeed = 0.1f; //len^2 before velocity forced to stop
 };

@@ -38,7 +38,7 @@ source distribution.
 
 struct EliteNavigator final
 {
-    glm::vec3 destination;
+    glm::vec3 destination = glm::vec3(0.f);
     bool active = false;
     float pauseTime = 1.f;
     cro::uint16 movementCount = 5;
@@ -46,7 +46,7 @@ struct EliteNavigator final
     std::size_t idleIndex = 0;
     float maxEmitRate = 0.f;
     bool dying = false;
-    glm::vec3 deathVelocity;
+    glm::vec3 deathVelocity = glm::vec3(0.f);
 };
 
 struct ChoppaNavigator final
@@ -54,7 +54,7 @@ struct ChoppaNavigator final
     std::size_t tableIndex = 0;
     float moveSpeed = -0.8f;
     bool inCombat = true;
-    glm::vec3 deathVelocity;
+    glm::vec3 deathVelocity = glm::vec3(0.f);
     cro::uint8 ident = 0;
     float shootTime = 0.f;
     static constexpr float nextShootTime = 0.08f;
@@ -78,7 +78,7 @@ struct WeaverNavigator final
     std::size_t tableStartIndex = 0;
     float moveSpeed = -2.7f;
     float yPos = 0.5f;
-    glm::vec3 velocity;
+    glm::vec3 velocity = glm::vec3(0.f);
     cro::uint8 ident = 0;
     bool dying = false;
     float dyingTime = 0.f;
@@ -122,7 +122,7 @@ public:
 private:
 
     float m_accumulator;
-    glm::vec3 m_playerPosition;
+    glm::vec3 m_playerPosition = glm::vec3(0.f);
     bool m_empFired;
     bool m_awardPoints;
 

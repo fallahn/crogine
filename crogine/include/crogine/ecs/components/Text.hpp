@@ -147,9 +147,9 @@ namespace cro
 
         struct Vertex final
         {
-            glm::vec4 position;
-            glm::vec4 colour;
-            glm::vec2 UV;
+            glm::vec4 position = glm::vec4(0.f);
+            glm::vec4 colour = glm::vec4(0.f);
+            glm::vec2 UV = glm::vec2(0.f);
         };
         std::vector<Vertex> m_vertices;
         int32 m_vboOffset; //starting index in parent VBO

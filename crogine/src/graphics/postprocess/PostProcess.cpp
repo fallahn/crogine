@@ -88,7 +88,7 @@ void PostProcess::drawQuad(Shader& shader, FloatRect size)
     CRO_ASSERT(m_vbo, "VBO not created!");
     
     //TODO only rebuild as necessary? Else not really a need for member var
-    m_transform = glm::scale(glm::mat4(), { size.width, size.height, 0.f });
+    m_transform = glm::scale(glm::mat4(1.f), { size.width, size.height, 0.f });
     m_projection = glm::ortho(0.f, size.width, 0.f, size.height, -0.1f, 10.f);
     const auto& uniforms = shader.getUniformMap();
 

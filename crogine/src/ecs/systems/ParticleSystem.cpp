@@ -219,7 +219,7 @@ void ParticleSystem::process(Time dt)
         //update each particle
         const float dtSec = dt.asSeconds();
         glm::vec3 minBounds(std::numeric_limits<float>::max());
-        glm::vec3 maxBounds;
+        glm::vec3 maxBounds(0.f);
         for (auto i = 0u; i < emitter.m_nextFreeParticle; ++i)
         {
             auto& p = emitter.m_particles[i];

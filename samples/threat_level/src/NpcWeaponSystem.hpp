@@ -46,7 +46,7 @@ struct NpcWeapon final
         Missile
     }type;
     float damage = 0.f;
-    glm::vec3 velocity;
+    glm::vec3 velocity = glm::vec3(0.f);
 };
 
 class NpcWeaponSystem final : public cro::System

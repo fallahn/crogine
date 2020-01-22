@@ -37,7 +37,7 @@ source distribution.
 
 struct Slider final
 {
-    glm::vec3 destination;
+    glm::vec3 destination = glm::vec3(0.f);
     bool active = false;
     float speed = 10.f;
 };

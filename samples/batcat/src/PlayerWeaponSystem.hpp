@@ -36,7 +36,7 @@ source distribution.
 
 struct PlayerWeapon final
 {
-    glm::vec3 velocity;
+    glm::vec3 velocity = glm::vec3(0.f);
     enum
     {
         Bullet,

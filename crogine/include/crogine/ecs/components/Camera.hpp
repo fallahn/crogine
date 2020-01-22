@@ -55,7 +55,7 @@ namespace cro
         By default it is constructed to a perspective matrix to match
         the curent window size.
         */
-        glm::mat4 projection;
+        glm::mat4 projection = glm::mat4(1.f);
 
         /*!
         \brief Viewport.

@@ -49,9 +49,9 @@ namespace cro
     */
     struct CRO_EXPORT_API Particle final
     {
-        glm::vec3 position;
-        glm::vec3 velocity;
-        glm::vec3 gravity;
+        glm::vec3 position = glm::vec3(0.f);
+        glm::vec3 velocity = glm::vec3(0.f);
+        glm::vec3 gravity = glm::vec3(0.f);
         float lifetime = 0.f;
         float maxLifeTime = 1.f;
         Colour colour;
@@ -71,9 +71,9 @@ namespace cro
             Add,
             Multiply
         } blendmode = Alpha;
-        glm::vec3 gravity;
-        glm::vec3 initialVelocity;
-        std::array<glm::vec3, 4> forces{};
+        glm::vec3 gravity = glm::vec3(0.f);
+        glm::vec3 initialVelocity = glm::vec3(0.f);
+        std::array<glm::vec3, 4> forces{ glm::vec3(0.f) };
         float lifetime = 1.f;
         float lifetimeVariance = 0.f;
         Colour colour;

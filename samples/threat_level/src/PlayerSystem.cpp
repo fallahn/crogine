@@ -283,7 +283,7 @@ void PlayerSystem::updateAlive(cro::Entity entity)
         {
             //keep in area
             auto& tx = entity.getComponent<cro::Transform>();
-            glm::vec3 normal;
+            glm::vec3 normal = glm::vec3(0.f);
             normal.x = (tx.getWorldPosition().x < 0)? 1.f : -1.f;
 
             //discover penetration and reverse it - TODO is it safe to assume we always have at least one point?
@@ -321,7 +321,7 @@ void PlayerSystem::updateDying(cro::Entity entity)
     {
         tx.setPosition(initialPosition);
         tx.setRotation({ 0.f, 0.f, 0.f });
-        entity.getComponent<Velocity>().velocity = glm::vec3();
+        entity.getComponent<Velocity>().velocity = glm::vec3(0.f);
         entity.getComponent<PlayerInfo>().state = PlayerInfo::State::Dead;
         m_respawnTime = 1.f;
 

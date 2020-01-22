@@ -78,7 +78,7 @@ struct PlayerEvent final
         Spawned,
         Died
     }type;
-    glm::vec3 position;
+    glm::vec3 position = glm::vec3(0.f);
 };
 
 struct WeaponEvent final
@@ -90,8 +90,8 @@ struct WeaponEvent final
         Grenade
     }type;
 
-    glm::vec3 direction;
-    glm::vec3 position;
+    glm::vec3 direction = glm::vec3(0.f);
+    glm::vec3 position = glm::vec3(0.f);
 };
 
 #endif //DH_MESSAGES_HPP_

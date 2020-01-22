@@ -115,7 +115,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
                 && m_deadPulseCount > 0)
             {
                 static cro::int32 side = 0;
-                glm::vec3 offset;
+                glm::vec3 offset = glm::vec3(0.f);
                 offset.z = (side) ? -pulseOffset : pulseOffset;
 
                 offset = getScene()->getEntity(m_playerID).getComponent<cro::Transform>().getWorldTransform() * glm::vec4(offset, 1.f);
@@ -130,7 +130,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
                 && m_deadPulseCount > 0)
             {
                 static cro::int32 side = 0;
-                glm::vec3 offset;
+                glm::vec3 offset = glm::vec3(0.f);
                 offset.z = -pulseOffset + (pulseOffset * side);
 
                 offset = getScene()->getEntity(m_playerID).getComponent<cro::Transform>().getWorldTransform() * glm::vec4(offset, 1.f);

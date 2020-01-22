@@ -92,7 +92,7 @@ void ItemSystem::process(cro::Time dt)
             if (!visible && status.wantsReset)
             {
                 auto pos = tx.getWorldPosition();
-                glm::vec3 dest;
+                glm::vec3 dest(0.f);
                 dest.x += 5.5f;
                 dest.y = cro::Util::Random::value(-2.2f, 2.2f);
                 dest.z = pos.z;
@@ -124,7 +124,7 @@ void ItemSystem::process(cro::Time dt)
                 {
                     //if player, die
                     auto pos = tx.getWorldPosition();
-                    glm::vec3 dest;
+                    glm::vec3 dest(0.f);
                     dest.x += 5.5f;
                     dest.y = cro::Util::Random::value(-2.2f, 2.2f);
                     dest.z = pos.z;

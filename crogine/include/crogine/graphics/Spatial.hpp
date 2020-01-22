@@ -43,7 +43,7 @@ namespace cro
     struct CRO_EXPORT_API Sphere final
     {
         float radius = 0.f;
-        glm::vec3 centre;
+        glm::vec3 centre = glm::vec3(0.f);
     };
 
     enum class Planar

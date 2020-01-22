@@ -70,7 +70,7 @@ private:
     float m_fireTime;
     float m_weaponDowngradeTime;
 
-    glm::vec3 m_playerPosition;
+    glm::vec3 m_playerPosition = glm::vec3(0.f);
     cro::uint32 m_playerID;
 
     std::size_t m_aliveCount;
