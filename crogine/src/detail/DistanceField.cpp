@@ -39,7 +39,7 @@ using namespace cro::Detail;
 
 namespace
 {
-    const float INF = 1e20;
+    const float INF = std::numeric_limits<float>::infinity();
     inline int32 square(int32 x)
     {
         return x * x;

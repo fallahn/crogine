@@ -150,7 +150,7 @@ std::vector<glm::vec2> cro::Util::Random::poissonDiscDistribution(const FloatRec
 
     while (!workingPoints.empty())
     {
-        std::size_t idx = (workingPoints.size() == 1) ? 0 : value(0, workingPoints.size() - 1);
+        std::size_t idx = (workingPoints.size() == 1) ? 0 : value(0, static_cast<int>(workingPoints.size()) - 1);
         centre = workingPoints[idx];
 
         workingPoints.erase(std::begin(workingPoints) + idx);

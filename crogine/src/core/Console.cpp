@@ -494,7 +494,7 @@ int textEditCallback(ImGuiTextEditCallbackData* data)
         {
             if (historyIndex == -1)
             {
-                historyIndex = history.size() - 1;
+                historyIndex = static_cast<std::int32_t>(history.size()) - 1;
             }
             else if (historyIndex > 0)
             {

@@ -262,7 +262,7 @@ cro::int32 OpenALImpl::requestNewStream(const std::string& path)
         return -1;
     }
     
-    alCheck(alGenBuffers(stream.buffers.size(), stream.buffers.data()));
+    alCheck(alGenBuffers(static_cast<ALsizei>(stream.buffers.size()), stream.buffers.data()));
     //fill buffers from file
     for (auto b : stream.buffers)
     {
@@ -297,7 +297,7 @@ void OpenALImpl::updateStream(int32 streamID)
         if (state == AL_STOPPED && state != stream.state)
         {
             stream.audioFile->seek(cro::Time());
-            stream.processed = stream.buffers.size();
+            stream.processed = static_cast<ALint>(stream.buffers.size());
         }
         stream.state = state;
 
@@ -326,7 +326,7 @@ void OpenALImpl::deleteStream(cro::int32 id)
 
     if (stream.buffers[0])
     {        
-        alCheck(alDeleteBuffers(stream.buffers.size(), stream.buffers.data()));
+        alCheck(alDeleteBuffers(static_cast<ALsizei>(stream.buffers.size()), stream.buffers.data()));
         LOG("Deleted audio stream", Logger::Type::Info);
     }
     stream.audioFile.reset();
@@ -354,7 +354,7 @@ cro::int32 OpenALImpl::requestAudioSource(cro::int32 buffer, bool streaming)
         {
             auto& stream = m_streams[buffer];
             stream.sourceID = source;
-            alCheck(alSourceQueueBuffers(source, stream.buffers.size(), stream.buffers.data()));
+            alCheck(alSourceQueueBuffers(source, static_cast<ALsizei>(stream.buffers.size()), stream.buffers.data()));
         }
         return source;
     }

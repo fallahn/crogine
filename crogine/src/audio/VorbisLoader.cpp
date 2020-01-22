@@ -136,7 +136,7 @@ const PCMData& VorbisLoader::getData(std::size_t size) const
     std::size_t idx = 0;
     while (shortSize > 0)
     {
-        auto amount = std::min(readSize, shortSize);
+        auto amount = static_cast<int>(std::min(readSize, shortSize));
         auto read = stb_vorbis_get_samples_short_interleaved(m_vorbisFile, m_channelCount, &m_buffer[idx], amount) * m_channelCount;
 
         shortSize -= read;

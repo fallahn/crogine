@@ -86,8 +86,8 @@ void ConfigProperty::setValue(const glm::vec4& v)
 std::vector<float> ConfigProperty::valueAsArray() const
 {
     std::vector<float> retval;
-    auto start = 0u;
-    auto next = m_value.find_first_of(',');
+    std::size_t start = 0u;
+    std::size_t next = m_value.find_first_of(',');
     while (next != std::string::npos && start < m_value.length())
     {
         float val;
@@ -494,7 +494,7 @@ bool ConfigObject::save(const std::string& path)
     return false;
 }
 
-int32 ConfigObject::write(SDL_RWops* file, uint16 depth)
+std::size_t ConfigObject::write(SDL_RWops* file, uint16 depth)
 {
     //add the correct amount of indenting based on this objects's depth
     std::string indent;
@@ -522,7 +522,7 @@ int32 ConfigObject::write(SDL_RWops* file, uint16 depth)
     }
     stream << "\n";
 
-    int32 written = 0;
+    std::size_t written = 0;
     std::string str = stream.str();
     written += SDL_RWwrite(file, str.data(), sizeof(char) * str.size(), 1) * str.size(); //TODO this assumes single width charstring
 

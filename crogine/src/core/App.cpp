@@ -412,8 +412,8 @@ App::WindowSettings App::loadSettings()
 
         if (aObj != objects.end())
         {
-            const auto& properties = aObj->getProperties();
-            for (const auto& p : properties)
+            const auto& objProperties = aObj->getProperties();
+            for (const auto& p : objProperties)
             {
                 if (p.getName() == "master")
                 {

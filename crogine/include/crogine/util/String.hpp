@@ -185,7 +185,7 @@ namespace cro
             or std::string::npos if not found
             */
 
-            static inline std::size_t findNthOf(const std::string& str, char c, uint32 n)
+            static inline std::size_t findNthOf(const std::string& str, char c, std::size_t n)
             {
                 if (n == 0)
                 {

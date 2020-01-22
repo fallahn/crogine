@@ -209,7 +209,7 @@ const PCMData& WavLoader::getData(std::size_t size) const
 
     m_file.file->read(m_file.file, m_sampleBuffer.data(), byteCount, 1);
     
-    m_dataChunk.size = byteCount;
+    m_dataChunk.size = static_cast<cro::uint32>(byteCount);
     m_dataChunk.data = m_sampleBuffer.data();
     return m_dataChunk;
 }

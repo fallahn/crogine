@@ -105,7 +105,7 @@ bool AudioBuffer::loadFromMemory(void* data, uint8 bitDepth, uint32 sampleRate, 
         pcmData.format = (bitDepth == 8) ? Detail::PCMData::Format::MONO8 : Detail::PCMData::Format::MONO16;
     }
     pcmData.frequency = sampleRate;
-    pcmData.size = size;
+    pcmData.size = static_cast<cro::uint32>(size);
         
     setID(AudioRenderer::requestNewBuffer(pcmData));
     return getID() != -1;
