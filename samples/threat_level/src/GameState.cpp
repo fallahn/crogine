@@ -76,6 +76,7 @@ source distribution.
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
+#include <crogine/ecs/systems/CameraSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -245,6 +246,7 @@ void GameState::addSystems()
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::SpriteAnimator>(mb);
     m_scene.addSystem<cro::SceneGraph>(mb);
+    m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
@@ -264,6 +266,7 @@ void GameState::addSystems()
     m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SceneGraph>(mb);
+    m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::ModelRenderer>(mb);
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
@@ -588,7 +591,7 @@ void GameState::createHUD()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioListener>();
     auto& cam2D = entity.addComponent<cro::Camera>();
-    cam2D.projection = glm::ortho(0.f, uiRes.x, 0.f, uiRes.y, -0.1f, 100.f);
+    cam2D.projectionMatrix = glm::ortho(0.f, uiRes.x, 0.f, uiRes.y, -0.1f, 100.f);
     m_uiScene.setActiveCamera(entity);
     m_uiScene.setActiveListener(entity);
 }
@@ -1174,7 +1177,7 @@ void GameState::updateView()
     size.x = 1.f;
 
     auto& cam3D = m_scene.getActiveCamera().getComponent<cro::Camera>();
-    cam3D.projection = glm::perspective(0.6f, 16.f / 9.f, 0.1f, 100.f);
+    cam3D.projectionMatrix = glm::perspective(0.6f, 16.f / 9.f, 0.1f, 100.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 

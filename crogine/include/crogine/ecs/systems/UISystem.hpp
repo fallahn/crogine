@@ -110,7 +110,5 @@ namespace cro
         //void setViewPort(int32, int32);
         glm::vec2 toWorldCoords(int32 x, int32 y); //converts screen coords
         glm::vec2 toWorldCoords(float, float); //converts normalised coords
-
-        glm::mat4 getProjectionMatrix();
     };
 }

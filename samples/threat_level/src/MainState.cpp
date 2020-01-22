@@ -49,6 +49,7 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
+#include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -177,6 +178,7 @@ void MainState::addSystems()
     m_backgroundScene.addSystem<DriftSystem>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
     m_backgroundScene.addSystem<cro::SceneGraph>(mb);
+    m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     //m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -190,6 +192,7 @@ void MainState::addSystems()
     //m_menuScene.addSystem<RotateSystem>(mb);
     m_menuScene.addSystem<cro::CallbackSystem>(mb);
     m_menuScene.addSystem<cro::SceneGraph>(mb);
+    m_menuScene.addSystem<cro::CameraSystem>(mb);
     m_menuScene.addSystem<cro::SpriteRenderer>(mb);
     m_menuScene.addSystem<cro::TextRenderer>(mb);
     m_uiSystem = &m_menuScene.addSystem<cro::UISystem>(mb);
@@ -311,7 +314,7 @@ void MainState::createScene()
     entity = m_menuScene.createEntity();
     entity.addComponent<cro::Transform>();
     auto& cam2D = entity.addComponent<cro::Camera>();
-    cam2D.projection = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
+    cam2D.projectionMatrix = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
     m_menuScene.setActiveCamera(entity);
 }
 
@@ -384,7 +387,7 @@ void MainState::updateView()
     //cro::Logger::log("resized to: " + std::to_string(size.x) + ", " + std::to_string(size.y));
 
     auto& cam3D = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
-    cam3D.projection = glm::perspective(0.6f, 16.f / 9.f, 0.1f, 100.f);
+    cam3D.projectionMatrix = glm::perspective(0.6f, 16.f / 9.f, 0.1f, 100.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 

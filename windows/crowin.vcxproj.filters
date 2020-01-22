@@ -480,6 +480,9 @@
     <ClInclude Include="..\crogine\src\imgui\imgui_impl_sdl.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\CameraSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -784,6 +787,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\imgui\imgui_widgets.cpp">
       <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\CameraSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

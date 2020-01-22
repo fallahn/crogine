@@ -127,14 +127,11 @@ void ModelRenderer::process(Time)
 
 void ModelRenderer::render(Entity camera)
 {
-    const auto& camTx = camera.getComponent<Transform>();
     const auto& camComponent = camera.getComponent<Camera>();
-    
-    auto cameraPosition = camTx.getWorldPosition();
-    auto viewMat = glm::inverse(camTx.getWorldTransform());
-    DPRINT("TODO", "update cam view matrix once per frame, remove from model render");
-    auto projMat = camComponent.projection;
     applyViewport(camComponent.viewport);
+    
+    const auto& camTx = camera.getComponent<Transform>();
+    auto cameraPosition = camTx.getWorldPosition();
 
     glCheck(glCullFace(GL_BACK));
 
@@ -144,7 +141,7 @@ void ModelRenderer::render(Entity camera)
         //calc entity transform
         const auto& tx = e.first.getComponent<Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
-        glm::mat4 worldView = viewMat * worldMat;
+        glm::mat4 worldView = camComponent.viewMatrix * worldMat;
 
         //foreach submesh / material:
         const auto& model = e.first.getComponent<Model>();
@@ -161,7 +158,7 @@ void ModelRenderer::render(Entity camera)
 
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(projMat)));
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.projectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
             glCheck(glUniformMatrix3fv(model.m_materials[i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
 

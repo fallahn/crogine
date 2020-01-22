@@ -190,13 +190,9 @@ void TextRenderer::render(Entity camera)
     const auto& camComponent = camera.getComponent<Camera>();
     m_currentViewport = applyViewport(camComponent.viewport);
 
-    const auto& camTx = camera.getComponent<Transform>();
-    auto viewMat = glm::inverse(camTx.getWorldTransform());
-    auto viewProjMat = camComponent.projection * viewMat;
-
     //bind shader and attrib arrays - TODO do this for both shader types
     glCheck(glUseProgram(m_shaders[Font::Bitmap].shader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].projectionUniformIndex, 1, GL_FALSE, &viewProjMat[0][0]));
+    glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].projectionUniformIndex, 1, GL_FALSE, &camComponent.viewProjectionMatrix[0][0]));
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glUniform1i(m_shaders[Font::Bitmap].textureUniformIndex, 0));
 
@@ -224,7 +220,7 @@ void TextRenderer::render(Entity camera)
 
             if (batchData.scissor)
             {
-                applyScissor(batchData.worldScissor, viewProjMat);
+                applyScissor(batchData.worldScissor, camComponent.viewProjectionMatrix);
             }
 
             glCheck(glBindTexture(GL_TEXTURE_2D, batchData.texture));

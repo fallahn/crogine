@@ -44,6 +44,7 @@ source distribution.
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/CameraSystem.hpp>
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
@@ -134,6 +135,7 @@ void RoundEndState::load()
     m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
     commandSystem = &m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::SceneGraph>(mb);
+    m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
 
@@ -253,7 +255,7 @@ void RoundEndState::load()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     auto& cam2D = entity.addComponent<cro::Camera>();
-    cam2D.projection = glm::ortho(0.f, uiRes.x, 0.f, uiRes.y, -10.1f, 10.f);
+    cam2D.projectionMatrix = glm::ortho(0.f, uiRes.x, 0.f, uiRes.y, -10.1f, 10.f);
     m_uiScene.setActiveCamera(entity);
 }
 

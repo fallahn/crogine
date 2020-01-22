@@ -530,7 +530,7 @@ glm::vec3 PlayerDirector::getWorldCoords()
     z *= 2.f; z -= 1.f;
 
     //and unproject - remember view matrix if we decide to move the camera!!
-    auto worldPos = glm::inverse(camera.projection) * glm::vec4(x, y, z, 1.f);
+    auto worldPos = glm::inverse(camera.projectionMatrix) * glm::vec4(x, y, z, 1.f);
     glm::vec3 retVal(worldPos);
     retVal *= worldPos.w; //sure this is supposed to be division, but what the fudge.
     return retVal;

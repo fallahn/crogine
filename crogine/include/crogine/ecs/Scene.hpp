@@ -225,8 +225,6 @@ namespace cro
 
         void postRenderPath();
         std::function<void()> currentRenderPath;
-
-        void updateFrustum();
     };
 
 #include "Scene.inl"

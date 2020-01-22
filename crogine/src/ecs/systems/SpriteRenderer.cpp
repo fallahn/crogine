@@ -279,12 +279,9 @@ void SpriteRenderer::render(Entity camera)
     const auto& camComponent = camera.getComponent<Camera>();
     applyViewport(camComponent.viewport);
     
-    const auto& camTx = camera.getComponent<Transform>();
-    auto viewMat = glm::inverse(camTx.getWorldTransform());
-
     //bind shader and attrib arrays
     glCheck(glUseProgram(m_shader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(camComponent.projection * viewMat)));
+    glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(camComponent.viewProjectionMatrix)));
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glUniform1i(m_textureIndex, 0));
 

@@ -220,13 +220,6 @@ glm::vec2 UISystem::toWorldCoords(float x, float y)
     y *= 2.f; y -= 1.f;
 
     //and unproject
-    auto worldPos = glm::inverse(getProjectionMatrix()) * glm::vec4(x, y, 0.f, 1.f);
+    auto worldPos = glm::inverse(getScene()->getActiveCamera().getComponent<Camera>().viewProjectionMatrix) * glm::vec4(x, y, 0.f, 1.f);
     return { worldPos };
-}
-
-glm::mat4 UISystem::getProjectionMatrix()
-{
-    const auto& tx = getScene()->getActiveCamera().getComponent<Transform>();
-    const auto& cam = getScene()->getActiveCamera().getComponent<Camera>();
-    return cam.projection * glm::inverse(tx.getWorldTransform());
 }

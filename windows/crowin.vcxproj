@@ -88,6 +88,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\System.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\AudioSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CallbackSystem.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\CameraSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CollisionSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CommandSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DebugInfo.hpp" />
@@ -218,6 +219,7 @@
     <ClCompile Include="..\crogine\src\ecs\SystemManager.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\AudioSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\CallbackSystem.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\systems\CameraSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\CollisionSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\CommandSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\DebugInfo.cpp" />

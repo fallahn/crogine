@@ -316,9 +316,7 @@ void ParticleSystem::render(Entity camera)
     ENABLE_POINT_SPRITES;
         
     //particles are already in world space so just need viewProj
-    const auto& tx = camera.getComponent<Transform>();
-    const auto cam = camera.getComponent<Camera>();
-    glm::mat4 viewProj = cam.projection * glm::inverse(tx.getWorldTransform());
+    const auto& cam = camera.getComponent<Camera>();
 
     auto vp = applyViewport(cam.viewport);
 
@@ -326,8 +324,8 @@ void ParticleSystem::render(Entity camera)
     glCheck(glUseProgram(m_shader.getGLHandle()));
 
     //set shader uniforms (texture/projection)
-    glCheck(glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projection)));
-    glCheck(glUniformMatrix4fv(m_viewProjUniform, 1, GL_FALSE, glm::value_ptr(viewProj)));
+    glCheck(glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projectionMatrix)));
+    glCheck(glUniformMatrix4fv(m_viewProjUniform, 1, GL_FALSE, glm::value_ptr(cam.viewProjectionMatrix)));
     glCheck(glUniform1f(m_viewportUniform, static_cast<float>(vp.height)));
     glCheck(glUniform1i(m_textureUniform, 0));
     glCheck(glActiveTexture(GL_TEXTURE0));

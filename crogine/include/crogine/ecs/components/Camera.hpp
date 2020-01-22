@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/Window.hpp>
 #include <crogine/graphics/Spatial.hpp>
+#include <crogine/graphics/Rectangle.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
@@ -50,12 +51,28 @@ namespace cro
     struct CRO_EXPORT_API Camera final
     {
         /*!
+        \brief View Matrix.
+        This matrix is, by default, an identity matrix. This
+        can be updated manually, although it is recommended that
+        a Scene has an active CameraSystem added to it to automatically
+        calculate both the View and ViewProjection matrices for
+        all entities with a Camera component.
+        */
+        glm::mat4 viewMatrix = glm::mat4(1.f);
+
+        /*!
+        \brief ViewProjection matrix.
+        \see viewMatrix
+        */
+        glm::mat4 viewProjectionMatrix = glm::mat4(1.f);
+        
+        /*!
         \brief Projection matrix for this camera.
         This can be either a perspective or orthographic projection.
         By default it is constructed to a perspective matrix to match
         the curent window size.
         */
-        glm::mat4 projection = glm::mat4(1.f);
+        glm::mat4 projectionMatrix = glm::mat4(1.f);
 
         /*!
         \brief Viewport.
@@ -69,20 +86,20 @@ namespace cro
 
         /*!
         \brief Returns the camera frustum including any parent transformation,
-        IE the frustum of the ViewProjection matrix. Only guaranteed to be up
-        to date if this is currently the active scene camera
+        IE the frustum of the ViewProjection matrix. This requires an active
+        CameraSystem in the Scene to be up to date.
         */
         std::array<Plane, 6u> getFrustum() const {return m_frustum; }
 
         Camera() : viewport(0.f, 0.f, 1.f, 1.f)
         {
             glm::vec2 windowSize(App::getWindow().getSize());
-            projection = glm::perspective(0.6f, windowSize.x / windowSize.y, 0.1f, 150.f);
+            projectionMatrix = glm::perspective(0.6f, windowSize.x / windowSize.y, 0.1f, 150.f);
         }
 
     private:
 
-        std::array<Plane, 6u> m_frustum;
-        friend class Scene;
+        std::array<Plane, 6u> m_frustum = {};
+        friend class CameraSystem;
     };
 }
