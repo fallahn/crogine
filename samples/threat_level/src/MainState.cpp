@@ -70,6 +70,7 @@ source distribution.
 #include <crogine/audio/AudioMixer.hpp>
 
 #include <iomanip>
+
 namespace
 {
 #include "MenuConsts.inl"
@@ -316,6 +317,8 @@ void MainState::createScene()
     auto& cam2D = entity.addComponent<cro::Camera>();
     cam2D.projectionMatrix = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
     m_menuScene.setActiveCamera(entity);
+
+    updateView();
 }
 
 void MainState::createMenus()
@@ -385,9 +388,10 @@ void MainState::updateView()
     size.x = 1.f;
 
     //cro::Logger::log("resized to: " + std::to_string(size.x) + ", " + std::to_string(size.y));
+    //m_backgroundScene.getActiveCamera().getComponent<cro::Transform>().setScale({ -1.f, -1.f, 1.f });
 
     auto& cam3D = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
-    cam3D.projectionMatrix = glm::perspective(0.6f, 16.f / 9.f, 0.1f, 100.f);
+    cam3D.projectionMatrix = glm::perspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 100.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 

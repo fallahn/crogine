@@ -40,7 +40,7 @@ Transform::Transform()
     : m_origin      (0.f, 0.f, 0.f),
     m_position      (0.f, 0.f, 0.f),
     m_scale         (1.f, 1.f, 1.f),
-    m_rotation      (0.f, 0.f, 0.f, 1.f),
+    m_rotation      (1.f, 0.f, 0.f, 0.f),
     m_transform     (1.f),
     m_worldTransform(1.f),
     m_parent        (-1),
