@@ -483,6 +483,9 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CameraSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\FileSystem.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -790,6 +793,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\systems\CameraSystem.cpp">
       <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\core\FileSystem.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
