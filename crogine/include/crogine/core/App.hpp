@@ -104,6 +104,11 @@ namespace cro
         */
         void resetFrameTime();
 
+        /*!
+        brief Returns a reference to the active App instance
+        */
+        static App& getInstance();
+
 	protected:
 		
 		virtual void handleEvent(const Event&) = 0;
@@ -165,6 +170,7 @@ namespace cro
         static void removeWindows(const GuiClient*);
 
         friend class GuiClient;
+        friend class Console;
       
         std::string m_prefPath;
         

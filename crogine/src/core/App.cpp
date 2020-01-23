@@ -244,6 +244,12 @@ void App::resetFrameTime()
     m_frameClock->restart();
 }
 
+App& App::getInstance()
+{
+    CRO_ASSERT(m_instance, "");
+    return *m_instance;
+}
+
 //private
 void App::handleEvents()
 {
