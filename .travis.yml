@@ -18,9 +18,14 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
 before_install:
-    - sudo add-apt-repository --yes ppa:zoogie/sdl2-snapshots
-    - sudo apt-get update -qq
-    - sudo apt-get install libegl1-mesa-dev libgles2-mesa-dev libsdl2-dev libsdl2-mixer-dev libsdl2-ttf-dev pulseaudio
+    - sudo add-apt-repository main
+    - sudo add-apt-repository universe
+    - sudo add-apt-repository restricted
+    - sudo add-apt-repository multiverse
+    - sudo apt-get update
+    - sudo apt-get upgrade -y
+    - sudo apt-get -f install
+    - sudo apt-get install libsdl2-dev libsdl2-mixer-dev libsdl2-ttf-dev pulseaudio
 before_script:
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc
   gcc /usr/bin/gcc-7 90; fi
