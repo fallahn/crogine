@@ -36,9 +36,29 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 
+#include <crogine/util/Constants.hpp>
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
+
 #include "../detail/GLCheck.hpp"
 
 using namespace cro;
+
+namespace
+{
+    const float DefaultFOV = 35.f * Util::Const::degToRad;
+
+    void updateView(cro::Entity entity)
+    {
+        glm::vec2 size(cro::App::getWindow().getSize());
+        size.y = ((size.x / 16.f) * 9.f) / size.y;
+        size.x = 1.f;
+
+        auto& cam3D = entity.getComponent<cro::Camera>();
+        cam3D.projectionMatrix = glm::perspective(DefaultFOV, 16.f / 9.f, 0.1f, 280.f);
+        cam3D.viewport.bottom = (1.f - size.y) / 2.f;
+        cam3D.viewport.height = size.y;
+    }
+}
 
 Scene::Scene(MessageBus& mb)
     : m_messageBus      (mb),
@@ -50,6 +70,7 @@ Scene::Scene(MessageBus& mb)
     defaultCamera.addComponent<Transform>();
     defaultCamera.addComponent<Camera>();
     defaultCamera.addComponent<AudioListener>();
+    updateView(defaultCamera);
 
     m_defaultCamera = defaultCamera.getIndex();
     m_activeCamera = m_defaultCamera;
@@ -182,6 +203,15 @@ void Scene::forwardEvent(const Event& evt)
 
 void Scene::forwardMessage(const Message& msg)
 {
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            updateView(getEntity(m_defaultCamera));
+        }
+    }
+
     m_systemManager.forwardMessage(msg);
     for (auto& d : m_directors)
     {
