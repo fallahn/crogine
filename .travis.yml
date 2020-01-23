@@ -22,6 +22,7 @@ addons:
     - libpulse-dev
     - libpulse0
     - libpulse-mainloop-glib0
+    - libbullet-dev
 
     sources:
     - ubuntu-toolchain-r-test
@@ -33,15 +34,15 @@ before_script:
   g++ /usr/bin/g++-7 90; fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install enet; fi
 
-- git clone https://github.com/fallahn/tmxlite
-- cd tmxlite/tmxlite && mkdir build && cd build
-- cmake .. -G"$GENERATOR" $CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release && sudo cmake --build
-  . --target install --config Release && cd ../../../
+#- git clone https://github.com/fallahn/tmxlite
+#- cd tmxlite/tmxlite && mkdir build && cd build
+#- cmake .. -G"$GENERATOR" $CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release && sudo cmake --build
+#  . --target install --config Release && cd ../../../
 
-- git clone https://github.com/bulletphysics/bullet3.git
-- cd bullet3 && mkdir build && cd build
-- cmake .. -G"$GENERATOR" $CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release && sudo cmake --build
-  . --target install --config Release && cd ../../../
+#- git clone https://github.com/bulletphysics/bullet3.git
+#- cd bullet3 && mkdir build && cd build
+#- cmake .. -G"$GENERATOR" $CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release && sudo cmake --build
+#  . --target install --config Release && cd ../../../
 
 script:
 - mkdir build && cd build
