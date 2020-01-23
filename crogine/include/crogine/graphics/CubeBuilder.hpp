@@ -39,7 +39,7 @@ namespace cro
     class CRO_EXPORT_API CubeBuilder final : public MeshBuilder
     {
     public:
-        int32 getUID() const override { return Mesh::ID::CubeMesh; }
+        std::size_t getUID() const override { return Mesh::ID::CubeMesh; }
     private:
         Mesh::Data build() const override;
     };

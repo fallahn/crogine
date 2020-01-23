@@ -68,7 +68,7 @@ IqmBuilder::~IqmBuilder()
 }
 
 //public
-int32 IqmBuilder::getUID() const
+std::size_t IqmBuilder::getUID() const
 {
     return m_uid;
 }

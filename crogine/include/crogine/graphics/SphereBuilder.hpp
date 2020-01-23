@@ -48,12 +48,12 @@ namespace cro
         */
         SphereBuilder(float radius = 0.5f, std::size_t resolution = 4);
 
-        int32 getUID() const override { return m_uid; }
+        std::size_t getUID() const override { return m_uid; }
 
     private:
         float m_radius;
         std::size_t m_resolution;
-        int32 m_uid;
+        std::size_t m_uid;
         Mesh::Data build() const override;
     };
 }

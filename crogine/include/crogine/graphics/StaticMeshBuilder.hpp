@@ -92,11 +92,11 @@ namespace cro
         /*!
         \brief Implements the UID based on the path given to the ctor
         */
-        int32 getUID() const override { return m_uid; }
+        std::size_t getUID() const override { return m_uid; }
 
     private:
         std::string m_path;
-        int32 m_uid;
+        std::size_t m_uid;
         mutable SDL_RWops* m_file;
         Mesh::Data build() const override;
 

@@ -68,7 +68,7 @@ namespace cro
         create a Unique ID based on the hash of the file path to prevent the
         same mesh being loaded more than once if using the ResourceAutomation
         */
-        virtual int32 getUID() const { return 0; }
+        virtual std::size_t getUID() const { return 0; }
 
     protected:
         friend class MeshResource;
