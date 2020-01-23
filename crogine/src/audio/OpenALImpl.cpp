@@ -273,8 +273,8 @@ cro::int32 OpenALImpl::requestNewStream(const std::string& path)
     //hurrah we has stream
     auto streamID = m_nextStream;
 
-    while (m_streams[m_nextStream].audioFile
-        && m_nextStream < m_streams.size())
+    while (m_nextStream < m_streams.size()
+        && m_streams[m_nextStream].audioFile)
     {
         m_nextStream++;
     }

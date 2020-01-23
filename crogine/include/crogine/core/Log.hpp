@@ -114,7 +114,7 @@ namespace cro
 
 #ifdef _MSC_VER
                 outstring += "\n";
-                OutputDebugString(outstring.c_str());
+                OutputDebugStringA(outstring.c_str());
 #endif //_MSC_VER
             }
             if (output == Output::File || output == Output::All)
