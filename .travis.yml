@@ -1,6 +1,6 @@
 language: c++
 sudo: false
-dist: xenial
+dist: wily
 addons:
   apt:
     packages:
