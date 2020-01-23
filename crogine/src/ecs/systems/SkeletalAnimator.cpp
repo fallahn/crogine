@@ -128,11 +128,16 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
     //TODO convert to 4x3 to free up some uniform space
     auto mix = [](const glm::mat4& a, const glm::mat4& b, float time) -> glm::mat4
     {
-        glm::vec3 scaleA, scaleB;
-        glm::quat rotA, rotB;
-        glm::vec3 transA, transB;
-        glm::vec3 skewA, skewB;
-        glm::vec4 perspA, perspB;
+        glm::vec3 scaleA(1.f);
+        glm::vec3 scaleB(1.f);
+        glm::quat rotA(1.f, 0.f, 0.f, 0.f);
+        glm::quat rotB(1.f, 0.f, 0.f, 0.f);
+        glm::vec3 transA(0.f);
+        glm::vec3 transB(0.f);
+        glm::vec3 skewA(0.f);
+        glm::vec3 skewB(0.f);
+        glm::vec4 perspA(0.f);
+        glm::vec4 perspB(0.f);
         glm::decompose(a, scaleA, rotA, transA, skewA, perspA);
         glm::decompose(b, scaleB, rotB, transB, skewB, perspB);
 

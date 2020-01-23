@@ -311,7 +311,7 @@ char* readAnim(char* animArrayPtr, Iqm::Anim& dest)
 
 glm::mat4 createBoneMatrix(const glm::quat& rotation, const glm::vec3& translation, const glm::vec3& scale)
 {
-    glm::mat3 rotMat = glm::inverse(glm::mat3_cast(glm::normalize(rotation)));
+    /*glm::mat3 rotMat = glm::inverse(glm::mat3_cast(glm::normalize(rotation)));
     rotMat[0] *= scale;
     rotMat[1] *= scale;
     rotMat[2] *= scale;
@@ -322,7 +322,15 @@ glm::mat4 createBoneMatrix(const glm::quat& rotation, const glm::vec3& translati
     retVal[2].w = translation.z;
     retVal[3].w = 1.0;
 
-    return glm::transpose(retVal);
+    return glm::transpose(retVal);*/
+
+    glm::mat4 t = glm::translate(glm::mat4(1.f), translation);
+
+    glm::mat4 rot = glm::toMat4(rotation);
+    rot = glm::scale(rot, scale);
+    //rot = glm::translate(rot, -m_origin);
+
+    return t * rot;
 }
 
 //used in normal calcs

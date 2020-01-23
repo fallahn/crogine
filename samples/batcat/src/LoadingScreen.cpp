@@ -86,7 +86,7 @@ LoadingScreen::LoadingScreen()
     m_wavetable = cro::Util::Wavetable::sine(2.f, 3.f);
 
     //TODO if the texture fails we should load a version of the shader with defines which dont require a texture
-    m_texture.loadFromFile("assets/sprites/loading.png");
+    m_texture.loadFromFile("assets/ui/loading.png");
 
     if (m_shader.loadFromString(vertex, fragment))
     {

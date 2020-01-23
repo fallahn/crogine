@@ -32,6 +32,7 @@ source distribution.
 
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
 
 #include <cstring>
 #include <array>
@@ -475,7 +476,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         Iqm::Joint joint;
         jointIter = readJoint(jointIter, joint);
 
-        glm::quat rotation;
+        glm::quat rotation(1.f, 0.f, 0.f, 0.f);
         rotation.w = joint.rotate[3];
         rotation.x = joint.rotate[0];
         rotation.y = joint.rotate[1];
@@ -517,7 +518,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 
                     glm::quat rotation(1.f, 0.f, 0.f, 0.f);
                     glm::vec3 translation(0.f);
-                    glm::vec3 scale(0.f);
+                    glm::vec3 scale(1.f);
 
                     translation.x = pose.channelOffset[0];
                     if (pose.mask & 0x01) translation.x += *frameIter++ * pose.channelScale[0];

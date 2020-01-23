@@ -94,8 +94,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         createScene();
         createUI();
     });
-    //context.appInstance.setClearColour(cro::Colour(0.4f, 0.58f, 0.92f));
-    //context.mainWindow.setVsyncEnabled(false);
 
     updateView();
 
@@ -193,7 +191,7 @@ void GameState::loadAssets()
     m_modelDefs[GameModelID::Moon].loadFromFile("assets/models/moon.cmt", m_resources);
     m_modelDefs[GameModelID::Stars].loadFromFile("assets/models/stars.cmt", m_resources);
 
-    CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
+    //CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
 }
 
 void GameState::createScene()
@@ -202,9 +200,9 @@ void GameState::createScene()
     auto entity = m_scene.createEntity();
     m_modelDefs[GameModelID::BatCat].createModel(entity, m_resources);
 
-    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.03f));
+    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.06f));
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, cro::Util::Const::PI / 2.f, 0.f });
-    entity.getComponent<cro::Transform>().setPosition({ -19.f, 0.f, 6.f });
+    //entity.getComponent<cro::Transform>().setPosition({ -19.f, 0.f, 6.f });
     entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Run);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
