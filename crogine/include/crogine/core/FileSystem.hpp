@@ -127,9 +127,10 @@ namespace cro
         \brief Show a native file dialog to open a file
         \param defaultDir Default path to open (optional)
         \param filter File extention filter in the format "png,jpg,bmp"
+        \param selectMultiple If true then allows selecting multiple files
         \returns path the path selected by the user
         */
-        static std::string openFileDialogue(const std::string& defaultDir = "", const std::string& filter = "");
+        static std::string openFileDialogue(const std::string& defaultDir = "", const std::string& filter = "", bool selectMultiple = false);
 
         /*!
         \brief Show a native file dialog to open a folder

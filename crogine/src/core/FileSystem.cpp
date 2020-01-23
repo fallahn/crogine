@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-//#include "dialogues/nfd/include/nfd.h"
+#include "tinyfiledialogs.h"
 
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/Log.hpp>
@@ -71,6 +71,22 @@ source distribution.
 #endif
 
 #endif //_WIN32
+
+namespace
+{
+    std::vector<std::string> parseFileFilter(const std::string& filter)
+    {
+        std::vector<std::string> retVal;
+
+        std::string current;
+        std::stringstream ss(filter);
+        while (std::getline(ss, current, ','))
+        {
+            retVal.push_back("*." + current);
+        }
+        return retVal;
+    }
+}
 
 using namespace cro;
 
@@ -556,99 +572,42 @@ std::string FileSystem::getConfigDirectory(const std::string& appName)
     return { out };
 }
 
-std::string FileSystem::openFileDialogue(const std::string& defaultDir, const std::string& filter)
+std::string FileSystem::openFileDialogue(const std::string& defaultDir, const std::string& filter, bool selectMultiple)
 {
-//    // Show native file dialog, blocking call
-//    nfdchar_t* outPath = nullptr;
-//    const nfdchar_t* pFilter = nullptr;
-//    if (!filter.empty())
-//    {
-//        pFilter = filter.c_str();
-//    }
-//
-//    const nfdchar_t* defaultPath = nullptr;
-//if (!defaultDir.empty())
-//{
-//	defaultPath = defaultDir.c_str();
-//}
-//
-//nfdresult_t result = NFD_OpenDialog(pFilter, defaultPath, &outPath);
-//
-//if (result == NFD_OKAY)
-//{
-//	return outPath;
-//}
-//else if (result == NFD_CANCEL)
-//{
-//	xy::Logger::log("User cancelled native file dialog");
-//	return {};
-//}
-//else
-//{
-//	std::string error = NFD_GetError();
-//	xy::Logger::log("Error during native file dialog: " + error);
-//	return{};
-//}
-return {};
+    //filter is comma delimited list
+    auto filters = parseFileFilter(filter);
+    
+    std::vector<const char*> filterArray;
+    for (const auto& str : filters)
+    {
+        filterArray.push_back(str.c_str());
+    }    
+
+    auto path = tinyfd_openFileDialog("Open File", defaultDir.c_str(), static_cast<int>(filterArray.size()), filterArray.data(), nullptr, selectMultiple ? 1 : 0);
+
+    return path ? path : std::string();
 }
 
 std::string FileSystem::openFolderDialogue()
 {
-	// Show native file dialog, blocking call
-	//nfdchar_t* outPath = nullptr;
-	//nfdresult_t result = NFD_PickFolder(nullptr, &outPath);
-
-	//if (result == NFD_OKAY)
-	//{
-	//	return outPath;
-	//}
-	//else if (result == NFD_CANCEL)
-	//{
-	//	xy::Logger::log("User cancelled native file dialog");
-	//	return {};
-	//}
-	//else
-	//{
-	//	std::string error = NFD_GetError();
-	//	xy::Logger::log("Error during native file dialog: " + error);
-	//	return {};
-	//}
-    return {};
+    auto path = tinyfd_selectFolderDialog("Select Folder", nullptr);
+    return path ? path : std::string();
 }
 
 std::string FileSystem::saveFileDialogue(const std::string& defaultDir, const std::string& filter)
 {
-	/*nfdchar_t* outPath = nullptr;
-	const nfdchar_t* pFilter = nullptr;
-	if (!filter.empty())
-	{
-		pFilter = filter.c_str();
-	}
+    //filter is comma delimited list
+    auto filters = parseFileFilter(filter);
 
-	const nfdchar_t* defaultPath = nullptr;
-	if (!defaultDir.empty())
-	{
-		defaultPath = defaultDir.c_str();
-	}
+    std::vector<const char*> filterArray;
+    for (const auto& str : filters)
+    {
+        filterArray.push_back(str.c_str());
+    }
 
-	nfdresult_t result = NFD_SaveDialog(pFilter, defaultPath, &outPath);
+    auto path = tinyfd_saveFileDialog("Save File", defaultDir.c_str(), static_cast<int>(filterArray.size()), filterArray.data(), nullptr);
 
-	if (result == NFD_OKAY)
-	{
-		return outPath;
-	}
-	else if (result == NFD_CANCEL)
-	{
-		xy::Logger::log("User cancelled native file dialog");
-		return {};
-	}
-	else
-	{
-		std::string error = NFD_GetError();
-		xy::Logger::log("Error during native file dialog: " + error);
-		return{};
-	}*/
-	return {};
+    return path ? path : std::string();
 }
 
 std::string FileSystem::getResourcePath()

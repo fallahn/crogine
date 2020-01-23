@@ -797,6 +797,9 @@
     <ClCompile Include="..\crogine\src\core\FileSystem.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\crogine\src\core\tinyfiledialogs.c">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\ecs\Entity.inl">

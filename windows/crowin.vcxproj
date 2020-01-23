@@ -189,6 +189,7 @@
     <ClCompile Include="..\crogine\src\core\MessageBus.cpp" />
     <ClCompile Include="..\crogine\src\core\State.cpp" />
     <ClCompile Include="..\crogine\src\core\StateStack.cpp" />
+    <ClCompile Include="..\crogine\src\core\tinyfiledialogs.c" />
     <ClCompile Include="..\crogine\src\core\Wavetable.cpp" />
     <ClCompile Include="..\crogine\src\core\Window.cpp" />
     <ClCompile Include="..\crogine\src\detail\DistanceField.cpp" />

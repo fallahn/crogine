@@ -54,7 +54,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 
-
+#include <crogine/core/FileSystem.hpp>
 namespace
 {
 #include "MenuConsts.inl"
