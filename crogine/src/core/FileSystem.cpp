@@ -271,37 +271,37 @@ bool FileSystem::createDirectory(const std::string& path)
         {
         case EEXIST:
             {
-                xy::Logger::log(path + " directory already exists!", xy::Logger::Type::Info);
+                Logger::log(path + " directory already exists!", Logger::Type::Info);
             }
             break;
         case ENOENT:
             {
-                xy::Logger::log("Unable to create " + path + " directory not found.", xy::Logger::Type::Error);
+                Logger::log("Unable to create " + path + " directory not found.", Logger::Type::Error);
             }
             break;
         case EFAULT:
             {
-                xy::Logger::log("Unable to create " + path + ". Reason: EFAULT", xy::Logger::Type::Error);
+                Logger::log("Unable to create " + path + ". Reason: EFAULT", Logger::Type::Error);
             }
             break;
         case EACCES:
             {
-                xy::Logger::log("Unable to create " + path + ". Reason: EACCES", xy::Logger::Type::Error);
+                Logger::log("Unable to create " + path + ". Reason: EACCES", Logger::Type::Error);
             }
             break;
         case ENAMETOOLONG:
             {
-                xy::Logger::log("Unable to create " + path + ". Reason: ENAMETOOLONG", xy::Logger::Type::Error);
+                Logger::log("Unable to create " + path + ". Reason: ENAMETOOLONG", Logger::Type::Error);
             }
             break;
         case ENOTDIR:
             {
-                xy::Logger::log("Unable to create " + path + ". Reason: ENOTDIR", xy::Logger::Type::Error);
+                Logger::log("Unable to create " + path + ". Reason: ENOTDIR", Logger::Type::Error);
             }
             break;
         case ENOMEM:
             {
-                xy::Logger::log("Unable to create " + path + ". Reason: ENOMEM", xy::Logger::Type::Error);
+                Logger::log("Unable to create " + path + ". Reason: ENOMEM", Logger::Type::Error);
             }
             break;
         }
