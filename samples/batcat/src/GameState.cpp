@@ -203,7 +203,7 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setScale(glm::vec3(0.06f));
     entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, cro::Util::Const::PI / 2.f, 0.f });
     //entity.getComponent<cro::Transform>().setPosition({ -19.f, 0.f, 6.f });
-    entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Run);
+    //entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Run);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
 

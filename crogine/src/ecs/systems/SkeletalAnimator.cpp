@@ -84,6 +84,14 @@ void SkeletalAnimator::process(Time dt)
                 }
                 //DPRINT("Current Frame", std::to_string(anim.currentFrame));
             }
+            else
+            {
+                //show the current frame
+                if (entity.getComponent<Model>().isVisible())
+                {
+                    interpolate(anim.currentFrame, anim.currentFrame, 0.f, skel);
+                }
+            }
         }
         else
         {

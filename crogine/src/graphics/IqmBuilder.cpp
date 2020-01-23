@@ -32,7 +32,6 @@ source distribution.
 
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
-#include <crogine/detail/glm/gtx/quaternion.hpp>
 
 #include <cstring>
 #include <array>
@@ -546,7 +545,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     glm::mat4 mat = Iqm::createBoneMatrix(rotation, translation, scale);
                     if (pose.parent >= 0)
                     {
-                        out.frames[frameIndex + poseIndex] = bindPose[pose.parent] * mat * inverseBindPose[poseIndex];
+                        out.frames[frameIndex + poseIndex] = bindPose[pose.parent] *  mat *inverseBindPose[poseIndex];
                     }
                     else
                     {
