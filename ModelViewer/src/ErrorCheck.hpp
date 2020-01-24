@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2020
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine model viewer/importer - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,37 +27,27 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/gui/Gui.hpp>
-#include <crogine/gui/imgui.h>
+#pragma once
 
-using namespace cro;
+#ifdef CRO_DEBUG_
+#define glCheck(x) do{x; glErrorCheck(__FILE__, __LINE__, #x);}while (false)
+#else
+#define glCheck(x) (x)
+#endif //_DEBUG_
 
-void ui::begin(const std::string& title, bool* b)
+#include <crogine/detail/OpenGL.hpp>
+#include <crogine/core/Log.hpp>
+
+#include <sstream>
+
+static inline void glErrorCheck(const char* file, unsigned int line, const char* expression)
 {
-    ImGui::Begin(title.c_str(), b);
-}
-
-void ui::checkbox(const std::string& title, bool* value)
-{
-    ImGui::Checkbox(title.c_str(), value);
-}
-
-void ui::slider(const std::string& title, float& value, float min, float max)
-{
-    ImGui::SliderFloat(title.c_str(), &value, min, max);
-}
-
-void ui::end()
-{
-    ImGui::End();
-}
-
-bool ui::wantsMouse()
-{
-    return ImGui::GetIO().WantCaptureMouse;
-}
-
-bool ui::wantsKeyboard()
-{
-    return ImGui::GetIO().WantCaptureKeyboard;
+    GLenum err = glGetError();
+    while(err != GL_NO_ERROR)
+    {
+        std::stringstream ss;
+        ss << file << ", " << line << ": " << expression << ". " << " glError: " << err << std::endl;
+        cro::Logger::log(ss.str(), cro::Logger::Type::Error);
+        err = glGetError();
+    }
 }

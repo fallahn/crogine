@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2020
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine model viewer/importer - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,37 +27,50 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/gui/Gui.hpp>
-#include <crogine/gui/imgui.h>
+#pragma once
 
-using namespace cro;
-
-void ui::begin(const std::string& title, bool* b)
+namespace MaterialID
 {
-    ImGui::Begin(title.c_str(), b);
+    /*enum
+    {
+
+    };*/
 }
 
-void ui::checkbox(const std::string& title, bool* value)
+namespace MeshID
 {
-    ImGui::Checkbox(title.c_str(), value);
+    /*enum
+    {
+        
+    };*/
 }
 
-void ui::slider(const std::string& title, float& value, float min, float max)
+namespace GameModelID
 {
-    ImGui::SliderFloat(title.c_str(), &value, min, max);
+
 }
 
-void ui::end()
+namespace FontID
 {
-    ImGui::End();
+
 }
 
-bool ui::wantsMouse()
+namespace ShaderID
 {
-    return ImGui::GetIO().WantCaptureMouse;
+
 }
 
-bool ui::wantsKeyboard()
+namespace CommandID
 {
-    return ImGui::GetIO().WantCaptureKeyboard;
+
+}
+
+namespace AnimationID
+{
+
+}
+
+namespace CollisionID
+{
+
 }

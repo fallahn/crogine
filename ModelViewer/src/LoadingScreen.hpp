@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2020
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine model viewer/importer - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,37 +27,39 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/gui/Gui.hpp>
-#include <crogine/gui/imgui.h>
+#pragma once
 
-using namespace cro;
+#include <crogine/graphics/LoadingScreen.hpp>
+#include <crogine/detail/Types.hpp>
+#include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/Texture.hpp>
+#include <crogine/core/Clock.hpp>
 
-void ui::begin(const std::string& title, bool* b)
+#include <crogine/detail/glm/mat4x4.hpp>
+
+#include <vector>
+
+class LoadingScreen final : public cro::LoadingScreen
 {
-    ImGui::Begin(title.c_str(), b);
-}
+public:
+    LoadingScreen();
+    ~LoadingScreen();
 
-void ui::checkbox(const std::string& title, bool* value)
-{
-    ImGui::Checkbox(title.c_str(), value);
-}
+    void update() override;
+    void draw() override;
 
-void ui::slider(const std::string& title, float& value, float min, float max)
-{
-    ImGui::SliderFloat(title.c_str(), &value, min, max);
-}
+private:
+    cro::uint32 m_vbo;
+    cro::uint32 m_transformIndex;
 
-void ui::end()
-{
-    ImGui::End();
-}
+    cro::Shader m_shader;
+    glm::mat4 m_transform;
+    glm::mat4 m_projectionMatrix;
+    glm::uvec2 m_viewport;
 
-bool ui::wantsMouse()
-{
-    return ImGui::GetIO().WantCaptureMouse;
-}
+    cro::Clock m_clock;
+    std::vector<float> m_wavetable;
+    std::size_t m_wavetableIndex;
 
-bool ui::wantsKeyboard()
-{
-    return ImGui::GetIO().WantCaptureKeyboard;
-}
+    cro::Texture m_texture;
+};

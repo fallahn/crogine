@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2020
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine model viewer/importer - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,37 +27,25 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/gui/Gui.hpp>
-#include <crogine/gui/imgui.h>
+#pragma once
 
-using namespace cro;
+#include <crogine/core/App.hpp>
+#include <crogine/core/StateStack.hpp>
 
-void ui::begin(const std::string& title, bool* b)
+class MyApp final : public cro::App
 {
-    ImGui::Begin(title.c_str(), b);
-}
+public:
+	MyApp();
+	~MyApp() = default;
 
-void ui::checkbox(const std::string& title, bool* value)
-{
-    ImGui::Checkbox(title.c_str(), value);
-}
+private:
+	
+	cro::StateStack m_stateStack;
 
-void ui::slider(const std::string& title, float& value, float min, float max)
-{
-    ImGui::SliderFloat(title.c_str(), &value, min, max);
-}
-
-void ui::end()
-{
-    ImGui::End();
-}
-
-bool ui::wantsMouse()
-{
-    return ImGui::GetIO().WantCaptureMouse;
-}
-
-bool ui::wantsKeyboard()
-{
-    return ImGui::GetIO().WantCaptureKeyboard;
-}
+	void handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
+	void simulate(cro::Time) override;
+	void render() override;
+    bool initialise() override;
+    void finalise() override;
+};

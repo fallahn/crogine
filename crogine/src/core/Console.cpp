@@ -33,8 +33,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/audio/AudioMixer.hpp>
-
-#include "../imgui/imgui.h"
+#include <crogine/gui/imgui.h>
 
 #include <list>
 #include <unordered_map>

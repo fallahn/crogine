@@ -34,8 +34,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/detail/HashCombine.hpp>
-
-#include "../../imgui/imgui.h"
+#include <crogine/gui/imgui.h>
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>

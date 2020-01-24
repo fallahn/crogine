@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/audio/AudioMixer.hpp>
+#include <crogine/gui/imgui.h>
 
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -41,7 +42,6 @@ source distribution.
 #include <SDL_filesystem.h>
 
 #include "../detail/GLCheck.hpp"
-#include "../imgui/imgui.h"
 #include "../imgui/imgui_impl_opengl3.h"
 #include "../imgui/imgui_impl_sdl.h"
 
