@@ -491,7 +491,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         //so that they are easier to interpolate separately?
         if (joint.parent >= 0)
         {
-            //multiply by parent's transform - IQM's matrix multiplication is reversed
+            //multiply by parent's transform
             bindPose[i] = bindPose[joint.parent] * bindPose[i];
             inverseBindPose[i] *= inverseBindPose[joint.parent];
 
@@ -545,11 +545,11 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     glm::mat4 mat = Iqm::createBoneMatrix(rotation, translation, scale);
                     if (pose.parent >= 0)
                     {
-                        out.frames[frameIndex + poseIndex] = bindPose[pose.parent] *  mat *inverseBindPose[poseIndex];
+                        out.frames[frameIndex + poseIndex] =  bindPose[pose.parent] * mat * inverseBindPose[poseIndex];
                     }
                     else
                     {
-                        out.frames[frameIndex + poseIndex] = mat * inverseBindPose[poseIndex];
+                        out.frames[frameIndex + poseIndex] = mat* inverseBindPose[poseIndex];
                     }
                 }
             }
