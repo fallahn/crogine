@@ -1,5 +1,5 @@
 project(model_viewer)
-SET(PROJECT_NAME moel_viewer)
+SET(PROJECT_NAME model_viewer)
 cmake_minimum_required(VERSION 3.2.2)
 
 if(NOT CMAKE_BUILD_TYPE)
