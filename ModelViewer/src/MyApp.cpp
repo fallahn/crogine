@@ -75,7 +75,7 @@ void MyApp::render()
 bool MyApp::initialise()
 {
     getWindow().setLoadingScreen<LoadingScreen>();
-    getWindow().setTitle("Crogine Model Viewer / Importer");
+    getWindow().setTitle("Crogine Model Viewer / Importer - Current Scale: 1 unit per metre");
 
 	m_stateStack.pushState(States::MainMenu);
 

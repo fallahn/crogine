@@ -33,6 +33,22 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/gui/imgui.h>
 
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Skeleton.hpp>
+#include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
+#include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Callback.hpp>
+
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
+#include <crogine/ecs/systems/SceneGraph.hpp>
+#include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
+
+#include <crogine/util/Constants.hpp>
+
 namespace
 {
 
@@ -92,7 +108,13 @@ void MenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
-
+    m_scene.addSystem<cro::CommandSystem>(mb);
+    m_scene.addSystem<cro::CallbackSystem>(mb);
+    m_scene.addSystem<cro::SkeletalAnimator>(mb);
+    m_scene.addSystem<cro::SceneGraph>(mb);
+    m_scene.addSystem<cro::CameraSystem>(mb);
+    m_scene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_scene.addSystem<cro::ModelRenderer>(mb);
 }
 
 void MenuState::loadAssets()
@@ -102,7 +124,28 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
+    //create ground plane
+    cro::ModelDefinition modelDef;
+    modelDef.loadFromFile("assets/models/ground_plane.cmt", m_resources);
 
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
+    modelDef.createModel(entity, m_resources);
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, cro::Time dt)
+    {
+        e.getComponent<cro::Transform>().rotate({ 1.f, 0.f, 0.f }, dt.asSeconds());
+    };
+
+    //position the camera
+    m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 1.f, 5.f });
+
+    //set the default sunlight properties
+    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 19.f, 16.4f, -10.3f });
+    m_scene.getSunlight().setDirection({ -0.f, -1.f, -0.f });
+    m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 }
 
 void MenuState::buildUI()
@@ -117,7 +160,10 @@ void MenuState::buildUI()
                     ImGui::MenuItem("Open Model", nullptr, nullptr);
                     ImGui::MenuItem("Import Model", nullptr, nullptr);
                     ImGui::MenuItem("Export Model", nullptr, nullptr);
-                    ImGui::MenuItem("Quit", nullptr, nullptr);
+                    if (ImGui::MenuItem("Quit", nullptr, nullptr))
+                    {
+                        cro::App::quit();
+                    }
                     ImGui::EndMenu();
                 }
 

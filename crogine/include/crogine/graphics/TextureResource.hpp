@@ -77,7 +77,7 @@ namespace cro
         when loading the texture the first time. If the texture is already
         loaded then this has no effect.
         */
-        Texture& get(const std::string& path, bool createMipMaps = true);
+        Texture& get(const std::string& path, bool createMipMaps = false);
 
         /*!
         \brief Sets the current fallback colour.

@@ -85,6 +85,7 @@ namespace cro
         /*!
         \brief Creates a Model component from the loaded config on the given entity.
         \returns true on success, else false (no model definition has been loaded)
+        Note that this does not add other necessary components such as Transform
         */
         bool createModel(Entity, ResourceCollection&);
 
@@ -100,7 +101,7 @@ namespace cro
         \brief Returns the loaded MeshID within the mesh resource supplied
         when the definition was loaded, or 0 if no mesh has been parsed
         */
-        int32 getMeshID() const { return m_meshID; }
+        std::size_t getMeshID() const { return m_meshID; }
 
         /*!
         \brief Returns true if the loaded model has a skeleton.
@@ -110,7 +111,7 @@ namespace cro
         bool hasSkeleton() const { return m_skeleton != nullptr; }
 
     private:
-        int32 m_meshID = 0; //< ID of the mesh in the mesh resource
+        std::size_t m_meshID = 0; //< ID of the mesh in the mesh resource
         std::array<int32, Mesh::IndexData::MaxBuffers> m_materialIDs{}; //< list of material IDs in the order in which they appear on the model
         std::array<int32, Mesh::IndexData::MaxBuffers> m_shadowIDs{}; //< IDs of shadow map materials if this model casts shadows
         std::size_t m_materialCount = 0; //< number of active materials

@@ -69,21 +69,21 @@ namespace cro
         a mesh to add to the resource       
         \returns true if mesh was successfully added to the resource holder
         */
-        bool loadMesh(int32 ID, const MeshBuilder& mb);
+        bool loadMesh(std::size_t ID, const MeshBuilder& mb);
 
         /*!
         \brief Preloads a mesh and automatically assigns an ID.
         \param mb Reference to the MeshBuilder instance containing the data to preload.
         \returns Automatically generated ID, or -1 if loading failed.
         */
-        int32 loadMesh(const MeshBuilder& mb);
+        std::size_t loadMesh(const MeshBuilder& mb);
 
         /*!
         \brief Returns the mesh data for the given ID.
         */
-        const Mesh::Data getMesh(int32 ID) const;
+        const Mesh::Data getMesh(std::size_t ID) const;
 
     private:
-        std::unordered_map<int32, Mesh::Data> m_meshData;
+        std::unordered_map<std::size_t, Mesh::Data> m_meshData;
     };
 }

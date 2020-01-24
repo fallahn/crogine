@@ -39,7 +39,7 @@ using namespace cro;
 
 namespace
 {
-    int32 autoID = std::numeric_limits<int32>::max();
+    std::size_t autoID = std::numeric_limits<std::size_t>::max();
 }
 
 MeshResource::MeshResource()
@@ -69,7 +69,7 @@ MeshResource::~MeshResource()
 }
 
 //public
-bool MeshResource::loadMesh(int32 ID, const MeshBuilder& mb)
+bool MeshResource::loadMesh(std::size_t ID, const MeshBuilder& mb)
 {
     //don't forget to check ID doesn't exist
     if (m_meshData.count(ID) != 0)
@@ -88,11 +88,11 @@ bool MeshResource::loadMesh(int32 ID, const MeshBuilder& mb)
     return false;
 }
 
-int32 MeshResource::loadMesh(const MeshBuilder& mb)
+std::size_t MeshResource::loadMesh(const MeshBuilder& mb)
 {
-    CRO_ASSERT(autoID > 0, "Christ you've loaded a lot of meshes!");
+    //CRO_ASSERT(autoID > 0, "Christ you've loaded a lot of meshes!");
     //int32 nextID = autoID--;
-    int32 nextID = mb.getUID();
+    std::size_t nextID = mb.getUID();
     if (nextID == 0) nextID = autoID--;
     if (m_meshData.count(nextID) != 0)
     {
@@ -105,10 +105,10 @@ int32 MeshResource::loadMesh(const MeshBuilder& mb)
         return nextID;
     }
 
-    return -1;
+    return 0;
 }
 
-const Mesh::Data MeshResource::getMesh(int32 id) const
+const Mesh::Data MeshResource::getMesh(std::size_t id) const
 {
     CRO_ASSERT(m_meshData.count(id) != 0, "Mesh not found");
     return m_meshData.find(id)->second;

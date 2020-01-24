@@ -75,7 +75,7 @@ namespace cro
         \param path Path to file to load. The image file should have pow2 dimensions on mobile platforms
         \returns true on success, else false
         */
-        bool loadFromFile(const std::string& path, bool createMipMaps = true);
+        bool loadFromFile(const std::string& path, bool createMipMaps = false);
 
         /*!
         \brief Updates the pixel data for the texture.
@@ -86,7 +86,7 @@ namespace cro
         \param area InRect representing the area of the texture to update. If the size is zero
         the entire texture will be updated.
         */
-        bool update(const uint8* pixels, bool createMipMaps = true, URect area = {});
+        bool update(const uint8* pixels, bool createMipMaps = false, URect area = {});
 
         /*!
         \brief Returns the dimensions of the image which makes up this texture
