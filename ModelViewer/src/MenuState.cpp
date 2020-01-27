@@ -140,12 +140,11 @@ void MenuState::createScene()
     //};
 
     //temp for testing
-    cro::ModelDefinition def2;
-    def2.loadFromFile("assets/models/sphere.cmt", m_resources);
+    modelDef.loadFromFile("assets/models/sphere.cmt", m_resources);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 0.f });
-    def2.createModel(entity, m_resources);
+    modelDef.createModel(entity, m_resources);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [](cro::Entity e, cro::Time dt)

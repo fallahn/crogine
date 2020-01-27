@@ -56,8 +56,9 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 {
     if (m_modelLoaded)
     {
-        cro::Logger::log("This definition already has a model loaded", cro::Logger::Type::Error);
-        return false;
+        //cro::Logger::log("This definition already has a model loaded", cro::Logger::Type::Error);
+        //return false;
+        reset();
     }
 
     if (Util::String::getFileExtension(path) != ".cmt")
@@ -183,7 +184,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         auto skel = dynamic_cast<IqmBuilder*>(meshBuilder.get())->getSkeleton();
         if (skel.frameCount > 0)
         {
-            m_skeleton = std::make_unique<Skeleton>(skel);
+            m_skeleton = skel;
         }
     }
 
@@ -428,16 +429,28 @@ bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
                     model.setShadowMaterial(i, rc.materials.get(m_shadowIDs[i]));
                 }
             }
-            entity.addComponent<ShadowCaster>().skinned = (m_skeleton != nullptr);
+            entity.addComponent<ShadowCaster>().skinned = (m_skeleton);
 
         }
 
         if (hasSkeleton())
         {
-            entity.addComponent<cro::Skeleton>() = *m_skeleton;
+            entity.addComponent<cro::Skeleton>() = m_skeleton;
         }
 
         return true;
     }
     return false;
+}
+
+void ModelDefinition::reset()
+{
+    m_meshID = 0;
+    m_materialIDs = {};
+    m_shadowIDs = {};
+    m_materialCount = 0;
+    Skeleton m_skeleton = {};
+    m_castShadows = false;
+
+    m_modelLoaded = false;
 }

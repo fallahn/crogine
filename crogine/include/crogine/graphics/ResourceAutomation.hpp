@@ -66,8 +66,6 @@ namespace cro
     These may be populated by loading from a path
     to a valid ConfigFile. The information can then
     be used to load data into a model component at run time.
-    If a model contains skeletal aniimation then this definfition
-    needs to exist for as long as any model which uses it.
     */
     class CRO_EXPORT_API ModelDefinition final
     {
@@ -110,16 +108,18 @@ namespace cro
         If this is true models created with createModel(() will have a skeleton
         component added
         */
-        bool hasSkeleton() const { return m_skeleton != nullptr; }
+        bool hasSkeleton() const { return m_skeleton; }
 
     private:
         std::size_t m_meshID = 0; //< ID of the mesh in the mesh resource
         std::array<int32, Mesh::IndexData::MaxBuffers> m_materialIDs{}; //< list of material IDs in the order in which they appear on the model
         std::array<int32, Mesh::IndexData::MaxBuffers> m_shadowIDs{}; //< IDs of shadow map materials if this model casts shadows
         std::size_t m_materialCount = 0; //< number of active materials
-        std::unique_ptr<Skeleton> m_skeleton; //< nullptr if no skeleton exists - TODO this needs to be managed by something else
+        Skeleton m_skeleton; //< overloaded operator bool indicates if currently valid
         bool m_castShadows = false; //< if this is true the model entity also requires a shadow cast component
 
         bool m_modelLoaded = false;
+
+        void reset();
     };
 }

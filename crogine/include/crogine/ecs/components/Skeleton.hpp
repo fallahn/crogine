@@ -69,6 +69,11 @@ namespace cro
         std::vector<glm::mat4> frames; //indexed by steps of frameSize
         std::vector<glm::mat4> currentFrame; //current interpolated output
 
+        operator bool() const
+        {
+            return (!frames.empty() && (frames.size() == frameSize * frameCount));
+        }
+
         std::vector<int32> jointIndices;
 
         std::vector<SkeletalAnim> animations;

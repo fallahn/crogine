@@ -93,7 +93,11 @@ std::size_t MeshResource::loadMesh(const MeshBuilder& mb)
     //CRO_ASSERT(autoID > 0, "Christ you've loaded a lot of meshes!");
     //int32 nextID = autoID--;
     std::size_t nextID = mb.getUID();
-    if (nextID == 0) nextID = autoID--;
+    if (nextID == 0)
+    {
+        nextID = autoID--;
+    }
+
     if (m_meshData.count(nextID) != 0)
     {
         //LOG(std::to_string(nextID) + ": ID already assigned to mesh", Logger::Type::Info);
