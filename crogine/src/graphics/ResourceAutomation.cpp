@@ -36,6 +36,7 @@ source distribution.
 
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/util/String.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
@@ -53,6 +54,12 @@ namespace
 
 bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& rc)
 {
+    if (m_modelLoaded)
+    {
+        cro::Logger::log("This definition already has a model loaded", cro::Logger::Type::Error);
+        return false;
+    }
+
     if (Util::String::getFileExtension(path) != ".cmt")
     {
         Logger::log(path + ": unusual file extension...", Logger::Type::Warning);
@@ -97,7 +104,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     {
         if (auto* prop = cfg.findProperty("radius"))
         {
-            float rad = prop->getValue<float>();
+            float rad = std::max(0.001f, prop->getValue<float>());
             meshBuilder = std::make_unique<SphereBuilder>(rad, 8);
         }
     }
@@ -116,6 +123,8 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         if (auto* prop = cfg.findProperty("size"))
         {
             glm::vec2 size = prop->getValue<glm::vec2>();
+            size.x = std::max(0.001f, size.x);
+            size.y = std::max(0.001f, size.y);
             meshBuilder = std::make_unique<QuadBuilder>(size, uv);
         }
     }
@@ -316,11 +325,16 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             else if (name == "rim")
             {
                 auto c = p.getValue<glm::vec4>();
-                material.setProperty("u_rimColour", Colour(c.r, c.g, c.b, c.a));
+                material.setProperty("u_rimColour", 
+                    Colour(
+                        Util::Maths::clamp(c.r, 0.f, 1.f), 
+                        Util::Maths::clamp(c.g, 0.f, 1.f),
+                        Util::Maths::clamp(c.b, 0.f, 1.f),
+                        Util::Maths::clamp(c.a, 0.f, 1.f)));
 
                 if (auto* rimProperty = mat.findProperty("rim_falloff"))
                 {
-                    material.setProperty("u_rimFalloff", rimProperty->getValue<float>());
+                    material.setProperty("u_rimFalloff", Util::Maths::clamp(rimProperty->getValue<float>(), 0.1f, 1.f));
                 }
                 else
                 {
@@ -339,11 +353,21 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             }
             else if (name == "colour")
             {
-                material.setProperty("u_colour", p.getValue<glm::vec4>());
+                auto c = p.getValue<glm::vec4>();
+                material.setProperty("u_colour", Colour(
+                    Util::Maths::clamp(c.r, 0.f, 1.f),
+                    Util::Maths::clamp(c.g, 0.f, 1.f),
+                    Util::Maths::clamp(c.b, 0.f, 1.f),
+                    Util::Maths::clamp(c.a, 0.f, 1.f)));
             }
             else if (name == "mask_colour")
             {
-                material.setProperty("u_maskColour", p.getValue<glm::vec4>());
+                auto c = p.getValue<glm::vec4>();
+                material.setProperty("u_maskColour", Colour(
+                    Util::Maths::clamp(c.r, 0.f, 1.f),
+                    Util::Maths::clamp(c.g, 0.f, 1.f),
+                    Util::Maths::clamp(c.b, 0.f, 1.f),
+                    Util::Maths::clamp(c.a, 0.f, 1.f)));
             }
             else if (name == "blendmode")
             {
@@ -381,6 +405,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         m_materialCount++;
     }
 
+    m_modelLoaded = true;
     return true;
 }
 
@@ -398,7 +423,10 @@ bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
         {
             for (auto i = 0u; i < m_materialCount; ++i)
             {
-                model.setShadowMaterial(i, rc.materials.get(m_shadowIDs[i]));
+                if (m_shadowIDs[i] > 0)
+                {
+                    model.setShadowMaterial(i, rc.materials.get(m_shadowIDs[i]));
+                }
             }
             entity.addComponent<ShadowCaster>().skinned = (m_skeleton != nullptr);
 

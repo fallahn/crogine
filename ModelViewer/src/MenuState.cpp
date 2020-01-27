@@ -132,18 +132,32 @@ void MenuState::createScene()
     entity.addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
     modelDef.createModel(entity, m_resources);
 
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function =
+    //    [](cro::Entity e, cro::Time dt)
+    //{
+    //    e.getComponent<cro::Transform>().rotate({ 1.f, 0.f, 0.f }, dt.asSeconds());
+    //};
+
+    //temp for testing
+    cro::ModelDefinition def2;
+    def2.loadFromFile("assets/models/sphere.cmt", m_resources);
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 0.f });
+    def2.createModel(entity, m_resources);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [](cro::Entity e, cro::Time dt)
     {
-        e.getComponent<cro::Transform>().rotate({ 1.f, 0.f, 0.f }, dt.asSeconds());
+        e.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, dt.asSeconds() * 0.5f);
     };
 
     //position the camera
     m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 1.f, 5.f });
 
     //set the default sunlight properties
-    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 19.f, 16.4f, -10.3f });
+    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 6.f, -5.f });
     m_scene.getSunlight().setDirection({ -0.f, -1.f, -0.f });
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 }
