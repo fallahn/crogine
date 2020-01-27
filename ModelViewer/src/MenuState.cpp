@@ -30,6 +30,8 @@ source distribution.
 #include "MenuState.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/FileSystem.hpp>
+#include <crogine/core/ConfigFile.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/gui/imgui.h>
 
@@ -51,12 +53,27 @@ source distribution.
 
 namespace
 {
+    const std::string prefPath = cro::FileSystem::getConfigDirectory("cro_model_viewer") + "prefs.cfg";
 
+    //tooltip for UI
+    static void HelpMarker(const char* desc)
+    {
+        ImGui::TextDisabled("(?)");
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+            ImGui::TextUnformatted(desc);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
-	: cro::State    (stack, context),
-    m_scene         (context.appInstance.getMessageBus())
+	: cro::State        (stack, context),
+    m_scene             (context.appInstance.getMessageBus()),
+    m_showPreferences   (false)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -71,7 +88,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
     });
 
     context.appInstance.resetFrameTime();
-
 }
 
 //public
@@ -132,26 +148,6 @@ void MenuState::createScene()
     entity.addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
     modelDef.createModel(entity, m_resources);
 
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().function =
-    //    [](cro::Entity e, cro::Time dt)
-    //{
-    //    e.getComponent<cro::Transform>().rotate({ 1.f, 0.f, 0.f }, dt.asSeconds());
-    //};
-
-    //temp for testing
-    modelDef.loadFromFile("assets/models/sphere.cmt", m_resources);
-
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 0.f });
-    modelDef.createModel(entity, m_resources);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, cro::Time dt)
-    {
-        e.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, dt.asSeconds() * 0.5f);
-    };
-
     //position the camera
     m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 1.f, 5.f });
 
@@ -163,14 +159,36 @@ void MenuState::createScene()
 
 void MenuState::buildUI()
 {
-    registerWindow([]()
+    cro::ConfigFile prefs;
+    if (prefs.loadFromFile(prefPath))
+    {
+        const auto& props = prefs.getProperties();
+        for (const auto& prop : props)
+        {
+            auto name = cro::Util::String::toLower(prop.getName());
+            if (name == "working_dir")
+            {
+                m_preferences.workingDirectory = prop.getValue<std::string>();
+            }
+        }
+    }
+
+    registerWindow([&]()
         {
             if(ImGui::BeginMainMenuBar())
             {
                 //file menu
                 if (ImGui::BeginMenu("File"))
                 {
-                    ImGui::MenuItem("Open Model", nullptr, nullptr);
+                    if (ImGui::MenuItem("Open Model", nullptr, nullptr))
+                    {
+                        openModel();
+                    }
+                    if (ImGui::MenuItem("Close Model", nullptr, nullptr))
+                    {
+                        closeModel();
+                    }
+
                     ImGui::MenuItem("Import Model", nullptr, nullptr);
                     ImGui::MenuItem("Export Model", nullptr, nullptr);
                     if (ImGui::MenuItem("Quit", nullptr, nullptr))
@@ -183,7 +201,10 @@ void MenuState::buildUI()
                 //view menu
                 if (ImGui::BeginMenu("View"))
                 {
-                    ImGui::MenuItem("Options", nullptr, nullptr);
+                    if (ImGui::MenuItem("Options", nullptr, nullptr))
+                    {
+                        m_showPreferences = true;
+                    }
                     ImGui::MenuItem("Animation Data", nullptr, nullptr);
                     ImGui::MenuItem("Material Data", nullptr, nullptr);
                     ImGui::EndMenu();
@@ -191,5 +212,92 @@ void MenuState::buildUI()
 
                 ImGui::EndMainMenuBar();
             }
+
+            //options window
+            if (m_showPreferences)
+            {
+                ImGui::SetNextWindowSize({ 400.f, 160.f });
+                if (ImGui::Begin("Preferences", &m_showPreferences))
+                {
+                    ImGui::Text("%s", "Working Directory:");
+                    if (m_preferences.workingDirectory.empty())
+                    {
+                        ImGui::Text("%s", "Not Set");
+                    }
+                    else
+                    {
+                        auto dir = m_preferences.workingDirectory.substr(0, 30) + "...";
+                        ImGui::Text("%s", dir.c_str());
+                        ImGui::SameLine();
+                        HelpMarker(m_preferences.workingDirectory.c_str());
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Browse"))
+                    {
+                        auto path = cro::FileSystem::openFolderDialogue();
+                        if (!path.empty())
+                        {
+                            m_preferences.workingDirectory = path;
+                        }
+                    }
+
+                    if (!m_showPreferences ||
+                        ImGui::Button("Close"))
+                    {
+                        cro::ConfigFile prefsOut;
+                        prefsOut.addProperty("working_dir", m_preferences.workingDirectory);
+
+                        prefsOut.save(prefPath);
+
+                        m_showPreferences = false;
+                    }
+                }
+                ImGui::End();
+            }
         });
+}
+
+void MenuState::openModel()
+{
+    closeModel();
+
+    auto path = cro::FileSystem::openFileDialogue("", "cmt");
+    if (!path.empty()
+        && cro::FileSystem::getFileExtension(path) == ".cmt")
+    {
+        m_activeModel = m_scene.createEntity();
+        m_activeModel.addComponent<cro::Transform>();
+
+        cro::ModelDefinition def(m_preferences.workingDirectory);
+        if (def.loadFromFile(path, m_resources))
+        {
+            def.createModel(m_activeModel, m_resources);
+
+            if (m_activeModel.getComponent<cro::Model>().getMeshData().boundingSphere.radius > 2.f)
+            {
+                cro::Logger::log("Bounding sphere radius is very large - model may not be visible", cro::Logger::Type::Warning);
+            }
+        }
+        else
+        {
+            cro::Logger::log("Check current working directory (Options)?", cro::Logger::Type::Error);
+            closeModel();
+        }
+    }
+    else
+    {
+        cro::Logger::log(path + ": invalid file path", cro::Logger::Type::Error);
+    }
+}
+
+void MenuState::closeModel()
+{
+    if (m_activeModel.isValid())
+    {
+        m_scene.destroyEntity(m_activeModel);
+    }
+
+    //TODO we might want to remove from any resource manager
+    //too else eventually we'll end up with a lot of unused
+    //resources if closing  and opening a lot of files.
 }

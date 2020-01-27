@@ -71,6 +71,23 @@ namespace cro
     {
     public:
         /*!
+        \brief Constructor.
+        \param workingDir Set this to have resources open at a file location
+        relative to a directory other than the current working directory
+        */
+        ModelDefinition(const std::string& workingDir = "") : m_workingDir(workingDir)
+        {
+            if (!workingDir.empty())
+            {
+                std::replace(m_workingDir.begin(), m_workingDir.end(), '\\', '/');
+                if (m_workingDir.back() != '/')
+                {
+                    m_workingDir += '/';
+                }
+            }        
+        }
+
+        /*!
         \brief Attempts to load a definition from a ConfigFile at a given path.
         \param path String containing the path to a configuration file. These are
         specially formatted files containing data about a model.
@@ -111,6 +128,8 @@ namespace cro
         bool hasSkeleton() const { return m_skeleton; }
 
     private:
+        std::string m_workingDir;
+
         std::size_t m_meshID = 0; //< ID of the mesh in the mesh resource
         std::array<int32, Mesh::IndexData::MaxBuffers> m_materialIDs{}; //< list of material IDs in the order in which they appear on the model
         std::array<int32, Mesh::IndexData::MaxBuffers> m_shadowIDs{}; //< IDs of shadow map materials if this model casts shadows

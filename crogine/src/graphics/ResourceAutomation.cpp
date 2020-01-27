@@ -93,12 +93,12 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     if (ext == ".cmf")
     {
         //we have a static mesh
-        meshBuilder = std::make_unique<StaticMeshBuilder>(meshValue);
+        meshBuilder = std::make_unique<StaticMeshBuilder>(m_workingDir + meshValue);
     }
     else if (ext == ".iqm")
     {
         //use iqm loader
-        meshBuilder = std::make_unique<IqmBuilder>(meshValue);
+        meshBuilder = std::make_unique<IqmBuilder>(m_workingDir + meshValue);
         checkSkeleton = true;
     }
     else if (Util::String::toLower(meshValue) == "sphere")
@@ -298,28 +298,28 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             const auto& name = Util::String::toLower(p.getName());
             if (name == "diffuse")
             {
-                auto& tex = rc.textures.get(p.getValue<std::string>());
+                auto& tex = rc.textures.get(m_workingDir + p.getValue<std::string>());
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_diffuseMap", tex);
             }
             else if (name == "mask")
             {
-                auto& tex = rc.textures.get(p.getValue<std::string>());
+                auto& tex = rc.textures.get(m_workingDir + p.getValue<std::string>());
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_maskMap", tex);
             }
             else if (name == "normal")
             {
-                auto& tex = rc.textures.get(p.getValue<std::string>());
+                auto& tex = rc.textures.get(m_workingDir + p.getValue<std::string>());
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_normalMap", tex);
             }
             else if (name == "lightmap")
             {
-                auto& tex = rc.textures.get(p.getValue<std::string>());
+                auto& tex = rc.textures.get(m_workingDir + p.getValue<std::string>());
                 tex.setSmooth(true);
                 material.setProperty("u_lightMap", tex);
             }

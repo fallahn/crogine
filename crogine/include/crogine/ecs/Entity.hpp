@@ -69,7 +69,7 @@ namespace cro
 		using ID = uint32;
 		using Generation = uint8;
 
-		Entity(ID index, Generation generation);
+		Entity(ID index = std::numeric_limits<ID>::max(), Generation generation = 0);
 
 		/*
 		\brief Returns the index of this entity
@@ -131,7 +131,10 @@ namespace cro
         */
         const ComponentMask& getComponentMask() const;
 
-		//TODO add tags of types
+		/*!
+        \brief Returns true if this entity currently belongs to a scene
+        */
+        bool isValid() const { return m_entityManager != nullptr; }
         
         bool operator == (Entity r)
         {

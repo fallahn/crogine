@@ -57,8 +57,19 @@ private:
     cro::Scene m_scene;
     cro::ResourceCollection m_resources;
     
+    cro::Entity m_activeModel;
+
+    struct Preferences final
+    {
+        std::string workingDirectory;
+    }m_preferences;
+    bool m_showPreferences;
+
     void addSystems();
     void loadAssets();
     void createScene();
     void buildUI();
+
+    void openModel();
+    void closeModel();
 };
