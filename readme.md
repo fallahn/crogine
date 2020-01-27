@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/fallahn/crogine.svg?branch=master)](https://travis-ci.org/fallahn/crogine)
+
 CROGINE
 -------
 
