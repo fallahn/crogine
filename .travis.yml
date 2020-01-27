@@ -46,8 +46,10 @@ before_script:
 
 script:
 - mkdir build && cd build
-- cmake ../crogine -G"$GENERATOR" $CMAKE_FLAGS && sudo cmake --build . --target install
-- sudo cmake --build . --target package
+- cmake ../crogine
+- sudo make install
+#- cmake ../crogine -G"$GENERATOR" $CMAKE_FLAGS && sudo cmake --build . --target install
+#- sudo cmake --build . --target package
 
 matrix:
   fast_finish: true
