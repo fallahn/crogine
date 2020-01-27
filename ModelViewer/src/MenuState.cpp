@@ -50,6 +50,7 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Maths.hpp>
 
 namespace
 {
@@ -68,12 +69,16 @@ namespace
             ImGui::EndTooltip();
         }
     }
+
+    const std::array<float, 6> worldScales = { 0.01f, 0.1f, 1.f, 10.f, 100.f, 1000.f };
+    const glm::vec3 DefaultCameraPosition({ 0.f, 1.f, 5.f });
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 	: cro::State        (stack, context),
     m_scene             (context.appInstance.getMessageBus()),
-    m_showPreferences   (false)
+    m_showPreferences   (false),
+    m_showGroundPlane   (true)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -144,12 +149,12 @@ void MenuState::createScene()
     cro::ModelDefinition modelDef;
     modelDef.loadFromFile("assets/models/ground_plane.cmt", m_resources);
 
-    auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
-    modelDef.createModel(entity, m_resources);
+    m_groundPlane = m_scene.createEntity();
+    m_groundPlane.addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
+    modelDef.createModel(m_groundPlane, m_resources);
 
     //position the camera
-    m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 1.f, 5.f });
+    m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(DefaultCameraPosition);
 
     //set the default sunlight properties
     m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 6.f, -5.f });
@@ -159,20 +164,7 @@ void MenuState::createScene()
 
 void MenuState::buildUI()
 {
-    cro::ConfigFile prefs;
-    if (prefs.loadFromFile(prefPath))
-    {
-        const auto& props = prefs.getProperties();
-        for (const auto& prop : props)
-        {
-            auto name = cro::Util::String::toLower(prop.getName());
-            if (name == "working_dir")
-            {
-                m_preferences.workingDirectory = prop.getValue<std::string>();
-            }
-        }
-    }
-
+    loadPrefs();
     registerWindow([&]()
         {
             if(ImGui::BeginMainMenuBar())
@@ -207,6 +199,18 @@ void MenuState::buildUI()
                     }
                     ImGui::MenuItem("Animation Data", nullptr, nullptr);
                     ImGui::MenuItem("Material Data", nullptr, nullptr);
+                    if (ImGui::MenuItem("Ground Plane", nullptr, &m_showGroundPlane))
+                    {
+                        if (m_showGroundPlane)
+                        {
+                            //set this to whichever world scale we're currently using
+                            updateWorldScale();
+                        }
+                        else
+                        {
+                            m_groundPlane.getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
+                        }
+                    }
                     ImGui::EndMenu();
                 }
 
@@ -241,16 +245,53 @@ void MenuState::buildUI()
                         }
                     }
 
+                    ImGui::PushItemWidth(100.f);
+                    //world scale selection
+                    const char* items[] = { "0.01", "0.1", "1", "10", "100", "1000" };
+                    static const char* currentItem = items[m_preferences.unitsPerMetre];
+                    if (ImGui::BeginCombo("World Scale", currentItem))
+                    {
+                        for (auto i = 0u; i < worldScales.size(); ++i)
+                        {
+                            bool selected = (currentItem == items[i]);
+                            if (ImGui::Selectable(items[i], selected))
+                            {
+                                currentItem = items[i];
+                                m_preferences.unitsPerMetre = i;
+                                updateWorldScale();
+                            }
+
+                            if (selected)
+                            {
+                                ImGui::SetItemDefaultFocus();
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
+                    ImGui::PopItemWidth();
+
+                    ImGui::Separator();
+
                     if (!m_showPreferences ||
                         ImGui::Button("Close"))
                     {
-                        cro::ConfigFile prefsOut;
-                        prefsOut.addProperty("working_dir", m_preferences.workingDirectory);
-
-                        prefsOut.save(prefPath);
-
+                        savePrefs();
                         m_showPreferences = false;
                     }
+                }
+                ImGui::End();
+            }
+
+            //model detail window
+            if (m_activeModel.isValid())
+            {
+                ImGui::SetNextWindowSize({ 250.f, 430.f });
+                if (ImGui::Begin("Model Properties"))
+                {
+                    std::string worldScale("World Scale:\n");
+                    worldScale += std::to_string(worldScales[m_preferences.unitsPerMetre]);
+                    worldScale += " units per metre";
+                    ImGui::Text("%s", worldScale.c_str());
                 }
                 ImGui::End();
             }
@@ -300,4 +341,44 @@ void MenuState::closeModel()
     //TODO we might want to remove from any resource manager
     //too else eventually we'll end up with a lot of unused
     //resources if closing  and opening a lot of files.
+}
+
+void MenuState::loadPrefs()
+{
+    cro::ConfigFile prefs;
+    if (prefs.loadFromFile(prefPath))
+    {
+        const auto& props = prefs.getProperties();
+        for (const auto& prop : props)
+        {
+            auto name = cro::Util::String::toLower(prop.getName());
+            if (name == "working_dir")
+            {
+                m_preferences.workingDirectory = prop.getValue<std::string>();
+            }
+            else if (name == "units_per_metre")
+            {
+                m_preferences.unitsPerMetre = cro::Util::Maths::clamp(static_cast<std::size_t>(prop.getValue<std::int32_t>()), std::size_t(0u), worldScales.size());
+            }
+        }
+
+        updateWorldScale();
+    }
+}
+
+void MenuState::savePrefs()
+{
+    cro::ConfigFile prefsOut;
+    prefsOut.addProperty("working_dir", m_preferences.workingDirectory);
+    prefsOut.addProperty("units_per_metre", std::to_string(m_preferences.unitsPerMetre));
+
+    prefsOut.save(prefPath);
+}
+
+void MenuState::updateWorldScale()
+{
+    const float scale = worldScales[m_preferences.unitsPerMetre];
+    m_groundPlane.getComponent<cro::Transform>().setScale({ scale, scale, scale });
+    m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(DefaultCameraPosition * scale);
+    //TODO update Camera position
 }

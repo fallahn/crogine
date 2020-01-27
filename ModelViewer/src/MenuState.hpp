@@ -58,12 +58,15 @@ private:
     cro::ResourceCollection m_resources;
     
     cro::Entity m_activeModel;
+    cro::Entity m_groundPlane;
 
     struct Preferences final
     {
         std::string workingDirectory;
+        std::size_t unitsPerMetre = 2;
     }m_preferences;
     bool m_showPreferences;
+    bool m_showGroundPlane;
 
     void addSystems();
     void loadAssets();
@@ -72,4 +75,9 @@ private:
 
     void openModel();
     void closeModel();
+
+    void loadPrefs();
+    void savePrefs();
+
+    void updateWorldScale();
 };
