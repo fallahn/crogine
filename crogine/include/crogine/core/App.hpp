@@ -183,5 +183,7 @@ namespace cro
         };
         WindowSettings loadSettings();
         void saveSettings();
+
+        void saveScreenshot();
 	};
 }

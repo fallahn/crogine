@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Console.hpp>
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/SysTime.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/gui/imgui.h>
@@ -44,6 +45,10 @@ source distribution.
 #include "../detail/GLCheck.hpp"
 #include "../imgui/imgui_impl_opengl3.h"
 #include "../imgui/imgui_impl_sdl.h"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "../graphics/stb_image_write.h"
+
 
 #include "../audio/AudioRenderer.hpp"
 
@@ -267,6 +272,10 @@ void App::handleEvents()
             {
                 Console::show();
             }
+            else if (evt.key.keysym.sym == SDLK_F5)
+            {
+                saveScreenshot();
+            }
 
             break;
         case SDL_QUIT:
@@ -470,4 +479,32 @@ void App::saveSettings()
     }
 
     saveSettings.save(m_prefPath + cfgName);
+}
+
+void App::saveScreenshot()
+{
+    auto size = m_window.getSize();
+    std::vector<GLubyte> buffer(size.x * size.y * 4);
+    glCheck(glPixelStorei(GL_PACK_ALIGNMENT, 1));
+    glCheck(glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data()));
+
+    //flip row order
+    std::vector<GLubyte> outBuffer(buffer.size());
+
+    const auto rowSize = size.x * 4;
+    auto dst = outBuffer.data();
+    auto src = buffer.data() + ((outBuffer.size()) - rowSize);
+    for (auto i = 0u; i < size.y; ++i)
+    {
+        std::memcpy(dst, src, rowSize);
+        dst += rowSize;
+        src -= rowSize;
+    }
+
+    std::string filename = "screenshot_" + SysTime::dateString() + "_" + SysTime::timeString() + ".png";
+    std::replace(filename.begin(), filename.end(), '/', '_');
+    std::replace(filename.begin(), filename.end(), ':', '_');
+
+    //TODO implement SDL write function for this so that it works on android too
+    stbi_write_png(filename.c_str(), size.x, size.y, 4, outBuffer.data(), size.x * 4);
 }

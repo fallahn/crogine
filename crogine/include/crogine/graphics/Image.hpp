@@ -109,7 +109,7 @@ namespace cro
 
 
     private:
-        glm::uvec2 m_size;
+        glm::uvec2 m_size = glm::uvec2(0);
         ImageFormat::Type m_format;
         std::vector<uint8> m_data;
         bool m_flipped;
