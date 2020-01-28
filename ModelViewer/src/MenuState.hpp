@@ -79,6 +79,17 @@ private:
     void openModel();
     void closeModel();
 
+    struct CMFHeader final
+    {
+        std::uint8_t flags = 0;
+        std::uint8_t arrayCount = 1;
+        std::int32_t arrayOffset = 0;
+        std::vector<std::int32_t> arraySizes;
+    };
+    std::vector<float> m_importedVBO;
+    std::vector<std::vector<std::uint32_t>> m_importedIndexArrays;
+    void importModel();
+
     void loadPrefs();
     void savePrefs();
 

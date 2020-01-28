@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MenuState.hpp"
+#include "OBJ_Loader.h"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
@@ -233,7 +234,10 @@ void MenuState::buildUI()
                         closeModel();
                     }
 
-                    ImGui::MenuItem("Import Model", nullptr, nullptr);
+                    if (ImGui::MenuItem("Import Model", nullptr, nullptr))
+                    {
+                        importModel();
+                    }
                     ImGui::MenuItem("Export Model", nullptr, nullptr);
                     if (ImGui::MenuItem("Quit", nullptr, nullptr))
                     {
@@ -393,6 +397,27 @@ void MenuState::closeModel()
     //TODO we might want to remove from any resource manager
     //too else eventually we'll end up with a lot of unused
     //resources if closing  and opening a lot of files.
+}
+
+void MenuState::importModel()
+{
+    auto path = cro::FileSystem::openFileDialogue(m_preferences.workingDirectory, "obj");
+    if (!path.empty())
+    {
+        //TODO a more comprehensive loader like assimp will support more features,
+        //more file types and more complex vertex data (currently limited to pos, uv and normal)
+        namespace ol = objl;
+        ol::Loader loader;
+        if (loader.LoadFile(path) &&
+            !loader.LoadedMeshes.empty())
+        {
+            CMFHeader header;
+            m_importedIndexArrays.clear();
+            m_importedVBO.clear();
+
+
+        }
+    }
 }
 
 void MenuState::loadPrefs()

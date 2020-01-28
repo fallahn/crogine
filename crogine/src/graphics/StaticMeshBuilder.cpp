@@ -65,9 +65,9 @@ Mesh::Data StaticMeshBuilder::build() const
         readCount = SDL_RWread(m_file, &arrayCount, sizeof(uint8), 1);
         if (checkError(readCount)) return {};
 
-        std::vector<int32> indexOffsets(arrayCount);
+        std::int32_t indexArrayOffset = 0;
         std::vector<int32> indexSizes(arrayCount);
-        readCount = SDL_RWread(m_file, indexOffsets.data(), sizeof(int32), arrayCount);
+        readCount = SDL_RWread(m_file, &indexArrayOffset, sizeof(int32), 1);
         if (checkError(readCount)) return {};
         readCount = SDL_RWread(m_file, indexSizes.data(), sizeof(int32), arrayCount);
         if (checkError(readCount)) return {};
@@ -75,7 +75,7 @@ Mesh::Data StaticMeshBuilder::build() const
         std::size_t headerSize = sizeof(flags) + sizeof(arrayCount) +
             ((sizeof(int32) * arrayCount) * 2);
 
-        std::size_t vboSize = (indexOffsets[0] - headerSize) / sizeof(float);
+        std::size_t vboSize = (indexArrayOffset - headerSize) / sizeof(float);
         std::vector<float> vboData(vboSize);
         readCount = SDL_RWread(m_file, vboData.data(), sizeof(float), vboSize);
         if (checkError(readCount)) return {};

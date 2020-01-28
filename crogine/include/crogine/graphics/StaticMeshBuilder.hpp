@@ -54,26 +54,24 @@ namespace cro
     UV1 - for light mapping
 
     uint8 index array count. The number of index arrays in this mesh
-    currently this is fixed at 1 and exists for possible future use
 
-    int32[indexArrayCount] an array of values representing the offset,
-    in bytes, from the beginning of the file to the beginning of each
-    index array.
+    int32 the offset, in bytes, from the beginning of the file to the
+    beginning of the index array.
 
     int32[indexArrayCount] an array of array sizes. Each value
-    corresponds to the size of each array in the offset array above.
+    corresponds to the size of each array in the offset array.
 
     float[] vbo data. Interleaved vbo data containing each attribute
     marked in the flags byte. Starts at sizeof header, ends at
-    offsetArray[0] - 1. Header size is calculated as:
+    indec array offset - 1. Header size is calculated as:
 
     sizeof(uint8) flags +
     sizeof(unit8) array count + 
-    (sizeof(int32) * array count) +
+    sizeof(int32) array offset +
     (sizeof(int32) * array count)
 
-    uint32[arraySizes[0]] array of uint32 values making up the first
-    index array - followed by any further index arrays
+    uint32[fileSize - arrayOffset] array of concatenated index
+    arrays, the sizes of which are stored in array size array
 
     Be Aware: binary files are little endian (intel) by default.
 
