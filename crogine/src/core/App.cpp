@@ -481,6 +481,12 @@ void App::saveSettings()
     saveSettings.save(m_prefPath + cfgName);
 }
 
+void image_write_func(void* context, void* data, int size)
+{
+    SDL_RWops* file = (SDL_RWops*)context;
+    SDL_RWwrite(file, data, size, 1);
+}
+
 void App::saveScreenshot()
 {
     auto size = m_window.getSize();
@@ -489,22 +495,13 @@ void App::saveScreenshot()
     glCheck(glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data()));
 
     //flip row order
-    std::vector<GLubyte> outBuffer(buffer.size());
-
-    const auto rowSize = size.x * 4;
-    auto dst = outBuffer.data();
-    auto src = buffer.data() + ((outBuffer.size()) - rowSize);
-    for (auto i = 0u; i < size.y; ++i)
-    {
-        std::memcpy(dst, src, rowSize);
-        dst += rowSize;
-        src -= rowSize;
-    }
+    stbi_flip_vertically_on_write(1);
 
     std::string filename = "screenshot_" + SysTime::dateString() + "_" + SysTime::timeString() + ".png";
     std::replace(filename.begin(), filename.end(), '/', '_');
     std::replace(filename.begin(), filename.end(), ':', '_');
 
-    //TODO implement SDL write function for this so that it works on android too
-    stbi_write_png(filename.c_str(), size.x, size.y, 4, outBuffer.data(), size.x * 4);
+    RaiiRWops out;
+    out.file = SDL_RWFromFile(filename.c_str(), "w");
+    stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
 }
