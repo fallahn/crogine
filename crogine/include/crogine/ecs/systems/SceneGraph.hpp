@@ -56,5 +56,6 @@ namespace cro
 
     private:
         void onEntityAdded(Entity) override;
+        void onEntityRemoved(Entity) override;
     };
 }

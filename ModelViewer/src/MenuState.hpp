@@ -59,6 +59,9 @@ private:
     
     cro::Entity m_activeModel;
     cro::Entity m_groundPlane;
+    cro::Entity m_camController;
+
+    float m_zoom;
 
     struct Preferences final
     {

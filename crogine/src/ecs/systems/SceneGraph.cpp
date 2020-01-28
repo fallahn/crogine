@@ -66,6 +66,10 @@ void SceneGraph::process(Time dt)
                     LOG("Failed adding tx to parent - too many children already", Logger::Type::Error);
                 }
             }
+
+            //TODO why remove all children from this parent if we
+            //only wanted to remove the current node??
+
             if (tx.m_lastParent > -1) //remove old parent
             {
                 //remove the parent from all the children
@@ -162,7 +166,54 @@ void SceneGraph::process(Time dt)
 
 void SceneGraph::handleMessage(const Message& msg)
 {
-    std::function<void(std::array<int32, Transform::MaxChildren>&)> destroyChildren = 
+    //std::function<void(std::array<int32, Transform::MaxChildren>&)> destroyChildren = 
+    //    [&, this](std::array<int32, Transform::MaxChildren>& children)
+    //{
+    //    for (auto& c : children)
+    //    {
+    //        if (c > -1)
+    //        {
+    //            auto entity = getScene()->getEntity(c);
+    //            destroyChildren(entity.getComponent<Transform>().m_children);
+    //            //entity.destroy();
+
+    //            getScene()->destroyEntity(entity);
+
+    //            c = -1; //mark the child as gone else the message from destroying this
+    //            //entity will become infinitely recursive...
+    //        }
+    //        else
+    //        {
+    //            break;
+    //        }
+    //    }
+    //};
+    //
+    ////remove all children when an entity dies
+    ////TODO does this entity still exist by the time we get here?
+    //if (msg.id == Message::SceneMessage)
+    //{
+    //    const auto& data = msg.getData<Message::SceneEvent>();
+    //    auto entity = getScene()->getEntity(data.entityID);
+    //    if (entity.hasComponent<Transform>())
+    //    {
+    //        auto& children = entity.getComponent<Transform>().m_children;
+    //        destroyChildren(children);
+    //    }
+    //    //LOG("Removing children from dead entity", Logger::Type::Info);
+    //}
+}
+
+//private
+void SceneGraph::onEntityAdded(Entity entity)
+{
+    //nab our entity's index
+    entity.getComponent<Transform>().m_id = entity.getIndex();
+}
+
+void SceneGraph::onEntityRemoved(Entity entity)
+{
+    std::function<void(std::array<int32, Transform::MaxChildren>&)> destroyChildren =
         [&, this](std::array<int32, Transform::MaxChildren>& children)
     {
         for (auto& c : children)
@@ -171,7 +222,6 @@ void SceneGraph::handleMessage(const Message& msg)
             {
                 auto entity = getScene()->getEntity(c);
                 destroyChildren(entity.getComponent<Transform>().m_children);
-                //entity.destroy();
 
                 getScene()->destroyEntity(entity);
 
@@ -184,25 +234,13 @@ void SceneGraph::handleMessage(const Message& msg)
             }
         }
     };
-    
-    //remove all children when an entity dies
-    //TODO does this entity still exist by the time we get here?
-    if (msg.id == Message::SceneMessage)
-    {
-        const auto& data = msg.getData<Message::SceneEvent>();
-        auto entity = getScene()->getEntity(data.entityID);
-        if (entity.hasComponent<Transform>())
-        {
-            auto& children = entity.getComponent<Transform>().m_children;
-            destroyChildren(children);
-        }
-        //LOG("Removing children from dead entity", Logger::Type::Info);
-    }
-}
 
-//private
-void SceneGraph::onEntityAdded(Entity entity)
-{
-    //nab our entity's index
-    entity.getComponent<Transform>().m_id = entity.getIndex();
+    if (entity.hasComponent<Transform>())
+    {
+        auto& children = entity.getComponent<Transform>().m_children;
+        destroyChildren(children);
+
+        //TODO why would this orphan all siblings too??
+        entity.getComponent<Transform>().removeParent();
+    }
 }

@@ -136,6 +136,21 @@ namespace cro
         */
         glm::mat4 getWorldTransform() const;
 
+        /*!
+        \brief Sets the translation relative to the camera
+        In cases where an object, usually the camera itself, needs
+        to be transformed around a point, set this to true. For
+        example this would be set if creating a 3rd person camera
+        targeted on a player. Set to false by default.
+        */
+        void setRelativeToCamera(bool r) { m_relativeToCamera = r; }
+
+        /*!
+        \brief Returns whether or not this transform is relative to 
+        world coordinates, or the camera.
+        \see setRelativeToCamera()
+        */
+        bool getRelativeToCamera() const { return m_relativeToCamera; }
 
         /*!
         \brief Sets the parent entity if this node in the scene graph.
@@ -160,6 +175,10 @@ namespace cro
         */
         const std::array<int32, MaxChildren>& getChildIDs() const { return m_children; }
 
+        static constexpr glm::vec3 X_AXIS = glm::vec3(1.f, 0.f, 0.f);
+        static constexpr glm::vec3 Y_AXIS = glm::vec3(0.f, 1.f, 0.f);
+        static constexpr glm::vec3 Z_AXIS = glm::vec3(0.f, 0.f, 1.f);
+
     private:
         glm::vec3 m_origin;
         glm::vec3 m_position;
@@ -167,6 +186,8 @@ namespace cro
         glm::quat m_rotation;
         mutable glm::mat4 m_transform;
         mutable glm::mat4 m_worldTransform;
+
+        bool m_relativeToCamera;
 
         int32 m_parent;
         int32 m_lastParent;

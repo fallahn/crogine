@@ -37,16 +37,17 @@ source distribution.
 using namespace cro;
 
 Transform::Transform()
-    : m_origin      (0.f, 0.f, 0.f),
-    m_position      (0.f, 0.f, 0.f),
-    m_scale         (1.f, 1.f, 1.f),
-    m_rotation      (1.f, 0.f, 0.f, 0.f),
-    m_transform     (1.f),
-    m_worldTransform(1.f),
-    m_parent        (-1),
-    m_lastParent    (-1),
-    m_id            (-1),
-    m_dirtyFlags    (0)
+    : m_origin          (0.f, 0.f, 0.f),
+    m_position          (0.f, 0.f, 0.f),
+    m_scale             (1.f, 1.f, 1.f),
+    m_rotation          (1.f, 0.f, 0.f, 0.f),
+    m_transform         (1.f),
+    m_worldTransform    (1.f),
+    m_relativeToCamera  (false),
+    m_parent            (-1),
+    m_lastParent        (-1),
+    m_id                (-1),
+    m_dirtyFlags        (0)
 {
     for(auto& c : m_children) c = -1;
 }
@@ -128,15 +129,23 @@ const glm::mat4& Transform::getLocalTransform() const
 {
     if (m_dirtyFlags & Tx)
     {
-        //m_dirtyFlags &= ~Tx;
-
         glm::mat4 translation = glm::translate(glm::mat4(1.f), m_position);
 
-        auto rotation = glm::toMat4(m_rotation);
-        rotation = glm::scale(rotation, m_scale);
-        rotation = glm::translate(rotation, -m_origin);
+        if (m_relativeToCamera)
+        {
+            auto scale = glm::scale(glm::mat4(1.f), m_scale);
+            scale = glm::translate(scale, -m_origin);
+            scale *= glm::toMat4(m_rotation);
+            m_transform = scale * translation;
+        }
+        else
+        {
+            auto rotation = glm::toMat4(m_rotation);
+            rotation = glm::scale(rotation, m_scale);
+            rotation = glm::translate(rotation, -m_origin);
 
-        m_transform = translation * rotation;
+            m_transform = translation * rotation;
+        }
     }
 
     return m_transform;

@@ -54,6 +54,24 @@ source distribution.
 
 namespace
 {
+    const float DefaultFOV = 35.f * cro::Util::Const::degToRad;
+    const float DefaultFarPlane = 50.f;
+    const float MinZoom = 0.1f;
+    const float MaxZoom = 2.5f;
+
+    void updateView(cro::Entity entity, float farPlane, float fov)
+    {
+        glm::vec2 size(cro::App::getWindow().getSize());
+        size.y = ((size.x / 16.f) * 9.f) / size.y;
+        size.x = 1.f;
+
+        auto& cam3D = entity.getComponent<cro::Camera>();
+        cam3D.projectionMatrix = glm::perspective(fov, 16.f / 9.f, 0.1f, farPlane);
+        cam3D.viewport.bottom = (1.f - size.y) / 2.f;
+        cam3D.viewport.height = size.y;
+    }
+
+
     const std::string prefPath = cro::FileSystem::getConfigDirectory("cro_model_viewer") + "prefs.cfg";
 
     //tooltip for UI
@@ -77,6 +95,7 @@ namespace
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 	: cro::State        (stack, context),
     m_scene             (context.appInstance.getMessageBus()),
+    m_zoom              (1.f),
     m_showPreferences   (false),
     m_showGroundPlane   (true)
 {
@@ -101,6 +120,31 @@ bool MenuState::handleEvent(const cro::Event& evt)
     if(cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
         return true;
+    }
+
+    switch (evt.type)
+    {
+    default: break;
+    case SDL_MOUSEMOTION:
+        if (evt.motion.state & SDL_BUTTON_LMASK)
+        {
+            auto& tx = m_camController.getComponent<cro::Transform>();
+            tx.rotate(cro::Transform::Y_AXIS, static_cast<float>(-evt.motion.xrel / 2) * cro::Util::Const::degToRad);
+            tx.rotate(cro::Transform::X_AXIS, static_cast<float>(-evt.motion.yrel / 2) * cro::Util::Const::degToRad);
+        }
+        else if (evt.motion.state & SDL_BUTTON_MMASK)
+        {
+            auto& tx = m_camController.getComponent<cro::Transform>();
+            tx.move((glm::vec3(-evt.motion.xrel, evt.motion.yrel, 0.f ) / 60.f) * worldScales[m_preferences.unitsPerMetre]);
+        }
+        break;
+    case SDL_MOUSEWHEEL:
+        m_zoom = cro::Util::Maths::clamp(m_zoom - (0.1f * evt.wheel.y), MinZoom, MaxZoom);
+        updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_zoom * DefaultFOV);
+        break;
+    case SDL_WINDOWEVENT_RESIZED:
+        updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_zoom* DefaultFOV);
+        break;
     }
 
     m_scene.forwardEvent(evt);
@@ -153,8 +197,16 @@ void MenuState::createScene()
     m_groundPlane.addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
     modelDef.createModel(m_groundPlane, m_resources);
 
-    //position the camera
-    m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(DefaultCameraPosition);
+    //create the camera - using a custom camera prevents the scene updating the projection on window resize
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition);
+    entity.addComponent<cro::Camera>();
+    updateView(entity, DefaultFarPlane, DefaultFOV);
+    m_scene.setActiveCamera(entity);
+
+    m_camController = m_scene.createEntity();
+    m_camController.addComponent<cro::Transform>().setRelativeToCamera(true);
+    entity.getComponent<cro::Transform>().setParent(m_camController);
 
     //set the default sunlight properties
     m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 6.f, -5.f });
@@ -380,5 +432,7 @@ void MenuState::updateWorldScale()
     const float scale = worldScales[m_preferences.unitsPerMetre];
     m_groundPlane.getComponent<cro::Transform>().setScale({ scale, scale, scale });
     m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(DefaultCameraPosition * scale);
-    //TODO update Camera position
+    
+    m_camController.getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
+    updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_zoom * DefaultFOV);
 }

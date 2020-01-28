@@ -396,9 +396,6 @@
     <ClInclude Include="..\crogine\src\audio\AudioRenderer.hpp">
       <Filter>Header Files\audio</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\src\audio\SDLMixerImpl.hpp">
-      <Filter>Header Files\audio</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\src\audio\PCMData.hpp">
       <Filter>Header Files\audio</Filter>
     </ClInclude>
@@ -699,9 +696,6 @@
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp">
-      <Filter>Source Files\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\SDLMixerImpl.cpp">
       <Filter>Source Files\audio</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\AudioRenderer.cpp">
