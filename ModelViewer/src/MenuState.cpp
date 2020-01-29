@@ -320,7 +320,7 @@ void MenuState::buildUI()
                     //world scale selection
                     const char* items[] = { "0.01", "0.1", "1", "10", "100", "1000" };
                     static const char* currentItem = items[m_preferences.unitsPerMetre];
-                    if (ImGui::BeginCombo("World Scale", currentItem))
+                    if (ImGui::BeginCombo("World Scale (units per metre)", currentItem))
                     {
                         for (auto i = 0u; i < worldScales.size(); ++i)
                         {
@@ -438,7 +438,7 @@ void MenuState::importModel()
 
             for (const auto& mesh : loader.LoadedMeshes)
             {
-                auto indexOffset = m_importedVBO.size() / vertexSize;
+                auto indexOffset = importedVBO.size() / vertexSize;
 
                 for (auto& vertex : mesh.Vertices)
                 {
@@ -462,13 +462,13 @@ void MenuState::importModel()
                     i += indexOffset;
                 }
 
-                header.arraySizes.push_back(static_cast<std::int32_t>(mesh.Indices.size()));
+                header.arraySizes.push_back(static_cast<std::int32_t>(mesh.Indices.size() * sizeof(std::int32_t)));
 
                 header.arrayCount++;
             }
 
             auto indexOffset = sizeof(header.flags) + sizeof(header.arrayCount) + sizeof(header.arrayOffset) + (header.arraySizes.size() * sizeof(std::int32_t));
-            indexOffset += sizeof(float) * m_importedVBO.size();
+            indexOffset += sizeof(float) * importedVBO.size();
             header.arrayOffset = static_cast<std::int32_t>(indexOffset);
 
             if (header.arrayCount > 0 && !importedVBO.empty() && !importedIndexArrays.empty())
