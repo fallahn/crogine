@@ -49,23 +49,7 @@ MeshResource::MeshResource()
 
 MeshResource::~MeshResource()
 {
-    //make sure all the meshes are deaded
-    for (auto& md : m_meshData)
-    {
-        //delete index buffers
-        for (auto& id : md.second.indexData)
-        {
-            if (id.ibo)
-            {
-                glCheck(glDeleteBuffers(1, &id.ibo));
-            }
-        }
-        //delete vertex buffer
-        if (md.second.vbo)
-        {
-            glCheck(glDeleteBuffers(1, &md.second.vbo));
-        }
-    }
+    flush();
 }
 
 //public
@@ -116,4 +100,27 @@ const Mesh::Data MeshResource::getMesh(std::size_t id) const
 {
     CRO_ASSERT(m_meshData.count(id) != 0, "Mesh not found");
     return m_meshData.find(id)->second;
+}
+
+void MeshResource::flush()
+{
+    //make sure all the meshes are deaded
+    for (auto& md : m_meshData)
+    {
+        //delete index buffers
+        for (auto& id : md.second.indexData)
+        {
+            if (id.ibo)
+            {
+                glCheck(glDeleteBuffers(1, &id.ibo));
+            }
+        }
+        //delete vertex buffer
+        if (md.second.vbo)
+        {
+            glCheck(glDeleteBuffers(1, &md.second.vbo));
+        }
+    }
+    m_meshData.clear();
+    autoID = std::numeric_limits<std::size_t>::max();
 }

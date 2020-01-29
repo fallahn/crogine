@@ -83,6 +83,14 @@ namespace cro
         */
         const Mesh::Data getMesh(std::size_t ID) const;
 
+        /*!
+        \brief Forcefully deletes all meshes
+        Generally not needed as this is taken care of when the resource manager
+        is destroyed, but if it is used make sure all entities which have a model
+        components are first completely destroyed and removed from their Scene
+        */
+        void flush();
+
     private:
         std::unordered_map<std::size_t, Mesh::Data> m_meshData;
     };

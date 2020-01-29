@@ -84,9 +84,9 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/MaterialResource.cpp
   ${PROJECT_DIR}/graphics/MeshBuilder.cpp
   ${PROJECT_DIR}/graphics/MeshResource.cpp
+  ${PROJECT_DIR}/graphics/ModelDefinition.cpp
   ${PROJECT_DIR}/graphics/PrimitiveBuilders.cpp
   ${PROJECT_DIR}/graphics/RenderTexture.cpp
-  ${PROJECT_DIR}/graphics/ResourceAutomation.cpp
   ${PROJECT_DIR}/graphics/Shader.cpp
   ${PROJECT_DIR}/graphics/ShaderResource.cpp
   ${PROJECT_DIR}/graphics/Spatial.cpp

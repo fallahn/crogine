@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 
 #include "StateIDs.hpp"
+#include "ImportedMeshBuilder.hpp"
 
 /*!
 Creates a state to render a menu.
@@ -79,16 +80,14 @@ private:
     void openModel();
     void closeModel();
 
-    struct CMFHeader final
-    {
-        std::uint8_t flags = 0;
-        std::uint8_t arrayCount = 1;
-        std::int32_t arrayOffset = 0;
-        std::vector<std::int32_t> arraySizes;
-    };
+    std::int32_t m_defaultMaterial;
+    std::int32_t m_defaultShadowMaterial;
+
+    CMFHeader m_importedHeader;
     std::vector<float> m_importedVBO;
     std::vector<std::vector<std::uint32_t>> m_importedIndexArrays;
     void importModel();
+    void exportModel();
 
     void loadPrefs();
     void savePrefs();

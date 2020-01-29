@@ -36,6 +36,9 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/gui/imgui.h>
 
+#include <crogine/graphics/StaticMeshBuilder.hpp>
+#include <crogine/detail/Types.hpp>
+
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -98,7 +101,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
     m_scene             (context.appInstance.getMessageBus()),
     m_zoom              (1.f),
     m_showPreferences   (false),
-    m_showGroundPlane   (true)
+    m_showGroundPlane   (true),
+    m_defaultMaterial   (0)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -185,7 +189,15 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
+    //create a default material to display models on import
+    auto flags = /*cro::ShaderResource::RxShadows |*/ cro::ShaderResource::DiffuseColour;
+    auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::VertexLit, flags);
+    m_defaultMaterial = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    auto& material = m_resources.materials.get(m_defaultMaterial);
+    material.setProperty("u_colour", cro::Colour(1.f, 0.f, 1.f));
 
+    shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::Skinning | cro::ShaderResource::DepthMap);
+    m_defaultShadowMaterial = m_resources.materials.add(m_resources.shaders.get(shaderID));
 }
 
 void MenuState::createScene()
@@ -238,7 +250,10 @@ void MenuState::buildUI()
                     {
                         importModel();
                     }
-                    ImGui::MenuItem("Export Model", nullptr, nullptr);
+                    if (ImGui::MenuItem("Export Model", nullptr, nullptr, !m_importedVBO.empty()))
+                    {
+                        exportModel();
+                    }
                     if (ImGui::MenuItem("Quit", nullptr, nullptr))
                     {
                         cro::App::quit();
@@ -392,6 +407,9 @@ void MenuState::closeModel()
     if (m_activeModel.isValid())
     {
         m_scene.destroyEntity(m_activeModel);
+
+        m_importedIndexArrays.clear();
+        m_importedVBO.clear();
     }
 
     //TODO we might want to remove from any resource manager
@@ -412,10 +430,123 @@ void MenuState::importModel()
             !loader.LoadedMeshes.empty())
         {
             CMFHeader header;
-            m_importedIndexArrays.clear();
-            m_importedVBO.clear();
+            header.flags |= cro::VertexProperty::Position | cro::VertexProperty::Normal | cro::VertexProperty::UV0;
+            std::vector<std::vector<std::uint32_t>> importedIndexArrays;
+            std::vector<float> importedVBO;
+
+            const std::size_t vertexSize = 8 * sizeof(float);
+
+            for (const auto& mesh : loader.LoadedMeshes)
+            {
+                auto indexOffset = m_importedVBO.size() / vertexSize;
+
+                for (auto& vertex : mesh.Vertices)
+                {
+                    importedVBO.push_back(vertex.Position.X);
+                    importedVBO.push_back(vertex.Position.Y);
+                    importedVBO.push_back(vertex.Position.Z);
+
+                    importedVBO.push_back(vertex.Normal.X);
+                    importedVBO.push_back(vertex.Normal.Y);
+                    importedVBO.push_back(vertex.Normal.Z);
+
+                    importedVBO.push_back(vertex.TextureCoordinate.X);
+                    importedVBO.push_back(vertex.TextureCoordinate.Y);
+                }
+
+                auto& indices = importedIndexArrays.emplace_back(mesh.Indices);
+                //have to offset by how far we're into the vertex array as all verts
+                //have been concatenated.
+                for (auto& i : indices)
+                {
+                    i += indexOffset;
+                }
+
+                header.arraySizes.push_back(static_cast<std::int32_t>(mesh.Indices.size()));
+
+                header.arrayCount++;
+            }
+
+            auto indexOffset = sizeof(header.flags) + sizeof(header.arrayCount) + sizeof(header.arrayOffset) + (header.arraySizes.size() * sizeof(std::int32_t));
+            indexOffset += sizeof(float) * m_importedVBO.size();
+            header.arrayOffset = static_cast<std::int32_t>(indexOffset);
+
+            if (header.arrayCount > 0 && !importedVBO.empty() && !importedIndexArrays.empty())
+            {
+                closeModel();
+                
+                m_importedHeader = header;
+                m_importedIndexArrays.swap(importedIndexArrays);
+                m_importedVBO.swap(importedVBO);
+
+                
+                //TODO check the size and flush after a certain amount
+                //remembering to reload the ground plane..
+                //m_resources.meshes.flush();
+                ImportedMeshBuilder builder(m_importedHeader, m_importedVBO, m_importedIndexArrays);
+                auto meshID = m_resources.meshes.loadMesh(builder);
+
+                m_activeModel = m_scene.createEntity();
+                m_activeModel.addComponent<cro::Transform>();
+                m_activeModel.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_defaultMaterial));
+                m_activeModel.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_defaultShadowMaterial));
+                m_activeModel.addComponent<cro::ShadowCaster>();
 
 
+                //TODO try loading any material properties?
+            }
+            else
+            {
+                cro::Logger::log("Failed opening " + path, cro::Logger::Type::Error);
+                cro::Logger::log("Missing index or vertex data", cro::Logger::Type::Error);
+            }
+        }
+    }
+}
+
+void MenuState::exportModel()
+{
+    //TODO asset we at least have valid header data
+    //prevent accidentally writing a bad file
+
+    auto path = cro::FileSystem::saveFileDialogue("", "cmf");
+    if (!path.empty())
+    {
+        if (cro::FileSystem::getFileExtension(path) != ".cmf")
+        {
+            path += ".cmf";
+        }
+
+        //write binary file
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "wb");
+        if (file.file)
+        {
+            SDL_RWwrite(file.file, &m_importedHeader.flags, sizeof(CMFHeader::flags), 1);
+            SDL_RWwrite(file.file, &m_importedHeader.arrayCount, sizeof(CMFHeader::arrayCount), 1);
+            SDL_RWwrite(file.file, &m_importedHeader.arrayOffset, sizeof(CMFHeader::arrayOffset), 1);
+            SDL_RWwrite(file.file, m_importedHeader.arraySizes.data(), sizeof(std::int32_t), m_importedHeader.arraySizes.size());
+            SDL_RWwrite(file.file, m_importedVBO.data(), sizeof(float), m_importedVBO.size());
+            for (const auto& indices : m_importedIndexArrays)
+            {
+                SDL_RWwrite(file.file, indices.data(), sizeof(std::uint32_t), indices.size());
+            }
+
+            //create config file and save as cmt
+            auto modelName = cro::FileSystem::getFileName(path);
+            modelName = modelName.substr(0, modelName.find_last_of('.'));
+
+            auto meshPath = path.substr(m_preferences.workingDirectory.length() + 1);
+            std::replace(meshPath.begin(), meshPath.end(), '\\', '/');
+
+            cro::ConfigFile cfg("model", modelName);
+            cfg.addProperty("mesh", meshPath);
+            //cfg.addProperty("cast_shadows", "true"); //TODO this should be an option
+            auto material = cfg.addObject("material", "VertexLit");
+            material->addProperty("colour", "1,0,1,1");
+            //TODO grab all the material properties from the editor
+            path.back() = 't';
+            cfg.save(path);
         }
     }
 }

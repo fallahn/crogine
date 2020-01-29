@@ -78,6 +78,8 @@ namespace cro
         RaiiRWops() : file(nullptr) {}
         RaiiRWops(const RaiiRWops&) = delete;
         RaiiRWops& operator = (const RaiiRWops&) = delete;
-        //TODO this should be moveable but it's just a util
+        
+        RaiiRWops(RaiiRWops&&) = default;
+        RaiiRWops& operator = (RaiiRWops&&) = default;
     };
 }

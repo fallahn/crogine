@@ -51,7 +51,7 @@ void MeshBuilder::createVBO(Mesh::Data& meshData, const std::vector<float>& vert
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
-void MeshBuilder::createIBO(Mesh::Data& meshData, void* idxData, std::size_t idx, int32 dataSize)
+void MeshBuilder::createIBO(Mesh::Data& meshData, const void* idxData, std::size_t idx, int32 dataSize)
 {
     glCheck(glGenBuffers(1, &meshData.indexData[idx].ibo));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[idx].ibo));

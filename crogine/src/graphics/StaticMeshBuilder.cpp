@@ -73,7 +73,7 @@ Mesh::Data StaticMeshBuilder::build() const
         if (checkError(readCount)) return {};
 
         std::size_t headerSize = sizeof(flags) + sizeof(arrayCount) +
-            ((sizeof(int32) * arrayCount) * 2);
+            sizeof(indexArrayOffset) + ((sizeof(int32) * arrayCount));
 
         std::size_t vboSize = (indexArrayOffset - headerSize) / sizeof(float);
         std::vector<float> vboData(vboSize);

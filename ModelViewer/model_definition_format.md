@@ -1,12 +1,12 @@
 Model Definition Format
 -----------------------
 
-Models in crogine are described in a text format that can be loaded via the MeshDefinition class. The text format used is the same as that used by all configuration files (loaded with the ConfigFile/ConfigObj classes), to describe a special set of model properties. The following properties are used but often not all at the same time, to describe a model to be loaded by crogine.
+Models in crogine are described in a text format that can be loaded via the `ModelDefinition` class. The text format used is the same as that used by all configuration files (loaded with the `ConfigFile/ConfigObj` class), to describe a special set of model properties. The following properties are used but often not all at the same time, to describe a model to be loaded by crogine.
 
     //root node. All models require the model root node, along with a name, containing no spaces
     model <model_name>
     {
-        //the mesh property. This can be a path in quotation to a mesh file
+        //the mesh property. This can be a path in quotation marks to a mesh file
         //or the name of an auto-generated primitive. For example:
 
         mesh = "path/to/model.cmf"
@@ -20,7 +20,7 @@ Models in crogine are described in a text format that can be loaded via the Mesh
         //Inter Quake Models - more about authoring those can be founde at http://sauerbraten.org/iqm/
 
         //primitive types are: sphere, cube and quad. Sphere meshes also expect a radius property with a float
-        //value greater an 0. Cubes are a;ways 1x1x1 units in size (subject to change). Quads require two
+        //value greater an 0. Cubes are always 1x1x1 units in size (subject to change). Quads require two
         //properties: size and uv. For example:
         size = 2,3.4
         uv = 0.5,1
@@ -40,7 +40,7 @@ Models in crogine are described in a text format that can be loaded via the Mesh
             //supplies a path to a texture to be used for this material
             diffuse = "path/to/image.png"
 
-            //supplies a colour to multiply the material out by. This will
+            //supplies a colour to multiply the material output by. This will
             //either affect the colour output of the diffuse texture, or
             //set the colour if the material. Colour is a 4 component normalised value
             colour = 1,0.65,0.8,1
@@ -52,7 +52,7 @@ Models in crogine are described in a text format that can be loaded via the Mesh
             //for *.iqm format meshes with skeletal animation this should be set to true, else it can be omitted
             skinned = true
 
-            //if a rim property is supplied then rim-view lighting will be applied to the material.
+            //if a rim property is supplied then rim lighting will be applied to the material.
             //the rim property contains a 4 component normalised colour value, and can have an
             //optional rim_falloff property applied which affects the strength of the rim light effect
             rim = 1,0.9,0.89,1

@@ -249,7 +249,7 @@
     <ClCompile Include="..\crogine\src\graphics\postprocess\PostProcess.cpp" />
     <ClCompile Include="..\crogine\src\graphics\PrimitiveBuilders.cpp" />
     <ClCompile Include="..\crogine\src\graphics\RenderTexture.cpp" />
-    <ClCompile Include="..\crogine\src\graphics\ResourceAutomation.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\ModelDefinition.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Shader.cpp" />
     <ClCompile Include="..\crogine\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Spatial.cpp" />

@@ -662,9 +662,6 @@
     <ClCompile Include="..\crogine\src\core\ConfigFile.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\ResourceAutomation.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\systems\CollisionSystem.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
@@ -799,6 +796,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\core\SysTime.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\ModelDefinition.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
