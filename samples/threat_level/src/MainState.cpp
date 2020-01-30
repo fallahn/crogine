@@ -331,7 +331,8 @@ void MainState::createMenus()
     auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
-        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
+        LOG("Fix me!!", cro::Logger::Type::Info);
+        /*const auto& children = e.getComponent<cro::Transform>().getChildIDs();
         std::size_t i = 0;
         while (children[i] != -1)
         {
@@ -345,12 +346,13 @@ void MainState::createMenus()
             {
                 child.getComponent<cro::Sprite>().setColour(textColourSelected);
             }
-        }
+        }*/
     });
     auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
-        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
+        LOG("Fix me!!", cro::Logger::Type::Info);
+        /*const auto& children = e.getComponent<cro::Transform>().getChildIDs();
         std::size_t i = 0;
         while (children[i] != -1)
         {
@@ -364,7 +366,7 @@ void MainState::createMenus()
             {
                 child.getComponent<cro::Sprite>().setColour(textColourNormal);
             }
-        }
+        }*/
     });
 
     createMainMenu(mouseEnterCallback, mouseExitCallback, spriteSheetButtons, spriteSheetIcons);

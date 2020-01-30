@@ -231,45 +231,19 @@ void GameOverState::load()
 
     auto activeArea = sprites.getSprite("button_active").getTextureRect();
     auto& gameControl = entity.addComponent<cro::UIInput>();
-    gameControl.callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback([&,activeArea]
-    (cro::Entity e, glm::vec2)
+    gameControl.callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
+        [&,activeArea, iconEnt, textEnt](cro::Entity e, glm::vec2) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(activeArea);
-        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
-        std::size_t i = 0;
-        while (children[i] != -1)
-        {
-            auto c = children[i++];
-            auto child = m_uiScene.getEntity(c);
-            if (child.hasComponent<cro::Text>())
-            {
-                child.getComponent<cro::Text>().setColour(textColourSelected);
-            }
-            else if (child.hasComponent<cro::Sprite>())
-            {
-                child.getComponent<cro::Sprite>().setColour(textColourSelected);
-            }
-        }
+        iconEnt.getComponent<cro::Sprite>().setColour(textColourSelected);
+        textEnt.getComponent<cro::Text>().setColour(textColourSelected);
     });
-    gameControl.callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback([&, area]
-    (cro::Entity e, glm::vec2)
+    gameControl.callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
+        [&, area, iconEnt, textEnt](cro::Entity e, glm::vec2) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(area);
-        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
-        std::size_t i = 0;
-        while (children[i] != -1)
-        {
-            auto c = children[i++];
-            auto child = m_uiScene.getEntity(c);
-            if (child.hasComponent<cro::Text>())
-            {
-                child.getComponent<cro::Text>().setColour(textColourNormal);
-            }
-            else if (child.hasComponent<cro::Sprite>())
-            {
-                child.getComponent<cro::Sprite>().setColour(textColourNormal);
-            }
-        }
+        iconEnt.getComponent<cro::Sprite>().setColour(textColourNormal);
+        textEnt.getComponent<cro::Text>().setColour(textColourNormal);
     });
     gameControl.callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([&]
     (cro::Entity, cro::uint64 flags)

@@ -105,20 +105,21 @@ void NpcWeaponSystem::handleMessage(const cro::Message& msg)
                 break;
             case Npc::Elite:
             {
-                auto laserEntID = getScene()->getEntity(data.entityID).getComponent<cro::Transform>().getChildIDs()[0];
+                //auto laserEntID = getScene()->getEntity(data.entityID).getComponent<cro::Transform>().getChildIDs()[0];
 
-                auto id = getScene()->getEntity(laserEntID).getComponent<cro::Transform>().getChildIDs()[0];
-                auto childEnt = getScene()->getEntity(id);
-                childEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
-                childEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
-
-                id = getScene()->getEntity(laserEntID).getComponent<cro::Transform>().getChildIDs()[1];
-                childEnt = getScene()->getEntity(id);
-                //don't place here as we'll collide too soon
+                //auto id = getScene()->getEntity(laserEntID).getComponent<cro::Transform>().getChildIDs()[0];
+                //auto childEnt = getScene()->getEntity(id);
                 //childEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
-                childEnt.getComponent<cro::Sprite>().setColour(cro::Colour::White());
+                //childEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
 
-                m_activeLasers.push_back(laserEntID);
+                //id = getScene()->getEntity(laserEntID).getComponent<cro::Transform>().getChildIDs()[1];
+                //childEnt = getScene()->getEntity(id);
+                ////don't place here as we'll collide too soon
+                ////childEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
+                //childEnt.getComponent<cro::Sprite>().setColour(cro::Colour::White());
+
+                //m_activeLasers.push_back(laserEntID);
+                LOG("Elite lasers are disabled", cro::Logger::Type::Info);
             }
                 break;
             case Npc::Choppa:
@@ -145,21 +146,21 @@ void NpcWeaponSystem::handleMessage(const cro::Message& msg)
             if (entity.getComponent<Npc>().type == Npc::Elite)
             {
                 //kill any firing weapons
-                auto laser = std::find_if(std::begin(m_activeLasers), std::end(m_activeLasers),
-                    [&, data](cro::int32 id)
-                {
-                    return getScene()->getEntity(id).getComponent<cro::Transform>().getParentID() == data.entityID;
-                });
+                //auto laser = std::find_if(std::begin(m_activeLasers), std::end(m_activeLasers),
+                //    [&, data](cro::int32 id)
+                //{
+                //    return getScene()->getEntity(id).getComponent<cro::Transform>().getParentID() == data.entityID;
+                //});
 
-                if (laser != m_activeLasers.end())
-                {
-                    //move the entities out of shot
-                    auto laserEnt = getScene()->getEntity(*laser);
-                    getScene()->getEntity(laserEnt.getComponent<cro::Transform>().getChildIDs()[0]).getComponent<cro::Transform>().setPosition({ 0.f, -200.f, 0.f });
-                    getScene()->getEntity(laserEnt.getComponent<cro::Transform>().getChildIDs()[1]).getComponent<cro::Transform>().setPosition({ 0.f, -200.f, 0.f });
+                //if (laser != m_activeLasers.end())
+                //{
+                //    //move the entities out of shot
+                //    auto laserEnt = getScene()->getEntity(*laser);
+                //    getScene()->getEntity(laserEnt.getComponent<cro::Transform>().getChildIDs()[0]).getComponent<cro::Transform>().setPosition({ 0.f, -200.f, 0.f });
+                //    getScene()->getEntity(laserEnt.getComponent<cro::Transform>().getChildIDs()[1]).getComponent<cro::Transform>().setPosition({ 0.f, -200.f, 0.f });
 
-                    m_activeLasers.erase(laser);
-                }
+                //    m_activeLasers.erase(laser);
+                //}
             }
         }
     }
@@ -220,42 +221,44 @@ void NpcWeaponSystem::processPulse(std::size_t& idx, float dt)
 
 void NpcWeaponSystem::processLaser(cro::Entity entity) 
 {
-    auto orbEnt = getScene()->getEntity(entity.getComponent<cro::Transform>().getChildIDs()[0]);
-    auto laserEnt = getScene()->getEntity(entity.getComponent<cro::Transform>().getChildIDs()[1]);
-    
-    //fade in orb
-    auto buns = glm::length2(laserEnt.getComponent<cro::Transform>().getPosition());
-    if (buns > 0.2)
-    {
-        auto alpha = orbEnt.getComponent<cro::Sprite>().getColour().getAlpha();
-        alpha = std::min(1.f, alpha + (fixedStep/* * 2.f*/));
-        orbEnt.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 1.f, 1.f, alpha));
+    //TODO disabled until I can be bothered to refactor
 
-        if (alpha == 1)
-        {
-            laserEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
-        }
-        //LOG(std::to_string(buns), cro::Logger::Type::Info);
-    }
-    else //fade out
-    {
-        //fade out laser
-        float alpha = laserEnt.getComponent<cro::Sprite>().getColour().getAlpha();
+    //auto orbEnt = getScene()->getEntity(entity.getComponent<cro::Transform>().getChildIDs()[0]);
+    //auto laserEnt = getScene()->getEntity(entity.getComponent<cro::Transform>().getChildIDs()[1]);
+    //
+    ////fade in orb
+    //auto buns = glm::length2(laserEnt.getComponent<cro::Transform>().getPosition());
+    //if (buns > 0.2)
+    //{
+    //    auto alpha = orbEnt.getComponent<cro::Sprite>().getColour().getAlpha();
+    //    alpha = std::min(1.f, alpha + (fixedStep/* * 2.f*/));
+    //    orbEnt.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 1.f, 1.f, alpha));
 
-        alpha = std::max(0.f, alpha - (fixedStep * 2.f));
-        laserEnt.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 1.f, 1.f, alpha));
-        orbEnt.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 1.f, 1.f, alpha));
+    //    if (alpha == 1)
+    //    {
+    //        laserEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
+    //    }
+    //    //LOG(std::to_string(buns), cro::Logger::Type::Info);
+    //}
+    //else //fade out
+    //{
+    //    //fade out laser
+    //    float alpha = laserEnt.getComponent<cro::Sprite>().getColour().getAlpha();
 
-        if (alpha == 0) //remove if complete
-        {
-            //move sprites out of the way
-            orbEnt.getComponent<cro::Transform>().setPosition({ 0.f, -50.f, 0.f });
-            laserEnt.getComponent<cro::Transform>().setPosition({ 0.f, -50.f, 0.f });
+    //    alpha = std::max(0.f, alpha - (fixedStep * 2.f));
+    //    laserEnt.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 1.f, 1.f, alpha));
+    //    orbEnt.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 1.f, 1.f, alpha));
 
-            m_activeLasers.erase(std::find(m_activeLasers.begin(), m_activeLasers.end(), entity.getIndex()));
-        }
-        //LOG("Fade out", cro::Logger::Type::Info);
-    }
+    //    if (alpha == 0) //remove if complete
+    //    {
+    //        //move sprites out of the way
+    //        orbEnt.getComponent<cro::Transform>().setPosition({ 0.f, -50.f, 0.f });
+    //        laserEnt.getComponent<cro::Transform>().setPosition({ 0.f, -50.f, 0.f });
+
+    //        m_activeLasers.erase(std::find(m_activeLasers.begin(), m_activeLasers.end(), entity.getIndex()));
+    //    }
+    //    //LOG("Fade out", cro::Logger::Type::Info);
+    //}
 }
 
 void NpcWeaponSystem::processOrb(std::size_t& idx, float dt)

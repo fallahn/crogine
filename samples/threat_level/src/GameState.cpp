@@ -469,6 +469,7 @@ void GameState::createHUD()
         emp.currentTime += dt.asSeconds();
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_time", emp.currentTime);
     };
+    entity.getComponent<HudItem>().child = pulseEnt;
 
 
 #ifdef PLATFORM_MOBILE
@@ -723,7 +724,7 @@ void GameState::loadModels()
     m_modelDefs[GameModelID::Buddy].createModel(buddyEnt, m_resources);
     axisEnt.getComponent<cro::Transform>().addChild(buddyEnt.addComponent<cro::Transform>());
     buddyEnt.getComponent<cro::Transform>().setPosition({ 0.f, 1.8f, 0.f });
-    buddyEnt.addComponent<Buddy>();
+    buddyEnt.addComponent<Buddy>().parent = axisEnt;
     buddyEnt.addComponent<cro::ParticleEmitter>().emitterSettings.loadFromFile("assets/particles/buddy_smoke.cps", m_resources.textures);
     auto& buddyRot = buddyEnt.addComponent<Rotator>();
     buddyRot.speed = -4.f;
@@ -911,12 +912,14 @@ void GameState::loadModels()
     chunkEntityA.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>()); //attach to scenery
     m_modelDefs[GameModelID::TurretBase].createModel(entity, m_resources);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::TurretA;
+    entity.addComponent<Family>().parent = chunkEntityA;
 
     auto canEnt = m_scene.createEntity();
     entity.getComponent<cro::Transform>().addChild(canEnt.addComponent<cro::Transform>());
     m_modelDefs[GameModelID::TurretCannon].createModel(canEnt, m_resources);
     canEnt.addComponent<Npc>().type = Npc::Turret;
     canEnt.addComponent<cro::PhysicsObject>().addShape(turrShape);
+    entity.getComponent<Family>().child = canEnt;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
@@ -924,12 +927,14 @@ void GameState::loadModels()
     chunkEntityB.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>()); //attach to scenery
     m_modelDefs[GameModelID::TurretBase].createModel(entity, m_resources);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::TurretB;
+    entity.addComponent<Family>().parent = chunkEntityB;
 
     canEnt = m_scene.createEntity();
     entity.getComponent<cro::Transform>().addChild(canEnt.addComponent<cro::Transform>());
     m_modelDefs[GameModelID::TurretCannon].createModel(canEnt, m_resources);
     canEnt.addComponent<Npc>().type = Npc::Turret;
     canEnt.addComponent<cro::PhysicsObject>().addShape(turrShape);
+    entity.getComponent<Family>().child = canEnt;
 
     //weaver
     glm::vec3 weaverScale(0.35f);

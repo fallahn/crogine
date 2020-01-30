@@ -104,9 +104,9 @@ void BuddySystem::process(cro::Time dt)
 void BuddySystem::processInit(float dt, cro::Entity entity)
 {
     //when reached final position transmit spawn message
-    auto parent = entity.getComponent<cro::Transform>().getParentID();
+    auto parent = entity.getComponent<Buddy>().parent;
     
-    auto& tx = getScene()->getEntity(parent).getComponent<cro::Transform>();
+    auto& tx = parent.getComponent<cro::Transform>();
     tx.move(-tx.getPosition() * dt * 5.f);
 
     if (glm::length2(tx.getPosition()) < 0.1f)
@@ -141,8 +141,8 @@ void BuddySystem::processActive(float dt, cro::Entity entity)
         msg->type = BuddyEvent::Died;
         msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
 
-        auto parent = entity.getComponent<cro::Transform>().getParentID();
-        getScene()->getEntity(parent).getComponent<cro::Transform>().setPosition({ -25.f, 0.f, 0.f });
+        auto parent = entity.getComponent<Buddy>().parent;
+        parent.getComponent<cro::Transform>().setPosition({ -25.f, 0.f, 0.f });
 
         //stop particle effect
         entity.getComponent<cro::ParticleEmitter>().stop();

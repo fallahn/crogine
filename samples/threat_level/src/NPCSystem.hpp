@@ -111,6 +111,14 @@ struct Npc final
     WeaverNavigator weaver;
 };
 
+//used to reference associated
+//entities with turrets
+struct Family final
+{
+    cro::Entity parent;
+    cro::Entity child;
+};
+
 class NpcSystem final : public cro::System
 {
 public:

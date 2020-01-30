@@ -109,7 +109,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
             cmd.action = [data](cro::Entity entity, cro::Time)
             {
                 auto& tx = entity.getComponent<cro::Transform>();
-                if (tx.getParentID() == data.entityID)
+                if (entity.getComponent<Family>().parent.getIndex() == data.entityID)
                 {
                     //this our man. Or woman. Turret.
                     tx.setPosition({ data.position, 0.f });
@@ -249,7 +249,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
                     deathMsg->npcType = Npc::Turret;
                     deathMsg->type = NpcEvent::Died;
                     deathMsg->position = oldPos;
-                    deathMsg->entityID = tx.getChildIDs()[0];
+                    deathMsg->entityID = entity.getComponent<Family>().child.getIndex();
                 };
                 sendCommand(cmd);
 
@@ -498,7 +498,7 @@ void NpcDirector::process(cro::Time dt)
             if (entity.getComponent<cro::Model>().isVisible())
             {
                 const auto& tx = entity.getComponent<cro::Transform>();
-                float rotation = getScene().getEntity(tx.getChildIDs()[0]).getComponent<cro::Transform>().getRotation().z;
+                float rotation = entity.getComponent<Family>().child.getComponent<cro::Transform>().getRotation().z;
 
                 for (auto i = 0u; i < 2; ++i)
                 {

@@ -160,7 +160,8 @@ void PauseState::load()
     auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
-        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
+        LOG("Fix me!!", cro::Logger::Type::Info);
+        /*const auto& children = e.getComponent<cro::Transform>().getChildIDs();
         std::size_t i = 0;
         while (children[i] != -1)
         {
@@ -174,26 +175,27 @@ void PauseState::load()
             {
                 child.getComponent<cro::Sprite>().setColour(textColourSelected);
             }
-        }
+        }*/
     });
     auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
-        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
-        std::size_t i = 0;
-        while (children[i] != -1)
-        {
-            auto c = children[i++];
-            auto child = m_uiScene.getEntity(c);
-            if (child.hasComponent<cro::Text>())
-            {
-                child.getComponent<cro::Text>().setColour(textColourNormal);
-            }
-            else if (child.hasComponent<cro::Sprite>())
-            {
-                child.getComponent<cro::Sprite>().setColour(textColourNormal);
-            }
-        }
+        LOG("Fix me!!", cro::Logger::Type::Info);
+        //const auto& children = e.getComponent<cro::Transform>().getChildIDs();
+        //std::size_t i = 0;
+        //while (children[i] != -1)
+        //{
+        //    auto c = children[i++];
+        //    auto child = m_uiScene.getEntity(c);
+        //    if (child.hasComponent<cro::Text>())
+        //    {
+        //        child.getComponent<cro::Text>().setColour(textColourNormal);
+        //    }
+        //    else if (child.hasComponent<cro::Sprite>())
+        //    {
+        //        child.getComponent<cro::Sprite>().setColour(textColourNormal);
+        //    }
+        //}
     });
 
 

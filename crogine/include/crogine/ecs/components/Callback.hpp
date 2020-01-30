@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/Config.hpp>
 
 #include <functional>
+#include <any>
 
 namespace cro
 {
@@ -47,5 +48,6 @@ namespace cro
     {
         bool active = false; //!< disabling callbacks when not in use can avoid unnecessary cache misses looking up callback functions
         CallbackFunction function;
+        std::any userData;
     };
 }
