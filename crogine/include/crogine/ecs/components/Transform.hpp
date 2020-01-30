@@ -37,7 +37,6 @@ source distribution.
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
-#include <array>
 #include <vector>
 
 namespace cro
@@ -54,13 +53,19 @@ namespace cro
             MaxChildren = 16
         };
 
-        /*!
-        TODO this needs to be non-copyable at the least
-        probably with special move operator to account for
-        the fact copies of parented transforms will try to
-        occupy the same child slot in the parent as their clone.
-        */
+
         Transform();
+        Transform(const Transform&) = delete;
+        //moving takes on all the properties of
+        //the existing transform including the
+        //parental hierarchy, and resets the existing
+        //transform to an identity.
+        Transform(Transform&&) noexcept;
+
+        Transform& operator = (const Transform&) = delete;
+        Transform& operator = (Transform&&) noexcept;
+
+        ~Transform();
 
         /*!
         \brief Sets the origin of the transform
@@ -153,27 +158,17 @@ namespace cro
         bool getRelativeToCamera() const { return m_relativeToCamera; }
 
         /*!
-        \brief Sets the parent entity if this node in the scene graph.
-        Parents must have a Transform component
+        \brief Adds the given transform as a child, if there is room
+        No more than MaxChildren may be added to any one transform.
+        \returns false if child was not successfully added
         */
-        void setParent(Entity);
+        bool addChild(Transform& tx);
 
         /*!
-        \brief Removes the parent entity if it exists so that this
-        and all child nodes are orphaned
+        \brief Removes the given child if it exists.
         */
-        void removeParent();
+        void removeChild(Transform& tx);
 
-        /*!
-        \brief Returns the ID of the entity to which this transform's
-        Entity is parented.
-        */
-        int32 getParentID() const { return m_parent; }
-
-        /*!
-        \brief Returns a read-only list of child IDs
-        */
-        const std::array<int32, MaxChildren>& getChildIDs() const { return m_children; }
 
         static constexpr glm::vec3 X_AXIS = glm::vec3(1.f, 0.f, 0.f);
         static constexpr glm::vec3 Y_AXIS = glm::vec3(0.f, 1.f, 0.f);
@@ -185,15 +180,12 @@ namespace cro
         glm::vec3 m_scale;
         glm::quat m_rotation;
         mutable glm::mat4 m_transform;
-        mutable glm::mat4 m_worldTransform;
 
         bool m_relativeToCamera;
 
-        int32 m_parent;
-        int32 m_lastParent;
-        int32 m_id;
-        std::array<int32, MaxChildren> m_children = {};
-        std::vector<int32> m_removedChildren;
+        Transform* m_parent;
+        std::vector<Transform*> m_children = {};
+
 
         enum Flags
         {
@@ -204,19 +196,6 @@ namespace cro
         };
         mutable uint8 m_dirtyFlags;
 
-        friend class SceneGraph;
-
-        /*!
-        \brief Sets the child node at the given index.
-        \param id ID of the entity to add as a child.
-        No more than MaxChildren may be added to any one transform.
-        \returns false if child was not successfully added
-        */
-        bool addChild(uint32 id);
-
-        /*!
-        \brief Removes a child with the given entity ID if it exists.
-        */
-        void removeChild(uint32 id);
+        void reset();
     };
 }

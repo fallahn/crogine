@@ -64,7 +64,6 @@ source distribution.
 #include <crogine/graphics/IqmBuilder.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
-#include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -245,7 +244,6 @@ void GameState::addSystems()
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::SpriteAnimator>(mb);
-    m_scene.addSystem<cro::SceneGraph>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
@@ -265,7 +263,6 @@ void GameState::addSystems()
     m_uiScene.addSystem<HudSystem>(mb);
     m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
-    m_uiScene.addSystem<cro::SceneGraph>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::ModelRenderer>(mb);
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
@@ -399,7 +396,7 @@ void GameState::createHUD()
     entity.addComponent<cro::Transform>().setPosition({ uiRes.x - (size.x + UIPadding), uiRes.y - (size.y * 1.5f), 0.f });
 
     auto innerEntity = m_uiScene.createEntity();
-    innerEntity.addComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(innerEntity.addComponent<cro::Transform>());
     innerEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bar_inside");
     innerEntity.addComponent<HudItem>().type = HudItem::Type::HealthBar;
 
@@ -461,7 +458,7 @@ void GameState::createHUD()
 
     //pulse effect on EMP icon
     auto pulseEnt = m_uiScene.createEntity();
-    pulseEnt.addComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(pulseEnt.addComponent<cro::Transform>());
     pulseEnt.getComponent<cro::Transform>().setScale(glm::vec3(40.f));
     pulseEnt.getComponent<cro::Transform>().setPosition({ spriteSize.x / 2.f, spriteSize.y / 2.f, 0.f });
     pulseEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::EmpQuad), m_resources.materials.get(MaterialID::EmpBlast));
@@ -582,7 +579,7 @@ void GameState::createHUD()
     spriteEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bullet1");
     spriteSize = spriteEntity.getComponent<cro::Sprite>().getSize() / 2.f;
     spriteEntity.addComponent<cro::Transform>().setOrigin({ spriteSize.x, spriteSize.y, 0.f });
-    spriteEntity.getComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(spriteEntity.getComponent<cro::Transform>());
     spriteEntity.addComponent<cro::CommandTarget>().ID = CommandID::HudElement;
     spriteEntity.addComponent<HudItem>().type = HudItem::Type::TimerIcon;
 
@@ -708,14 +705,14 @@ void GameState::loadModels()
     //shield
     entity = m_scene.createEntity();
     m_modelDefs[GameModelID::PlayerShield].createModel(entity, m_resources);
-    entity.addComponent<cro::Transform>().setParent(playerEntity);
+    playerEntity.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
     entity.addComponent<Rotator>().speed = 1.f;
     entity.getComponent<Rotator>().axis.z = 1.f;
     playerEntity.getComponent<PlayerInfo>().shieldEntity = entity.getIndex();
 
     //buddy bonus
     auto axisEnt = m_scene.createEntity();
-    axisEnt.addComponent<cro::Transform>().setParent(playerEntity);
+    playerEntity.getComponent<cro::Transform>().addChild(axisEnt.addComponent<cro::Transform>());
     axisEnt.getComponent<cro::Transform>().setPosition({ -25.f, 0.f, 0.f });
     axisEnt.addComponent<cro::CommandTarget>().ID = CommandID::Buddy;
     auto& axisRotate = axisEnt.addComponent<Rotator>();
@@ -724,7 +721,7 @@ void GameState::loadModels()
 
     auto buddyEnt = m_scene.createEntity();
     m_modelDefs[GameModelID::Buddy].createModel(buddyEnt, m_resources);
-    buddyEnt.addComponent<cro::Transform>().setParent(axisEnt);
+    axisEnt.getComponent<cro::Transform>().addChild(buddyEnt.addComponent<cro::Transform>());
     buddyEnt.getComponent<cro::Transform>().setPosition({ 0.f, 1.8f, 0.f });
     buddyEnt.addComponent<Buddy>();
     buddyEnt.addComponent<cro::ParticleEmitter>().emitterSettings.loadFromFile("assets/particles/buddy_smoke.cps", m_resources.textures);
@@ -843,7 +840,7 @@ void GameState::loadModels()
     entity.addComponent<cro::ParticleEmitter>().emitterSettings = smokeEmitter;
 
     weaponEntity = m_scene.createEntity(); //weapon sprites are added below
-    weaponEntity.addComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(weaponEntity.addComponent<cro::Transform>());
     weaponEntity.getComponent<cro::Transform>().move({ -0.6f, -0.1f, 0.f });
     weaponEntity.addComponent<NpcWeapon>().type = NpcWeapon::Laser;
     weaponEntity.getComponent<NpcWeapon>().damage = 1.f;
@@ -911,12 +908,12 @@ void GameState::loadModels()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f }); //places off screen to start
     entity.getComponent<cro::Transform>().setScale({ 0.3f, 0.3f, 0.3f });
-    entity.getComponent<cro::Transform>().setParent(chunkEntityA); //attach to scenery
+    chunkEntityA.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>()); //attach to scenery
     m_modelDefs[GameModelID::TurretBase].createModel(entity, m_resources);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::TurretA;
 
     auto canEnt = m_scene.createEntity();
-    canEnt.addComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(canEnt.addComponent<cro::Transform>());
     m_modelDefs[GameModelID::TurretCannon].createModel(canEnt, m_resources);
     canEnt.addComponent<Npc>().type = Npc::Turret;
     canEnt.addComponent<cro::PhysicsObject>().addShape(turrShape);
@@ -924,12 +921,12 @@ void GameState::loadModels()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
     entity.getComponent<cro::Transform>().setScale({ 0.3f, 0.3f, 0.3f });
-    entity.getComponent<cro::Transform>().setParent(chunkEntityB); //attach to scenery
+    chunkEntityB.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>()); //attach to scenery
     m_modelDefs[GameModelID::TurretBase].createModel(entity, m_resources);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::TurretB;
 
     canEnt = m_scene.createEntity();
-    canEnt.addComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(canEnt.addComponent<cro::Transform>());
     m_modelDefs[GameModelID::TurretCannon].createModel(canEnt, m_resources);
     canEnt.addComponent<Npc>().type = Npc::Turret;
     canEnt.addComponent<cro::PhysicsObject>().addShape(turrShape);
@@ -1070,7 +1067,7 @@ void GameState::loadWeapons()
     entity.addComponent<cro::Transform>().setScale(laserScale);
     entity.getComponent<cro::Transform>().setPosition(glm::vec3(-9.3f));
     //entity.getComponent<cro::Transform>().setOrigin({ 0.f, size.y / 2.f, 0.f });
-    entity.getComponent<cro::Transform>().setParent(playerEntity);
+    playerEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     cro::PhysicsShape laserPhys;
     laserPhys.type = cro::PhysicsShape::Type::Box;
@@ -1116,7 +1113,7 @@ void GameState::loadWeapons()
     laserEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
     size = laserEnt.getComponent<cro::Sprite>().getSize();
     laserEnt.addComponent<cro::Transform>().setScale(laserScale);
-    laserEnt.getComponent<cro::Transform>().setParent(weaponEntity);
+    weaponEntity.getComponent<cro::Transform>().addChild(laserEnt.getComponent<cro::Transform>());
     laserEnt.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, cro::Util::Const::PI);
     laserEnt.getComponent<cro::Transform>().setOrigin({ 0.f, size.y / 2.f, 0.f });
     laserEnt.getComponent<cro::Transform>().setPosition({ 0.f, -50.f, 0.f });
@@ -1137,7 +1134,7 @@ void GameState::loadWeapons()
     orbEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("npc_orb");
     orbEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
     size = orbEnt.getComponent<cro::Sprite>().getSize();
-    orbEnt.addComponent<cro::Transform>().setParent(weaponEntity);
+    weaponEntity.getComponent<cro::Transform>().addChild(orbEnt.addComponent<cro::Transform>());
     orbEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.01f)); //approx orbScale * 1/eliteScale. So many magic numbers!!!
     orbEnt.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
     orbEnt.getComponent<cro::Transform>().setPosition({ 0.f, -50.f, 0.f });

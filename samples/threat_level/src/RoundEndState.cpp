@@ -42,7 +42,6 @@ source distribution.
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
-#include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 
@@ -134,7 +133,6 @@ void RoundEndState::load()
 
     m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
     commandSystem = &m_uiScene.addSystem<cro::CommandSystem>(mb);
-    m_uiScene.addSystem<cro::SceneGraph>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
@@ -177,7 +175,7 @@ void RoundEndState::load()
     gameText.setCharSize(TextLarge);
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
     gameTextTx.setPosition({ 40.f, 100.f, 0.f });
-    gameTextTx.setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(gameTextTx);
     /*auto iconEnt = m_uiScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);
     iconEnt.getComponent<cro::Transform>().setPosition({ area.width - buttonIconOffset, 0.f, 0.f });

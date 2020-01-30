@@ -34,7 +34,6 @@ source distribution.
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
-#include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/DebugInfo.hpp>
 

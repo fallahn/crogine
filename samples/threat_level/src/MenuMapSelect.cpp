@@ -54,7 +54,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
 {
     auto menuController = m_menuScene.createEntity();
     menuController.addComponent<cro::Transform>().setPosition({ 0.f, buttonPosition, 0.f });
-    menuController.getComponent<cro::Transform>().setParent(parentEnt);
+    parentEnt.getComponent<cro::Transform>().addChild(menuController.getComponent<cro::Transform>());
     menuController.addComponent<Slider>();
     menuController.addComponent<cro::CommandTarget>().ID = CommandID::MapSelectController;
 
@@ -68,7 +68,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("caves_normal");
     auto size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
-    entity.getComponent<cro::Transform>().setParent(menuController);
+    menuController.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().move({ -720.f, 0.f, 0.f });
 
     auto normalRect = spriteSheet.getSprite("caves_normal").getTextureRect();
@@ -102,7 +102,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     textEnt.getComponent<cro::Text>().setColour(textColourNormal);
     textEnt.getComponent<cro::Text>().setCharSize(32);
     textEnt.addComponent<cro::Transform>();
-    textEnt.getComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
     textEnt.getComponent<cro::Transform>().move({ 25.f, 56.f, 0.f });
 
     //forest button
@@ -110,7 +110,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("forest_normal");
     size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
-    entity.getComponent<cro::Transform>().setParent(menuController);
+    menuController.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().move({ -240.f, 0.f, 0.f });
 
     normalRect = spriteSheet.getSprite("forest_normal").getTextureRect();
@@ -142,7 +142,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     lockEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("padlock");
     size = lockEnt.getComponent<cro::Sprite>().getSize();
     lockEnt.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
-    lockEnt.getComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(lockEnt.getComponent<cro::Transform>());
     lockEnt.getComponent<cro::Transform>().setPosition({ normalRect.width / 2.f, normalRect.height / 2.f, 0.1f });
 
     textEnt = m_menuScene.createEntity();
@@ -151,7 +151,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     textEnt.getComponent<cro::Text>().setColour(textColourNormal);
     textEnt.getComponent<cro::Text>().setCharSize(32);
     textEnt.addComponent<cro::Transform>();
-    textEnt.getComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
     textEnt.getComponent<cro::Transform>().move({ 25.f, 56.f, 0.f });
 
     //desert button
@@ -159,7 +159,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("desert_normal");
     size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
-    entity.getComponent<cro::Transform>().setParent(menuController);
+    menuController.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().move({ 240.f, 0.f, 0.f });
 
     normalRect = spriteSheet.getSprite("desert_normal").getTextureRect();
@@ -191,7 +191,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     lockEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("padlock");
     size = lockEnt.getComponent<cro::Sprite>().getSize();
     lockEnt.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
-    lockEnt.getComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(lockEnt.getComponent<cro::Transform>());
     lockEnt.getComponent<cro::Transform>().setPosition({ normalRect.width / 2.f, normalRect.height / 2.f, 0.1f });
 
     textEnt = m_menuScene.createEntity();
@@ -200,7 +200,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     textEnt.getComponent<cro::Text>().setColour(textColourNormal);
     textEnt.getComponent<cro::Text>().setCharSize(32);
     textEnt.addComponent<cro::Transform>();
-    textEnt.getComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
     textEnt.getComponent<cro::Transform>().move({ 25.f, 56.f, 0.f });
 
     //comin soon button
@@ -208,7 +208,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("empty_normal");
     size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
-    entity.getComponent<cro::Transform>().setParent(menuController);
+    menuController.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().move({ 720.f, 0.f, 0.f });
 
     normalRect = spriteSheet.getSprite("empty_normal").getTextureRect();
@@ -236,7 +236,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     textEnt.getComponent<cro::Text>().setColour(textColourNormal);
     textEnt.getComponent<cro::Text>().setCharSize(32);
     textEnt.addComponent<cro::Transform>();
-    textEnt.getComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
     textEnt.getComponent<cro::Transform>().move({ 25.f, 56.f, 0.f });
 
     //back button
@@ -247,7 +247,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& quitTx = entity.addComponent<cro::Transform>();
     quitTx.setPosition({ 0.f, 1080.f - 480.f, 0.f });
-    quitTx.setParent(parentEnt);
+    parentEnt.getComponent<cro::Transform>().addChild(quitTx);
     quitTx.setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
 
     textEnt = m_menuScene.createEntity();
@@ -256,12 +256,12 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     textEnt.getComponent<cro::Text>().setColour(textColourNormal);
     textEnt.getComponent<cro::Text>().setCharSize(60);
     textEnt.addComponent<cro::Transform>();
-    textEnt.getComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
     textEnt.getComponent<cro::Transform>().move({ 40.f, 100.f, 0.f });
 
 
     auto iconEnt = m_menuScene.createEntity();
-    iconEnt.addComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(iconEnt.addComponent<cro::Transform>());
     iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
     iconEnt.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("back");
 

@@ -47,7 +47,6 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
-#include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
@@ -97,12 +96,13 @@ namespace
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
-	: cro::State        (stack, context),
-    m_scene             (context.appInstance.getMessageBus()),
-    m_zoom              (1.f),
-    m_showPreferences   (false),
-    m_showGroundPlane   (true),
-    m_defaultMaterial   (0)
+	: cro::State            (stack, context),
+    m_scene                 (context.appInstance.getMessageBus()),
+    m_zoom                  (1.f),
+    m_showPreferences       (false),
+    m_showGroundPlane       (true),
+    m_defaultMaterial       (0),
+    m_defaultShadowMaterial (0)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -181,7 +181,6 @@ void MenuState::addSystems()
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
-    m_scene.addSystem<cro::SceneGraph>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
@@ -190,7 +189,7 @@ void MenuState::addSystems()
 void MenuState::loadAssets()
 {
     //create a default material to display models on import
-    auto flags = /*cro::ShaderResource::RxShadows |*/ cro::ShaderResource::DiffuseColour;
+    auto flags = cro::ShaderResource::DiffuseColour;
     auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::VertexLit, flags);
     m_defaultMaterial = m_resources.materials.add(m_resources.shaders.get(shaderID));
     auto& material = m_resources.materials.get(m_defaultMaterial);
@@ -219,7 +218,8 @@ void MenuState::createScene()
 
     m_camController = m_scene.createEntity();
     m_camController.addComponent<cro::Transform>().setRelativeToCamera(true);
-    entity.getComponent<cro::Transform>().setParent(m_camController);
+    m_camController.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //set the default sunlight properties
     m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 6.f, -5.f });

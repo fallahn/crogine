@@ -96,7 +96,6 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DebugInfo.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ParticleSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ProjectionMapSystem.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SceneGraph.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ModelRenderer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ShadowMapRenderer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SkeletalAnimator.hpp" />
@@ -228,7 +227,6 @@
     <ClCompile Include="..\crogine\src\ecs\systems\DebugInfo.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ParticleSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ProjectionMapSystem.cpp" />
-    <ClCompile Include="..\crogine\src\ecs\systems\SceneGraph.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ModelRenderer.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ShadowMapRenderer.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\SkeletalAnimator.cpp" />
