@@ -59,7 +59,7 @@ namespace cro
     beginning of the index array.
 
     int32[indexArrayCount] an array of array sizes. Each value
-    corresponds to the size of each array in the offset array.
+    corresponds to the size of each array in the offset array, in bytes.
 
     float[] vbo data. Interleaved vbo data containing each attribute
     marked in the flags byte. Starts at sizeof header, ends at

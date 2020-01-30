@@ -545,8 +545,15 @@ void MenuState::exportModel()
             auto material = cfg.addObject("material", "VertexLit");
             material->addProperty("colour", "1,0,1,1");
             //TODO grab all the material properties from the editor
+
+
             path.back() = 't';
-            cfg.save(path);
+            
+            //TODO make this an option so we don't accidentally overwrite files
+            if (!cro::FileSystem::fileExists(path))
+            {
+                cfg.save(path);
+            }
         }
     }
 }
