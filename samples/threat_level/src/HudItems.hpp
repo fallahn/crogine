@@ -30,6 +30,8 @@ source distribution.
 #ifndef TL_HUD_ITEMS_HPP_
 #define TL_HUD_ITEMS_HPP_
 
+#include <crogine/ecs/System.hpp>
+
 namespace cro
 {
     class Model;
@@ -51,9 +53,8 @@ struct HudItem final
 
     float value = 100.f;
     bool active = false;
+    cro::Entity child;
 };
-
-#include <crogine/ecs/System.hpp>
 
 class HudSystem final : public cro::System
 {

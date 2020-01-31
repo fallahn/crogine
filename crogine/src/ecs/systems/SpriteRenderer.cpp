@@ -234,7 +234,7 @@ void SpriteRenderer::process(Time)
 
         //if (sprite.m_visible)
         {
-            auto tx = entities[i].getComponent<Transform>();
+            auto& tx = entities[i].getComponent<Transform>();
             //if depth sorted set Z to -Y
             if (m_depthAxis == DepthAxis::Y)
             {

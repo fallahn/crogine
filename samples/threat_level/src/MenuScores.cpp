@@ -34,7 +34,6 @@ source distribution.
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
-#include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/DebugInfo.hpp>
 
@@ -93,7 +92,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     auto size = backgroundEnt.getComponent<cro::Sprite>().getSize();
     backgroundEnt.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y, 0.f });
     backgroundEnt.getComponent<cro::Transform>().setPosition({ 0.f, 140.f, -10.f });
-    backgroundEnt.getComponent<cro::Transform>().setParent(controlEntity);
+    controlEntity.getComponent<cro::Transform>().addChild(backgroundEnt.getComponent<cro::Transform>());
 
     auto textEnt = m_menuScene.createEntity();
     auto& titleText = textEnt.addComponent<cro::Text>(menuFont);
@@ -102,14 +101,14 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     titleText.setCharSize(TextMedium);
     auto& titleTextTx = textEnt.addComponent<cro::Transform>();
     titleTextTx.setPosition({ -84.f, 110.f, 0.f });
-    titleTextTx.setParent(controlEntity);
+    controlEntity.getComponent<cro::Transform>().addChild(titleTextTx);
 
 
     auto entity = m_menuScene.createEntity();
     entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& backTx = entity.addComponent<cro::Transform>();
     backTx.setPosition({ 0.f, -480.f, 0.f });
-    backTx.setParent(controlEntity);
+    controlEntity.getComponent<cro::Transform>().addChild(backTx);
     backTx.setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
 
     textEnt = m_menuScene.createEntity();
@@ -118,12 +117,12 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     backText.setColour(textColourNormal);
     backText.setCharSize(TextLarge);
     auto& backTexTx = textEnt.addComponent<cro::Transform>();
-    backTexTx.setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(backTexTx);
     backTexTx.move({ 40.f, 100.f, 0.f });
 
 
     auto iconEnt = m_menuScene.createEntity();
-    iconEnt.addComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(iconEnt.addComponent<cro::Transform>());
     iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
     iconEnt.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("back");
 
@@ -197,7 +196,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     }
 
     entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Transform>().setParent(controlEntity);
+    controlEntity.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
     entity.addComponent<cro::Text>(scoreboardFont).setString(scoreString);
     entity.getComponent<cro::Text>().setCharSize(TextLarge);
     entity.getComponent<cro::Text>().setColour(textColourSelected);
@@ -303,7 +302,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("arrow_inactive");
     size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
-    entity.getComponent<cro::Transform>().setParent(controlEntity);
+    controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setPosition({ (croppingArea.width / 2.f) + (size.x / 2.f) /** 0.89f*/, 60.f, 0.f });
 
     entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = arrowEnter;
@@ -339,7 +338,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
 
     entity = m_menuScene.createEntity();
     entity.addComponent<cro::Sprite>() = upArrow.getComponent<cro::Sprite>();
-    entity.addComponent<cro::Transform>().setParent(controlEntity);
+    controlEntity.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setOrigin(upArrow.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::Transform>().setPosition(upArrow.getComponent<cro::Transform>().getPosition());
     entity.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, cro::Util::Const::PI);

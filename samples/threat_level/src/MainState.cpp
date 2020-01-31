@@ -47,7 +47,6 @@ source distribution.
 #include <crogine/ecs/components/ShadowCaster.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
-#include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
@@ -178,7 +177,6 @@ void MainState::addSystems()
     m_backgroundScene.addSystem<RotateSystem>(mb);
     m_backgroundScene.addSystem<DriftSystem>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
-    m_backgroundScene.addSystem<cro::SceneGraph>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     //m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
@@ -192,7 +190,6 @@ void MainState::addSystems()
     m_menuScene.addSystem<SliderSystem>(mb);
     //m_menuScene.addSystem<RotateSystem>(mb);
     m_menuScene.addSystem<cro::CallbackSystem>(mb);
-    m_menuScene.addSystem<cro::SceneGraph>(mb);
     m_menuScene.addSystem<cro::CameraSystem>(mb);
     m_menuScene.addSystem<cro::SpriteRenderer>(mb);
     m_menuScene.addSystem<cro::TextRenderer>(mb);
@@ -236,13 +233,13 @@ void MainState::createScene()
     auto moonAxis = m_backgroundScene.createEntity();
     auto& moonAxisTx = moonAxis.addComponent<cro::Transform>();
     moonAxisTx.setOrigin({ 0.f, 0.f, -5.6f });
-    moonAxisTx.setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(moonAxisTx);
     
     auto moonEntity = m_backgroundScene.createEntity();
     auto& moonTx = moonEntity.addComponent<cro::Transform>();
     moonTx.setScale(glm::vec3(0.34f));
     //moonTx.setOrigin({ 11.f, 0.f, 0.f });
-    moonTx.setParent(moonAxis);
+    moonAxisTx.addChild(moonTx);
     m_modelDefs[MenuModelID::Moon].createModel(moonEntity, m_resources);
     auto& moonRotator = moonEntity.addComponent<Rotator>();
     moonRotator.axis.y = 1.f;
@@ -252,7 +249,7 @@ void MainState::createScene()
     auto& arcticTx = arcticEntity.addComponent<cro::Transform>();
     arcticTx.setScale(glm::vec3(0.8f));
     arcticTx.setOrigin({ 5.8f, 0.f, 5.f });
-    arcticTx.setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(arcticTx);
     m_modelDefs[MenuModelID::ArcticPost].createModel(arcticEntity, m_resources);
     arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::TestStream)).play(true);
     //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
@@ -263,13 +260,13 @@ void MainState::createScene()
     auto& lookoutTx = lookoutEntity.addComponent<cro::Transform>();
     lookoutTx.setScale(glm::vec3(0.7f));
     lookoutTx.setOrigin({ -8.f, 0.f, 2.f });
-    lookoutTx.setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(lookoutTx);
     m_modelDefs[MenuModelID::LookoutBase].createModel(lookoutEntity, m_resources);
     //lookoutEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
     
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
-    roidEntity.getComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(roidEntity.getComponent<cro::Transform>());
     m_modelDefs[MenuModelID::Roids].createModel(roidEntity, m_resources);
     auto& roidRotator = roidEntity.addComponent<Rotator>();
     roidRotator.speed = -0.03f;
@@ -334,7 +331,8 @@ void MainState::createMenus()
     auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
-        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
+        LOG("Fix me!!", cro::Logger::Type::Info);
+        /*const auto& children = e.getComponent<cro::Transform>().getChildIDs();
         std::size_t i = 0;
         while (children[i] != -1)
         {
@@ -348,12 +346,13 @@ void MainState::createMenus()
             {
                 child.getComponent<cro::Sprite>().setColour(textColourSelected);
             }
-        }
+        }*/
     });
     auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, glm::vec2)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
-        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
+        LOG("Fix me!!", cro::Logger::Type::Info);
+        /*const auto& children = e.getComponent<cro::Transform>().getChildIDs();
         std::size_t i = 0;
         while (children[i] != -1)
         {
@@ -367,7 +366,7 @@ void MainState::createMenus()
             {
                 child.getComponent<cro::Sprite>().setColour(textColourNormal);
             }
-        }
+        }*/
     });
 
     createMainMenu(mouseEnterCallback, mouseExitCallback, spriteSheetButtons, spriteSheetIcons);

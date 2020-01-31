@@ -42,14 +42,138 @@ Transform::Transform()
     m_scale             (1.f, 1.f, 1.f),
     m_rotation          (1.f, 0.f, 0.f, 0.f),
     m_transform         (1.f),
-    m_worldTransform    (1.f),
     m_relativeToCamera  (false),
-    m_parent            (-1),
-    m_lastParent        (-1),
-    m_id                (-1),
+    m_parent            (nullptr),
     m_dirtyFlags        (0)
 {
-    for(auto& c : m_children) c = -1;
+
+}
+
+Transform::Transform(Transform&& other) noexcept
+    : m_origin          (0.f, 0.f, 0.f),
+    m_position          (0.f, 0.f, 0.f),
+    m_scale             (1.f, 1.f, 1.f),
+    m_rotation          (1.f, 0.f, 0.f, 0.f),
+    m_transform         (1.f),
+    m_relativeToCamera  (false),
+    m_parent            (nullptr),
+    m_dirtyFlags        (0)
+{
+    if (other.m_parent != this)
+    {
+        //orphan any children
+        for (auto c : m_children)
+        {
+            c->m_parent = nullptr;
+        }
+
+        //and adopt new
+        m_parent = other.m_parent;
+
+        other.m_parent = nullptr;
+
+        //swap ourself into siblings list
+        if (m_parent)
+        {
+            auto& siblings = m_parent->m_children;
+            for (auto i = 0u; i < siblings.size(); ++i)
+            {
+                if (siblings[i] == &other)
+                {
+                    siblings[i] = this;
+                    break;
+                }
+            }
+        }
+        m_children = std::move(other.m_children);
+
+        //update the children's new parent
+        for (auto* c : m_children)
+        {
+            CRO_ASSERT(c != this, "we already exist in the child list!");
+
+            c->m_parent = this;
+        }
+
+        //actually take on the other transform
+        setPosition(other.getPosition());
+        setRotation(other.getRotation());
+        setScale(other.getScale());
+        setOrigin(other.getOrigin());
+        setRelativeToCamera(other.getRelativeToCamera());
+        m_dirtyFlags = Flags::Tx;
+
+        other.reset();
+    }
+}
+
+Transform& Transform::operator=(Transform&& other) noexcept
+{
+    if (&other != this && other.m_parent != this)
+    {
+        //orphan any children
+        for (auto c : m_children)
+        {
+            c->m_parent = nullptr;
+        }
+
+        m_parent = other.m_parent;
+
+        other.m_parent = nullptr;
+
+        //swap ourself into siblings list
+        if (m_parent)
+        {
+            auto& siblings = m_parent->m_children;
+            for (auto i = 0u; i < siblings.size(); ++i)
+            {
+                if (siblings[i] == &other)
+                {
+                    siblings[i] = this;
+                    break;
+                }
+            }
+        }
+
+        m_children = std::move(other.m_children);
+
+        //update the children's new parent
+        for (auto c : m_children)
+        {
+            CRO_ASSERT(c != this, "we already exist in the child list!");
+            c->m_parent = this;
+        }
+
+        //actually take on the other transform
+        setPosition(other.getPosition());
+        setRotation(other.getRotation());
+        setScale(other.getScale());
+        setOrigin(other.getOrigin());
+        m_dirtyFlags = Flags::Tx;
+
+        other.reset();
+    }
+    return *this;
+}
+
+Transform::~Transform()
+{
+    //remove this transform from its parent
+    if (m_parent)
+    {
+        auto& siblings = m_parent->m_children;
+        siblings.erase(
+            std::remove_if(siblings.begin(), siblings.end(),
+                [this](const Transform* ptr)
+                {return ptr == this; }),
+            siblings.end());
+    }
+
+    //orphan any children
+    for (auto c : m_children)
+    {
+        c->m_parent = nullptr;
+    }
 }
 
 //public
@@ -153,66 +277,68 @@ const glm::mat4& Transform::getLocalTransform() const
 
 glm::mat4 Transform::getWorldTransform() const
 {
-    return (m_parent > -1) ? m_worldTransform : getLocalTransform();
-}
-
-void Transform::setParent(Entity parent)
-{
-    /*if you're setting this and getting apparently no transform at all remember to add a SceneGraph system*/
-    
-    CRO_ASSERT(parent.hasComponent<Transform>(), "Parent must have a transform component");
-    CRO_ASSERT(parent.getIndex() != m_id, "Can't parent to ourself!");
-    int32 newID = parent.getIndex();
-    if (m_parent == newID) return;
-
-    m_lastParent = m_parent;
-    m_parent = newID;
-
-    m_dirtyFlags |= Parent;
-}
-
-void Transform::removeParent()
-{
-    m_lastParent = m_parent;
-    m_parent = -1;
-    m_dirtyFlags |= Parent;
-}
-
-bool Transform::addChild(uint32 id)
-{
-    auto freeSlot = std::find_if(std::begin(m_children), std::end(m_children), [id](int32 i) {return (i == -1 || i == id); });
-    if (freeSlot != std::end(m_children))
+    if (m_parent)
     {
-        if (*freeSlot > -1)
-        {
-            m_removedChildren.push_back(*freeSlot);
-        }
-        
-        *freeSlot = id;
-        //we have to sort these descending so negative values are last
-        std::sort(std::begin(m_children), std::end(m_children), [](int32 i, int32 j) { return i > j; });
+        return m_parent->getWorldTransform() * getLocalTransform();
+    }
+    return getLocalTransform();
+}
 
-        //mark for update
-        m_dirtyFlags |= Child;
+bool Transform::addChild(Transform& child)
+{
+    CRO_ASSERT(&child != this, "can't parent to ourselves");
+
+    if (m_children.size() < MaxChildren)
+    {
+        //remove any existing parent
+        if (child.m_parent)
+        {
+            if (child.m_parent == this)
+            {
+                return true; //already added!
+            }
+
+            auto& otherSiblings = child.m_parent->m_children;
+            otherSiblings.erase(std::remove_if(otherSiblings.begin(), otherSiblings.end(),
+                [&child](const Transform* ptr)
+                {
+                    return ptr == &child;
+                }), otherSiblings.end());
+        }
+        child.m_parent = this;
+
+        m_children.push_back(&child);
+
         return true;
     }
+    Logger::log("Could not add child transform, max children has been reached");
     return false;
 }
 
-void Transform::removeChild(uint32 id)
+void Transform::removeChild(Transform& tx)
 {
-    auto freeSlot = std::find(std::begin(m_children), std::end(m_children), id);
-    if (freeSlot != std::end(m_children))
-    {
-        //if (*freeSlot > -1)
+    if (tx.m_parent != this) return;
+
+    tx.m_parent = nullptr;
+
+    m_children.erase(std::remove_if(m_children.begin(), m_children.end(),
+        [&tx](const Transform* ptr)
         {
-            m_removedChildren.push_back(*freeSlot);
-        }
-        *freeSlot = -1;
-    }
+            return ptr == &tx;
+        }), m_children.end());
+}
 
-    std::sort(std::begin(m_children), std::end(m_children), [](int32 i, int32 j) { return i > j; });
+//private
+void Transform::reset()
+{
+    m_origin = glm::vec3(0.f, 0.f, 0.f);
+    m_position = glm::vec3(0.f, 0.f, 0.f);
+    m_scale = glm::vec3(1.f, 1.f, 1.f);
+    m_rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
+    m_transform = glm::mat4(1.f);
+    m_relativeToCamera = false;
+    m_parent = nullptr;
+    m_dirtyFlags = 0;
 
-    //mark for update
-    m_dirtyFlags |= Child;
+    m_children.clear();
 }

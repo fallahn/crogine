@@ -149,7 +149,7 @@ void TextRenderer::process(Time dt)
             text.m_dirtyFlags &= ~Text::Colours;
         }
 
-        auto tx = entities[i].getComponent<Transform>();
+        const auto& tx = entities[i].getComponent<Transform>();
 
         //get current transforms
         std::size_t buffIdx = (i > MaxTexts) ? i % MaxTexts : 0;

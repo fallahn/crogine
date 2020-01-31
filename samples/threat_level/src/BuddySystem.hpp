@@ -40,6 +40,7 @@ struct Buddy final
     }state = Inactive;
     float fireTime = 0.f;
     float lifespan = 0.f;
+    cro::Entity parent;
 };
 
 class BuddySystem final : public cro::System

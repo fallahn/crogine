@@ -255,9 +255,6 @@
     <ClInclude Include="..\crogine\include\crogine\util\Constants.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SceneGraph.hpp">
-      <Filter>Header Files\ecs\systems</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\src\detail\GLCheck.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
@@ -595,9 +592,6 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\core\Clock.cpp">
       <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\ecs\systems\SceneGraph.cpp">
-      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\Font.cpp">
       <Filter>Source Files\graphics</Filter>

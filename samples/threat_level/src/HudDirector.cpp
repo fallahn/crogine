@@ -77,7 +77,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
                          entity.getComponent<cro::Sprite>().setColour(cro::Colour::Cyan());
                          if (hudItem.type == HudItem::Type::Emp)
                          {
-                             auto childEnt = getScene().getEntity(entity.getComponent<cro::Transform>().getChildIDs()[0]);
+                             auto childEnt = hudItem.child;
                              childEnt.getComponent<cro::Callback>().active = true;
                          }
                     }
@@ -95,7 +95,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
                 if (hudItem.type == HudItem::Type::Emp)
                 {
                     entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
-                    auto childEnt = getScene().getEntity(entity.getComponent<cro::Transform>().getChildIDs()[0]);
+                    auto childEnt = hudItem.child;
                     childEnt.getComponent<cro::Callback>().active = false;
                     childEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_time", 0.f);
                 }
@@ -147,7 +147,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
                 if (hudItem.type == HudItem::Type::Emp)
                 {
                     entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
-                    auto childEnt = getScene().getEntity(entity.getComponent<cro::Transform>().getChildIDs()[0]);
+                    auto childEnt = hudItem.child;
                     childEnt.getComponent<cro::Callback>().active = false;
                     childEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_time", 0.f);
                 }

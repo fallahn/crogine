@@ -38,7 +38,6 @@ source distribution.
 #include <crogine/ecs/components/CommandID.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 
-#include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
@@ -176,7 +175,6 @@ void GameOverState::load()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
-    m_uiScene.addSystem<cro::SceneGraph>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
@@ -225,53 +223,27 @@ void GameOverState::load()
     gameText.setCharSize(TextLarge);
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
     gameTextTx.setPosition({ 40.f, 100.f, 0.f });
-    gameTextTx.setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(gameTextTx);
     auto iconEnt = m_uiScene.createEntity();
-    iconEnt.addComponent<cro::Transform>().setParent(entity);
+    entity.getComponent<cro::Transform>().addChild(iconEnt.addComponent<cro::Transform>());
     iconEnt.getComponent<cro::Transform>().setPosition({ area.width - buttonIconOffset, 0.f, 0.f });
     iconEnt.addComponent<cro::Sprite>() = icons.getSprite("menu");
 
     auto activeArea = sprites.getSprite("button_active").getTextureRect();
     auto& gameControl = entity.addComponent<cro::UIInput>();
-    gameControl.callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback([&,activeArea]
-    (cro::Entity e, glm::vec2)
+    gameControl.callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
+        [&,activeArea, iconEnt, textEnt](cro::Entity e, glm::vec2) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(activeArea);
-        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
-        std::size_t i = 0;
-        while (children[i] != -1)
-        {
-            auto c = children[i++];
-            auto child = m_uiScene.getEntity(c);
-            if (child.hasComponent<cro::Text>())
-            {
-                child.getComponent<cro::Text>().setColour(textColourSelected);
-            }
-            else if (child.hasComponent<cro::Sprite>())
-            {
-                child.getComponent<cro::Sprite>().setColour(textColourSelected);
-            }
-        }
+        iconEnt.getComponent<cro::Sprite>().setColour(textColourSelected);
+        textEnt.getComponent<cro::Text>().setColour(textColourSelected);
     });
-    gameControl.callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback([&, area]
-    (cro::Entity e, glm::vec2)
+    gameControl.callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
+        [&, area, iconEnt, textEnt](cro::Entity e, glm::vec2) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(area);
-        const auto& children = e.getComponent<cro::Transform>().getChildIDs();
-        std::size_t i = 0;
-        while (children[i] != -1)
-        {
-            auto c = children[i++];
-            auto child = m_uiScene.getEntity(c);
-            if (child.hasComponent<cro::Text>())
-            {
-                child.getComponent<cro::Text>().setColour(textColourNormal);
-            }
-            else if (child.hasComponent<cro::Sprite>())
-            {
-                child.getComponent<cro::Sprite>().setColour(textColourNormal);
-            }
-        }
+        iconEnt.getComponent<cro::Sprite>().setColour(textColourNormal);
+        textEnt.getComponent<cro::Text>().setColour(textColourNormal);
     });
     gameControl.callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([&]
     (cro::Entity, cro::uint64 flags)
@@ -338,13 +310,13 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     textEnt.getComponent<cro::Text>().setColour(textColourSelected);
 
     auto textSize = textEnt.getComponent<cro::Text>().getLocalBounds();
-    textEnt.addComponent<cro::Transform>().setParent(parentEnt);
+    parentEnt.getComponent<cro::Transform>().addChild(textEnt.addComponent<cro::Transform>());
     textEnt.getComponent<cro::Transform>().setOrigin({ textSize.width / 2.f, -textSize.height, 0.f });
 
     auto boxEnt = m_uiScene.createEntity();
     boxEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("textbox_inactive");
     auto textArea = boxEnt.getComponent<cro::Sprite>().getLocalBounds();
-    boxEnt.addComponent<cro::Transform>().setParent(parentEnt);
+    parentEnt.getComponent<cro::Transform>().addChild(boxEnt.addComponent<cro::Transform>());
     boxEnt.getComponent<cro::Transform>().setOrigin({ textArea.width / 2.f, textArea.height, 0.f });
     boxEnt.addComponent<cro::UIInput>().area = textArea;
     inactiveArea = boxEnt.getComponent<cro::Sprite>().getTextureRect();
@@ -366,7 +338,7 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     inputEnt.addComponent<cro::Text>(font).setString(names[cro::Util::Random::value(0, names.size()-1)]);
     inputEnt.getComponent<cro::Text>().setCharSize(TextLarge);
     inputEnt.getComponent<cro::Text>().setColour(textColourSelected);
-    inputEnt.addComponent<cro::Transform>().setParent(parentEnt);
+    parentEnt.getComponent<cro::Transform>().addChild(inputEnt.addComponent<cro::Transform>());
     inputEnt.getComponent<cro::Transform>().setPosition({ (-textArea.width / 2.f) + 32.f, -32.f, 0.f });
     inputEnt.addComponent<cro::CommandTarget>().ID = UICommand::NameText;
 }

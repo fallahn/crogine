@@ -22,7 +22,7 @@ crogine uses OpenAL for audio, SDL2 for cross platform parts, and bullet 2.x for
 
 -----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2019  
+Matt Marchant 2017 - 2020  
 http://trederia.blogspot.com  
 
 crogine - Zlib license.  

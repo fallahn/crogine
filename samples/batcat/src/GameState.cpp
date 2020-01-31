@@ -45,7 +45,6 @@ source distribution.
 #include <crogine/graphics/IqmBuilder.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
-#include <crogine/ecs/systems/SceneGraph.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -168,7 +167,6 @@ void GameState::addSystems()
 
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
-    m_scene.addSystem<cro::SceneGraph>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
@@ -177,7 +175,6 @@ void GameState::addSystems()
     m_scene.addDirector<PlayerDirector>();
 
     uiSystem = &m_overlayScene.addSystem<cro::UISystem>(mb);
-    m_overlayScene.addSystem<cro::SceneGraph>(mb);
     m_overlayScene.addSystem<cro::CameraSystem>(mb);
     m_overlayScene.addSystem<cro::TextRenderer>(mb);
     m_overlayScene.addSystem<cro::SpriteRenderer>(mb);
