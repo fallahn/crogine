@@ -78,6 +78,7 @@ private:
     void buildUI();
 
     void openModel();
+    void openModelAtPath(const std::string&);
     void closeModel();
 
     std::int32_t m_defaultMaterial;

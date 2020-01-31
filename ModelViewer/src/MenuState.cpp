@@ -410,34 +410,40 @@ void MenuState::buildUI()
 
 void MenuState::openModel()
 {
-    closeModel();
+    //closeModel();
 
     auto path = cro::FileSystem::openFileDialogue("", "cmt");
     if (!path.empty()
         && cro::FileSystem::getFileExtension(path) == ".cmt")
     {
-        m_activeModel = m_scene.createEntity();
-        m_activeModel.addComponent<cro::Transform>();
-
-        cro::ModelDefinition def(m_preferences.workingDirectory);
-        if (def.loadFromFile(path, m_resources))
-        {
-            def.createModel(m_activeModel, m_resources);
-
-            if (m_activeModel.getComponent<cro::Model>().getMeshData().boundingSphere.radius > 2.f)
-            {
-                cro::Logger::log("Bounding sphere radius is very large - model may not be visible", cro::Logger::Type::Warning);
-            }
-        }
-        else
-        {
-            cro::Logger::log("Check current working directory (Options)?", cro::Logger::Type::Error);
-            closeModel();
-        }
+        openModelAtPath(path);
     }
     else
     {
         cro::Logger::log(path + ": invalid file path", cro::Logger::Type::Error);
+    }
+}
+
+void MenuState::openModelAtPath(const std::string& path)
+{
+    closeModel();
+
+    m_activeModel = m_scene.createEntity();
+    m_activeModel.addComponent<cro::Transform>();
+
+    cro::ModelDefinition def(m_preferences.workingDirectory);
+    if (def.loadFromFile(path, m_resources))
+    {
+        def.createModel(m_activeModel, m_resources);
+
+        if (m_activeModel.getComponent<cro::Model>().getMeshData().boundingSphere.radius > 2.f)
+        {
+            cro::Logger::log("Bounding sphere radius is very large - model may not be visible", cro::Logger::Type::Warning);
+        }
+    }
+    else
+    {
+        cro::Logger::log("Check current working directory (Options)?", cro::Logger::Type::Error);
     }
 }
 
@@ -699,6 +705,9 @@ void MenuState::exportModel()
                 SDL_RWwrite(file.file, indices.data(), sizeof(std::uint32_t), indices.size());
             }
 
+            SDL_RWclose(file.file);
+            file.file = nullptr;
+
             //create config file and save as cmt
             auto modelName = cro::FileSystem::getFileName(path);
             modelName = modelName.substr(0, modelName.find_last_of('.'));
@@ -721,6 +730,8 @@ void MenuState::exportModel()
             {
                 cfg.save(path);
             }
+
+            openModelAtPath(path);
         }
     }
 }
