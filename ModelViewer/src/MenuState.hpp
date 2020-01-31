@@ -80,6 +80,8 @@ private:
     void openModel();
     void openModelAtPath(const std::string&);
     void closeModel();
+    std::string m_lastImportPath;
+    std::string m_lastExportPath;
 
     std::int32_t m_defaultMaterial;
     std::int32_t m_defaultShadowMaterial;

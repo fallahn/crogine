@@ -410,9 +410,7 @@ void MenuState::buildUI()
 
 void MenuState::openModel()
 {
-    //closeModel();
-
-    auto path = cro::FileSystem::openFileDialogue("", "cmt");
+    auto path = cro::FileSystem::openFileDialogue(m_preferences.workingDirectory, "cmt");
     if (!path.empty()
         && cro::FileSystem::getFileExtension(path) == ".cmt")
     {
@@ -502,7 +500,7 @@ void MenuState::importModel()
         return retVal;
     };
 
-    auto path = cro::FileSystem::openFileDialogue("", "obj,dae,fbx");
+    auto path = cro::FileSystem::openFileDialogue(m_lastImportPath, "obj,dae,fbx");
     if (!path.empty())
     {
         ai::Importer importer;
@@ -633,7 +631,7 @@ void MenuState::importModel()
             //update header with array sizes
             for (const auto& indices : importedIndexArrays)
             {
-                header.arraySizes.push_back(static_cast<std::int32_t>(indices.size()));
+                header.arraySizes.push_back(static_cast<std::int32_t>(indices.size() * sizeof(std::uint32_t)));
             }
             header.arrayCount = static_cast<std::uint8_t>(importedIndexArrays.size());
 
@@ -674,6 +672,8 @@ void MenuState::importModel()
                 cro::Logger::log("Missing index or vertex data", cro::Logger::Type::Error);
             }
         }
+
+        m_lastImportPath = cro::FileSystem::getFilePath(path);
     }
 }
 
@@ -682,7 +682,7 @@ void MenuState::exportModel()
     //TODO asset we at least have valid header data
     //prevent accidentally writing a bad file
 
-    auto path = cro::FileSystem::saveFileDialogue("", "cmf");
+    auto path = cro::FileSystem::saveFileDialogue(m_lastExportPath, "cmf");
     if (!path.empty())
     {
         if (cro::FileSystem::getFileExtension(path) != ".cmf")
@@ -730,6 +730,8 @@ void MenuState::exportModel()
             {
                 cfg.save(path);
             }
+
+            m_lastExportPath = cro::FileSystem::getFilePath(path);
 
             openModelAtPath(path);
         }

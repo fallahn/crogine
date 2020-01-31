@@ -221,13 +221,12 @@ std::string FileSystem::getFilePath(const std::string& path)
     };
 
 
-//#ifdef _WIN32 //try windows formatted paths first
-    std::string retVal = searchFunc('\\', path);
-    //if (!retVal.empty()) return retVal;
-    return searchFunc('/', retVal);
-//#endif
-
-//    return searchFunc('/', path);
+    std::string retVal = searchFunc('/', path);
+    if (!retVal.empty())
+    {
+        return retVal;
+    }
+    return searchFunc('\\', path);
 }
 
 bool FileSystem::fileExists(const std::string& path)
