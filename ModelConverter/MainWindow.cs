@@ -169,10 +169,11 @@ namespace ModelConverter
             {
                 writer.Write(m_currentFlags);
                 writer.Write(arrayCount);
-                foreach (var v in arrayOffsets)
-                {
-                    writer.Write(v);
-                }
+                //foreach (var v in arrayOffsets)
+                //{
+                //    writer.Write(v);
+                //}
+                writer.Write(arrayOffsets[0]);
                 foreach (var v in arraySizes)
                 {
                     writer.Write(v);

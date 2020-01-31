@@ -32,10 +32,13 @@ source distribution.
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/geometric.hpp>
 
-ImportedMeshBuilder::ImportedMeshBuilder(const CMFHeader& header, const std::vector<float>& vertexData, const std::vector<std::vector<std::uint32_t>>& indices)
+#include <crogine/graphics/StaticMeshBuilder.hpp>
+
+ImportedMeshBuilder::ImportedMeshBuilder(const CMFHeader& header, const std::vector<float>& vertexData, const std::vector<std::vector<std::uint32_t>>& indices, std::uint8_t flags)
     : m_header      (header),
     m_vboData       (vertexData),
-    m_indexArrays   (indices)
+    m_indexArrays   (indices),
+    m_flags         (flags)
 {
 
 }
@@ -43,14 +46,14 @@ ImportedMeshBuilder::ImportedMeshBuilder(const CMFHeader& header, const std::vec
 //private
 cro::Mesh::Data ImportedMeshBuilder::build() const
 {
-    //TODO this assumes it came from the obj loader
-    //if implementing assimp import we need to check
-    //the attrib flags for correct values.
-
     cro::Mesh::Data meshData;
-    meshData.attributes[cro::Mesh::Position] = 3;
-    meshData.attributes[cro::Mesh::Normal] = 3;
-    meshData.attributes[cro::Mesh::UV0] = 2;
+    if (m_flags & cro::VertexProperty::Position) meshData.attributes[cro::Mesh::Position] = 3;
+    if (m_flags & cro::VertexProperty::Colour) meshData.attributes[cro::Mesh::Colour] = 3;
+    if (m_flags & cro::VertexProperty::Normal) meshData.attributes[cro::Mesh::Normal] = 3;
+    if (m_flags & cro::VertexProperty::Tangent) meshData.attributes[cro::Mesh::Tangent] = 3;
+    if (m_flags & cro::VertexProperty::Bitangent) meshData.attributes[cro::Mesh::Bitangent] = 3;
+    if (m_flags & cro::VertexProperty::UV0) meshData.attributes[cro::Mesh::UV0] = 2;
+    if (m_flags & cro::VertexProperty::UV1) meshData.attributes[cro::Mesh::UV1] = 2;
 
     meshData.primitiveType = GL_TRIANGLES;
     meshData.vertexSize = getVertexSize(meshData.attributes);

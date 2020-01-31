@@ -28,7 +28,6 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MenuState.hpp"
-#include "OBJ_Loader.h"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
@@ -38,6 +37,7 @@ source distribution.
 
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/detail/Types.hpp>
+#include <crogine/detail/OpenGL.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
@@ -54,6 +54,12 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
+
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+
+namespace ai = Assimp;
 
 namespace
 {
@@ -78,7 +84,7 @@ namespace
     const std::string prefPath = cro::FileSystem::getConfigDirectory("cro_model_viewer") + "prefs.cfg";
 
     //tooltip for UI
-    static void HelpMarker(const char* desc)
+    void HelpMarker(const char* desc)
     {
         ImGui::TextDisabled("(?)");
         if (ImGui::IsItemHovered())
@@ -363,6 +369,39 @@ void MenuState::buildUI()
                     worldScale += std::to_string(worldScales[m_preferences.unitsPerMetre]);
                     worldScale += " units per metre";
                     ImGui::Text("%s", worldScale.c_str());
+
+                    if (!m_importedVBO.empty())
+                    {
+                        ImGui::Separator();
+
+                        std::string flags = "Flags:\n";
+                        if (m_importedHeader.flags & cro::VertexProperty::Position)
+                        {
+                            flags += "Position\n";
+                        }
+                        if (m_importedHeader.flags & cro::VertexProperty::Colour)
+                        {
+                            flags += "Colour\n";
+                        }
+                        if (m_importedHeader.flags & cro::VertexProperty::Normal)
+                        {
+                            flags += "Normal\n";
+                        }
+                        if (m_importedHeader.flags & cro::VertexProperty::Tangent)
+                        {
+                            flags += "Tan/Bitan\n";
+                        }
+                        if (m_importedHeader.flags & cro::VertexProperty::UV0)
+                        {
+                            flags += "Texture Coords\n";
+                        }
+                        if (m_importedHeader.flags & cro::VertexProperty::UV1)
+                        {
+                            flags += "Shadowmap Coords\n";
+                        }
+                        ImGui::Text("%s", flags.c_str());
+                        ImGui::Text("Materials: %d", m_importedHeader.arrayCount);
+                    }
                 }
                 ImGui::End();
             }
@@ -419,52 +458,164 @@ void MenuState::closeModel()
 
 void MenuState::importModel()
 {
-    auto path = cro::FileSystem::openFileDialogue(m_preferences.workingDirectory, "obj");
+    auto calcFlags = [](const aiMesh * mesh, std::uint32_t& vertexSize)->std::uint8_t
+    {
+        std::uint8_t retVal = cro::VertexProperty::Position | cro::VertexProperty::Normal;
+        vertexSize = 6;
+        if (mesh->HasVertexColors(0))
+        {
+            retVal |= cro::VertexProperty::Colour;
+            vertexSize += 3;
+        }
+        if (!mesh->HasNormals())
+        {
+            cro::Logger::log("Missing normals for mesh data", cro::Logger::Type::Warning);
+            vertexSize = 0;
+            return 0;
+        }
+        if (mesh->HasTangentsAndBitangents())
+        {
+            retVal |= cro::VertexProperty::Bitangent | cro::VertexProperty::Tangent;
+            vertexSize += 6;
+        }
+        if (!mesh->HasTextureCoords(0))
+        {
+            cro::Logger::log("UV coordinates were missing in (sub)mesh", cro::Logger::Type::Warning);
+        }
+        else
+        {
+            retVal |= cro::VertexProperty::UV0;
+            vertexSize += 2;
+        }
+        if (mesh->HasTextureCoords(1))
+        {
+            retVal |= cro::VertexProperty::UV1;
+            vertexSize += 2;
+        }
+
+        return retVal;
+    };
+
+    auto path = cro::FileSystem::openFileDialogue("", "obj,dae,fbx");
     if (!path.empty())
     {
-        //TODO a more comprehensive loader like assimp will support more features,
-        //more file types and more complex vertex data (currently limited to pos, uv and normal)
-        namespace ol = objl;
-        ol::Loader loader;
-        if (loader.LoadFile(path) &&
-            !loader.LoadedMeshes.empty())
+        ai::Importer importer;
+        auto* scene = importer.ReadFile(path, 
+                            aiProcess_CalcTangentSpace
+                            | aiProcess_GenSmoothNormals
+                            | aiProcess_Triangulate
+                            | aiProcess_JoinIdenticalVertices
+                            | aiProcess_OptimizeMeshes
+                            | aiProcess_GenBoundingBoxes);
+
+        if(scene && scene->HasMeshes())
         {
+            //sort the meshes by material ready for concatenation
+            std::vector<aiMesh*> meshes;
+            for (auto i = 0u; i < scene->mNumMeshes; ++i)
+            {
+                meshes.push_back(scene->mMeshes[i]);
+            }
+            std::sort(meshes.begin(), meshes.end(), 
+                [](const aiMesh* a, const aiMesh* b) 
+                {
+                    return a->mMaterialIndex > b->mMaterialIndex;
+                });
+
+            //prep the header
+            std::uint32_t vertexSize = 0;
             CMFHeader header;
-            header.flags |= cro::VertexProperty::Position | cro::VertexProperty::Normal | cro::VertexProperty::UV0;
+            header.flags = calcFlags(meshes[0], vertexSize);
+
+            if (header.flags == 0)
+            {
+                cro::Logger::log("Invalid vertex data...", cro::Logger::Type::Error);
+                return;
+            }
+
             std::vector<std::vector<std::uint32_t>> importedIndexArrays;
             std::vector<float> importedVBO;
 
-            const std::size_t vertexSize = 8 * sizeof(float);
-
-            for (const auto& mesh : loader.LoadedMeshes)
+            //concat sub meshes assuming they meet the same flags
+            for (const auto* mesh : meshes)
             {
-                auto indexOffset = importedVBO.size() / vertexSize;
-
-                for (auto& vertex : mesh.Vertices)
+                if (calcFlags(mesh, vertexSize) != header.flags)
                 {
-                    importedVBO.push_back(vertex.Position.X);
-                    importedVBO.push_back(vertex.Position.Y);
-                    importedVBO.push_back(vertex.Position.Z);
-
-                    importedVBO.push_back(vertex.Normal.X);
-                    importedVBO.push_back(vertex.Normal.Y);
-                    importedVBO.push_back(vertex.Normal.Z);
-
-                    importedVBO.push_back(vertex.TextureCoordinate.X);
-                    importedVBO.push_back(vertex.TextureCoordinate.Y);
+                    cro::Logger::log("sub mesh vertex data differs - skipping...", cro::Logger::Type::Warning);
+                    continue;
                 }
 
-                auto& indices = importedIndexArrays.emplace_back(mesh.Indices);
-                //have to offset by how far we're into the vertex array as all verts
-                //have been concatenated.
-                for (auto& i : indices)
+                if (header.arrayCount < 32)
                 {
-                    i += indexOffset;
+                    std::uint32_t offset = static_cast<std::uint32_t>(importedVBO.size()) / vertexSize;
+                    for (auto i = 0u; i < mesh->mNumVertices; ++i)
+                    {
+                        auto pos = mesh->mVertices[i];
+                        importedVBO.push_back(pos.x);
+                        importedVBO.push_back(pos.y);
+                        importedVBO.push_back(pos.z);
+
+                        if (mesh->HasVertexColors(0))
+                        {
+                            auto colour = mesh->mColors[0][i];
+                            importedVBO.push_back(colour.r);
+                            importedVBO.push_back(colour.g);
+                            importedVBO.push_back(colour.b);
+                        }
+
+                        auto normal = mesh->mNormals[i];
+                        importedVBO.push_back(normal.x);
+                        importedVBO.push_back(normal.y);
+                        importedVBO.push_back(normal.z);
+
+                        if (mesh->HasTangentsAndBitangents())
+                        {
+                            auto tan = mesh->mTangents[i];
+                            importedVBO.push_back(tan.x);
+                            importedVBO.push_back(tan.y);
+                            importedVBO.push_back(tan.z);
+
+                            auto bitan = mesh->mBitangents[i];
+                            importedVBO.push_back(bitan.x);
+                            importedVBO.push_back(bitan.y);
+                            importedVBO.push_back(bitan.z);
+                        }
+
+                        if (mesh->HasTextureCoords(0))
+                        {
+                            auto coord = mesh->mTextureCoords[0][i];
+                            importedVBO.push_back(coord.x);
+                            importedVBO.push_back(coord.y);
+                        }
+
+                        if (mesh->HasTextureCoords(1))
+                        {
+                            auto coord = mesh->mTextureCoords[1][i];
+                            importedVBO.push_back(coord.x);
+                            importedVBO.push_back(coord.y);
+                        }
+                    }
+
+                    auto idx = mesh->mMaterialIndex;
+
+                    while (idx >= importedIndexArrays.size())
+                    {
+                        //create an index array
+                        importedIndexArrays.emplace_back();
+                        header.arrayCount++;
+                    }
+
+                    for (auto i = 0u; i < mesh->mNumFaces; ++i)
+                    {
+                        importedIndexArrays[idx].push_back(mesh->mFaces[i].mIndices[0] + offset);
+                        importedIndexArrays[idx].push_back(mesh->mFaces[i].mIndices[1] + offset);
+                        importedIndexArrays[idx].push_back(mesh->mFaces[i].mIndices[2] + offset);
+                    }
                 }
-
-                header.arraySizes.push_back(static_cast<std::int32_t>(mesh.Indices.size() * sizeof(std::int32_t)));
-
-                header.arrayCount++;
+                else
+                {
+                    cro::Logger::log("Max materials have been reached - model may be incomplete", cro::Logger::Type::Warning);
+                }
             }
 
             auto indexOffset = sizeof(header.flags) + sizeof(header.arrayCount) + sizeof(header.arrayOffset) + (header.arraySizes.size() * sizeof(std::int32_t));
@@ -483,17 +634,20 @@ void MenuState::importModel()
                 //TODO check the size and flush after a certain amount
                 //remembering to reload the ground plane..
                 //m_resources.meshes.flush();
-                ImportedMeshBuilder builder(m_importedHeader, m_importedVBO, m_importedIndexArrays);
+                ImportedMeshBuilder builder(m_importedHeader, m_importedVBO, m_importedIndexArrays, header.flags);
                 auto meshID = m_resources.meshes.loadMesh(builder);
 
                 m_activeModel = m_scene.createEntity();
                 m_activeModel.addComponent<cro::Transform>();
                 m_activeModel.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_defaultMaterial));
-                m_activeModel.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_defaultShadowMaterial));
+                //m_activeModel.getComponent<cro::Model>().getMeshData().primitiveType = GL_POINTS;
+                //m_activeModel.getComponent<cro::Model>().getMeshData().indexData[0].primitiveType = GL_TRIANGLE_STRIP;
+                
+                for (auto i = 0; i < header.arrayCount; ++i)
+                {
+                    m_activeModel.getComponent<cro::Model>().setShadowMaterial(i, m_resources.materials.get(m_defaultShadowMaterial));
+                }
                 m_activeModel.addComponent<cro::ShadowCaster>();
-
-
-                //TODO try loading any material properties?
             }
             else
             {

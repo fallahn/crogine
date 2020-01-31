@@ -42,12 +42,13 @@ struct CMFHeader final
 class ImportedMeshBuilder final : public cro::MeshBuilder
 {
 public:
-    ImportedMeshBuilder(const CMFHeader&, const std::vector<float>&, const std::vector<std::vector<std::uint32_t>>&);
+    ImportedMeshBuilder(const CMFHeader&, const std::vector<float>&, const std::vector<std::vector<std::uint32_t>>&, std::uint8_t);
 
 private:
     const CMFHeader& m_header;
     const std::vector<float>& m_vboData;
     const std::vector<std::vector<std::uint32_t>> m_indexArrays;
+    std::uint8_t m_flags;
 
     cro::Mesh::Data build() const override;
 

@@ -30,12 +30,14 @@ find_package(CROGINE REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(ASSIMP REQUIRED)
 
 include_directories(
   ${CROGINE_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
   ${OPENGL_INCLUDE_DIR}
+  ${assimp_INCLUDE_DIRS}
   src)
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -47,4 +49,5 @@ target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
   ${SDL2_LIBRARY}
   ${BULLET_LIBRARIES}
-  ${OPENGL_LIBRARIES})
+  ${OPENGL_LIBRARIES}
+  ${assimp_LIBRARIES})
