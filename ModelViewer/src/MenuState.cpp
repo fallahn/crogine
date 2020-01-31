@@ -602,7 +602,6 @@ void MenuState::importModel()
                     {
                         //create an index array
                         importedIndexArrays.emplace_back();
-                        header.arrayCount++;
                     }
 
                     for (auto i = 0u; i < mesh->mNumFaces; ++i)
@@ -617,6 +616,20 @@ void MenuState::importModel()
                     cro::Logger::log("Max materials have been reached - model may be incomplete", cro::Logger::Type::Warning);
                 }
             }
+
+            //remove any empty arrays
+            importedIndexArrays.erase(std::remove_if(importedIndexArrays.begin(), importedIndexArrays.end(), 
+                [](const std::vector<std::uint32_t>& arr)
+                {
+                    return arr.empty();
+                }), importedIndexArrays.end());
+
+            //update header with array sizes
+            for (const auto& indices : importedIndexArrays)
+            {
+                header.arraySizes.push_back(static_cast<std::int32_t>(indices.size()));
+            }
+            header.arrayCount = static_cast<std::uint8_t>(importedIndexArrays.size());
 
             auto indexOffset = sizeof(header.flags) + sizeof(header.arrayCount) + sizeof(header.arrayOffset) + (header.arraySizes.size() * sizeof(std::int32_t));
             indexOffset += sizeof(float) * importedVBO.size();

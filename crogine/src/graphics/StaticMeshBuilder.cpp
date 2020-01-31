@@ -83,6 +83,7 @@ Mesh::Data StaticMeshBuilder::build() const
         std::vector<std::vector<uint32>> indexArrays(arrayCount);
         for (auto i = 0; i < arrayCount; ++i)
         {
+            //if (indexSizes[i] == 0)continue;
             indexArrays[i].resize(indexSizes[i] / sizeof(uint32));
             readCount = SDL_RWread(m_file, indexArrays[i].data(), sizeof(uint32), indexSizes[i] / sizeof(uint32));
             if (checkError(readCount)) return {};
