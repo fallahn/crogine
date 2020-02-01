@@ -145,7 +145,11 @@ void App::run()
 	{
 		//load opengl - TODO choose which loader to use based on
         //current platform, ie mobile or desktop
+#ifdef PLATFORM_MOBILE
 		if (!gladLoadGLES2Loader(SDL_GL_GetProcAddress))
+#else
+        if (!gladLoadGLLoader(SDL_GL_GetProcAddress))
+#endif //PLATFORM_MOBILE
 		{
 			Logger::log("Failed loading OpenGL", Logger::Type::Error);
 			return;
