@@ -77,8 +77,8 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
 	if (borderless) styleMask |= SDL_WINDOW_BORDERLESS;
 	//TODO set up proper masks for all window options
 
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+    /*SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);*/
 
     m_window = SDL_CreateWindow(title.c_str(),SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, styleMask);
 
@@ -88,7 +88,7 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
 		return false;
 	}
 	else
-	{       
+	{
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
         m_threadContext = SDL_GL_CreateContext(m_window);
 		m_mainContext = SDL_GL_CreateContext(m_window);
