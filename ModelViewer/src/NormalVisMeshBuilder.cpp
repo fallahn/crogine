@@ -86,12 +86,13 @@ cro::Mesh::Data NormalVisMeshBuilder::build() const
         return glm::vec3(m_sourceBuffer[idx], m_sourceBuffer[idx + 1], m_sourceBuffer[idx + 2]);
     };
 
+    const float visScale = 0.3f;
     for (std::size_t i = 0; i < m_sourceBuffer.size(); i += vertexSize)
     {
         auto vertPos = getPosition(i);
         
         auto idx = normalOffset + i;
-        auto normalPos = vertPos + getPosition(idx);
+        auto normalPos = vertPos + (getPosition(idx) * visScale);
 
         addVertex(vertPos, glm::vec3(1.f, 0.f, 0.f));
         addVertex(normalPos, glm::vec3(1.f, 0.f, 0.f));
@@ -99,7 +100,7 @@ cro::Mesh::Data NormalVisMeshBuilder::build() const
         if (tanOffset != 0)
         {
             idx = tanOffset + i;
-            auto tanPos = vertPos + getPosition(idx);
+            auto tanPos = vertPos + (getPosition(idx) * visScale);
 
             addVertex(vertPos, glm::vec3(0.f, 1.f, 0.f));
             addVertex(tanPos, glm::vec3(0.f, 1.f, 0.f));
@@ -108,7 +109,7 @@ cro::Mesh::Data NormalVisMeshBuilder::build() const
         if (bitanOffset != 0)
         {
             idx = bitanOffset + i;
-            auto bitanPos = vertPos + getPosition(idx);
+            auto bitanPos = vertPos + (getPosition(idx) * visScale);
 
             addVertex(vertPos, glm::vec3(0.f, 0.f, 1.f));
             addVertex(bitanPos, glm::vec3(0.f, 0.f, 1.f));
@@ -124,7 +125,7 @@ cro::Mesh::Data NormalVisMeshBuilder::build() const
     createVBO(meshData, vboData);
 
     std::vector<std::uint16_t> indices;
-    for (auto i = 0u; i < meshData.vertexSize / sizeof(float); ++i)
+    for (auto i = 0u; i < meshData.vertexCount; ++i)
     {
         indices.push_back(i);
     }
@@ -134,10 +135,10 @@ cro::Mesh::Data NormalVisMeshBuilder::build() const
     meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
     createIBO(meshData, indices.data(), 0, sizeof(std::uint16_t));
 
-    meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
-    meshData.boundingBox[1] = glm::vec3(-std::numeric_limits<float>::max());
+    meshData.boundingBox[0] = glm::vec3(1.f);
+    meshData.boundingBox[1] = glm::vec3(-1.f);
     
-    auto rad = std::numeric_limits<float>::max() / 2.f;
+    auto rad = 0.6f;
     meshData.boundingSphere.centre= glm::vec3(rad);
     meshData.boundingSphere.radius = rad;
 

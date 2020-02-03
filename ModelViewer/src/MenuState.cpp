@@ -485,8 +485,6 @@ void MenuState::openModelAtPath(const std::string& path)
         {
             cro::Logger::log("Bounding sphere radius is very large - model may not be visible", cro::Logger::Type::Warning);
         }
-
-        updateNormalVis();
     }
     else
     {
@@ -504,9 +502,10 @@ void MenuState::closeModel()
         m_importedVBO.clear();
     }
 
-    //TODO we might want to remove from any resource manager
-    //too else eventually we'll end up with a lot of unused
-    //resources if closing  and opening a lot of files.
+    if (entities[EntityID::NormalVis].isValid())
+    {
+        m_scene.destroyEntity(entities[EntityID::NormalVis]);
+    }
 }
 
 void MenuState::importModel()
@@ -706,8 +705,6 @@ void MenuState::importModel()
                 entities[EntityID::ActiveModel] = m_scene.createEntity();
                 entities[EntityID::ActiveModel].addComponent<cro::Transform>();
                 entities[EntityID::ActiveModel].addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::Default]));
-                //m_activeModel.getComponent<cro::Model>().getMeshData().primitiveType = GL_POINTS;
-                //m_activeModel.getComponent<cro::Model>().getMeshData().indexData[0].primitiveType = GL_TRIANGLE_STRIP;
                 
                 for (auto i = 0; i < header.arrayCount; ++i)
                 {
@@ -716,6 +713,8 @@ void MenuState::importModel()
                 entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>();
 
                 m_importedTransform = {};
+
+                //updateNormalVis();
             }
             else
             {
@@ -933,18 +932,11 @@ void MenuState::updateNormalVis()
             m_scene.destroyEntity(entities[EntityID::NormalVis]);
         }
 
-        //pull down model info from active mode
-        //BUH this doesn't do what I thought... back to the drawing board...
         auto meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
-        std::vector<float> vbo(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
-
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-        glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vbo.data(), GL_STATIC_READ));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
         //pass to mesh builder - TODO we would be better recycling the VBO with new vertex data, rather than
         //destroying and creating a new one (unique instances will build up in the resource manager)
-        auto meshID = m_resources.meshes.loadMesh(NormalVisMeshBuilder(meshData, vbo));
+        auto meshID = m_resources.meshes.loadMesh(NormalVisMeshBuilder(meshData, m_importedVBO));
 
         entities[EntityID::NormalVis] = m_scene.createEntity();
         entities[EntityID::NormalVis].addComponent<cro::Transform>();
