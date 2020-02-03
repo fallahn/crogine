@@ -3,7 +3,7 @@
 Matt Marchant 2020
 http://trederia.blogspot.com
 
-crogine model viewer/importer - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,51 +29,16 @@ source distribution.
 
 #pragma once
 
-namespace MaterialID
+#include <crogine/graphics/MeshBuilder.hpp>
+
+class NormalVisMeshBuilder final : public cro::MeshBuilder
 {
-    enum
-    {
-        Default, DefaultShadow, DebugDraw, Count
-    };
-}
+public:
+    NormalVisMeshBuilder(cro::Mesh::Data, const std::vector<float>&);
 
-namespace MeshID
-{
-    /*enum
-    {
-        
-    };*/
-}
+private:
+    cro::Mesh::Data m_sourceData;
+    const std::vector<float>& m_sourceBuffer;
 
-namespace EntityID
-{
-    enum
-    {
-        GroundPlane, ActiveModel, CamController, NormalVis, Count
-    };
-}
-
-namespace FontID
-{
-
-}
-
-namespace ShaderID
-{
-
-}
-
-namespace CommandID
-{
-
-}
-
-namespace AnimationID
-{
-
-}
-
-namespace CollisionID
-{
-
-}
+    cro::Mesh::Data build() const override;
+};

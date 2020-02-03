@@ -29,6 +29,9 @@ source distribution.
 
 #include "MenuState.hpp"
 #include "OriginIconBuilder.hpp"
+#include "ResourceIDs.hpp"
+#include "NormalVisMeshBuilder.hpp"
+#include "GLCheck.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
@@ -103,7 +106,10 @@ namespace
     }
 
     const std::array<float, 6> worldScales = { 0.01f, 0.1f, 1.f, 10.f, 100.f, 1000.f };
-    const glm::vec3 DefaultCameraPosition({ 0.f, 1.f, 5.f });
+    const glm::vec3 DefaultCameraPosition({ 0.f, 0.25f, 5.f });
+
+    std::array<std::int32_t, MaterialID::Count> materialIDs = {};
+    std::array<cro::Entity, EntityID::Count> entities = {};
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
@@ -111,9 +117,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
     m_scene                 (context.appInstance.getMessageBus()),
     m_zoom                  (1.f),
     m_showPreferences       (false),
-    m_showGroundPlane       (false),
-    m_defaultMaterial       (0),
-    m_defaultShadowMaterial (0)
+    m_showGroundPlane       (false)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -144,13 +148,13 @@ bool MenuState::handleEvent(const cro::Event& evt)
     case SDL_MOUSEMOTION:
         if (evt.motion.state & SDL_BUTTON_LMASK)
         {
-            auto& tx = m_camController.getComponent<cro::Transform>();
+            auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
             tx.rotate(cro::Transform::Y_AXIS, static_cast<float>(-evt.motion.xrel / 2) * cro::Util::Const::degToRad);
             tx.rotate(cro::Transform::X_AXIS, static_cast<float>(-evt.motion.yrel / 2) * cro::Util::Const::degToRad);
         }
         else if (evt.motion.state & SDL_BUTTON_MMASK)
         {
-            auto& tx = m_camController.getComponent<cro::Transform>();
+            auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
             tx.move((glm::vec3(-evt.motion.xrel, evt.motion.yrel, 0.f ) / 60.f) * worldScales[m_preferences.unitsPerMetre]);
         }
         break;
@@ -202,12 +206,16 @@ void MenuState::loadAssets()
     //create a default material to display models on import
     auto flags = cro::ShaderResource::DiffuseColour;
     auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::VertexLit, flags);
-    m_defaultMaterial = m_resources.materials.add(m_resources.shaders.get(shaderID));
-    auto& material = m_resources.materials.get(m_defaultMaterial);
-    material.setProperty("u_colour", cro::Colour(1.f, 0.f, 1.f));
+    materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 0.f, 1.f));
 
     shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::Skinning | cro::ShaderResource::DepthMap);
-    m_defaultShadowMaterial = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+
+    //used for drawing debug lines
+    shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    materialIDs[MaterialID::DebugDraw] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_resources.materials.get(materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
 }
 
 void MenuState::createScene()
@@ -216,10 +224,10 @@ void MenuState::createScene()
     cro::ModelDefinition modelDef;
     modelDef.loadFromFile("assets/models/ground_plane.cmt", m_resources);
 
-    m_groundPlane = m_scene.createEntity();
-    m_groundPlane.addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
-    m_groundPlane.getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
-    modelDef.createModel(m_groundPlane, m_resources);
+    entities[EntityID::GroundPlane] = m_scene.createEntity();
+    entities[EntityID::GroundPlane].addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
+    entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
+    modelDef.createModel(entities[EntityID::GroundPlane], m_resources);
 
     //create the camera - using a custom camera prevents the scene updating the projection on window resize
     auto entity = m_scene.createEntity();
@@ -228,21 +236,18 @@ void MenuState::createScene()
     updateView(entity, DefaultFarPlane, DefaultFOV);
     m_scene.setActiveCamera(entity);
 
-    m_camController = m_scene.createEntity();
-    m_camController.addComponent<cro::Transform>().setRelativeToCamera(true);
-    m_camController.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entities[EntityID::CamController] = m_scene.createEntity();
+    entities[EntityID::CamController].addComponent<cro::Transform>().setRelativeToCamera(true);
+    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //axis icon
     auto meshID = m_resources.meshes.loadMesh(OriginIconBuilder());
-    auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
-    auto matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
-    m_resources.materials.get(matID).blendMode = cro::Material::BlendMode::Alpha;
-    m_resources.materials.get(matID).depthTest = false;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(matID));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::DebugDraw]));
+    entity.getComponent<cro::Model>().enableDepthTest = false;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, cro::Time)
@@ -309,7 +314,7 @@ void MenuState::buildUI()
                         }
                         else
                         {
-                            m_groundPlane.getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
+                            entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
                         }
                     }
                     ImGui::EndMenu();
@@ -384,9 +389,9 @@ void MenuState::buildUI()
             }
 
             //model detail window
-            if (m_activeModel.isValid())
+            if (entities[EntityID::ActiveModel].isValid())
             {
-                ImGui::SetNextWindowSize({ 350.f, 430.f });
+                ImGui::SetNextWindowSize({ 280.f, 430.f });
                 if (ImGui::Begin("Model Properties"))
                 {
                     std::string worldScale("World Scale:\n");
@@ -430,12 +435,12 @@ void MenuState::buildUI()
                         ImGui::Text("Transform"); ImGui::SameLine(); HelpMarker("Double Click to change Values");
                         if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], -180.f, 180.f))
                         {
-                            m_activeModel.getComponent<cro::Transform>().setRotation(m_importedTransform.rotation * cro::Util::Const::degToRad);
+                            entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(m_importedTransform.rotation * cro::Util::Const::degToRad);
                         }
                         if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.1f, 10.f))
                         {
                             //scale needs to be uniform, else we'd have to recalc all the normal data
-                            m_activeModel.getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                            entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
                         }
                         if (ImGui::Button("Apply"))
                         {
@@ -468,18 +473,20 @@ void MenuState::openModelAtPath(const std::string& path)
 {
     closeModel();
 
-    m_activeModel = m_scene.createEntity();
-    m_activeModel.addComponent<cro::Transform>();
+    entities[EntityID::ActiveModel] = m_scene.createEntity();
+    entities[EntityID::ActiveModel].addComponent<cro::Transform>();
 
     cro::ModelDefinition def(m_preferences.workingDirectory);
     if (def.loadFromFile(path, m_resources))
     {
-        def.createModel(m_activeModel, m_resources);
+        def.createModel(entities[EntityID::ActiveModel], m_resources);
 
-        if (m_activeModel.getComponent<cro::Model>().getMeshData().boundingSphere.radius > 2.f)
+        if (entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData().boundingSphere.radius > 2.f)
         {
             cro::Logger::log("Bounding sphere radius is very large - model may not be visible", cro::Logger::Type::Warning);
         }
+
+        updateNormalVis();
     }
     else
     {
@@ -489,9 +496,9 @@ void MenuState::openModelAtPath(const std::string& path)
 
 void MenuState::closeModel()
 {
-    if (m_activeModel.isValid())
+    if (entities[EntityID::ActiveModel].isValid())
     {
-        m_scene.destroyEntity(m_activeModel);
+        m_scene.destroyEntity(entities[EntityID::ActiveModel]);
 
         m_importedIndexArrays.clear();
         m_importedVBO.clear();
@@ -696,17 +703,17 @@ void MenuState::importModel()
                 ImportedMeshBuilder builder(m_importedHeader, m_importedVBO, m_importedIndexArrays, header.flags);
                 auto meshID = m_resources.meshes.loadMesh(builder);
 
-                m_activeModel = m_scene.createEntity();
-                m_activeModel.addComponent<cro::Transform>();
-                m_activeModel.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_defaultMaterial));
+                entities[EntityID::ActiveModel] = m_scene.createEntity();
+                entities[EntityID::ActiveModel].addComponent<cro::Transform>();
+                entities[EntityID::ActiveModel].addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::Default]));
                 //m_activeModel.getComponent<cro::Model>().getMeshData().primitiveType = GL_POINTS;
                 //m_activeModel.getComponent<cro::Model>().getMeshData().indexData[0].primitiveType = GL_TRIANGLE_STRIP;
                 
                 for (auto i = 0; i < header.arrayCount; ++i)
                 {
-                    m_activeModel.getComponent<cro::Model>().setShadowMaterial(i, m_resources.materials.get(m_defaultShadowMaterial));
+                    entities[EntityID::ActiveModel].getComponent<cro::Model>().setShadowMaterial(i, m_resources.materials.get(materialIDs[MaterialID::DefaultShadow]));
                 }
-                m_activeModel.addComponent<cro::ShadowCaster>();
+                entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>();
 
                 m_importedTransform = {};
             }
@@ -791,7 +798,7 @@ void MenuState::applyImportTransform()
     auto rotation = glm::toMat4(glm::toQuat(glm::orientate3(m_importedTransform.rotation)));
     auto transform = rotation * glm::scale(glm::mat4(1.f), glm::vec3(m_importedTransform.scale));
 
-    auto meshData = m_activeModel.getComponent<cro::Model>().getMeshData();
+    auto meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
     auto vertexSize = meshData.vertexSize / sizeof(float);
 
     std::size_t normalOffset = 0;
@@ -834,7 +841,7 @@ void MenuState::applyImportTransform()
     };
 
     //loop over the vertex data and modify
-    for (auto i = 0u; i < m_importedVBO.size(); i += vertexSize)
+    for (std::size_t i = 0u; i < m_importedVBO.size(); i += vertexSize)
     {
         //position
         applyTransform(transform, i);
@@ -864,8 +871,8 @@ void MenuState::applyImportTransform()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     m_importedTransform = {};
-    m_activeModel.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
-    m_activeModel.getComponent<cro::Transform>().setRotation(glm::vec3(0.f));
+    entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+    entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(glm::vec3(0.f));
 }
 
 void MenuState::loadPrefs()
@@ -905,14 +912,42 @@ void MenuState::updateWorldScale()
     const float scale = worldScales[m_preferences.unitsPerMetre];
     if (m_showGroundPlane)
     {
-        m_groundPlane.getComponent<cro::Transform>().setScale({ scale, scale, scale });
+        entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale({ scale, scale, scale });
     }
     else
     {
-        m_groundPlane.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+        entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
     }
     m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(DefaultCameraPosition * scale);
     
-    m_camController.getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
+    entities[EntityID::CamController].getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
     updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_zoom * DefaultFOV);
+}
+
+void MenuState::updateNormalVis()
+{
+    if (entities[EntityID::ActiveModel].isValid())
+    {
+        if (entities[EntityID::NormalVis].isValid())
+        {
+            m_scene.destroyEntity(entities[EntityID::NormalVis]);
+        }
+
+        //pull down model info from active mode
+        //BUH this doesn't do what I thought... back to the drawing board...
+        auto meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+        std::vector<float> vbo(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
+
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vbo.data(), GL_STATIC_READ));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+        //pass to mesh builder - TODO we would be better recycling the VBO with new vertex data, rather than
+        //destroying and creating a new one (unique instances will build up in the resource manager)
+        auto meshID = m_resources.meshes.loadMesh(NormalVisMeshBuilder(meshData, vbo));
+
+        entities[EntityID::NormalVis] = m_scene.createEntity();
+        entities[EntityID::NormalVis].addComponent<cro::Transform>();
+        entities[EntityID::NormalVis].addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::DebugDraw]));
+    }
 }

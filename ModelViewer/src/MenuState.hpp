@@ -58,10 +58,6 @@ private:
     cro::Scene m_scene;
     cro::ResourceCollection m_resources;
     
-    cro::Entity m_activeModel;
-    cro::Entity m_groundPlane;
-    cro::Entity m_camController;
-
     float m_zoom;
 
     struct Preferences final
@@ -83,9 +79,6 @@ private:
     std::string m_lastImportPath;
     std::string m_lastExportPath;
 
-    std::int32_t m_defaultMaterial;
-    std::int32_t m_defaultShadowMaterial;
-
     CMFHeader m_importedHeader;
     std::vector<float> m_importedVBO;
     std::vector<std::vector<std::uint32_t>> m_importedIndexArrays;
@@ -102,4 +95,5 @@ private:
     void savePrefs();
 
     void updateWorldScale();
+    void updateNormalVis();
 };

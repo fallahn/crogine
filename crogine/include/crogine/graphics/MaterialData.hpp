@@ -134,14 +134,6 @@ namespace cro
             */
             BlendMode blendMode = BlendMode::None;
 
-            /*!
-            \brief Used to disable depth testing. If false it will override
-            the depth testing property of any active blend mode on
-            a material. This is usually left as true, but it useful
-            for example when rendering certain HUD or UI elements.
-            */
-            bool depthTest = true;
-
             //arbitrary uniforms are stored as properties
             PropertyList properties;
             /*!

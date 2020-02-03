@@ -5,4 +5,5 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/main.cpp
   ${PROJECT_DIR}/MenuState.cpp
   ${PROJECT_DIR}/MyApp.cpp
+  ${PROJECT_DIR}/NormalVisMeshBuilder.cpp
   ${PROJECT_DIR}/OriginIconBuilder.cpp)
