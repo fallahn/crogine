@@ -164,6 +164,13 @@ void ModelRenderer::render(Entity camera)
 
             applyBlendMode(model.m_materials[i].blendMode);
 
+            //check for depth test override
+            if (!model.m_materials[i].depthTest)
+            {
+                glCheck(glDisable(GL_DEPTH_TEST));
+            }
+
+
             //bind attribs
             const auto& attribs = model.m_materials[i].attribs;
             for (auto j = 0u; j < model.m_materials[i].attribCount; ++j)

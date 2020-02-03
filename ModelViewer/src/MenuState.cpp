@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MenuState.hpp"
+#include "OriginIconBuilder.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
@@ -106,7 +107,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
     m_scene                 (context.appInstance.getMessageBus()),
     m_zoom                  (1.f),
     m_showPreferences       (false),
-    m_showGroundPlane       (true),
+    m_showGroundPlane       (false),
     m_defaultMaterial       (0),
     m_defaultShadowMaterial (0)
 {
@@ -213,6 +214,7 @@ void MenuState::createScene()
 
     m_groundPlane = m_scene.createEntity();
     m_groundPlane.addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
+    m_groundPlane.getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
     modelDef.createModel(m_groundPlane, m_resources);
 
     //create the camera - using a custom camera prevents the scene updating the projection on window resize
@@ -226,6 +228,24 @@ void MenuState::createScene()
     m_camController.addComponent<cro::Transform>().setRelativeToCamera(true);
     m_camController.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //axis icon
+    auto meshID = m_resources.meshes.loadMesh(OriginIconBuilder());
+    auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    auto matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_resources.materials.get(matID).blendMode = cro::Material::BlendMode::Alpha;
+    m_resources.materials.get(matID).depthTest = false;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(matID));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, cro::Time)
+    {
+        float scale = worldScales[m_preferences.unitsPerMetre];
+        e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+    };
 
     //set the default sunlight properties
     m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 6.f, -5.f });
@@ -773,7 +793,14 @@ void MenuState::savePrefs()
 void MenuState::updateWorldScale()
 {
     const float scale = worldScales[m_preferences.unitsPerMetre];
-    m_groundPlane.getComponent<cro::Transform>().setScale({ scale, scale, scale });
+    if (m_showGroundPlane)
+    {
+        m_groundPlane.getComponent<cro::Transform>().setScale({ scale, scale, scale });
+    }
+    else
+    {
+        m_groundPlane.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+    }
     m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(DefaultCameraPosition * scale);
     
     m_camController.getComponent<cro::Transform>().setPosition(glm::vec3(0.f));

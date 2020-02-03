@@ -151,6 +151,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
+    <ClCompile Include="src\OriginIconBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
+    <ClInclude Include="src\OriginIconBuilder.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
   </ItemGroup>

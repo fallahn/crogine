@@ -122,19 +122,25 @@ namespace cro
                 Size,
                 Offset
             };
-            uint32 shader = 0;
-            //maps attrib location to attrib size between shader and mesh - index, size, pointer offset
-            std::array<std::array<int32, 3u>, Mesh::Attribute::Total> attribs{}; 
-            std::size_t attribCount = 0; //< count of attributes successfully mapped
-            //maps uniform locations by indexing via Uniform enum
-            std::array<int32, Uniform::Total> uniforms{};
-            //optional uniforms are added to this list if they exist
-            //for example skinning and projection map data which is
-            //used internally, and nor user-definable
-            std::size_t optionalUniformCount = 0;
-            std::array<int32, 3> optionalUniforms{};
 
+            /*!
+            \brief Blend mode.
+            This affects how the material is rendered (and when).
+            By default a belnd mode of None will render the geometry
+            with this material first, with depth testing enabled.
+            Additive, multiplicative and alpha blended materials are
+            rendered afterwards, with alpha blended materials rendered
+            in a back to front order.
+            */
             BlendMode blendMode = BlendMode::None;
+
+            /*!
+            \brief Used to disable depth testing. If false it will override
+            the depth testing property of any active blend mode on
+            a material. This is usually left as true, but it useful
+            for example when rendering certain HUD or UI elements.
+            */
+            bool depthTest = true;
 
             //arbitrary uniforms are stored as properties
             PropertyList properties;
@@ -180,6 +186,24 @@ namespace cro
             \param value A reference to the texture to bind to the sampler
             */
             void setProperty(const std::string& name, const Texture& value);
+
+
+            /*
+            Here be dragons! Don't modify these variables as they are configured
+            by the material resource class when the material is created.
+            */
+
+            uint32 shader = 0;
+            //maps attrib location to attrib size between shader and mesh - index, size, pointer offset
+            std::array<std::array<int32, 3u>, Mesh::Attribute::Total> attribs{};
+            std::size_t attribCount = 0; //< count of attributes successfully mapped
+            //maps uniform locations by indexing via Uniform enum
+            std::array<int32, Uniform::Total> uniforms{};
+            //optional uniforms are added to this list if they exist
+            //for example skinning and projection map data which is
+            //used internally, and not user-definable
+            std::size_t optionalUniformCount = 0;
+            std::array<int32, 3> optionalUniforms{};
         };
     }
 }

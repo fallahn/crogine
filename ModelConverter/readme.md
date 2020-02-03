@@ -1,3 +1,7 @@
+# DEPRECATED
+Use the Model Viewer project instead, which is more feature-rich and works cross-platform. This project is left here for reference.
+
+
 Model Converter
 ---------------
 
