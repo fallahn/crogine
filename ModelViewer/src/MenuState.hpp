@@ -89,8 +89,14 @@ private:
     CMFHeader m_importedHeader;
     std::vector<float> m_importedVBO;
     std::vector<std::vector<std::uint32_t>> m_importedIndexArrays;
+    struct ImportTransform final
+    {
+        glm::vec3 rotation = glm::vec3(0.f);
+        float scale = 1.f;
+    }m_importedTransform;
     void importModel();
     void exportModel();
+    void applyImportTransform();
 
     void loadPrefs();
     void savePrefs();

@@ -56,6 +56,10 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
 
+#include <crogine/detail/glm/gtx/euler_angles.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
+#include <crogine/detail/OpenGL.hpp>
+
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -382,7 +386,7 @@ void MenuState::buildUI()
             //model detail window
             if (m_activeModel.isValid())
             {
-                ImGui::SetNextWindowSize({ 250.f, 430.f });
+                ImGui::SetNextWindowSize({ 350.f, 430.f });
                 if (ImGui::Begin("Model Properties"))
                 {
                     std::string worldScale("World Scale:\n");
@@ -421,6 +425,24 @@ void MenuState::buildUI()
                         }
                         ImGui::Text("%s", flags.c_str());
                         ImGui::Text("Materials: %d", m_importedHeader.arrayCount);
+
+                        ImGui::NewLine();
+                        ImGui::Text("Transform"); ImGui::SameLine(); HelpMarker("Double Click to change Values");
+                        if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], -180.f, 180.f))
+                        {
+                            m_activeModel.getComponent<cro::Transform>().setRotation(m_importedTransform.rotation * cro::Util::Const::degToRad);
+                        }
+                        if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.1f, 10.f))
+                        {
+                            //scale needs to be uniform, else we'd have to recalc all the normal data
+                            m_activeModel.getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                        }
+                        if (ImGui::Button("Apply"))
+                        {
+                            applyImportTransform();
+                        }
+                        ImGui::SameLine();
+                        HelpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.");
                     }
                 }
                 ImGui::End();
@@ -685,6 +707,8 @@ void MenuState::importModel()
                     m_activeModel.getComponent<cro::Model>().setShadowMaterial(i, m_resources.materials.get(m_defaultShadowMaterial));
                 }
                 m_activeModel.addComponent<cro::ShadowCaster>();
+
+                m_importedTransform = {};
             }
             else
             {
@@ -737,10 +761,13 @@ void MenuState::exportModel()
 
             cro::ConfigFile cfg("model", modelName);
             cfg.addProperty("mesh", meshPath);
-            //cfg.addProperty("cast_shadows", "true"); //TODO this should be an option
-            auto material = cfg.addObject("material", "VertexLit");
-            material->addProperty("colour", "1,0,1,1");
-            //TODO grab all the material properties from the editor
+            
+            //material placeholder for each sub mesh
+            for (auto i = 0u; i < m_importedHeader.arrayCount; ++i)
+            {
+                auto material = cfg.addObject("material", "VertexLit");
+                material->addProperty("colour", "1,0,1,1");
+            }
 
 
             path.back() = 't';
@@ -756,6 +783,89 @@ void MenuState::exportModel()
             openModelAtPath(path);
         }
     }
+}
+
+void MenuState::applyImportTransform()
+{
+    //keep rotation separate as we don't apply scale to normal data
+    auto rotation = glm::toMat4(glm::toQuat(glm::orientate3(m_importedTransform.rotation)));
+    auto transform = rotation * glm::scale(glm::mat4(1.f), glm::vec3(m_importedTransform.scale));
+
+    auto meshData = m_activeModel.getComponent<cro::Model>().getMeshData();
+    auto vertexSize = meshData.vertexSize / sizeof(float);
+
+    std::size_t normalOffset = 0;
+    std::size_t tanOffset = 0;
+    std::size_t bitanOffset = 0;
+
+    //calculate the offset index into a single vertex which points
+    //to any normal / tan / bitan values
+    if (meshData.attributes[cro::Mesh::Attribute::Normal] != 0)
+    {
+        for (auto i = 0; i < cro::Mesh::Attribute::Normal; ++i)
+        {
+            normalOffset += meshData.attributes[i];
+        }
+    }
+
+    if (meshData.attributes[cro::Mesh::Attribute::Tangent] != 0)
+    {
+        for (auto i = 0; i < cro::Mesh::Attribute::Tangent; ++i)
+        {
+            tanOffset += meshData.attributes[i];
+        }
+    }
+
+    if (meshData.attributes[cro::Mesh::Attribute::Bitangent] != 0)
+    {
+        for (auto i = 0; i < cro::Mesh::Attribute::Bitangent; ++i)
+        {
+            bitanOffset += meshData.attributes[i];
+        }
+    }
+
+    auto applyTransform = [&](const glm::mat4& tx, std::size_t idx)
+    {
+        glm::vec4 v(m_importedVBO[idx], m_importedVBO[idx + 1], m_importedVBO[idx + 2], 1.f);
+        v = tx * v;
+        m_importedVBO[idx] = v.x;
+        m_importedVBO[idx+1] = v.y;
+        m_importedVBO[idx+2] = v.z;
+    };
+
+    //loop over the vertex data and modify
+    for (auto i = 0u; i < m_importedVBO.size(); i += vertexSize)
+    {
+        //position
+        applyTransform(transform, i);
+
+        if (normalOffset != 0)
+        {
+            auto idx = i + normalOffset;
+            applyTransform(rotation, idx);
+        }
+
+        if (tanOffset != 0)
+        {
+            auto idx = i + tanOffset;
+            applyTransform(rotation, idx);
+        }
+
+        if (bitanOffset != 0)
+        {
+            auto idx = i + bitanOffset;
+            applyTransform(rotation, idx);
+        }
+    }
+
+    //upload the data to the preview model
+    glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+    glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, m_importedVBO.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    m_importedTransform = {};
+    m_activeModel.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+    m_activeModel.getComponent<cro::Transform>().setRotation(glm::vec3(0.f));
 }
 
 void MenuState::loadPrefs()
