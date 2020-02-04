@@ -20,6 +20,8 @@ crogine was built with the aim of creating a flexible ECS based framework to run
 
 crogine uses OpenAL for audio, SDL2 for cross platform parts, and bullet 2.x for collision detection. Full physics support will be added as and when I deem necessary - the aforementioned modularity allows for easy integration of future features. Documentation can be generated with doxygen using the doxy file in common/docs. Eventually I plan to fully document features on the github wiki as and when I have the time. 
 
+Portions of this software are copyright (c) 2019 The FreeType Project (www.freetype.org).  All rights reserved.
+
 -----------------------------------------------------------------------
 
 Matt Marchant 2017 - 2020  

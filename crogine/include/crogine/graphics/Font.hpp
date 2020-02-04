@@ -35,33 +35,28 @@ source distribution.
 
 #include <map>
 #include <vector>
+#include <any>
 
-struct _TTF_Font;
 namespace cro
 {
     class Image;
 
+    struct Glyph final
+    {
+        float advance = 0.f;
+        FloatRect bounds;
+        FloatRect textureBounds;
+    };
+
     /*!
     \brief Font class.
-    Fonts are created from a given texture atlas which may be a standard
-    greyscale image or a signed distance field. Atlases use only the first (red)
+    Fonts are created from a given texture atlas which are a standard
+    greyscale image. Atlases use only the first (red)
     colour channel to multiply the colour of the given text instance when drawn.
     */
     class CRO_EXPORT_API Font final : public Detail::SDLResource
     {
     public:
-        struct Glyph final
-        {
-            FloatRect rect;
-            const Texture& texture;
-            Glyph(const Texture& t) : texture(t) {}
-        };
-
-        enum Type
-        {
-            Bitmap = 0,
-            SDF
-        };
 
         Font();
         ~Font();
@@ -78,17 +73,8 @@ namespace cro
         bool loadFromFile(const std::string& path);
 
         /*!
-        \brief Creates a font from the given Image
-        \param image Image holding the font atlas from which to create the font
-        \param size Width and height of a character within the atlas
-        \param type Type of image atlas, either bitmap or signed distance field
-        \returns true on success, else false
-        */
-        bool loadFromImage(const Image& image, glm::vec2 size, Type type = Type::Bitmap);
-
-        /*!
         \brief Attempts to return a float rect representing the sub rectangle of the atlas
-        for the give character.
+        for the given codepoint.
         */
         FloatRect getGlyph(uint32 codepoint, uint32 charSize) const;
 
@@ -98,41 +84,43 @@ namespace cro
         const Texture& getTexture(uint32 charSize) const;
 
         /*!
-        \brief Returns the type of this font, either bitmap or signed distance field
-        */
-        Type getType() const;
-
-        /*!
-        \brief Returns the lineheight of bitmap fonts or the default height
-        of SDF fonts before resizing
+        \brief Returns the lineheight 
         */
         float getLineHeight(uint32 charSize) const;
 
     private:
 
-        Type m_type;
         std::string m_path;
 
-        mutable _TTF_Font* m_font;
-
-        struct GlyphData final
+        struct Row final
         {
-            uint32 width, height;
-            std::vector<uint8> data;
-        };
-
-        struct MetricData final
-        {
-            int32 minx, maxx, miny, maxy;
+            Row(std::uint32_t t, std::uint32_t h) : width(0), top(t), height(h) {}
+            std::uint32_t width = 0;
+            std::uint32_t top = 0;
+            std::uint32_t height = 0;
         };
 
         struct Page final
         {
             Texture texture;
-            float lineHeight = 0.f;
-            std::map<uint32, FloatRect> subrects;
+            std::map<uint32, Glyph> glyphs;
+            std::uint32_t nextRow = 0;
+            std::vector<Row> rows;
         };
+
         mutable std::map<uint32, Page> m_pages;
-        bool createPage(uint32 charSize) const;
+        mutable std::vector<std::uint8_t> m_pixelBuffer;
+
+
+        //use std::any so we don't expose freetype pointers to public API
+        std::any m_library;
+        std::any m_face;
+        std::int32_t* m_refCount;
+
+        void loadGlyph(std::uint32_t cp, std::uint32_t charSize);
+        FloatRect getGlyphRect(Page&, std::uint32_t w, std::uint32_t h) const;
+        bool setCurrentCharacterSize(std::uint32_t) const;
+
+        void cleanup();
     };
 }
