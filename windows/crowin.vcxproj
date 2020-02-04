@@ -54,7 +54,9 @@
     <ClInclude Include="..\crogine\include\crogine\core\MessageBus.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\State.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\StateStack.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\core\String.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\SysTime.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\core\Utf.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Wavetable.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Window.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Assert.hpp" />
@@ -187,6 +189,7 @@
     <ClCompile Include="..\crogine\src\core\MessageBus.cpp" />
     <ClCompile Include="..\crogine\src\core\State.cpp" />
     <ClCompile Include="..\crogine\src\core\StateStack.cpp" />
+    <ClCompile Include="..\crogine\src\core\String.cpp" />
     <ClCompile Include="..\crogine\src\core\SysTime.cpp" />
     <ClCompile Include="..\crogine\src\core\tinyfiledialogs.c" />
     <ClCompile Include="..\crogine\src\core\Wavetable.cpp" />
@@ -272,6 +275,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\core\ConfigFile.inl" />
+    <None Include="..\crogine\include\crogine\core\String.inl" />
+    <None Include="..\crogine\include\crogine\core\Utf.inl" />
     <None Include="..\crogine\include\crogine\ecs\Entity.inl" />
     <None Include="..\crogine\include\crogine\ecs\EntityManager.inl" />
     <None Include="..\crogine\include\crogine\ecs\Scene.inl" />

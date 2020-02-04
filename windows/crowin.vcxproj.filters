@@ -483,6 +483,12 @@
     <ClInclude Include="..\crogine\include\crogine\core\SysTime.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\String.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\Utf.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -794,6 +800,9 @@
     <ClCompile Include="..\crogine\src\graphics\ModelDefinition.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\crogine\src\core\String.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\ecs\Entity.inl">
@@ -828,6 +837,12 @@
     </None>
     <None Include="..\crogine\include\crogine\network\NetHost.inl">
       <Filter>Header Files\network</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\core\String.inl">
+      <Filter>Header Files\core</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\core\Utf.inl">
+      <Filter>Header Files\core</Filter>
     </None>
   </ItemGroup>
 </Project>
