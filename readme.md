@@ -7,6 +7,7 @@ CROssplatform enGINE.
 
 SDL2 Based game engine which runs on Windows, linux and Android. Due to Apple's attitude towards OpenGL support for macOS and iOS is hit and miss. Mostly miss.
 
+
 #### Building
 Using the CMake file included in the root directory first generate project files for your compiler/environment of choice, then build and install the crogine library. To build the samples set the cmake variables BUILD_BATCAT or BUILD_TL to true. The included findCROGINE.cmake file should find the installed library if it was installed in the default location - else you need to manually point CMake to the crogine lib.
 
@@ -20,7 +21,8 @@ crogine was built with the aim of creating a flexible ECS based framework to run
 
 crogine uses OpenAL for audio, SDL2 for cross platform parts, and bullet 2.x for collision detection. Full physics support will be added as and when I deem necessary - the aforementioned modularity allows for easy integration of future features. Documentation can be generated with doxygen using the doxy file in common/docs. Eventually I plan to fully document features on the github wiki as and when I have the time. 
 
-Portions of this software are copyright (c) 2019 The FreeType Project (www.freetype.org).  All rights reserved.
+Portions of this software are copyright (c) 2019 The FreeType Project (www.freetype.org). All rights reserved.
+Portions of this software are copyright (c) 2019 SFML (www.sfml-dev.org). All rights reserved.
 
 -----------------------------------------------------------------------
 

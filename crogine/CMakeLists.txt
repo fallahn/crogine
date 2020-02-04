@@ -36,7 +36,7 @@ SET (CMAKE_CXX_STANDARD_REQUIRED ON)
 SET (OpenGL_GL_PREFERENCE "GLVND")
 
 find_package(SDL2 REQUIRED)
-find_package(SDL2_ttf REQUIRED)
+find_package(Freetype REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(OpenGL REQUIRED)
 
@@ -48,7 +48,7 @@ endif()
 
 include_directories(
   ${SDL2_INCLUDE_DIR}  
-  ${SDL2_TTF_INCLUDE_DIR}
+  ${FREETYPE_INCLUDE_DIRS}
   ${BULLET_INCLUDE_DIRS}  
   ${CMAKE_SOURCE_DIR}/crogine/include)
   
@@ -80,14 +80,14 @@ endif()
 if(USE_OPENAL)
 target_link_libraries(${PROJECT_NAME}
   ${SDL2_LIBRARY} 
-  ${SDL2_TTF_LIBRARIES}
+  ${FREETYPE_LIBRARIES}
   ${BULLET_LIBRARIES}
   ${OPENGL_LIBRARIES}
   ${OPENAL_LIBRARY})
 else()
 target_link_libraries(${PROJECT_NAME}
   ${SDL2_LIBRARY} 
-  ${SDL2_TTF_LIBRARIES}
+  ${FREETYPE_LIBRARIES}
   ${BULLET_LIBRARIES}
   ${OPENGL_LIBRARIES}
   ${SDL2_MIXER_LIBRARY})

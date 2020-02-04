@@ -227,6 +227,62 @@ bool Texture::update(const uint8* pixels, bool createMipMaps, URect area)
     return false;
 }
 
+bool Texture::update(const Texture& other, std::uint32_t xPos, std::uint32_t yPos)
+{
+    CRO_ASSERT(xPos + other.m_size.x <= m_size.x, "Won't fit!");
+    CRO_ASSERT(yPos + other.m_size.y <= m_size.y, "Won't fit!");
+    CRO_ASSERT(m_format == other.m_format, "Texture formats don't match");
+
+    if (!m_handle || !other.m_handle || (other.m_handle == m_handle))
+    {
+        return false;
+    }
+
+    auto bpp = 4;
+    GLenum format = GL_RGBA;
+
+    if (other.m_format == ImageFormat::RGB)
+    {
+        bpp = 3;
+        format = GL_RGB;
+    }
+    else if (other.m_format == ImageFormat::A)
+    {
+        bpp = 1;
+        format = GL_RED;
+    }
+
+    std::vector<std::uint8_t> buffer(other.m_size.x * other.m_size.y * bpp);
+
+    //TODO assert this works on GLES too
+#ifdef PLATFORM_DESKTOP
+    glCheck(glBindTexture(GL_TEXTURE_2D, other.m_handle));
+    glCheck(glGetTexImage(GL_TEXTURE_2D, 0, format, GL_UNSIGNED_BYTE, buffer.data()));
+    glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+#else
+    //we don't have glGetTexImage on GLES
+    GLuint frameBuffer = 0;
+    glCheck(glGenFramebuffers(1, &frameBuffer));
+    if (frameBuffer)
+    {
+        GLint previousFrameBuffer;
+        glCheck(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFrameBuffer));
+
+        glCheck(glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer));
+        glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, other.m_handle, 0));
+        glCheck(glReadPixels(0, 0, other.m_size.x, other.m_size.y, format, GL_UNSIGNED_BYTE, buffer.data()));
+        glCheck(glDeleteFramebuffers(1, &frameBuffer));
+
+        glCheck(glBindFramebuffer(GL_FRAMEBUFFER, previousFrameBuffer));
+    }
+
+#endif //PLATFORM_DESKTOP
+
+    update(buffer.data(), false, { xPos, yPos, other.m_size.x, other.m_size.y });
+
+    return true;
+}
+
 glm::uvec2 Texture::getSize() const
 {
     return m_size;
@@ -303,4 +359,14 @@ uint32 Texture::getMaxTextureSize()
 
     Logger::log("No valid gl context which querying max teure size", Logger::Type::Error);
     return 0;
+}
+
+void Texture::swap(Texture& other)
+{
+    std::swap(m_size, other.m_size);
+    std::swap(m_format, other.m_format);
+    std::swap(m_handle, other.m_handle);
+    std::swap(m_smooth, other.m_smooth);
+    std::swap(m_repeated, other.m_repeated);
+    std::swap(m_hasMipMaps, other.m_hasMipMaps);
 }

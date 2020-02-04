@@ -36,6 +36,7 @@ source distribution.
 #include <map>
 #include <vector>
 #include <any>
+#include <memory>
 
 namespace cro
 {
@@ -102,6 +103,7 @@ namespace cro
 
         struct Page final
         {
+            Page();
             Texture texture;
             std::map<uint32, Glyph> glyphs;
             std::uint32_t nextRow = 0;
@@ -115,9 +117,9 @@ namespace cro
         //use std::any so we don't expose freetype pointers to public API
         std::any m_library;
         std::any m_face;
-        std::int32_t* m_refCount;
+        //std::unique_ptr<std::int32_t> m_refCount; //use this if we decide to make font copyable
 
-        void loadGlyph(std::uint32_t cp, std::uint32_t charSize);
+        Glyph loadGlyph(std::uint32_t cp, std::uint32_t charSize) const;
         FloatRect getGlyphRect(Page&, std::uint32_t w, std::uint32_t h) const;
         bool setCurrentCharacterSize(std::uint32_t) const;
 

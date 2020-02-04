@@ -80,9 +80,11 @@ namespace cro
 
                 void main()
                 {
-                    float value = texture2D(u_texture, v_texCoord0).r;
+                    float value = texture2D(u_texture, v_texCoord0).a;
                     gl_FragColor = smoothstep(0.3, 1.0, value) * v_colour;
                     gl_FragColor.a *= value;
+
+                    //gl_FragColor = texture2D(u_texture, v_texCoord0) * v_colour;
                 })";
 
             const static std::string SDFFragment = R"(
