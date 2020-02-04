@@ -33,7 +33,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/core/Console.hpp>
-#include <crogine/util/String.hpp>
+#include <crogine/core/FileSystem.hpp>
 
 #include <string>
 #include <iostream>
@@ -170,7 +170,7 @@ namespace cro
 #else
 #define LOG(message, type) {\
 std::string fileName(__FILE__); \
-fileName = cro::Util::String::getFileName(fileName); \
+fileName = cro::FileSystem::getFileName(fileName); \
 std::stringstream ss; \
 ss << message << " (" << fileName << ", " << __LINE__ << ")"; \
 cro::Logger::log(ss.str(), type);}

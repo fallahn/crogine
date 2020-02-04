@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/graphics/Font.hpp>
+#include <crogine/util/String.hpp>
 
 using namespace cro;
 
@@ -57,7 +58,7 @@ Text::Text(const Font& font)
 }
 
 //public
-void Text::setString(const std::string& str)
+void Text::setString(const String& str)
 {
     m_string = str;
     m_dirtyFlags |= Flags::Verts;
@@ -125,7 +126,7 @@ float Text::getLineWidth(std::size_t idx) const
     }
 
     float width = 0.f;
-    for (auto i = start + 1; i < m_string.length(); ++i)
+    for (auto i = start + 1; i < m_string.size(); ++i)
     {
         if (m_string[i] == '\n')
         {

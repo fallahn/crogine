@@ -134,7 +134,7 @@ bool Font::loadFromImage(const Image& image, glm::vec2 charSize, Type type)
     return false;
 }
 
-FloatRect Font::getGlyph(char c, uint32 charSize) const
+FloatRect Font::getGlyph(uint32 codepoint, uint32 charSize) const
 {
     if (m_pages.count(charSize) == 0)
     {
@@ -146,12 +146,12 @@ FloatRect Font::getGlyph(char c, uint32 charSize) const
     
     Page& page = m_pages[charSize];
     
-    if (page.subrects.count(c) == 0)
+    if (page.subrects.count(codepoint) == 0)
     {
         //TODO insert a new glyph
         return {};
     }
-    return page.subrects.find(c)->second;
+    return page.subrects.find(codepoint)->second;
 }
 
 const Texture& Font::getTexture(uint32 charSize) const

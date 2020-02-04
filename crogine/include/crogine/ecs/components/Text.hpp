@@ -30,11 +30,11 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/core/String.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 
-#include <string>
 #include <vector>
 
 namespace cro
@@ -58,7 +58,7 @@ namespace cro
         /*!
         \brief Set the text's string
         */
-        void setString(const std::string&);
+        void setString(const String&);
 
         /*!
         \brief Sets the character size
@@ -131,7 +131,7 @@ namespace cro
 
     private:
         const Font* m_font;
-        std::string m_string;
+        String m_string;
         uint32 m_charSize;
         Colour m_colour;
         Material::BlendMode m_blendMode;

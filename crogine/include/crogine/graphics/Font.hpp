@@ -88,9 +88,9 @@ namespace cro
 
         /*!
         \brief Attempts to return a float rect representing the sub rectangle of the atlas
-        for the give character. Currently only ASCII chars are supported.
+        for the give character.
         */
-        FloatRect getGlyph(char c, uint32 charSize) const;
+        FloatRect getGlyph(uint32 codepoint, uint32 charSize) const;
 
         /*!
         \brief Returns a reference to the texture used by the font
@@ -130,7 +130,7 @@ namespace cro
         {
             Texture texture;
             float lineHeight = 0.f;
-            std::map<uint8, FloatRect> subrects;
+            std::map<uint32, FloatRect> subrects;
         };
         mutable std::map<uint32, Page> m_pages;
         bool createPage(uint32 charSize) const;
