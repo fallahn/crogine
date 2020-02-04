@@ -132,7 +132,7 @@ float Text::getLineWidth(std::size_t idx) const
         {
             break;
         }
-        width += m_font->getGlyph(m_string[i], m_charSize).width;
+        width += m_font->getGlyph(m_string[i], m_charSize).advance;
     }
 
     return width;
@@ -149,7 +149,7 @@ void Text::updateLocalBounds() const
 
     for (auto c : m_string)
     {
-        if (c == '\n'/* || c == '\r'*/) //only newline is a new line!!
+        if (c == '\n')
         {
             if (currWidth > m_localBounds.width)
             {
@@ -162,11 +162,12 @@ void Text::updateLocalBounds() const
         }
         else
         {
+            //TODO this needs to account for kerning
             auto glyph = m_font->getGlyph(c, m_charSize);
-            currWidth += glyph.width;
-            if (currHeight < glyph.height)
+            currWidth += glyph.advance;
+            if (currHeight < glyph.bounds.height)
             {
-                currHeight = glyph.height;
+                currHeight = glyph.bounds.height;
             }
         }
     }

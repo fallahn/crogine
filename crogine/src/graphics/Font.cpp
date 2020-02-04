@@ -49,13 +49,7 @@ using namespace cro;
 
 namespace
 {
-    template <typename T, typename U>
-    inline T reinterpret(const U& input)
-    {
-        T output;
-        std::memcpy(&output, &input, sizeof(U));
-        return output;
-    }
+    const float MagicNumber = static_cast<float>(1 << 6);
 }
 
 Font::Font()
@@ -105,7 +99,7 @@ bool Font::loadFromFile(const std::string& path)
     return true;
 }
 
-FloatRect Font::getGlyph(uint32 codepoint, uint32 charSize) const
+Glyph Font::getGlyph(uint32 codepoint, uint32 charSize) const
 {
     auto& currentGlyphs = m_pages[charSize].glyphs;
 
@@ -116,13 +110,13 @@ FloatRect Font::getGlyph(uint32 codepoint, uint32 charSize) const
     auto result = currentGlyphs.find(codepoint);
     if (result != currentGlyphs.end())
     {
-        return result->second.textureBounds;
+        return result->second;
     }
     else
     {
         //add the glyph to the page
         auto glyph = loadGlyph(codepoint, charSize);
-        return currentGlyphs.insert(std::make_pair(codepoint, glyph)).first->second.textureBounds;
+        return currentGlyphs.insert(std::make_pair(codepoint, glyph)).first->second;
     }
 
     return {};
@@ -142,9 +136,44 @@ float Font::getLineHeight(uint32 charSize) const
     if (face && setCurrentCharacterSize(charSize))
     {
         //there's some magic going on here...
-        return static_cast<float>(face->size->metrics.height) / static_cast<float>(1 << 6);
+        return static_cast<float>(face->size->metrics.height) / MagicNumber;
     }
     return 0.f;
+}
+
+float Font::getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charSize) const
+{
+    if (cpA == 0 || cpB == 0)
+    {
+        return 0.f;
+    }
+
+    FT_Face face = std::any_cast<FT_Face>(m_face);
+
+    if (face && FT_HAS_KERNING(face) && setCurrentCharacterSize(charSize))
+    {
+        //convert the characters to indices
+        FT_UInt index1 = FT_Get_Char_Index(face, cpA);
+        FT_UInt index2 = FT_Get_Char_Index(face, cpB);
+
+        //get the kerning vector
+        FT_Vector kerning;
+        FT_Get_Kerning(face, index1, index2, FT_KERNING_DEFAULT, &kerning);
+
+        //x advance is already in pixels for bitmap fonts
+        if (!FT_IS_SCALABLE(face))
+        {
+            return static_cast<float>(kerning.x);
+        }
+
+        //return the x advance
+        return static_cast<float>(kerning.x) / MagicNumber;
+    }
+    else
+    {
+        //invalid font, or no kerning
+        return 0.f;
+    }
 }
 
 //private
@@ -206,10 +235,10 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize) const
         retVal.textureBounds.width -= padding * 2;
         retVal.textureBounds.height -= padding * 2;
 
-        retVal.bounds.left = static_cast<float>(face->glyph->metrics.horiBearingX) / static_cast<float>(1 << 6);
-        retVal.bounds.bottom = -static_cast<float>(face->glyph->metrics.horiBearingY) / static_cast<float>(1 << 6);
-        retVal.bounds.width = static_cast<float>(face->glyph->metrics.width) / static_cast<float>(1 << 6);
-        retVal.bounds.height = static_cast<float>(face->glyph->metrics.height) / static_cast<float>(1 << 6);
+        retVal.bounds.left = static_cast<float>(face->glyph->metrics.horiBearingX) / MagicNumber;
+        retVal.bounds.bottom = -static_cast<float>(face->glyph->metrics.horiBearingY) / MagicNumber;
+        retVal.bounds.width = static_cast<float>(face->glyph->metrics.width) / MagicNumber;
+        retVal.bounds.height = static_cast<float>(face->glyph->metrics.height) / MagicNumber;
 
 
         //buffer the pixel data and update the page texture
@@ -230,7 +259,8 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize) const
         const auto* pixels = bitmap.buffer;
         if (bitmap.pixel_mode == FT_PIXEL_MODE_MONO)
         {
-            for(auto y = height - padding - 1; y >= padding; --y)
+            //for(auto y = height - padding - 1; y >= padding; --y)
+            for(auto y = padding; y < height - padding; ++y)
             {
                 for (auto x = padding; x < width - padding; ++x)
                 {
@@ -242,7 +272,8 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize) const
         }
         else
         {
-            for (auto y = height - padding - 1; y >= padding; --y)
+            //for (auto y = height - padding - 1; y >= padding; --y)
+            for (auto y = padding; y < height - padding; ++y)
             {
                 for (auto x = padding; x < width - padding; ++x)
                 {

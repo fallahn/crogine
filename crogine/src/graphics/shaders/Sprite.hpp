@@ -84,7 +84,7 @@ namespace cro
                     gl_FragColor = smoothstep(0.3, 1.0, value) * v_colour;
                     gl_FragColor.a *= value;
 
-                    //gl_FragColor = texture2D(u_texture, v_texCoord0) * v_colour;
+                    //gl_FragColor = v_colour;
                 })";
 
             const static std::string SDFFragment = R"(

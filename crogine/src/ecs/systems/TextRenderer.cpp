@@ -482,10 +482,11 @@ void TextRenderer::updateVerts(Text& text)
     float width = 0.f;
     std::size_t lineCount = 0;
 
+    std::uint32_t prevChar = 0;
     for (auto c : text.m_string)
     {
         //check for end of lines
-        if (/*c == '\r' ||*/ c == '\n') //newline is a new line!!
+        if (c == '\n') //newline is a new line!!
         {
             lineCount++;
 
@@ -495,40 +496,55 @@ void TextRenderer::updateVerts(Text& text)
             continue;
         }
 
-        auto rect = text.m_font->getGlyph(c, text.m_charSize);
+        auto glyph = text.m_font->getGlyph(c, text.m_charSize);
+        auto rect = glyph.textureBounds;
+        auto bounds = glyph.bounds;
+
         Text::Vertex v;
+
         v.position.x = xPos;
-        v.position.y = yPos + rect.height;
+        v.position.y = yPos - bounds.bottom;
         v.position.z = 0.f;
 
         v.UV.x = rect.left / texSize.x;
-        v.UV.y = (rect.bottom + rect.height) / texSize.y;
+        v.UV.y = rect.bottom / texSize.y;
+
         text.m_vertices.push_back(v);
         text.m_vertices.push_back(v); //twice for degen tri
 
-        v.position.y = yPos;
+
+        v.position.y = yPos - bounds.height - bounds.bottom;
 
         v.UV.x = rect.left / texSize.x;
-        v.UV.y = rect.bottom / texSize.y;
+        v.UV.y = (rect.bottom + rect.height) / texSize.y;
+
         text.m_vertices.push_back(v);
 
+
         v.position.x = xPos + rect.width;
-        v.position.y = yPos + rect.height;
+        v.position.y = yPos - bounds.bottom;
+
+        v.UV.x = (rect.left + rect.width) / texSize.x;
+        v.UV.y = rect.bottom / texSize.y;
+
+        text.m_vertices.push_back(v);
+
+
+        v.position.y = yPos - bounds.height - bounds.bottom;
 
         v.UV.x = (rect.left + rect.width) / texSize.x;
         v.UV.y = (rect.bottom + rect.height) / texSize.y;
-        text.m_vertices.push_back(v);
 
-        v.position.y = yPos;
-
-        v.UV.x = (rect.left + rect.width) / texSize.x;
-        v.UV.y = rect.bottom / texSize.y;
         text.m_vertices.push_back(v);
         text.m_vertices.push_back(v); //end degen tri
 
+
+
         if (v.position.x > width) width = v.position.x;
 
-        xPos += rect.width;
+        xPos += text.m_font->getKerning(prevChar, c, text.m_charSize);
+        xPos += glyph.advance;
+        prevChar = c;
     }
 
     text.m_localBounds.bottom = yPos;

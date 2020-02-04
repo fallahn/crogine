@@ -45,8 +45,8 @@ namespace cro
     struct Glyph final
     {
         float advance = 0.f;
-        FloatRect bounds;
-        FloatRect textureBounds;
+        FloatRect bounds; //< relative to baseline
+        FloatRect textureBounds; //< relative to texture atlas
     };
 
     /*!
@@ -77,7 +77,7 @@ namespace cro
         \brief Attempts to return a float rect representing the sub rectangle of the atlas
         for the given codepoint.
         */
-        FloatRect getGlyph(uint32 codepoint, uint32 charSize) const;
+        Glyph getGlyph(uint32 codepoint, uint32 charSize) const;
 
         /*!
         \brief Returns a reference to the texture used by the font
@@ -88,6 +88,11 @@ namespace cro
         \brief Returns the lineheight 
         */
         float getLineHeight(uint32 charSize) const;
+
+        /*!
+        \brief Returns the kerning between two characters
+        */
+        float getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charSize) const;
 
     private:
 
