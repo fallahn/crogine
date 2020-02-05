@@ -38,7 +38,6 @@ source distribution.
 #include <crogine/gui/imgui.h>
 
 #include <SDL.h>
-#include <SDL_ttf.h>
 #include <SDL_joystick.h>
 #include <SDL_filesystem.h>
 
@@ -87,10 +86,6 @@ App::App()
 	else
 	{
 		m_instance = this;
-        if (TTF_Init() == -1)
-        {
-            Logger::log("Something when wrong initialising TTF fonts!", Logger::Type::Error);
-        }
 
         for (auto i = 0; i < SDL_NumJoysticks(); ++i)
         {
@@ -132,7 +127,6 @@ App::~App()
     }
     
     //SDL cleanup
-    TTF_Quit();
 	SDL_Quit();
 }
 

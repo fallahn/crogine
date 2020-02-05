@@ -61,7 +61,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         reset();
     }
 
-    if (Util::String::getFileExtension(path) != ".cmt")
+    if (FileSystem::getFileExtension(path) != ".cmt")
     {
         Logger::log(path + ": unusual file extension...", Logger::Type::Warning);
     }
@@ -87,7 +87,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     }
 
     const std::string& meshValue = meshPath->getValue<std::string>();
-    auto ext = Util::String::getFileExtension(meshValue);
+    auto ext = FileSystem::getFileExtension(meshValue);
     std::unique_ptr<MeshBuilder> meshBuilder;
     bool checkSkeleton = false;
     if (ext == ".cmf")

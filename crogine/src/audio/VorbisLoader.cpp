@@ -29,6 +29,8 @@ source distribution.
 
 #include "VorbisLoader.hpp"
 
+#include <algorithm>
+
 using namespace cro;
 using namespace cro::Detail;
 

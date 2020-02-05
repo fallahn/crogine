@@ -172,7 +172,7 @@ cro::int32 OpenALImpl::requestNewBuffer(const std::string& path)
 {
     std::unique_ptr<AudioFile> loader;
     
-    auto ext = Util::String::getFileExtension(path);
+    auto ext = FileSystem::getFileExtension(path);
     PCMData data;
     if (ext == ".wav")
     {      
@@ -235,7 +235,7 @@ cro::int32 OpenALImpl::requestNewStream(const std::string& path)
 
     //attempt to open the file
     auto& stream = m_streams[m_nextStream];
-    auto ext = Util::String::getFileExtension(path);
+    auto ext = FileSystem::getFileExtension(path);
     if (ext == ".wav")
     {
         stream.audioFile = std::make_unique<WavLoader>();

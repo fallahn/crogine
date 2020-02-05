@@ -61,17 +61,17 @@ TextRenderer::TextRenderer(MessageBus& mb)
     MaxTexts = std::min(MaxTexts - 1, 255u); //caps size on platforms such as VMs which incorrectly report max_vectors
     LOG(std::to_string(MaxTexts) + " texts are available per batch", Logger::Type::Info);
 
-    if (!m_shaders[Font::Type::Bitmap].shader.loadFromString(Shaders::Sprite::Vertex, Shaders::Text::BitmapFragment, "#define MAX_MATRICES " + std::to_string(MaxTexts) + "\n"))
+    if (!m_shaders[/*Font::Type::Bitmap*/0].shader.loadFromString(Shaders::Sprite::Vertex, Shaders::Text::BitmapFragment, "#define MAX_MATRICES " + std::to_string(MaxTexts) + "\n"))
     {
         Logger::log("Failed loading bitmap font shader, text renderer is in invalid state", Logger::Type::Error, Logger::Output::All);
     }
 
-    if (!m_shaders[Font::Type::SDF].shader.loadFromString(Shaders::Sprite::Vertex, Shaders::Text::SDFFragment, "#define MAX_MATRICES " + std::to_string(MaxTexts) + "\n"))
-    {
-        Logger::log("Failed loading SDF font shader, text renderer is in invalid state", Logger::Type::Error, Logger::Output::All);
-    }
-    fetchShaderData(m_shaders[Font::Type::Bitmap]);
-    fetchShaderData(m_shaders[Font::SDF]);
+    //if (!m_shaders[Font::Type::SDF].shader.loadFromString(Shaders::Sprite::Vertex, Shaders::Text::SDFFragment, "#define MAX_MATRICES " + std::to_string(MaxTexts) + "\n"))
+    //{
+    //    Logger::log("Failed loading SDF font shader, text renderer is in invalid state", Logger::Type::Error, Logger::Output::All);
+    //}
+    fetchShaderData(m_shaders[/*Font::Type::Bitmap*/0]);
+    //fetchShaderData(m_shaders[Font::SDF]);
 
     requireComponent<Text>();
     requireComponent<Transform>();
@@ -191,26 +191,26 @@ void TextRenderer::render(Entity camera)
     m_currentViewport = applyViewport(camComponent.viewport);
 
     //bind shader and attrib arrays - TODO do this for both shader types
-    glCheck(glUseProgram(m_shaders[Font::Bitmap].shader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].projectionUniformIndex, 1, GL_FALSE, &camComponent.viewProjectionMatrix[0][0]));
+    glCheck(glUseProgram(m_shaders[/*Font::Bitmap*/0].shader.getGLHandle()));
+    glCheck(glUniformMatrix4fv(m_shaders[/*Font::Bitmap*/0].projectionUniformIndex, 1, GL_FALSE, &camComponent.viewProjectionMatrix[0][0]));
     glCheck(glActiveTexture(GL_TEXTURE0));
-    glCheck(glUniform1i(m_shaders[Font::Bitmap].textureUniformIndex, 0));
+    glCheck(glUniform1i(m_shaders[/*Font::Bitmap*/0].textureUniformIndex, 0));
 
     //foreach vbo bind and draw
     std::size_t idx = 0;
     for (const auto& batch : m_buffers)
     {
         const auto& transforms = m_bufferTransforms[idx++]; //TODO this should be same index as current buffer
-        glCheck(glUniformMatrix4fv(m_shaders[Font::Bitmap].xformUniformIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
+        glCheck(glUniformMatrix4fv(m_shaders[/*Font::Bitmap*/0].xformUniformIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
 
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, batch.first));
 
         //bind attrib pointers
-        for (auto i = 0u; i < m_shaders[Font::Bitmap].attribMap.size(); ++i)
+        for (auto i = 0u; i < m_shaders[/*Font::Bitmap*/0].attribMap.size(); ++i)
         {
-            glCheck(glEnableVertexAttribArray(m_shaders[Font::Bitmap].attribMap[i].location));
-            glCheck(glVertexAttribPointer(m_shaders[Font::Bitmap].attribMap[i].location, m_shaders[Font::Bitmap].attribMap[i].size, GL_FLOAT, GL_FALSE, vertexSize,
-                reinterpret_cast<void*>(static_cast<intptr_t>(m_shaders[Font::Bitmap].attribMap[i].offset))));
+            glCheck(glEnableVertexAttribArray(m_shaders[/*Font::Bitmap*/0].attribMap[i].location));
+            glCheck(glVertexAttribPointer(m_shaders[/*Font::Bitmap*/0].attribMap[i].location, m_shaders[/*Font::Bitmap*/0].attribMap[i].size, GL_FLOAT, GL_FALSE, vertexSize,
+                reinterpret_cast<void*>(static_cast<intptr_t>(m_shaders[/*Font::Bitmap*/0].attribMap[i].offset))));
         }
 
         for (const auto& batchData : batch.second)
@@ -229,9 +229,9 @@ void TextRenderer::render(Entity camera)
         }
 
         //unbind attrib pointers
-        for (auto i = 0u; i < m_shaders[Font::Bitmap].attribMap.size(); ++i)
+        for (auto i = 0u; i < m_shaders[/*Font::Bitmap*/0].attribMap.size(); ++i)
         {
-            glCheck(glDisableVertexAttribArray(m_shaders[Font::Bitmap].attribMap[i].location));
+            glCheck(glDisableVertexAttribArray(m_shaders[/*Font::Bitmap*/0].attribMap[i].location));
         }
 
     }
@@ -474,7 +474,7 @@ void TextRenderer::updateVerts(Text& text)
 
     float xPos = getStart(0, text);
     float yPos = -text.getLineHeight();
-    float lineHeight = text.getLineHeight();
+    float lineHeight = -yPos;
     glm::vec2 texSize(text.m_font->getTexture(text.m_charSize).getSize());
     CRO_ASSERT(texSize.x > 0 && texSize.y > 0, "Font texture not loaded!");
 
@@ -482,10 +482,11 @@ void TextRenderer::updateVerts(Text& text)
     float width = 0.f;
     std::size_t lineCount = 0;
 
+    std::uint32_t prevChar = 0;
     for (auto c : text.m_string)
     {
         //check for end of lines
-        if (/*c == '\r' ||*/ c == '\n') //newline is a new line!!
+        if (c == '\n') //newline is a new line!!
         {
             lineCount++;
 
@@ -495,40 +496,55 @@ void TextRenderer::updateVerts(Text& text)
             continue;
         }
 
-        auto rect = text.m_font->getGlyph(c, text.m_charSize);
+        auto glyph = text.m_font->getGlyph(c, text.m_charSize);
+        auto rect = glyph.textureBounds;
+        auto bounds = glyph.bounds;
+        auto descender = 8.f;// bounds.bottom + bounds.height;
         Text::Vertex v;
+
         v.position.x = xPos;
-        v.position.y = yPos + rect.height;
+        v.position.y = yPos - bounds.bottom + descender;
         v.position.z = 0.f;
 
         v.UV.x = rect.left / texSize.x;
-        v.UV.y = (rect.bottom + rect.height) / texSize.y;
+        v.UV.y = rect.bottom / texSize.y;
+
         text.m_vertices.push_back(v);
         text.m_vertices.push_back(v); //twice for degen tri
 
-        v.position.y = yPos;
+
+        v.position.y = yPos - bounds.bottom - bounds.height + descender;
 
         v.UV.x = rect.left / texSize.x;
-        v.UV.y = rect.bottom / texSize.y;
+        v.UV.y = (rect.bottom + rect.height) / texSize.y;
+
         text.m_vertices.push_back(v);
 
+
         v.position.x = xPos + rect.width;
-        v.position.y = yPos + rect.height;
+        v.position.y = yPos - bounds.bottom + descender;
+
+        v.UV.x = (rect.left + rect.width) / texSize.x;
+        v.UV.y = rect.bottom / texSize.y;
+
+        text.m_vertices.push_back(v);
+
+
+        v.position.y = yPos - bounds.bottom - bounds.height + descender;
 
         v.UV.x = (rect.left + rect.width) / texSize.x;
         v.UV.y = (rect.bottom + rect.height) / texSize.y;
-        text.m_vertices.push_back(v);
 
-        v.position.y = yPos;
-
-        v.UV.x = (rect.left + rect.width) / texSize.x;
-        v.UV.y = rect.bottom / texSize.y;
         text.m_vertices.push_back(v);
         text.m_vertices.push_back(v); //end degen tri
 
+
+
         if (v.position.x > width) width = v.position.x;
 
-        xPos += rect.width;
+        xPos += text.m_font->getKerning(prevChar, c, text.m_charSize);
+        xPos += glyph.advance;
+        prevChar = c;
     }
 
     text.m_localBounds.bottom = yPos;

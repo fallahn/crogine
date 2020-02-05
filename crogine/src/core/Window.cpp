@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Log.hpp>
+#include <crogine/core/App.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
 #include <SDL.h>
@@ -290,10 +291,12 @@ void Window::loadResources(const std::function<void()>& loader)
 
     SDL_AtomicIncRef(&data.threadFlag);
 
-    int32 result;
+    int32 result = 0;
     SDL_WaitThread(thread, &result);
 
     //SDL_GL_MakeCurrent(m_window, m_mainContext);
+
+    App::getInstance().resetFrameTime();
 #else
 
     //android doesn't appear to like running the thread - so we'll display the loading screen once

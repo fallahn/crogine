@@ -58,6 +58,7 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/String.hpp>
 
 #include <crogine/detail/glm/gtx/euler_angles.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>

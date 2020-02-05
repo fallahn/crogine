@@ -44,6 +44,7 @@ source distribution.
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/CommandID.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/Font.hpp>
@@ -124,6 +125,9 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     entity.getComponent<cro::Transform>().addChild(iconEnt.addComponent<cro::Transform>());
     iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.2f });
     iconEnt.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("play");
+
+    //textEnt.addComponent<cro::Callback>().active = true;
+    //textEnt.getComponent<cro::Callback>().function = [](cro::Entity e, cro::Time dt) {e.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f },dt.asSeconds()); };
 
     //options
     entity = m_menuScene.createEntity();

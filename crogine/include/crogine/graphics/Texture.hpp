@@ -88,6 +88,11 @@ namespace cro
         */
         bool update(const uint8* pixels, bool createMipMaps = false, URect area = {});
 
+        /*
+        \brief Updates the texture with the information stored in the given texture
+        */
+        bool update(const Texture& other, std::uint32_t xPos = 0, std::uint32_t yPos = 0);
+
         /*!
         \brief Returns the dimensions of the image which makes up this texture
         */
@@ -127,6 +132,11 @@ namespace cro
         \brief Returns the max texture size for the current platform
         */
         static uint32 getMaxTextureSize();
+
+        /*!
+        \brief Swaps this texture with the given texture
+        */
+        void swap(Texture& other);
 
     private:
         glm::uvec2 m_size;
