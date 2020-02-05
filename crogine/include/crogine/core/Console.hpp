@@ -33,6 +33,7 @@ source distribution.
 
 #include <functional>
 #include <string>
+#include <vector>
 
 namespace cro
 {
