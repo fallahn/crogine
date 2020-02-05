@@ -474,7 +474,7 @@ void TextRenderer::updateVerts(Text& text)
 
     float xPos = getStart(0, text);
     float yPos = -text.getLineHeight();
-    float lineHeight = text.getLineHeight();
+    float lineHeight = -yPos;
     glm::vec2 texSize(text.m_font->getTexture(text.m_charSize).getSize());
     CRO_ASSERT(texSize.x > 0 && texSize.y > 0, "Font texture not loaded!");
 
@@ -499,11 +499,11 @@ void TextRenderer::updateVerts(Text& text)
         auto glyph = text.m_font->getGlyph(c, text.m_charSize);
         auto rect = glyph.textureBounds;
         auto bounds = glyph.bounds;
-
+        auto descender = 8.f;// bounds.bottom + bounds.height;
         Text::Vertex v;
 
         v.position.x = xPos;
-        v.position.y = yPos - bounds.bottom;
+        v.position.y = yPos - bounds.bottom + descender;
         v.position.z = 0.f;
 
         v.UV.x = rect.left / texSize.x;
@@ -513,7 +513,7 @@ void TextRenderer::updateVerts(Text& text)
         text.m_vertices.push_back(v); //twice for degen tri
 
 
-        v.position.y = yPos - bounds.height - bounds.bottom;
+        v.position.y = yPos - bounds.bottom - bounds.height + descender;
 
         v.UV.x = rect.left / texSize.x;
         v.UV.y = (rect.bottom + rect.height) / texSize.y;
@@ -522,7 +522,7 @@ void TextRenderer::updateVerts(Text& text)
 
 
         v.position.x = xPos + rect.width;
-        v.position.y = yPos - bounds.bottom;
+        v.position.y = yPos - bounds.bottom + descender;
 
         v.UV.x = (rect.left + rect.width) / texSize.x;
         v.UV.y = rect.bottom / texSize.y;
@@ -530,7 +530,7 @@ void TextRenderer::updateVerts(Text& text)
         text.m_vertices.push_back(v);
 
 
-        v.position.y = yPos - bounds.height - bounds.bottom;
+        v.position.y = yPos - bounds.bottom - bounds.height + descender;
 
         v.UV.x = (rect.left + rect.width) / texSize.x;
         v.UV.y = (rect.bottom + rect.height) / texSize.y;

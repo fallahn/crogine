@@ -121,8 +121,6 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
     });
 
     updateView();
-
-    //context.appInstance.setClearColour(cro::Colour::Red());
 }
 
 //public
