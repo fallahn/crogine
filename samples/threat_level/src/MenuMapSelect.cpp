@@ -274,7 +274,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
-            cmd.action = [](cro::Entity e, cro::Time)
+            cmd.action = [](cro::Entity e, float)
             {
                 auto& slider = e.getComponent<Slider>();
                 slider.active = true;

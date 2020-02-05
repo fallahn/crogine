@@ -78,7 +78,7 @@ namespace cro
         \brief Fetches the next sample of the wavetable according to the given frame time
         \param dt Time since the last sample was fetched from the wavetable
         */
-        float fetch(Time) const;
+        float fetch(float) const;
 
     private:
         float m_timestep;

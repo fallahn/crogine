@@ -107,7 +107,7 @@ namespace cro
 		else returns false. 
 		\see handleEvent()
 		*/
-		virtual bool simulate(Time dt) = 0;
+		virtual bool simulate(float dt) = 0;
 
 		/*!
 		\brief Calls to rendering systems should be performed here.

@@ -64,7 +64,7 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
 
 
 //public
-void ShadowMapRenderer::process(cro::Time dt)
+void ShadowMapRenderer::process(float)
 {
     m_visibleEntities.clear();
     

@@ -77,7 +77,7 @@ void ItemDirector::handleMessage(const cro::Message& msg)
             {
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Collectable;
-                cmd.action = [data](cro::Entity entity, cro::Time)
+                cmd.action = [data](cro::Entity entity, float)
                 {
                     auto& collectable = entity.getComponent<CollectableItem>();
                     if (collectable.type == CollectableItem::WeaponUpgrade && !collectable.active)
@@ -115,11 +115,11 @@ void ItemDirector::handleEvent(const cro::Event&)
 
 }
 
-void ItemDirector::process(cro::Time dt)
+void ItemDirector::process(float dt)
 {
     if (m_active)
     {
-        m_releaseTime -= dt.asSeconds();
+        m_releaseTime -= dt;
         if (m_releaseTime < 0)
         {
             //ignore weapon upgrades, these are dropped by NPCs
@@ -128,7 +128,7 @@ void ItemDirector::process(cro::Time dt)
 
             cro::Command cmd;
             cmd.targetFlags = CommandID::Collectable;
-            cmd.action = [type](cro::Entity entity, cro::Time)
+            cmd.action = [type](cro::Entity entity, float)
             {
                 auto& item = entity.getComponent<CollectableItem>();
                 if (item.type == type && !item.active)

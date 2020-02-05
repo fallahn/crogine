@@ -55,16 +55,15 @@ public:
     explicit NpcWeaponSystem(cro::MessageBus&);
 
     void handleMessage(const cro::Message&) override;
-    void process(cro::Time) override;
+    void process(float) override;
 
 private:
-    float m_accumulator;
     float m_backgroundSpeed;
 
     void onEntityAdded(cro::Entity) override;
 
     void processPulse(std::size_t&, float);
-    void processLaser(cro::Entity);
+    void processLaser(cro::Entity, float);
     void processOrb(std::size_t&, float);
     void processMissile(cro::Entity);
 

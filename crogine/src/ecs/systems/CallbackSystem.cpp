@@ -39,7 +39,7 @@ CallbackSystem::CallbackSystem(MessageBus& mb)
     requireComponent<Callback>();
 }
 
-void CallbackSystem::process(cro::Time dt)
+void CallbackSystem::process(float dt)
 {
     auto& entities = getEntities();
     for (auto& entity : entities)

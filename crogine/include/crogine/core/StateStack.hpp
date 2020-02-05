@@ -106,7 +106,7 @@ namespace cro
 		passing in the elapsed time, until the active state returns false,
 		or the end of the stack is reached.
 		*/
-		void simulate(Time);
+		void simulate(float);
 
 		/*!
 		\brief Calls the render function on each state active on the stack

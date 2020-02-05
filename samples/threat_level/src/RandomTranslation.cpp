@@ -40,7 +40,7 @@ Translator::Translator(cro::MessageBus& mb)
 }
 
 //public
-void Translator::process(cro::Time)
+void Translator::process(float)
 {
     auto& entities = getEntities();
     for (auto& e : entities)

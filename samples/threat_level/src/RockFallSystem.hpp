@@ -54,7 +54,7 @@ class RockFallSystem final : public cro::System
 public:
     explicit RockFallSystem(cro::MessageBus&);
 
-    void process(cro::Time) override;
+    void process(float) override;
 
     void handleMessage(const cro::Message&) override;
 

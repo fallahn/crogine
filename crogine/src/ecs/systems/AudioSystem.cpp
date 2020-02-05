@@ -49,7 +49,7 @@ AudioSystem::AudioSystem(MessageBus& mb)
 }
 
 //public
-void AudioSystem::process(cro::Time dt)
+void AudioSystem::process(float)
 {
     //update the scene's listener details
     const auto& listener = getScene()->getActiveListener();

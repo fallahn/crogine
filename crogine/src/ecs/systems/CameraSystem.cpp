@@ -44,7 +44,7 @@ CameraSystem::CameraSystem(cro::MessageBus& mb)
 }
 
 //public
-void CameraSystem::process(Time)
+void CameraSystem::process(float)
 {
     auto& entities = getEntities();
     for (auto entity : entities)

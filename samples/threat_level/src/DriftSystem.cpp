@@ -44,7 +44,7 @@ DriftSystem::DriftSystem(cro::MessageBus& mb)
 }
 
 //public
-void DriftSystem::process(cro::Time dt)
+void DriftSystem::process(float dt)
 {
     auto& entities = getEntities();
     for (auto& entity : entities)
@@ -58,6 +58,6 @@ void DriftSystem::process(cro::Time dt)
         //currPos.y = position;
         //tx.setPosition(currPos);
 
-        entity.getComponent<cro::Transform>().move({ 0.f, position * dt.asSeconds(), 0.f });
+        entity.getComponent<cro::Transform>().move({ 0.f, position * dt, 0.f });
     }
 }

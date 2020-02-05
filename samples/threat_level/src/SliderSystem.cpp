@@ -47,7 +47,7 @@ SliderSystem::SliderSystem(cro::MessageBus& mb)
 }
 
 //public
-void SliderSystem::process(cro::Time dt)
+void SliderSystem::process(float dt)
 {
     auto& entities = getEntities();
     for (auto& e : entities)
@@ -65,7 +65,7 @@ void SliderSystem::process(cro::Time dt)
             }
             else
             {
-                tx.move(movement * slider.speed * dt.asSeconds());
+                tx.move(movement * slider.speed * dt);
             }
         }
     }

@@ -57,10 +57,8 @@ ItemSystem::ItemSystem(cro::MessageBus& mb)
 }
 
 //public
-void ItemSystem::process(cro::Time dt)
+void ItemSystem::process(float dt)
 {
-    const float dtSec = dt.asSeconds();
-
     auto& entities = getEntities();
     for (auto& entity : entities)
     {
@@ -69,9 +67,9 @@ void ItemSystem::process(cro::Time dt)
         {
             //move item
             auto& tx = entity.getComponent<cro::Transform>();
-            tx.move({ status.speed * dtSec, 0.f, 0.f });
+            tx.move({ status.speed * dt, 0.f, 0.f });
 
-            tx.move(status.impulse * dtSec);
+            tx.move(status.impulse * dt);
             status.impulse *= 0.94f;
 
             //if near the player get closer
@@ -81,7 +79,7 @@ void ItemSystem::process(cro::Time dt)
             {
                 float ratio = 1.f - (dist / minPlayerDistance);
                 auto movement = glm::normalize(dir);
-                tx.move(movement * magnetSpeed * ratio * dtSec);
+                tx.move(movement * magnetSpeed * ratio * dt);
 
                 status.impulse += movement * 0.15f;
             }

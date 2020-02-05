@@ -489,6 +489,12 @@
     <ClInclude Include="..\crogine\include\crogine\core\Utf.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\HiResTimer.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostProcess.hpp">
+      <Filter>Header Files\graphics\post process</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">

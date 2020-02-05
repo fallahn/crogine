@@ -118,7 +118,7 @@ bool GameState::handleEvent(const cro::Event& evt)
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Cursor;
-        cmd.action = [x, y](cro::Entity entity, cro::Time)
+        cmd.action = [x, y](cro::Entity entity, float)
         {
             entity.getComponent<cro::Transform>().setPosition({ x, y, 0 });
         };
@@ -144,7 +144,7 @@ void GameState::handleMessage(const cro::Message& msg)
     }
 }
 
-bool GameState::simulate(cro::Time dt)
+bool GameState::simulate(float dt)
 {
     m_scene.simulate(dt);
     m_overlayScene.simulate(dt);

@@ -53,7 +53,7 @@ namespace cro
         const ParticleSystem operator = (const ParticleSystem&) = delete;
         ParticleSystem& operator = (ParticleSystem&&) = delete;
 
-        void process(Time) override;
+        void process(float) override;
 
         void render(Entity) override;
 

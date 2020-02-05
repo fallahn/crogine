@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2020
 http://trederia.blogspot.com
 
-crogine test application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,30 +27,33 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef MY_APP_HPP_
-#define MY_APP_HPP_
+#pragma once
 
-//implements the cro::App class
+//the high resolution timer provides a more accurate frame time for the core loop
 
-#include <crogine/core/App.hpp>
-#include <crogine/core/StateStack.hpp>
+#include <SDL.h>
 
-class MyApp final : public cro::App
+namespace cro::Detail
 {
-public:
-	MyApp();
-	~MyApp() = default;
+    class HiResTimer final
+    {
+    public:
+        HiResTimer()
+        {
+            m_start = m_current = SDL_GetPerformanceCounter();
+            m_frequency = SDL_GetPerformanceFrequency();
+        }
 
-private:
-	
-	cro::StateStack m_stateStack;
+        float restart()
+        {
+            m_start = m_current;
+            m_current = SDL_GetPerformanceCounter();
+            return static_cast<float>(m_current - m_start) / static_cast<float>(m_frequency);
+        }
 
-	void handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-	void simulate(float) override;
-	void render() override;
-    bool initialise() override;
-    void finalise() override;
-};
-
-#endif //MY_APP_HPP_
+    private:
+        Uint64 m_start = 0;
+        Uint64 m_current = 0;
+        Uint64 m_frequency = 0;
+    };
+}

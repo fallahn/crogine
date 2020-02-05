@@ -53,20 +53,18 @@ public:
     explicit PlayerSystem(cro::MessageBus&);
 
     void handleMessage(const cro::Message&) override;
-    void process(cro::Time) override;
+    void process(float) override;
 
 private:
-
-    float m_accumulator;
     float m_respawnTime;
     float m_shieldTime;
     cro::int32 m_score;
 
-    void updateSpawning(cro::Entity);
-    void updateAlive(cro::Entity);
-    void updateDying(cro::Entity);
-    void updateDead(cro::Entity);
-    void updateRoundEnd(cro::Entity);
+    void updateSpawning(cro::Entity, float);
+    void updateAlive(cro::Entity, float);
+    void updateDying(cro::Entity, float);
+    void updateDead(cro::Entity, float);
+    void updateRoundEnd(cro::Entity, float);
 
     void onEntityAdded(cro::Entity) override;
 };

@@ -44,10 +44,8 @@ SpriteAnimator::SpriteAnimator(MessageBus& mb)
 }
 
 //public
-void SpriteAnimator::process(cro::Time dt)
+void SpriteAnimator::process(float dt)
 {
-    float dtSec = dt.asSeconds();
-
     auto& entities = getEntities();
     for (auto& entity : entities) 
     {
@@ -55,7 +53,7 @@ void SpriteAnimator::process(cro::Time dt)
         if (animation.playing)
         {
             auto& sprite = entity.getComponent<Sprite>();
-            animation.currentFrameTime -= dtSec;
+            animation.currentFrameTime -= dt;
             if (animation.currentFrameTime < 0)
             {
                 animation.currentFrameTime += (1.f / sprite.m_animations[animation.id].framerate);

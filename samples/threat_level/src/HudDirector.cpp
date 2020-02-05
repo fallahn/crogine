@@ -68,7 +68,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
                 auto id = data.itemID;
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::HudElement;
-                cmd.action = [&, id](cro::Entity entity, cro::Time)
+                cmd.action = [&, id](cro::Entity entity, float)
                 {
                     const auto& hudItem = entity.getComponent<HudItem>();
                     if ((hudItem.type == HudItem::Type::Bomb && id == CollectableItem::Bomb) ||
@@ -89,7 +89,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::HudElement;
-            cmd.action = [&](cro::Entity entity, cro::Time)
+            cmd.action = [&](cro::Entity entity, float)
             {
                 const auto& hudItem = entity.getComponent<HudItem>();
                 if (hudItem.type == HudItem::Type::Emp)
@@ -108,7 +108,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
             cro::int32 lives = static_cast<cro::int32>(data.value);
             cro::Command cmd;
             cmd.targetFlags = CommandID::HudElement;
-            cmd.action = [lives](cro::Entity entity, cro::Time)
+            cmd.action = [lives](cro::Entity entity, float)
             {
                 const auto& hudItem = entity.getComponent<HudItem>();
                 if (hudItem.type == HudItem::Type::Life)
@@ -129,7 +129,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
             {
                 //do a popup
                 cmd.targetFlags = CommandID::MeatMan;
-                cmd.action = [](cro::Entity entity, cro::Time)
+                cmd.action = [](cro::Entity entity, float)
                 {
                     entity.getComponent<cro::Callback>().active = true;
                 };
@@ -141,7 +141,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::HudElement;
-            cmd.action = [&](cro::Entity entity, cro::Time)
+            cmd.action = [&](cro::Entity entity, float)
             {
                 const auto& hudItem = entity.getComponent<HudItem>();
                 if (hudItem.type == HudItem::Type::Emp)
@@ -165,7 +165,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
             auto mode = data.fireMode + 1;
             cro::Command cmd;
             cmd.targetFlags = CommandID::HudElement;
-            cmd.action = [mode](cro::Entity entity, cro::Time)
+            cmd.action = [mode](cro::Entity entity, float)
             {
                 if (entity.getComponent<HudItem>().type == HudItem::Type::TimerIcon)
                 {
@@ -183,7 +183,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
     }
 }
 
-void HudDirector::process(cro::Time)
+void HudDirector::process(float)
 {
 
 }

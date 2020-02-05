@@ -65,7 +65,7 @@ const ComponentMask& System::getComponentMask() const
 
 void System::handleMessage(const Message&) {}
 
-void System::process(Time) {}
+void System::process(float) {}
 
 //protected
 void System::setScene(Scene& scene)

@@ -99,7 +99,7 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
                 float health = data.value;
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Player;
-                cmd.action = [health](cro::Entity entity, cro::Time)
+                cmd.action = [health](cro::Entity entity, float)
                 {
                     const auto& playerInfo = entity.getComponent<PlayerInfo>();
                     float emitRate = std::max((1.f - (health / 100.f)) * playerInfo.maxParticleRate, 0.f);
@@ -114,7 +114,7 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
                 cro::Command empCommand;
                 empCommand.targetFlags = CommandID::EmpBlast;
                 auto position = data.position;
-                empCommand.action = [this, position](cro::Entity ent, cro::Time)
+                empCommand.action = [this, position](cro::Entity ent, float)
                 {
                     ent.getComponent<cro::Transform>().setPosition(position);
                     ent.getComponent<Emp>().currentTime = 0.f;
@@ -154,7 +154,7 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
                 m_currentInput = 0; //stop firing all weapons
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Player;
-                cmd.action = [](cro::Entity entity, cro::Time)
+                cmd.action = [](cro::Entity entity, float)
                 {
                     entity.getComponent<PlayerInfo>().pendingRoundEnd = true;
                 };
@@ -166,7 +166,7 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
             case GameEvent::RoundStart:
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Player;
-                cmd.action = [](cro::Entity entity, cro::Time)
+                cmd.action = [](cro::Entity entity, float)
                 {
                     auto& pi = entity.getComponent<PlayerInfo>();
                     if (pi.state == PlayerInfo::State::EndingRound)
@@ -347,7 +347,7 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
     }
 }
 
-void PlayerDirector::process(cro::Time)
+void PlayerDirector::process(float)
 {
     //controller analogue
     glm::vec3 joyVec = {
@@ -362,25 +362,17 @@ void PlayerDirector::process(cro::Time)
         joyVec = glm::normalize(joyVec);
         cro::Command cmd;
         cmd.targetFlags = CommandID::Player;
-        cmd.action = [=](cro::Entity entity, cro::Time dt)
+        cmd.action = [=](cro::Entity entity, float dt)
         {
             if (entity.getComponent<PlayerInfo>().state != PlayerInfo::State::Alive) return;
 
-            static const float updateTime = 1.f / 60.f;
-            static float accumulator = 0.f;
-
-            accumulator += dt.asSeconds();
-            while (accumulator > updateTime)
-            {
-                auto& velocity = entity.getComponent<Velocity>();
-                velocity.velocity += joyVec * joystickAmount * playerJoyAcceleration * updateTime;
-                accumulator -= updateTime;
-            }
+            auto& velocity = entity.getComponent<Velocity>();
+            velocity.velocity += joyVec * joystickAmount * playerJoyAcceleration * dt;
 
             float rotation = -maxRotation * joyVec.y;
             auto& tx = entity.getComponent<cro::Transform>();
             const float currRotation = tx.getRotation().x;
-            tx.setRotation({ currRotation + ((rotation - currRotation) * (dt.asSeconds() * 4.f)), 0.f, 0.f });
+            tx.setRotation({ currRotation + ((rotation - currRotation) * (dt * 4.f)), 0.f, 0.f });
 
         };
         sendCommand(cmd);
@@ -391,13 +383,12 @@ void PlayerDirector::process(cro::Time)
     {
         cro::Command cmd;
         cmd.targetFlags = CommandID::Player;
-        cmd.action = [this](cro::Entity entity, cro::Time dt)
+        cmd.action = [this](cro::Entity entity, float dt)
         {
             if (entity.getComponent<PlayerInfo>().state != PlayerInfo::State::Alive) return;
 
             glm::vec3 acceleration(0.f);
             float rotation = 0.f;
-            const float dtSec = dt.asSeconds();
 
             if (m_currentInput & Up)
             {
@@ -436,7 +427,7 @@ void PlayerDirector::process(cro::Time)
 
             auto& tx = entity.getComponent<cro::Transform>();
             const float currRotation = tx.getRotation().x;
-            tx.setRotation({ currRotation + ((rotation - currRotation) * (dtSec * 4.f)), 0.f, 0.f });
+            tx.setRotation({ currRotation + ((rotation - currRotation) * (dt * 4.f)), 0.f, 0.f });
         };
         sendCommand(cmd);
         m_currentInput &= ~StateChanged;
@@ -475,7 +466,7 @@ void PlayerDirector::process(cro::Time)
     //TODO is there a better way to broadcast player position?
     cro::Command cmd;
     cmd.targetFlags = CommandID::Player;
-    cmd.action = [this](cro::Entity entity, cro::Time)
+    cmd.action = [this](cro::Entity entity, float)
     {
         {
             auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);

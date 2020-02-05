@@ -53,8 +53,6 @@ namespace
 
     const float shieldTime = 3.f;
 
-    constexpr float fixedStep = 1.f / 60.f;
-
     const cro::int32 maxLives = 5;
 
     const cro::int32 bonusScore = 250000;
@@ -62,7 +60,6 @@ namespace
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
     : cro::System   (mb, typeid(PlayerSystem)),
-    m_accumulator   (0.f),
     m_respawnTime   (0.f),
     m_shieldTime    (shieldTime),
     m_score         (0)
@@ -91,7 +88,7 @@ void PlayerSystem::handleMessage(const cro::Message& msg)
                 //raise extra life message
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Player;
-                cmd.action = [&](cro::Entity entity, cro::Time)
+                cmd.action = [&](cro::Entity entity, float)
                 {
                     auto& playerInfo = entity.getComponent<PlayerInfo>();
                     
@@ -121,52 +118,46 @@ void PlayerSystem::handleMessage(const cro::Message& msg)
     }
 }
 
-void PlayerSystem::process(cro::Time dt)
+void PlayerSystem::process(float dt)
 {
-    m_accumulator += dt.asSeconds();
-
     auto entities = getEntities();
-    while(m_accumulator > fixedStep)
+
+    for (auto& entity : entities)
     {
-        m_accumulator -= fixedStep;
+        float scale = m_shieldTime / shieldTime;
 
-        for (auto& entity : entities)
+        auto shieldEnt = getScene()->getEntity(entity.getComponent<PlayerInfo>().shieldEntity);
+        shieldEnt.getComponent<cro::Transform>().setScale(glm::vec3(scale * 2.4f)); //kludge because default sphere models is R0.5
+
+        auto& playerInfo = entity.getComponent<PlayerInfo>();
+        //DPRINT("Health", std::to_string(playerInfo.health));
+        switch (playerInfo.state)
         {
-            float scale = m_shieldTime / shieldTime;
-
-            auto shieldEnt = getScene()->getEntity(entity.getComponent<PlayerInfo>().shieldEntity);
-            shieldEnt.getComponent<cro::Transform>().setScale(glm::vec3(scale * 2.4f)); //kludge because default sphere models is R0.5
-
-            auto& playerInfo = entity.getComponent<PlayerInfo>();
-            //DPRINT("Health", std::to_string(playerInfo.health));
-            switch (playerInfo.state)
-            {
-            case PlayerInfo::State::Spawning:
-                updateSpawning(entity);
-                break;
-            case PlayerInfo::State::Alive:
-                updateAlive(entity);
-                break;
-            case PlayerInfo::State::Dying:
-                updateDying(entity);
-                break;
-            case PlayerInfo::State::Dead:
-                updateDead(entity);
-                break;
-            case PlayerInfo::State::EndingRound:
-                updateRoundEnd(entity);
-                break;
-            }
+        case PlayerInfo::State::Spawning:
+            updateSpawning(entity, dt);
+            break;
+        case PlayerInfo::State::Alive:
+            updateAlive(entity, dt);
+            break;
+        case PlayerInfo::State::Dying:
+            updateDying(entity, dt);
+            break;
+        case PlayerInfo::State::Dead:
+            updateDead(entity, dt);
+            break;
+        case PlayerInfo::State::EndingRound:
+            updateRoundEnd(entity, dt);
+            break;
         }
     }
 }
 
 //private
-void PlayerSystem::updateSpawning(cro::Entity entity)
+void PlayerSystem::updateSpawning(cro::Entity entity, float dt)
 {
     auto& tx = entity.getComponent<cro::Transform>();
     auto dist = spawnTarget - tx.getWorldPosition();
-    tx.move(dist * fixedStep * 2.f);
+    tx.move(dist * dt * 2.f);
 
     if (glm::length2(dist) < 0.5f)
     {
@@ -185,9 +176,9 @@ void PlayerSystem::updateSpawning(cro::Entity entity)
     }
 }
 
-void PlayerSystem::updateAlive(cro::Entity entity)
+void PlayerSystem::updateAlive(cro::Entity entity, float dt)
 {
-    m_shieldTime = std::max(0.f, m_shieldTime - fixedStep);
+    m_shieldTime = std::max(0.f, m_shieldTime - dt);
     auto& playerInfo = entity.getComponent<PlayerInfo>();
 
     if (playerInfo.pendingRoundEnd)
@@ -310,13 +301,13 @@ void PlayerSystem::updateAlive(cro::Entity entity)
     }
 }
 
-void PlayerSystem::updateDying(cro::Entity entity)
+void PlayerSystem::updateDying(cro::Entity entity, float dt)
 {
     //drop out of map
     entity.getComponent<Velocity>().velocity += gravity;
     
     auto& tx = entity.getComponent<cro::Transform>();
-    tx.rotate({ 1.f, 0.f, 0.f }, 10.f * fixedStep);
+    tx.rotate({ 1.f, 0.f, 0.f }, 10.f * dt);
     if (tx.getWorldPosition().y < -3.f)
     {
         tx.setPosition(initialPosition);
@@ -329,10 +320,10 @@ void PlayerSystem::updateDying(cro::Entity entity)
     }
 }
 
-void PlayerSystem::updateDead(cro::Entity entity)
+void PlayerSystem::updateDead(cro::Entity entity, float dt)
 {
     //count down to respawn
-    m_respawnTime -= fixedStep;
+    m_respawnTime -= dt;
     if (m_respawnTime < 0)
     {
         //only respawn if lives remain
@@ -350,12 +341,12 @@ void PlayerSystem::updateDead(cro::Entity entity)
     }
 }
 
-void PlayerSystem::updateRoundEnd(cro::Entity entity)
+void PlayerSystem::updateRoundEnd(cro::Entity entity, float dt)
 {
     auto& tx = entity.getComponent<cro::Transform>();
     if (tx.getWorldPosition().x < 20.f)
     {
-        tx.move({ 8.f * fixedStep, 0.f, 0.f });
+        tx.move({ 8.f * dt, 0.f, 0.f });
     }
 }
 

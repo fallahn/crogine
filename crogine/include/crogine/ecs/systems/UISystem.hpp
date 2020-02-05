@@ -56,7 +56,7 @@ namespace cro
         /*!
         \brief Performs processing
         */
-        void process(Time) override;
+        void process(float) override;
 
         /*!
         \brief Message handler

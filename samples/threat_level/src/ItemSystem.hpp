@@ -58,7 +58,7 @@ class ItemSystem final : public cro::System
 public:
     explicit ItemSystem(cro::MessageBus&);
 
-    void process(cro::Time) override;
+    void process(float) override;
     void handleMessage(const cro::Message&) override;
 
 private:

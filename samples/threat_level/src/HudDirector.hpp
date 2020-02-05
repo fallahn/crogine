@@ -39,7 +39,7 @@ public:
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
-    void process(cro::Time)override;
+    void process(float)override;
 
 private:
     cro::int32 m_fireMode;

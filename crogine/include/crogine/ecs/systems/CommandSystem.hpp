@@ -43,7 +43,7 @@ namespace cro
     struct CRO_EXPORT_API Command final
     {
         uint32 targetFlags = 0;
-        std::function<void(Entity, Time)> action;
+        std::function<void(Entity, float)> action;
     };
 
     /*
@@ -67,7 +67,7 @@ namespace cro
         /*!
         \brief Process override
         */
-        void process(Time) override;
+        void process(float) override;
 
     private:
         std::vector<Command> m_commands;

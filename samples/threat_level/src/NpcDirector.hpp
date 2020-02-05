@@ -53,7 +53,7 @@ private:
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
-    void process(cro::Time) override;
+    void process(float) override;
 };
 
 #endif //TL_NPC_DIRECTOR_HPP_

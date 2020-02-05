@@ -133,7 +133,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
-            cmd.action = [](cro::Entity e, cro::Time)
+            cmd.action = [](cro::Entity e, float)
             {
                 auto& slider = e.getComponent<Slider>();
                 slider.active = true;
@@ -268,11 +268,11 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
 
     //callback gives scrolling some momentum
     entity.addComponent<cro::Callback>().function = 
-        [scroll](cro::Entity entity, cro::Time dt)
+        [scroll](cro::Entity entity, float dt)
     {
         auto& drag = entity.getComponent<cro::UIDraggable>();
 
-        scroll(entity, drag.velocity.y * dt.asSeconds());
+        scroll(entity, drag.velocity.y * dt);
         drag.velocity *= 0.993f;
 
         if (glm::length2(drag.velocity) < 0.1f)
@@ -310,9 +310,9 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.getComponent<cro::UIInput>().area.width = activeArrow.width;
     entity.getComponent<cro::UIInput>().area.height = activeArrow.height;
 
-    entity.addComponent<cro::Callback>().function = [scroll, scoreEnt](cro::Entity entity, cro::Time dt)
+    entity.addComponent<cro::Callback>().function = [scroll, scoreEnt](cro::Entity entity, float dt)
     {
-        scroll(scoreEnt, -scrollSpeed * dt.asSeconds());
+        scroll(scoreEnt, -scrollSpeed * dt);
     };
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback(
         [](cro::Entity entity, cro::uint64 flags)
@@ -349,9 +349,9 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.getComponent<cro::UIInput>().area.width = activeArrow.width;
     entity.getComponent<cro::UIInput>().area.height = activeArrow.height;
 
-    entity.addComponent<cro::Callback>().function = [scroll, scoreEnt](cro::Entity entity, cro::Time dt)
+    entity.addComponent<cro::Callback>().function = [scroll, scoreEnt](cro::Entity entity, float dt)
     {
-        scroll(scoreEnt, scrollSpeed * dt.asSeconds());
+        scroll(scoreEnt, scrollSpeed * dt);
     };
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback(
         [](cro::Entity entity, cro::uint64 flags)

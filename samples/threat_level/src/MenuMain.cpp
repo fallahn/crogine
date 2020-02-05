@@ -99,7 +99,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
-            cmd.action = [](cro::Entity e, cro::Time)
+            cmd.action = [](cro::Entity e, float)
             {
                 auto& slider = e.getComponent<Slider>();
                 slider.active = true;
@@ -150,7 +150,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
-            cmd.action = [](cro::Entity e, cro::Time)
+            cmd.action = [](cro::Entity e, float)
             {
                 auto& slider = e.getComponent<Slider>();
                 slider.active = true;
@@ -195,7 +195,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
-            cmd.action = [](cro::Entity e, cro::Time)
+            cmd.action = [](cro::Entity e, float)
             {
                 auto& slider = e.getComponent<Slider>();
                 slider.active = true;
@@ -249,7 +249,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
-            cmd.action = [](cro::Entity e, cro::Time)
+            cmd.action = [](cro::Entity e, float)
             {
                 auto& slider = e.getComponent<Slider>();
                 slider.active = true;
@@ -353,7 +353,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
-            cmd.action = [](cro::Entity e, cro::Time)
+            cmd.action = [](cro::Entity e, float)
             {
                 auto& slider = e.getComponent<Slider>();
                 slider.active = true;

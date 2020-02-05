@@ -67,7 +67,7 @@ namespace cro
         /*!
         \brief Processes the text data into renderable batches
         */
-        void process(Time) override;
+        void process(float) override;
 
         /*!
         \brief Draws all the text components in this system's parent Scene

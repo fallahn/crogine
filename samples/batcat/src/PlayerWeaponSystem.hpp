@@ -52,7 +52,7 @@ public:
     PlayerWeaponSystem(cro::MessageBus&);
 
     void handleMessage(const cro::Message&) override;
-    void process(cro::Time) override;
+    void process(float) override;
 
 private:
     void onEntityAdded(cro::Entity) override;

@@ -45,7 +45,7 @@ SkeletalAnimator::SkeletalAnimator(MessageBus& mb)
 }
 
 //public
-void SkeletalAnimator::process(Time dt)
+void SkeletalAnimator::process(float dt)
 {
     auto& entities = getEntities();
     for (auto& entity : entities)
@@ -63,7 +63,7 @@ void SkeletalAnimator::process(Time dt)
                 auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
                 nextFrame += anim.startFrame;
 
-                skel.currentFrameTime += dt.asSeconds();
+                skel.currentFrameTime += dt;
                               
                 if (entity.getComponent<Model>().isVisible())
                 {
@@ -100,7 +100,7 @@ void SkeletalAnimator::process(Time dt)
             //first frame of the next anim. Really we should interpolate the current
             //position of both animations, and then blend the results according to
             //the current blend time.
-            skel.currentBlendTime += dt.asSeconds();
+            skel.currentBlendTime += dt;
             if (entity.getComponent<Model>().isVisible())
             {
                 float interpTime = std::min(1.f, skel.currentBlendTime / skel.blendTime);

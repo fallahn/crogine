@@ -41,13 +41,13 @@ EmpSystem::EmpSystem(cro::MessageBus& mb)
 }
 
 
-void EmpSystem::process(cro::Time dt)
+void EmpSystem::process(float dt)
 {
     auto& entities = getEntities();
     for (auto& entity : entities)
     {
         auto& emp = entity.getComponent<Emp>();
-        emp.currentTime = std::min(emp.currentTime + dt.asSeconds(), 1.f);
+        emp.currentTime = std::min(emp.currentTime + dt, 1.f);
 
         if (emp.currentTime == 1)
         {

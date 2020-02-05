@@ -46,7 +46,7 @@ TerrainSystem::TerrainSystem(cro::MessageBus& mb)
 }
 
 //public
-void TerrainSystem::process(cro::Time dt)
+void TerrainSystem::process(float dt)
 {
     auto& entities = getEntities();
     for (auto& entity : entities)
@@ -55,7 +55,7 @@ void TerrainSystem::process(cro::Time dt)
         if (chunk.inUse)
         {
             auto& xForm = entity.getComponent<cro::Transform>();
-            xForm.move({ -terrainSpeed * dt.asSeconds(), 0.f, 0.f });
+            xForm.move({ -terrainSpeed * dt, 0.f, 0.f });
 
             //this assumes all chunks have their origin in the centre.
             if (xForm.getPosition().x < 0 && !chunk.followed)

@@ -49,7 +49,7 @@ public:
 private:
     void handleMessage(const cro::Message&) override;
     void handleEvent(const cro::Event&) override;
-    void process(cro::Time) override;
+    void process(float) override;
 
     float m_releaseTime;
     std::array<cro::int32, 10u>  m_itemList;

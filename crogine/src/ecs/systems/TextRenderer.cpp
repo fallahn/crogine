@@ -91,7 +91,7 @@ void TextRenderer::handleMessage(const Message& msg)
 
 }
 
-void TextRenderer::process(Time dt)
+void TextRenderer::process(float)
 {
     if (m_pendingRebuild)
     {

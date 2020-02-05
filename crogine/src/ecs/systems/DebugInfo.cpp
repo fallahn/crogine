@@ -41,7 +41,7 @@ DebugInfo::DebugInfo(MessageBus& mb)
 }
 
 //public
-void DebugInfo::process(Time)
+void DebugInfo::process(float)
 {
     auto& entities = getEntities();
     for (auto& e : entities)

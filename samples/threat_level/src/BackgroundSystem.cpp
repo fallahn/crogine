@@ -114,15 +114,13 @@ void BackgroundSystem::handleMessage(const cro::Message& msg)
     }
 }
 
-void BackgroundSystem::process(cro::Time dt)
+void BackgroundSystem::process(float dt)
 {
-    float dtSec = dt.asSeconds();
+    m_currentColourAngle += ((m_colourAngle - m_currentColourAngle) * dt);
 
-    m_currentColourAngle += ((m_colourAngle - m_currentColourAngle) * dtSec);
+    m_currentSpeed += ((m_speed - m_currentSpeed) * dt);
 
-    m_currentSpeed += ((m_speed - m_currentSpeed) * dtSec);
-
-    m_offset.x += m_currentSpeed * dtSec;
+    m_offset.x += m_currentSpeed * dt;
 
     if(m_currentMode == Mode::Shake)
     {

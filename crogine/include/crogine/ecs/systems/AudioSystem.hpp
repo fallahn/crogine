@@ -48,7 +48,7 @@ namespace cro
     public:
         explicit AudioSystem(MessageBus&);
 
-        void process(cro::Time) override;
+        void process(float) override;
 
     private:
 

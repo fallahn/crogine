@@ -208,7 +208,7 @@ void GameState::handleMessage(const cro::Message& msg)
     }
 }
 
-bool GameState::simulate(cro::Time dt)
+bool GameState::simulate(float dt)
 {
     m_scene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -463,10 +463,10 @@ void GameState::createHUD()
     pulseEnt.getComponent<cro::Transform>().setPosition({ spriteSize.x / 2.f, spriteSize.y / 2.f, 0.f });
     pulseEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(MeshID::EmpQuad), m_resources.materials.get(MaterialID::EmpBlast));
     pulseEnt.addComponent<Emp>();
-    pulseEnt.addComponent<cro::Callback>().function = [](cro::Entity entity, cro::Time dt)
+    pulseEnt.addComponent<cro::Callback>().function = [](cro::Entity entity, float dt)
     {
         auto& emp = entity.getComponent<Emp>();
-        emp.currentTime += dt.asSeconds();
+        emp.currentTime += dt;
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_time", emp.currentTime);
     };
     entity.getComponent<HudItem>().child = pulseEnt;
@@ -524,14 +524,14 @@ void GameState::createHUD()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::MeatMan;
     entity.addComponent<MeatMan>();
     entity.addComponent<cro::Callback>().function = 
-        [](cro::Entity entity, cro::Time dt)
+        [](cro::Entity entity, float dt)
     {
         static const glm::vec3 movespeed(0.f, 1000.f, 0.f);
         auto& meat = entity.getComponent<MeatMan>();
         if (!meat.shown)
         {
             auto& tx = entity.getComponent<cro::Transform>();
-            tx.move(movespeed * dt.asSeconds());
+            tx.move(movespeed * dt);
             if (tx.getPosition().y > 0.f)
             {
                 tx.move({ 0.f, -tx.getPosition().y, 0.f });
@@ -544,12 +544,12 @@ void GameState::createHUD()
         {
             if (meat.currentTime > 0)
             {
-                meat.currentTime -= dt.asSeconds();
+                meat.currentTime -= dt;
             }
             else
             {
                 auto& tx = entity.getComponent<cro::Transform>();
-                tx.move(-movespeed * dt.asSeconds());
+                tx.move(-movespeed * dt);
 
                 if (tx.getPosition().y < -entity.getComponent<cro::Sprite>().getSize().y)
                 {

@@ -42,7 +42,7 @@ class EmpSystem final : public cro::System
 public:
     explicit EmpSystem(cro::MessageBus&);
 
-    void process(cro::Time) override;
+    void process(float) override;
 
 };
 

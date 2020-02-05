@@ -94,10 +94,8 @@ void HudSystem::handleMessage(const cro::Message& msg)
     }
 }
 
-void HudSystem::process(cro::Time dt)
+void HudSystem::process(float dt)
 {
-    float dtSec = dt.asSeconds();
-
     auto& entities = getEntities();
     for (auto& entity : entities)
     {
@@ -107,14 +105,14 @@ void HudSystem::process(cro::Time dt)
         default: break;
         case HudItem::Type::HealthBar:
         {
-            hudItem.value -= (hudItem.value - m_playerHealth) * dtSec;
+            hudItem.value -= (hudItem.value - m_playerHealth) * dt;
             float amount = cro::Util::Maths::clamp(hudItem.value / 100.f, 0.f, 1.f);
             entity.getComponent<cro::Transform>().setScale({ amount, 1.f, 1.f });
             entity.getComponent<cro::Sprite>().setColour(interp(cro::Colour(1.f, 0.f, 0.f, 0.1f), cro::Colour::Cyan(), amount));
         }
         break;
         case HudItem::Type::Timer:
-            hudItem.value += (m_weaponTime - hudItem.value) * dtSec * 4.f;
+            hudItem.value += (m_weaponTime - hudItem.value) * dt * 4.f;
             entity.getComponent<cro::Model>().setMaterialProperty(0, "u_time", hudItem.value);
             break;
 

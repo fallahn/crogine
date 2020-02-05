@@ -84,7 +84,7 @@ Scene::Scene(MessageBus& mb)
 }
 
 //public
-void Scene::simulate(Time dt)
+void Scene::simulate(float dt)
 {
     //update directors first as they'll be working on data from the last frame
     for (auto& d : m_directors)

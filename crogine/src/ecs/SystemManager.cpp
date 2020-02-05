@@ -63,7 +63,7 @@ void SystemManager::forwardMessage(const Message& msg)
     }
 }
 
-void SystemManager::process(Time dt)
+void SystemManager::process(float dt)
 {
     for (auto& system : m_systems)
     {

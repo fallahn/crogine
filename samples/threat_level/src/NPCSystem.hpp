@@ -125,11 +125,9 @@ public:
     explicit NpcSystem(cro::MessageBus&);
 
     void handleMessage(const cro::Message&) override;
-    void process(cro::Time) override;
+    void process(float) override;
 
 private:
-
-    float m_accumulator;
     glm::vec3 m_playerPosition = glm::vec3(0.f);
     bool m_empFired;
     bool m_awardPoints;
@@ -140,11 +138,11 @@ private:
     std::vector<float> m_speedrayTable;
     std::vector<float> m_weaverTable;
 
-    void processElite(cro::Entity);
-    void processChoppa(cro::Entity);
-    void processTurret(cro::Entity);
-    void processSpeedray(cro::Entity);
-    void processWeaver(cro::Entity);
+    void processElite(cro::Entity, float);
+    void processChoppa(cro::Entity, float);
+    void processTurret(cro::Entity, float);
+    void processSpeedray(cro::Entity, float);
+    void processWeaver(cro::Entity, float);
 
     void onEntityAdded(cro::Entity) override;
 };

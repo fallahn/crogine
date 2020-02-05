@@ -104,11 +104,11 @@ void RoundEndState::handleMessage(const cro::Message& msg)
     m_uiScene.forwardMessage(msg);
 }
 
-bool RoundEndState::simulate(cro::Time dt)
+bool RoundEndState::simulate(float dt)
 {
     cro::Command cmd;
     cmd.targetFlags = UICommand::ScoreText;
-    cmd.action = [&](cro::Entity entity, cro::Time)
+    cmd.action = [&](cro::Entity entity, float)
     {
         auto& txt = entity.getComponent<cro::Text>();
         txt.setString("Score: " + std::to_string(m_sharedResources.score));

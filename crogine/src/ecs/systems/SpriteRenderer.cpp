@@ -150,7 +150,7 @@ void SpriteRenderer::handleMessage(const Message& msg)
 
 }
 
-void SpriteRenderer::process(Time)
+void SpriteRenderer::process(float)
 { 
     //have to do this first, at least once
     if (m_pendingRebuild)

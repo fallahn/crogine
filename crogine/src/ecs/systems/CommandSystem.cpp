@@ -56,7 +56,7 @@ void CommandSystem::sendCommand(const Command& cmd)
     CRO_ASSERT(m_currentCommand != m_commands.end(), "Exceeded max commands!");
 }
 
-void CommandSystem::process(Time dt)
+void CommandSystem::process(float dt)
 {
     auto& entities = getEntities();
     m_currentCommand = m_commands.begin();

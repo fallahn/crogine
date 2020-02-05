@@ -45,7 +45,7 @@ class VelocitySystem final : public cro::System
 {
 public:
     explicit VelocitySystem(cro::MessageBus&);
-    void process(cro::Time) override;
+    void process(float) override;
 };
 
 #endif //TL_VELOCITY_SYSTEM_HPP_

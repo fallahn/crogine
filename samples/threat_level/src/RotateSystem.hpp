@@ -40,7 +40,7 @@ class RotateSystem final : public cro::System
 public:
     explicit RotateSystem(cro::MessageBus&);
 
-    void process(cro::Time) override;
+    void process(float) override;
 
 private:
 

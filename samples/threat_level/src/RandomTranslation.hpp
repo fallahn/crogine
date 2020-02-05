@@ -47,7 +47,7 @@ class Translator final : public cro::System
 public:
     explicit Translator(cro::MessageBus&);
 
-    void process(cro::Time) override;
+    void process(float) override;
 
 private:
 

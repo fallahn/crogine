@@ -162,7 +162,7 @@ CollisionSystem::~CollisionSystem()
 }
 
 //public
-void CollisionSystem::process(cro::Time dt)
+void CollisionSystem::process(float dt)
 {
     //update the collision transforms
     auto& entities = getEntities();

@@ -90,7 +90,7 @@ namespace cro
         /*!
         \brief Implements the process which performs batching
         */
-        void process(Time) override;
+        void process(float) override;
 
         /*!
         \brief Renders the Sprite components

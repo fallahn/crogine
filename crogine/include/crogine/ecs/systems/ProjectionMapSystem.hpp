@@ -44,6 +44,6 @@ namespace cro
     public:
         explicit ProjectionMapSystem(MessageBus&);
 
-        void process(Time) override;
+        void process(float) override;
     };
 }

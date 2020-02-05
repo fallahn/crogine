@@ -48,7 +48,7 @@ public:
 
     void handleMessage(const cro::Message&) override;
 
-    void process(cro::Time) override;
+    void process(float) override;
 
 private:
     std::size_t m_aliveCount;

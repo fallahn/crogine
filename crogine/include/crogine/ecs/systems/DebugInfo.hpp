@@ -38,6 +38,6 @@ namespace cro
     public:
         explicit DebugInfo(MessageBus&);
 
-        void process(Time) override;
+        void process(float) override;
     };
 }

@@ -47,7 +47,7 @@ ProjectionMapSystem::ProjectionMapSystem(MessageBus& mb)
 }
 
 //public
-void ProjectionMapSystem::process(Time)
+void ProjectionMapSystem::process(float)
 {
     Scene* scene = getScene();
     scene->m_projectionMapCount = 0;

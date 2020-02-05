@@ -87,7 +87,7 @@ void GameState::handleMessage(const cro::Message& msg)
     }
 }
 
-bool GameState::simulate(cro::Time dt)
+bool GameState::simulate(float dt)
 {
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);

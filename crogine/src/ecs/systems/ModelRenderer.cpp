@@ -52,7 +52,7 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 }
 
 //public
-void ModelRenderer::process(Time)
+void ModelRenderer::process(float)
 {
     auto& entities = getEntities();
     auto frustum = getScene()->getActiveCamera().getComponent<Camera>().getFrustum();

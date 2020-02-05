@@ -71,7 +71,7 @@ void MenuState::handleMessage(const cro::Message& msg)
     m_scene.forwardMessage(msg);
 }
 
-bool MenuState::simulate(cro::Time dt)
+bool MenuState::simulate(float dt)
 {
     m_scene.simulate(dt);
 	return true;

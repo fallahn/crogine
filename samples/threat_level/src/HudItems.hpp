@@ -62,7 +62,7 @@ public:
     explicit HudSystem(cro::MessageBus&);
 
     void handleMessage(const cro::Message&) override;
-    void process(cro::Time) override;
+    void process(float) override;
 
 private:
 

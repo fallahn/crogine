@@ -101,7 +101,7 @@ namespace cro
         /*!
         \brief Implement this for system specific processing to entities.
         */
-        virtual void process(cro::Time);
+        virtual void process(float);
 
     protected:
 
@@ -214,7 +214,7 @@ namespace cro
         /*!
         \brief Runs a simulation step by calling process() on each system
         */
-        void process(Time);
+        void process(float);
     private:
         Scene& m_scene;
         std::vector<std::unique_ptr<System>> m_systems;

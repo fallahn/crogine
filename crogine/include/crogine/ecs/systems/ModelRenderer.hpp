@@ -72,7 +72,7 @@ namespace cro
         /*!
         \brief Performs frustum culling and Material sorting by depth and blend mode
         */
-        void process(Time) override;
+        void process(float) override;
 
         /*!
         \brief Attempts to render the scene based on the current entity lists

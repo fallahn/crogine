@@ -51,8 +51,8 @@ namespace cro
 	namespace Detail
 	{
 		class SDLResource;
+        class HiResTimer;
 	}
-	class Time;
     class GuiClient;
 
 	/*!
@@ -114,11 +114,10 @@ namespace cro
 		virtual void handleEvent(const Event&) = 0;
 		virtual void handleMessage(const cro::Message&) = 0;
 		/*!
-        \brief Used to update the simulation with the time elapsed since the last update.
-        It is left to the user to decide if a specific system (such as physics)
-        requires fixed updates or not, which can be implemeted with a simple accumulator.
+        \brief Used to update the simulation with a fixed timestep of 60Hz
         */
-        virtual void simulate(Time) = 0;
+        virtual void simulate(float) = 0;
+
         /*!
         \brief Renders any drawables
         */
@@ -144,7 +143,7 @@ namespace cro
 
 		Window m_window;
 		Colour m_clearColour;
-        Clock* m_frameClock;
+        Detail::HiResTimer* m_frameClock;
         bool m_running;
 
         void handleEvents();

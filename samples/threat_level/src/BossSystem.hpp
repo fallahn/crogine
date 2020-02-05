@@ -51,16 +51,14 @@ class BossSystem final : public cro::System
 public:
     explicit BossSystem(cro::MessageBus&);
 
-    void process(cro::Time) override;
+    void process(float) override;
 
     void handleMessage(const cro::Message&) override;
 
 private:
 
-    float m_accumulator;
-
-    void processAppearance(cro::Entity);
-    void processShooting(cro::Entity);
+    void processAppearance(cro::Entity, float);
+    void processShooting(cro::Entity, float);
 };
 
 #endif //CRO_BOSS_SYSTEM_HPP_

@@ -42,10 +42,8 @@ VelocitySystem::VelocitySystem(cro::MessageBus& mb)
 }
 
 //public
-void VelocitySystem::process(cro::Time dt)
+void VelocitySystem::process(float dt)
 {
-    const float dtSec = dt.asSeconds();
-
     auto& entities = getEntities();
     for (auto& entity : entities)
     {
@@ -53,8 +51,8 @@ void VelocitySystem::process(cro::Time dt)
         auto& velocity = entity.getComponent<Velocity>();
 
         //reduce velocity with friction
-        tx.move(velocity.velocity * dtSec);
-        velocity.velocity *= (1.f - (velocity.friction * dtSec));
+        tx.move(velocity.velocity * dt);
+        velocity.velocity *= (1.f - (velocity.friction * dt));
 
         //clamp to zero when below min speed to stop drifting
         if (glm::length2(velocity.velocity) < velocity.minSpeed)
@@ -63,6 +61,6 @@ void VelocitySystem::process(cro::Time dt)
         }
 
         //reset rotation
-        tx.setRotation(tx.getRotation() - (tx.getRotation() * (dtSec * 2.f)));
+        tx.setRotation(tx.getRotation() - (tx.getRotation() * (dt * 2.f)));
     }
 }

@@ -112,7 +112,7 @@ void PauseState::handleMessage(const cro::Message& msg)
     }
 }
 
-bool PauseState::simulate(cro::Time dt)
+bool PauseState::simulate(float dt)
 {
     m_uiScene.simulate(dt);
 
@@ -246,7 +246,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
-            cmd.action = [](cro::Entity e, cro::Time)
+            cmd.action = [](cro::Entity e, float)
             {
                 auto& slider = e.getComponent<Slider>();
                 slider.active = true;
@@ -287,7 +287,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
-            cmd.action = [](cro::Entity e, cro::Time)
+            cmd.action = [](cro::Entity e, float)
             {
                 auto& slider = e.getComponent<Slider>();
                 slider.active = true;
@@ -424,7 +424,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
-            cmd.action = [](cro::Entity e, cro::Time)
+            cmd.action = [](cro::Entity e, float)
             {
                 auto& slider = e.getComponent<Slider>();
                 slider.active = true;
@@ -480,7 +480,7 @@ void PauseState::createOptions(const cro::SpriteSheet& spriteSheet, const cro::S
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
-            cmd.action = [](cro::Entity e, cro::Time)
+            cmd.action = [](cro::Entity e, float)
             {
                 auto& slider = e.getComponent<Slider>();
                 slider.active = true;

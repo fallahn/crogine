@@ -76,7 +76,7 @@ namespace cro
         /*!
         \brief Implement to process time based data
         */
-        virtual void process(Time) = 0;
+        virtual void process(float) = 0;
 
         /*
         \brief Places a message on the system wide MessageBus

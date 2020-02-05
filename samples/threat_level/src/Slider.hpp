@@ -47,7 +47,7 @@ class SliderSystem final : public cro::System
 public:
     explicit SliderSystem(cro::MessageBus&);
 
-    void process(cro::Time) override;
+    void process(float) override;
 };
 
 #endif //TL_SLIDER_HPP_

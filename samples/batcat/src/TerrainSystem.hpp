@@ -38,7 +38,7 @@ public:
 
     explicit TerrainSystem(cro::MessageBus&);
 
-    void process(cro::Time) override;
+    void process(float) override;
 
 private:
     void onEntityAdded(cro::Entity) override;

@@ -56,7 +56,7 @@ namespace cro
         */
         explicit ShadowMapRenderer(MessageBus& mb);
 
-        void process(cro::Time) override;
+        void process(float) override;
 
         void render(Entity) override;
 

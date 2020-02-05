@@ -77,14 +77,14 @@ PlayerWeaponSystem::PlayerWeaponSystem(cro::MessageBus& mb)
 }
 
 //public
-void PlayerWeaponSystem::process(cro::Time dt)
+void PlayerWeaponSystem::process(float dt)
 {
     //DPRINT("Dead Pulse", std::to_string(m_deadPulseCount));
     //DPRINT("Alive Pulse", std::to_string(m_aliveCount));
     //DPRINT("Fire Time", std::to_string(m_fireTime));
     //DPRINT("Laser cooldown", std::to_string(m_laserCooldownTime));
 
-    m_fireTime += dt.asSeconds();
+    m_fireTime += dt;
     
     auto spawnPulse = [&](glm::vec3 position, float damage)
     {
@@ -158,7 +158,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
     //downgrade weapon over time    
     if (m_fireMode > FireMode::Single)
     {
-        m_weaponDowngradeTime -= dt.asSeconds();
+        m_weaponDowngradeTime -= dt;
         if (m_weaponDowngradeTime < 0)
         {
             m_weaponDowngradeTime = weaponDowngradeTime;
@@ -179,7 +179,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
         if (weaponData.type == PlayerWeapon::Type::Pulse)
         {
             //update position
-            e.getComponent<cro::Transform>().move({ dt.asSeconds() * pulseMoveSpeed, 0.f, 0.f });
+            e.getComponent<cro::Transform>().move({ dt * pulseMoveSpeed, 0.f, 0.f });
 
             //handle collision with NPCs or end of map
             const auto& collision = e.getComponent<cro::PhysicsObject>();
@@ -205,7 +205,7 @@ void PlayerWeaponSystem::process(cro::Time dt)
         else //laser is firing
         {
             static float laserTime = 0.f;
-            laserTime += dt.asSeconds();
+            laserTime += dt;
             
             if (laserTime > laserRate)
             {

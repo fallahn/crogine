@@ -40,12 +40,12 @@ RotateSystem::RotateSystem(cro::MessageBus& mb)
 }
 
 //public
-void RotateSystem::process(cro::Time dt)
+void RotateSystem::process(float dt)
 {
     auto& ents = getEntities();
     for (auto& e : ents)
     {
         auto r = e.getComponent<Rotator>();
-        e.getComponent<cro::Transform>().rotate(r.axis, r.speed * dt.asSeconds());
+        e.getComponent<cro::Transform>().rotate(r.axis, r.speed * dt);
     }
 }

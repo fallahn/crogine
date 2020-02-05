@@ -55,10 +55,9 @@ RockFallSystem::RockFallSystem(cro::MessageBus& mb)
 }
 
 //public
-void RockFallSystem::process(cro::Time dt)
+void RockFallSystem::process(float dt)
 {
     auto& entities = getEntities();
-    const float dtSec = dt.asSeconds();
     if (m_running)
     {
         //check clock and spawn new if available
@@ -95,8 +94,8 @@ void RockFallSystem::process(cro::Time dt)
         default: break;
 
         case RockFall::Spawning:
-            rockfall.stateTime -= dtSec;
-            tx.move({ 0.f, -0.5f * dtSec, 0.f });
+            rockfall.stateTime -= dt;
+            tx.move({ 0.f, -0.5f * dt, 0.f });
             if (rockfall.stateTime <= 0)
             {
                 rockfall.stateTime = shakeTime + cro::Util::Random::value(-0.8f, 0.8f);
@@ -104,16 +103,16 @@ void RockFallSystem::process(cro::Time dt)
             }
             break;
         case RockFall::Shaking:
-            rockfall.stateTime -= dtSec;
-            tx.move({ m_wavetable.fetch(dt) * dt.asSeconds(), 0.f, 0.f });
+            rockfall.stateTime -= dt;
+            tx.move({ m_wavetable.fetch(dt) * dt, 0.f, 0.f });
             if (rockfall.stateTime <= 0)
             {
                 rockfall.state = RockFall::Falling;
             }
             break;
         case RockFall::Falling:
-            rockfall.velocity += gravity * dtSec;
-            tx.move({ 0.f, -rockfall.velocity * dtSec, 0.f });
+            rockfall.velocity += gravity * dt;
+            tx.move({ 0.f, -rockfall.velocity * dt, 0.f });
 
             if (tx.getPosition().y < -4.f)
             {

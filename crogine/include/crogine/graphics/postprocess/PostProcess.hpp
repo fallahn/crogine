@@ -75,7 +75,7 @@ namespace cro
         \brief Optionally implement this if the effect requires updating
         over time, for example animated uniform values.
         */
-        virtual void process(Time) {};
+        virtual void process(float) {};
 
         /*!
         \brief Applies the Post Process to the source texture and

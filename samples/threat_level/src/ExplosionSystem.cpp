@@ -97,12 +97,12 @@ void ExplosionSystem::handleMessage(const cro::Message& msg)
     }
 }
 
-void ExplosionSystem::process(cro::Time dt)
+void ExplosionSystem::process(float dt)
 {
     for (auto i = 0u; i < m_aliveCount; ++i)
     {
         auto entity = getScene()->getEntity(m_aliveExplosions[i]);
-        entity.getComponent<cro::Transform>().move({ -m_backgroundSpeed * dt.asSeconds(), 0.f, 0.f });
+        entity.getComponent<cro::Transform>().move({ -m_backgroundSpeed * dt, 0.f, 0.f });
         if (!entity.getComponent<cro::SpriteAnimation>().playing)
         {
             //animation ended, move to dead list and off screen

@@ -150,7 +150,7 @@ void MainState::handleMessage(const cro::Message& msg)
     }
 }
 
-bool MainState::simulate(cro::Time dt)
+bool MainState::simulate(float dt)
 {    
     m_backgroundScene.simulate(dt);
     m_menuScene.simulate(dt);

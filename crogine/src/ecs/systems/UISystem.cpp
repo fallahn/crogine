@@ -120,7 +120,7 @@ void UISystem::handleEvent(const Event& evt)
     }
 }
 
-void UISystem::process(Time dt)
+void UISystem::process(float)
 {    
     //TODO we probably want some partitioning? Checking every entity for a collision could be a bit pants
     auto& entities = getEntities();

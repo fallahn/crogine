@@ -47,7 +47,7 @@ class ChunkSystem final : public cro::System
 public:
     explicit ChunkSystem(cro::MessageBus&);
 
-    void process(cro::Time) override;
+    void process(float) override;
 
     void handleMessage(const cro::Message&) override;
 

@@ -42,7 +42,7 @@ namespace cro
     public:
         explicit SkeletalAnimator(MessageBus&);
 
-        void process(Time) override;
+        void process(float) override;
 
     private:
         void onEntityAdded(Entity) override;

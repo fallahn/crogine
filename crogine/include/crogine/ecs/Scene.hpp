@@ -43,7 +43,6 @@ source distribution.
 
 namespace cro
 {
-    class Time;
     class MessageBus;
     class Renderable;
 
@@ -70,10 +69,11 @@ namespace cro
         Scene& operator = (const Scene&&) = delete;
 
         /*!
-        \brief Executes one simulations step.
+        \brief Executes one simulation step.
         \param dt The time elapsed since the last simulation step
+        fixed at 60Hz
         */
-        void simulate(Time dt);
+        void simulate(float dt);
 
         /*!
         \brief Creates a new entity in the Scene, and returns a copy of it

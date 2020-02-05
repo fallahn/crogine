@@ -42,7 +42,7 @@ class ColourSystem final : public cro::System
 public:
     explicit ColourSystem(cro::MessageBus&);
 
-    void process(cro::Time) override;
+    void process(float) override;
 
 private:
 

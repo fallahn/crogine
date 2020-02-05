@@ -104,14 +104,14 @@ bool GameOverState::handleEvent(const cro::Event& evt)
 
             cro::Command cmd;
             cmd.targetFlags = UICommand::NameText;
-            cmd.action = [&](cro::Entity entity, cro::Time)
+            cmd.action = [&](cro::Entity entity, float)
             {
                 entity.getComponent<cro::Text>().setString(m_sharedResources.playerName);
             };
             commandSystem->sendCommand(cmd);
 
             cmd.targetFlags = UICommand::InputBox;
-            cmd.action = [](cro::Entity entity, cro::Time)
+            cmd.action = [](cro::Entity entity, float)
             {
                 entity.getComponent<cro::Sprite>().setTextureRect(inactiveArea);
             };
@@ -147,11 +147,11 @@ void GameOverState::handleMessage(const cro::Message& msg)
     m_uiScene.forwardMessage(msg);
 }
 
-bool GameOverState::simulate(cro::Time dt)
+bool GameOverState::simulate(float dt)
 {
     cro::Command cmd;
     cmd.targetFlags = UICommand::ScoreText;
-    cmd.action = [&](cro::Entity entity, cro::Time)
+    cmd.action = [&](cro::Entity entity, float)
     {
         auto& txt = entity.getComponent<cro::Text>();
         txt.setString("Score: " + std::to_string(m_sharedResources.score));
@@ -350,7 +350,7 @@ void GameOverState::handleTextEvent(const cro::Event& evt)
     //send command to text to update it
     cro::Command cmd;
     cmd.targetFlags = UICommand::NameText;
-    cmd.action = [&, text](cro::Entity entity, cro::Time)
+    cmd.action = [&, text](cro::Entity entity, float)
     {
         if (entity.getComponent<cro::Text>().getLocalBounds().width < inactiveArea.width - 100.f)
         {
@@ -365,7 +365,7 @@ void GameOverState::updateTextBox()
 {
     cro::Command cmd;
     cmd.targetFlags = UICommand::NameText;
-    cmd.action = [&](cro::Entity entity, cro::Time)
+    cmd.action = [&](cro::Entity entity, float)
     {
         entity.getComponent<cro::Text>().setString(m_sharedResources.playerName + "_");
     };

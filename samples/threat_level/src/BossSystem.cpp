@@ -35,14 +35,8 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 
-namespace
-{
-    const float fixedUpdate = 1.f / 60.f;
-}
-
 BossSystem::BossSystem(cro::MessageBus& mb)
-    :cro::System(mb, typeid(BossSystem)),
-    m_accumulator(0.f)
+    :cro::System(mb, typeid(BossSystem))
 {
     requireComponent<cro::Transform>();
     requireComponent<cro::Model>();
@@ -55,39 +49,34 @@ void BossSystem::handleMessage(const cro::Message& msg)
 
 }
 
-void BossSystem::process(cro::Time dt)
+void BossSystem::process(float dt)
 {
-    m_accumulator += dt.asSeconds();
     auto& entities = getEntities();
 
-    while (m_accumulator > fixedUpdate)
+    for (auto& entity : entities)
     {
-        m_accumulator -= fixedUpdate;
-
-        for (auto& entity : entities)
+        const auto& boss = entity.getComponent<Boss>();
+        switch (boss.state)
         {
-            const auto& boss = entity.getComponent<Boss>();
-            switch (boss.state)
-            {
-            default:break;
-            case Boss::Appearance:
-                processAppearance(entity);
-                break;
-            case Boss::Shooting:
-                processShooting(entity);
-                break;
-            }
+        default:break;
+        case Boss::Appearance:
+            processAppearance(entity, dt);
+            break;
+        case Boss::Shooting:
+            processShooting(entity, dt);
+            break;
         }
     }
+
 }
 
 //private
-void BossSystem::processAppearance(cro::Entity entity)
+void BossSystem::processAppearance(cro::Entity entity, float dt)
 {
     auto& boss = entity.getComponent<Boss>();
     auto& tx = entity.getComponent<cro::Transform>();
 
-    tx.move({ boss.moveSpeed * fixedUpdate, 0.f, 0.f });
+    tx.move({ boss.moveSpeed * dt, 0.f, 0.f });
 
     auto visible = entity.getComponent<cro::Model>().isVisible();
     if (!visible && boss.wantsReset)
@@ -102,7 +91,7 @@ void BossSystem::processAppearance(cro::Entity entity)
     }
 }
 
-void BossSystem::processShooting(cro::Entity entity)
+void BossSystem::processShooting(cro::Entity, float)
 {
 
 }

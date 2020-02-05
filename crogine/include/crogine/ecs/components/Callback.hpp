@@ -37,9 +37,8 @@ source distribution.
 namespace cro
 {
     class Entity;
-    class Time;
 
-    using CallbackFunction = std::function<void(Entity, Time)>;
+    using CallbackFunction = std::function<void(Entity, float)>;
     /*!
     \brief Allows attaching a callback function to an entity.
     \see CallbackSystem

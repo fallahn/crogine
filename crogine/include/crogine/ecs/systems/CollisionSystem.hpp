@@ -63,7 +63,7 @@ namespace cro
         CollisionSystem(CollisionSystem&&) = delete;
         CollisionSystem& operator = (CollisionSystem&&) = delete;
 
-        void process(cro::Time) override;
+        void process(float) override;
 
         void render(Entity) override;
 

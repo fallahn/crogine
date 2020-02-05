@@ -172,7 +172,7 @@ ParticleSystem::~ParticleSystem()
 }
 
 //public
-void ParticleSystem::process(Time dt)
+void ParticleSystem::process(float dt)
 {
     m_visibleCount = 0;
 
@@ -217,22 +217,21 @@ void ParticleSystem::process(Time dt)
         }      
 
         //update each particle
-        const float dtSec = dt.asSeconds();
         glm::vec3 minBounds(std::numeric_limits<float>::max());
         glm::vec3 maxBounds(0.f);
         for (auto i = 0u; i < emitter.m_nextFreeParticle; ++i)
         {
             auto& p = emitter.m_particles[i];
 
-            p.velocity += p.gravity * dtSec;
-            for (auto f : emitter.emitterSettings.forces) p.velocity += f * dtSec;
-            p.position += p.velocity * dtSec;            
+            p.velocity += p.gravity * dt;
+            for (auto f : emitter.emitterSettings.forces) p.velocity += f * dt;
+            p.position += p.velocity * dt;            
            
-            p.lifetime -= dtSec;
+            p.lifetime -= dt;
             p.colour.setAlpha(std::max(p.lifetime / p.maxLifeTime, 0.f));
 
-            p.rotation += emitter.emitterSettings.rotationSpeed * dtSec;
-            p.scale += ((p.scale * emitter.emitterSettings.scaleModifier) * dtSec);
+            p.rotation += emitter.emitterSettings.rotationSpeed * dt;
+            p.scale += ((p.scale * emitter.emitterSettings.scaleModifier) * dt);
             //LOG(std::to_string(emitter.emitterSettings.scaleModifier), Logger::Type::Info);
 
             //update bounds for culling

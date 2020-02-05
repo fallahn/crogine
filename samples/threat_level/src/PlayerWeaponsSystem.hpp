@@ -52,7 +52,7 @@ class PlayerWeaponSystem final : public cro::System
 public:
     explicit PlayerWeaponSystem(cro::MessageBus&);
 
-    void process(cro::Time) override;
+    void process(float) override;
 
     void handleMessage(const cro::Message&) override;
 

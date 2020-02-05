@@ -106,7 +106,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
             //to the turrets to tell them to reposition
             cro::Command cmd;
             cmd.targetFlags = CommandID::TurretA | CommandID::TurretB;
-            cmd.action = [data](cro::Entity entity, cro::Time)
+            cmd.action = [data](cro::Entity entity, float)
             {
                 auto& tx = entity.getComponent<cro::Transform>();
                 if (entity.getComponent<Family>().parent.getIndex() == data.entityID)
@@ -133,7 +133,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
 
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Weaver;
-                cmd.action = [partID](cro::Entity entity, cro::Time)
+                cmd.action = [partID](cro::Entity entity, float)
                 {
                     auto& status = entity.getComponent<Npc>();
                     if (status.active && status.health > 0)
@@ -157,7 +157,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
             {
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Elite;
-                cmd.action = [](cro::Entity entity, cro::Time)
+                cmd.action = [](cro::Entity entity, float)
                 {
                     entity.getComponent<cro::ParticleEmitter>().stop();
                 };
@@ -177,7 +177,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
             {
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Weaver;
-                cmd.action = [](cro::Entity entity, cro::Time)
+                cmd.action = [](cro::Entity entity, float)
                 {
                     auto& status = entity.getComponent<Npc>();
                     status.weaver.shootTime = cro::Util::Random::value(WeaverNavigator::nextShootTime - 0.3f, WeaverNavigator::nextShootTime);
@@ -195,7 +195,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
 
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Elite;
-                cmd.action = [health](cro::Entity entity, cro::Time)
+                cmd.action = [health](cro::Entity entity, float)
                 {
                     float amount = (1.f - (health / 100.f));
                     if (amount > 0)
@@ -238,7 +238,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
                 //remove the turrets
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::TurretA | CommandID::TurretB;
-                cmd.action = [&](cro::Entity entity, cro::Time)
+                cmd.action = [&](cro::Entity entity, float)
                 {
                     auto& tx = entity.getComponent<cro::Transform>();
                     auto oldPos = tx.getWorldPosition();
@@ -272,7 +272,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
     }
 }
 
-void NpcDirector::process(cro::Time dt)
+void NpcDirector::process(float dt)
 {   
     DPRINT("NPC Count", std::to_string(m_npcCount));
     
@@ -285,7 +285,7 @@ void NpcDirector::process(cro::Time dt)
         //wait until all NPCs died
         if (m_npcCount == 0)
         {
-            m_roundDelay -= dt.asSeconds();
+            m_roundDelay -= dt;
             getScene().getSystem<BackgroundSystem>().setColourAngle(-50.f);
 
             if (m_roundDelay < 0)
@@ -315,16 +315,14 @@ void NpcDirector::process(cro::Time dt)
     }
     if (!m_releaseActive) return;
 
-    float dtSec = dt.asSeconds();
-
-    m_eliteRespawn -= dtSec;
+    m_eliteRespawn -= dt;
     if (m_eliteRespawn < 0)
     {
         m_eliteRespawn = eliteSpawnTime + cro::Util::Random::value(0.1f, 2.3f);
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Elite;
-        cmd.action = [this](cro::Entity entity, cro::Time)
+        cmd.action = [this](cro::Entity entity, float)
         {
             if (!m_releaseActive) return;
             
@@ -358,7 +356,7 @@ void NpcDirector::process(cro::Time dt)
         m_totalReleaseCount++;      
     }
 
-    m_choppaRespawn -= dtSec;
+    m_choppaRespawn -= dt;
     if (m_choppaRespawn < 0)
     {
         m_choppaRespawn = choppaSpawnTime + cro::Util::Random::value(-2.f, 3.6439f);
@@ -366,7 +364,7 @@ void NpcDirector::process(cro::Time dt)
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Choppa;
-        cmd.action = [this, vertical](cro::Entity entity, cro::Time)
+        cmd.action = [this, vertical](cro::Entity entity, float)
         {
             if (!m_releaseActive) return;
             
@@ -408,12 +406,12 @@ void NpcDirector::process(cro::Time dt)
         m_totalReleaseCount++;
     }
 
-    m_speedrayRespawn -= dtSec;
+    m_speedrayRespawn -= dt;
     if(m_speedrayRespawn < 0)
     {
         cro::Command cmd;
         cmd.targetFlags = CommandID::Speedray;
-        cmd.action = [this](cro::Entity entity, cro::Time)
+        cmd.action = [this](cro::Entity entity, float)
         {
             if (!m_releaseActive) return;
 
@@ -443,7 +441,7 @@ void NpcDirector::process(cro::Time dt)
         m_totalReleaseCount++;
     }
 
-    m_weaverRespawn -= dtSec;
+    m_weaverRespawn -= dt;
     if (m_weaverRespawn < 0)
     {
         m_weaverRespawn = weaverSpawnTime;
@@ -451,7 +449,7 @@ void NpcDirector::process(cro::Time dt)
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Weaver;
-        cmd.action = [this, yPos](cro::Entity entity, cro::Time) 
+        cmd.action = [this, yPos](cro::Entity entity, float) 
         {
             if (!m_releaseActive) return;
             
@@ -485,13 +483,13 @@ void NpcDirector::process(cro::Time dt)
 
     //TODO switch between turrets, and check player is not too close
     //when firing
-    m_turretOrbTime -= dtSec;
+    m_turretOrbTime -= dt;
     if (m_turretOrbTime < 0)
     {
         m_turretOrbTime = cro::Util::Random::value(turretOrbTime - 1.f, turretOrbTime + 1.f);
         cro::Command cmd;
         cmd.targetFlags = CommandID::TurretA | CommandID::TurretB;
-        cmd.action = [this](cro::Entity entity, cro::Time)
+        cmd.action = [this](cro::Entity entity, float)
         {
             if (!m_releaseActive) return;
             

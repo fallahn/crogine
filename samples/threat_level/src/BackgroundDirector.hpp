@@ -39,7 +39,7 @@ public:
 
     void handleEvent(const cro::Event&) override {}
     void handleMessage(const cro::Message&) override;
-    void process(cro::Time) override {}
+    void process(float) override {}
 };
 
 #endif //TL_BACKGROUND_DIRECTOR_HPP_

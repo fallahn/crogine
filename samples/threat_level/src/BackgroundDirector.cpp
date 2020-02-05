@@ -47,7 +47,7 @@ void BackgroundDirector::handleMessage(const cro::Message& msg)
 
             cro::Command cmd;
             cmd.targetFlags = CommandID::RockParticles;
-            cmd.action = [start](cro::Entity entity, cro::Time)
+            cmd.action = [start](cro::Entity entity, float)
             {
                 auto& ps = entity.getComponent<cro::ParticleEmitter>();
                 if (start)
@@ -62,7 +62,7 @@ void BackgroundDirector::handleMessage(const cro::Message& msg)
             sendCommand(cmd);
 
             cmd.targetFlags = CommandID::SnowParticles;
-            cmd.action = [start](cro::Entity entity, cro::Time)
+            cmd.action = [start](cro::Entity entity, float)
             {
                 auto& rt = entity.getComponent<RandomTranslation>();
                 if (start)
@@ -91,7 +91,7 @@ void BackgroundDirector::handleMessage(const cro::Message& msg)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::SnowParticles;
-            cmd.action = [=](cro::Entity entity, cro::Time)
+            cmd.action = [=](cro::Entity entity, float)
             {
                 entity.getComponent<cro::ParticleEmitter>().emitterSettings.initialVelocity.x = (data.value * -11.f);
             };

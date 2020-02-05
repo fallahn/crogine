@@ -45,7 +45,7 @@ ColourSystem::ColourSystem(cro::MessageBus& mb)
     requireComponent<ColourChanger>();
 }
 
-void ColourSystem::process(cro::Time dt)
+void ColourSystem::process(float dt)
 {
     auto& entities = getEntities();
     for (auto& entity : entities)
@@ -53,7 +53,7 @@ void ColourSystem::process(cro::Time dt)
         auto& sprite = entity.getComponent<Sprite>();
         auto& changer = entity.getComponent<ColourChanger>();
 
-        auto time = dt.asSeconds() / 3.f;
+        auto time = dt / 3.f;
         if (changer.up)
         {
             changer.colour[changer.currentChannel] = Util::Maths::clamp(changer.colour[changer.currentChannel] + time, 0.f, 1.f);

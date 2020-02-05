@@ -52,11 +52,11 @@ Wavetable::Wavetable(const std::vector<float>& data, float updaterate)
     m_wavetable = data;
 }
 
-float Wavetable::fetch(Time dt) const
+float Wavetable::fetch(float dt) const
 {
     CRO_ASSERT(!m_wavetable.empty(), "Invalid wavetable data");
     
-    m_accumulator  += dt.asSeconds();
+    m_accumulator  += dt;
     while (m_accumulator > m_timestep)
     {
         m_accumulator -= m_timestep;

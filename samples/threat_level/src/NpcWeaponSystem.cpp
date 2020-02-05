@@ -41,7 +41,6 @@ source distribution.
 
 namespace
 {
-    const float fixedStep = 1.f / 60.f;
     const float speedMultiplier = 21.3f; //approx chunk size of terrain
 
     const float orbSpeed = 4.f;
@@ -50,7 +49,6 @@ namespace
 
 NpcWeaponSystem::NpcWeaponSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(NpcWeaponSystem)),
-    m_accumulator       (0.f),
     m_backgroundSpeed   (0.f),
     m_orbCount          (0),
     m_deadOrbCount      (0),
@@ -166,33 +164,26 @@ void NpcWeaponSystem::handleMessage(const cro::Message& msg)
     }
 }
 
-void NpcWeaponSystem::process(cro::Time dt)
-{
-    const float dtSec = dt.asSeconds();
-    
+void NpcWeaponSystem::process(float dt)
+{    
     //update orbs
     for (std::size_t i = 0u; i < m_orbCount; ++i)
     {
-        processOrb(i, dtSec);
+        processOrb(i, dt);
     }    
     
     //update pulses
     for (std::size_t i = 0u; i < m_alivePulseCount; ++i)
     {
-        processPulse(i, dtSec);
+        processPulse(i, dt);
     }
 
-    m_accumulator += dtSec;
 
-    while (m_accumulator > fixedStep)
+    for (auto l : m_activeLasers)
     {
-        m_accumulator -= fixedStep;
+        processLaser(getScene()->getEntity(l), dt);
+    }        
 
-        for (auto l : m_activeLasers)
-        {
-            processLaser(getScene()->getEntity(l));
-        }        
-    }
 }
 
 //private
@@ -219,7 +210,7 @@ void NpcWeaponSystem::processPulse(std::size_t& idx, float dt)
     }
 }
 
-void NpcWeaponSystem::processLaser(cro::Entity entity) 
+void NpcWeaponSystem::processLaser(cro::Entity entity, float dt) 
 {
     //TODO disabled until I can be bothered to refactor
 

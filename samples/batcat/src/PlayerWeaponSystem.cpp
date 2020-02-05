@@ -72,11 +72,10 @@ void PlayerWeaponSystem::handleMessage(const cro::Message& msg)
     }
 }
 
-void PlayerWeaponSystem::process(cro::Time dt)
+void PlayerWeaponSystem::process(float dt)
 {
-    float dtSec = dt.asSeconds();
-    processLasers(dtSec);
-    processGrenades(dtSec);
+    processLasers(dt);
+    processGrenades(dt);
 }
 
 //private

@@ -71,10 +71,8 @@ void BuddySystem::handleMessage(const cro::Message& msg)
     }
 }
 
-void BuddySystem::process(cro::Time dt)
+void BuddySystem::process(float dt)
 {
-    float dtSec = dt.asSeconds();
-
     auto& entities = getEntities();
     for (auto& entity : entities)
     {
@@ -91,10 +89,10 @@ void BuddySystem::process(cro::Time dt)
             }
             break;
         case Buddy::Initialising:
-            processInit(dtSec, entity);
+            processInit(dt, entity);
             break;
         case Buddy::Active:
-            processActive(dtSec, entity);
+            processActive(dt, entity);
             break;
         }
     }

@@ -78,18 +78,17 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb)
 }
 
 //public
-void ChunkSystem::process(cro::Time dt)
+void ChunkSystem::process(float dt)
 {
     auto& entities = getEntities();
 
     //move each entity according to current speed
-    float dtSec = dt.asSeconds();
-    m_currentSpeed += ((m_speed - m_currentSpeed) * dtSec);
+    m_currentSpeed += ((m_speed - m_currentSpeed) * dt);
 
     for (auto& e : entities)
     {
         auto& tx = e.getComponent<cro::Transform>();
-        tx.move({ (-m_currentSpeed + m_offset) * dtSec, 0.f, 0.f });
+        tx.move({ (-m_currentSpeed + m_offset) * dt, 0.f, 0.f });
 
 
         //if out of view move by one width and rebuild from current coords

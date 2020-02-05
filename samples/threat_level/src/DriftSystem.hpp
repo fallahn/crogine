@@ -45,7 +45,7 @@ class DriftSystem final : public cro::System
 public:
     explicit DriftSystem(cro::MessageBus&);
 
-    void process(cro::Time) override;
+    void process(float) override;
 
 private:
     std::vector<float> m_waveTable;

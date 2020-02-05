@@ -62,7 +62,7 @@ void MyApp::handleMessage(const cro::Message& msg)
     m_stateStack.handleMessage(msg);
 }
 
-void MyApp::simulate(cro::Time dt)
+void MyApp::simulate(float dt)
 {
 	m_stateStack.simulate(dt);
 }
@@ -85,5 +85,5 @@ bool MyApp::initialise()
 void MyApp::finalise()
 {
     m_stateStack.clearStates();
-    m_stateStack.simulate(cro::Time());
+    m_stateStack.simulate(0.f);
 }

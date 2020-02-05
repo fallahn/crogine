@@ -51,6 +51,6 @@ namespace cro
     public:
         explicit CallbackSystem(MessageBus&);
 
-        void process(cro::Time) override;
+        void process(float) override;
     };
 }

@@ -42,6 +42,7 @@ source distribution.
 #include <SDL_filesystem.h>
 
 #include "../detail/GLCheck.hpp"
+#include "../detail/HiResTimer.hpp"
 #include "../imgui/imgui_impl_opengl3.h"
 #include "../imgui/imgui_impl_sdl.h"
 
@@ -59,7 +60,11 @@ cro::App* App::m_instance = nullptr;
 
 namespace
 {    
-    const Time frameTime = seconds(1.f / 60.f);
+    //storing the dt as float is far more
+    //accurate than converting to a Time and
+    //back as the underlying SDL timer only
+    //supports milliseconds
+    const float frameTime = 1.f / 60.f;
 
 #include "../detail/DefaultIcon.inl"
 
@@ -152,7 +157,12 @@ void App::run()
         ImGui::CreateContext();
         ImGui::StyleColorsDark();
         ImGui_ImplSDL2_InitForOpenGL(m_window.m_window, m_window.m_mainContext);
-        ImGui_ImplOpenGL3_Init(/*version150 if mac - but meh, Apple*/);
+#ifdef PLATFORM_DESKTOP
+        ImGui_ImplOpenGL3_Init("#version 150");
+#else
+        //load ES2 shaders on mobile
+        ImGui_ImplOpenGL3_Init();
+#endif
 
         m_window.setIcon(defaultIcon);
         m_window.setFullScreen(settings.fullscreen);
@@ -166,11 +176,11 @@ void App::run()
 	}
     
     
-    Clock frameClock;
+    Detail::HiResTimer frameClock;
     m_frameClock = &frameClock;
     m_running = initialise();
 
-    Time timeSinceLastUpdate;
+    float timeSinceLastUpdate = 0.f;
 
 	while (m_running)
 	{
@@ -184,7 +194,6 @@ void App::run()
             handleMessages();
 
 			simulate(frameTime);
-            //simulate(timeSinceLastUpdate);
 		}
         //DPRINT("Frame time", std::to_string(timeSinceLastUpdate.asMilliseconds()));
         doImGui();
@@ -194,8 +203,6 @@ void App::run()
         render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		m_window.display();
-
-        //SDL_Delay((frameTime - timeSinceLastUpdate).asMilliseconds());
 	}
 
     saveSettings();

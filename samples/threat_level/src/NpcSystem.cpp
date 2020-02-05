@@ -47,7 +47,6 @@ source distribution.
 
 namespace
 {
-    const float fixedUpdate = 1.f / 60.f;
     const float zDepth = -9.3f;
     const glm::vec3 gravity(0.f, -9.f, 0.f);
     const glm::vec3 chopperPulseOffset(-0.1f, -0.06f, 0.f);
@@ -61,7 +60,6 @@ namespace
 
 NpcSystem::NpcSystem(cro::MessageBus& mb)
     : cro::System   (mb, typeid(NpcSystem)),
-    m_accumulator   (0.f),
     m_empFired      (false),
     m_awardPoints   (true)
 {
@@ -131,123 +129,118 @@ void NpcSystem::handleMessage(const cro::Message& msg)
     }
 }
 
-void NpcSystem::process(cro::Time dt)
+void NpcSystem::process(float dt)
 {
     //DPRINT("Player Position", std::to_string(m_playerPosition.x) + ", " + std::to_string(m_playerPosition.y));
     
     auto& entities = getEntities();
-    m_accumulator += dt.asSeconds();// std::min(, 1.f);
        
-    while (m_accumulator > fixedUpdate)
+    for (auto& entity : entities)
     {
-        m_accumulator -= fixedUpdate;
+        auto& status = entity.getComponent<Npc>();
 
-        for (auto& entity : entities) 
+        bool hasCollision = false;
+        if (status.wantsReset) //we're on screen
         {
-            auto& status = entity.getComponent<Npc>();
-           
-            bool hasCollision = false;
-            if (status.wantsReset) //we're on screen
+            //check for collision with player weapons
+            auto& phys = entity.getComponent<cro::PhysicsObject>();
+            auto count = phys.getCollisionCount();
+            for (auto i = 0u; i < count; ++i)
             {
-                //check for collision with player weapons
-                auto& phys = entity.getComponent<cro::PhysicsObject>();
-                auto count = phys.getCollisionCount();
-                for (auto i = 0u; i < count; ++i)
+                auto otherEnt = getScene()->getEntity(phys.getCollisionIDs()[i]);
+                if (otherEnt.getComponent<cro::PhysicsObject>().getCollisionGroups()& CollisionID::PlayerLaser)
                 {
-                    auto otherEnt = getScene()->getEntity(phys.getCollisionIDs()[i]);
-                    if (otherEnt.getComponent<cro::PhysicsObject>().getCollisionGroups() & CollisionID::PlayerLaser)
+                    //remove some health based on weapon energy
+                    const auto& weapon = otherEnt.getComponent<PlayerWeapon>();
+                    status.health -= weapon.damage;
+
                     {
-                        //remove some health based on weapon energy
-                        const auto& weapon = otherEnt.getComponent<PlayerWeapon>();
-                        status.health -= weapon.damage;
-                        
-                        {
-                            auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
-                            msg->type = NpcEvent::HealthChanged;
-                            msg->npcType = status.type;
-                            msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
-                            msg->entityID = entity.getIndex();
-                            msg->value = status.health;
-                        }
-                    }
-                }
-
-                //if EMP was fired kill anyway
-                if (m_empFired)
-                {
-                    status.health = -1.f;
-                    //LOG("EMP killed everything", cro::Logger::Type::Info)
-                }
-
-                if (status.health <= 0)
-                {
-                    //raise a message 
-                    auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
-                    msg->type = NpcEvent::Died;
-                    msg->npcType = status.type;
-                    msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
-                    msg->entityID = entity.getIndex();
-                    msg->value = m_awardPoints ? static_cast<float>(status.scoreValue) : 0;
-
-                    if (!status.hasDyingAnim)
-                    {
-                        //TODO make this a case for all with dying animation
-                        entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
-                        hasCollision = true;
+                        auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                        msg->type = NpcEvent::HealthChanged;
+                        msg->npcType = status.type;
+                        msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+                        msg->entityID = entity.getIndex();
+                        msg->value = status.health;
                     }
                 }
             }
 
-            if (status.active)
-            {               
-                //process logic based on type
-                switch (status.type)
-                {
-                default: break;
-                case Npc::Elite:
-                    processElite(entity);
-                    break;
-                case Npc::Choppa:
-                    processChoppa(entity);
-                    hasCollision = false; //we want to play dying animation
-                    break;
-                case Npc::Turret:
-                    processTurret(entity);
-                    continue; //turrets are parented to terrain entities - so don't need following update
-                case Npc::Speedray:
-                    processSpeedray(entity);
-                    break;
-                case Npc::Weaver:
-                    processWeaver(entity);
-                    break;
-                }  
+            //if EMP was fired kill anyway
+            if (m_empFired)
+            {
+                status.health = -1.f;
+                //LOG("EMP killed everything", cro::Logger::Type::Info)
+            }
 
-                //check if entity has moved off-screen and
-                //reset it if it has
-                bool visible = (entity.getComponent<cro::Model>().isVisible() && !hasCollision);
-                if (!visible && status.wantsReset) //moved out of area
-                {
-                    status.wantsReset = false;
-                    status.active = false;
+            if (status.health <= 0)
+            {
+                //raise a message 
+                auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                msg->type = NpcEvent::Died;
+                msg->npcType = status.type;
+                msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+                msg->entityID = entity.getIndex();
+                msg->value = m_awardPoints ? static_cast<float>(status.scoreValue) : 0;
 
-                    auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
-                    msg->entityID = entity.getIndex();
-                    msg->npcType = status.type;
-                    msg->type = NpcEvent::ExitScreen;
+                if (!status.hasDyingAnim)
+                {
+                    //TODO make this a case for all with dying animation
+                    entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
+                    hasCollision = true;
                 }
-                else if (visible)
-                {
-                    //we've entered the visible area so will eventually want resetting
-                    status.wantsReset = true;
-                }                
             }
         }
+
+        if (status.active)
+        {
+            //process logic based on type
+            switch (status.type)
+            {
+            default: break;
+            case Npc::Elite:
+                processElite(entity, dt);
+                break;
+            case Npc::Choppa:
+                processChoppa(entity, dt);
+                hasCollision = false; //we want to play dying animation
+                break;
+            case Npc::Turret:
+                processTurret(entity, dt);
+                continue; //turrets are parented to terrain entities - so don't need following update
+            case Npc::Speedray:
+                processSpeedray(entity, dt);
+                break;
+            case Npc::Weaver:
+                processWeaver(entity, dt);
+                break;
+            }
+
+            //check if entity has moved off-screen and
+            //reset it if it has
+            bool visible = (entity.getComponent<cro::Model>().isVisible() && !hasCollision);
+            if (!visible && status.wantsReset) //moved out of area
+            {
+                status.wantsReset = false;
+                status.active = false;
+
+                auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+                msg->entityID = entity.getIndex();
+                msg->npcType = status.type;
+                msg->type = NpcEvent::ExitScreen;
+            }
+            else if (visible)
+            {
+                //we've entered the visible area so will eventually want resetting
+                status.wantsReset = true;
+            }
+        }
+
         m_empFired = false;
     }
 }
 
 //private
-void NpcSystem::processElite(cro::Entity entity)
+void NpcSystem::processElite(cro::Entity entity, float dt)
 {
     auto& tx = entity.getComponent<cro::Transform>();
     auto& status = entity.getComponent<Npc>();
@@ -256,9 +249,9 @@ void NpcSystem::processElite(cro::Entity entity)
 
     if (status.elite.dying)
     {
-        tx.rotate({ 1.f, 0.f, 0.f }, 0.1f + fixedUpdate);
-        tx.move(status.elite.deathVelocity * fixedUpdate);
-        status.elite.deathVelocity += gravity * fixedUpdate;
+        tx.rotate({ 1.f, 0.f, 0.f }, 0.1f + dt);
+        tx.move(status.elite.deathVelocity * dt);
+        status.elite.deathVelocity += gravity * dt;
     }
     else
     {
@@ -295,7 +288,7 @@ void NpcSystem::processElite(cro::Entity entity)
             }*/
 
             //count down to next movement
-            status.elite.pauseTime -= fixedUpdate;
+            status.elite.pauseTime -= dt;
             if (status.elite.pauseTime < 0)
             {
                 status.elite.active = true;
@@ -305,7 +298,7 @@ void NpcSystem::processElite(cro::Entity entity)
             }
 
             //check weapon fire
-            status.elite.firetime -= fixedUpdate;
+            status.elite.firetime -= dt;
             if (status.elite.firetime < 0)
             {
                 //LOG("Fired Elite laser", cro::Logger::Type::Info);
@@ -319,11 +312,11 @@ void NpcSystem::processElite(cro::Entity entity)
             }
         }
         status.elite.deathVelocity = movement;
-        tx.move(movement * fixedUpdate);
+        tx.move(movement * dt);
     }
 }
 
-void NpcSystem::processChoppa(cro::Entity entity)
+void NpcSystem::processChoppa(cro::Entity entity, float dt)
 {
     auto& tx = entity.getComponent<cro::Transform>();
     auto& status = entity.getComponent<Npc>();
@@ -335,11 +328,11 @@ void NpcSystem::processChoppa(cro::Entity entity)
         //fly
         glm::vec3 movement(status.choppa.moveSpeed, m_choppaTable[status.choppa.tableIndex], 0.f);
         movement.y += (m_playerPosition.y - tx.getWorldPosition().y) * 0.17f;
-        tx.move(movement * fixedUpdate);
+        tx.move(movement * dt);
         status.choppa.tableIndex = (status.choppa.tableIndex + 1) % m_choppaTable.size();
 
         //shoot
-        status.choppa.shootTime -= fixedUpdate;
+        status.choppa.shootTime -= dt;
         if (status.choppa.shootTime < 0)
         {
             status.choppa.shootTime = ChoppaNavigator::nextShootTime;
@@ -354,13 +347,13 @@ void NpcSystem::processChoppa(cro::Entity entity)
     else
     {
         //diiieeeee
-        tx.rotate({ 1.f, 0.f, 0.f }, 0.1f + fixedUpdate);
-        tx.move(status.choppa.deathVelocity * fixedUpdate);
-        status.choppa.deathVelocity += gravity * fixedUpdate;
+        tx.rotate({ 1.f, 0.f, 0.f }, 0.1f + dt);
+        tx.move(status.choppa.deathVelocity * dt);
+        status.choppa.deathVelocity += gravity * dt;
     }
 }
 
-void NpcSystem::processTurret(cro::Entity entity)
+void NpcSystem::processTurret(cro::Entity entity, float)
 {
     auto& tx = entity.getComponent<cro::Transform>();
     
@@ -370,7 +363,7 @@ void NpcSystem::processTurret(cro::Entity entity)
     tx.setRotation({ 0.f, rotation, 0.f });
 }
 
-void NpcSystem::processSpeedray(cro::Entity entity)
+void NpcSystem::processSpeedray(cro::Entity entity, float dt)
 {
     auto& status = entity.getComponent<Npc>();
     
@@ -382,10 +375,10 @@ void NpcSystem::processSpeedray(cro::Entity entity)
 
     status.speedray.tableIndex = (status.speedray.tableIndex + 1) % m_speedrayTable.size();
 
-    tx.move({ status.speedray.moveSpeed * fixedUpdate, 0.f, 0.f });
+    tx.move({ status.speedray.moveSpeed * dt, 0.f, 0.f });
 
     //shooting
-    status.speedray.shootTime -= fixedUpdate;
+    status.speedray.shootTime -= dt;
     if (status.speedray.shootTime < 0)
     {
         status.speedray.shootTime = SpeedrayNavigator::nextShootTime;
@@ -398,7 +391,7 @@ void NpcSystem::processSpeedray(cro::Entity entity)
     }
 }
 
-void NpcSystem::processWeaver(cro::Entity entity)
+void NpcSystem::processWeaver(cro::Entity entity, float dt)
 {
     auto& status = entity.getComponent<Npc>();
     auto& tx = entity.getComponent<cro::Transform>();
@@ -406,12 +399,12 @@ void NpcSystem::processWeaver(cro::Entity entity)
 
     status.weaver.tableIndex = (status.weaver.tableIndex + 1) % m_weaverTable.size();
 
-    tx.move({ status.weaver.moveSpeed * fixedUpdate, 0.f, 0.f });
+    tx.move({ status.weaver.moveSpeed * dt, 0.f, 0.f });
 
     //check if part is dying
     if (status.weaver.dying)
     {
-        status.weaver.dyingTime -= fixedUpdate;
+        status.weaver.dyingTime -= dt;
         if (status.weaver.dyingTime < 0)
         {
             tx.setPosition(glm::vec3(100.f));
@@ -421,13 +414,13 @@ void NpcSystem::processWeaver(cro::Entity entity)
             //LOG("Part Died", cro::Logger::Type::Info);
         }
         //DPRINT("Dying", std::to_string(status.weaver.ident));
-        status.weaver.velocity += gravity * fixedUpdate;
-        tx.move(status.weaver.velocity * fixedUpdate);
+        status.weaver.velocity += gravity * dt;
+        tx.move(status.weaver.velocity * dt);
     }
     else
     {
         //shooting
-        status.weaver.shootTime -= fixedUpdate;
+        status.weaver.shootTime -= dt;
         if (status.weaver.shootTime < 0)
         {
             status.weaver.shootTime = cro::Util::Random::value(WeaverNavigator::nextShootTime - 0.5f, WeaverNavigator::nextShootTime + 2.f);

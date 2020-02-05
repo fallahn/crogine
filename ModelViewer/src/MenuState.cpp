@@ -177,7 +177,7 @@ void MenuState::handleMessage(const cro::Message& msg)
     m_scene.forwardMessage(msg);
 }
 
-bool MenuState::simulate(cro::Time dt)
+bool MenuState::simulate(float dt)
 {
     m_scene.simulate(dt);
 	return true;
@@ -251,7 +251,7 @@ void MenuState::createScene()
     entity.getComponent<cro::Model>().enableDepthTest = false;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, cro::Time)
+        [&](cro::Entity e, float)
     {
         float scale = worldScales[m_preferences.unitsPerMetre];
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));

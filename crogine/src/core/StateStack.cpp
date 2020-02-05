@@ -69,7 +69,7 @@ void StateStack::handleMessage(const Message& msg)
     for (auto& s : m_stack) s->handleMessage(msg);
 }
 
-void StateStack::simulate(Time dt)
+void StateStack::simulate(float dt)
 {
 	applyPendingChanges();
 	for (auto i = m_stack.rbegin(); i != m_stack.rend(); ++i)
