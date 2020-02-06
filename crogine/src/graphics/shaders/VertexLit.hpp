@@ -79,7 +79,7 @@ namespace cro
                 uniform MED vec4 u_subrect;
                 #endif
                 
-                varying vec3 v_worldPosition;
+                VARYING_OUT vec3 v_worldPosition;
                 #if defined (VERTEX_COLOUR)
                 VARYING_OUT LOW vec4 v_colour;
                 #endif

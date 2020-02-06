@@ -39,12 +39,12 @@ namespace cro
     we can use the pre-transform positions as texture coords!!
     */
     static const std::string PostVertex = R"(
-        attribute vec4 a_position;
+        ATTRIBUTE vec4 a_position;
 
         uniform mat4 u_worldMatrix;
         uniform mat4 u_projectionMatrix;
             
-        varying MED vec2 v_texCoord;
+        VARYING_OUT MED vec2 v_texCoord;
 
         void main()
         {

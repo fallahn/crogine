@@ -47,12 +47,12 @@ namespace
     constexpr float timestep = 1.f / 60.f;
 
     const std::string vertex = R"(
-        attribute vec4 a_position;
+        ATTRIBUTE vec4 a_position;
 
         uniform mat4 u_worldMatrix;
         uniform mat4 u_projectionMatrix;
 
-        varying vec2 v_texCoord;
+        VARYING_OUT vec2 v_texCoord;
 
         void main()
         {
@@ -64,11 +64,12 @@ namespace
     const std::string fragment = R"(
         uniform sampler2D u_texture;
         
-        varying vec2 v_texCoord;
+        VARYING_IN vec2 v_texCoord;
+        OUTPUT
 
         void main()
         {
-            gl_FragColor = TEXTURE(u_texture, v_texCoord);
+            FRAG_OUT = TEXTURE(u_texture, v_texCoord);
         }
     )";
 }
