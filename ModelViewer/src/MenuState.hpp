@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/core/State.hpp>
+#include <crogine/core/ConfigFile.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ResourceAutomation.hpp>
 #include <crogine/gui/GuiClient.hpp>
