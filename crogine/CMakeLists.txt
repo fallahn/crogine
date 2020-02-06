@@ -8,6 +8,11 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 SET(USE_OPENAL TRUE CACHE BOOL "Choose whether to use OpenAL for audio or SDL_Mixer.")
+SET(TARGET_ANDROID FALSE CACHE BOOL "Build the library for Android devices")
+
+if(${TARGET_ANDROID})
+  SET(${CMAKE_TOOLCHAIN_FILE} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains/android-arm.cmake")
+endif()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/")
 

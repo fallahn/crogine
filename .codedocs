@@ -1,0 +1,6 @@
+DOXYFILE = crogine/doc
+INPUT = crogine/include/crogine
+CLASS_DIAGRAMS = YES
+PROJECT_NAME = crogine
+PROJECT_BRIEF = "Cross platform game engine aimed at android devices"
+MARKDOWN_SUPPORT = YES
