@@ -38,25 +38,25 @@ namespace cro
         namespace VertexLit
         {
             const static std::string Vertex = R"(
-                attribute vec4 a_position;
+                ATTRIBUTE vec4 a_position;
                 #if defined (VERTEX_COLOUR)
-                attribute LOW vec4 a_colour;
+                ATTRIBUTE LOW vec4 a_colour;
                 #endif
-                attribute vec3 a_normal;
+                ATTRIBUTE vec3 a_normal;
                 #if defined(BUMP)
-                attribute vec3 a_tangent;
-                attribute vec3 a_bitangent;
+                ATTRIBUTE vec3 a_tangent;
+                ATTRIBUTE vec3 a_bitangent;
                 #endif
                 #if defined(TEXTURED)
-                attribute MED vec2 a_texCoord0;
+                ATTRIBUTE MED vec2 a_texCoord0;
                 #endif
                 #if defined (LIGHTMAPPED)
-                attribute MED vec2 a_texCoord1;
+                ATTRIBUTE MED vec2 a_texCoord1;
                 #endif
 
                 #if defined(SKINNED)
-                attribute vec4 a_boneIndices;
-                attribute vec4 a_boneWeights;
+                ATTRIBUTE vec4 a_boneIndices;
+                ATTRIBUTE vec4 a_boneWeights;
                 uniform mat4 u_boneMatrices[MAX_BONES];
                 #endif
 
@@ -81,22 +81,22 @@ namespace cro
                 
                 varying vec3 v_worldPosition;
                 #if defined (VERTEX_COLOUR)
-                varying LOW vec4 v_colour;
+                VARYING_OUT LOW vec4 v_colour;
                 #endif
                 #if defined(BUMP)
-                varying vec3 v_tbn[3];
+                VARYING_OUT vec3 v_tbn[3];
                 #else
-                varying vec3 v_normalVector;
+                VARYING_OUT vec3 v_normalVector;
                 #endif
                 #if defined(TEXTURED)
-                varying MED vec2 v_texCoord0;
+                VARYING_OUT MED vec2 v_texCoord0;
                 #endif
                 #if defined(LIGHTMAPPED)
-                varying MED vec2 v_texCoord1;
+                VARYING_OUT MED vec2 v_texCoord1;
                 #endif
 
                 #if defined(RX_SHADOWS)
-                varying LOW vec4 v_lightWorldPosition;
+                VARYING_OUT LOW vec4 v_lightWorldPosition;
                 #endif
 
                 void main()
@@ -164,6 +164,7 @@ namespace cro
                 })";
 
             const static std::string Fragment = R"(
+                OUTPUT
                 #if defined(TEXTURED)
                 uniform sampler2D u_diffuseMap;
                 uniform sampler2D u_maskMap;
@@ -198,28 +199,28 @@ namespace cro
                 uniform LOW float u_rimFalloff;
                 #endif
 
-                varying HIGH vec3 v_worldPosition;
+                VARYING_IN HIGH vec3 v_worldPosition;
                 #if defined(VERTEX_COLOUR)
-                varying LOW vec4 v_colour;
+                VARYING_IN LOW vec4 v_colour;
                 #endif
                 #if defined (BUMP)
-                varying HIGH vec3 v_tbn[3];
+                VARYING_IN HIGH vec3 v_tbn[3];
                 #else
-                varying HIGH vec3 v_normalVector;
+                VARYING_IN HIGH vec3 v_normalVector;
                 #endif
                 #if defined(TEXTURED)
-                varying MED vec2 v_texCoord0;
+                VARYING_IN MED vec2 v_texCoord0;
                 #endif
                 #if defined(LIGHTMAPPED)
-                varying MED vec2 v_texCoord1;
+                VARYING_IN MED vec2 v_texCoord1;
                 #endif
  
                 #if defined(PROJECTIONS)
-                varying LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
+                VARYING_IN LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
                 #endif
 
                 #if defined(RX_SHADOWS)
-                varying LOW vec4 v_lightWorldPosition;
+                VARYING_IN LOW vec4 v_lightWorldPosition;
 
                 #if defined(MOBILE)
                 #if defined (GL_FRAGMENT_PRECISION_HIGH)
@@ -337,14 +338,14 @@ namespace cro
                 #endif
 
                 #if defined(TEXTURED)
-                    gl_FragColor.rgb = mix(blendedColour, diffuseColour.rgb, mask.b);
+                    FRAG_OUT.rgb = mix(blendedColour, diffuseColour.rgb, mask.b);
                 #else     
-                    gl_FragColor.rgb = blendedColour;
+                    FRAG_OUT.rgb = blendedColour;
                 #endif
                 #if defined (LIGHTMAPPED)
-                    gl_FragColor *= texture2D(u_lightMap, v_texCoord1);
+                    FRAG_OUT *= texture2D(u_lightMap, v_texCoord1);
                 #endif
-                    gl_FragColor.a = diffuseColour.a;
+                    FRAG_OUT.a = diffuseColour.a;
 
                 #if defined(PROJECTIONS)
                     for(int i = 0; i < u_projectionMapCount; ++i)
@@ -352,7 +353,7 @@ namespace cro
                         if(v_projectionCoords[i].w > 0.0)
                         {
                             vec2 coords = v_projectionCoords[i].xy / v_projectionCoords[i].w / 2.0 + 0.5;
-                            gl_FragColor *= texture2D(u_projectionMap, coords);
+                            FRAG_OUT *= texture2D(u_projectionMap, coords);
                         }
                     }
                 #endif
@@ -360,8 +361,8 @@ namespace cro
                 #if defined (RIMMING)
                     LOW float rim = 1.0 - dot(normal, eyeDirection);
                     rim = smoothstep(u_rimFalloff, 1.0, rim);
-                    //gl_FragColor.rgb = mix(gl_FragColor.rgb, u_rimColour.rgb, rim);
-                    gl_FragColor.rgb += u_rimColour.rgb * rim ;//* 0.5;
+                    //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, u_rimColour.rgb, rim);
+                    FRAG_OUT.rgb += u_rimColour.rgb * rim ;//* 0.5;
                 #endif
                 })";
         }

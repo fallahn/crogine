@@ -52,9 +52,9 @@ namespace cro
         ~Shader();
 
         Shader(const Shader&) = delete;
-        Shader(Shader&&);
+        Shader(Shader&&) noexcept;
         Shader& operator = (const Shader&) = delete;
-        Shader& operator = (Shader&&);
+        Shader& operator = (Shader&&) noexcept;
 
         /*!
         \brief Attempts to load the shader source from given files on disk.

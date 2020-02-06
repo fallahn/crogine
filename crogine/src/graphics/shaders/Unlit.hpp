@@ -38,21 +38,21 @@ namespace cro
         namespace Unlit
         {
             const static std::string Vertex = R"(
-                attribute vec4 a_position;
+                ATTRIBUTE vec4 a_position;
                 #if defined(VERTEX_COLOUR)
-                attribute vec4 a_colour;
+                ATTRIBUTE vec4 a_colour;
                 #endif
 
                 #if defined(TEXTURED)
-                attribute MED vec2 a_texCoord0;
+                ATTRIBUTE MED vec2 a_texCoord0;
                 #endif
                 #if defined(LIGHTMAPPED)
-                attribute MED vec2 a_texCoord1;
+                ATTRIBUTE MED vec2 a_texCoord1;
                 #endif
 
                 #if defined(SKINNED)
-                attribute vec4 a_boneIndices;
-                attribute vec4 a_boneWeights;
+                ATTRIBUTE vec4 a_boneIndices;
+                ATTRIBUTE vec4 a_boneWeights;
                 uniform mat4 u_boneMatrices[MAX_BONES];
                 #endif
 
@@ -75,21 +75,21 @@ namespace cro
                 #endif
                 
                 #if defined (VERTEX_COLOUR)
-                varying LOW vec4 v_colour;
+                VARYING_OUT LOW vec4 v_colour;
                 #endif
                 #if defined (TEXTURED)
-                varying MED vec2 v_texCoord0;
+                VARYING_OUT MED vec2 v_texCoord0;
                 #endif
                 #if defined (LIGHTMAPPED)
-                varying MED vec2 v_texCoord1;
+                VARYING_OUT MED vec2 v_texCoord1;
                 #endif
 
                 #if defined(PROJECTIONS)
-                varying LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
+                VARYING_OUT LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
                 #endif
 
                 #if defined(RX_SHADOWS)
-                varying LOW vec4 v_lightWorldPosition;
+                VARYING_OUT LOW vec4 v_lightWorldPosition;
                 #endif
 
                 void main()
@@ -135,6 +135,7 @@ namespace cro
                 })";
 
             const static std::string Fragment = R"(
+                OUTPUT
                 #if defined (TEXTURED)
                 uniform sampler2D u_diffuseMap;
                 #endif
@@ -155,21 +156,21 @@ namespace cro
                 #endif
 
                 #if defined (VERTEX_COLOUR)
-                varying LOW vec4 v_colour;
+                VARYING_IN LOW vec4 v_colour;
                 #endif
                 #if defined (TEXTURED)
-                varying MED vec2 v_texCoord0;
+                VARYING_IN MED vec2 v_texCoord0;
                 #endif
                 #if defined (LIGHTMAPPED)
-                varying MED vec2 v_texCoord1;
+                VARYING_IN MED vec2 v_texCoord1;
                 #endif                
 
                 #if defined(PROJECTIONS)
-                varying LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
+                VARYING_IN LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
                 #endif
 
                 #if defined(RX_SHADOWS)
-                varying LOW vec4 v_lightWorldPosition;
+                VARYING_IN LOW vec4 v_lightWorldPosition;
 
                 #if defined(MOBILE)
                 #if defined (GL_FRAGMENT_PRECISION_HIGH)
@@ -243,19 +244,19 @@ namespace cro
                 void main()
                 {
                 #if defined (VERTEX_COLOUR)
-                    gl_FragColor = v_colour;
+                    FRAG_OUT = v_colour;
                 #else
-                    gl_FragColor = vec4(1.0);
+                    FRAG_OUT = vec4(1.0);
                 #endif
                 #if defined (TEXTURED)
-                    gl_FragColor *= texture2D(u_diffuseMap, v_texCoord0);
+                    FRAG_OUT *= texture2D(u_diffuseMap, v_texCoord0);
                 #endif
                 #if defined (LIGHTMAPPED)
-                    gl_FragColor *= texture2D(u_lightMap, v_texCoord1);
+                    FRAG_OUT *= texture2D(u_lightMap, v_texCoord1);
                 #endif
 
                 #if defined(COLOURED)
-                    gl_FragColor *= u_colour;
+                    FRAG_OUT *= u_colour;
                 #endif
                 #if defined(PROJECTIONS)
                     for(int i = 0; i < u_projectionMapCount; ++i)
@@ -263,13 +264,13 @@ namespace cro
                         if(v_projectionCoords[i].w > 0.0)
                         {
                             vec2 coords = v_projectionCoords[i].xy / v_projectionCoords[i].w / 2.0 + 0.5;
-                            gl_FragColor *= texture2D(u_projectionMap, coords);
+                            FRAG_OUT *= texture2D(u_projectionMap, coords);
                         }
                     }
                 #endif
 
                 #if defined (RX_SHADOWS)
-                    gl_FragColor.rgb *= shadowAmount(v_lightWorldPosition);
+                    FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
                 #endif
 
                 })";

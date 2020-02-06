@@ -38,12 +38,12 @@ namespace cro
         namespace Debug
         {
             const static std::string Vertex = R"(
-                attribute vec4 a_position;
-                attribute LOW vec4 a_colour;
+                ATTRIBUTE vec4 a_position;
+                ATTRIBUTE LOW vec4 a_colour;
 
                 uniform mat4 u_projectionMatrix;
 
-                varying MED vec4 v_colour;
+                VARYING_OUT MED vec4 v_colour;
 
                 void main()
                 {
@@ -52,11 +52,12 @@ namespace cro
                 })";
 
             const static std::string Fragment = R"(
-                varying LOW vec4 v_colour;
+                VARYING_IN LOW vec4 v_colour;
+                OUTPUT
 
                 void main()
                 {
-                    gl_FragColor = v_colour;
+                    FRAG_OUT = v_colour;
                 })";
         }
     }

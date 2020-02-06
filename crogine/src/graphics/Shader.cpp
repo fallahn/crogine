@@ -43,10 +43,25 @@ namespace
         #define HIGH highp
         #define MED mediump
         #define LOW lowp
+
+        #define ATTRIBUTE attribute
+        #define VARYING_OUT varying
+        #define VARYING_IN varying
+        #define FRAG_OUT gl_FragColor
+        #define OUTPUT
+
         #else
+
         #define HIGH
         #define MED
         #define LOW
+
+        #define ATTRIBUTE in
+        #define VARYING_OUT out
+        #define VARYING_IN in
+        #define FRAG_OUT fragOut
+        #define OUTPUT out vec4 FRAG_OUT;
+
         #endif
         )";
 }
@@ -58,7 +73,7 @@ Shader::Shader()
     resetAttribMap();
 }
 
-Shader::Shader(Shader&& other)
+Shader::Shader(Shader&& other) noexcept
 {
     m_handle = other.m_handle;
     m_attribMap = other.m_attribMap;
@@ -69,7 +84,7 @@ Shader::Shader(Shader&& other)
     other.m_uniformMap.clear();
 }
 
-Shader& Shader::operator=(Shader&& other)
+Shader& Shader::operator=(Shader&& other) noexcept
 {
     if (this != &other)
     {
@@ -115,7 +130,7 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
 #ifdef __ANDROID__
     const char* src[] = { "#version 100\n#define MOBILE\n", precision.c_str(), defines.c_str(), vertex.c_str() };
 #else
-    const char* src[] = { "#version 130\n", precision.c_str(), defines.c_str(), vertex.c_str() };
+    const char* src[] = { "#version 150 core\n", precision.c_str(), defines.c_str(), vertex.c_str() };
 #endif //__ANDROID__
 
     glCheck(glShaderSource(vertID, 4, src, nullptr));

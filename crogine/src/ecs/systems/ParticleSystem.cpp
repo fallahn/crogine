@@ -60,17 +60,17 @@ using namespace cro;
 namespace
 {
     const std::string vertex = R"(
-        attribute vec4 a_position;
-        attribute LOW vec4 a_colour;
-        attribute MED vec3 a_normal; //this actually stores rotation and scale
+        ATTRIBUTE vec4 a_position;
+        ATTRIBUTE LOW vec4 a_colour;
+        ATTRIBUTE MED vec3 a_normal; //this actually stores rotation and scale
 
         uniform mat4 u_projection;
         uniform mat4 u_viewProjection;
         uniform LOW float u_viewportHeight;
         uniform LOW float u_particleSize;
 
-        varying LOW vec4 v_colour;
-        varying MED mat2 v_rotation;
+        VARYING_OUT LOW vec4 v_colour;
+        VARYING_OUT MED mat2 v_rotation;
 
         void main()
         {
@@ -88,13 +88,14 @@ namespace
     const std::string fragment = R"(
         uniform sampler2D u_texture;
 
-        varying LOW vec4 v_colour;
-        varying MED mat2 v_rotation;
+        VARYING_IN LOW vec4 v_colour;
+        VARYING_IN MED mat2 v_rotation;
+        OUTPUT
 
         void main()
         {
             vec2 texCoord = v_rotation * (gl_PointCoord - vec2(0.5));
-            gl_FragColor = v_colour * texture2D(u_texture, texCoord + vec2(0.5)) * v_colour.a;
+            FRAG_OUT = v_colour * texture2D(u_texture, texCoord + vec2(0.5)) * v_colour.a;
         }
     )";
 

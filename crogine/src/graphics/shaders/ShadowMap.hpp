@@ -38,18 +38,18 @@ namespace cro
         namespace ShadowMap
         {
             const static std::string Vertex = R"(
-                attribute vec4 a_position;
+                ATTRIBUTE vec4 a_position;
 
                 #if defined(SKINNED)
-                attribute vec4 a_boneIndices;
-                attribute vec4 a_boneWeights;
+                ATTRIBUTE vec4 a_boneIndices;
+                ATTRIBUTE vec4 a_boneWeights;
                 uniform mat4 u_boneMatrices[MAX_BONES];
                 #endif
 
                 uniform mat4 u_worldViewMatrix;
                 uniform mat4 u_projectionMatrix;
 
-                varying vec4 v_position;
+                VARYING_OUT vec4 v_position;
 
                 void main()
                 {
@@ -80,7 +80,8 @@ namespace cro
                 #define PREC
                 #endif
 
-                varying vec4 v_position;
+                VARYING_IN vec4 v_position;
+                OUTPUT
 
                 PREC vec4 pack(const float depth)
                 {
@@ -95,7 +96,7 @@ namespace cro
                 {
                     PREC float distanceNorm = v_position.z /v_position.w;
                     distanceNorm = (distanceNorm + 1.0) / 2.0;
-                    gl_FragColor = pack(distanceNorm);
+                    FRAG_OUT = pack(distanceNorm);
                 })";
 
             const static std::string FragmentDesktop = R"()";

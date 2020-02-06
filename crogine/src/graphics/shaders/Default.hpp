@@ -38,24 +38,24 @@ namespace cro
         namespace Default
         {
             const static std::string Vertex = R"(
-                attribute vec4 a_position;
-                attribute LOW vec4 a_colour;
-                attribute vec3 a_normal;
-                attribute vec3 a_tangent;
-                attribute vec3 a_bitangent;
-                attribute MED vec2 a_texCoord0;
-                attribute MED vec2 a_texCoord1;
+                ATTRIBUTE vec4 a_position;
+                ATTRIBUTE LOW vec4 a_colour;
+                ATTRIBUTE vec3 a_normal;
+                ATTRIBUTE vec3 a_tangent;
+                ATTRIBUTE vec3 a_bitangent;
+                ATTRIBUTE MED vec2 a_texCoord0;
+                ATTRIBUTE MED vec2 a_texCoord1;
 
                 uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;
                 uniform mat3 u_normalMatrix;                
                 uniform mat4 u_projectionMatrix;
                 
-                varying vec3 v_worldPosition;
-                varying LOW vec4 v_colour;
-                varying vec3 v_normalVector;
-                varying MED vec2 v_texCoord0;
-                varying MED vec2 v_texCoord1;
+                VARYING_OUT vec3 v_worldPosition;
+                VARYING_OUT LOW vec4 v_colour;
+                VARYING_OUT vec3 v_normalVector;
+                VARYING_OUT MED vec2 v_texCoord0;
+                VARYING_OUT MED vec2 v_texCoord1;
 
 
                 void main()
@@ -82,12 +82,14 @@ namespace cro
 
                 uniform vec3 u_cameraWorldPosition;
 
-                varying vec3 v_worldPosition;
-                varying vec4 v_colour;
-                varying vec3 v_normalVector;
-                varying vec2 v_texCoord0;
-                varying vec2 v_texCoord1;
-                
+                VARYING_IN vec3 v_worldPosition;
+                VARYING_IN vec4 v_colour;
+                VARYING_IN vec3 v_normalVector;
+                VARYING_IN vec2 v_texCoord0;
+                VARYING_IN vec2 v_texCoord1;
+
+                OUTPUT                
+
                 vec3 lightDir = vec3(0.1, -0.8, -0.2);
 
                 vec3 diffuseColour;
@@ -114,12 +116,12 @@ namespace cro
                     eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
 
                     blendedColour += calcLighting(normal, normalize(-lightDir), vec3(0.18), vec3(1.0), 1.0);
-                    gl_FragColor.rgb = blendedColour;
+                    FRAG_OUT.rgb = blendedColour;
 
-                    //gl_FragColor = vec4(v_texCoord0.x, v_texCoord0.y, 1.0, 1.0);
-                    //gl_FragColor.rgb *= v_normalVector;
-                    //gl_FragColor *= texture2D(u_diffuseMap, v_texCoord0);
-                    //gl_FragColor *= texture2D(u_normalMap, v_texCoord0);
+                    //FRAG_OUT = vec4(v_texCoord0.x, v_texCoord0.y, 1.0, 1.0);
+                    //FRAG_OUT.rgb *= v_normalVector;
+                    //FRAG_OUT *= texture2D(u_diffuseMap, v_texCoord0);
+                    //FRAG_OUT *= texture2D(u_normalMap, v_texCoord0);
                 })";
         }
     }

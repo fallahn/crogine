@@ -38,16 +38,16 @@ namespace cro
         namespace Sprite
         {
             const static std::string Vertex = R"(
-                attribute vec4 a_position;
-                attribute LOW vec4 a_colour;
-                attribute MED vec2 a_texCoord0;
-                attribute MED vec2 a_texCoord1; //this actually has the matrix index in the x component
+                ATTRIBUTE vec4 a_position;
+                ATTRIBUTE LOW vec4 a_colour;
+                ATTRIBUTE MED vec2 a_texCoord0;
+                ATTRIBUTE MED vec2 a_texCoord1; //this actually has the matrix index in the x component
 
                 uniform mat4 u_projectionMatrix;
                 uniform mat4 u_worldMatrix[MAX_MATRICES];               
                
-                varying LOW vec4 v_colour;
-                varying MED vec2 v_texCoord0;
+                VARYING_OUT LOW vec4 v_colour;
+                VARYING_OUT MED vec2 v_texCoord0;
 
                 void main()
                 {
@@ -61,12 +61,13 @@ namespace cro
             const static std::string Fragment = R"(
                 uniform sampler2D u_texture;
                 
-                varying LOW vec4 v_colour;
-                varying MED vec2 v_texCoord0;
+                VARYING_IN LOW vec4 v_colour;
+                VARYING_IN MED vec2 v_texCoord0;
+                OUTPUT
 
                 void main()
                 {
-                    gl_FragColor = texture2D(u_texture, v_texCoord0) * v_colour;
+                    FRAG_OUT = texture2D(u_texture, v_texCoord0) * v_colour;
                 })";
         }
 
@@ -75,23 +76,25 @@ namespace cro
             const static std::string BitmapFragment = R"(
                 uniform sampler2D u_texture;
                 
-                varying LOW vec4 v_colour;
-                varying MED vec2 v_texCoord0;
+                VARYING_IN LOW vec4 v_colour;
+                VARYING_IN MED vec2 v_texCoord0;
+                OUTPUT
 
                 void main()
                 {
                     float value = texture2D(u_texture, v_texCoord0).a;
-                    gl_FragColor = smoothstep(0.3, 1.0, value) * v_colour;
-                    gl_FragColor.a *= value;
+                    FRAG_OUT = smoothstep(0.3, 1.0, value) * v_colour;
+                    FRAG_OUT.a *= value;
 
-                    //gl_FragColor = v_colour;
+                    //FRAG_OUT = v_colour;
                 })";
 
             const static std::string SDFFragment = R"(
                 uniform sampler2D u_texture;
                 
-                varying LOW vec4 v_colour;
-                varying MED vec2 v_texCoord0;
+                VARYING_IN LOW vec4 v_colour;
+                VARYING_IN MED vec2 v_texCoord0;
+                OUTPUT
 
                 MED float spread = 4.0;
                 MED float scale = 5.0;
@@ -102,7 +105,7 @@ namespace cro
                     //smoothing = 0.25 / (spread * scale);
                     MED float value = texture2D(u_texture, v_texCoord0).r;
                     MED float alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, value);
-                    gl_FragColor = vec4(v_colour.rgb, v_colour.a * alpha);
+                    FRAG_OUT = vec4(v_colour.rgb, v_colour.a * alpha);
                 })";
         }
     }
