@@ -30,17 +30,18 @@ source distribution.
 const std::string extractionFrag = R"(
     uniform sampler2D u_texture;
 
-    varying MED vec2 v_texCoord;
+    VARYING_IN MED vec2 v_texCoord;
+    OUTPUT
 
     const MED float threshold = 0.8;
     const MED float factor = 4.0;
 
     void main()
     {
-        LOW vec4 colour = texture2D(u_texture, v_texCoord);
+        LOW vec4 colour = TEXTURE(u_texture, v_texCoord);
         LOW float luminance = colour.r * 0.2126 + colour.b * 0.7152 + colour.g * 0.0722;
         colour *= clamp(luminance - threshold, 0.0, 1.0) * factor;
-        gl_FragColor = colour;
+        FRAG_OUT = colour;
     }
 )";
 
@@ -53,7 +54,8 @@ const std::string blueDream = R"(
     uniform sampler2D u_texture;
     uniform sampler2D u_baseTexture;
 
-    varying MED vec2 v_texCoord;
+    VARYING_IN MED vec2 v_texCoord;
+    OUTPUT
 
     const MED float decay = 0.96815;
     const MED float exposure = 0.21;
@@ -68,18 +70,18 @@ const std::string blueDream = R"(
         MED vec2 texCoord = v_texCoord;
 
         LOW float illuminationDecay = 1.0;
-        LOW vec4 colour = texture2D(u_texture, texCoord) * 0.305104;
+        LOW vec4 colour = TEXTURE(u_texture, texCoord) * 0.305104;
         
         texCoord += deltaTexCoord * fract(sin(dot(v_texCoord, vec2(12.9898, 78.233))) * 43758.5453);
 
         for(int i = 0; i < SAMPLES; ++i)
         {
             texCoord -= deltaTexCoord;
-            LOW vec4 deltaColour = texture2D(u_texture, texCoord) * 0.305104;
+            LOW vec4 deltaColour = TEXTURE(u_texture, texCoord) * 0.305104;
             deltaColour *- illuminationDecay * weight;
             colour += deltaColour;
             illuminationDecay *= decay;
         }
-        gl_FragColor = (colour * exposure) + texture2D(u_baseTexture, v_texCoord);
+        FRAG_OUT = (colour * exposure) + TEXTURE(u_baseTexture, v_texCoord);
     }
 )";

@@ -68,7 +68,7 @@ namespace
 
         void main()
         {
-            gl_FragColor = texture2D(u_texture, v_texCoord);
+            gl_FragColor = TEXTURE(u_texture, v_texCoord);
         }
     )";
 }

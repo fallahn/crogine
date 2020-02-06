@@ -243,7 +243,7 @@ namespace cro
                 {
                     PREC vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
                     projectionCoords = projectionCoords * 0.5 + 0.5;
-                    PREC float depthSample = unpack(texture2D(u_shadowMap, projectionCoords.xy));
+                    PREC float depthSample = unpack(TEXTURE(u_shadowMap, projectionCoords.xy));
                     PREC float currDepth = projectionCoords.z - 0.005;
                     return (currDepth < depthSample) ? 1.0 : 0.4;
                 }
@@ -281,7 +281,7 @@ namespace cro
                     {
                         for(int y = 0; y < filterSize; ++y)
                         {
-                            float pcfDepth = unpack(texture2D(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize));
+                            float pcfDepth = unpack(TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize));
                             shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
                         }
                     }
@@ -310,14 +310,14 @@ namespace cro
                 void main()
                 {
                 #if defined (BUMP)
-                    MED vec3 texNormal = texture2D(u_normalMap, v_texCoord0).rgb * 2.0 - 1.0;
+                    MED vec3 texNormal = TEXTURE(u_normalMap, v_texCoord0).rgb * 2.0 - 1.0;
                     MED vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
                 #else
                     MED vec3 normal = normalize(v_normalVector);
                 #endif
                 #if defined (TEXTURED)
-                    diffuseColour = texture2D(u_diffuseMap, v_texCoord0);
-                    mask = texture2D(u_maskMap, v_texCoord0).rgb;
+                    diffuseColour = TEXTURE(u_diffuseMap, v_texCoord0);
+                    mask = TEXTURE(u_maskMap, v_texCoord0).rgb;
                 #elif defined(COLOURED)
                     diffuseColour = u_colour;
                     mask = u_maskColour.rgb;
@@ -343,7 +343,7 @@ namespace cro
                     FRAG_OUT.rgb = blendedColour;
                 #endif
                 #if defined (LIGHTMAPPED)
-                    FRAG_OUT *= texture2D(u_lightMap, v_texCoord1);
+                    FRAG_OUT *= TEXTURE(u_lightMap, v_texCoord1);
                 #endif
                     FRAG_OUT.a = diffuseColour.a;
 
@@ -353,7 +353,7 @@ namespace cro
                         if(v_projectionCoords[i].w > 0.0)
                         {
                             vec2 coords = v_projectionCoords[i].xy / v_projectionCoords[i].w / 2.0 + 0.5;
-                            FRAG_OUT *= texture2D(u_projectionMap, coords);
+                            FRAG_OUT *= TEXTURE(u_projectionMap, coords);
                         }
                     }
                 #endif

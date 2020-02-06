@@ -43,7 +43,9 @@ namespace Shaders
         const static std::string TimerFragment = R"(
             uniform MED float u_time;
 
-            varying MED vec2 v_texCoord0;
+            VARYING_IN MED vec2 v_texCoord0;
+
+            OUTPUT
 
             const MED float start = 1.5708;
             const MED float end = 4.71239;
@@ -64,14 +66,14 @@ namespace Shaders
                 sqr *= sqr;
                 float length = sqr.x + sqr.y;
 
-                gl_FragColor = vec4(0.0, 1.0, 1.0, 0.0);
+                FRAG_OUT = vec4(0.0, 1.0, 1.0, 0.0);
                 if (length > 0.25 || length < 0.21)
                 {
-                    gl_FragColor.a = 0.0;
+                    FRAG_OUT.a = 0.0;
                 }
                 else if (threshold.y < yReq)
                 {
-                    gl_FragColor.a = 0.7;
+                    FRAG_OUT.a = 0.7;
                 }
             })";
     }
@@ -79,14 +81,14 @@ namespace Shaders
     namespace FX
     {
         const static std::string Vertex = R"(
-            attribute vec4 a_position;
-            attribute MED vec2 a_texCoord0;
+            ATTRIBUTE vec4 a_position;
+            ATTRIBUTE MED vec2 a_texCoord0;
 
             uniform mat4 u_worldMatrix;
             uniform mat4 u_worldViewMatrix;               
             uniform mat4 u_projectionMatrix;
                 
-            varying MED vec2 v_texCoord0;
+            VARYING_OUT MED vec2 v_texCoord0;
 
             void main()
             {
@@ -99,7 +101,9 @@ namespace Shaders
         static const std::string EMPFragment = R"(
             uniform MED float u_time;
             
-            varying MED vec2 v_texCoord0;
+            VARYING_IN MED vec2 v_texCoord0;
+
+            OUTPUT
 
             const MED float maxRadius = 50.0;
             const MED float thickness = 7.0;
@@ -120,22 +124,22 @@ namespace Shaders
                 LOW vec4 empColour = vec4(0.63, 0.0, 1.0, 1.0);
                 LOW vec4 clearColour = vec4(0.0, 0.0, 0.0, 0.0);
 
-                gl_FragColor = mix(clearColour, empColour, strength);               
+                FRAG_OUT = mix(clearColour, empColour, strength);               
             })";
     }
 
     namespace Background
     {
         const static std::string Vertex = R"(
-            attribute vec4 a_position;
-            attribute MED vec2 a_texCoord0;
+            ATTRIBUTE vec4 a_position;
+            ATTRIBUTE MED vec2 a_texCoord0;
 
             uniform mat4 u_worldMatrix;
             uniform mat4 u_worldViewMatrix;               
             uniform mat4 u_projectionMatrix;
             uniform vec2 u_textureOffset;
                 
-            varying MED vec2 v_texCoord0;
+            VARYING_OUT MED vec2 v_texCoord0;
 
             void main()
             {
@@ -150,8 +154,8 @@ namespace Shaders
             uniform sampler2D u_diffuseMap;
             uniform MED float u_colourAngle;
 
-            varying MED vec2 v_texCoord0;
-                
+            VARYING_IN MED vec2 v_texCoord0;
+            OUTPUT
 
             vec3 rgb2hsv(vec3 c)
             {
@@ -174,11 +178,11 @@ namespace Shaders
 
             void main()
             {
-                vec4 colour = texture2D(u_diffuseMap, v_texCoord0);
+                vec4 colour = TEXTURE(u_diffuseMap, v_texCoord0);
                 vec3 hsv = rgb2hsv(colour.rgb);
                 hsv.x += u_colourAngle / 360.0;
                 hsv.x = mod(hsv.x, 1.0);
-                gl_FragColor = vec4(hsv2rgb(hsv), colour.a);
+                FRAG_OUT = vec4(hsv2rgb(hsv), colour.a);
             })";
     }
 }

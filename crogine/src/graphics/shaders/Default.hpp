@@ -110,7 +110,7 @@ namespace cro
                 void main()
                 {
                     vec3 normal = normalize(v_normalVector);
-                    vec4 diffuse = texture2D(u_diffuseMap, v_texCoord0);
+                    vec4 diffuse = TEXTURE(u_diffuseMap, v_texCoord0);
                     diffuseColour = diffuse.rgb;
                     vec3 blendedColour = diffuse.rgb * 0.2; //ambience
                     eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
@@ -120,8 +120,8 @@ namespace cro
 
                     //FRAG_OUT = vec4(v_texCoord0.x, v_texCoord0.y, 1.0, 1.0);
                     //FRAG_OUT.rgb *= v_normalVector;
-                    //FRAG_OUT *= texture2D(u_diffuseMap, v_texCoord0);
-                    //FRAG_OUT *= texture2D(u_normalMap, v_texCoord0);
+                    //FRAG_OUT *= TEXTURE(u_diffuseMap, v_texCoord0);
+                    //FRAG_OUT *= TEXTURE(u_normalMap, v_texCoord0);
                 })";
         }
     }

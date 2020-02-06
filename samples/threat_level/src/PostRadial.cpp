@@ -36,11 +36,12 @@ namespace
     const std::string fragment = R"(
         uniform sampler2D u_texture;
 
-        varying vec2 v_texCoord;
+        VARYING_IN vec2 v_texCoord;
+        OUTPUT
         
         void main()
         {
-            gl_FragColor = texture2D(u_texture, v_texCoord);
+            FRAG_OUT = TEXTURE(u_texture, v_texCoord);
         }       
     )";
 

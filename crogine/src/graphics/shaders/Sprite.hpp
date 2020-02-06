@@ -67,7 +67,7 @@ namespace cro
 
                 void main()
                 {
-                    FRAG_OUT = texture2D(u_texture, v_texCoord0) * v_colour;
+                    FRAG_OUT = TEXTURE(u_texture, v_texCoord0) * v_colour;
                 })";
         }
 
@@ -82,7 +82,7 @@ namespace cro
 
                 void main()
                 {
-                    float value = texture2D(u_texture, v_texCoord0).a;
+                    float value = TEXTURE(u_texture, v_texCoord0).a;
                     FRAG_OUT = smoothstep(0.3, 1.0, value) * v_colour;
                     FRAG_OUT.a *= value;
 
@@ -103,7 +103,7 @@ namespace cro
                 void main()
                 {
                     //smoothing = 0.25 / (spread * scale);
-                    MED float value = texture2D(u_texture, v_texCoord0).r;
+                    MED float value = TEXTURE(u_texture, v_texCoord0).r;
                     MED float alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, value);
                     FRAG_OUT = vec4(v_colour.rgb, v_colour.a * alpha);
                 })";

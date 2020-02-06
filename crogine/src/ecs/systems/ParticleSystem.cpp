@@ -95,7 +95,7 @@ namespace
         void main()
         {
             vec2 texCoord = v_rotation * (gl_PointCoord - vec2(0.5));
-            FRAG_OUT = v_colour * texture2D(u_texture, texCoord + vec2(0.5)) * v_colour.a;
+            FRAG_OUT = v_colour * TEXTURE(u_texture, texCoord + vec2(0.5)) * v_colour.a;
         }
     )";
 

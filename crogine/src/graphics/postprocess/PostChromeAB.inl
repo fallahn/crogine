@@ -30,7 +30,8 @@ source distribution.
 static const std::string FragChromeAB = R"(
     uniform sampler2D u_input;
 
-    varying MED vec2 v_texCoord;
+    VARYING_IN MED vec2 v_texCoord;
+    OUTPUT
 
     const float maxOffset = 1.0 / 300.0; //decrease the ratio to create a bigger effect
 
@@ -40,10 +41,10 @@ static const std::string FragChromeAB = R"(
         MED vec2 offset = vec2((maxOffset / 2.0) - (texCoord.x * maxOffset), (maxOffset / 2.0) - (texCoord.y * maxOffset));
 
         MED vec3 colour = vec3(0.0);
-        colour.r = texture2D(u_input, texCoord + offset).r;
-        colour.g = texture2D(u_input, texCoord).g;
-        colour.b = texture2D(u_input, texCoord - offset).b;
+        colour.r = TEXTURE(u_input, texCoord + offset).r;
+        colour.g = TEXTURE(u_input, texCoord).g;
+        colour.b = TEXTURE(u_input, texCoord - offset).b;
 
-        gl_FragColor.rgb = colour;
+        FRAG_OUT.rgb = colour;
     }
 )";

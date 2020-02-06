@@ -50,6 +50,8 @@ namespace
         #define FRAG_OUT gl_FragColor
         #define OUTPUT
 
+        #define TEXTURE texture2D
+
         #else
 
         #define HIGH
@@ -61,6 +63,8 @@ namespace
         #define VARYING_IN in
         #define FRAG_OUT fragOut
         #define OUTPUT out vec4 FRAG_OUT;
+
+        #define TEXTURE texture
 
         #endif
         )";

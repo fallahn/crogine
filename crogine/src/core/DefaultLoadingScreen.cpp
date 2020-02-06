@@ -46,7 +46,7 @@ namespace
     constexpr uint32 vertexSize = 2 * sizeof(float);
 
     const std::string vertex = R"(
-        attribute vec4 a_position;
+        ATTRIBUTE vec4 a_position;
 
         uniform mat4 u_worldMatrix;
         uniform mat4 u_projectionMatrix;
@@ -58,9 +58,10 @@ namespace
     )";
 
     const std::string fragment = R"(
+        OUTPUT
         void main()
         {
-            gl_FragColor = vec4(1.0);
+            FRAG_OUT = vec4(1.0);
         }
     )";
 }
