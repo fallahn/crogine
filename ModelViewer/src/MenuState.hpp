@@ -68,6 +68,8 @@ private:
     bool m_showPreferences;
     bool m_showGroundPlane;
 
+    cro::ConfigFile m_currentModelConfig;
+
     void addSystems();
     void loadAssets();
     void createScene();
@@ -90,6 +92,8 @@ private:
     void importModel();
     void exportModel();
     void applyImportTransform();
+
+    void importIQM(const std::string&); //used to apply modified transforms
 
     void loadPrefs();
     void savePrefs();

@@ -474,17 +474,25 @@ void MenuState::openModelAtPath(const std::string& path)
 {
     closeModel();
 
-    entities[EntityID::ActiveModel] = m_scene.createEntity();
-    entities[EntityID::ActiveModel].addComponent<cro::Transform>();
-
     cro::ModelDefinition def(m_preferences.workingDirectory);
     if (def.loadFromFile(path, m_resources))
     {
-        def.createModel(entities[EntityID::ActiveModel], m_resources);
+        entities[EntityID::ActiveModel] = m_scene.createEntity();
+        entities[EntityID::ActiveModel].addComponent<cro::Transform>();
 
-        if (entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData().boundingSphere.radius > 2.f)
+        def.createModel(entities[EntityID::ActiveModel], m_resources);
+        m_currentModelConfig.loadFromFile(path);
+
+        if (entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData().boundingSphere.radius > (2.f * worldScales[m_preferences.unitsPerMetre]))
         {
             cro::Logger::log("Bounding sphere radius is very large - model may not be visible", cro::Logger::Type::Warning);
+        }
+
+        //if this is an IQM file load the vert data into the import
+        //structures so we can adjust the model and re-export if needed
+        if (cro::FileSystem::getFileExtension(path) == "*.iqm")
+        {
+            importIQM(path);
         }
     }
     else
@@ -507,6 +515,8 @@ void MenuState::closeModel()
     {
         m_scene.destroyEntity(entities[EntityID::NormalVis]);
     }
+
+    m_currentModelConfig = {};
 }
 
 void MenuState::importModel()

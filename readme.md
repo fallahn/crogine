@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/fallahn/crogine.svg?branch=master)](https://travis-ci.org/fallahn/crogine)
+[![Documentation](https://codedocs.xyz/fallahn/crogine.svg)](https://codedocs.xyz/fallahn/crogine/)
 
 CROGINE
 -------
@@ -13,7 +14,7 @@ Using the CMake file included in the root directory first generate project files
 
 On windows you can use the included Visual Studio 2019 solution to build crogine and the demo projects for both Windows, and Android if the cross platform tools for Visual Studio are installed. To get started with building Android projects with Visual Studio see [this repository](https://github.com/fallahn/sdl2vs) which includes a sample SDL2 application for Android.
 
-Android make files can also be created with the included cmake file, but the toolchain will first need configuring in cmake/toolchans/android-arm.cmake
+Android make files can also be created with the included cmake file, but the toolchain will first need configuring in cmake/toolchains/android-arm.cmake
 
 
 #### About

@@ -49,7 +49,7 @@ namespace cro
     system provides collision detection between entities with collision shape
     components. NOTE that no physics simulation is performed, for that a
     PhysicsSystem should be used. The collision system exists to provide detection
-    of collision between complex shapes with the option of user defined response or
+    of collisions between complex shapes with the option of user defined response or
     physics simulation.
     */
     class CRO_EXPORT_API CollisionSystem : public cro::System, public Renderable, public GuiClient

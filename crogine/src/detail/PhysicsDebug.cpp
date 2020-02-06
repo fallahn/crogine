@@ -39,12 +39,12 @@ using namespace cro::Detail;
 namespace
 {
     const std::string vertex = R"(
-        attribute MED vec4 a_position;
-        attribute LOW vec4 a_colour;
+        ATTRIBUTE MED vec4 a_position;
+        ATTRIBUTE LOW vec4 a_colour;
             
         uniform mat4 u_viewProjectionMatrix;
 
-        varying LOW vec4 v_colour;
+        VARYING_OUT LOW vec4 v_colour;
 
         void main()
         {
@@ -53,11 +53,12 @@ namespace
         })";
 
     const std::string fragment = R"(
-        varying LOW vec4 v_colour;
+        VARYING_IN LOW vec4 v_colour;
+        OUTPUT
 
         void main()
         {
-            gl_FragColor = v_colour;
+            FRAG_OUT = v_colour;
         })";
 
     const std::size_t vertexSize = 6; //3 pos, 3 colour
