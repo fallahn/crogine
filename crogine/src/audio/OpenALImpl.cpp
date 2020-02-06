@@ -38,7 +38,7 @@ source distribution.
 
 //oh apple you so quirky
 #ifdef __APPLE__
-#include <OpenAL/alc.h>
+#include <alc.h>
 #else
 #include <AL/al.h>
 #endif

@@ -91,9 +91,7 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
 	else
 	{
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-        m_threadContext = SDL_GL_CreateContext(m_window);
-		m_mainContext = SDL_GL_CreateContext(m_window);
-        //SDL_GL_MakeCurrent(m_window, m_mainContext);
+
 
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -101,6 +99,12 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
+
+        m_threadContext = SDL_GL_CreateContext(m_window);
+        m_mainContext = SDL_GL_CreateContext(m_window);
+        //SDL_GL_MakeCurrent(m_window, m_mainContext);
+        
 
 		int maj, min;
 		SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &maj);
