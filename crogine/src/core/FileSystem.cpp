@@ -27,8 +27,9 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#ifndef __ANDROID__
 #include "tinyfiledialogs.h"
-
+#endif
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/Log.hpp>
 
@@ -573,6 +574,10 @@ std::string FileSystem::getConfigDirectory(const std::string& appName)
 
 std::string FileSystem::openFileDialogue(const std::string& defaultDir, const std::string& filter, bool selectMultiple)
 {
+#ifdef __ANDROID__
+    Logger::log("File Dialogues are not supported", Logger::Type::Error);
+    return {};
+#else
     //filter is comma delimited list
     auto filters = parseFileFilter(filter);
     
@@ -585,16 +590,26 @@ std::string FileSystem::openFileDialogue(const std::string& defaultDir, const st
     auto path = tinyfd_openFileDialog("Open File", defaultDir.c_str(), static_cast<int>(filterArray.size()), filterArray.data(), nullptr, selectMultiple ? 1 : 0);
 
     return path ? path : std::string();
+#endif //__ANDROID__
 }
 
 std::string FileSystem::openFolderDialogue()
 {
+#ifdef __ANDROID__
+    Logger::log("File Dialogues are not supported", Logger::Type::Error);
+    return {};
+#else
     auto path = tinyfd_selectFolderDialog("Select Folder", nullptr);
     return path ? path : std::string();
+#endif //__ANDROID__
 }
 
 std::string FileSystem::saveFileDialogue(const std::string& defaultDir, const std::string& filter)
 {
+#ifdef __ANDROID__
+    Logger::log("File Dialogues are not supported", Logger::Type::Error);
+    return {};
+#else
     //filter is comma delimited list
     auto filters = parseFileFilter(filter);
 
@@ -607,6 +622,7 @@ std::string FileSystem::saveFileDialogue(const std::string& defaultDir, const st
     auto path = tinyfd_saveFileDialog("Save File", defaultDir.c_str(), static_cast<int>(filterArray.size()), filterArray.data(), nullptr);
 
     return path ? path : std::string();
+#endif //__ANDROID__
 }
 
 std::string FileSystem::getResourcePath()

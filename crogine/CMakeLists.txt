@@ -70,6 +70,12 @@ else()
   SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_nix})
 endif()
 
+# Add the Resourcepath source
+if (APPLE)
+  set(PROJECT_SRC ${PROJECT_SRC} src/detail/ResourcePath.mm)
+endif()
+
+
 if(PROJECT_STATIC_RUNTIME)
   add_library(${PROJECT_NAME} STATIC ${PROJECT_SRC})
 else()
