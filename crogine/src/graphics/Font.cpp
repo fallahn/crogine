@@ -36,6 +36,7 @@ by Laurent Gomila et al
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include "../detail/DistanceField.hpp"
+#include <crogine/detail/Types.hpp>
 
 #include <array>
 #include <cstring>
@@ -75,16 +76,32 @@ bool Font::loadFromFile(const std::string& path)
     m_library = std::make_any<FT_Library>(library);
 
     //load the face
-    //TODO this currently doesn't work on android because of file system considerations
-    //this can be fixed with a custom loader using SDL's RWops
+    RaiiRWops fontFile;
+    fontFile.file = SDL_RWFromFile(path.c_str(), "r");
+    if (!fontFile.file)
+    {
+        Logger::log("Failed opening " + path, Logger::Type::Error);
+        return false;
+    }
+    
+    m_buffer.clear();
+    m_buffer.resize(fontFile.file->size(fontFile.file));
+    if (m_buffer.size() == 0)
+    {
+        Logger::log("Could not open " + path + ": files size was 0", Logger::Type::Error);
+        return false;
+    }
+    SDL_RWread(fontFile.file, m_buffer.data(), m_buffer.size(), 1);
+
+
     FT_Face face;
-    if (FT_New_Face(library, path.c_str(), 0, &face) != 0)
+    if (FT_New_Memory_Face(library, m_buffer.data(), m_buffer.size(), 0, &face) != 0)
     {
         Logger::log("Failed to load font " + path + ": Failed creating font face", Logger::Type::Error);
         return false;
     }
 
-    //TODO could use FT's stroke functions for creatnig text outlines
+    //TODO could use FT's stroke functions for creating text outlines
 
     //using unicode
     if (FT_Select_Charmap(face, FT_ENCODING_UNICODE) != 0)
@@ -132,18 +149,21 @@ const Texture& Font::getTexture(uint32 charSize) const
 
 float Font::getLineHeight(uint32 charSize) const
 {
-    auto face = std::any_cast<FT_Face>(m_face);
-    if (face && setCurrentCharacterSize(charSize))
+    if (m_face.has_value())
     {
-        //there's some magic going on here...
-        return static_cast<float>(face->size->metrics.height) / MagicNumber;
+        auto face = std::any_cast<FT_Face>(m_face);
+        if (face && setCurrentCharacterSize(charSize))
+        {
+            //there's some magic going on here...
+            return static_cast<float>(face->size->metrics.height) / MagicNumber;
+        }
     }
     return 0.f;
 }
 
 float Font::getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charSize) const
 {
-    if (cpA == 0 || cpB == 0)
+    if (cpA == 0 || cpB == 0 || !m_face.has_value())
     {
         return 0.f;
     }
@@ -180,6 +200,11 @@ float Font::getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charS
 Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize) const
 {
     Glyph retVal;
+
+    if (!m_face.has_value())
+    {
+        return retVal;
+    }
 
     auto face = std::any_cast<FT_Face>(m_face);
     if (!face)
@@ -397,16 +422,22 @@ bool Font::setCurrentCharacterSize(std::uint32_t size) const
 
 void Font::cleanup()
 {
-    auto face = std::any_cast<FT_Face>(m_face);
-    if (face)
+    if (m_face.has_value())
     {
-        FT_Done_Face(face);
+        auto face = std::any_cast<FT_Face>(m_face);
+        if (face)
+        {
+            FT_Done_Face(face);
+        }
     }
 
-    auto library = std::any_cast<FT_Library>(m_library);
-    if (library)
+    if (m_library.has_value())
     {
-        FT_Done_FreeType(library);
+        auto library = std::any_cast<FT_Library>(m_library);
+        if (library)
+        {
+            FT_Done_FreeType(library);
+        }
     }
 
     m_face.reset();

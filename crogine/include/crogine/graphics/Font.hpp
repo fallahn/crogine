@@ -96,7 +96,7 @@ namespace cro
 
     private:
 
-        std::string m_path;
+        std::vector<Uint8> m_buffer;
 
         struct Row final
         {
