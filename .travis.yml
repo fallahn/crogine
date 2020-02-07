@@ -46,9 +46,9 @@ before_script:
 
 script:
 - mkdir build && cd build
-#- cmake ../crogine
-#- sudo make install
-- cmake ../crogine -G"$GENERATOR" $CMAKE_FLAGS && sudo cmake --build .
+- cmake ../crogine -G"$GENERATOR"
+- sudo make install
+#- cmake ../crogine -G"$GENERATOR" $CMAKE_FLAGS && sudo cmake --build .
 #- sudo cmake --build . --target package
 
 matrix:
@@ -67,7 +67,8 @@ matrix:
   - os: osx
     osx_image: xcode10
     env:
-    - GENERATOR="Xcode"
+    #- GENERATOR="Xcode"
+    - GENERATOR="Unix Makefiles"
     - CMAKE_FLAGS=""
 
   allow_failures:
