@@ -31,7 +31,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 SET (CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_ -DHAS_SOCKLEN_T")
-SET (CMAKE_CXX_FLAGS_RELEASE "-O4 -DNDEBUG -DHAS_SOCKLEN_T")
+SET (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DHAS_SOCKLEN_T")
 SET (CMAKE_DEBUG_POSTFIX -d)
 
 # We're using c++17
@@ -57,16 +57,18 @@ include_directories(
   ${BULLET_INCLUDE_DIRS}  
   ${CMAKE_SOURCE_DIR}/crogine/include)
   
-  
-if(USE_OPENAL)
-include_directories(${OPENAL_INCLUDE_DIR})
-else()
-include_directories(${SDL2_MIXER_INCLUDE_DIR})
-endif()
-
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
+
+if(USE_OPENAL)
+  include_directories(${OPENAL_INCLUDE_DIR})
+  SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_openal})
+else()
+  include_directories(${SDL2_MIXER_INCLUDE_DIR})
+  SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_sdlmixer})
+endif()
+
 
 #add platform specific source files
 if(WIN32)

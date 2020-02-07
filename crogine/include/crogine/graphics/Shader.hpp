@@ -43,7 +43,7 @@ namespace cro
     class Texture;
 
     /*!
-    \bref Encapsulates a compiled/linked shader program
+    \brief Encapsulates a compiled/linked shader program
     */
     class CRO_EXPORT_API Shader : public Detail::SDLResource
     {
@@ -107,3 +107,85 @@ namespace cro
         std::string parseFile(const std::string&);
     };
 }
+
+/*!
+\class cro::Shader
+
+The shader class is used to encapsulate an OpenGL shader created from
+a vertex program and fragment program. Shaders are generally managed
+by the shader resource class, from which the built in types Unlit and
+VertexLit can be requested. See the ShaderResource class for more detail.
+While these built-in shaders take care of most of the basic rendering
+tasks in crogine, custom shaders can (and often will) be necessary to
+give a particular application that edge. While this is possible it is
+also necessary to impose some restrictions on the shader code to
+be able to maintain smooth transitions between the mobile and desktop
+targets that crogine supports. To aid this the shader class automatically
+supplies some information to the compiler so the it is not required
+to add it to the source manually.
+
+For example mobile targets support GLES2 with glsl version 100. Desktop
+targets, on the other hand, require glsl version 150 for the provided
+OpenGL 3.3 context. This is auto detected at compilation time and means
+that you DO NOT need to add any version directives to your shader source
+as they will be added automatically. It also means that there are a few
+caveats, listed below:
+
+Glsl version 100 uses the attribute and varying keywords for shader
+input and output, whereas version 150 uses the keywords in and out.
+To simplify the amount of code written and to prevent multiple versions
+of the same shader being written the shader class provides some macros
+which substitute the correct keywords at compile time. When writing
+vertex shaders vertex attribute inputs should use the ATTRIBUTE macro.
+This will expand to the correct attribute or in keyword when compiled
+
+\code
+ATTRIBUTE vec3 a_position;
+\endcode
+
+For vertex shader outputs the VARYING_OUT macro is used. This expands
+to varying on glsl 100 or out in glsl 150
+
+\code
+VARYING_OUT vec3 v_worldPosition;
+\endcode
+
+Fragment shaders also have a selection of macros used for portibility.
+When using a varying variable or input in a fragment shader use the
+VARYING_IN macro which expands to varying or in as appropriate.
+
+\code
+VARYING_IN vec3 v_worldPosition;
+\endcode
+
+Fragment shaders in glsl 150 also require a special out variable which
+replaces the gl_FragColor variable of earlier versions of glsl. To declare
+this use the OUTPUT macro which expands to the correct output in glsl 150
+but is ignored in mobile shaders
+
+\code
+VARYING_IN vec3 v_worldPosition;
+VARYING_IN vec3 v_normal;
+
+OUTPUT
+\endcode
+
+When writing to the fragment shader output use the FRAG_OUT macro. This
+will expland to gl_FragColor on mobile targets and and variable named
+fragOut, declared by the OUTPUT macro on desktop targets.
+
+\code
+FRAG_OUT.rgb = v_vertexColour.rgb;
+\endcode
+
+Finally, when sampling textures, the texture2D() function from glsl 100
+needs to be substitued with texture() in glsl 150. For this the TEXTURE
+macro is supplied. This macro unfortunately doesn't cover other variations
+such as texture3D, which will need to be taken in to consideration for
+any custom shaders which may require it.
+
+\code
+FRAG_OUT = TEXTURE(u_sampler, v_texCoord);
+\endcode
+
+*/

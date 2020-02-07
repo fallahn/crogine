@@ -5,8 +5,6 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/audio/AudioResource.cpp
   ${PROJECT_DIR}/audio/AudioRenderer.cpp
   ${PROJECT_DIR}/audio/AudioStream.cpp
-  ${PROJECT_DIR}/audio/OpenALImpl.cpp
-  ${PROJECT_DIR}/audio/SDLMixerImpl.cpp
   ${PROJECT_DIR}/audio/stb_vorbis.c
   ${PROJECT_DIR}/audio/VorbisLoader.cpp
   ${PROJECT_DIR}/audio/WavLoader.cpp
@@ -115,6 +113,14 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/network/NetPeer.cpp
 
   ${PROJECT_DIR}/util/Random.cpp)
+
+SET(project_src_openal
+  ${PROJECT_DIR}/audio/OpenALImpl.cpp
+  )
+
+SET(project_src_sdlmixer
+  ${PROJECT_DIR}/audio/SDLMixerImpl.cpp
+  )
 
 SET(project_src_win32
   ${PROJECT_DIR}/detail/enet/win32.c
