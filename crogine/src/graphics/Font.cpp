@@ -407,7 +407,7 @@ bool Font::setCurrentCharacterSize(std::uint32_t size) const
             {
                 Logger::log("Available sizes:", Logger::Type::Info);
                 std::stringstream ss;
-                for (auto i = 0u; i < face->num_fixed_sizes; ++i)
+                for (auto i = 0; i < face->num_fixed_sizes; ++i)
                 {
                     ss << ((face->available_sizes[i].y_ppem + 32) >> 6) << " ";
                 }
