@@ -48,7 +48,7 @@ script:
 - mkdir build && cd build
 #- cmake ../crogine
 #- sudo make install
-- cmake ../crogine -G"$GENERATOR" $CMAKE_FLAGS && sudo cmake --build . --target install
+- cmake ../crogine -G"$GENERATOR" $CMAKE_FLAGS && sudo make install
 #- sudo cmake --build . --target package
 
 matrix:
