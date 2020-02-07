@@ -32,8 +32,11 @@ source distribution.
 #ifndef CRO_DEBUG_
 #define alCheck(x) x;
 #else
-
+#ifdef __APPLE__
+#include <al.h>
+#else
 #include <AL/al.h>
+#endif
 #include <crogine/core/Log.hpp>
 
 #include <sstream>
