@@ -65,7 +65,7 @@ matrix:
     - GENERATOR="Unix Makefiles"
     - CMAKE_FLAGS=""
   - os: osx
-    osx_image: xcode10
+    osx_image: xcode10.3
     env:
     #- GENERATOR="Xcode"
     - GENERATOR="Unix Makefiles"
@@ -73,7 +73,7 @@ matrix:
 
   allow_failures:
   - os: osx
-    osx_image: xcode10
+    osx_image: xcode10.3
     env:
     - GENERATOR="Xcode"
     - CMAKE_FLAGS="-DCMAKE_TOOLCHAIN_FILE=../cmake/toolchains/iOS.toolchain.cmake"
