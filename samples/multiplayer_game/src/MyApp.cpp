@@ -37,8 +37,8 @@ source distribution.
 MyApp::MyApp()
 	: m_stateStack({*this, getWindow()})
 {
-    m_stateStack.registerState<MenuState>(States::ID::MainMenu);
-    m_stateStack.registerState<GameState>(States::ID::Game);
+    m_stateStack.registerState<MenuState>(States::ID::MainMenu, m_sharedData);
+    m_stateStack.registerState<GameState>(States::ID::Game, m_sharedData);
 }
 
 //public
@@ -81,6 +81,8 @@ bool MyApp::initialise()
 
 	m_stateStack.pushState(States::MainMenu);
 
+	m_sharedData.clientConnection.netClient.create(4);
+
 	return true;
 }
 
@@ -88,4 +90,6 @@ void MyApp::finalise()
 {
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);
+
+	m_sharedData.serverInstance.stop();
 }

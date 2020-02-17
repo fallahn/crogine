@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GameState.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -42,8 +43,9 @@ namespace
 
 }
 
-GameState::GameState(cro::StateStack& stack, cro::State::Context context)
+GameState::GameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
+    m_sharedData    (sd),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus())
 {
@@ -89,6 +91,19 @@ void GameState::handleMessage(const cro::Message& msg)
 
 bool GameState::simulate(float dt)
 {
+    if (m_sharedData.clientConnection.connected)
+    {
+        cro::NetEvent evt;
+        while (m_sharedData.clientConnection.netClient.pollEvent(evt))
+        {
+
+        }
+    }
+    else
+    {
+        //we've been disconnected somewhere - push error state
+    }
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;

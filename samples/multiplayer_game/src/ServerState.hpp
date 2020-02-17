@@ -29,39 +29,55 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/network/NetData.hpp>
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
+#include <cstdint>
 
-struct SharedStateData;
-class GameState final : public cro::State
+namespace Sv
 {
-public:
-    GameState(cro::StateStack&, cro::State::Context, SharedStateData&);
-    ~GameState() = default;
+    namespace StateID
+    {
+        enum
+        {
+            Lobby,
+            Game
+        };
+    }
 
-    cro::StateID getStateID() const override { return States::Game; }
+    class State
+    {
+    public:
+        virtual void netUpdate(const cro::NetEvent&) = 0;
+        virtual std::int32_t process(float) = 0;
 
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
+        virtual std::int32_t stateID() const = 0;
+    };
 
-private:
+    class LobbyState final : public State
+    {
+    public:
+        LobbyState();
 
-    SharedStateData& m_sharedData;
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
+        void netUpdate(const cro::NetEvent&) override;
+        std::int32_t process(float) override;
 
-    cro::ResourceCollection m_resources;
+        std::int32_t stateID() const override { return StateID::Lobby; }
 
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
+    private:
+        std::int32_t m_returnValue;
+    };
 
-    void updateView();
-};
+    class GameState final : public State
+    {
+    public:
+        GameState();
+
+        void netUpdate(const cro::NetEvent&) override;
+        std::int32_t process(float) override;
+
+        std::int32_t stateID() const override { return StateID::Game; }
+
+    private:
+        std::int32_t m_returnValue;
+    };
+}

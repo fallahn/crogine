@@ -29,39 +29,17 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
+#include "Server.hpp"
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
+#include <crogine/network/NetClient.hpp>
 
-struct SharedStateData;
-class GameState final : public cro::State
+struct SharedStateData final
 {
-public:
-    GameState(cro::StateStack&, cro::State::Context, SharedStateData&);
-    ~GameState() = default;
+    Server serverInstance;
 
-    cro::StateID getStateID() const override { return States::Game; }
-
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
-
-private:
-
-    SharedStateData& m_sharedData;
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-
-    cro::ResourceCollection m_resources;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
-    void updateView();
+    struct ClientConnection final
+    {
+        cro::NetClient netClient;
+        bool connected = false;
+    }clientConnection;
 };

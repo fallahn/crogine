@@ -35,16 +35,24 @@ source distribution.
 #include <crogine/graphics/ShaderResource.hpp>
 #include <crogine/graphics/MaterialResource.hpp>
 #include <crogine/graphics/TextureResource.hpp>
+#include <crogine/graphics/Font.hpp>
 
 #include "StateIDs.hpp"
+
 
 /*!
 Creates a state to render a menu.
 */
+struct SharedStateData;
+namespace cro
+{
+    struct NetEvent;
+}
+
 class MenuState final : public cro::State
 {
 public:
-	MenuState(cro::StateStack&, cro::State::Context);
+	MenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
 	~MenuState() = default;
 
 	cro::StateID getStateID() const override { return States::MainMenu; }
@@ -56,13 +64,19 @@ public:
 
 private:
 
+    SharedStateData& m_sharedData;
+
     cro::Scene m_scene;
     cro::MeshResource m_meshResource;
     cro::ShaderResource m_shaderResource;
     cro::MaterialResource m_materialResource;
     cro::TextureResource m_textureResource;
 
+    cro::Font m_font;
+
     void addSystems();
     void loadAssets();
     void createScene();
+
+    void handleNetEvent(const cro::NetEvent&);
 };

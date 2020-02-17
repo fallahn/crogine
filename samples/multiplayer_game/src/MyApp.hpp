@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "SharedStateData.hpp"
+
 #include <crogine/core/App.hpp>
 #include <crogine/core/StateStack.hpp>
 
@@ -41,6 +43,8 @@ public:
 private:
 	
 	cro::StateStack m_stateStack;
+
+	SharedStateData m_sharedData;
 
 	void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;

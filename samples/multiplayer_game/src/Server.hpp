@@ -29,39 +29,52 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
+#include "ServerState.hpp"
+#include "CommonConsts.hpp"
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
+#include <crogine/network/NetHost.hpp>
 
-struct SharedStateData;
-class GameState final : public cro::State
+#include <atomic>
+#include <memory>
+#include <thread>
+#include <array>
+
+namespace Sv
+{
+    struct ClientConnection final
+    {
+        //std::uint8_t id = 0;
+        bool connected = false;
+        cro::NetPeer peer;
+    };
+}
+
+class Server final
 {
 public:
-    GameState(cro::StateStack&, cro::State::Context, SharedStateData&);
-    ~GameState() = default;
+    Server();
+    ~Server();
 
-    cro::StateID getStateID() const override { return States::Game; }
+    Server(const Server&) = delete;
+    Server(Server&&) = delete;
+    Server& operator = (const Server&) = delete;
+    Server& operator = (Server&&) = delete;
 
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
+    void launch();
+    bool running() const { return m_running; }
+    void stop();
 
 private:
+    std::atomic_bool m_running;
+    std::unique_ptr<std::thread> m_thread;
 
-    SharedStateData& m_sharedData;
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
+    std::unique_ptr<Sv::State> m_currentState;
 
-    cro::ResourceCollection m_resources;
+    cro::NetHost m_host;
+    std::array<Sv::ClientConnection, ConstVal::MaxClients> m_clients;
 
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
+    void run();
 
-    void updateView();
+    bool addClient(const cro::NetEvent&);
+    void removeClient(const cro::NetEvent&);
 };

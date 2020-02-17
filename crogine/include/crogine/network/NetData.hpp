@@ -67,6 +67,11 @@ namespace cro
         };
         State getState() const; //! <Current state of the peer
 
+        bool operator == (const NetPeer& other) const { return (&other == this || other.m_peer == m_peer); }
+        bool operator != (const NetPeer& other) const { return !(other == *this); }
+
+        operator bool() const { return m_peer != nullptr; }
+
     private:
         _ENetPeer* m_peer = nullptr;
 

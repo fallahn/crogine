@@ -27,41 +27,24 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "ServerState.hpp"
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/core/Log.hpp>
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
+using namespace Sv;
 
-struct SharedStateData;
-class GameState final : public cro::State
+LobbyState::LobbyState()
+    : m_returnValue(StateID::Lobby)
 {
-public:
-    GameState(cro::StateStack&, cro::State::Context, SharedStateData&);
-    ~GameState() = default;
+    LOG("Entered Server Lobby State", cro::Logger::Type::Info);
+}
 
-    cro::StateID getStateID() const override { return States::Game; }
+void LobbyState::netUpdate(const cro::NetEvent& evt)
+{
 
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
+}
 
-private:
-
-    SharedStateData& m_sharedData;
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-
-    cro::ResourceCollection m_resources;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
-    void updateView();
-};
+std::int32_t LobbyState::process(float dt)
+{
+    return m_returnValue;
+}

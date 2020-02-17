@@ -29,39 +29,11 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
+#include <cstdint>
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
-
-struct SharedStateData;
-class GameState final : public cro::State
+namespace ConstVal
 {
-public:
-    GameState(cro::StateStack&, cro::State::Context, SharedStateData&);
-    ~GameState() = default;
-
-    cro::StateID getStateID() const override { return States::Game; }
-
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
-
-private:
-
-    SharedStateData& m_sharedData;
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-
-    cro::ResourceCollection m_resources;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
-    void updateView();
-};
+    static const std::uint16_t GamePort = 16002;
+    static const std::size_t MaxClients = 4;
+    static const uint8_t NetChannelReliable = 1;
+}

@@ -28,17 +28,29 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MenuState.hpp"
+#include "SharedStateData.hpp"
+#include "PacketIDs.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
+#include <crogine/detail/GlobalConsts.hpp>
+
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Camera.hpp>
+
+#include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/CameraSystem.hpp>
+
 
 namespace
 {
 
 }
 
-MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
+MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
 	: cro::State    (stack, context),
+    m_sharedData    (sd),
     m_scene         (context.appInstance.getMessageBus())
 {
     //launches a loading screen (registered in MyApp.cpp)
@@ -62,6 +74,39 @@ bool MenuState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+    if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_1:
+            if (!m_sharedData.clientConnection.connected)
+            {
+                m_sharedData.serverInstance.launch();
+                m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
+
+                if (!m_sharedData.clientConnection.connected)
+                {
+                    m_sharedData.serverInstance.stop();
+                    cro::Logger::log("Failed to connect to local server", cro::Logger::Type::Error);
+                }
+                else
+                {
+                    //TODO switch to lobby view
+                    LOG("Successfully connected to server", cro::Logger::Type::Info);
+                }
+            }
+            break;
+        case SDLK_3:
+            if (m_sharedData.clientConnection.connected
+                && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
+            {
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        }
+    }
+
     m_scene.forwardEvent(evt);
 	return true;
 }
@@ -73,6 +118,16 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+    if (m_sharedData.clientConnection.connected)
+    {
+        cro::NetEvent evt;
+        while (m_sharedData.clientConnection.netClient.pollEvent(evt))
+        {
+            //handle events
+            handleNetEvent(evt);
+        }
+    }
+
     m_scene.simulate(dt);
 	return true;
 }
@@ -87,16 +142,43 @@ void MenuState::render()
 void MenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-
+    m_scene.addSystem<cro::CameraSystem>(mb);
+    m_scene.addSystem<cro::TextRenderer>(mb);
 
 }
 
 void MenuState::loadAssets()
 {
-
+    m_font.loadFromFile("assets/fonts/VeraMono.ttf");
 }
 
 void MenuState::createScene()
 {
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 10.f, 1000.f, 0.f });
+    entity.addComponent<cro::Text>(m_font);
+    entity.getComponent<cro::Text>().setString("1. Host\n2. Join");
+    entity.getComponent<cro::Text>().setCharSize(40);
+    entity.getComponent<cro::Text>().setColour(cro::Colour::White());
 
+    m_scene.getActiveCamera().getComponent<cro::Camera>().projectionMatrix = 
+        glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
+}
+
+void MenuState::handleNetEvent(const cro::NetEvent& evt)
+{
+    if (evt.type == cro::NetEvent::PacketReceived)
+    {
+        switch (evt.packet.getID())
+        {
+        default: break;
+        case PacketID::StateChange:
+            if (evt.packet.as<std::uint8_t>() == Sv::StateID::Game)
+            {
+                requestStackClear();
+                requestStackPush(States::Game);
+            }
+            break;
+        }
+    }
 }
