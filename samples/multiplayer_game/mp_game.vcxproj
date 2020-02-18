@@ -155,27 +155,34 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\GameState.cpp" />
+    <ClCompile Include="src\InputParser.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
+    <ClCompile Include="src\PlayerSystem.cpp" />
     <ClCompile Include="src\ServerLobbyState.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\Server.cpp" />
     <ClCompile Include="src\ServerGameState.cpp" />
+    <ClCompile Include="src\SliderSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\CircularBuffer.hpp" />
     <ClInclude Include="src\CommonConsts.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\GameState.hpp" />
+    <ClInclude Include="src\InputParser.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\PacketIDs.hpp" />
+    <ClInclude Include="src\PlayerSystem.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\Server.hpp" />
     <ClInclude Include="src\ServerState.hpp" />
     <ClInclude Include="src\SharedStateData.hpp" />
+    <ClInclude Include="src\Slider.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

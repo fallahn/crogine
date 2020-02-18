@@ -30,6 +30,7 @@ source distribution.
 #include "MenuState.hpp"
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
+#include "Slider.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -38,14 +39,19 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 
 
 namespace
 {
-
+    enum CommandID
+    {
+        RootNode = 0x1
+    };
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -63,6 +69,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         createScene();
     });
 
+    context.mainWindow.setMouseCaptured(false);
     context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
 }
 
@@ -92,7 +99,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 }
                 else
                 {
-                    //TODO switch to lobby view
+                    //switch to lobby view
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::RootNode;
+                    cmd.action = [](cro::Entity e, float)
+                    {
+                        e.getComponent<Slider>().destination = { -(float)cro::DefaultSceneSize.x, 0.f, 0.f };
+                        e.getComponent<Slider>().active = true;
+                    };
+                    m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
                     LOG("Successfully connected to server", cro::Logger::Type::Info);
                 }
             }
@@ -142,6 +158,9 @@ void MenuState::render()
 void MenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+
+    m_scene.addSystem<cro::CommandSystem>(mb);
+    m_scene.addSystem<SliderSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::TextRenderer>(mb);
 
@@ -155,11 +174,27 @@ void MenuState::loadAssets()
 void MenuState::createScene()
 {
     auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::RootNode;
+    entity.addComponent<Slider>();
+    auto& rootTx = entity.getComponent<cro::Transform>();
+
+    entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 1000.f, 0.f });
     entity.addComponent<cro::Text>(m_font);
     entity.getComponent<cro::Text>().setString("1. Host\n2. Join");
     entity.getComponent<cro::Text>().setCharSize(40);
     entity.getComponent<cro::Text>().setColour(cro::Colour::White());
+    rootTx.addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 10.f + cro::DefaultSceneSize.x, 1000.f, 0.f });
+    entity.addComponent<cro::Text>(m_font);
+    entity.getComponent<cro::Text>().setString("3. Start\n4. Quit");
+    entity.getComponent<cro::Text>().setCharSize(40);
+    entity.getComponent<cro::Text>().setColour(cro::Colour::White());
+    rootTx.addChild(entity.getComponent<cro::Transform>());
 
     m_scene.getActiveCamera().getComponent<cro::Camera>().projectionMatrix = 
         glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);

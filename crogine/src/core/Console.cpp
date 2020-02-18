@@ -100,6 +100,20 @@ void Console::print(const std::string& line)
 void Console::show()
 {
     visible = !visible;
+
+    //TODO this is a bit hacky because if the window capture state
+    //is changed while the console is open (say a game switches state
+    //for example) then this value will be wrong.
+    static bool wantMouseCapture = false;
+    if (visible)
+    {
+        wantMouseCapture = App::getInstance().getWindow().getMouseCaptured();
+        App::getInstance().getWindow().setMouseCaptured(false);
+    }
+    else
+    {
+        App::getInstance().getWindow().setMouseCaptured(wantMouseCapture);
+    }
 }
 
 void Console::doCommand(const std::string& str)
@@ -172,6 +186,11 @@ void Console::addConvar(const std::string& name, const std::string& defaultValue
 void Console::printStat(const std::string& name, const std::string& value)
 {
     m_debugLines.push_back(name + ":" + value);
+}
+
+bool Console::isVisible()
+{
+    return visible;
 }
 
 //private

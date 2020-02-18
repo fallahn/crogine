@@ -195,6 +195,12 @@ void Transform::setRotation(glm::vec3 rotation)
     m_dirtyFlags |= Tx;
 }
 
+void Transform::setRotation(glm::quat rotation)
+{
+    m_rotation = rotation;
+    m_dirtyFlags |= Tx;
+}
+
 void Transform::setScale(glm::vec3 scale)
 {
     m_scale = scale;

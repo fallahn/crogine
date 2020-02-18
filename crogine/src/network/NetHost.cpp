@@ -119,6 +119,8 @@ bool NetHost::start(const std::string& address, uint16 port, std::size_t maxClie
         return false;
     }
 
+    enet_host_compress_with_range_coder(m_host);
+
     LOG("Created server host on port " + std::to_string(port), Logger::Type::Info);
     return true;
 }

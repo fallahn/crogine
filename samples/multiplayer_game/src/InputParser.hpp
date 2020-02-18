@@ -29,42 +29,54 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
+/*
+Input parser. In charge of reading input events and applying
+them to both the local player controller and sending to the server.
+*/
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
-#include "InputParser.hpp"
+#include <crogine/core/Clock.hpp>
+#include <crogine/ecs/Entity.hpp>
 
-struct SharedStateData;
-class GameState final : public cro::State
+#include <SDL_events.h>
+
+struct Input final
+{
+    enum Flags
+    {
+        Forward = 0x1,
+        Backward = 0x2,
+        Left = 0x4,
+        Right = 0x8,
+        LeftMouse = 0x10,
+        RightMouse = 0x20,
+
+        //potentially jump, up, and down
+    };
+
+    std::uint32_t timeStamp = 0;
+    std::uint16_t buttonFlags = 0;
+    std::int8_t xMove = 0;
+    std::int8_t yMove = 0;
+};
+
+class InputParser final
 {
 public:
-    GameState(cro::StateStack&, cro::State::Context, SharedStateData&);
-    ~GameState() = default;
+    InputParser();
 
-    cro::StateID getStateID() const override { return States::Game; }
+    void handleEvent(const SDL_Event&);
 
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
+    void update();
+
+    void setEntity(cro::Entity);
+
+    cro::Entity getEntity() const { return m_entity; }
 
 private:
+    std::uint16_t m_inputFlags;
+    cro::Entity m_entity;
+    std::int32_t m_mouseMoveX;
+    std::int32_t m_mouseMoveY;
 
-    SharedStateData& m_sharedData;
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-
-    cro::ResourceCollection m_resources;
-
-    InputParser m_inputParser;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
-    void updateView();
+    cro::Clock m_timestampClock;
 };

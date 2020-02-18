@@ -324,6 +324,16 @@ void Window::loadResources(const std::function<void()>& loader)
 #endif //PLATFORM_DESKTOP
 }
 
+void Window::setMouseCaptured(bool captured)
+{
+    SDL_SetRelativeMouseMode(captured ? SDL_TRUE : SDL_FALSE);
+}
+
+bool Window::getMouseCaptured() const
+{
+    return (SDL_GetRelativeMouseMode() == SDL_TRUE);
+}
+
 //private
 void Window::destroy()
 {

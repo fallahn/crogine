@@ -95,6 +95,11 @@ namespace cro
         */
         static void printStat(const std::string& name, const std::string& value);
 
+        /*!
+        \brief Returns true if the console is currently being displayed
+        */
+        static bool isVisible();
+
     private:
         friend class App;
         friend class ConsoleClient;

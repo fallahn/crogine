@@ -71,7 +71,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioSource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Callback.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Camera.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandID.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandTarget.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ParticleEmitter.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\PhysicsObject.hpp" />

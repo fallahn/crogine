@@ -55,8 +55,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     });
 
     updateView();
-
-    context.appInstance.resetFrameTime();
 }
 
 //public

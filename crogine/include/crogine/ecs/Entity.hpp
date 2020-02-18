@@ -134,7 +134,8 @@ namespace cro
 		/*!
         \brief Returns true if this entity currently belongs to a scene
         */
-        bool isValid() const { return m_entityManager != nullptr; }
+        bool isValid() const;
+
         
         bool operator == (Entity r)
         {

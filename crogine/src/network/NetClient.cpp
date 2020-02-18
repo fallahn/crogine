@@ -86,6 +86,9 @@ bool NetClient::create(std::size_t maxChannels, std::size_t maxClients, uint32 i
         Logger::log("Creating net client failed.", Logger::Type::Error);
         return false;
     }
+
+    enet_host_compress_with_range_coder(m_client);
+
     LOG("Created client host", Logger::Type::Info);
     return true;
 }

@@ -80,6 +80,10 @@ namespace cro
         \brief Sets the euler rotation in radians for the x, y and z axis
         */
         void setRotation(glm::vec3);
+        /*!
+        \brief Sets the rotation with the given quaternion
+        */
+        void setRotation(glm::quat);
         /*
         \brief Sets the transform scale for each axis
         */

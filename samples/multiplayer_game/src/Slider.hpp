@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,44 +27,24 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+//slides the menu about
 #pragma once
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/ecs/System.hpp>
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
-#include "InputParser.hpp"
+#include <crogine/detail/glm/vec3.hpp>
 
-struct SharedStateData;
-class GameState final : public cro::State
+struct Slider final
+{
+    glm::vec3 destination = glm::vec3(0.f);
+    bool active = false;
+    float speed = 10.f;
+};
+
+class SliderSystem final : public cro::System
 {
 public:
-    GameState(cro::StateStack&, cro::State::Context, SharedStateData&);
-    ~GameState() = default;
+    explicit SliderSystem(cro::MessageBus&);
 
-    cro::StateID getStateID() const override { return States::Game; }
-
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
-
-private:
-
-    SharedStateData& m_sharedData;
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-
-    cro::ResourceCollection m_resources;
-
-    InputParser m_inputParser;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
-    void updateView();
+    void process(float) override;
 };

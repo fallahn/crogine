@@ -25,6 +25,36 @@
     <Filter Include="Header Files\Client">
       <UniqueIdentifier>{c293cb0b-8b9c-47c2-b425-046783f9025d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Client\systems">
+      <UniqueIdentifier>{5ae2b70a-5bc6-4e34-aa85-1d5eaeef425d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Client\systems">
+      <UniqueIdentifier>{dcf6dfd2-777b-40d3-8568-cd8c620ced98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Client\states">
+      <UniqueIdentifier>{4d405ed9-fecf-4599-b37e-dc837d881eff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Client\states">
+      <UniqueIdentifier>{82856e9a-db91-4199-9d7e-6e865200d851}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Server\states">
+      <UniqueIdentifier>{ee3c8633-a329-45cb-a53f-6889c176ea76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Server\states">
+      <UniqueIdentifier>{1c044b8b-1ee9-41b5-8a52-359b6163bcf6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared">
+      <UniqueIdentifier>{0cd6ba39-fb16-4dbe-809c-e8547771978a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared\systems">
+      <UniqueIdentifier>{31024685-8d14-418d-bcbd-d99919804274}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared">
+      <UniqueIdentifier>{8c7271f8-76a9-49e5-a646-4226d9766216}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared\systems">
+      <UniqueIdentifier>{1df1d38d-e54b-4f71-b34e-6ad29415c76b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -33,23 +63,32 @@
     <ClCompile Include="src\MyApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ServerGameState.cpp">
-      <Filter>Source Files\Server</Filter>
-    </ClCompile>
     <ClCompile Include="src\Server.cpp">
       <Filter>Source Files\Server</Filter>
     </ClCompile>
-    <ClCompile Include="src\ServerLobbyState.cpp">
-      <Filter>Source Files\Server</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GameState.cpp">
+    <ClCompile Include="src\InputParser.cpp">
       <Filter>Source Files\Client</Filter>
     </ClCompile>
-    <ClCompile Include="src\LoadingScreen.cpp">
-      <Filter>Source Files\Client</Filter>
+    <ClCompile Include="src\SliderSystem.cpp">
+      <Filter>Source Files\Client\systems</Filter>
     </ClCompile>
     <ClCompile Include="src\MenuState.cpp">
-      <Filter>Source Files\Client</Filter>
+      <Filter>Source Files\Client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LoadingScreen.cpp">
+      <Filter>Source Files\Client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameState.cpp">
+      <Filter>Source Files\Client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ServerLobbyState.cpp">
+      <Filter>Source Files\Server\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ServerGameState.cpp">
+      <Filter>Source Files\Server\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlayerSystem.cpp">
+      <Filter>Source Files\shared\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -71,26 +110,38 @@
     <ClInclude Include="src\SharedStateData.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ServerState.hpp">
-      <Filter>Header Files\Server</Filter>
-    </ClInclude>
     <ClInclude Include="src\Server.hpp">
       <Filter>Header Files\Server</Filter>
-    </ClInclude>
-    <ClInclude Include="src\MenuState.hpp">
-      <Filter>Header Files\Client</Filter>
-    </ClInclude>
-    <ClInclude Include="src\LoadingScreen.hpp">
-      <Filter>Header Files\Client</Filter>
-    </ClInclude>
-    <ClInclude Include="src\GameState.hpp">
-      <Filter>Header Files\Client</Filter>
     </ClInclude>
     <ClInclude Include="src\CommonConsts.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\PacketIDs.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InputParser.hpp">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CircularBuffer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Slider.hpp">
+      <Filter>Header Files\Client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameState.hpp">
+      <Filter>Header Files\Client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LoadingScreen.hpp">
+      <Filter>Header Files\Client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MenuState.hpp">
+      <Filter>Header Files\Client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ServerState.hpp">
+      <Filter>Header Files\Server\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlayerSystem.hpp">
+      <Filter>Header Files\shared\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

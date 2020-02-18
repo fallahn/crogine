@@ -29,10 +29,16 @@ source distribution.
 
 #include "GameState.hpp"
 #include "SharedStateData.hpp"
+#include "PlayerSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+
+#include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/util/Constants.hpp>
 
@@ -57,17 +63,20 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     });
 
     updateView();
-
-    context.appInstance.resetFrameTime();
+    context.mainWindow.setMouseCaptured(true);
 }
 
 //public
 bool GameState::handleEvent(const cro::Event& evt)
 {
-    if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    if (cro::ui::wantsMouse() 
+        || cro::ui::wantsKeyboard()
+        || cro::Console::isVisible())
     {
         return true;
     }
+
+    m_inputParser.handleEvent(evt);
 
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
@@ -104,6 +113,8 @@ bool GameState::simulate(float dt)
         //we've been disconnected somewhere - push error state
     }
 
+    m_inputParser.update();
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -119,6 +130,11 @@ void GameState::render()
 void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_gameScene.addSystem<PlayerSystem>(mb);
+    m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ModelRenderer>(mb);
+
+
 
 }
 
@@ -129,7 +145,25 @@ void GameState::loadAssets()
 
 void GameState::createScene()
 {
+    //create ground plane for testing
+    cro::ModelDefinition modelDef;
+    modelDef.loadFromFile("assets/models/ground_plane.cmt", m_resources);
 
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
+    modelDef.createModel(entity, m_resources);
+
+
+    //create a player entity and attach a camera
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 50.f });
+    entity.addComponent<Player>();
+    entity.addComponent<cro::Camera>();
+
+    m_inputParser.setEntity(entity);
+
+    m_gameScene.setActiveCamera(entity);
+    updateView();
 }
 
 void GameState::createUI()

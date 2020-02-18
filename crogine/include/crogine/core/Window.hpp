@@ -159,6 +159,21 @@ namespace cro
         template <typename T, typename... Args>
         void setLoadingScreen(Args&&...);
 
+        /*!
+        \brief Sets if the mouse cursor is captured or not.
+        When this is true the mouse cursor is hidden and only
+        relative mouse move events are received. Useful for
+        games such as first or third person shooters where
+        mouse movements are used to move the camera.
+        */
+        void setMouseCaptured(bool);
+
+        /*!
+        \brief Returns whether or not the mouse cursor is currently
+        captured by the window.
+        */
+        bool getMouseCaptured() const;
+
 	private:
 
 		SDL_Window* m_window;

@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,51 +27,46 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/components/CommandTarget.hpp>
-#include <crogine/ecs/systems/CommandSystem.hpp>
-#include <crogine/core/Clock.hpp>
+#include "Slider.hpp"
 
-using namespace cro;
+#include <crogine/core/Clock.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 namespace
 {
-    const std::size_t MaxCommands = 128; //this can be made larger if necessary, is only used to prevent continual reallocation of heap memory
+    const float minDistSqrd = 25.f;
 }
 
-CommandSystem::CommandSystem(MessageBus& mb)
-    : System        (mb, typeid(CommandSystem)),
-    m_commands      (MaxCommands),
-    m_currentCommand(m_commands.begin()),
-    m_count         (0)
+SliderSystem::SliderSystem(cro::MessageBus& mb)
+    : cro::System(mb, typeid(SliderSystem))
 {
-    requireComponent<CommandTarget>();
+    requireComponent<cro::Transform>();
+    requireComponent<Slider>();
 }
 
 //public
-void CommandSystem::sendCommand(const Command& cmd)
-{
-    *m_currentCommand = cmd;
-    m_currentCommand++;
-    m_count++;
-    CRO_ASSERT(m_currentCommand != m_commands.end(), "Exceeded max commands!");
-}
-
-void CommandSystem::process(float dt)
+void SliderSystem::process(float dt)
 {
     auto& entities = getEntities();
-    m_currentCommand = m_commands.begin();
-
-    for (auto i = 0u; i < m_count; ++i, ++m_currentCommand)
+    for (auto& e : entities)
     {
-        for (auto& e : entities)
+        auto& slider = e.getComponent<Slider>();
+        if (slider.active)
         {
-            if (e.getComponent<CommandTarget>().ID & m_currentCommand->targetFlags)
+            auto& tx = e.getComponent<cro::Transform>();
+            auto movement = slider.destination - tx.getPosition();
+            
+            if (glm::length2(movement) < minDistSqrd)
             {
-                m_currentCommand->action(e, dt);
+                slider.active = false;
+                tx.setPosition(slider.destination);
+            }
+            else
+            {
+                tx.move(movement * slider.speed * dt);
             }
         }
     }
-
-    m_currentCommand = m_commands.begin();
-    m_count = 0;
 }

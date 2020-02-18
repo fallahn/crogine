@@ -29,42 +29,31 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
-
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
 #include "InputParser.hpp"
 
-struct SharedStateData;
-class GameState final : public cro::State
+#include <crogine/ecs/System.hpp>
+
+#include <array>
+
+struct Player final
+{
+    static constexpr std::size_t HistorySize = 64;
+    std::array<Input, HistorySize> inputStack = {};
+    std::size_t nextFreeInput = 0; //POST incremented after adding new input to history
+    std::size_t lastUpdatedInput = HistorySize - 1; //index of the last parsed input
+};
+
+class PlayerSystem final : public cro::System
 {
 public:
-    GameState(cro::StateStack&, cro::State::Context, SharedStateData&);
-    ~GameState() = default;
+    explicit PlayerSystem(cro::MessageBus&);
 
-    cro::StateID getStateID() const override { return States::Game; }
+    void process(float) override;
 
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
+    void reconcile(cro::Entity);
 
 private:
-
-    SharedStateData& m_sharedData;
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-
-    cro::ResourceCollection m_resources;
-
-    InputParser m_inputParser;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
-    void updateView();
+    void processInput(cro::Entity);
+    void processMovement(cro::Entity, Input);
+    void processCollision(cro::Entity);
 };

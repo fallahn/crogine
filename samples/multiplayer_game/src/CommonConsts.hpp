@@ -36,4 +36,10 @@ namespace ConstVal
     static const std::uint16_t GamePort = 16002;
     static const std::size_t MaxClients = 4;
     static const uint8_t NetChannelReliable = 1;
+
+    //rather than tag each player input with the same
+    //value and sending over the network, assume this
+    //is the delta between updates (as the engine is
+    //fixed for this anyway)
+    static const float FixedGameUpdate = 1.f / 60.f;
 }
