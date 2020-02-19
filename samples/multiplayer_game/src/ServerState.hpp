@@ -100,5 +100,6 @@ namespace Sv
         SharedData& m_sharedData;
 
         void sendInitialGameState(std::uint8_t);
+        void handlePlayerInput(const cro::NetEvent::Packet&);
     };
 }

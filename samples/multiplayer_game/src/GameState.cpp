@@ -56,7 +56,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     : cro::State    (stack, context),
     m_sharedData    (sd),
     m_gameScene     (context.appInstance.getMessageBus()),
-    m_uiScene       (context.appInstance.getMessageBus())
+    m_uiScene       (context.appInstance.getMessageBus()),
+    m_inputParser   (sd.clientConnection.netClient)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -238,10 +239,10 @@ void GameState::spawnPlayer(PlayerInfo info)
         entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
 
         //TODO get rotation from server
-        auto rotation = glm::lookAt(info.spawnPosition, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f));
+        auto rotation = glm::inverse(glm::lookAt(info.spawnPosition, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f)));
         entity.getComponent<cro::Transform>().setRotation(glm::quat_cast(rotation));
 
-        entity.addComponent<Player>();
+        entity.addComponent<Player>().id = info.playerID;
         entity.addComponent<cro::Camera>();
         playerEntity = entity;
         m_inputParser.setEntity(entity);

@@ -29,11 +29,15 @@ source distribution.
 
 #include "InputParser.hpp"
 #include "PlayerSystem.hpp"
+#include "ClientPacketData.hpp"
+#include "PacketIDs.hpp"
 
 #include <crogine/core/Console.hpp>
+#include <crogine/network/NetClient.hpp>
 
-InputParser::InputParser()
-    : m_inputFlags  (0),
+InputParser::InputParser(cro::NetClient& nc)
+    : m_netClient   (nc),
+    m_inputFlags    (0),
     m_mouseMoveX    (0),
     m_mouseMoveY    (0)
 {
@@ -137,8 +141,12 @@ void InputParser::update()
         player.nextFreeInput = (player.nextFreeInput + 1) % Player::HistorySize;
 
 
-        //TODO broadcast packet
-        
+        //broadcast packet
+        InputUpdate update;
+        update.input = input;
+        update.playerID = player.id;
+
+        m_netClient.sendPacket(PacketID::InputUpdate, update, cro::NetFlag::Unreliable);
     }
     m_mouseMoveX = m_mouseMoveY = 0;
 }

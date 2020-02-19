@@ -41,6 +41,8 @@ struct Player final
     std::array<Input, HistorySize> inputStack = {};
     std::size_t nextFreeInput = 0; //POST incremented after adding new input to history
     std::size_t lastUpdatedInput = HistorySize - 1; //index of the last parsed input
+
+    std::uint8_t id = 4; //this should be the same as the ActorID for this entity
 };
 
 class PlayerSystem final : public cro::System

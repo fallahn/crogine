@@ -59,10 +59,15 @@ struct Input final
     std::int8_t yMove = 0;
 };
 
+namespace cro
+{
+    class NetClient;
+}
+
 class InputParser final
 {
 public:
-    InputParser();
+    explicit InputParser(cro::NetClient&);
 
     void handleEvent(const SDL_Event&);
 
@@ -73,6 +78,8 @@ public:
     cro::Entity getEntity() const { return m_entity; }
 
 private:
+    cro::NetClient& m_netClient;
+    
     std::uint16_t m_inputFlags;
     cro::Entity m_entity;
     std::int32_t m_mouseMoveX;

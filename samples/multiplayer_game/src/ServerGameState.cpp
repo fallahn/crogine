@@ -31,6 +31,7 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "CommonConsts.hpp"
 #include "ServerPacketData.hpp"
+#include "ClientPacketData.hpp"
 
 #include <crogine/core/Log.hpp>
 #include <crogine/detail/glm/vec3.hpp>
@@ -69,6 +70,9 @@ void GameState::netUpdate(const cro::NetEvent& evt)
                 sendInitialGameState(evt.packet.as<std::uint8_t>());
             }
             break;
+        case PacketID::InputUpdate:
+            handlePlayerInput(evt.packet);
+            break;
         }
     }
 }
@@ -98,4 +102,11 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
 
 
     //TODO send map data to start building the world
+}
+
+void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
+{
+    auto input = packet.as<InputUpdate>();
+    //TODO apply this to the correct player
+
 }
