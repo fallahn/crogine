@@ -41,11 +41,13 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/util/Constants.hpp>
-
+#include <crogine/gui/imgui.h>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
 {
+    //for debug output
+    cro::Entity playerEntity;
 
 }
 
@@ -64,6 +66,26 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
 
     updateView();
     context.mainWindow.setMouseCaptured(true);
+
+    //debug output
+    registerWindow([]()
+        {
+            if (playerEntity.isValid())
+            {
+                ImGui::SetNextWindowSize({ 300.f, 120.f });
+                ImGui::Begin("Info");
+
+                auto pos = playerEntity.getComponent<cro::Transform>().getPosition();
+                auto rotation = playerEntity.getComponent<cro::Transform>().getRotation() * cro::Util::Const::radToDeg;
+                ImGui::Text("Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+                ImGui::Text("Rotation: %3.3f, %3.3f, %3.3f", rotation.x, rotation.y, rotation.z);
+
+                auto mouse = playerEntity.getComponent<Player>().inputStack[playerEntity.getComponent<Player>().lastUpdatedInput];
+                ImGui::Text("Mouse Movement: %d, %d", mouse.xMove, mouse.yMove);
+
+                ImGui::End();
+            }
+        });
 }
 
 //public
@@ -153,13 +175,17 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
     modelDef.createModel(entity, m_resources);
 
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -7.f });
+    modelDef.createModel(entity, m_resources);
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Green());
 
     //create a player entity and attach a camera
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 50.f });
     entity.addComponent<Player>();
     entity.addComponent<cro::Camera>();
-
+    playerEntity = entity;
     m_inputParser.setEntity(entity);
 
     m_gameScene.setActiveCamera(entity);

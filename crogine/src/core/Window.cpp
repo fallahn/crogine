@@ -327,6 +327,7 @@ void Window::loadResources(const std::function<void()>& loader)
 void Window::setMouseCaptured(bool captured)
 {
     SDL_SetRelativeMouseMode(captured ? SDL_TRUE : SDL_FALSE);
+    //SDL_CaptureMouse(captured ? SDL_TRUE : SDL_FALSE);
 }
 
 bool Window::getMouseCaptured() const

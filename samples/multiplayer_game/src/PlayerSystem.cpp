@@ -31,7 +31,7 @@ source distribution.
 #include "CommonConsts.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
-
+#include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 
@@ -82,14 +82,12 @@ void PlayerSystem::processInput(cro::Entity entity)
 
 void PlayerSystem::processMovement(cro::Entity entity, Input input)
 {
-    auto& tx = entity.getComponent<cro::Transform>();
-    auto rot = tx.getRotation();
+    glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.yMove) * 0.005f, glm::vec3(1.f, 0.f, 0.f));
+    glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.xMove) * 0.005f, glm::vec3(0.f, 1.f, 0.f));
 
-    rot.y -= static_cast<float>(input.xMove) * 0.007f;
-    rot.x -= static_cast<float>(input.yMove) * 0.007f;
-    
-    glm::quat rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rot.y, glm::vec3(0.f, 1.f, 0.f));
-    rotation = glm::rotate(rotation, rot.x, glm::vec3(1.f, 0.f, 0.f));
+    auto& tx = entity.getComponent<cro::Transform>();
+    auto rotation = yaw * tx.getRotationQuat() * pitch;
+    tx.setRotation(rotation);
 
     glm::vec3 forwardVector = rotation * glm::vec3(0.f, 0.f, -1.f);
     glm::vec3 rightVector = rotation * glm::vec3(1.f, 0.f, 0.f);
@@ -112,8 +110,6 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
     {
         tx.move(rightVector * moveSpeed);
     }
-
-    tx.setRotation(rotation);
 }
 
 void PlayerSystem::processCollision(cro::Entity)

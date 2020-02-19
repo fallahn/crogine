@@ -1,5 +1,5 @@
-project(new_project)
-SET(PROJECT_NAME new_project)
+project(mp_game)
+SET(PROJECT_NAME mp_game)
 cmake_minimum_required(VERSION 3.2.2)
 
 if(NOT CMAKE_BUILD_TYPE)

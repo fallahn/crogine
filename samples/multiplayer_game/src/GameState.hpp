@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/core/State.hpp>
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ResourceAutomation.hpp>
 
@@ -38,7 +39,7 @@ source distribution.
 #include "InputParser.hpp"
 
 struct SharedStateData;
-class GameState final : public cro::State
+class GameState final : public cro::State, public cro::GuiClient
 {
 public:
     GameState(cro::StateStack&, cro::State::Context, SharedStateData&);
