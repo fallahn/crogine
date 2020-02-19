@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 namespace ConstVal
 {

@@ -29,12 +29,29 @@ source distribution.
 
 #pragma once
 
+#include "CommonConsts.hpp"
+
 #include <crogine/network/NetData.hpp>
+#include <crogine/network/NetHost.hpp>
 
 #include <cstdint>
+#include <array>
 
 namespace Sv
 {
+    struct ClientConnection final
+    {
+        bool ready = false;
+        bool connected = false;
+        cro::NetPeer peer;
+    };
+
+    struct SharedData final
+    {
+        cro::NetHost host;
+        std::array<Sv::ClientConnection, ConstVal::MaxClients> clients;
+    };
+
     namespace StateID
     {
         enum
@@ -56,7 +73,7 @@ namespace Sv
     class LobbyState final : public State
     {
     public:
-        LobbyState();
+        explicit LobbyState(SharedData&);
 
         void netUpdate(const cro::NetEvent&) override;
         std::int32_t process(float) override;
@@ -65,12 +82,13 @@ namespace Sv
 
     private:
         std::int32_t m_returnValue;
+        SharedData& m_sharedData;
     };
 
     class GameState final : public State
     {
     public:
-        GameState();
+        explicit GameState(SharedData&);
 
         void netUpdate(const cro::NetEvent&) override;
         std::int32_t process(float) override;
@@ -79,5 +97,8 @@ namespace Sv
 
     private:
         std::int32_t m_returnValue;
+        SharedData& m_sharedData;
+
+        void sendInitialGameState(std::uint8_t);
     };
 }

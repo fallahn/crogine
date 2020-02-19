@@ -27,30 +27,17 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "ServerState.hpp"
+#pragma once
 
-#include <crogine/core/Log.hpp>
-
-using namespace Sv;
-
-LobbyState::LobbyState(SharedData& sd)
-    : m_returnValue (StateID::Lobby),
-    m_sharedData    (sd)
+//it is important that players 0 - 3 are listed first so that
+//they match the indices into data arrays pertinent to their client
+namespace ActorID
 {
-    LOG("Entered Server Lobby State", cro::Logger::Type::Info);
-
-    for (auto& c : sd.clients)
+    enum
     {
-        c.ready = false;
-    }
-}
-
-void LobbyState::netUpdate(const cro::NetEvent& evt)
-{
-
-}
-
-std::int32_t LobbyState::process(float dt)
-{
-    return m_returnValue;
+        PlayerOne = 0,
+        PlayerTwo,
+        PlayerThree,
+        PlayerFour
+    };
 }

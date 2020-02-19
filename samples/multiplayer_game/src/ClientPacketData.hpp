@@ -27,30 +27,12 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "ServerState.hpp"
+#pragma once
 
-#include <crogine/core/Log.hpp>
+#include "InputParser.hpp"
 
-using namespace Sv;
-
-LobbyState::LobbyState(SharedData& sd)
-    : m_returnValue (StateID::Lobby),
-    m_sharedData    (sd)
+struct InputUpdate final
 {
-    LOG("Entered Server Lobby State", cro::Logger::Type::Info);
-
-    for (auto& c : sd.clients)
-    {
-        c.ready = false;
-    }
-}
-
-void LobbyState::netUpdate(const cro::NetEvent& evt)
-{
-
-}
-
-std::int32_t LobbyState::process(float dt)
-{
-    return m_returnValue;
-}
+    Input input;
+    std::uint8_t playerID = 4;
+};

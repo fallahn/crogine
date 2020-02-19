@@ -143,5 +143,14 @@
     <ClInclude Include="src\PlayerSystem.hpp">
       <Filter>Header Files\shared\systems</Filter>
     </ClInclude>
+    <ClInclude Include="src\ClientPacketData.hpp">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ServerPacketData.hpp">
+      <Filter>Header Files\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ActorIDs.hpp">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

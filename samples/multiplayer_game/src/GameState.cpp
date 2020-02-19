@@ -30,6 +30,7 @@ source distribution.
 #include "GameState.hpp"
 #include "SharedStateData.hpp"
 #include "PlayerSystem.hpp"
+#include "PacketIDs.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -66,14 +67,17 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
 
     updateView();
     context.mainWindow.setMouseCaptured(true);
+    sd.clientConnection.ready = false;
 
     //debug output
-    registerWindow([]()
+    registerWindow([&]()
         {
             if (playerEntity.isValid())
             {
                 ImGui::SetNextWindowSize({ 300.f, 120.f });
                 ImGui::Begin("Info");
+
+                ImGui::Text("Player ID: %d", m_sharedData.clientConnection.playerID);
 
                 auto pos = playerEntity.getComponent<cro::Transform>().getPosition();
                 auto rotation = playerEntity.getComponent<cro::Transform>().getRotation() * cro::Util::Const::radToDeg;
@@ -127,13 +131,23 @@ bool GameState::simulate(float dt)
         cro::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
-
+            if (evt.type == cro::NetEvent::PacketReceived)
+            {
+                handlePacket(evt.packet);
+            }
         }
     }
     else
     {
         //we've been disconnected somewhere - push error state
     }
+
+    //if we haven't had the server reply yet, tell it we're ready
+    if (!m_sharedData.clientConnection.ready)
+    {
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.playerID, cro::NetFlag::Unreliable);
+    }
+
 
     m_inputParser.update();
 
@@ -179,17 +193,6 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -7.f });
     modelDef.createModel(entity, m_resources);
     entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Green());
-
-    //create a player entity and attach a camera
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 50.f });
-    entity.addComponent<Player>();
-    entity.addComponent<cro::Camera>();
-    playerEntity = entity;
-    m_inputParser.setEntity(entity);
-
-    m_gameScene.setActiveCamera(entity);
-    updateView();
 }
 
 void GameState::createUI()
@@ -210,4 +213,44 @@ void GameState::updateView()
 
     auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam2D.viewport = cam3D.viewport;
+}
+
+void GameState::handlePacket(const cro::NetEvent::Packet& packet)
+{
+    switch (packet.getID())
+    {
+    default: break;
+    case PacketID::PlayerSpawn:
+        //TODO we want to flag all these + world data
+        //so we know to stop requesting world data
+        m_sharedData.clientConnection.ready = true;
+        spawnPlayer(packet.as<PlayerInfo>());
+        break;
+    }
+}
+
+void GameState::spawnPlayer(PlayerInfo info)
+{
+    if (info.playerID == m_sharedData.clientConnection.playerID)
+    {
+        //this is us
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
+
+        //TODO get rotation from server
+        auto rotation = glm::lookAt(info.spawnPosition, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f));
+        entity.getComponent<cro::Transform>().setRotation(glm::quat_cast(rotation));
+
+        entity.addComponent<Player>();
+        entity.addComponent<cro::Camera>();
+        playerEntity = entity;
+        m_inputParser.setEntity(entity);
+
+        m_gameScene.setActiveCamera(entity);
+        updateView();
+    }
+    else
+    {
+        //spawn an avatar
+    }
 }

@@ -71,6 +71,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     context.mainWindow.setMouseCaptured(false);
     context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
+
+    sd.clientConnection.ready = false;
+    //TODO we need to check the connection state if we returned here after a game completed
 }
 
 //public
@@ -96,20 +99,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 {
                     m_sharedData.serverInstance.stop();
                     cro::Logger::log("Failed to connect to local server", cro::Logger::Type::Error);
-                }
-                else
-                {
-                    //switch to lobby view
-                    cro::Command cmd;
-                    cmd.targetFlags = CommandID::RootNode;
-                    cmd.action = [](cro::Entity e, float)
-                    {
-                        e.getComponent<Slider>().destination = { -(float)cro::DefaultSceneSize.x, 0.f, 0.f };
-                        e.getComponent<Slider>().active = true;
-                    };
-                    m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-                    LOG("Successfully connected to server", cro::Logger::Type::Info);
                 }
             }
             break;
@@ -212,6 +201,23 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             {
                 requestStackClear();
                 requestStackPush(States::Game);
+            }
+            break;
+        case PacketID::ConnectionAccepted:
+            {
+                m_sharedData.clientConnection.playerID = evt.packet.as<std::uint8_t>();
+
+                //switch to lobby view
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::RootNode;
+                cmd.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<Slider>().destination = { -(float)cro::DefaultSceneSize.x, 0.f, 0.f };
+                    e.getComponent<Slider>().active = true;
+                };
+                m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                LOG("Successfully connected to server", cro::Logger::Type::Info);
             }
             break;
         }

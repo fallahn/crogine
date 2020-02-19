@@ -167,7 +167,9 @@
     <ClCompile Include="src\SliderSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ActorIDs.hpp" />
     <ClInclude Include="src\CircularBuffer.hpp" />
+    <ClInclude Include="src\ClientPacketData.hpp" />
     <ClInclude Include="src\CommonConsts.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\GameState.hpp" />
@@ -180,6 +182,7 @@
     <ClInclude Include="src\PlayerSystem.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\Server.hpp" />
+    <ClInclude Include="src\ServerPacketData.hpp" />
     <ClInclude Include="src\ServerState.hpp" />
     <ClInclude Include="src\SharedStateData.hpp" />
     <ClInclude Include="src\Slider.hpp" />

@@ -27,30 +27,14 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "ServerState.hpp"
+#pragma once
 
-#include <crogine/core/Log.hpp>
+#include "CommonConsts.hpp"
 
-using namespace Sv;
+#include <crogine/detail/glm/vec3.hpp>
 
-LobbyState::LobbyState(SharedData& sd)
-    : m_returnValue (StateID::Lobby),
-    m_sharedData    (sd)
+struct PlayerInfo final
 {
-    LOG("Entered Server Lobby State", cro::Logger::Type::Info);
-
-    for (auto& c : sd.clients)
-    {
-        c.ready = false;
-    }
-}
-
-void LobbyState::netUpdate(const cro::NetEvent& evt)
-{
-
-}
-
-std::int32_t LobbyState::process(float dt)
-{
-    return m_returnValue;
-}
+    std::uint8_t playerID = ConstVal::MaxClients;
+    glm::vec3 spawnPosition = glm::vec3(0.f);
+};

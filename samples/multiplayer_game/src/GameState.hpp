@@ -29,14 +29,16 @@ source distribution.
 
 #pragma once
 
+#include "StateIDs.hpp"
+#include "ResourceIDs.hpp"
+#include "InputParser.hpp"
+#include "ServerPacketData.hpp"
+
 #include <crogine/core/State.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ResourceAutomation.hpp>
-
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
-#include "InputParser.hpp"
+#include <crogine/network/NetData.hpp>
 
 struct SharedStateData;
 class GameState final : public cro::State, public cro::GuiClient
@@ -68,4 +70,7 @@ private:
     void createUI();
 
     void updateView();
+
+    void handlePacket(const cro::NetEvent::Packet&);
+    void spawnPlayer(PlayerInfo);
 };

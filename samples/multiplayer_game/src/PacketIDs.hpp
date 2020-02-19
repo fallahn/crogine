@@ -46,9 +46,16 @@ namespace PacketID
         ClientConnected, //< uint32 client peer ID
         ClientDisconnected, //< uint32 client peer ID
         ConnectionRefused, //< uint8 message type
+        ConnectionAccepted, //< uint8 assigned player ID (0-3)
         StateChange, //< uint8 state ID
+
+        PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
+        PlayerUpdate, //< world pos, rotation, uint32 timestamp - used for reconciliation, send directly to targeted peer
+        ActorUpdate, //< uint8 ID pos, rotation - used for interpolation of other players and NPCs
 
         //from client
         RequestGameStart,
+        ClientReady, //< uint8 playerID - requests game data from server. Sent repeatedly until ack'd
+        InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput)
     };
 }

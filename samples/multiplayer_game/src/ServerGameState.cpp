@@ -28,23 +28,74 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ServerState.hpp"
+#include "PacketIDs.hpp"
+#include "CommonConsts.hpp"
+#include "ServerPacketData.hpp"
 
 #include <crogine/core/Log.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 using namespace Sv;
 
-GameState::GameState()
-    : m_returnValue(StateID::Game)
+namespace
+{
+    //TODO work out a better way to create spawn points
+    const std::array<glm::vec3, ConstVal::MaxClients> playerSpawns =
+    {
+        glm::vec3(-10.f, 5.f, -10.f),
+        glm::vec3(10.f, 5.f, -10.f),
+        glm::vec3(10.f, 5.f, 10.f),
+        glm::vec3(-10.f, 5.f, 10.f)
+    };
+}
+
+GameState::GameState(SharedData& sd)
+    : m_returnValue (StateID::Game),
+    m_sharedData    (sd)
 {
     LOG("Entered Server Game State", cro::Logger::Type::Info);
 }
 
 void GameState::netUpdate(const cro::NetEvent& evt)
 {
-
+    if (evt.type == cro::NetEvent::PacketReceived)
+    {
+        switch (evt.packet.getID())
+        {
+        default: break;
+        case PacketID::ClientReady:
+            if (!m_sharedData.clients[evt.packet.as<std::uint8_t>()].ready)
+            {
+                sendInitialGameState(evt.packet.as<std::uint8_t>());
+            }
+            break;
+        }
+    }
 }
 
 std::int32_t GameState::process(float dt)
 {
     return m_returnValue;
+}
+
+//private
+void GameState::sendInitialGameState(std::uint8_t playerID)
+{
+    for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+    {
+        if (m_sharedData.clients[i].connected)
+        {
+            //TODO name/skin info is sent on lobby join
+
+            PlayerInfo info;
+            info.playerID = i;
+            info.spawnPosition = playerSpawns[i]; //TODO take this from actual player entity
+            //TODO include rotation?
+
+            m_sharedData.host.sendPacket(m_sharedData.clients[playerID].peer, PacketID::PlayerSpawn, info, cro::NetFlag::Reliable);
+        }
+    }
+
+
+    //TODO send map data to start building the world
 }
