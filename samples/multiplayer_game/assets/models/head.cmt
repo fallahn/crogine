@@ -1,0 +1,9 @@
+model head
+{
+    mesh = cube
+
+    material Unlit
+    {
+        colour = 0.9, 0.64, 0.2, 1
+    }
+}

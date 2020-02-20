@@ -123,6 +123,11 @@ void GameState::handleMessage(const cro::Message& msg)
             updateView();
         }
     }
+    else if (msg.id == cro::Message::ConsoleMessage)
+    {
+        const auto& data = msg.getData<cro::Message::ConsoleEvent>();
+        getContext().mainWindow.setMouseCaptured(data.type == cro::Message::ConsoleEvent::Closed);
+    }
 }
 
 bool GameState::simulate(float dt)

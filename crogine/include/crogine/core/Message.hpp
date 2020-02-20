@@ -57,6 +57,7 @@ namespace cro
             WindowMessage,
             SceneMessage,
             StateMessage,
+            ConsoleMessage,
             Count
         };
 
@@ -73,7 +74,11 @@ namespace cro
             }action;
         };
         /*!
-        \brief Window event message.
+        \brief Window event message. These
+        repeat windows events from the event
+        handler, such as focus changes or
+        resize events.
+        \see SDL_WindowEvent
         */
         struct WindowEvent final
         {
@@ -103,10 +108,19 @@ namespace cro
             int32 id = -1;
         };
 
+        struct ConsoleEvent final
+        {
+            enum
+            {
+                Opened,
+                Closed
+            }type = Opened;
+        };
+
         ID id = -1;
 
         /*!
-        \brief Returns the actual data containend in the message
+        \brief Returns the actual data contained in the message
 
         Using the ID of the message to determine the data type of the
         message, this function will return a reference to that data.

@@ -144,8 +144,14 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
     auto input = packet.as<InputUpdate>();
     CRO_ASSERT(m_playerEntities[input.playerID].isValid(), "Not a valid player!");
     auto& player = m_playerEntities[input.playerID].getComponent<Player>();
-    player.inputStack[player.nextFreeInput] = input.input;
-    player.nextFreeInput = (player.nextFreeInput + 1) % Player::HistorySize;
+
+    //only add new inputs
+    auto lastIndex = (player.nextFreeInput + (Player::HistorySize - 1) ) % Player::HistorySize;
+    if (input.input.timeStamp > (player.inputStack[lastIndex].timeStamp))
+    {
+        player.inputStack[player.nextFreeInput] = input.input;
+        player.nextFreeInput = (player.nextFreeInput + 1) % Player::HistorySize;
+    }
 }
 
 void GameState::initScene()

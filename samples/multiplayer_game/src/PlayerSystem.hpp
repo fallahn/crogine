@@ -32,6 +32,7 @@ source distribution.
 #include "InputParser.hpp"
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 #include <array>
@@ -55,11 +56,17 @@ class PlayerSystem final : public cro::System
 public:
     explicit PlayerSystem(cro::MessageBus&);
 
+    void handleMessage(const cro::Message&) override;
+
     void process(float) override;
 
     void reconcile(cro::Entity, const PlayerUpdate&);
 
 private:
+
+    glm::vec2 m_windowScale; //< scale the mouse rel movement relative to the window size
+    void updateWindowScale(std::uint32_t, std::uint32_t);
+
     void processInput(cro::Entity);
     void processMovement(cro::Entity, Input);
     void processCollision(cro::Entity);

@@ -30,20 +30,38 @@ source distribution.
 #include "PlayerSystem.hpp"
 #include "CommonConsts.hpp"
 #include "ServerPacketData.hpp"
+#include "Messages.hpp"
 
+#include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(PlayerSystem))
+    : cro::System(mb, typeid(PlayerSystem)),
+    m_windowScale(1.f)
 {
     requireComponent<Player>();
     requireComponent<cro::Transform>();
+
+    auto size = cro::App::getWindow().getSize();
+    updateWindowScale(size.x, size.y);
 }
 
 //public
+void PlayerSystem::handleMessage(const cro::Message& msg)
+{
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_RESIZED)
+        {
+            updateWindowScale(data.data0, data.data1);
+        }
+    }
+}
+
 void PlayerSystem::process(float)
 {
     auto& entities = getEntities();
@@ -87,6 +105,11 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
 }
 
 //private
+void PlayerSystem::updateWindowScale(std::uint32_t x, std::uint32_t y)
+{
+    m_windowScale = { static_cast<float>(x) / 1920.f, static_cast<float>(y) / 1080.f };
+}
+
 void PlayerSystem::processInput(cro::Entity entity)
 {
     auto& player = entity.getComponent<Player>();
@@ -106,8 +129,10 @@ void PlayerSystem::processInput(cro::Entity entity)
 
 void PlayerSystem::processMovement(cro::Entity entity, Input input)
 {
-    glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.yMove) * 0.005f, glm::vec3(1.f, 0.f, 0.f));
-    glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.xMove) * 0.005f, glm::vec3(0.f, 1.f, 0.f));
+    const float moveScale = 0.01f;
+
+    glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.yMove) * m_windowScale.y * moveScale, glm::vec3(1.f, 0.f, 0.f));
+    glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.xMove) * m_windowScale.x * moveScale, glm::vec3(0.f, 1.f, 0.f));
 
     auto& tx = entity.getComponent<cro::Transform>();
     auto rotation = yaw * tx.getRotationQuat() * pitch;
