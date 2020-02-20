@@ -152,5 +152,11 @@
     <ClInclude Include="src\ActorIDs.hpp">
       <Filter>Header Files\shared</Filter>
     </ClInclude>
+    <ClInclude Include="src\ServerLobbyState.hpp">
+      <Filter>Header Files\Server\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ServerGameState.hpp">
+      <Filter>Header Files\Server\states</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

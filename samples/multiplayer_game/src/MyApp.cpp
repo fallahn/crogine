@@ -49,10 +49,13 @@ void MyApp::handleEvent(const cro::Event& evt)
 		switch (evt.key.keysym.sym)
 		{
 		default: break;
+#ifdef CRO_DEBUG_
 		case SDLK_ESCAPE:
 		case SDLK_AC_BACK:
-            App::quit();
+			getWindow().setMouseCaptured(false);
+			App::quit();
 			break;
+#endif
 		}
 	}
 	

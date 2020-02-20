@@ -29,6 +29,7 @@ source distribution.
 
 #include "PlayerSystem.hpp"
 #include "CommonConsts.hpp"
+#include "ServerPacketData.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Constants.hpp>
@@ -52,14 +53,37 @@ void PlayerSystem::process(float)
     }
 }
 
-void PlayerSystem::reconcile(cro::Entity entity)
+void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
 {
-    //TODO apply position/rotation from
-    //server
-    //TODO rewind player's last input to timestamp and
-    //re-process all succeeding events
-    //TODO handle cases where requested timestamp has been pushed out the stack
-    processInput(entity);
+    if (entity.isValid())
+    {
+        auto& tx = entity.getComponent<cro::Transform>();
+        auto& player = entity.getComponent<Player>();
+
+        //rewind player's last input to timestamp and
+        //re-process all succeeding events
+        auto lastIndex = player.lastUpdatedInput;
+        while (player.inputStack[lastIndex].timeStamp > update.timestamp)
+        {
+            lastIndex = (lastIndex + (Player::HistorySize - 1)) % Player::HistorySize;
+
+            if (player.inputStack[lastIndex].timeStamp == player.inputStack[player.lastUpdatedInput].timeStamp)
+            {
+                //we've looped all the way around so the requested timestamp must
+                //be too far in the past... have to skip this update
+                //TODO we need t ohandle this more satisfactorily such as forcing a resync
+                cro::Logger::log("Requested timestamp too far in the past... potential desync!", cro::Logger::Type::Warning);
+                return;
+            }
+        }
+        player.lastUpdatedInput = lastIndex;
+
+        //apply position/rotation from server
+        tx.setPosition(update.position);
+        tx.setRotation(Util::decompressQuat(update.rotation));
+
+        processInput(entity);
+    }
 }
 
 //private

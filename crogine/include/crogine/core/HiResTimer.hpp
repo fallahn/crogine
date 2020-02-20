@@ -37,7 +37,7 @@ source distribution.
 namespace cro
 {
     /*!
-    \brief High Resolution Timer.
+    \brief High Reoslution Timer.
     Generally cro::Clock will suffice for millisecond accurate timing
     but when floating point values are used for representing seconds
     are required cro::Clock can lose precision. In these cases it's
@@ -45,7 +45,7 @@ namespace cro
     floatnig point precision.
     */
 
-    CRO_EXPORT_API class HiResTimer final
+    class CRO_EXPORT_API HiResTimer final
     {
     public:
         HiResTimer()

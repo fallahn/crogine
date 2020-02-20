@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/core/Console.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/SysTime.hpp>
+#include <crogine/core/HiResTimer.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/gui/imgui.h>
@@ -42,7 +43,6 @@ source distribution.
 #include <SDL_filesystem.h>
 
 #include "../detail/GLCheck.hpp"
-#include "../detail/HiResTimer.hpp"
 #include "../imgui/imgui_impl_opengl3.h"
 #include "../imgui/imgui_impl_sdl.h"
 
@@ -176,7 +176,7 @@ void App::run()
 	}
     
     
-    Detail::HiResTimer frameClock;
+    HiResTimer frameClock;
     m_frameClock = &frameClock;
     m_running = initialise();
 

@@ -27,7 +27,6 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-
 template <typename T, typename... Args>
 T& Scene::addSystem(Args&&... args)
 {

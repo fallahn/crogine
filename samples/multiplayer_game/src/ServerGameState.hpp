@@ -29,23 +29,36 @@ source distribution.
 
 #pragma once
 
-#include "CommonConsts.hpp"
 
-#include <crogine/detail/glm/vec3.hpp>
-#include <array>
+#include "ServerState.hpp"
 
-using CompressedQuat = std::array<std::int16_t, 4u>;
+#include <crogine/ecs/Scene.hpp>
 
-struct PlayerInfo final
+namespace Sv
 {
-    CompressedQuat rotation{};
-    glm::vec3 spawnPosition = glm::vec3(0.f);
-    std::uint8_t playerID = ConstVal::MaxClients;
-};
+    class GameState final : public State
+    {
+    public:
+        explicit GameState(SharedData&);
 
-struct PlayerUpdate final
-{
-    CompressedQuat rotation{};
-    glm::vec3 position = glm::vec3(0.f);
-    std::uint32_t timestamp = 0;
-};
+        void handleMessage(const cro::Message&) override;
+        void netEvent(const cro::NetEvent&) override;
+        void netBroadcast() override;
+        std::int32_t process(float) override;
+
+        std::int32_t stateID() const override { return StateID::Game; }
+
+    private:
+        std::int32_t m_returnValue;
+        SharedData& m_sharedData;
+
+        cro::Scene m_scene;
+        std::array<cro::Entity, ConstVal::MaxClients> m_playerEntities;
+
+        void sendInitialGameState(std::uint8_t);
+        void handlePlayerInput(const cro::NetEvent::Packet&);
+
+        void initScene();
+        void buildWorld();
+    };
+}

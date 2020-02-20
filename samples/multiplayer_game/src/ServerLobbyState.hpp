@@ -29,23 +29,23 @@ source distribution.
 
 #pragma once
 
-#include "CommonConsts.hpp"
+#include "ServerState.hpp"
 
-#include <crogine/detail/glm/vec3.hpp>
-#include <array>
-
-using CompressedQuat = std::array<std::int16_t, 4u>;
-
-struct PlayerInfo final
+namespace Sv
 {
-    CompressedQuat rotation{};
-    glm::vec3 spawnPosition = glm::vec3(0.f);
-    std::uint8_t playerID = ConstVal::MaxClients;
-};
+    class LobbyState final : public State
+    {
+    public:
+        explicit LobbyState(SharedData&);
 
-struct PlayerUpdate final
-{
-    CompressedQuat rotation{};
-    glm::vec3 position = glm::vec3(0.f);
-    std::uint32_t timestamp = 0;
-};
+        void handleMessage(const cro::Message&) override;
+        void netEvent(const cro::NetEvent&) override;
+        std::int32_t process(float) override;
+
+        std::int32_t stateID() const override { return StateID::Lobby; }
+
+    private:
+        std::int32_t m_returnValue;
+        SharedData& m_sharedData;
+    };
+}

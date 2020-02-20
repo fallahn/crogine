@@ -51,9 +51,9 @@ namespace cro
 	namespace Detail
 	{
 		class SDLResource;
-        class HiResTimer;
 	}
     class GuiClient;
+    class HiResTimer;
 
 	/*!
 	\brief Base class for crogine applications.
@@ -143,7 +143,7 @@ namespace cro
 
 		Window m_window;
 		Colour m_clearColour;
-        Detail::HiResTimer* m_frameClock;
+        HiResTimer* m_frameClock;
         bool m_running;
 
         void handleEvents();

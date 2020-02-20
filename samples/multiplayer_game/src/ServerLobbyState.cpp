@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "ServerState.hpp"
+#include "ServerLobbyState.hpp"
 
 #include <crogine/core/Log.hpp>
 
@@ -45,7 +45,12 @@ LobbyState::LobbyState(SharedData& sd)
     }
 }
 
-void LobbyState::netUpdate(const cro::NetEvent& evt)
+void LobbyState::handleMessage(const cro::Message&)
+{
+
+}
+
+void LobbyState::netEvent(const cro::NetEvent& evt)
 {
 
 }

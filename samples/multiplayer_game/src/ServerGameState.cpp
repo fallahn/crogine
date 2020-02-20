@@ -27,13 +27,17 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "ServerState.hpp"
+#include "ServerGameState.hpp"
 #include "PacketIDs.hpp"
 #include "CommonConsts.hpp"
 #include "ServerPacketData.hpp"
 #include "ClientPacketData.hpp"
+#include "PlayerSystem.hpp"
 
 #include <crogine/core/Log.hpp>
+
+#include<crogine/ecs/components/Transform.hpp>
+
 #include <crogine/detail/glm/vec3.hpp>
 
 using namespace Sv;
@@ -52,12 +56,20 @@ namespace
 
 GameState::GameState(SharedData& sd)
     : m_returnValue (StateID::Game),
-    m_sharedData    (sd)
+    m_sharedData    (sd),
+    m_scene         (sd.messageBus)
 {
+    initScene();
+    buildWorld();
     LOG("Entered Server Game State", cro::Logger::Type::Info);
 }
 
-void GameState::netUpdate(const cro::NetEvent& evt)
+void GameState::handleMessage(const cro::Message& msg)
+{
+    m_scene.forwardMessage(msg);
+}
+
+void GameState::netEvent(const cro::NetEvent& evt)
 {
     if (evt.type == cro::NetEvent::PacketReceived)
     {
@@ -77,8 +89,31 @@ void GameState::netUpdate(const cro::NetEvent& evt)
     }
 }
 
+void GameState::netBroadcast()
+{
+    //send reconciliation for each player
+    for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+    {
+        if (m_sharedData.clients[i].connected
+            && m_playerEntities[i].isValid())
+        {
+            const auto& player = m_playerEntities[i].getComponent<Player>();
+
+            PlayerUpdate update;
+            update.position = m_playerEntities[i].getComponent<cro::Transform>().getPosition();
+            update.rotation = Util::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotationQuat());
+            update.timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
+
+            m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::PlayerUpdate, update, cro::NetFlag::Unreliable);
+        }
+    }
+
+    //broadcast other actor transforms
+}
+
 std::int32_t GameState::process(float dt)
 {
+    m_scene.simulate(dt);
     return m_returnValue;
 }
 
@@ -93,8 +128,8 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
 
             PlayerInfo info;
             info.playerID = i;
-            info.spawnPosition = playerSpawns[i]; //TODO take this from actual player entity
-            //TODO include rotation?
+            info.spawnPosition = m_playerEntities[i].getComponent<cro::Transform>().getPosition();
+            info.rotation = Util::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotationQuat());
 
             m_sharedData.host.sendPacket(m_sharedData.clients[playerID].peer, PacketID::PlayerSpawn, info, cro::NetFlag::Reliable);
         }
@@ -107,6 +142,34 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
 void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
 {
     auto input = packet.as<InputUpdate>();
-    //TODO apply this to the correct player
+    CRO_ASSERT(m_playerEntities[input.playerID].isValid(), "Not a valid player!");
+    auto& player = m_playerEntities[input.playerID].getComponent<Player>();
+    player.inputStack[player.nextFreeInput] = input.input;
+    player.nextFreeInput = (player.nextFreeInput + 1) % Player::HistorySize;
+}
 
+void GameState::initScene()
+{
+    auto& mb = m_sharedData.messageBus;
+    m_scene.addSystem<PlayerSystem>(mb);
+
+
+}
+
+void GameState::buildWorld()
+{
+    for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+    {
+        if (m_sharedData.clients[i].connected)
+        {
+            //insert a player in this slot
+            //TODO get spawn position from generated world data
+            m_playerEntities[i] = m_scene.createEntity();
+            m_playerEntities[i].addComponent<cro::Transform>().setPosition(playerSpawns[i]);
+            m_playerEntities[i].getComponent<cro::Transform>().setRotation( //look at centre of the world
+                glm::quat_cast(glm::inverse(glm::lookAt(playerSpawns[i], glm::vec3(0.f), glm::vec3(0.f, 1.f,0.f)))));
+            m_playerEntities[i].addComponent<Player>().id = i;
+            m_playerEntities[i].getComponent<Player>().spawnPosition = playerSpawns[i];
+        }
+    }
 }

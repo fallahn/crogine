@@ -28,10 +28,13 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "Server.hpp"
+#include "ServerGameState.hpp"
+#include "ServerLobbyState.hpp"
 #include "PacketIDs.hpp"
 
 #include <crogine/core/Log.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/HiResTimer.hpp>
 
 #include <functional>
 
@@ -54,6 +57,12 @@ void Server::launch()
 {
     //stop any existing instance first
     stop();
+
+    //clear out any old messages
+    while (!m_sharedData.messageBus.empty())
+    {
+        m_sharedData.messageBus.poll();
+    }
 
     m_running = true;
     m_thread = std::make_unique<std::thread>(&Server::run, this);
@@ -85,16 +94,26 @@ void Server::run()
     m_currentState = std::make_unique<Sv::LobbyState>(m_sharedData);
     std::int32_t nextState = m_currentState->stateID();
 
-    const cro::Time frameTime = cro::milliseconds(50);
-    cro::Clock frameClock;
-    cro::Time accumulatedTime;
+    //network broadcasts are called less regularly
+    //that logic updates to the scene
+    const cro::Time netFrameTime = cro::milliseconds(50);
+    cro::Clock netFrameClock;
+    cro::Time netAccumulatedTime;
+
+    cro::HiResTimer updateClock;
+    float updateAccumulator = 0.f;
 
     while (m_running)
     {
+        while (!m_sharedData.messageBus.empty())
+        {
+            m_currentState->handleMessage(m_sharedData.messageBus.poll());
+        }
+
         cro::NetEvent evt;
         while(m_sharedData.host.pollEvent(evt))
         {
-            m_currentState->netUpdate(evt);
+            m_currentState->netEvent(evt);
         
             //handle connects / disconnects
             if (evt.type == cro::NetEvent::ClientConnect)
@@ -145,13 +164,23 @@ void Server::run()
             }
         }
 
-        accumulatedTime += frameClock.restart();
-        while (accumulatedTime > frameTime)
+        //network broadcasts
+        netAccumulatedTime += netFrameClock.restart();
+        while (netAccumulatedTime > netFrameTime)
         {
-            accumulatedTime -= frameTime;
-            nextState = m_currentState->process(frameTime.asSeconds());
+            netAccumulatedTime -= netFrameTime;
+            m_currentState->netBroadcast();
         }
 
+        //logic updates
+        updateAccumulator += updateClock.restart();
+        while (updateAccumulator > ConstVal::FixedGameUpdate)
+        {
+            updateAccumulator -= ConstVal::FixedGameUpdate;
+            nextState = m_currentState->process(ConstVal::FixedGameUpdate);
+        }
+
+        //switch state if last update returned a new state ID
         if (nextState != m_currentState->stateID())
         {
             switch (nextState)
@@ -166,7 +195,7 @@ void Server::run()
             }
 
             //mitigate large DT which may have built up while new state was loading.
-            frameClock.restart();
+            netFrameClock.restart();
         }
     }
 

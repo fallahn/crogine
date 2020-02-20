@@ -32,17 +32,22 @@ source distribution.
 #include "InputParser.hpp"
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 #include <array>
 
+struct PlayerUpdate;
 struct Player final
 {
-    static constexpr std::size_t HistorySize = 64;
+    //if we assume (and we should) 60 updates per second
+    //this will buffer 2 seconds worth of input
+    static constexpr std::size_t HistorySize = 120;
     std::array<Input, HistorySize> inputStack = {};
     std::size_t nextFreeInput = 0; //POST incremented after adding new input to history
     std::size_t lastUpdatedInput = HistorySize - 1; //index of the last parsed input
 
     std::uint8_t id = 4; //this should be the same as the ActorID for this entity
+    glm::vec3 spawnPosition = glm::vec3(0.f);
 };
 
 class PlayerSystem final : public cro::System
@@ -52,7 +57,7 @@ public:
 
     void process(float) override;
 
-    void reconcile(cro::Entity);
+    void reconcile(cro::Entity, const PlayerUpdate&);
 
 private:
     void processInput(cro::Entity);

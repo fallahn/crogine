@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/Director.hpp>
 #include <crogine/ecs/Sunlight.hpp>
+#include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/postprocess/PostProcess.hpp>
 

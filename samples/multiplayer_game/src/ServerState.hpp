@@ -33,6 +33,7 @@ source distribution.
 
 #include <crogine/network/NetData.hpp>
 #include <crogine/network/NetHost.hpp>
+#include <crogine/core/MessageBus.hpp>
 
 #include <cstdint>
 #include <array>
@@ -50,6 +51,7 @@ namespace Sv
     {
         cro::NetHost host;
         std::array<Sv::ClientConnection, ConstVal::MaxClients> clients;
+        cro::MessageBus messageBus;
     };
 
     namespace StateID
@@ -64,42 +66,17 @@ namespace Sv
     class State
     {
     public:
-        virtual void netUpdate(const cro::NetEvent&) = 0;
+        virtual ~State() = default;
+
+        virtual void handleMessage(const cro::Message&) = 0;
+
+        //handle incoming network events
+        virtual void netEvent(const cro::NetEvent&) = 0;
+        //broadcast network updates at 20Hz
+        virtual void netBroadcast() {};
+        //update scene logic at 62.5Hz (16ms)
         virtual std::int32_t process(float) = 0;
 
         virtual std::int32_t stateID() const = 0;
-    };
-
-    class LobbyState final : public State
-    {
-    public:
-        explicit LobbyState(SharedData&);
-
-        void netUpdate(const cro::NetEvent&) override;
-        std::int32_t process(float) override;
-
-        std::int32_t stateID() const override { return StateID::Lobby; }
-
-    private:
-        std::int32_t m_returnValue;
-        SharedData& m_sharedData;
-    };
-
-    class GameState final : public State
-    {
-    public:
-        explicit GameState(SharedData&);
-
-        void netUpdate(const cro::NetEvent&) override;
-        std::int32_t process(float) override;
-
-        std::int32_t stateID() const override { return StateID::Game; }
-
-    private:
-        std::int32_t m_returnValue;
-        SharedData& m_sharedData;
-
-        void sendInitialGameState(std::uint8_t);
-        void handlePlayerInput(const cro::NetEvent::Packet&);
     };
 }

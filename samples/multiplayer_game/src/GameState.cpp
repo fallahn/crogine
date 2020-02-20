@@ -227,22 +227,25 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         m_sharedData.clientConnection.ready = true;
         spawnPlayer(packet.as<PlayerInfo>());
         break;
+    case PacketID::PlayerUpdate:
+        //we assume we're only receiving our own
+        m_gameScene.getSystem<PlayerSystem>().reconcile(m_inputParser.getEntity(), packet.as<PlayerUpdate>());
+        break;
     }
 }
 
 void GameState::spawnPlayer(PlayerInfo info)
 {
-    if (info.playerID == m_sharedData.clientConnection.playerID)
+    if (info.playerID == m_sharedData.clientConnection.playerID
+        && !m_inputParser.getEntity().isValid())
     {
         //this is us
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
-
-        //TODO get rotation from server
-        auto rotation = glm::inverse(glm::lookAt(info.spawnPosition, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f)));
-        entity.getComponent<cro::Transform>().setRotation(glm::quat_cast(rotation));
+        entity.getComponent<cro::Transform>().setRotation(Util::decompressQuat(info.rotation));
 
         entity.addComponent<Player>().id = info.playerID;
+        entity.getComponent<Player>().spawnPosition = info.spawnPosition;
         entity.addComponent<cro::Camera>();
         playerEntity = entity;
         m_inputParser.setEntity(entity);
