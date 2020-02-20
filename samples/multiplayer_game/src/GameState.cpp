@@ -57,7 +57,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData    (sd),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
-    m_inputParser   (sd.clientConnection.netClient)
+    m_inputParser   (sd.clientConnection.netClient),
+    m_cameraPosIndex(0)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -101,6 +102,17 @@ bool GameState::handleEvent(const cro::Event& evt)
         || cro::Console::isVisible())
     {
         return true;
+    }
+
+    if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_F3:
+            updateCameraPosition();
+            break;
+        }
     }
 
     m_inputParser.handleEvent(evt);
@@ -241,25 +253,67 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
 
 void GameState::spawnPlayer(PlayerInfo info)
 {
+    //TODO move code up from below to share between conditions and make
+    //sure this function is not called twice on the same ID
+
     if (info.playerID == m_sharedData.clientConnection.playerID
         && !m_inputParser.getEntity().isValid())
     {
         //this is us
+
+
+        //TODO do we want to cache this model def?
+        cro::ModelDefinition modelDef;
+        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
+
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
         entity.getComponent<cro::Transform>().setRotation(Util::decompressQuat(info.rotation));
+        modelDef.createModel(entity, m_resources);
+        //TODO actor component
 
         entity.addComponent<Player>().id = info.playerID;
         entity.getComponent<Player>().spawnPosition = info.spawnPosition;
-        entity.addComponent<cro::Camera>();
         playerEntity = entity;
         m_inputParser.setEntity(entity);
 
+        auto& tx = entity.getComponent<cro::Transform>();
+
+        //add the camera as a child so we can change
+        //the perspective as necessary
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        tx.addChild(entity.getComponent<cro::Transform>());
+
+        entity.addComponent<cro::Camera>();
         m_gameScene.setActiveCamera(entity);
         updateView();
     }
     else
     {
         //spawn an avatar
+        //TODO check this avatar doesn't already exist
+        //TODO interpolation component
+        //TODO actor component
+    }
+}
+
+void GameState::updateCameraPosition()
+{
+    m_cameraPosIndex = (m_cameraPosIndex + 1) % 3;
+    auto& tx = m_gameScene.getActiveCamera().getComponent<cro::Transform>();
+    switch (m_cameraPosIndex)
+    {
+    default: break;
+    case 0:
+        tx.setRotation(glm::quat(1.f, 0.f, 0.f, 0.f));
+        tx.setOrigin(glm::vec3(0.f));
+        break;
+    case 1:
+        tx.setOrigin(glm::vec3(0.f, 0.f, -10.f)); //TODO update this once we settle on a scale (need smaller heads!)
+        break;
+    case 2:
+        tx.rotate(glm::vec3(0.f, 1.f, 0.f), cro::Util::Const::PI);
+        break;
     }
 }
