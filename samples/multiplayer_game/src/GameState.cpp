@@ -273,27 +273,32 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
 
 void GameState::spawnPlayer(PlayerInfo info)
 {
-    //TODO move code up from below to share between conditions and make
-    //sure this function is not called twice on the same ID
+    //TODO make sure this function is not called twice on the same ID
+
+
+    auto createActor = [&]()->cro::Entity
+    {
+        //TODO do we want to cache this model def?
+        cro::ModelDefinition modelDef;
+        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
+
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
+        entity.getComponent<cro::Transform>().setRotation(Util::decompressQuat(info.rotation));
+        modelDef.createModel(entity, m_resources);
+            
+        entity.addComponent<Actor>().id = info.playerID;
+        entity.getComponent<Actor>().serverEntityId = info.serverID;
+        return entity;
+    };
+
 
     if (info.playerID == m_sharedData.clientConnection.playerID)
     {
         if (!m_inputParser.getEntity().isValid())
         {
             //this is us
-
-
-            //TODO do we want to cache this model def?
-            cro::ModelDefinition modelDef;
-            modelDef.loadFromFile("assets/models/head.cmt", m_resources);
-
-            auto entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
-            entity.getComponent<cro::Transform>().setRotation(Util::decompressQuat(info.rotation));
-            modelDef.createModel(entity, m_resources);
-            
-            entity.addComponent<Actor>().id = info.playerID;
-            entity.getComponent<Actor>().serverEntityId = info.serverID;
+            auto entity = createActor();
 
             entity.addComponent<Player>().id = info.playerID;
             entity.getComponent<Player>().spawnPosition = info.spawnPosition;
@@ -317,19 +322,9 @@ void GameState::spawnPlayer(PlayerInfo info)
     {
         //spawn an avatar
         //TODO check this avatar doesn't already exist
-        //TODO interpolation component
-        //TODO put some of this shared code in own function with above
-        cro::ModelDefinition modelDef;
-        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
-
-        auto entity = m_gameScene.createEntity();
-        auto rotation = Util::decompressQuat(info.rotation);
-        entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
-        entity.getComponent<cro::Transform>().setRotation(rotation);
-        modelDef.createModel(entity, m_resources);
-
-        entity.addComponent<Actor>().id = info.playerID;
-        entity.getComponent<Actor>().serverEntityId = info.serverID;
+        
+        auto entity = createActor();
+        auto rotation = entity.getComponent<cro::Transform>().getRotationQuat();
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));

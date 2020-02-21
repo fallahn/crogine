@@ -248,5 +248,6 @@ void Server::removeClient(const cro::NetEvent& evt)
 
         //broadcast to all connected clients
         m_sharedData.host.broadcastPacket(PacketID::ClientDisconnected, evt.peer.getID(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        LOG("Client disconnected", cro::Logger::Type::Info);
     }
 }
