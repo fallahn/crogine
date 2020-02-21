@@ -112,13 +112,13 @@ void InputParser::handleEvent(const SDL_Event& evt)
         }
         break;
     case SDL_MOUSEMOTION:
-        if (evt.motion.xrel != 0)
+        //if (evt.motion.xrel != 0)
         {
-            m_mouseMoveX = evt.motion.xrel;
+            m_mouseMoveX += evt.motion.xrel;
         }
-        if (evt.motion.yrel != 0)
+        //if (evt.motion.yrel != 0)
         {
-            m_mouseMoveY = evt.motion.yrel;
+            m_mouseMoveY += evt.motion.yrel;
         }
         break;
     }

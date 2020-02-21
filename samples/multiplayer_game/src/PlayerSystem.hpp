@@ -64,9 +64,6 @@ public:
 
 private:
 
-    glm::vec2 m_windowScale; //< scale the mouse rel movement relative to the window size
-    void updateWindowScale(std::uint32_t, std::uint32_t);
-
     void processInput(cro::Entity);
     void processMovement(cro::Entity, Input);
     void processCollision(cro::Entity);

@@ -39,27 +39,16 @@ source distribution.
 
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(PlayerSystem)),
-    m_windowScale(1.f)
+    : cro::System(mb, typeid(PlayerSystem))
 {
     requireComponent<Player>();
     requireComponent<cro::Transform>();
-
-    auto size = cro::App::getWindow().getSize();
-    updateWindowScale(size.x, size.y);
 }
 
 //public
 void PlayerSystem::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == cro::Message::WindowMessage)
-    {
-        const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_RESIZED)
-        {
-            updateWindowScale(data.data0, data.data1);
-        }
-    }
+
 }
 
 void PlayerSystem::process(float)
@@ -105,11 +94,6 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
 }
 
 //private
-void PlayerSystem::updateWindowScale(std::uint32_t x, std::uint32_t y)
-{
-    m_windowScale = { static_cast<float>(x) / 1920.f, static_cast<float>(y) / 1080.f };
-}
-
 void PlayerSystem::processInput(cro::Entity entity)
 {
     auto& player = entity.getComponent<Player>();
@@ -129,10 +113,10 @@ void PlayerSystem::processInput(cro::Entity entity)
 
 void PlayerSystem::processMovement(cro::Entity entity, Input input)
 {
-    const float moveScale = 0.01f;
+    const float moveScale = 0.006f;
 
-    glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.yMove) * m_windowScale.y * moveScale, glm::vec3(1.f, 0.f, 0.f));
-    glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.xMove) * m_windowScale.x * moveScale, glm::vec3(0.f, 1.f, 0.f));
+    glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.yMove) * moveScale, glm::vec3(1.f, 0.f, 0.f));
+    glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.xMove) * moveScale, glm::vec3(0.f, 1.f, 0.f));
 
     auto& tx = entity.getComponent<cro::Transform>();
     auto rotation = yaw * tx.getRotationQuat() * pitch;
