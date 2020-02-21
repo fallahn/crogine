@@ -20,8 +20,8 @@ Models in crogine are described in a text format that can be loaded via the `Mod
         //Inter Quake Models - more about authoring those can be founde at http://sauerbraten.org/iqm/
 
         //primitive types are: sphere, cube and quad. Sphere meshes also expect a radius property with a float
-        //value greater an 0. Cubes are always 1x1x1 units in size (subject to change). Quads require two
-        //properties: size and uv. For example:
+        //value greater an 0. Cubes are 1x1x1 by default, but may have a size property with 3 components. 
+        //Quads require two properties: size and uv. For example:
         size = 2,3.4
         uv = 0.5,1
         //these are used to describe the size of the quad in x,y coordinates, as well as the UV coordinates used

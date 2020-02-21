@@ -111,7 +111,17 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     }
     else if (Util::String::toLower(meshValue) == "cube")
     {
-        meshBuilder = std::make_unique<CubeBuilder>();
+        glm::vec3 size(1.f);
+        if (auto sizeProp = cfg.findProperty("size"); sizeProp)
+        {
+            auto sizeValue = sizeProp->getValue<glm::vec3>();
+            if (sizeValue.x > 0 && sizeValue.y > 0 && sizeValue.z > 0)
+            {
+                size = sizeValue;
+            }
+        }
+
+        meshBuilder = std::make_unique<CubeBuilder>(size);
     }
     else if (Util::String::toLower(meshValue) == "quad")
     {

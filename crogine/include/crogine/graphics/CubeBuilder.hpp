@@ -39,8 +39,11 @@ namespace cro
     class CRO_EXPORT_API CubeBuilder final : public MeshBuilder
     {
     public:
+        explicit CubeBuilder(glm::vec3 = glm::vec3(1.f));
         std::size_t getUID() const override { return Mesh::ID::CubeMesh; }
     private:
+
+        glm::vec3 m_dimensions;
         Mesh::Data build() const override;
     };
 }
