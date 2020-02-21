@@ -90,24 +90,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_1:
-            if (!m_sharedData.clientConnection.connected)
-            {
-                m_sharedData.serverInstance.launch();
-                m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
-
-                if (!m_sharedData.clientConnection.connected)
-                {
-                    m_sharedData.serverInstance.stop();
-                    cro::Logger::log("Failed to connect to local server", cro::Logger::Type::Error);
-                }
-            }
+            
+            break;
+        case SDLK_2:
+            
             break;
         case SDLK_3:
-            if (m_sharedData.clientConnection.connected
-                && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
-            {
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-            }
+            
+            break;
+        case SDLK_4:
+
             break;
         }
     }
@@ -162,6 +154,118 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
+    registerWindow([&]() 
+        {
+            ImGui::SetNextWindowSize({ 400.f, 400.f });
+            if (ImGui::Begin("Main Menu"))
+            {
+                if (m_currentMenu == Main)
+                {
+                    if (ImGui::Button("Host"))
+                    {
+                        if (!m_sharedData.clientConnection.connected)
+                        {
+                            m_sharedData.serverInstance.launch();
+
+                            //small delay for server to get ready
+                            cro::Clock clock;
+                            while (clock.elapsed().asMilliseconds() < 500) {}
+
+                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+
+                            if (!m_sharedData.clientConnection.connected)
+                            {
+                                m_sharedData.serverInstance.stop();
+                                cro::Logger::log("Failed to connect to local server", cro::Logger::Type::Error);
+                            }
+                        }
+                    }
+
+                    if (ImGui::Button("Join"))
+                    {
+                        if (!m_sharedData.clientConnection.connected
+                            && !m_sharedData.serverInstance.running())
+                        {
+                            //switch to connection view
+                            cro::Command cmd;
+                            cmd.targetFlags = CommandID::RootNode;
+                            cmd.action = [](cro::Entity e, float)
+                            {
+                                e.getComponent<Slider>().destination = { (float)cro::DefaultSceneSize.x, 0.f, 0.f };
+                                e.getComponent<Slider>().active = true;
+                            };
+                            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                            m_currentMenu = Join;
+                        }
+                    }
+                }
+                else if (m_currentMenu == Join)
+                {
+                    static char buffer[20] = "127.0.0.1";
+                    ImGui::InputText("Address", buffer, 20);
+                    if (ImGui::Button("Connect"))
+                    {
+                        if (!m_sharedData.clientConnection.connected)
+                        {
+                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(buffer, ConstVal::GamePort);
+                            if (!m_sharedData.clientConnection.connected)
+                            {
+                                cro::Logger::log("Could not connect to server", cro::Logger::Type::Error);
+                            }
+                        }
+                    }
+
+                    if (ImGui::Button("Back"))
+                    {
+                        cro::Command cmd;
+                        cmd.targetFlags = CommandID::RootNode;
+                        cmd.action = [](cro::Entity e, float)
+                        {
+                            e.getComponent<Slider>().destination = glm::vec3(0.f);
+                            e.getComponent<Slider>().active = true;
+                        };
+                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                        m_sharedData.clientConnection.netClient.disconnect();
+                        m_sharedData.serverInstance.stop();
+                        m_sharedData.clientConnection.connected = false;
+                        m_currentMenu = Main;
+                    }
+                }
+                else
+                {
+                    //lobby
+                    if (ImGui::Button("Start"))
+                    {
+                        if (m_sharedData.clientConnection.connected
+                            && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
+                        {
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        }
+                    }
+
+                    if (ImGui::Button("Back"))
+                    {
+                        cro::Command cmd;
+                        cmd.targetFlags = CommandID::RootNode;
+                        cmd.action = [](cro::Entity e, float)
+                        {
+                            e.getComponent<Slider>().destination = glm::vec3(0.f);
+                            e.getComponent<Slider>().active = true;
+                        };
+                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                        m_sharedData.clientConnection.netClient.disconnect();
+                        m_sharedData.serverInstance.stop();
+                        m_sharedData.clientConnection.connected = false;
+                        m_currentMenu = Main;
+                    }
+                }
+
+            }
+            ImGui::End();        
+        });
+
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::RootNode;
@@ -171,7 +275,7 @@ void MenuState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 1000.f, 0.f });
     entity.addComponent<cro::Text>(m_font);
-    entity.getComponent<cro::Text>().setString("1. Host\n2. Join");
+    entity.getComponent<cro::Text>().setString("Main Menu");
     entity.getComponent<cro::Text>().setCharSize(40);
     entity.getComponent<cro::Text>().setColour(cro::Colour::White());
     rootTx.addChild(entity.getComponent<cro::Transform>());
@@ -180,7 +284,15 @@ void MenuState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f + cro::DefaultSceneSize.x, 1000.f, 0.f });
     entity.addComponent<cro::Text>(m_font);
-    entity.getComponent<cro::Text>().setString("3. Start\n4. Quit");
+    entity.getComponent<cro::Text>().setString("Lobby");
+    entity.getComponent<cro::Text>().setCharSize(40);
+    entity.getComponent<cro::Text>().setColour(cro::Colour::White());
+    rootTx.addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -(cro::DefaultSceneSize.x - 10.f), 1000.f, 0.f });
+    entity.addComponent<cro::Text>(m_font);
+    entity.getComponent<cro::Text>().setString("Join");
     entity.getComponent<cro::Text>().setCharSize(40);
     entity.getComponent<cro::Text>().setColour(cro::Colour::White());
     rootTx.addChild(entity.getComponent<cro::Transform>());
@@ -217,8 +329,19 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 };
                 m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
+                m_currentMenu = Lobby;
+
                 LOG("Successfully connected to server", cro::Logger::Type::Info);
             }
+            break;
+        case PacketID::ConnectionRefused:
+        {
+            std::string err = evt.packet.as<std::uint8_t>() == 0 ? "Server full" : "Game in progress";
+            cro::Logger::log("Connection refused: " + err, cro::Logger::Type::Error);
+
+            m_sharedData.clientConnection.netClient.disconnect();
+            m_sharedData.clientConnection.connected = false;
+        }
             break;
         }
     }
