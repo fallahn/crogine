@@ -33,6 +33,7 @@ source distribution.
 #include "ServerPacketData.hpp"
 #include "ClientPacketData.hpp"
 #include "PlayerSystem.hpp"
+#include "ActorSystem.hpp"
 
 #include <crogine/core/Log.hpp>
 
@@ -109,6 +110,23 @@ void GameState::netBroadcast()
     }
 
     //broadcast other actor transforms
+    auto timestamp = m_serverTime.elapsed().asMilliseconds();
+    const auto& actors = m_scene.getSystem<ActorSystem>().getEntities1();
+    for (auto e : actors)
+    {
+        const auto& actor = e.getComponent<Actor>();
+        const auto& tx = e.getComponent<cro::Transform>();
+
+        //TODO do we want to add a timestamp to this
+        //so clients can discard old packets?
+        ActorUpdate update;
+        update.actorID = actor.id;
+        update.serverID = actor.serverEntityId;
+        update.position = tx.getPosition();
+        update.rotation = Util::compressQuat(tx.getRotationQuat());
+        update.timestamp = timestamp;
+        m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, update, cro::NetFlag::Unreliable);
+    }
 }
 
 std::int32_t GameState::process(float dt)
@@ -130,6 +148,8 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
             info.playerID = i;
             info.spawnPosition = m_playerEntities[i].getComponent<cro::Transform>().getPosition();
             info.rotation = Util::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotationQuat());
+            info.serverID = m_playerEntities[i].getIndex();
+            info.timestamp = m_serverTime.elapsed().asMilliseconds();
 
             m_sharedData.host.sendPacket(m_sharedData.clients[playerID].peer, PacketID::PlayerSpawn, info, cro::NetFlag::Reliable);
         }
@@ -157,6 +177,8 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
 void GameState::initScene()
 {
     auto& mb = m_sharedData.messageBus;
+
+    m_scene.addSystem<ActorSystem>(mb);
     m_scene.addSystem<PlayerSystem>(mb);
 
 
@@ -173,9 +195,11 @@ void GameState::buildWorld()
             m_playerEntities[i] = m_scene.createEntity();
             m_playerEntities[i].addComponent<cro::Transform>().setPosition(playerSpawns[i]);
             m_playerEntities[i].getComponent<cro::Transform>().setRotation( //look at centre of the world
-                glm::quat_cast(glm::inverse(glm::lookAt(playerSpawns[i], glm::vec3(0.f), glm::vec3(0.f, 1.f,0.f)))));
+                glm::quat_cast(glm::inverse(glm::lookAt(playerSpawns[i], glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f)))));
             m_playerEntities[i].addComponent<Player>().id = i;
             m_playerEntities[i].getComponent<Player>().spawnPosition = playerSpawns[i];
+            m_playerEntities[i].addComponent<Actor>().id = i;
+            m_playerEntities[i].getComponent<Actor>().serverEntityId = m_playerEntities[i].getIndex();
         }
     }
 }

@@ -40,6 +40,8 @@ struct PlayerInfo final
 {
     CompressedQuat rotation{};
     glm::vec3 spawnPosition = glm::vec3(0.f);
+    std::uint32_t serverID = 0;
+    std::int32_t timestamp = 0;
     std::uint8_t playerID = ConstVal::MaxClients;
 };
 
@@ -48,4 +50,13 @@ struct PlayerUpdate final
     CompressedQuat rotation{};
     glm::vec3 position = glm::vec3(0.f);
     std::uint32_t timestamp = 0;
+};
+
+struct ActorUpdate final
+{
+    CompressedQuat rotation{};
+    glm::vec3 position = glm::vec3(0.f);
+    std::uint32_t serverID = 0;
+    std::int32_t timestamp = 0;
+    std::int8_t actorID = -1;
 };

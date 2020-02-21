@@ -31,18 +31,22 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "PlayerSystem.hpp"
 #include "PacketIDs.hpp"
+#include "ActorIDs.hpp"
+#include "ClientCommandIDs.hpp"
+#include "InterpolationSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 
+#include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/util/Constants.hpp>
-#include <crogine/gui/imgui.h>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
@@ -184,12 +188,11 @@ void GameState::render()
 void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_gameScene.addSystem<cro::CommandSystem>(mb);
+    m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
-
-
-
 }
 
 void GameState::loadAssets()
@@ -248,6 +251,23 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         //we assume we're only receiving our own
         m_gameScene.getSystem<PlayerSystem>().reconcile(m_inputParser.getEntity(), packet.as<PlayerUpdate>());
         break;
+    case PacketID::ActorUpdate:
+    {
+        auto update = packet.as<ActorUpdate>();
+        cro::Command cmd;
+        cmd.targetFlags = Client::CommandID::Interpolated;
+        cmd.action = [update](cro::Entity e, float)
+        {
+            if (e.isValid() &&
+                e.getComponent<Actor>().serverEntityId == update.serverID)
+            {
+                auto& interp = e.getComponent<InterpolationComponent>();
+                interp.setTarget({ update.position, Util::decompressQuat(update.rotation), update.timestamp });
+            }
+        };
+        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    }
+        break;
     }
 }
 
@@ -256,45 +276,63 @@ void GameState::spawnPlayer(PlayerInfo info)
     //TODO move code up from below to share between conditions and make
     //sure this function is not called twice on the same ID
 
-    if (info.playerID == m_sharedData.clientConnection.playerID
-        && !m_inputParser.getEntity().isValid())
+    if (info.playerID == m_sharedData.clientConnection.playerID)
     {
-        //this is us
+        if (!m_inputParser.getEntity().isValid())
+        {
+            //this is us
 
 
-        //TODO do we want to cache this model def?
-        cro::ModelDefinition modelDef;
-        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
+            //TODO do we want to cache this model def?
+            cro::ModelDefinition modelDef;
+            modelDef.loadFromFile("assets/models/head.cmt", m_resources);
 
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
-        entity.getComponent<cro::Transform>().setRotation(Util::decompressQuat(info.rotation));
-        modelDef.createModel(entity, m_resources);
-        //TODO actor component
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
+            entity.getComponent<cro::Transform>().setRotation(Util::decompressQuat(info.rotation));
+            modelDef.createModel(entity, m_resources);
+            
+            entity.addComponent<Actor>().id = info.playerID;
+            entity.getComponent<Actor>().serverEntityId = info.serverID;
 
-        entity.addComponent<Player>().id = info.playerID;
-        entity.getComponent<Player>().spawnPosition = info.spawnPosition;
-        playerEntity = entity;
-        m_inputParser.setEntity(entity);
+            entity.addComponent<Player>().id = info.playerID;
+            entity.getComponent<Player>().spawnPosition = info.spawnPosition;
+            playerEntity = entity;
+            m_inputParser.setEntity(entity);
 
-        auto& tx = entity.getComponent<cro::Transform>();
+            auto& tx = entity.getComponent<cro::Transform>();
 
-        //add the camera as a child so we can change
-        //the perspective as necessary
-        entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        tx.addChild(entity.getComponent<cro::Transform>());
+            //add the camera as a child so we can change
+            //the perspective as necessary
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            tx.addChild(entity.getComponent<cro::Transform>());
 
-        entity.addComponent<cro::Camera>();
-        m_gameScene.setActiveCamera(entity);
-        updateView();
+            entity.addComponent<cro::Camera>();
+            m_gameScene.setActiveCamera(entity);
+            updateView();
+        }
     }
     else
     {
         //spawn an avatar
         //TODO check this avatar doesn't already exist
         //TODO interpolation component
-        //TODO actor component
+        //TODO put some of this shared code in own function with above
+        cro::ModelDefinition modelDef;
+        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
+
+        auto entity = m_gameScene.createEntity();
+        auto rotation = Util::decompressQuat(info.rotation);
+        entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
+        entity.getComponent<cro::Transform>().setRotation(rotation);
+        modelDef.createModel(entity, m_resources);
+
+        entity.addComponent<Actor>().id = info.playerID;
+        entity.getComponent<Actor>().serverEntityId = info.serverID;
+
+        entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
+        entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
     }
 }
 

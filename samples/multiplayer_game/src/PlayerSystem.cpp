@@ -114,11 +114,19 @@ void PlayerSystem::processInput(cro::Entity entity)
 void PlayerSystem::processMovement(cro::Entity entity, Input input)
 {
     const float moveScale = 0.006f;
+    float pitchAmount = static_cast<float>(-input.yMove)* moveScale;
 
-    glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.yMove) * moveScale, glm::vec3(1.f, 0.f, 0.f));
-    glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.xMove) * moveScale, glm::vec3(0.f, 1.f, 0.f));
-
+    //TODO clamp pitch
     auto& tx = entity.getComponent<cro::Transform>();
+    //float oldPitch = tx.getRotation().x * cro::Util::Const::radToDeg;
+    //if (oldPitch < 135 || oldPitch > 215)
+    //{
+    //    pitchAmount -= pitchAmount;
+    //}
+
+    glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchAmount, glm::vec3(1.f, 0.f, 0.f));
+    glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.xMove) * moveScale, glm::vec3(0.f, 1.f, 0.f));
+    
     auto rotation = yaw * tx.getRotationQuat() * pitch;
     tx.setRotation(rotation);
 

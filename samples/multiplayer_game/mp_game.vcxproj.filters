@@ -55,6 +55,12 @@
     <Filter Include="Source Files\shared\systems">
       <UniqueIdentifier>{1df1d38d-e54b-4f71-b34e-6ad29415c76b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Server\systems">
+      <UniqueIdentifier>{2ac268f4-f2f7-478c-b05f-f0d5dc5e32f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Client\components">
+      <UniqueIdentifier>{fd2c8667-53fa-4313-ba76-5a51b1a31fac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -89,6 +95,12 @@
     </ClCompile>
     <ClCompile Include="src\PlayerSystem.cpp">
       <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InterpolationSystem.cpp">
+      <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InterpolationComponent.cpp">
+      <Filter>Source Files\Client\components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -157,6 +169,15 @@
     </ClInclude>
     <ClInclude Include="src\ServerGameState.hpp">
       <Filter>Header Files\Server\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ActorSystem.hpp">
+      <Filter>Header Files\Server\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ClientCommandIDs.hpp">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InterpolationSystem.hpp">
+      <Filter>Header Files\Client\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

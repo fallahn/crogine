@@ -156,6 +156,8 @@
   <ItemGroup>
     <ClCompile Include="src\GameState.cpp" />
     <ClCompile Include="src\InputParser.cpp" />
+    <ClCompile Include="src\InterpolationComponent.cpp" />
+    <ClCompile Include="src\InterpolationSystem.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\PlayerSystem.cpp" />
     <ClCompile Include="src\ServerLobbyState.cpp" />
@@ -168,12 +170,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ActorIDs.hpp" />
+    <ClInclude Include="src\ActorSystem.hpp" />
     <ClInclude Include="src\CircularBuffer.hpp" />
+    <ClInclude Include="src\ClientCommandIDs.hpp" />
     <ClInclude Include="src\ClientPacketData.hpp" />
     <ClInclude Include="src\CommonConsts.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\InputParser.hpp" />
+    <ClInclude Include="src\InterpolationSystem.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />

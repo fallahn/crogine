@@ -33,6 +33,7 @@ source distribution.
 #include "ServerState.hpp"
 
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/core/Clock.hpp>
 
 namespace Sv
 {
@@ -51,6 +52,8 @@ namespace Sv
     private:
         std::int32_t m_returnValue;
         SharedData& m_sharedData;
+
+        cro::Clock m_serverTime; //used in timestamping
 
         cro::Scene m_scene;
         std::array<cro::Entity, ConstVal::MaxClients> m_playerEntities;

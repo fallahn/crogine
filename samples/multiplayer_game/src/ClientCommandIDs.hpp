@@ -29,27 +29,10 @@ source distribution.
 
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
-
-//it is important that players 0 - 3 are listed first so that
-//they match the indices into data arrays pertinent to their client
-namespace ActorID
+namespace Client::CommandID
 {
-    //currently limited to 127, increase data size in update packet if more are needed
     enum
     {
-        None = -1,
-        PlayerOne = 0,
-        PlayerTwo,
-        PlayerThree,
-        PlayerFour
+        Interpolated = 0x1
     };
 }
-
-
-struct Actor final
-{
-    std::int32_t id = -1;
-    std::uint32_t serverEntityId = 0;
-};

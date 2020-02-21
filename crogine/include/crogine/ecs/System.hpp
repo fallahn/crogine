@@ -74,8 +74,10 @@ namespace cro
 
         /*!
         \brief Returns a list of entities that this system is currently interested in
+        TODO this is supposed to be a const overload but for some reason the compiler
+        keeps trying to pick the protected version...
         */
-        std::vector<Entity> getEntities() const;
+        const std::vector<Entity>& getEntities1() const;
 
         /*!
         \brief Adds an entity to the list to process
@@ -112,7 +114,7 @@ namespace cro
         template <typename T>
         void requireComponent();
 
-        std::vector<Entity>& getEntities() { return m_entities; }
+        std::vector<Entity>& getEntities();
 
         /*!
         \brief Optional callback performed when an entity is added

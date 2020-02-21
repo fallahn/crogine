@@ -29,27 +29,14 @@ source distribution.
 
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
+#include "ActorIDs.hpp"
 
-//it is important that players 0 - 3 are listed first so that
-//they match the indices into data arrays pertinent to their client
-namespace ActorID
+#include <crogine/ecs/System.hpp>
+
+class ActorSystem final : public cro::System
 {
-    //currently limited to 127, increase data size in update packet if more are needed
-    enum
-    {
-        None = -1,
-        PlayerOne = 0,
-        PlayerTwo,
-        PlayerThree,
-        PlayerFour
-    };
-}
+public:
+    explicit ActorSystem(cro::MessageBus& mb) : cro::System(mb, typeid(ActorSystem)) { requireComponent<Actor>(); }
 
-
-struct Actor final
-{
-    std::int32_t id = -1;
-    std::uint32_t serverEntityId = 0;
+    void process(float) override {}
 };
