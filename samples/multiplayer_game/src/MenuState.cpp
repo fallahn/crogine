@@ -110,6 +110,15 @@ bool MenuState::handleEvent(const cro::Event& evt)
 
 void MenuState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            updateView();
+        }
+    }
+
     m_scene.forwardMessage(msg);
 }
 
@@ -297,8 +306,14 @@ void MenuState::createScene()
     entity.getComponent<cro::Text>().setColour(cro::Colour::White());
     rootTx.addChild(entity.getComponent<cro::Transform>());
 
-    m_scene.getActiveCamera().getComponent<cro::Camera>().projectionMatrix = 
-        glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
+
+    //set a custom camera so the scene doesn't overwrite the viewport
+    //with the default view when resizing the window
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Camera>();
+    m_scene.setActiveCamera(entity);
+    updateView();
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)
@@ -345,4 +360,16 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             break;
         }
     }
+}
+
+void MenuState::updateView()
+{
+    glm::vec2 size(cro::App::getWindow().getSize());
+    size.y = ((size.x / 16.f) * 9.f) / size.y;
+    size.x = 1.f;
+
+    auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    cam.projectionMatrix = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
+    cam.viewport.bottom = (1.f - size.y) / 2.f;
+    cam.viewport.height = size.y;
 }

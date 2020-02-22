@@ -64,6 +64,8 @@ private:
 
     InputParser m_inputParser;
 
+    cro::Clock m_bitrateClock;
+
     void addSystems();
     void loadAssets();
     void createScene();

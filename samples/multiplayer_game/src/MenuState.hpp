@@ -87,4 +87,5 @@ private:
     void createScene();
 
     void handleNetEvent(const cro::NetEvent&);
+    void updateView();
 };

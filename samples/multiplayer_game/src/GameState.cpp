@@ -53,7 +53,8 @@ namespace
 {
     //for debug output
     cro::Entity playerEntity;
-
+    std::int32_t bitrate = 0;
+    std::int32_t bitrateCounter = 0;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -80,18 +81,23 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (playerEntity.isValid())
             {
-                ImGui::SetNextWindowSize({ 300.f, 120.f });
+                ImGui::SetNextWindowSize({ 300.f, 320.f });
                 ImGui::Begin("Info");
 
                 ImGui::Text("Player ID: %d", m_sharedData.clientConnection.playerID);
 
                 auto pos = playerEntity.getComponent<cro::Transform>().getPosition();
-                auto rotation = playerEntity.getComponent<cro::Transform>().getRotation() * cro::Util::Const::radToDeg;
+                auto rotation = playerEntity.getComponent<cro::Transform>().getRotation();// *cro::Util::Const::radToDeg;
                 ImGui::Text("Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
                 ImGui::Text("Rotation: %3.3f, %3.3f, %3.3f", rotation.x, rotation.y, rotation.z);
 
+                ImGui::Text("Pitch: %3.3f", playerEntity.getComponent<Player>().cameraPitch);
+
                 auto mouse = playerEntity.getComponent<Player>().inputStack[playerEntity.getComponent<Player>().lastUpdatedInput];
                 ImGui::Text("Mouse Movement: %d, %d", mouse.xMove, mouse.yMove);
+
+                ImGui::Separator();
+                ImGui::Text("Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
 
                 ImGui::End();
             }
@@ -155,8 +161,17 @@ bool GameState::simulate(float dt)
         {
             if (evt.type == cro::NetEvent::PacketReceived)
             {
+                bitrateCounter += evt.packet.getSize() * 8;
                 handlePacket(evt.packet);
             }
+        }
+
+        if (m_bitrateClock.elapsed().asMilliseconds() > 1000)
+        {
+            //TODO convert this to a moving average
+            m_bitrateClock.restart();
+            bitrate = bitrateCounter;
+            bitrateCounter = 0;
         }
     }
     else

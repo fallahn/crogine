@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 
@@ -113,25 +114,40 @@ void PlayerSystem::processInput(cro::Entity entity)
 
 void PlayerSystem::processMovement(cro::Entity entity, Input input)
 {
-    const float moveScale = 0.006f;
-    float pitchAmount = static_cast<float>(-input.yMove)* moveScale;
+    const float moveScale = 0.004f;
+    float pitchMove = static_cast<float>(-input.yMove)* moveScale;
 
-    //TODO clamp pitch
-    auto& tx = entity.getComponent<cro::Transform>();
-    //float oldPitch = tx.getRotation().x * cro::Util::Const::radToDeg;
-    //if (oldPitch < 135 || oldPitch > 215)
-    //{
-    //    pitchAmount -= pitchAmount;
-    //}
+    //clamp pitch
+    auto& player = entity.getComponent<Player>();
+    float newPitch = player.cameraPitch + pitchMove;
+    const float clamp = 1.4f;
+    if (newPitch > clamp)
+    {
+        pitchMove -= (newPitch - clamp);
+        player.cameraPitch = clamp;
+    }
+    else if (newPitch < -clamp)
+    {
+        pitchMove -= (newPitch + clamp);
+        player.cameraPitch = -clamp;
+    }
+    else
+    {
+        player.cameraPitch = newPitch;
+    }
 
-    glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchAmount, glm::vec3(1.f, 0.f, 0.f));
+    glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchMove, glm::vec3(1.f, 0.f, 0.f));
     glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.xMove) * moveScale, glm::vec3(0.f, 1.f, 0.f));
     
+    auto& tx = entity.getComponent<cro::Transform>();
     auto rotation = yaw * tx.getRotationQuat() * pitch;
-    tx.setRotation(rotation);
 
     glm::vec3 forwardVector = rotation * glm::vec3(0.f, 0.f, -1.f);
-    glm::vec3 rightVector = rotation * glm::vec3(1.f, 0.f, 0.f);
+    glm::vec3 rightVector = rotation* glm::vec3(1.f, 0.f, 0.f);
+
+    tx.setRotation(rotation);
+
+
 
     const float moveSpeed = 30.f * ConstVal::FixedGameUpdate;
     if (input.buttonFlags & Input::Forward)

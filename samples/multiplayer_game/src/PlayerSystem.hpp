@@ -49,6 +49,8 @@ struct Player final
 
     std::uint8_t id = 4; //this should be the same as the ActorID for this entity
     glm::vec3 spawnPosition = glm::vec3(0.f);
+
+    float cameraPitch = 0.f; //used to clamp camera
 };
 
 class PlayerSystem final : public cro::System
