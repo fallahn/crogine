@@ -30,6 +30,7 @@ source distribution.
 #include "Server.hpp"
 #include "ServerGameState.hpp"
 #include "ServerLobbyState.hpp"
+#include "ServerMessages.hpp"
 #include "PacketIDs.hpp"
 
 #include <crogine/core/Log.hpp>
@@ -221,7 +222,11 @@ std::uint8_t Server::addClient(const cro::NetEvent& evt)
 
             //broadcast to all connected clients
             //so they can update lobby view.
-            m_sharedData.host.broadcastPacket(PacketID::ClientConnected, evt.peer.getID(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::ClientConnected, i, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(Sv::MessageID::ConnectionMessage);
+            msg->playerID = i;
+            msg->type = ConnectionEvent::Connected;
 
             break;
         }
@@ -232,8 +237,6 @@ std::uint8_t Server::addClient(const cro::NetEvent& evt)
 
 void Server::removeClient(const cro::NetEvent& evt)
 {
-    LOG("Check this event has valid client ID", cro::Logger::Type::Info);
-
     auto result = std::find_if(m_sharedData.clients.begin(), m_sharedData.clients.end(), 
         [&evt](const Sv::ClientConnection& c) 
         {
@@ -246,8 +249,13 @@ void Server::removeClient(const cro::NetEvent& evt)
         result->peer = {};
         result->ready = false;
 
+        auto playerID = std::distance(m_sharedData.clients.begin(), result);
+        auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(Sv::MessageID::ConnectionMessage);
+        msg->playerID = static_cast<std::uint8_t>(playerID);
+        msg->type = ConnectionEvent::Disconnected;
+
         //broadcast to all connected clients
-        m_sharedData.host.broadcastPacket(PacketID::ClientDisconnected, evt.peer.getID(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::ClientDisconnected, static_cast<std::uint8_t>(playerID), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         LOG("Client disconnected", cro::Logger::Type::Info);
     }
 }

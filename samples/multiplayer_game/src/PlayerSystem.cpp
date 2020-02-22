@@ -148,8 +148,8 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
     tx.setRotation(rotation);
 
 
-
-    const float moveSpeed = 30.f * ConstVal::FixedGameUpdate;
+    //walking speed in metres per second (1 world unit == 1 metre)
+    const float moveSpeed = 1.6f * ConstVal::FixedGameUpdate;
     if (input.buttonFlags & Input::Forward)
     {
         tx.move(forwardVector * moveSpeed);

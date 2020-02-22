@@ -29,35 +29,21 @@ source distribution.
 
 #pragma once
 
-namespace MessageType
+#include <crogine/core/Message.hpp>
+
+namespace Sv::MessageID
 {
     enum
     {
-        ServerFull,
-        NotInLobby,
+        ConnectionMessage = cro::Message::Count
     };
 }
 
-namespace PacketID
+struct ConnectionEvent final
 {
+    std::uint8_t playerID = 4;
     enum
     {
-        //from server
-        ClientConnected, //< uint8 player ID
-        ClientDisconnected, //< uint8 player ID
-        ConnectionRefused, //< uint8 MessageType
-        ConnectionAccepted, //< uint8 assigned player ID (0-3)
-        StateChange, //< uint8 state ID
-
-        PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
-        PlayerUpdate, //< world pos, rotation, uint32 timestamp - used for reconciliation, send directly to targeted peer
-        ActorUpdate, //< uint8 ID pos, rotation - used for interpolation of other players and NPCs
-
-        EntityRemoved, //< uint32 entity ID
-
-        //from client
-        RequestGameStart,
-        ClientReady, //< uint8 playerID - requests game data from server. Sent repeatedly until ack'd
-        InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput)
-    };
-}
+        Connected, Disconnected
+    }type = Connected;
+};

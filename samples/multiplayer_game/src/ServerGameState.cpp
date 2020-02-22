@@ -34,6 +34,7 @@ source distribution.
 #include "ClientPacketData.hpp"
 #include "PlayerSystem.hpp"
 #include "ActorSystem.hpp"
+#include "ServerMessages.hpp"
 
 #include <crogine/core/Log.hpp>
 
@@ -67,6 +68,18 @@ GameState::GameState(SharedData& sd)
 
 void GameState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == Sv::MessageID::ConnectionMessage)
+    {
+        const auto& data = msg.getData<ConnectionEvent>();
+        if (data.type == ConnectionEvent::Disconnected)
+        {
+            auto entityID = m_playerEntities[data.playerID].getIndex();
+            m_scene.destroyEntity(m_playerEntities[data.playerID]);
+
+            m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+    }
+
     m_scene.forwardMessage(msg);
 }
 

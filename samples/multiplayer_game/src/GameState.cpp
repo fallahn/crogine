@@ -256,6 +256,21 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     switch (packet.getID())
     {
     default: break;
+    case PacketID::EntityRemoved:
+    {
+        auto entityID = packet.as<std::uint32_t>();
+        cro::Command cmd;
+        cmd.targetFlags = Client::CommandID::Interpolated;
+        cmd.action = [&,entityID](cro::Entity e, float)
+        {
+            if (e.getComponent<Actor>().serverEntityId == entityID)
+            {
+                m_gameScene.destroyEntity(e);
+            }
+        };
+        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    }
+        break;
     case PacketID::PlayerSpawn:
         //TODO we want to flag all these + world data
         //so we know to stop requesting world data
