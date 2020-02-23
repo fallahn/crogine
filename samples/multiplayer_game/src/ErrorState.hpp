@@ -30,54 +30,25 @@ source distribution.
 #pragma once
 
 #include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
-#include "InputParser.hpp"
-#include "ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/gui/GuiClient.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
-#include <crogine/network/NetData.hpp>
 
 struct SharedStateData;
-class GameState final : public cro::State, public cro::GuiClient
+class ErrorState final : public cro::State, public cro::GuiClient
 {
 public:
-    GameState(cro::StateStack&, cro::State::Context, SharedStateData&);
-    ~GameState() = default;
-
-    cro::StateID getStateID() const override { return States::Game; }
+    ErrorState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
     bool handleEvent(const cro::Event&) override;
+
     void handleMessage(const cro::Message&) override;
+
     bool simulate(float) override;
+
     void render() override;
 
+    cro::StateID getStateID() const override { return States::Error; }
+
 private:
-
-    SharedStateData& m_sharedData;
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-
-    cro::ResourceCollection m_resources;
-
-    InputParser m_inputParser;
-
-    cro::Clock m_bitrateClock; //< updates the bitrate display in the debug window
-    cro::Clock m_sceneRequestClock; //< spaces the request for initial scene data
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
-    void updateView();
-
-    void handlePacket(const cro::NetEvent::Packet&);
-    void spawnPlayer(PlayerInfo);
-
-
-    std::size_t m_cameraPosIndex;
-    void updateCameraPosition();//< switch 3rd to first person view etc
 };

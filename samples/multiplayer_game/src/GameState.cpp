@@ -41,7 +41,9 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
@@ -164,6 +166,11 @@ bool GameState::simulate(float dt)
                 bitrateCounter += evt.packet.getSize() * 8;
                 handlePacket(evt.packet);
             }
+            else if (evt.type == cro::NetEvent::ClientDisconnect)
+            {
+                m_sharedData.errorMessage = "Diconnected from server.";
+                requestStackPush(States::Error);
+            }
         }
 
         if (m_bitrateClock.elapsed().asMilliseconds() > 1000)
@@ -180,8 +187,10 @@ bool GameState::simulate(float dt)
     }
 
     //if we haven't had the server reply yet, tell it we're ready
-    if (!m_sharedData.clientConnection.ready)
+    if (!m_sharedData.clientConnection.ready
+        && m_sceneRequestClock.elapsed().asMilliseconds() > 1000)
     {
+        m_sceneRequestClock.restart();
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.playerID, cro::NetFlag::Unreliable);
     }
 
@@ -204,6 +213,7 @@ void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CommandSystem>(mb);
+    m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
@@ -303,19 +313,11 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
 
 void GameState::spawnPlayer(PlayerInfo info)
 {
-    //TODO make sure this function is not called twice on the same ID
-
-
     auto createActor = [&]()->cro::Entity
     {
-        //TODO do we want to cache this model def?
-        cro::ModelDefinition modelDef;
-        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
-
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
         entity.getComponent<cro::Transform>().setRotation(Util::decompressQuat(info.rotation));
-        modelDef.createModel(entity, m_resources);
             
         entity.addComponent<Actor>().id = info.playerID;
         entity.getComponent<Actor>().serverEntityId = info.serverID;
@@ -340,12 +342,14 @@ void GameState::spawnPlayer(PlayerInfo info)
             //add the camera as a child so we can change
             //the perspective as necessary
             entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Transform>().setOrigin(glm::vec3(0.f, -0.2f, 0.f));;
             tx.addChild(entity.getComponent<cro::Transform>());
 
             entity.addComponent<cro::Camera>();
             m_gameScene.setActiveCamera(entity);
             updateView();
+
+            //TODO create a head/body that only gets drawn in third person
         }
     }
     else
@@ -356,8 +360,36 @@ void GameState::spawnPlayer(PlayerInfo info)
         auto entity = createActor();
         auto rotation = entity.getComponent<cro::Transform>().getRotationQuat();
 
+        //TODO do we want to cache this model def?
+        cro::ModelDefinition modelDef;
+        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
+
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
+        modelDef.createModel(entity, m_resources);
+
+        auto headEnt = entity;
+
+        //body model
+        modelDef.loadFromFile("assets/models/body.cmt", m_resources);
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.55f, 0.f }); //TODO we need to get some sizes from the mesh - will AABB do?
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, headEnt](cro::Entity e, float)
+        {
+            //remove this entity if the head entity was removed
+            if (headEnt.destroyed())
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setPosition(headEnt.getComponent<cro::Transform>().getPosition());
+            }
+        };
+        modelDef.createModel(entity, m_resources);
     }
 }
 
@@ -370,7 +402,7 @@ void GameState::updateCameraPosition()
     default: break;
     case 0:
         tx.setRotation(glm::quat(1.f, 0.f, 0.f, 0.f));
-        tx.setOrigin(glm::vec3(0.f));
+        tx.setOrigin(glm::vec3(0.f, -0.2f, 0.f));
         break;
     case 1:
         tx.setOrigin(glm::vec3(0.f, 0.f, -10.f)); //TODO update this once we settle on a scale (need smaller heads!)

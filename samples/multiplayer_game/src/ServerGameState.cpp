@@ -49,10 +49,10 @@ namespace
     //TODO work out a better way to create spawn points
     const std::array<glm::vec3, ConstVal::MaxClients> playerSpawns =
     {
-        glm::vec3(-10.f, 5.f, -10.f),
-        glm::vec3(10.f, 5.f, -10.f),
-        glm::vec3(10.f, 5.f, 10.f),
-        glm::vec3(-10.f, 5.f, 10.f)
+        glm::vec3(-1.5f, 1.f, -1.5f),
+        glm::vec3(1.5f, 1.f, -1.5f),
+        glm::vec3(1.5f, 1.f, 1.5f),
+        glm::vec3(-1.5f, 1.f, 1.5f)
     };
 }
 
@@ -170,6 +170,9 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
 
 
     //TODO send map data to start building the world
+
+    //client said it was ready, so mark as ready
+    m_sharedData.clients[playerID].ready = true;
 }
 
 void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)

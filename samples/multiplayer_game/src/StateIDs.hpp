@@ -34,6 +34,7 @@ namespace States
 	enum ID
 	{
 		MainMenu,
-        Game
+        Game,
+		Error
 	};
 }

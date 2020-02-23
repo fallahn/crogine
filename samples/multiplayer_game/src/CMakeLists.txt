@@ -1,5 +1,6 @@
 
 set(PROJECT_SRC
+  ${PROJECT_DIR}/ErrorState.cpp
   ${PROJECT_DIR}/GameState.cpp
   ${PROJECT_DIR}/InputParser.cpp
   ${PROJECT_DIR}/InterpolationComponent.cpp

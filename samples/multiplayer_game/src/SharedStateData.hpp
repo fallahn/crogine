@@ -33,6 +33,8 @@ source distribution.
 
 #include <crogine/network/NetClient.hpp>
 
+#include <string>
+
 struct SharedStateData final
 {
     Server serverInstance;
@@ -44,4 +46,6 @@ struct SharedStateData final
         bool ready = false;
         std::uint8_t playerID = 4;
     }clientConnection;
+
+    std::string errorMessage;
 };

@@ -102,6 +102,9 @@
     <ClCompile Include="src\InterpolationComponent.cpp">
       <Filter>Source Files\Client\components</Filter>
     </ClCompile>
+    <ClCompile Include="src\ErrorState.cpp">
+      <Filter>Source Files\Client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -181,6 +184,9 @@
     </ClInclude>
     <ClInclude Include="src\ServerMessages.hpp">
       <Filter>Header Files\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ErrorState.hpp">
+      <Filter>Header Files\Client\states</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

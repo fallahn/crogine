@@ -30,6 +30,7 @@ source distribution.
 #include "MyApp.hpp"
 #include "GameState.hpp"
 #include "MenuState.hpp"
+#include "ErrorState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -39,6 +40,7 @@ MyApp::MyApp()
 {
     m_stateStack.registerState<MenuState>(States::ID::MainMenu, m_sharedData);
     m_stateStack.registerState<GameState>(States::ID::Game, m_sharedData);
+    m_stateStack.registerState<ErrorState>(States::ID::Error, m_sharedData);
 }
 
 //public
