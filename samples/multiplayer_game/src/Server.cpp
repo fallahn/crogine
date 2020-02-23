@@ -202,7 +202,12 @@ void Server::run()
 
     m_currentState.reset();
     //TODO clear all client data
-    //TODO force disconnect clients
+    
+    for (auto& c : m_sharedData.clients)
+    {
+        m_sharedData.host.disconnect(c.peer);
+    }
+
     m_sharedData.host.stop();
 
     LOG("Server quit", cro::Logger::Type::Info);

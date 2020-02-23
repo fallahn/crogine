@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
+#include <crogine/ecs/Scene.hpp>
+
 struct SharedStateData;
 class ErrorState final : public cro::State, public cro::GuiClient
 {
@@ -51,4 +53,10 @@ public:
     cro::StateID getStateID() const override { return States::Error; }
 
 private:
+
+    cro::Scene m_scene;
+    cro::Texture m_backgroundTexture;
+
+    void buildScene();
+    void updateView();
 };

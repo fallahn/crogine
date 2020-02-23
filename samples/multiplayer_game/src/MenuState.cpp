@@ -90,7 +90,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_1:
-            
+
             break;
         case SDLK_2:
             

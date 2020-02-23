@@ -212,3 +212,12 @@ void NetHost::sendPacket(const NetPeer& peer, uint32 id, void* data, std::size_t
         enet_peer_send(peer.m_peer, channel, createPacket(id, data, size, flags));
     }
 }
+
+void NetHost::disconnect(NetPeer& peer)
+{
+    if (m_host && peer.m_peer)
+    {
+        enet_peer_disconnect(peer.m_peer, 0);
+        peer.m_peer = nullptr;
+    }
+}

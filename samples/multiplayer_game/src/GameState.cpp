@@ -168,7 +168,7 @@ bool GameState::simulate(float dt)
             }
             else if (evt.type == cro::NetEvent::ClientDisconnect)
             {
-                m_sharedData.errorMessage = "Diconnected from server.";
+                m_sharedData.errorMessage = "Disconnected from server.";
                 requestStackPush(States::Error);
             }
         }

@@ -153,6 +153,11 @@ namespace cro
         void sendPacket(const NetPeer& peer, uint32 id, void* data, std::size_t size, NetFlag flags, uint8 channel = 0);
 
 
+        /*!
+        \brief Disconnects the given peer from this host, if it is valid
+        */
+        void disconnect(NetPeer& peer);
+
     private:
 
         _ENetHost* m_host;

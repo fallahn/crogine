@@ -32,9 +32,19 @@ source distribution.
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/core/Window.hpp>
+#include <crogine/detail/GlobalConsts.hpp>
+#include <crogine/graphics/Image.hpp>
+
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/systems/SpriteRenderer.hpp>
+
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 ErrorState::ErrorState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State(ss, ctx)
+    : cro::State(ss, ctx),
+    m_scene     (ctx.appInstance.getMessageBus())
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -62,25 +72,76 @@ ErrorState::ErrorState(cro::StateStack& ss, cro::State::Context ctx, SharedState
             ImGui::End();
         
         });
+
+    buildScene();
 }
 
 //public
-bool ErrorState::handleEvent(const cro::Event&)
+bool ErrorState::handleEvent(const cro::Event& evt)
 {
+    m_scene.forwardEvent(evt);
     return false;
 }
 
-void ErrorState::handleMessage(const cro::Message&)
+void ErrorState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            updateView();
+        }
+    }
 
+    m_scene.forwardMessage(msg);
 }
 
-bool ErrorState::simulate(float)
+bool ErrorState::simulate(float dt)
 {
+    m_scene.simulate(dt);
     return false;
 }
 
 void ErrorState::render()
 {
+    m_scene.render();
+}
 
+//private
+void ErrorState::buildScene()
+{
+    auto& mb = getContext().appInstance.getMessageBus();
+    m_scene.addSystem<cro::SpriteRenderer>(mb);
+
+    cro::Image img;
+    img.create(2, 2, cro::Colour(std::uint8_t(0),0u,0u,120u));
+
+    m_backgroundTexture.create(2, 2);
+    m_backgroundTexture.update(img.getPixelData());
+
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setScale({ cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y / 2.f, 1.f });
+    entity.getComponent<cro::Transform>().setPosition({ -(cro::DefaultSceneSize.x / 2.f), -(cro::DefaultSceneSize.y / 2.f), 0.f });
+    entity.addComponent<cro::Sprite>().setTexture(m_backgroundTexture);
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Camera>();
+
+    m_scene.setActiveCamera(entity);
+
+    updateView();
+}
+
+void ErrorState::updateView()
+{
+    glm::vec2 size(cro::App::getWindow().getSize());
+    size.y = ((size.x / 16.f) * 9.f) / size.y;
+    size.x = 1.f;
+
+    auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    cam.projectionMatrix = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
+    cam.viewport.bottom = (1.f - size.y) / 2.f;
+    cam.viewport.height = size.y;
 }
