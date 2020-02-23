@@ -68,6 +68,13 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
         auto& tx = entity.getComponent<cro::Transform>();
         auto& player = entity.getComponent<Player>();
 
+        player.cameraPitch = Util::decompressFloat(update.pitch);
+        player.cameraYaw = Util::decompressFloat(update.yaw);
+
+        //apply position/rotation from server
+        tx.setPosition(update.position);
+        tx.setRotation(Util::decompressQuat(update.rotation));
+
         //rewind player's last input to timestamp and
         //re-process all succeeding events
         auto lastIndex = player.lastUpdatedInput;
@@ -79,16 +86,23 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
             {
                 //we've looped all the way around so the requested timestamp must
                 //be too far in the past... have to skip this update
-                //TODO we need t ohandle this more satisfactorily such as forcing a resync
+                
+                //setting the resync flag temporarily ignores input
+                //so that the client remains in place until the next update comes
+                //in to guarantee input/position etc match
+                player.waitResync = true;
                 cro::Logger::log("Requested timestamp too far in the past... potential desync!", cro::Logger::Type::Warning);
                 return;
             }
         }
         player.lastUpdatedInput = lastIndex;
 
-        //apply position/rotation from server
-        tx.setPosition(update.position);
-        tx.setRotation(Util::decompressQuat(update.rotation));
+        auto lastInput = player.inputStack[player.lastUpdatedInput];
+        if (lastInput.buttonFlags == 0
+            && lastInput.xMove == 0 && lastInput.yMove == 0)
+        {
+            player.waitResync = false;
+        }
 
         processInput(entity);
     }
@@ -116,6 +130,7 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
 {
     const float moveScale = 0.004f;
     float pitchMove = static_cast<float>(-input.yMove)* moveScale;
+    float yawMove = static_cast<float>(-input.xMove)* moveScale;
 
     //clamp pitch
     auto& player = entity.getComponent<Player>();
@@ -136,20 +151,30 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
         player.cameraPitch = newPitch;
     }
 
+    player.cameraYaw += yawMove;
+
     glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchMove, glm::vec3(1.f, 0.f, 0.f));
-    glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), static_cast<float>(-input.xMove) * moveScale, glm::vec3(0.f, 1.f, 0.f));
+    glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yawMove, glm::vec3(0.f, 1.f, 0.f));
     
     auto& tx = entity.getComponent<cro::Transform>();
     auto rotation = yaw * tx.getRotationQuat() * pitch;
-
-    glm::vec3 forwardVector = rotation * glm::vec3(0.f, 0.f, -1.f);
-    glm::vec3 rightVector = rotation* glm::vec3(1.f, 0.f, 0.f);
-
     tx.setRotation(rotation);
 
+    
+    //we only want to rotate around the yaw when walking
+    rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), player.cameraYaw, glm::vec3(0.f, 1.f, 0.f));
+    glm::vec3 forwardVector = rotation * glm::vec3(0.f, 0.f, -1.f);
+    glm::vec3 rightVector = rotation* glm::vec3(1.f, 0.f, 0.f);
+    
 
     //walking speed in metres per second (1 world unit == 1 metre)
-    const float moveSpeed = 1.6f * ConstVal::FixedGameUpdate;
+    float moveSpeed = 1.6f * ConstVal::FixedGameUpdate;
+
+    if (player.flyMode)
+    {
+        moveSpeed *= 5.f;
+    }
+
     if (input.buttonFlags & Input::Forward)
     {
         tx.move(forwardVector * moveSpeed);
@@ -166,6 +191,18 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
     if (input.buttonFlags & Input::Right)
     {
         tx.move(rightVector * moveSpeed);
+    }
+
+    if (player.flyMode)
+    {
+        if (input.buttonFlags & Input::Jump)
+        {
+            tx.move(glm::vec3(0.f, 1.f, 0.f) * moveSpeed);
+        }
+        if (input.buttonFlags & Input::Crouch)
+        {
+            tx.move(glm::vec3(0.f, -1.f, 0.f) * moveSpeed);
+        }
     }
 }
 

@@ -69,4 +69,14 @@ namespace Util
 
         return /*glm::normalize*/(glm::quat(w, x, y, z));
     }
+
+    static inline std::int16_t compressFloat(float f)
+    {
+        return static_cast<std::int16_t>(f * 10000.f);
+    }
+
+    static inline float decompressFloat(std::int16_t i)
+    {
+        return static_cast<float>(i) / 10000.f;
+    }
 }

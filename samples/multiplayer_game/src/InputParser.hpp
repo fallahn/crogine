@@ -49,8 +49,8 @@ struct Input final
         Right = 0x8,
         LeftMouse = 0x10,
         RightMouse = 0x20,
-
-        //potentially jump, up, and down
+        Crouch = 0x40,
+        Jump = 0x80
     };
 
     std::uint32_t timeStamp = 0;

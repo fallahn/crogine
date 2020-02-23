@@ -39,7 +39,7 @@ source distribution.
 #include <crogine/core/Log.hpp>
 
 #include<crogine/ecs/components/Transform.hpp>
-
+#include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 using namespace Sv;
@@ -116,6 +116,8 @@ void GameState::netBroadcast()
             PlayerUpdate update;
             update.position = m_playerEntities[i].getComponent<cro::Transform>().getPosition();
             update.rotation = Util::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotationQuat());
+            update.pitch = Util::compressFloat(player.cameraPitch);
+            update.yaw = Util::compressFloat(player.cameraYaw);
             update.timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
 
             m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::PlayerUpdate, update, cro::NetFlag::Unreliable);
@@ -130,8 +132,6 @@ void GameState::netBroadcast()
         const auto& actor = e.getComponent<Actor>();
         const auto& tx = e.getComponent<cro::Transform>();
 
-        //TODO do we want to add a timestamp to this
-        //so clients can discard old packets?
         ActorUpdate update;
         update.actorID = actor.id;
         update.serverID = actor.serverEntityId;
@@ -208,12 +208,14 @@ void GameState::buildWorld()
         {
             //insert a player in this slot
             //TODO get spawn position from generated world data
+            //TODO figure out how to get correct initial pitch/yaw from any rotation other than 0
             m_playerEntities[i] = m_scene.createEntity();
             m_playerEntities[i].addComponent<cro::Transform>().setPosition(playerSpawns[i]);
-            m_playerEntities[i].getComponent<cro::Transform>().setRotation( //look at centre of the world
-                glm::quat_cast(glm::inverse(glm::lookAt(playerSpawns[i], glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f)))));
+            //m_playerEntities[i].getComponent<cro::Transform>().setRotation( //look at centre of the world
+            //    glm::quat_cast(glm::inverse(glm::lookAt(playerSpawns[i], glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f)))));
             m_playerEntities[i].addComponent<Player>().id = i;
             m_playerEntities[i].getComponent<Player>().spawnPosition = playerSpawns[i];
+            //m_playerEntities[i].getComponent<Player>().cameraYaw = m_playerEntities[i].getComponent<cro::Transform>().getRotation().y;
             m_playerEntities[i].addComponent<Actor>().id = i;
             m_playerEntities[i].getComponent<Actor>().serverEntityId = m_playerEntities[i].getIndex();
         }

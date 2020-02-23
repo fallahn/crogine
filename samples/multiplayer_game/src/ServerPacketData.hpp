@@ -49,6 +49,8 @@ struct PlayerUpdate final
 {
     CompressedQuat rotation{};
     glm::vec3 position = glm::vec3(0.f);
+    std::int16_t pitch = 0;
+    std::int16_t yaw = 0;
     std::uint32_t timestamp = 0;
 };
 

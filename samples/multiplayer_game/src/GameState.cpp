@@ -94,11 +94,14 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::Text("Rotation: %3.3f, %3.3f, %3.3f", rotation.x, rotation.y, rotation.z);
 
                 ImGui::Text("Pitch: %3.3f", playerEntity.getComponent<Player>().cameraPitch);
+                ImGui::Text("Yaw: %3.3f", playerEntity.getComponent<Player>().cameraYaw);
 
                 auto mouse = playerEntity.getComponent<Player>().inputStack[playerEntity.getComponent<Player>().lastUpdatedInput];
                 ImGui::Text("Mouse Movement: %d, %d", mouse.xMove, mouse.yMove);
 
+                ImGui::NewLine();
                 ImGui::Separator();
+                ImGui::NewLine();
                 ImGui::Text("Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
 
                 ImGui::End();
@@ -332,8 +335,19 @@ void GameState::spawnPlayer(PlayerInfo info)
             //this is us
             auto entity = createActor();
 
+            auto rotation = entity.getComponent<cro::Transform>().getRotation();
+            auto pitch = rotation.x;
+            if (pitch > (cro::Util::Const::PI / 2.f))
+            {
+                pitch -= cro::Util::Const::PI;
+            }
+            
             entity.addComponent<Player>().id = info.playerID;
             entity.getComponent<Player>().spawnPosition = info.spawnPosition;
+            //entity.getComponent<Player>().cameraPitch = pitch;
+            //entity.getComponent<Player>().cameraYaw = rotation.y;
+
+
             playerEntity = entity;
             m_inputParser.setEntity(entity);
 

@@ -51,6 +51,10 @@ struct Player final
     glm::vec3 spawnPosition = glm::vec3(0.f);
 
     float cameraPitch = 0.f; //used to clamp camera
+    float cameraYaw = 0.f; //used to calc forward vector
+
+    bool flyMode = true;
+    bool waitResync = false; //waiting to resync player with server
 };
 
 class PlayerSystem final : public cro::System

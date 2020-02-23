@@ -67,6 +67,12 @@ void InputParser::handleEvent(const SDL_Event& evt)
         case SDLK_d:
             m_inputFlags |= Input::Right;
             break;
+        case SDLK_SPACE:
+            m_inputFlags |= Input::Jump;
+            break;
+        case SDLK_LCTRL:
+            m_inputFlags |= Input::Crouch;
+            break;
         }
         break;
     case SDL_KEYUP:
@@ -84,6 +90,12 @@ void InputParser::handleEvent(const SDL_Event& evt)
             break;
         case SDLK_d:
             m_inputFlags &= ~Input::Right;
+            break;
+        case SDLK_SPACE:
+            m_inputFlags &= ~Input::Jump;
+            break;
+        case SDLK_LCTRL:
+            m_inputFlags &= ~Input::Crouch;
             break;
         }
         break;
@@ -129,14 +141,18 @@ void InputParser::update()
 {
     if (m_entity.isValid())
     {
+        auto& player = m_entity.getComponent<Player>();
+
         Input input;
-        input.buttonFlags = m_inputFlags;
-        input.xMove = static_cast<std::uint8_t>(m_mouseMoveX);
-        input.yMove = static_cast<std::uint8_t>(m_mouseMoveY);
+        if (!player.waitResync)
+        {
+            input.buttonFlags = m_inputFlags;
+            input.xMove = static_cast<std::uint8_t>(m_mouseMoveX);
+            input.yMove = static_cast<std::uint8_t>(m_mouseMoveY);
+        }
         input.timeStamp = m_timestampClock.elapsed().asMilliseconds();
 
         //apply to local entity
-        auto& player = m_entity.getComponent<Player>();
         player.inputStack[player.nextFreeInput] = input;
         player.nextFreeInput = (player.nextFreeInput + 1) % Player::HistorySize;
 
