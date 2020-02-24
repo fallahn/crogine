@@ -36,3 +36,12 @@ struct InputUpdate final
     Input input;
     std::uint8_t playerID = 4;
 };
+
+//client is requesting a command (see CommandPacket enum)
+//on the target player. Server may reject this if client
+//not privileged enough
+struct ServerCommand final
+{
+    std::uint8_t commandID = 0;
+    std::uint8_t target = 4;
+};

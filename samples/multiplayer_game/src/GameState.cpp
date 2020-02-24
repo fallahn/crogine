@@ -34,6 +34,7 @@ source distribution.
 #include "ActorIDs.hpp"
 #include "ClientCommandIDs.hpp"
 #include "InterpolationSystem.hpp"
+#include "ClientPacketData.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -77,6 +78,36 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     updateView();
     context.mainWindow.setMouseCaptured(true);
     sd.clientConnection.ready = false;
+
+    //console commands
+    registerCommand("sv_playermode", 
+        [&](const std::string& params)
+        {
+            if (!params.empty())
+            {
+                ServerCommand cmd;
+                cmd.target = 0;
+
+                if (params == "fly")
+                {
+                    cmd.commandID = CommandPacket::SetModeFly;
+                }
+                else if (params == "walk")
+                {
+                    cmd.commandID = CommandPacket::SetModeWalk;
+                }
+                else
+                {
+                    cro::Console::print(params + ": unknown parameter.");
+                    return;
+                }
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, cmd, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            else
+            {
+                cro::Console::print("Missing parameter. Usage: sv_playermode <mode>");
+            }
+        });
 
     //debug output
     registerWindow([&]()
@@ -125,8 +156,27 @@ bool GameState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_F3:
+            //first/third person camera
             updateCameraPosition();
             break;
+#ifdef CRO_DEBUG_
+        case SDLK_1:
+        {
+            ServerCommand cmd;
+            cmd.target = 0;
+            cmd.commandID = CommandPacket::SetModeWalk;
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, cmd, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+            break;
+        case SDLK_2:
+        {
+            ServerCommand cmd;
+            cmd.target = 0;
+            cmd.commandID = CommandPacket::SetModeFly;
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, cmd, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+        break;
+#endif //CRO_DEBUG_
         }
     }
 
@@ -311,6 +361,27 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
         break;
+    case PacketID::ServerCommand:
+    {
+        auto data = packet.as<ServerCommand>();
+        auto playerEnt = m_inputParser.getEntity();
+        if (playerEnt.isValid() && playerEnt.getComponent<Player>().id == data.target)
+        {
+            switch (data.commandID)
+            {
+            default: break;
+            case CommandPacket::SetModeFly:
+                playerEnt.getComponent<Player>().flyMode = true;
+                cro::Logger::log("Server set mode to fly", cro::Logger::Type::Info);
+                break;
+            case CommandPacket::SetModeWalk:
+                playerEnt.getComponent<Player>().flyMode = false;
+                cro::Logger::log("Server set mode to walk", cro::Logger::Type::Info);
+                break;
+            }
+        }
+    }
+    break;
     }
 }
 

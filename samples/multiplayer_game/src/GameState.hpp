@@ -35,13 +35,14 @@ source distribution.
 #include "ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/core/ConsoleClient.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ResourceAutomation.hpp>
 #include <crogine/network/NetData.hpp>
 
 struct SharedStateData;
-class GameState final : public cro::State, public cro::GuiClient
+class GameState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
     GameState(cro::StateStack&, cro::State::Context, SharedStateData&);

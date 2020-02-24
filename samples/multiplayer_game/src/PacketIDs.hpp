@@ -38,6 +38,15 @@ namespace MessageType
     };
 }
 
+namespace CommandPacket
+{
+    enum
+    {
+        SetModeFly,
+        SetModeWalk
+    };
+}
+
 namespace PacketID
 {
     enum
@@ -59,5 +68,9 @@ namespace PacketID
         RequestGameStart,
         ClientReady, //< uint8 playerID - requests game data from server. Sent repeatedly until ack'd
         InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput)
+
+
+        //both directions
+        ServerCommand, //< ServerCommand struct - requests server perform some action (may be ignored by server), forwarded to target client if successful
     };
 }

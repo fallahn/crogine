@@ -99,6 +99,9 @@ void GameState::netEvent(const cro::NetEvent& evt)
         case PacketID::InputUpdate:
             handlePlayerInput(evt.packet);
             break;
+        case PacketID::ServerCommand:
+            doServerCommand(evt);
+            break;
         }
     }
 }
@@ -188,6 +191,37 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
         player.inputStack[player.nextFreeInput] = input.input;
         player.nextFreeInput = (player.nextFreeInput + 1) % Player::HistorySize;
     }
+}
+
+void GameState::doServerCommand(const cro::NetEvent& evt)
+{
+    //TODO validate this sender has permission to request commands
+    //by checking evt peer against client data
+
+    auto data = evt.packet.as<ServerCommand>();
+    if (data.target < m_sharedData.clients.size()
+        && m_sharedData.clients[data.target].connected)
+    {
+        switch (data.commandID)
+        {
+        default: break;
+        case CommandPacket::SetModeFly:
+            if (m_playerEntities[data.target].isValid())
+            {
+                m_playerEntities[data.target].getComponent<Player>().flyMode = true;
+                m_sharedData.host.sendPacket(m_sharedData.clients[data.target].peer, PacketID::ServerCommand, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        case CommandPacket::SetModeWalk:
+            if (m_playerEntities[data.target].isValid())
+            {
+                m_playerEntities[data.target].getComponent<Player>().flyMode = false;
+                m_sharedData.host.sendPacket(m_sharedData.clients[data.target].peer, PacketID::ServerCommand, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        }
+    }
+
 }
 
 void GameState::initScene()
