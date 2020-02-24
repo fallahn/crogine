@@ -74,7 +74,7 @@ namespace
 
         void main()
         {    
-            float mixAmount = smoothstep(0.4, 0.44, (v_texCoords.y + 1.0) / 2.0);
+            float mixAmount = smoothstep(0.4, 0.44, v_texCoords.y + 0.5);
             FRAG_OUT = vec4(mix(darkColour, lightColour, mixAmount), 1.0);
         })";
     const std::string skyboxFragTextured =
@@ -121,7 +121,7 @@ Scene::Scene(MessageBus& mb)
     m_activeCamera = m_defaultCamera;
     m_activeListener = m_defaultCamera;
 
-    currentRenderPath = std::bind(&Scene::defaultRenderPath, this);
+    currentRenderPath = std::bind(&Scene::defaultRenderPath, this, std::placeholders::_1);
 }
 
 Scene::~Scene()
@@ -175,7 +175,7 @@ void Scene::setPostEnabled(bool enabled)
 {
     if (enabled && !m_postEffects.empty())
     {
-        currentRenderPath = std::bind(&Scene::postRenderPath, this);
+        currentRenderPath = std::bind(&Scene::postRenderPath, this, std::placeholders::_1);
         auto size = App::getWindow().getSize();
         m_sceneBuffer.create(size.x, size.y, true);
         for (auto& p : m_postEffects)
@@ -185,7 +185,7 @@ void Scene::setPostEnabled(bool enabled)
     }
     else
     {       
-        currentRenderPath = std::bind(&Scene::defaultRenderPath, this);
+        currentRenderPath = std::bind(&Scene::defaultRenderPath, this, std::placeholders::_1);
     }
 }
 
@@ -210,47 +210,47 @@ void Scene::enableSkybox()
     {
         //only using positions
         std::array<float, 108> verts = {
-            -1.0f,  1.0f, -1.0f,
-            -1.0f, -1.0f, -1.0f,
-             1.0f, -1.0f, -1.0f,
-             1.0f, -1.0f, -1.0f,
-             1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f,
+            -0.5f,  0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+             0.5f, -0.5f, -0.5f,
+             0.5f, -0.5f, -0.5f,
+             0.5f,  0.5f, -0.5f,
+            -0.5f,  0.5f, -0.5f,
 
-            -1.0f, -1.0f,  1.0f,
-            -1.0f, -1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f,  1.0f,
-            -1.0f, -1.0f,  1.0f,
+            -0.5f, -0.5f,  0.5f,
+            -0.5f, -0.5f, -0.5f,
+            -0.5f,  0.5f, -0.5f,
+            -0.5f,  0.5f, -0.5f,
+            -0.5f,  0.5f,  0.5f,
+            -0.5f, -0.5f,  0.5f,
 
-             1.0f, -1.0f, -1.0f,
-             1.0f, -1.0f,  1.0f,
-             1.0f,  1.0f,  1.0f,
-             1.0f,  1.0f,  1.0f,
-             1.0f,  1.0f, -1.0f,
-             1.0f, -1.0f, -1.0f,
+             0.5f, -0.5f, -0.5f,
+             0.5f, -0.5f,  0.5f,
+             0.5f,  0.5f,  0.5f,
+             0.5f,  0.5f,  0.5f,
+             0.5f,  0.5f, -0.5f,
+             0.5f, -0.5f, -0.5f,
 
-            -1.0f, -1.0f,  1.0f,
-            -1.0f,  1.0f,  1.0f,
-             1.0f,  1.0f,  1.0f,
-             1.0f,  1.0f,  1.0f,
-             1.0f, -1.0f,  1.0f,
-            -1.0f, -1.0f,  1.0f,
+            -0.5f, -0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+             0.5f,  0.5f,  0.5f,
+             0.5f,  0.5f,  0.5f,
+             0.5f, -0.5f,  0.5f,
+            -0.5f, -0.5f,  0.5f,
 
-            -1.0f,  1.0f, -1.0f,
-             1.0f,  1.0f, -1.0f,
-             1.0f,  1.0f,  1.0f,
-             1.0f,  1.0f,  1.0f,
-            -1.0f,  1.0f,  1.0f,
-            -1.0f,  1.0f, -1.0f,
+            -0.5f,  0.5f, -0.5f,
+             0.5f,  0.5f, -0.5f,
+             0.5f,  0.5f,  0.5f,
+             0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f, -0.5f,
 
-            -1.0f, -1.0f, -1.0f,
-            -1.0f, -1.0f,  1.0f,
-             1.0f, -1.0f, -1.0f,
-             1.0f, -1.0f, -1.0f,
-            -1.0f, -1.0f,  1.0f,
-             1.0f, -1.0f,  1.0f
+            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f,  0.5f,
+             0.5f, -0.5f, -0.5f,
+             0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f,  0.5f,
+             0.5f, -0.5f,  0.5f
         };
 
         //glCheck(glGenVertexArrays(1, &m_skybox.vao));
@@ -370,9 +370,9 @@ void Scene::forwardMessage(const Message& msg)
     }
 }
 
-void Scene::render()
+void Scene::render(const RenderTarget& rt)
 {
-    currentRenderPath();
+    currentRenderPath(rt);
 }
 
 std::pair<const float*, std::size_t> Scene::getActiveProjectionMaps() const
@@ -381,9 +381,22 @@ std::pair<const float*, std::size_t> Scene::getActiveProjectionMaps() const
 }
 
 //private
-void Scene::defaultRenderPath()
+void Scene::defaultRenderPath(const RenderTarget& rt)
 {
     auto camera = m_entityManager.getEntity(m_activeCamera);
+    const auto& cam = camera.getComponent<Camera>();
+
+    //make sure we're using the active viewport
+    //generic target size - this might be a buffer not the window!
+    glm::vec2 size(rt.getSize());
+    std::array<std::int32_t, 4u> previousViewport;
+    glCheck(glGetIntegerv(GL_VIEWPORT, previousViewport.data()));
+
+    auto vp = cam.viewport;
+    IntRect rect(static_cast<int32>(size.x * vp.left), static_cast<int32>(size.y * vp.bottom),
+        static_cast<int32>(size.x * vp.width), static_cast<int32>(size.y * vp.height));
+    glViewport(rect.left, rect.bottom, rect.width, rect.height);
+
     for (auto r : m_renderables)
     {
         r->render(camera);
@@ -392,20 +405,6 @@ void Scene::defaultRenderPath()
     //draw the skybox if enabled
     if (m_skybox.vbo)
     {
-        const auto& cam = camera.getComponent<Camera>();
-
-        //make sure we're using the active viewport
-        //TODO apply once before rendering all drawables
-        //TODO generic target size - this might be a buffer not the window!
-        glm::vec2 size(App::getWindow().getSize());
-        std::array<std::int32_t, 4u> previousViewport;
-        glCheck(glGetIntegerv(GL_VIEWPORT, previousViewport.data()));
-
-        auto vp = cam.viewport;
-        IntRect rect(static_cast<int32>(size.x * vp.left), static_cast<int32>(size.y * vp.bottom),
-            static_cast<int32>(size.x * vp.width), static_cast<int32>(size.y * vp.height));
-        glViewport(rect.left, rect.bottom, rect.width, rect.height);
-
         //change depth function so depth test passes when values are equal to depth buffer's content
         glDepthFunc(GL_LEQUAL);
         glEnable(GL_DEPTH_TEST);
@@ -437,16 +436,16 @@ void Scene::defaultRenderPath()
 
         glDisable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
-
-        //restore old view port
-        glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
     }
+
+    //restore old view port
+    glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
 }
 
-void Scene::postRenderPath()
+void Scene::postRenderPath(const RenderTarget&)
 {
     m_sceneBuffer.clear();
-    defaultRenderPath();
+    defaultRenderPath(m_sceneBuffer);
     m_sceneBuffer.display();
 
     RenderTexture* inTex = &m_sceneBuffer;

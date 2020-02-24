@@ -153,8 +153,9 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
-    m_scene.render();
-    m_overlayScene.render();
+    auto& rt = cro::App::getWindow();
+    m_scene.render(rt);
+    m_overlayScene.render(rt);
 }
 
 //private

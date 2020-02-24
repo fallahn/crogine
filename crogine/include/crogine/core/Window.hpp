@@ -30,14 +30,13 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/graphics/RenderTarget.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
 #include <SDL_video.h>
 #include <SDL_events.h>
 #include <SDL_atomic.h>
-
-#include <crogine/detail/glm/vec2.hpp>
 
 #include <string>
 #include <vector>
@@ -51,7 +50,7 @@ namespace cro
 	/*!
 	\brief Creates a window to which to draw.
 	*/
-	class CRO_EXPORT_API Window final// : public cro::Detail::SDLResource
+	class CRO_EXPORT_API Window final : public RenderTarget// : public cro::Detail::SDLResource
 	{
 	public:
 		Window();
@@ -106,7 +105,7 @@ namespace cro
         /*!
         \brief Returns the current size of the window
         */
-        glm::uvec2 getSize() const;
+        glm::uvec2 getSize() const override;
         /*!
         \brief Attempts to set the window to the given size if it is valid
         */

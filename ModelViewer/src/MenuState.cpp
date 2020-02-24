@@ -186,7 +186,7 @@ bool MenuState::simulate(float dt)
 void MenuState::render()
 {
 	//draw any renderable systems
-    m_scene.render();
+    m_scene.render(cro::App::getWindow());
 }
 
 //private

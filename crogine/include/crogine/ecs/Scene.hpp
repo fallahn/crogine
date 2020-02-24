@@ -220,9 +220,10 @@ namespace cro
         void forwardMessage(const Message&);
 
         /*!
-        \brief Draws any renderable systems in this scene, in the order in which they were addeded
+        \brief Draws any renderable systems in this scene, in the order in which they were added
+        \param target The target to be rendered to, either the active window or a render texture
         */
-        void render();
+        void render(const RenderTarget&);
 
         /*!
         \brief Returns a pointer to the array of active projection maps, with the count.
@@ -262,9 +263,9 @@ namespace cro
         }m_skybox;
         Shader m_skyboxShader;
 
-        void defaultRenderPath();
-        void postRenderPath();
-        std::function<void()> currentRenderPath;
+        void defaultRenderPath(const RenderTarget&);
+        void postRenderPath(const RenderTarget&);
+        std::function<void(const RenderTarget&)> currentRenderPath;
 
         void destroySkybox();
     };

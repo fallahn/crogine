@@ -166,7 +166,7 @@ bool GameOverState::simulate(float dt)
 
 void GameOverState::render()
 {
-    m_uiScene.render();
+    m_uiScene.render(cro::App::getWindow());
 }
 
 //private

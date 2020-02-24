@@ -495,6 +495,9 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandTarget.hpp">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\RenderTarget.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">

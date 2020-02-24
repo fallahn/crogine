@@ -162,9 +162,10 @@ bool MainState::simulate(float dt)
 }
 
 void MainState::render()
-{    
-    m_backgroundScene.render();
-    m_menuScene.render();
+{
+    auto& rt = cro::App::getWindow();
+    m_backgroundScene.render(rt);
+    m_menuScene.render(rt);
 }
 
 //private

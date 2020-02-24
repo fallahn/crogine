@@ -41,7 +41,7 @@ namespace
     the assumption is that only RenderTextures update the active
     framebuffer. I'm leaving this here for performance reasons
     on mobile platforms, but bear in mind this needs to be
-    potentially altered should a new class introduct changing the
+    potentially altered should a new class introduce changing the
     active FBO.
     */
     int32 activeBuffer = 0;
@@ -102,6 +102,7 @@ bool RenderTexture::create(uint32 width, uint32 height, bool depthBuffer, bool s
     if (m_fboID)
     {
         glCheck(glDeleteFramebuffers(1, &m_fboID));
+        m_clearBits = 0;
     }
 
     m_texture.create(width, height, ImageFormat::RGBA);
