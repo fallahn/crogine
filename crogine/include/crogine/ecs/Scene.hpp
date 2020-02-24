@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/ecs/Director.hpp>
 #include <crogine/ecs/Sunlight.hpp>
 #include <crogine/ecs/Renderable.hpp>
+#include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/postprocess/PostProcess.hpp>
 
@@ -63,7 +64,7 @@ namespace cro
     public:
         explicit Scene(MessageBus&);
 
-        ~Scene() = default;
+        ~Scene();
         Scene(const Scene&) = delete;
         Scene(const Scene&&) = delete;
         Scene& operator = (const Scene&) = delete;
@@ -150,6 +151,29 @@ namespace cro
         Sunlight& getSunlight();
 
         /*!
+        \brief Enables the skybox.
+        Enabling this creates the default coloured skybox for the scene.
+        Skyboxes may be cubemapped by supplying a cubemap texture. By
+        default skyboxes are disabled until enableSkybox() or setCubemap()
+        are called.
+        \see setCubemap()
+        */
+        void enableSkybox();
+
+        /*!
+        \brief Attempts to load the cubemap at the given path and applies it to the skybox.
+        This will automatically enable the skybox if it has not been enabled already.
+        */
+        void setCubemap(const std::string& path);
+
+        /*!
+        \brief Enables or disables tinting the skybox with the sunlight colour.
+        This is disabled by default, and requires the skybox to be enabled to do
+        anything, else calling this function has not effect on the Scene.
+        */
+        void setSkyTintEnabled(bool enabled);
+
+        /*!
         \brief Returns a copy of the entity containing the default camera
         */
         Entity getDefaultCamera() const;
@@ -230,8 +254,19 @@ namespace cro
         std::array<RenderTexture, 2u> m_postBuffers;
         std::vector<std::unique_ptr<PostProcess>> m_postEffects;
 
+        struct Skybox final
+        {
+            std::uint32_t vbo = 0;
+            std::uint32_t viewUniform = 0;
+            std::uint32_t projectionUniform = 0;
+        }m_skybox;
+        Shader m_skyboxShader;
+
+        void defaultRenderPath();
         void postRenderPath();
         std::function<void()> currentRenderPath;
+
+        void destroySkybox();
     };
 
 #include "Scene.inl"

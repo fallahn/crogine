@@ -271,6 +271,8 @@ void GameState::addSystems()
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+
+    m_gameScene.enableSkybox();
 }
 
 void GameState::loadAssets()

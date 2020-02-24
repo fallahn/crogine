@@ -7,6 +7,6 @@ model ground_plane
 	material Unlit
 	{
 		colour = 1,1,0,1
-        blendmode=alpha
+        blendmode=none
 	}	
 }

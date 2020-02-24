@@ -27,6 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../detail/GLCheck.hpp"
+
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -38,6 +40,7 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
 
 #include "../detail/GLCheck.hpp"
 
@@ -45,6 +48,48 @@ using namespace cro;
 
 namespace
 {
+    const std::string skyboxVertex = 
+        R"(
+        uniform mat4 u_projectionMatrix;
+        uniform mat4 u_viewMatrix;        
+
+        ATTRIBUTE vec3 a_position;
+
+        VARYING_OUT vec3 v_texCoords;
+
+        void main()
+        {
+            v_texCoords = a_position;
+            vec4 pos = u_projectionMatrix * u_viewMatrix * vec4(a_position, 1.0);
+            gl_Position = pos.xyww;
+        })";
+    const std::string skyboxFrag = 
+        R"(
+        OUTPUT
+
+        VARYING_IN vec3 v_texCoords;
+
+        const LOW vec3 lightColour = vec3(0.82, 0.98, 0.99);
+        const LOW vec3 darkColour = vec3(0.3, 0.28, 0.21);
+
+        void main()
+        {    
+            float mixAmount = smoothstep(0.4, 0.44, (v_texCoords.y + 1.0) / 2.0);
+            FRAG_OUT = vec4(mix(darkColour, lightColour, mixAmount), 1.0);
+        })";
+    const std::string skyboxFragTextured =
+        R"(
+        OUTPUT
+
+        VARYING_IN vec3 v_texCoords;
+
+        uniform samplerCube u_skybox;
+
+        void main()
+        {    
+            FRAG_OUT = TEXTURE_CUBE(u_skybox, v_texCoords);
+        })";
+
     const float DefaultFOV = 35.f * Util::Const::degToRad;
 
     void updateView(cro::Entity entity)
@@ -76,11 +121,12 @@ Scene::Scene(MessageBus& mb)
     m_activeCamera = m_defaultCamera;
     m_activeListener = m_defaultCamera;
 
-    currentRenderPath = [this]()
-    {
-        auto camera = m_entityManager.getEntity(m_activeCamera);
-        for (auto r : m_renderables) r->render(camera);
-    };
+    currentRenderPath = std::bind(&Scene::defaultRenderPath, this);
+}
+
+Scene::~Scene()
+{
+    destroySkybox();
 }
 
 //public
@@ -132,15 +178,14 @@ void Scene::setPostEnabled(bool enabled)
         currentRenderPath = std::bind(&Scene::postRenderPath, this);
         auto size = App::getWindow().getSize();
         m_sceneBuffer.create(size.x, size.y, true);
-        for (auto& p : m_postEffects) p->resizeBuffer(size.x, size.y);
+        for (auto& p : m_postEffects)
+        {
+            p->resizeBuffer(size.x, size.y);
+        }
     }
     else
     {       
-        currentRenderPath = [this]()
-        {
-            auto camera = m_entityManager.getEntity(m_activeCamera);
-            for (auto& r : m_renderables) r->render(camera);
-        };
+        currentRenderPath = std::bind(&Scene::defaultRenderPath, this);
     }
 }
 
@@ -157,6 +202,88 @@ const Sunlight& Scene::getSunlight() const
 Sunlight& Scene::getSunlight()
 {
     return m_sunlight;
+}
+
+void Scene::enableSkybox()
+{
+    if (!m_skybox.vbo)
+    {
+        //only using positions
+        std::array<float, 108> verts = {
+            -1.0f,  1.0f, -1.0f,
+            -1.0f, -1.0f, -1.0f,
+             1.0f, -1.0f, -1.0f,
+             1.0f, -1.0f, -1.0f,
+             1.0f,  1.0f, -1.0f,
+            -1.0f,  1.0f, -1.0f,
+
+            -1.0f, -1.0f,  1.0f,
+            -1.0f, -1.0f, -1.0f,
+            -1.0f,  1.0f, -1.0f,
+            -1.0f,  1.0f, -1.0f,
+            -1.0f,  1.0f,  1.0f,
+            -1.0f, -1.0f,  1.0f,
+
+             1.0f, -1.0f, -1.0f,
+             1.0f, -1.0f,  1.0f,
+             1.0f,  1.0f,  1.0f,
+             1.0f,  1.0f,  1.0f,
+             1.0f,  1.0f, -1.0f,
+             1.0f, -1.0f, -1.0f,
+
+            -1.0f, -1.0f,  1.0f,
+            -1.0f,  1.0f,  1.0f,
+             1.0f,  1.0f,  1.0f,
+             1.0f,  1.0f,  1.0f,
+             1.0f, -1.0f,  1.0f,
+            -1.0f, -1.0f,  1.0f,
+
+            -1.0f,  1.0f, -1.0f,
+             1.0f,  1.0f, -1.0f,
+             1.0f,  1.0f,  1.0f,
+             1.0f,  1.0f,  1.0f,
+            -1.0f,  1.0f,  1.0f,
+            -1.0f,  1.0f, -1.0f,
+
+            -1.0f, -1.0f, -1.0f,
+            -1.0f, -1.0f,  1.0f,
+             1.0f, -1.0f, -1.0f,
+             1.0f, -1.0f, -1.0f,
+            -1.0f, -1.0f,  1.0f,
+             1.0f, -1.0f,  1.0f
+        };
+
+        //glCheck(glGenVertexArrays(1, &m_skybox.vao));
+        glCheck(glGenBuffers(1, &m_skybox.vbo));
+        //glCheck(glBindVertexArray(m_skybox.vao));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        //glCheck(glEnableVertexAttribArray(0));
+        //glCheck(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr));
+
+        //if shader fails reset the geometry
+        if(!m_skyboxShader.loadFromString(skyboxVertex, skyboxFrag))
+        {
+            destroySkybox();
+            Logger::log("Failed creating skybox shader", Logger::Type::Error);
+        }
+        else
+        {
+            m_skybox.viewUniform = m_skyboxShader.getUniformMap().at("u_viewMatrix");
+            m_skybox.projectionUniform = m_skyboxShader.getUniformMap().at("u_projectionMatrix");
+        }
+    }
+}
+
+void Scene::setCubemap(const std::string&)
+{
+    enableSkybox();
+}
+
+void Scene::setSkyTintEnabled(bool)
+{
+
 }
 
 Entity Scene::getDefaultCamera() const
@@ -254,12 +381,72 @@ std::pair<const float*, std::size_t> Scene::getActiveProjectionMaps() const
 }
 
 //private
-void Scene::postRenderPath()
+void Scene::defaultRenderPath()
 {
     auto camera = m_entityManager.getEntity(m_activeCamera);
-    
+    for (auto r : m_renderables)
+    {
+        r->render(camera);
+    }
+
+    //draw the skybox if enabled
+    if (m_skybox.vbo)
+    {
+        const auto& cam = camera.getComponent<Camera>();
+
+        //make sure we're using the active viewport
+        //TODO apply once before rendering all drawables
+        //TODO generic target size - this might be a buffer not the window!
+        glm::vec2 size(App::getWindow().getSize());
+        std::array<std::int32_t, 4u> previousViewport;
+        glCheck(glGetIntegerv(GL_VIEWPORT, previousViewport.data()));
+
+        auto vp = cam.viewport;
+        IntRect rect(static_cast<int32>(size.x * vp.left), static_cast<int32>(size.y * vp.bottom),
+            static_cast<int32>(size.x * vp.width), static_cast<int32>(size.y * vp.height));
+        glViewport(rect.left, rect.bottom, rect.width, rect.height);
+
+        //change depth function so depth test passes when values are equal to depth buffer's content
+        glDepthFunc(GL_LEQUAL);
+        glEnable(GL_DEPTH_TEST);
+
+        //remove translation from the view matrix
+        auto view = glm::mat4(glm::mat3(cam.viewMatrix)); 
+
+        glCheck(glUseProgram(m_skyboxShader.getGLHandle()));
+        glCheck(glUniformMatrix4fv(m_skybox.viewUniform, 1, GL_FALSE, glm::value_ptr(view)));
+        glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projectionMatrix)));
+
+        //TODO set texture if enabled
+        //glActiveTexture(GL_TEXTURE0);
+        //glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+
+        //draw cube
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
+
+        const auto& attribs = m_skyboxShader.getAttribMap();
+        glCheck(glEnableVertexAttribArray(attribs[0]));
+        glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3*sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+
+        glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
+
+        glCheck(glDisableVertexAttribArray(attribs[0]));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+        glUseProgram(0);
+
+        glDisable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+
+        //restore old view port
+        glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
+    }
+}
+
+void Scene::postRenderPath()
+{
     m_sceneBuffer.clear();
-    for (auto r : m_renderables) r->render(camera);
+    defaultRenderPath();
     m_sceneBuffer.display();
 
     RenderTexture* inTex = &m_sceneBuffer;
@@ -274,8 +461,17 @@ void Scene::postRenderPath()
         inTex = outTex;
     }
 
-
     auto vp = m_sceneBuffer.getDefaultViewport();
     glViewport(vp.left, vp.bottom, vp.width, vp.height);
     m_postEffects.back()->apply(*inTex);
+}
+
+void Scene::destroySkybox()
+{
+    if (m_skybox.vbo)
+    {
+        glDeleteBuffers(1, &m_skybox.vbo);
+
+        m_skybox = {};
+    }
 }
