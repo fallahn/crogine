@@ -175,7 +175,7 @@ namespace cro
     class CRO_EXPORT_API EntityManager final
     {
     public:
-        explicit EntityManager(MessageBus&);
+        EntityManager(MessageBus&, ComponentManager&);
 
         ~EntityManager() = default;
         EntityManager(const EntityManager&) = delete;
@@ -248,6 +248,8 @@ namespace cro
         std::vector<Entity::Generation> m_generations; // < indexed by entity ID
         std::vector<std::unique_ptr<Detail::Pool>> m_componentPools; // < index is component ID. Pool index is entity ID.
         std::vector<ComponentMask> m_componentMasks;
+
+        ComponentManager& m_componentManager;
 
         template <typename T>
         Detail::ComponentPool<T>& getPool();

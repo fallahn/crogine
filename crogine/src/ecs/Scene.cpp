@@ -122,8 +122,8 @@ namespace
 
 Scene::Scene(MessageBus& mb)
     : m_messageBus      (mb),
-    m_entityManager     (mb),
-    m_systemManager     (*this),
+    m_entityManager     (mb, m_componentManager),
+    m_systemManager     (*this, m_componentManager),
     m_projectionMapCount(0)
 {
     auto defaultCamera = createEntity();
@@ -393,11 +393,6 @@ void Scene::setCubemap(const std::string& path)
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
-}
-
-void Scene::setSkyTintEnabled(bool)
-{
-
 }
 
 Entity Scene::getDefaultCamera() const

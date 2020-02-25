@@ -158,12 +158,18 @@ namespace cro
         Scene* m_scene;
 
         friend class SystemManager;
+
+
+        //list of types populated by requireComponent then processed by SystemManager
+        //when the system is created
+        std::vector<std::type_index> m_pendingTypes;
+        void processTypes(ComponentManager&);
     };
 
     class CRO_EXPORT_API SystemManager final
     {
     public:
-        explicit SystemManager(Scene&);
+        SystemManager(Scene&, ComponentManager&);
 
         ~SystemManager() = default;
         SystemManager(const SystemManager&) = delete;
@@ -220,6 +226,8 @@ namespace cro
     private:
         Scene& m_scene;
         std::vector<std::unique_ptr<System>> m_systems;
+
+        ComponentManager& m_componentManager;
     };
 
 #include "System.inl"

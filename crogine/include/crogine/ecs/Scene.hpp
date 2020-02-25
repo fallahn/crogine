@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/ecs/Director.hpp>
 #include <crogine/ecs/Sunlight.hpp>
 #include <crogine/ecs/Renderable.hpp>
+#include <crogine/ecs/Component.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/postprocess/PostProcess.hpp>
@@ -179,13 +180,6 @@ namespace cro
         void setCubemap(const std::string& path);
 
         /*!
-        \brief Enables or disables tinting the skybox with the sunlight colour.
-        This is disabled by default, and requires the skybox to be enabled to do
-        anything, else calling this function has not effect on the Scene.
-        */
-        void setSkyTintEnabled(bool enabled);
-
-        /*!
         \brief Returns a copy of the entity containing the default camera
         */
         Entity getDefaultCamera() const;
@@ -252,6 +246,7 @@ namespace cro
         std::vector<Entity> m_pendingEntities;
         std::vector<Entity> m_destroyedEntities;
 
+        ComponentManager m_componentManager;
         EntityManager m_entityManager;
         SystemManager m_systemManager;
 

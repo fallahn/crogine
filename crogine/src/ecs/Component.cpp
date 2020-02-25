@@ -32,20 +32,14 @@ source distribution.
 
 using namespace cro;
 
-namespace
+ComponentManager::ID ComponentManager::getFromTypeID(std::type_index id)
 {
-    std::vector<std::type_index> IDs;
-}
-
-cro::Component::ID Component::getFromTypeID(std::type_index id)
-{
-    CRO_ASSERT(IDs.size() < Detail::MaxComponents, "Max components have been allocated");
-
-    auto result = std::find(std::begin(IDs), std::end(IDs), id);
-    if (result == IDs.end())
+    auto result = std::find(std::begin(m_IDs), std::end(m_IDs), id);
+    if (result == m_IDs.end())
     {
-        IDs.push_back(id);
-        return static_cast<ID>(IDs.size() - 1);
+        CRO_ASSERT(m_IDs.size() < Detail::MaxComponents, "Max components have been allocated");
+        m_IDs.push_back(id);
+        return static_cast<ID>(m_IDs.size() - 1);
     }
-    return static_cast<ID>(std::distance(IDs.begin(), result));
+    return static_cast<ID>(std::distance(m_IDs.begin(), result));
 }

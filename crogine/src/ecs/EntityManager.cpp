@@ -33,9 +33,10 @@ source distribution.
 
 using namespace cro;
 
-EntityManager::EntityManager(MessageBus& mb)
-    : m_messageBus  (mb),
-    m_componentPools(Detail::MaxComponents)
+EntityManager::EntityManager(MessageBus& mb, ComponentManager& cm)
+    : m_messageBus      (mb),
+    m_componentPools    (Detail::MaxComponents),
+    m_componentManager  (cm)
 {}
 
 //public

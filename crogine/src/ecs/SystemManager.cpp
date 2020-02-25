@@ -32,7 +32,7 @@ source distribution.
 
 using namespace cro;
 
-SystemManager::SystemManager(Scene& scene) : m_scene(scene) {}
+SystemManager::SystemManager(Scene& scene, ComponentManager& cm) : m_scene(scene), m_componentManager(cm) {}
 
 void SystemManager::addToSystems(Entity entity)
 {
