@@ -76,6 +76,13 @@ namespace cro
         \brief Sets the transform position
         */
         void setPosition(glm::vec3);
+
+        /*!
+        \brief Sets a 2D position by automatically setting
+        the Z value to zero
+        */
+        void setPosition(glm::vec2);
+
         /*!
         \brief Sets the euler rotation in radians for the x, y and z axis
         */

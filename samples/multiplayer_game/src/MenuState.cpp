@@ -44,6 +44,8 @@ source distribution.
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/UISystem.hpp>
 
 
 namespace
@@ -57,7 +59,8 @@ namespace
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
 	: cro::State    (stack, context),
     m_sharedData    (sd),
-    m_scene         (context.appInstance.getMessageBus())
+    m_scene         (context.appInstance.getMessageBus()),
+    m_hosting       (false)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -103,6 +106,8 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         }
     }
+
+    m_scene.getSystem<cro::UISystem>().handleEvent(evt);
 
     m_scene.forwardEvent(evt);
 	return true;
@@ -151,9 +156,10 @@ void MenuState::addSystems()
 
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<SliderSystem>(mb);
+    m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::TextRenderer>(mb);
-
+    m_scene.addSystem<cro::SpriteRenderer>(mb);
 }
 
 void MenuState::loadAssets()
@@ -163,6 +169,7 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
+#ifdef CRO_DEBUG_
     registerWindow([&]() 
         {
             ImGui::SetNextWindowSize({ 400.f, 400.f });
@@ -274,37 +281,56 @@ void MenuState::createScene()
             }
             ImGui::End();        
         });
+#endif //CRO_DEBUG_
+
+    auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>().addCallback(
+        [](cro::Entity e, glm::vec2)
+        {
+            e.getComponent<cro::Text>().setColour(cro::Colour::Red());        
+        });
+    auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
+        [](cro::Entity e, glm::vec2) 
+        {
+            e.getComponent<cro::Text>().setColour(cro::Colour::White());
+        });
 
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::RootNode;
-    entity.addComponent<Slider>();
-    auto& rootTx = entity.getComponent<cro::Transform>();
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 10.f, 1000.f, 0.f });
-    entity.addComponent<cro::Text>(m_font);
-    entity.getComponent<cro::Text>().setString("Main Menu");
-    entity.getComponent<cro::Text>().setCharSize(40);
-    entity.getComponent<cro::Text>().setColour(cro::Colour::White());
-    rootTx.addChild(entity.getComponent<cro::Transform>());
+    createMainMenu(entity, mouseEnterCallback, mouseExitCallback);
+    createAvatarMenu(entity, mouseEnterCallback, mouseExitCallback);
+    createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
+    createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
+    createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
+
+    //entity.addComponent<Slider>();
+    //auto& rootTx = entity.getComponent<cro::Transform>();
+
+    //entity = m_scene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ 10.f, 1000.f, 0.f });
+    //entity.addComponent<cro::Text>(m_font);
+    //entity.getComponent<cro::Text>().setString("Main Menu");
+    //entity.getComponent<cro::Text>().setCharSize(40);
+    //entity.getComponent<cro::Text>().setColour(cro::Colour::White());
+    //rootTx.addChild(entity.getComponent<cro::Transform>());
 
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 10.f + cro::DefaultSceneSize.x, 1000.f, 0.f });
-    entity.addComponent<cro::Text>(m_font);
-    entity.getComponent<cro::Text>().setString("Lobby");
-    entity.getComponent<cro::Text>().setCharSize(40);
-    entity.getComponent<cro::Text>().setColour(cro::Colour::White());
-    rootTx.addChild(entity.getComponent<cro::Transform>());
+    //entity = m_scene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ 10.f + cro::DefaultSceneSize.x, 1000.f, 0.f });
+    //entity.addComponent<cro::Text>(m_font);
+    //entity.getComponent<cro::Text>().setString("Lobby");
+    //entity.getComponent<cro::Text>().setCharSize(40);
+    //entity.getComponent<cro::Text>().setColour(cro::Colour::White());
+    //rootTx.addChild(entity.getComponent<cro::Transform>());
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -(cro::DefaultSceneSize.x - 10.f), 1000.f, 0.f });
-    entity.addComponent<cro::Text>(m_font);
-    entity.getComponent<cro::Text>().setString("Join");
-    entity.getComponent<cro::Text>().setCharSize(40);
-    entity.getComponent<cro::Text>().setColour(cro::Colour::White());
-    rootTx.addChild(entity.getComponent<cro::Transform>());
+    //entity = m_scene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ -(cro::DefaultSceneSize.x - 10.f), 1000.f, 0.f });
+    //entity.addComponent<cro::Text>(m_font);
+    //entity.getComponent<cro::Text>().setString("Join");
+    //entity.getComponent<cro::Text>().setCharSize(40);
+    //entity.getComponent<cro::Text>().setColour(cro::Colour::White());
+    //rootTx.addChild(entity.getComponent<cro::Transform>());
 
 
     //set a custom camera so the scene doesn't overwrite the viewport
@@ -333,16 +359,6 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
         case PacketID::ConnectionAccepted:
             {
                 m_sharedData.clientConnection.playerID = evt.packet.as<std::uint8_t>();
-
-                //switch to lobby view
-                cro::Command cmd;
-                cmd.targetFlags = CommandID::RootNode;
-                cmd.action = [](cro::Entity e, float)
-                {
-                    e.getComponent<Slider>().destination = { -(float)cro::DefaultSceneSize.x, 0.f, 0.f };
-                    e.getComponent<Slider>().active = true;
-                };
-                m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
                 m_currentMenu = Lobby;
 

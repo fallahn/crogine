@@ -105,6 +105,9 @@
     <ClCompile Include="src\ErrorState.cpp">
       <Filter>Source Files\Client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\MenuCreation.cpp">
+      <Filter>Source Files\Client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">

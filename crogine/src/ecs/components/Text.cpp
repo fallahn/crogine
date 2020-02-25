@@ -36,8 +36,9 @@ using namespace cro;
 Text::Text()
     : m_font        (nullptr),
     m_charSize      (0),
+    m_colour        (cro::Colour::White()),
     m_blendMode     (Material::BlendMode::Alpha),
-    m_dirtyFlags    (Flags::Verts),
+    m_dirtyFlags    (Flags::Verts | Flags::Colours),
     m_scissor       (false),
     m_vboOffset     (0),
     m_alignment     (Left)
@@ -48,8 +49,9 @@ Text::Text()
 Text::Text(const Font& font)
     : m_font        (&font),
     m_charSize      (30),
+    m_colour        (cro::Colour::White()),
     m_blendMode     (Material::BlendMode::Alpha),
-    m_dirtyFlags    (Flags::Verts),
+    m_dirtyFlags    (Flags::Verts | Flags::Colours),
     m_scissor       (false),
     m_vboOffset     (0),
     m_alignment     (Left)
@@ -98,7 +100,7 @@ const FloatRect& Text::getLocalBounds() const
 {
     if (m_dirtyFlags & (Flags::CharSize | Flags::Verts))
     {
-        updateLocalBounds();
+        updateVerts();
     }
     return m_localBounds;
 }
@@ -139,42 +141,125 @@ float Text::getLineWidth(std::size_t idx) const
 }
 
 //private
-void Text::updateLocalBounds() const
+void Text::updateVerts() const
 {
-    m_localBounds.width = 0.f;
-    m_localBounds.height = 0.f;
+    /*
+    0-------2
+    |       |
+    |       |
+    1-------3
+    */
+    CRO_ASSERT(m_font, "Must construct text with a font!");
+    if (m_string.empty()) return;
 
-    float currWidth = 0.f;
-    float currHeight = 0.f;
+    m_vertices.clear();
+    m_vertices.reserve(m_string.size() * 6); //4 verts per char + degen tri
 
+    auto getStart = [&](std::size_t idx)->float
+    {
+        //TODO fix this else it recursively called getLocalBounds() to infinity
+        float pos = 0.f;
+        if (m_alignment == Text::Right)
+        {
+            /*float maxWidth = getLocalBounds().width;
+            float rowWidth = getLineWidth(idx);
+            pos = maxWidth - rowWidth;*/
+        }
+        else if (m_alignment == Text::Centre)
+        {
+            /*float maxWidth = getLocalBounds().width;
+            float rowWidth = getLineWidth(idx);
+            pos = maxWidth - rowWidth;
+            pos /= 2.f;*/
+        }
+        return pos;
+    };
+
+    float xPos = getStart(0);
+    float yPos = -getLineHeight();
+    float lineHeight = -yPos;
+    glm::vec2 texSize(m_font->getTexture(m_charSize).getSize());
+    CRO_ASSERT(texSize.x > 0 && texSize.y > 0, "Font texture not loaded!");
+
+    float top = 0.f;
+    float width = 0.f;
+    std::size_t lineCount = 0;
+
+    std::uint32_t prevChar = 0;
     for (auto c : m_string)
     {
-        if (c == '\n')
+        //check for end of lines
+        if (c == '\n') //newline is a new line!!
         {
-            if (currWidth > m_localBounds.width)
-            {
-                m_localBounds.width = currWidth;
-            }
-            currWidth = 0.f;
+            lineCount++;
 
-            m_localBounds.height += currHeight;
-            currHeight = 0.f;
+            xPos = getStart(lineCount);
+            yPos -= lineHeight;
+
+            continue;
         }
-        else
-        {
-            //TODO this needs to account for kerning
-            auto glyph = m_font->getGlyph(c, m_charSize);
-            currWidth += glyph.advance;
-            if (currHeight < glyph.bounds.height)
-            {
-                currHeight = glyph.bounds.height;
-            }
-        }
+
+        auto glyph = m_font->getGlyph(c, m_charSize);
+        auto rect = glyph.textureBounds;
+        auto bounds = glyph.bounds;
+        auto descender = 8.f;// bounds.bottom + bounds.height;
+        Text::Vertex v;
+
+        v.position.x = xPos;
+        v.position.y = yPos - bounds.bottom + descender;
+        v.position.z = 0.f;
+
+        v.UV.x = rect.left / texSize.x;
+        v.UV.y = rect.bottom / texSize.y;
+
+        m_vertices.push_back(v);
+        m_vertices.push_back(v); //twice for degen tri
+
+
+        v.position.y = yPos - bounds.bottom - bounds.height + descender;
+
+        v.UV.x = rect.left / texSize.x;
+        v.UV.y = (rect.bottom + rect.height) / texSize.y;
+
+        m_vertices.push_back(v);
+
+
+        v.position.x = xPos + rect.width;
+        v.position.y = yPos - bounds.bottom + descender;
+
+        v.UV.x = (rect.left + rect.width) / texSize.x;
+        v.UV.y = rect.bottom / texSize.y;
+
+        m_vertices.push_back(v);
+
+
+        v.position.y = yPos - bounds.bottom - bounds.height + descender;
+
+        v.UV.x = (rect.left + rect.width) / texSize.x;
+        v.UV.y = (rect.bottom + rect.height) / texSize.y;
+
+        m_vertices.push_back(v);
+        m_vertices.push_back(v); //end degen tri
+
+
+
+        if (v.position.x > width) width = v.position.x;
+
+        xPos += m_font->getKerning(prevChar, c, m_charSize);
+        xPos += glyph.advance;
+        prevChar = c;
     }
 
-    if (currWidth > m_localBounds.width)
+    m_localBounds.bottom = yPos;
+    m_localBounds.height = top - yPos;
+    m_localBounds.width = width;
+
+    m_vertices.erase(m_vertices.begin()); //remove front/back degens as these are added by renderer
+    m_vertices.pop_back();
+
+    for (auto& v : m_vertices)
     {
-        m_localBounds.width = currWidth;
+        v.colour = { m_colour.getRed(), m_colour.getGreen(), m_colour.getBlue(), m_colour.getAlpha() };
     }
-    m_localBounds.height += currHeight;
+    m_dirtyFlags &= ~Flags::Verts;
 }

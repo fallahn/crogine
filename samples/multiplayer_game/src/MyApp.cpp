@@ -34,6 +34,17 @@ source distribution.
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/ConfigFile.hpp>
+#include <crogine/util/Random.hpp>
+
+namespace
+{
+	const std::vector<cro::String> playernames =
+	{
+		"Edwardo", "Cliff", "Theodora", "Annabelle", "Mr.Wilson", "Sarah"
+	};
+	std::string configPath;
+}
 
 MyApp::MyApp()
 	: m_stateStack({*this, getWindow()})
@@ -88,13 +99,48 @@ bool MyApp::initialise()
 
 	m_sharedData.clientConnection.netClient.create(4);
 
+	configPath = cro::FileSystem::getConfigDirectory("mp_game") + "settings.cfg";
+	loadSettings();
+
 	return true;
 }
 
 void MyApp::finalise()
 {
+	saveSettings();
+
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);
 
 	m_sharedData.serverInstance.stop();
+}
+
+void MyApp::loadSettings()
+{
+	cro::ConfigFile cfg;
+	if (cfg.loadFromFile(configPath))
+	{
+		if (auto* name = cfg.findProperty("player_name"); name)
+		{
+			m_sharedData.localPlayer.name = name->getValue<std::string>();
+		}
+		else
+		{
+			m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0, playernames.size() - 1)];
+		}
+	}
+	else
+	{
+		//fill in some defaults
+		m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0, playernames.size() - 1)];
+	}
+}
+
+void MyApp::saveSettings()
+{
+	cro::ConfigFile cfg;
+	cfg.addProperty("player_name", m_sharedData.localPlayer.name.toAnsiString());
+
+
+	cfg.save(configPath);
 }

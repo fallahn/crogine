@@ -189,6 +189,11 @@ void Transform::setPosition(glm::vec3 position)
     m_dirtyFlags |= Tx;
 }
 
+void Transform::setPosition(glm::vec2 position)
+{
+    setPosition(glm::vec3(position.x, position.y, 0.f));
+}
+
 void Transform::setRotation(glm::vec3 rotation)
 {
     m_rotation = glm::toQuat(glm::orientate3(rotation));

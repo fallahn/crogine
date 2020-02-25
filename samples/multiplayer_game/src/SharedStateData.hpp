@@ -32,8 +32,15 @@ source distribution.
 #include "Server.hpp"
 
 #include <crogine/network/NetClient.hpp>
+#include <crogine/core/String.hpp>
 
 #include <string>
+
+struct PlayerData final
+{
+    cro::String name;
+    //TODO other stuff like skin data
+};
 
 struct SharedStateData final
 {
@@ -46,6 +53,12 @@ struct SharedStateData final
         bool ready = false;
         std::uint8_t playerID = 4;
     }clientConnection;
+
+    //data of all players rx'd from server
+    std::array<PlayerData, 4u> playerData = {};
+
+    //our local player data
+    PlayerData localPlayer;
 
     std::string errorMessage;
 };
