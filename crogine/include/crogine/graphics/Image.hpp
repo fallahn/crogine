@@ -57,7 +57,7 @@ namespace cro
         Images are invalid until either create() or load*() functions have been
         called and returned successfully.
         */
-        Image();
+        Image(bool flipOnLoad = false);
 
         /*!
         \brief Creates an empty image.
@@ -113,5 +113,7 @@ namespace cro
         ImageFormat::Type m_format;
         std::vector<uint8> m_data;
         bool m_flipped;
+
+        bool m_flipOnLoad;
     };
 }

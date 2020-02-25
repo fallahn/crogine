@@ -37,7 +37,9 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/core/ConfigFile.hpp>
 
+#include <crogine/graphics/Image.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
@@ -48,6 +50,12 @@ using namespace cro;
 
 namespace
 {
+    //same order as GL_TEXTURE_CUBE_MAP_XXXX_YYYY
+    enum CubemapDirection
+    {
+        Left, Right, Up, Down, Front, Back, Count
+    };
+
     const std::string skyboxVertex = 
         R"(
         uniform mat4 u_projectionMatrix;
@@ -69,13 +77,18 @@ namespace
 
         VARYING_IN vec3 v_texCoords;
 
-        const LOW vec3 lightColour = vec3(0.82, 0.98, 0.99);
-        const LOW vec3 darkColour = vec3(0.3, 0.28, 0.21);
+        //const LOW vec3 lightColour = vec3(0.82, 0.98, 0.99);
+        //const LOW vec3 darkColour = vec3(0.3, 0.28, 0.21);
+
+        const LOW vec3 darkColour = vec3(0.82, 0.98, 0.99);
+        const LOW vec3 lightColour = vec3(0.21, 0.5, 0.96);
 
         void main()
-        {    
-            float mixAmount = smoothstep(0.4, 0.44, v_texCoords.y + 0.5);
-            FRAG_OUT = vec4(mix(darkColour, lightColour, mixAmount), 1.0);
+        {
+            float dist = normalize(v_texCoords).y; /*v_texCoords.y + 0.5*/
+
+            vec3 colour = mix(darkColour, lightColour, smoothstep(0.04, 0.88, dist));
+            FRAG_OUT = vec4(colour, 1.0);
         })";
     const std::string skyboxFragTextured =
         R"(
@@ -86,8 +99,10 @@ namespace
         uniform samplerCube u_skybox;
 
         void main()
-        {    
-            FRAG_OUT = TEXTURE_CUBE(u_skybox, v_texCoords);
+        {
+            vec3 texCoords = v_texCoords;
+            //texCoords.y = 1.0 - texCoords.y;
+            FRAG_OUT = TEXTURE_CUBE(u_skybox, texCoords);
         })";
 
     const float DefaultFOV = 35.f * Util::Const::degToRad;
@@ -276,9 +291,108 @@ void Scene::enableSkybox()
     }
 }
 
-void Scene::setCubemap(const std::string&)
+void Scene::setCubemap(const std::string& path)
 {
     enableSkybox();
+
+    //open the file, check it's valid
+    cro::ConfigFile cfg;
+    if (!cfg.loadFromFile(path))
+    {
+        cro::Logger::log("Failed to open cubemap " + path, cro::Logger::Type::Error);
+        return;
+    }
+
+    std::array<std::string, CubemapDirection::Count> paths;
+    const auto& properties = cfg.getProperties();
+    for (const auto& prop : properties)
+    {
+        auto name = prop.getName();
+        if (name == "up")
+        {
+            paths[CubemapDirection::Up] = prop.getValue<std::string>();
+        }
+        else if (name == "down")
+        {
+            paths[CubemapDirection::Down] = prop.getValue<std::string>();
+        }
+        else if (name == "left")
+        {
+            paths[CubemapDirection::Left] = prop.getValue<std::string>();
+        }
+        else if (name == "right")
+        {
+            paths[CubemapDirection::Right] = prop.getValue<std::string>();
+        }
+        else if (name == "front")
+        {
+            paths[CubemapDirection::Front] = prop.getValue<std::string>();
+        }
+        else if (name == "back")
+        {
+            paths[CubemapDirection::Back] = prop.getValue<std::string>();
+        }
+    }
+
+    //recreate shader if no texture yet exists
+    if (m_skybox.texture == 0)
+    {
+        if (!m_skyboxShader.loadFromString(skyboxVertex, skyboxFragTextured))
+        {
+            cro::Logger::log("Failed to create skybox shader", cro::Logger::Type::Error);
+            destroySkybox();
+            return;
+        }
+        m_skybox.viewUniform = m_skyboxShader.getUniformMap().at("u_viewMatrix");
+        m_skybox.projectionUniform = m_skyboxShader.getUniformMap().at("u_projectionMatrix");
+        m_skybox.textureUniform = m_skyboxShader.getUniformMap().at("u_skybox");
+    }
+
+
+    //load textures, filling in fallback where needed
+    cro::Image fallback;
+    fallback.create(2, 2, cro::Colour::Magenta(), cro::ImageFormat::RGB);
+
+    cro::Image side(true);
+
+    glCheck(glGenTextures(1, &m_skybox.texture));
+    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_skybox.texture));
+
+    cro::Image* currImage = &fallback;
+    GLenum format = GL_RGB;
+    for (auto i = 0u; i < 6u; i++)
+    {
+        if (side.loadFromFile(paths[i]))
+        {
+            currImage = &side;
+            if (currImage->getFormat() == cro::ImageFormat::RGB)
+            {
+                format = GL_RGB;
+            }
+            else if (currImage->getFormat() == cro::ImageFormat::RGBA)
+            {
+                 format = GL_RGBA;
+            }
+            else
+            {
+                currImage = &fallback;
+                format = GL_RGB;
+            }
+        }
+        else
+        {
+            currImage = &fallback;
+            format = GL_RGB;
+        }
+
+        auto size = currImage->getSize();
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, size.x, size.y, 0, format, GL_UNSIGNED_BYTE, currImage->getPixelData());
+    }
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
 }
 
 void Scene::setSkyTintEnabled(bool)
@@ -416,9 +530,13 @@ void Scene::defaultRenderPath(const RenderTarget& rt)
         glCheck(glUniformMatrix4fv(m_skybox.viewUniform, 1, GL_FALSE, glm::value_ptr(view)));
         glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projectionMatrix)));
 
-        //TODO set texture if enabled
-        //glActiveTexture(GL_TEXTURE0);
-        //glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        //bind the texture if it exists
+        if (m_skybox.texture)
+        {
+            glCheck(glActiveTexture(GL_TEXTURE0));
+            glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_skybox.texture));
+            glCheck(glUniform1i(m_skybox.textureUniform, 0));
+        }
 
         //draw cube
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
@@ -470,7 +588,12 @@ void Scene::destroySkybox()
     if (m_skybox.vbo)
     {
         glDeleteBuffers(1, &m_skybox.vbo);
-
-        m_skybox = {};
     }
+
+    if (m_skybox.texture)
+    {
+        glDeleteTextures(1, &m_skybox.texture);
+    }
+
+    m_skybox = {};
 }

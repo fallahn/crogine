@@ -100,11 +100,11 @@ namespace
     }
 }
 
-Image::Image()
+Image::Image(bool flipOnLoad)
     : m_format  (ImageFormat::None),
-    m_flipped   (false)
+    m_flipped   (false),
+    m_flipOnLoad(flipOnLoad)
 {
-
 }
 
 //public
@@ -151,6 +151,8 @@ bool Image::loadFromFile(const std::string& path)
         return false;
     }
 
+    stbi_set_flip_vertically_on_load(m_flipOnLoad ? 1 : 0);
+
     STBIMG_stbio_RWops io;
     stbi_callback_from_RW(file, &io);
 
@@ -165,12 +167,18 @@ bool Image::loadFromFile(const std::string& path)
         
         stbi_image_free(img);
         SDL_RWclose(file);
+
+        stbi_set_flip_vertically_on_load(0);
+
         return result;
     }
     else
     {
         Logger::log("failed to open image: " + path, Logger::Type::Error);
         SDL_RWclose(file);
+
+        stbi_set_flip_vertically_on_load(0);
+
         return false;
     }
 }

@@ -163,6 +163,18 @@ namespace cro
         /*!
         \brief Attempts to load the cubemap at the given path and applies it to the skybox.
         This will automatically enable the skybox if it has not been enabled already.
+        \param path Should be a path to a ConfigFile containing the following:
+        \begincode
+        cubemap <mapname>
+        {
+            up = "path/to/up.png"
+            down = "path/to/udown.png"
+            left = "path/to/left.png"
+            right = "path/to/right.png"
+            front = "path/to/front.png"
+            back = "path/to/back.png"
+        }
+        \endcode
         */
         void setCubemap(const std::string& path);
 
@@ -260,6 +272,8 @@ namespace cro
             std::uint32_t vbo = 0;
             std::uint32_t viewUniform = 0;
             std::uint32_t projectionUniform = 0;
+            std::uint32_t texture = 0;
+            std::uint32_t textureUniform = 0;
         }m_skybox;
         Shader m_skyboxShader;
 
