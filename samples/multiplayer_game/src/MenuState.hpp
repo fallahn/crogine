@@ -40,10 +40,16 @@ source distribution.
 
 #include "StateIDs.hpp"
 
+namespace MenuCommandID
+{
+    enum
+    {
+        RootNode = 0x1,
+        ReadyButton = 0x2,
+    };
+}
 
-/*!
-Creates a state to render a menu.
-*/
+
 struct SharedStateData;
 namespace cro
 {
@@ -76,14 +82,13 @@ private:
     cro::Font m_font;
     bool m_hosting;
 
-    //fudgy way of tracking current menu
-    //while we get things set up
-#ifdef CRO_DEBUG_
-    enum
+
+    enum MenuID
     {
-        Main, Join, Lobby
+        Main, Avatar, Join, Lobby, Options, Count
     }m_currentMenu = Main;
-#endif //CRO_DEBUG_
+
+    static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
 
 
     void addSystems();

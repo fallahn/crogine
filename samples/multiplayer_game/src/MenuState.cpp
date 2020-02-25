@@ -50,10 +50,7 @@ source distribution.
 
 namespace
 {
-    enum CommandID
-    {
-        RootNode = 0x1
-    };
+
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -73,7 +70,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     });
 
     context.mainWindow.setMouseCaptured(false);
-    context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
+    //context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
 
     sd.clientConnection.ready = false;
     //TODO we need to check the connection state if we returned here after a game completed
@@ -202,15 +199,6 @@ void MenuState::createScene()
                         if (!m_sharedData.clientConnection.connected
                             && !m_sharedData.serverInstance.running())
                         {
-                            //switch to connection view
-                            cro::Command cmd;
-                            cmd.targetFlags = CommandID::RootNode;
-                            cmd.action = [](cro::Entity e, float)
-                            {
-                                e.getComponent<Slider>().destination = { (float)cro::DefaultSceneSize.x, 0.f, 0.f };
-                                e.getComponent<Slider>().active = true;
-                            };
-                            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                             m_currentMenu = Join;
                         }
                     }
@@ -233,15 +221,6 @@ void MenuState::createScene()
 
                     if (ImGui::Button("Back"))
                     {
-                        cro::Command cmd;
-                        cmd.targetFlags = CommandID::RootNode;
-                        cmd.action = [](cro::Entity e, float)
-                        {
-                            e.getComponent<Slider>().destination = glm::vec3(0.f);
-                            e.getComponent<Slider>().active = true;
-                        };
-                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
                         m_sharedData.clientConnection.netClient.disconnect();
                         m_sharedData.serverInstance.stop();
                         m_sharedData.clientConnection.connected = false;
@@ -262,15 +241,6 @@ void MenuState::createScene()
 
                     if (ImGui::Button("Back"))
                     {
-                        cro::Command cmd;
-                        cmd.targetFlags = CommandID::RootNode;
-                        cmd.action = [](cro::Entity e, float)
-                        {
-                            e.getComponent<Slider>().destination = glm::vec3(0.f);
-                            e.getComponent<Slider>().active = true;
-                        };
-                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
                         m_sharedData.clientConnection.netClient.disconnect();
                         m_sharedData.serverInstance.stop();
                         m_sharedData.clientConnection.connected = false;
@@ -296,42 +266,13 @@ void MenuState::createScene()
 
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::RootNode;
+    entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::RootNode;
 
     createMainMenu(entity, mouseEnterCallback, mouseExitCallback);
     createAvatarMenu(entity, mouseEnterCallback, mouseExitCallback);
     createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
     createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
     createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
-
-    //entity.addComponent<Slider>();
-    //auto& rootTx = entity.getComponent<cro::Transform>();
-
-    //entity = m_scene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ 10.f, 1000.f, 0.f });
-    //entity.addComponent<cro::Text>(m_font);
-    //entity.getComponent<cro::Text>().setString("Main Menu");
-    //entity.getComponent<cro::Text>().setCharSize(40);
-    //entity.getComponent<cro::Text>().setColour(cro::Colour::White());
-    //rootTx.addChild(entity.getComponent<cro::Transform>());
-
-
-    //entity = m_scene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ 10.f + cro::DefaultSceneSize.x, 1000.f, 0.f });
-    //entity.addComponent<cro::Text>(m_font);
-    //entity.getComponent<cro::Text>().setString("Lobby");
-    //entity.getComponent<cro::Text>().setCharSize(40);
-    //entity.getComponent<cro::Text>().setColour(cro::Colour::White());
-    //rootTx.addChild(entity.getComponent<cro::Transform>());
-
-    //entity = m_scene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ -(cro::DefaultSceneSize.x - 10.f), 1000.f, 0.f });
-    //entity.addComponent<cro::Text>(m_font);
-    //entity.getComponent<cro::Text>().setString("Join");
-    //entity.getComponent<cro::Text>().setCharSize(40);
-    //entity.getComponent<cro::Text>().setColour(cro::Colour::White());
-    //rootTx.addChild(entity.getComponent<cro::Transform>());
-
 
     //set a custom camera so the scene doesn't overwrite the viewport
     //with the default view when resizing the window
@@ -361,6 +302,14 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 m_sharedData.clientConnection.playerID = evt.packet.as<std::uint8_t>();
 
                 m_currentMenu = Lobby;
+
+                cro::Command cmd;
+                cmd.targetFlags = MenuCommandID::RootNode;
+                cmd.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
+                };
+                m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
                 LOG("Successfully connected to server", cro::Logger::Type::Info);
             }

@@ -155,23 +155,30 @@ void Text::updateVerts() const
     m_vertices.clear();
     m_vertices.reserve(m_string.size() * 6); //4 verts per char + degen tri
 
+    //we need to update the verts twice if setting an alignment
+    bool clearFlags = false;
     auto getStart = [&](std::size_t idx)->float
     {
-        //TODO fix this else it recursively called getLocalBounds() to infinity
+        auto lineWidth = getLineWidth(idx);
+        if (m_localBounds.width < getLineWidth(idx))
+        {
+            return 0.f;
+        }
+
         float pos = 0.f;
         if (m_alignment == Text::Right)
         {
-            /*float maxWidth = getLocalBounds().width;
-            float rowWidth = getLineWidth(idx);
-            pos = maxWidth - rowWidth;*/
+            float maxWidth = m_localBounds.width;
+            pos = maxWidth - lineWidth;
         }
         else if (m_alignment == Text::Centre)
         {
-            /*float maxWidth = getLocalBounds().width;
-            float rowWidth = getLineWidth(idx);
-            pos = maxWidth - rowWidth;
-            pos /= 2.f;*/
+            float maxWidth = m_localBounds.width;
+            pos = maxWidth - lineWidth;
+            pos /= 2.f;
         }
+
+        clearFlags = true;
         return pos;
     };
 
@@ -241,8 +248,6 @@ void Text::updateVerts() const
         m_vertices.push_back(v);
         m_vertices.push_back(v); //end degen tri
 
-
-
         if (v.position.x > width) width = v.position.x;
 
         xPos += m_font->getKerning(prevChar, c, m_charSize);
@@ -261,5 +266,9 @@ void Text::updateVerts() const
     {
         v.colour = { m_colour.getRed(), m_colour.getGreen(), m_colour.getBlue(), m_colour.getAlpha() };
     }
-    m_dirtyFlags &= ~Flags::Verts;
+
+    if (clearFlags)
+    {
+        m_dirtyFlags &= ~Flags::Verts;
+    }
 }
