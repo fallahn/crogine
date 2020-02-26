@@ -155,6 +155,11 @@ bool GameState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
+        case SDLK_PAUSE:
+        case SDLK_ESCAPE:
+        case SDLK_p:
+            requestStackPush(States::ID::Pause);
+            break;
         case SDLK_F3:
             //first/third person camera
             updateCameraPosition();
@@ -203,7 +208,10 @@ void GameState::handleMessage(const cro::Message& msg)
     else if (msg.id == cro::Message::ConsoleMessage)
     {
         const auto& data = msg.getData<cro::Message::ConsoleEvent>();
-        getContext().mainWindow.setMouseCaptured(data.type == cro::Message::ConsoleEvent::Closed);
+        if (getStateCount() == 1) //ignore this if pause menu is open
+        {
+            getContext().mainWindow.setMouseCaptured(data.type == cro::Message::ConsoleEvent::Closed);
+        }
     }
 }
 

@@ -108,6 +108,9 @@
     <ClCompile Include="src\MenuCreation.cpp">
       <Filter>Source Files\Client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\PauseState.cpp">
+      <Filter>Source Files\Client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -189,6 +192,9 @@
       <Filter>Header Files\Server</Filter>
     </ClInclude>
     <ClInclude Include="src\ErrorState.hpp">
+      <Filter>Header Files\Client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PauseState.hpp">
       <Filter>Header Files\Client\states</Filter>
     </ClInclude>
   </ItemGroup>

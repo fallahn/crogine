@@ -29,13 +29,44 @@ source distribution.
 
 #pragma once
 
-namespace States
+#include "StateIDs.hpp"
+
+#include <crogine/core/State.hpp>
+
+#include <crogine/ecs/Scene.hpp>
+
+#include <crogine/graphics/Font.hpp>
+
+/*
+Bit of a mis-nomer really... While it acts like an
+in game menu the game, by nature, cannot really be paused
+partly because it's a multiplayer game but also because
+suspending updates would cause the network connection
+to time out.
+*/
+
+struct SharedStateData;
+class PauseState final : public cro::State
 {
-	enum ID
-	{
-		MainMenu,
-        Game,
-		Error,
-		Pause
-	};
-}
+public:
+    PauseState(cro::StateStack&, cro::State::Context, SharedStateData&);
+
+    bool handleEvent(const cro::Event&) override;
+
+    void handleMessage(const cro::Message&) override;
+
+    bool simulate(float) override;
+
+    void render() override;
+
+    cro::StateID getStateID() const override { return States::Error; }
+
+private:
+
+    cro::Scene m_scene;
+    cro::Texture m_backgroundTexture;
+    cro::Font m_font;
+
+    void buildScene();
+    void updateView();
+};
