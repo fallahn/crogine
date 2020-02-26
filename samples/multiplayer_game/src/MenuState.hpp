@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/core/State.hpp>
+#include <crogine/core/String.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/MeshResource.hpp>
@@ -90,6 +91,11 @@ private:
 
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
 
+    struct TextEdit final
+    {
+        cro::String* string = nullptr;
+        cro::Entity entity;
+    }m_textEdit;
 
     void addSystems();
     void loadAssets();
@@ -100,6 +106,9 @@ private:
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createOptionsMenu(cro::Entity, std::uint32_t, std::uint32_t);
+
+    void handleTextEdit(const cro::Event&);
+    void applyTextEdit();
 
     void handleNetEvent(const cro::NetEvent&);
     void updateView();

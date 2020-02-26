@@ -30,6 +30,7 @@ source distribution.
 #include "MenuState.hpp"
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
+#include "MenuConsts.hpp"
 
 #include <crogine/detail/GlobalConsts.hpp>
 
@@ -38,14 +39,9 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
-
-namespace
-{
-    const std::uint32_t LargeTextSize = 120;
-    const std::uint32_t MediumTextSize = 50;
-}
 
 const std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPositions =
 {
@@ -69,6 +65,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
     entity.addComponent<cro::Text>(m_font).setString("Title!");
     entity.getComponent<cro::Text>().setCharSize(LargeTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     //host
@@ -76,6 +73,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 540.f });
     entity.addComponent<cro::Text>(m_font).setString("Host");
     entity.getComponent<cro::Text>().setCharSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Text>().getLocalBounds();
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
@@ -95,6 +93,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 480.f });
     entity.addComponent<cro::Text>(m_font).setString("Join");
     entity.getComponent<cro::Text>().setCharSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Text>().getLocalBounds();
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
@@ -114,6 +113,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 420.f });
     entity.addComponent<cro::Text>(m_font).setString("Options");
     entity.getComponent<cro::Text>().setCharSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Text>().getLocalBounds();
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
@@ -132,6 +132,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 360.f });
     entity.addComponent<cro::Text>(m_font).setString("Quit");
     entity.getComponent<cro::Text>().setCharSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Text>().getLocalBounds();
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
@@ -160,24 +161,73 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
     entity.addComponent<cro::Text>(m_font).setString("Player Details");
     entity.getComponent<cro::Text>().setCharSize(LargeTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    //TODO enter player name
+    //name text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
+    entity.addComponent<cro::Text>(m_font).setString(m_sharedData.localPlayer.name);
+    entity.getComponent<cro::Text>().setCharSize(SmallTextSize);
+    auto bounds = entity.getComponent<cro::Text>().getLocalBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
+    entity.addComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        //add a cursor to the end of the string when active
+        cro::String str = m_sharedData.localPlayer.name + "_";
+        e.getComponent<cro::Text>().setString(str);
+    };
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+    auto textEnt = entity;
 
+    //box background
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
+    entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/images/textbox.png"));
+    bounds = entity.getComponent<cro::Sprite>().getLocalBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] =
+        m_scene.getSystem<cro::UISystem>().addCallback(
+            [&, textEnt](cro::Entity, std::uint64_t flags) mutable
+            {
+                if (flags & cro::UISystem::LeftMouse)
+                {
+                    auto& callback = textEnt.getComponent<cro::Callback>();
+                    callback.active = !callback.active;
+                    if (callback.active)
+                    {
+                        textEnt.getComponent<cro::Text>().setColour(TextHighlightColour);
+                        m_textEdit.string = &m_sharedData.localPlayer.name;
+                        m_textEdit.entity = textEnt;
+                        SDL_StartTextInput();
+                    }
+                    else
+                    {
+                        applyTextEdit();
+                    }
+                }
+            });
+
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     //back
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 80.f, 120.f });
     entity.addComponent<cro::Text>(m_font).setString("Back");
     entity.getComponent<cro::Text>().setCharSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Text>().getLocalBounds();
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([parent](cro::Entity, std::uint64_t flags) mutable
+        m_scene.getSystem<cro::UISystem>().addCallback(
+            [&,parent](cro::Entity, std::uint64_t flags) mutable
             {
                 if (flags & cro::UISystem::LeftMouse)
                 {
+                    applyTextEdit();
                     parent.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
                 }
             });
@@ -188,16 +238,20 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.addComponent<cro::Transform>().setPosition({ 1920.f - 80.f, 120.f });
     entity.addComponent<cro::Text>(m_font).setString("Continue");
     entity.getComponent<cro::Text>().setCharSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
-    auto bounds = entity.getComponent<cro::Text>().getLocalBounds();
+    bounds = entity.getComponent<cro::Text>().getLocalBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([&,parent](cro::Entity, std::uint64_t flags) mutable
+        m_scene.getSystem<cro::UISystem>().addCallback(
+            [&,parent](cro::Entity, std::uint64_t flags) mutable
             {
                 if (flags & cro::UISystem::LeftMouse)
                 {
+                    applyTextEdit();
+
                     if (m_hosting)
                     {
                         if (!m_sharedData.clientConnection.connected)
@@ -252,24 +306,73 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
     entity.addComponent<cro::Text>(m_font).setString("Join Game");
     entity.getComponent<cro::Text>().setCharSize(LargeTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    //TODO enter server address
+    //ip text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
+    entity.addComponent<cro::Text>(m_font).setString(m_sharedData.targetIP);
+    entity.getComponent<cro::Text>().setCharSize(SmallTextSize);
+    auto bounds = entity.getComponent<cro::Text>().getLocalBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
+    entity.addComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        //add a cursor to the end of the string when active
+        cro::String str = m_sharedData.targetIP + "_";
+        e.getComponent<cro::Text>().setString(str);
+    };
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+    auto textEnt = entity;
+
+    //box background
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
+    entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/images/textbox.png"));
+    bounds = entity.getComponent<cro::Sprite>().getLocalBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] =
+        m_scene.getSystem<cro::UISystem>().addCallback(
+            [&, textEnt](cro::Entity, std::uint64_t flags) mutable
+            {
+                if (flags & cro::UISystem::LeftMouse)
+                {
+                    auto& callback = textEnt.getComponent<cro::Callback>();
+                    callback.active = !callback.active;
+                    if (callback.active)
+                    {
+                        textEnt.getComponent<cro::Text>().setColour(TextHighlightColour);
+                        m_textEdit.string = &m_sharedData.targetIP;
+                        m_textEdit.entity = textEnt;
+                        SDL_StartTextInput();
+                    }
+                    else
+                    {
+                        applyTextEdit();
+                    }
+                }
+            });
+
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     //back
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 80.f, 120.f });
     entity.addComponent<cro::Text>(m_font).setString("Back");
     entity.getComponent<cro::Text>().setCharSize(MediumTextSize);
-    auto bounds = entity.getComponent<cro::Text>().getLocalBounds();
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
+    bounds = entity.getComponent<cro::Text>().getLocalBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([parent](cro::Entity, std::uint64_t flags) mutable
+        m_scene.getSystem<cro::UISystem>().addCallback([&,parent](cro::Entity, std::uint64_t flags) mutable
             {
                 if (flags & cro::UISystem::LeftMouse)
                 {
+                    applyTextEdit();
                     parent.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
                 }
             });
@@ -280,6 +383,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::Transform>().setPosition({ 1920.f - 80.f, 120.f });
     entity.addComponent<cro::Text>(m_font).setString("Join");
     entity.getComponent<cro::Text>().setCharSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     bounds = entity.getComponent<cro::Text>().getLocalBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
@@ -289,9 +393,10 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
             {
                 if (flags & cro::UISystem::LeftMouse)
                 {
+                    applyTextEdit(); //finish any pending changes
                     if (!m_sharedData.clientConnection.connected)
                     {
-                        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+                        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
                         if (!m_sharedData.clientConnection.connected)
                         {
                             m_sharedData.errorMessage = "Could not connect to server";
@@ -327,6 +432,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
     entity.addComponent<cro::Text>(m_font).setString("Lobby");
     entity.getComponent<cro::Text>().setCharSize(LargeTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     //TODO display lobby members
@@ -336,6 +442,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Transform>().setPosition({ 80.f, 120.f });
     entity.addComponent<cro::Text>(m_font).setString("Back");
     entity.getComponent<cro::Text>().setCharSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Text>().getLocalBounds();
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
@@ -362,6 +469,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::ReadyButton;
     entity.addComponent<cro::Text>(m_font).setString("Start");
     entity.getComponent<cro::Text>().setCharSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     auto bounds = entity.getComponent<cro::Text>().getLocalBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;

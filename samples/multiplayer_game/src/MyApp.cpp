@@ -130,11 +130,21 @@ void MyApp::loadSettings()
 		{
 			m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0, playernames.size() - 1)];
 		}
+
+		if (auto* ip = cfg.findProperty("target_ip"); ip)
+		{
+			m_sharedData.targetIP = ip->getValue<std::string>();
+		}
+		else
+		{
+			m_sharedData.targetIP = "127.0.0.1";
+		}
 	}
 	else
 	{
 		//fill in some defaults
 		m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0, playernames.size() - 1)];
+		m_sharedData.targetIP = "127.0.0.1";
 	}
 }
 
@@ -142,7 +152,7 @@ void MyApp::saveSettings()
 {
 	cro::ConfigFile cfg;
 	cfg.addProperty("player_name", m_sharedData.localPlayer.name.toAnsiString());
-
+	cfg.addProperty("target_ip", m_sharedData.targetIP.toAnsiString());
 
 	cfg.save(configPath);
 }

@@ -31,21 +31,26 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
 #include "Slider.hpp"
+#include "MenuConsts.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
+#include <crogine/util/String.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 
 
 namespace
@@ -101,7 +106,29 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_4:
 
             break;
+        case SDLK_RETURN:
+        case SDLK_RETURN2:
+        case SDLK_KP_ENTER:
+            if (m_textEdit.string)
+            {
+                applyTextEdit();
+            }
+            break;
         }
+    }
+    else if (evt.type == SDL_KEYDOWN)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_BACKSPACE:
+            handleTextEdit(evt);
+            break;
+        }
+    }
+    else if (evt.type == SDL_TEXTINPUT)
+    {
+        handleTextEdit(evt);
     }
 
     m_scene.getSystem<cro::UISystem>().handleEvent(evt);
@@ -152,11 +179,12 @@ void MenuState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_scene.addSystem<cro::CommandSystem>(mb);
+    m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<SliderSystem>(mb);
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<cro::TextRenderer>(mb);
     m_scene.addSystem<cro::SpriteRenderer>(mb);
+    m_scene.addSystem<cro::TextRenderer>(mb);    
 }
 
 void MenuState::loadAssets()
@@ -256,15 +284,19 @@ void MenuState::createScene()
     auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e, glm::vec2)
         {
-            e.getComponent<cro::Text>().setColour(cro::Colour::Red());        
+            e.getComponent<cro::Text>().setColour(TextHighlightColour);        
         });
     auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e, glm::vec2) 
         {
-            e.getComponent<cro::Text>().setColour(cro::Colour::White());
+            e.getComponent<cro::Text>().setColour(TextNormalColour);
         });
 
     auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/images/menu_background.png"));
+
+    entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::RootNode;
 
@@ -273,6 +305,7 @@ void MenuState::createScene()
     createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
     createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
     createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
+
 
     //set a custom camera so the scene doesn't overwrite the viewport
     //with the default view when resizing the window
@@ -337,4 +370,57 @@ void MenuState::updateView()
     cam.projectionMatrix = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
     cam.viewport.bottom = (1.f - size.y) / 2.f;
     cam.viewport.height = size.y;
+}
+
+void MenuState::handleTextEdit(const cro::Event& evt)
+{
+    if (!m_textEdit.string)
+    {
+        return;
+    }
+
+    if (evt.type == SDL_KEYDOWN)
+    {
+        //assuming we're only handling backspace...
+        if (!m_textEdit.string->empty())
+        {
+            m_textEdit.string->erase(m_textEdit.string->size() - 1);
+        }
+    }
+    else if (evt.type == SDL_TEXTINPUT)
+    {
+        //TODO decide on some max string length (need also for sending over network)
+        if (m_textEdit.string->size() < 42)
+        {
+            auto codePoints = cro::Util::String::getCodepoints(evt.text.text);
+
+            *m_textEdit.string += cro::String::fromUtf32(codePoints.begin(), codePoints.end());
+        }
+    }
+
+    //update string origin
+    if (!m_textEdit.string->empty())
+    {
+        auto bounds = m_textEdit.entity.getComponent<cro::Text>().getLocalBounds();
+        m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
+    }
+}
+
+void MenuState::applyTextEdit()
+{
+    if (m_textEdit.string && m_textEdit.entity.isValid())
+    {
+        if (m_textEdit.string->empty())
+        {
+            *m_textEdit.string = "INVALID";
+        }
+
+        m_textEdit.entity.getComponent<cro::Text>().setColour(cro::Colour::White());
+        m_textEdit.entity.getComponent<cro::Text>().setString(*m_textEdit.string);
+        auto bounds = m_textEdit.entity.getComponent<cro::Text>().getLocalBounds();
+        m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
+        m_textEdit.entity.getComponent<cro::Callback>().active = false;
+        SDL_StopTextInput();
+    }
+    m_textEdit = {};
 }

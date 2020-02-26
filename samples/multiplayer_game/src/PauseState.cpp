@@ -29,6 +29,7 @@ source distribution.
 
 #include "PauseState.hpp"
 #include "SharedStateData.hpp"
+#include "MenuConsts.hpp"
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/core/Window.hpp>
@@ -135,12 +136,12 @@ void PauseState::buildScene()
     auto mouseEnter = m_scene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e, glm::vec2) 
         {
-            e.getComponent<cro::Text>().setColour(cro::Colour::Red());
+            e.getComponent<cro::Text>().setColour(TextHighlightColour);
         });
     auto mouseExit = m_scene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e, glm::vec2)
         {
-            e.getComponent<cro::Text>().setColour(cro::Colour::White());
+            e.getComponent<cro::Text>().setColour(TextNormalColour);
         });
 
     //menu items
@@ -149,12 +150,14 @@ void PauseState::buildScene()
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
     entity.addComponent<cro::Text>(m_font).setString("PAUSED");
     entity.getComponent<cro::Text>().setCharSize(120);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
 
     //options
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 500.f });
     entity.addComponent<cro::Text>(m_font).setString("Options");
     entity.getComponent<cro::Text>().setCharSize(50);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     auto bounds = entity.getComponent<cro::Text>().getLocalBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
@@ -174,6 +177,7 @@ void PauseState::buildScene()
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 440.f });
     entity.addComponent<cro::Text>(m_font).setString("Back");
     entity.getComponent<cro::Text>().setCharSize(50);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     bounds = entity.getComponent<cro::Text>().getLocalBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
@@ -194,6 +198,7 @@ void PauseState::buildScene()
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 380.f });
     entity.addComponent<cro::Text>(m_font).setString("Quit");
     entity.getComponent<cro::Text>().setCharSize(50);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
     bounds = entity.getComponent<cro::Text>().getLocalBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;

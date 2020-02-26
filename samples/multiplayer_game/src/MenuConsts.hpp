@@ -29,37 +29,11 @@ source distribution.
 
 #pragma once
 
-#include "Server.hpp"
+#include <crogine/graphics/Colour.hpp>
 
-#include <crogine/network/NetClient.hpp>
-#include <crogine/core/String.hpp>
+static const std::uint32_t LargeTextSize = 120;
+static const std::uint32_t MediumTextSize = 50;
+static const std::uint32_t SmallTextSize = 30;
 
-#include <string>
-
-struct PlayerData final
-{
-    cro::String name;
-    //TODO other stuff like skin data
-};
-
-struct SharedStateData final
-{
-    Server serverInstance;
-
-    struct ClientConnection final
-    {
-        cro::NetClient netClient;
-        bool connected = false;
-        bool ready = false;
-        std::uint8_t playerID = 4;
-    }clientConnection;
-
-    //data of all players rx'd from server
-    std::array<PlayerData, 4u> playerData = {};
-
-    //our local player data
-    PlayerData localPlayer;
-    cro::String targetIP;
-
-    std::string errorMessage;
-};
+static const cro::Colour TextNormalColour(0.9f, 0.58f, 0.1f);
+static const cro::Colour TextHighlightColour(0.99f, 0.08f, 0.1f);

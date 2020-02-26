@@ -342,6 +342,14 @@ void TextRenderer::rebuildBatch()
         for (auto i = 0u; i < maxCount; ++i)
         {
             auto& text = entities[i + batchIdx].getComponent<Text>();
+            text.updateVerts();
+            text.m_dirtyFlags = 0;
+
+            if (text.m_vertices.empty())
+            {
+                continue;
+            }
+
             auto texID = text.m_font->getTexture(text.m_charSize).getGLHandle();
             //new batches are created within the VBO for each new text, blend mode or scissor mode
             if (texID != batchData.texture
@@ -361,9 +369,6 @@ void TextRenderer::rebuildBatch()
 
                 spritesThisBatch = 0;
             }
-
-            text.updateVerts();
-            text.m_dirtyFlags = 0;
 
             text.m_batchIndex[0] = batchIdx;
             text.m_batchIndex[1] = batch.second.size();
