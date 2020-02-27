@@ -160,15 +160,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
 
 void MenuState::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == cro::Message::WindowMessage)
-    {
-        const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-        {
-            updateView();
-        }
-    }
-
     m_scene.forwardMessage(msg);
 }
 
@@ -332,9 +323,9 @@ void MenuState::createScene()
     //with the default view when resizing the window
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>();
+    entity.addComponent<cro::Camera>().resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
     m_scene.setActiveCamera(entity);
-    updateView();
+    updateView(entity.getComponent<cro::Camera>());
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)
@@ -413,13 +404,12 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
     }
 }
 
-void MenuState::updateView()
+void MenuState::updateView(cro::Camera& cam)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
-    auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
     cam.projectionMatrix = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
     cam.viewport.bottom = (1.f - size.y) / 2.f;
     cam.viewport.height = size.y;

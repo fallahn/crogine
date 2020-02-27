@@ -59,6 +59,7 @@ struct SharedStateData;
 namespace cro
 {
     struct NetEvent;
+    struct Camera;
 }
 
 class MenuState final : public cro::State, public cro::GuiClient
@@ -118,5 +119,5 @@ private:
     void updateReadyDisplay();
 
     void handleNetEvent(const cro::NetEvent&);
-    void updateView();
+    void updateView(cro::Camera&);
 };

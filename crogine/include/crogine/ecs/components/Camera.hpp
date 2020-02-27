@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 #include <array>
+#include <functional>
 
 namespace cro
 {
@@ -96,6 +97,15 @@ namespace cro
             glm::vec2 windowSize(App::getWindow().getSize());
             projectionMatrix = glm::perspective(0.6f, windowSize.x / windowSize.y, 0.1f, 150.f);
         }
+
+        /*!
+        \brief Resize callback.
+        Optional callback automatically called by the camera's Scene if the camera
+        is currently the active one. Useful for resizing viewports or letterboxing
+        2D views when the current window has changed aspect ratio. The callback
+        takes the current camera as a parameter and returns void
+        */
+        std::function<void(Camera&)> resizeCallback;
 
     private:
 

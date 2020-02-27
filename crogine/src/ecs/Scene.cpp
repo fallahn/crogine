@@ -107,16 +107,15 @@ namespace
 
     const float DefaultFOV = 35.f * Util::Const::degToRad;
 
-    void updateView(cro::Entity entity)
+    void updateView(cro::Camera& camera)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         size.y = ((size.x / 16.f) * 9.f) / size.y;
         size.x = 1.f;
 
-        auto& cam3D = entity.getComponent<cro::Camera>();
-        cam3D.projectionMatrix = glm::perspective(DefaultFOV, 16.f / 9.f, 0.1f, 280.f);
-        cam3D.viewport.bottom = (1.f - size.y) / 2.f;
-        cam3D.viewport.height = size.y;
+        camera.projectionMatrix = glm::perspective(DefaultFOV, 16.f / 9.f, 0.1f, 280.f);
+        camera.viewport.bottom = (1.f - size.y) / 2.f;
+        camera.viewport.height = size.y;
     }
 }
 
@@ -128,9 +127,9 @@ Scene::Scene(MessageBus& mb)
 {
     auto defaultCamera = createEntity();
     defaultCamera.addComponent<Transform>();
-    defaultCamera.addComponent<Camera>();
+    defaultCamera.addComponent<Camera>().resizeCallback = std::bind(&updateView, std::placeholders::_1);
     defaultCamera.addComponent<AudioListener>();
-    updateView(defaultCamera);
+    updateView(defaultCamera.getComponent<Camera>());
 
     m_defaultCamera = defaultCamera.getIndex();
     m_activeCamera = m_defaultCamera;
@@ -444,7 +443,11 @@ void Scene::forwardMessage(const Message& msg)
         const auto& data = msg.getData<cro::Message::WindowEvent>();
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
-            updateView(getEntity(m_defaultCamera));
+            auto& camera = m_entityManager.getEntity(m_activeCamera).getComponent<Camera>();
+            if (camera.resizeCallback)
+            {
+                camera.resizeCallback(camera);
+            }
         }
     }
 

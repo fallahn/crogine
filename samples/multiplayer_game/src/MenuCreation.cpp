@@ -495,7 +495,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                         bool ready = true;
                         for (auto i = 0u; i < ConstVal::MaxClients; ++i)
                         {
-                            if (m_sharedData.clientConnection.connected
+                            if (!m_sharedData.playerData[i].name.empty()
                                 && !m_readyState[i])
                             {
                                 ready = false;
