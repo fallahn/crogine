@@ -40,7 +40,7 @@ using namespace cro;
 
 namespace
 {
-    ENetPacket* createPacket(uint32 id, void* data, std::size_t size, NetFlag flags)
+    ENetPacket* createPacket(uint8 id, void* data, std::size_t size, NetFlag flags)
     {
         int32 packetFlags = 0;
         if (flags == NetFlag::Reliable)
@@ -56,9 +56,9 @@ namespace
             packetFlags |= ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT | ENET_PACKET_FLAG_UNSEQUENCED;
         }
 
-        ENetPacket* packet = enet_packet_create(&id, sizeof(uint32), packetFlags);
-        enet_packet_resize(packet, sizeof(uint32) + size);
-        std::memcpy(&packet->data[sizeof(uint32)], data, size);
+        ENetPacket* packet = enet_packet_create(&id, sizeof(uint8), packetFlags);
+        enet_packet_resize(packet, sizeof(uint8) + size);
+        std::memcpy(&packet->data[sizeof(uint8)], data, size);
 
         return packet;
     }
@@ -197,7 +197,7 @@ bool NetHost::pollEvent(NetEvent& evt)
     return false;
 }
 
-void NetHost::broadcastPacket(uint32 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
+void NetHost::broadcastPacket(uint8 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
 {
     if (m_host)
     {
@@ -205,7 +205,7 @@ void NetHost::broadcastPacket(uint32 id, void* data, std::size_t size, NetFlag f
     }
 }
 
-void NetHost::sendPacket(const NetPeer& peer, uint32 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
+void NetHost::sendPacket(const NetPeer& peer, uint8 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
 {
     if (peer.m_peer)
     {
