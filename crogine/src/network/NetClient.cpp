@@ -86,6 +86,9 @@ bool NetClient::create(std::size_t maxChannels, std::size_t maxClients, uint32 i
         Logger::log("Creating net client failed.", Logger::Type::Error);
         return false;
     }
+
+    enet_host_compress_with_range_coder(m_client);
+
     LOG("Created client host", Logger::Type::Info);
     return true;
 }
@@ -199,7 +202,7 @@ bool NetClient::pollEvent(NetEvent& evt)
     return false;
 }
 
-void NetClient::sendPacket(uint32 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
+void NetClient::sendPacket(uint8 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
 {
     if (m_peer.m_peer)
     {
@@ -217,9 +220,9 @@ void NetClient::sendPacket(uint32 id, void* data, std::size_t size, NetFlag flag
             packetFlags |= ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT | ENET_PACKET_FLAG_UNSEQUENCED;
         }
         
-        ENetPacket* packet = enet_packet_create(&id, sizeof(uint32), packetFlags);
-        enet_packet_resize(packet, sizeof(uint32) + size);
-        std::memcpy(&packet->data[sizeof(uint32)], data, size);
+        ENetPacket* packet = enet_packet_create(&id, sizeof(uint8), packetFlags);
+        enet_packet_resize(packet, sizeof(uint8) + size);
+        std::memcpy(&packet->data[sizeof(uint8)], data, size);
 
         enet_peer_send(m_peer.m_peer, channel, packet);
     }

@@ -30,15 +30,30 @@ source distribution.
 #include "MyApp.hpp"
 #include "GameState.hpp"
 #include "MenuState.hpp"
+#include "ErrorState.hpp"
+#include "PauseState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/ConfigFile.hpp>
+#include <crogine/util/Random.hpp>
+
+namespace
+{
+	const std::vector<cro::String> playernames =
+	{
+		"Edwardo", "Cliff", "Theodora", "Annabelle", "Mr.Wilson", "Sarah"
+	};
+	std::string configPath;
+}
 
 MyApp::MyApp()
 	: m_stateStack({*this, getWindow()})
 {
     m_stateStack.registerState<MenuState>(States::ID::MainMenu, m_sharedData);
     m_stateStack.registerState<GameState>(States::ID::Game, m_sharedData);
+    m_stateStack.registerState<ErrorState>(States::ID::Error, m_sharedData);
+    m_stateStack.registerState<PauseState>(States::ID::Pause, m_sharedData);
 }
 
 //public
@@ -49,10 +64,13 @@ void MyApp::handleEvent(const cro::Event& evt)
 		switch (evt.key.keysym.sym)
 		{
 		default: break;
+#ifdef CRO_DEBUG_
 		case SDLK_ESCAPE:
 		case SDLK_AC_BACK:
-            App::quit();
+			getWindow().setMouseCaptured(false);
+			App::quit();
 			break;
+#endif
 		}
 	}
 	
@@ -83,13 +101,58 @@ bool MyApp::initialise()
 
 	m_sharedData.clientConnection.netClient.create(4);
 
+	configPath = cro::FileSystem::getConfigDirectory("mp_game") + "settings.cfg";
+	loadSettings();
+
 	return true;
 }
 
 void MyApp::finalise()
 {
+	saveSettings();
+
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);
 
 	m_sharedData.serverInstance.stop();
+}
+
+void MyApp::loadSettings()
+{
+	cro::ConfigFile cfg;
+	if (cfg.loadFromFile(configPath))
+	{
+		if (auto* name = cfg.findProperty("player_name"); name)
+		{
+			m_sharedData.localPlayer.name = name->getValue<std::string>().substr(0, ConstVal::MaxStringChars);
+		}
+		else
+		{
+			m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0, playernames.size() - 1)];
+		}
+
+		if (auto* ip = cfg.findProperty("target_ip"); ip)
+		{
+			m_sharedData.targetIP = ip->getValue<std::string>();
+		}
+		else
+		{
+			m_sharedData.targetIP = "127.0.0.1";
+		}
+	}
+	else
+	{
+		//fill in some defaults
+		m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0, playernames.size() - 1)];
+		m_sharedData.targetIP = "127.0.0.1";
+	}
+}
+
+void MyApp::saveSettings()
+{
+	cro::ConfigFile cfg;
+	cfg.addProperty("player_name", m_sharedData.localPlayer.name.toAnsiString());
+	cfg.addProperty("target_ip", m_sharedData.targetIP.toAnsiString());
+
+	cfg.save(configPath);
 }

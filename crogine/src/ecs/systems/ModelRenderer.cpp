@@ -128,7 +128,6 @@ void ModelRenderer::process(float)
 void ModelRenderer::render(Entity camera)
 {
     const auto& camComponent = camera.getComponent<Camera>();
-    applyViewport(camComponent.viewport);
     
     const auto& camTx = camera.getComponent<Transform>();
     auto cameraPosition = camTx.getWorldPosition();
@@ -206,8 +205,6 @@ void ModelRenderer::render(Entity camera)
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
-
-    restorePreviousViewport();
 }
 
 //private

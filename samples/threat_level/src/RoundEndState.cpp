@@ -37,7 +37,7 @@ source distribution.
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/CommandID.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
@@ -123,7 +123,7 @@ bool RoundEndState::simulate(float dt)
 
 void RoundEndState::render()
 {
-    m_uiScene.render();
+    m_uiScene.render(cro::App::getWindow());
 }
 
 //private

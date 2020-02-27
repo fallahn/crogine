@@ -43,7 +43,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/AudioSource.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
-#include <crogine/ecs/components/CommandID.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
@@ -162,9 +162,10 @@ bool MainState::simulate(float dt)
 }
 
 void MainState::render()
-{    
-    m_backgroundScene.render();
-    m_menuScene.render();
+{
+    auto& rt = cro::App::getWindow();
+    m_backgroundScene.render(rt);
+    m_menuScene.render(rt);
 }
 
 //private

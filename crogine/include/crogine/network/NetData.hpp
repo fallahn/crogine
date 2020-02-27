@@ -111,9 +111,9 @@ namespace cro
             Packet& operator = (Packet&&) = delete;
 
             /*!
-            \brief The unique ID this packet was tegged with when sent
+            \brief The unique ID this packet was tagged with when sent
             */
-            Uint32 getID() const;
+            std::uint8_t getID() const;
 
             /*!
             \brief Used to retreive the data as a specific type.
@@ -134,7 +134,7 @@ namespace cro
 
         private:
             _ENetPacket* m_packet;
-            uint32 m_id;
+            std::uint8_t m_id;
             void setPacketData(_ENetPacket*);
 
             friend class NetClient;

@@ -71,7 +71,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioSource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Callback.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Camera.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandID.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandTarget.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ParticleEmitter.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\PhysicsObject.hpp" />
@@ -121,6 +121,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostProcess.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\QuadBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Rectangle.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\RenderTarget.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\RenderTexture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\ResourceAutomation.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Shader.hpp" />

@@ -76,3 +76,8 @@ const ComponentMask& Entity::getComponentMask() const
     CRO_ASSERT(m_entityManager, "Invalid Entity instance");
     return m_entityManager->getComponentMask(*this);
 }
+
+bool Entity::isValid() const
+{
+    return (m_entityManager != nullptr && !m_entityManager->entityDestroyed(*this));
+}

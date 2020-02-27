@@ -36,26 +36,31 @@ source distribution.
 #include <vector>
 #include <typeindex>
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 
 namespace cro
 {
-    class CRO_EXPORT_API Component final
+    class CRO_EXPORT_API ComponentManager final
     {
     public:
 
-        using ID = uint32;
+        using ID = std::uint32_t;
 
         /*!
         \brief Returns a unique ID based on the component type
         */
         template <typename T>
-        static ID getID()
+        ID getID()
         {
             auto id = std::type_index(typeid(T));
             return getFromTypeID(id);
         }
 
+        ID getFromTypeID(std::type_index);
+
     private:
-        static ID getFromTypeID(std::type_index);
+
+        std::vector<std::type_index> m_IDs;
     };
 }

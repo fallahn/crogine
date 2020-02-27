@@ -183,10 +183,20 @@ void Transform::setOrigin(glm::vec3 o)
     m_dirtyFlags |= Tx;
 }
 
+void Transform::setOrigin(glm::vec2 o)
+{
+    setOrigin(glm::vec3(o.x, o.y, 0.f));
+}
+
 void Transform::setPosition(glm::vec3 position)
 {
     m_position = position;
     m_dirtyFlags |= Tx;
+}
+
+void Transform::setPosition(glm::vec2 position)
+{
+    setPosition(glm::vec3(position.x, position.y, 0.f));
 }
 
 void Transform::setRotation(glm::vec3 rotation)
@@ -195,10 +205,26 @@ void Transform::setRotation(glm::vec3 rotation)
     m_dirtyFlags |= Tx;
 }
 
+void Transform::setRotation(glm::quat rotation)
+{
+    m_rotation = rotation;
+    m_dirtyFlags |= Tx;
+}
+
+void Transform::setRotation(float radians)
+{
+    setRotation(glm::vec3(0.f, 0.f, radians));
+}
+
 void Transform::setScale(glm::vec3 scale)
 {
     m_scale = scale;
     m_dirtyFlags |= Tx;
+}
+
+void Transform::setScale(glm::vec2 scale)
+{
+    setScale(glm::vec3(scale.x, scale.y, 1.f));
 }
 
 void Transform::move(glm::vec3 distance)
@@ -207,16 +233,31 @@ void Transform::move(glm::vec3 distance)
     m_dirtyFlags |= Tx;
 }
 
+void Transform::move(glm::vec2 distance)
+{
+    move(glm::vec3(distance.x, distance.y, 0.f));
+}
+
 void Transform::rotate(glm::vec3 axis, float rotation)
 {
     m_rotation = glm::rotate(m_rotation, rotation, glm::normalize(axis));
     m_dirtyFlags |= Tx;
 }
 
+void Transform::rotate(float amount)
+{
+    rotate(glm::vec3(0.f, 0.f, 1.), amount);
+}
+
 void Transform::scale(glm::vec3 scale)
 {
     m_scale *= scale;
     m_dirtyFlags |= Tx;
+}
+
+void Transform::scale(glm::vec2 amount)
+{
+    scale(glm::vec3(amount.x, amount.y, 0.f));
 }
 
 glm::vec3 Transform::getOrigin() const

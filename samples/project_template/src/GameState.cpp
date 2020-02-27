@@ -55,8 +55,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     });
 
     updateView();
-
-    context.appInstance.resetFrameTime();
 }
 
 //public
@@ -96,8 +94,9 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
-    m_gameScene.render();
-    m_uiScene.render();
+    auto& rt = cro::App::getWindow();
+    m_gameScene.render(rt);
+    m_uiScene.render(rt);
 }
 
 //private

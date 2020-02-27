@@ -116,7 +116,6 @@ namespace cro
         bool m_pendingRebuild;
         bool m_pendingSorting;
         void rebuildBatch();
-        void updateVerts(Text&);
 
         void applyBlendMode(Material::BlendMode);
         void applyScissor(const FloatRect&, const glm::mat4&);

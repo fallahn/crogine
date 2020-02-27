@@ -1,0 +1,9 @@
+cubemap sky
+{
+	up = "assets/images/cubemap/sky_up.jpg"
+	down = "assets/images/cubemap/sky_dn.jpg"
+	left = "assets/images/cubemap/sky_lf.jpg"
+	right = "assets/images/cubemap/sky_rt.jpg"
+	front = "assets/images/cubemap/sky_ft.jpg"
+	back = "assets/images/cubemap/sky_bk.jpg"
+}

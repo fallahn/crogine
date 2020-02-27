@@ -29,15 +29,20 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
-
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
+#include "InputParser.hpp"
+#include "ServerPacketData.hpp"
+
+#include <crogine/core/State.hpp>
+#include <crogine/core/ConsoleClient.hpp>
+#include <crogine/gui/GuiClient.hpp>
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/network/NetData.hpp>
 
 struct SharedStateData;
-class GameState final : public cro::State
+class GameState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
     GameState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -58,10 +63,22 @@ private:
 
     cro::ResourceCollection m_resources;
 
+    InputParser m_inputParser;
+
+    cro::Clock m_bitrateClock; //< updates the bitrate display in the debug window
+    cro::Clock m_sceneRequestClock; //< spaces the request for initial scene data
+
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
 
     void updateView();
+
+    void handlePacket(const cro::NetEvent::Packet&);
+    void spawnPlayer(PlayerInfo);
+
+
+    std::size_t m_cameraPosIndex;
+    void updateCameraPosition();//< switch 3rd to first person view etc
 };

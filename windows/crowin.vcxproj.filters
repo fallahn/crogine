@@ -234,9 +234,6 @@
     <ClInclude Include="..\crogine\include\crogine\core\MessageBus.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandID.hpp">
-      <Filter>Header Files\ecs\components</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CommandSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
@@ -494,6 +491,12 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostProcess.hpp">
       <Filter>Header Files\graphics\post process</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandTarget.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\RenderTarget.hpp">
+      <Filter>Header Files\graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -30,24 +30,10 @@ source distribution.
 #pragma once
 
 #include "ServerState.hpp"
-#include "CommonConsts.hpp"
-
-#include <crogine/network/NetHost.hpp>
 
 #include <atomic>
 #include <memory>
 #include <thread>
-#include <array>
-
-namespace Sv
-{
-    struct ClientConnection final
-    {
-        //std::uint8_t id = 0;
-        bool connected = false;
-        cro::NetPeer peer;
-    };
-}
 
 class Server final
 {
@@ -70,11 +56,11 @@ private:
 
     std::unique_ptr<Sv::State> m_currentState;
 
-    cro::NetHost m_host;
-    std::array<Sv::ClientConnection, ConstVal::MaxClients> m_clients;
+    Sv::SharedData m_sharedData;
 
     void run();
 
-    bool addClient(const cro::NetEvent&);
+    //returns slot index, or >= MaxClients if full
+    std::uint8_t addClient(const cro::NetEvent&);
     void removeClient(const cro::NetEvent&);
 };

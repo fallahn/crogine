@@ -46,6 +46,7 @@ namespace cro
     class CRO_EXPORT_API ConsoleClient
     {
     public:
+        ConsoleClient() = default;
         virtual ~ConsoleClient();
         ConsoleClient(const ConsoleClient&) = default;
         ConsoleClient(ConsoleClient&&) = default;

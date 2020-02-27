@@ -27,7 +27,6 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-
 template <typename T, typename... Args>
 T& Scene::addSystem(Args&&... args)
 {
@@ -90,7 +89,7 @@ T& Scene::addPostProcess(Args&&... args)
         if (m_sceneBuffer.create(size.x, size.y))
         {
             //set render path
-            currentRenderPath = std::bind(&Scene::postRenderPath, this);
+            currentRenderPath = std::bind(&Scene::postRenderPath, this, std::placeholders::_1);
         }
         else
         {

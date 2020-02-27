@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "imgui.h"
+
 #include <crogine/Config.hpp>
 
 #include <string>

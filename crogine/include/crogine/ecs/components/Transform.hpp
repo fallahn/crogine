@@ -71,19 +71,46 @@ namespace cro
         \brief Sets the origin of the transform
         */
         void setOrigin(glm::vec3);
+        /*!
+        \brief Sets the origin of the x and y axis.
+        Useful shortcut when working with 2D objects
+        such as text or sprites
+        */
+        void setOrigin(glm::vec2);
 
         /*!
         \brief Sets the transform position
         */
         void setPosition(glm::vec3);
+
+        /*!
+        \brief Sets a 2D position by automatically setting
+        the Z value to zero
+        */
+        void setPosition(glm::vec2);
+
         /*!
         \brief Sets the euler rotation in radians for the x, y and z axis
         */
         void setRotation(glm::vec3);
+        /*!
+        \brief Sets the euler rotation around the z axis, in radians.
+        Useful shortcut when using "D objects such as sprites or text
+        */
+        void setRotation(float);
+        /*!
+        \brief Sets the rotation with the given quaternion
+        */
+        void setRotation(glm::quat);
         /*
         \brief Sets the transform scale for each axis
         */
         void setScale(glm::vec3);
+        /*!
+        \brief Sets the transform scale on the x/y axis.
+        Useful for 2D objects such as text or sprites. Z is fixed at 1
+        */
+        void setScale(glm::vec2);
 
         /*
         \brief Moves the transform.
@@ -91,16 +118,32 @@ namespace cro
         */
         void move(glm::vec3);
         /*!
+        \brief Moves the transform on the x and y axis only.
+        The given paramter is added to the transform's current position.
+        Useful for working with 2D objects such as sprites or text
+        */
+        void move(glm::vec2);
+        /*!
         \brief Rotates the transform.
         \param axis A vector representing the axis around which to rotate the transform
         \param amount The amount of rotation in radians
         */
         void rotate(glm::vec3 axis, float amount);
         /*!
+        \brief Rotates the transform around its z axis by the given radians.
+        Useful shortcut for working with 2D items such as sprites or text
+        */
+        void rotate(float amount);
+        /*!
         \brief Scales the transform.
         The existing scale on the x, y, and z axis is multiplied by the given values
         */
         void scale(glm::vec3);
+        /*!
+        \brief Scales the transform along the x and y axis.
+        Useful shortcut for scaling 2D items such as text or sprites
+        */
+        void scale(glm::vec2);
 
         /*!
         \brief Returns the current origin of the transform

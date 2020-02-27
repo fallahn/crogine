@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/components/CommandID.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/core/Clock.hpp>
 

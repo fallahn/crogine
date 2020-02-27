@@ -50,6 +50,7 @@ namespace cro
 
         /*!
         \brief Used to pass in any events the system may be interested in
+        This must be called from a State's even handler for the UI to work
         */
         void handleEvent(const Event&);
 

@@ -51,6 +51,7 @@ namespace
         #define OUTPUT
 
         #define TEXTURE texture2D
+        #define TEXTURE_CUBE textureCube
 
         #else
 
@@ -65,6 +66,7 @@ namespace
         #define OUTPUT out vec4 FRAG_OUT;
 
         #define TEXTURE texture
+        #define TEXTURE_CUBE texture
 
         #endif
         )";

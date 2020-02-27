@@ -118,7 +118,7 @@ namespace cro
         channels have higher priority, with 0 being highest.
         */
         template <typename T>
-        void sendPacket(uint32 id, const T& data, NetFlag flags, uint8 channel = 0);
+        void sendPacket(uint8 id, const T& data, NetFlag flags, uint8 channel = 0);
 
         /*!
         \brief Sends the given array of bytes out over the connection if it
@@ -132,7 +132,7 @@ namespace cro
         \param channel Stream channel over which to send the data. Lower number
         channels have higher priority, with 0 being highest.
         */
-        void sendPacket(uint32 id, void* data, std::size_t size, NetFlag flags, uint8 channel = 0);
+        void sendPacket(uint8 id, void* data, std::size_t size, NetFlag flags, uint8 channel = 0);
 
         /*!
         \brief Returns a reference to the client's peer.

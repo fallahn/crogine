@@ -104,42 +104,50 @@ Mesh::Data QuadBuilder::build() const
 
 //------------------------------------
 
+CubeBuilder::CubeBuilder(glm::vec3 dimensions)
+    : m_dimensions(dimensions) 
+{
+    CRO_ASSERT(dimensions.x > 0 && dimensions.y > 0 && dimensions.z > 0, "Must have non-negative size");
+}
+
 Mesh::Data CubeBuilder::build() const
 {
     Mesh::Data meshData;
 
+    auto dim = m_dimensions / 2.f;
+
     std::vector<float> vertexData =
     {
         //front
-        -0.5f, 0.5f, 0.5f,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 1.f,
-        -0.5f, -0.5f, 0.5f,  0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 0.f,
-        0.5f, 0.5f, 0.5f,    0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 1.f,
-        0.5f, -0.5f, 0.5f,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 0.f,
+        -dim.x, dim.y, dim.z,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 1.f,
+        -dim.x, -dim.y, dim.z,  0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 0.f,
+        dim.x, dim.y, dim.z,    0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 1.f,
+        dim.x, -dim.y, dim.z,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 0.f,
         //back
-        0.5f, 0.5f, -0.5f,   0.f,0.f,-1.f,   -1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 1.f,
-        0.5f, -0.5f, -0.5f,  0.f,0.f,-1.f,   -1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 0.f,
-        -0.5f, 0.5f, -0.5f,    0.f,0.f,-1.f,   -1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 1.f,
-        -0.5f, -0.5f, -0.5f,   0.f,0.f,-1.f,   -1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 0.f,
+        dim.x, dim.y, -dim.z,   0.f,0.f,-1.f,   -1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 1.f,
+        dim.x, -dim.y, -dim.z,  0.f,0.f,-1.f,   -1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 0.f,
+        -dim.x, dim.y, -dim.z,    0.f,0.f,-1.f,   -1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 1.f,
+        -dim.x, -dim.y, -dim.z,   0.f,0.f,-1.f,   -1.f,0.f,0.f,   0.f,1.f,0.f,     1.f, 0.f,
         //left
-        -0.5f, 0.5f, -0.5f,   -1.f,0.f,0.f,   0.f,0.f,1.f,   0.f,1.f,0.f,     0.f, 1.f,
-        -0.5f, -0.5f, -0.5f,  -1.f,0.f,0.f,   0.f,0.f,1.f,   0.f,1.f,0.f,     0.f, 0.f,
-        -0.5f, 0.5f, 0.5f,    -1.f,0.f,0.f,   0.f,0.f,1.f,   0.f,1.f,0.f,     1.f, 1.f,
-        -0.5f, -0.5f, 0.5f,   -1.f,0.f,0.f,   0.f,0.f,1.f,   0.f,1.f,0.f,     1.f, 0.f,
+        -dim.x, dim.y, -dim.z,   -1.f,0.f,0.f,   0.f,0.f,1.f,   0.f,1.f,0.f,     0.f, 1.f,
+        -dim.x, -dim.y, -dim.z,  -1.f,0.f,0.f,   0.f,0.f,1.f,   0.f,1.f,0.f,     0.f, 0.f,
+        -dim.x, dim.y, dim.z,    -1.f,0.f,0.f,   0.f,0.f,1.f,   0.f,1.f,0.f,     1.f, 1.f,
+        -dim.x, -dim.y, dim.z,   -1.f,0.f,0.f,   0.f,0.f,1.f,   0.f,1.f,0.f,     1.f, 0.f,
         //right
-        0.5f, 0.5f, 0.5f,   1.f,0.f,0.f,   0.f,0.f,-1.f,   0.f,1.f,0.f,     0.f, 1.f,
-        0.5f, -0.5f, 0.5f,  1.f,0.f,0.f,   0.f,0.f,-1.f,   0.f,1.f,0.f,     0.f, 0.f,
-        0.5f, 0.5f, -0.5f,    1.f,0.f,0.f,   0.f,0.f,-1.f,   0.f,1.f,0.f,     1.f, 1.f,
-        0.5f, -0.5f, -0.5f,   1.f,0.f,0.f,   0.f,0.f,-1.f,   0.f,1.f,0.f,     1.f, 0.f,
+        dim.x, dim.y, dim.z,   1.f,0.f,0.f,   0.f,0.f,-1.f,   0.f,1.f,0.f,     0.f, 1.f,
+        dim.x, -dim.y, dim.z,  1.f,0.f,0.f,   0.f,0.f,-1.f,   0.f,1.f,0.f,     0.f, 0.f,
+        dim.x, dim.y, -dim.z,    1.f,0.f,0.f,   0.f,0.f,-1.f,   0.f,1.f,0.f,     1.f, 1.f,
+        dim.x, -dim.y, -dim.z,   1.f,0.f,0.f,   0.f,0.f,-1.f,   0.f,1.f,0.f,     1.f, 0.f,
         //top
-        -0.5f, 0.5f, -0.5f,   0.f,1.f,0.f,   1.f,0.f,0.f,   0.f,0.f,-1.f,     0.f, 1.f,
-        -0.5f, 0.5f, 0.5f,  0.f,1.f,0.f,   1.f,0.f,0.f,   0.f,0.f,-1.f,     0.f, 0.f,
-        0.5f, 0.5f, -0.5f,    0.f,1.f,0.f,   1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 1.f,
-        0.5f, 0.5f, 0.5f,   0.f,1.f,0.f,   1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 0.f,
+        -dim.x, dim.y, -dim.z,   0.f,1.f,0.f,   1.f,0.f,0.f,   0.f,0.f,-1.f,     0.f, 1.f,
+        -dim.x, dim.y, dim.z,  0.f,1.f,0.f,   1.f,0.f,0.f,   0.f,0.f,-1.f,     0.f, 0.f,
+        dim.x, dim.y, -dim.z,    0.f,1.f,0.f,   1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 1.f,
+        dim.x, dim.y, dim.z,   0.f,1.f,0.f,   1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 0.f,
         //bottom
-        -0.5f, -0.5f, 0.5f,   0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     0.f, 1.f,
-        -0.5f, -0.5f, -0.5f,  0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     0.f, 0.f,
-        0.5f, -0.5f, 0.5f,    0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 1.f,
-        0.5f, -0.5f, -0.5f,   0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 0.f
+        -dim.x, -dim.y, dim.z,   0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     0.f, 1.f,
+        -dim.x, -dim.y, -dim.z,  0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     0.f, 0.f,
+        dim.x, -dim.y, dim.z,    0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 1.f,
+        dim.x, -dim.y, -dim.z,   0.f,-1.f,0.f,   -1.f,0.f,0.f,   0.f,0.f,-1.f,     1.f, 0.f
     };
 
     meshData.attributes[Mesh::Position] = 3;

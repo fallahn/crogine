@@ -277,7 +277,7 @@ void SpriteRenderer::process(float)
 void SpriteRenderer::render(Entity camera)
 {
     const auto& camComponent = camera.getComponent<Camera>();
-    applyViewport(camComponent.viewport);
+    //applyViewport(camComponent.viewport);
     
     //bind shader and attrib arrays
     glCheck(glUseProgram(m_shader.getGLHandle()));
@@ -325,7 +325,7 @@ void SpriteRenderer::render(Entity camera)
     glCheck(glDisable(GL_BLEND));
     glCheck(glDepthMask(GL_TRUE));
 
-    restorePreviousViewport();
+    //restorePreviousViewport();
 }
 
 //private

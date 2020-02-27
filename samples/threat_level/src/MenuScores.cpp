@@ -42,7 +42,7 @@ source distribution.
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/UIDraggable.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/CommandID.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/graphics/Image.hpp>

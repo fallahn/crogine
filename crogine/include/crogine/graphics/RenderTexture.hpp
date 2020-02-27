@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/RenderTarget.hpp>
 
 #include <array>
 
@@ -40,7 +41,7 @@ namespace cro
     \brief A render buffer which can be used as a texture.
     RenderTextures are non-copyable objects but *can* be moved.
     */
-    class CRO_EXPORT_API RenderTexture final : public Detail::SDLResource
+    class CRO_EXPORT_API RenderTexture final : public RenderTarget, public Detail::SDLResource
     {
     public:
         /*!
@@ -77,7 +78,7 @@ namespace cro
         /*!
         \brief Returns the current size in pixels of the render texture (zero if not yet created)
         */
-        glm::uvec2 getSize() const;
+        glm::uvec2 getSize() const override;
 
         /*!
         \brief Returns a reference to the colour buffer texture to be used in rendering

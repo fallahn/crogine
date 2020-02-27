@@ -1,0 +1,9 @@
+cubemap interstellar
+{
+	up = "assets/images/cubemap/interstellar_up.png"
+	down = "assets/images/cubemap/interstellar_dn.png"
+	left = "assets/images/cubemap/interstellar_lf.png"
+	right = "assets/images/cubemap/interstellar_rt.png"
+	front = "assets/images/cubemap/interstellar_ft.png"
+	back = "assets/images/cubemap/interstellar_bk.png"
+}

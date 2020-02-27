@@ -135,7 +135,7 @@ namespace cro
         uint32 m_charSize;
         Colour m_colour;
         Material::BlendMode m_blendMode;
-        uint8 m_dirtyFlags;
+        mutable uint8 m_dirtyFlags;
 
         bool m_scissor;
         FloatRect m_croppingArea;
@@ -151,12 +151,13 @@ namespace cro
             glm::vec4 colour = glm::vec4(0.f);
             glm::vec2 UV = glm::vec2(0.f);
         };
-        std::vector<Vertex> m_vertices;
+        mutable std::vector<Vertex> m_vertices;
         int32 m_vboOffset; //starting index in parent VBO
         std::array<std::size_t, 2u> m_batchIndex = {};
 
         mutable FloatRect m_localBounds;
-        void updateLocalBounds() const;
+
+        void updateVerts() const;
 
         Alignment m_alignment;
 

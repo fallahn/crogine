@@ -52,22 +52,25 @@ namespace
 }
 
 Texture::Texture()
-    : m_format          (ImageFormat::None),
-    m_handle            (0),
-    m_smooth            (false),
-    m_repeated          (false),
-    m_hasMipMaps        (false)
+    : m_size        (0),
+    m_format        (ImageFormat::None),
+    m_handle        (0),
+    m_smooth        (false),
+    m_repeated      (false),
+    m_hasMipMaps    (false)
 {
 
 }
 
-Texture::Texture(Texture&& other)
-    : m_format  (other.m_format),
+Texture::Texture(Texture&& other) noexcept
+    : m_size    (other.m_size),
+    m_format    (other.m_format),
     m_handle    (other.m_handle),
     m_smooth    (other.m_smooth),
     m_repeated  (other.m_repeated),
     m_hasMipMaps(other.m_hasMipMaps)
 {
+    other.m_size = glm::uvec2(0);
     other.m_format = ImageFormat::None;
     other.m_handle = 0;
     other.m_smooth = false;
@@ -75,16 +78,18 @@ Texture::Texture(Texture&& other)
     other.m_hasMipMaps = false;
 }
 
-Texture& Texture::operator=(Texture&& other)
+Texture& Texture::operator=(Texture&& other) noexcept
 {
     if (this != &other)
     {
+        m_size = other.m_size;
         m_format = other.m_format;
         m_handle = other.m_handle;
         m_smooth = other.m_smooth;
         m_repeated = other.m_repeated;
         m_hasMipMaps = other.m_hasMipMaps;
 
+        other.m_size = glm::uvec2(0);
         other.m_format = ImageFormat::None;
         other.m_handle = 0;
         other.m_smooth = false;

@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/CommandID.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
@@ -166,7 +166,7 @@ bool GameOverState::simulate(float dt)
 
 void GameOverState::render()
 {
-    m_uiScene.render();
+    m_uiScene.render(cro::App::getWindow());
 }
 
 //private

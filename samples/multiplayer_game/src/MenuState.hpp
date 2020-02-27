@@ -29,7 +29,12 @@ source distribution.
 
 #pragma once
 
+#include "StateIDs.hpp"
+#include "CommonConsts.hpp"
+
 #include <crogine/core/State.hpp>
+#include <crogine/core/String.hpp>
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/MeshResource.hpp>
 #include <crogine/graphics/ShaderResource.hpp>
@@ -37,30 +42,37 @@ source distribution.
 #include <crogine/graphics/TextureResource.hpp>
 #include <crogine/graphics/Font.hpp>
 
-#include "StateIDs.hpp"
+#include <array>
+
+namespace MenuCommandID
+{
+    enum
+    {
+        RootNode = 0x1,
+        ReadyButton = 0x2,
+        LobbyList = 0x4
+    };
+}
 
 
-/*!
-Creates a state to render a menu.
-*/
 struct SharedStateData;
 namespace cro
 {
     struct NetEvent;
 }
 
-class MenuState final : public cro::State
+class MenuState final : public cro::State, public cro::GuiClient
 {
 public:
-	MenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
-	~MenuState() = default;
+    MenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    ~MenuState() = default;
 
-	cro::StateID getStateID() const override { return States::MainMenu; }
+    cro::StateID getStateID() const override { return States::MainMenu; }
 
-	bool handleEvent(const cro::Event&) override;
+    bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
-	bool simulate(float) override;
-	void render() override;
+    bool simulate(float) override;
+    void render() override;
 
 private:
 
@@ -73,10 +85,38 @@ private:
     cro::TextureResource m_textureResource;
 
     cro::Font m_font;
+    bool m_hosting;
+    std::array<bool, ConstVal::MaxClients> m_readyState = {};
+
+    enum MenuID
+    {
+        Main, Avatar, Join, Lobby, Options, Count
+    }m_currentMenu = Main;
+
+    static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
+
+    struct TextEdit final
+    {
+        cro::String* string = nullptr;
+        cro::Entity entity;
+    }m_textEdit;
 
     void addSystems();
     void loadAssets();
     void createScene();
 
+    void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createOptionsMenu(cro::Entity, std::uint32_t, std::uint32_t);
+
+    void handleTextEdit(const cro::Event&);
+    void applyTextEdit();
+    void updateLobbyData(const cro::NetEvent&);
+    void updateLobbyStrings();
+    void updateReadyDisplay();
+
     void handleNetEvent(const cro::NetEvent&);
+    void updateView();
 };

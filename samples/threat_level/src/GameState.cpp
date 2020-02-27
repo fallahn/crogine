@@ -81,7 +81,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
-#include <crogine/ecs/components/CommandID.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/Text.hpp>
@@ -217,8 +217,9 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
-    m_scene.render();
-    m_uiScene.render();
+    auto& rt = cro::App::getWindow();
+    m_scene.render(rt);
+    m_uiScene.render(rt);
 }
 
 //private

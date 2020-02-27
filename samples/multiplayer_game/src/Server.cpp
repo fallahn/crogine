@@ -28,10 +28,14 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "Server.hpp"
+#include "ServerGameState.hpp"
+#include "ServerLobbyState.hpp"
+#include "ServerMessages.hpp"
 #include "PacketIDs.hpp"
 
 #include <crogine/core/Log.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/HiResTimer.hpp>
 
 #include <functional>
 
@@ -55,6 +59,12 @@ void Server::launch()
     //stop any existing instance first
     stop();
 
+    //clear out any old messages
+    while (!m_sharedData.messageBus.empty())
+    {
+        m_sharedData.messageBus.poll();
+    }
+
     m_running = true;
     m_thread = std::make_unique<std::thread>(&Server::run, this);
 }
@@ -73,7 +83,7 @@ void Server::stop()
 //private
 void Server::run()
 {
-    if (!m_host.start("", ConstVal::GamePort, ConstVal::MaxClients, 4))
+    if (!m_sharedData.host.start("", ConstVal::GamePort, ConstVal::MaxClients, 4))
     {
         m_running = false;
         cro::Logger::log("Failed to start host service", cro::Logger::Type::Error);
@@ -82,19 +92,29 @@ void Server::run()
     
     LOG("Server launched", cro::Logger::Type::Info);
 
-    m_currentState = std::make_unique<Sv::LobbyState>();
+    m_currentState = std::make_unique<Sv::LobbyState>(m_sharedData);
     std::int32_t nextState = m_currentState->stateID();
 
-    const cro::Time frameTime = cro::milliseconds(50);
-    cro::Clock frameClock;
-    cro::Time accumulatedTime;
+    //network broadcasts are called less regularly
+    //that logic updates to the scene
+    const cro::Time netFrameTime = cro::milliseconds(50);
+    cro::Clock netFrameClock;
+    cro::Time netAccumulatedTime;
+
+    cro::HiResTimer updateClock;
+    float updateAccumulator = 0.f;
 
     while (m_running)
     {
-        cro::NetEvent evt;
-        while(m_host.pollEvent(evt))
+        while (!m_sharedData.messageBus.empty())
         {
-            m_currentState->netUpdate(evt);
+            m_currentState->handleMessage(m_sharedData.messageBus.poll());
+        }
+
+        cro::NetEvent evt;
+        while(m_sharedData.host.pollEvent(evt))
+        {
+            m_currentState->netEvent(evt);
         
             //handle connects / disconnects
             if (evt.type == cro::NetEvent::ClientConnect)
@@ -103,16 +123,22 @@ void Server::run()
                 //else add to client list
                 if (m_currentState->stateID() == Sv::StateID::Lobby)
                 {
-                    if (!addClient(evt))
+                    if (auto i = addClient(evt); i >= ConstVal::MaxClients)
                     {
                         //tell client server is full
-                        m_host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerFull), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerFull), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        //TODO actually disconnect client
+                    }
+                    else
+                    {
+                        //tell the client which player they are
+                        m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionAccepted, i, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     }
                 }
                 else
                 {
                     //send rejection packet
-                    m_host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::NotInLobby), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::NotInLobby), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
             }
             else if (evt.type == cro::NetEvent::ClientDisconnect)
@@ -129,89 +155,110 @@ void Server::run()
                     if (m_currentState->stateID() == Sv::StateID::Lobby)
                     {
                         //TODO assert sender is host
-                        m_currentState = std::make_unique<Sv::GameState>();
+                        m_currentState = std::make_unique<Sv::GameState>(m_sharedData);
                         nextState = Sv::StateID::Game;
 
-                        m_host.broadcastPacket(PacketID::StateChange, std::uint8_t(nextState), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        m_sharedData.host.broadcastPacket(PacketID::StateChange, std::uint8_t(nextState), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     }
                     break;
                 }
             }
         }
 
-        accumulatedTime += frameClock.restart();
-        while (accumulatedTime > frameTime)
+        //network broadcasts
+        netAccumulatedTime += netFrameClock.restart();
+        while (netAccumulatedTime > netFrameTime)
         {
-            accumulatedTime -= frameTime;
-            nextState = m_currentState->process(frameTime.asSeconds());
+            netAccumulatedTime -= netFrameTime;
+            m_currentState->netBroadcast();
         }
 
+        //logic updates
+        updateAccumulator += updateClock.restart();
+        while (updateAccumulator > ConstVal::FixedGameUpdate)
+        {
+            updateAccumulator -= ConstVal::FixedGameUpdate;
+            nextState = m_currentState->process(ConstVal::FixedGameUpdate);
+        }
+
+        //switch state if last update returned a new state ID
         if (nextState != m_currentState->stateID())
         {
             switch (nextState)
             {
             default: m_running = false; break;
             case Sv::StateID::Game:
-                m_currentState = std::make_unique<Sv::GameState>();
+                m_currentState = std::make_unique<Sv::GameState>(m_sharedData);
                 break;
             case Sv::StateID::Lobby:
-                m_currentState = std::make_unique<Sv::LobbyState>();
+                m_currentState = std::make_unique<Sv::LobbyState>(m_sharedData);
                 break;
             }
 
             //mitigate large DT which may have built up while new state was loading.
-            frameClock.restart();
+            netFrameClock.restart();
         }
     }
 
     m_currentState.reset();
     //TODO clear all client data
-    //TODO force disconnect clients
-    m_host.stop();
+    
+    for (auto& c : m_sharedData.clients)
+    {
+        m_sharedData.host.disconnect(c.peer);
+    }
+
+    m_sharedData.host.stop();
 
     LOG("Server quit", cro::Logger::Type::Info);
 }
 
-bool Server::addClient(const cro::NetEvent& evt)
+std::uint8_t Server::addClient(const cro::NetEvent& evt)
 {
-    auto i = 0u;
-    for (i; i < m_clients.size(); ++i)
+    std::uint8_t i = 0;
+    for (; i < m_sharedData.clients.size(); ++i)
     {
-        if (!m_clients[i].connected)
+        if (!m_sharedData.clients[i].connected)
         {
             LOG("Added client to server with id " + std::to_string(evt.peer.getID()), cro::Logger::Type::Info);
 
-            m_clients[i].connected = true;
-            //m_clients[i].id;
-            m_clients[i].peer = evt.peer;
+            m_sharedData.clients[i].connected = true;
+            m_sharedData.clients[i].peer = evt.peer;
 
             //broadcast to all connected clients
             //so they can update lobby view.
-            m_host.broadcastPacket(PacketID::ClientConnected, evt.peer.getID(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::ClientConnected, i, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(Sv::MessageID::ConnectionMessage);
+            msg->playerID = i;
+            msg->type = ConnectionEvent::Connected;
 
             break;
         }
     }
 
-    return (i != m_clients.size());
+    return i;
 }
 
 void Server::removeClient(const cro::NetEvent& evt)
 {
-    LOG("Check this event has valid client ID", cro::Logger::Type::Info);
-
-    auto result = std::find_if(m_clients.begin(), m_clients.end(), 
+    auto result = std::find_if(m_sharedData.clients.begin(), m_sharedData.clients.end(), 
         [&evt](const Sv::ClientConnection& c) 
         {
             return c.peer == evt.peer;
         });
 
-    if (result != m_clients.end())
+    if (result != m_sharedData.clients.end())
     {
-        result->connected = false;
-        result->peer = {};
+        *result = Sv::ClientConnection();
+
+        auto playerID = std::distance(m_sharedData.clients.begin(), result);
+        auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(Sv::MessageID::ConnectionMessage);
+        msg->playerID = static_cast<std::uint8_t>(playerID);
+        msg->type = ConnectionEvent::Disconnected;
 
         //broadcast to all connected clients
-        m_host.broadcastPacket(PacketID::ClientDisconnected, evt.peer.getID(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::ClientDisconnected, static_cast<std::uint8_t>(playerID), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        LOG("Client disconnected", cro::Logger::Type::Info);
     }
 }

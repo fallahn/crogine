@@ -342,6 +342,14 @@ void TextRenderer::rebuildBatch()
         for (auto i = 0u; i < maxCount; ++i)
         {
             auto& text = entities[i + batchIdx].getComponent<Text>();
+            text.updateVerts();
+            text.m_dirtyFlags = 0;
+
+            if (text.m_vertices.empty())
+            {
+                continue;
+            }
+
             auto texID = text.m_font->getTexture(text.m_charSize).getGLHandle();
             //new batches are created within the VBO for each new text, blend mode or scissor mode
             if (texID != batchData.texture
@@ -361,7 +369,6 @@ void TextRenderer::rebuildBatch()
 
                 spritesThisBatch = 0;
             }
-            updateVerts(text);
 
             text.m_batchIndex[0] = batchIdx;
             text.m_batchIndex[1] = batch.second.size();
@@ -437,128 +444,6 @@ void TextRenderer::rebuildBatch()
     }
 
     m_pendingRebuild = false;
-}
-
-void TextRenderer::updateVerts(Text& text)
-{
-    /*
-    0-------2
-    |       |
-    |       |
-    1-------3
-    */
-    CRO_ASSERT(text.m_font, "Must construct text with a font!");
-    if (text.m_string.empty()) return;
-
-    text.m_vertices.clear();
-    text.m_vertices.reserve(text.m_string.size() * 6); //4 verts per char + degen tri
-
-    auto getStart = [](std::size_t idx, const Text& text)->float
-    {
-        float pos = 0.f;
-        if (text.m_alignment == Text::Right)
-        {
-            float maxWidth = text.getLocalBounds().width;
-            float rowWidth = text.getLineWidth(idx);
-            pos = maxWidth - rowWidth;
-        }
-        else if (text.m_alignment == Text::Centre)
-        {
-            float maxWidth = text.getLocalBounds().width;
-            float rowWidth = text.getLineWidth(idx);
-            pos = maxWidth - rowWidth;
-            pos /= 2.f;
-        }
-        return pos;
-    };
-
-    float xPos = getStart(0, text);
-    float yPos = -text.getLineHeight();
-    float lineHeight = -yPos;
-    glm::vec2 texSize(text.m_font->getTexture(text.m_charSize).getSize());
-    CRO_ASSERT(texSize.x > 0 && texSize.y > 0, "Font texture not loaded!");
-
-    float top = 0.f;
-    float width = 0.f;
-    std::size_t lineCount = 0;
-
-    std::uint32_t prevChar = 0;
-    for (auto c : text.m_string)
-    {
-        //check for end of lines
-        if (c == '\n') //newline is a new line!!
-        {
-            lineCount++;
-
-            xPos = getStart(lineCount, text);
-            yPos -= lineHeight;
-            
-            continue;
-        }
-
-        auto glyph = text.m_font->getGlyph(c, text.m_charSize);
-        auto rect = glyph.textureBounds;
-        auto bounds = glyph.bounds;
-        auto descender = 8.f;// bounds.bottom + bounds.height;
-        Text::Vertex v;
-
-        v.position.x = xPos;
-        v.position.y = yPos - bounds.bottom + descender;
-        v.position.z = 0.f;
-
-        v.UV.x = rect.left / texSize.x;
-        v.UV.y = rect.bottom / texSize.y;
-
-        text.m_vertices.push_back(v);
-        text.m_vertices.push_back(v); //twice for degen tri
-
-
-        v.position.y = yPos - bounds.bottom - bounds.height + descender;
-
-        v.UV.x = rect.left / texSize.x;
-        v.UV.y = (rect.bottom + rect.height) / texSize.y;
-
-        text.m_vertices.push_back(v);
-
-
-        v.position.x = xPos + rect.width;
-        v.position.y = yPos - bounds.bottom + descender;
-
-        v.UV.x = (rect.left + rect.width) / texSize.x;
-        v.UV.y = rect.bottom / texSize.y;
-
-        text.m_vertices.push_back(v);
-
-
-        v.position.y = yPos - bounds.bottom - bounds.height + descender;
-
-        v.UV.x = (rect.left + rect.width) / texSize.x;
-        v.UV.y = (rect.bottom + rect.height) / texSize.y;
-
-        text.m_vertices.push_back(v);
-        text.m_vertices.push_back(v); //end degen tri
-
-
-
-        if (v.position.x > width) width = v.position.x;
-
-        xPos += text.m_font->getKerning(prevChar, c, text.m_charSize);
-        xPos += glyph.advance;
-        prevChar = c;
-    }
-
-    text.m_localBounds.bottom = yPos;
-    text.m_localBounds.height = top - yPos;
-    text.m_localBounds.width = width;
-
-    text.m_vertices.erase(text.m_vertices.begin()); //remove front/back degens as these are added by renderer
-    text.m_vertices.pop_back();
-
-    for (auto& v : text.m_vertices)
-    {
-        v.colour = { text.m_colour.getRed(), text.m_colour.getGreen(), text.m_colour.getBlue(), text.m_colour.getAlpha() };
-    }
-    text.m_dirtyFlags = 0;
 }
 
 void TextRenderer::applyBlendMode(Material::BlendMode mode)

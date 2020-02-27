@@ -116,7 +116,7 @@ void PlayerWeaponSystem::spawnLaser(glm::vec3 velocity, glm::vec3 position)
         }
         else
         {
-            entity.getComponent<cro::Transform>().setRotation({ });
+            entity.getComponent<cro::Transform>().setRotation(glm::quat(1.f,0.f,0.f,0.f));
         }
 
         entity.getComponent<cro::Transform>().setPosition(position);

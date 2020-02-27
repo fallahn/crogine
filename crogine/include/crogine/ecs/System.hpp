@@ -74,8 +74,10 @@ namespace cro
 
         /*!
         \brief Returns a list of entities that this system is currently interested in
+        TODO this is supposed to be a const overload but for some reason the compiler
+        keeps trying to pick the protected version...
         */
-        std::vector<Entity> getEntities() const;
+        const std::vector<Entity>& getEntities1() const;
 
         /*!
         \brief Adds an entity to the list to process
@@ -112,7 +114,7 @@ namespace cro
         template <typename T>
         void requireComponent();
 
-        std::vector<Entity>& getEntities() { return m_entities; }
+        std::vector<Entity>& getEntities();
 
         /*!
         \brief Optional callback performed when an entity is added
@@ -156,12 +158,18 @@ namespace cro
         Scene* m_scene;
 
         friend class SystemManager;
+
+
+        //list of types populated by requireComponent then processed by SystemManager
+        //when the system is created
+        std::vector<std::type_index> m_pendingTypes;
+        void processTypes(ComponentManager&);
     };
 
     class CRO_EXPORT_API SystemManager final
     {
     public:
-        explicit SystemManager(Scene&);
+        SystemManager(Scene&, ComponentManager&);
 
         ~SystemManager() = default;
         SystemManager(const SystemManager&) = delete;
@@ -218,6 +226,8 @@ namespace cro
     private:
         Scene& m_scene;
         std::vector<std::unique_ptr<System>> m_systems;
+
+        ComponentManager& m_componentManager;
     };
 
 #include "System.inl"

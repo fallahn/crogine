@@ -100,6 +100,9 @@ void Console::print(const std::string& line)
 void Console::show()
 {
     visible = !visible;
+
+    auto* msg = App::getInstance().getMessageBus().post<Message::ConsoleEvent>(Message::ConsoleMessage);
+    msg->type = visible ? Message::ConsoleEvent::Opened : Message::ConsoleEvent::Closed;
 }
 
 void Console::doCommand(const std::string& str)
@@ -172,6 +175,11 @@ void Console::addConvar(const std::string& name, const std::string& defaultValue
 void Console::printStat(const std::string& name, const std::string& value)
 {
     m_debugLines.push_back(name + ":" + value);
+}
+
+bool Console::isVisible()
+{
+    return visible;
 }
 
 //private
@@ -345,6 +353,8 @@ void Console::draw()
     if (!visible)
     {
         App::getInstance().saveSettings();
+        auto* msg = App::getInstance().getMessageBus().post<Message::ConsoleEvent>(Message::ConsoleMessage);
+        msg->type = Message::ConsoleEvent::Closed;
     }
 }
 

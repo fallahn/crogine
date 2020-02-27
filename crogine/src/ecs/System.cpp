@@ -32,7 +32,7 @@ source distribution.
 
 using namespace cro;
 
-std::vector<Entity> System::getEntities() const
+const std::vector<Entity>& System::getEntities1() const
 {
     return m_entities;
 }
@@ -68,6 +68,11 @@ void System::handleMessage(const Message&) {}
 void System::process(float) {}
 
 //protected
+std::vector<Entity>& System::getEntities()
+{
+    return m_entities;
+}
+
 void System::setScene(Scene& scene)
 {
     m_scene = &scene;
@@ -77,4 +82,14 @@ Scene* System::getScene()
 {
     CRO_ASSERT(m_scene, "Scene is nullptr - something went wrong!");
     return m_scene;
+}
+
+//private
+void System::processTypes(ComponentManager& cm)
+{
+    for (const auto& componentType : m_pendingTypes)
+    {
+        m_componentMask.set(cm.getFromTypeID(componentType));
+    }
+    m_pendingTypes.clear();
 }

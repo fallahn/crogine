@@ -32,10 +32,20 @@ source distribution.
 //the high resolution timer provides a more accurate frame time for the core loop
 
 #include <SDL.h>
+#include <crogine/Config.hpp>
 
-namespace cro::Detail
+namespace cro
 {
-    class HiResTimer final
+    /*!
+    \brief High Resolution Timer.
+    Generally cro::Clock will suffice for millisecond accurate timing
+    but when floating point values are used for representing seconds
+    are required cro::Clock can lose precision. In these cases it's
+    possible to use the high resolution timer which has greater
+    floatnig point precision.
+    */
+
+    CRO_EXPORT_API class HiResTimer final
     {
     public:
         HiResTimer()
@@ -44,6 +54,9 @@ namespace cro::Detail
             m_frequency = SDL_GetPerformanceFrequency();
         }
 
+        /*!
+        \brief Restarts the timer and returns the time elapsed since the last restart.
+        */
         float restart()
         {
             m_start = m_current;

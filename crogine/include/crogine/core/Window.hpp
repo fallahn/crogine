@@ -30,14 +30,13 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/graphics/RenderTarget.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
 #include <SDL_video.h>
 #include <SDL_events.h>
 #include <SDL_atomic.h>
-
-#include <crogine/detail/glm/vec2.hpp>
 
 #include <string>
 #include <vector>
@@ -51,7 +50,7 @@ namespace cro
 	/*!
 	\brief Creates a window to which to draw.
 	*/
-	class CRO_EXPORT_API Window final// : public cro::Detail::SDLResource
+	class CRO_EXPORT_API Window final : public RenderTarget// : public cro::Detail::SDLResource
 	{
 	public:
 		Window();
@@ -106,7 +105,7 @@ namespace cro
         /*!
         \brief Returns the current size of the window
         */
-        glm::uvec2 getSize() const;
+        glm::uvec2 getSize() const override;
         /*!
         \brief Attempts to set the window to the given size if it is valid
         */
@@ -158,6 +157,21 @@ namespace cro
         */
         template <typename T, typename... Args>
         void setLoadingScreen(Args&&...);
+
+        /*!
+        \brief Sets if the mouse cursor is captured or not.
+        When this is true the mouse cursor is hidden and only
+        relative mouse move events are received. Useful for
+        games such as first or third person shooters where
+        mouse movements are used to move the camera.
+        */
+        void setMouseCaptured(bool);
+
+        /*!
+        \brief Returns whether or not the mouse cursor is currently
+        captured by the window.
+        */
+        bool getMouseCaptured() const;
 
 	private:
 

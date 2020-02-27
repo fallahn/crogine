@@ -49,7 +49,7 @@ NetEvent::Packet::~Packet()
 }
 
 //public
-uint32 NetEvent::Packet::getID() const
+std::uint8_t NetEvent::Packet::getID() const
 {
     CRO_ASSERT(m_packet, "Not a valid packet instance");
     return m_id;
@@ -58,13 +58,13 @@ uint32 NetEvent::Packet::getID() const
 const void* NetEvent::Packet::getData() const
 {
     CRO_ASSERT(m_packet, "Not a valid packet instance");
-    return &m_packet->data[sizeof(uint32)];
+    return &m_packet->data[sizeof(std::uint8_t)];
 }
 
 std::size_t NetEvent::Packet::getSize() const
 {
     CRO_ASSERT(m_packet, "Not a valid packet instance");
-    return m_packet->dataLength - sizeof(uint32);
+    return m_packet->dataLength - sizeof(std::uint8_t);
 }
 
 //private
@@ -79,6 +79,6 @@ void NetEvent::Packet::setPacketData(ENetPacket* packet)
 
     if (m_packet)
     {
-        std::memcpy(&m_id, m_packet->data, sizeof(uint32));
+        std::memcpy(&m_id, m_packet->data, sizeof(std::uint8_t));
     }
 }

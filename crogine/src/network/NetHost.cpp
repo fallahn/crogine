@@ -40,7 +40,7 @@ using namespace cro;
 
 namespace
 {
-    ENetPacket* createPacket(uint32 id, void* data, std::size_t size, NetFlag flags)
+    ENetPacket* createPacket(uint8 id, void* data, std::size_t size, NetFlag flags)
     {
         int32 packetFlags = 0;
         if (flags == NetFlag::Reliable)
@@ -56,9 +56,9 @@ namespace
             packetFlags |= ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT | ENET_PACKET_FLAG_UNSEQUENCED;
         }
 
-        ENetPacket* packet = enet_packet_create(&id, sizeof(uint32), packetFlags);
-        enet_packet_resize(packet, sizeof(uint32) + size);
-        std::memcpy(&packet->data[sizeof(uint32)], data, size);
+        ENetPacket* packet = enet_packet_create(&id, sizeof(uint8), packetFlags);
+        enet_packet_resize(packet, sizeof(uint8) + size);
+        std::memcpy(&packet->data[sizeof(uint8)], data, size);
 
         return packet;
     }
@@ -118,6 +118,8 @@ bool NetHost::start(const std::string& address, uint16 port, std::size_t maxClie
         Logger::log("There was an error creating the server host", Logger::Type::Error);
         return false;
     }
+
+    enet_host_compress_with_range_coder(m_host);
 
     LOG("Created server host on port " + std::to_string(port), Logger::Type::Info);
     return true;
@@ -195,7 +197,7 @@ bool NetHost::pollEvent(NetEvent& evt)
     return false;
 }
 
-void NetHost::broadcastPacket(uint32 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
+void NetHost::broadcastPacket(uint8 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
 {
     if (m_host)
     {
@@ -203,10 +205,19 @@ void NetHost::broadcastPacket(uint32 id, void* data, std::size_t size, NetFlag f
     }
 }
 
-void NetHost::sendPacket(const NetPeer& peer, uint32 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
+void NetHost::sendPacket(const NetPeer& peer, uint8 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
 {
     if (peer.m_peer)
     {
         enet_peer_send(peer.m_peer, channel, createPacket(id, data, size, flags));
+    }
+}
+
+void NetHost::disconnect(NetPeer& peer)
+{
+    if (m_host && peer.m_peer)
+    {
+        enet_peer_disconnect(peer.m_peer, 0);
+        peer.m_peer = nullptr;
     }
 }

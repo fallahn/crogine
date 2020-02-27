@@ -30,7 +30,7 @@ source distribution.
 template <typename T>
 void EntityManager::addComponent(Entity entity, T component)
 {
-    auto componentID = Component::getID<T>();
+    auto componentID = m_componentManager.getID<T>();
     auto entID = entity.getIndex();
 
     auto& pool = getPool<T>();
@@ -66,7 +66,7 @@ T& EntityManager::addComponent(Entity entity, Args&&... args)
 template <typename T>
 bool EntityManager::hasComponent(Entity entity) const
 {
-    const auto componentID = Component::getID<T>();
+    const auto componentID = m_componentManager.getID<T>();
     const auto entityID = entity.getIndex();
 
     CRO_ASSERT(entityID < m_componentMasks.size(), "Entity index out of range");
@@ -76,7 +76,7 @@ bool EntityManager::hasComponent(Entity entity) const
 template <typename T>
 T& EntityManager::getComponent(Entity entity)
 {
-    const auto componentID = Component::getID<T>();
+    const auto componentID = m_componentManager.getID<T>();
     const auto entityID = entity.getIndex();
 
     CRO_ASSERT(hasComponent<T>(entity), "Component does not exist!");
@@ -92,7 +92,7 @@ T& EntityManager::getComponent(Entity entity)
 template <typename T>
 Detail::ComponentPool<T>& EntityManager::getPool()
 {
-    const auto componentID = Component::getID<T>();
+    const auto componentID = m_componentManager.getID<T>();
 
     if (!m_componentPools[componentID])
     {

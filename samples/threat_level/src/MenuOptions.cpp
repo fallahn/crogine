@@ -41,7 +41,7 @@ source distribution.
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/CommandID.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/Font.hpp>

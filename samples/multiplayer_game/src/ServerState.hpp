@@ -29,12 +29,33 @@ source distribution.
 
 #pragma once
 
+#include "CommonConsts.hpp"
+
 #include <crogine/network/NetData.hpp>
+#include <crogine/network/NetHost.hpp>
+#include <crogine/core/MessageBus.hpp>
+#include <crogine/core/String.hpp>
 
 #include <cstdint>
+#include <array>
 
 namespace Sv
 {
+    struct ClientConnection final
+    {
+        bool ready = false; //< player is ready to recieve game data, not lobby readiness (see GameState)
+        bool connected = false;
+        cro::NetPeer peer;
+        cro::String name;
+    };
+
+    struct SharedData final
+    {
+        cro::NetHost host;
+        std::array<Sv::ClientConnection, ConstVal::MaxClients> clients;
+        cro::MessageBus messageBus;
+    };
+
     namespace StateID
     {
         enum
@@ -47,37 +68,17 @@ namespace Sv
     class State
     {
     public:
-        virtual void netUpdate(const cro::NetEvent&) = 0;
+        virtual ~State() = default;
+
+        virtual void handleMessage(const cro::Message&) = 0;
+
+        //handle incoming network events
+        virtual void netEvent(const cro::NetEvent&) = 0;
+        //broadcast network updates at 20Hz
+        virtual void netBroadcast() {};
+        //update scene logic at 62.5Hz (16ms)
         virtual std::int32_t process(float) = 0;
 
         virtual std::int32_t stateID() const = 0;
-    };
-
-    class LobbyState final : public State
-    {
-    public:
-        LobbyState();
-
-        void netUpdate(const cro::NetEvent&) override;
-        std::int32_t process(float) override;
-
-        std::int32_t stateID() const override { return StateID::Lobby; }
-
-    private:
-        std::int32_t m_returnValue;
-    };
-
-    class GameState final : public State
-    {
-    public:
-        GameState();
-
-        void netUpdate(const cro::NetEvent&) override;
-        std::int32_t process(float) override;
-
-        std::int32_t stateID() const override { return StateID::Game; }
-
-    private:
-        std::int32_t m_returnValue;
     };
 }
