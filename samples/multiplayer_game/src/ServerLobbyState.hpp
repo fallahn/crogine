@@ -47,5 +47,7 @@ namespace Sv
     private:
         std::int32_t m_returnValue;
         SharedData& m_sharedData;
+
+        void insertPlayerInfo(const cro::NetEvent&);
     };
 }

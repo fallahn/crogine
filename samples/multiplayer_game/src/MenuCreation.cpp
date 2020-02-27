@@ -31,6 +31,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
+#include "ServerPacketData.hpp"
 
 #include <crogine/detail/GlobalConsts.hpp>
 
@@ -42,6 +43,8 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
+
+#include <cstring>
 
 const std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPositions =
 {
@@ -435,7 +438,14 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    //TODO display lobby members
+    //display lobby members
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 400.f, 700.f });
+    entity.addComponent<cro::Text>(m_font).setString("No Players...");
+    entity.getComponent<cro::Text>().setCharSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
+    entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::LobbyList;
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     //back
     entity = m_scene.createEntity();
@@ -505,4 +515,49 @@ void MenuState::createOptionsMenu(cro::Entity parent, std::uint32_t, std::uint32
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
+}
+
+void MenuState::updateLobbyData(const cro::NetEvent& evt)
+{
+    LobbyData data;
+    std::memcpy(&data, evt.packet.getData(), sizeof(data));
+
+    auto size = std::min(data.stringSize, static_cast<std::uint8_t>(ConstVal::MaxStringDataSize));
+    if (size % sizeof(std::uint32_t) == 0
+        && data.playerID < ConstVal::MaxClients)
+    {
+        std::vector<std::uint32_t> buffer(size / sizeof(std::uint32_t));
+        std::memcpy(buffer.data(), static_cast<const std::uint8_t*>(evt.packet.getData()) + sizeof(data), size);
+
+        m_sharedData.playerData[data.playerID].name = cro::String::fromUtf32(buffer.begin(), buffer.end());
+    }
+
+    updateLobbyStrings();
+}
+
+void MenuState::updateLobbyStrings()
+{
+    cro::Command cmd;
+    cmd.targetFlags = MenuCommandID::LobbyList;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        cro::String str;
+        for (const auto& c : m_sharedData.playerData)
+        {
+            if (!c.name.empty())
+            {
+                str += c.name + "\n";
+            }
+        }
+
+        if (!str.empty())
+        {
+            e.getComponent<cro::Text>().setString(str);
+        }
+        else
+        {
+            e.getComponent<cro::Text>().setString("No Players...");
+        }
+    };
+    m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }

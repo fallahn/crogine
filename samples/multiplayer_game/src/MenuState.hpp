@@ -47,6 +47,7 @@ namespace MenuCommandID
     {
         RootNode = 0x1,
         ReadyButton = 0x2,
+        LobbyList = 0x4
     };
 }
 
@@ -109,6 +110,8 @@ private:
 
     void handleTextEdit(const cro::Event&);
     void applyTextEdit();
+    void updateLobbyData(const cro::NetEvent&);
+    void updateLobbyStrings();
 
     void handleNetEvent(const cro::NetEvent&);
     void updateView();

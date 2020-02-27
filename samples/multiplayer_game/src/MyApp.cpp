@@ -124,7 +124,7 @@ void MyApp::loadSettings()
 	{
 		if (auto* name = cfg.findProperty("player_name"); name)
 		{
-			m_sharedData.localPlayer.name = name->getValue<std::string>();
+			m_sharedData.localPlayer.name = name->getValue<std::string>().substr(0, ConstVal::MaxStringChars);
 		}
 		else
 		{

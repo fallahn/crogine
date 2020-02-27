@@ -362,7 +362,7 @@ public:
     ///
     /// \return Number of characters in the string
     ///
-    /// \see isEmpty
+    /// \see empty
     ///
     ////////////////////////////////////////////////////////////
     std::size_t size() const;

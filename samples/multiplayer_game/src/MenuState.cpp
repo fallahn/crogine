@@ -52,6 +52,7 @@ source distribution.
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 
+#include <cstring>
 
 namespace
 {
@@ -332,8 +333,18 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             break;
         case PacketID::ConnectionAccepted:
             {
+                //update local player data
                 m_sharedData.clientConnection.playerID = evt.packet.as<std::uint8_t>();
+                m_sharedData.playerData[m_sharedData.clientConnection.playerID] = m_sharedData.localPlayer;
 
+                //send player details to server (name, skin)
+                std::uint8_t size = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, m_sharedData.localPlayer.name.size() * sizeof(std::uint32_t)));
+                std::vector<std::uint8_t> buffer(size + 1);
+                buffer[0] = size;
+                std::memcpy(&buffer[1], m_sharedData.localPlayer.name.data(), size);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+                //switch to lobby view
                 m_currentMenu = Lobby;
 
                 cro::Command cmd;
@@ -355,6 +366,13 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             m_sharedData.clientConnection.netClient.disconnect();
             m_sharedData.clientConnection.connected = false;
         }
+            break;
+        case PacketID::LobbyUpdate:
+            updateLobbyData(evt);
+            break;
+        case PacketID::ClientDisconnected:
+            m_sharedData.playerData[evt.packet.as<std::uint8_t>()].name.clear();
+            updateLobbyStrings();
             break;
         }
     }
@@ -390,7 +408,7 @@ void MenuState::handleTextEdit(const cro::Event& evt)
     else if (evt.type == SDL_TEXTINPUT)
     {
         //TODO decide on some max string length (need also for sending over network)
-        if (m_textEdit.string->size() < 42)
+        if (m_textEdit.string->size() < ConstVal::MaxStringChars)
         {
             auto codePoints = cro::Util::String::getCodepoints(evt.text.text);
 

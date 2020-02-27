@@ -36,6 +36,13 @@ source distribution.
 
 using CompressedQuat = std::array<std::int16_t, 4u>;
 
+struct LobbyData final
+{
+    std::uint8_t playerID = 4;
+    std::uint8_t skinFlags = 0;
+    std::uint8_t stringSize = 0;
+};
+
 struct PlayerInfo final
 {
     CompressedQuat rotation{};

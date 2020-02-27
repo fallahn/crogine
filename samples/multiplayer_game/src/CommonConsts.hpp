@@ -37,9 +37,15 @@ source distribution.
 
 namespace ConstVal
 {
+    //max string vars for name/limiting packet size
+    static std::size_t MaxStringChars = 24;
+    //this is sent as a byte in packet headers - so don't increase MaxStringChars above 32!!
+    static std::size_t MaxStringDataSize = MaxStringChars * sizeof(std::uint32_t);
+
     static const std::uint16_t GamePort = 16002;
     static const std::size_t MaxClients = 4;
     static const uint8_t NetChannelReliable = 1;
+    static const uint8_t NetChannelStrings = 2;
 
     //rather than tag each player input with the same
     //value and sending over the network, assume this

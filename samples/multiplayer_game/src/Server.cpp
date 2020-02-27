@@ -250,9 +250,7 @@ void Server::removeClient(const cro::NetEvent& evt)
 
     if (result != m_sharedData.clients.end())
     {
-        result->connected = false;
-        result->peer = {};
-        result->ready = false;
+        *result = Sv::ClientConnection();
 
         auto playerID = std::distance(m_sharedData.clients.begin(), result);
         auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(Sv::MessageID::ConnectionMessage);

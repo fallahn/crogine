@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/network/NetData.hpp>
 #include <crogine/network/NetHost.hpp>
 #include <crogine/core/MessageBus.hpp>
+#include <crogine/core/String.hpp>
 
 #include <cstdint>
 #include <array>
@@ -42,9 +43,10 @@ namespace Sv
 {
     struct ClientConnection final
     {
-        bool ready = false;
+        bool ready = false; //< player is ready to recieve game data, not lobby readiness (see GameState)
         bool connected = false;
         cro::NetPeer peer;
+        cro::String name;
     };
 
     struct SharedData final
