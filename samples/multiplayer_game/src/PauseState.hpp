@@ -67,6 +67,8 @@ private:
     cro::Texture m_backgroundTexture;
     cro::Font m_font;
 
+    SharedStateData& m_sharedData;
+
     void buildScene();
     void updateView();
 };

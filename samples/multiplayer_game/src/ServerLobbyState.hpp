@@ -31,6 +31,8 @@ source distribution.
 
 #include "ServerState.hpp"
 
+#include <array>
+
 namespace Sv
 {
     class LobbyState final : public State
@@ -47,6 +49,8 @@ namespace Sv
     private:
         std::int32_t m_returnValue;
         SharedData& m_sharedData;
+
+        std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
         void insertPlayerInfo(const cro::NetEvent&);
     };

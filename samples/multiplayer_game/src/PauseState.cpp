@@ -51,7 +51,8 @@ source distribution.
 
 PauseState::PauseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State(ss, ctx),
-    m_scene(ctx.appInstance.getMessageBus())
+    m_scene         (ctx.appInstance.getMessageBus()),
+    m_sharedData    (sd)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -210,6 +211,10 @@ void PauseState::buildScene()
                 if (flags & cro::UISystem::LeftMouse)
                 {
                     //TODO some sort of OK/Cancel box
+                    m_sharedData.clientConnection.netClient.disconnect();
+                    m_sharedData.clientConnection.connected = false;
+                    m_sharedData.serverInstance.stop();
+
                     cro::App::getWindow().setMouseCaptured(false);
                     requestStackClear();
                     requestStackPush(States::ID::MainMenu);

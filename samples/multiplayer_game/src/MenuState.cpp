@@ -79,7 +79,27 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
 
     sd.clientConnection.ready = false;
-    //TODO we need to check the connection state if we returned here after a game completed
+    for (auto& b : m_readyState)
+    {
+        b = false;
+    }
+    
+    //we returned from a previous  game
+    if (sd.clientConnection.connected)
+    {
+        updateLobbyStrings();
+
+        //switch to lobby view
+        m_currentMenu = Lobby;
+
+        cro::Command cmd;
+        cmd.targetFlags = MenuCommandID::RootNode;
+        cmd.action = [](cro::Entity e, float)
+        {
+            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
+        };
+        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    }
 }
 
 //public
@@ -355,6 +375,14 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 };
                 m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
+                if (m_sharedData.serverInstance.running())
+                {
+                    //auto ready up if host
+                    m_sharedData.clientConnection.netClient.sendPacket(
+                        PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.playerID << 8 | std::uint8_t(1)),
+                        cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+
                 LOG("Successfully connected to server", cro::Logger::Type::Info);
             }
             break;
@@ -373,6 +401,13 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
         case PacketID::ClientDisconnected:
             m_sharedData.playerData[evt.packet.as<std::uint8_t>()].name.clear();
             updateLobbyStrings();
+            break;
+        case PacketID::LobbyReady:
+        {
+            std::uint16_t data = evt.packet.as<std::uint16_t>();
+            m_readyState[((data & 0xff00) >> 8)] = (data & 0x00ff) ? true : false;
+            updateReadyDisplay();
+        }
             break;
         }
     }

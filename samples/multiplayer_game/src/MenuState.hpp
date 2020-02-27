@@ -29,6 +29,9 @@ source distribution.
 
 #pragma once
 
+#include "StateIDs.hpp"
+#include "CommonConsts.hpp"
+
 #include <crogine/core/State.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -39,7 +42,7 @@ source distribution.
 #include <crogine/graphics/TextureResource.hpp>
 #include <crogine/graphics/Font.hpp>
 
-#include "StateIDs.hpp"
+#include <array>
 
 namespace MenuCommandID
 {
@@ -83,7 +86,7 @@ private:
 
     cro::Font m_font;
     bool m_hosting;
-
+    std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
     enum MenuID
     {
@@ -112,6 +115,7 @@ private:
     void applyTextEdit();
     void updateLobbyData(const cro::NetEvent&);
     void updateLobbyStrings();
+    void updateReadyDisplay();
 
     void handleNetEvent(const cro::NetEvent&);
     void updateView();

@@ -45,9 +45,16 @@ LobbyState::LobbyState(SharedData& sd)
 {
     LOG("Entered Server Lobby State", cro::Logger::Type::Info);
 
+    //this is client readyness to receive map data
     for (auto& c : sd.clients)
     {
         c.ready = false;
+    }
+
+    //this is lobby readiness
+    for (auto& b : m_readyState)
+    {
+        b = false;
     }
 }
 
@@ -65,6 +72,13 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
         default:break;
         case PacketID::PlayerInfo:
             insertPlayerInfo(evt);
+            break;
+        case PacketID::LobbyReady:
+        {
+            std::uint16_t data = evt.packet.as<std::uint16_t>();
+            m_readyState[((data & 0xff00) >> 8)] = (data & 0x00ff) ? true : false;
+            m_sharedData.host.broadcastPacket(PacketID::LobbyReady, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
             break;
         }
     }
@@ -122,5 +136,8 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
 
             m_sharedData.host.broadcastPacket(PacketID::LobbyUpdate, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
         }
+
+        std::uint8_t ready = m_readyState[i] ? 1 : 0;
+        m_sharedData.host.broadcastPacket(PacketID::LobbyReady, std::uint16_t(std::uint8_t(i) << 8 | ready), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }

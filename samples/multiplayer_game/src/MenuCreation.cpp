@@ -491,8 +491,19 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 {
                     if (m_hosting)
                     {
-                        //TODO check all members ready
-                        if (m_sharedData.clientConnection.connected
+                        //check all members ready
+                        bool ready = true;
+                        for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+                        {
+                            if (m_sharedData.clientConnection.connected
+                                && !m_readyState[i])
+                            {
+                                ready = false;
+                                break;
+                            }
+                        }
+
+                        if (ready && m_sharedData.clientConnection.connected
                             && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
                         {
                             m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -501,6 +512,9 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     else
                     {
                         //toggle readyness
+                        std::uint8_t ready = m_readyState[m_sharedData.clientConnection.playerID] ? 0 : 1;
+                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.playerID << 8 | ready),
+                            cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     }
                 }
             });
@@ -560,4 +574,12 @@ void MenuState::updateLobbyStrings()
         }
     };
     m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
+void MenuState::updateReadyDisplay()
+{
+    for (auto b : m_readyState)
+    {
+        std::cout << b << "\n";
+    }
 }

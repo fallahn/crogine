@@ -392,6 +392,9 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         }
     }
     break;
+    case PacketID::ClientDisconnected:
+        m_sharedData.playerData[packet.as<std::uint8_t>()].name.clear();
+        break;
     }
 }
 
