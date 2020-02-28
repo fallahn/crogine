@@ -1,0 +1,9 @@
+model head
+{
+    mesh = "assets/models/head.cmf"
+
+    material VertexLit
+    {
+        diffuse = "assets/images/head.png"
+    }
+}
