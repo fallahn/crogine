@@ -1,5 +1,8 @@
 
 set(PROJECT_SRC
+  ${PROJECT_DIR}/Chunk.cpp
+  ${PROJECT_DIR}/ChunkManager.cpp
+  ${PROJECT_DIR}/Coordinate.cpp
   ${PROJECT_DIR}/ErrorState.cpp
   ${PROJECT_DIR}/GameState.cpp
   ${PROJECT_DIR}/InputParser.cpp
@@ -15,4 +18,5 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/Server.cpp
   ${PROJECT_DIR}/ServerGameState.cpp
   ${PROJECT_DIR}/ServerLobbyState.cpp
-  ${PROJECT_DIR}/SliderSystem.cpp)
+  ${PROJECT_DIR}/SliderSystem.cpp
+  ${PROJECT_DIR}/Voxel.cpp)

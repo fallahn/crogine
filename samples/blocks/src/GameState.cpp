@@ -284,24 +284,12 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
-    m_gameScene.enableSkybox();
-    //m_gameScene.setCubemap("assets/images/cubemap/interstellar.ccm");
+    m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
 }
 
 void GameState::createScene()
 {
-    //create ground plane for testing
-    cro::ModelDefinition modelDef;
-    modelDef.loadFromFile("assets/models/ground_plane.cmt", m_resources);
 
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
-    modelDef.createModel(entity, m_resources);
-
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -7.f });
-    modelDef.createModel(entity, m_resources);
-    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Green());
 }
 
 void GameState::createUI()

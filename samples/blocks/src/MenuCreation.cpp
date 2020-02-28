@@ -578,8 +578,5 @@ void MenuState::updateLobbyStrings()
 
 void MenuState::updateReadyDisplay()
 {
-    for (auto b : m_readyState)
-    {
-        std::cout << b << "\n";
-    }
+
 }

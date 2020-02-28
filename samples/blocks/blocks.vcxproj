@@ -154,6 +154,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Chunk.cpp" />
+    <ClCompile Include="src\ChunkManager.cpp" />
+    <ClCompile Include="src\Coordinate.cpp" />
     <ClCompile Include="src\ErrorState.cpp" />
     <ClCompile Include="src\GameState.cpp" />
     <ClCompile Include="src\InputParser.cpp" />
@@ -170,14 +173,18 @@
     <ClCompile Include="src\Server.cpp" />
     <ClCompile Include="src\ServerGameState.cpp" />
     <ClCompile Include="src\SliderSystem.cpp" />
+    <ClCompile Include="src\Voxel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ActorIDs.hpp" />
     <ClInclude Include="src\ActorSystem.hpp" />
+    <ClInclude Include="src\Chunk.hpp" />
+    <ClInclude Include="src\ChunkManager.hpp" />
     <ClInclude Include="src\CircularBuffer.hpp" />
     <ClInclude Include="src\ClientCommandIDs.hpp" />
     <ClInclude Include="src\ClientPacketData.hpp" />
     <ClInclude Include="src\CommonConsts.hpp" />
+    <ClInclude Include="src\Coordinate.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\ErrorState.hpp" />
     <ClInclude Include="src\GameState.hpp" />
@@ -201,6 +208,8 @@
     <ClInclude Include="src\SharedStateData.hpp" />
     <ClInclude Include="src\Slider.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
+    <ClInclude Include="src\Voxel.hpp" />
+    <ClInclude Include="src\WorldConsts.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

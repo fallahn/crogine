@@ -61,6 +61,12 @@
     <Filter Include="Source Files\Client\components">
       <UniqueIdentifier>{fd2c8667-53fa-4313-ba76-5a51b1a31fac}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\WorldGen">
+      <UniqueIdentifier>{178ef469-dba6-4925-b4b6-8beb8021cdf4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\WorldGen">
+      <UniqueIdentifier>{de71435f-0001-40d9-b042-d4b72a22e061}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -110,6 +116,18 @@
     </ClCompile>
     <ClCompile Include="src\PauseState.cpp">
       <Filter>Source Files\Client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Voxel.cpp">
+      <Filter>Source Files\WorldGen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Chunk.cpp">
+      <Filter>Source Files\WorldGen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Coordinate.cpp">
+      <Filter>Source Files\WorldGen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ChunkManager.cpp">
+      <Filter>Source Files\WorldGen</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -199,6 +217,21 @@
     </ClInclude>
     <ClInclude Include="src\MenuConsts.hpp">
       <Filter>Header Files\Client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Voxel.hpp">
+      <Filter>Header Files\WorldGen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WorldConsts.hpp">
+      <Filter>Header Files\WorldGen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Chunk.hpp">
+      <Filter>Header Files\WorldGen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ChunkManager.hpp">
+      <Filter>Header Files\WorldGen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Coordinate.hpp">
+      <Filter>Header Files\WorldGen</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
