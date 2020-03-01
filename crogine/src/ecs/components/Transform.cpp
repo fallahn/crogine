@@ -42,7 +42,6 @@ Transform::Transform()
     m_scale             (1.f, 1.f, 1.f),
     m_rotation          (1.f, 0.f, 0.f, 0.f),
     m_transform         (1.f),
-    m_relativeToCamera  (false),
     m_parent            (nullptr),
     m_dirtyFlags        (0)
 {
@@ -55,7 +54,6 @@ Transform::Transform(Transform&& other) noexcept
     m_scale             (1.f, 1.f, 1.f),
     m_rotation          (1.f, 0.f, 0.f, 0.f),
     m_transform         (1.f),
-    m_relativeToCamera  (false),
     m_parent            (nullptr),
     m_dirtyFlags        (0)
 {
@@ -100,7 +98,6 @@ Transform::Transform(Transform&& other) noexcept
         setRotation(other.getRotation());
         setScale(other.getScale());
         setOrigin(other.getOrigin());
-        setRelativeToCamera(other.getRelativeToCamera());
         m_dirtyFlags = Flags::Tx;
 
         other.reset();
@@ -296,21 +293,11 @@ const glm::mat4& Transform::getLocalTransform() const
     {
         glm::mat4 translation = glm::translate(glm::mat4(1.f), m_position);
 
-        if (m_relativeToCamera)
-        {
-            auto scale = glm::scale(glm::mat4(1.f), m_scale);
-            scale = glm::translate(scale, -m_origin);
-            scale *= glm::toMat4(m_rotation);
-            m_transform = scale * translation;
-        }
-        else
-        {
-            auto rotation = glm::toMat4(m_rotation);
-            rotation = glm::scale(rotation, m_scale);
-            rotation = glm::translate(rotation, -m_origin);
+        auto rotation = glm::toMat4(m_rotation);
+        rotation = glm::scale(rotation, m_scale);
+        rotation = glm::translate(rotation, -m_origin);
 
-            m_transform = translation * rotation;
-        }
+        m_transform = translation * rotation;
     }
 
     return m_transform;
@@ -377,7 +364,6 @@ void Transform::reset()
     m_scale = glm::vec3(1.f, 1.f, 1.f);
     m_rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
     m_transform = glm::mat4(1.f);
-    m_relativeToCamera = false;
     m_parent = nullptr;
     m_dirtyFlags = 0;
 

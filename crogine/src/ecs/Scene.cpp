@@ -290,6 +290,11 @@ void Scene::enableSkybox()
     }
 }
 
+void Scene::disableSkybox()
+{
+    destroySkybox();
+}
+
 void Scene::setCubemap(const std::string& path)
 {
     enableSkybox();
@@ -509,10 +514,11 @@ void Scene::defaultRenderPath(const RenderTarget& rt)
         static_cast<int32>(size.x * vp.width), static_cast<int32>(size.y * vp.height));
     glViewport(rect.left, rect.bottom, rect.width, rect.height);
 
-    for (auto r : m_renderables)
-    {
-        r->render(camera);
-    }
+    //see comment after skybox render
+    //for (auto r : m_renderables)
+    //{
+    //    r->render(camera);
+    //}
 
     //draw the skybox if enabled
     if (m_skybox.vbo)
@@ -552,6 +558,15 @@ void Scene::defaultRenderPath(const RenderTarget& rt)
 
         glDisable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
+    }
+
+    //ideally we want to do this before the skybox to reduce overdraw
+    //but this breaks transparent objects... ideally opaque and transparent
+    //passes should be separated, but this only affects the model renderer
+    //and not other systems.... hum. Ideas on a postcard please.
+    for (auto r : m_renderables)
+    {
+        r->render(camera);
     }
 
     //restore old view port

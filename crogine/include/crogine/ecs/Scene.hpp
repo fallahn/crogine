@@ -162,6 +162,12 @@ namespace cro
         void enableSkybox();
 
         /*!
+        \brief Disables the skybox.
+        Note that this also removes any skybox textures added with setCubemap
+        */
+        void disableSkybox();
+
+        /*!
         \brief Attempts to load the cubemap at the given path and applies it to the skybox.
         This will automatically enable the skybox if it has not been enabled already.
         \param path Should be a path to a ConfigFile containing the following:

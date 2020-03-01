@@ -66,6 +66,7 @@ private:
     }m_preferences;
     bool m_showPreferences;
     bool m_showGroundPlane;
+    bool m_showSkybox;
 
     cro::ConfigFile m_currentModelConfig;
 
