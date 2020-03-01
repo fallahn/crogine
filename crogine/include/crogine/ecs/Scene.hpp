@@ -186,6 +186,11 @@ namespace cro
         void setCubemap(const std::string& path);
 
         /*!
+        \brief Sets the colours used in the default skybox
+        */
+        void setSkyboxColours(cro::Colour top = cro::Colour(0.82f, 0.98f, 0.99f), cro::Colour bottom = cro::Colour(0.21f, 0.5f, 0.96f));
+
+        /*!
         \brief Returns a copy of the entity containing the default camera
         */
         Entity getDefaultCamera() const;

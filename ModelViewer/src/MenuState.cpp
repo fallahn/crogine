@@ -333,7 +333,7 @@ void MenuState::buildUI()
             //options window
             if (m_showPreferences)
             {
-                ImGui::SetNextWindowSize({ 400.f, 160.f });
+                ImGui::SetNextWindowSize({ 400.f, 260.f });
                 if (ImGui::Begin("Preferences", &m_showPreferences))
                 {
                     ImGui::Text("%s", "Working Directory:");
@@ -382,9 +382,23 @@ void MenuState::buildUI()
                         ImGui::EndCombo();
                     }
                     ImGui::PopItemWidth();
-
+                    
+                    ImGui::NewLine();
                     ImGui::Separator();
+                    ImGui::NewLine();
 
+                    
+                    if (ImGui::ColorEdit3("Sky Top", m_preferences.skyTop.asArray()))
+                    {
+                        m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
+                    }
+                    if (ImGui::ColorEdit3("Sky Bottom", m_preferences.skyBottom.asArray()))
+                    {
+                        m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
+                    }
+
+                    ImGui::NewLine();
+                    ImGui::NewLine();
                     if (!m_showPreferences ||
                         ImGui::Button("Close"))
                     {
@@ -930,6 +944,16 @@ void MenuState::loadPrefs()
                     m_scene.enableSkybox();
                 }
             }
+            else if (name == "sky_top")
+            {
+                m_preferences.skyTop = prop.getValue<cro::Colour>();
+                m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
+            }
+            else if (name == "sky_bottom")
+            {
+                m_preferences.skyBottom = prop.getValue<cro::Colour>();
+                m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
+            }
         }
 
         updateWorldScale();
@@ -938,11 +962,18 @@ void MenuState::loadPrefs()
 
 void MenuState::savePrefs()
 {
+    auto toString = [](cro::Colour c)->std::string
+    {
+        return std::to_string(c.getRed()) + ", " + std::to_string(c.getGreen()) + ", " + std::to_string(c.getBlue()) + ", " + std::to_string(c.getAlpha());
+    };
+
     cro::ConfigFile prefsOut;
     prefsOut.addProperty("working_dir", m_preferences.workingDirectory);
     prefsOut.addProperty("units_per_metre", std::to_string(m_preferences.unitsPerMetre));
     prefsOut.addProperty("show_groundplane", m_showGroundPlane ? "true" : "false");
     prefsOut.addProperty("show_skybox", m_showSkybox ? "true" : "false");
+    prefsOut.addProperty("sky_top", toString(m_preferences.skyTop));
+    prefsOut.addProperty("sky_bottom", toString(m_preferences.skyBottom));
 
     prefsOut.save(prefPath);
 }

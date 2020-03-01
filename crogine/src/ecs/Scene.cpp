@@ -75,6 +75,9 @@ namespace
         R"(
         OUTPUT
 
+        uniform LOW vec3 u_darkColour;
+        uniform LOW vec3 u_lightColour;
+
         VARYING_IN vec3 v_texCoords;
 
         //const LOW vec3 lightColour = vec3(0.82, 0.98, 0.99);
@@ -87,7 +90,7 @@ namespace
         {
             float dist = normalize(v_texCoords).y; /*v_texCoords.y + 0.5*/
 
-            vec3 colour = mix(darkColour, lightColour, smoothstep(0.04, 0.88, dist));
+            vec3 colour = mix(u_darkColour, u_lightColour, smoothstep(0.04, 0.88, dist));
             FRAG_OUT = vec4(colour, 1.0);
         })";
     const std::string skyboxFragTextured =
@@ -267,14 +270,10 @@ void Scene::enableSkybox()
              0.5f, -0.5f,  0.5f
         };
 
-        //glCheck(glGenVertexArrays(1, &m_skybox.vao));
         glCheck(glGenBuffers(1, &m_skybox.vbo));
-        //glCheck(glBindVertexArray(m_skybox.vao));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
         glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-        //glCheck(glEnableVertexAttribArray(0));
-        //glCheck(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr));
 
         //if shader fails reset the geometry
         if(!m_skyboxShader.loadFromString(skyboxVertex, skyboxFrag))
@@ -286,6 +285,7 @@ void Scene::enableSkybox()
         {
             m_skybox.viewUniform = m_skyboxShader.getUniformMap().at("u_viewMatrix");
             m_skybox.projectionUniform = m_skyboxShader.getUniformMap().at("u_projectionMatrix");
+            setSkyboxColours();
         }
     }
 }
@@ -397,6 +397,17 @@ void Scene::setCubemap(const std::string& path)
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
+}
+
+void Scene::setSkyboxColours(cro::Colour dark, cro::Colour light)
+{
+    if (m_skyboxShader.getGLHandle())
+    {
+        glCheck(glUseProgram(m_skyboxShader.getGLHandle()));
+        glCheck(glUniform3f(m_skyboxShader.getUniformMap().at("u_darkColour"), dark.getRed(), dark.getGreen(), dark.getBlue()));
+        glCheck(glUniform3f(m_skyboxShader.getUniformMap().at("u_lightColour"), light.getRed(), light.getGreen(), light.getBlue()));
+        glCheck(glUseProgram(0));
+    }
 }
 
 Entity Scene::getDefaultCamera() const
