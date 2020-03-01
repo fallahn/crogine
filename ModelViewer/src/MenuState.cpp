@@ -116,7 +116,6 @@ namespace
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 	: cro::State            (stack, context),
     m_scene                 (context.appInstance.getMessageBus()),
-    m_zoom                  (1.f),
     m_showPreferences       (false),
     m_showGroundPlane       (false)
 {
@@ -147,24 +146,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
     {
     default: break;
     case SDL_MOUSEMOTION:
-        if (evt.motion.state & SDL_BUTTON_LMASK)
-        {
-            auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
-            tx.rotate(cro::Transform::Y_AXIS, static_cast<float>(-evt.motion.xrel / 2) * cro::Util::Const::degToRad);
-            tx.rotate(cro::Transform::X_AXIS, static_cast<float>(-evt.motion.yrel / 2) * cro::Util::Const::degToRad);
-        }
-        else if (evt.motion.state & SDL_BUTTON_MMASK)
-        {
-            auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
-            tx.move((glm::vec3(-evt.motion.xrel, evt.motion.yrel, 0.f ) / 60.f) * worldScales[m_preferences.unitsPerMetre]);
-        }
+        updateMouseInput(evt);
         break;
     case SDL_MOUSEWHEEL:
-        m_zoom = cro::Util::Maths::clamp(m_zoom - (0.1f * evt.wheel.y), MinZoom, MaxZoom);
-        updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_zoom * DefaultFOV);
+    {
+        float acceleration = m_scene.getActiveCamera().getComponent<cro::Transform>().getPosition().z / DefaultCameraPosition.z;
+        m_scene.getActiveCamera().getComponent<cro::Transform>().move(glm::vec3(0.f, 0.f, -(evt.wheel.y * 0.5f)) * worldScales[m_preferences.unitsPerMetre] * acceleration);
+    }
         break;
     case SDL_WINDOWEVENT_RESIZED:
-        updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_zoom* DefaultFOV);
+        updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], DefaultFOV);
         break;
     }
 
@@ -238,9 +229,9 @@ void MenuState::createScene()
     m_scene.setActiveCamera(entity);
 
     entities[EntityID::CamController] = m_scene.createEntity();
-    entities[EntityID::CamController].addComponent<cro::Transform>().setRelativeToCamera(true);
-    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    entities[EntityID::CamController].addComponent<cro::Transform>();
+    //entities[EntityID::CamController].addComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::GroundPlane].getComponent<cro::Transform>());
 
     //axis icon
     auto meshID = m_resources.meshes.loadMesh(OriginIconBuilder());
@@ -256,11 +247,14 @@ void MenuState::createScene()
         float scale = worldScales[m_preferences.unitsPerMetre];
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     };
+    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //set the default sunlight properties
     m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 6.f, -5.f });
     m_scene.getSunlight().setDirection({ -0.f, -1.f, -0.f });
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
+
+    m_scene.enableSkybox();
 }
 
 void MenuState::buildUI()
@@ -478,7 +472,7 @@ void MenuState::openModelAtPath(const std::string& path)
     if (def.loadFromFile(path, m_resources))
     {
         entities[EntityID::ActiveModel] = m_scene.createEntity();
-        entities[EntityID::ActiveModel].addComponent<cro::Transform>();
+        entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
 
         def.createModel(entities[EntityID::ActiveModel], m_resources);
         m_currentModelConfig.loadFromFile(path);
@@ -714,7 +708,7 @@ void MenuState::importModel()
                 auto meshID = m_resources.meshes.loadMesh(builder);
 
                 entities[EntityID::ActiveModel] = m_scene.createEntity();
-                entities[EntityID::ActiveModel].addComponent<cro::Transform>();
+                entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
                 entities[EntityID::ActiveModel].addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::Default]));
                 
                 for (auto i = 0; i < header.arrayCount; ++i)
@@ -931,7 +925,7 @@ void MenuState::updateWorldScale()
     m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(DefaultCameraPosition * scale);
     
     entities[EntityID::CamController].getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
-    updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_zoom * DefaultFOV);
+    updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], DefaultFOV);
 }
 
 void MenuState::updateNormalVis()
@@ -952,5 +946,29 @@ void MenuState::updateNormalVis()
         entities[EntityID::NormalVis] = m_scene.createEntity();
         entities[EntityID::NormalVis].addComponent<cro::Transform>();
         entities[EntityID::NormalVis].addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::DebugDraw]));
+    }
+}
+
+void MenuState::updateMouseInput(const cro::Event& evt)
+{
+    if (evt.motion.state & SDL_BUTTON_LMASK)
+    {
+        const float moveScale = 0.004f;
+        float pitchMove = static_cast<float>(evt.motion.yrel)* moveScale;
+        float yawMove = static_cast<float>(evt.motion.xrel)* moveScale;
+
+        auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
+
+        glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchMove, glm::vec3(1.f, 0.f, 0.f));
+        glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yawMove, glm::vec3(0.f, 1.f, 0.f));
+
+        auto rotation = yaw * pitch * tx.getRotationQuat();
+        tx.setRotation(rotation);
+    }
+    else if (evt.motion.state & SDL_BUTTON_MMASK)
+    {
+        auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
+        //TODO multiply this by zoom factor
+        tx.move((glm::vec3(evt.motion.xrel, -evt.motion.yrel, 0.f) / 60.f) * worldScales[m_preferences.unitsPerMetre]);
     }
 }

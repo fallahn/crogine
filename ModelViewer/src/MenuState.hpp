@@ -58,8 +58,6 @@ private:
 
     cro::Scene m_scene;
     cro::ResourceCollection m_resources;
-    
-    float m_zoom;
 
     struct Preferences final
     {
@@ -101,4 +99,6 @@ private:
 
     void updateWorldScale();
     void updateNormalVis();
+
+    void updateMouseInput(const cro::Event&);
 };
