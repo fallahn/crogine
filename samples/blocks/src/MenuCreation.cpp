@@ -52,7 +52,8 @@ const std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPositions
     glm::vec2(0.f, cro::DefaultSceneSize.y),
     glm::vec2(-static_cast<float>(cro::DefaultSceneSize.x), cro::DefaultSceneSize.y),
     glm::vec2(-static_cast<float>(cro::DefaultSceneSize.x), 0.f),
-    glm::vec2(0.f, 0.f)
+    glm::vec2(0.f, 0.f),
+    glm::vec2(static_cast<float>(cro::DefaultSceneSize.x), 0.f)
 };
 
 void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
@@ -506,6 +507,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                         if (ready && m_sharedData.clientConnection.connected
                             && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
                         {
+                            parent.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Waiting]);
                             m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                         }
                     }
@@ -529,6 +531,24 @@ void MenuState::createOptionsMenu(cro::Entity parent, std::uint32_t, std::uint32
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
+}
+
+void MenuState::createWaitMessage(cro::Entity parent)
+{
+    auto menuEntity = m_scene.createEntity();
+    menuEntity.addComponent<cro::Transform>();
+    parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
+
+    auto& menuTransform = menuEntity.getComponent<cro::Transform>();
+    menuTransform.setPosition({ -static_cast<float>(cro::DefaultSceneSize.x), 0.f });
+
+    //title
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
+    entity.addComponent<cro::Text>(m_font).setString("Waiting for server...");
+    entity.getComponent<cro::Text>().setCharSize(LargeTextSize);
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
 }
 
 void MenuState::updateLobbyData(const cro::NetEvent& evt)

@@ -91,7 +91,7 @@ private:
 
     enum MenuID
     {
-        Main, Avatar, Join, Lobby, Options, Count
+        Main, Avatar, Join, Lobby, Options, Waiting, Count
     }m_currentMenu = Main;
 
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
@@ -111,6 +111,7 @@ private:
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createOptionsMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createWaitMessage(cro::Entity);
 
     void handleTextEdit(const cro::Event&);
     void applyTextEdit();

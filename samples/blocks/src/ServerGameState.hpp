@@ -31,6 +31,8 @@ source distribution.
 
 
 #include "ServerState.hpp"
+#include "Voxel.hpp"
+#include "ChunkManager.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
@@ -57,6 +59,14 @@ namespace Sv
 
         cro::Scene m_scene;
         std::array<cro::Entity, ConstVal::MaxClients> m_playerEntities;
+
+        struct World final
+        {
+            ChunkManager chunks;
+            std::vector<vx::Update> updates;
+        }m_world;
+        vx::DataManager m_voxelData;
+
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);

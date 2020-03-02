@@ -28,6 +28,8 @@ SOFTWARE.
 
 #pragma once
 
+#include <crogine/detail/glm/vec3.hpp>
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -60,6 +62,8 @@ namespace vx
         Air = 0,
         Stone,
         Sand,
+        Dirt,
+        Grass,
         Water,
 
         Count
@@ -80,8 +84,6 @@ namespace vx
     public:
         DataManager();
 
-        void initTypes();
-
         std::uint8_t addVoxel(const Data&);
 
         const Data& getVoxel(std::uint8_t) const;
@@ -96,5 +98,11 @@ namespace vx
         std::vector<Data> m_voxels;
         std::vector<std::uint8_t> m_commonVoxels;
         std::unordered_map<std::string, std::uint8_t> m_voxelMap;
+    };
+
+    struct Update final
+    {
+        glm::ivec3 position;
+        std::uint8_t id;
     };
 }

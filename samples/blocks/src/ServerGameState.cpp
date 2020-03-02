@@ -35,6 +35,7 @@ source distribution.
 #include "PlayerSystem.hpp"
 #include "ActorSystem.hpp"
 #include "ServerMessages.hpp"
+#include "TerrainGen.hpp"
 
 #include <crogine/core/Log.hpp>
 
@@ -236,6 +237,25 @@ void GameState::initScene()
 
 void GameState::buildWorld()
 {
+    //TODO parse a config file or similar with voxel data
+    //and add the types to m_voxelData
+
+    std::hash<std::string> hash;
+    //hm this performs some truncation on the value... does it matter?
+    auto seed = static_cast<std::int32_t>(hash("cleftwhistle"));
+
+    //count per side
+    static const std::int32_t chunkCount = 16;
+
+    for (auto z = 0; z < chunkCount; ++z)
+    {
+        for (auto x = 0; x < chunkCount; ++x)
+        {
+            generateTerrain(m_world.chunks, x, z, m_voxelData, seed, chunkCount);
+        }
+    }
+
+
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
         if (m_sharedData.clients[i].connected)

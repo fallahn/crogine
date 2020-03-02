@@ -209,7 +209,7 @@ void MenuState::createScene()
 #ifdef CRO_DEBUG_
     registerWindow([&]() 
         {
-            ImGui::SetNextWindowSize({ 400.f, 400.f });
+            ImGui::SetNextWindowSize({ 400.f, 100.f });
             if (ImGui::Begin("Main Menu"))
             {
                 if (m_currentMenu == Main)
@@ -318,6 +318,7 @@ void MenuState::createScene()
     createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
     createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
 
+    createWaitMessage(entity);
 
     //set a custom camera so the scene doesn't overwrite the viewport
     //with the default view when resizing the window

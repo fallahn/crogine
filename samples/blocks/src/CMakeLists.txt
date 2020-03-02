@@ -19,4 +19,5 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ServerGameState.cpp
   ${PROJECT_DIR}/ServerLobbyState.cpp
   ${PROJECT_DIR}/SliderSystem.cpp
+  ${PROJECT_DIR}/TerrainGen.cpp
   ${PROJECT_DIR}/Voxel.cpp)
