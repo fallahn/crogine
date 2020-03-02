@@ -46,6 +46,10 @@ to time out.
 */
 
 struct SharedStateData;
+namespace cro
+{
+    struct Camera;
+}
 class PauseState final : public cro::State
 {
 public:
@@ -70,5 +74,5 @@ private:
     SharedStateData& m_sharedData;
 
     void buildScene();
-    void updateView();
+    void updateView(cro::Camera&);
 };

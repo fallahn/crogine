@@ -39,9 +39,10 @@ source distribution.
 
 #include <crogine/core/Log.hpp>
 
-#include<crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+
 
 using namespace Sv;
 
@@ -159,8 +160,6 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
     {
         if (m_sharedData.clients[i].connected)
         {
-            //TODO name/skin info is sent on lobby join
-
             PlayerInfo info;
             info.playerID = i;
             info.spawnPosition = m_playerEntities[i].getComponent<cro::Transform>().getPosition();
@@ -173,7 +172,8 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
     }
 
 
-    //TODO send map data to start building the world
+    //send map data to start building the world
+    sendChunk(playerID, {});
 
     //client said it was ready, so mark as ready
     m_sharedData.clients[playerID].ready = true;
@@ -245,8 +245,8 @@ void GameState::buildWorld()
     auto seed = static_cast<std::int32_t>(hash("cleftwhistle"));
 
     //count per side
-    static const std::int32_t chunkCount = 16;
-
+    static const std::int32_t chunkCount = 4;
+    LOG("Generating...", cro::Logger::Type::Info);
     for (auto z = 0; z < chunkCount; ++z)
     {
         for (auto x = 0; x < chunkCount; ++x)
@@ -274,4 +274,33 @@ void GameState::buildWorld()
             m_playerEntities[i].getComponent<Actor>().serverEntityId = m_playerEntities[i].getIndex();
         }
     }
+}
+
+void GameState::sendChunk(std::uint8_t playerID, glm::ivec3 chunkPos)
+{
+    const Chunk* chunk = nullptr;
+    if (m_world.chunks.hasChunk(chunkPos))
+    {
+        chunk = &m_world.chunks.getChunk(chunkPos);
+    }
+    else
+    {
+        chunk = &m_world.chunks.addChunk(chunkPos);
+    }
+
+    CRO_ASSERT(chunk, "Something went wrong");
+
+    auto compressedData = compressVoxels(chunk->getVoxels());
+
+    ChunkData cd;
+    cd.x = static_cast<std::int16_t>(chunkPos.x);
+    cd.y = static_cast<std::int16_t>(chunkPos.y);
+    cd.z = static_cast<std::int16_t>(chunkPos.z);
+    cd.dataSize = static_cast<std::uint32_t>(compressedData.size());
+
+    std::vector<std::uint8_t> data(sizeof(cd) + (cd.dataSize * sizeof(RLEPair)));
+    std::memcpy(data.data(), &cd, sizeof(cd));
+    std::memcpy(data.data() + sizeof(cd), compressedData.data(), compressedData.size() * sizeof(RLEPair));
+
+    m_sharedData.host.sendPacket(m_sharedData.clients[playerID].peer, PacketID::ChunkData, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }

@@ -14,3 +14,7 @@
 
 27/02/20-14:16:58: ERROR: Assertion failed in C:\Users\Matt\Documents\Visual Studio 2019\Projects\crogine\crogine\include\crogine\network\NetData.inl, function `cro::NetEvent::Packet::as`, line 34: This type's size does not match data size
 
+02/03/20-12:46:52: ERROR: Assertion failed in C:\Users\Matt\Documents\Visual Studio 2019\Projects\crogine\crogine\include\crogine\ecs\Entity.inl, function `cro::Entity::getComponent`, line 63: Not a valid Entity
+
+02/03/20-14:48:20: ERROR: Assertion failed in C:\Users\Matt\Documents\Visual Studio 2019\Projects\crogine\crogine\include\crogine\ecs\Entity.inl, function `cro::Entity::getComponent`, line 63: Not a valid Entity
+

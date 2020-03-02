@@ -36,8 +36,16 @@ SOFTWARE.
 #include <vector>
 #include <array>
 
+//using a struct rather than std::pair makes it easier to serialise into packet.
+struct RLEPair final
+{
+    RLEPair(std::uint8_t i = 0, std::uint16_t c = 0) : id(i), count(c) {}
+    std::uint8_t id = 0;
+    std::uint16_t count = 0;
+};
+
 //holds a collection of voxel IDs compressed with run length encoding: pair<ID, Count>
-using CompressedVoxels = std::vector<std::pair<std::uint8_t, std::uint16_t>>;
+using CompressedVoxels = std::vector<RLEPair>;
 using ChunkVoxels = std::array<std::uint8_t, WorldConst::ChunkVolume>;
 
 class ChunkManager;

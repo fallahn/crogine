@@ -151,16 +151,6 @@ void Server::run()
                 switch (evt.packet.getID())
                 {
                 default: break;
-                case PacketID::RequestGameStart:
-                    if (m_currentState->stateID() == Sv::StateID::Lobby)
-                    {
-                        //TODO assert sender is host
-                        m_currentState = std::make_unique<Sv::GameState>(m_sharedData);
-                        nextState = Sv::StateID::Game;
-
-                        m_sharedData.host.broadcastPacket(PacketID::StateChange, std::uint8_t(nextState), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    }
-                    break;
                 }
             }
         }

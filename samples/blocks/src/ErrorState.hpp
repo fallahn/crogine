@@ -37,6 +37,11 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 
 struct SharedStateData;
+namespace cro
+{
+    struct Camera;
+}
+
 class ErrorState final : public cro::State, public cro::GuiClient
 {
 public:
@@ -58,5 +63,5 @@ private:
     cro::Texture m_backgroundTexture;
 
     void buildScene();
-    void updateView();
+    void updateView(cro::Camera&);
 };

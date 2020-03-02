@@ -58,6 +58,8 @@ namespace PacketID
         ConnectionAccepted, //< uint8 assigned player ID (0-3)
         StateChange, //< uint8 state ID
         LobbyUpdate, //< LobbyData struct, name string bytes
+        ChunkData, //< ChunkData struct followed by data array
+        VoxelUpdate, //
 
         PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
         PlayerUpdate, //< world pos, rotation, uint32 timestamp - used for reconciliation, send directly to targeted peer

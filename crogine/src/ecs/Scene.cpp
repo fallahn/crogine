@@ -422,6 +422,12 @@ Entity Scene::setActiveCamera(Entity entity)
     auto oldCam = m_entityManager.getEntity(m_activeCamera);
     m_activeCamera = entity.getIndex();
 
+    auto& cam = entity.getComponent<cro::Camera>();
+    if (cam.resizeCallback)
+    {
+        cam.resizeCallback(cam);
+    }
+
     return oldCam;
 }
 

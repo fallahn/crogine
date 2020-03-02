@@ -80,6 +80,15 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
             m_sharedData.host.broadcastPacket(PacketID::LobbyReady, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
             break;
+        case PacketID::RequestGameStart:
+            {
+                //TODO assert sender is host
+                //TODO check all members are ready server side instead of client side
+                m_returnValue = Sv::StateID::Game;
+
+                m_sharedData.host.broadcastPacket(PacketID::StateChange, std::uint8_t(m_returnValue), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
         }
     }
 }

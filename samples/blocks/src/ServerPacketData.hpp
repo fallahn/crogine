@@ -69,3 +69,11 @@ struct ActorUpdate final
     std::int32_t timestamp = 0;
     std::int8_t actorID = -1;
 };
+
+struct ChunkData final
+{
+    std::int16_t x = 0;
+    std::int16_t y = 0;
+    std::int16_t z = 0;
+    std::uint16_t dataSize = 0;
+};

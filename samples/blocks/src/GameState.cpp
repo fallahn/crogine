@@ -35,6 +35,8 @@ source distribution.
 #include "ClientCommandIDs.hpp"
 #include "InterpolationSystem.hpp"
 #include "ClientPacketData.hpp"
+#include "MenuConsts.hpp"
+#include "Chunk.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -43,14 +45,17 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Text.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/TextRenderer.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/GlobalConsts.hpp>
 
 namespace
 {
@@ -280,6 +285,10 @@ void GameState::addSystems()
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+
+    m_uiScene.addSystem<cro::CommandSystem>(mb);
+    m_uiScene.addSystem<cro::CameraSystem>(mb);
+    m_uiScene.addSystem<cro::TextRenderer>(mb);
 }
 
 void GameState::loadAssets()
@@ -294,7 +303,24 @@ void GameState::createScene()
 
 void GameState::createUI()
 {
+    auto fontID = 0;
+    auto& font = m_resources.fonts.get(fontID);
+    font.loadFromFile("assets/fonts/VeraMono.ttf");
 
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 10.f, 60.f });
+    entity.addComponent<cro::Text>(font).setString("Waiting for server...");
+    entity.getComponent<cro::Text>().setColour(TextNormalColour);
+    entity.addComponent<cro::CommandTarget>().ID = UI::CommandID::WaitMessage;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Camera>().projectionMatrix = 
+        glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -0.1f, 100.f);
+
+    m_uiScene.setActiveCamera(entity);
+
+    updateView();
 }
 
 void GameState::updateView()
@@ -383,6 +409,9 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     case PacketID::ClientDisconnected:
         m_sharedData.playerData[packet.as<std::uint8_t>()].name.clear();
         break;
+    case PacketID::ChunkData:
+        parseChunkData(packet);
+        break;
     }
 }
 
@@ -436,6 +465,17 @@ void GameState::spawnPlayer(PlayerInfo info)
             updateView();
 
             //TODO create a head/body that only gets drawn in third person
+
+
+            //reove the plase wait message
+            cro::Command cmd;
+            cmd.targetFlags = UI::CommandID::WaitMessage;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                //m_uiScene.destroyEntity(e);
+                cro::Logger::log("Fix deleting texts!", cro::Logger::Type::Warning);
+            };
+            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
         }
     }
     else
@@ -476,6 +516,27 @@ void GameState::spawnPlayer(PlayerInfo info)
             }
         };
         modelDef.createModel(entity, m_resources);
+    }
+}
+
+void GameState::parseChunkData(const cro::NetEvent::Packet& packet)
+{
+    //TODO properly validate the size of this packet
+    if (packet.getSize() > sizeof(ChunkData))
+    {
+        ChunkData cd;
+        std::memcpy(&cd, packet.getData(), sizeof(cd));
+
+        if (packet.getSize() - sizeof(cd) == cd.dataSize * sizeof(RLEPair))
+        {
+            CompressedVoxels voxels(cd.dataSize);
+            std::memcpy(voxels.data(), (char*)packet.getData() + static_cast<std::intptr_t>(sizeof(cd)), sizeof(RLEPair)* cd.dataSize);
+        }
+
+        else
+        {
+            std::cout << "packet size and data size mistmatch\n";
+        }
     }
 }
 

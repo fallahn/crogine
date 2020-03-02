@@ -36,3 +36,11 @@ namespace Client::CommandID
         Interpolated = 0x1
     };
 }
+
+namespace UI::CommandID
+{
+    enum
+    {
+        WaitMessage = 0x1
+    };
+}

@@ -88,15 +88,6 @@ bool PauseState::handleEvent(const cro::Event& evt)
 
 void PauseState::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == cro::Message::WindowMessage)
-    {
-        const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-        {
-            updateView();
-        }
-    }
-
     m_scene.forwardMessage(msg);
 }
 
@@ -224,20 +215,17 @@ void PauseState::buildScene()
     //create a custom camera to allow or own update function
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>();
+    entity.addComponent<cro::Camera>().resizeCallback = std::bind(&PauseState::updateView, this, std::placeholders::_1);
 
     m_scene.setActiveCamera(entity);
-
-    updateView();
 }
 
-void PauseState::updateView()
+void PauseState::updateView(cro::Camera& cam)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
-    auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
     cam.projectionMatrix = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
     cam.viewport.bottom = (1.f - size.y) / 2.f;
     cam.viewport.height = size.y;

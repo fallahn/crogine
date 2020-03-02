@@ -186,7 +186,6 @@ void createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManag
     }
 }
 
-#include <iostream>
 void generateTerrain(ChunkManager& chunkManager, std::int32_t chunkX, std::int32_t chunkZ,
     const vx::DataManager& voxelData, std::int32_t seed, std::int32_t chunkCount)
 {
@@ -195,13 +194,10 @@ void generateTerrain(ChunkManager& chunkManager, std::int32_t chunkX, std::int32
     auto heightmap = createChunkHeightmap(chunkPos, chunkCount, seed);
     auto maxHeight = *std::max_element(heightmap.begin(), heightmap.end());
 
-    std::cout << "generating " << chunkX;
     for(auto y = 0; y < std::max(1, maxHeight / ChunkSize + 1); ++y)
     {
         auto& chunk = chunkManager.addChunk({ chunkX, y, chunkZ });
         createTerrain(chunk, heightmap, voxelData, seed);
         chunkManager.ensureNeighbours(chunk.getPosition());
-        std::cout << "," << y;
     }
-    std::cout << ", " << chunkZ << "\n";
 }

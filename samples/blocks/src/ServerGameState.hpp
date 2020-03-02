@@ -74,5 +74,8 @@ namespace Sv
 
         void initScene();
         void buildWorld();
+
+        void sendChunk(std::uint8_t, glm::ivec3);
+
     };
 }

@@ -77,7 +77,7 @@ private:
 
     void handlePacket(const cro::NetEvent::Packet&);
     void spawnPlayer(PlayerInfo);
-
+    void parseChunkData(const cro::NetEvent::Packet&);
 
     std::size_t m_cameraPosIndex;
     void updateCameraPosition();//< switch 3rd to first person view etc
