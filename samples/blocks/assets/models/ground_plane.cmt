@@ -2,7 +2,7 @@ model ground_plane
 {
 	mesh = quad
 	uv = 1,1
-	size = 3,3
+	size = 1,1
 
 	material Unlit
 	{

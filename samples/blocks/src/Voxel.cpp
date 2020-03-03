@@ -61,8 +61,8 @@ namespace vx
         m_commonVoxels[CommonType::Stone] = getID("stone");
         m_commonVoxels[CommonType::Air] = getID("air");
         m_commonVoxels[CommonType::Water] = getID("water");
-        m_commonVoxels[CommonType::Water] = getID("dirt");
-        m_commonVoxels[CommonType::Water] = getID("grass");
+        m_commonVoxels[CommonType::Dirt] = getID("dirt");
+        m_commonVoxels[CommonType::Grass] = getID("grass");
     }
 
     std::uint8_t DataManager::addVoxel(const Data& voxel)

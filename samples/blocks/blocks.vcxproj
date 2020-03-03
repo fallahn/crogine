@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="src\Chunk.cpp" />
     <ClCompile Include="src\ChunkManager.cpp" />
+    <ClCompile Include="src\ChunkRenderer.cpp" />
     <ClCompile Include="src\Coordinate.cpp" />
     <ClCompile Include="src\ErrorState.cpp" />
     <ClCompile Include="src\GameState.cpp" />
@@ -182,6 +183,7 @@
     <ClInclude Include="src\ActorSystem.hpp" />
     <ClInclude Include="src\Chunk.hpp" />
     <ClInclude Include="src\ChunkManager.hpp" />
+    <ClInclude Include="src\ChunkRenderer.hpp" />
     <ClInclude Include="src\CircularBuffer.hpp" />
     <ClInclude Include="src\ClientCommandIDs.hpp" />
     <ClInclude Include="src\ClientPacketData.hpp" />

@@ -132,6 +132,9 @@
     <ClCompile Include="src\TerrainGen.cpp">
       <Filter>Source Files\WorldGen</Filter>
     </ClCompile>
+    <ClCompile Include="src\ChunkRenderer.cpp">
+      <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -238,6 +241,9 @@
     </ClInclude>
     <ClInclude Include="src\TerrainGen.hpp">
       <Filter>Header Files\WorldGen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ChunkRenderer.hpp">
+      <Filter>Header Files\Client\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

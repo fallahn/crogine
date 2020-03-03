@@ -175,6 +175,11 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
     //send map data to start building the world
     sendChunk(playerID, {});
 
+    //for (auto& c : m_world.chunks.getChunks())
+    //{
+    //    sendChunk(playerID, c.first);
+    //}
+
     //client said it was ready, so mark as ready
     m_sharedData.clients[playerID].ready = true;
 }

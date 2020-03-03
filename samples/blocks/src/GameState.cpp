@@ -37,6 +37,7 @@ source distribution.
 #include "ClientPacketData.hpp"
 #include "MenuConsts.hpp"
 #include "Chunk.hpp"
+#include "ChunkRenderer.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -287,6 +288,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<ChunkRenderer>(mb, m_resources);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
@@ -297,12 +299,12 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
-    m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
+
 }
 
 void GameState::createScene()
 {
-
+    m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
 }
 
 void GameState::createUI()
@@ -413,7 +415,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         m_sharedData.playerData[packet.as<std::uint8_t>()].name.clear();
         break;
     case PacketID::ChunkData:
-        parseChunkData(packet);
+        m_gameScene.getSystem<ChunkRenderer>().parseChunkData(packet);
         break;
     }
 }
@@ -519,27 +521,6 @@ void GameState::spawnPlayer(PlayerInfo info)
             }
         };
         modelDef.createModel(entity, m_resources);
-    }
-}
-
-void GameState::parseChunkData(const cro::NetEvent::Packet& packet)
-{
-    //TODO properly validate the size of this packet
-    if (packet.getSize() > sizeof(ChunkData))
-    {
-        ChunkData cd;
-        std::memcpy(&cd, packet.getData(), sizeof(cd));
-
-        if (packet.getSize() - sizeof(cd) == cd.dataSize * sizeof(RLEPair))
-        {
-            CompressedVoxels voxels(cd.dataSize);
-            std::memcpy(voxels.data(), (char*)packet.getData() + static_cast<std::intptr_t>(sizeof(cd)), sizeof(RLEPair)* cd.dataSize);
-        }
-
-        else
-        {
-            std::cout << "packet size and data size mistmatch\n";
-        }
     }
 }
 
