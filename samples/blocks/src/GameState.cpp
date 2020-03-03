@@ -46,12 +46,14 @@ source distribution.
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/SpriteRenderer.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -70,6 +72,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData    (sd),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
+    m_fontID        (0),
     m_inputParser   (sd.clientConnection.netClient),
     m_cameraPosIndex(0)
 {
@@ -288,6 +291,7 @@ void GameState::addSystems()
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
+    m_uiScene.addSystem<cro::SpriteRenderer>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
 }
 
@@ -303,8 +307,7 @@ void GameState::createScene()
 
 void GameState::createUI()
 {
-    auto fontID = 0;
-    auto& font = m_resources.fonts.get(fontID);
+    auto& font = m_resources.fonts.get(m_fontID);
     font.loadFromFile("assets/fonts/VeraMono.ttf");
 
     auto entity = m_uiScene.createEntity();
@@ -472,8 +475,8 @@ void GameState::spawnPlayer(PlayerInfo info)
             cmd.targetFlags = UI::CommandID::WaitMessage;
             cmd.action = [&](cro::Entity e, float)
             {
-                //m_uiScene.destroyEntity(e);
-                cro::Logger::log("Fix deleting texts!", cro::Logger::Type::Warning);
+                m_uiScene.destroyEntity(e);
+                //cro::Logger::log("Fix deleting texts!", cro::Logger::Type::Warning);
             };
             m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
         }

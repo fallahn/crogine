@@ -60,6 +60,7 @@ private:
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
+    std::uint32_t m_fontID;
 
     cro::ResourceCollection m_resources;
 

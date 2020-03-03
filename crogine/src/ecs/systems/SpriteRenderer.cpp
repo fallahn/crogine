@@ -287,12 +287,17 @@ void SpriteRenderer::render(Entity camera)
 
     //foreach vbo bind and draw
     std::size_t idx = 0;
-    for (const auto& batch : m_buffers)
+    for (const auto& [vbo, batch] : m_buffers)
     {
+        if (batch.empty())
+        {
+            continue;
+        }
+
         const auto& transforms = m_bufferTransforms[idx++]; //TODO this should be same index as current buffer
         glCheck(glUniformMatrix4fv(m_matrixIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
 
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, batch.first));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, vbo));
         
         //bind attrib pointers
         for (auto i = 0u; i < m_attribMap.size(); ++i)
@@ -302,7 +307,7 @@ void SpriteRenderer::render(Entity camera)
                 reinterpret_cast<void*>(static_cast<intptr_t>(m_attribMap[i].offset))));      
         }
 
-        for (const auto& batchData : batch.second)
+        for (const auto& batchData : batch)
         {
             //CRO_ASSERT(batchData.texture > -1, "Missing sprite texture!");
             applyBlendMode(batchData.blendMode);
@@ -324,8 +329,6 @@ void SpriteRenderer::render(Entity camera)
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_BLEND));
     glCheck(glDepthMask(GL_TRUE));
-
-    //restorePreviousViewport();
 }
 
 //private
@@ -346,16 +349,23 @@ void SpriteRenderer::rebuildBatch()
     //create each batch
     uint32 start = 0;
     uint32 batchIdx = 0;
-    for (auto& batch : m_buffers)
+    for (auto& [vbo, batch] : m_buffers)
     {
+        batch.clear();
+
+        if (entities.empty())
+        {
+            continue;
+        }
+
         const auto& firstSprite = entities[batchIdx].getComponent<Sprite>();
         
         Batch batchData;
         batchData.start = start;
         batchData.texture = firstSprite.m_textureID;
         batchData.blendMode = firstSprite.m_blendMode;
+
         int32 spritesThisBatch = 0;
-        batch.second.clear();
 
         std::vector<float> vertexData;
         auto maxCount = std::min(static_cast<uint32>(entities.size()), batchIdx + MaxSprites);
@@ -368,7 +378,7 @@ void SpriteRenderer::rebuildBatch()
             {
                 //end the batch and start a new one for this buffer
                 batchData.count = start - batchData.start;
-                batch.second.push_back(batchData);
+                batch.push_back(batchData);
 
                 batchData.start = start;
                 batchData.texture = sprite.m_textureID;
@@ -431,10 +441,10 @@ void SpriteRenderer::rebuildBatch()
         }
         batchIdx += MaxSprites;
         batchData.count = start - batchData.start;
-        batch.second.push_back(batchData);
+        batch.push_back(batchData);
 
         //upload to VBO
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, batch.first));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, vbo));
         glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW));
     }
 

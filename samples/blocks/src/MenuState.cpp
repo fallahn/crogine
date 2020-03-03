@@ -115,9 +115,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_1:
 
-            break;
         case SDLK_2:
             
             break;

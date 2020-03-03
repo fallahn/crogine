@@ -198,12 +198,17 @@ void TextRenderer::render(Entity camera)
 
     //foreach vbo bind and draw
     std::size_t idx = 0;
-    for (const auto& batch : m_buffers)
+    for (const auto& [vbo, batch] : m_buffers)
     {
-        const auto& transforms = m_bufferTransforms[idx++]; //TODO this should be same index as current buffer
+        if (batch.empty())
+        {
+            continue;
+        }
+
+        const auto& transforms = m_bufferTransforms[idx++];
         glCheck(glUniformMatrix4fv(m_shaders[/*Font::Bitmap*/0].xformUniformIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
 
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, batch.first));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, vbo));
 
         //bind attrib pointers
         for (auto i = 0u; i < m_shaders[/*Font::Bitmap*/0].attribMap.size(); ++i)
@@ -213,7 +218,7 @@ void TextRenderer::render(Entity camera)
                 reinterpret_cast<void*>(static_cast<intptr_t>(m_shaders[/*Font::Bitmap*/0].attribMap[i].offset))));
         }
 
-        for (const auto& batchData : batch.second)
+        for (const auto& batchData : batch)
         {
             //CRO_ASSERT(batchData.texture > -1, "Missing sprite texture!");
             applyBlendMode(batchData.blendMode);
@@ -321,8 +326,15 @@ void TextRenderer::rebuildBatch()
     //create a batch for each VBO, sub indexing at MaxTexts
     uint32 start = 0;
     uint32 batchIdx = 0;
-    for (auto& batch : m_buffers)
+    for (auto& [vbo, batch] : m_buffers)
     {
+        batch.clear();
+
+        if (entities.empty())
+        {
+            continue;
+        }
+
         auto& currText = entities[batchIdx].getComponent<Text>();
         
         Batch batchData;
@@ -332,10 +344,9 @@ void TextRenderer::rebuildBatch()
         batchData.scissor = currText.m_scissor;
         //scissor area is updated during processing, so we store the batch ID in the text component
         currText.m_batchIndex[0] = batchIdx;
-        currText.m_batchIndex[1] = batch.second.size();
+        currText.m_batchIndex[1] = batch.size();
 
         int32 spritesThisBatch = 0;
-        batch.second.clear();
 
         std::vector<float> vertexData;
         auto maxCount = std::min(static_cast<uint32>(entities.size()), batchIdx + MaxTexts);
@@ -359,7 +370,7 @@ void TextRenderer::rebuildBatch()
             {
                 //end the batch and start a new one for this buffer
                 batchData.count = start - batchData.start;
-                batch.second.push_back(batchData);
+                batch.push_back(batchData);
 
                 batchData.start = start;
                 batchData.texture = texID;
@@ -371,7 +382,7 @@ void TextRenderer::rebuildBatch()
             }
 
             text.m_batchIndex[0] = batchIdx;
-            text.m_batchIndex[1] = batch.second.size();
+            text.m_batchIndex[1] = batch.size();
 
             //copies vertex data at a given index
             auto copyVertex = [&](uint32 idx)
@@ -425,10 +436,10 @@ void TextRenderer::rebuildBatch()
 
         batchIdx += MaxTexts;
         batchData.count = start - batchData.start;
-        batch.second.push_back(batchData);
+        batch.push_back(batchData);
 
         //upload to VBO
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, batch.first));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, vbo));
         glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW));
     }
 
