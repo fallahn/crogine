@@ -27,32 +27,75 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "ChunkRenderer.hpp"
+#include "ChunkSystem.hpp"
 #include "ServerPacketData.hpp"
 #include "WorldConsts.hpp"
+#include "ChunkMeshBuilder.hpp"
+#include "ResourceIDs.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Model.hpp>
 
 #include <crogine/graphics/ResourceAutomation.hpp>
 
-ChunkRenderer::ChunkRenderer(cro::MessageBus& mb, cro::ResourceCollection& rc)
-    : cro::System(mb, typeid(ChunkRenderer)),
-    m_resources(rc)
+namespace
+{
+    const std::string Vertex = 
+        R"(
+            ATTRIBUTE vec4 a_position;
+            ATTRIBUTE LOW vec3 a_colour;
+            ATTRIBUTE MED vec2 a_texCoord0;
+
+            uniform mat4 u_worldViewMatrix;
+            uniform mat4 u_projectionMatrix;
+
+            VARYING_OUT LOW vec3 v_colour;
+            VARYING_OUT MED vec2 v_texCoord;
+
+            void main()
+            {
+                gl_Position = u_projectionMatrix * u_worldViewMatrix * a_position;
+                v_colour = a_colour;
+                v_texCoord = a_texCoord0;
+            })";
+
+    const std::string Fragment = 
+        R"(
+            VARYING_IN LOW vec3 v_colour;
+            VARYING_IN MED vec2 v_texCoord;
+
+            OUTPUT
+
+            void main()
+            {
+                FRAG_OUT = vec4(v_colour, 1.0);
+            })";
+}
+
+ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
+    : cro::System   (mb, typeid(ChunkSystem)),
+    m_resources     (rc),
+    m_materialID    (0)
 {
     requireComponent<ChunkComponent>();
     requireComponent<cro::Transform>();
 
-    //TODO create shaders for chunk meshes
+    //create shaders for chunk meshes
+    if (rc.shaders.preloadFromString(Vertex, Fragment, ShaderID::Chunk))
+    {
+        //and then material
+        m_materialID = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
+    }
 }
 
 //public
-void ChunkRenderer::handleMessage(const cro::Message&)
+void ChunkSystem::handleMessage(const cro::Message&)
 {
 
 }
 
-void ChunkRenderer::process(float)
+void ChunkSystem::process(float)
 {
     auto& entities = getEntities();
     for (auto entity : entities)
@@ -66,7 +109,7 @@ void ChunkRenderer::process(float)
     }
 }
 
-void ChunkRenderer::parseChunkData(const cro::NetEvent::Packet& packet)
+void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
 {
     //TODO properly validate the size of this packet
     if (packet.getSize() > sizeof(ChunkData))
@@ -91,32 +134,33 @@ void ChunkRenderer::parseChunkData(const cro::NetEvent::Packet& packet)
                 entity.addComponent<ChunkComponent>().chunkPos = position;
 
                 //temp just to see where we are
-                cro::ModelDefinition md;
+                /*cro::ModelDefinition md;
                 md.loadFromFile("assets/models/ground_plane.cmt", m_resources);
-                md.createModel(entity, m_resources);
+                md.createModel(entity, m_resources);*/
+
+                //create a model with an empty mesh, this should be build on next
+                //update automagically!
+                auto meshID = m_resources.meshes.loadMesh(ChunkMeshBuilder());
+                CRO_ASSERT(meshID > 0, "Mesh generation failed");
+                auto& mesh = m_resources.meshes.getMesh(meshID);
+
+                auto& material = m_resources.materials.get(m_materialID);
+                entity.addComponent<cro::Model>(mesh, material);
             }
         }
     }
 }
 
-void ChunkRenderer::render(cro::Entity cam)
-{
-
-}
-
 //private
-void ChunkRenderer::updateMesh(const Chunk& chunk)
+void ChunkSystem::updateMesh(const Chunk& chunk)
 {
-    //TODO track existing chunks to only update
-    //the vertex data instead of creatng new one
-
     //TODO create the vertex data in own thread
     //and signal to this thread when done/ready for upload
 
-
+    //TODO test uploading simple vertex data first
 }
 
-void ChunkRenderer::onEntityRemoved(cro::Entity entity)
+void ChunkSystem::onEntityRemoved(cro::Entity entity)
 {
     if (auto found = m_chunkEntities.find(entity.getComponent<ChunkComponent>().chunkPos); found != m_chunkEntities.end())
     {
@@ -124,7 +168,7 @@ void ChunkRenderer::onEntityRemoved(cro::Entity entity)
     }
 }
 
-void ChunkRenderer::onEntityAdded(cro::Entity entity)
+void ChunkSystem::onEntityAdded(cro::Entity entity)
 {
     if (auto found = m_chunkEntities.find(entity.getComponent<ChunkComponent>().chunkPos); found != m_chunkEntities.end())
     {

@@ -2,7 +2,8 @@
 set(PROJECT_SRC
   ${PROJECT_DIR}/Chunk.cpp
   ${PROJECT_DIR}/ChunkManager.cpp
-  ${PROJECT_DIR}/ChunkRenderer.cpp
+  ${PROJECT_DIR}/ChunkMeshBuilder.cpp
+  ${PROJECT_DIR}/ChunkSystem.cpp
   ${PROJECT_DIR}/Coordinate.cpp
   ${PROJECT_DIR}/ErrorState.cpp
   ${PROJECT_DIR}/GameState.cpp

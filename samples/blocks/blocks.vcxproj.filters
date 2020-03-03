@@ -132,7 +132,10 @@
     <ClCompile Include="src\TerrainGen.cpp">
       <Filter>Source Files\WorldGen</Filter>
     </ClCompile>
-    <ClCompile Include="src\ChunkRenderer.cpp">
+    <ClCompile Include="src\ChunkMeshBuilder.cpp">
+      <Filter>Source Files\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ChunkSystem.cpp">
       <Filter>Source Files\Client\systems</Filter>
     </ClCompile>
   </ItemGroup>
@@ -242,7 +245,10 @@
     <ClInclude Include="src\TerrainGen.hpp">
       <Filter>Header Files\WorldGen</Filter>
     </ClInclude>
-    <ClInclude Include="src\ChunkRenderer.hpp">
+    <ClInclude Include="src\ChunkMeshBuilder.hpp">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ChunkSystem.hpp">
       <Filter>Header Files\Client\systems</Filter>
     </ClInclude>
   </ItemGroup>

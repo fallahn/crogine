@@ -74,7 +74,7 @@ namespace cro
         /*!
         \brief Preloads a mesh and automatically assigns an ID.
         \param mb Reference to the MeshBuilder instance containing the data to preload.
-        \returns Automatically generated ID, or -1 if loading failed.
+        \returns Automatically generated ID, or 0 if loading failed.
         */
         std::size_t loadMesh(const MeshBuilder& mb);
 

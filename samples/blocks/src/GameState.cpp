@@ -37,7 +37,7 @@ source distribution.
 #include "ClientPacketData.hpp"
 #include "MenuConsts.hpp"
 #include "Chunk.hpp"
-#include "ChunkRenderer.hpp"
+#include "ChunkSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -288,7 +288,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<ChunkRenderer>(mb, m_resources);
+    m_gameScene.addSystem<ChunkSystem>(mb, m_resources);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
@@ -415,7 +415,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         m_sharedData.playerData[packet.as<std::uint8_t>()].name.clear();
         break;
     case PacketID::ChunkData:
-        m_gameScene.getSystem<ChunkRenderer>().parseChunkData(packet);
+        m_gameScene.getSystem<ChunkSystem>().parseChunkData(packet);
         break;
     }
 }

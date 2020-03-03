@@ -33,7 +33,6 @@ source distribution.
 #include "Voxel.hpp"
 
 #include <crogine/ecs/System.hpp>
-#include <crogine/ecs/Renderable.hpp>
 
 #include <crogine/network/NetData.hpp>
 
@@ -48,17 +47,16 @@ struct ChunkComponent final
     glm::ivec3 chunkPos = glm::ivec3(0);
 };
 
-class ChunkRenderer final : public cro::System, public cro::Renderable
+class ChunkSystem final : public cro::System
 {
 public:
-    ChunkRenderer(cro::MessageBus&, cro::ResourceCollection&);
+    ChunkSystem(cro::MessageBus&, cro::ResourceCollection&);
 
     void handleMessage(const cro::Message&) override;
     void process(float) override;
 
     void parseChunkData(const cro::NetEvent::Packet&);
 
-    void render(cro::Entity) override;
 private:
 
     struct VoxelUpdate final
@@ -72,10 +70,12 @@ private:
     ChunkManager m_chunkManager;
     vx::DataManager m_voxelData;
 
-    std::vector<VoxelUpdate> m_voxelUpdates;
+    std::vector<VoxelUpdate> m_voxelUpdates; //TODO move this into the chunk component
 
     PositionMap<cro::Entity> m_chunkEntities;
     void updateMesh(const Chunk&);
+
+    std::int32_t m_materialID;
 
     void onEntityRemoved(cro::Entity);
     void onEntityAdded(cro::Entity);

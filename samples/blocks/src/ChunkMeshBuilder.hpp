@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2017 - 2020
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,51 +29,27 @@ source distribution.
 
 #pragma once
 
-namespace MaterialID
+#include <crogine/graphics/MeshBuilder.hpp>
+
+/*
+custom mesh builder creates an empty mesh with the
+correct attributes for a chunk mesh. The VBO itself
+is updated by the ChunkRenderer system.
+*/
+class ChunkMeshBuilder final : public cro::MeshBuilder
 {
-    enum
-    {
-        Chunk
-    };
-}
+public:
+    ChunkMeshBuilder();
 
-namespace MeshID
-{
-    /*enum
-    {
-        
-    };*/
-}
+    //return 0 and each mesh gets an automatic ID
+    //from the mesh resource, prevents returning the
+    //same instance each time...
 
-namespace GameModelID
-{
+    //TODO could also use the chunk position hash here
+    //but it's unlikely a chunk gets completely recreated
+    std::size_t getUID() const override { return 0; }
 
-}
+private:
 
-namespace FontID
-{
-
-}
-
-namespace ShaderID
-{
-    enum
-    {
-        Chunk
-    };
-}
-
-namespace CommandID
-{
-
-}
-
-namespace AnimationID
-{
-
-}
-
-namespace CollisionID
-{
-
-}
+    cro::Mesh::Data build() const override;
+};
