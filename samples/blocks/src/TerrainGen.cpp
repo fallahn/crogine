@@ -32,6 +32,8 @@ SOFTWARE.
 #include "ChunkManager.hpp"
 #include "WorldConsts.hpp"
 
+#include <algorithm>
+
 //TODO also try fastnoise to see how results compare
 #include <crogine/detail/glm/gtc/noise.hpp>
 
