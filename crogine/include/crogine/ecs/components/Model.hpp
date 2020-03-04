@@ -108,6 +108,10 @@ namespace cro
 
         void bindMaterial(Material::Data&);
         
+#ifdef PLATFORM_DESKTOP
+        void updateVAO(std::size_t);
+#endif //DESKTOP
+
         glm::mat4* m_skeleton = nullptr;
         std::size_t m_jointCount = 0;
 

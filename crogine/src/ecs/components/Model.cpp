@@ -29,6 +29,8 @@ source distribution.
 
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/detail/Assert.hpp>
+#include "../../detail/glad.hpp"
+#include "../../detail/GLCheck.hpp"
 
 #include <algorithm>
 
@@ -46,6 +48,12 @@ Model::Model(Mesh::Data data, Material::Data material)
     {
         mat = material;
     }
+#ifdef PLATFORM_DESKTOP
+    for (auto i = 0u; i < m_meshData.submeshCount; ++i)
+    {
+        updateVAO(i);
+    }
+#endif //DESKTOP
 }
 
 void Model::setMaterial(std::size_t idx, Material::Data data)
@@ -53,6 +61,10 @@ void Model::setMaterial(std::size_t idx, Material::Data data)
     CRO_ASSERT(idx < m_materials.size(), "Index out of range");
     bindMaterial(data);
     m_materials[idx] = data;
+
+#ifdef PLATFORM_DESKTOP
+    updateVAO(idx);
+#endif //DESKTOP
 }
 
 void Model::setSkeleton(glm::mat4* frame, std::size_t jointCount)
@@ -81,7 +93,7 @@ void Model::bindMaterial(Material::Data& material)
             material.attribs[i][Material::Data::Size] = static_cast<int32>(m_meshData.attributes[i]);
 
             //calc the pointer offset for each attrib
-            material.attribs[i][Material::Data::Offset] = static_cast<int32>(pointerOffset * sizeof(float));           
+            material.attribs[i][Material::Data::Offset] = static_cast<int32>(pointerOffset * sizeof(float));
         }
         pointerOffset += m_meshData.attributes[i]; //count the offset regardless as the mesh may have more attributes than material
     }
@@ -90,9 +102,9 @@ void Model::bindMaterial(Material::Data& material)
     std::sort(std::begin(material.attribs), std::end(material.attribs),
         [](const std::array<int32, 3>& ip,
             const std::array<int32, 3>& op)
-    {
-        return ip[Material::Data::Size] > op[Material::Data::Size];
-    });
+        {
+            return ip[Material::Data::Size] > op[Material::Data::Size];
+        });
 
     //count attribs with size > 0
     int i = 0;
@@ -101,3 +113,38 @@ void Model::bindMaterial(Material::Data& material)
         material.attribCount++;
     }
 }
+    //if we're on desktop core opengl profile requires VAOs
+#ifdef PLATFORM_DESKTOP
+void Model::updateVAO(std::size_t idx)
+{
+    auto& submesh = m_meshData.indexData[idx];
+
+    //I guess we have to remove any old binding
+    //if there's an existing material
+    if (submesh.vao != 0)
+    {
+        glCheck(glDeleteVertexArrays(1, &submesh.vao));
+        submesh.vao = 0;
+    }
+
+    glCheck(glGenVertexArrays(1, &submesh.vao));
+
+    glCheck(glBindVertexArray(submesh.vao));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vbo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+
+    const auto& attribs = m_materials[idx].attribs;
+    for (auto j = 0u; j < m_materials[idx].attribCount; ++j)
+    {
+        glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
+        glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
+            GL_FLOAT, GL_FALSE, static_cast<GLsizei>(m_meshData.vertexSize),
+            reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
+    }
+    glCheck(glEnableVertexAttribArray(0));
+
+    glCheck(glBindVertexArray(0));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+}
+#endif //DESKTOP

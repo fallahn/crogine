@@ -114,6 +114,13 @@ void MeshResource::flush()
             {
                 glCheck(glDeleteBuffers(1, &id.ibo));
             }
+
+#ifdef PLATFORM_DESKTOP
+            if (id.vao)
+            {
+                glCheck(glDeleteVertexArrays(1, &id.vao));
+            }
+#endif
         }
         //delete vertex buffer
         if (md.second.vbo)

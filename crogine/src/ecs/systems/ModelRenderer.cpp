@@ -135,18 +135,18 @@ void ModelRenderer::render(Entity camera)
     glCheck(glCullFace(GL_BACK));
 
     //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
-    for (const auto& e : m_visibleEntities)
+    for (const auto& [entity, sortData] : m_visibleEntities)
     {
         //calc entity transform
-        const auto& tx = e.first.getComponent<Transform>();
+        const auto& tx = entity.getComponent<Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
         glm::mat4 worldView = camComponent.viewMatrix * worldMat;
 
         //foreach submesh / material:
-        const auto& model = e.first.getComponent<Model>();
+        const auto& model = entity.getComponent<Model>();
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
         
-        for(auto i : e.second.matIDs)
+        for (auto i : sortData.matIDs)
         {
             //bind shader
             glCheck(glUseProgram(model.m_materials[i].shader));
@@ -169,6 +169,12 @@ void ModelRenderer::render(Entity camera)
                 glCheck(glDisable(GL_DEPTH_TEST));
             }
 
+#ifdef PLATFORM_DESKTOP
+            const auto& indexData = model.m_meshData.indexData[i];
+            glCheck(glBindVertexArray(indexData.vao));
+            glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+
+#else //GLES 2 doesn't have VAO support without extensions
 
             //bind attribs
             const auto& attribs = model.m_materials[i].attribs;
@@ -177,7 +183,7 @@ void ModelRenderer::render(Entity camera)
                 glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
                 glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
                     GL_FLOAT, GL_FALSE, static_cast<GLsizei>(model.m_meshData.vertexSize),
-                    reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));               
+                    reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
             }
 
             //bind element/index buffer
@@ -194,8 +200,9 @@ void ModelRenderer::render(Entity camera)
             {
                 glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
             }
+#endif //PLATFORM 
         }
-        
+        glCheck(glBindVertexArray(0));
         glCheck(glUseProgram(0));
     }
 

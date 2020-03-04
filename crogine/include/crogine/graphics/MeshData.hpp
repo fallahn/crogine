@@ -80,6 +80,7 @@ namespace cro
         struct CRO_EXPORT_API IndexData final
         {
             uint32 ibo = 0;
+            uint32 vao = 0; //< required for core profile on desktop, ignored on mobile
             uint32 primitiveType = 0;
             uint32 indexCount = 0;
             uint32 format = 0;
