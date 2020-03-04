@@ -81,7 +81,14 @@ TextRenderer::~TextRenderer()
 {
     for (auto b : m_buffers)
     {
-        glCheck(glDeleteBuffers(1, &b.first));
+        glCheck(glDeleteBuffers(1, &b.first.vbo));
+
+#ifdef PLATFORM_DESKTOP
+        if (b.first.vao)
+        {
+            glCheck(glDeleteVertexArrays(1, &b.first.vao));
+        }
+#endif //PLATFORM
     }
 }
 
@@ -141,7 +148,7 @@ void TextRenderer::process(float)
             auto vboIdx = (i > MaxTexts) ? i % MaxTexts : 0;
 
             //update sub data
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_buffers[vboIdx].first));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_buffers[vboIdx].first.vbo));
             glCheck(glBufferSubData(GL_ARRAY_BUFFER, text.m_vboOffset,
                 vertexData.size() * sizeof(float), vertexData.data()));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -198,7 +205,7 @@ void TextRenderer::render(Entity camera)
 
     //foreach vbo bind and draw
     std::size_t idx = 0;
-    for (const auto& [vbo, batch] : m_buffers)
+    for (const auto& [batchMap, batch] : m_buffers)
     {
         if (batch.empty())
         {
@@ -208,7 +215,27 @@ void TextRenderer::render(Entity camera)
         const auto& transforms = m_bufferTransforms[idx++];
         glCheck(glUniformMatrix4fv(m_shaders[/*Font::Bitmap*/0].xformUniformIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
 
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+
+#ifdef PLATFORM_DESKTOP
+
+        for (const auto& batchData : batch)
+        {
+            applyBlendMode(batchData.blendMode);
+
+            if (batchData.scissor)
+            {
+                applyScissor(batchData.worldScissor, camComponent.viewProjectionMatrix);
+            }
+
+            glCheck(glBindTexture(GL_TEXTURE_2D, batchData.texture));
+
+            glCheck(glBindVertexArray(batchMap.vao));
+            glCheck(glDrawArrays(GL_TRIANGLE_STRIP, batchData.start, batchData.count));
+            glCheck(glDisable(GL_SCISSOR_TEST));
+        }
+        glCheck(glBindVertexArray(0));
+#else
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, batchMap.vbo));
 
         //bind attrib pointers
         for (auto i = 0u; i < m_shaders[/*Font::Bitmap*/0].attribMap.size(); ++i)
@@ -238,7 +265,7 @@ void TextRenderer::render(Entity camera)
         {
             glCheck(glDisableVertexAttribArray(m_shaders[/*Font::Bitmap*/0].attribMap[i].location));
         }
-
+#endif //PLATFORM
     }
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -318,15 +345,34 @@ void TextRenderer::rebuildBatch()
     auto neededVBOs = vboCount - m_buffers.size();
     for (auto i = 0u; i < neededVBOs; ++i)
     {
-        uint32 vbo;
-        glCheck(glGenBuffers(1, &vbo));
-        m_buffers.emplace_back(std::make_pair(vbo, std::vector<Batch>()));
+        BatchMap bm;
+        glCheck(glGenBuffers(1, &bm.vbo));
+
+        //use VAO on desktop builds
+#ifdef PLATFORM_DESKTOP
+        glCheck(glGenVertexArrays(1, &bm.vao));
+        glCheck(glBindVertexArray(bm.vao));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, bm.vbo));
+
+        for (auto j = 0u; j < m_shaders[/*Font::Bitmap*/0].attribMap.size(); ++j)
+        {
+            glCheck(glEnableVertexAttribArray(m_shaders[/*Font::Bitmap*/0].attribMap[j].location));
+            glCheck(glVertexAttribPointer(m_shaders[/*Font::Bitmap*/0].attribMap[j].location, m_shaders[/*Font::Bitmap*/0].attribMap[j].size, GL_FLOAT, GL_FALSE, vertexSize,
+                reinterpret_cast<void*>(static_cast<intptr_t>(m_shaders[/*Font::Bitmap*/0].attribMap[j].offset))));
+        }
+        glCheck(glEnableVertexAttribArray(0));
+        glCheck(glBindVertexArray(0));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+#endif //PLATFORM
+
+        m_buffers.emplace_back(std::make_pair(bm, std::vector<Batch>()));
     }
 
     //create a batch for each VBO, sub indexing at MaxTexts
     uint32 start = 0;
     uint32 batchIdx = 0;
-    for (auto& [vbo, batch] : m_buffers)
+    for (auto& [batchMap, batch] : m_buffers)
     {
         batch.clear();
 
@@ -439,7 +485,7 @@ void TextRenderer::rebuildBatch()
         batch.push_back(batchData);
 
         //upload to VBO
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, batchMap.vbo));
         glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW));
     }
 

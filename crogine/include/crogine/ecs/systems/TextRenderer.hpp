@@ -86,7 +86,12 @@ namespace cro
             FloatRect worldScissor;
         };
         //maps VBO id to a batch
-        std::vector<std::pair<uint32, std::vector<Batch>>> m_buffers;
+        struct BatchMap final
+        {
+            std::uint32_t vbo = 0;
+            std::uint32_t vao = 0; //< only used on desktop builds
+        };
+        std::vector<std::pair<BatchMap, std::vector<Batch>>> m_buffers;
         std::vector<std::vector<glm::mat4>> m_bufferTransforms;
 
 

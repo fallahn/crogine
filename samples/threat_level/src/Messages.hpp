@@ -132,7 +132,7 @@ struct BuddyEvent final
         Spawned,
         FiredWeapon,
         Died
-    }type;
+    }type = Spawned;
     glm::vec3 position = glm::vec3(0.f);
 };
 
