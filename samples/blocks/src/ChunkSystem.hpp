@@ -59,23 +59,36 @@ public:
 
 private:
 
+    cro::ResourceCollection& m_resources;
+    std::int32_t m_materialID;
+
+
+    ChunkManager m_chunkManager;
+    vx::DataManager m_voxelData;
+
     struct VoxelUpdate final
     {
         glm::ivec3 position;
         std::uint8_t id = 0;
     };
-
-    cro::ResourceCollection& m_resources;
-
-    ChunkManager m_chunkManager;
-    vx::DataManager m_voxelData;
-
     std::vector<VoxelUpdate> m_voxelUpdates; //TODO move this into the chunk component
+
 
     PositionMap<cro::Entity> m_chunkEntities;
     void updateMesh(const Chunk&);
 
-    std::int32_t m_materialID;
+
+    struct VoxelFace final
+    {
+        bool visible = true;
+        enum Side
+        {
+            Top, Bottom, North, East, South, West
+        }direction = Top;
+        std::uint8_t id;
+    };
+    VoxelFace getFace(const Chunk&, glm::ivec3, VoxelFace::Side);
+    void generateChunkMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&);
 
     void onEntityRemoved(cro::Entity);
     void onEntityAdded(cro::Entity);

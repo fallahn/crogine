@@ -66,15 +66,22 @@ void ModelRenderer::process(float)
 
         auto sphere = model.m_meshData.boundingSphere;
         const auto& tx = entity.getComponent<Transform>();
-        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre.x, sphere.centre.y, sphere.centre.z, 1.f));
+        auto pos = tx.getWorldPosition();
+
+        sphere.centre += pos;// glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
         auto scale = tx.getScale();
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
+
+        /*auto box = model.m_meshData.boundingBox;
+        box[0] += pos;
+        box[1] += pos;*/
 
         model.m_visible = true;
         std::size_t i = 0;
         while (model.m_visible && i < frustum.size())
         {
             model.m_visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
+            //model.m_visible = (Spatial::intersects(frustum[i++], box) != Planar::Back);
         }
 
         if (model.m_visible)

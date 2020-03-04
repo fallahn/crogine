@@ -178,8 +178,8 @@ Mesh::Data CubeBuilder::build() const
 
     createIBO(meshData, idxData.data(), 0, sizeof(uint16));
     
-    meshData.boundingBox[0] = { -0.5f, -0.5f, -0.5f };
-    meshData.boundingBox[1] = { 0.5f, 0.5f, 0.5f };
+    meshData.boundingBox[0] = -dim;
+    meshData.boundingBox[1] = dim;
     meshData.boundingSphere.radius = glm::length(meshData.boundingBox[0]);
 
     return meshData;

@@ -51,10 +51,10 @@ namespace
     //TODO work out a better way to create spawn points
     const std::array<glm::vec3, ConstVal::MaxClients> playerSpawns =
     {
-        glm::vec3(-1.5f, 1.f, -1.5f),
-        glm::vec3(1.5f, 1.f, -1.5f),
+        glm::vec3(16.f, 16.f, 35.f),
         glm::vec3(1.5f, 1.f, 1.5f),
-        glm::vec3(-1.5f, 1.f, 1.5f)
+        glm::vec3(1.5f, 1.f, -1.5f),
+        glm::vec3(-1.5f, 1.f, -1.5f)
     };
 }
 

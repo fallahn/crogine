@@ -38,6 +38,10 @@ source distribution.
 #include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+namespace
+{
+    const float FlyMultiplier = 15.f;
+}
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(PlayerSystem))
@@ -172,7 +176,7 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
 
     if (player.flyMode)
     {
-        moveSpeed *= 5.f;
+        moveSpeed *= FlyMultiplier;
     }
 
     if (input.buttonFlags & Input::Forward)

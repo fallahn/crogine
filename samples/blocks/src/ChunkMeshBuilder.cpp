@@ -32,6 +32,7 @@ source distribution.
 #include "WorldConsts.hpp"
 
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/detail/glm/geometric.hpp>
 
 
 ChunkMeshBuilder::ChunkMeshBuilder() {}
@@ -69,8 +70,9 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     data.boundingBox[0] = glm::vec3(0.f);
     data.boundingBox[1] = glm::vec3(WorldConst::ChunkSize);
 
+    //sphere has to ENCASE AABB, not fit in it
     data.boundingSphere.centre = glm::vec3(WorldConst::ChunkSize / 2);
-    data.boundingSphere.radius = static_cast<float>(WorldConst::ChunkSize / 2);
+    data.boundingSphere.radius = glm::length(data.boundingBox[1]) / 2.f;
 
     return data;
 }
