@@ -107,7 +107,14 @@ namespace cro
             uint32 count = 0; //this is the COUNT not the final index
             Material::BlendMode blendMode = Material::BlendMode::Alpha;
         };
-        std::vector<std::pair<uint32, std::vector<Batch>>> m_buffers;
+
+        struct BatchMap final
+        {
+            std::uint32_t vbo = 0;
+            std::uint32_t vao = 0; //< only used in desktop builds
+        };
+
+        std::vector<std::pair<BatchMap, std::vector<Batch>>> m_buffers;
         std::vector<std::vector<glm::mat4>> m_bufferTransforms;
 
         enum AttribLocation

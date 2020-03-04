@@ -217,6 +217,7 @@ void TextRenderer::render(Entity camera)
 
 
 #ifdef PLATFORM_DESKTOP
+        glCheck(glBindVertexArray(batchMap.vao));
 
         for (const auto& batchData : batch)
         {
@@ -228,8 +229,6 @@ void TextRenderer::render(Entity camera)
             }
 
             glCheck(glBindTexture(GL_TEXTURE_2D, batchData.texture));
-
-            glCheck(glBindVertexArray(batchMap.vao));
             glCheck(glDrawArrays(GL_TRIANGLE_STRIP, batchData.start, batchData.count));
             glCheck(glDisable(GL_SCISSOR_TEST));
         }
@@ -363,7 +362,6 @@ void TextRenderer::rebuildBatch()
         glCheck(glEnableVertexAttribArray(0));
         glCheck(glBindVertexArray(0));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
 #endif //PLATFORM
 
         m_buffers.emplace_back(std::make_pair(bm, std::vector<Batch>()));

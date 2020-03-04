@@ -136,7 +136,14 @@ SpriteRenderer::~SpriteRenderer()
 {
     for (auto& p : m_buffers)
     {
-        glCheck(glDeleteBuffers(1, &p.first));
+        glCheck(glDeleteBuffers(1, &p.first.vbo));
+
+#ifdef PLATFORM_DESKTOP
+        if(p.first.vao)
+        {
+            glCheck(glDeleteVertexArrays(1, &p.first.vao));
+        }
+#endif //PLATFORM
     }
 
 #ifdef DEBUG_DRAW
@@ -287,7 +294,7 @@ void SpriteRenderer::render(Entity camera)
 
     //foreach vbo bind and draw
     std::size_t idx = 0;
-    for (const auto& [vbo, batch] : m_buffers)
+    for (const auto& [batchMap, batch] : m_buffers)
     {
         if (batch.empty())
         {
@@ -297,7 +304,18 @@ void SpriteRenderer::render(Entity camera)
         const auto& transforms = m_bufferTransforms[idx++]; //TODO this should be same index as current buffer
         glCheck(glUniformMatrix4fv(m_matrixIndex, static_cast<GLsizei>(transforms.size()), GL_FALSE, glm::value_ptr(transforms[0])));
 
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+#ifdef PLATFORM_DESKTOP
+        glCheck(glBindVertexArray(batchMap.vao));
+        for (const auto& batchData : batch)
+        {
+            //CRO_ASSERT(batchData.texture > -1, "Missing sprite texture!");
+            applyBlendMode(batchData.blendMode);
+            glCheck(glBindTexture(GL_TEXTURE_2D, batchData.texture));
+            glCheck(glDrawArrays(GL_TRIANGLE_STRIP, batchData.start, batchData.count));
+        }
+        glCheck(glBindVertexArray(0));
+#else
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, batchMap.vbo));
         
         //bind attrib pointers
         for (auto i = 0u; i < m_attribMap.size(); ++i)
@@ -319,8 +337,8 @@ void SpriteRenderer::render(Entity camera)
         for (auto i = 0u; i < m_attribMap.size(); ++i)
         {
             glCheck(glDisableVertexAttribArray(m_attribMap[i].location));
-        } 
-
+        }
+#endif //PLATFORM
     }
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -341,15 +359,33 @@ void SpriteRenderer::rebuildBatch()
     auto neededVBOs = vboCount - m_buffers.size();
     for (auto i = 0u; i < neededVBOs; ++i)
     {
-        uint32 vbo;
-        glCheck(glGenBuffers(1, &vbo));
-        m_buffers.emplace_back(std::make_pair(vbo, std::vector<Batch>()));
+        BatchMap batchMap;
+        glCheck(glGenBuffers(1, &batchMap.vbo));
+
+#ifdef PLATFORM_DESKTOP
+        glCheck(glGenVertexArrays(1, &batchMap.vao));
+        glCheck(glBindVertexArray(batchMap.vao));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, batchMap.vbo));
+
+        for (auto j = 0u; j < m_attribMap.size(); ++j)
+        {
+            glCheck(glEnableVertexAttribArray(m_attribMap[j].location));
+            glCheck(glVertexAttribPointer(m_attribMap[j].location, m_attribMap[j].size, GL_FLOAT, GL_FALSE, vertexSize,
+                reinterpret_cast<void*>(static_cast<intptr_t>(m_attribMap[j].offset))));
+        }
+
+        glCheck(glEnableVertexAttribArray(0));
+        glCheck(glBindVertexArray(0));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+#endif //PLATFORM
+
+        m_buffers.emplace_back(std::make_pair(batchMap, std::vector<Batch>()));
     }
 
     //create each batch
     uint32 start = 0;
     uint32 batchIdx = 0;
-    for (auto& [vbo, batch] : m_buffers)
+    for (auto& [batchMap, batch] : m_buffers)
     {
         batch.clear();
 
@@ -444,7 +480,7 @@ void SpriteRenderer::rebuildBatch()
         batch.push_back(batchData);
 
         //upload to VBO
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, batchMap.vbo));
         glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW));
     }
 
