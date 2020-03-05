@@ -83,12 +83,23 @@ private:
         bool visible = true;
         enum Side
         {
-            Top, Bottom, North, East, South, West
+            South, North, East, West, Top, Bottom
         }direction = Top;
         std::uint8_t id;
+
+        bool operator == (const VoxelFace& other)
+        {
+            return (other.id == id && other.visible == visible);
+        }
+
+        bool operator != (const VoxelFace& other)
+        {
+            return (other.id != id || other.visible != visible);
+        }
     };
     VoxelFace getFace(const Chunk&, glm::ivec3, VoxelFace::Side);
     void generateChunkMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&);
+    void generateDebugMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&);
 
     void onEntityRemoved(cro::Entity);
     void onEntityAdded(cro::Entity);
