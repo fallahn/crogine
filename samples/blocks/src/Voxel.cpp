@@ -68,7 +68,7 @@ namespace vx
     std::uint8_t DataManager::addVoxel(const Data& voxel)
     {
         CRO_ASSERT(!voxel.name.empty(), "voxel must be named!");
-        CRO_ASSERT(m_voxels.size() < std::numeric_limits<std::uint8_t>::max(), "Too many voxel types");
+        CRO_ASSERT(m_voxels.size() < std::numeric_limits<std::uint8_t>::max() - 1, "Too many voxel types");
         m_voxelMap.emplace(voxel.name, static_cast<std::uint8_t>(m_voxels.size()));
 
         auto& data = m_voxels.emplace_back(voxel);

@@ -27,6 +27,7 @@ SOFTWARE.
 */
 
 #include "ChunkManager.hpp"
+#include "Voxel.hpp"
 
 ChunkManager::ChunkManager()
     : m_errorChunk(*this, glm::ivec3(0))
@@ -63,7 +64,7 @@ std::uint8_t ChunkManager::getVoxel(glm::ivec3 position) const
 
     if (result == m_chunks.end())
     {
-        return 0;
+        return vx::CommonType::OutOfBounds;
     }
     return result->second.getVoxelQ(toLocalVoxelPosition(position));
 }

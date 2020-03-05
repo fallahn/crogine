@@ -87,6 +87,7 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
             lastIndex = (lastIndex + (Player::HistorySize - 1)) % Player::HistorySize;
 
             if (player.inputStack[lastIndex].timeStamp == player.inputStack[player.lastUpdatedInput].timeStamp)
+            //if(lastIndex == player.lastUpdatedInput)
             {
                 //we've looped all the way around so the requested timestamp must
                 //be too far in the past... have to skip this update

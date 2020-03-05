@@ -66,7 +66,9 @@ namespace vx
         Grass,
         Water,
 
-        Count
+        Count,
+
+        OutOfBounds = 255
     };
 
     struct Data final

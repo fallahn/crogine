@@ -231,7 +231,7 @@ ChunkSystem::VoxelFace ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 posit
     }
 
     face.visible = (neighbour == m_voxelData.getID(vx::CommonType::Air)
-                    || neighbour == m_voxelData.getID(vx::CommonType::Water));
+                    || (neighbour == m_voxelData.getID(vx::CommonType::Water) && face.id != m_voxelData.getID(vx::CommonType::Water)));
     return face;
 }
 
@@ -372,7 +372,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                 x[direction]++;
 
 
-                //create a face from the mask and add it to the vertex output
+                //create a quad from the mask and add it to the vertex output
                 maskIndex = 0;
                 for (auto j = 0; j < WorldConst::ChunkSize; ++j)
                 {
@@ -408,8 +408,8 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                             }
 
                             //discard any marked as not visible
-                            if (faceMask[maskIndex]->visible
-                                && faceMask[maskIndex]->id != m_voxelData.getID(vx::CommonType::Water)) //TODO remove this
+                            if (faceMask[maskIndex]->visible)
+                                //&& faceMask[maskIndex]->id != m_voxelData.getID(vx::CommonType::Water)) //TODO remove this
                                 //&& faceMask[maskIndex]->id != m_voxelData.getID(vx::CommonType::Air))
                             {
                                 std::array<std::int32_t, 3u> du = { 0,0,0 };
