@@ -33,8 +33,12 @@ source distribution.
 #include "Voxel.hpp"
 
 #include <crogine/ecs/System.hpp>
-
 #include <crogine/network/NetData.hpp>
+
+#include <mutex>
+#include <memory>
+#include <atomic>
+#include <queue>
 
 namespace cro
 {
@@ -51,6 +55,12 @@ class ChunkSystem final : public cro::System
 {
 public:
     ChunkSystem(cro::MessageBus&, cro::ResourceCollection&);
+    ~ChunkSystem();
+
+    ChunkSystem(const ChunkSystem&) = delete;
+    ChunkSystem(ChunkSystem&&) = default;
+    const ChunkSystem& operator = (const ChunkSystem&) = delete;
+    ChunkSystem& operator = (ChunkSystem&&) = default;
 
     void handleMessage(const cro::Message&) override;
     void process(float) override;
@@ -75,8 +85,21 @@ private:
 
 
     PositionMap<cro::Entity> m_chunkEntities;
-    void updateMesh(const Chunk&);
+    void updateMesh();
 
+    std::unique_ptr<std::mutex> m_mutex;
+    std::unique_ptr<std::thread> m_greedyThread;
+    std::atomic_bool m_threadRunning;
+    void threadFunc();
+
+    std::queue<glm::ivec3> m_inputQueue;
+    struct VertexOutput final
+    {
+        std::vector<float> vertexData;
+        std::vector<std::uint32_t> indices;
+        glm::ivec3 position = glm::ivec3(0);
+    };
+    std::queue<VertexOutput> m_outputQueue;
 
     struct VoxelFace final
     {

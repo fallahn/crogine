@@ -81,7 +81,8 @@ namespace
 ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
     : cro::System   (mb, typeid(ChunkSystem)),
     m_resources     (rc),
-    m_materialID    (0)
+    m_materialID    (0),
+    m_threadRunning (false)
 {
     requireComponent<ChunkComponent>();
     requireComponent<cro::Transform>();
@@ -92,6 +93,17 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
         //and then material
         m_materialID = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
     }
+
+    //thread for greedy meshing
+    m_mutex = std::make_unique<std::mutex>();
+    m_greedyThread = std::make_unique<std::thread>(&ChunkSystem::threadFunc, this);
+    m_threadRunning = true;
+}
+
+ChunkSystem::~ChunkSystem()
+{
+    m_threadRunning = false;
+    m_greedyThread->join();
 }
 
 //public
@@ -108,10 +120,18 @@ void ChunkSystem::process(float)
         auto& chunkComponent = entity.getComponent<ChunkComponent>();
         if (chunkComponent.needsUpdate)
         {
-            updateMesh(m_chunkManager.getChunk(chunkComponent.chunkPos));
+            //TODO push chunk into thread queue
+            m_mutex->lock();
+            m_inputQueue.push(chunkComponent.chunkPos);
+            m_mutex->unlock();
+
+            //updateMesh(m_chunkManager.getChunk(chunkComponent.chunkPos));
             chunkComponent.needsUpdate = false;
         }
     }
+
+    //check result queue and update VBO data if needed
+    updateMesh();
 }
 
 void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
@@ -128,6 +148,7 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
             std::memcpy(voxels.data(), (char*)packet.getData() + static_cast<std::intptr_t>(sizeof(cd)), sizeof(RLEPair)* cd.dataSize);
 
             glm::ivec3 position(cd.x, cd.y, cd.z);
+            std::lock_guard<std::mutex>(*m_mutex);
             if (!m_chunkManager.hasChunk(position))
             {
                 auto& chunk = m_chunkManager.addChunk(position);
@@ -138,12 +159,6 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 entity.addComponent<cro::Transform>().setPosition(glm::vec3(position * WorldConst::ChunkSize));
                 entity.addComponent<ChunkComponent>().chunkPos = position;
 
-                //temp just to see where we are
-                /*cro::ModelDefinition md;
-                md.loadFromFile("assets/models/ground_plane.cmt", m_resources);
-                md.createModel(entity, m_resources);
-                entity.getComponent<ChunkComponent>().needsUpdate = false;*/
-
                 //create a model with an empty mesh, this should be build on next
                 //update automagically!
                 auto meshID = m_resources.meshes.loadMesh(ChunkMeshBuilder());
@@ -152,49 +167,99 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
 
                 auto& material = m_resources.materials.get(m_materialID);
                 entity.addComponent<cro::Model>(mesh, material);
-
-                /*entity.addComponent<cro::Callback>().active = true;
-                entity.getComponent<cro::Callback>().function =
-                    [](cro::Entity e, float)
-                {
-                    if (e.getComponent<cro::Model>().isVisible())
-                    {
-                        static int buns = 0;
-                        std::cout << buns++ << "\n";
-                    }
-                };*/
             }
         }
     }
 }
 
 //private
-void ChunkSystem::updateMesh(const Chunk& chunk)
+void ChunkSystem::updateMesh()
 {
-    //TODO create the vertex data in own thread
-    //and signal to this thread when done/ready for upload
     std::vector<float> vertexData;
     std::vector<std::uint32_t> indices;
-    generateChunkMesh(chunk, vertexData, indices);
-    //generateDebugMesh(chunk, vertexData, indices);
+    glm::ivec3 position = glm::ivec3(0);
+    //generateChunkMesh(chunk, vertexData, indices);
+
+    m_mutex->lock();
+    if (!m_outputQueue.empty())
+    {
+        auto& front = m_outputQueue.front();
+        position = front.position;
+        vertexData.swap(front.vertexData);
+        indices.swap(front.indices);
+        m_outputQueue.pop();
+    }
+    m_mutex->unlock();
+
+    if (!vertexData.empty() && !indices.empty())
+    {
+        auto entity = m_chunkEntities[position];
+        auto& meshData = entity.getComponent<cro::Model>().getMeshData();
+
+        meshData.vertexCount = vertexData.size() / (meshData.vertexSize / sizeof(float));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+        meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
+    }
+}
+
+void ChunkSystem::threadFunc()
+{
+    while (m_threadRunning)
+    {
+        const Chunk* chunk = nullptr;
+        glm::ivec3 position = glm::ivec3(0);
+
+        //lock the input queue
+        m_mutex->lock();
+
+        //check queue
+        if (!m_inputQueue.empty())
+        {
+            position = m_inputQueue.front();
+            m_inputQueue.pop();
+
+            chunk = &m_chunkManager.getChunk(position);
+        }
+
+        //unlock queue
+        m_mutex->unlock();
+
+        //if input do work
+        if (chunk)
+        {
+            std::vector<float> vertexData;
+            std::vector<std::uint32_t> indices;
+            generateChunkMesh(*chunk, vertexData, indices);
 
 
+            //lock output
+            m_mutex->lock();
 
-    auto entity = m_chunkEntities[chunk.getPosition()];
-    auto& meshData = entity.getComponent<cro::Model>().getMeshData();
+            //swap results
+            auto& result = m_outputQueue.emplace();
+            result.position = position;
+            result.vertexData.swap(vertexData);
+            result.indices.swap(indices);
 
-    meshData.vertexCount = vertexData.size() / (meshData.vertexSize / sizeof(float));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-    meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
+            //unlock output
+            m_mutex->unlock();
+        }
+        else
+        {
+            std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(50));
+        }
+    }
 }
 
 ChunkSystem::VoxelFace ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 position, VoxelFace::Side side)
 {
+    std::lock_guard<std::mutex>(*m_mutex);
+
     VoxelFace face;
     face.direction = side;
     face.id = chunk.getVoxelQ(position);
@@ -285,7 +350,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
         }
         else if (face.id == m_voxelData.getID(vx::CommonType::Water))
         {
-            colour = { 0.17f, 0.47f, 0.67f };
+            colour = { 0.17f, 0.47f, 0.87f };
         }
 
         std::array<float, 6u> multipliers = {0.89f, 0.95f, 0.85f, 0.96f, 1.f, 0.2f};
