@@ -127,7 +127,7 @@ Heightmap createChunkHeightmap(glm::ivec3 chunkPos, std::int32_t chunkCount, std
 
             //TODO remove this kludginess
             {
-                std::uint8_t c = static_cast<std::uint8_t>(255.f * result/* * island*/);
+                std::uint8_t c = static_cast<std::uint8_t>(255.f * noise0/*result * island*/);
                 int coordX = (x)+(chunkPos.x * (ChunkSize));
                 int coordY = z + (chunkPos.z * ChunkSize);
                 imageData[coordY * (worldWidth) + coordX] = c;

@@ -54,15 +54,24 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     glCheck(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    //in *theory* we only need one submesh if all textures
-    //are stored in a single atlas. I haven't decided how I'm going to render water yet.
-    data.submeshCount = 1;
+    //first submesh is all solid geometry
+    data.submeshCount = 2;
     data.indexData[0].format = GL_UNSIGNED_INT;
     data.indexData[0].primitiveType = GL_TRIANGLES;
     data.indexData[0].indexCount = 0;
 
     glCheck(glGenBuffers(1, &data.indexData[0].ibo));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[0].ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    //second submesh is water/fluid
+    data.indexData[1].format = GL_UNSIGNED_INT;
+    data.indexData[1].primitiveType = GL_TRIANGLES;
+    data.indexData[1].indexCount = 0;
+
+    glCheck(glGenBuffers(1, &data.indexData[1].ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[1].ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 

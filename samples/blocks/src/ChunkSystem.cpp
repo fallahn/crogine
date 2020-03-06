@@ -76,22 +76,40 @@ namespace
             {
                 FRAG_OUT = vec4(v_colour, 1.0);
             })";
+
+    const std::string FragmentWater = 
+        R"(
+            VARYING_IN LOW vec3 v_colour;
+            VARYING_IN MED vec2 v_texCoord;
+
+            OUTPUT
+
+            void main()
+            {
+                FRAG_OUT = vec4(v_colour, 0.26);
+            })";
 }
 
 ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
     : cro::System   (mb, typeid(ChunkSystem)),
     m_resources     (rc),
-    m_materialID    (0),
     m_threadRunning (false)
 {
     requireComponent<ChunkComponent>();
     requireComponent<cro::Transform>();
 
     //create shaders for chunk meshes
-    if (rc.shaders.preloadFromString(Vertex, Fragment, ShaderID::Chunk))
+    if (rc.shaders.preloadFromString(Vertex, Fragment, ShaderID::ChunkSolid))
     {
         //and then material
-        m_materialID = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
+        m_materialIDs[MaterialID::ChunkSolid] = rc.materials.add(rc.shaders.get(ShaderID::ChunkSolid));
+    }
+
+    if (rc.shaders.preloadFromString(Vertex, FragmentWater, ShaderID::ChunkWater))
+    {
+        //and then material
+        m_materialIDs[MaterialID::ChunkWater] = rc.materials.add(rc.shaders.get(ShaderID::ChunkWater));
+        rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).blendMode = cro::Material::BlendMode::Alpha;
     }
 
     //thread for greedy meshing
@@ -174,8 +192,11 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 CRO_ASSERT(meshID > 0, "Mesh generation failed");
                 auto& mesh = m_resources.meshes.getMesh(meshID);
 
-                auto& material = m_resources.materials.get(m_materialID);
+                auto& material = m_resources.materials.get(m_materialIDs[MaterialID::ChunkSolid]);
                 entity.addComponent<cro::Model>(mesh, material);
+
+                auto& waterMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkWater]);
+                entity.getComponent<cro::Model>().setMaterial(1, waterMaterial);
             }
         }
     }
@@ -185,7 +206,8 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
 void ChunkSystem::updateMesh()
 {
     std::vector<float> vertexData;
-    std::vector<std::uint32_t> indices;
+    std::vector<std::uint32_t> solidIndices;
+    std::vector<std::uint32_t> waterIndices;
     glm::ivec3 position = glm::ivec3(0);
     //generateChunkMesh(chunk, vertexData, indices);
 
@@ -195,12 +217,13 @@ void ChunkSystem::updateMesh()
         auto& front = m_outputQueue.front();
         position = front.position;
         vertexData.swap(front.vertexData);
-        indices.swap(front.indices);
+        solidIndices.swap(front.solidIndices);
+        waterIndices.swap(front.waterIndices);
         m_outputQueue.pop();
     }
     m_mutex->unlock();
 
-    if (!vertexData.empty() && !indices.empty())
+    if (!vertexData.empty() && (!solidIndices.empty() || !waterIndices.empty()))
     {
         auto entity = m_chunkEntities[position];
         auto& meshData = entity.getComponent<cro::Model>().getMeshData();
@@ -210,9 +233,13 @@ void ChunkSystem::updateMesh()
         glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-        meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
+        meshData.indexData[0].indexCount = static_cast<std::uint32_t>(solidIndices.size());
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));
-        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, solidIndices.size() * sizeof(std::uint32_t), solidIndices.data(), GL_DYNAMIC_DRAW));
+
+        meshData.indexData[1].indexCount = static_cast<std::uint32_t>(waterIndices.size());
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[1].ibo));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, waterIndices.size() * sizeof(std::uint32_t), waterIndices.data(), GL_DYNAMIC_DRAW));
     }
 }
 
@@ -242,8 +269,9 @@ void ChunkSystem::threadFunc()
         if (chunk)
         {
             std::vector<float> vertexData;
-            std::vector<std::uint32_t> indices;
-            generateChunkMesh(*chunk, vertexData, indices);
+            std::vector<std::uint32_t> solidIndices;
+            std::vector<std::uint32_t> waterIndices;
+            generateChunkMesh(*chunk, vertexData, solidIndices, waterIndices);
 
 
             //lock output
@@ -253,7 +281,8 @@ void ChunkSystem::threadFunc()
             auto& result = m_outputQueue.emplace();
             result.position = position;
             result.vertexData.swap(vertexData);
-            result.indices.swap(indices);
+            result.solidIndices.swap(solidIndices);
+            result.waterIndices.swap(waterIndices);
 
             //unlock output
             m_mutex->unlock();
@@ -310,7 +339,7 @@ ChunkSystem::VoxelFace ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 posit
     return face;
 }
 
-void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& verts, std::vector<std::uint32_t>& indices)
+void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& verts, std::vector<std::uint32_t>& solidIndices, std::vector<std::uint32_t>& waterIndices)
 {
     //greedy meshing from http://0fps.wordpress.com/2012/06/30/meshing-in-a-minecraft-game/
     //and https://github.com/roboleary/GreedyMesh/blob/master/src/mygame/Main.java
@@ -335,7 +364,15 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
         {
             i += indexOffset;
         }
-        indices.insert(indices.end(), localIndices.begin(), localIndices.end());
+
+        if (face.id == m_voxelData.getID(vx::CommonType::Water))
+        {
+            waterIndices.insert(waterIndices.end(), localIndices.begin(), localIndices.end());
+        }
+        else
+        {
+            solidIndices.insert(solidIndices.end(), localIndices.begin(), localIndices.end());
+        }
 
 
         //for now we're colouring types, eventually this

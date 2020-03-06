@@ -31,6 +31,7 @@ source distribution.
 
 #include "ChunkManager.hpp"
 #include "Voxel.hpp"
+#include "ResourceIDs.hpp"
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/network/NetData.hpp>
@@ -70,7 +71,7 @@ public:
 private:
 
     cro::ResourceCollection& m_resources;
-    std::int32_t m_materialID;
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
 
     ChunkManager m_chunkManager;
@@ -96,7 +97,8 @@ private:
     struct VertexOutput final
     {
         std::vector<float> vertexData;
-        std::vector<std::uint32_t> indices;
+        std::vector<std::uint32_t> solidIndices;
+        std::vector<std::uint32_t> waterIndices;
         glm::ivec3 position = glm::ivec3(0);
     };
     std::queue<VertexOutput> m_outputQueue;
@@ -121,7 +123,7 @@ private:
         }
     };
     VoxelFace getFace(const Chunk&, glm::ivec3, VoxelFace::Side);
-    void generateChunkMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&);
+    void generateChunkMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&, std::vector<std::uint32_t>&);
     void generateDebugMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&);
 
     void onEntityRemoved(cro::Entity);

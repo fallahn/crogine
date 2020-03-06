@@ -33,7 +33,11 @@ namespace MaterialID
 {
     enum
     {
-        Chunk
+        ChunkSolid,
+        ChunkWater,
+
+
+        Count
     };
 }
 
@@ -59,7 +63,8 @@ namespace ShaderID
 {
     enum
     {
-        Chunk
+        ChunkSolid,
+        ChunkWater
     };
 }
 
