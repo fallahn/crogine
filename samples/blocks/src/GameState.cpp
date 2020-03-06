@@ -313,12 +313,12 @@ void GameState::createUI()
     font.loadFromFile("assets/fonts/VeraMono.ttf");
 
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 10.f, 60.f });
+    /*entity.addComponent<cro::Transform>().setPosition({ 10.f, 60.f });
     entity.addComponent<cro::Text>(font).setString("Waiting for server...");
     entity.getComponent<cro::Text>().setColour(TextNormalColour);
     entity.addComponent<cro::CommandTarget>().ID = UI::CommandID::WaitMessage;
 
-    entity = m_uiScene.createEntity();
+    entity = m_uiScene.createEntity();*/
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Camera>().projectionMatrix = 
         glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -0.1f, 100.f);

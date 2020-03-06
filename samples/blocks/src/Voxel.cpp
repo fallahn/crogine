@@ -37,7 +37,19 @@ namespace vx
     {
         //let's call these 'built in' types
         Data data;
+
+        //adding air first ensures it haas the ID of 0
+        //unfortunately this is an assumption made in
+        //some places where the true ID of a block type
+        //is ont accessible, for instance the default value
+        //of a chunk.
+        data.name = "air";
+        data.collidable = false;
+        addVoxel(data);
+
+
         data.name = "sand";
+        data.collidable = true;
         addVoxel(data);
 
         data.name = "stone";
@@ -52,9 +64,7 @@ namespace vx
         data.name = "grass";
         addVoxel(data);
 
-        data.name = "air";
-        data.collidable = false;
-        addVoxel(data);
+
         
 
         m_commonVoxels[CommonType::Sand] = getID("sand");

@@ -88,7 +88,7 @@ private:
     void updateMesh();
 
     std::unique_ptr<std::mutex> m_mutex;
-    std::unique_ptr<std::thread> m_greedyThread;
+    std::array<std::unique_ptr<std::thread>, 2u> m_greedyThreads;
     std::atomic_bool m_threadRunning;
     void threadFunc();
 

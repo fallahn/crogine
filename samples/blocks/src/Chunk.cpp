@@ -28,6 +28,7 @@ SOFTWARE.
 
 #include "Chunk.hpp"
 #include "ChunkManager.hpp"
+#include "Voxel.hpp"
 
 #include <crogine/detail/Assert.hpp>
 
@@ -45,10 +46,12 @@ namespace
 }
 
 Chunk::Chunk(ChunkManager& m, glm::ivec3 pos)
-    : m_chunkManager(m),
-    m_position(pos)
+    : m_chunkManager    (m),
+    m_position          (pos)
 {
-
+    //this assume 'air' is ID 0 - ideally we should be checking
+    //the ID assigned by the voxel manager when the type is loaded.
+    std::fill(m_voxels.begin(), m_voxels.end(), 0);
 }
 
 //public

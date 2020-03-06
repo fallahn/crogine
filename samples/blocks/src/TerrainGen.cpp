@@ -36,6 +36,8 @@ SOFTWARE.
 
 //TODO also try fastnoise to see how results compare
 #include <crogine/detail/glm/gtc/noise.hpp>
+#include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/Colour.hpp>
 
 #include <cmath>
 #include <array>
@@ -47,7 +49,7 @@ float rounded(glm::vec2 coord)
 {
     auto bump = [](float t) {return std::max(0.f, 1.f - std::pow(t, 6.f)); };
     auto b = bump(coord.x) * bump(coord.y);
-    return b * 0.9f;
+    return std::min((b * 0.9f) * 1.25f, 1.f);
 }
 
 struct NoiseOptions final
@@ -61,7 +63,7 @@ struct NoiseOptions final
 
 float getNoiseAt(glm::vec2 voxelPos, glm::vec2 chunkPos, const NoiseOptions& options, std::int32_t seed)
 {
-    auto voxel = voxelPos + chunkPos * static_cast<float>(ChunkSize);
+    auto voxel = voxelPos + (chunkPos * static_cast<float>(ChunkSize));
 
     float value = 0.f;
     float accumulated = 0.f;
@@ -73,8 +75,9 @@ float getNoiseAt(glm::vec2 voxelPos, glm::vec2 chunkPos, const NoiseOptions& opt
 
         glm::vec2 coord = voxel * freq / options.smoothness;
 
+        //float noise = glm::perlin(glm::vec3(seed + coord.x, seed + coord.y, seed));
         float noise = glm::simplex(glm::vec3(seed + coord.x, seed + coord.y, seed));
-        noise = noise + 1.f / 2.f;
+        noise = (noise + 1.f) / 2.f;
         value += noise * amplitude;
 
         accumulated += amplitude;
@@ -97,33 +100,52 @@ Heightmap createChunkHeightmap(glm::ivec3 chunkPos, std::int32_t chunkCount, std
     noiseB.amplitude = 20.f;
     noiseB.octaves = 4;
     noiseB.smoothness = 200.f;
-noiseB.roughness = 0.45f;
-noiseB.offset = 0.f;
+    noiseB.roughness = 0.45f;
+    noiseB.offset = 0.f;
 
-glm::vec2 chunkXZ(chunkPos.x, chunkPos.z);
+    glm::vec2 chunkXZ(chunkPos.x, chunkPos.z);
 
-Heightmap heightmap = {};
-for (auto z = 0u; z < ChunkSize; ++z)
-{
-    for (auto x = 0; x < ChunkSize; ++x)
+    int worldWidth = chunkCount * ChunkSize;
+    static std::vector<std::uint8_t> imageData(worldWidth * worldWidth);
+
+    Heightmap heightmap = {};
+    for (auto z = 0u; z < ChunkSize; ++z)
     {
-        float bx = static_cast<float>(x + chunkPos.x * ChunkSize);
-        float bz = static_cast<float>(z + chunkPos.z * ChunkSize);
+        for (auto x = 0; x < ChunkSize; ++x)
+        {
+            float bx = static_cast<float>(x + (chunkPos.x * ChunkSize));
+            float bz = static_cast<float>(z + (chunkPos.z * ChunkSize));
 
-        glm::vec2 coord((glm::vec2(bx, bz) - worldSize / 2.f) / worldSize * 2.f);
+            glm::vec2 coord((glm::vec2(bx, bz) - worldSize / 2.f) / worldSize * 2.f);
 
-        auto noise0 = getNoiseAt({ x,z }, chunkXZ, noiseA, seed);
-        auto noise1 = getNoiseAt({ x,z }, { chunkPos.x, chunkPos.z }, noiseB, seed);
+            auto noise0 = getNoiseAt({ x,z }, chunkXZ, noiseA, seed);
+            auto noise1 = getNoiseAt({ x,z }, chunkXZ, noiseB, seed);
 
-        //round off the edges
-        auto island = rounded(coord) * 1.25f;
-        auto result = noise0 * noise1;
+            //round off the edges
+            auto island = rounded(coord);
+            auto result = noise0 * noise1;
 
-        heightmap[z * ChunkSize + x] = static_cast<std::int32_t>((result * noiseA.amplitude + noiseA.offset) * island - 5.f);
+            //TODO remove this kludginess
+            {
+                std::uint8_t c = static_cast<std::uint8_t>(255.f * result/* * island*/);
+                int coordX = (x)+(chunkPos.x * (ChunkSize));
+                int coordY = z + (chunkPos.z * ChunkSize);
+                imageData[coordY * (worldWidth) + coordX] = c;
+            }
+
+            heightmap[z * ChunkSize + x] = static_cast<std::int32_t>((result * noiseA.amplitude + noiseA.offset) * island) -5;
+        }
     }
-}
 
-return heightmap;
+    if (chunkPos.x == chunkCount - 1 && chunkPos.z == chunkCount - 1)
+    {
+        cro::Image img;
+        img.loadFromMemory(imageData.data(), worldWidth, worldWidth, cro::ImageFormat::A);
+        img.write("height.png");
+        LOG("Remove heightmap render", cro::Logger::Type::Info);
+    }
+
+    return heightmap;
 }
 
 void createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManager& voxeldata, std::int32_t seed)
@@ -137,7 +159,7 @@ void createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManag
             for (auto y = 0; y < ChunkSize; ++y)
             {
                 auto voxY = chunk.getPosition().y * ChunkSize + y;
-                std::uint8_t voxelID = 0;
+                std::uint8_t voxelID = voxeldata.getID(vx::Air);
 
                 //above the height value we're water or air (air is default)
                 if (voxY > height)
@@ -165,11 +187,18 @@ void createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManag
                 }
                 //some arbitrary depth of dirt below the surface.
                 //again, a biome would influence this
-                else if (voxY > (height - 4))
+                else if (voxY > (height - 4)) //TODO this value should be modulated by a depth map for varitation (as should grass)
                 {
-                    //TODO we only want to put this under grass
+                    //we only want to put dirt under grass
                     //sand should have more sand underneath it
-                    voxelID = voxeldata.getID(vx::Dirt);
+                    if (voxY > WaterLevel)
+                    {
+                        voxelID = voxeldata.getID(vx::Dirt);
+                    }
+                    else
+                    {
+                        voxelID = voxeldata.getID(vx::Sand);
+                    }
                 }
                 else
                 {
@@ -179,7 +208,7 @@ void createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManag
 
 
                 //set the voxelID at the current chunk position
-                if (voxelID > 0)
+                //if (voxelID != voxeldata.getID(vx::Air))
                 {
                     chunk.setVoxelQ({ x,y,z }, voxelID);
                 }

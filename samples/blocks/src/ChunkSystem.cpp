@@ -96,14 +96,23 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
 
     //thread for greedy meshing
     m_mutex = std::make_unique<std::mutex>();
-    m_greedyThread = std::make_unique<std::thread>(&ChunkSystem::threadFunc, this);
+
+    for (auto& thread : m_greedyThreads)
+    {
+        thread = std::make_unique<std::thread>(&ChunkSystem::threadFunc, this);
+    }
+
     m_threadRunning = true;
 }
 
 ChunkSystem::~ChunkSystem()
 {
     m_threadRunning = false;
-    m_greedyThread->join();
+
+    for (auto& thread : m_greedyThreads)
+    {
+        thread->join();
+    }
 }
 
 //public
@@ -267,7 +276,8 @@ ChunkSystem::VoxelFace ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 posit
     std::uint8_t neighbour = m_voxelData.getID(vx::CommonType::Air);
 
     //skip if this is an air block
-    if (face.id == neighbour)
+    if (face.id == neighbour
+        || face.id == vx::CommonType::OutOfBounds)
     {
         face.visible = false;
         return face;
@@ -350,7 +360,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
         }
         else if (face.id == m_voxelData.getID(vx::CommonType::Water))
         {
-            colour = { 0.17f, 0.47f, 0.87f };
+            colour = { 0.07f, 0.17f, 0.87f };
         }
 
         std::array<float, 6u> multipliers = {0.89f, 0.95f, 0.85f, 0.96f, 1.f, 0.2f};
