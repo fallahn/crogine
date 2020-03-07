@@ -63,8 +63,7 @@ namespace ShaderID
 {
     enum
     {
-        ChunkSolid,
-        ChunkWater
+        Chunk
     };
 }
 

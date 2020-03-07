@@ -52,29 +52,53 @@ namespace
             ATTRIBUTE LOW vec3 a_colour;
             ATTRIBUTE MED vec2 a_texCoord0;
 
+            uniform mat4 u_worldMatrix;
             uniform mat4 u_worldViewMatrix;
             uniform mat4 u_projectionMatrix;
 
             VARYING_OUT LOW vec3 v_colour;
             VARYING_OUT MED vec2 v_texCoord;
+            VARYING_OUT MED vec4 v_viewPosition;
+            VARYING_OUT float v_worldHeight;
 
             void main()
             {
                 gl_Position = u_projectionMatrix * u_worldViewMatrix * a_position;
                 v_colour = a_colour;
                 v_texCoord = a_texCoord0;
+                v_viewPosition = u_worldViewMatrix * a_position;
+                v_worldHeight = (u_worldMatrix * a_position).y;
             })";
 
     const std::string Fragment = 
         R"(
+            uniform float u_alpha;
+
             VARYING_IN LOW vec3 v_colour;
             VARYING_IN MED vec2 v_texCoord;
+            VARYING_IN MED vec4 v_viewPosition;
+            VARYING_IN float v_worldHeight;
 
             OUTPUT
 
+            const LOW vec4 FogColour = vec4(0.07, 0.17, 0.67, 1.0);
+            const float FogDensity = 0.03;
+
             void main()
             {
-                FRAG_OUT = vec4(v_colour, 1.0);
+                vec4 colour = vec4(v_colour, u_alpha);
+                float fogFactor = 1.0;
+
+                if(v_worldHeight < 23.99) //water level
+                {
+                    float fogDistance = length(v_viewPosition);
+                    fogFactor = 1.0 / exp(fogDistance * FogDensity);
+                    fogFactor = clamp(fogFactor, 0.2, 0.8);
+
+                    colour *= 0.9;
+                }
+
+                FRAG_OUT = mix(FogColour, colour, fogFactor);
             })";
 
     const std::string FragmentWater = 
@@ -86,7 +110,7 @@ namespace
 
             void main()
             {
-                FRAG_OUT = vec4(v_colour, 0.26);
+                FRAG_OUT = vec4(v_colour, 0.2);
             })";
 }
 
@@ -99,18 +123,17 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
     requireComponent<cro::Transform>();
 
     //create shaders for chunk meshes
-    if (rc.shaders.preloadFromString(Vertex, Fragment, ShaderID::ChunkSolid))
+    if (rc.shaders.preloadFromString(Vertex, Fragment, ShaderID::Chunk))
     {
         //and then material
-        m_materialIDs[MaterialID::ChunkSolid] = rc.materials.add(rc.shaders.get(ShaderID::ChunkSolid));
+        m_materialIDs[MaterialID::ChunkSolid] = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
+        rc.materials.get(m_materialIDs[MaterialID::ChunkSolid]).setProperty("u_alpha", 1.f);
+
+        m_materialIDs[MaterialID::ChunkWater] = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
+        rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).blendMode = cro::Material::BlendMode::Alpha;
+        rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_alpha", 0.2f);
     }
 
-    if (rc.shaders.preloadFromString(Vertex, FragmentWater, ShaderID::ChunkWater))
-    {
-        //and then material
-        m_materialIDs[MaterialID::ChunkWater] = rc.materials.add(rc.shaders.get(ShaderID::ChunkWater));
-        rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).blendMode = cro::Material::BlendMode::Alpha;
-    }
 
     //thread for greedy meshing
     m_mutex = std::make_unique<std::mutex>();
@@ -330,7 +353,7 @@ ChunkSystem::VoxelFace ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 posit
         neighbour = chunk.getVoxel({ position.x + 1, position.y, position.z });
         break;
     case VoxelFace::West:
-        neighbour = chunk.getVoxel({ position.x - 1, position.y + 1, position.z });
+        neighbour = chunk.getVoxel({ position.x - 1, position.y, position.z });
         break;
     }
 
@@ -365,14 +388,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
             i += indexOffset;
         }
 
-        if (face.id == m_voxelData.getID(vx::CommonType::Water))
-        {
-            waterIndices.insert(waterIndices.end(), localIndices.begin(), localIndices.end());
-        }
-        else
-        {
-            solidIndices.insert(solidIndices.end(), localIndices.begin(), localIndices.end());
-        }
+
 
 
         //for now we're colouring types, eventually this
@@ -400,8 +416,17 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
             colour = { 0.07f, 0.17f, 0.87f };
         }
 
-        std::array<float, 6u> multipliers = {0.89f, 0.95f, 0.85f, 0.96f, 1.f, 0.2f};
-        colour *= multipliers[face.direction];
+        if (face.id == m_voxelData.getID(vx::CommonType::Water))
+        {
+            waterIndices.insert(waterIndices.end(), localIndices.begin(), localIndices.end());
+        }
+        else
+        {
+            std::array<float, 6u> multipliers = {0.89f, 0.95f, 0.85f, 0.96f, 1.f, 0.2f};
+            colour *= multipliers[face.direction];
+            solidIndices.insert(solidIndices.end(), localIndices.begin(), localIndices.end());
+        }
+
 
         //remember our vert order...
         std::array<glm::vec2, 4u> UVs =
