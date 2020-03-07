@@ -131,7 +131,7 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
 
         m_materialIDs[MaterialID::ChunkWater] = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
         rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).blendMode = cro::Material::BlendMode::Alpha;
-        rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_alpha", 0.2f);
+        rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_alpha", 0.5f);
     }
 
 

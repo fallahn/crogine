@@ -35,10 +35,10 @@ namespace cro
     {
         namespace Const
         {
-            static const float PI = 3.1412f;
+            static const float PI = 3.14159265358979f;
             static const float degToRad = PI / 180.f;
             static const float radToDeg = 180.f / PI;
-            static const float TAU = PI * 2.f;
+            static const float TAU = 6.283185307f;
             static const float E = 2.71828f;
         }
     }

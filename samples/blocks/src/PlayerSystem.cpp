@@ -72,13 +72,6 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
         auto& tx = entity.getComponent<cro::Transform>();
         auto& player = entity.getComponent<Player>();
 
-        player.cameraPitch = Util::decompressFloat(update.pitch);
-        player.cameraYaw = Util::decompressFloat(update.yaw);
-
-        //apply position/rotation from server
-        tx.setPosition(update.position);
-        tx.setRotation(Util::decompressQuat(update.rotation));
-
         //rewind player's last input to timestamp and
         //re-process all succeeding events
         auto lastIndex = player.lastUpdatedInput;
@@ -100,6 +93,14 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
                 return;
             }
         }
+
+        player.cameraPitch = Util::decompressFloat(update.pitch);
+        player.cameraYaw = Util::decompressFloat(update.yaw);
+
+        //apply position/rotation from server
+        tx.setPosition(update.position);
+        tx.setRotation(Util::decompressQuat(update.rotation));
+
         player.lastUpdatedInput = lastIndex;
 
         auto lastInput = player.inputStack[player.lastUpdatedInput];
@@ -156,7 +157,18 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
         player.cameraPitch = newPitch;
     }
 
+    //we need to clamp this to TAU (or ideally +- PI) else more than one rotation
+    //introduces very visible jitter
+    //player.cameraYaw = std::fmod(player.cameraYaw + yawMove, cro::Util::Const::TAU);
     player.cameraYaw += yawMove;
+    if (player.cameraYaw < -cro::Util::Const::PI)
+    {
+        player.cameraYaw += cro::Util::Const::TAU;
+    }
+    else if (player.cameraYaw > cro::Util::Const::PI)
+    {
+        player.cameraYaw -= cro::Util::Const::TAU;
+    }
 
     glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchMove, glm::vec3(1.f, 0.f, 0.f));
     glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yawMove, glm::vec3(0.f, 1.f, 0.f));

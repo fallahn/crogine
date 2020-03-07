@@ -249,10 +249,10 @@ void GameState::buildWorld()
     //TODO parse a config file or similar with voxel data
     //and add the types to m_voxelData
 
-    //std::hash<std::string> hash;
-    ////hm this performs some truncation on the value... does it matter?
-    //auto seed = static_cast<std::uint32_t>(hash("buns"));
-    std::int32_t seed = 1234567;
+    std::hash<std::string> hash;
+    //hm this performs some truncation on the value... does it matter?
+    auto seed = static_cast<std::uint32_t>(/*hash("buns")*/std::time(nullptr));
+    //std::int32_t seed = 1234567;
 
     LOG("Seed: " + std::to_string(seed), cro::Logger::Type::Info);
 
