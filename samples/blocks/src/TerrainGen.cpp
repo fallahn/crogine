@@ -30,125 +30,209 @@ SOFTWARE.
 #include "Voxel.hpp"
 #include "Chunk.hpp"
 #include "ChunkManager.hpp"
-#include "WorldConsts.hpp"
 
 #include <algorithm>
 
-//TODO also try fastnoise to see how results compare
-#include <crogine/detail/glm/gtc/noise.hpp>
 #include <crogine/graphics/Image.hpp>
-#include <crogine/graphics/Colour.hpp>
+#include <crogine/gui/Gui.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <cmath>
-#include <array>
 
-using namespace WorldConst;
-using Heightmap = std::array<std::int32_t, ChunkArea>;
+using fn = FastNoiseSIMD;
 
-float rounded(glm::vec2 coord)
+namespace
 {
-    auto bump = [](float t) {return std::max(0.f, 1.f - std::pow(t, 6.f)); };
-    auto b = bump(coord.x) * bump(coord.y);
-    return std::min((b * 0.9f) * 1.25f, 1.f);
-}
-
-struct NoiseOptions final
-{
-    std::int32_t octaves = 0;
-    float amplitude = 0.f;
-    float smoothness = 0.f;
-    float roughness = 0.f;
-    float offset = 0.f;
-};
-
-float getNoiseAt(glm::vec2 voxelPos, glm::vec2 chunkPos, const NoiseOptions& options, std::int32_t seed)
-{
-    auto voxel = voxelPos + (chunkPos * static_cast<float>(ChunkSize));
-
-    float value = 0.f;
-    float accumulated = 0.f;
-
-    for (auto i = 0; i < options.octaves; ++i)
+    float rounded(glm::vec2 coord)
     {
-        float freq = std::pow(2.f, i);
-        float amplitude = std::pow(options.roughness, i);
-
-        glm::vec2 coord = voxel * freq / options.smoothness;
-
-        //float noise = glm::perlin(glm::vec3(seed + coord.x, seed + coord.y, seed));
-        float noise = glm::simplex(glm::vec3(seed + coord.x, seed + coord.y, seed));
-        noise = (noise + 1.f) / 2.f;
-        value += noise * amplitude;
-
-        accumulated += amplitude;
+        auto bump = [](float t) {return std::max(0.f, 1.f - std::pow(t, 4.f)); };
+        auto b = bump(coord.x) * bump(coord.y);
+        return std::min((b * 0.9f) * 1.25f, 1.f);
     }
-    return value / accumulated;
+
+    const float MaxTerrainHeight = 80.f;
+
+    float noiseOneFreq = 0.004f;
+    float noiseTwoFreq = 0.008f;
+    float minHeight = 0.399f;
+
+    std::int32_t seed = 1234567;
 }
 
-Heightmap createChunkHeightmap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed)
+TerrainGenerator::TerrainGenerator(bool debugWindow)
+    : m_noise(nullptr),
+    m_lastHeightmapSize(0)
+{
+    m_noise = fn::NewFastNoiseSIMD();
+
+    if (debugWindow)
+    {
+        registerWindow([&]()
+            {
+                ImGui::SetNextWindowSize({ 500.f, 260.f });
+                if (ImGui::Begin("Terrain"))
+                {
+                    ImGui::SliderFloat("Noise One Freq", &noiseOneFreq, 0.001f, 0.09f);
+                    ImGui::SliderFloat("Noise Two Freq", &noiseTwoFreq, 0.001f, 0.09f);
+                    ImGui::SliderFloat("MinHeight", &minHeight, 0.1f, 0.6f);
+
+                    if (ImGui::Button("Random Seed"))
+                    {
+                        seed = cro::Util::Random::value(12564, 984343);
+                    }
+                    ImGui::SameLine();
+                    ImGui::Text("%d", seed);
+
+                    if (ImGui::Button("Render"))
+                    {
+                        static const std::int32_t chunkCount = 16;
+                        for (auto z = 0; z < chunkCount; ++z)
+                        {
+                            for (auto x = 0; x < chunkCount; ++x)
+                            {
+                                createChunkHeightmap({ x, 0, z }, chunkCount, seed);
+                            }
+                        }
+                        renderHeightmaps();
+                    }
+                }
+                ImGui::End();
+            });
+    }
+}
+
+TerrainGenerator::~TerrainGenerator()
+{
+    if (m_noise)
+    {
+        
+    }
+}
+
+//public
+void TerrainGenerator::generateTerrain(ChunkManager& chunkManager, std::int32_t chunkX, std::int32_t chunkZ,
+    const vx::DataManager& voxelData, std::int32_t seed, std::int32_t chunkCount)
+{
+    glm::ivec3 chunkPos(chunkX, 0, chunkZ);
+
+    auto heightmap = createChunkHeightmap(chunkPos, chunkCount, seed);
+    auto maxHeight = *std::max_element(heightmap.begin(), heightmap.end());
+
+    for(auto y = 0; y < std::max(1, maxHeight / ChunkSize + 1); ++y)
+    {
+        auto& chunk = chunkManager.addChunk({ chunkX, y, chunkZ });
+        createTerrain(chunk, heightmap, voxelData, seed);
+        chunkManager.ensureNeighbours(chunk.getPosition());
+    }
+}
+
+void TerrainGenerator::renderHeightmaps()
+{
+    auto area = m_lastHeightmapSize * m_lastHeightmapSize;
+
+    cro::Image image;
+    if (m_noiseImageOne.size() == area)
+    {
+        image.loadFromMemory(m_noiseImageOne.data(), m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
+        image.write("noise_one.png");
+    }
+
+    if (m_noiseImageTwo.size() == area)
+    {
+        image.loadFromMemory(m_noiseImageTwo.data(), m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
+        image.write("noise_two.png");
+    }
+
+    if (m_falloffImage.size() == area)
+    {
+        image.loadFromMemory(m_falloffImage.data(), m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
+        image.write("falloff.png");
+    }
+
+    if (m_finalImage.size() == area)
+    {
+        image.loadFromMemory(m_finalImage.data(), m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
+        image.write("final.png");
+    }
+}
+
+//private
+Heightmap TerrainGenerator::createChunkHeightmap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed)
 {
     const float worldSize = static_cast<float>(chunkCount * ChunkSize);
+    auto chunkWorldPos = chunkPos * ChunkSize;
 
-    NoiseOptions noiseA;
-    noiseA.amplitude = 105.f;
-    noiseA.octaves = 6;
-    noiseA.smoothness = 205.f;
-    noiseA.roughness = 0.58f;
-    noiseA.offset = 18.f;
+    m_noise->SetSeed(seed);
+    m_noise->SetFrequency(/*0.02f*/noiseOneFreq);
+    
+    auto* noiseSet0 = m_noise->GetSimplexSet(chunkWorldPos.x, chunkWorldPos.y, chunkWorldPos.z, ChunkSize, 1, ChunkSize);
 
-    NoiseOptions noiseB;
-    noiseB.amplitude = 20.f;
-    noiseB.octaves = 4;
-    noiseB.smoothness = 200.f;
-    noiseB.roughness = 0.45f;
-    noiseB.offset = 0.f;
+    m_noise->SetFrequency(/*0.01f*/noiseTwoFreq);
+
+    auto* noiseSet1 = m_noise->GetSimplexSet(chunkWorldPos.x, chunkWorldPos.y, chunkWorldPos.z, ChunkSize, 1, ChunkSize);
 
     glm::vec2 chunkXZ(chunkPos.x, chunkPos.z);
 
-    int worldWidth = chunkCount * ChunkSize;
-    static std::vector<std::uint8_t> imageData(worldWidth * worldWidth);
+    //TODO could make this debug only
+    auto lastHeightmapSize = chunkCount * ChunkSize;
+    if (m_lastHeightmapSize != lastHeightmapSize)
+    {
+        m_lastHeightmapSize = lastHeightmapSize;
+        m_noiseImageOne.resize(lastHeightmapSize * lastHeightmapSize);
+        m_noiseImageTwo.resize(m_noiseImageOne.size());
+        m_falloffImage.resize(m_noiseImageOne.size());
+        m_finalImage.resize(m_noiseImageOne.size());
+    }
 
     Heightmap heightmap = {};
-    for (auto z = 0u; z < ChunkSize; ++z)
+    std::int32_t i = 0;
+    for (auto x = 0u; x < ChunkSize; ++x)
     {
-        for (auto x = 0; x < ChunkSize; ++x)
+        for (auto z = 0; z < ChunkSize; ++z)
         {
+            //round off the edges
             float bx = static_cast<float>(x + (chunkPos.x * ChunkSize));
             float bz = static_cast<float>(z + (chunkPos.z * ChunkSize));
 
             glm::vec2 coord((glm::vec2(bx, bz) - worldSize / 2.f) / worldSize * 2.f);
-
-            auto noise0 = getNoiseAt({ x,z }, chunkXZ, noiseA, seed);
-            auto noise1 = getNoiseAt({ x,z }, chunkXZ, noiseB, seed);
-
-            //round off the edges
             auto island = rounded(coord);
+
+            auto noise0 = (((noiseSet0[i] + 1.f) / 2.f) * (1.f - minHeight)) + minHeight;
+            auto noise1 = (((noiseSet1[i] + 1.f) / 2.f) * (1.f - minHeight)) + minHeight;
+
             auto result = noise0 * noise1;
 
-            //TODO remove this kludginess
-            {
-                std::uint8_t c = static_cast<std::uint8_t>(255.f * noise0/*result * island*/);
-                int coordX = (x)+(chunkPos.x * (ChunkSize));
-                int coordY = z + (chunkPos.z * ChunkSize);
-                imageData[coordY * (worldWidth) + coordX] = c;
-            }
+            //debug images
+            std::int32_t coordX = x + (chunkPos.x * ChunkSize);
+            std::int32_t coordY = z + (chunkPos.z * ChunkSize);
+            std::size_t idx = coordY *  lastHeightmapSize + coordX;
 
-            heightmap[z * ChunkSize + x] = static_cast<std::int32_t>((result * noiseA.amplitude + noiseA.offset) * island) -5;
+            std::uint8_t c = static_cast<std::uint8_t>(255.f * noise0);
+            m_noiseImageOne[idx] = c;
+            
+            c = static_cast<std::uint8_t>(255.f * noise1);
+            m_noiseImageTwo[idx] = c;
+
+            c = static_cast<std::uint8_t>(255.f * island);
+            m_falloffImage[idx] = c;
+
+            c = static_cast<std::uint8_t>(255.f * result * island);
+            m_finalImage[idx] = c;
+
+            //output heightmap
+            heightmap[z * ChunkSize + x] = static_cast<std::int32_t>((result * MaxTerrainHeight) * island);
+
+            i++;
         }
     }
 
-    if (chunkPos.x == chunkCount - 1 && chunkPos.z == chunkCount - 1)
-    {
-        cro::Image img;
-        img.loadFromMemory(imageData.data(), worldWidth, worldWidth, cro::ImageFormat::A);
-        img.write("height.png");
-        LOG("Remove heightmap render", cro::Logger::Type::Info);
-    }
+    fn::FreeNoiseSet(noiseSet0);
+    fn::FreeNoiseSet(noiseSet1);
 
     return heightmap;
 }
 
-void createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManager& voxeldata, std::int32_t seed)
+void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManager& voxeldata, std::int32_t seed)
 {
     for (auto z = 0; z < ChunkSize; ++z)
     {
@@ -214,21 +298,5 @@ void createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManag
                 }
             }
         }
-    }
-}
-
-void generateTerrain(ChunkManager& chunkManager, std::int32_t chunkX, std::int32_t chunkZ,
-    const vx::DataManager& voxelData, std::int32_t seed, std::int32_t chunkCount)
-{
-    glm::ivec3 chunkPos(chunkX, 0, chunkZ);
-
-    auto heightmap = createChunkHeightmap(chunkPos, chunkCount, seed);
-    auto maxHeight = *std::max_element(heightmap.begin(), heightmap.end());
-
-    for(auto y = 0; y < std::max(1, maxHeight / ChunkSize + 1); ++y)
-    {
-        auto& chunk = chunkManager.addChunk({ chunkX, y, chunkZ });
-        createTerrain(chunk, heightmap, voxelData, seed);
-        chunkManager.ensureNeighbours(chunk.getPosition());
     }
 }

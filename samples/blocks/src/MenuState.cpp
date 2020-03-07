@@ -61,6 +61,7 @@ namespace
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
 	: cro::State    (stack, context),
+    m_terrainGenerator(true),
     m_sharedData    (sd),
     m_scene         (context.appInstance.getMessageBus()),
     m_hosting       (false)

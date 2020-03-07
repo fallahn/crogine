@@ -51,7 +51,7 @@ namespace
     //TODO work out a better way to create spawn points
     const std::array<glm::vec3, ConstVal::MaxClients> playerSpawns =
     {
-        glm::vec3(16.f, 16.f, 35.f),
+        glm::vec3(16.f, 48.f, 35.f),
         glm::vec3(1.5f, 1.f, 1.5f),
         glm::vec3(1.5f, 1.f, -1.5f),
         glm::vec3(-1.5f, 1.f, -1.5f)
@@ -257,16 +257,16 @@ void GameState::buildWorld()
     LOG("Seed: " + std::to_string(seed), cro::Logger::Type::Info);
 
     //count per side
-    static const std::int32_t chunkCount = 16;
+    static const std::int32_t chunkCount = 4;
     LOG("Generating...", cro::Logger::Type::Info);
     for (auto z = 0; z < chunkCount; ++z)
     {
         for (auto x = 0; x < chunkCount; ++x)
         {
-            generateTerrain(m_world.chunks, x, z, m_voxelData, seed, chunkCount);
+            m_terrainGenerator.generateTerrain(m_world.chunks, x, z, m_voxelData, seed, chunkCount);
         }
     }
-
+    m_terrainGenerator.renderHeightmaps();
 
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {

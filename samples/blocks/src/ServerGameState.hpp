@@ -33,6 +33,7 @@ source distribution.
 #include "ServerState.hpp"
 #include "Voxel.hpp"
 #include "ChunkManager.hpp"
+#include "TerrainGen.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
@@ -67,6 +68,7 @@ namespace Sv
         }m_world;
         vx::DataManager m_voxelData;
 
+        TerrainGenerator m_terrainGenerator;
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);

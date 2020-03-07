@@ -67,6 +67,9 @@
     <Filter Include="Source Files\WorldGen">
       <UniqueIdentifier>{de71435f-0001-40d9-b042-d4b72a22e061}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\fastnoise">
+      <UniqueIdentifier>{54058e6d-dbc5-496f-988c-453d622f5e87}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -137,6 +140,27 @@
     </ClCompile>
     <ClCompile Include="src\ChunkSystem.cpp">
       <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx2.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx512.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_internal.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_neon.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse2.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse41.cpp">
+      <Filter>Source Files\fastnoise</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

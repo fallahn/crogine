@@ -31,6 +31,7 @@ source distribution.
 
 #include "StateIDs.hpp"
 #include "CommonConsts.hpp"
+#include "TerrainGen.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/String.hpp>
@@ -76,6 +77,7 @@ public:
     void render() override;
 
 private:
+    TerrainGenerator m_terrainGenerator;
 
     SharedStateData& m_sharedData;
 

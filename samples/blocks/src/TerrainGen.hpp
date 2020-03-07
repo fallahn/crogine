@@ -28,12 +28,63 @@ SOFTWARE.
 
 #pragma once
 
-#include <cstdint>
+#include "fastnoise/FastNoiseSIMD.h"
+#include "WorldConsts.hpp"
 
+#include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/gui/GuiClient.hpp>
+
+#include <cstdint>
+#include <array>
+#include <vector>
+
+class Chunk;
 class ChunkManager;
 namespace vx
 {
     class DataManager;
 }
 
-void generateTerrain(ChunkManager&, std::int32_t x, std::int32_t z, const vx::DataManager&, std::int32_t seed, std::int32_t chunksPerSide);
+using namespace WorldConst;
+using Heightmap = std::array<std::int32_t, ChunkArea>;
+
+class TerrainGenerator final : public cro::GuiClient
+{
+public:
+    TerrainGenerator(bool debugWindow = false);
+    ~TerrainGenerator();
+
+    TerrainGenerator(const TerrainGenerator&) = delete;
+    TerrainGenerator(TerrainGenerator&&) = delete;
+
+    TerrainGenerator& operator = (const TerrainGenerator&) = delete;
+    TerrainGenerator& operator = (TerrainGenerator&&) = delete;
+
+    void generateTerrain(ChunkManager&, std::int32_t x, std::int32_t z, const vx::DataManager&, std::int32_t seed, std::int32_t chunksPerSide);
+
+    void renderHeightmaps();
+
+    
+
+private:
+    FastNoiseSIMD* m_noise;
+
+    struct NoiseOptions final
+    {
+        std::int32_t octaves = 0;
+        float amplitude = 0.f;
+        float smoothness = 0.f;
+        float roughness = 0.f;
+        float offset = 0.f;
+    };
+
+    std::vector<std::uint8_t> m_noiseImageOne;
+    std::vector<std::uint8_t> m_noiseImageTwo;
+    std::vector<std::uint8_t> m_falloffImage;
+    std::vector<std::uint8_t> m_finalImage;
+    std::uint32_t m_lastHeightmapSize;
+
+    Heightmap createChunkHeightmap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
+    void createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManager& voxeldata, std::int32_t seed);
+};

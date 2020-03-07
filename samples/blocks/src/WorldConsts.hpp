@@ -36,5 +36,5 @@ namespace WorldConst
     static const std::int32_t ChunkArea = ChunkSize * ChunkSize;
     static const std::int32_t ChunkVolume = ChunkArea * ChunkSize;
 
-    static const std::int32_t WaterLevel = 32;
+    static const std::int32_t WaterLevel = 24;
 }
