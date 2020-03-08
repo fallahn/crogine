@@ -105,6 +105,10 @@ private:
 
     struct VoxelFace final
     {
+        //these are the same BL, BR, TL, TR as the positions
+        //when creating a quad
+        std::array<float, 4u> ao = {};
+        
         bool visible = true;
         enum Side
         {

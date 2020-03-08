@@ -403,8 +403,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
         }
 
 
-
-
         //for now we're colouring types, eventually this
         //will be the offset into the atlas and we'll use the w/h as UVs
         //to repeat the correct texture in the shader.
@@ -436,8 +434,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
         }
         else
         {
-            /*std::array<float, 6u> multipliers = {0.89f, 0.95f, 0.85f, 0.96f, 1.f, 0.2f};
-            colour *= multipliers[face.direction];*/
             solidIndices.insert(solidIndices.end(), localIndices.begin(), localIndices.end());
         }
 
@@ -544,6 +540,9 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                         std::optional<VoxelFace> faceB = (x[direction] < (WorldConst::ChunkSize - 1)) ?
                             std::optional<VoxelFace>(getFace(chunk, glm::ivec3(x[0] + q[0], x[1] + q[1], x[2] + q[2]), (VoxelFace::Side)currentSide)) : std::nullopt;
 
+                        //TODO if the face is visible calculate the AO values
+                        //TODO modify the == operator to only add quads with matching AOs
+
                         faceMask[maskIndex++] = (faceA != std::nullopt && faceB != std::nullopt && (*faceA == *faceB)) ?
                             std::nullopt :
                             backface ? faceB : faceA;
@@ -554,12 +553,14 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
 
 
                 //create a quad from the mask and add it to the vertex output
+                //if it's visible (no point processing invisible faces...)
                 maskIndex = 0;
                 for (auto j = 0; j < WorldConst::ChunkSize; ++j)
                 {
                     for (auto i = 0; i < WorldConst::ChunkSize;)
                     {
-                        if (faceMask[maskIndex] != std::nullopt)
+                        if (faceMask[maskIndex] != std::nullopt
+                            && faceMask[maskIndex]->visible)
                         {
                             std::int32_t width = 0;
                             for (width = 1;
@@ -589,9 +590,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                             }
 
                             //discard any marked as not visible
-                            if (faceMask[maskIndex]->visible)
-                                //&& faceMask[maskIndex]->id != m_voxelData.getID(vx::CommonType::Water)) //TODO remove this
-                                //&& faceMask[maskIndex]->id != m_voxelData.getID(vx::CommonType::Air))
+                            //if (faceMask[maskIndex]->visible)
                             {
                                 std::array<std::int32_t, 3u> du = { 0,0,0 };
                                 std::array<std::int32_t, 3u> dv = { 0,0,0 };
