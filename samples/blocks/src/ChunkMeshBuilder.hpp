@@ -47,9 +47,15 @@ public:
 
     //TODO could also use the chunk position hash here
     //but it's unlikely a chunk gets completely recreated
+    //(chunk updates just replace the VBO/IBO data)
     std::size_t getUID() const override { return 0; }
 
+    //this is a helper for when mesh data is updated
+    static std::size_t getVertexComponentCount() { return m_componentCount; }
+
 private:
+
+    static std::size_t m_componentCount;
 
     cro::Mesh::Data build() const override;
 };

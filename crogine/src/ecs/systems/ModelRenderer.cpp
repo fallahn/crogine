@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 using namespace cro;
 
@@ -54,8 +55,12 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 //public
 void ModelRenderer::process(float)
 {
-    auto& entities = getEntities();
-    auto frustum = getScene()->getActiveCamera().getComponent<Camera>().getFrustum();
+    auto cameraEnt = getScene()->getActiveCamera();
+    auto frustum = cameraEnt.getComponent<Camera>().getFrustum();
+    auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
+    auto forwardVector = cameraEnt.getComponent<Transform>().getForwardVector();;
+
+    auto& entities = getEntities();    
 
     //cull entities by viewable into draw lists by pass
     m_visibleEntities.clear();
@@ -89,7 +94,12 @@ void ModelRenderer::process(float)
             auto opaque = std::make_pair(entity, SortData());
             auto transparent = std::make_pair(entity, SortData());
 
-            auto worldPos = tx.getWorldPosition();
+            //auto worldPos = tx.getWorldPosition();
+            auto direction = sphere.centre - cameraPos;
+            float distance = glm::dot(forwardVector, direction);
+            //TODO a large model with a centre behind the camera
+            //might still intersect the view but register as being
+            //further away than smaller objects in front
 
             //foreach material
             //add ent/index pair to alpha or opaque list
@@ -98,13 +108,13 @@ void ModelRenderer::process(float)
                 if (model.m_materials[i].blendMode != Material::BlendMode::None)
                 {
                     transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                    transparent.second.flags = static_cast<int64>(worldPos.z * 1000000.f); //suitably large number to shift decimal point
+                    transparent.second.flags = static_cast<int64>(-distance * 1000000.f); //suitably large number to shift decimal point
                     transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
                 }
                 else
                 {
                     opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                    opaque.second.flags = static_cast<int64>(-worldPos.z * 1000000.f);
+                    opaque.second.flags = static_cast<int64>(distance * 1000000.f);
                 }
             }
 

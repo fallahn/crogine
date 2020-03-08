@@ -49,7 +49,8 @@ namespace
     const std::string Vertex = 
         R"(
             ATTRIBUTE vec4 a_position;
-            ATTRIBUTE LOW vec3 a_colour;
+            ATTRIBUTE vec3 a_colour;
+            ATTRIBUTE vec3 a_normal;
             ATTRIBUTE MED vec2 a_texCoord0;
 
             uniform mat4 u_worldMatrix;
@@ -61,10 +62,22 @@ namespace
             VARYING_OUT MED vec4 v_viewPosition;
             VARYING_OUT float v_worldHeight;
 
+            float directionalAmbience(vec3 normal)
+            {
+	            vec3 v = normal * normal;
+	            if (normal.y < 0)
+                {
+		            return dot(v, vec3(0.67082, 0.447213f, 0.83666));
+                }
+	            return dot(v, vec3(0.67082, 1.0, 0.83666));
+            }
+
             void main()
             {
                 gl_Position = u_projectionMatrix * u_worldViewMatrix * a_position;
-                v_colour = a_colour;
+
+                float ambience = directionalAmbience(a_normal);
+                v_colour = a_colour * ambience;
                 v_texCoord = a_texCoord0;
                 v_viewPosition = u_worldViewMatrix * a_position;
                 v_worldHeight = (u_worldMatrix * a_position).y;
@@ -357,6 +370,7 @@ ChunkSystem::VoxelFace ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 posit
         break;
     }
 
+
     face.visible = (neighbour == m_voxelData.getID(vx::CommonType::Air)
                     || (neighbour == m_voxelData.getID(vx::CommonType::Water) && face.id != m_voxelData.getID(vx::CommonType::Water)));
     return face;
@@ -381,8 +395,8 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
         {
             localIndices = { 2,3,1,  1,0,2 };
         }
-        //8 is the number of floats per vert. Need to hook this up to the format somewhere..
-        std::int32_t indexOffset = static_cast<std::int32_t>(verts.size() / 8);
+
+        std::int32_t indexOffset = static_cast<std::int32_t>(verts.size() / ChunkMeshBuilder::getVertexComponentCount());
         for (auto& i : localIndices)
         {
             i += indexOffset;
@@ -422,8 +436,8 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
         }
         else
         {
-            std::array<float, 6u> multipliers = {0.89f, 0.95f, 0.85f, 0.96f, 1.f, 0.2f};
-            colour *= multipliers[face.direction];
+            /*std::array<float, 6u> multipliers = {0.89f, 0.95f, 0.85f, 0.96f, 1.f, 0.2f};
+            colour *= multipliers[face.direction];*/
             solidIndices.insert(solidIndices.end(), localIndices.begin(), localIndices.end());
         }
 
@@ -437,6 +451,32 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
             glm::vec2(width, 0.f)
         };
 
+        glm::vec3 normal = glm::vec3(0.f);
+        switch (face.direction)
+        {
+        case VoxelFace::North:
+            normal.z = -1.f;
+            break;
+        case VoxelFace::South:
+            normal.z = 1.f;
+            break;
+        case VoxelFace::East:
+            normal.x = -1.f;
+            break;
+        case VoxelFace::West:
+            normal.x = 1.f;
+            break;
+        case VoxelFace::Top:
+            normal.y = 1.f;
+            break;
+        case VoxelFace::Bottom:
+            normal.y = -1.f;
+            break;
+        }
+
+        //NOTE: when adding more attributes
+        //remember to update the component count in
+        //the mesh builder class.
         for (auto i = 0u; i < positions.size(); ++i)
         {
             verts.push_back(positions[i].x);
@@ -446,6 +486,10 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
             verts.push_back(colour.r);
             verts.push_back(colour.g);
             verts.push_back(colour.b);
+
+            verts.push_back(normal.x);
+            verts.push_back(normal.y);
+            verts.push_back(normal.z);
 
             verts.push_back(UVs[i].x);
             verts.push_back(UVs[i].y);

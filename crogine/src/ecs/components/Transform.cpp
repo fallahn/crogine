@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/glm/gtc/matrix_access.hpp>
 
 using namespace cro;
 
@@ -310,6 +311,24 @@ glm::mat4 Transform::getWorldTransform() const
         return m_parent->getWorldTransform() * getLocalTransform();
     }
     return getLocalTransform();
+}
+
+glm::vec3 Transform::getForwardVector() const
+{
+    const auto& tx = getWorldTransform();
+    return -glm::column(tx, 2);
+}
+
+glm::vec3 Transform::getUpVector() const
+{
+    const auto& tx = getWorldTransform();
+    return glm::column(tx, 1);
+}
+
+glm::vec3 Transform::getRightVector() const
+{
+    const auto& tx = getWorldTransform();
+    return glm::column(tx, 0);
 }
 
 bool Transform::addChild(Transform& child)

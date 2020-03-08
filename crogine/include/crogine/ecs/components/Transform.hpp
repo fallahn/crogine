@@ -185,6 +185,21 @@ namespace cro
         glm::mat4 getWorldTransform() const;
 
         /*!
+        \brief Returns the forward vector of this transform
+        */
+        glm::vec3 getForwardVector() const;
+
+        /*!
+        brief Returns the up vector of this transform
+        */
+        glm::vec3 getUpVector() const;
+
+        /*!
+        \brief Returns the right vector of this transform
+        */
+        glm::vec3 getRightVector() const;
+
+        /*!
         \brief Adds the given transform as a child, if there is room
         No more than MaxChildren may be added to any one transform.
         \returns false if child was not successfully added
