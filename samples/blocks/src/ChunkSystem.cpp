@@ -64,8 +64,6 @@ namespace
             VARYING_OUT float v_ao;
             VARYING_OUT vec3 v_normal;
 
-            const float aoValues[] = float[](0.0, 0.6, 0.8, 1.0);
-
             float directionalAmbience(vec3 normal)
             {
 	            vec3 v = normal * normal;
@@ -322,8 +320,8 @@ void ChunkSystem::threadFunc()
             std::vector<float> vertexData;
             std::vector<std::uint32_t> solidIndices;
             std::vector<std::uint32_t> waterIndices;
-            //generateChunkMesh(*chunk, vertexData, solidIndices, waterIndices);
-            generateNaiveMesh(*chunk, vertexData, solidIndices, waterIndices);
+            generateChunkMesh(*chunk, vertexData, solidIndices, waterIndices);
+            //generateNaiveMesh(*chunk, vertexData, solidIndices, waterIndices);
 
 
             //lock output
@@ -865,7 +863,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                                         || (*faceMask[idx] != *faceMask[maskIndex]))
                                     { 
                                         //aoValues[2] = faceMask[idx - (width - 1)]->ao[2];
-                                        //aoValues[3] = faceMask[idx - 1]->ao[3];
+                                        aoValues[3] = faceMask[idx - 1]->ao[3];
 
                                         complete = true;
                                         break;
@@ -926,6 +924,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
 
 void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& verts, std::vector<std::uint32_t>& solidIndices, std::vector<std::uint32_t>& waterIndices)
 {
+    return;
     for (auto z = 0; z < WorldConst::ChunkSize; ++z)
     {
         for (auto y = 0; y < WorldConst::ChunkSize; ++y)
