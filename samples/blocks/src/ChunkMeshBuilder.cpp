@@ -44,11 +44,11 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     cro::Mesh::Data data;
 
     data.attributes[cro::Mesh::Position] = 3;
-    data.attributes[cro::Mesh::Colour] = 3;
+    data.attributes[cro::Mesh::Colour] = 4;
     data.attributes[cro::Mesh::Normal] = 3;
     data.attributes[cro::Mesh::UV0] = 2;
 
-    m_componentCount = 11; //this is important! update this if modifying above
+    m_componentCount = 12; //this is important! update this if modifying above
 
     data.primitiveType = GL_TRIANGLES;
     data.vertexSize = getVertexSize(data.attributes);

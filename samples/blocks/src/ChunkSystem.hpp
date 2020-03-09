@@ -107,7 +107,8 @@ private:
     {
         //these are the same BL, BR, TL, TR as the positions
         //when creating a quad
-        std::array<float, 4u> ao = {};
+        std::array<float, 4u> ao = { 1.f,1.f,1.f,1.f };
+        float offset = 0.f; //eg if a water surface should be slightly lower
         
         bool visible = true;
         enum Side
@@ -127,7 +128,9 @@ private:
         }
     };
     VoxelFace getFace(const Chunk&, glm::ivec3, VoxelFace::Side);
+    void calcAO(VoxelFace&, glm::ivec3);
     void generateChunkMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&, std::vector<std::uint32_t>&);
+    void generateNaiveMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&, std::vector<std::uint32_t>&);
     void generateDebugMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&);
 
     void onEntityRemoved(cro::Entity);
