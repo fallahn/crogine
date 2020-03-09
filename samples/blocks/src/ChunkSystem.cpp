@@ -117,7 +117,7 @@ namespace
                     colour *= 0.9;
                 }
 
-                float light = v_ao + max(0.15 * dot(v_normal, vec3(1.0, 1.0, 1.0)), 0.0);
+                float light = v_ao + max(0.15 * dot(v_normal, vec3(1.0)), 0.0);
                 FRAG_OUT = mix(FogColour, colour * light, fogFactor);
             })";
 
@@ -218,7 +218,7 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
             std::memcpy(voxels.data(), (char*)packet.getData() + static_cast<std::intptr_t>(sizeof(cd)), sizeof(RLEPair)* cd.dataSize);
 
             glm::ivec3 position(cd.x, cd.y, cd.z);
-            std::lock_guard<std::mutex>(*m_mutex);
+            std::lock_guard<std::mutex> lock(*m_mutex);
             if (!m_chunkManager.hasChunk(position))
             {
                 auto& chunk = m_chunkManager.addChunk(position);
@@ -352,15 +352,15 @@ void ChunkSystem::calcAO(VoxelFace& face, glm::ivec3 position)
     std::uint8_t airblock = 0;
     std::uint8_t waterblock = 0;
 
-    //m_mutex->lock();
+    m_mutex->lock();
     airblock = m_voxelData.getID(vx::CommonType::Air);
     waterblock = m_voxelData.getID(vx::CommonType::Water);
-    //m_mutex->unlock();
+    m_mutex->unlock();
 
     auto getSurrounding = [&](const std::vector<glm::ivec3>& positions)
     {
         //we want to lock this as briefly as possible
-        std::lock_guard<std::mutex>(*m_mutex);
+        std::lock_guard<std::mutex> lock(*m_mutex);
         for (auto i = 0u; i < surroundingVoxels.size(); ++i)
         {
             surroundingVoxels[i] = m_chunkManager.getVoxel(positions[i]);
@@ -559,7 +559,7 @@ void ChunkSystem::calcAO(VoxelFace& face, glm::ivec3 position)
             }
             return 3 - (side1 + side2 + corner);
         };
-        static const std::array<float, 4u> levels = { 0.f, 0.6f, 0.8f, 1.f };
+        static const std::array<float, 4u> levels = { 0.15f, 0.6f, 0.8f, 1.f };
 
         std::int32_t s1 = 0;
         std::int32_t s2 = 0;
@@ -570,28 +570,28 @@ void ChunkSystem::calcAO(VoxelFace& face, glm::ivec3 position)
         s1 = (surroundingVoxels[5] == vx::CommonType::OutOfBounds || surroundingVoxels[5] == airblock) ? 0 : 1;
         c = (surroundingVoxels[6] == vx::CommonType::OutOfBounds || surroundingVoxels[6] == airblock) ? 0 : 1;
         s2 = (surroundingVoxels[7] == vx::CommonType::OutOfBounds || surroundingVoxels[7] == airblock) ? 0 : 1;
-        face.ao[0] = levels[vertexAO(s1, s1, c)];
+        face.ao[0] = levels[vertexAO(s1, s2, c)];
 
         s1 = (surroundingVoxels[3] == vx::CommonType::OutOfBounds || surroundingVoxels[3] == airblock) ? 0 : 1;
         c = (surroundingVoxels[4] == vx::CommonType::OutOfBounds || surroundingVoxels[4] == airblock) ? 0 : 1;
         s2 = (surroundingVoxels[5] == vx::CommonType::OutOfBounds || surroundingVoxels[5] == airblock) ? 0 : 1;
-        face.ao[1] = levels[vertexAO(s1, s1, c)];
+        face.ao[1] = levels[vertexAO(s1, s2, c)];
 
         s1 = (surroundingVoxels[7] == vx::CommonType::OutOfBounds || surroundingVoxels[7] == airblock) ? 0 : 1;
         c = (surroundingVoxels[0] == vx::CommonType::OutOfBounds || surroundingVoxels[0] == airblock) ? 0 : 1;
         s2 = (surroundingVoxels[1] == vx::CommonType::OutOfBounds || surroundingVoxels[1] == airblock) ? 0 : 1;
-        face.ao[2] = levels[vertexAO(s1, s1, c)];
+        face.ao[2] = levels[vertexAO(s1, s2, c)];
 
         s1 = (surroundingVoxels[1] == vx::CommonType::OutOfBounds || surroundingVoxels[1] == airblock) ? 0 : 1;
         c = (surroundingVoxels[2] == vx::CommonType::OutOfBounds || surroundingVoxels[2] == airblock) ? 0 : 1;
         s2 = (surroundingVoxels[3] == vx::CommonType::OutOfBounds || surroundingVoxels[3] == airblock) ? 0 : 1;
-        face.ao[3] = levels[vertexAO(s1, s1, c)];
+        face.ao[3] = levels[vertexAO(s1, s2, c)];
     }
 }
 
 ChunkSystem::VoxelFace ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 position, VoxelFace::Side side)
 {
-    std::lock_guard<std::mutex>(*m_mutex);
+    std::lock_guard<std::mutex> lock(*m_mutex);
     const std::uint8_t airBlock = m_voxelData.getID(vx::CommonType::Air);
     const std::uint8_t waterBlock = m_voxelData.getID(vx::CommonType::Water);
 
@@ -815,8 +815,8 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                         //TODO we want to save some time here and only calc on the face
                         //which was added - but we have to do both to be able to compare
                         //them and know if we need to add the face or not...
-                        calcAO(*faceA, positionA);
-                        calcAO(*faceB, positionB);
+                        if(faceA) calcAO(*faceA, positionA);
+                        if(faceB) calcAO(*faceB, positionB);
 
                         faceMask[maskIndex++] = (faceA != std::nullopt && faceB != std::nullopt && (*faceA == *faceB)) ?
                             std::nullopt :
@@ -862,7 +862,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                                     if (faceMask[idx] == std::nullopt
                                         || (*faceMask[idx] != *faceMask[maskIndex]))
                                     { 
-                                        //aoValues[2] = faceMask[idx - (width - 1)]->ao[2];
+                                        aoValues[2] = faceMask[(idx - 1) -width]->ao[2];
                                         aoValues[3] = faceMask[idx - 1]->ao[3];
 
                                         complete = true;
@@ -925,11 +925,11 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
 void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& verts, std::vector<std::uint32_t>& solidIndices, std::vector<std::uint32_t>& waterIndices)
 {
     return;
-    for (auto z = 0; z < WorldConst::ChunkSize; ++z)
+    for (auto z = 0; z < /*WorldConst::ChunkSize*/4; ++z)
     {
-        for (auto y = 0; y < WorldConst::ChunkSize; ++y)
+        for (auto y = 0; y < /*WorldConst::ChunkSize*/4; ++y)
         {
-            for (auto x = 0; x < WorldConst::ChunkSize; ++x)
+            for (auto x = 0; x < /*WorldConst::ChunkSize*/4; ++x)
             {
                 for (auto i = 0; i < 6; ++i)
                 {

@@ -174,7 +174,7 @@ Heightmap TerrainGenerator::createChunkHeightmap(glm::ivec3 chunkPos, std::int32
     glm::vec2 chunkXZ(chunkPos.x, chunkPos.z);
 
     //TODO could make this debug only
-    auto lastHeightmapSize = chunkCount * ChunkSize;
+    std::uint32_t lastHeightmapSize = chunkCount * ChunkSize;
     if (m_lastHeightmapSize != lastHeightmapSize)
     {
         m_lastHeightmapSize = lastHeightmapSize;
