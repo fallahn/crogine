@@ -309,6 +309,7 @@ void GameState::sendChunk(std::uint8_t playerID, glm::ivec3 chunkPos)
     cd.y = static_cast<std::int16_t>(chunkPos.y);
     cd.z = static_cast<std::int16_t>(chunkPos.z);
     cd.dataSize = static_cast<std::uint32_t>(compressedData.size());
+    cd.highestPoint = chunk->getHighestPoint();
 
     std::vector<std::uint8_t> data(sizeof(cd) + (cd.dataSize * sizeof(RLEPair)));
     std::memcpy(data.data(), &cd, sizeof(cd));

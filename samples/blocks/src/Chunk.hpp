@@ -70,11 +70,16 @@ public:
     ChunkVoxels& getVoxels();
     const ChunkVoxels& getVoxels() const;
 
+    void setHighestPoint(std::int8_t p) { m_highestPoint = p; }
+    std::int8_t getHighestPoint() const { return m_highestPoint; }
+
 private:
 
     ChunkManager& m_chunkManager;
     glm::ivec3 m_position;
     ChunkVoxels m_voxels = {};
+
+    std::int8_t m_highestPoint;
 };
 
 //compress / decompress voxels with RLE for network transport

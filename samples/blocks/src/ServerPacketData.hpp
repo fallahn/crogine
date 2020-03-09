@@ -76,4 +76,5 @@ struct ChunkData final
     std::int16_t y = 0;
     std::int16_t z = 0;
     std::uint16_t dataSize = 0;
+    std::int8_t highestPoint = -1;
 };

@@ -492,9 +492,12 @@ void TextRenderer::rebuildBatch()
     m_bufferTransforms.clear();
     m_bufferTransforms.resize(m_buffers.size());
     std::size_t i = 0;
-    for (const auto& buffer : m_buffers)
+    for (const auto& [batchMap, batch] : m_buffers)
     {
-        m_bufferTransforms[i].resize((buffer.second.back().start + buffer.second.back().count) / 4);
+        if (!batch.empty())
+        {
+            m_bufferTransforms[i].resize((batch.back().start + batch.back().count) / 4);
+        }
         i++;
     }
 

@@ -216,6 +216,7 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
             {
                 auto& chunk = m_chunkManager.addChunk(position);
                 chunk.getVoxels() = decompressVoxels(voxels);
+                chunk.setHighestPoint(cd.highestPoint);
 
                 //create new entity for chunk
                 auto entity = getScene()->createEntity();
@@ -245,7 +246,6 @@ void ChunkSystem::updateMesh()
     std::vector<std::uint32_t> solidIndices;
     std::vector<std::uint32_t> waterIndices;
     glm::ivec3 position = glm::ivec3(0);
-    //generateChunkMesh(chunk, vertexData, indices);
 
     m_mutex->lock();
     if (!m_outputQueue.empty())
@@ -296,6 +296,12 @@ void ChunkSystem::threadFunc()
             m_inputQueue.pop();
 
             chunk = &m_chunkManager.getChunk(position);
+
+            //skip empty/airblock chunks
+            if (chunk->getHighestPoint() == -1)
+            {
+                chunk = nullptr;
+            }
         }
 
         //unlock queue
@@ -380,7 +386,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
 {
     //greedy meshing from http://0fps.wordpress.com/2012/06/30/meshing-in-a-minecraft-game/
     //and https://github.com/roboleary/GreedyMesh/blob/master/src/mygame/Main.java
-
 
     //positions are BL, BR, TL, TR
     auto addQuad = [&](const std::vector<glm::vec3>& positions, float width, float height, VoxelFace face, bool backface) mutable
@@ -492,7 +497,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
         }
     };
 
-    //TODO consider non-solid types such as fauna and add to different sub-meshes of the VBO
 
     //flip flop loop - means we can run verts in reverse order when backfacing
     for (bool backface = true, b = false; b != backface; backface = (backface && b), b = !b)
@@ -509,6 +513,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
             q[direction] = 1;
 
             std::int32_t currentSide = -1;
+            std::int32_t maxSlice = WorldConst::ChunkSize; //on the Y plane slices don't process any air/empty layers
             switch(direction)
             {
             case 0:
@@ -516,6 +521,8 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                 break;
             case 1:
                 currentSide = (backface) ? VoxelFace::Bottom : VoxelFace::Top;
+                maxSlice = chunk.getHighestPoint() + 1;
+                //std::cout << maxSlice << "\n";
                 break;
             case 2:
                 currentSide = (backface) ? VoxelFace::South : VoxelFace::North;
@@ -523,7 +530,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
             }
 
             //move across the current direction/plane front to back
-            for (x[direction] = -1; x[direction] < WorldConst::ChunkSize;)
+            for (x[direction] = -1; x[direction] < /*WorldConst::ChunkSize*/maxSlice;)
             {
                 //this is the collection of faces grouped per side
                 std::vector<std::optional<VoxelFace>> faceMask(WorldConst::ChunkArea);

@@ -47,7 +47,8 @@ namespace
 
 Chunk::Chunk(ChunkManager& m, glm::ivec3 pos)
     : m_chunkManager    (m),
-    m_position          (pos)
+    m_position          (pos),
+    m_highestPoint      (-1)
 {
     //this assume 'air' is ID 0 - ideally we should be checking
     //the ID assigned by the voxel manager when the type is loaded.

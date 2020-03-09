@@ -234,6 +234,8 @@ Heightmap TerrainGenerator::createChunkHeightmap(glm::ivec3 chunkPos, std::int32
 
 void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManager& voxeldata, std::int32_t seed)
 {
+    std::int8_t highestPoint = -1;
+
     for (auto z = 0; z < ChunkSize; ++z)
     {
         for (auto x = 0; x < ChunkSize; ++x)
@@ -292,11 +294,14 @@ void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, c
 
 
                 //set the voxelID at the current chunk position
-                //if (voxelID != voxeldata.getID(vx::Air))
+                chunk.setVoxelQ({ x,y,z }, voxelID);
+                if (voxelID != voxeldata.getID(vx::Air))
                 {
-                    chunk.setVoxelQ({ x,y,z }, voxelID);
+                    highestPoint = (y > highestPoint) ? y : highestPoint;
                 }
             }
         }
     }
+
+    chunk.setHighestPoint(highestPoint);
 }
