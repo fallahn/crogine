@@ -40,6 +40,7 @@ source distribution.
 #include <memory>
 #include <atomic>
 #include <queue>
+#include <thread>
 
 namespace cro
 {

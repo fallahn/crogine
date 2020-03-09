@@ -25,10 +25,10 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/Voxel.cpp
 
 
-  ${CMAKE_CURRENT_SOURCE_DIR}/fastnoise/FastNoiseSIMD.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/fastnoise/FastNoiseSIMD_avx2.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/fastnoise/FastNoiseSIMD_avx512.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/fastnoise/FastNoiseSIMD_internal.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/fastnoise/FastNoiseSIMD_neon.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/fastnoise/FastNoiseSIMD_sse2.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/fastnoise/FastNoiseSIMD_sse41.cpp)
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD.cpp
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD_avx2.cpp
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD_avx512.cpp
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD_internal.cpp
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD_neon.cpp
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD_sse2.cpp
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD_sse41.cpp)
