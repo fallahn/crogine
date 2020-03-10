@@ -916,8 +916,9 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& vert
                         if (faceB) calcAO(chunk, *faceB, positionB);
 
                         std::vector<glm::vec3> positions;
-                        std::array<float, 4u> ao = { 1.f,1.f,1.f,1.f };
+
                         VoxelFace::Side direction = VoxelFace::North;
+			LOG("Fix this shadow var!", cro::Logger::Type::Warning);
                         glm::ivec3 position(0);
 
                         if (faceA != std::nullopt && faceB != std::nullopt && (*faceA == *faceB))
