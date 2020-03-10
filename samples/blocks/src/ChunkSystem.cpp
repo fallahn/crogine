@@ -730,7 +730,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                             && faceMask[maskIndex]->visible)
                         {
                             std::array<float, 4u> aoValues = {1.f, 1.f, 1.f, 1.f};
-                            aoValues[0] = faceMask[maskIndex]->ao[0];
+                            //aoValues[0] = faceMask[maskIndex]->ao[0];
 
                             //calc the merged width/height
                             std::int32_t width = 0;
@@ -740,7 +740,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                                 && *faceMask[maskIndex + width] == *faceMask[maskIndex];
                                 width++)
                             {
-                                aoValues[1] = faceMask[maskIndex + width]->ao[1];
+                                //aoValues[1] = faceMask[maskIndex + width]->ao[1];
                             }
 
                             bool complete = false;
@@ -754,8 +754,8 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                                     if (faceMask[idx] == std::nullopt
                                         || (*faceMask[idx] != *faceMask[maskIndex]))
                                     { 
-                                        aoValues[2] = faceMask[(idx - 1) -width]->ao[2];
-                                        aoValues[3] = faceMask[idx - 1]->ao[3];
+                                        //aoValues[2] = faceMask[(idx - 1) -width]->ao[2];
+                                        //aoValues[3] = faceMask[idx - 1]->ao[3];
 
                                         complete = true;
                                         break;
@@ -778,16 +778,61 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                             du[u] = width;
                             dv[v] = height;
 
-                            //note this assumes block sizes of 1x1x1
-                            //scale this to change block size
-                            std::vector<glm::vec3> positions =
+                            
+                            std::vector<glm::vec3> positions;
+                            auto facing = backface;
+                            switch (faceMask[maskIndex]->direction)
                             {
-                                glm::vec3(x[0], x[1], x[2]), //BL
-                                glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]), //BR
-                                glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2]), //TL
-                                glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]) //TR
-                            };
-                            addQuad(verts, solidIndices, waterIndices, positions, aoValues, static_cast<float>(width), static_cast<float>(height), *faceMask[maskIndex], backface);
+                            case VoxelFace::West:
+                                positions =
+                                {
+                                    glm::vec3(x[0], x[1], x[2]), //BL
+                                    glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]), //BR
+                                    glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2]), //TL
+                                    glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]) //TR
+                                };
+                                break;
+                            case VoxelFace::East:
+                            case VoxelFace::Top:
+                                positions =
+                                {
+                                    glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]),
+                                    glm::vec3(x[0], x[1], x[2]),
+                                    glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
+                                    glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2])
+                                };
+                                facing = !facing;
+                                break;
+                            case VoxelFace::North:
+                                positions =
+                                {
+                                    glm::vec3(x[0], x[1], x[2]),
+                                    glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2]),
+                                    glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]),
+                                    glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2])
+                                };
+                                facing = !facing;
+                                break;
+                            case VoxelFace::South:
+                                positions =
+                                {
+                                    glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2]),
+                                    glm::vec3(x[0], x[1], x[2]),
+                                    glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
+                                    glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2])
+                                };
+                                break;
+                            case VoxelFace::Bottom:
+                                positions =
+                                {
+                                    glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
+                                    glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2]),
+                                    glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]),
+                                    glm::vec3(x[0], x[1], x[2])
+                                };
+                                break;
+                            }
+                            addQuad(verts, solidIndices, waterIndices, positions, aoValues, static_cast<float>(width), static_cast<float>(height), *faceMask[maskIndex], facing);
 
 
                             //reset any faces used
@@ -1142,6 +1187,14 @@ void ChunkSystem::addQuad(std::vector<float>& verts, std::vector<std::uint32_t>&
         normal.y = -1.f;
         break;
     }
+
+    //std::array<glm::vec3, 4u> colours =
+    //{
+    //    glm::vec3(1.f, 0.f, 0.f),
+    //    glm::vec3(0.f, 1.f, 0.f),
+    //    glm::vec3(1.f, 1.f, 1.f),
+    //    glm::vec3(0.f, 0.f, 1.f)
+    //};
 
     //NOTE: when adding more attributes
     //remember to update the component count in
