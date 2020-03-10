@@ -780,7 +780,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
 
                             
                             std::vector<glm::vec3> positions;
-                            auto facing = backface;
                             switch (faceMask[maskIndex]->direction)
                             {
                             case VoxelFace::West:
@@ -801,7 +800,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                                     glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
                                     glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2])
                                 };
-                                facing = !facing;
                                 break;
                             case VoxelFace::North:
                                 positions =
@@ -811,7 +809,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                                     glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]),
                                     glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2])
                                 };
-                                facing = !facing;
                                 break;
                             case VoxelFace::South:
                                 positions =
@@ -832,7 +829,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                                 };
                                 break;
                             }
-                            addQuad(verts, solidIndices, waterIndices, positions, aoValues, static_cast<float>(width), static_cast<float>(height), *faceMask[maskIndex], facing);
+                            addQuad(verts, solidIndices, waterIndices, positions, aoValues, static_cast<float>(width), static_cast<float>(height), *faceMask[maskIndex]);
 
 
                             //reset any faces used
@@ -945,7 +942,6 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& vert
 
                         if (faceMask[maskIndex] && faceMask[maskIndex]->visible)
                         {
-                            auto facing = backface;
                             switch (direction)
                             {
                             case VoxelFace::Bottom:
@@ -959,14 +955,12 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& vert
                                 positions.emplace_back(position.x, position.y + 1, position.z);
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
                                 positions.emplace_back(position.x, position.y + 1, position.z + 1);
-                                facing = !facing;
                                 break;
                             case VoxelFace::North:
                                 positions.emplace_back(position.x, position.y, position.z + 1);
                                 positions.emplace_back(position.x + 1, position.y, position.z + 1);
                                 positions.emplace_back(position.x, position.y + 1, position.z + 1);
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
-                                facing = !facing;
                                 break;
                             case VoxelFace::South:
                                 positions.emplace_back(position.x + 1, position.y, position.z);
@@ -980,7 +974,6 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& vert
                                 positions.emplace_back(position.x + 1, position.y, position.z);
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z);
-                                facing = !facing;
                                 break;
                             case VoxelFace::West:
                                 positions.emplace_back(position.x, position.y, position.z);
@@ -990,7 +983,7 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& vert
                                 break;
                             }
                             if(!positions.empty())
-                            addQuad(verts, solidIndices, waterIndices, positions, faceMask[maskIndex]->ao, 1.f, 1.f, *faceMask[maskIndex], facing);
+                            addQuad(verts, solidIndices, waterIndices, positions, faceMask[maskIndex]->ao, 1.f, 1.f, *faceMask[maskIndex]);
                         }
 
                         maskIndex++;
@@ -1099,18 +1092,10 @@ void ChunkSystem::generateDebugMesh(const Chunk& chunk, std::vector<float>& vert
 }
 
 void ChunkSystem::addQuad(std::vector<float>& verts, std::vector<std::uint32_t>& solidIndices, std::vector<std::uint32_t>& waterIndices,
-    std::vector<glm::vec3> positions, const std::array<float, 4u>& ao, float width, float height, VoxelFace face, bool backface)
+    std::vector<glm::vec3> positions, const std::array<float, 4u>& ao, float width, float height, VoxelFace face)
 {
     //add indices to the index array, remembering to offset into the current VBO
-    std::array<std::int32_t, 6> localIndices;
-    if (backface)
-    {
-        localIndices = { 2,0,1,  1,3,2 };
-    }
-    else
-    {
-        localIndices = { 2,3,1,  1,0,2 };
-    }
+    std::array<std::int32_t, 6> localIndices = { 2,0,1,  1,3,2 };
 
     std::int32_t indexOffset = static_cast<std::int32_t>(verts.size() / ChunkMeshBuilder::getVertexComponentCount());
     for (auto& i : localIndices)

@@ -135,7 +135,7 @@ private:
     void generateDebugMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&);
 
     void addQuad(std::vector<float>&, std::vector<std::uint32_t>&, std::vector<std::uint32_t>&,
-        std::vector<glm::vec3> positions, const std::array<float, 4u>& ao, float width, float height, VoxelFace face, bool backface);
+        std::vector<glm::vec3> positions, const std::array<float, 4u>& ao, float width, float height, VoxelFace face);
 
     void onEntityRemoved(cro::Entity);
     void onEntityAdded(cro::Entity);
