@@ -129,7 +129,7 @@ private:
         }
     };
     VoxelFace getFace(const Chunk&, glm::ivec3, VoxelFace::Side);
-    void calcAO(VoxelFace&, glm::ivec3);
+    void calcAO(const Chunk&, VoxelFace&, glm::ivec3);
     void generateChunkMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&, std::vector<std::uint32_t>&);
     void generateNaiveMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&, std::vector<std::uint32_t>&);
     void generateDebugMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&);

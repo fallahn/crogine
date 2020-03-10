@@ -320,8 +320,8 @@ void ChunkSystem::threadFunc()
             std::vector<float> vertexData;
             std::vector<std::uint32_t> solidIndices;
             std::vector<std::uint32_t> waterIndices;
-            //generateChunkMesh(*chunk, vertexData, solidIndices, waterIndices);
-            generateNaiveMesh(*chunk, vertexData, solidIndices, waterIndices);
+            generateChunkMesh(*chunk, vertexData, solidIndices, waterIndices);
+            //generateNaiveMesh(*chunk, vertexData, solidIndices, waterIndices);
             //generateDebugMesh(*chunk, vertexData, solidIndices);
 
 
@@ -345,8 +345,13 @@ void ChunkSystem::threadFunc()
     }
 }
 
-void ChunkSystem::calcAO(VoxelFace& face, glm::ivec3 position)
+void ChunkSystem::calcAO(const Chunk& chunk, VoxelFace& face, glm::ivec3 position)
 {
+    //this has confused itself somewhere. currently north
+    //faces point +z, south faces are - z
+    //east is + x and west is - x. The bottom edge of
+    //a top face faces - z (south in these weird coords)
+
     //surrounding voxel values starting at the top left
     //of the face and moving clockwise.
     std::array<std::uint8_t, 8u> surroundingVoxels = {};
@@ -364,7 +369,7 @@ void ChunkSystem::calcAO(VoxelFace& face, glm::ivec3 position)
         std::lock_guard<std::mutex> lock(*m_mutex);
         for (auto i = 0u; i < surroundingVoxels.size(); ++i)
         {
-            surroundingVoxels[i] = m_chunkManager.getVoxel(positions[i]);
+            surroundingVoxels[i] = chunk.getVoxel(positions[i]);
         }
     };
 
@@ -378,25 +383,25 @@ void ChunkSystem::calcAO(VoxelFace& face, glm::ivec3 position)
                 position, position, position, position,
                 position, position, position, position
             };
-            positions[0].x -= 1;
-            positions[0].z -= 1;
+            positions[0].x += 1;
+            positions[0].z += 1;
 
-            positions[1].z -= 1;
+            positions[1].z += 1;
 
-            positions[2].x += 1;
-            positions[2].z -= 1;
+            positions[2].x -= 1;
+            positions[2].z += 1;
 
-            positions[3].x += 1;
+            positions[3].x -= 1;
 
-            positions[4].x += 1;
-            positions[4].z += 1;
+            positions[4].x -= 1;
+            positions[4].z -= 1;
 
-            positions[5].z += 1;
+            positions[5].z -= 1;
 
-            positions[6].x -= 1;
-            positions[6].z += 1;
+            positions[6].x += 1;
+            positions[6].z -= 1;
 
-            positions[7].x -= 1;
+            positions[7].x += 1;
 
             getSurrounding(positions);
         }
@@ -408,89 +413,29 @@ void ChunkSystem::calcAO(VoxelFace& face, glm::ivec3 position)
                 position, position, position, position,
                 position, position, position, position
             };
-            positions[0].x -= 1;
-            positions[0].z += 1;
-
-            positions[1].z += 1;
-
-            positions[2].x += 1;
-            positions[2].z += 1;
-
-            positions[3].x += 1;
-
-            positions[4].x += 1;
-            positions[4].z -= 1;
-
-            positions[5].z -= 1;
-
-            positions[6].x -= 1;
-            positions[6].z -= 1;
-
-            positions[7].x -= 1;
-
-            getSurrounding(positions);
-        }
-        else if (face.direction == VoxelFace::North)
-        {
-            position.z -= 1;
-            std::vector<glm::ivec3> positions =
-            {
-                position, position, position, position,
-                position, position, position, position
-            };
             positions[0].x += 1;
-            positions[0].y += 1;
+            positions[0].z -= 1;
 
-            positions[1].y += 1;
+            positions[1].z -= 1;
 
             positions[2].x -= 1;
-            positions[2].y += 1;
+            positions[2].z -= 1;
 
             positions[3].x -= 1;
 
             positions[4].x -= 1;
-            positions[4].y -= 1;
+            positions[4].z += 1;
 
-            positions[5].y -= 1;
+            positions[5].z += 1;
 
             positions[6].x += 1;
-            positions[6].y -= 1;
+            positions[6].z += 1;
 
             positions[7].x += 1;
 
             getSurrounding(positions);
         }
-        else if (face.direction == VoxelFace::East)
-        {
-            position.x += 1;
-            std::vector<glm::ivec3> positions =
-            {
-                position, position, position, position,
-                position, position, position, position
-            };
-            positions[0].z -= 1;
-            positions[0].y += 1;
-
-            positions[1].y += 1;
-
-            positions[2].z += 1;
-            positions[2].y += 1;
-
-            positions[3].z += 1;
-
-            positions[4].z += 1;
-            positions[4].y -= 1;
-
-            positions[5].y -= 1;
-
-            positions[6].z -= 1;
-            positions[6].y -= 1;
-
-            positions[7].z -= 1;
-
-            getSurrounding(positions);
-        }
-        else if (face.direction == VoxelFace::South)
+        else if (face.direction == VoxelFace::North)
         {
             position.z += 1;
             std::vector<glm::ivec3> positions =
@@ -520,9 +465,9 @@ void ChunkSystem::calcAO(VoxelFace& face, glm::ivec3 position)
 
             getSurrounding(positions);
         }
-        else if (face.direction == VoxelFace::West)
+        else if (face.direction == VoxelFace::East)
         {
-            position.x -= 1;
+            position.x += 1;
             std::vector<glm::ivec3> positions =
             {
                 position, position, position, position,
@@ -547,6 +492,66 @@ void ChunkSystem::calcAO(VoxelFace& face, glm::ivec3 position)
             positions[6].y -= 1;
 
             positions[7].z += 1;
+
+            getSurrounding(positions);
+        }
+        else if (face.direction == VoxelFace::South)
+        {
+            position.z -= 1;
+            std::vector<glm::ivec3> positions =
+            {
+                position, position, position, position,
+                position, position, position, position
+            };
+            positions[0].x += 1;
+            positions[0].y += 1;
+
+            positions[1].y += 1;
+
+            positions[2].x -= 1;
+            positions[2].y += 1;
+
+            positions[3].x -= 1;
+
+            positions[4].x -= 1;
+            positions[4].y -= 1;
+
+            positions[5].y -= 1;
+
+            positions[6].x += 1;
+            positions[6].y -= 1;
+
+            positions[7].x += 1;
+
+            getSurrounding(positions);
+        }
+        else if (face.direction == VoxelFace::West)
+        {
+            position.x -= 1;
+            std::vector<glm::ivec3> positions =
+            {
+                position, position, position, position,
+                position, position, position, position
+            };
+            positions[0].z -= 1;
+            positions[0].y += 1;
+
+            positions[1].y += 1;
+
+            positions[2].z += 1;
+            positions[2].y += 1;
+
+            positions[3].z += 1;
+
+            positions[4].z += 1;
+            positions[4].y -= 1;
+
+            positions[5].y -= 1;
+
+            positions[6].z -= 1;
+            positions[6].y -= 1;
+
+            positions[7].z -= 1;
 
             getSurrounding(positions);
         }
@@ -702,8 +707,8 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                         //TODO we want to save some time here and only calc on the face
                         //which was added - but we have to do both to be able to compare
                         //them and know if we need to add the face or not...
-                        if(faceA) calcAO(*faceA, positionA);
-                        if(faceB) calcAO(*faceB, positionB);
+                        if(faceA) calcAO(chunk, *faceA, positionA);
+                        if(faceB) calcAO(chunk, *faceB, positionB);
 
                         faceMask[maskIndex++] = (faceA != std::nullopt && faceB != std::nullopt && (*faceA == *faceB)) ?
                             std::nullopt :
@@ -865,8 +870,8 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& vert
                         //TODO we want to save some time here and only calc on the face
                         //which was added - but we have to do both to be able to compare
                         //them and know if we need to add the face or not...
-                        if (faceA) calcAO(*faceA, positionA);
-                        if (faceB) calcAO(*faceB, positionB);
+                        if (faceA) calcAO(chunk, *faceA, positionA);
+                        if (faceB) calcAO(chunk, *faceB, positionB);
 
                         std::vector<glm::vec3> positions;
                         std::array<float, 4u> ao = { 1.f,1.f,1.f,1.f };
@@ -895,34 +900,42 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& vert
 
                         if (faceMask[maskIndex] && faceMask[maskIndex]->visible)
                         {
+                            auto facing = backface;
                             switch (direction)
                             {
                             case VoxelFace::Bottom:
-
-                                break;
-                            case VoxelFace::Top:
-                                positions.emplace_back(position.x, position.y + 1, position.z);
-                                positions.emplace_back(position.x + 1, position.y + 1, position.z);
-                                positions.emplace_back(position.x, position.y + 1, position.z + 1);
-                                positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
-                                break;
-                            case VoxelFace::North:
                                 positions.emplace_back(position.x + 1, position.y, position.z + 1);
                                 positions.emplace_back(position.x, position.y, position.z + 1);
+                                positions.emplace_back(position.x + 1, position.y, position.z);
+                                positions.emplace_back(position.x, position.y, position.z);
+                                break;
+                            case VoxelFace::Top:
+                                positions.emplace_back(position.x + 1, position.y + 1, position.z);
+                                positions.emplace_back(position.x, position.y + 1, position.z);
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
                                 positions.emplace_back(position.x, position.y + 1, position.z + 1);
+                                facing = !facing;
+                                break;
+                            case VoxelFace::North:
+                                positions.emplace_back(position.x, position.y, position.z + 1);
+                                positions.emplace_back(position.x + 1, position.y, position.z + 1);
+                                positions.emplace_back(position.x, position.y + 1, position.z + 1);
+                                positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
+                                facing = !facing;
                                 break;
                             case VoxelFace::South:
                                 positions.emplace_back(position.x + 1, position.y, position.z);
                                 positions.emplace_back(position.x, position.y, position.z);
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z);
                                 positions.emplace_back(position.x, position.y + 1, position.z);
+                                
                                 break;
                             case VoxelFace::East:
-                                positions.emplace_back(position.x + 1, position.y, position.z);
                                 positions.emplace_back(position.x + 1, position.y, position.z + 1);
-                                positions.emplace_back(position.x + 1, position.y + 1, position.z);
+                                positions.emplace_back(position.x + 1, position.y, position.z);
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
+                                positions.emplace_back(position.x + 1, position.y + 1, position.z);
+                                facing = !facing;
                                 break;
                             case VoxelFace::West:
                                 positions.emplace_back(position.x, position.y, position.z);
@@ -932,7 +945,7 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& vert
                                 break;
                             }
                             if(!positions.empty())
-                            addQuad(verts, solidIndices, waterIndices, positions, faceMask[maskIndex]->ao, 1.f, 1.f, *faceMask[maskIndex], backface);
+                            addQuad(verts, solidIndices, waterIndices, positions, faceMask[maskIndex]->ao, 1.f, 1.f, *faceMask[maskIndex], facing);
                         }
 
                         maskIndex++;
