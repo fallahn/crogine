@@ -90,7 +90,7 @@ private:
     void updateMesh();
 
     std::unique_ptr<std::mutex> m_mutex;
-    std::array<std::unique_ptr<std::thread>, 2u> m_greedyThreads;
+    std::array<std::unique_ptr<std::thread>, 1u> m_greedyThreads;
     std::atomic_bool m_threadRunning;
     void threadFunc();
 
@@ -108,9 +108,11 @@ private:
     {
         //these are the same BL, BR, TL, TR as the positions
         //when creating a quad
-        std::array<float, 4u> ao = { 1.f,1.f,1.f,1.f };
+        std::array<std::uint8_t, 4u> ao = { 3,3,3,3 };
         float offset = 0.f; //eg if a water surface should be slightly lower
         
+        glm::ivec3 position = glm::ivec3(0); //voxel position of this face so we can track which direction the meshing is travelling
+
         bool visible = true;
         enum Side
         {
@@ -127,6 +129,8 @@ private:
         {
             return (other.id != id || other.visible != visible);
         }
+
+        bool canAppend(const VoxelFace& other, std::int32_t direction);
     };
     VoxelFace getFace(const Chunk&, glm::ivec3, VoxelFace::Side);
     void calcAO(const Chunk&, VoxelFace&, glm::ivec3);
@@ -135,7 +139,7 @@ private:
     void generateDebugMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&);
 
     void addQuad(std::vector<float>&, std::vector<std::uint32_t>&, std::vector<std::uint32_t>&,
-        std::vector<glm::vec3> positions, const std::array<float, 4u>& ao, float width, float height, VoxelFace face);
+        std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, VoxelFace face);
 
     void onEntityRemoved(cro::Entity);
     void onEntityAdded(cro::Entity);

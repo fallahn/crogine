@@ -557,7 +557,7 @@ void ChunkSystem::calcAO(const Chunk& chunk, VoxelFace& face, glm::ivec3 positio
         }
 
 
-        auto vertexAO = [](std::int32_t side1, std::int32_t side2, std::int32_t corner)
+        auto vertexAO = [](std::int32_t side1, std::int32_t side2, std::int32_t corner)->std::uint8_t
         {
             if (side1 && side2)
             {
@@ -565,33 +565,31 @@ void ChunkSystem::calcAO(const Chunk& chunk, VoxelFace& face, glm::ivec3 positio
             }
             return 3 - (side1 + side2 + corner);
         };
-        static const std::array<float, 4u> levels = { 0.15f, 0.6f, 0.8f, 1.f };
-
+        
         std::int32_t s1 = 0;
         std::int32_t s2 = 0;
         std::int32_t c = 0;
-
 
         //BL, BR, TL, TR
         s1 = (surroundingVoxels[5] == vx::CommonType::OutOfBounds || surroundingVoxels[5] == airblock) ? 0 : 1;
         c = (surroundingVoxels[6] == vx::CommonType::OutOfBounds || surroundingVoxels[6] == airblock) ? 0 : 1;
         s2 = (surroundingVoxels[7] == vx::CommonType::OutOfBounds || surroundingVoxels[7] == airblock) ? 0 : 1;
-        face.ao[0] = levels[vertexAO(s1, s2, c)];
+        face.ao[0] = vertexAO(s1, s2, c);
 
         s1 = (surroundingVoxels[3] == vx::CommonType::OutOfBounds || surroundingVoxels[3] == airblock) ? 0 : 1;
         c = (surroundingVoxels[4] == vx::CommonType::OutOfBounds || surroundingVoxels[4] == airblock) ? 0 : 1;
         s2 = (surroundingVoxels[5] == vx::CommonType::OutOfBounds || surroundingVoxels[5] == airblock) ? 0 : 1;
-        face.ao[1] = levels[vertexAO(s1, s2, c)];
+        face.ao[1] = vertexAO(s1, s2, c);
 
         s1 = (surroundingVoxels[7] == vx::CommonType::OutOfBounds || surroundingVoxels[7] == airblock) ? 0 : 1;
         c = (surroundingVoxels[0] == vx::CommonType::OutOfBounds || surroundingVoxels[0] == airblock) ? 0 : 1;
         s2 = (surroundingVoxels[1] == vx::CommonType::OutOfBounds || surroundingVoxels[1] == airblock) ? 0 : 1;
-        face.ao[2] = levels[vertexAO(s1, s2, c)];
+        face.ao[2] = vertexAO(s1, s2, c);
 
         s1 = (surroundingVoxels[1] == vx::CommonType::OutOfBounds || surroundingVoxels[1] == airblock) ? 0 : 1;
         c = (surroundingVoxels[2] == vx::CommonType::OutOfBounds || surroundingVoxels[2] == airblock) ? 0 : 1;
         s2 = (surroundingVoxels[3] == vx::CommonType::OutOfBounds || surroundingVoxels[3] == airblock) ? 0 : 1;
-        face.ao[3] = levels[vertexAO(s1, s2, c)];
+        face.ao[3] = vertexAO(s1, s2, c);
     }
 }
 
@@ -604,6 +602,7 @@ ChunkSystem::VoxelFace ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 posit
     VoxelFace face;
     face.direction = side;
     face.id = chunk.getVoxelQ(position);
+    face.position = position;
     
     std::uint8_t neighbour = airBlock;
 
@@ -729,18 +728,20 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                         if (faceMask[maskIndex] != std::nullopt
                             && faceMask[maskIndex]->visible)
                         {
-                            std::array<float, 4u> aoValues = {1.f, 1.f, 1.f, 1.f};
-                            //aoValues[0] = faceMask[maskIndex]->ao[0];
+                            std::array<std::uint8_t, 4u> aoValues = {3,3,3,3};
+                            //TODO check the current side to see which initial AO val to set
+
+                            auto prevFace = *faceMask[maskIndex];
 
                             //calc the merged width/height
                             std::int32_t width = 0;
                             for (width = 1;
                                 i + width < WorldConst::ChunkSize 
                                 && faceMask[maskIndex + width] != std::nullopt 
-                                && *faceMask[maskIndex + width] == *faceMask[maskIndex];
+                                && prevFace.canAppend(*faceMask[maskIndex + width], currentSide);
                                 width++)
                             {
-                                //aoValues[1] = faceMask[maskIndex + width]->ao[1];
+                                prevFace = *faceMask[maskIndex + width];
                             }
 
                             bool complete = false;
@@ -752,11 +753,10 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                                     auto idx = maskIndex + k + height * WorldConst::ChunkSize;
 
                                     if (faceMask[idx] == std::nullopt
-                                        || (*faceMask[idx] != *faceMask[maskIndex]))
+                                        //|| !faceMask[maskIndex]->canAppend(*faceMask[idx], currentSide)
+                                        || (*faceMask[maskIndex] != *faceMask[idx]))
                                     { 
-                                        //aoValues[2] = faceMask[(idx - 1) -width]->ao[2];
-                                        //aoValues[3] = faceMask[idx - 1]->ao[3];
-
+                                        //TODO above should be prev face appending, not starting face
                                         complete = true;
                                         break;
                                     }
@@ -1092,7 +1092,7 @@ void ChunkSystem::generateDebugMesh(const Chunk& chunk, std::vector<float>& vert
 }
 
 void ChunkSystem::addQuad(std::vector<float>& verts, std::vector<std::uint32_t>& solidIndices, std::vector<std::uint32_t>& waterIndices,
-    std::vector<glm::vec3> positions, const std::array<float, 4u>& ao, float width, float height, VoxelFace face)
+    std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, VoxelFace face)
 {
     //add indices to the index array, remembering to offset into the current VBO
     std::array<std::int32_t, 6> localIndices = { 2,0,1,  1,3,2 };
@@ -1181,6 +1181,8 @@ void ChunkSystem::addQuad(std::vector<float>& verts, std::vector<std::uint32_t>&
     //    glm::vec3(0.f, 0.f, 1.f)
     //};
 
+    static const std::array<float, 4u> aoLevels = { 0.15f, 0.6f, 0.8f, 1.f };
+
     //NOTE: when adding more attributes
     //remember to update the component count in
     //the mesh builder class.
@@ -1193,7 +1195,7 @@ void ChunkSystem::addQuad(std::vector<float>& verts, std::vector<std::uint32_t>&
         verts.push_back(colour.r);
         verts.push_back(colour.g);
         verts.push_back(colour.b);
-        verts.push_back(ao[i]);
+        verts.push_back(aoLevels[ao[i]]);
 
         verts.push_back(normal.x);
         verts.push_back(normal.y);
@@ -1223,4 +1225,39 @@ void ChunkSystem::onEntityAdded(cro::Entity entity)
     {
         m_chunkEntities.insert(std::make_pair(entity.getComponent<ChunkComponent>().chunkPos, entity));
     }
+}
+
+bool ChunkSystem::VoxelFace::canAppend(const VoxelFace& other, std::int32_t direction)
+{
+    auto diff = other.position - position;
+    switch (direction)
+    {
+    default: break;
+    case VoxelFace::North:
+        //should be pos X, new face to the right
+        std::cout << "North: " << diff.x << ", " << diff.y << ", " << diff.z << "\n";
+        break;
+    case VoxelFace::South:
+        //diff is pos X, but looking from other
+        //direction means new face is on the left
+        std::cout << "South: " << diff.x << ", " << diff.y << ", " << diff.z << "\n";
+        break;
+    case VoxelFace::East:
+        //diff is pos Z, new face on left
+        std::cout << "East: " << diff.x << ", " << diff.y << ", " << diff.z << "\n";
+        break;
+    case VoxelFace::West:
+        //diff is pos Z, new face on right
+        std::cout << "West: " << diff.x << ", " << diff.y << ", " << diff.z << "\n";
+        break;
+    case VoxelFace::Top:
+        //moves pos x, but new face is on left
+        //because the view is flipped vertically
+        break;
+    case VoxelFace::Bottom:
+        //also pos X with new face on left, but not flipped
+        break;
+    }
+
+    return (other.id == id && other.visible == visible);
 }
