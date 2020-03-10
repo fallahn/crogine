@@ -320,8 +320,9 @@ void ChunkSystem::threadFunc()
             std::vector<float> vertexData;
             std::vector<std::uint32_t> solidIndices;
             std::vector<std::uint32_t> waterIndices;
-            generateChunkMesh(*chunk, vertexData, solidIndices, waterIndices);
-            //generateNaiveMesh(*chunk, vertexData, solidIndices, waterIndices);
+            //generateChunkMesh(*chunk, vertexData, solidIndices, waterIndices);
+            generateNaiveMesh(*chunk, vertexData, solidIndices, waterIndices);
+            //generateDebugMesh(*chunk, vertexData, solidIndices);
 
 
             //lock output
@@ -646,120 +647,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
     //greedy meshing from http://0fps.wordpress.com/2012/06/30/meshing-in-a-minecraft-game/
     //and https://github.com/roboleary/GreedyMesh/blob/master/src/mygame/Main.java
 
-    //positions are BL, BR, TL, TR
-    auto addQuad = [&](std::vector<glm::vec3> positions, const std::array<float, 4u>& ao, float width, float height, VoxelFace face, bool backface) mutable
-    {
-        //add indices to the index array, remembering to offset into the current VBO
-        std::array<std::int32_t, 6> localIndices;
-        if (backface)
-        {
-            localIndices = { 2,0,1,  1,3,2 };
-        }
-        else
-        {
-            localIndices = { 2,3,1,  1,0,2 };
-        }
-
-        std::int32_t indexOffset = static_cast<std::int32_t>(verts.size() / ChunkMeshBuilder::getVertexComponentCount());
-        for (auto& i : localIndices)
-        {
-            i += indexOffset;
-        }
-
-
-        //for now we're colouring types, eventually this
-        //will be the offset into the atlas and we'll use the w/h as UVs
-        //to repeat the correct texture in the shader.
-        glm::vec3 colour(1.f, 0.f, 0.f);
-        //reading this without a lock should be OK as this data
-        //is only written to on construction
-        if (face.id == m_voxelData.getID(vx::CommonType::Dirt))
-        {
-            colour = { 0.4f, 0.2f, 0.05f };
-        }
-        else if (face.id == m_voxelData.getID(vx::CommonType::Grass))
-        {
-            colour = { 0.1f, 0.7f, 0.1f };
-        }
-        else if (face.id == m_voxelData.getID(vx::CommonType::Sand))
-        {
-            colour = { 0.98f, 0.99f, 0.8f };
-        }
-        else if (face.id == m_voxelData.getID(vx::CommonType::Stone))
-        {
-            colour = { 0.7f, 0.7f, 0.7f };
-        }
-        else if (face.id == m_voxelData.getID(vx::CommonType::Water))
-        {
-            colour = { 0.07f, 0.17f, 0.87f };
-        }
-
-        if (face.id == m_voxelData.getID(vx::CommonType::Water))
-        {
-            waterIndices.insert(waterIndices.end(), localIndices.begin(), localIndices.end());
-        }
-        else
-        {
-            solidIndices.insert(solidIndices.end(), localIndices.begin(), localIndices.end());
-        }
-
-
-        //remember our vert order...
-        std::array<glm::vec2, 4u> UVs =
-        {
-            glm::vec2(0.f, height),
-            glm::vec2(width, height),
-            glm::vec2(0.f),
-            glm::vec2(width, 0.f)
-        };
-
-        glm::vec3 normal = glm::vec3(0.f);
-        switch (face.direction)
-        {
-        case VoxelFace::North:
-            normal.z = -1.f;
-            break;
-        case VoxelFace::South:
-            normal.z = 1.f;
-            break;
-        case VoxelFace::East:
-            normal.x = 1.f;
-            break;
-        case VoxelFace::West:
-            normal.x = -1.f;
-            break;
-        case VoxelFace::Top:
-            normal.y = 1.f;
-            break;
-        case VoxelFace::Bottom:
-            normal.y = -1.f;
-            break;
-        }
-
-        //NOTE: when adding more attributes
-        //remember to update the component count in
-        //the mesh builder class.
-        for (auto i = 0u; i < positions.size(); ++i)
-        {
-            verts.push_back(positions[i].x);
-            verts.push_back(positions[i].y - face.offset);
-            verts.push_back(positions[i].z);
-
-            verts.push_back(colour.r);
-            verts.push_back(colour.g);
-            verts.push_back(colour.b);
-            verts.push_back(ao[i]);
-
-            verts.push_back(normal.x);
-            verts.push_back(normal.y);
-            verts.push_back(normal.z);
-
-            verts.push_back(UVs[i].x);
-            verts.push_back(UVs[i].y);
-        }
-    };
-
-
     //flip flop loop - means we can run verts in reverse order when backfacing
     for (bool backface = true, b = false; b != backface; backface = (backface && b), b = !b)
     {
@@ -895,7 +782,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                                 glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2]), //TL
                                 glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]) //TR
                             };
-                            addQuad(positions, aoValues, static_cast<float>(width), static_cast<float>(height), *faceMask[maskIndex], backface);
+                            addQuad(verts, solidIndices, waterIndices, positions, aoValues, static_cast<float>(width), static_cast<float>(height), *faceMask[maskIndex], backface);
 
 
                             //reset any faces used
@@ -924,147 +811,135 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
 
 void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& verts, std::vector<std::uint32_t>& solidIndices, std::vector<std::uint32_t>& waterIndices)
 {
-    return;
-    for (auto z = 0; z < /*WorldConst::ChunkSize*/4; ++z)
+    for (bool backface = true, b = false; b != backface; backface = (backface && b), b = !b)
     {
-        for (auto y = 0; y < /*WorldConst::ChunkSize*/4; ++y)
+        //3 directions which are performed for both front and backfacing
+        //providing a total of 6 directions
+        for (auto direction = 0; direction < 3; direction++)
         {
-            for (auto x = 0; x < /*WorldConst::ChunkSize*/4; ++x)
+            std::int32_t u = (direction + 1) % 3;
+            std::int32_t v = (direction + 2) % 3;
+
+            std::array<std::int32_t, 3u> x = { 0,0,0 };
+            std::array<std::int32_t, 3u> q = { 0,0,0 };
+            q[direction] = 1;
+
+            std::int32_t currentSide = -1;
+            std::int32_t maxSlice = WorldConst::ChunkSize; //on the Y plane slices don't process any air/empty layers
+            switch (direction)
             {
-                for (auto i = 0; i < 6; ++i)
+            case 0:
+                currentSide = (backface) ? VoxelFace::West : VoxelFace::East;
+                break;
+            case 1:
+                currentSide = (backface) ? VoxelFace::Bottom : VoxelFace::Top;
+                maxSlice = chunk.getHighestPoint() + 1;
+                break;
+            case 2:
+                currentSide = (backface) ? VoxelFace::South : VoxelFace::North;
+                break;
+            }
+
+            //move across the current direction/plane front to back
+            for (x[direction] = -1; x[direction] < maxSlice;)
+            {
+                //this is the collection of faces grouped per side
+                std::vector<std::optional<VoxelFace>> faceMask(WorldConst::ChunkArea);
+                std::fill(faceMask.begin(), faceMask.end(), std::nullopt);
+                std::size_t maskIndex = 0;
+
+                for (x[v] = 0; x[v] < WorldConst::ChunkSize; x[v]++)
                 {
-                    auto face = getFace(chunk, { x,y,z }, VoxelFace::Side(i));
-                    if (face.visible)
+                    for (x[u] = 0; x[u] < WorldConst::ChunkSize; x[u]++)
                     {
-                        calcAO(face, { x,y,z });
+                        auto positionA = glm::ivec3(x[0], x[1], x[2]);
+                        auto positionB = glm::ivec3(x[0] + q[0], x[1] + q[1], x[2] + q[2]);
 
-                        std::array<std::int32_t, 6> localIndices;
-                        if (i == VoxelFace::North || i == VoxelFace::Bottom || i == VoxelFace::West)
-                        {
-                            localIndices = { 2,0,1,  1,3,2 };
-                        }
-                        else
-                        {
-                            localIndices = { 2,3,1,  1,0,2 };
-                        }
+                        std::optional<VoxelFace> faceA = (x[direction] >= 0) ?
+                            std::optional<VoxelFace>(getFace(chunk, positionA, (VoxelFace::Side)currentSide)) : std::nullopt;
 
-                        std::int32_t indexOffset = static_cast<std::int32_t>(verts.size() / ChunkMeshBuilder::getVertexComponentCount());
-                        for (auto& i : localIndices)
-                        {
-                            i += indexOffset;
-                        }
+                        std::optional<VoxelFace> faceB = (x[direction] < (WorldConst::ChunkSize - 1)) ?
+                            std::optional<VoxelFace>(getFace(chunk, positionB, (VoxelFace::Side)currentSide)) : std::nullopt;
 
-                        glm::vec3 colour(1.f, 0.f, 0.f);
-                        if (face.id == m_voxelData.getID(vx::CommonType::Dirt))
-                        {
-                            colour = { 0.4f, 0.2f, 0.05f };
-                        }
-                        else if (face.id == m_voxelData.getID(vx::CommonType::Grass))
-                        {
-                            colour = { 0.1f, 0.7f, 0.1f };
-                        }
-                        else if (face.id == m_voxelData.getID(vx::CommonType::Sand))
-                        {
-                            colour = { 0.98f, 0.99f, 0.8f };
-                        }
-                        else if (face.id == m_voxelData.getID(vx::CommonType::Stone))
-                        {
-                            colour = { 0.7f, 0.7f, 0.7f };
-                        }
-                        else if (face.id == m_voxelData.getID(vx::CommonType::Water))
-                        {
-                            colour = { 0.07f, 0.17f, 0.87f };
-                        }
+                        //calculate the AO values
+                        //TODO we want to save some time here and only calc on the face
+                        //which was added - but we have to do both to be able to compare
+                        //them and know if we need to add the face or not...
+                        if (faceA) calcAO(*faceA, positionA);
+                        if (faceB) calcAO(*faceB, positionB);
 
-                        if (face.id == m_voxelData.getID(vx::CommonType::Water))
-                        {
-                            waterIndices.insert(waterIndices.end(), localIndices.begin(), localIndices.end());
-                        }
-                        else
-                        {
-                            solidIndices.insert(solidIndices.end(), localIndices.begin(), localIndices.end());
-                        }
-
-
-                        //remember our vert order...
-                        std::array<glm::vec2, 4u> UVs =
-                        {
-                            glm::vec2(0.f, 1.f),
-                            glm::vec2(1.f, 1.f),
-                            glm::vec2(0.f),
-                            glm::vec2(1.f, 0.f)
-                        };
-
-                        glm::vec3 normal = glm::vec3(0.f);
                         std::vector<glm::vec3> positions;
+                        std::array<float, 4u> ao = { 1.f,1.f,1.f,1.f };
+                        VoxelFace::Side direction = VoxelFace::North;
+                        glm::ivec3 position(0);
 
-                        switch (face.direction)
+                        if (faceA != std::nullopt && faceB != std::nullopt && (*faceA == *faceB))
                         {
-                        case VoxelFace::North:
-                            normal.z = -1.f;
-                            positions.emplace_back(x, y, z - 1);
-                            positions.emplace_back(x + 1, y, z - 1);
-                            positions.emplace_back(x, y + 1, z - 1);
-                            positions.emplace_back(x + 1, y + 1, z - 1);
-                            break;
-                        case VoxelFace::South:
-                            normal.z = 1.f;
-                            positions.emplace_back(x, y, z);
-                            positions.emplace_back(x + 1, y, z);
-                            positions.emplace_back(x, y + 1, z);
-                            positions.emplace_back(x + 1, y + 1, z);
-                            break;
-                        case VoxelFace::East:
-                            normal.x = 1.f;
-                            positions.emplace_back(x + 1, y, z);
-                            positions.emplace_back(x + 1, y, z - 1);
-                            positions.emplace_back(x + 1, y + 1, z);
-                            positions.emplace_back(x + 1, y + 1, z - 1);
-                            break;
-                        case VoxelFace::West:
-                            normal.x = -1.f;
-                            positions.emplace_back(x, y, z - 1);
-                            positions.emplace_back(x, y, z);
-                            positions.emplace_back(x, y = 1, z - 1);
-                            positions.emplace_back(x, y = 1, z);
-                            break;
-                        case VoxelFace::Top:
-                            normal.y = 1.f;
-                            positions.emplace_back(x, y + 1, z);
-                            positions.emplace_back(x + 1, y + 1, z);
-                            positions.emplace_back(x, y + 1, z - 1);
-                            positions.emplace_back(x + 1, y + 1, z - 1);
-                            break;
-                        case VoxelFace::Bottom:
-                            normal.y = -1.f;
-                            positions.emplace_back(x, y, z - 1);
-                            positions.emplace_back(x + 1, y, z - 1);
-                            positions.emplace_back(x, y, z);
-                            positions.emplace_back(x + 1, y, z);
-                            break;
+                            faceMask[maskIndex] = std::nullopt;
                         }
-                                                
-
-                        for (auto i = 0u; i < positions.size(); ++i)
+                        else
                         {
-                            verts.push_back(positions[i].x);
-                            verts.push_back(positions[i].y - face.offset);
-                            verts.push_back(positions[i].z);
-
-                            verts.push_back(colour.r);
-                            verts.push_back(colour.g);
-                            verts.push_back(colour.b);
-                            verts.push_back(face.ao[i]);
-
-                            verts.push_back(normal.x);
-                            verts.push_back(normal.y);
-                            verts.push_back(normal.z);
-
-                            verts.push_back(UVs[i].x);
-                            verts.push_back(UVs[i].y);
+                            if (backface)
+                            {
+                                faceMask[maskIndex] = faceB;
+                                direction = faceB->direction;
+                                position = positionB;
+                            }
+                            else
+                            {
+                                faceMask[maskIndex] = faceA;
+                                direction = faceA->direction;
+                                position = positionA;
+                            }
                         }
+
+                        if (faceMask[maskIndex] && faceMask[maskIndex]->visible)
+                        {
+                            switch (direction)
+                            {
+                            case VoxelFace::Bottom:
+
+                                break;
+                            case VoxelFace::Top:
+                                positions.emplace_back(position.x, position.y + 1, position.z);
+                                positions.emplace_back(position.x + 1, position.y + 1, position.z);
+                                positions.emplace_back(position.x, position.y + 1, position.z + 1);
+                                positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
+                                break;
+                            case VoxelFace::North:
+                                positions.emplace_back(position.x + 1, position.y, position.z + 1);
+                                positions.emplace_back(position.x, position.y, position.z + 1);
+                                positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
+                                positions.emplace_back(position.x, position.y + 1, position.z + 1);
+                                break;
+                            case VoxelFace::South:
+                                positions.emplace_back(position.x + 1, position.y, position.z);
+                                positions.emplace_back(position.x, position.y, position.z);
+                                positions.emplace_back(position.x + 1, position.y + 1, position.z);
+                                positions.emplace_back(position.x, position.y + 1, position.z);
+                                break;
+                            case VoxelFace::East:
+                                positions.emplace_back(position.x + 1, position.y, position.z);
+                                positions.emplace_back(position.x + 1, position.y, position.z + 1);
+                                positions.emplace_back(position.x + 1, position.y + 1, position.z);
+                                positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
+                                break;
+                            case VoxelFace::West:
+                                positions.emplace_back(position.x, position.y, position.z);
+                                positions.emplace_back(position.x, position.y, position.z + 1);
+                                positions.emplace_back(position.x, position.y + 1, position.z);
+                                positions.emplace_back(position.x, position.y + 1, position.z + 1);
+                                break;
+                            }
+                            if(!positions.empty())
+                            addQuad(verts, solidIndices, waterIndices, positions, faceMask[maskIndex]->ao, 1.f, 1.f, *faceMask[maskIndex], backface);
+                        }
+
+                        maskIndex++;
                     }
                 }
+
+                x[direction]++;
             }
         }
     }
@@ -1105,7 +980,7 @@ void ChunkSystem::generateDebugMesh(const Chunk& chunk, std::vector<float>& vert
                     }
 
 
-                    auto offset = static_cast<std::uint32_t>(vertexData.size() / 8);
+                    auto offset = static_cast<std::uint32_t>(vertexData.size() / ChunkMeshBuilder::getVertexComponentCount());
                     indices.push_back(offset + 1);
                     indices.push_back(offset + 2);
                     indices.push_back(offset);
@@ -1118,35 +993,163 @@ void ChunkSystem::generateDebugMesh(const Chunk& chunk, std::vector<float>& vert
                     vertexData.push_back(colour.r);
                     vertexData.push_back(colour.g);
                     vertexData.push_back(colour.b);
+                    vertexData.push_back(1.f);
+
+                    vertexData.push_back(0.f);
+                    vertexData.push_back(1.f);
+                    vertexData.push_back(0.f);
 
                     vertexData.push_back(0.f);
                     vertexData.push_back(0.f);
                     //
                     vertexData.push_back(position.x);
                     vertexData.push_back(position.y);
-                    vertexData.push_back(position.z + 0.1f);
+                    vertexData.push_back(position.z + 0.9f);
 
                     vertexData.push_back(colour.r);
                     vertexData.push_back(colour.g);
                     vertexData.push_back(colour.b);
+                    vertexData.push_back(1.f);
+
+                    vertexData.push_back(0.f);
+                    vertexData.push_back(1.f);
+                    vertexData.push_back(0.f);
 
                     vertexData.push_back(0.f);
                     vertexData.push_back(0.f);
                     //
 
-                    vertexData.push_back(position.x + 0.1f);
+                    vertexData.push_back(position.x + 0.9f);
                     vertexData.push_back(position.y);
                     vertexData.push_back(position.z);
 
                     vertexData.push_back(colour.r);
                     vertexData.push_back(colour.g);
                     vertexData.push_back(colour.b);
+                    vertexData.push_back(1.f);
+
+                    vertexData.push_back(0.f);
+                    vertexData.push_back(1.f);
+                    vertexData.push_back(0.f);
 
                     vertexData.push_back(0.f);
                     vertexData.push_back(0.f);
                 }
             }
         }
+    }
+}
+
+void ChunkSystem::addQuad(std::vector<float>& verts, std::vector<std::uint32_t>& solidIndices, std::vector<std::uint32_t>& waterIndices,
+    std::vector<glm::vec3> positions, const std::array<float, 4u>& ao, float width, float height, VoxelFace face, bool backface)
+{
+    //add indices to the index array, remembering to offset into the current VBO
+    std::array<std::int32_t, 6> localIndices;
+    if (backface)
+    {
+        localIndices = { 2,0,1,  1,3,2 };
+    }
+    else
+    {
+        localIndices = { 2,3,1,  1,0,2 };
+    }
+
+    std::int32_t indexOffset = static_cast<std::int32_t>(verts.size() / ChunkMeshBuilder::getVertexComponentCount());
+    for (auto& i : localIndices)
+    {
+        i += indexOffset;
+    }
+
+
+    //for now we're colouring types, eventually this
+    //will be the offset into the atlas and we'll use the w/h as UVs
+    //to repeat the correct texture in the shader.
+    glm::vec3 colour(1.f, 0.f, 0.f);
+    //reading this without a lock should be OK as this data
+    //is only written to on construction
+    if (face.id == m_voxelData.getID(vx::CommonType::Dirt))
+    {
+        colour = { 0.4f, 0.2f, 0.05f };
+    }
+    else if (face.id == m_voxelData.getID(vx::CommonType::Grass))
+    {
+        colour = { 0.1f, 0.7f, 0.1f };
+    }
+    else if (face.id == m_voxelData.getID(vx::CommonType::Sand))
+    {
+        colour = { 0.98f, 0.99f, 0.8f };
+    }
+    else if (face.id == m_voxelData.getID(vx::CommonType::Stone))
+    {
+        colour = { 0.7f, 0.7f, 0.7f };
+    }
+    else if (face.id == m_voxelData.getID(vx::CommonType::Water))
+    {
+        colour = { 0.07f, 0.17f, 0.87f };
+    }
+
+    if (face.id == m_voxelData.getID(vx::CommonType::Water))
+    {
+        waterIndices.insert(waterIndices.end(), localIndices.begin(), localIndices.end());
+    }
+    else
+    {
+        solidIndices.insert(solidIndices.end(), localIndices.begin(), localIndices.end());
+    }
+
+
+    //remember our vert order...
+    std::array<glm::vec2, 4u> UVs =
+    {
+        glm::vec2(0.f, height),
+        glm::vec2(width, height),
+        glm::vec2(0.f),
+        glm::vec2(width, 0.f)
+    };
+
+    glm::vec3 normal = glm::vec3(0.f);
+    switch (face.direction)
+    {
+    case VoxelFace::North:
+        normal.z = -1.f;
+        break;
+    case VoxelFace::South:
+        normal.z = 1.f;
+        break;
+    case VoxelFace::East:
+        normal.x = 1.f;
+        break;
+    case VoxelFace::West:
+        normal.x = -1.f;
+        break;
+    case VoxelFace::Top:
+        normal.y = 1.f;
+        break;
+    case VoxelFace::Bottom:
+        normal.y = -1.f;
+        break;
+    }
+
+    //NOTE: when adding more attributes
+    //remember to update the component count in
+    //the mesh builder class.
+    for (auto i = 0u; i < positions.size(); ++i)
+    {
+        verts.push_back(positions[i].x);
+        verts.push_back(positions[i].y - face.offset);
+        verts.push_back(positions[i].z);
+
+        verts.push_back(colour.r);
+        verts.push_back(colour.g);
+        verts.push_back(colour.b);
+        verts.push_back(ao[i]);
+
+        verts.push_back(normal.x);
+        verts.push_back(normal.y);
+        verts.push_back(normal.z);
+
+        verts.push_back(UVs[i].x);
+        verts.push_back(UVs[i].y);
     }
 }
 

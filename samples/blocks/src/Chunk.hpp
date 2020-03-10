@@ -60,7 +60,7 @@ public:
     void setVoxelQ(glm::ivec3, std::uint8_t);
 
     //safe version which returns an ID from neighbouring
-    //chunk of the position is out of bounds
+    //chunk if the position is out of bounds
     std::uint8_t getVoxel(glm::ivec3) const;
 
     void setVoxel(glm::ivec3, std::uint8_t);
