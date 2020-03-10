@@ -917,8 +917,7 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& vert
 
                         std::vector<glm::vec3> positions;
 
-                        VoxelFace::Side direction = VoxelFace::North;
-			LOG("Fix this shadow var!", cro::Logger::Type::Warning);
+                        VoxelFace::Side faceDirection = VoxelFace::North;
                         glm::ivec3 position(0);
 
                         if (faceA != std::nullopt && faceB != std::nullopt && (*faceA == *faceB))
@@ -930,20 +929,20 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& vert
                             if (backface)
                             {
                                 faceMask[maskIndex] = faceB;
-                                direction = faceB->direction;
+                                faceDirection = faceB->direction;
                                 position = positionB;
                             }
                             else
                             {
                                 faceMask[maskIndex] = faceA;
-                                direction = faceA->direction;
+                                faceDirection = faceA->direction;
                                 position = positionA;
                             }
                         }
 
                         if (faceMask[maskIndex] && faceMask[maskIndex]->visible)
                         {
-                            switch (direction)
+                            switch (faceDirection)
                             {
                             case VoxelFace::Bottom:
                                 positions.emplace_back(position.x + 1, position.y, position.z + 1);
