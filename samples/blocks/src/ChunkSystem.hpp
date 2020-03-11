@@ -90,7 +90,7 @@ private:
     void updateMesh();
 
     std::unique_ptr<std::mutex> m_mutex;
-    std::array<std::unique_ptr<std::thread>, 1u> m_greedyThreads;
+    std::array<std::unique_ptr<std::thread>, 1u> m_meshThreads;
     std::atomic_bool m_threadRunning;
     void threadFunc();
 
@@ -100,6 +100,7 @@ private:
         std::vector<float> vertexData;
         std::vector<std::uint32_t> solidIndices;
         std::vector<std::uint32_t> waterIndices;
+        std::vector<std::uint32_t> debugIndices;
         glm::ivec3 position = glm::ivec3(0);
     };
     std::queue<VertexOutput> m_outputQueue;
@@ -134,12 +135,11 @@ private:
     };
     VoxelFace getFace(const Chunk&, glm::ivec3, VoxelFace::Side);
     void calcAO(const Chunk&, VoxelFace&, glm::ivec3);
-    void generateChunkMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&, std::vector<std::uint32_t>&);
-    void generateNaiveMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&, std::vector<std::uint32_t>&);
-    void generateDebugMesh(const Chunk&, std::vector<float>&, std::vector<std::uint32_t>&);
+    void generateChunkMesh(const Chunk&, VertexOutput&);
+    void generateNaiveMesh(const Chunk&, VertexOutput&);
+    void generateDebugMesh(const Chunk&, VertexOutput&);
 
-    void addQuad(std::vector<float>&, std::vector<std::uint32_t>&, std::vector<std::uint32_t>&,
-        std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, VoxelFace face);
+    void addQuad(VertexOutput&, std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, VoxelFace face);
 
     void onEntityRemoved(cro::Entity);
     void onEntityAdded(cro::Entity);

@@ -35,7 +35,7 @@ namespace MaterialID
     {
         ChunkSolid,
         ChunkWater,
-
+        ChunkDebug,
 
         Count
     };
@@ -63,7 +63,8 @@ namespace ShaderID
 {
     enum
     {
-        Chunk
+        Chunk,
+        ChunkDebug
     };
 }
 

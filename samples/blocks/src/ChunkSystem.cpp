@@ -117,20 +117,30 @@ namespace
                     colour *= 0.9;
                 }
 
-                float light = v_ao + max(0.15 * dot(v_normal, vec3(1.0)), 0.0);
+                float light = pow(v_ao, 0.9);// + max(0.15 * dot(v_normal, vec3(1.0)), 0.0);
                 FRAG_OUT = mix(FogColour, colour * light, fogFactor);
             })";
 
-    const std::string FragmentWater = 
+    const std::string VertexDebug = 
         R"(
-            VARYING_IN LOW vec3 v_colour;
-            VARYING_IN MED vec2 v_texCoord;
+            ATTRIBUTE vec4 a_position;
 
+            uniform mat4 u_worldViewMatrix;
+            uniform mat4 u_projectionMatrix;
+
+            void main()
+            {
+                gl_Position = u_projectionMatrix * u_worldViewMatrix * a_position;
+            })";
+
+    const std::string FragmentDebug = 
+        R"(
+            uniform vec4 u_colour;
             OUTPUT
 
             void main()
             {
-                FRAG_OUT = vec4(v_colour, 0.2);
+                FRAG_OUT = u_colour;
             })";
 }
 
@@ -154,11 +164,18 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
         rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_alpha", 0.5f);
     }
 
+    if (rc.shaders.preloadFromString(VertexDebug, FragmentDebug, ShaderID::ChunkDebug))
+    {
+        m_materialIDs[MaterialID::ChunkDebug] = rc.materials.add(rc.shaders.get(ShaderID::ChunkDebug));
+        rc.materials.get(m_materialIDs[MaterialID::ChunkDebug]).setProperty("u_colour", cro::Colour::Red());
+        //TODO add this to a console tab or something so we can toggle it
+        glCheck(glLineWidth(5.f));
+    }
 
-    //thread for greedy meshing
+    //thread for meshing
     m_mutex = std::make_unique<std::mutex>();
 
-    for (auto& thread : m_greedyThreads)
+    for (auto& thread : m_meshThreads)
     {
         thread = std::make_unique<std::thread>(&ChunkSystem::threadFunc, this);
     }
@@ -170,7 +187,7 @@ ChunkSystem::~ChunkSystem()
 {
     m_threadRunning = false;
 
-    for (auto& thread : m_greedyThreads)
+    for (auto& thread : m_meshThreads)
     {
         thread->join();
     }
@@ -236,11 +253,14 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 CRO_ASSERT(meshID > 0, "Mesh generation failed");
                 auto& mesh = m_resources.meshes.getMesh(meshID);
 
-                auto& material = m_resources.materials.get(m_materialIDs[MaterialID::ChunkSolid]);
+                auto material = m_resources.materials.get(m_materialIDs[MaterialID::ChunkSolid]);
                 entity.addComponent<cro::Model>(mesh, material);
 
-                auto& waterMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkWater]);
+                auto waterMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkWater]);
                 entity.getComponent<cro::Model>().setMaterial(1, waterMaterial);
+
+                auto debugMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
+                entity.getComponent<cro::Model>().setMaterial(2, debugMaterial);
             }
         }
     }
@@ -249,40 +269,42 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
 //private
 void ChunkSystem::updateMesh()
 {
-    std::vector<float> vertexData;
-    std::vector<std::uint32_t> solidIndices;
-    std::vector<std::uint32_t> waterIndices;
-    glm::ivec3 position = glm::ivec3(0);
+    VertexOutput vertexOutput;
 
     m_mutex->lock();
     if (!m_outputQueue.empty())
     {
         auto& front = m_outputQueue.front();
-        position = front.position;
-        vertexData.swap(front.vertexData);
-        solidIndices.swap(front.solidIndices);
-        waterIndices.swap(front.waterIndices);
+        vertexOutput.position = front.position;
+        vertexOutput.vertexData.swap(front.vertexData);
+        vertexOutput.solidIndices.swap(front.solidIndices);
+        vertexOutput.waterIndices.swap(front.waterIndices);
+        vertexOutput.debugIndices.swap(front.debugIndices);
         m_outputQueue.pop();
     }
     m_mutex->unlock();
 
-    if (!vertexData.empty() && (!solidIndices.empty() || !waterIndices.empty()))
+    if (!vertexOutput.vertexData.empty() && (!vertexOutput.solidIndices.empty() || !vertexOutput.waterIndices.empty()))
     {
-        auto entity = m_chunkEntities[position];
+        auto entity = m_chunkEntities[vertexOutput.position];
         auto& meshData = entity.getComponent<cro::Model>().getMeshData();
 
-        meshData.vertexCount = vertexData.size() / (meshData.vertexSize / sizeof(float));
+        meshData.vertexCount = vertexOutput.vertexData.size() / (meshData.vertexSize / sizeof(float));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-        glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, vertexOutput.vertexData.size() * sizeof(float), vertexOutput.vertexData.data(), GL_DYNAMIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-        meshData.indexData[0].indexCount = static_cast<std::uint32_t>(solidIndices.size());
+        meshData.indexData[0].indexCount = static_cast<std::uint32_t>(vertexOutput.solidIndices.size());
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));
-        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, solidIndices.size() * sizeof(std::uint32_t), solidIndices.data(), GL_DYNAMIC_DRAW));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.solidIndices.size() * sizeof(std::uint32_t), vertexOutput.solidIndices.data(), GL_DYNAMIC_DRAW));
 
-        meshData.indexData[1].indexCount = static_cast<std::uint32_t>(waterIndices.size());
+        meshData.indexData[1].indexCount = static_cast<std::uint32_t>(vertexOutput.waterIndices.size());
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[1].ibo));
-        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, waterIndices.size() * sizeof(std::uint32_t), waterIndices.data(), GL_DYNAMIC_DRAW));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.waterIndices.size() * sizeof(std::uint32_t), vertexOutput.waterIndices.data(), GL_DYNAMIC_DRAW));
+
+        meshData.indexData[2].indexCount = static_cast<std::uint32_t>(vertexOutput.debugIndices.size());
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[2].ibo));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.debugIndices.size() * sizeof(std::uint32_t), vertexOutput.debugIndices.data(), GL_DYNAMIC_DRAW));
     }
 }
 
@@ -317,12 +339,10 @@ void ChunkSystem::threadFunc()
         //if input do work
         if (chunk)
         {
-            std::vector<float> vertexData;
-            std::vector<std::uint32_t> solidIndices;
-            std::vector<std::uint32_t> waterIndices;
-            generateChunkMesh(*chunk, vertexData, solidIndices, waterIndices);
-            //generateNaiveMesh(*chunk, vertexData, solidIndices, waterIndices);
-            //generateDebugMesh(*chunk, vertexData, solidIndices);
+            VertexOutput vertexOutput;
+            generateChunkMesh(*chunk, vertexOutput);
+            //generateNaiveMesh(*chunk, vertexOutput);
+            //generateDebugMesh(*chunk, vertexOutput);
 
 
             //lock output
@@ -331,9 +351,10 @@ void ChunkSystem::threadFunc()
             //swap results
             auto& result = m_outputQueue.emplace();
             result.position = position;
-            result.vertexData.swap(vertexData);
-            result.solidIndices.swap(solidIndices);
-            result.waterIndices.swap(waterIndices);
+            result.vertexData.swap(vertexOutput.vertexData);
+            result.solidIndices.swap(vertexOutput.solidIndices);
+            result.waterIndices.swap(vertexOutput.waterIndices);
+            result.debugIndices.swap(vertexOutput.debugIndices);
 
             //unlock output
             m_mutex->unlock();
@@ -646,7 +667,7 @@ ChunkSystem::VoxelFace ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 posit
     return face;
 }
 
-void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& verts, std::vector<std::uint32_t>& solidIndices, std::vector<std::uint32_t>& waterIndices)
+void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
 {
     //greedy meshing from http://0fps.wordpress.com/2012/06/30/meshing-in-a-minecraft-game/
     //and https://github.com/roboleary/GreedyMesh/blob/master/src/mygame/Main.java
@@ -729,13 +750,14 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                             && faceMask[maskIndex]->visible)
                         {
                             std::array<std::uint8_t, 4u> aoValues = {3,3,3,3};
-                            //TODO check the current side to see which initial AO val to set
+                            
+                            aoValues[0] = faceMask[maskIndex]->ao[0];
 
                             auto prevFace = *faceMask[maskIndex];
 
                             //calc the merged width/height
-                            std::int32_t width = 0;
-                            for (width = 1;
+                            std::int32_t width = 1;
+                            for (;
                                 i + width < WorldConst::ChunkSize 
                                 && faceMask[maskIndex + width] != std::nullopt 
                                 && prevFace.canAppend(*faceMask[maskIndex + width], currentSide);
@@ -743,24 +765,41 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                             {
                                 prevFace = *faceMask[maskIndex + width];
                             }
+                            auto endFace = *faceMask[maskIndex + (width - 1)];
+                            aoValues[1] = endFace.ao[1];
 
                             bool complete = false;
                             std::int32_t height = 0;
+                            prevFace = *faceMask[maskIndex];
                             for (height = 1; j + height < WorldConst::ChunkSize; ++height)
                             {
+                                auto rowStart = maskIndex + ((height - 1) * WorldConst::ChunkSize);
+
                                 for (auto k = 0; k < width; ++k)
                                 {
                                     auto idx = maskIndex + k + height * WorldConst::ChunkSize;
 
                                     if (faceMask[idx] == std::nullopt
-                                        //|| !faceMask[maskIndex]->canAppend(*faceMask[idx], currentSide)
-                                        || (*faceMask[maskIndex] != *faceMask[idx]))
+                                        || !prevFace.canAppend(*faceMask[idx], currentSide)
+                                        /*|| (*faceMask[maskIndex] != *faceMask[idx])*/)
                                     { 
-                                        //TODO above should be prev face appending, not starting face
+
+                                        aoValues[0] = faceMask[rowStart]->ao[0];
+                                        aoValues[1] = faceMask[rowStart + (width - 1)]->ao[1];
+
                                         complete = true;
                                         break;
                                     }
+                                    else
+                                    {
+                                        prevFace = *faceMask[idx];
+                                    }
                                 }
+                                
+                                //move the prev face to the beginning of the row
+                                //so next iter we check canAppend() vertically
+                                prevFace = *faceMask[rowStart + WorldConst::ChunkSize];
+
 
                                 if (complete)
                                 {
@@ -829,7 +868,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
                                 };
                                 break;
                             }
-                            addQuad(verts, solidIndices, waterIndices, positions, aoValues, static_cast<float>(width), static_cast<float>(height), *faceMask[maskIndex]);
+                            addQuad(output, positions, aoValues, static_cast<float>(width), static_cast<float>(height), *faceMask[maskIndex]);
 
 
                             //reset any faces used
@@ -856,7 +895,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, std::vector<float>& vert
     }
 }
 
-void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& verts, std::vector<std::uint32_t>& solidIndices, std::vector<std::uint32_t>& waterIndices)
+void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
 {
     for (bool backface = true, b = false; b != backface; backface = (backface && b), b = !b)
     {
@@ -983,7 +1022,7 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& vert
                                 break;
                             }
                             if(!positions.empty())
-                            addQuad(verts, solidIndices, waterIndices, positions, faceMask[maskIndex]->ao, 1.f, 1.f, *faceMask[maskIndex]);
+                            addQuad(output, positions, faceMask[maskIndex]->ao, 1.f, 1.f, *faceMask[maskIndex]);
                         }
 
                         maskIndex++;
@@ -996,8 +1035,11 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, std::vector<float>& vert
     }
 }
 
-void ChunkSystem::generateDebugMesh(const Chunk& chunk, std::vector<float>& vertexData, std::vector<std::uint32_t>& indices)
+void ChunkSystem::generateDebugMesh(const Chunk& chunk, VertexOutput& output)
 {
+    auto& indices = output.solidIndices;
+    auto& vertexData = output.vertexData;
+
     using namespace WorldConst;
     for (auto y = 0; y < ChunkSize; ++y)
     {
@@ -1031,7 +1073,7 @@ void ChunkSystem::generateDebugMesh(const Chunk& chunk, std::vector<float>& vert
                     }
 
 
-                    auto offset = static_cast<std::uint32_t>(vertexData.size() / ChunkMeshBuilder::getVertexComponentCount());
+                    auto offset = static_cast<std::uint32_t>(output.vertexData.size() / ChunkMeshBuilder::getVertexComponentCount());
                     indices.push_back(offset + 1);
                     indices.push_back(offset + 2);
                     indices.push_back(offset);
@@ -1091,18 +1133,40 @@ void ChunkSystem::generateDebugMesh(const Chunk& chunk, std::vector<float>& vert
     }
 }
 
-void ChunkSystem::addQuad(std::vector<float>& verts, std::vector<std::uint32_t>& solidIndices, std::vector<std::uint32_t>& waterIndices,
-    std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, VoxelFace face)
+void ChunkSystem::addQuad(VertexOutput& output, std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, VoxelFace face)
 {
     //add indices to the index array, remembering to offset into the current VBO
     std::array<std::int32_t, 6> localIndices = { 2,0,1,  1,3,2 };
 
-    std::int32_t indexOffset = static_cast<std::int32_t>(verts.size() / ChunkMeshBuilder::getVertexComponentCount());
+    //switch tri direction to maintain ao interp artifacting symmetry
+    static const std::array<float, 4u> aoLevels = { 0.25f, 0.6f, 0.8f, 1.f };
+    if (aoLevels[ao[2]] + aoLevels[ao[1]] < aoLevels[ao[0]] + aoLevels[ao[3]])
+    {
+        localIndices = { 3,0,1, 2,0,3 };
+    }
+
+    //update the index output
+    std::int32_t indexOffset = static_cast<std::int32_t>(output.vertexData.size() / ChunkMeshBuilder::getVertexComponentCount());
     for (auto& i : localIndices)
     {
         i += indexOffset;
     }
 
+    std::array<std::uint32_t, 8u> debugIndices = { 0, 1, 1, 3, 3, 2, 2, 0 };
+    for (auto& i : debugIndices)
+    {
+        i += indexOffset;
+    }
+
+    if (face.id == m_voxelData.getID(vx::CommonType::Water))
+    {
+        output.waterIndices.insert(output.waterIndices.end(), localIndices.begin(), localIndices.end());
+    }
+    else
+    {
+        output.solidIndices.insert(output.solidIndices.end(), localIndices.begin(), localIndices.end());
+    }
+    output.debugIndices.insert(output.debugIndices.end(), debugIndices.begin(), debugIndices.end());
 
     //for now we're colouring types, eventually this
     //will be the offset into the atlas and we'll use the w/h as UVs
@@ -1130,16 +1194,6 @@ void ChunkSystem::addQuad(std::vector<float>& verts, std::vector<std::uint32_t>&
     {
         colour = { 0.07f, 0.17f, 0.87f };
     }
-
-    if (face.id == m_voxelData.getID(vx::CommonType::Water))
-    {
-        waterIndices.insert(waterIndices.end(), localIndices.begin(), localIndices.end());
-    }
-    else
-    {
-        solidIndices.insert(solidIndices.end(), localIndices.begin(), localIndices.end());
-    }
-
 
     //remember our vert order...
     std::array<glm::vec2, 4u> UVs =
@@ -1181,28 +1235,26 @@ void ChunkSystem::addQuad(std::vector<float>& verts, std::vector<std::uint32_t>&
     //    glm::vec3(0.f, 0.f, 1.f)
     //};
 
-    static const std::array<float, 4u> aoLevels = { 0.15f, 0.6f, 0.8f, 1.f };
-
     //NOTE: when adding more attributes
     //remember to update the component count in
     //the mesh builder class.
     for (auto i = 0u; i < positions.size(); ++i)
     {
-        verts.push_back(positions[i].x);
-        verts.push_back(positions[i].y - face.offset);
-        verts.push_back(positions[i].z);
+        output.vertexData.push_back(positions[i].x);
+        output.vertexData.push_back(positions[i].y - face.offset);
+        output.vertexData.push_back(positions[i].z);
 
-        verts.push_back(colour.r);
-        verts.push_back(colour.g);
-        verts.push_back(colour.b);
-        verts.push_back(aoLevels[ao[i]]);
+        output.vertexData.push_back(colour.r);
+        output.vertexData.push_back(colour.g);
+        output.vertexData.push_back(colour.b);
+        output.vertexData.push_back(aoLevels[ao[i]]);
 
-        verts.push_back(normal.x);
-        verts.push_back(normal.y);
-        verts.push_back(normal.z);
+        output.vertexData.push_back(normal.x);
+        output.vertexData.push_back(normal.y);
+        output.vertexData.push_back(normal.z);
 
-        verts.push_back(UVs[i].x);
-        verts.push_back(UVs[i].y);
+        output.vertexData.push_back(UVs[i].x);
+        output.vertexData.push_back(UVs[i].y);
     }
 }
 
@@ -1229,35 +1281,139 @@ void ChunkSystem::onEntityAdded(cro::Entity entity)
 
 bool ChunkSystem::VoxelFace::canAppend(const VoxelFace& other, std::int32_t direction)
 {
-    auto diff = other.position - position;
-    switch (direction)
-    {
-    default: break;
-    case VoxelFace::North:
-        //should be pos X, new face to the right
-        std::cout << "North: " << diff.x << ", " << diff.y << ", " << diff.z << "\n";
-        break;
-    case VoxelFace::South:
-        //diff is pos X, but looking from other
-        //direction means new face is on the left
-        std::cout << "South: " << diff.x << ", " << diff.y << ", " << diff.z << "\n";
-        break;
-    case VoxelFace::East:
-        //diff is pos Z, new face on left
-        std::cout << "East: " << diff.x << ", " << diff.y << ", " << diff.z << "\n";
-        break;
-    case VoxelFace::West:
-        //diff is pos Z, new face on right
-        std::cout << "West: " << diff.x << ", " << diff.y << ", " << diff.z << "\n";
-        break;
-    case VoxelFace::Top:
-        //moves pos x, but new face is on left
-        //because the view is flipped vertically
-        break;
-    case VoxelFace::Bottom:
-        //also pos X with new face on left, but not flipped
-        break;
-    }
+    //TODO refactor this into something more coherant
+    //for instance hide the nasty reinterpret_cast by converting
+    //the ao values to a bitmask for comparing several values at once
 
-    return (other.id == id && other.visible == visible);
+    const std::uint8_t NoLight = 3;
+    bool append = false;
+    auto diff = other.position - position;
+
+    std::uint32_t aoMask = *reinterpret_cast<std::uint32_t*>(ao.data());
+    std::uint32_t otherAoMask = *reinterpret_cast<const std::uint32_t*>(other.ao.data());
+
+    //only join if the tiles both have ao
+    if (aoMask != 0
+        && otherAoMask != 0)
+    {
+        switch (direction)
+        {
+        default: break;
+        case VoxelFace::North:
+            //should be pos X, new face to the right
+            /*
+            2---3    2---3
+            | t | -> | o |
+            0---1    0---1
+            t = this o = other
+            */
+            if (diff.x == 1)
+            {
+                //at least one joining vert should have ao
+                if (ao[1] != NoLight || ao[3] != NoLight) //these light levels could get confusing without a name
+                {
+                    append = (ao[1] == other.ao[0] && ao[3] == other.ao[2]);
+                }
+            }
+
+            /*
+            This is moving up the face
+
+            2---3
+            | o |
+            0---1
+              ^
+            2---3
+            | t |
+            0---1
+            */
+            else if (diff.y == 1
+                && (ao[2] != NoLight || ao[3] != NoLight))
+            {
+                append = (ao[2] == other.ao[0] && ao[3] == other.ao[1]);
+            }
+            break;
+        case VoxelFace::South:
+            //diff is pos X, but looking from other
+            //direction means new face is on the left
+
+            /*
+            3---2    3---2
+            | t | -> | o |
+            1---0    1---0
+            t = this o = other
+            */
+            if (diff.x == 1
+                && (ao[2] != NoLight || ao[0] != NoLight))
+            {
+                append = (ao[2] == other.ao[3] && ao[0] == other.ao[1]);
+            }
+            else if (diff.y == 1
+                && (ao[2] != NoLight || ao[3] != NoLight))//moving up the face
+            {
+                append = (ao[2] == other.ao[0] && ao[3] == other.ao[1]);
+            }
+            break;
+        case VoxelFace::East:
+            //diff is pos Z, new face on left
+            if (diff.z == 1
+                && (ao[2] != NoLight || ao[0] != NoLight))
+            {
+                append = (ao[2] == other.ao[3] && ao[0] == other.ao[1]);
+            }
+            else if (diff.y == 1
+                && (ao[2] != NoLight || ao[3] != NoLight))//moving up the face
+            {
+                append = (ao[2] == other.ao[0] && ao[3] == other.ao[1]);
+            }
+            break;
+        case VoxelFace::West:
+            //diff is pos Z, new face on right
+            if (diff.z == 1
+                && (ao[1] != NoLight || ao[3] != NoLight))
+            {
+                append = (ao[1] == other.ao[0] && ao[3] == other.ao[2]);
+            }
+            else if (diff.y == 1
+                && (ao[2] != NoLight || ao[3] != NoLight))//moving up the face
+            {
+                append = (ao[2] == other.ao[0] && ao[3] == other.ao[1]);
+            }
+            break;
+        case VoxelFace::Top:
+            //moves pos x, but new face is on left
+            //because the view is flipped vertically
+            if (diff.x == 1
+                && (ao[1] != NoLight || ao[3] != NoLight))
+            {
+                append = (ao[1] == other.ao[0] && ao[3] == other.ao[2]);
+            }
+            else if (diff.z == 1
+                && (ao[2] != NoLight || ao[3] != NoLight))//moving up the face
+            {
+                append = (ao[2] == other.ao[0] && ao[3] == other.ao[1]);
+            }
+            break;
+        case VoxelFace::Bottom:
+            //also pos X with new face on left, but not flipped
+            if (diff.x == 1
+                && (ao[2] != NoLight || ao[0] != NoLight))
+            {
+                append = (ao[2] == other.ao[3] && ao[0] == other.ao[1]);
+            }
+            else if (diff.z == 1
+                && (ao[2] != NoLight || ao[3] != NoLight))//moving up the face
+            {
+                append = (ao[2] == other.ao[0] && ao[3] == other.ao[1]);
+            }
+            break;
+        }
+    }
+    //or both have no ao
+    else if (aoMask + otherAoMask == 0)
+    {
+        append = true;
+    }
+    //return false;
+    return (other.id == id && other.visible == visible && append);
 }
