@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/gui/Gui.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
 #include <optional>
@@ -166,9 +167,14 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
 
     if (rc.shaders.preloadFromString(VertexDebug, FragmentDebug, ShaderID::ChunkDebug))
     {
-        m_materialIDs[MaterialID::ChunkDebug] = rc.materials.add(rc.shaders.get(ShaderID::ChunkDebug));
-        rc.materials.get(m_materialIDs[MaterialID::ChunkDebug]).setProperty("u_colour", cro::Colour::Red());
-        //TODO add this to a console tab or something so we can toggle it
+        auto& shader = rc.shaders.get(ShaderID::ChunkDebug);
+        m_materialIDs[MaterialID::ChunkDebug] = rc.materials.add(shader);
+        rc.materials.get(m_materialIDs[MaterialID::ChunkDebug]).blendMode = cro::Material::BlendMode::Alpha;
+
+        glCheck(glUseProgram(shader.getGLHandle()));
+        glCheck(glUniform4f(shader.getUniformMap().at("u_colour"), 1.f, 0.f, 0.f, 1.f));
+        glCheck(glUseProgram(0));
+
         glCheck(glLineWidth(5.f));
     }
 
@@ -181,6 +187,20 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
     }
 
     m_threadRunning = true;
+
+    registerConsoleTab("Debug", 
+        [&]()
+        {
+            static bool showQuadmesh = true;
+            if (ImGui::Checkbox("Show Quads", &showQuadmesh))
+            {
+                auto colour = showQuadmesh ? cro::Colour::Red() : cro::Colour::Transparent();
+                auto& shader = rc.shaders.get(ShaderID::ChunkDebug);
+                glCheck(glUseProgram(shader.getGLHandle()));
+                glCheck(glUniform4f(shader.getUniformMap().at("u_colour"), colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()));
+                glCheck(glUseProgram(0));
+            }
+        });
 }
 
 ChunkSystem::~ChunkSystem()
@@ -1415,5 +1435,6 @@ bool ChunkSystem::VoxelFace::canAppend(const VoxelFace& other, std::int32_t dire
         append = true;
     }
     //return false;
-    return (other.id == id && other.visible == visible && append);
+    return other.id == id && other.visible == visible;
+    //return (other.id == id && other.visible == visible && append);
 }

@@ -35,6 +35,7 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/network/NetData.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include <mutex>
 #include <memory>
@@ -53,7 +54,7 @@ struct ChunkComponent final
     glm::ivec3 chunkPos = glm::ivec3(0);
 };
 
-class ChunkSystem final : public cro::System
+class ChunkSystem final : public cro::System, public cro::GuiClient
 {
 public:
     ChunkSystem(cro::MessageBus&, cro::ResourceCollection&);
@@ -90,7 +91,7 @@ private:
     void updateMesh();
 
     std::unique_ptr<std::mutex> m_mutex;
-    std::array<std::unique_ptr<std::thread>, 1u> m_meshThreads;
+    std::array<std::unique_ptr<std::thread>, 4u> m_meshThreads;
     std::atomic_bool m_threadRunning;
     void threadFunc();
 
