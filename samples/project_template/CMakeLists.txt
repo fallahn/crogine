@@ -28,13 +28,11 @@ SET (OpenGL_GL_PREFERENCE "GLVND")
 
 find_package(CROGINE REQUIRED)
 find_package(SDL2 REQUIRED)
-find_package(Bullet REQUIRED)
 find_package(OpenGL REQUIRED)
 
 include_directories(
   ${CROGINE_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
-  ${BULLET_INCLUDE_DIRS}
   ${OPENGL_INCLUDE_DIR}
   src)
 
@@ -46,5 +44,4 @@ add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
   ${SDL2_LIBRARY}
-  ${BULLET_LIBRARIES}
   ${OPENGL_LIBRARIES})

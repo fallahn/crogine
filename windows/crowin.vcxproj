@@ -62,7 +62,6 @@
     <ClInclude Include="..\crogine\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\GlobalConsts.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\HashCombine.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\detail\PhysicsDebug.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Types.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Component.hpp" />
@@ -74,7 +73,6 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandTarget.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ParticleEmitter.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\ecs\components\PhysicsObject.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ProjectionMap.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ShadowCaster.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Skeleton.hpp" />
@@ -93,7 +91,6 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\AudioSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CallbackSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CameraSystem.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\ecs\systems\CollisionSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CommandSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DebugInfo.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ParticleSystem.hpp" />
@@ -207,13 +204,11 @@
     <ClCompile Include="..\crogine\src\detail\enet\protocol.c" />
     <ClCompile Include="..\crogine\src\detail\enet\win32.c" />
     <ClCompile Include="..\crogine\src\detail\glad.c" />
-    <ClCompile Include="..\crogine\src\detail\PhysicsDebug.cpp" />
     <ClCompile Include="..\crogine\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\crogine\src\ecs\Component.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\AudioSource.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\ParticleEmitter.cpp" />
-    <ClCompile Include="..\crogine\src\ecs\components\PhysicsObject.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Sprite.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Text.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Transform.cpp" />
@@ -228,7 +223,6 @@
     <ClCompile Include="..\crogine\src\ecs\systems\AudioSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\CallbackSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\CameraSystem.cpp" />
-    <ClCompile Include="..\crogine\src\ecs\systems\CollisionSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\CommandSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\DebugInfo.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ParticleSystem.cpp" />
@@ -447,14 +441,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;CRO_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/w34457 /w34456 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\lib\x64\Debug;$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\debug;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>BulletCollision_Debug.lib;LinearMath_Debug.lib;SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies);openal32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\debug;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies);openal32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|x64'">
@@ -513,15 +507,15 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\lib\x64\Release;$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\release;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>openal32.lib;BulletCollision.lib;LinearMath.lib;SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\release;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>openal32.lib;SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tools|x64'">

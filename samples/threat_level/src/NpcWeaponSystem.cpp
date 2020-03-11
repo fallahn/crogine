@@ -30,9 +30,9 @@ source distribution.
 #include "NpcWeaponSystem.hpp"
 #include "NPCSystem.hpp"
 #include "Messages.hpp"
+#include "PhysicsObject.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>

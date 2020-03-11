@@ -30,12 +30,12 @@ source distribution.
 #include "ItemSystem.hpp"
 #include "Messages.hpp"
 #include "ResourceIDs.hpp"
+#include "PhysicsObject.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
-#include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/util/Random.hpp>
 

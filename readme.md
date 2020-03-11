@@ -20,7 +20,9 @@ Android make files can also be created with the included cmake file, but the too
 #### About
 crogine was built with the aim of creating a flexible ECS based framework to run on mobile devices which support OpenGLES2. crogine supplies renderers for both 2D and 3D GLES2 based graphics, although desktop builds provide an OpenGL 3.3 context.  
 
-crogine uses OpenAL for audio, SDL2 for cross platform parts, and bullet 2.x for collision detection. Full physics support will be added as and when I deem necessary - the aforementioned modularity allows for easy integration of future features. Documentation can be generated with doxygen using the doxy file in common/docs. Eventually I plan to fully document features on the github wiki as and when I have the time. 
+crogine uses OpenAL for audio, and SDL2 for cross platform parts. Documentation can be generated with doxygen using the doxy file in common/docs. Eventually I plan to fully document features on the github wiki as and when I have the time. 
+
+The `extras` directory contains the source for useful systems such as collision detection, which aren't included in the main library.
 
 Portions of this software are copyright (c) 2019 The FreeType Project (www.freetype.org). All rights reserved.  
 Portions of this software are copyright (c) 2019 SFML (www.sfml-dev.org). All rights reserved.

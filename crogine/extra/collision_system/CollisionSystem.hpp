@@ -29,10 +29,11 @@ source distribution.
 
 #pragma once
 
+#include "PhysicsDebug.hpp"
+
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/Renderable.hpp>
-#include <crogine/detail/PhysicsDebug.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <btBulletCollisionCommon.h>
@@ -52,7 +53,7 @@ namespace cro
     of collisions between complex shapes with the option of user defined response or
     physics simulation.
     */
-    class CRO_EXPORT_API CollisionSystem : public cro::System, public Renderable, public GuiClient
+    class CollisionSystem : public cro::System, public Renderable, public GuiClient
     {
     public:
         explicit CollisionSystem(cro::MessageBus& mb);

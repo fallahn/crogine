@@ -30,10 +30,9 @@ source distribution.
 #pragma once
 
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
 
 #include <LinearMath/btIDebugDraw.h>
-
-#include <crogine/detail/glm/mat4x4.hpp>
 
 #include <vector>
 
@@ -43,6 +42,8 @@ namespace cro
     {
         /*!
         \brief Implements the bullet debug drawer
+        This is used for visualisation of the CollisionSystem, and optionally
+        any PhysicsSystems which may use the bullet physics library
         */
         class BulletDebug final : public btIDebugDraw
         {

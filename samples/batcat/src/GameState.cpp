@@ -53,7 +53,6 @@ source distribution.
 #include <crogine/ecs/systems/ProjectionMapSystem.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
-#include <crogine/ecs/systems/CollisionSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 
@@ -67,7 +66,6 @@ source distribution.
 #include <crogine/ecs/components/ProjectionMap.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
-#include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
 
 #include <crogine/util/Random.hpp>
@@ -165,9 +163,7 @@ void GameState::addSystems()
 
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<TerrainSystem>(mb);
-
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
-    m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
@@ -205,21 +201,6 @@ void GameState::createScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
 
-    auto& phys = entity.addComponent<cro::PhysicsObject>();
-    cro::PhysicsShape ps;
-    ps.type = cro::PhysicsShape::Type::Sphere;
-    ps.radius = 1.7f;
-    ps.position.z = 6.6f;
-    phys.addShape(ps);
-
-    ps.type = cro::PhysicsShape::Type::Capsule;
-    ps.length = 1.85f;
-    ps.position.z = 2.8f;
-    ps.orientation = cro::PhysicsShape::Orientation::Z;
-    phys.addShape(ps);
-
-    phys.setCollisionFlags(CollisionID::Wall);
-    phys.setCollisionGroups(CollisionID::Player);
 
     //load terrain chunks
     entity = m_scene.createEntity();
@@ -262,21 +243,6 @@ void GameState::createScene()
     m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 19.f, 16.4f, -10.3f });
     m_scene.getSunlight().setDirection({ -0.f, -1.f, -0.4f });
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
-
-    /*cro::PhysicsShape boundsShape;
-    boundsShape.type = cro::PhysicsShape::Type::Box;
-    boundsShape.extent = { 0.01f, 0.5f, 0.5f };
-    boundsShape.position.x = 1.2f;
-    boundsShape.position.z = -ent.getComponent<cro::Transform>().getPosition().z;
-    ent.addComponent<cro::PhysicsObject>().addShape(boundsShape);
-    boundsShape.position.x = -boundsShape.position.x;
-    ent.getComponent<cro::PhysicsObject>().addShape(boundsShape);
-    boundsShape.extent = { 1.2f, 0.01f, 0.5f };
-    boundsShape.position.x = 0.f;
-    boundsShape.position.y = -0.63f;
-    ent.getComponent<cro::PhysicsObject>().addShape(boundsShape);
-    ent.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Bounds);
-    ent.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Weapon);*/
 
     m_scene.setActiveCamera(ent);
 }

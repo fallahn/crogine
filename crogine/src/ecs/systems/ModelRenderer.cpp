@@ -73,7 +73,7 @@ void ModelRenderer::process(float)
         const auto& tx = entity.getComponent<Transform>();
         auto pos = tx.getWorldPosition();
 
-        sphere.centre += pos;// glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
+        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
         auto scale = tx.getScale();
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
