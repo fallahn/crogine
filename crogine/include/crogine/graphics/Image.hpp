@@ -107,6 +107,11 @@ namespace cro
         */
         const uint8* getPixelData() const;
 
+        /*!
+        \brief Saves this image to the given path
+        \returns true on success else false
+        */
+        bool write(const std::string& path);
 
     private:
         glm::uvec2 m_size = glm::uvec2(0);

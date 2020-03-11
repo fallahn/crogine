@@ -153,6 +153,8 @@ namespace cro
 		static Colour White();
 		static Colour Transparent();
 
+		float* asArray() { return reinterpret_cast<float*>(this); }
+
 	private:
 
 		float r;

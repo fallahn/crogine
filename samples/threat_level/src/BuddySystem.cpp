@@ -109,7 +109,7 @@ void BuddySystem::processInit(float dt, cro::Entity entity)
 
     if (glm::length2(tx.getPosition()) < 0.1f)
     {
-        tx.setPosition({});
+        tx.setPosition(glm::vec3(0.f));
         entity.getComponent<Buddy>().state = Buddy::Active;
         entity.getComponent<Buddy>().lifespan = lifespan;
         entity.getComponent<cro::ParticleEmitter>().start();

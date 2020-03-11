@@ -151,7 +151,18 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
         player.cameraPitch = newPitch;
     }
 
+    //we need to clamp this to TAU (or ideally +- PI) else more than one rotation
+    //introduces very visible jitter
+    //player.cameraYaw = std::fmod(player.cameraYaw + yawMove, cro::Util::Const::TAU);
     player.cameraYaw += yawMove;
+    if (player.cameraYaw < -cro::Util::Const::PI)
+    {
+        player.cameraYaw += cro::Util::Const::TAU;
+    }
+    else if (player.cameraYaw > cro::Util::Const::PI)
+    {
+        player.cameraYaw -= cro::Util::Const::TAU;
+    }
 
     glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchMove, glm::vec3(1.f, 0.f, 0.f));
     glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yawMove, glm::vec3(0.f, 1.f, 0.f));

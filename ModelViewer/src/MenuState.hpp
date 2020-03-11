@@ -58,16 +58,17 @@ private:
 
     cro::Scene m_scene;
     cro::ResourceCollection m_resources;
-    
-    float m_zoom;
 
     struct Preferences final
     {
         std::string workingDirectory;
         std::size_t unitsPerMetre = 2;
+        cro::Colour skyBottom = cro::Colour(0.82f, 0.98f, 0.99f);
+        cro::Colour skyTop = cro::Colour(0.21f, 0.5f, 0.96f);
     }m_preferences;
     bool m_showPreferences;
     bool m_showGroundPlane;
+    bool m_showSkybox;
 
     cro::ConfigFile m_currentModelConfig;
 
@@ -101,4 +102,6 @@ private:
 
     void updateWorldScale();
     void updateNormalVis();
+
+    void updateMouseInput(const cro::Event&);
 };

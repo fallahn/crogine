@@ -38,6 +38,7 @@ source distribution.
 #define STBI_ONLY_BMP
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "stb_image_write.h"
 #include <SDL_rwops.h>
 
 #include <array>
@@ -253,4 +254,45 @@ ImageFormat::Type Image::getFormat() const
 const uint8* Image::getPixelData() const
 {
     return m_data.data();
+}
+
+void image_writer_func(void* context, void* data, int size)
+{
+    SDL_RWops* file = (SDL_RWops*)context;
+    SDL_RWwrite(file, data, size, 1);
+}
+
+bool Image::write(const std::string& path)
+{
+    if (cro::FileSystem::getFileExtension(path) != ".png")
+    {
+        Logger::log("Only png files currently supported", Logger::Type::Error);
+        return false;
+    }
+
+    std::int32_t pixelWidth = 0;
+    if (m_format == ImageFormat::RGB)
+    {
+        pixelWidth = 3;
+    }
+    else if (m_format == ImageFormat::RGBA)
+    {
+        pixelWidth = 4;
+    }
+    else if (m_format == ImageFormat::A)
+    {
+        pixelWidth = 1;
+    }
+
+    if (pixelWidth == 0)
+    {
+        Logger::log("Only RGB and RGBA format images currently supported", Logger::Type::Error);
+        return false;
+    }
+
+    stbi_flip_vertically_on_write(m_flipped ? 1 : 0);
+
+    RaiiRWops out;
+    out.file = SDL_RWFromFile(path.c_str(), "w");
+    return stbi_write_png_to_func(image_writer_func, out.file, m_size.x, m_size.y, pixelWidth, m_data.data(), m_size.x * pixelWidth) != 0;
 }

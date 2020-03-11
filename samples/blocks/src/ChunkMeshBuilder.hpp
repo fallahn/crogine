@@ -27,29 +27,35 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/components/PhysicsObject.hpp>
+#pragma once
 
-using namespace cro;
+#include <crogine/graphics/MeshBuilder.hpp>
 
-PhysicsObject::PhysicsObject(float mass, float density)
-    : m_mass            (mass),
-    m_density           (density),
-    m_collisionGroups   (1),
-    m_collisionFlags    (-1),
-    m_shapeCount        (0),
-    m_collisionCount    (0)
+/*
+custom mesh builder creates an empty mesh with the
+correct attributes for a chunk mesh. The VBO itself
+is updated by the ChunkRenderer system.
+*/
+class ChunkMeshBuilder final : public cro::MeshBuilder
 {
+public:
+    ChunkMeshBuilder();
 
-}
+    //return 0 and each mesh gets an automatic ID
+    //from the mesh resource, prevents returning the
+    //same instance each time...
 
-//public
-bool PhysicsObject::addShape(const PhysicsShape& shape)
-{
-    if (m_shapeCount < m_shapes.size())
-    {
-        m_shapes[m_shapeCount++] = shape;
-        return true;
-    }
-    LOG("Max shapes for this object reached", Logger::Type::Warning);
-    return false;
-}
+    //TODO could also use the chunk position hash here
+    //but it's unlikely a chunk gets completely recreated
+    //(chunk updates just replace the VBO/IBO data)
+    std::size_t getUID() const override { return 0; }
+
+    //this is a helper for when mesh data is updated
+    static std::size_t getVertexComponentCount() { return m_componentCount; }
+
+private:
+
+    static std::size_t m_componentCount;
+
+    cro::Mesh::Data build() const override;
+};

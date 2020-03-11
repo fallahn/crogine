@@ -190,7 +190,7 @@ namespace cro
             std::array<std::array<int32, 3u>, Mesh::Attribute::Total> attribs{};
             std::size_t attribCount = 0; //< count of attributes successfully mapped
             //maps uniform locations by indexing via Uniform enum
-            std::array<int32, Uniform::Total> uniforms{};
+            std::array<int32, Uniform::Total> uniforms{-1,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
             //optional uniforms are added to this list if they exist
             //for example skinning and projection map data which is
             //used internally, and not user-definable

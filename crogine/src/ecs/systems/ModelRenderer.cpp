@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 using namespace cro;
 
@@ -54,8 +55,12 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 //public
 void ModelRenderer::process(float)
 {
-    auto& entities = getEntities();
-    auto frustum = getScene()->getActiveCamera().getComponent<Camera>().getFrustum();
+    auto cameraEnt = getScene()->getActiveCamera();
+    auto frustum = cameraEnt.getComponent<Camera>().getFrustum();
+    auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
+    auto forwardVector = cameraEnt.getComponent<Transform>().getForwardVector();;
+
+    auto& entities = getEntities();    
 
     //cull entities by viewable into draw lists by pass
     m_visibleEntities.clear();
@@ -66,15 +71,22 @@ void ModelRenderer::process(float)
 
         auto sphere = model.m_meshData.boundingSphere;
         const auto& tx = entity.getComponent<Transform>();
-        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre.x, sphere.centre.y, sphere.centre.z, 1.f));
+        auto pos = tx.getWorldPosition();
+
+        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
         auto scale = tx.getScale();
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
+
+        /*auto box = model.m_meshData.boundingBox;
+        box[0] += pos;
+        box[1] += pos;*/
 
         model.m_visible = true;
         std::size_t i = 0;
         while (model.m_visible && i < frustum.size())
         {
             model.m_visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
+            //model.m_visible = (Spatial::intersects(frustum[i++], box) != Planar::Back);
         }
 
         if (model.m_visible)
@@ -82,7 +94,12 @@ void ModelRenderer::process(float)
             auto opaque = std::make_pair(entity, SortData());
             auto transparent = std::make_pair(entity, SortData());
 
-            auto worldPos = tx.getWorldPosition();
+            //auto worldPos = tx.getWorldPosition();
+            auto direction = sphere.centre - cameraPos;
+            float distance = glm::dot(forwardVector, direction);
+            //TODO a large model with a centre behind the camera
+            //might still intersect the view but register as being
+            //further away than smaller objects in front
 
             //foreach material
             //add ent/index pair to alpha or opaque list
@@ -91,13 +108,13 @@ void ModelRenderer::process(float)
                 if (model.m_materials[i].blendMode != Material::BlendMode::None)
                 {
                     transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                    transparent.second.flags = static_cast<int64>(worldPos.z * 1000000.f); //suitably large number to shift decimal point
+                    transparent.second.flags = static_cast<int64>(-distance * 1000000.f); //suitably large number to shift decimal point
                     transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
                 }
                 else
                 {
                     opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                    opaque.second.flags = static_cast<int64>(-worldPos.z * 1000000.f);
+                    opaque.second.flags = static_cast<int64>(distance * 1000000.f);
                 }
             }
 
@@ -135,18 +152,18 @@ void ModelRenderer::render(Entity camera)
     glCheck(glCullFace(GL_BACK));
 
     //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
-    for (const auto& e : m_visibleEntities)
+    for (const auto& [entity, sortData] : m_visibleEntities)
     {
         //calc entity transform
-        const auto& tx = e.first.getComponent<Transform>();
+        const auto& tx = entity.getComponent<Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
         glm::mat4 worldView = camComponent.viewMatrix * worldMat;
 
         //foreach submesh / material:
-        const auto& model = e.first.getComponent<Model>();
+        const auto& model = entity.getComponent<Model>();
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
         
-        for(auto i : e.second.matIDs)
+        for (auto i : sortData.matIDs)
         {
             //bind shader
             glCheck(glUseProgram(model.m_materials[i].shader));
@@ -169,6 +186,12 @@ void ModelRenderer::render(Entity camera)
                 glCheck(glDisable(GL_DEPTH_TEST));
             }
 
+#ifdef PLATFORM_DESKTOP
+            const auto& indexData = model.m_meshData.indexData[i];
+            glCheck(glBindVertexArray(indexData.vao));
+            glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+
+#else //GLES 2 doesn't have VAO support without extensions
 
             //bind attribs
             const auto& attribs = model.m_materials[i].attribs;
@@ -177,7 +200,7 @@ void ModelRenderer::render(Entity camera)
                 glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
                 glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
                     GL_FLOAT, GL_FALSE, static_cast<GLsizei>(model.m_meshData.vertexSize),
-                    reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));               
+                    reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
             }
 
             //bind element/index buffer
@@ -194,8 +217,9 @@ void ModelRenderer::render(Entity camera)
             {
                 glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
             }
+#endif //PLATFORM 
         }
-        
+        glCheck(glBindVertexArray(0));
         glCheck(glUseProgram(0));
     }
 

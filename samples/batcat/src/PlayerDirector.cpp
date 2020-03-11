@@ -42,7 +42,6 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
-#include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/Scene.hpp>
 
 namespace
@@ -98,28 +97,6 @@ void PlayerDirector::process(float dt)
     {
         auto& tx = entity.getComponent<cro::Transform>();
         auto& playerState = entity.getComponent<Player>();
-        auto& phys = entity.getComponent<cro::PhysicsObject>();
-
-        //update any collision
-        if (phys.getCollisionCount() > 0)
-        {
-            const auto& ids = phys.getCollisionIDs();
-            const auto& manifolds = phys.getManifolds();
-
-            for (auto i = 0u; i < phys.getCollisionCount(); ++i)
-            {
-                auto otherEnt = getScene().getEntity(ids[i]);
-                const auto& otherPhys = otherEnt.getComponent<cro::PhysicsObject>();
-                if (otherPhys.getCollisionGroups() & CollisionID::Wall)
-                {
-                    const auto& manifold = manifolds[i];
-                    if (manifold.pointCount > 0)
-                    {
-                        //we have a collision
-                    }
-                }
-            }
-        }
 
 
         //update orientation

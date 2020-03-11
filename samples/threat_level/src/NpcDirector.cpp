@@ -112,7 +112,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
                 if (entity.getComponent<Family>().parent.getIndex() == data.entityID)
                 {
                     //this our man. Or woman. Turret.
-                    tx.setPosition({ data.position, 0.f });
+                    tx.setPosition(glm::vec3(data.position, 0.f));
                 }
             };
             sendCommand(cmd);

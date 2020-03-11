@@ -116,9 +116,9 @@ namespace
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 	: cro::State            (stack, context),
     m_scene                 (context.appInstance.getMessageBus()),
-    m_zoom                  (1.f),
     m_showPreferences       (false),
-    m_showGroundPlane       (false)
+    m_showGroundPlane       (false),
+    m_showSkybox            (false)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -147,24 +147,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
     {
     default: break;
     case SDL_MOUSEMOTION:
-        if (evt.motion.state & SDL_BUTTON_LMASK)
-        {
-            auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
-            tx.rotate(cro::Transform::Y_AXIS, static_cast<float>(-evt.motion.xrel / 2) * cro::Util::Const::degToRad);
-            tx.rotate(cro::Transform::X_AXIS, static_cast<float>(-evt.motion.yrel / 2) * cro::Util::Const::degToRad);
-        }
-        else if (evt.motion.state & SDL_BUTTON_MMASK)
-        {
-            auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
-            tx.move((glm::vec3(-evt.motion.xrel, evt.motion.yrel, 0.f ) / 60.f) * worldScales[m_preferences.unitsPerMetre]);
-        }
+        updateMouseInput(evt);
         break;
     case SDL_MOUSEWHEEL:
-        m_zoom = cro::Util::Maths::clamp(m_zoom - (0.1f * evt.wheel.y), MinZoom, MaxZoom);
-        updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_zoom * DefaultFOV);
+    {
+        float acceleration = m_scene.getActiveCamera().getComponent<cro::Transform>().getPosition().z / DefaultCameraPosition.z;
+        m_scene.getActiveCamera().getComponent<cro::Transform>().move(glm::vec3(0.f, 0.f, -(evt.wheel.y * 0.5f)) * worldScales[m_preferences.unitsPerMetre] * acceleration);
+    }
         break;
     case SDL_WINDOWEVENT_RESIZED:
-        updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_zoom* DefaultFOV);
+        updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], DefaultFOV);
         break;
     }
 
@@ -238,9 +230,9 @@ void MenuState::createScene()
     m_scene.setActiveCamera(entity);
 
     entities[EntityID::CamController] = m_scene.createEntity();
-    entities[EntityID::CamController].addComponent<cro::Transform>().setRelativeToCamera(true);
-    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    entities[EntityID::CamController].addComponent<cro::Transform>();
+    //entities[EntityID::CamController].addComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::GroundPlane].getComponent<cro::Transform>());
 
     //axis icon
     auto meshID = m_resources.meshes.loadMesh(OriginIconBuilder());
@@ -256,6 +248,7 @@ void MenuState::createScene()
         float scale = worldScales[m_preferences.unitsPerMetre];
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     };
+    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //set the default sunlight properties
     m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 6.f, -5.f });
@@ -317,6 +310,19 @@ void MenuState::buildUI()
                         {
                             entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
                         }
+                        savePrefs();
+                    }
+                    if (ImGui::MenuItem("Show Skybox", nullptr, &m_showSkybox))
+                    {
+                        if (m_showSkybox)
+                        {
+                            m_scene.enableSkybox();
+                        }
+                        else
+                        {
+                            m_scene.disableSkybox();
+                        }
+                        savePrefs();
                     }
                     ImGui::EndMenu();
                 }
@@ -327,7 +333,7 @@ void MenuState::buildUI()
             //options window
             if (m_showPreferences)
             {
-                ImGui::SetNextWindowSize({ 400.f, 160.f });
+                ImGui::SetNextWindowSize({ 400.f, 260.f });
                 if (ImGui::Begin("Preferences", &m_showPreferences))
                 {
                     ImGui::Text("%s", "Working Directory:");
@@ -376,9 +382,23 @@ void MenuState::buildUI()
                         ImGui::EndCombo();
                     }
                     ImGui::PopItemWidth();
-
+                    
+                    ImGui::NewLine();
                     ImGui::Separator();
+                    ImGui::NewLine();
 
+                    
+                    if (ImGui::ColorEdit3("Sky Top", m_preferences.skyTop.asArray()))
+                    {
+                        m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
+                    }
+                    if (ImGui::ColorEdit3("Sky Bottom", m_preferences.skyBottom.asArray()))
+                    {
+                        m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
+                    }
+
+                    ImGui::NewLine();
+                    ImGui::NewLine();
                     if (!m_showPreferences ||
                         ImGui::Button("Close"))
                     {
@@ -478,7 +498,7 @@ void MenuState::openModelAtPath(const std::string& path)
     if (def.loadFromFile(path, m_resources))
     {
         entities[EntityID::ActiveModel] = m_scene.createEntity();
-        entities[EntityID::ActiveModel].addComponent<cro::Transform>();
+        entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
 
         def.createModel(entities[EntityID::ActiveModel], m_resources);
         m_currentModelConfig.loadFromFile(path);
@@ -714,7 +734,7 @@ void MenuState::importModel()
                 auto meshID = m_resources.meshes.loadMesh(builder);
 
                 entities[EntityID::ActiveModel] = m_scene.createEntity();
-                entities[EntityID::ActiveModel].addComponent<cro::Transform>();
+                entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
                 entities[EntityID::ActiveModel].addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::Default]));
                 
                 for (auto i = 0; i < header.arrayCount; ++i)
@@ -773,7 +793,17 @@ void MenuState::exportModel()
             auto modelName = cro::FileSystem::getFileName(path);
             modelName = modelName.substr(0, modelName.find_last_of('.'));
 
-            auto meshPath = path.substr(m_preferences.workingDirectory.length() + 1);
+            //auto meshPath = path.substr(m_preferences.workingDirectory.length() + 1);
+            std::string meshPath;
+            if (!m_preferences.workingDirectory.empty() && path.find(m_preferences.workingDirectory) != std::string::npos)
+            {
+                meshPath = path.substr(m_preferences.workingDirectory.length() + 1);
+            }
+            else
+            {
+                meshPath = cro::FileSystem::getFileName(path);
+            }
+
             std::replace(meshPath.begin(), meshPath.end(), '\\', '/');
 
             cro::ConfigFile cfg("model", modelName);
@@ -902,6 +932,28 @@ void MenuState::loadPrefs()
             {
                 m_preferences.unitsPerMetre = cro::Util::Maths::clamp(static_cast<std::size_t>(prop.getValue<std::int32_t>()), std::size_t(0u), worldScales.size());
             }
+            else if (name == "show_groundplane")
+            {
+                m_showGroundPlane = prop.getValue<bool>();
+            }
+            else if (name == "show_skybox")
+            {
+                m_showSkybox = prop.getValue<bool>();
+                if (m_showSkybox)
+                {
+                    m_scene.enableSkybox();
+                }
+            }
+            else if (name == "sky_top")
+            {
+                m_preferences.skyTop = prop.getValue<cro::Colour>();
+                m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
+            }
+            else if (name == "sky_bottom")
+            {
+                m_preferences.skyBottom = prop.getValue<cro::Colour>();
+                m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
+            }
         }
 
         updateWorldScale();
@@ -910,9 +962,18 @@ void MenuState::loadPrefs()
 
 void MenuState::savePrefs()
 {
+    auto toString = [](cro::Colour c)->std::string
+    {
+        return std::to_string(c.getRed()) + ", " + std::to_string(c.getGreen()) + ", " + std::to_string(c.getBlue()) + ", " + std::to_string(c.getAlpha());
+    };
+
     cro::ConfigFile prefsOut;
     prefsOut.addProperty("working_dir", m_preferences.workingDirectory);
     prefsOut.addProperty("units_per_metre", std::to_string(m_preferences.unitsPerMetre));
+    prefsOut.addProperty("show_groundplane", m_showGroundPlane ? "true" : "false");
+    prefsOut.addProperty("show_skybox", m_showSkybox ? "true" : "false");
+    prefsOut.addProperty("sky_top", toString(m_preferences.skyTop));
+    prefsOut.addProperty("sky_bottom", toString(m_preferences.skyBottom));
 
     prefsOut.save(prefPath);
 }
@@ -931,7 +992,7 @@ void MenuState::updateWorldScale()
     m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(DefaultCameraPosition * scale);
     
     entities[EntityID::CamController].getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
-    updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_zoom * DefaultFOV);
+    updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], DefaultFOV);
 }
 
 void MenuState::updateNormalVis()
@@ -952,5 +1013,41 @@ void MenuState::updateNormalVis()
         entities[EntityID::NormalVis] = m_scene.createEntity();
         entities[EntityID::NormalVis].addComponent<cro::Transform>();
         entities[EntityID::NormalVis].addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::DebugDraw]));
+    }
+}
+
+void MenuState::updateMouseInput(const cro::Event& evt)
+{
+    const float moveScale = 0.004f;
+    if (evt.motion.state & SDL_BUTTON_LMASK)
+    {
+        float pitchMove = static_cast<float>(evt.motion.yrel)* moveScale;
+        float yawMove = static_cast<float>(evt.motion.xrel)* moveScale;
+
+        auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
+
+        glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchMove, glm::vec3(1.f, 0.f, 0.f));
+        glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yawMove, glm::vec3(0.f, 1.f, 0.f));
+
+        auto rotation =  pitch * yaw * tx.getRotationQuat();
+        tx.setRotation(rotation);
+    }
+    else if (evt.motion.state & SDL_BUTTON_RMASK)
+    {
+        //do roll
+        float rollMove = static_cast<float>(-evt.motion.xrel)* moveScale;
+
+        auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
+
+        glm::quat roll = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rollMove, glm::vec3(0.f, 0.f, 1.f));
+
+        auto rotation = roll * tx.getRotationQuat();
+        tx.setRotation(rotation);
+    }
+    else if (evt.motion.state & SDL_BUTTON_MMASK)
+    {
+        auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
+        //TODO multiply this by zoom factor
+        tx.move((glm::vec3(evt.motion.xrel, -evt.motion.yrel, 0.f) / 60.f) * worldScales[m_preferences.unitsPerMetre]);
     }
 }

@@ -33,11 +33,11 @@ source distribution.
 #include "Messages.hpp"
 #include "ItemSystem.hpp"
 #include "NpcWeaponSystem.hpp"
+#include "PhysicsObject.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/components/Callback.hpp>

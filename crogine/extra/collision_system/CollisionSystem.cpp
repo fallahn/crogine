@@ -27,9 +27,10 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/systems/CollisionSystem.hpp>
+#include "CollisionSystem.hpp"
+#include "PhysicsObject.hpp"
+
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>

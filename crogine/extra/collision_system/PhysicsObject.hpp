@@ -44,7 +44,7 @@ namespace cro
     \brief PhysicsShapes are attached to PhysicsObjects to
     define their shape within the world.
     */
-    struct CRO_EXPORT_API PhysicsShape final
+    struct PhysicsShape final
     {
         /*
         \brief The type of the shape
@@ -106,7 +106,7 @@ namespace cro
     Physics objects may be composed of up to 10 shapes defined by a 
     PhysicsShape struct. Units are, by default, in kilos and metres.
     */
-    class CRO_EXPORT_API PhysicsObject final
+    class PhysicsObject final
     {
     public:
         /*!

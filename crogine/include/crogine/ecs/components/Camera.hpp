@@ -47,7 +47,13 @@ namespace cro
     /*!
     \brief Represents a camera within the scene.
     Use Scene::setActiveCamera() to use an entity with
-    a camera component as the current view
+    a camera component as the current view. The default
+    output is a letterboxed perspecticve camera with a 16:9
+    ratio. This can easily be overriden with a custom
+    projection matrix and viewport - usually set via a
+    callback applied to Camera::resizeCallback
+
+    \sa resizeCallback
     */
     struct CRO_EXPORT_API Camera final
     {

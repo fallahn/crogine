@@ -1,0 +1,12 @@
+model ground_plane
+{
+	mesh = quad
+	uv = 1,1
+	size = 1,1
+
+	material Unlit
+	{
+		colour = 1,1,0,1
+        blendmode=none
+	}	
+}

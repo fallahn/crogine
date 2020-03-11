@@ -30,14 +30,14 @@ source distribution.
 template <typename T>
 void Entity::addComponent(const T& component)
 {
-    CRO_ASSERT(m_entityManager, "Not a valid Entity");
+    CRO_ASSERT(isValid(), "Not a valid Entity");
     m_entityManager->addComponent<T>(*this, component);
 }
 
 template <typename T, typename... Args>
 T& Entity::addComponent(Args&&... args)
 {
-    CRO_ASSERT(m_entityManager, "Not a valid Entity");
+    CRO_ASSERT(isValid(), "Not a valid Entity");
     return m_entityManager->addComponent<T>(*this, std::forward<Args>(args)...);
 }
 
@@ -53,20 +53,20 @@ T& Entity::addComponent(Args&&... args)
 template <typename T>
 bool Entity::hasComponent() const
 {
-    CRO_ASSERT(m_entityManager, "Not a valid Entity");
+    CRO_ASSERT(isValid(), "Not a valid Entity");
     return m_entityManager->hasComponent<T>(*this);
 }
 
 template <typename T>
 T& Entity::getComponent()
 {
-    CRO_ASSERT(m_entityManager, "Not a valid Entity");
+    CRO_ASSERT(isValid(), "Not a valid Entity");
     return m_entityManager->getComponent<T>(*this);
 }
 
 template <typename T>
 const T& Entity::getComponent() const
 {
-    CRO_ASSERT(m_entityManager, "Not a valid Entity");
+    CRO_ASSERT(isValid(), "Not a valid Entity");
     return m_entityManager->getComponent<T>(*this);
 }
