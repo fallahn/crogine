@@ -5,6 +5,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/BossSystem.cpp
   ${PROJECT_DIR}/BuddySystem.cpp
   ${PROJECT_DIR}/ChunkBuilder.cpp
+  ${PROJECT_DIR}/CollisionSystem.cpp
   ${PROJECT_DIR}/ColourSystem.cpp
   ${PROJECT_DIR}/DriftSystem.cpp
   ${PROJECT_DIR}/EmpSystem.cpp
@@ -27,6 +28,8 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/NpcSystem.cpp 
   ${PROJECT_DIR}/NpcWeaponSystem.cpp 
   ${PROJECT_DIR}/PauseState.cpp
+  ${PROJECT_DIR}/PhysicsDebug.cpp
+  ${PROJECT_DIR}/PhysicsObject.cpp
   ${PROJECT_DIR}/PlayerDirector.cpp
   ${PROJECT_DIR}/PlayerSystem.cpp
   ${PROJECT_DIR}/PlayerWeaponsSystem.cpp

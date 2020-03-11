@@ -31,7 +31,6 @@ source distribution.
 #include "Messages.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/util/Constants.hpp>
@@ -131,20 +130,6 @@ void PlayerWeaponSystem::processLasers(float dtSec)
         auto ent = getScene()->getEntity(m_aliveLasers[i]);
         const auto& weapon = ent.getComponent<PlayerWeapon>();
         ent.getComponent<cro::Transform>().move(weapon.velocity * dtSec);
-
-        //check collisions and deadify
-        const auto& phys = ent.getComponent<cro::PhysicsObject>();
-        if (phys.getCollisionCount() > 0)
-        {
-            ent.getComponent<cro::Transform>().setPosition(glm::vec3(-100.f));
-
-            m_deadLasers[m_deadLaserCount] = m_aliveLasers[i];
-            m_deadLaserCount++;
-
-            m_aliveLaserCount--;
-            m_aliveLasers[i] = m_aliveLasers[m_aliveLaserCount];
-            i--;
-        }
     }
 }
 
@@ -171,18 +156,5 @@ void PlayerWeaponSystem::processGrenades(float dtSec)
         weapon.velocity += gravity * dtSec;
 
         entity.getComponent<cro::Transform>().move(weapon.velocity * dtSec);
-
-        const auto& phys = entity.getComponent<cro::PhysicsObject>();
-        if (phys.getCollisionCount() > 0)
-        {
-            entity.getComponent<cro::Transform>().setPosition(glm::vec3(-100.f));
-
-            m_deadGrenades[m_deadGrenadeCount] = m_aliveGrenades[i];
-            m_deadGrenadeCount++;
-
-            m_aliveGrenadeCount--;
-            m_aliveGrenades[i] = m_aliveGrenades[m_aliveGrenadeCount];
-            i--;
-        }
     }
 }

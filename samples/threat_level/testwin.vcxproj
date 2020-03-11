@@ -141,8 +141,8 @@
     </PostBuildEvent>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x86</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine-d.lib;SDL2.lib;%(AdditionalDependencies);SDL2main.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\x86\Debug;$(SolutionDir)$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x86</AdditionalLibraryDirectories>
+      <AdditionalDependencies>crogine-d.lib;SDL2.lib;BulletCollision_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies);SDL2main.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|Win32'">
@@ -178,8 +178,8 @@
     </PostBuildEvent>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\SDL2_image\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine-d.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|x64'">
@@ -216,8 +216,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x86</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine.lib;SDL2.lib;%(AdditionalDependencies);SDL2main.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x86;$(SolutionDir)extlibs\bullet\x86\Release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>crogine.lib;SDL2.lib;BulletCollision.lib;LinearMath.lib;%(AdditionalDependencies);SDL2main.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -261,8 +261,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\SDL2_image\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;LinearMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -298,6 +298,7 @@
     <ClCompile Include="src\BossSystem.cpp" />
     <ClCompile Include="src\BuddySystem.cpp" />
     <ClCompile Include="src\ChunkBuilder.cpp" />
+    <ClCompile Include="src\CollisionSystem.cpp" />
     <ClCompile Include="src\ColourSystem.cpp" />
     <ClCompile Include="src\DriftSystem.cpp" />
     <ClCompile Include="src\EmpSystem.cpp" />
@@ -320,6 +321,8 @@
     <ClCompile Include="src\NpcSystem.cpp" />
     <ClCompile Include="src\NpcWeaponSystem.cpp" />
     <ClCompile Include="src\PauseState.cpp" />
+    <ClCompile Include="src\PhysicsDebug.cpp" />
+    <ClCompile Include="src\PhysicsObject.cpp" />
     <ClCompile Include="src\PlayerWeaponsSystem.cpp" />
     <ClCompile Include="src\PlayerDirector.cpp" />
     <ClCompile Include="src\PlayerSystem.cpp" />
@@ -339,6 +342,7 @@
     <ClInclude Include="src\BossSystem.hpp" />
     <ClInclude Include="src\BuddySystem.hpp" />
     <ClInclude Include="src\ChunkBuilder.hpp" />
+    <ClInclude Include="src\CollisionSystem.hpp" />
     <ClInclude Include="src\ColourSystem.hpp" />
     <ClInclude Include="src\DriftSystem.hpp" />
     <ClInclude Include="src\EmpSystem.hpp" />
@@ -358,6 +362,8 @@
     <ClInclude Include="src\NPCSystem.hpp" />
     <ClInclude Include="src\NpcWeaponSystem.hpp" />
     <ClInclude Include="src\PauseState.hpp" />
+    <ClInclude Include="src\PhysicsDebug.hpp" />
+    <ClInclude Include="src\PhysicsObject.hpp" />
     <ClInclude Include="src\PlayerDirector.hpp" />
     <ClInclude Include="src\PlayerSystem.hpp" />
     <ClInclude Include="src\PlayerWeaponsSystem.hpp" />

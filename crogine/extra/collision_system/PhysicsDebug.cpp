@@ -27,11 +27,10 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-//#include <crogine/core/App.hpp>
+#include "PhysicsDebug.hpp"
+#include "ErrorCheck.hpp"
 
 #include <crogine/graphics/MeshData.hpp>
-#include <crogine/detail/PhysicsDebug.hpp>
-#include "../detail/GLCheck.hpp"
 
 using namespace cro;
 using namespace cro::Detail;

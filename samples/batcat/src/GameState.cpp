@@ -53,7 +53,6 @@ source distribution.
 #include <crogine/ecs/systems/ProjectionMapSystem.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
-#include <crogine/ecs/systems/CollisionSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 
@@ -67,7 +66,6 @@ source distribution.
 #include <crogine/ecs/components/ProjectionMap.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
-#include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
 
 #include <crogine/util/Random.hpp>
@@ -167,7 +165,6 @@ void GameState::addSystems()
     m_scene.addSystem<TerrainSystem>(mb);
 
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
-    m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
@@ -205,21 +202,6 @@ void GameState::createScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
 
-    auto& phys = entity.addComponent<cro::PhysicsObject>();
-    cro::PhysicsShape ps;
-    ps.type = cro::PhysicsShape::Type::Sphere;
-    ps.radius = 1.7f;
-    ps.position.z = 6.6f;
-    phys.addShape(ps);
-
-    ps.type = cro::PhysicsShape::Type::Capsule;
-    ps.length = 1.85f;
-    ps.position.z = 2.8f;
-    ps.orientation = cro::PhysicsShape::Orientation::Z;
-    phys.addShape(ps);
-
-    phys.setCollisionFlags(CollisionID::Wall);
-    phys.setCollisionGroups(CollisionID::Player);
 
     //load terrain chunks
     entity = m_scene.createEntity();

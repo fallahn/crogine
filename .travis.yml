@@ -22,25 +22,19 @@ addons:
     - libpulse-dev
     - libpulse0
     - libpulse-mainloop-glib0
-    - libbullet-dev
 
     sources:
     - ubuntu-toolchain-r-test
 
 before_script:
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc
-  gcc /usr/bin/gcc-7 90; sudo apt-get install libsdl2-dev libsdl2-mixer-dev libbullet-dev libopenal-dev; fi
+  gcc /usr/bin/gcc-7 90; sudo apt-get install libsdl2-dev libsdl2-mixer-dev libopenal-dev; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/g++
-  g++ /usr/bin/g++-7 90; sudo apt-get install libsdl2-dev libsdl2-mixer-dev libbullet-dev libopenal-dev; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install enet sdl2 bullet; fi
+  g++ /usr/bin/g++-7 90; sudo apt-get install libsdl2-dev libsdl2-mixer-dev libopenal-dev; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install enet sdl2; fi
 
 #- git clone https://github.com/fallahn/tmxlite
 #- cd tmxlite/tmxlite && mkdir build && cd build
-#- cmake .. -G"$GENERATOR" $CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release && sudo cmake --build
-#  . --target install --config Release && cd ../../../
-
-#- git clone https://github.com/bulletphysics/bullet3.git
-#- cd bullet3 && mkdir build && cd build
 #- cmake .. -G"$GENERATOR" $CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release && sudo cmake --build
 #  . --target install --config Release && cd ../../../
 
@@ -88,5 +82,3 @@ deploy:
   prerelease: true
   on:
    tags: true
-
-

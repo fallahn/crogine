@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/components/PhysicsObject.hpp>
+#include "PhysicsObject.hpp"
 
 using namespace cro;
 
