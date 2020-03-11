@@ -163,7 +163,6 @@ void GameState::addSystems()
 
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<TerrainSystem>(mb);
-
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
@@ -244,21 +243,6 @@ void GameState::createScene()
     m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 19.f, 16.4f, -10.3f });
     m_scene.getSunlight().setDirection({ -0.f, -1.f, -0.4f });
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
-
-    /*cro::PhysicsShape boundsShape;
-    boundsShape.type = cro::PhysicsShape::Type::Box;
-    boundsShape.extent = { 0.01f, 0.5f, 0.5f };
-    boundsShape.position.x = 1.2f;
-    boundsShape.position.z = -ent.getComponent<cro::Transform>().getPosition().z;
-    ent.addComponent<cro::PhysicsObject>().addShape(boundsShape);
-    boundsShape.position.x = -boundsShape.position.x;
-    ent.getComponent<cro::PhysicsObject>().addShape(boundsShape);
-    boundsShape.extent = { 1.2f, 0.01f, 0.5f };
-    boundsShape.position.x = 0.f;
-    boundsShape.position.y = -0.63f;
-    ent.getComponent<cro::PhysicsObject>().addShape(boundsShape);
-    ent.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Bounds);
-    ent.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Weapon);*/
 
     m_scene.setActiveCamera(ent);
 }
