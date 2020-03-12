@@ -99,8 +99,20 @@ namespace cro
         */
         bool enableDepthTest = true;
 
+        /*!
+        \brief Sets the model hidden or unhidden. If this is true then the
+        model won't be drawn.
+        */
+        void setHidden(bool hidden) { m_hidden = hidden; }
+
+        /*!
+        \brief Returns whether or not this model is currently hidden from rendering
+        */
+        bool isHidden() const { return m_hidden; }
+
     private:
         bool m_visible = false;
+        bool m_hidden = false;
 
         Mesh::Data m_meshData;
         std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_materials{};       

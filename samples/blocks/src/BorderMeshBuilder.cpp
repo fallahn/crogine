@@ -27,34 +27,9 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "BorderMeshBuilder.hpp"
 
-#include <crogine/graphics/MeshBuilder.hpp>
-
-/*
-custom mesh builder creates an empty mesh with the
-correct attributes for a chunk mesh. The VBO itself
-is updated by the ChunkRenderer system.
-*/
-class ChunkMeshBuilder final : public cro::MeshBuilder
+cro::Mesh::Data BorderMeshBuilder::build() const
 {
-public:
-
-    //return 0 and each mesh gets an automatic ID
-    //from the mesh resource, prevents returning the
-    //same instance each time...
-
-    //TODO could also use the chunk position hash here
-    //but it's unlikely a chunk gets completely recreated
-    //(chunk updates just replace the VBO/IBO data)
-    std::size_t getUID() const override { return 0; }
-
-    //this is a helper for when mesh data is updated
-    static std::size_t getVertexComponentCount() { return m_componentCount; }
-
-private:
-
-    static std::size_t m_componentCount;
-
-    cro::Mesh::Data build() const override;
-};
+    return {};
+}

@@ -89,7 +89,7 @@ void ModelRenderer::process(float)
             //model.m_visible = (Spatial::intersects(frustum[i++], box) != Planar::Back);
         }
 
-        if (model.m_visible)
+        if (model.m_visible && !model.m_hidden)
         {
             auto opaque = std::make_pair(entity, SortData());
             auto transparent = std::make_pair(entity, SortData());

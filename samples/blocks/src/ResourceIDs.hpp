@@ -43,10 +43,10 @@ namespace MaterialID
 
 namespace MeshID
 {
-    /*enum
+    enum
     {
-        
-    };*/
+        Border,
+    };
 }
 
 namespace GameModelID

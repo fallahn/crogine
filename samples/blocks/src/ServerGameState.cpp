@@ -266,7 +266,7 @@ void GameState::buildWorld()
             m_terrainGenerator.generateTerrain(m_world.chunks, x, z, m_voxelData, seed, chunkCount);
         }
     }
-    m_terrainGenerator.renderHeightmaps();
+    //m_terrainGenerator.renderHeightmaps();
 
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {

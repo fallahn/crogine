@@ -34,9 +34,6 @@ source distribution.
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/geometric.hpp>
 
-
-ChunkMeshBuilder::ChunkMeshBuilder() {}
-
 std::size_t ChunkMeshBuilder::m_componentCount = 0;
 
 cro::Mesh::Data ChunkMeshBuilder::build() const
