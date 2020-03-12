@@ -175,7 +175,7 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
         glCheck(glUniform4f(shader.getUniformMap().at("u_colour"), 1.f, 0.f, 0.f, 1.f));
         glCheck(glUseProgram(0));
 
-        glCheck(glLineWidth(5.f));
+        glCheck(glLineWidth(2.f));
     }
 
     //thread for meshing
@@ -227,12 +227,11 @@ void ChunkSystem::process(float)
         auto& chunkComponent = entity.getComponent<ChunkComponent>();
         if (chunkComponent.needsUpdate)
         {
-            //TODO push chunk into thread queue
+            //push chunk into thread queue
             m_mutex->lock();
             m_inputQueue.push(chunkComponent.chunkPos);
             m_mutex->unlock();
 
-            //updateMesh(m_chunkManager.getChunk(chunkComponent.chunkPos));
             chunkComponent.needsUpdate = false;
         }
     }
@@ -1306,6 +1305,8 @@ bool ChunkSystem::VoxelFace::canAppend(const VoxelFace& other, std::int32_t dire
     //the ao values to a bitmask for comparing several values at once
 
     const std::uint8_t NoLight = 3;
+    const std::uint32_t MaskEmpty = (NoLight << 24) | (NoLight << 16) | (NoLight << 8) | NoLight;
+
     bool append = false;
     auto diff = other.position - position;
 
@@ -1313,8 +1314,8 @@ bool ChunkSystem::VoxelFace::canAppend(const VoxelFace& other, std::int32_t dire
     std::uint32_t otherAoMask = *reinterpret_cast<const std::uint32_t*>(other.ao.data());
 
     //only join if the tiles both have ao
-    if (aoMask != 0
-        && otherAoMask != 0)
+    if (aoMask != MaskEmpty
+        && otherAoMask != MaskEmpty)
     {
         switch (direction)
         {
@@ -1330,7 +1331,7 @@ bool ChunkSystem::VoxelFace::canAppend(const VoxelFace& other, std::int32_t dire
             if (diff.x == 1)
             {
                 //at least one joining vert should have ao
-                if (ao[1] != NoLight || ao[3] != NoLight) //these light levels could get confusing without a name
+                if (ao[1] != NoLight || ao[3] != NoLight)
                 {
                     append = (ao[1] == other.ao[0] && ao[3] == other.ao[2]);
                 }
@@ -1404,9 +1405,9 @@ bool ChunkSystem::VoxelFace::canAppend(const VoxelFace& other, std::int32_t dire
             //moves pos x, but new face is on left
             //because the view is flipped vertically
             if (diff.x == 1
-                && (ao[1] != NoLight || ao[3] != NoLight))
+                && (ao[3] != NoLight || ao[1] != NoLight))
             {
-                append = (ao[1] == other.ao[0] && ao[3] == other.ao[2]);
+                append = (ao[3] == other.ao[2] && ao[1] == other.ao[0]);
             }
             else if (diff.z == 1
                 && (ao[2] != NoLight || ao[3] != NoLight))//moving up the face
@@ -1430,11 +1431,11 @@ bool ChunkSystem::VoxelFace::canAppend(const VoxelFace& other, std::int32_t dire
         }
     }
     //or both have no ao
-    else if (aoMask + otherAoMask == 0)
+    else if (aoMask + otherAoMask == MaskEmpty + MaskEmpty)
     {
         append = true;
     }
     //return false;
-    return other.id == id && other.visible == visible;
-    //return (other.id == id && other.visible == visible && append);
+    //return other.id == id && other.visible == visible;
+    return (other.id == id && other.visible == visible && append);
 }

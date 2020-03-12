@@ -276,6 +276,7 @@ namespace cro
         struct Skybox final
         {
             std::uint32_t vbo = 0;
+            std::uint32_t vao = 0;
             std::uint32_t viewUniform = 0;
             std::uint32_t projectionUniform = 0;
             std::uint32_t texture = 0;
