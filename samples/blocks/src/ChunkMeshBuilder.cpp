@@ -60,7 +60,7 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     //first submesh is all solid geometry
-    data.submeshCount = 3;
+    data.submeshCount = 2;
     data.indexData[0].format = GL_UNSIGNED_INT;
     data.indexData[0].primitiveType = GL_TRIANGLES;
     data.indexData[0].indexCount = 0;
@@ -81,14 +81,14 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     //third submesh is used for drawing debug outlines
-    data.indexData[2].format = GL_UNSIGNED_INT;
+    /*data.indexData[2].format = GL_UNSIGNED_INT;
     data.indexData[2].primitiveType = GL_LINES;
     data.indexData[2].indexCount = 0;
 
     glCheck(glGenBuffers(1, &data.indexData[2].ibo));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[2].ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
     //this needs to be set to be culled properly
     data.boundingBox[0] = glm::vec3(0.f);

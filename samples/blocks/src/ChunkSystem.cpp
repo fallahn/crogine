@@ -321,9 +321,9 @@ void ChunkSystem::updateMesh()
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[1].ibo));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.waterIndices.size() * sizeof(std::uint32_t), vertexOutput.waterIndices.data(), GL_DYNAMIC_DRAW));
 
-        meshData.indexData[2].indexCount = static_cast<std::uint32_t>(vertexOutput.debugIndices.size());
+        /*meshData.indexData[2].indexCount = static_cast<std::uint32_t>(vertexOutput.debugIndices.size());
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[2].ibo));
-        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.debugIndices.size() * sizeof(std::uint32_t), vertexOutput.debugIndices.data(), GL_DYNAMIC_DRAW));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.debugIndices.size() * sizeof(std::uint32_t), vertexOutput.debugIndices.data(), GL_DYNAMIC_DRAW));*/
     }
 }
 
@@ -642,7 +642,7 @@ ChunkSystem::VoxelFace ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 posit
     VoxelFace face;
     face.direction = side;
     face.id = chunk.getVoxelQ(position);
-    face.position = position;
+    //face.position = position;
     
     std::uint8_t neighbour = airBlock;
 
@@ -769,7 +769,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                             && faceMask[maskIndex]->visible)
                         {
                             std::array<std::uint8_t, 4u> aoValues = {3,3,3,3};
-                            
                             aoValues[0] = faceMask[maskIndex]->ao[0];
 
                             auto prevFace = *faceMask[maskIndex];
@@ -779,13 +778,14 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                             for (;
                                 i + width < WorldConst::ChunkSize 
                                 && faceMask[maskIndex + width] != std::nullopt 
-                                && prevFace.canAppend(*faceMask[maskIndex + width], currentSide);
+                                && prevFace == *faceMask[maskIndex + width];
                                 width++)
                             {
                                 prevFace = *faceMask[maskIndex + width];
                             }
                             auto endFace = *faceMask[maskIndex + (width - 1)];
                             aoValues[1] = endFace.ao[1];
+
 
                             bool complete = false;
                             std::int32_t height = 0;
@@ -799,12 +799,10 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                     auto idx = maskIndex + k + height * WorldConst::ChunkSize;
 
                                     if (faceMask[idx] == std::nullopt
-                                        || !prevFace.canAppend(*faceMask[idx], currentSide)
-                                        /*|| (*faceMask[maskIndex] != *faceMask[idx])*/)
+                                        || (prevFace != *faceMask[idx]))
                                     { 
-
-                                        aoValues[0] = faceMask[rowStart]->ao[0];
-                                        aoValues[1] = faceMask[rowStart + (width - 1)]->ao[1];
+                                        aoValues[2] = faceMask[rowStart]->ao[2];
+                                        aoValues[3] = faceMask[rowStart + (width - 1)]->ao[3];
 
                                         complete = true;
                                         break;
@@ -816,7 +814,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                 }
                                 
                                 //move the prev face to the beginning of the row
-                                //so next iter we check canAppend() vertically
+                                //so next iter we check appending vertically
                                 prevFace = *faceMask[rowStart + WorldConst::ChunkSize];
 
 
@@ -1185,7 +1183,7 @@ void ChunkSystem::addQuad(VertexOutput& output, std::vector<glm::vec3> positions
     {
         output.solidIndices.insert(output.solidIndices.end(), localIndices.begin(), localIndices.end());
     }
-    output.debugIndices.insert(output.debugIndices.end(), debugIndices.begin(), debugIndices.end());
+    //output.debugIndices.insert(output.debugIndices.end(), debugIndices.begin(), debugIndices.end());
 
     //for now we're colouring types, eventually this
     //will be the offset into the atlas and we'll use the w/h as UVs
@@ -1298,144 +1296,11 @@ void ChunkSystem::onEntityAdded(cro::Entity entity)
     }
 }
 
-bool ChunkSystem::VoxelFace::canAppend(const VoxelFace& other, std::int32_t direction)
-{
-    //TODO refactor this into something more coherant
-    //for instance hide the nasty reinterpret_cast by converting
-    //the ao values to a bitmask for comparing several values at once
-
-    const std::uint8_t NoLight = 3;
-    const std::uint32_t MaskEmpty = (NoLight << 24) | (NoLight << 16) | (NoLight << 8) | NoLight;
-
-    bool append = false;
-    auto diff = other.position - position;
-
-    std::uint32_t aoMask = *reinterpret_cast<std::uint32_t*>(ao.data());
-    std::uint32_t otherAoMask = *reinterpret_cast<const std::uint32_t*>(other.ao.data());
-
-    //only join if the tiles both have ao
-    if (aoMask != MaskEmpty
-        && otherAoMask != MaskEmpty)
-    {
-        switch (direction)
-        {
-        default: break;
-        case VoxelFace::North:
-            //should be pos X, new face to the right
-            /*
-            2---3    2---3
-            | t | -> | o |
-            0---1    0---1
-            t = this o = other
-            */
-            if (diff.x == 1)
-            {
-                //at least one joining vert should have ao
-                if (ao[1] != NoLight || ao[3] != NoLight)
-                {
-                    append = (ao[1] == other.ao[0] && ao[3] == other.ao[2]);
-                }
-            }
-
-            /*
-            This is moving up the face
-
-            2---3
-            | o |
-            0---1
-              ^
-            2---3
-            | t |
-            0---1
-            */
-            else if (diff.y == 1
-                && (ao[2] != NoLight || ao[3] != NoLight))
-            {
-                append = (ao[2] == other.ao[0] && ao[3] == other.ao[1]);
-            }
-            break;
-        case VoxelFace::South:
-            //diff is pos X, but looking from other
-            //direction means new face is on the left
-
-            /*
-            3---2    3---2
-            | t | -> | o |
-            1---0    1---0
-            t = this o = other
-            */
-            if (diff.x == 1
-                && (ao[2] != NoLight || ao[0] != NoLight))
-            {
-                append = (ao[2] == other.ao[3] && ao[0] == other.ao[1]);
-            }
-            else if (diff.y == 1
-                && (ao[2] != NoLight || ao[3] != NoLight))//moving up the face
-            {
-                append = (ao[2] == other.ao[0] && ao[3] == other.ao[1]);
-            }
-            break;
-        case VoxelFace::East:
-            //diff is pos Z, new face on left
-            if (diff.z == 1
-                && (ao[2] != NoLight || ao[0] != NoLight))
-            {
-                append = (ao[2] == other.ao[3] && ao[0] == other.ao[1]);
-            }
-            else if (diff.y == 1
-                && (ao[2] != NoLight || ao[3] != NoLight))//moving up the face
-            {
-                append = (ao[2] == other.ao[0] && ao[3] == other.ao[1]);
-            }
-            break;
-        case VoxelFace::West:
-            //diff is pos Z, new face on right
-            if (diff.z == 1
-                && (ao[1] != NoLight || ao[3] != NoLight))
-            {
-                append = (ao[1] == other.ao[0] && ao[3] == other.ao[2]);
-            }
-            else if (diff.y == 1
-                && (ao[2] != NoLight || ao[3] != NoLight))//moving up the face
-            {
-                append = (ao[2] == other.ao[0] && ao[3] == other.ao[1]);
-            }
-            break;
-        case VoxelFace::Top:
-            //moves pos x, but new face is on left
-            //because the view is flipped vertically
-            if (diff.x == 1
-                && (ao[3] != NoLight || ao[1] != NoLight))
-            {
-                append = (ao[3] == other.ao[2] && ao[1] == other.ao[0]);
-            }
-            else if (diff.z == 1
-                && (ao[2] != NoLight || ao[3] != NoLight))//moving up the face
-            {
-                append = (ao[2] == other.ao[0] && ao[3] == other.ao[1]);
-            }
-            break;
-        case VoxelFace::Bottom:
-            //also pos X with new face on left, but not flipped
-            if (diff.x == 1
-                && (ao[2] != NoLight || ao[0] != NoLight))
-            {
-                append = (ao[2] == other.ao[3] && ao[0] == other.ao[1]);
-            }
-            else if (diff.z == 1
-                && (ao[2] != NoLight || ao[3] != NoLight))//moving up the face
-            {
-                append = (ao[2] == other.ao[0] && ao[3] == other.ao[1]);
-            }
-            break;
-        }
-    }
-    //or both have no ao
-    else if (aoMask + otherAoMask == MaskEmpty + MaskEmpty)
-    {
-        append = true;
-    }
-    //return false;
-    //return other.id == id && other.visible == visible;
-    return (other.id == id && other.visible == visible && append);
-}
+//bool ChunkSystem::VoxelFace::canAppend(const VoxelFace& other, std::int32_t direction)
+//{
+//    std::uint32_t aoMask = *reinterpret_cast<std::uint32_t*>(ao.data());
+//    std::uint32_t otherAoMask = *reinterpret_cast<const std::uint32_t*>(other.ao.data());
+//    bool append = aoMask == otherAoMask;
+//
+//    return (other.id == id && other.visible == visible && append);
+//}

@@ -113,7 +113,7 @@ private:
         std::array<std::uint8_t, 4u> ao = { 3,3,3,3 };
         float offset = 0.f; //eg if a water surface should be slightly lower
         
-        glm::ivec3 position = glm::ivec3(0); //voxel position of this face so we can track which direction the meshing is travelling
+        //glm::ivec3 position = glm::ivec3(0); //voxel position of this face so we can track which direction the meshing is travelling
 
         bool visible = true;
         enum Side
@@ -124,15 +124,16 @@ private:
 
         bool operator == (const VoxelFace& other)
         {
-            return (other.id == id && other.visible == visible);
+            std::uint32_t aoMask = *reinterpret_cast<std::uint32_t*>(ao.data());
+            std::uint32_t otherAoMask = *reinterpret_cast<const std::uint32_t*>(other.ao.data());
+            bool aoMatch = (aoMask == otherAoMask);
+            return (other.id == id && other.visible == visible && aoMatch);
         }
 
         bool operator != (const VoxelFace& other)
         {
-            return (other.id != id || other.visible != visible);
+            return !(*this == other);
         }
-
-        bool canAppend(const VoxelFace& other, std::int32_t direction);
     };
     VoxelFace getFace(const Chunk&, glm::ivec3, VoxelFace::Side);
     void calcAO(const Chunk&, VoxelFace&, glm::ivec3);

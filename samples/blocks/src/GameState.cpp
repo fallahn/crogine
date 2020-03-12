@@ -119,6 +119,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
     //debug output
+    playerEntity = {};
     registerWindow([&]()
         {
             if (playerEntity.isValid())
