@@ -143,6 +143,6 @@ private:
 
     void addQuad(VertexOutput&, std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, VoxelFace face);
 
-    void onEntityRemoved(cro::Entity);
-    void onEntityAdded(cro::Entity);
+    void onEntityRemoved(cro::Entity) override;
+    void onEntityAdded(cro::Entity) override;
 };

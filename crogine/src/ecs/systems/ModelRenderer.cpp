@@ -71,7 +71,7 @@ void ModelRenderer::process(float)
 
         auto sphere = model.m_meshData.boundingSphere;
         const auto& tx = entity.getComponent<Transform>();
-        auto pos = tx.getWorldPosition();
+        //auto pos = tx.getWorldPosition();
 
         sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
         auto scale = tx.getScale();
