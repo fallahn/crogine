@@ -112,42 +112,13 @@ private:
     };
     std::queue<VertexOutput> m_outputQueue;
 
-    struct VoxelFace final
-    {
-        //these are the same BL, BR, TL, TR as the positions
-        //when creating a quad
-        std::array<std::uint8_t, 4u> ao = { 3,3,3,3 };
-        float offset = 0.f; //eg if a water surface should be slightly lower
-        
-        //glm::ivec3 position = glm::ivec3(0); //voxel position of this face so we can track which direction the meshing is travelling
-
-        bool visible = true;
-        enum Side
-        {
-            South, North, East, West, Top, Bottom
-        }direction = Top;
-        std::uint8_t id;
-
-        bool operator == (const VoxelFace& other)
-        {
-            std::uint32_t aoMask = *reinterpret_cast<std::uint32_t*>(ao.data());
-            std::uint32_t otherAoMask = *reinterpret_cast<const std::uint32_t*>(other.ao.data());
-            bool aoMatch = (aoMask == otherAoMask);
-            return (other.id == id && other.visible == visible && aoMatch);
-        }
-
-        bool operator != (const VoxelFace& other)
-        {
-            return !(*this == other);
-        }
-    };
-    VoxelFace getFace(const Chunk&, glm::ivec3, VoxelFace::Side);
-    void calcAO(const Chunk&, VoxelFace&, glm::ivec3);
+    vx::Face getFace(const Chunk&, glm::ivec3, vx::Side);
+    void calcAO(const Chunk&, vx::Face&, glm::ivec3);
     void generateChunkMesh(const Chunk&, VertexOutput&);
     void generateNaiveMesh(const Chunk&, VertexOutput&);
     void generateDebugMesh(const Chunk&, VertexOutput&);
 
-    void addQuad(VertexOutput&, std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, VoxelFace face);
+    void addQuad(VertexOutput&, std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, vx::Face face);
 
     void onEntityRemoved(cro::Entity) override;
     void onEntityAdded(cro::Entity) override;

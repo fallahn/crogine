@@ -405,7 +405,7 @@ void ChunkSystem::threadFunc()
     }
 }
 
-void ChunkSystem::calcAO(const Chunk& chunk, VoxelFace& face, glm::ivec3 position)
+void ChunkSystem::calcAO(const Chunk& chunk, vx::Face& face, glm::ivec3 position)
 {
     //this has confused itself somewhere. currently north
     //faces point +z, south faces are - z
@@ -435,7 +435,7 @@ void ChunkSystem::calcAO(const Chunk& chunk, VoxelFace& face, glm::ivec3 positio
 
     if (face.visible && face.id != waterblock)
     {
-        if (face.direction == VoxelFace::Top)
+        if (face.direction == vx::Top)
         {
             position.y += 1;
             std::vector<glm::ivec3> positions =
@@ -465,7 +465,7 @@ void ChunkSystem::calcAO(const Chunk& chunk, VoxelFace& face, glm::ivec3 positio
 
             getSurrounding(positions);
         }
-        else if(face.direction == VoxelFace::Bottom)
+        else if(face.direction == vx::Bottom)
         {
             position.y -= 1;
             std::vector<glm::ivec3> positions =
@@ -495,7 +495,7 @@ void ChunkSystem::calcAO(const Chunk& chunk, VoxelFace& face, glm::ivec3 positio
 
             getSurrounding(positions);
         }
-        else if (face.direction == VoxelFace::North)
+        else if (face.direction == vx::North)
         {
             position.z += 1;
             std::vector<glm::ivec3> positions =
@@ -525,7 +525,7 @@ void ChunkSystem::calcAO(const Chunk& chunk, VoxelFace& face, glm::ivec3 positio
 
             getSurrounding(positions);
         }
-        else if (face.direction == VoxelFace::East)
+        else if (face.direction == vx::East)
         {
             position.x += 1;
             std::vector<glm::ivec3> positions =
@@ -555,7 +555,7 @@ void ChunkSystem::calcAO(const Chunk& chunk, VoxelFace& face, glm::ivec3 positio
 
             getSurrounding(positions);
         }
-        else if (face.direction == VoxelFace::South)
+        else if (face.direction == vx::South)
         {
             position.z -= 1;
             std::vector<glm::ivec3> positions =
@@ -585,7 +585,7 @@ void ChunkSystem::calcAO(const Chunk& chunk, VoxelFace& face, glm::ivec3 positio
 
             getSurrounding(positions);
         }
-        else if (face.direction == VoxelFace::West)
+        else if (face.direction == vx::West)
         {
             position.x -= 1;
             std::vector<glm::ivec3> positions =
@@ -653,16 +653,15 @@ void ChunkSystem::calcAO(const Chunk& chunk, VoxelFace& face, glm::ivec3 positio
     }
 }
 
-ChunkSystem::VoxelFace ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 position, VoxelFace::Side side)
+vx::Face ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 position, vx::Side side)
 {
     std::lock_guard<std::mutex> lock(*m_mutex);
     const std::uint8_t airBlock = m_voxelData.getID(vx::CommonType::Air);
     const std::uint8_t waterBlock = m_voxelData.getID(vx::CommonType::Water);
 
-    VoxelFace face;
+    vx::Face face;
     face.direction = side;
     face.id = chunk.getVoxelQ(position);
-    //face.position = position;
     
     std::uint8_t neighbour = airBlock;
 
@@ -674,28 +673,29 @@ ChunkSystem::VoxelFace ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 posit
         return face;
     }
 
+    face.textureIndex = m_voxelData.getVoxel(face.id).tileIDs[side];
     switch (side)
     {
-    case VoxelFace::Top:
+    case vx::Top:
         neighbour = chunk.getVoxel({ position.x, position.y + 1, position.z });
         if (face.id == waterBlock)
         {
             face.offset = 0.1f;
         }
         break;
-    case VoxelFace::Bottom:
+    case vx::Bottom:
         neighbour = chunk.getVoxel({ position.x, position.y - 1, position.z });
         break;
-    case VoxelFace::North:
+    case vx::North:
         neighbour = chunk.getVoxel({ position.x, position.y, position.z + 1 });
         break;
-    case VoxelFace::South:
+    case vx::South:
         neighbour = chunk.getVoxel({ position.x, position.y, position.z - 1 });
         break;
-    case VoxelFace::East:
+    case vx::East:
         neighbour = chunk.getVoxel({ position.x + 1, position.y, position.z });
         break;
-    case VoxelFace::West:
+    case vx::West:
         neighbour = chunk.getVoxel({ position.x - 1, position.y, position.z });
         break;
     }
@@ -730,14 +730,14 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
             switch(direction)
             {
             case 0:
-                currentSide = (backface) ? VoxelFace::West : VoxelFace::East;
+                currentSide = (backface) ? vx::West : vx::East;
                 break;
             case 1:
-                currentSide = (backface) ? VoxelFace::Bottom : VoxelFace::Top;
+                currentSide = (backface) ? vx::Bottom : vx::Top;
                 maxSlice = chunk.getHighestPoint() + 1;
                 break;
             case 2:
-                currentSide = (backface) ? VoxelFace::South : VoxelFace::North;
+                currentSide = (backface) ? vx::South : vx::North;
                 break;
             }
 
@@ -745,7 +745,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
             for (x[direction] = -1; x[direction] < maxSlice;)
             {
                 //this is the collection of faces grouped per side
-                std::vector<std::optional<VoxelFace>> faceMask(WorldConst::ChunkArea);
+                std::vector<std::optional<vx::Face>> faceMask(WorldConst::ChunkArea);
                 std::fill(faceMask.begin(), faceMask.end(), std::nullopt);
                 std::size_t maskIndex = 0;
 
@@ -756,11 +756,14 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                         auto positionA = glm::ivec3(x[0], x[1], x[2]);
                         auto positionB = glm::ivec3(x[0] + q[0], x[1] + q[1], x[2] + q[2]);
 
-                        std::optional<VoxelFace> faceA = (x[direction] >= 0) ? 
-                            std::optional<VoxelFace>(getFace(chunk, positionA, (VoxelFace::Side)currentSide)) : std::nullopt;
+                        //TODO check the voxel type for cross meshes and add them to a list
+                        //for later processing, and skip the following
 
-                        std::optional<VoxelFace> faceB = (x[direction] < (WorldConst::ChunkSize - 1)) ?
-                            std::optional<VoxelFace>(getFace(chunk, positionB, (VoxelFace::Side)currentSide)) : std::nullopt;
+                        std::optional<vx::Face> faceA = (x[direction] >= 0) ? 
+                            std::optional<vx::Face>(getFace(chunk, positionA, (vx::Side)currentSide)) : std::nullopt;
+
+                        std::optional<vx::Face> faceB = (x[direction] < (WorldConst::ChunkSize - 1)) ?
+                            std::optional<vx::Face>(getFace(chunk, positionB, (vx::Side)currentSide)) : std::nullopt;
 
                         //calculate the AO values
                         //TODO we want to save some time here and only calc on the face
@@ -851,7 +854,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                             std::vector<glm::vec3> positions;
                             switch (faceMask[maskIndex]->direction)
                             {
-                            case VoxelFace::West:
+                            case vx::West:
                                 positions =
                                 {
                                     glm::vec3(x[0], x[1], x[2]), //BL
@@ -860,8 +863,8 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                     glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]) //TR
                                 };
                                 break;
-                            case VoxelFace::East:
-                            case VoxelFace::Top:
+                            case vx::East:
+                            case vx::Top:
                                 positions =
                                 {
                                     glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]),
@@ -870,7 +873,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                     glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2])
                                 };
                                 break;
-                            case VoxelFace::North:
+                            case vx::North:
                                 positions =
                                 {
                                     glm::vec3(x[0], x[1], x[2]),
@@ -879,7 +882,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                     glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2])
                                 };
                                 break;
-                            case VoxelFace::South:
+                            case vx::South:
                                 positions =
                                 {
                                     glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2]),
@@ -888,7 +891,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                     glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2])
                                 };
                                 break;
-                            case VoxelFace::Bottom:
+                            case vx::Bottom:
                                 positions =
                                 {
                                     glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
@@ -923,6 +926,8 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
             }
         }
     }
+
+    //TODO check the list of cross meshes and add the vertices
 }
 
 void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
@@ -945,14 +950,14 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
             switch (direction)
             {
             case 0:
-                currentSide = (backface) ? VoxelFace::West : VoxelFace::East;
+                currentSide = (backface) ? vx::West : vx::East;
                 break;
             case 1:
-                currentSide = (backface) ? VoxelFace::Bottom : VoxelFace::Top;
+                currentSide = (backface) ? vx::Bottom : vx::Top;
                 maxSlice = chunk.getHighestPoint() + 1;
                 break;
             case 2:
-                currentSide = (backface) ? VoxelFace::South : VoxelFace::North;
+                currentSide = (backface) ? vx::South : vx::North;
                 break;
             }
 
@@ -960,7 +965,7 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
             for (x[direction] = -1; x[direction] < maxSlice;)
             {
                 //this is the collection of faces grouped per side
-                std::vector<std::optional<VoxelFace>> faceMask(WorldConst::ChunkArea);
+                std::vector<std::optional<vx::Face>> faceMask(WorldConst::ChunkArea);
                 std::fill(faceMask.begin(), faceMask.end(), std::nullopt);
                 std::size_t maskIndex = 0;
 
@@ -971,11 +976,11 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
                         auto positionA = glm::ivec3(x[0], x[1], x[2]);
                         auto positionB = glm::ivec3(x[0] + q[0], x[1] + q[1], x[2] + q[2]);
 
-                        std::optional<VoxelFace> faceA = (x[direction] >= 0) ?
-                            std::optional<VoxelFace>(getFace(chunk, positionA, (VoxelFace::Side)currentSide)) : std::nullopt;
+                        std::optional<vx::Face> faceA = (x[direction] >= 0) ?
+                            std::optional<vx::Face>(getFace(chunk, positionA, (vx::Side)currentSide)) : std::nullopt;
 
-                        std::optional<VoxelFace> faceB = (x[direction] < (WorldConst::ChunkSize - 1)) ?
-                            std::optional<VoxelFace>(getFace(chunk, positionB, (VoxelFace::Side)currentSide)) : std::nullopt;
+                        std::optional<vx::Face> faceB = (x[direction] < (WorldConst::ChunkSize - 1)) ?
+                            std::optional<vx::Face>(getFace(chunk, positionB, (vx::Side)currentSide)) : std::nullopt;
 
                         //calculate the AO values
                         //TODO we want to save some time here and only calc on the face
@@ -986,7 +991,7 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
 
                         std::vector<glm::vec3> positions;
 
-                        VoxelFace::Side faceDirection = VoxelFace::North;
+                        vx::Side faceDirection = vx::North;
                         glm::ivec3 position(0);
 
                         if (faceA != std::nullopt && faceB != std::nullopt && (*faceA == *faceB))
@@ -1013,38 +1018,38 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
                         {
                             switch (faceDirection)
                             {
-                            case VoxelFace::Bottom:
+                            case vx::Bottom:
                                 positions.emplace_back(position.x + 1, position.y, position.z + 1);
                                 positions.emplace_back(position.x, position.y, position.z + 1);
                                 positions.emplace_back(position.x + 1, position.y, position.z);
                                 positions.emplace_back(position.x, position.y, position.z);
                                 break;
-                            case VoxelFace::Top:
+                            case vx::Top:
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z);
                                 positions.emplace_back(position.x, position.y + 1, position.z);
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
                                 positions.emplace_back(position.x, position.y + 1, position.z + 1);
                                 break;
-                            case VoxelFace::North:
+                            case vx::North:
                                 positions.emplace_back(position.x, position.y, position.z + 1);
                                 positions.emplace_back(position.x + 1, position.y, position.z + 1);
                                 positions.emplace_back(position.x, position.y + 1, position.z + 1);
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
                                 break;
-                            case VoxelFace::South:
+                            case vx::South:
                                 positions.emplace_back(position.x + 1, position.y, position.z);
                                 positions.emplace_back(position.x, position.y, position.z);
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z);
                                 positions.emplace_back(position.x, position.y + 1, position.z);
                                 
                                 break;
-                            case VoxelFace::East:
+                            case vx::East:
                                 positions.emplace_back(position.x + 1, position.y, position.z + 1);
                                 positions.emplace_back(position.x + 1, position.y, position.z);
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z + 1);
                                 positions.emplace_back(position.x + 1, position.y + 1, position.z);
                                 break;
-                            case VoxelFace::West:
+                            case vx::West:
                                 positions.emplace_back(position.x, position.y, position.z);
                                 positions.emplace_back(position.x, position.y, position.z + 1);
                                 positions.emplace_back(position.x, position.y + 1, position.z);
@@ -1163,7 +1168,7 @@ void ChunkSystem::generateDebugMesh(const Chunk& chunk, VertexOutput& output)
     }
 }
 
-void ChunkSystem::addQuad(VertexOutput& output, std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, VoxelFace face)
+void ChunkSystem::addQuad(VertexOutput& output, std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, vx::Face face)
 {
     //add indices to the index array, remembering to offset into the current VBO
     std::array<std::int32_t, 6> localIndices = { 2,0,1,  1,3,2 };
@@ -1237,22 +1242,22 @@ void ChunkSystem::addQuad(VertexOutput& output, std::vector<glm::vec3> positions
     glm::vec3 normal = glm::vec3(0.f);
     switch (face.direction)
     {
-    case VoxelFace::North:
+    case vx::North:
         normal.z = -1.f;
         break;
-    case VoxelFace::South:
+    case vx::South:
         normal.z = 1.f;
         break;
-    case VoxelFace::East:
+    case vx::East:
         normal.x = 1.f;
         break;
-    case VoxelFace::West:
+    case vx::West:
         normal.x = -1.f;
         break;
-    case VoxelFace::Top:
+    case vx::Top:
         normal.y = 1.f;
         break;
-    case VoxelFace::Bottom:
+    case vx::Bottom:
         normal.y = -1.f;
         break;
     }

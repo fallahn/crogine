@@ -36,9 +36,11 @@ namespace vx
         : m_commonVoxels(CommonType::Count)
     {
         //let's call these 'built in' types
+        //TODO load some sort of config file to get
+        //the tile indices
         Data data;
 
-        //adding air first ensures it haas the ID of 0
+        //adding air first ensures it has the ID of 0
         //unfortunately this is an assumption made in
         //some places where the true ID of a block type
         //is ont accessible, for instance the default value
@@ -50,18 +52,28 @@ namespace vx
 
         data.name = "sand";
         data.collidable = true;
+        data.tileIDs = { 2,2,2,2,2,2 };
         addVoxel(data);
 
         data.name = "stone";
+        data.tileIDs = { 10,10,10,10,10,10 };
         addVoxel(data);
 
         data.name = "water";
+        data.tileIDs = { 18,18,18,18,18,18 };
         addVoxel(data);
 
         data.name = "dirt";
+        data.tileIDs = { 17,17,17,17,17,17 };
         addVoxel(data);
 
         data.name = "grass";
+        data.tileIDs[Side::Top] = 1;
+        data.tileIDs[Side::Bottom] = 17;
+        data.tileIDs[Side::North] = 9;
+        data.tileIDs[Side::East] = 9;
+        data.tileIDs[Side::South] = 9;
+        data.tileIDs[Side::West] = 9;
         addVoxel(data);
 
 
