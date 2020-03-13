@@ -192,6 +192,18 @@ bool GameState::handleEvent(const cro::Event& evt)
         }
         break;
 #endif //CRO_DEBUG_
+        case SDLK_3:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = Client::CommandID::DebugMesh;
+            cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Model>().setHidden(!e.getComponent<cro::Model>().isHidden());
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        }
+        break;
+
         }
     }
 

@@ -33,11 +33,13 @@ source distribution.
 #include "ChunkMeshBuilder.hpp"
 #include "ResourceIDs.hpp"
 #include "ErrorCheck.hpp"
+#include "BorderMeshBuilder.hpp"
+#include "ClientCommandIDs.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
-#include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 
 #include <crogine/graphics/ResourceAutomation.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -125,23 +127,28 @@ namespace
     const std::string VertexDebug = 
         R"(
             ATTRIBUTE vec4 a_position;
+            ATTRIBUTE vec3 a_colour;
 
             uniform mat4 u_worldViewMatrix;
             uniform mat4 u_projectionMatrix;
 
+            VARYING_OUT MED vec3 v_colour;
+
             void main()
             {
                 gl_Position = u_projectionMatrix * u_worldViewMatrix * a_position;
+                v_colour = a_colour;
             })";
 
     const std::string FragmentDebug = 
         R"(
-            uniform vec4 u_colour;
             OUTPUT
+
+            VARYING_IN MED vec3 v_colour;
 
             void main()
             {
-                FRAG_OUT = u_colour;
+                FRAG_OUT.rgb = v_colour;
             })";
 }
 
@@ -169,11 +176,7 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
     {
         auto& shader = rc.shaders.get(ShaderID::ChunkDebug);
         m_materialIDs[MaterialID::ChunkDebug] = rc.materials.add(shader);
-        rc.materials.get(m_materialIDs[MaterialID::ChunkDebug]).blendMode = cro::Material::BlendMode::Alpha;
-
-        glCheck(glUseProgram(shader.getGLHandle()));
-        glCheck(glUniform4f(shader.getUniformMap().at("u_colour"), 1.f, 0.f, 0.f, 1.f));
-        glCheck(glUseProgram(0));
+        m_meshIDs[MeshID::Border] = rc.meshes.loadMesh(BorderMeshBuilder());
 
         glCheck(glLineWidth(2.f));
     }
@@ -187,20 +190,6 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
     }
 
     m_threadRunning = true;
-
-    registerConsoleTab("Debug", 
-        [&]()
-        {
-            static bool showQuadmesh = true;
-            if (ImGui::Checkbox("Show Quads", &showQuadmesh))
-            {
-                auto colour = showQuadmesh ? cro::Colour::Red() : cro::Colour::Transparent();
-                auto& shader = rc.shaders.get(ShaderID::ChunkDebug);
-                glCheck(glUseProgram(shader.getGLHandle()));
-                glCheck(glUniform4f(shader.getUniformMap().at("u_colour"), colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()));
-                glCheck(glUseProgram(0));
-            }
-        });
 }
 
 ChunkSystem::~ChunkSystem()
@@ -278,8 +267,14 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 auto waterMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkWater]);
                 entity.getComponent<cro::Model>().setMaterial(1, waterMaterial);
 
+                
+                //create a second entity for debug bounds
+                entity = getScene()->createEntity();
+                entity.addComponent<cro::Transform>().setPosition(glm::vec3(position * WorldConst::ChunkSize));
                 auto debugMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
-                entity.getComponent<cro::Model>().setMaterial(2, debugMaterial);
+                entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), debugMaterial);
+                entity.getComponent<cro::Model>().setHidden(true);
+                entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::DebugMesh;
             }
         }
     }

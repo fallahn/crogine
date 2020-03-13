@@ -74,6 +74,7 @@ private:
 
     cro::ResourceCollection& m_resources;
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
+    std::array<std::size_t, MeshID::Count> m_meshIDs = {};
 
 
     ChunkManager m_chunkManager;

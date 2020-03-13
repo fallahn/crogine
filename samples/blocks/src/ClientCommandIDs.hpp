@@ -33,7 +33,8 @@ namespace Client::CommandID
 {
     enum
     {
-        Interpolated = 0x1
+        Interpolated = 0x1,
+        DebugMesh = 0x2
     };
 }
 

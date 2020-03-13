@@ -28,8 +28,59 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BorderMeshBuilder.hpp"
+#include "WorldConsts.hpp"
+
+#include <crogine/detail/OpenGL.hpp>
+#include <crogine/detail/glm/gtc/packing.hpp>
+
+using namespace WorldConst;
 
 cro::Mesh::Data BorderMeshBuilder::build() const
 {
-    return {};
+
+    std::vector<float> verts =
+    {
+        0.f, 0.f, 0.f,               1.f, 0.f, 1.f,
+        ChunkSize, 0.f, 0.f,         1.f, 0.f, 1.f,
+        ChunkSize, 0.f, ChunkSize,   1.f, 0.f, 1.f,
+        0.f, 0.f, ChunkSize,         1.f, 0.f, 1.f,
+
+        0.f, ChunkSize, 0.f,               1.f, 0.f, 1.f,
+        ChunkSize, ChunkSize, 0.f,         1.f, 0.f, 1.f,
+        ChunkSize, ChunkSize, ChunkSize,   1.f, 0.f, 1.f,
+        0.f, ChunkSize, ChunkSize,         1.f, 0.f, 1.f
+    };
+
+    std::vector<std::uint16_t> indices =
+    {
+        0, 1,  1, 2,  2, 3,  3, 0,
+
+        4, 5,  5, 6,  6, 7,  7, 4,
+
+        0, 4,  1, 5,  2, 6,  3, 7
+    };
+
+    cro::Mesh::Data data;
+
+    data.attributes[cro::Mesh::Position] = 3;
+    data.attributes[cro::Mesh::Colour] = 3;
+
+    data.primitiveType = GL_LINES;
+    data.vertexSize = getVertexSize(data.attributes);
+    data.vertexCount = 8;
+    createVBO(data, verts);
+
+    data.submeshCount = 1;
+    data.indexData[0].format = GL_UNSIGNED_SHORT;
+    data.indexData[0].primitiveType = data.primitiveType;
+    data.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
+
+    createIBO(data, indices.data(), 0, sizeof(std::uint16_t) * indices.size());
+
+    data.boundingBox[0] = glm::vec3(0.f);
+    data.boundingBox[1] = glm::vec3(ChunkSize);
+    data.boundingSphere.radius = glm::length(data.boundingBox[1] / 2.f);
+    data.boundingSphere.centre = data.boundingBox[1] / 2.f;
+
+    return data;
 }

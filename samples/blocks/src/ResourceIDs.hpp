@@ -46,6 +46,8 @@ namespace MeshID
     enum
     {
         Border,
+
+        Count
     };
 }
 
