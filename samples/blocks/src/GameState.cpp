@@ -191,6 +191,39 @@ bool GameState::handleEvent(const cro::Event& evt)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, cmd, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
         break;
+        case SDLK_4:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = Client::CommandID::ChunkMesh;
+            cmd.action = [](cro::Entity e, float)
+            {
+                auto& chunkComponent = e.getComponent<ChunkComponent>();
+                if (chunkComponent.meshType != ChunkComponent::Naive)
+                {
+                    chunkComponent.meshType = ChunkComponent::Naive;
+                    chunkComponent.needsUpdate = true;
+                }
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        }
+            break;
+        case SDLK_5:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = Client::CommandID::ChunkMesh;
+            cmd.action = [](cro::Entity e, float)
+            {
+                auto& chunkComponent = e.getComponent<ChunkComponent>();
+                if (chunkComponent.meshType != ChunkComponent::Greedy)
+                {
+                    chunkComponent.meshType = ChunkComponent::Greedy;
+                    chunkComponent.needsUpdate = true;
+                }
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            std::cout << "put back correct operator == !!!\n";
+        }
+        break;
 #endif //CRO_DEBUG_
         case SDLK_3:
         {

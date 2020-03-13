@@ -148,8 +148,19 @@ namespace
 
             void main()
             {
-                FRAG_OUT.rgb = v_colour;
+                FRAG_OUT = vec4(v_colour, 1.0);
             })";
+
+    const std::string FragmentRed =
+        R"(
+            OUTPUT
+
+            void main()
+            {
+                FRAG_OUT = vec4(1.0, 0.0, 0.0, 1.0);
+            })";
+
+    //std::int32_t temp = 0;
 }
 
 ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
@@ -178,7 +189,8 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
         m_materialIDs[MaterialID::ChunkDebug] = rc.materials.add(shader);
         m_meshIDs[MeshID::Border] = rc.meshes.loadMesh(BorderMeshBuilder());
 
-        glCheck(glLineWidth(2.f));
+        /*rc.shaders.preloadFromString(VertexDebug, FragmentRed, 500);
+        temp = rc.materials.add(rc.shaders.get(500));*/
     }
 
     //thread for meshing
@@ -218,7 +230,7 @@ void ChunkSystem::process(float)
         {
             //push chunk into thread queue
             m_mutex->lock();
-            m_inputQueue.push(chunkComponent.chunkPos);
+            m_inputQueue.push(entity);
             m_mutex->unlock();
 
             chunkComponent.needsUpdate = false;
@@ -254,6 +266,7 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 auto entity = getScene()->createEntity();
                 entity.addComponent<cro::Transform>().setPosition(glm::vec3(position * WorldConst::ChunkSize));
                 entity.addComponent<ChunkComponent>().chunkPos = position;
+                entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::ChunkMesh;
 
                 //create a model with an empty mesh, this should be build on next
                 //update automagically!
@@ -267,6 +280,8 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 auto waterMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkWater]);
                 entity.getComponent<cro::Model>().setMaterial(1, waterMaterial);
 
+                /*auto tempMat = m_resources.materials.get(temp);
+                entity.getComponent<cro::Model>().setMaterial(2, tempMat);*/
                 
                 //create a second entity for debug bounds
                 entity = getScene()->createEntity();
@@ -328,6 +343,7 @@ void ChunkSystem::threadFunc()
     {
         const Chunk* chunk = nullptr;
         glm::ivec3 position = glm::ivec3(0);
+        ChunkComponent::MeshType meshType = ChunkComponent::Greedy;
 
         //lock the input queue
         m_mutex->lock();
@@ -335,8 +351,11 @@ void ChunkSystem::threadFunc()
         //check queue
         if (!m_inputQueue.empty())
         {
-            position = m_inputQueue.front();
+            auto entity = m_inputQueue.front();
             m_inputQueue.pop();
+
+            position = entity.getComponent<ChunkComponent>().chunkPos;
+            meshType = entity.getComponent<ChunkComponent>().meshType;
 
             chunk = &m_chunkManager.getChunk(position);
 
@@ -354,8 +373,14 @@ void ChunkSystem::threadFunc()
         if (chunk)
         {
             VertexOutput vertexOutput;
-            generateChunkMesh(*chunk, vertexOutput);
-            //generateNaiveMesh(*chunk, vertexOutput);
+            if (meshType == ChunkComponent::MeshType::Greedy)
+            {
+                generateChunkMesh(*chunk, vertexOutput);
+            }
+            else
+            {
+                generateNaiveMesh(*chunk, vertexOutput);
+            }
             //generateDebugMesh(*chunk, vertexOutput);
 
 
@@ -368,7 +393,7 @@ void ChunkSystem::threadFunc()
             result.vertexData.swap(vertexOutput.vertexData);
             result.solidIndices.swap(vertexOutput.solidIndices);
             result.waterIndices.swap(vertexOutput.waterIndices);
-            result.debugIndices.swap(vertexOutput.debugIndices);
+            //result.debugIndices.swap(vertexOutput.debugIndices);
 
             //unlock output
             m_mutex->unlock();
@@ -763,9 +788,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                         if (faceMask[maskIndex] != std::nullopt
                             && faceMask[maskIndex]->visible)
                         {
-                            std::array<std::uint8_t, 4u> aoValues = {3,3,3,3};
-                            aoValues[0] = faceMask[maskIndex]->ao[0];
-
                             auto prevFace = *faceMask[maskIndex];
 
                             //calc the merged width/height
@@ -779,7 +801,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                 prevFace = *faceMask[maskIndex + width];
                             }
                             auto endFace = *faceMask[maskIndex + (width - 1)];
-                            aoValues[1] = endFace.ao[1];
 
 
                             bool complete = false;
@@ -796,9 +817,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                     if (faceMask[idx] == std::nullopt
                                         || (prevFace != *faceMask[idx]))
                                     { 
-                                        aoValues[2] = faceMask[rowStart]->ao[2];
-                                        aoValues[3] = faceMask[rowStart + (width - 1)]->ao[3];
-
                                         complete = true;
                                         break;
                                     }
@@ -880,7 +898,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                 };
                                 break;
                             }
-                            addQuad(output, positions, aoValues, static_cast<float>(width), static_cast<float>(height), *faceMask[maskIndex]);
+                            addQuad(output, positions, faceMask[maskIndex]->ao, static_cast<float>(width), static_cast<float>(height), *faceMask[maskIndex]);
 
 
                             //reset any faces used
@@ -1164,11 +1182,11 @@ void ChunkSystem::addQuad(VertexOutput& output, std::vector<glm::vec3> positions
         i += indexOffset;
     }
 
-    std::array<std::uint32_t, 8u> debugIndices = { 0, 1, 1, 3, 3, 2, 2, 0 };
-    for (auto& i : debugIndices)
-    {
-        i += indexOffset;
-    }
+    //std::array<std::uint32_t, 8u> debugIndices = { 0, 1, 1, 3, 3, 2, 2, 0 };
+    //for (auto& i : debugIndices)
+    //{
+    //    i += indexOffset;
+    //}
 
     if (face.id == m_voxelData.getID(vx::CommonType::Water))
     {
@@ -1290,12 +1308,3 @@ void ChunkSystem::onEntityAdded(cro::Entity entity)
         m_chunkEntities.insert(std::make_pair(entity.getComponent<ChunkComponent>().chunkPos, entity));
     }
 }
-
-//bool ChunkSystem::VoxelFace::canAppend(const VoxelFace& other, std::int32_t direction)
-//{
-//    std::uint32_t aoMask = *reinterpret_cast<std::uint32_t*>(ao.data());
-//    std::uint32_t otherAoMask = *reinterpret_cast<const std::uint32_t*>(other.ao.data());
-//    bool append = aoMask == otherAoMask;
-//
-//    return (other.id == id && other.visible == visible && append);
-//}

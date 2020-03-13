@@ -52,6 +52,11 @@ struct ChunkComponent final
 {
     bool needsUpdate = true;
     glm::ivec3 chunkPos = glm::ivec3(0);
+
+    enum MeshType
+    {
+        Greedy, Naive
+    }meshType = Greedy;
 };
 
 class ChunkSystem final : public cro::System, public cro::GuiClient
@@ -96,7 +101,7 @@ private:
     std::atomic_bool m_threadRunning;
     void threadFunc();
 
-    std::queue<glm::ivec3> m_inputQueue;
+    std::queue<cro::Entity> m_inputQueue;
     struct VertexOutput final
     {
         std::vector<float> vertexData;
