@@ -52,31 +52,29 @@ namespace vx
 
         data.name = "sand";
         data.collidable = true;
-        data.tileIDs = { 2,2,2,2,2,2 };
+        data.tileIDs = { 1,1,1,1,1,1 };
         addVoxel(data);
 
         data.name = "stone";
-        data.tileIDs = { 10,10,10,10,10,10 };
+        data.tileIDs = { 9,9,9,9,9,9 };
         addVoxel(data);
 
         data.name = "water";
-        data.tileIDs = { 18,18,18,18,18,18 };
-        addVoxel(data);
-
-        data.name = "dirt";
         data.tileIDs = { 17,17,17,17,17,17 };
         addVoxel(data);
 
-        data.name = "grass";
-        data.tileIDs[Side::Top] = 1;
-        data.tileIDs[Side::Bottom] = 17;
-        data.tileIDs[Side::North] = 9;
-        data.tileIDs[Side::East] = 9;
-        data.tileIDs[Side::South] = 9;
-        data.tileIDs[Side::West] = 9;
+        data.name = "dirt";
+        data.tileIDs = { 0,0,0,0,0,0 };
         addVoxel(data);
 
-
+        data.name = "grass";
+        data.tileIDs[Side::Top] = 16;
+        data.tileIDs[Side::Bottom] = 0;
+        data.tileIDs[Side::North] = 8;
+        data.tileIDs[Side::East] = 8;
+        data.tileIDs[Side::South] = 8;
+        data.tileIDs[Side::West] = 8;
+        addVoxel(data);
         
 
         m_commonVoxels[CommonType::Sand] = getID("sand");

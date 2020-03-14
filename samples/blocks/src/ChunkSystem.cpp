@@ -52,7 +52,7 @@ namespace
     const std::string Vertex = 
         R"(
             ATTRIBUTE vec4 a_position;
-            ATTRIBUTE vec4 a_colour;
+            ATTRIBUTE MED vec4 a_colour;
             ATTRIBUTE vec3 a_normal;
             ATTRIBUTE MED vec2 a_texCoord0;
 
@@ -60,12 +60,42 @@ namespace
             uniform mat4 u_worldViewMatrix;
             uniform mat4 u_projectionMatrix;
 
-            VARYING_OUT LOW vec3 v_colour;
+            VARYING_OUT MED vec3 v_colour;
             VARYING_OUT MED vec2 v_texCoord;
             VARYING_OUT MED vec4 v_viewPosition;
             VARYING_OUT float v_worldHeight;
             VARYING_OUT float v_ao;
             VARYING_OUT vec3 v_normal;
+
+            void main()
+            {
+                gl_Position = u_projectionMatrix * u_worldViewMatrix * a_position;
+
+                v_colour = a_colour.rgb;
+                v_texCoord = a_texCoord0;
+                v_viewPosition = u_worldViewMatrix * a_position;
+                v_worldHeight = (u_worldMatrix * a_position).y;
+                v_ao = a_colour.a;
+                v_normal = a_normal;
+            })";
+
+    const std::string Fragment = 
+        R"(
+            uniform float u_alpha;
+            uniform vec2 u_tileSize;
+            uniform sampler2D u_texture;
+
+            VARYING_IN MED vec3 v_colour;
+            VARYING_IN MED vec2 v_texCoord;
+            VARYING_IN MED vec4 v_viewPosition;
+            VARYING_IN float v_worldHeight;
+            VARYING_IN float v_ao;
+            VARYING_IN vec3 v_normal;
+
+            OUTPUT
+
+            const LOW vec4 FogColour = vec4(0.07, 0.17, 0.67, 1.0);
+            const float FogDensity = 0.03;
 
             float directionalAmbience(vec3 normal)
             {
@@ -79,36 +109,13 @@ namespace
 
             void main()
             {
-                gl_Position = u_projectionMatrix * u_worldViewMatrix * a_position;
+                vec2 uv = v_colour.rg;
+                uv.x += (u_tileSize.x * fract(v_texCoord.x));
+                uv.y -= (u_tileSize.y * fract(v_texCoord.y));
 
-                float ambience = directionalAmbience(a_normal);
-                v_colour = a_colour.rgb * ambience;
-                v_texCoord = a_texCoord0;
-                v_viewPosition = u_worldViewMatrix * a_position;
-                v_worldHeight = (u_worldMatrix * a_position).y;
-                v_ao = a_colour.a;
-                v_normal = a_normal;
-            })";
+                vec4 colour = vec4(TEXTURE(u_texture, uv).rgb, u_alpha);
+                colour.rgb *= directionalAmbience(v_normal);
 
-    const std::string Fragment = 
-        R"(
-            uniform float u_alpha;
-
-            VARYING_IN LOW vec3 v_colour;
-            VARYING_IN MED vec2 v_texCoord;
-            VARYING_IN MED vec4 v_viewPosition;
-            VARYING_IN float v_worldHeight;
-            VARYING_IN float v_ao;
-            VARYING_IN vec3 v_normal;
-
-            OUTPUT
-
-            const LOW vec4 FogColour = vec4(0.07, 0.17, 0.67, 1.0);
-            const float FogDensity = 0.03;
-
-            void main()
-            {
-                vec4 colour = vec4(v_colour, u_alpha);
                 float fogFactor = 1.0;
 
                 if(v_worldHeight < 23.899) //water level
@@ -120,7 +127,7 @@ namespace
                     colour *= 0.9;
                 }
 
-                float light = pow(v_ao, 0.9);// + max(0.15 * dot(v_normal, vec3(1.0)), 0.0);
+                float light = v_ao + max(0.15 * dot(v_normal, vec3(1.0)), 0.0);
                 FRAG_OUT = mix(FogColour, colour * light, fogFactor);
             })";
 
@@ -161,6 +168,9 @@ namespace
             })";
 
     //std::int32_t temp = 0;
+
+    //number of tiles in the tile texture X direction.
+    const std::int32_t TextureTileCount = 8;
 }
 
 ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
@@ -192,6 +202,48 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
         /*rc.shaders.preloadFromString(VertexDebug, FragmentRed, 500);
         temp = rc.materials.add(rc.shaders.get(500));*/
     }
+
+    //pre-parse the texture info
+    /*
+    Something has to be const here - so we'll go ahead and state that the
+    block texture will always be 8 tiles wide. This allows for varying width
+    tiles (although enforces they should be square) so blocks can optionally
+    have higher resolution textures. The texture file can also be expanded
+    vertically in size should more tiles be required in the future. Here
+    we load the texture and parse some information about it to pass to the
+    shader so that it can pick the correct tile for the UV info handed to it.
+    */
+    auto& texture = rc.textures.get("assets/images/blocks.png");
+    texture.setRepeated(true);
+
+    glm::vec2 textureSize(texture.getSize());
+    float tileWidth = textureSize.x / TextureTileCount;
+
+    std::int32_t tileCountY = static_cast<std::int32_t>(textureSize.y / tileWidth);
+
+    glm::vec2 tileUVSize = { 1.f / TextureTileCount, 1.f / tileCountY };
+
+    //store the offset for each tile so the voxel face can index into the vector
+    //we reserve some size in case a face tries to index somewhere out of range
+    //(although this really needs to be prevented altogether, perhaps by limiting
+    //the index value of the face indices)
+    m_tileOffsets.resize(256);
+    for (auto y = 0; y < tileCountY; ++y)
+    {
+        for (auto x = 0; x < TextureTileCount; ++x)
+        {
+            auto index = y * TextureTileCount + x;
+            m_tileOffsets[index] = glm::vec2(static_cast<float>(x) * tileUVSize.x, static_cast<float>(y + 1) * tileUVSize.y);
+        }
+    }
+    //and tell the shader how big one tile is
+    auto& shader = rc.shaders.get(ShaderID::Chunk);
+    glCheck(glUseProgram(shader.getGLHandle()));
+    glCheck(glUniform2f(shader.getUniformMap().at("u_tileSize"), tileUVSize.x, tileUVSize.y));
+    glCheck(glUseProgram(0));
+    
+    rc.materials.get(m_materialIDs[MaterialID::ChunkSolid]).setProperty("u_texture", texture);
+    rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_texture", texture);
 
     //thread for meshing
     m_mutex = std::make_unique<std::mutex>();
@@ -852,6 +904,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
 
                             
                             std::vector<glm::vec3> positions;
+                            std::vector<glm::vec2> UVs;
                             switch (faceMask[maskIndex]->direction)
                             {
                             case vx::West:
@@ -861,6 +914,13 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                     glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]), //BR
                                     glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2]), //TL
                                     glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]) //TR
+                                };
+                                UVs =
+                                {
+                                    glm::vec2(0.f, width),
+                                    glm::vec2(height, width),
+                                    glm::vec2(0.f),
+                                    glm::vec2(height, 0.f)
                                 };
                                 break;
                             case vx::East:
@@ -872,6 +932,13 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                     glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
                                     glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2])
                                 };
+                                UVs =
+                                {
+                                    glm::vec2(0.f, width),
+                                    glm::vec2(height, width),
+                                    glm::vec2(0.f),
+                                    glm::vec2(height, 0.f)
+                                };
                                 break;
                             case vx::North:
                                 positions =
@@ -880,6 +947,14 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                     glm::vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2]),
                                     glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]),
                                     glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2])
+                                };
+
+                                UVs =
+                                {
+                                    glm::vec2(0.f, height),
+                                    glm::vec2(width, height),
+                                    glm::vec2(0.f),
+                                    glm::vec2(width, 0.f)
                                 };
                                 break;
                             case vx::South:
@@ -890,6 +965,13 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                     glm::vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
                                     glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2])
                                 };
+                                UVs =
+                                {
+                                    glm::vec2(0.f, height),
+                                    glm::vec2(width, height),
+                                    glm::vec2(0.f),
+                                    glm::vec2(width, 0.f)
+                                };
                                 break;
                             case vx::Bottom:
                                 positions =
@@ -899,9 +981,17 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                     glm::vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]),
                                     glm::vec3(x[0], x[1], x[2])
                                 };
+                                UVs =
+                                {
+                                    glm::vec2(0.f, width),
+                                    glm::vec2(height, width),
+                                    glm::vec2(0.f),
+                                    glm::vec2(height, 0.f)
+                                };
                                 break;
                             }
-                            addQuad(output, positions, faceMask[maskIndex]->ao, static_cast<float>(width), static_cast<float>(height), *faceMask[maskIndex]);
+
+                            addQuad(output, positions, UVs, faceMask[maskIndex]->ao, *faceMask[maskIndex]);
 
 
                             //reset any faces used
@@ -1056,8 +1146,19 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
                                 positions.emplace_back(position.x, position.y + 1, position.z + 1);
                                 break;
                             }
-                            if(!positions.empty())
-                            addQuad(output, positions, faceMask[maskIndex]->ao, 1.f, 1.f, *faceMask[maskIndex]);
+
+                            const std::vector<glm::vec2> UVs =
+                            {
+                                glm::vec2(0.f, 1.f),
+                                glm::vec2(1.f),
+                                glm::vec2(0.f),
+                                glm::vec2(1.f, 0.f)
+                            };
+
+                            if (!positions.empty())
+                            {
+                                addQuad(output, positions, UVs, faceMask[maskIndex]->ao, *faceMask[maskIndex]);
+                            }
                         }
 
                         maskIndex++;
@@ -1168,7 +1269,7 @@ void ChunkSystem::generateDebugMesh(const Chunk& chunk, VertexOutput& output)
     }
 }
 
-void ChunkSystem::addQuad(VertexOutput& output, std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, vx::Face face)
+void ChunkSystem::addQuad(VertexOutput& output, const std::vector<glm::vec3>& positions, const std::vector<glm::vec2>& UVs,  const std::array<std::uint8_t, 4u>& ao, vx::Face face)
 {
     //add indices to the index array, remembering to offset into the current VBO
     std::array<std::int32_t, 6> localIndices = { 2,0,1,  1,3,2 };
@@ -1203,41 +1304,6 @@ void ChunkSystem::addQuad(VertexOutput& output, std::vector<glm::vec3> positions
     }
     //output.debugIndices.insert(output.debugIndices.end(), debugIndices.begin(), debugIndices.end());
 
-    //for now we're colouring types, eventually this
-    //will be the offset into the atlas and we'll use the w/h as UVs
-    //to repeat the correct texture in the shader.
-    glm::vec3 colour(1.f, 0.f, 0.f);
-    //reading this without a lock should be OK as this data
-    //is only written to on construction
-    if (face.id == m_voxelData.getID(vx::CommonType::Dirt))
-    {
-        colour = { 0.4f, 0.2f, 0.05f };
-    }
-    else if (face.id == m_voxelData.getID(vx::CommonType::Grass))
-    {
-        colour = { 0.1f, 0.7f, 0.1f };
-    }
-    else if (face.id == m_voxelData.getID(vx::CommonType::Sand))
-    {
-        colour = { 0.98f, 0.99f, 0.8f };
-    }
-    else if (face.id == m_voxelData.getID(vx::CommonType::Stone))
-    {
-        colour = { 0.7f, 0.7f, 0.7f };
-    }
-    else if (face.id == m_voxelData.getID(vx::CommonType::Water))
-    {
-        colour = { 0.07f, 0.17f, 0.87f };
-    }
-
-    //remember our vert order...
-    std::array<glm::vec2, 4u> UVs =
-    {
-        glm::vec2(0.f, height),
-        glm::vec2(width, height),
-        glm::vec2(0.f),
-        glm::vec2(width, 0.f)
-    };
 
     glm::vec3 normal = glm::vec3(0.f);
     switch (face.direction)
@@ -1279,9 +1345,14 @@ void ChunkSystem::addQuad(VertexOutput& output, std::vector<glm::vec3> positions
         output.vertexData.push_back(positions[i].y - face.offset);
         output.vertexData.push_back(positions[i].z);
 
-        output.vertexData.push_back(colour.r);
-        output.vertexData.push_back(colour.g);
-        output.vertexData.push_back(colour.b);
+        //output.vertexData.push_back(colour.r);
+        //output.vertexData.push_back(colour.g);
+
+        //these are the offset coords into the tile texture
+        output.vertexData.push_back(m_tileOffsets[face.textureIndex].x);
+        output.vertexData.push_back(m_tileOffsets[face.textureIndex].y);
+
+        output.vertexData.push_back(1.f);
         output.vertexData.push_back(aoLevels[ao[i]]);
 
         output.vertexData.push_back(normal.x);

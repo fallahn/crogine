@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/network/NetData.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/detail/glm/vec2.hpp>
 
 #include <mutex>
 #include <memory>
@@ -80,7 +81,7 @@ private:
     cro::ResourceCollection& m_resources;
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
     std::array<std::size_t, MeshID::Count> m_meshIDs = {};
-
+    std::vector<glm::vec2> m_tileOffsets;
 
     ChunkManager m_chunkManager;
     vx::DataManager m_voxelData;
@@ -118,7 +119,7 @@ private:
     void generateNaiveMesh(const Chunk&, VertexOutput&);
     void generateDebugMesh(const Chunk&, VertexOutput&);
 
-    void addQuad(VertexOutput&, std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, vx::Face face);
+    void addQuad(VertexOutput&, const std::vector<glm::vec3>& positions, const std::vector<glm::vec2>& UVs, const std::array<std::uint8_t, 4u>& ao, vx::Face face);
 
     void onEntityRemoved(cro::Entity) override;
     void onEntityAdded(cro::Entity) override;

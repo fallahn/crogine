@@ -205,6 +205,7 @@ bool GameState::handleEvent(const cro::Event& evt)
                 }
             };
             m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            LOG("Switched to naive mesh", cro::Logger::Type::Info);
         }
             break;
         case SDLK_5:
@@ -221,7 +222,7 @@ bool GameState::handleEvent(const cro::Event& evt)
                 }
             };
             m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-            std::cout << "put back correct operator == !!!\n";
+            LOG("Switched to greedy mesh", cro::Logger::Type::Info);
         }
         break;
 #endif //CRO_DEBUG_
