@@ -102,7 +102,7 @@ namespace
 	            vec3 v = normal * normal;
 	            if (normal.y < 0)
                 {
-		            return dot(v, vec3(0.67082, 0.447213f, 0.83666));
+		            return dot(v, vec3(0.67082, 0.447213, 0.83666));
                 }
 	            return dot(v, vec3(0.67082, 1.0, 0.83666));
             }
@@ -246,7 +246,8 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
     rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_texture", texture);
 
     //thread for meshing
-    m_mutex = std::make_unique<std::mutex>();
+    m_queueMutex = std::make_unique<std::mutex>();
+    m_chunkMutex = std::make_unique<std::mutex>();
 
     for (auto& thread : m_meshThreads)
     {
@@ -275,17 +276,26 @@ void ChunkSystem::handleMessage(const cro::Message&)
 void ChunkSystem::process(float)
 {
     auto& entities = getEntities();
+
+    std::vector<cro::Entity> dirtyChunks;
+
     for (auto entity : entities)
     {
         auto& chunkComponent = entity.getComponent<ChunkComponent>();
         if (chunkComponent.needsUpdate)
         {
-            //push chunk into thread queue
-            m_mutex->lock();
-            m_inputQueue.push(entity);
-            m_mutex->unlock();
-
+            dirtyChunks.push_back(entity);
             chunkComponent.needsUpdate = false;
+        }
+    }
+
+    //push all chunks in one go with a single lock
+    if (!dirtyChunks.empty())
+    {
+        std::lock_guard<std::mutex> lock(*m_queueMutex);
+        for (auto entity : dirtyChunks)
+        {
+            m_inputQueue.push(entity);
         }
     }
 
@@ -307,7 +317,7 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
             std::memcpy(voxels.data(), (char*)packet.getData() + static_cast<std::intptr_t>(sizeof(cd)), sizeof(RLEPair)* cd.dataSize);
 
             glm::ivec3 position(cd.x, cd.y, cd.z);
-            std::lock_guard<std::mutex> lock(*m_mutex);
+            std::lock_guard<std::mutex> lock(*m_chunkMutex);
             if (!m_chunkManager.hasChunk(position))
             {
                 auto& chunk = m_chunkManager.addChunk(position);
@@ -332,6 +342,10 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 auto waterMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkWater]);
                 entity.getComponent<cro::Model>().setMaterial(1, waterMaterial);
 
+                //remember to update this if the chunk is updated
+                //this can nearly double the frame rate when skipping a lot of empty chunks!
+                entity.getComponent<cro::Model>().setHidden(cd.highestPoint == -1);
+
                 /*auto tempMat = m_resources.materials.get(temp);
                 entity.getComponent<cro::Model>().setMaterial(2, tempMat);*/
                 
@@ -352,7 +366,7 @@ void ChunkSystem::updateMesh()
 {
     VertexOutput vertexOutput;
 
-    m_mutex->lock();
+    m_queueMutex->lock();
     if (!m_outputQueue.empty())
     {
         auto& front = m_outputQueue.front();
@@ -363,7 +377,7 @@ void ChunkSystem::updateMesh()
         vertexOutput.debugIndices.swap(front.debugIndices);
         m_outputQueue.pop();
     }
-    m_mutex->unlock();
+    m_queueMutex->unlock();
 
     if (!vertexOutput.vertexData.empty() && (!vertexOutput.solidIndices.empty() || !vertexOutput.waterIndices.empty()))
     {
@@ -398,28 +412,33 @@ void ChunkSystem::threadFunc()
         ChunkComponent::MeshType meshType = ChunkComponent::Greedy;
 
         //lock the input queue
-        m_mutex->lock();
+        m_queueMutex->lock();
 
         //check queue
         if (!m_inputQueue.empty())
         {
+            //check the chunk is even visible before updating it
             auto entity = m_inputQueue.front();
-            m_inputQueue.pop();
-
-            position = entity.getComponent<ChunkComponent>().chunkPos;
-            meshType = entity.getComponent<ChunkComponent>().meshType;
-
-            chunk = &m_chunkManager.getChunk(position);
-
-            //skip empty/airblock chunks
-            if (chunk->getHighestPoint() == -1)
+            const auto& model = entity.getComponent<cro::Model>();
+            if (model.isVisible() /*&& !model.isHidden()*/)
             {
-                chunk = nullptr;
+                m_inputQueue.pop();
+
+                position = entity.getComponent<ChunkComponent>().chunkPos;
+                meshType = entity.getComponent<ChunkComponent>().meshType;
+
+                chunk = &m_chunkManager.getChunk(position);
+
+                //skip empty/airblock chunks
+                if (chunk->getHighestPoint() == -1)
+                {
+                    chunk = nullptr;
+                }
             }
         }
 
         //unlock queue
-        m_mutex->unlock();
+        m_queueMutex->unlock();
 
         //if input do work
         if (chunk)
@@ -437,7 +456,7 @@ void ChunkSystem::threadFunc()
 
 
             //lock output
-            m_mutex->lock();
+            std::lock_guard<std::mutex> lock(*m_queueMutex);
 
             //swap results
             auto& result = m_outputQueue.emplace();
@@ -446,9 +465,6 @@ void ChunkSystem::threadFunc()
             result.solidIndices.swap(vertexOutput.solidIndices);
             result.waterIndices.swap(vertexOutput.waterIndices);
             //result.debugIndices.swap(vertexOutput.debugIndices);
-
-            //unlock output
-            m_mutex->unlock();
         }
         else
         {
@@ -470,15 +486,14 @@ void ChunkSystem::calcAO(const Chunk& chunk, vx::Face& face, glm::ivec3 position
     std::uint8_t airblock = 0;
     std::uint8_t waterblock = 0;
 
-    m_mutex->lock();
     airblock = m_voxelData.getID(vx::CommonType::Air);
     waterblock = m_voxelData.getID(vx::CommonType::Water);
-    m_mutex->unlock();
 
     auto getSurrounding = [&](const std::vector<glm::ivec3>& positions)
     {
         //we want to lock this as briefly as possible
-        std::lock_guard<std::mutex> lock(*m_mutex);
+        //TODO we want to lock this *as few times* as possible
+        //std::lock_guard<std::mutex> lock(*m_chunkMutex);
         for (auto i = 0u; i < surroundingVoxels.size(); ++i)
         {
             surroundingVoxels[i] = chunk.getVoxel(positions[i]);
@@ -707,7 +722,7 @@ void ChunkSystem::calcAO(const Chunk& chunk, vx::Face& face, glm::ivec3 position
 
 vx::Face ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 position, vx::Side side)
 {
-    std::lock_guard<std::mutex> lock(*m_mutex);
+    //std::lock_guard<std::mutex> lock(*m_chunkMutex);
     const std::uint8_t airBlock = m_voxelData.getID(vx::CommonType::Air);
     const std::uint8_t waterBlock = m_voxelData.getID(vx::CommonType::Water);
 
@@ -801,6 +816,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                 std::fill(faceMask.begin(), faceMask.end(), std::nullopt);
                 std::size_t maskIndex = 0;
 
+                m_chunkMutex->lock();
                 for (x[v] = 0; x[v] < WorldConst::ChunkSize; x[v]++)
                 {
                     for (x[u] = 0; x[u] < WorldConst::ChunkSize; x[u]++)
@@ -829,6 +845,7 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                             backface ? faceB : faceA;
                     }
                 }
+                m_chunkMutex->unlock();
 
                 x[direction]++;
 
@@ -855,7 +872,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                             {
                                 prevFace = *faceMask[maskIndex + width];
                             }
-                            auto endFace = *faceMask[maskIndex + (width - 1)];
 
 
                             bool complete = false;
@@ -1059,6 +1075,7 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
                 std::fill(faceMask.begin(), faceMask.end(), std::nullopt);
                 std::size_t maskIndex = 0;
 
+                m_chunkMutex->lock();
                 for (x[v] = 0; x[v] < WorldConst::ChunkSize; x[v]++)
                 {
                     for (x[u] = 0; x[u] < WorldConst::ChunkSize; x[u]++)
@@ -1164,7 +1181,7 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
                         maskIndex++;
                     }
                 }
-
+                m_chunkMutex->unlock();
                 x[direction]++;
             }
         }
