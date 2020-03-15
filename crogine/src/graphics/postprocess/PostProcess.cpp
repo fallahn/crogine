@@ -86,10 +86,12 @@ void PostProcess::resizeBuffer(int32 w, int32 h)
 }
 
 //protected
-void PostProcess::drawQuad(Shader& shader, FloatRect size)
+void PostProcess::drawQuad(std::size_t passIndex, FloatRect size)
 {
     CRO_ASSERT(m_vbo, "VBO not created!");
     
+    const Shader& shader = *m_passes[passIndex].first;
+
     //TODO only rebuild as necessary? Else not really a need for member var
     m_transform = glm::scale(glm::mat4(1.f), { size.width, size.height, 0.f });
     m_projection = glm::ortho(0.f, size.width, 0.f, size.height, -0.1f, 10.f);
@@ -209,4 +211,13 @@ void PostProcess::setUniform(const std::string& name, const Texture& value, cons
     auto b = shader.getUniformMap().find(name)->second;
     m_uniforms[a][b].type = UniformData::Texture;
     m_uniforms[a][b].textureID = value.getGLHandle();
+}
+
+std::size_t PostProcess::addPass(const Shader& shader)
+{
+    m_passes.emplace_back(std::make_pair(&shader, 0));
+
+    //TODO on desktop builds create a VAO to pair with the shader
+
+    return m_passes.size() - 1;
 }

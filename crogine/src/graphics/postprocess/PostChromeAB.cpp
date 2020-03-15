@@ -50,6 +50,7 @@ PostChromeAB::PostChromeAB()
     {
         m_textureIndex = m_postShader.getUniformMap().find("u_input")->second;
     }
+    addPass(m_postShader);
 }
 
 //public
@@ -61,5 +62,5 @@ void PostChromeAB::apply(const RenderTexture& input)
     glCheck(glUniform1i(m_textureIndex, 0));
 
     auto size = glm::vec2(getCurrentBufferSize());
-    drawQuad(m_postShader, { 0.f, 0.f, size.x, size.y });
+    drawQuad(0, { 0.f, 0.f, size.x, size.y });
 }

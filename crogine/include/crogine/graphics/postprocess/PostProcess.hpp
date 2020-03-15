@@ -93,10 +93,10 @@ namespace cro
     protected:
         /*!
         \brief Draws a quad to the current buffer using the given shader
-        \param shader Shader to use
+        \param passIndex Index retrieved from addPass() to use when rendering
         \param size Size of the quad to draw
         */
-        void drawQuad(Shader& shader, FloatRect size);
+        void drawQuad(std::size_t passIndex, FloatRect size);
 
         /*!
         \brief Sets the value of a uniform in the given shader, if it exists
@@ -122,12 +122,23 @@ namespace cro
         */
         glm::uvec2 getCurrentBufferSize() const { return m_currentBufferSize; }
 
+        /*!
+        \brief Creates a render pass assigned to the given shader.
+        \returns index of the render pass.
+        This must be done for each shader / pass used in the PostProcess. Pass
+        the returned index value to drawQuad() when rendering to denote which
+        shader should be used for the quad being rendered.
+        */
+        std::size_t addPass(const Shader&);
+
     private:
         glm::uvec2 m_currentBufferSize;
         
         uint32 m_vbo;
         glm::mat4 m_projection;
         glm::mat4 m_transform;
+
+        std::vector<std::pair<const Shader*, std::uint32_t>> m_passes;
 
         struct UniformData final
         {
