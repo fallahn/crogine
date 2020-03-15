@@ -68,6 +68,10 @@ void ModelRenderer::process(float)
     for (auto& entity : entities)
     {
         auto& model = entity.getComponent<Model>();
+        if (model.isHidden())
+        {
+            continue;
+        }
 
         auto sphere = model.m_meshData.boundingSphere;
         const auto& tx = entity.getComponent<Transform>();
@@ -89,7 +93,7 @@ void ModelRenderer::process(float)
             //model.m_visible = (Spatial::intersects(frustum[i++], box) != Planar::Back);
         }
 
-        if (model.m_visible && !model.m_hidden)
+        if (model.m_visible)
         {
             auto opaque = std::make_pair(entity, SortData());
             auto transparent = std::make_pair(entity, SortData());
