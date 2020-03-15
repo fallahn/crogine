@@ -236,11 +236,11 @@ void MenuState::createScene()
 
     //axis icon
     auto meshID = m_resources.meshes.loadMesh(OriginIconBuilder());
-
+    auto material = m_resources.materials.get(materialIDs[MaterialID::DebugDraw]);
+    material.enableDepthTest = false;
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::DebugDraw]));
-    entity.getComponent<cro::Model>().enableDepthTest = false;
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)

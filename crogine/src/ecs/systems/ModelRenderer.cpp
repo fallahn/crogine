@@ -95,7 +95,7 @@ void ModelRenderer::process(float)
             auto transparent = std::make_pair(entity, SortData());
 
             //auto worldPos = tx.getWorldPosition();
-            auto direction = sphere.centre - cameraPos;
+            auto direction = (sphere.centre - cameraPos);
             float distance = glm::dot(forwardVector, direction);
             //TODO a large model with a centre behind the camera
             //might still intersect the view but register as being
@@ -109,7 +109,7 @@ void ModelRenderer::process(float)
                 {
                     transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
                     transparent.second.flags = static_cast<int64>(-distance * 1000000.f); //suitably large number to shift decimal point
-                    transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
+                    transparent.second.flags |= 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
                 }
                 else
                 {
@@ -181,7 +181,7 @@ void ModelRenderer::render(Entity camera)
             applyBlendMode(model.m_materials[i].blendMode);
 
             //check for depth test override
-            if (!model.enableDepthTest)
+            if (!model.m_materials[i].enableDepthTest)
             {
                 glCheck(glDisable(GL_DEPTH_TEST));
             }
