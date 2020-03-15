@@ -47,7 +47,10 @@ namespace
 }
 
 PostProcess::PostProcess()
-    : m_vbo(0)
+    : m_currentBufferSize(0),
+    m_vbo(0),
+    m_projection(1.f),
+    m_transform(1.f)
 {
     //0------2
     //|      |

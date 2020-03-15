@@ -55,6 +55,8 @@ source distribution.
 #include "EmpSystem.hpp"
 #include "MeatMan.hpp"
 #include "BossSystem.hpp"
+#include "CollisionSystem.hpp"
+#include "PhysicsObject.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -68,7 +70,6 @@ source distribution.
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
-#include <crogine/ecs/systems/CollisionSystem.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
@@ -82,7 +83,6 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
-#include <crogine/ecs/components/PhysicsObject.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
