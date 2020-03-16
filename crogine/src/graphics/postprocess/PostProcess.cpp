@@ -47,27 +47,12 @@ namespace
 }
 
 PostProcess::PostProcess()
-    : m_currentBufferSize(0),
-    m_vbo(0),
-    m_projection(1.f),
-    m_transform(1.f)
+    : m_currentBufferSize   (0),
+    m_vbo                   (0),
+    m_projection            (1.f),
+    m_transform             (1.f)
 {
-    //0------2
-    //|      |
-    //|      |
-    //1------3
 
-    std::vector<float> verts = 
-    {
-        0.f, 1.f, //0.f, 1.f,
-        0.f, 0.f,// 0.f, 0.f,
-        1.f, 1.f, //1.f, 1.f,
-        1.f, 0.f, //1.f, 0.f
-    };
-    glCheck(glGenBuffers(1, &m_vbo));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, vertexSize * verts.size(), verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
 PostProcess::~PostProcess()
@@ -75,6 +60,14 @@ PostProcess::~PostProcess()
     if (m_vbo)
     {
         glCheck(glDeleteBuffers(1, &m_vbo));
+    }
+
+    for (auto& [shader, vao] : m_passes)
+    {
+        if (vao)
+        {
+            glCheck(glDeleteVertexArrays(1, &vao));
+        }
     }
 }
 
@@ -131,6 +124,13 @@ void PostProcess::drawQuad(std::size_t passIndex, FloatRect size)
         }
     }
 
+#ifdef PLATFORM_DESKTOP
+
+    glCheck(glBindVertexArray(m_passes[passIndex].second));
+    glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    glCheck(glBindVertexArray(0));
+
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
 
     const auto& attribs = shader.getAttribMap();
@@ -141,6 +141,7 @@ void PostProcess::drawQuad(std::size_t passIndex, FloatRect size)
 
     glCheck(glDisableVertexAttribArray(attribs[Mesh::Attribute::Position]));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+#endif //PLATFORM
     glCheck(glUseProgram(0));
 }
 
@@ -215,9 +216,52 @@ void PostProcess::setUniform(const std::string& name, const Texture& value, cons
 
 std::size_t PostProcess::addPass(const Shader& shader)
 {
+    if (!m_vbo)
+    {
+        createVBO();
+    }
+
     m_passes.emplace_back(std::make_pair(&shader, 0));
 
-    //TODO on desktop builds create a VAO to pair with the shader
+    //on desktop builds create a VAO to pair with the shader
+#ifdef PLATFORM_DESKTOP
+    GLuint vao = 0;
+    glCheck(glGenVertexArrays(1, &vao));
+    glCheck(glBindVertexArray(vao));
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+
+    const auto& attribs = shader.getAttribMap();
+    glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::Position]));
+    glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Position], 2, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(vertexSize), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+    glCheck(glDisableVertexAttribArray(attribs[Mesh::Attribute::Position]));
+    glCheck(glEnableVertexAttribArray(0));
+
+    glCheck(glBindVertexArray(0));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    m_passes.back().second = vao;
+#endif //PLATFORM
 
     return m_passes.size() - 1;
+}
+
+//private
+void PostProcess::createVBO()
+{
+    //0------2
+    //|      |
+    //|      |
+    //1------3
+
+    std::vector<float> verts =
+    {
+        0.f, 1.f, //0.f, 1.f,
+        0.f, 0.f,// 0.f, 0.f,
+        1.f, 1.f, //1.f, 1.f,
+        1.f, 0.f, //1.f, 0.f
+    };
+    glCheck(glGenBuffers(1, &m_vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, vertexSize * verts.size(), verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }

@@ -160,6 +160,8 @@ namespace cro
         };
 
         std::map<uint32, std::map<uint32, UniformData>> m_uniforms;
+
+        void createVBO();
     };
 }
 
