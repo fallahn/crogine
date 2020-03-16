@@ -109,7 +109,7 @@ private:
         std::vector<float> vertexData;
         std::vector<std::uint32_t> solidIndices;
         std::vector<std::uint32_t> waterIndices;
-        std::vector<std::uint32_t> debugIndices;
+        std::vector<std::uint32_t> detailIndices;
         glm::ivec3 position = glm::ivec3(0);
     };
     std::queue<VertexOutput> m_outputQueue;
@@ -121,6 +121,7 @@ private:
     void generateDebugMesh(const Chunk&, VertexOutput&);
 
     void addQuad(VertexOutput&, const std::vector<glm::vec3>& positions, const std::vector<glm::vec2>& UVs, const std::array<std::uint8_t, 4u>& ao, vx::Face face);
+    void addDetail(VertexOutput&, glm::vec3, std::uint16_t);
 
     void onEntityRemoved(cro::Entity) override;
     void onEntityAdded(cro::Entity) override;

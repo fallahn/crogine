@@ -36,6 +36,7 @@ namespace MaterialID
         ChunkSolid,
         ChunkWater,
         ChunkDebug,
+        ChunkDetail,
 
         Count
     };

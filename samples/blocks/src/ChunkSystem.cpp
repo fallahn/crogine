@@ -35,6 +35,7 @@ source distribution.
 #include "ErrorCheck.hpp"
 #include "BorderMeshBuilder.hpp"
 #include "ClientCommandIDs.hpp"
+#include "Coordinate.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -46,6 +47,7 @@ source distribution.
 #include <crogine/detail/OpenGL.hpp>
 
 #include <optional>
+#include <set>
 
 namespace
 {
@@ -113,8 +115,9 @@ namespace
                 uv.x += (u_tileSize.x * fract(v_texCoord.x));
                 uv.y -= (u_tileSize.y * fract(v_texCoord.y));
 
-                vec4 colour = vec4(TEXTURE(u_texture, uv).rgb, u_alpha);
+                vec4 colour = TEXTURE(u_texture, uv);
                 colour.rgb *= directionalAmbience(v_normal);
+                colour.a *= u_alpha;
 
                 float fogFactor = 1.0;
 
@@ -167,7 +170,6 @@ namespace
                 FRAG_OUT = vec4(1.0, 0.0, 0.0, 1.0);
             })";
 
-    //std::int32_t temp = 0;
 
     //number of tiles in the tile texture X direction.
     const std::int32_t TextureTileCount = 8;
@@ -191,6 +193,10 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
         m_materialIDs[MaterialID::ChunkWater] = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
         rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).blendMode = cro::Material::BlendMode::Alpha;
         rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_alpha", 0.5f);
+
+        m_materialIDs[MaterialID::ChunkDetail] = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
+        rc.materials.get(m_materialIDs[MaterialID::ChunkDetail]).blendMode = cro::Material::BlendMode::Alpha;
+        rc.materials.get(m_materialIDs[MaterialID::ChunkDetail]).setProperty("u_alpha", 1.f);
     }
 
     if (rc.shaders.preloadFromString(VertexDebug, FragmentDebug, ShaderID::ChunkDebug))
@@ -342,12 +348,13 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 auto waterMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkWater]);
                 entity.getComponent<cro::Model>().setMaterial(1, waterMaterial);
 
+                auto detailMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDetail]);
+                entity.getComponent<cro::Model>().setMaterial(2, detailMaterial);
+
                 //remember to update this if the chunk is updated
                 //this can nearly double the frame rate when skipping a lot of empty chunks!
                 entity.getComponent<cro::Model>().setHidden(cd.highestPoint == -1);
 
-                /*auto tempMat = m_resources.materials.get(temp);
-                entity.getComponent<cro::Model>().setMaterial(2, tempMat);*/
                 
                 //create a second entity for debug bounds
                 entity = getScene()->createEntity();
@@ -374,7 +381,7 @@ void ChunkSystem::updateMesh()
         vertexOutput.vertexData.swap(front.vertexData);
         vertexOutput.solidIndices.swap(front.solidIndices);
         vertexOutput.waterIndices.swap(front.waterIndices);
-        vertexOutput.debugIndices.swap(front.debugIndices);
+        vertexOutput.detailIndices.swap(front.detailIndices);
         m_outputQueue.pop();
     }
     m_queueMutex->unlock();
@@ -397,9 +404,9 @@ void ChunkSystem::updateMesh()
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[1].ibo));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.waterIndices.size() * sizeof(std::uint32_t), vertexOutput.waterIndices.data(), GL_DYNAMIC_DRAW));
 
-        /*meshData.indexData[2].indexCount = static_cast<std::uint32_t>(vertexOutput.debugIndices.size());
+        meshData.indexData[2].indexCount = static_cast<std::uint32_t>(vertexOutput.detailIndices.size());
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[2].ibo));
-        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.debugIndices.size() * sizeof(std::uint32_t), vertexOutput.debugIndices.data(), GL_DYNAMIC_DRAW));*/
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.detailIndices.size() * sizeof(std::uint32_t), vertexOutput.detailIndices.data(), GL_DYNAMIC_DRAW));
     }
 }
 
@@ -464,7 +471,7 @@ void ChunkSystem::threadFunc()
             result.vertexData.swap(vertexOutput.vertexData);
             result.solidIndices.swap(vertexOutput.solidIndices);
             result.waterIndices.swap(vertexOutput.waterIndices);
-            //result.debugIndices.swap(vertexOutput.debugIndices);
+            result.detailIndices.swap(vertexOutput.detailIndices);
         }
         else
         {
@@ -683,7 +690,6 @@ void ChunkSystem::calcAO(const Chunk& chunk, vx::Face& face, glm::ivec3 position
             getSurrounding(positions);
         }
 
-
         auto vertexAO = [](std::int32_t side1, std::int32_t side2, std::int32_t corner)->std::uint8_t
         {
             if (side1 && side2)
@@ -698,24 +704,36 @@ void ChunkSystem::calcAO(const Chunk& chunk, vx::Face& face, glm::ivec3 position
         std::int32_t c = 0;
 
         //BL, BR, TL, TR
-        s1 = (surroundingVoxels[5] == vx::CommonType::OutOfBounds || surroundingVoxels[5] == airblock) ? 0 : 1;
-        c = (surroundingVoxels[6] == vx::CommonType::OutOfBounds || surroundingVoxels[6] == airblock) ? 0 : 1;
-        s2 = (surroundingVoxels[7] == vx::CommonType::OutOfBounds || surroundingVoxels[7] == airblock) ? 0 : 1;
+        s1 = (surroundingVoxels[5] == vx::CommonType::OutOfBounds || surroundingVoxels[5] == airblock 
+            || m_voxelData.getVoxel(surroundingVoxels[5]).type == vx::Type::Detail) ? 0 : 1;
+        c = (surroundingVoxels[6] == vx::CommonType::OutOfBounds || surroundingVoxels[6] == airblock 
+            || m_voxelData.getVoxel(surroundingVoxels[6]).type == vx::Type::Detail) ? 0 : 1;
+        s2 = (surroundingVoxels[7] == vx::CommonType::OutOfBounds || surroundingVoxels[7] == airblock 
+            || m_voxelData.getVoxel(surroundingVoxels[7]).type == vx::Type::Detail) ? 0 : 1;
         face.ao[0] = vertexAO(s1, s2, c);
 
-        s1 = (surroundingVoxels[3] == vx::CommonType::OutOfBounds || surroundingVoxels[3] == airblock) ? 0 : 1;
-        c = (surroundingVoxels[4] == vx::CommonType::OutOfBounds || surroundingVoxels[4] == airblock) ? 0 : 1;
-        s2 = (surroundingVoxels[5] == vx::CommonType::OutOfBounds || surroundingVoxels[5] == airblock) ? 0 : 1;
+        s1 = (surroundingVoxels[3] == vx::CommonType::OutOfBounds || surroundingVoxels[3] == airblock 
+            || m_voxelData.getVoxel(surroundingVoxels[3]).type == vx::Type::Detail) ? 0 : 1;
+        c = (surroundingVoxels[4] == vx::CommonType::OutOfBounds || surroundingVoxels[4] == airblock 
+            || m_voxelData.getVoxel(surroundingVoxels[4]).type == vx::Type::Detail) ? 0 : 1;
+        s2 = (surroundingVoxels[5] == vx::CommonType::OutOfBounds || surroundingVoxels[5] == airblock 
+            || m_voxelData.getVoxel(surroundingVoxels[5]).type == vx::Type::Detail) ? 0 : 1;
         face.ao[1] = vertexAO(s1, s2, c);
 
-        s1 = (surroundingVoxels[7] == vx::CommonType::OutOfBounds || surroundingVoxels[7] == airblock) ? 0 : 1;
-        c = (surroundingVoxels[0] == vx::CommonType::OutOfBounds || surroundingVoxels[0] == airblock) ? 0 : 1;
-        s2 = (surroundingVoxels[1] == vx::CommonType::OutOfBounds || surroundingVoxels[1] == airblock) ? 0 : 1;
+        s1 = (surroundingVoxels[7] == vx::CommonType::OutOfBounds || surroundingVoxels[7] == airblock 
+            || m_voxelData.getVoxel(surroundingVoxels[7]).type == vx::Type::Detail) ? 0 : 1;
+        c = (surroundingVoxels[0] == vx::CommonType::OutOfBounds || surroundingVoxels[0] == airblock 
+            || m_voxelData.getVoxel(surroundingVoxels[0]).type == vx::Type::Detail) ? 0 : 1;
+        s2 = (surroundingVoxels[1] == vx::CommonType::OutOfBounds || surroundingVoxels[1] == airblock 
+            || m_voxelData.getVoxel(surroundingVoxels[1]).type == vx::Type::Detail) ? 0 : 1;
         face.ao[2] = vertexAO(s1, s2, c);
 
-        s1 = (surroundingVoxels[1] == vx::CommonType::OutOfBounds || surroundingVoxels[1] == airblock) ? 0 : 1;
-        c = (surroundingVoxels[2] == vx::CommonType::OutOfBounds || surroundingVoxels[2] == airblock) ? 0 : 1;
-        s2 = (surroundingVoxels[3] == vx::CommonType::OutOfBounds || surroundingVoxels[3] == airblock) ? 0 : 1;
+        s1 = (surroundingVoxels[1] == vx::CommonType::OutOfBounds || surroundingVoxels[1] == airblock 
+            || m_voxelData.getVoxel(surroundingVoxels[1]).type == vx::Type::Detail) ? 0 : 1;
+        c = (surroundingVoxels[2] == vx::CommonType::OutOfBounds || surroundingVoxels[2] == airblock 
+            || m_voxelData.getVoxel(surroundingVoxels[2]).type == vx::Type::Detail) ? 0 : 1;
+        s2 = (surroundingVoxels[3] == vx::CommonType::OutOfBounds || surroundingVoxels[3] == airblock 
+            || m_voxelData.getVoxel(surroundingVoxels[3]).type == vx::Type::Detail) ? 0 : 1;
         face.ao[3] = vertexAO(s1, s2, c);
     }
 }
@@ -767,14 +785,16 @@ vx::Face ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 position, vx::Side 
         break;
     }
 
-
-    face.visible = (neighbour == airBlock
+    face.visible = (neighbour == airBlock || (m_voxelData.getVoxel(neighbour).type == vx::Type::Detail)
                     || (neighbour == waterBlock && face.id != waterBlock));
     return face;
 }
 
 void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
 {
+    //list of positions to create details at
+    std::vector<std::pair<glm::ivec3, std::uint16_t>> detailPositions;
+    
     //greedy meshing from http://0fps.wordpress.com/2012/06/30/meshing-in-a-minecraft-game/
     //and https://github.com/roboleary/GreedyMesh/blob/master/src/mygame/Main.java
 
@@ -824,14 +844,29 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                         auto positionA = glm::ivec3(x[0], x[1], x[2]);
                         auto positionB = glm::ivec3(x[0] + q[0], x[1] + q[1], x[2] + q[2]);
 
-                        //TODO check the voxel type for cross meshes and add them to a list
-                        //for later processing, and skip the following
 
                         std::optional<vx::Face> faceA = (x[direction] >= 0) ? 
                             std::optional<vx::Face>(getFace(chunk, positionA, (vx::Side)currentSide)) : std::nullopt;
 
                         std::optional<vx::Face> faceB = (x[direction] < (WorldConst::ChunkSize - 1)) ?
                             std::optional<vx::Face>(getFace(chunk, positionB, (vx::Side)currentSide)) : std::nullopt;
+
+                        //check the voxel type for detail meshes and add them to a list
+                        //for later processing
+                        auto voxelID = chunk.getVoxel(positionA);
+                        auto data = m_voxelData.getVoxel(voxelID);
+                        if (data.style == vx::MeshStyle::Cross)
+                        {
+                            detailPositions.emplace_back(std::make_pair(positionA, data.tileIDs[0]));
+                            faceA->visible = false;
+                        }
+                        voxelID = chunk.getVoxel(positionB);
+                        data = m_voxelData.getVoxel(voxelID);
+                        if (data.style == vx::MeshStyle::Cross)
+                        {
+                            detailPositions.emplace_back(std::make_pair(positionB, data.tileIDs[0]));
+                            faceB->visible = false;
+                        }
 
                         //calculate the AO values
                         //TODO we want to save some time here and only calc on the face
@@ -840,9 +875,11 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                         if(faceA) calcAO(chunk, *faceA, positionA);
                         if(faceB) calcAO(chunk, *faceB, positionB);
 
-                        faceMask[maskIndex++] = (faceA != std::nullopt && faceB != std::nullopt && (*faceA == *faceB)) ?
+                        faceMask[maskIndex] = (faceA != std::nullopt && faceB != std::nullopt && (*faceA == *faceB)) ?
                             std::nullopt :
                             backface ? faceB : faceA;
+
+                        maskIndex++;
                     }
                 }
                 m_chunkMutex->unlock();
@@ -857,11 +894,12 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                 {
                     for (auto i = 0; i < WorldConst::ChunkSize;)
                     {
+                        //if(faceMask[maskIndex]) std::cout << faceMask[maskIndex]->visible << "\n";
                         if (faceMask[maskIndex] != std::nullopt
                             && faceMask[maskIndex]->visible)
                         {
                             auto prevFace = *faceMask[maskIndex];
-
+                            
                             //calc the merged width/height
                             std::int32_t width = 1;
                             for (;
@@ -1033,7 +1071,11 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
         }
     }
 
-    //TODO check the list of cross meshes and add the vertices
+    //check the list of cross meshes and add the vertices
+    for (const auto& [pos, tileID] : detailPositions)
+    {
+        addDetail(output, pos, tileID);
+    }
 }
 
 void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
@@ -1305,12 +1347,6 @@ void ChunkSystem::addQuad(VertexOutput& output, const std::vector<glm::vec3>& po
         i += indexOffset;
     }
 
-    //std::array<std::uint32_t, 8u> debugIndices = { 0, 1, 1, 3, 3, 2, 2, 0 };
-    //for (auto& i : debugIndices)
-    //{
-    //    i += indexOffset;
-    //}
-
     if (face.id == m_voxelData.getID(vx::CommonType::Water))
     {
         output.waterIndices.insert(output.waterIndices.end(), localIndices.begin(), localIndices.end());
@@ -1319,8 +1355,7 @@ void ChunkSystem::addQuad(VertexOutput& output, const std::vector<glm::vec3>& po
     {
         output.solidIndices.insert(output.solidIndices.end(), localIndices.begin(), localIndices.end());
     }
-    //output.debugIndices.insert(output.debugIndices.end(), debugIndices.begin(), debugIndices.end());
-
+    
 
     glm::vec3 normal = glm::vec3(0.f);
     switch (face.direction)
@@ -1378,6 +1413,62 @@ void ChunkSystem::addQuad(VertexOutput& output, const std::vector<glm::vec3>& po
 
         output.vertexData.push_back(UVs[i].x);
         output.vertexData.push_back(UVs[i].y);
+    }
+}
+
+void ChunkSystem::addDetail(VertexOutput& output, glm::vec3 position, std::uint16_t textureIndex)
+{
+    std::int32_t indexOffset = static_cast<std::int32_t>(output.vertexData.size() / ChunkMeshBuilder::getVertexComponentCount());
+
+    std::array<std::uint32_t, 12u> detailIndices = { 2,0,1,  1,3,2, 6,4,5,  5,7,6 };
+    for (auto& i : detailIndices)
+    {
+        i += indexOffset;
+    }
+
+    output.detailIndices.insert(output.detailIndices.end(), detailIndices.begin(), detailIndices.end());
+
+    std::array<glm::vec2, 4u> UVs =
+    {
+        glm::vec2(0.f, 1.f),
+        glm::vec2(1.f),
+        glm::vec2(0.f),
+        glm::vec2(1.f, 0.f)
+    };
+
+    std::array<glm::vec3, 8u> positions =
+    {
+        glm::vec3(position),
+        glm::vec3(position.x + 0.7f, position.y, position.z + 0.7f),
+        glm::vec3(position.x, position.y + 1, position.z),
+        glm::vec3(position.x + 0.7f, position.y + 1.f, position.z + 0.7f),
+
+        glm::vec3(position.x, position.y, position.z + 0.7f),
+        glm::vec3(position.x + 0.7f, position.y, position.z),
+        glm::vec3(position.x, position.y + 1.f, position.z + 0.7f),
+        glm::vec3(position.x + 0.7f, position.y + 1.f, position.z),
+    };
+
+    for (auto i = 0u; i < positions.size(); ++i)
+    {
+        output.vertexData.push_back(positions[i].x + 0.15f);
+        output.vertexData.push_back(positions[i].y);
+        output.vertexData.push_back(positions[i].z - 0.15f);
+
+        //these are the offset coords into the tile texture
+        //stored in the colour attribute
+        output.vertexData.push_back(m_tileOffsets[textureIndex].x);
+        output.vertexData.push_back(m_tileOffsets[textureIndex].y);
+        output.vertexData.push_back(1.f);
+
+        output.vertexData.push_back(1.f); //ao value
+
+        output.vertexData.push_back(0.f); //normal
+        output.vertexData.push_back(1.f);
+        output.vertexData.push_back(0.f);
+
+        output.vertexData.push_back(UVs[i % 4].x);
+        output.vertexData.push_back(UVs[i % 4].y);
     }
 }
 

@@ -232,7 +232,7 @@ Heightmap TerrainGenerator::createChunkHeightmap(glm::ivec3 chunkPos, std::int32
     return heightmap;
 }
 
-void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManager& voxeldata, std::int32_t seed)
+void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManager& voxelData, std::int32_t seed)
 {
     std::int8_t highestPoint = -1;
 
@@ -245,14 +245,33 @@ void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, c
             for (auto y = 0; y < ChunkSize; ++y)
             {
                 auto voxY = chunk.getPosition().y * ChunkSize + y;
-                std::uint8_t voxelID = voxeldata.getID(vx::Air);
+                std::uint8_t voxelID = voxelData.getID(vx::Air);
 
                 //above the height value we're water or air (air is default)
                 if (voxY > height)
                 {
                     if (voxY < WaterLevel)
                     {
-                        voxelID = voxeldata.getID(vx::Water);
+                        voxelID = voxelData.getID(vx::Water);
+                    }
+                    else if (voxY == height + 1)
+                    {
+                        //random vegetation - TODO create a distribution map/poisson disc distribution
+                        if (cro::Util::Random::value(0, 8) == 6)
+                        {
+                            if (voxY < WaterLevel + 4)
+                            {
+                                //we must be above sand
+                                voxelID = voxelData.getID("sand_grass");
+                            }
+                            else
+                            {
+                                //assume grass? might be rock or something
+                                voxelID = (cro::Util::Random::value(0, 1) == 0)
+                                    ? voxelData.getID("short_grass01")
+                                    : voxelData.getID("short_grass02");
+                            }
+                        }
                     }
                 }
                 //on the top layer, so sand if near water
@@ -261,14 +280,14 @@ void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, c
                 {
                     if (voxY < (WaterLevel + 3))
                     {
-                        voxelID = voxeldata.getID(vx::Sand);
+                        voxelID = voxelData.getID(vx::Sand);
                     }
                     else
                     {
                         //if using biome set the top data according
                         //to the current biome
 
-                        voxelID = voxeldata.getID(vx::Grass);
+                        voxelID = voxelData.getID(vx::Grass);
                     }
                 }
                 //some arbitrary depth of dirt below the surface.
@@ -279,23 +298,23 @@ void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, c
                     //sand should have more sand underneath it
                     if (voxY > WaterLevel)
                     {
-                        voxelID = voxeldata.getID(vx::Dirt);
+                        voxelID = voxelData.getID(vx::Dirt);
                     }
                     else
                     {
-                        voxelID = voxeldata.getID(vx::Sand);
+                        voxelID = voxelData.getID(vx::Sand);
                     }
                 }
                 else
                 {
                     //we're underground, so make solid
-                    voxelID = voxeldata.getID(vx::Stone);
+                    voxelID = voxelData.getID(vx::Stone);
                 }
 
 
                 //set the voxelID at the current chunk position
                 chunk.setVoxelQ({ x,y,z }, voxelID);
-                if (voxelID != voxeldata.getID(vx::Air))
+                if (voxelID != voxelData.getID(vx::Air))
                 {
                     highestPoint = (y > highestPoint) ? y : highestPoint;
                 }

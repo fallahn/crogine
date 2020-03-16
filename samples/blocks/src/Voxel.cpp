@@ -47,20 +47,22 @@ namespace vx
         //of a chunk.
         data.name = "air";
         data.collidable = false;
+        data.type = vx::Type::Gas;
         addVoxel(data);
 
+        data.name = "water";
+        data.collidable = true;
+        data.type = vx::Type::Liquid;
+        data.tileIDs = { 17,17,17,17,17,17 };
+        addVoxel(data);
 
         data.name = "sand";
-        data.collidable = true;
+        data.type = vx::Type::Solid;
         data.tileIDs = { 1,1,1,1,1,1 };
         addVoxel(data);
 
         data.name = "stone";
         data.tileIDs = { 9,9,9,9,9,9 };
-        addVoxel(data);
-
-        data.name = "water";
-        data.tileIDs = { 17,17,17,17,17,17 };
         addVoxel(data);
 
         data.name = "dirt";
@@ -83,6 +85,21 @@ namespace vx
         m_commonVoxels[CommonType::Water] = getID("water");
         m_commonVoxels[CommonType::Dirt] = getID("dirt");
         m_commonVoxels[CommonType::Grass] = getID("grass");
+
+        data.name = "sand_grass";
+        data.tileIDs = { 7,7,7,7,7,7 };
+        data.style = vx::MeshStyle::Cross;
+        data.collidable = false;
+        data.type = Type::Detail;
+        addVoxel(data);
+
+        data.name = "short_grass01";
+        data.tileIDs[0] = 15;
+        addVoxel(data);
+
+        data.name = "short_grass02";
+        data.tileIDs[0] = 23;
+        addVoxel(data);
     }
 
     std::uint8_t DataManager::addVoxel(const Data& voxel)
