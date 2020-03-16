@@ -34,6 +34,7 @@ SOFTWARE.
 #include <algorithm>
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/Colour.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Random.hpp>
 
@@ -67,9 +68,18 @@ TerrainGenerator::TerrainGenerator(bool debugWindow)
 
     if (debugWindow)
     {
+        static const std::int32_t chunkCount = 16;
+
+        auto w = chunkCount * ChunkSize;
+        for (auto& t : m_debugTextures)
+        {
+            t.create(w, w, cro::ImageFormat::A);
+        }
+        m_previewTexture.create(w, w);
+
         registerWindow([&]()
             {
-                ImGui::SetNextWindowSize({ 500.f, 260.f });
+                ImGui::SetNextWindowSize({ 560.f, 540.f });
                 if (ImGui::Begin("Terrain"))
                 {
                     ImGui::SliderFloat("Noise One Freq", &noiseOneFreq, 0.001f, 0.09f);
@@ -83,9 +93,19 @@ TerrainGenerator::TerrainGenerator(bool debugWindow)
                     ImGui::SameLine();
                     ImGui::Text("%d", seed);
 
+                    for (const auto& t : m_debugTextures)
+                    {
+                        auto h = t.getGLHandle();
+                        ImGui::Image((ImTextureID)(intptr_t)h, { 128.f, 128.f });
+                        ImGui::SameLine();
+                    }
+                    ImGui::NewLine();
+
+                    ImGui::Image((ImTextureID)(intptr_t)m_previewTexture.getGLHandle(), { 256.f, 256.f });
+                    ImGui::SameLine();
                     if (ImGui::Button("Render"))
                     {
-                        static const std::int32_t chunkCount = 16;
+                        
                         for (auto z = 0; z < chunkCount; ++z)
                         {
                             for (auto x = 0; x < chunkCount; ++x)
@@ -96,6 +116,7 @@ TerrainGenerator::TerrainGenerator(bool debugWindow)
                         renderHeightmaps();
                     }
                 }
+
                 ImGui::End();
             });
     }
@@ -130,29 +151,67 @@ void TerrainGenerator::renderHeightmaps()
 {
     auto area = m_lastHeightmapSize * m_lastHeightmapSize;
 
-    cro::Image image;
+    for (auto& t : m_debugTextures)
+    {
+        if (t.getGLHandle() == 0
+            || t.getSize().x != m_lastHeightmapSize)
+        {
+            t.create(m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
+        }
+    }
+    if (m_previewTexture.getGLHandle() == 0
+        || m_previewTexture.getSize().x != m_lastHeightmapSize)
+    {
+        m_previewTexture.create(m_lastHeightmapSize, m_lastHeightmapSize);
+    }
+
     if (m_noiseImageOne.size() == area)
     {
-        image.loadFromMemory(m_noiseImageOne.data(), m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
-        image.write("noise_one.png");
+        m_debugTextures[NoiseOne].update(m_noiseImageOne.data());
     }
 
     if (m_noiseImageTwo.size() == area)
     {
-        image.loadFromMemory(m_noiseImageTwo.data(), m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
-        image.write("noise_two.png");
+        m_debugTextures[NoiseTwo].update(m_noiseImageTwo.data());
     }
 
     if (m_falloffImage.size() == area)
     {
-        image.loadFromMemory(m_falloffImage.data(), m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
-        image.write("falloff.png");
+        m_debugTextures[Falloff].update(m_falloffImage.data());
     }
 
     if (m_finalImage.size() == area)
     {
-        image.loadFromMemory(m_finalImage.data(), m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
-        image.write("final.png");
+        m_debugTextures[Final].update(m_finalImage.data());
+
+        //create a colour preview
+        std::vector<std::uint8_t> bytes;
+        for (auto c : m_finalImage)
+        {
+            std::int32_t height = static_cast<std::int32_t>((static_cast<float>(c) / 255.f)* MaxTerrainHeight);
+            if (height < WaterLevel)
+            {
+                bytes.push_back(0);
+                bytes.push_back(0);
+                bytes.push_back(255);
+                bytes.push_back(255);
+            }
+            else if (height < WaterLevel + 3)
+            {
+                bytes.push_back(255);
+                bytes.push_back(255);
+                bytes.push_back(200);
+                bytes.push_back(255);
+            }
+            else
+            {
+                bytes.push_back(10);
+                bytes.push_back(250);
+                bytes.push_back(80);
+                bytes.push_back(255);
+            }
+        }
+        m_previewTexture.update(bytes.data());
     }
 }
 

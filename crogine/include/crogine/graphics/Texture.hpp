@@ -64,7 +64,7 @@ namespace cro
 
         /*!
         \brief Creates an empty texture.
-        \param width Width of the texture to create. On mobile platfors this should be pow2
+        \param width Width of the texture to create. On mobile platforms this should be pow2
         \param height Height of the texture to create. On mobile platforms this should be pow2
         \param format Graphics::Format type - valid values are RGB or RGBA
         */
