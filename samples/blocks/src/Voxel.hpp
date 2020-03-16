@@ -91,6 +91,7 @@ namespace vx
 
     struct Face final
     {
+        glm::ivec3 position = glm::ivec3(0);
         //these are the same BL, BR, TL, TR as the positions
         //when creating a quad
         std::array<std::uint8_t, 4u> ao = { 3,3,3,3 };

@@ -251,8 +251,8 @@ void GameState::buildWorld()
 
     //std::hash<std::string> hash;
     //hm this performs some truncation on the value... does it matter?
-    auto seed = static_cast<std::uint32_t>(/*hash("buns")*/std::time(nullptr));
-    //std::int32_t seed = 1234567;
+    //auto seed = static_cast<std::uint32_t>(/*hash("buns")*/std::time(nullptr));
+    std::int32_t seed = 1234567;
 
     LOG("Seed: " + std::to_string(seed), cro::Logger::Type::Info);
 

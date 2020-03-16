@@ -115,7 +115,7 @@ private:
     std::queue<VertexOutput> m_outputQueue;
 
     vx::Face getFace(const Chunk&, glm::ivec3, vx::Side);
-    void calcAO(const Chunk&, vx::Face&, glm::ivec3);
+    void calcAO(const Chunk&, vx::Face&);
     void generateChunkMesh(const Chunk&, VertexOutput&);
     void generateNaiveMesh(const Chunk&, VertexOutput&);
     void generateDebugMesh(const Chunk&, VertexOutput&);

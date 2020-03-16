@@ -480,7 +480,7 @@ void ChunkSystem::threadFunc()
     }
 }
 
-void ChunkSystem::calcAO(const Chunk& chunk, vx::Face& face, glm::ivec3 position)
+void ChunkSystem::calcAO(const Chunk& chunk, vx::Face& face)
 {
     //this has confused itself somewhere. currently north
     //faces point +z, south faces are - z
@@ -507,6 +507,7 @@ void ChunkSystem::calcAO(const Chunk& chunk, vx::Face& face, glm::ivec3 position
         }
     };
 
+    auto position = face.position;
     if (face.visible && face.id != waterblock)
     {
         if (face.direction == vx::Top)
@@ -747,6 +748,7 @@ vx::Face ChunkSystem::getFace(const Chunk& chunk, glm::ivec3 position, vx::Side 
     vx::Face face;
     face.direction = side;
     face.id = chunk.getVoxelQ(position);
+    face.position = position;
     
     std::uint8_t neighbour = airBlock;
 
@@ -857,23 +859,23 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                         auto data = m_voxelData.getVoxel(voxelID);
                         if (data.style == vx::MeshStyle::Cross)
                         {
-                            detailPositions.emplace_back(std::make_pair(positionA, data.tileIDs[0]));
+                            //only add this on first pass, else we get the same position 6 times!
+                            if (direction == 0 && !backface)
+                            {
+                                detailPositions.emplace_back(std::make_pair(positionA, data.tileIDs[0]));
+                            }
                             faceA->visible = false;
                         }
                         voxelID = chunk.getVoxel(positionB);
                         data = m_voxelData.getVoxel(voxelID);
                         if (data.style == vx::MeshStyle::Cross)
                         {
-                            detailPositions.emplace_back(std::make_pair(positionB, data.tileIDs[0]));
+                            if (direction == 0 && !backface)
+                            {
+                                detailPositions.emplace_back(std::make_pair(positionB, data.tileIDs[0]));
+                            }
                             faceB->visible = false;
                         }
-
-                        //calculate the AO values
-                        //TODO we want to save some time here and only calc on the face
-                        //which was added - but we have to do both to be able to compare
-                        //them and know if we need to add the face or not...
-                        if(faceA) calcAO(chunk, *faceA, positionA);
-                        if(faceB) calcAO(chunk, *faceB, positionB);
 
                         faceMask[maskIndex] = (faceA != std::nullopt && faceB != std::nullopt && (*faceA == *faceB)) ?
                             std::nullopt :
@@ -881,6 +883,11 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
 
                         maskIndex++;
                     }
+                }
+                //do this out here halves the amount of calls!
+                for (auto& f : faceMask)
+                {
+                    calcAO(chunk, *f);
                 }
                 m_chunkMutex->unlock();
 
@@ -894,7 +901,6 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                 {
                     for (auto i = 0; i < WorldConst::ChunkSize;)
                     {
-                        //if(faceMask[maskIndex]) std::cout << faceMask[maskIndex]->visible << "\n";
                         if (faceMask[maskIndex] != std::nullopt
                             && faceMask[maskIndex]->visible)
                         {
@@ -1131,13 +1137,6 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
                         std::optional<vx::Face> faceB = (x[direction] < (WorldConst::ChunkSize - 1)) ?
                             std::optional<vx::Face>(getFace(chunk, positionB, (vx::Side)currentSide)) : std::nullopt;
 
-                        //calculate the AO values
-                        //TODO we want to save some time here and only calc on the face
-                        //which was added - but we have to do both to be able to compare
-                        //them and know if we need to add the face or not...
-                        if (faceA) calcAO(chunk, *faceA, positionA);
-                        if (faceB) calcAO(chunk, *faceB, positionB);
-
                         std::vector<glm::vec3> positions;
 
                         vx::Side faceDirection = vx::North;
@@ -1165,6 +1164,7 @@ void ChunkSystem::generateNaiveMesh(const Chunk& chunk, VertexOutput& output)
 
                         if (faceMask[maskIndex] && faceMask[maskIndex]->visible)
                         {
+                            calcAO(chunk, *faceMask[maskIndex]);
                             switch (faceDirection)
                             {
                             case vx::Bottom:
