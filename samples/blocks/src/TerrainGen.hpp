@@ -71,6 +71,8 @@ public:
         NoiseOne, NoiseTwo,
         Falloff, Final,
 
+        Flora,
+
         Count
     };
 
@@ -83,9 +85,13 @@ private:
     std::vector<std::uint8_t> m_finalImage;
     std::uint32_t m_lastHeightmapSize;
 
+    std::vector<std::uint8_t> m_floraImage;
+
     std::array<cro::Texture, Count> m_debugTextures;
     cro::Texture m_previewTexture;
 
     Heightmap createChunkHeightmap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
-    void createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManager& voxeldata, std::int32_t seed);
+    void createTerrain(Chunk& chunk, const Heightmap& heightmap, const Heightmap& flora, const vx::DataManager& voxeldata, std::int32_t seed);
+
+    Heightmap createFloraMap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
 };
