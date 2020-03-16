@@ -52,6 +52,9 @@ PostRadial::PostRadial()
 {
     m_inputShader.loadFromString(cro::PostVertex, extractionFrag);
     m_outputShader.loadFromString(cro::PostVertex, blueDream);
+
+    addPass(m_inputShader);
+    addPass(m_outputShader);
 }
 
 //public
@@ -60,11 +63,11 @@ void PostRadial::apply(const cro::RenderTexture& source)
     glm::vec2 size(getCurrentBufferSize());
     setUniform("u_texture", source.getTexture(), m_inputShader);
     m_blurBuffer.clear();
-    drawQuad(m_inputShader, { 0.f, 0.f, size.x / 2.f, size.y / 2.f });
+    drawQuad(0, { 0.f, 0.f, size.x / 2.f, size.y / 2.f });
     m_blurBuffer.display();
     
     setUniform("u_baseTexture", source.getTexture(), m_outputShader);
-    drawQuad(m_outputShader, { 0.f, 0.f, size.x, size.y });
+    drawQuad(1, { 0.f, 0.f, size.x, size.y });
 }
 
 //private

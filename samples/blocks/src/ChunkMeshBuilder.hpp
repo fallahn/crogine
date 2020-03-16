@@ -39,7 +39,6 @@ is updated by the ChunkRenderer system.
 class ChunkMeshBuilder final : public cro::MeshBuilder
 {
 public:
-    ChunkMeshBuilder();
 
     //return 0 and each mesh gets an automatic ID
     //from the mesh resource, prevents returning the

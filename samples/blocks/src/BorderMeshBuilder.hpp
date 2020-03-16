@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2017 - 2020
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,59 +29,17 @@ source distribution.
 
 #pragma once
 
-namespace MaterialID
+#include "ResourceIDs.hpp"
+
+#include <crogine/graphics/MeshBuilder.hpp>
+
+class BorderMeshBuilder final : public cro::MeshBuilder
 {
-    enum
-    {
-        ChunkSolid,
-        ChunkWater,
-        ChunkDebug,
-        ChunkDetail,
+public:
 
-        Count
-    };
-}
+    std::size_t getUID() const override { return MeshID::Border; }
 
-namespace MeshID
-{
-    enum
-    {
-        Border,
+private:
 
-        Count
-    };
-}
-
-namespace GameModelID
-{
-
-}
-
-namespace FontID
-{
-
-}
-
-namespace ShaderID
-{
-    enum
-    {
-        Chunk,
-        ChunkDebug
-    };
-}
-
-namespace CommandID
-{
-
-}
-
-namespace AnimationID
-{
-
-}
-
-namespace CollisionID
-{
-
-}
+    cro::Mesh::Data build() const override;
+};

@@ -34,6 +34,7 @@ SOFTWARE.
 #include <algorithm>
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/Colour.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Random.hpp>
 
@@ -67,9 +68,18 @@ TerrainGenerator::TerrainGenerator(bool debugWindow)
 
     if (debugWindow)
     {
+        static const std::int32_t chunkCount = 16;
+
+        auto w = chunkCount * ChunkSize;
+        for (auto& t : m_debugTextures)
+        {
+            t.create(w, w, cro::ImageFormat::A);
+        }
+        m_previewTexture.create(w, w);
+
         registerWindow([&]()
             {
-                ImGui::SetNextWindowSize({ 500.f, 260.f });
+                ImGui::SetNextWindowSize({ 760.f, 540.f });
                 if (ImGui::Begin("Terrain"))
                 {
                     ImGui::SliderFloat("Noise One Freq", &noiseOneFreq, 0.001f, 0.09f);
@@ -83,19 +93,31 @@ TerrainGenerator::TerrainGenerator(bool debugWindow)
                     ImGui::SameLine();
                     ImGui::Text("%d", seed);
 
+                    for (const auto& t : m_debugTextures)
+                    {
+                        auto h = t.getGLHandle();
+                        ImGui::Image((ImTextureID)(intptr_t)h, { 128.f, 128.f });
+                        ImGui::SameLine();
+                    }
+                    ImGui::NewLine();
+
+                    ImGui::Image((ImTextureID)(intptr_t)m_previewTexture.getGLHandle(), { 256.f, 256.f });
+                    ImGui::SameLine();
                     if (ImGui::Button("Render"))
                     {
-                        static const std::int32_t chunkCount = 16;
+                        
                         for (auto z = 0; z < chunkCount; ++z)
                         {
                             for (auto x = 0; x < chunkCount; ++x)
                             {
                                 createChunkHeightmap({ x, 0, z }, chunkCount, seed);
+                                createFloraMap({ x, 0, z }, chunkCount, seed);
                             }
                         }
                         renderHeightmaps();
                     }
                 }
+
                 ImGui::End();
             });
     }
@@ -115,13 +137,14 @@ void TerrainGenerator::generateTerrain(ChunkManager& chunkManager, std::int32_t 
 {
     glm::ivec3 chunkPos(chunkX, 0, chunkZ);
 
+    auto flora = createFloraMap(chunkPos, chunkCount, seed);
     auto heightmap = createChunkHeightmap(chunkPos, chunkCount, seed);
     auto maxHeight = *std::max_element(heightmap.begin(), heightmap.end());
 
     for(auto y = 0; y < std::max(1, maxHeight / ChunkSize + 1); ++y)
     {
         auto& chunk = chunkManager.addChunk({ chunkX, y, chunkZ });
-        createTerrain(chunk, heightmap, voxelData, seed);
+        createTerrain(chunk, heightmap, flora, voxelData, seed);
         chunkManager.ensureNeighbours(chunk.getPosition());
     }
 }
@@ -130,29 +153,82 @@ void TerrainGenerator::renderHeightmaps()
 {
     auto area = m_lastHeightmapSize * m_lastHeightmapSize;
 
-    cro::Image image;
+    for (auto& t : m_debugTextures)
+    {
+        if (t.getGLHandle() == 0
+            || t.getSize().x != m_lastHeightmapSize)
+        {
+            t.create(m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
+        }
+    }
+    if (m_previewTexture.getGLHandle() == 0
+        || m_previewTexture.getSize().x != m_lastHeightmapSize)
+    {
+        m_previewTexture.create(m_lastHeightmapSize, m_lastHeightmapSize);
+    }
+
     if (m_noiseImageOne.size() == area)
     {
-        image.loadFromMemory(m_noiseImageOne.data(), m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
-        image.write("noise_one.png");
+        m_debugTextures[NoiseOne].update(m_noiseImageOne.data());
     }
 
     if (m_noiseImageTwo.size() == area)
     {
-        image.loadFromMemory(m_noiseImageTwo.data(), m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
-        image.write("noise_two.png");
+        m_debugTextures[NoiseTwo].update(m_noiseImageTwo.data());
     }
 
     if (m_falloffImage.size() == area)
     {
-        image.loadFromMemory(m_falloffImage.data(), m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
-        image.write("falloff.png");
+        m_debugTextures[Falloff].update(m_falloffImage.data());
+    }
+
+    if (m_floraImage.size() == area)
+    {
+        m_debugTextures[Flora].update(m_floraImage.data());
     }
 
     if (m_finalImage.size() == area)
     {
-        image.loadFromMemory(m_finalImage.data(), m_lastHeightmapSize, m_lastHeightmapSize, cro::ImageFormat::A);
-        image.write("final.png");
+        m_debugTextures[Final].update(m_finalImage.data());
+
+        //create a colour preview
+        std::vector<std::uint8_t> bytes;
+        for (auto i = 0u; i < m_finalImage.size(); ++i)
+        {
+            float heightFloat = (static_cast<float>(m_finalImage[i]) / 255.f);
+            std::int32_t height = static_cast<std::int32_t>(heightFloat * MaxTerrainHeight);
+            if (height < WaterLevel)
+            {
+                bytes.push_back(0);
+                bytes.push_back(0);
+                bytes.push_back(255);
+                bytes.push_back(255);
+            }
+            else if (height < WaterLevel + 3)
+            {
+                bytes.push_back(255);
+                bytes.push_back(255 - m_floraImage[i]);
+                bytes.push_back(200);
+                bytes.push_back(255);
+            }
+            else
+            {
+                if (m_floraImage[i])
+                {
+                    bytes.push_back(255);
+                    bytes.push_back(10);
+                    bytes.push_back(80);
+                }
+                else
+                {
+                    bytes.push_back(10);
+                    bytes.push_back(static_cast<std::uint8_t>(250.f * heightFloat));
+                    bytes.push_back(80);
+                }
+                bytes.push_back(255);
+            }
+        }
+        m_previewTexture.update(bytes.data());
     }
 }
 
@@ -175,7 +251,8 @@ Heightmap TerrainGenerator::createChunkHeightmap(glm::ivec3 chunkPos, std::int32
 
     //TODO could make this debug only
     std::uint32_t lastHeightmapSize = chunkCount * ChunkSize;
-    if (m_lastHeightmapSize != lastHeightmapSize)
+    if (m_lastHeightmapSize != lastHeightmapSize
+        || m_noiseImageOne.size() != lastHeightmapSize * lastHeightmapSize)
     {
         m_lastHeightmapSize = lastHeightmapSize;
         m_noiseImageOne.resize(lastHeightmapSize * lastHeightmapSize);
@@ -232,7 +309,7 @@ Heightmap TerrainGenerator::createChunkHeightmap(glm::ivec3 chunkPos, std::int32
     return heightmap;
 }
 
-void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, const vx::DataManager& voxeldata, std::int32_t seed)
+void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, const Heightmap& flora, const vx::DataManager& voxelData, std::int32_t seed)
 {
     std::int8_t highestPoint = -1;
 
@@ -241,18 +318,38 @@ void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, c
         for (auto x = 0; x < ChunkSize; ++x)
         {
             auto height = heightmap[z * ChunkSize + x];
+            auto hasFlora = flora[z * ChunkSize + x];
 
             for (auto y = 0; y < ChunkSize; ++y)
             {
                 auto voxY = chunk.getPosition().y * ChunkSize + y;
-                std::uint8_t voxelID = voxeldata.getID(vx::Air);
+                std::uint8_t voxelID = voxelData.getID(vx::Air);
 
                 //above the height value we're water or air (air is default)
                 if (voxY > height)
                 {
                     if (voxY < WaterLevel)
                     {
-                        voxelID = voxeldata.getID(vx::Water);
+                        voxelID = voxelData.getID(vx::Water);
+                    }
+                    else if (voxY == height + 1)
+                    {
+                        //random vegetation
+                        if (hasFlora)
+                        {
+                            if (voxY < WaterLevel + 4)
+                            {
+                                //we must be above sand
+                                voxelID = voxelData.getID("sand_grass");
+                            }
+                            else
+                            {
+                                //assume grass? might be rock or something
+                                voxelID = (cro::Util::Random::value(0, 1) == 0)
+                                    ? voxelData.getID("short_grass01")
+                                    : voxelData.getID("short_grass02");
+                            }
+                        }
                     }
                 }
                 //on the top layer, so sand if near water
@@ -261,14 +358,14 @@ void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, c
                 {
                     if (voxY < (WaterLevel + 3))
                     {
-                        voxelID = voxeldata.getID(vx::Sand);
+                        voxelID = voxelData.getID(vx::Sand);
                     }
                     else
                     {
                         //if using biome set the top data according
                         //to the current biome
 
-                        voxelID = voxeldata.getID(vx::Grass);
+                        voxelID = voxelData.getID(vx::Grass);
                     }
                 }
                 //some arbitrary depth of dirt below the surface.
@@ -279,23 +376,23 @@ void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, c
                     //sand should have more sand underneath it
                     if (voxY > WaterLevel)
                     {
-                        voxelID = voxeldata.getID(vx::Dirt);
+                        voxelID = voxelData.getID(vx::Dirt);
                     }
                     else
                     {
-                        voxelID = voxeldata.getID(vx::Sand);
+                        voxelID = voxelData.getID(vx::Sand);
                     }
                 }
                 else
                 {
                     //we're underground, so make solid
-                    voxelID = voxeldata.getID(vx::Stone);
+                    voxelID = voxelData.getID(vx::Stone);
                 }
 
 
                 //set the voxelID at the current chunk position
                 chunk.setVoxelQ({ x,y,z }, voxelID);
-                if (voxelID != voxeldata.getID(vx::Air))
+                if (voxelID != voxelData.getID(vx::Air))
                 {
                     highestPoint = (y > highestPoint) ? y : highestPoint;
                 }
@@ -304,4 +401,43 @@ void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, c
     }
 
     chunk.setHighestPoint(highestPoint);
+}
+
+Heightmap TerrainGenerator::createFloraMap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed)
+{
+    auto chunkWorldPos = chunkPos * ChunkSize;
+
+    m_noise->SetSeed(seed);
+    m_noise->SetFrequency(/*0.02f*/noiseOneFreq);
+
+    std::uint32_t lastHeightmapSize = chunkCount * ChunkSize;
+    if (m_lastHeightmapSize != lastHeightmapSize
+        || m_floraImage.size() != lastHeightmapSize * lastHeightmapSize)
+    {
+        m_lastHeightmapSize = lastHeightmapSize;
+        m_floraImage.resize(lastHeightmapSize * lastHeightmapSize);
+    }
+
+    Heightmap retVal = {};
+    auto* noiseSet0 = m_noise->GetSimplexFractalSet(chunkWorldPos.x + seed, chunkWorldPos.y - (seed / 2), chunkWorldPos.z, ChunkSize, 1, ChunkSize);
+    std::int32_t i = 0;
+    for (auto x = 0u; x < ChunkSize; ++x)
+    {
+        for (auto z = 0; z < ChunkSize; ++z)
+        {
+            auto noise0 = ((noiseSet0[i] + 1.f) / 2.f);
+            
+            std::int32_t coordX = x + (chunkPos.x * ChunkSize);
+            std::int32_t coordY = z + (chunkPos.z * ChunkSize);
+            std::size_t idx = coordY * lastHeightmapSize + coordX;
+            m_floraImage[idx] = noise0 < 0.5 ? 0 : cro::Util::Random::value(0, 48) == 6 ? 255 : 0;
+
+            retVal[z * ChunkSize + x] = m_floraImage[idx];
+
+            i++;
+        }
+    }
+
+    fn::FreeNoiseSet(noiseSet0);
+    return retVal;
 }

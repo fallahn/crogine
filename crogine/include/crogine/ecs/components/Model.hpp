@@ -91,16 +91,19 @@ namespace cro
         bool isVisible() const { return m_visible; }
 
         /*!
-        \brief Overrides the active material's blend mode's depth test setting.
-        By default most materials use a blend mode which enable depth testing.
-        This setting overrides the material when rendering, and applies it to the
-        entire model. This is useful for models such as wireframe output, although
-        this is usually not needed and can be ignored.
+        \brief Sets the model hidden or unhidden. If this is true then the
+        model won't be drawn.
         */
-        bool enableDepthTest = true;
+        void setHidden(bool hidden) { m_hidden = hidden; }
+
+        /*!
+        \brief Returns whether or not this model is currently hidden from rendering
+        */
+        bool isHidden() const { return m_hidden; }
 
     private:
         bool m_visible = false;
+        bool m_hidden = false;
 
         Mesh::Data m_meshData;
         std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_materials{};       

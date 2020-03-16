@@ -50,7 +50,7 @@ using namespace cro::Detail;
 
 namespace
 {
-    constexpr std::size_t STREAM_CHUNK_SIZE = 48000u * sizeof(uint16); //1 sec of stereo @ highest quality (mono)
+    constexpr std::size_t STREAM_CHUNK_SIZE = 48000u * sizeof(uint16) * 30; //30 sec of stereo @ highest quality (mono)
 
     ALenum getFormatFromData(const PCMData& data)
     {

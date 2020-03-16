@@ -251,13 +251,13 @@ void GameState::buildWorld()
 
     //std::hash<std::string> hash;
     //hm this performs some truncation on the value... does it matter?
-    auto seed = static_cast<std::uint32_t>(/*hash("buns")*/std::time(nullptr));
-    //std::int32_t seed = 1234567;
+    //auto seed = static_cast<std::uint32_t>(/*hash("buns")*/std::time(nullptr));
+    std::int32_t seed = 1234567;
 
     LOG("Seed: " + std::to_string(seed), cro::Logger::Type::Info);
 
     //count per side
-    static const std::int32_t chunkCount = 1;
+    static const std::int32_t chunkCount = 2;
     LOG("Generating...", cro::Logger::Type::Info);
     for (auto z = 0; z < chunkCount; ++z)
     {
@@ -266,7 +266,6 @@ void GameState::buildWorld()
             m_terrainGenerator.generateTerrain(m_world.chunks, x, z, m_voxelData, seed, chunkCount);
         }
     }
-    m_terrainGenerator.renderHeightmaps();
 
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {

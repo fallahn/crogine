@@ -1,5 +1,6 @@
 
 set(PROJECT_SRC
+  ${PROJECT_DIR}/BorderMeshBuilder.cpp
   ${PROJECT_DIR}/Chunk.cpp
   ${PROJECT_DIR}/ChunkManager.cpp
   ${PROJECT_DIR}/ChunkMeshBuilder.cpp

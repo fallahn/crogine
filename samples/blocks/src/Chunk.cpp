@@ -48,11 +48,12 @@ namespace
 Chunk::Chunk(ChunkManager& m, glm::ivec3 pos)
     : m_chunkManager    (m),
     m_position          (pos),
+    m_voxels            (WorldConst::ChunkVolume),
     m_highestPoint      (-1)
 {
     //this assume 'air' is ID 0 - ideally we should be checking
     //the ID assigned by the voxel manager when the type is loaded.
-    std::fill(m_voxels.begin(), m_voxels.end(), 0);
+    std::fill(m_voxels.begin(), m_voxels.end(), /*vx::OutOfBounds*/0);
 }
 
 //public
@@ -129,7 +130,7 @@ CompressedVoxels compressVoxels(const ChunkVoxels& voxels)
 
 ChunkVoxels decompressVoxels(const CompressedVoxels& voxels)
 {
-    ChunkVoxels voxelData = {};
+    ChunkVoxels voxelData(WorldConst::ChunkVolume);
     std::size_t idx = 0;
     for (const auto& [type, count] : voxels)
     {

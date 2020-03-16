@@ -34,9 +34,6 @@ source distribution.
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/geometric.hpp>
 
-
-ChunkMeshBuilder::ChunkMeshBuilder() {}
-
 std::size_t ChunkMeshBuilder::m_componentCount = 0;
 
 cro::Mesh::Data ChunkMeshBuilder::build() const
@@ -80,9 +77,9 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    //third submesh is used for drawing debug outlines
+    //third submesh is used for drawing details like grass and flowers
     data.indexData[2].format = GL_UNSIGNED_INT;
-    data.indexData[2].primitiveType = GL_LINES;
+    data.indexData[2].primitiveType = GL_TRIANGLES;
     data.indexData[2].indexCount = 0;
 
     glCheck(glGenBuffers(1, &data.indexData[2].ibo));

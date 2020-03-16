@@ -119,6 +119,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
     //debug output
+    playerEntity = {};
     registerWindow([&]()
         {
             if (playerEntity.isValid())
@@ -190,7 +191,53 @@ bool GameState::handleEvent(const cro::Event& evt)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, cmd, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
         break;
+        case SDLK_4:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = Client::CommandID::ChunkMesh;
+            cmd.action = [](cro::Entity e, float)
+            {
+                auto& chunkComponent = e.getComponent<ChunkComponent>();
+                if (chunkComponent.meshType != ChunkComponent::Naive)
+                {
+                    chunkComponent.meshType = ChunkComponent::Naive;
+                    chunkComponent.needsUpdate = true;
+                }
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            LOG("Switched to naive mesh", cro::Logger::Type::Info);
+        }
+            break;
+        case SDLK_5:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = Client::CommandID::ChunkMesh;
+            cmd.action = [](cro::Entity e, float)
+            {
+                auto& chunkComponent = e.getComponent<ChunkComponent>();
+                if (chunkComponent.meshType != ChunkComponent::Greedy)
+                {
+                    chunkComponent.meshType = ChunkComponent::Greedy;
+                    chunkComponent.needsUpdate = true;
+                }
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            LOG("Switched to greedy mesh", cro::Logger::Type::Info);
+        }
+        break;
 #endif //CRO_DEBUG_
+        case SDLK_3:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = Client::CommandID::DebugMesh;
+            cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Model>().setHidden(!e.getComponent<cro::Model>().isHidden());
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        }
+        break;
+
         }
     }
 

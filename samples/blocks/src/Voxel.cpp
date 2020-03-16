@@ -36,35 +36,47 @@ namespace vx
         : m_commonVoxels(CommonType::Count)
     {
         //let's call these 'built in' types
+        //TODO load some sort of config file to get
+        //the tile indices
         Data data;
 
-        //adding air first ensures it haas the ID of 0
+        //adding air first ensures it has the ID of 0
         //unfortunately this is an assumption made in
         //some places where the true ID of a block type
         //is ont accessible, for instance the default value
         //of a chunk.
         data.name = "air";
         data.collidable = false;
-        addVoxel(data);
-
-
-        data.name = "sand";
-        data.collidable = true;
-        addVoxel(data);
-
-        data.name = "stone";
+        data.type = vx::Type::Gas;
         addVoxel(data);
 
         data.name = "water";
+        data.collidable = true;
+        data.type = vx::Type::Liquid;
+        data.tileIDs = { 17,17,17,17,17,17 };
+        addVoxel(data);
+
+        data.name = "sand";
+        data.type = vx::Type::Solid;
+        data.tileIDs = { 1,1,1,1,1,1 };
+        addVoxel(data);
+
+        data.name = "stone";
+        data.tileIDs = { 9,9,9,9,9,9 };
         addVoxel(data);
 
         data.name = "dirt";
+        data.tileIDs = { 0,0,0,0,0,0 };
         addVoxel(data);
 
         data.name = "grass";
+        data.tileIDs[Side::Top] = 16;
+        data.tileIDs[Side::Bottom] = 0;
+        data.tileIDs[Side::North] = 8;
+        data.tileIDs[Side::East] = 8;
+        data.tileIDs[Side::South] = 8;
+        data.tileIDs[Side::West] = 8;
         addVoxel(data);
-
-
         
 
         m_commonVoxels[CommonType::Sand] = getID("sand");
@@ -73,6 +85,21 @@ namespace vx
         m_commonVoxels[CommonType::Water] = getID("water");
         m_commonVoxels[CommonType::Dirt] = getID("dirt");
         m_commonVoxels[CommonType::Grass] = getID("grass");
+
+        data.name = "sand_grass";
+        data.tileIDs = { 7,7,7,7,7,7 };
+        data.style = vx::MeshStyle::Cross;
+        data.collidable = false;
+        data.type = Type::Detail;
+        addVoxel(data);
+
+        data.name = "short_grass01";
+        data.tileIDs[0] = 15;
+        addVoxel(data);
+
+        data.name = "short_grass02";
+        data.tileIDs[0] = 23;
+        addVoxel(data);
     }
 
     std::uint8_t DataManager::addVoxel(const Data& voxel)

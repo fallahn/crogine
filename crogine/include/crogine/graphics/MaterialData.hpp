@@ -179,6 +179,12 @@ namespace cro
             */
             void setProperty(const std::string& name, const Texture& value);
 
+            /*!
+            \brief Overrides the material's depth test setting. 
+            This is useful for models rendered as wireframe, although
+            this is usually not needed and can be ignored.
+            */
+            bool enableDepthTest = true;
 
             /*
             Here be dragons! Don't modify these variables as they are configured

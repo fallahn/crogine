@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/network/NetData.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/detail/glm/vec2.hpp>
 
 #include <mutex>
 #include <memory>
@@ -52,6 +53,11 @@ struct ChunkComponent final
 {
     bool needsUpdate = true;
     glm::ivec3 chunkPos = glm::ivec3(0);
+
+    enum MeshType
+    {
+        Greedy, Naive
+    }meshType = Greedy;
 };
 
 class ChunkSystem final : public cro::System, public cro::GuiClient
@@ -74,7 +80,8 @@ private:
 
     cro::ResourceCollection& m_resources;
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
-
+    std::array<std::size_t, MeshID::Count> m_meshIDs = {};
+    std::vector<glm::vec2> m_tileOffsets;
 
     ChunkManager m_chunkManager;
     vx::DataManager m_voxelData;
@@ -90,58 +97,32 @@ private:
     PositionMap<cro::Entity> m_chunkEntities;
     void updateMesh();
 
-    std::unique_ptr<std::mutex> m_mutex;
+    std::unique_ptr<std::mutex> m_queueMutex;
+    std::unique_ptr<std::mutex> m_chunkMutex;
     std::array<std::unique_ptr<std::thread>, 4u> m_meshThreads;
     std::atomic_bool m_threadRunning;
     void threadFunc();
 
-    std::queue<glm::ivec3> m_inputQueue;
+    std::queue<cro::Entity> m_inputQueue;
     struct VertexOutput final
     {
         std::vector<float> vertexData;
         std::vector<std::uint32_t> solidIndices;
         std::vector<std::uint32_t> waterIndices;
-        std::vector<std::uint32_t> debugIndices;
+        std::vector<std::uint32_t> detailIndices;
         glm::ivec3 position = glm::ivec3(0);
     };
     std::queue<VertexOutput> m_outputQueue;
 
-    struct VoxelFace final
-    {
-        //these are the same BL, BR, TL, TR as the positions
-        //when creating a quad
-        std::array<std::uint8_t, 4u> ao = { 3,3,3,3 };
-        float offset = 0.f; //eg if a water surface should be slightly lower
-        
-        glm::ivec3 position = glm::ivec3(0); //voxel position of this face so we can track which direction the meshing is travelling
-
-        bool visible = true;
-        enum Side
-        {
-            South, North, East, West, Top, Bottom
-        }direction = Top;
-        std::uint8_t id;
-
-        bool operator == (const VoxelFace& other)
-        {
-            return (other.id == id && other.visible == visible);
-        }
-
-        bool operator != (const VoxelFace& other)
-        {
-            return (other.id != id || other.visible != visible);
-        }
-
-        bool canAppend(const VoxelFace& other, std::int32_t direction);
-    };
-    VoxelFace getFace(const Chunk&, glm::ivec3, VoxelFace::Side);
-    void calcAO(const Chunk&, VoxelFace&, glm::ivec3);
+    vx::Face getFace(const Chunk&, glm::ivec3, vx::Side);
+    void calcAO(const Chunk&, vx::Face&);
     void generateChunkMesh(const Chunk&, VertexOutput&);
     void generateNaiveMesh(const Chunk&, VertexOutput&);
     void generateDebugMesh(const Chunk&, VertexOutput&);
 
-    void addQuad(VertexOutput&, std::vector<glm::vec3> positions, const std::array<std::uint8_t, 4u>& ao, float width, float height, VoxelFace face);
+    void addQuad(VertexOutput&, const std::vector<glm::vec3>& positions, const std::vector<glm::vec2>& UVs, const std::array<std::uint8_t, 4u>& ao, vx::Face face);
+    void addDetail(VertexOutput&, glm::vec3, std::uint16_t);
 
-    void onEntityRemoved(cro::Entity);
-    void onEntityAdded(cro::Entity);
+    void onEntityRemoved(cro::Entity) override;
+    void onEntityAdded(cro::Entity) override;
 };

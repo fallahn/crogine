@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\BorderMeshBuilder.cpp" />
     <ClCompile Include="src\Chunk.cpp" />
     <ClCompile Include="src\ChunkManager.cpp" />
     <ClCompile Include="src\ChunkMeshBuilder.cpp" />
@@ -205,6 +206,7 @@
   <ItemGroup>
     <ClInclude Include="src\ActorIDs.hpp" />
     <ClInclude Include="src\ActorSystem.hpp" />
+    <ClInclude Include="src\BorderMeshBuilder.hpp" />
     <ClInclude Include="src\Chunk.hpp" />
     <ClInclude Include="src\ChunkManager.hpp" />
     <ClInclude Include="src\ChunkMeshBuilder.hpp" />

@@ -68,10 +68,14 @@ void ModelRenderer::process(float)
     for (auto& entity : entities)
     {
         auto& model = entity.getComponent<Model>();
+        if (model.isHidden())
+        {
+            continue;
+        }
 
         auto sphere = model.m_meshData.boundingSphere;
         const auto& tx = entity.getComponent<Transform>();
-        auto pos = tx.getWorldPosition();
+        //auto pos = tx.getWorldPosition();
 
         sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
         auto scale = tx.getScale();
@@ -95,7 +99,7 @@ void ModelRenderer::process(float)
             auto transparent = std::make_pair(entity, SortData());
 
             //auto worldPos = tx.getWorldPosition();
-            auto direction = sphere.centre - cameraPos;
+            auto direction = (sphere.centre - cameraPos);
             float distance = glm::dot(forwardVector, direction);
             //TODO a large model with a centre behind the camera
             //might still intersect the view but register as being
@@ -181,7 +185,7 @@ void ModelRenderer::render(Entity camera)
             applyBlendMode(model.m_materials[i].blendMode);
 
             //check for depth test override
-            if (!model.enableDepthTest)
+            if (!model.m_materials[i].enableDepthTest)
             {
                 glCheck(glDisable(GL_DEPTH_TEST));
             }

@@ -223,7 +223,7 @@ Sunlight& Scene::getSunlight()
 
 void Scene::enableSkybox()
 {
-    if (!m_skybox.vbo)
+    if (!m_skybox.vbo && m_skyboxShader.loadFromString(skyboxVertex, skyboxFrag))
     {
         //only using positions
         std::array<float, 108> verts = {
@@ -270,23 +270,31 @@ void Scene::enableSkybox()
              0.5f, -0.5f,  0.5f
         };
 
+#ifdef PLATFORM_DESKTOP
+        glCheck(glGenVertexArrays(1, &m_skybox.vao));
+        glCheck(glBindVertexArray(m_skybox.vao));
+#endif
         glCheck(glGenBuffers(1, &m_skybox.vbo));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
         glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
+        
+#ifdef PLATFORM_DESKTOP
+        const auto& attribs = m_skyboxShader.getAttribMap();
+        glCheck(glEnableVertexAttribArray(attribs[0]));
+        glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3 * sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+        glCheck(glEnableVertexAttribArray(0));
+
+        glCheck(glBindVertexArray(0));
+#endif
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-        //if shader fails reset the geometry
-        if(!m_skyboxShader.loadFromString(skyboxVertex, skyboxFrag))
-        {
-            destroySkybox();
-            Logger::log("Failed creating skybox shader", Logger::Type::Error);
-        }
-        else
-        {
-            m_skybox.viewUniform = m_skyboxShader.getUniformMap().at("u_viewMatrix");
-            m_skybox.projectionUniform = m_skyboxShader.getUniformMap().at("u_projectionMatrix");
-            setSkyboxColours();
-        }
+        m_skybox.viewUniform = m_skyboxShader.getUniformMap().at("u_viewMatrix");
+        m_skybox.projectionUniform = m_skyboxShader.getUniformMap().at("u_projectionMatrix");
+        setSkyboxColours();
+    }
+    else
+    {
+        Logger::log("Failed to create skybox", cro::Logger::Type::Error);
     }
 }
 
@@ -560,6 +568,11 @@ void Scene::defaultRenderPath(const RenderTarget& rt)
         }
 
         //draw cube
+#ifdef PLATFORM_DESKTOP
+        glCheck(glBindVertexArray(m_skybox.vao));
+        glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
+        glCheck(glBindVertexArray(0));
+#else
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
 
         const auto& attribs = m_skyboxShader.getAttribMap();
@@ -570,7 +583,7 @@ void Scene::defaultRenderPath(const RenderTarget& rt)
 
         glCheck(glDisableVertexAttribArray(attribs[0]));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
+#endif //PLATFORM
         glUseProgram(0);
 
         glDisable(GL_DEPTH_TEST);
@@ -615,14 +628,19 @@ void Scene::postRenderPath(const RenderTarget&)
 
 void Scene::destroySkybox()
 {
+    if (m_skybox.vao)
+    {
+        glCheck(glDeleteVertexArrays(1, &m_skybox.vao));
+    }
+
     if (m_skybox.vbo)
     {
-        glDeleteBuffers(1, &m_skybox.vbo);
+        glCheck(glDeleteBuffers(1, &m_skybox.vbo));
     }
 
     if (m_skybox.texture)
     {
-        glDeleteTextures(1, &m_skybox.texture);
+        glCheck(glDeleteTextures(1, &m_skybox.texture));
     }
 
     m_skybox = {};

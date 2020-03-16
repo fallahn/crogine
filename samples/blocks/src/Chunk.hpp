@@ -46,7 +46,7 @@ struct RLEPair final
 
 //holds a collection of voxel IDs compressed with run length encoding: pair<ID, Count>
 using CompressedVoxels = std::vector<RLEPair>;
-using ChunkVoxels = std::array<std::uint8_t, WorldConst::ChunkVolume>;
+using ChunkVoxels = std::vector<std::uint8_t>;
 
 class ChunkManager;
 class Chunk final
@@ -77,7 +77,7 @@ private:
 
     ChunkManager& m_chunkManager;
     glm::ivec3 m_position;
-    ChunkVoxels m_voxels = {};
+    ChunkVoxels m_voxels;
 
     std::int8_t m_highestPoint;
 };

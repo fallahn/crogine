@@ -34,6 +34,7 @@ SOFTWARE.
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <array>
 
 namespace vx
 {
@@ -71,14 +72,48 @@ namespace vx
         OutOfBounds = 255
     };
 
+    enum Side
+    {
+        South, North, East, West, Top, Bottom
+    };
+
     struct Data final
     {
         bool collidable = true;
         std::uint8_t id = 0;
         MeshStyle style = MeshStyle::Voxel;
         Type type = Type::Solid;
-
+        //indices into the tile map for each side
+        //indexed by vx::Side
+        std::array<std::uint16_t, 6u> tileIDs = {};
         std::string name;
+    };
+
+    struct Face final
+    {
+        glm::ivec3 position = glm::ivec3(0);
+        //these are the same BL, BR, TL, TR as the positions
+        //when creating a quad
+        std::array<std::uint8_t, 4u> ao = { 3,3,3,3 };
+        float offset = 0.f; //eg if a water surface should be slightly lower
+        std::uint16_t textureIndex = 0;
+        bool visible = true;
+        Side direction = Top;
+        std::uint8_t id;
+
+        bool operator == (const Face& other)
+        {
+            std::uint32_t aoMask = *reinterpret_cast<std::uint32_t*>(ao.data());
+            std::uint32_t otherAoMask = *reinterpret_cast<const std::uint32_t*>(other.ao.data());
+            bool aoMatch = (aoMask == otherAoMask);
+
+            return (other.id == id && other.visible == visible && aoMatch && other.textureIndex == textureIndex);
+        }
+
+        bool operator != (const Face& other)
+        {
+            return !(*this == other);
+        }
     };
 
     class DataManager final
