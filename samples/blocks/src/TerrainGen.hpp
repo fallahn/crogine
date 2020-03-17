@@ -97,9 +97,10 @@ private:
     std::array<cro::Texture, Count> m_debugTextures;
     cro::Texture m_previewTexture;
 
-    Heightmap createChunkHeightmap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
-    void createTerrain(Chunk& chunk, const Heightmap& heightmap, const Heightmap& flora, const vx::DataManager& voxeldata, std::int32_t seed);
 
+    void createTerrain(Chunk& chunk, const Heightmap& heightmap, const Heightmap& flora, const Heightmap& rockmap, const vx::DataManager& voxeldata, std::int32_t seed);
+
+    Heightmap createChunkHeightmap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
     Heightmap createFloraMap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
     Heightmap createRockMap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
 };

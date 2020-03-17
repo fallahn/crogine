@@ -135,6 +135,7 @@
     <ClInclude Include="..\crogine\include\crogine\network\NetData.hpp" />
     <ClInclude Include="..\crogine\include\crogine\network\NetHost.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Constants.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\util\Easings.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Maths.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Matrix.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Random.hpp" />
