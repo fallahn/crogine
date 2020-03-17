@@ -46,7 +46,7 @@ namespace
 {
     float rounded(glm::vec2 coord)
     {
-        auto bump = [](float t) {return std::max(0.f, 1.f - std::pow(t, 4.f)); };
+        auto bump = [](float t) {return std::max(0.f, 1.f - std::pow(t, 2.f)); };
         auto b = bump(coord.x) * bump(coord.y);
         return std::min((b * 0.9f) * 1.25f, 1.f);
     }
@@ -56,6 +56,7 @@ namespace
     float noiseOneFreq = 0.004f;
     float noiseTwoFreq = 0.008f;
     float minHeight = 0.399f;
+    float floraNoiseFreq = 0.011f;
 
     std::int32_t seed = 1234567;
 }
@@ -79,11 +80,12 @@ TerrainGenerator::TerrainGenerator(bool debugWindow)
 
         registerWindow([&]()
             {
-                ImGui::SetNextWindowSize({ 760.f, 540.f });
+                ImGui::SetNextWindowSize({ 760.f, 700.f });
                 if (ImGui::Begin("Terrain"))
                 {
                     ImGui::SliderFloat("Noise One Freq", &noiseOneFreq, 0.001f, 0.09f);
                     ImGui::SliderFloat("Noise Two Freq", &noiseTwoFreq, 0.001f, 0.09f);
+                    ImGui::SliderFloat("Flora Freq", &floraNoiseFreq, 0.001f, 0.09f);
                     ImGui::SliderFloat("MinHeight", &minHeight, 0.1f, 0.6f);
 
                     if (ImGui::Button("Random Seed"))
@@ -93,11 +95,20 @@ TerrainGenerator::TerrainGenerator(bool debugWindow)
                     ImGui::SameLine();
                     ImGui::Text("%d", seed);
 
-                    for (const auto& t : m_debugTextures)
+                    for (auto i = 0u; i < m_debugTextures.size(); ++i)
                     {
+                        const auto& t = m_debugTextures[i];
                         auto h = t.getGLHandle();
                         ImGui::Image((ImTextureID)(intptr_t)h, { 128.f, 128.f });
-                        ImGui::SameLine();
+
+                        if (i == 4)
+                        {
+                            ImGui::NewLine();
+                        }
+                        else
+                        {
+                            ImGui::SameLine();
+                        }
                     }
                     ImGui::NewLine();
 
@@ -112,6 +123,7 @@ TerrainGenerator::TerrainGenerator(bool debugWindow)
                             {
                                 createChunkHeightmap({ x, 0, z }, chunkCount, seed);
                                 createFloraMap({ x, 0, z }, chunkCount, seed);
+                                createRockMap({ x, 0, z }, chunkCount, seed);
                             }
                         }
                         renderHeightmaps();
@@ -187,6 +199,21 @@ void TerrainGenerator::renderHeightmaps()
         m_debugTextures[Flora].update(m_floraImage.data());
     }
 
+    if (m_rockMaskImage.size() == area)
+    {
+        m_debugTextures[RockMask].update(m_rockMaskImage.data());
+    }
+
+    if (m_rockFalloffImage.size() == area)
+    {
+        m_debugTextures[RockFalloff].update(m_rockFalloffImage.data());
+    }
+
+    if (m_rockOutputImage.size() == area)
+    {
+        m_debugTextures[RockOutput].update(m_rockOutputImage.data());
+    }
+
     if (m_finalImage.size() == area)
     {
         m_debugTextures[Final].update(m_finalImage.data());
@@ -239,11 +266,11 @@ Heightmap TerrainGenerator::createChunkHeightmap(glm::ivec3 chunkPos, std::int32
     auto chunkWorldPos = chunkPos * ChunkSize;
 
     m_noise->SetSeed(seed);
-    m_noise->SetFrequency(/*0.02f*/noiseOneFreq);
+    m_noise->SetFrequency(noiseOneFreq);
     
     auto* noiseSet0 = m_noise->GetSimplexSet(chunkWorldPos.x, chunkWorldPos.y, chunkWorldPos.z, ChunkSize, 1, ChunkSize);
 
-    m_noise->SetFrequency(/*0.01f*/noiseTwoFreq);
+    m_noise->SetFrequency(noiseTwoFreq);
 
     auto* noiseSet1 = m_noise->GetSimplexSet(chunkWorldPos.x, chunkWorldPos.y, chunkWorldPos.z, ChunkSize, 1, ChunkSize);
 
@@ -272,7 +299,7 @@ Heightmap TerrainGenerator::createChunkHeightmap(glm::ivec3 chunkPos, std::int32
             float bz = static_cast<float>(z + (chunkPos.z * ChunkSize));
 
             glm::vec2 coord((glm::vec2(bx, bz) - worldSize / 2.f) / worldSize * 2.f);
-            auto island = rounded(coord);
+            auto island = rounded(coord * 1.09f);
 
             auto noise0 = (((noiseSet0[i] + 1.f) / 2.f) * (1.f - minHeight)) + minHeight;
             auto noise1 = (((noiseSet1[i] + 1.f) / 2.f) * (1.f - minHeight)) + minHeight;
@@ -408,7 +435,7 @@ Heightmap TerrainGenerator::createFloraMap(glm::ivec3 chunkPos, std::int32_t chu
     auto chunkWorldPos = chunkPos * ChunkSize;
 
     m_noise->SetSeed(seed);
-    m_noise->SetFrequency(/*0.02f*/noiseOneFreq);
+    m_noise->SetFrequency(floraNoiseFreq);
 
     std::uint32_t lastHeightmapSize = chunkCount * ChunkSize;
     if (m_lastHeightmapSize != lastHeightmapSize
@@ -439,5 +466,77 @@ Heightmap TerrainGenerator::createFloraMap(glm::ivec3 chunkPos, std::int32_t chu
     }
 
     fn::FreeNoiseSet(noiseSet0);
+    return retVal;
+}
+
+Heightmap TerrainGenerator::createRockMap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed)
+{
+    const float worldSize = static_cast<float>(chunkCount * ChunkSize);
+    auto chunkWorldPos = chunkPos * ChunkSize;
+
+    m_noise->SetSeed(seed);
+    m_noise->SetFrequency(0.007f);
+
+    auto* maskNoise = m_noise->GetSimplexFractalSet(chunkWorldPos.x + seed, chunkWorldPos.y - (seed / 2), chunkWorldPos.z, ChunkSize, 1, ChunkSize);
+
+    m_noise->SetFrequency(0.008f);
+    m_noise->SetFractalOctaves(4);
+    m_noise->SetFractalType(fn::FractalType::RigidMulti);
+
+    auto* rockNoise = m_noise->GetSimplexFractalSet(chunkWorldPos.x + seed, chunkWorldPos.y - (seed / 2), chunkWorldPos.z, ChunkSize, 1, ChunkSize);
+
+    //TODO create a 3D volume to carve out some caves
+
+    std::uint32_t lastHeightmapSize = chunkCount * ChunkSize;
+    if (m_lastHeightmapSize != lastHeightmapSize
+        || m_rockFalloffImage.size() != lastHeightmapSize * lastHeightmapSize)
+    {
+        m_lastHeightmapSize = lastHeightmapSize;
+        m_rockFalloffImage.resize(lastHeightmapSize * lastHeightmapSize);
+        m_rockMaskImage.resize(lastHeightmapSize * lastHeightmapSize);
+        m_rockOutputImage.resize(lastHeightmapSize * lastHeightmapSize);
+    }
+
+    
+
+    Heightmap retVal = {};
+
+    std::int32_t i = 0;
+    for (auto x = 0u; x < ChunkSize; ++x)
+    {
+        for (auto z = 0; z < ChunkSize; ++z)
+        {
+            //edge falloff
+            float bx = static_cast<float>(x + (chunkPos.x * ChunkSize));
+            float bz = static_cast<float>(z + (chunkPos.z * ChunkSize));
+
+            glm::vec2 coord((glm::vec2(bx, bz) - worldSize / 2.f) / worldSize * 2.f);
+            auto island = rounded(coord * 2.f);
+
+
+            //rock mask noise
+            auto noise0 = ((maskNoise[i] + 1.f) / 2.f);
+            noise0 = noise0 < 0.55f ? 0.f : 1.f;
+
+            //rock height noise
+            auto noise1 = ((rockNoise[i] + 1.f) / 2.f);
+
+            std::int32_t coordX = x + (chunkPos.x * ChunkSize);
+            std::int32_t coordY = z + (chunkPos.z * ChunkSize);
+            std::size_t idx = coordY * lastHeightmapSize + coordX;
+            m_rockMaskImage[idx] = static_cast<std::uint8_t>(noise0 * 255.f);
+            m_rockFalloffImage[idx] = static_cast<std::uint8_t>(island * 255.f);
+            
+            m_rockOutputImage[idx] = static_cast<std::uint8_t>(noise0 * noise1 * island * 255.f);
+            
+
+            retVal[z * ChunkSize + x] = m_rockOutputImage[idx] / 2;
+
+            i++;
+        }
+    }
+
+    fn::FreeNoiseSet(rockNoise);
+    fn::FreeNoiseSet(maskNoise);
     return retVal;
 }

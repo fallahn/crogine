@@ -69,9 +69,13 @@ public:
     enum
     {
         NoiseOne, NoiseTwo,
-        Falloff, Final,
+        Falloff, 
 
         Flora,
+
+        RockMask, RockFalloff, RockOutput,
+
+        Final,
 
         Count
     };
@@ -86,6 +90,9 @@ private:
     std::uint32_t m_lastHeightmapSize;
 
     std::vector<std::uint8_t> m_floraImage;
+    std::vector<std::uint8_t> m_rockMaskImage;
+    std::vector<std::uint8_t> m_rockFalloffImage;
+    std::vector<std::uint8_t> m_rockOutputImage;
 
     std::array<cro::Texture, Count> m_debugTextures;
     cro::Texture m_previewTexture;
@@ -94,4 +101,5 @@ private:
     void createTerrain(Chunk& chunk, const Heightmap& heightmap, const Heightmap& flora, const vx::DataManager& voxeldata, std::int32_t seed);
 
     Heightmap createFloraMap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
+    Heightmap createRockMap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
 };
