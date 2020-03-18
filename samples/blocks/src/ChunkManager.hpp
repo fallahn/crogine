@@ -54,7 +54,11 @@ public:
 
     const PositionMap<Chunk>& getChunks() const;
 
+    std::vector<glm::ivec3> getChunkPositions() const { return m_chunkPositions; }
+
 private:
     PositionMap<Chunk> m_chunks;
     Chunk m_errorChunk;
+
+    std::vector<glm::ivec3> m_chunkPositions;
 };

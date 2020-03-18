@@ -45,6 +45,7 @@ source distribution.
 #include <crogine/graphics/ResourceAutomation.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/util/Constants.hpp>
 
 #include <optional>
 #include <set>
@@ -84,6 +85,7 @@ namespace
     const std::string Fragment = 
         R"(
             uniform float u_alpha;
+            uniform float u_time;
             uniform vec2 u_tileSize;
             uniform sampler2D u_texture;
 
@@ -109,13 +111,21 @@ namespace
 	            return dot(v, vec3(0.67082, 1.0, 0.83666));
             }
 
+            vec3 brightnessContrast(vec3 colour)
+            {
+                float amount = sin(u_time) + 1.0 / 2.0;
+                colour = colour - vec3(0.5) + max(amount, 0.0) * 0.5;
+                return colour;
+            }
+
             void main()
             {
                 vec2 uv = v_colour.rg;
                 uv.x += (u_tileSize.x * fract(v_texCoord.x));
-                uv.y -= (u_tileSize.y * fract(v_texCoord.y));
+                uv.y -= (u_tileSize.y * fract(v_texCoord.y + u_time));
 
                 vec4 colour = TEXTURE(u_texture, uv);
+                //colour.rgb = brightnessContrast(colour.rgb);
                 colour.rgb *= directionalAmbience(v_normal);
                 colour.a *= u_alpha;
 
@@ -189,14 +199,16 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
         //and then material
         m_materialIDs[MaterialID::ChunkSolid] = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
         rc.materials.get(m_materialIDs[MaterialID::ChunkSolid]).setProperty("u_alpha", 1.f);
+        rc.materials.get(m_materialIDs[MaterialID::ChunkSolid]).setProperty("u_time", 0.f);
 
         m_materialIDs[MaterialID::ChunkWater] = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
         rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).blendMode = cro::Material::BlendMode::Alpha;
-        rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_alpha", 0.5f);
+        rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_alpha", 0.4f);
 
         m_materialIDs[MaterialID::ChunkDetail] = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
         rc.materials.get(m_materialIDs[MaterialID::ChunkDetail]).blendMode = cro::Material::BlendMode::Alpha;
         rc.materials.get(m_materialIDs[MaterialID::ChunkDetail]).setProperty("u_alpha", 1.f);
+        rc.materials.get(m_materialIDs[MaterialID::ChunkDetail]).setProperty("u_time", 0.f);
     }
 
     if (rc.shaders.preloadFromString(VertexDebug, FragmentDebug, ShaderID::ChunkDebug))
@@ -278,8 +290,11 @@ void ChunkSystem::handleMessage(const cro::Message&)
 
 }
 
-void ChunkSystem::process(float)
+void ChunkSystem::process(float dt)
 {
+    static float elapsed = 0.f;
+    elapsed += dt;
+
     auto& entities = getEntities();
 
     std::vector<cro::Entity> dirtyChunks;
@@ -292,6 +307,9 @@ void ChunkSystem::process(float)
             dirtyChunks.push_back(entity);
             chunkComponent.needsUpdate = false;
         }
+
+        auto& model = entity.getComponent<cro::Model>();
+        model.setMaterialProperty(1, "u_time", elapsed * 0.6f);
     }
 
     //push all chunks in one go with a single lock

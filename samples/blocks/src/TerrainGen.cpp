@@ -344,7 +344,7 @@ void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, c
                         else if (height < WaterLevel - 1)
                         {
                             //caves over water
-                            if (voxY < (WaterLevel + ((WaterLevel - (height + cro::Util::Random::value(-1, 2))) * 2)))
+                            if (voxY < (WaterLevel + ((WaterLevel - (height)) * 2)))
                             {
                                 voxelID = voxelData.getID(vx::Air);
                             }

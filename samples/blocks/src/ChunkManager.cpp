@@ -41,6 +41,8 @@ Chunk& ChunkManager::addChunk(glm::ivec3 position)
     auto result = m_chunks.find(position);
     if (result == m_chunks.end())
     {
+        m_chunkPositions.push_back(position);
+
         return m_chunks.emplace(
             std::piecewise_construct, std::forward_as_tuple(position), std::forward_as_tuple(*this, position)).first->second;
     }

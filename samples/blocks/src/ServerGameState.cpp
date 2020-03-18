@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 
 using namespace Sv;
@@ -173,16 +174,21 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
 
 
     //send map data to start building the world
-    //sendChunk(playerID, {});
-    for (auto& c : m_world.chunks.getChunks())
+    //sort the chunk positions first so we start building on the
+    //client with the chunks nearest the player
+    auto chunkPositions = m_world.chunks.getChunkPositions();
+    auto spawnPos = m_terrainGenerator.getSpawnPoints()[playerID];
+    std::sort(chunkPositions.begin(), chunkPositions.end(),
+        [spawnPos](glm::ivec3 a, glm::ivec3 b)
+        {
+            return glm::length2(spawnPos - glm::vec3(a)) < glm::length2(spawnPos - glm::vec3(b));
+        });
+    
+    for (auto p : chunkPositions)
     {
-        sendChunk(playerID, c.first);
+        sendChunk(playerID, p);
     }
 
-    /*for (auto i = 0; i < 4; ++i)
-    {
-        sendChunk(playerID, { i, 0, i });
-    }*/
 
     //client said it was ready, so mark as ready
     m_sharedData.clients[playerID].ready = true;
@@ -257,7 +263,7 @@ void GameState::buildWorld()
     LOG("Seed: " + std::to_string(seed), cro::Logger::Type::Info);
 
     //count per side
-    static const std::int32_t chunkCount = 2;
+    static const std::int32_t chunkCount = 4;
     LOG("Generating...", cro::Logger::Type::Info);
     for (auto z = 0; z < chunkCount; ++z)
     {
@@ -272,7 +278,6 @@ void GameState::buildWorld()
         if (m_sharedData.clients[i].connected)
         {
             //insert a player in this slot
-            //TODO get spawn position from generated world data
             //TODO figure out how to get correct initial pitch/yaw from any rotation other than 0
             m_playerEntities[i] = m_scene.createEntity();
             m_playerEntities[i].addComponent<cro::Transform>().setPosition(m_terrainGenerator.getSpawnPoints()[i]);
