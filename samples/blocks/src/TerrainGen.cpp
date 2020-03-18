@@ -75,7 +75,7 @@ TerrainGenerator::TerrainGenerator(bool debugWindow)
 
     if (debugWindow)
     {
-        static const std::int32_t chunkCount = 16;
+        static const std::int32_t chunkCount = 12;
 
         auto w = chunkCount * ChunkSize;
         for (auto& t : m_debugTextures)
@@ -158,7 +158,7 @@ void TerrainGenerator::generateTerrain(ChunkManager& chunkManager, std::int32_t 
     auto flora = createFloraMap(chunkPos, chunkCount, seed);
     auto heightmap = createChunkHeightmap(chunkPos, chunkCount, seed);
     auto rockmap = createRockMap(chunkPos, chunkCount, seed);
-    auto maxHeight = *std::max_element(rockmap.begin(), rockmap.end());
+    auto maxHeight = std::max(*std::max_element(heightmap.begin(), heightmap.end()), *std::max_element(rockmap.begin(), rockmap.end()));
 
     for(auto y = 0; y < std::max(1, maxHeight / ChunkSize + 1); ++y)
     {
@@ -286,6 +286,7 @@ void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, c
         for (auto x = 0; x < ChunkSize; ++x)
         {
             auto height = heightmap[z * ChunkSize + x];
+            auto rockheight = rockmap[z * ChunkSize + x];
             auto hasFlora = flora[z * ChunkSize + x];
 
             for (auto y = 0; y < ChunkSize; ++y)
@@ -293,70 +294,113 @@ void TerrainGenerator::createTerrain(Chunk& chunk, const Heightmap& heightmap, c
                 auto voxY = chunk.getPosition().y * ChunkSize + y;
                 std::uint8_t voxelID = voxelData.getID(vx::Air);
 
-                //above the height value we're water or air (air is default)
-                if (voxY > height)
+                if (rockheight >= height)
                 {
-                    if (voxY < WaterLevel)
+                    if (voxY <= rockheight)
                     {
-                        voxelID = voxelData.getID(vx::Water);
-                    }
-                    else if (voxY == height + 1)
-                    {
-                        //random vegetation
-                        if (hasFlora)
+                        if (voxY < WaterLevel)
                         {
-                            if (voxY < WaterLevel + 4)
+                            if (voxY > height)
                             {
-                                //we must be above sand
-                                voxelID = voxelData.getID("sand_grass");
+                                voxelID = voxelData.getID(vx::Water);
+                            }
+                            else if (voxY == height)
+                            {
+                                voxelID = voxelData.getID(vx::Sand);
                             }
                             else
                             {
-                                //assume grass? might be rock or something
-                                voxelID = (cro::Util::Random::value(0, 1) == 0)
-                                    ? voxelData.getID("short_grass01")
-                                    : voxelData.getID("short_grass02");
+                                voxelID = voxelData.getID(vx::Stone);
                             }
                         }
+                        else if (height < WaterLevel - 1)
+                        {
+                            //caves over water
+                            if (voxY < (WaterLevel + ((WaterLevel - (height + cro::Util::Random::value(-1, 2))) * 2)))
+                            {
+                                voxelID = voxelData.getID(vx::Air);
+                            }
+                            else
+                            {
+                                voxelID = voxelData.getID(vx::Stone);
+                            }
+                        }
+                        else
+                        {
+                            voxelID = voxelData.getID(vx::Stone);
+                        }
                     }
-                }
-                //on the top layer, so sand if near water
-                //else grass (or whatever a biome map might throw up)
-                else if (voxY == height)
-                {
-                    if (voxY < (WaterLevel + 3))
+                    else if (voxY < WaterLevel)
                     {
-                        voxelID = voxelData.getID(vx::Sand);
-                    }
-                    else
-                    {
-                        //if using biome set the top data according
-                        //to the current biome
-
-                        voxelID = voxelData.getID(vx::Grass);
-                    }
-                }
-                //some arbitrary depth of dirt below the surface.
-                //again, a biome would influence this
-                else if (voxY > (height - 4)) //TODO this value should be modulated by a depth map for varitation (as should grass)
-                {
-                    //we only want to put dirt under grass
-                    //sand should have more sand underneath it
-                    if (voxY > WaterLevel)
-                    {
-                        voxelID = voxelData.getID(vx::Dirt);
-                    }
-                    else
-                    {
-                        voxelID = voxelData.getID(vx::Sand);
+                        voxelID = voxelData.getID(vx::Water);
                     }
                 }
                 else
                 {
-                    //we're underground, so make solid
-                    voxelID = voxelData.getID(vx::Stone);
-                }
+                    //above the height value we're water or air (air is default)
+                    if (voxY > height)
+                    {
+                        if (voxY < WaterLevel)
+                        {
+                            voxelID = voxelData.getID(vx::Water);
+                        }
+                        else if (voxY == height + 1)
+                        {
+                            //random vegetation
+                            if (hasFlora)
+                            {
+                                if (voxY < WaterLevel + 4)
+                                {
+                                    //we must be above sand
+                                    voxelID = voxelData.getID("sand_grass");
+                                }
+                                else
+                                {
+                                    //assume grass? might be rock or something
+                                    voxelID = (cro::Util::Random::value(0, 1) == 0)
+                                        ? voxelData.getID("short_grass01")
+                                        : voxelData.getID("short_grass02");
+                                }
+                            }
+                        }
+                    }
+                    //on the top layer, so sand if near water
+                    //else grass (or whatever a biome map might throw up)
+                    else if (voxY == height)
+                    {
+                        if (voxY < (WaterLevel + 3))
+                        {
+                            voxelID = voxelData.getID(vx::Sand);
+                        }
+                        else
+                        {
+                            //if using biome set the top data according
+                            //to the current biome
 
+                            voxelID = voxelData.getID(vx::Grass);
+                        }
+                    }
+                    //some arbitrary depth of dirt below the surface.
+                    //again, a biome would influence this
+                    else if (voxY > (height - 4)) //TODO this value should be modulated by a depth map for varitation (as should grass)
+                    {
+                        //we only want to put dirt under grass
+                        //sand should have more sand underneath it
+                        if (voxY > WaterLevel)
+                        {
+                            voxelID = voxelData.getID(vx::Dirt);
+                        }
+                        else
+                        {
+                            voxelID = voxelData.getID(vx::Sand);
+                        }
+                    }
+                    else
+                    {
+                        //we're underground, so make solid
+                        voxelID = voxelData.getID(vx::Stone);
+                    }
+                }
 
                 //set the voxelID at the current chunk position
                 chunk.setVoxelQ({ x,y,z }, voxelID);

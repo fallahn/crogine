@@ -97,7 +97,7 @@ private:
     PositionMap<cro::Entity> m_chunkEntities;
     void updateMesh();
 
-    std::unique_ptr<std::mutex> m_queueMutex;
+
     std::unique_ptr<std::mutex> m_chunkMutex;
     std::array<std::unique_ptr<std::thread>, 4u> m_meshThreads;
     std::atomic_bool m_threadRunning;

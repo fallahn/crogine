@@ -252,7 +252,6 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
     rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_texture", texture);
 
     //thread for meshing
-    m_queueMutex = std::make_unique<std::mutex>();
     m_chunkMutex = std::make_unique<std::mutex>();
 
     for (auto& thread : m_meshThreads)
@@ -298,7 +297,7 @@ void ChunkSystem::process(float)
     //push all chunks in one go with a single lock
     if (!dirtyChunks.empty())
     {
-        std::lock_guard<std::mutex> lock(*m_queueMutex);
+        std::lock_guard<std::mutex> lock(*m_chunkMutex);
         for (auto entity : dirtyChunks)
         {
             m_inputQueue.push(entity);
@@ -373,7 +372,7 @@ void ChunkSystem::updateMesh()
 {
     VertexOutput vertexOutput;
 
-    m_queueMutex->lock();
+    m_chunkMutex->lock();
     if (!m_outputQueue.empty())
     {
         auto& front = m_outputQueue.front();
@@ -384,7 +383,7 @@ void ChunkSystem::updateMesh()
         vertexOutput.detailIndices.swap(front.detailIndices);
         m_outputQueue.pop();
     }
-    m_queueMutex->unlock();
+    m_chunkMutex->unlock();
 
     if (!vertexOutput.vertexData.empty() && (!vertexOutput.solidIndices.empty() || !vertexOutput.waterIndices.empty()))
     {
@@ -419,7 +418,7 @@ void ChunkSystem::threadFunc()
         ChunkComponent::MeshType meshType = ChunkComponent::Greedy;
 
         //lock the input queue
-        m_queueMutex->lock();
+        m_chunkMutex->lock();
 
         //check queue
         if (!m_inputQueue.empty())
@@ -427,7 +426,7 @@ void ChunkSystem::threadFunc()
             //check the chunk is even visible before updating it
             auto entity = m_inputQueue.front();
             const auto& model = entity.getComponent<cro::Model>();
-            if (model.isVisible() /*&& !model.isHidden()*/)
+            //if (model.isVisible() /*&& !model.isHidden()*/)
             {
                 m_inputQueue.pop();
 
@@ -445,7 +444,7 @@ void ChunkSystem::threadFunc()
         }
 
         //unlock queue
-        m_queueMutex->unlock();
+        m_chunkMutex->unlock();
 
         //if input do work
         if (chunk)
@@ -463,7 +462,7 @@ void ChunkSystem::threadFunc()
 
 
             //lock output
-            std::lock_guard<std::mutex> lock(*m_queueMutex);
+            std::lock_guard<std::mutex> lock(*m_chunkMutex);
 
             //swap results
             auto& result = m_outputQueue.emplace();
