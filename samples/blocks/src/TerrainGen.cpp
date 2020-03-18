@@ -166,6 +166,34 @@ void TerrainGenerator::generateTerrain(ChunkManager& chunkManager, std::int32_t 
         createTerrain(chunk, heightmap, rockmap, flora, voxelData, seed);
         chunkManager.ensureNeighbours(chunk.getPosition());
     }
+
+    //start each spawn point at a corner and move diagonally until we hit land
+    m_spawnPoints[0] = { 0.f, WaterLevel + 1, chunkCount * WorldConst::ChunkSize };
+    m_spawnPoints[1] = { chunkCount * WorldConst::ChunkSize, WaterLevel + 1, chunkCount * WorldConst::ChunkSize };
+    m_spawnPoints[2] = { chunkCount * WorldConst::ChunkSize, WaterLevel + 1, 0.f };
+    m_spawnPoints[3] = { 0.f, WaterLevel + 1, 0.f };
+    
+    std::array<glm::vec3, 4u> steps =
+    {
+        glm::vec3(1.f, 0.f, -1.f),
+        glm::vec3(-1.f, 0.f, -1.f),
+        glm::vec3(-1.f, 0.f, 1.f),
+        glm::vec3(1.f, 0.f, 1.f)
+    };
+
+    for (auto i = 0u; i < 4u; ++i)
+    {
+        while (chunkManager.getVoxel(m_spawnPoints[i]) == voxelData.getID(vx::CommonType::Air))
+        {
+            m_spawnPoints[i] += steps[i];
+        }
+        while (chunkManager.getVoxel(m_spawnPoints[i]) != voxelData.getID(vx::CommonType::Air)
+            && chunkManager.getVoxel(m_spawnPoints[i]) != vx::OutOfBounds)
+        {
+            m_spawnPoints[i] += glm::vec3(0.f, 1.f, 0.f);
+        }
+        m_spawnPoints[i] -= steps[i] / 2.f;
+    }
 }
 
 void TerrainGenerator::renderHeightmaps()

@@ -64,6 +64,8 @@ public:
 
     void generateTerrain(ChunkManager&, std::int32_t x, std::int32_t z, const vx::DataManager&, std::int32_t seed, std::int32_t chunksPerSide);
 
+    std::array<glm::vec3,4u> getSpawnPoints() const { return m_spawnPoints; }
+
     void renderHeightmaps();
 
     enum
@@ -97,6 +99,7 @@ private:
     std::array<cro::Texture, Count> m_debugTextures;
     cro::Texture m_previewTexture;
 
+    std::array<glm::vec3, 4u> m_spawnPoints = {};
 
     void createTerrain(Chunk& chunk, const Heightmap& heightmap, const Heightmap& flora, const Heightmap& rockmap, const vx::DataManager& voxeldata, std::int32_t seed);
 

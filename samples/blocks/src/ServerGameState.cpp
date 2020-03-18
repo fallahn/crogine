@@ -275,7 +275,7 @@ void GameState::buildWorld()
             //TODO get spawn position from generated world data
             //TODO figure out how to get correct initial pitch/yaw from any rotation other than 0
             m_playerEntities[i] = m_scene.createEntity();
-            m_playerEntities[i].addComponent<cro::Transform>().setPosition(playerSpawns[i]);
+            m_playerEntities[i].addComponent<cro::Transform>().setPosition(m_terrainGenerator.getSpawnPoints()[i]);
             //m_playerEntities[i].getComponent<cro::Transform>().setRotation( //look at centre of the world
             //    glm::quat_cast(glm::inverse(glm::lookAt(playerSpawns[i], glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f)))));
             m_playerEntities[i].addComponent<Player>().id = i;
