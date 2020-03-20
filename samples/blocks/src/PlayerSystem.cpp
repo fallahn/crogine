@@ -130,6 +130,17 @@ void PlayerSystem::processInput(cro::Entity entity)
 
         player.lastUpdatedInput = (player.lastUpdatedInput + 1) % Player::HistorySize;
     }
+
+    if (player.inputStack[player.lastUpdatedInput].buttonFlags & Input::LeftMouse)
+    {
+        //raise message to say mouse button is held (so engine can tell if it needs to process targeted block)
+        const auto& tx = entity.getComponent<cro::Transform>();
+        auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+        msg->type = PlayerEvent::LeftClick;
+        msg->position = tx.getWorldPosition();
+        msg->forwardVector = tx.getForwardVector();
+        msg->playerID = player.id;
+    }
 }
 
 void PlayerSystem::processMovement(cro::Entity entity, Input input)
