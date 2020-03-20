@@ -59,6 +59,11 @@ public:
     void render() override;
 
 private:
+    //hm is this dangerous to put here
+    //because multiple class can request concurrent access?
+    ChunkManager m_chunkManager;
+    vx::DataManager m_voxelData;
+
 
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
@@ -71,11 +76,6 @@ private:
 
     cro::Clock m_bitrateClock; //< updates the bitrate display in the debug window
     cro::Clock m_sceneRequestClock; //< spaces the request for initial scene data
-
-    //hm is this dangerous to put here
-    //because multiple class can request concurrent access?
-    ChunkManager m_chunkManager;
-    vx::DataManager m_voxelData;
 
     void addSystems();
     void loadAssets();

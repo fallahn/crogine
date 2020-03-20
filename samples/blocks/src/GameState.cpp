@@ -366,6 +366,15 @@ void GameState::createUI()
     entity.getComponent<cro::Text>().setColour(TextNormalColour);
     entity.addComponent<cro::CommandTarget>().ID = UI::CommandID::WaitMessage;
 
+    //player crosshair
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::DefaultSceneSize.x / 2, cro::DefaultSceneSize.y / 2));
+    entity.getComponent<cro::Transform>().setScale({ 2.f, 2.f });
+    entity.addComponent<cro::Sprite>().setTexture(m_resources.textures.get("assets/images/hud.png"));
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureRect();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+    //camera
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Camera>().projectionMatrix = 
