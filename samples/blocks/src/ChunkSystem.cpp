@@ -36,6 +36,7 @@ source distribution.
 #include "BorderMeshBuilder.hpp"
 #include "ClientCommandIDs.hpp"
 #include "Coordinate.hpp"
+#include "ChunkManager.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -164,11 +165,12 @@ namespace
         R"(
             OUTPUT
 
+            uniform vec4 u_colour;
             VARYING_IN MED vec3 v_colour;
 
             void main()
             {
-                FRAG_OUT = vec4(v_colour, 1.0);
+                FRAG_OUT = vec4(u_colour.rgb, 1.0);
             })";
 
     const std::string FragmentRed =
@@ -185,9 +187,11 @@ namespace
     const std::int32_t TextureTileCount = 8;
 }
 
-ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
+ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc, ChunkManager& cm, vx::DataManager& dm)
     : cro::System   (mb, typeid(ChunkSystem)),
     m_resources     (rc),
+    m_chunkManager  (cm),
+    m_voxelData     (dm),
     m_threadRunning (false)
 {
     requireComponent<ChunkComponent>();
@@ -215,7 +219,10 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
     {
         auto& shader = rc.shaders.get(ShaderID::ChunkDebug);
         m_materialIDs[MaterialID::ChunkDebug] = rc.materials.add(shader);
+        rc.materials.get(m_materialIDs[MaterialID::ChunkDebug]).setProperty("u_colour", cro::Colour::Magenta());
+
         m_meshIDs[MeshID::Border] = rc.meshes.loadMesh(BorderMeshBuilder());
+        
 
         /*rc.shaders.preloadFromString(VertexDebug, FragmentRed, 500);
         temp = rc.materials.add(rc.shaders.get(500));*/

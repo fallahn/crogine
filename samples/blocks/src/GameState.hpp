@@ -33,6 +33,8 @@ source distribution.
 #include "ResourceIDs.hpp"
 #include "InputParser.hpp"
 #include "ServerPacketData.hpp"
+#include "ChunkManager.hpp"
+#include "Voxel.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConsoleClient.hpp>
@@ -69,6 +71,11 @@ private:
 
     cro::Clock m_bitrateClock; //< updates the bitrate display in the debug window
     cro::Clock m_sceneRequestClock; //< spaces the request for initial scene data
+
+    //hm is this dangerous to put here
+    //because multiple class can request concurrent access?
+    ChunkManager m_chunkManager;
+    vx::DataManager m_voxelData;
 
     void addSystems();
     void loadAssets();

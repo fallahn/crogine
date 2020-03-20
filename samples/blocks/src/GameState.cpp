@@ -38,6 +38,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "Chunk.hpp"
 #include "ChunkSystem.hpp"
+#include "BorderMeshBuilder.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -335,7 +336,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<ChunkSystem>(mb, m_resources);
+    m_gameScene.addSystem<ChunkSystem>(mb, m_resources, m_chunkManager, m_voxelData);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
@@ -516,7 +517,50 @@ void GameState::spawnPlayer(PlayerInfo info)
             m_gameScene.setActiveCamera(entity);
             updateView();
 
+            auto camEnt = entity;
+
             //TODO create a head/body that only gets drawn in third person
+
+
+            //create a wireframe to highlight the block we look at
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setScale(glm::vec3(1.f / WorldConst::ChunkSize));
+            auto& shader = m_resources.shaders.get(ShaderID::ChunkDebug);
+            auto materialID = m_resources.materials.add(shader);
+            auto meshID = m_resources.meshes.loadMesh(BorderMeshBuilder());
+
+            auto material = m_resources.materials.get(materialID);
+            material.setProperty("u_colour", cro::Colour::Black());
+            material.blendMode = cro::Material::BlendMode::Alpha;
+            entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&, camEnt](cro::Entity e, float)
+            {
+                const auto& camTx = camEnt.getComponent<cro::Transform>();
+                auto voxelList = vx::intersectedVoxel(camTx.getWorldPosition(), camTx.getForwardVector(), 4.f);
+                if (voxelList.empty())
+                {
+                    e.getComponent<cro::Model>().setHidden(true);
+                }
+                else
+                {
+                    bool hidden = true;
+                    glm::vec3 pos(0.f);
+                    for (auto p : voxelList)
+                    {
+                        auto id = m_chunkManager.getVoxel(p);
+                        if (id != 0 && id != vx::OutOfBounds)
+                        {
+                            pos = p;
+                            hidden = false;
+                            break;
+                        }
+                    }
+                    e.getComponent<cro::Model>().setHidden(hidden);
+                    e.getComponent<cro::Transform>().setPosition(pos);
+                }
+            };
 
 
             //reove the plase wait message

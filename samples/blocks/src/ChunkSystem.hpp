@@ -29,25 +29,35 @@ source distribution.
 
 #pragma once
 
-#include "ChunkManager.hpp"
-#include "Voxel.hpp"
 #include "ResourceIDs.hpp"
+#include "Coordinate.hpp"
+#include "Voxel.hpp"
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/network/NetData.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 #include <mutex>
 #include <memory>
 #include <atomic>
 #include <queue>
 #include <thread>
+#include <array>
 
+class ChunkManager;
+class Chunk;
 namespace cro
 {
     struct ResourceCollection;
 }
+
+namespace vx
+{
+    class DataManager;
+}
+
 
 struct ChunkComponent final
 {
@@ -63,7 +73,7 @@ struct ChunkComponent final
 class ChunkSystem final : public cro::System, public cro::GuiClient
 {
 public:
-    ChunkSystem(cro::MessageBus&, cro::ResourceCollection&);
+    ChunkSystem(cro::MessageBus&, cro::ResourceCollection&, ChunkManager&, vx::DataManager&);
     ~ChunkSystem();
 
     ChunkSystem(const ChunkSystem&) = delete;
@@ -83,8 +93,8 @@ private:
     std::array<std::size_t, MeshID::Count> m_meshIDs = {};
     std::vector<glm::vec2> m_tileOffsets;
 
-    ChunkManager m_chunkManager;
-    vx::DataManager m_voxelData;
+    ChunkManager& m_chunkManager;
+    vx::DataManager& m_voxelData;
 
     struct VoxelUpdate final
     {
