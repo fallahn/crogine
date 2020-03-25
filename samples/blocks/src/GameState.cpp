@@ -331,6 +331,7 @@ void GameState::render()
 void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
@@ -487,7 +488,35 @@ void GameState::spawnPlayer(PlayerInfo info)
             
         entity.addComponent<Actor>().id = info.playerID;
         entity.getComponent<Actor>().serverEntityId = info.serverID;
-        return entity;
+
+        cro::ModelDefinition modelDef;
+        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
+        modelDef.createModel(entity, m_resources);
+
+        auto headEnt = entity;
+
+        //body model
+        modelDef.loadFromFile("assets/models/body.cmt", m_resources);
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.55f, 0.f }); //TODO we need to get some sizes from the mesh - will AABB do?
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, headEnt](cro::Entity e, float)
+        {
+            //remove this entity if the head entity was removed
+            if (headEnt.destroyed())
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setPosition(headEnt.getComponent<cro::Transform>().getPosition());
+            }
+        };
+        modelDef.createModel(entity, m_resources);
+
+        return headEnt;
     };
 
 
@@ -572,7 +601,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             };
 
 
-            //reove the plase wait message
+            //remove the please wait message
             cro::Command cmd;
             cmd.targetFlags = UI::CommandID::WaitMessage;
             cmd.action = [&](cro::Entity e, float)
@@ -592,35 +621,35 @@ void GameState::spawnPlayer(PlayerInfo info)
         auto rotation = entity.getComponent<cro::Transform>().getRotationQuat();
 
         //TODO do we want to cache this model def?
-        cro::ModelDefinition modelDef;
-        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
+        //cro::ModelDefinition modelDef;
+        //modelDef.loadFromFile("assets/models/head.cmt", m_resources);
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
-        modelDef.createModel(entity, m_resources);
+        //modelDef.createModel(entity, m_resources);
 
-        auto headEnt = entity;
+        //auto headEnt = entity;
 
         //body model
-        modelDef.loadFromFile("assets/models/body.cmt", m_resources);
-        entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.55f, 0.f }); //TODO we need to get some sizes from the mesh - will AABB do?
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&, headEnt](cro::Entity e, float)
-        {
-            //remove this entity if the head entity was removed
-            if (headEnt.destroyed())
-            {
-                e.getComponent<cro::Callback>().active = false;
-                m_gameScene.destroyEntity(e);
-            }
-            else
-            {
-                e.getComponent<cro::Transform>().setPosition(headEnt.getComponent<cro::Transform>().getPosition());
-            }
-        };
-        modelDef.createModel(entity, m_resources);
+        //modelDef.loadFromFile("assets/models/body.cmt", m_resources);
+        //entity = m_gameScene.createEntity();
+        //entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.55f, 0.f }); //TODO we need to get some sizes from the mesh - will AABB do?
+        //entity.addComponent<cro::Callback>().active = true;
+        //entity.getComponent<cro::Callback>().function =
+        //    [&, headEnt](cro::Entity e, float)
+        //{
+        //    //remove this entity if the head entity was removed
+        //    if (headEnt.destroyed())
+        //    {
+        //        e.getComponent<cro::Callback>().active = false;
+        //        m_gameScene.destroyEntity(e);
+        //    }
+        //    else
+        //    {
+        //        e.getComponent<cro::Transform>().setPosition(headEnt.getComponent<cro::Transform>().getPosition());
+        //    }
+        //};
+        //modelDef.createModel(entity, m_resources);
     }
 }
 
@@ -636,7 +665,7 @@ void GameState::updateCameraPosition()
         tx.setOrigin(glm::vec3(0.f, -0.2f, 0.f));
         break;
     case 1:
-        tx.setOrigin(glm::vec3(0.f, 0.f, -10.f)); //TODO update this once we settle on a scale (need smaller heads!)
+        tx.setOrigin(glm::vec3(0.f, 0.f, -4.f)); //TODO update this once we settle on a scale (need smaller heads!)
         break;
     case 2:
         tx.rotate(glm::vec3(0.f, 1.f, 0.f), cro::Util::Const::PI);

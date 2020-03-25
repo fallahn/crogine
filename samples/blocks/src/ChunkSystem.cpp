@@ -126,6 +126,12 @@ namespace
                 uv.y -= (u_tileSize.y * fract(v_texCoord.y + u_time));
 
                 vec4 colour = TEXTURE(u_texture, uv);
+
+                if(colour.a < 0.1)
+                {
+                    discard;
+                }
+
                 //colour.rgb = brightnessContrast(colour.rgb);
                 colour.rgb *= directionalAmbience(v_normal);
                 colour.a *= u_alpha;
