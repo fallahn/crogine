@@ -58,6 +58,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Matrix.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 
@@ -137,6 +138,9 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 ImGui::Text("Pitch: %3.3f", playerEntity.getComponent<Player>().cameraPitch);
                 ImGui::Text("Yaw: %3.3f", playerEntity.getComponent<Player>().cameraYaw);
+
+                auto forward = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getForwardVector();
+                ImGui::Text("Forward: %3.3f, %3.3f, %3.3f", forward.x, forward.y, forward.z);
 
                 auto mouse = playerEntity.getComponent<Player>().inputStack[playerEntity.getComponent<Player>().lastUpdatedInput];
                 ImGui::Text("Mouse Movement: %d, %d", mouse.xMove, mouse.yMove);
@@ -516,6 +520,9 @@ void GameState::spawnPlayer(PlayerInfo info)
         };
         modelDef.createModel(entity, m_resources);
 
+        //TODO only hide this on local player and reveal in 3rd person mode
+        entity.getComponent<cro::Model>().setHidden(true);
+
         return headEnt;
     };
 
@@ -556,9 +563,6 @@ void GameState::spawnPlayer(PlayerInfo info)
             updateView();
 
             auto camEnt = entity;
-
-            //TODO create a head/body that only gets drawn in third person
-
 
             //create a wireframe to highlight the block we look at
             entity = m_gameScene.createEntity();
@@ -620,36 +624,8 @@ void GameState::spawnPlayer(PlayerInfo info)
         auto entity = createActor();
         auto rotation = entity.getComponent<cro::Transform>().getRotationQuat();
 
-        //TODO do we want to cache this model def?
-        //cro::ModelDefinition modelDef;
-        //modelDef.loadFromFile("assets/models/head.cmt", m_resources);
-
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
-        //modelDef.createModel(entity, m_resources);
-
-        //auto headEnt = entity;
-
-        //body model
-        //modelDef.loadFromFile("assets/models/body.cmt", m_resources);
-        //entity = m_gameScene.createEntity();
-        //entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.55f, 0.f }); //TODO we need to get some sizes from the mesh - will AABB do?
-        //entity.addComponent<cro::Callback>().active = true;
-        //entity.getComponent<cro::Callback>().function =
-        //    [&, headEnt](cro::Entity e, float)
-        //{
-        //    //remove this entity if the head entity was removed
-        //    if (headEnt.destroyed())
-        //    {
-        //        e.getComponent<cro::Callback>().active = false;
-        //        m_gameScene.destroyEntity(e);
-        //    }
-        //    else
-        //    {
-        //        e.getComponent<cro::Transform>().setPosition(headEnt.getComponent<cro::Transform>().getPosition());
-        //    }
-        //};
-        //modelDef.createModel(entity, m_resources);
     }
 }
 

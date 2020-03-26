@@ -31,6 +31,19 @@ source distribution.
 
 #include <crogine/graphics/MeshBuilder.hpp>
 
+namespace SubMeshID
+{
+    //order is important when it comes to blending!
+    enum
+    {
+        Solid = 0,
+        Foliage,
+        Water,
+
+        Count
+    };
+}
+
 /*
 custom mesh builder creates an empty mesh with the
 correct attributes for a chunk mesh. The VBO itself

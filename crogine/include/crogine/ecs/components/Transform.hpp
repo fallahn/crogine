@@ -186,16 +186,19 @@ namespace cro
 
         /*!
         \brief Returns the forward vector of this transform
+        NOTE: that this is not necessarily normalised.
         */
         glm::vec3 getForwardVector() const;
 
         /*!
-        brief Returns the up vector of this transform
+        \brief Returns the up vector of this transform
+        NOTE: that this is not necessarily normalised.
         */
         glm::vec3 getUpVector() const;
 
         /*!
         \brief Returns the right vector of this transform
+        NOTE: that this is not necessarily normalised.
         */
         glm::vec3 getRightVector() const;
 

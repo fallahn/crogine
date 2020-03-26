@@ -330,7 +330,7 @@ void ModelRenderer::applyBlendMode(Material::BlendMode mode)
         glCheck(glDisable(GL_CULL_FACE));
         //glCheck(glDisable(GL_DEPTH_TEST));
         glCheck(glEnable(GL_DEPTH_TEST));
-        glCheck(glDepthMask(GL_FALSE));
+        glCheck(glDepthMask(GL_TRUE));
         glCheck(glEnable(GL_BLEND));
         glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         glCheck(glBlendEquation(GL_FUNC_ADD));
