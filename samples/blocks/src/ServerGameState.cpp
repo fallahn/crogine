@@ -49,14 +49,7 @@ using namespace Sv;
 
 namespace
 {
-    //TODO work out a better way to create spawn points
-    const std::array<glm::vec3, ConstVal::MaxClients> playerSpawns =
-    {
-        glm::vec3(16.f, 48.f, 35.f),
-        glm::vec3(1.5f, 1.f, 1.5f),
-        glm::vec3(1.5f, 1.f, -1.5f),
-        glm::vec3(-1.5f, 1.f, -1.5f)
-    };
+
 }
 
 GameState::GameState(SharedData& sd)
@@ -276,6 +269,7 @@ void GameState::buildWorld()
             m_terrainGenerator.generateTerrain(m_world.chunks, x, z, m_voxelData, seed, chunkCount);
         }
     }
+    m_terrainGenerator.createSpawnPoints(m_world.chunks, m_voxelData, chunkCount);
 
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
@@ -288,7 +282,7 @@ void GameState::buildWorld()
             //m_playerEntities[i].getComponent<cro::Transform>().setRotation( //look at centre of the world
             //    glm::quat_cast(glm::inverse(glm::lookAt(playerSpawns[i], glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f)))));
             m_playerEntities[i].addComponent<Player>().id = i;
-            m_playerEntities[i].getComponent<Player>().spawnPosition = playerSpawns[i];
+            m_playerEntities[i].getComponent<Player>().spawnPosition = m_terrainGenerator.getSpawnPoints()[i];
             //m_playerEntities[i].getComponent<Player>().cameraYaw = m_playerEntities[i].getComponent<cro::Transform>().getRotation().y;
             m_playerEntities[i].addComponent<Actor>().id = i;
             m_playerEntities[i].getComponent<Actor>().serverEntityId = m_playerEntities[i].getIndex();

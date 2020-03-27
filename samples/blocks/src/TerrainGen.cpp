@@ -166,14 +166,17 @@ void TerrainGenerator::generateTerrain(ChunkManager& chunkManager, std::int32_t 
         createTerrain(chunk, heightmap, rockmap, flora, voxelData, seed);
         chunkManager.ensureNeighbours(chunk.getPosition());
     }
+}
 
+void TerrainGenerator::createSpawnPoints(const ChunkManager& chunkManager, const vx::DataManager& voxelData, std::int32_t chunkCount)
+{
     //start each spawn point at a corner and move diagonally until we hit land
-    m_spawnPoints[0] = { 0.f, WaterLevel + 1, chunkCount * WorldConst::ChunkSize };
-    m_spawnPoints[1] = { chunkCount * WorldConst::ChunkSize, WaterLevel + 1, chunkCount * WorldConst::ChunkSize };
-    m_spawnPoints[2] = { chunkCount * WorldConst::ChunkSize, WaterLevel + 1, 0.f };
+    m_spawnPoints[0] = { 0.f, WaterLevel + 1, (chunkCount * WorldConst::ChunkSize) - 1.f };
+    m_spawnPoints[1] = { (chunkCount * WorldConst::ChunkSize) - 1.f, WaterLevel + 1, (chunkCount * WorldConst::ChunkSize) - 1.f };
+    m_spawnPoints[2] = { (chunkCount * WorldConst::ChunkSize) - 1.f, WaterLevel + 1, 0.f };
     m_spawnPoints[3] = { 0.f, WaterLevel + 1, 0.f };
-    
-    std::array<glm::vec3, 4u> steps =
+
+    const std::array<glm::vec3, 4u> steps =
     {
         glm::vec3(1.f, 0.f, -1.f),
         glm::vec3(-1.f, 0.f, -1.f),
@@ -190,9 +193,10 @@ void TerrainGenerator::generateTerrain(ChunkManager& chunkManager, std::int32_t 
         while (chunkManager.getVoxel(m_spawnPoints[i]) != voxelData.getID(vx::CommonType::Air)
             && chunkManager.getVoxel(m_spawnPoints[i]) != vx::OutOfBounds)
         {
-            m_spawnPoints[i] += glm::vec3(0.f, 1.f, 0.f);
+            m_spawnPoints[i].y += 1.f;
         }
-        m_spawnPoints[i] -= steps[i] / 2.f;
+        //centres in the block and moves up by body height
+        m_spawnPoints[i] += glm::vec3(0.5f, 1.1f, 0.5f);
     }
 }
 
