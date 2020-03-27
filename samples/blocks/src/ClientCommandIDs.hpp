@@ -35,7 +35,9 @@ namespace Client::CommandID
     {
         Interpolated = 0x1,
         DebugMesh = 0x2,
-        ChunkMesh = 0x4
+        ChunkMesh = 0x4,
+
+        BodyMesh = 0x8,
     };
 }
 

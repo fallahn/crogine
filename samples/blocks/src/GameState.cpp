@@ -59,6 +59,7 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Matrix.hpp>
+#include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 
@@ -148,7 +149,9 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::NewLine();
                 ImGui::Separator();
                 ImGui::NewLine();
-                ImGui::Text("Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
+                ImGui::Text("Application average:\n%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                ImGui::NewLine();
+                ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
 
                 ImGui::End();
             }
@@ -336,10 +339,10 @@ void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
-    m_gameScene.addSystem<cro::CommandSystem>(mb);
-    m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<cro::CommandSystem>(mb);   
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
+    m_gameScene.addSystem<cro::CallbackSystem>(mb); //currently used to update body model positions so needs to come after player update
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<ChunkSystem>(mb, m_resources, m_chunkManager, m_voxelData);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
@@ -358,6 +361,7 @@ void GameState::loadAssets()
 void GameState::createScene()
 {
     m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
+    m_gameScene.getSunlight().setDirection({ 0.2f, -0.8f, -0.2f });
 }
 
 void GameState::createUI()
@@ -503,9 +507,11 @@ void GameState::spawnPlayer(PlayerInfo info)
         modelDef.loadFromFile("assets/models/body.cmt", m_resources);
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.55f, 0.f }); //TODO we need to get some sizes from the mesh - will AABB do?
+        entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::BodyMesh;
         entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().userData = std::make_any<std::uint8_t>(info.playerID); //this is used to ID the body model when hiding it
         entity.getComponent<cro::Callback>().function =
-            [&, headEnt](cro::Entity e, float)
+            [&, headEnt](cro::Entity e, float dt)
         {
             //remove this entity if the head entity was removed
             if (headEnt.destroyed())
@@ -515,13 +521,29 @@ void GameState::spawnPlayer(PlayerInfo info)
             }
             else
             {
-                e.getComponent<cro::Transform>().setPosition(headEnt.getComponent<cro::Transform>().getPosition());
+                const auto& headTx = headEnt.getComponent<cro::Transform>();
+                const auto& mat = headTx.getLocalTransform();
+                float y = -std::atan2(mat[0][2], mat[0][0]);
+
+                auto& tx = e.getComponent<cro::Transform>();
+                //auto currentY = tx.getRotation().z;
+                //auto rotation = cro::Util::Maths::shortestRotation(currentY, y);
+
+                //if (std::abs(rotation) < 0.5f)
+                {
+                    tx.setRotation(glm::vec3(0.f, 0.f, y));
+                }
+                /*else
+                {
+                    tx.rotate(glm::vec3(0.f, 1.f, 0.f), rotation * dt * 4.f);
+                }*/
+
+                tx.setPosition(headTx.getPosition());
+
+                //TODO interpolate rotation to delay slightly
             }
         };
         modelDef.createModel(entity, m_resources);
-
-        //TODO only hide this on local player and reveal in 3rd person mode
-        entity.getComponent<cro::Model>().setHidden(true);
 
         return headEnt;
     };
@@ -639,9 +661,39 @@ void GameState::updateCameraPosition()
     case 0:
         tx.setRotation(glm::quat(1.f, 0.f, 0.f, 0.f));
         tx.setOrigin(glm::vec3(0.f, -0.2f, 0.f));
+
+        {
+            cro::Command cmd;
+            cmd.targetFlags = Client::CommandID::BodyMesh;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                auto id = std::any_cast<std::uint8_t>(e.getComponent<cro::Callback>().userData);
+                if (id == m_sharedData.clientConnection.playerID)
+                {
+                    e.getComponent<cro::Model>().setHidden(true);
+                }
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        }
+
         break;
     case 1:
         tx.setOrigin(glm::vec3(0.f, 0.f, -4.f)); //TODO update this once we settle on a scale (need smaller heads!)
+
+        {
+            cro::Command cmd;
+            cmd.targetFlags = Client::CommandID::BodyMesh;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                auto id = std::any_cast<std::uint8_t>(e.getComponent<cro::Callback>().userData);
+                if (id == m_sharedData.clientConnection.playerID)
+                {
+                    e.getComponent<cro::Model>().setHidden(false);
+                }
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        }
+
         break;
     case 2:
         tx.rotate(glm::vec3(0.f, 1.f, 0.f), cro::Util::Const::PI);
