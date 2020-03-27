@@ -488,7 +488,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
 
 void GameState::spawnPlayer(PlayerInfo info)
 {
-    auto createActor = [&]()->cro::Entity
+    auto createActor = [&](bool hideBody)->cro::Entity
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
@@ -544,6 +544,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             }
         };
         modelDef.createModel(entity, m_resources);
+        entity.getComponent<cro::Model>().setHidden(hideBody);
 
         return headEnt;
     };
@@ -554,7 +555,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         if (!m_inputParser.getEntity().isValid())
         {
             //this is us
-            auto entity = createActor();
+            auto entity = createActor(true);
 
             auto rotation = entity.getComponent<cro::Transform>().getRotation();
             auto pitch = rotation.x;
@@ -643,7 +644,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         //spawn an avatar
         //TODO check this avatar doesn't already exist
         
-        auto entity = createActor();
+        auto entity = createActor(false);
         auto rotation = entity.getComponent<cro::Transform>().getRotationQuat();
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;

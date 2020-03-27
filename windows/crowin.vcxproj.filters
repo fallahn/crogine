@@ -492,6 +492,9 @@
     <ClInclude Include="..\crogine\include\crogine\util\Easings.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\BoundingBox.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -796,6 +799,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\core\String.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\BoundingBox.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

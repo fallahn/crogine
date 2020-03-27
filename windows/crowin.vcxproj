@@ -102,6 +102,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteRenderer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\TextRenderer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\UISystem.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\BoundingBox.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Colour.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\CubeBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Font.hpp" />
@@ -235,6 +236,7 @@
     <ClCompile Include="..\crogine\src\ecs\systems\SpriteRenderer.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\TextRenderer.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\UISystem.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\BoundingBox.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Colour.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Font.cpp" />
     <ClCompile Include="..\crogine\src\graphics\FontResource.cpp" />

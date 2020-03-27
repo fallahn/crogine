@@ -70,6 +70,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/TextRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 
+  ${PROJECT_DIR}/graphics/BoundingBox.cpp
   ${PROJECT_DIR}/graphics/Colour.cpp
   ${PROJECT_DIR}/graphics/Font.cpp
   ${PROJECT_DIR}/graphics/FontResource.cpp
