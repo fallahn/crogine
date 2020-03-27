@@ -92,7 +92,7 @@ namespace cro
     /*!
     \brief Creates a new Box with the given position added to the given box
     */
-    Box operator + (const Box& box, glm::vec3 position)
+    inline Box operator + (const Box& box, glm::vec3 position)
     {
         Box retval = box;
         retval += position;
@@ -102,7 +102,7 @@ namespace cro
     /*!
     \brief Transforms the min/max values of the box by the given matrix
     */
-    Box operator * (const glm::mat4& mat, const Box& box)
+    inline Box operator * (const glm::mat4& mat, const Box& box)
     {
         return { glm::vec3(mat * glm::vec4(box[0], 1.f)), glm::vec3(mat * glm::vec4(box[1], 1.f)) };
     }
