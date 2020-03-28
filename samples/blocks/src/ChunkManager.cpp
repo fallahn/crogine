@@ -38,6 +38,10 @@ namespace
     //chunks!
     std::int32_t positionToIndex(glm::ivec3 pos)
     {
+        if (pos.x < 0 || pos.x >= WorldConst::ChunksPerSide) return -1;
+        if (pos.y < 0 || pos.y >= WorldConst::ChunksPerSide) return -1;
+        if (pos.z < 0 || pos.z >= WorldConst::ChunksPerSide) return -1;
+
         return pos.x + WorldConst::ChunksPerSide * (pos.y + WorldConst::ChunksPerSide * pos.z);
     }
 }
@@ -45,7 +49,9 @@ namespace
 ChunkManager::ChunkManager()
     : m_errorChunk(*this, glm::ivec3(0))
 {
-    //TODO make chunk fill with OOB voxel by default rather than air
+    auto voxels = m_errorChunk.getVoxels();
+    std::fill(voxels.begin(), voxels.end(), vx::OutOfBounds);
+    m_errorChunk.setVoxels(voxels);
 
     //create a fixed area - this isn't going to be an infinite world...
     auto maxChunks = WorldConst::ChunksPerSide * WorldConst::ChunksPerSide * WorldConst::ChunksPerSide;
@@ -130,7 +136,7 @@ void ChunkManager::setVoxel(glm::ivec3 position, std::uint8_t id)
     //}
 
     m_chunks[positionToIndex(chunkPos)].setVoxelQ(toLocalVoxelPosition(position), id);
-    ensureNeighbours(chunkPos);
+    //ensureNeighbours(chunkPos);
 }
 
 bool ChunkManager::hasChunk(glm::ivec3 position) const
@@ -140,27 +146,27 @@ bool ChunkManager::hasChunk(glm::ivec3 position) const
     return (idx >= 0 && idx < m_chunks.size()) && !m_chunks[idx].empty();
 }
 
-bool ChunkManager::hasNeighbours(glm::ivec3 position) const
-{
-    return hasChunk(position) 
-        && hasChunk({ position.x, position.y + 1, position.z }) //top 
-        && hasChunk({ position.x, position.y - 1, position.z }) //bottom
-        && hasChunk({ position.x - 1, position.y, position.z }) //left
-        && hasChunk({ position.x + 1, position.y, position.z }) //right
-        && hasChunk({ position.x, position.y, position.z - 1 }) //front
-        && hasChunk({ position.x, position.y, position.z + 1 }); //back
-}
+//bool ChunkManager::hasNeighbours(glm::ivec3 position) const
+//{
+//    return hasChunk(position) 
+//        && hasChunk({ position.x, position.y + 1, position.z }) //top 
+//        && hasChunk({ position.x, position.y - 1, position.z }) //bottom
+//        && hasChunk({ position.x - 1, position.y, position.z }) //left
+//        && hasChunk({ position.x + 1, position.y, position.z }) //right
+//        && hasChunk({ position.x, position.y, position.z - 1 }) //front
+//        && hasChunk({ position.x, position.y, position.z + 1 }); //back
+//}
 
-void ChunkManager::ensureNeighbours(glm::ivec3 pos)
-{
-    //addChunk(pos);
-    //addChunk({ pos.x, pos.y + 1, pos.z });
-    //addChunk({ pos.x, pos.y - 1, pos.z });
-    //addChunk({ pos.x - 1, pos.y, pos.z });
-    //addChunk({ pos.x + 1, pos.y, pos.z });
-    //addChunk({ pos.x, pos.y, pos.z - 1 });
-    //addChunk({ pos.x, pos.y, pos.z + 1 });
-}
+//void ChunkManager::ensureNeighbours(glm::ivec3 pos)
+//{
+//    //addChunk(pos);
+//    //addChunk({ pos.x, pos.y + 1, pos.z });
+//    //addChunk({ pos.x, pos.y - 1, pos.z });
+//    //addChunk({ pos.x - 1, pos.y, pos.z });
+//    //addChunk({ pos.x + 1, pos.y, pos.z });
+//    //addChunk({ pos.x, pos.y, pos.z - 1 });
+//    //addChunk({ pos.x, pos.y, pos.z + 1 });
+//}
 
 //const PositionMap<Chunk>& ChunkManager::getChunks() const
 //{

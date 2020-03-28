@@ -164,7 +164,7 @@ void TerrainGenerator::generateTerrain(ChunkManager& chunkManager, std::int32_t 
     {
         auto& chunk = chunkManager.addChunk({ chunkX, y, chunkZ });
         createTerrain(chunk, heightmap, rockmap, flora, voxelData, seed);
-        chunkManager.ensureNeighbours(chunk.getPosition());
+        //chunkManager.ensureNeighbours(chunk.getPosition());
     }
 }
 

@@ -48,9 +48,9 @@ public:
     bool hasChunk(glm::ivec3) const;
 
     //returns true if all 6 neighbours exist
-    bool hasNeighbours(glm::ivec3) const;
+    //bool hasNeighbours(glm::ivec3) const;
 
-    void ensureNeighbours(glm::ivec3);
+    //void ensureNeighbours(glm::ivec3);
 
     //const PositionMap<Chunk>& getChunks() const;
 

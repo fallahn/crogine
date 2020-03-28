@@ -54,7 +54,7 @@ Chunk::Chunk(ChunkManager& m, glm::ivec3 pos)
 {
     //this assume 'air' is ID 0 - ideally we should be checking
     //the ID assigned by the voxel manager when the type is loaded.
-    std::fill(m_voxels.begin(), m_voxels.end(), /*vx::OutOfBounds*/0);
+    std::fill(m_voxels.begin(), m_voxels.end(), 0);
 }
 
 //public

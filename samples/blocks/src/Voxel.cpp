@@ -102,6 +102,12 @@ namespace vx
         data.name = "short_grass02";
         data.tileIDs[0] = 23;
         addVoxel(data);
+
+        //return this data if we try accessing a voxel outside of the map
+        m_outOfBoundsData.collidable = false;
+        m_outOfBoundsData.id = CommonType::OutOfBounds;
+        m_outOfBoundsData.style = MeshStyle::None;
+        m_outOfBoundsData.type = Type::Gas;
     }
 
     std::uint8_t DataManager::addVoxel(const Data& voxel)
@@ -117,6 +123,11 @@ namespace vx
 
     const Data& DataManager::getVoxel(std::uint8_t id) const
     {
+        if (id == OutOfBounds)
+        {
+            return m_outOfBoundsData;
+        }
+
         return m_voxels[id];
     }
 
@@ -140,6 +151,7 @@ namespace vx
         return m_voxels;
     }
 
+    //see https://github.com/francisengelmann/fast_voxel_traversal/blob/master/main.cpp (MIT license)
     std::vector<glm::ivec3> intersectedVoxel(glm::vec3 start, glm::vec3 direction, float range)
     {
         direction = glm::normalize(direction);

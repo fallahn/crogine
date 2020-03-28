@@ -256,11 +256,8 @@ void GameState::buildWorld()
     LOG("Seed: " + std::to_string(seed), cro::Logger::Type::Info);
 
     //count per side
-#ifdef CRO_DEBUG_
-    static const std::int32_t chunkCount = 4;
-#else
-    static const std::int32_t chunkCount = 14;
-#endif //CRO_DEBUG
+    auto chunkCount = WorldConst::ChunksPerSide;
+
     LOG("Generating...", cro::Logger::Type::Info);
     for (auto z = 0; z < chunkCount; ++z)
     {

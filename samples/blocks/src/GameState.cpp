@@ -614,8 +614,9 @@ void GameState::spawnPlayer(PlayerInfo info)
                     glm::vec3 pos(0.f);
                     for (auto p : voxelList)
                     {
-                        auto id = m_chunkManager.getVoxel(p);
-                        if (id != 0 && id != vx::OutOfBounds)
+                        //auto id = m_chunkManager.getVoxel(p);
+                        //if (id != 0 && id != vx::OutOfBounds)
+                        if(m_voxelData.getVoxel(m_chunkManager.getVoxel(p)).type == vx::Type::Solid)
                         {
                             pos = p;
                             hidden = false;

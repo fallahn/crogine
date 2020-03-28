@@ -38,5 +38,9 @@ namespace WorldConst
 
     static const std::int32_t WaterLevel = 24;
 
-    static const std::int32_t ChunksPerSide = 16; //in other words max world size is 16x16x16 chunks
+#ifdef CRO_DEBUG_
+    static const std::int32_t ChunksPerSide = 4;
+#else
+    static const std::int32_t ChunksPerSide = 14;
+#endif //CRO_DEBUG
 }

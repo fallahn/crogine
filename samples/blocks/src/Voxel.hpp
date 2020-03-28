@@ -135,6 +135,8 @@ namespace vx
         std::vector<Data> m_voxels;
         std::vector<std::uint8_t> m_commonVoxels;
         std::unordered_map<std::string, std::uint8_t> m_voxelMap;
+
+        Data m_outOfBoundsData;
     };
 
     struct Update final
