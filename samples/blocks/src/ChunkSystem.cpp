@@ -36,7 +36,6 @@ source distribution.
 #include "BorderMeshBuilder.hpp"
 #include "ClientCommandIDs.hpp"
 #include "Coordinate.hpp"
-#include "ChunkManager.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -198,11 +197,11 @@ namespace
 }
 
 ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc, ChunkManager& cm, vx::DataManager& dm)
-    : cro::System   (mb, typeid(ChunkSystem)),
-    m_resources     (rc),
-    m_chunkManager  (cm),
-    m_voxelData     (dm),
-    m_threadRunning (false)
+    : cro::System       (mb, typeid(ChunkSystem)),
+    m_resources         (rc),
+    m_sharedChunkManager(cm),
+    m_voxelData         (dm),
+    m_threadRunning     (false)
 {
     requireComponent<ChunkComponent>();
     requireComponent<cro::Transform>();
@@ -390,11 +389,13 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
             std::memcpy(voxels.data(), (char*)packet.getData() + static_cast<std::intptr_t>(sizeof(cd)), sizeof(RLEPair)* cd.dataSize);
 
             glm::ivec3 position(cd.x, cd.y, cd.z);
-            std::lock_guard<std::mutex> lock(*m_chunkMutex);
-            if (!m_chunkManager.hasChunk(position))
+            
+            if (!m_sharedChunkManager.hasChunk(position))
             {
-                auto& chunk = m_chunkManager.addChunk(position);
-                chunk.getVoxels() = decompressVoxels(voxels);
+                auto chunkVoxels = decompressVoxels(voxels);
+
+                auto& chunk = m_sharedChunkManager.addChunk(position);
+                chunk.getVoxels() = chunkVoxels;
                 chunk.setHighestPoint(cd.highestPoint);
 
                 //create new entity for chunk
@@ -430,6 +431,12 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), debugMaterial);
                 entity.getComponent<cro::Model>().setHidden(true);
                 entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::DebugMesh;
+
+                //create a copy of the chunk data for our threads to work on
+                std::lock_guard<std::mutex> lock(*m_chunkMutex);
+                auto& copyChunk = m_chunkManager.addChunk(position);
+                copyChunk.getVoxels() = chunkVoxels;
+                copyChunk.setHighestPoint(cd.highestPoint);
             }
         }
     }
@@ -504,7 +511,7 @@ void ChunkSystem::threadFunc()
         {
             //check the chunk is even visible before updating it
             auto entity = m_inputQueue.front();
-            const auto& model = entity.getComponent<cro::Model>();
+            //const auto& model = entity.getComponent<cro::Model>();
             //if (model.isVisible() /*&& !model.isHidden()*/)
             {
                 m_inputQueue.pop();

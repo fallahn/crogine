@@ -32,6 +32,7 @@ source distribution.
 #include "ResourceIDs.hpp"
 #include "Coordinate.hpp"
 #include "Voxel.hpp"
+#include "ChunkManager.hpp"
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/network/NetData.hpp>
@@ -46,7 +47,7 @@ source distribution.
 #include <thread>
 #include <array>
 
-class ChunkManager;
+
 class Chunk;
 namespace cro
 {
@@ -102,8 +103,17 @@ private:
     std::array<std::size_t, MeshID::Count> m_meshIDs = {};
     std::vector<glm::vec2> m_tileOffsets;
 
-    ChunkManager& m_chunkManager;
-    vx::DataManager& m_voxelData;
+    //the shared data is used by the main thread exclusively
+    //so that it never needs to be locked (as server updates arrive on
+    //the main thread). We also keep a *copy* of this data which the
+    //meshing threads can lock/read/unlock as much as necessary
+    ChunkManager& m_sharedChunkManager;
+    ChunkManager m_chunkManager;
+
+    //while this is shared it is read only (including the main thread
+    // *after* setup is complete) so the mesh threads will not lock access
+    //other than necessary when sharing between worker threads
+    const vx::DataManager& m_voxelData;
 
     struct VoxelUpdate final
     {

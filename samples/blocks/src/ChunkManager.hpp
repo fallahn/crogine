@@ -54,6 +54,8 @@ public:
 
     const PositionMap<Chunk>& getChunks() const;
 
+    //used by the server to decide in which order to send chunks
+    //to clients on startup
     std::vector<glm::ivec3> getChunkPositions() const { return m_chunkPositions; }
 
 private:
