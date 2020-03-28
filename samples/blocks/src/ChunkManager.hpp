@@ -52,15 +52,17 @@ public:
 
     void ensureNeighbours(glm::ivec3);
 
-    const PositionMap<Chunk>& getChunks() const;
+    //const PositionMap<Chunk>& getChunks() const;
 
     //used by the server to decide in which order to send chunks
     //to clients on startup
     std::vector<glm::ivec3> getChunkPositions() const { return m_chunkPositions; }
 
 private:
-    PositionMap<Chunk> m_chunks;
+    //PositionMap<Chunk> m_chunks;
     Chunk m_errorChunk;
+
+    std::vector<Chunk> m_chunks;
 
     std::vector<glm::ivec3> m_chunkPositions;
 };

@@ -395,7 +395,7 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 auto chunkVoxels = decompressVoxels(voxels);
 
                 auto& chunk = m_sharedChunkManager.addChunk(position);
-                chunk.getVoxels() = chunkVoxels;
+                chunk.setVoxels(chunkVoxels);
                 chunk.setHighestPoint(cd.highestPoint);
 
                 //create new entity for chunk
@@ -435,7 +435,7 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 //create a copy of the chunk data for our threads to work on
                 std::lock_guard<std::mutex> lock(*m_chunkMutex);
                 auto& copyChunk = m_chunkManager.addChunk(position);
-                copyChunk.getVoxels() = chunkVoxels;
+                copyChunk.setVoxels(chunkVoxels);
                 copyChunk.setHighestPoint(cd.highestPoint);
             }
         }

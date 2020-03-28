@@ -37,4 +37,6 @@ namespace WorldConst
     static const std::int32_t ChunkVolume = ChunkArea * ChunkSize;
 
     static const std::int32_t WaterLevel = 24;
+
+    static const std::int32_t ChunksPerSide = 16; //in other words max world size is 16x16x16 chunks
 }

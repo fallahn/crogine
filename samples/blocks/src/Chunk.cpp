@@ -49,7 +49,8 @@ Chunk::Chunk(ChunkManager& m, glm::ivec3 pos)
     : m_chunkManager    (m),
     m_position          (pos),
     m_voxels            (WorldConst::ChunkVolume),
-    m_highestPoint      (-1)
+    m_highestPoint      (-1),
+    m_empty             (true)
 {
     //this assume 'air' is ID 0 - ideally we should be checking
     //the ID assigned by the voxel manager when the type is loaded.
@@ -67,6 +68,7 @@ void Chunk::setVoxelQ(glm::ivec3 position, std::uint8_t id)
 {
     CRO_ASSERT(!voxelPositionOutOfBounds(position), "Out of bounds");
     m_voxels[toLocalVoxelIndex(position)] = id;
+    m_empty = false;
 }
 
 std::uint8_t Chunk::getVoxel(glm::ivec3 position) const
@@ -86,6 +88,7 @@ void Chunk::setVoxel(glm::ivec3 position, std::uint8_t id)
         return;
     }
     setVoxelQ(position, id);
+    m_empty = false;
 }
 
 glm::ivec3 Chunk::getPosition() const
@@ -93,9 +96,10 @@ glm::ivec3 Chunk::getPosition() const
     return m_position;
 }
 
-ChunkVoxels& Chunk::getVoxels()
+void Chunk::setVoxels(const ChunkVoxels& voxels)
 {
-    return m_voxels;
+    m_voxels = voxels;
+    m_empty = false;
 }
 
 const ChunkVoxels& Chunk::getVoxels() const
