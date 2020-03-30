@@ -504,9 +504,9 @@ void GameState::spawnPlayer(PlayerInfo info)
         auto headEnt = entity;
 
         //body model
-        modelDef.loadFromFile("assets/models/body.cmt", m_resources);
+        modelDef.loadFromFile("assets/models/suit.cmt", m_resources);
         entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.55f, 0.f }); //TODO we need to get some sizes from the mesh - will AABB do?
+        entity.addComponent<cro::Transform>();// .setOrigin({ 0.f, 0.55f, 0.f }); //TODO we need to get some sizes from the mesh - will AABB do?
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::BodyMesh;
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().userData = std::make_any<std::uint8_t>(info.playerID); //this is used to ID the body model when hiding it

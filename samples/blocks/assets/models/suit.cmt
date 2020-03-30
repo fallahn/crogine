@@ -1,0 +1,9 @@
+model suit
+{
+    mesh = assets/models/suit.cmf
+
+    material VertexLit
+    {
+        diffuse = "assets/images/body.png"
+    }
+}

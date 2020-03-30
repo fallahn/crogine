@@ -503,6 +503,8 @@ void MenuState::openModelAtPath(const std::string& path)
         def.createModel(entities[EntityID::ActiveModel], m_resources);
         m_currentModelConfig.loadFromFile(path);
 
+        entities[EntityID::ActiveModel].getComponent<cro::Skeleton>().play(0);
+
         if (entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData().boundingSphere.radius > (2.f * worldScales[m_preferences.unitsPerMetre]))
         {
             cro::Logger::log("Bounding sphere radius is very large - model may not be visible", cro::Logger::Type::Warning);
