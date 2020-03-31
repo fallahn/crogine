@@ -427,6 +427,7 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 //create a second entity for debug bounds
                 entity = getScene()->createEntity();
                 entity.addComponent<cro::Transform>().setPosition(glm::vec3(position * WorldConst::ChunkSize));
+                entity.getComponent<cro::Transform>().setScale(glm::vec3(WorldConst::ChunkSize));
                 auto debugMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
                 entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), debugMaterial);
                 entity.getComponent<cro::Model>().setHidden(true);

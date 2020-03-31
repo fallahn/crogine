@@ -357,7 +357,9 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
-
+    auto& shader = m_resources.shaders.get(ShaderID::ChunkDebug);
+    m_materialIDs[MaterialID::ChunkDebug] = m_resources.materials.add(shader);
+    m_meshIDs[MeshID::Border] = m_resources.meshes.loadMesh(BorderMeshBuilder());
 }
 
 void GameState::createScene()
@@ -549,6 +551,30 @@ void GameState::spawnPlayer(PlayerInfo info)
         entity.getComponent<cro::Model>().setHidden(hideBody);
         entity.getComponent<cro::Skeleton>().play(0);
 
+        //used to draw AABB
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();// .setOrigin(-Player::aabb[0]);
+        entity.getComponent<cro::Transform>().setScale(Player::aabb.getSize());
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
+        material.setProperty("u_colour", cro::Colour::White());
+        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), material);
+        entity.getComponent<cro::Model>().setHidden(true);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, headEnt](cro::Entity e, float)
+        {
+            if (headEnt.destroyed())
+            {
+                m_gameScene.destroyEntity(e);
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setPosition(
+                    headEnt.getComponent<cro::Transform>().getPosition() + Player::aabb[0]);
+            }
+        };
+        entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::DebugMesh;
+
         return headEnt;
     };
 
@@ -592,15 +618,13 @@ void GameState::spawnPlayer(PlayerInfo info)
 
             //create a wireframe to highlight the block we look at
             entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Transform>().setScale(glm::vec3(1.f / WorldConst::ChunkSize));
-            auto& shader = m_resources.shaders.get(ShaderID::ChunkDebug);
-            auto materialID = m_resources.materials.add(shader);
-            auto meshID = m_resources.meshes.loadMesh(BorderMeshBuilder());
+            entity.addComponent<cro::Transform>();
 
-            auto material = m_resources.materials.get(materialID);
+
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
             material.setProperty("u_colour", cro::Colour::Black());
             material.blendMode = cro::Material::BlendMode::Alpha;
-            entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+            entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), material);
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
                 [&, camEnt](cro::Entity e, float)

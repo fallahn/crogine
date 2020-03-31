@@ -34,12 +34,15 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+#include <crogine/graphics/BoundingBox.hpp>
 
 #include <array>
 
 struct PlayerUpdate;
 struct Player final
 {
+    static const cro::Box aabb;
+
     //if we assume (and we should) 60 updates per second
     //this will buffer 2 seconds worth of input
     static constexpr std::size_t HistorySize = 120;

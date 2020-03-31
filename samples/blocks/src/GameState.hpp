@@ -71,6 +71,9 @@ private:
     std::uint32_t m_fontID;
 
     cro::ResourceCollection m_resources;
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
+    std::array<std::size_t, MeshID::Count> m_meshIDs = {};
+
 
     InputParser m_inputParser;
 

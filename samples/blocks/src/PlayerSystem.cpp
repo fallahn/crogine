@@ -43,6 +43,8 @@ namespace
     const float FlyMultiplier = 15.f;
 }
 
+const cro::Box Player::aabb = { glm::vec3(-0.3f, -1.34f, -0.3f), glm::vec3(0.3f, 0.5f, 0.3f) };
+
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(PlayerSystem))
 {
