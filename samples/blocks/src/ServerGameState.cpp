@@ -238,7 +238,7 @@ void GameState::initScene()
     auto& mb = m_sharedData.messageBus;
 
     m_scene.addSystem<ActorSystem>(mb);
-    m_scene.addSystem<PlayerSystem>(mb);
+    m_scene.addSystem<PlayerSystem>(mb, m_world.chunks);
 
 
 }

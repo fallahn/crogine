@@ -342,7 +342,7 @@ void GameState::addSystems()
 
     m_gameScene.addSystem<cro::CommandSystem>(mb);   
     m_gameScene.addSystem<InterpolationSystem>(mb);
-    m_gameScene.addSystem<PlayerSystem>(mb);
+    m_gameScene.addSystem<PlayerSystem>(mb, m_chunkManager);
     m_gameScene.addSystem<cro::CallbackSystem>(mb); //currently used to update body model positions so needs to come after player update
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<ChunkSystem>(mb, m_resources, m_chunkManager, m_voxelData);

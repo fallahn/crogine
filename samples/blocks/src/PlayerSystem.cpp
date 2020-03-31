@@ -31,6 +31,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "ServerPacketData.hpp"
 #include "Messages.hpp"
+#include "ChunkManager.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -45,8 +46,9 @@ namespace
 
 const cro::Box Player::aabb = { glm::vec3(-0.3f, -1.34f, -0.3f), glm::vec3(0.3f, 0.5f, 0.3f) };
 
-PlayerSystem::PlayerSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(PlayerSystem))
+PlayerSystem::PlayerSystem(cro::MessageBus& mb, const ChunkManager& cm)
+    : cro::System(mb, typeid(PlayerSystem)),
+    m_chunkManager(cm)
 {
     requireComponent<Player>();
     requireComponent<cro::Transform>();
@@ -234,9 +236,22 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
             tx.move(glm::vec3(0.f, -1.f, 0.f) * moveSpeed);
         }
     }
+    else
+    {
+        //add gravity / any jump impulse
+    }
 }
 
 void PlayerSystem::processCollision(cro::Entity)
 {
+    //get voxel position from current position
 
+    //get 9 below, 8 surrounding and 9 voxels above
+
+    //assuming we get these in order every time we can
+    //make an assumption about the direction we're approaching
+    //from to calculate the normal
+
+    //for each ID check if it's solid, create an AABB if it is
+    //then test / correct against player AABB
 }

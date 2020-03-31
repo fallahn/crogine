@@ -60,10 +60,11 @@ struct Player final
     bool waitResync = false; //waiting to resync player with server
 };
 
+class ChunkManager;
 class PlayerSystem final : public cro::System
 {
 public:
-    explicit PlayerSystem(cro::MessageBus&);
+    PlayerSystem(cro::MessageBus&, const ChunkManager&);
 
     void handleMessage(const cro::Message&) override;
 
@@ -72,6 +73,8 @@ public:
     void reconcile(cro::Entity, const PlayerUpdate&);
 
 private:
+
+    const ChunkManager& m_chunkManager;
 
     void processInput(cro::Entity);
     void processMovement(cro::Entity, Input);
