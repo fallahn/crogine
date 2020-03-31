@@ -56,6 +56,7 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Matrix.hpp>
@@ -345,6 +346,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb); //currently used to update body model positions so needs to come after player update
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<ChunkSystem>(mb, m_resources, m_chunkManager, m_voxelData);
+    m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
@@ -504,9 +506,9 @@ void GameState::spawnPlayer(PlayerInfo info)
         auto headEnt = entity;
 
         //body model
-        modelDef.loadFromFile("assets/models/suit.cmt", m_resources);
+        modelDef.loadFromFile("assets/models/body_animated.cmt", m_resources);
         entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>();// .setOrigin({ 0.f, 0.55f, 0.f }); //TODO we need to get some sizes from the mesh - will AABB do?
+        entity.addComponent<cro::Transform>();
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::BodyMesh;
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().userData = std::make_any<std::uint8_t>(info.playerID); //this is used to ID the body model when hiding it
@@ -545,6 +547,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         };
         modelDef.createModel(entity, m_resources);
         entity.getComponent<cro::Model>().setHidden(hideBody);
+        entity.getComponent<cro::Skeleton>().play(0);
 
         return headEnt;
     };

@@ -195,8 +195,8 @@ void TerrainGenerator::createSpawnPoints(const ChunkManager& chunkManager, const
         {
             m_spawnPoints[i].y += 1.f;
         }
-        //centres in the block and moves up by body height
-        m_spawnPoints[i] += glm::vec3(0.5f, 1.1f, 0.5f);
+        //centres in the block and moves up by body height - TODO make body height not magic
+        m_spawnPoints[i] += glm::vec3(0.5f, 1.4f, 0.5f);
     }
 }
 
