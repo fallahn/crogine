@@ -32,6 +32,7 @@ source distribution.
 #include "ServerPacketData.hpp"
 #include "Messages.hpp"
 #include "ChunkManager.hpp"
+#include "Coordinate.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -242,16 +243,58 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
     }
 }
 
-void PlayerSystem::processCollision(cro::Entity)
+#include "Voxel.hpp"
+void PlayerSystem::processCollision(cro::Entity entity)
 {
+    auto& tx = entity.getComponent<cro::Transform>();
+
     //get voxel position from current position
+    auto voxelPos = toVoxelPosition(tx.getPosition());
+    auto playerBounds = Player::aabb + tx.getPosition();
+
+
+    //TODO move this to chunk manager so we can query arbitrary AABBs
 
     //get 9 below, 8 surrounding and 9 voxels above
+    static const std::array<glm::ivec3, 26> offsetPositions =
+    {
+        glm::ivec3(-1,-1,-1), glm::ivec3(0,-1,-1), glm::ivec3(1,-1,-1),
+        glm::ivec3(-1,-1, 0), glm::ivec3(0,-1, 0), glm::ivec3(1,-1, 0),
+        glm::ivec3(-1,-1, 1), glm::ivec3(0,-1, 1), glm::ivec3(1,-1, 1),
+        
+        glm::ivec3(-1, 0,-1), glm::ivec3(0, 0,-1), glm::ivec3(1, 0,-1),
+        glm::ivec3(-1, 0, 0),                      glm::ivec3(1, 0, 0),
+        glm::ivec3(-1, 0, 1), glm::ivec3(0, 0, 1), glm::ivec3(1, 0, 1),
+        
+        glm::ivec3(-1, 1,-1), glm::ivec3(0, 1,-1), glm::ivec3(1, 1,-1),
+        glm::ivec3(-1, 1, 0), glm::ivec3(0, 1, 0), glm::ivec3(1, 1, 0),
+        glm::ivec3(-1, 1, 1), glm::ivec3(0, 1, 1), glm::ivec3(1, 1, 1)
+    };
 
-    //assuming we get these in order every time we can
+    
+
+    //if we get these in order every time we can
     //make an assumption about the direction we're approaching
     //from to calculate the normal
 
     //for each ID check if it's solid, create an AABB if it is
     //then test / correct against player AABB
+    static const cro::Box blockAABB(glm::vec3(0.f), glm::vec3(1.f));
+
+    for (const auto& offset : offsetPositions)
+    {
+        auto voxel = m_chunkManager.getVoxel(offset + voxelPos);
+        
+        //TODO look up the type/collision in voxel manager
+        if (voxel != 0 && voxel != vx::OutOfBounds)
+        {
+            auto voxelBox = blockAABB + offset;
+            cro::Box intersection;
+            if (voxelBox.intersects(playerBounds, &intersection))
+            {
+                //solve collision
+                std::cout << "Collision!\n";
+            }
+        }
+    }
 }
