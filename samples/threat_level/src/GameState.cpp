@@ -582,6 +582,7 @@ void GameState::createHUD()
 
     auto spriteEntity = m_uiScene.createEntity();
     spriteEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bullet1");
+    //spriteEntity.getComponent<cro::Sprite>().
     spriteSize = spriteEntity.getComponent<cro::Sprite>().getSize() / 2.f;
     spriteEntity.addComponent<cro::Transform>().setOrigin({ spriteSize.x, spriteSize.y, 0.f });
     entity.getComponent<cro::Transform>().addChild(spriteEntity.getComponent<cro::Transform>());
