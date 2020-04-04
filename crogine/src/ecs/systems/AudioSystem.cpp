@@ -75,8 +75,16 @@ void AudioSystem::process(float)
         //check its flags and update
         if (audioSource.m_newDataSource)
         {
-            AudioRenderer::deleteAudioSource(audioSource.m_ID);
-            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
+            if (audioSource.m_ID < 1)
+            {
+                //request a new source if this emitter is not yet used
+                audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
+            }
+            else
+            {
+                //update the existing source
+                AudioRenderer::updateAudioSource(audioSource.m_ID, audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
+            }
             audioSource.m_newDataSource = false;
         }
 
@@ -131,8 +139,11 @@ void AudioSystem::onEntityAdded(Entity entity)
     {
         if (audioSource.m_newDataSource)
         {
-            AudioRenderer::deleteAudioSource(audioSource.m_ID);
-            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
+            if (audioSource.m_ID < 1)
+            {
+                //request a new source if this emiter is not yet used
+                audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
+            }
             audioSource.m_newDataSource = false;
         }
     }

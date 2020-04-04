@@ -124,6 +124,14 @@ cro::int32 AudioRenderer::requestAudioSource(cro::int32 buffer, bool streaming)
     return m_impl->requestAudioSource(buffer, streaming);
 }
 
+void AudioRenderer::updateAudioSource(cro::int32 sourceID, cro::int32 bufferID, bool streaming)
+{
+    if (sourceID > 0 && bufferID > 0)
+    {
+        m_impl->updateAudioSource(sourceID, bufferID, streaming);
+    }
+}
+
 void AudioRenderer::deleteAudioSource(cro::int32 source)
 {
     if (source > 0)

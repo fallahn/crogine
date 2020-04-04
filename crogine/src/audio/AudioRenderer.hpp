@@ -79,6 +79,7 @@ namespace cro
 
         //note that this is the openAL source, not the buffer or stream behind it
         virtual cro::int32 requestAudioSource(cro::int32, bool) = 0;
+        virtual void updateAudioSource(cro::int32, cro::int32, bool) = 0;
         virtual void deleteAudioSource(cro::int32) = 0;
 
         virtual void playSource(cro::int32, bool) = 0;
@@ -187,13 +188,22 @@ namespace cro
         \brief Requests a new audio source bound to the given buffer.
         \param buffer ID of the buffer to which to bind the audio source.
         \param streaming Should be true if the buffer ID is associated with a
-        and AudioStream data source, else false for an AudioBuffer.
-        \returns A unique ID for the audio sourceon success else returns - 1
+        an AudioStream data source, else false for an AudioBuffer.
+        \returns A unique ID for the audio source on success else returns - 1
         NOTE these audio sources are not resource managed in anyway and is left
-        entirely to the caller to make sucre that the audio source is properly
-        deleted with deleteAudioEmitter() when it needs to be disposed
+        entirely to the caller to make sure that the audio source is properly
+        deleted with deleteAudioSource() when it needs to be disposed
         */
         static cro::int32 requestAudioSource(cro::int32 buffer, bool streaming);
+
+        /*!
+        \brief Updates the given audio source with a new buffer.
+        \param sourceID ID of the audio source to update
+        \param bufferID ID of the buffer to assign to the source
+        \param streaming Should be true if the buffer ID is associated with a
+        an AudioStream data source, else false for an AudioBuffer.
+        */
+        static void updateAudioSource(cro::int32 sourceID, cro::int32 bufferID, bool streaming);
 
         /*!
         \brief Attempts to delete the audio source with the given ID.

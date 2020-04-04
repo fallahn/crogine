@@ -78,6 +78,7 @@ AudioEmitter::~AudioEmitter()
 }
 
 AudioEmitter::AudioEmitter(AudioEmitter&& other) noexcept
+    : m_state(State::Stopped)
 {
     m_pitch = other.m_pitch;
     other.m_pitch = 1.f;
@@ -145,10 +146,10 @@ AudioEmitter& AudioEmitter::operator=(AudioEmitter&& other) noexcept
 //public
 void AudioEmitter::setSource(const AudioSource& dataSource)
 {
-    if (m_ID > 0)
+    if (m_dataSourceID == dataSource.getID())
     {
-        AudioRenderer::deleteAudioSource(m_ID);
-        m_ID = -1;
+        //already have this source
+        return;
     }
 
     m_dataSourceID = dataSource.getID();

@@ -75,7 +75,8 @@ void SFXDirector::handleMessage(const cro::Message& msg)
     if (msg.id == MessageID::NpcMessage)
     {
         const auto& data = msg.getData<NpcEvent>();
-        if (data.type == NpcEvent::Died)
+        if (data.type == NpcEvent::Died
+            || data.type == NpcEvent::HealthChanged)
         {
             //explosion
             playSound(AudioID::Explode, data.position).setPitch(cro::Util::Random::value(0.9f, 1.1f));
@@ -83,7 +84,19 @@ void SFXDirector::handleMessage(const cro::Message& msg)
         else if (data.type == NpcEvent::FiredWeapon)
         {
             //pew pew
-            playSound(AudioID::NPCLaser, data.position).setPitch(cro::Util::Random::value(0.9f, 1.1f));
+            playSound(AudioID::NPCLaser, data.position).setPitch(cro::Util::Random::value(0.8f, 1.2f));
+        }
+    }
+    else if (msg.id == MessageID::PlayerMessage)
+    {
+        const auto& data = msg.getData<PlayerEvent>();
+        if (data.type == PlayerEvent::Died)
+        {
+            playSound(AudioID::Explode, data.position).setPitch(cro::Util::Random::value(0.8f, 1.f));
+        }
+        else if (data.type == PlayerEvent::FiredLaser)
+        {
+            playSound(AudioID::NPCLaser, data.position).setPitch(cro::Util::Random::value(0.7f, 1.f));
         }
     }
 }

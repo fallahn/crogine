@@ -94,6 +94,10 @@ void PlayerWeaponSystem::process(float dt)
         entity.getComponent<cro::Transform>().setPosition(position);
         entity.getComponent<PlayerWeapon>().damage = damage;
         m_aliveCount++;
+
+        auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+        msg->position = position;
+        msg->type = PlayerEvent::FiredLaser;
     };
 
     //if active spawn more pulses or activate laser
