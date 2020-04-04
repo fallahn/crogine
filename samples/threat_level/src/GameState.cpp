@@ -57,6 +57,7 @@ source distribution.
 #include "BossSystem.hpp"
 #include "CollisionSystem.hpp"
 #include "PhysicsObject.hpp"
+#include "SoundEffectsDirector.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -250,11 +251,13 @@ void GameState::addSystems()
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
     m_scene.addSystem<cro::SpriteRenderer>(mb);
+    m_scene.addSystem<cro::AudioSystem>(mb);
 
     m_scene.addDirector<PlayerDirector>();
     m_scene.addDirector<BackgroundDirector>();
     m_scene.addDirector<ItemDirector>();
     m_scene.addDirector<NpcDirector>();
+    m_scene.addDirector<SFXDirector>();
 #ifdef PLATFORM_DESKTOP
     m_scene.addPostProcess<cro::PostChromeAB>();
     m_scene.addPostProcess<PostRadial>();

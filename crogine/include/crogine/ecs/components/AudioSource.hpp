@@ -37,7 +37,7 @@ namespace cro
     /*!
     \brief Audio source component.
     AudioSource components are use to play sounds within the scene.
-    An AudioSource requires an AudioBuffer ins the same way a sprite
+    An AudioSource requires an AudioBuffer in the same way a sprite
     requires a texture - ie multiple AudioSource components may use
     the same AudioBuffer (and should when playing the same sound!).
     AudioSources which use mono sound buffers are generally panned
