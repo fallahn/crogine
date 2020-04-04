@@ -29,16 +29,16 @@ source distribution.
 
 #pragma once
 
-#include <crogine/audio/AudioDataSource.hpp>
+#include <crogine/audio/AudioSource.hpp>
 
 #include <string>
 
 namespace cro
 {
     /*!
-    \brief An AudioDataSource which streams data from storage.
+    \brief An AudioSource which streams data from storage.
     When playing longer audio files such as music it is recommended
-    that an AudioEmitter component use and AudioStream as its data
+    that an AudioEmitter component use an AudioStream as its data
     source rather than a buffer. Streams will stream either *.wav
     or *.ogg data from disk, as opposed to attempting to load the
     entire file into memory.
@@ -48,7 +48,7 @@ namespace cro
     an AudioStream to further sources will only result in multiple
     sources playing back the same stream.
     */
-    class CRO_EXPORT_API AudioStream final : public AudioDataSource
+    class CRO_EXPORT_API AudioStream final : public AudioSource
     {
     public:
         AudioStream();
@@ -67,7 +67,7 @@ namespace cro
         /*!
         \brief Returns the underlying data type
         */
-        AudioDataSource::Type getType() const override { return AudioDataSource::Type::Stream; }
+        AudioSource::Type getType() const override { return AudioSource::Type::Stream; }
 
     private:
 

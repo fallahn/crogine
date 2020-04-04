@@ -37,7 +37,7 @@
   <ItemGroup>
     <ClInclude Include="..\crogine\include\crogine\android\Android.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioBuffer.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\audio\AudioDataSource.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioSource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioMixer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioStream.hpp" />

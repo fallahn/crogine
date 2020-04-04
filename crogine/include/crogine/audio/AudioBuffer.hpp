@@ -29,7 +29,7 @@ source distribution.
 
 #pragma once
 
-#include <crogine/audio/AudioDataSource.hpp>
+#include <crogine/audio/AudioSource.hpp>
 
 #include <string>
 
@@ -47,7 +47,7 @@ namespace cro
     still in use by one or more AudioEmitters will result in undefined
     behviour, depending on the audio renderer currently in use.
     */
-    class CRO_EXPORT_API AudioBuffer final : public AudioDataSource
+    class CRO_EXPORT_API AudioBuffer final : public AudioSource
     {
     public:
         AudioBuffer();
@@ -88,7 +88,7 @@ namespace cro
         /*!
         \brief Identifies this as an AudioBuffer
         */
-        AudioDataSource::Type getType() const override { return AudioDataSource::Type::Buffer; }
+        AudioSource::Type getType() const override { return AudioSource::Type::Buffer; }
 
     private:
 

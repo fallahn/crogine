@@ -71,7 +71,7 @@ void AudioSystem::process(float)
         if (audioSource.m_newDataSource)
         {
             AudioRenderer::deleteAudioEmitter(audioSource.m_ID);
-            audioSource.m_ID = AudioRenderer::requestAudioEmitter(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioDataSource::Type::Stream));
+            audioSource.m_ID = AudioRenderer::requestAudioEmitter(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
             audioSource.m_newDataSource = false;
         }
 
@@ -110,7 +110,7 @@ void AudioSystem::process(float)
         AudioRenderer::setSourceRolloff(audioSource.m_ID, audioSource.m_rolloff);
 
         //if we're steaming make sure to update the stream buffer
-        if (audioSource.m_sourceType == AudioDataSource::Type::Stream)
+        if (audioSource.m_sourceType == AudioSource::Type::Stream)
         {
             AudioRenderer::updateStream(audioSource.m_dataSourceID);
         }
@@ -133,7 +133,7 @@ void AudioSystem::onEntityAdded(Entity entity)
         if (audioSource.m_newDataSource)
         {
             AudioRenderer::deleteAudioEmitter(audioSource.m_ID);
-            audioSource.m_ID = AudioRenderer::requestAudioEmitter(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioDataSource::Type::Stream));
+            audioSource.m_ID = AudioRenderer::requestAudioEmitter(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
             audioSource.m_newDataSource = false;
         }
     }

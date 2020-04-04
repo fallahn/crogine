@@ -132,7 +132,7 @@ cro::AudioEmitter& SFXDirector::playSound(std::int32_t audioID, glm::vec3 positi
     auto entity = getNextFreeEntity();
     entity.getComponent<cro::Transform>().setPosition(position);
     auto& emitter = entity.getComponent<cro::AudioEmitter>();
-    emitter.setAudioDataSource(m_resources.get(audioID));
+    emitter.setSource(m_resources.get(audioID));
     //must reset values here in case they were changed prior to recycling from pool
     emitter.setRolloff(1.f);
     //emitter.setMinDistance(5.f);

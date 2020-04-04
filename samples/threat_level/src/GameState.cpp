@@ -565,7 +565,7 @@ void GameState::createHUD()
         }
     };
     //entity.getComponent<cro::Callback>().active = true;
-    entity.addComponent<cro::AudioEmitter>().setAudioDataSource(m_resources.audio.get(AudioID::Meaty));
+    entity.addComponent<cro::AudioEmitter>().setSource(m_resources.audio.get(AudioID::Meaty));
     entity.getComponent<cro::AudioEmitter>().setRolloff(0.f);
 
     //create a quad to render as the timer for weapons

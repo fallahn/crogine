@@ -30,17 +30,17 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
-#include <crogine/audio/AudioDataSource.hpp>
+#include <crogine/audio/AudioSource.hpp>
 
 namespace cro
 {
     /*!
-    \brief Audio source component.
+    \brief Audio emitter component.
     AudioEmitter components are use to play sounds within the scene.
-    An AudioEmitter requires an AudioBuffer in the same way a sprite
+    An AudioEmitter requires an AudioSource in the same way a sprite
     requires a texture - ie multiple AudioEmitter components may use
-    the same AudioBuffer (and should when playing the same sound!).
-    AudioEmitters which use mono sound buffers are generally panned
+    the same AudioSource (and should when playing the same sound!).
+    AudioEmitters which use mono sound sources are generally panned
     according to their position in the world (assuming the parent
     entity also has a Transform component attached) but this can 
     depend on the platform and AudioRenderer in use.
@@ -49,7 +49,7 @@ namespace cro
     {
     public:
         AudioEmitter();
-        AudioEmitter(const AudioDataSource&);
+        AudioEmitter(const AudioSource&);
         ~AudioEmitter();
 
         AudioEmitter(const AudioEmitter&) = delete;
@@ -62,7 +62,7 @@ namespace cro
         \brief Sets the AudioBuffer or AudioStream used by this AudioEmitter.
         If an AudioBuffer is deleted while in use results are undefined.
         */
-        void setAudioDataSource(const AudioDataSource&);
+        void setSource(const AudioSource&);
 
         /*!
         \brief Plays the AudioEmitter
@@ -154,6 +154,6 @@ namespace cro
         bool m_newDataSource;
         int32 m_ID;
         int32 m_dataSourceID;
-        AudioDataSource::Type m_sourceType;
+        AudioSource::Type m_sourceType;
     };
 }

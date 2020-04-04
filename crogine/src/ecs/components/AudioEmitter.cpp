@@ -49,12 +49,12 @@ AudioEmitter::AudioEmitter()
     m_newDataSource     (false),
     m_ID                (-1),
     m_dataSourceID      (-1),
-    m_sourceType        (AudioDataSource::Type::None)
+    m_sourceType        (AudioSource::Type::None)
 {
 
 }
 
-AudioEmitter::AudioEmitter(const AudioDataSource& dataSource)
+AudioEmitter::AudioEmitter(const AudioSource& dataSource)
     : m_state           (State::Stopped),
     m_pitch             (1.f),
     m_volume            (1.f),
@@ -98,7 +98,7 @@ AudioEmitter::AudioEmitter(AudioEmitter&& other) noexcept
     other.m_dataSourceID = -1;
 
     m_sourceType = other.m_sourceType;
-    other.m_sourceType = AudioDataSource::Type::None;
+    other.m_sourceType = AudioSource::Type::None;
 
     m_newDataSource = true;
     other.m_newDataSource = false;
@@ -132,7 +132,7 @@ AudioEmitter& AudioEmitter::operator=(AudioEmitter&& other) noexcept
         other.m_dataSourceID = -1;
 
         m_sourceType = other.m_sourceType;
-        other.m_sourceType = AudioDataSource::Type::None;
+        other.m_sourceType = AudioSource::Type::None;
 
         m_newDataSource = true;
         other.m_newDataSource = false;
@@ -143,7 +143,7 @@ AudioEmitter& AudioEmitter::operator=(AudioEmitter&& other) noexcept
 }
 
 //public
-void AudioEmitter::setAudioDataSource(const AudioDataSource& dataSource)
+void AudioEmitter::setSource(const AudioSource& dataSource)
 {
     if (m_ID > 0)
     {

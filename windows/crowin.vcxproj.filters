@@ -402,9 +402,6 @@
     <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp">
       <Filter>Header Files\audio</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\audio\AudioDataSource.hpp">
-      <Filter>Header Files\audio</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\src\audio\AudioFile.hpp">
       <Filter>Header Files\audio</Filter>
     </ClInclude>
@@ -494,6 +491,9 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioEmitter.hpp">
       <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioSource.hpp">
+      <Filter>Header Files\audio</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -31,7 +31,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
-#include <crogine/audio/AudioDataSource.hpp>
+#include <crogine/audio/AudioSource.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -69,11 +69,11 @@ namespace cro
         \brief Attempts to return the loaded data mapped to the given ID
         If the requested ID is not found an empty buffer will be returned
         */
-        const AudioDataSource& get(int32 id) const;
+        const AudioSource& get(int32 id) const;
 
     private:
 
-        std::unique_ptr<AudioDataSource> m_fallback;
-        std::unordered_map<int32, std::unique_ptr<AudioDataSource>> m_sources;
+        std::unique_ptr<AudioSource> m_fallback;
+        std::unordered_map<int32, std::unique_ptr<AudioSource>> m_sources;
     };
 }
