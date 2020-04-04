@@ -39,14 +39,14 @@ source distribution.
 
 namespace cro
 {
-    class AudioSource;
+    class AudioEmitter;
 }
 
 /*
 The sound effects director inherits the cro::Director interface and can
 be used by adding it to a Scene with cro::Scene::addDirector<T>();
 
-The director pools a series of entities with AudioSource components
+The director pools a series of entities with AudioEmitter components
 attached and can be used to dispatch sound effects based on messages
 recieved on the message bus. See SoundEffectsDirector.cpp for more
 detailed examples.
@@ -71,5 +71,5 @@ private:
 
     cro::Entity getNextFreeEntity();
     void resizeEntities(std::size_t);
-    cro::AudioSource& playSound(std::int32_t, glm::vec3 = glm::vec3(0.f));
+    cro::AudioEmitter& playSound(std::int32_t, glm::vec3 = glm::vec3(0.f));
 };

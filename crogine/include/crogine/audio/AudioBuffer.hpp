@@ -36,15 +36,15 @@ source distribution.
 namespace cro
 {
     /*!
-    \brief Buffers audio data used by AudioSource components.
-    AudioBuffers are the audio equivalent to textures, as AudioSources
+    \brief Buffers audio data used by AudioEmitter components.
+    AudioBuffers are the audio equivalent to textures, as AudioEmitters
     are to sprites or materials. Audio data is loaded, usually from disc,
     into an AudioBuffer, which can then be used by multiple sound sources.
     For this reason AudioBuffers should be resource managed in the same way
     as textures or other resources, using the appropriate resource management
     class - AudioResource. This means that AudioBuffers, again like Textures,
     are non-copyable, but are movable. Destroying an AudioBuffer which is
-    still in use by one or more AudioSources will result in undefined
+    still in use by one or more AudioEmitters will result in undefined
     behviour, depending on the audio renderer currently in use.
     */
     class CRO_EXPORT_API AudioBuffer final : public AudioDataSource

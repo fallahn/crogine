@@ -31,7 +31,7 @@ source distribution.
 #include <crogine/audio/AudioMixer.hpp>
 
 #include <crogine/ecs/systems/AudioSystem.hpp>
-#include <crogine/ecs/components/AudioSource.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -45,7 +45,7 @@ using namespace cro;
 AudioSystem::AudioSystem(MessageBus& mb)
     : System(mb, typeid(AudioSystem))
 {
-    requireComponent<AudioSource>();
+    requireComponent<AudioEmitter>();
 }
 
 //public
@@ -65,35 +65,35 @@ void AudioSystem::process(float)
     auto& entities = getEntities();
     for (auto& entity : entities)
     {
-        auto& audioSource = entity.getComponent<AudioSource>();
+        auto& audioSource = entity.getComponent<AudioEmitter>();
         
         //check its flags and update
         if (audioSource.m_newDataSource)
         {
-            AudioRenderer::deleteAudioSource(audioSource.m_ID);
-            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioDataSource::Type::Stream));
+            AudioRenderer::deleteAudioEmitter(audioSource.m_ID);
+            audioSource.m_ID = AudioRenderer::requestAudioEmitter(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioDataSource::Type::Stream));
             audioSource.m_newDataSource = false;
         }
 
-        if ((audioSource.m_transportFlags & AudioSource::Play)
-            && audioSource.m_state != AudioSource::State::Playing)
+        if ((audioSource.m_transportFlags & AudioEmitter::Play)
+            && audioSource.m_state != AudioEmitter::State::Playing)
         {
-            bool loop = (audioSource.m_transportFlags & AudioSource::Looped);
+            bool loop = (audioSource.m_transportFlags & AudioEmitter::Looped);
             AudioRenderer::playSource(audioSource.m_ID, loop);
         }
-        else if (audioSource.m_transportFlags & AudioSource::Pause)
+        else if (audioSource.m_transportFlags & AudioEmitter::Pause)
         {
             AudioRenderer::pauseSource(audioSource.m_ID);
         }
-        else if (audioSource.m_transportFlags & AudioSource::Stop)
+        else if (audioSource.m_transportFlags & AudioEmitter::Stop)
         {
             AudioRenderer::stopSource(audioSource.m_ID);
         }
         //reset all flags
         audioSource.m_transportFlags = 0;
         //set current state
-        audioSource.m_state = static_cast<AudioSource::State>(AudioRenderer::getSourceState(audioSource.m_ID));
-        //DPRINT("Audio State", (audioSource.m_state == AudioSource::State::Playing) ? "Playing" : "Stopped");
+        audioSource.m_state = static_cast<AudioEmitter::State>(AudioRenderer::getSourceState(audioSource.m_ID));
+        //DPRINT("Audio State", (audioSource.m_state == AudioEmitter::State::Playing) ? "Playing" : "Stopped");
 
         //check its position and update
         if (entity.hasComponent<Transform>())
@@ -121,7 +121,7 @@ void AudioSystem::process(float)
 void AudioSystem::onEntityAdded(Entity entity)
 {
     //check if buffer already added and summon new audio source
-    auto& audioSource = entity.getComponent<AudioSource>();
+    auto& audioSource = entity.getComponent<AudioEmitter>();
     if(AudioRenderer::isValid())
     {           
         if (audioSource.m_dataSourceID < 0) //we don't have a valid buffer yet (remember streams are 0 based)
@@ -132,8 +132,8 @@ void AudioSystem::onEntityAdded(Entity entity)
 
         if (audioSource.m_newDataSource)
         {
-            AudioRenderer::deleteAudioSource(audioSource.m_ID);
-            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioDataSource::Type::Stream));
+            AudioRenderer::deleteAudioEmitter(audioSource.m_ID);
+            audioSource.m_ID = AudioRenderer::requestAudioEmitter(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioDataSource::Type::Stream));
             audioSource.m_newDataSource = false;
         }
     }

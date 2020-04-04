@@ -36,36 +36,36 @@ namespace cro
 {
     /*!
     \brief Audio source component.
-    AudioSource components are use to play sounds within the scene.
-    An AudioSource requires an AudioBuffer in the same way a sprite
-    requires a texture - ie multiple AudioSource components may use
+    AudioEmitter components are use to play sounds within the scene.
+    An AudioEmitter requires an AudioBuffer in the same way a sprite
+    requires a texture - ie multiple AudioEmitter components may use
     the same AudioBuffer (and should when playing the same sound!).
-    AudioSources which use mono sound buffers are generally panned
+    AudioEmitters which use mono sound buffers are generally panned
     according to their position in the world (assuming the parent
     entity also has a Transform component attached) but this can 
     depend on the platform and AudioRenderer in use.
     */
-    class CRO_EXPORT_API AudioSource final
+    class CRO_EXPORT_API AudioEmitter final
     {
     public:
-        AudioSource();
-        AudioSource(const AudioDataSource&);
-        ~AudioSource();
+        AudioEmitter();
+        AudioEmitter(const AudioDataSource&);
+        ~AudioEmitter();
 
-        AudioSource(const AudioSource&) = delete;
-        AudioSource(AudioSource&&) noexcept;
+        AudioEmitter(const AudioEmitter&) = delete;
+        AudioEmitter(AudioEmitter&&) noexcept;
 
-        AudioSource& operator = (const AudioSource&) = delete;
-        AudioSource& operator = (AudioSource&&) noexcept;
+        AudioEmitter& operator = (const AudioEmitter&) = delete;
+        AudioEmitter& operator = (AudioEmitter&&) noexcept;
 
         /*!
-        \brief Sets the AudioBuffer or AudioStream used by this AudioSource.
+        \brief Sets the AudioBuffer or AudioStream used by this AudioEmitter.
         If an AudioBuffer is deleted while in use results are undefined.
         */
         void setAudioDataSource(const AudioDataSource&);
 
         /*!
-        \brief Plays the AudioSource
+        \brief Plays the AudioEmitter
         \param loop Whether or not this sound should be played looped
         */
         void play(bool looped = false);
@@ -88,11 +88,11 @@ namespace cro
         void setPitch(float);
 
         /*!
-        \brief Sets the volume of the AudioSource.
+        \brief Sets the volume of the AudioEmitter.
         Must be a positive value, where 0 is silent, 1 is normal.
         Anything above will attempt to amplify the sound. This
         value will be multiplied by the value of the AudioMixer
-        channel to which this AudioSource is assigned.
+        channel to which this AudioEmitter is assigned.
         */
         void setVolume(float);
 
@@ -101,16 +101,16 @@ namespace cro
         The larger this value the more quickly the sounds
         volume will fade with distance from the active listener.
         The default value is 1.0, and a value of 0 will cause the
-        AudioSource to not fade at all.
+        AudioEmitter to not fade at all.
         */
         void setRolloff(float);
 
         /*!
-        \brief Sets the AudioMixer channel for the AudioSource.
-        AudioSources may be grouped via AudioMixer channels, which
+        \brief Sets the AudioMixer channel for the AudioEmitter.
+        AudioEmitters may be grouped via AudioMixer channels, which
         in turn affect the playback volume of the sources. For example
-        an AudioSource which plays music could be routed through a
-        different channel than AudioSources which play sound effects
+        an AudioEmitter which plays music could be routed through a
+        different channel than AudioEmitters which play sound effects
         so that music may be quickly and easily adusted or muted
         independently of soud effect. By default all sound sources
         are mapped to channel 0
@@ -120,13 +120,13 @@ namespace cro
 
         /*!
         \brief Returns the current ID of the mixer channel to which
-        the AudioSource is assigned.
+        the AudioEmitter is assigned.
         */
         uint8 getMixerChannel() const { return m_mixerChannel; }
 
         enum class State{Playing = 0, Paused = 1, Stopped = 2};
         /*!
-        \brief Returns the current state of the AudioSource 
+        \brief Returns the current state of the AudioEmitter 
         */
         State getState() const { return m_state; }
 

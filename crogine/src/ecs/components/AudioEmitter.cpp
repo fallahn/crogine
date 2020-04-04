@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/components/AudioSource.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/audio/AudioBuffer.hpp>
 #include <crogine/audio/AudioStream.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -39,7 +39,7 @@ source distribution.
 
 using namespace cro;
 
-AudioSource::AudioSource()
+AudioEmitter::AudioEmitter()
     : m_state           (State::Stopped),
     m_pitch             (1.f),
     m_volume            (1.f),
@@ -54,7 +54,7 @@ AudioSource::AudioSource()
 
 }
 
-AudioSource::AudioSource(const AudioDataSource& dataSource)
+AudioEmitter::AudioEmitter(const AudioDataSource& dataSource)
     : m_state           (State::Stopped),
     m_pitch             (1.f),
     m_volume            (1.f),
@@ -69,15 +69,15 @@ AudioSource::AudioSource(const AudioDataSource& dataSource)
 
 }
 
-AudioSource::~AudioSource()
+AudioEmitter::~AudioEmitter()
 {
     if (m_ID > 0)
     {
-        AudioRenderer::deleteAudioSource(m_ID);
+        AudioRenderer::deleteAudioEmitter(m_ID);
     }
 }
 
-AudioSource::AudioSource(AudioSource&& other) noexcept
+AudioEmitter::AudioEmitter(AudioEmitter&& other) noexcept
 {
     m_pitch = other.m_pitch;
     other.m_pitch = 1.f;
@@ -109,7 +109,7 @@ AudioSource::AudioSource(AudioSource&& other) noexcept
     other.m_state = State::Stopped;
 }
 
-AudioSource& AudioSource::operator=(AudioSource&& other) noexcept
+AudioEmitter& AudioEmitter::operator=(AudioEmitter&& other) noexcept
 {
     if (&other != this)
     {
@@ -143,11 +143,11 @@ AudioSource& AudioSource::operator=(AudioSource&& other) noexcept
 }
 
 //public
-void AudioSource::setAudioDataSource(const AudioDataSource& dataSource)
+void AudioEmitter::setAudioDataSource(const AudioDataSource& dataSource)
 {
     if (m_ID > 0)
     {
-        AudioRenderer::deleteAudioSource(m_ID);
+        AudioRenderer::deleteAudioEmitter(m_ID);
         m_ID = -1;
     }
 
@@ -156,7 +156,7 @@ void AudioSource::setAudioDataSource(const AudioDataSource& dataSource)
     m_newDataSource = true;
 }
 
-void AudioSource::play(bool looped)
+void AudioEmitter::play(bool looped)
 {
     m_transportFlags |= Play;
     if (looped)
@@ -165,32 +165,32 @@ void AudioSource::play(bool looped)
     }
 }
 
-void AudioSource::pause()
+void AudioEmitter::pause()
 {
     m_transportFlags |= Pause;
 }
 
-void AudioSource::stop()
+void AudioEmitter::stop()
 {
     m_transportFlags |= Stop;
 }
 
-void AudioSource::setPitch(float pitch)
+void AudioEmitter::setPitch(float pitch)
 {
     m_pitch = std::max(0.f, pitch);
 }
 
-void AudioSource::setVolume(float volume)
+void AudioEmitter::setVolume(float volume)
 {
     m_volume = std::max(0.f, volume);
 }
 
-void AudioSource::setRolloff(float rolloff)
+void AudioEmitter::setRolloff(float rolloff)
 {
     m_rolloff = std::max(0.f, rolloff);
 }
 
-void AudioSource::setMixerChannel(uint8 channel)
+void AudioEmitter::setMixerChannel(uint8 channel)
 {
     CRO_ASSERT(channel < AudioMixer::MaxChannels, "Channel value out of range");
     m_mixerChannel = channel; 

@@ -30,7 +30,7 @@ source distribution.
 #include "SoundEffectsDirector.hpp"
 #include "Messages.hpp"
 
-#include <crogine/ecs/components/AudioSource.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/Scene.hpp>
 
@@ -93,7 +93,7 @@ void SFXDirector::process(float dt)
     //check our ents and free up finished sounds
     for (auto i = 0u; i < m_nextFreeEntity; ++i)
     {
-        if (m_entities[i].getComponent<cro::AudioSource>().getState() == cro::AudioSource::State::Stopped)
+        if (m_entities[i].getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
         {
             auto entity = m_entities[i];
             m_nextFreeEntity--;
@@ -123,15 +123,15 @@ void SFXDirector::resizeEntities(std::size_t size)
     {
         m_entities[i] = getScene().createEntity();
         m_entities[i].addComponent<cro::Transform>();
-        m_entities[i].addComponent<cro::AudioSource>();
+        m_entities[i].addComponent<cro::AudioEmitter>();
     }
 }
 
-cro::AudioSource& SFXDirector::playSound(std::int32_t audioID, glm::vec3 position)
+cro::AudioEmitter& SFXDirector::playSound(std::int32_t audioID, glm::vec3 position)
 {
     auto entity = getNextFreeEntity();
     entity.getComponent<cro::Transform>().setPosition(position);
-    auto& emitter = entity.getComponent<cro::AudioSource>();
+    auto& emitter = entity.getComponent<cro::AudioEmitter>();
     emitter.setAudioDataSource(m_resources.get(audioID));
     //must reset values here in case they were changed prior to recycling from pool
     emitter.setRolloff(1.f);

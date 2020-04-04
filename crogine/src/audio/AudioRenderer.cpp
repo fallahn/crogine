@@ -118,17 +118,17 @@ void AudioRenderer::deleteStream(int32 id)
     m_impl->deleteStream(id);
 }
 
-cro::int32 AudioRenderer::requestAudioSource(cro::int32 buffer, bool streaming)
+cro::int32 AudioRenderer::requestAudioEmitter(cro::int32 buffer, bool streaming)
 {
     if (buffer < 0) return -1; //streams are 0 based
-    return m_impl->requestAudioSource(buffer, streaming);
+    return m_impl->requestAudioEmitter(buffer, streaming);
 }
 
-void AudioRenderer::deleteAudioSource(cro::int32 source)
+void AudioRenderer::deleteAudioEmitter(cro::int32 source)
 {
     if (source > 0)
     {
-        m_impl->deleteAudioSource(source);
+        m_impl->deleteAudioEmitter(source);
     }
 }
 

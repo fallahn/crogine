@@ -390,9 +390,6 @@
     <ClInclude Include="..\crogine\include\crogine\audio\AudioBuffer.hpp">
       <Filter>Header Files\audio</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioSource.hpp">
-      <Filter>Header Files\ecs\components</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\AudioSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
@@ -494,6 +491,9 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\BoundingBox.hpp">
       <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioEmitter.hpp">
+      <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -707,9 +707,6 @@
     <ClCompile Include="..\crogine\src\ecs\systems\AudioSystem.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\ecs\components\AudioSource.cpp">
-      <Filter>Source Files\ecs\components</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\audio\AudioResource.cpp">
       <Filter>Source Files\audio</Filter>
     </ClCompile>
@@ -802,6 +799,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\BoundingBox.cpp">
       <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\AudioEmitter.cpp">
+      <Filter>Source Files\ecs\components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -38,13 +38,13 @@ namespace cro
     /*!
     \brief An AudioDataSource which streams data from storage.
     When playing longer audio files such as music it is recommended
-    that an AudioSource component use and AudioStream as its data
+    that an AudioEmitter component use and AudioStream as its data
     source rather than a buffer. Streams will stream either *.wav
     or *.ogg data from disk, as opposed to attempting to load the
     entire file into memory.
     As with AudioBuffers, AudioStreams must live at least as long as
-    the AudioSource which use them. Unlike AudioBuffers, however,
-    AudioStreams can be attached only to one AudioSource. Assigning
+    the AudioEmitter which use them. Unlike AudioBuffers, however,
+    AudioStreams can be attached only to one AudioEmitter. Assigning
     an AudioStream to further sources will only result in multiple
     sources playing back the same stream.
     */

@@ -48,7 +48,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/System.cpp
   ${PROJECT_DIR}/ecs/SystemManager.cpp
 
-  ${PROJECT_DIR}/ecs/components/AudioSource.cpp
+  ${PROJECT_DIR}/ecs/components/AudioEmitter.cpp
   ${PROJECT_DIR}/ecs/components/Model.cpp
   ${PROJECT_DIR}/ecs/components/ParticleEmitter.cpp
   ${PROJECT_DIR}/ecs/components/Sprite.cpp

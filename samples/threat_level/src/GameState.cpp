@@ -88,7 +88,7 @@ source distribution.
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Callback.hpp>
-#include <crogine/ecs/components/AudioSource.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
 
 #include <crogine/util/Random.hpp>
@@ -541,7 +541,7 @@ void GameState::createHUD()
                 tx.move({ 0.f, -tx.getPosition().y, 0.f });
                 meat.shown = true;
                 meat.currentTime = 1.6f;
-                entity.getComponent<cro::AudioSource>().play();
+                entity.getComponent<cro::AudioEmitter>().play();
             }
         }
         else
@@ -565,8 +565,8 @@ void GameState::createHUD()
         }
     };
     //entity.getComponent<cro::Callback>().active = true;
-    entity.addComponent<cro::AudioSource>().setAudioDataSource(m_resources.audio.get(AudioID::Meaty));
-    entity.getComponent<cro::AudioSource>().setRolloff(0.f);
+    entity.addComponent<cro::AudioEmitter>().setAudioDataSource(m_resources.audio.get(AudioID::Meaty));
+    entity.getComponent<cro::AudioEmitter>().setRolloff(0.f);
 
     //create a quad to render as the timer for weapons
     const glm::vec2 quadSize(160.f);

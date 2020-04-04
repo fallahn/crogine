@@ -38,10 +38,10 @@ namespace cro
     /*!
     \brief Audio Listener component.
     The AudioListener component defines the point at which the
-    active AudioSystem hears any playing AudioSources. Only one listener
+    active AudioSystem hears any playing AudioEmitters. Only one listener
     is active at a time, by default on the Scene's active camera entity.
     When using the OpenAL backend spatialisation is calculated based
-    on an AudioSource's position relative to the active AudioListener.
+    on an AudioEmitter's position relative to the active AudioListener.
     */
     class CRO_EXPORT_API AudioListener final
     {

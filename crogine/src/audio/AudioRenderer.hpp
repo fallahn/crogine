@@ -77,8 +77,8 @@ namespace cro
         virtual void updateStream(int32) = 0;
         virtual void deleteStream(cro::int32) = 0;
 
-        virtual cro::int32 requestAudioSource(cro::int32, bool) = 0;
-        virtual void deleteAudioSource(cro::int32) = 0;
+        virtual cro::int32 requestAudioEmitter(cro::int32, bool) = 0;
+        virtual void deleteAudioEmitter(cro::int32) = 0;
 
         virtual void playSource(cro::int32, bool) = 0;
         virtual void pauseSource(cro::int32) = 0;
@@ -190,16 +190,16 @@ namespace cro
         \returns A unique ID for the audio sourceon success else returns - 1
         NOTE these audio sources are not resource managed in anyway and is left
         entirely to the caller to make sucre that the audio source is properly
-        deleted with deleteAudioSource() when it needs to be disposed
+        deleted with deleteAudioEmitter() when it needs to be disposed
         */
-        static cro::int32 requestAudioSource(cro::int32 buffer, bool streaming);
+        static cro::int32 requestAudioEmitter(cro::int32 buffer, bool streaming);
 
         /*!
         \brief Attempts to delete the audio source with the given ID.
         \param source ID of the audio source to delete.
-        This MUST be called for all audio sources allocated with requestAudioSource()
+        This MUST be called for all audio sources allocated with requestAudioEmitter()
         */
-        static void deleteAudioSource(cro::int32 source);
+        static void deleteAudioEmitter(cro::int32 source);
 
         /*!
         \brief Attempts to play the given source.

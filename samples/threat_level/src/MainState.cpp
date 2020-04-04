@@ -41,7 +41,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
-#include <crogine/ecs/components/AudioSource.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
@@ -250,9 +250,9 @@ void MainState::createScene()
     arcticTx.setOrigin({ 5.8f, 0.f, 5.f });
     entity.getComponent<cro::Transform>().addChild(arcticTx);
     m_modelDefs[MenuModelID::ArcticPost].createModel(arcticEntity, m_resources);
-    arcticEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::TestStream)).play(true);
-    //arcticEntity.getComponent<cro::AudioSource>().setRolloff(20.f);
-    arcticEntity.getComponent<cro::AudioSource>().setVolume(0.5f);
+    arcticEntity.addComponent<cro::AudioEmitter>(m_resources.audio.get(AudioID::TestStream)).play(true);
+    //arcticEntity.getComponent<cro::AudioEmitter>().setRolloff(20.f);
+    arcticEntity.getComponent<cro::AudioEmitter>().setVolume(0.5f);
     arcticEntity.addComponent<cro::CommandTarget>().ID = (1 << 30);
        
     auto lookoutEntity = m_backgroundScene.createEntity();
@@ -261,7 +261,7 @@ void MainState::createScene()
     lookoutTx.setOrigin({ -8.f, 0.f, 2.f });
     entity.getComponent<cro::Transform>().addChild(lookoutTx);
     m_modelDefs[MenuModelID::LookoutBase].createModel(lookoutEntity, m_resources);
-    //lookoutEntity.addComponent<cro::AudioSource>(m_resources.audio.get(AudioID::Test)).play(true);
+    //lookoutEntity.addComponent<cro::AudioEmitter>(m_resources.audio.get(AudioID::Test)).play(true);
     
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });

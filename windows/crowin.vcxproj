@@ -67,7 +67,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\Component.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\ComponentPool.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioListener.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioSource.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioEmitter.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Callback.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Camera.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandTarget.hpp" />
@@ -208,7 +208,7 @@
     <ClCompile Include="..\crogine\src\detail\glad.c" />
     <ClCompile Include="..\crogine\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\crogine\src\ecs\Component.cpp" />
-    <ClCompile Include="..\crogine\src\ecs\components\AudioSource.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\components\AudioEmitter.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\ParticleEmitter.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Sprite.cpp" />
