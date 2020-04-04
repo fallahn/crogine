@@ -29,25 +29,43 @@ source distribution.
 
 #pragma once
 
-#include "ChunkManager.hpp"
-#include "Voxel.hpp"
 #include "ResourceIDs.hpp"
+#include "Coordinate.hpp"
+#include "Voxel.hpp"
+#include "ChunkManager.hpp"
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/network/NetData.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 #include <mutex>
 #include <memory>
 #include <atomic>
 #include <queue>
 #include <thread>
+#include <array>
 
+
+class Chunk;
 namespace cro
 {
     struct ResourceCollection;
 }
+
+namespace vx
+{
+    class DataManager;
+}
+
+//used for sorting polygons which are semi-transparent
+struct Triangle final
+{
+    std::array<std::uint32_t, 3> indices = {};
+    glm::vec3 normal = glm::vec3(0.f);
+    float sortValue = 0.f;
+};
 
 struct ChunkComponent final
 {
@@ -58,12 +76,14 @@ struct ChunkComponent final
     {
         Greedy, Naive
     }meshType = Greedy;
+
+    std::vector<Triangle> transparentIndices;
 };
 
 class ChunkSystem final : public cro::System, public cro::GuiClient
 {
 public:
-    ChunkSystem(cro::MessageBus&, cro::ResourceCollection&);
+    ChunkSystem(cro::MessageBus&, cro::ResourceCollection&, ChunkManager&, vx::DataManager&);
     ~ChunkSystem();
 
     ChunkSystem(const ChunkSystem&) = delete;
@@ -83,8 +103,17 @@ private:
     std::array<std::size_t, MeshID::Count> m_meshIDs = {};
     std::vector<glm::vec2> m_tileOffsets;
 
+    //the shared data is used by the main thread exclusively
+    //so that it never needs to be locked (as server updates arrive on
+    //the main thread). We also keep a *copy* of this data which the
+    //meshing threads can lock/read/unlock as much as necessary
+    ChunkManager& m_sharedChunkManager;
     ChunkManager m_chunkManager;
-    vx::DataManager m_voxelData;
+
+    //while this is shared it is read only (including the main thread
+    // *after* setup is complete) so the mesh threads will not lock access
+    //other than necessary when sharing between worker threads
+    const vx::DataManager& m_voxelData;
 
     struct VoxelUpdate final
     {
@@ -97,7 +126,7 @@ private:
     PositionMap<cro::Entity> m_chunkEntities;
     void updateMesh();
 
-    std::unique_ptr<std::mutex> m_queueMutex;
+
     std::unique_ptr<std::mutex> m_chunkMutex;
     std::array<std::unique_ptr<std::thread>, 4u> m_meshThreads;
     std::atomic_bool m_threadRunning;
@@ -110,6 +139,7 @@ private:
         std::vector<std::uint32_t> solidIndices;
         std::vector<std::uint32_t> waterIndices;
         std::vector<std::uint32_t> detailIndices;
+        std::vector<Triangle> triangles; //only semi-transparent
         glm::ivec3 position = glm::ivec3(0);
     };
     std::queue<VertexOutput> m_outputQueue;

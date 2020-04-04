@@ -40,11 +40,11 @@ namespace cro
     \brief Abstract base class for audio data sources.
     AudioBuffers and AudioStreams are derived from this
     */
-    class CRO_EXPORT_API AudioDataSource
+    class CRO_EXPORT_API AudioSource
     {
     public:
-        AudioDataSource() : m_id(-1) {}
-        virtual ~AudioDataSource() = default;
+        AudioSource() : m_id(-1) {}
+        virtual ~AudioSource() = default;
 
         enum class Type
         {

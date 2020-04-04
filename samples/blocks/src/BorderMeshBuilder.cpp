@@ -40,15 +40,15 @@ cro::Mesh::Data BorderMeshBuilder::build() const
 
     std::vector<float> verts =
     {
-        0.f, 0.f, 0.f,               1.f, 0.f, 1.f,
-        ChunkSize, 0.f, 0.f,         1.f, 0.f, 1.f,
-        ChunkSize, 0.f, ChunkSize,   1.f, 0.f, 1.f,
-        0.f, 0.f, ChunkSize,         1.f, 0.f, 1.f,
+        0.f, 0.f, 0.f,   1.f, 0.f, 1.f,
+        1.f, 0.f, 0.f,   1.f, 0.f, 1.f,
+        1.f, 0.f, 1.f,   1.f, 0.f, 1.f,
+        0.f, 0.f, 1.f,   1.f, 0.f, 1.f,
 
-        0.f, ChunkSize, 0.f,               1.f, 0.f, 1.f,
-        ChunkSize, ChunkSize, 0.f,         1.f, 0.f, 1.f,
-        ChunkSize, ChunkSize, ChunkSize,   1.f, 0.f, 1.f,
-        0.f, ChunkSize, ChunkSize,         1.f, 0.f, 1.f
+        0.f, 1.f, 0.f,   1.f, 0.f, 1.f,
+        1.f, 1.f, 0.f,   1.f, 0.f, 1.f,
+        1.f, 1.f, 1.f,   1.f, 0.f, 1.f,
+        0.f, 1.f, 1.f,   1.f, 0.f, 1.f
     };
 
     std::vector<std::uint16_t> indices =

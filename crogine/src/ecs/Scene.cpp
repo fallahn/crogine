@@ -549,8 +549,8 @@ void Scene::defaultRenderPath(const RenderTarget& rt)
     if (m_skybox.vbo)
     {
         //change depth function so depth test passes when values are equal to depth buffer's content
-        glDepthFunc(GL_LEQUAL);
-        glEnable(GL_DEPTH_TEST);
+        glCheck(glDepthFunc(GL_LEQUAL));
+        glCheck(glEnable(GL_DEPTH_TEST));
 
         //remove translation from the view matrix
         auto view = glm::mat4(glm::mat3(cam.viewMatrix)); 
@@ -584,10 +584,10 @@ void Scene::defaultRenderPath(const RenderTarget& rt)
         glCheck(glDisableVertexAttribArray(attribs[0]));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif //PLATFORM
-        glUseProgram(0);
+        glCheck(glUseProgram(0));
 
         glDisable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
+        glCheck(glDepthFunc(GL_LESS));
     }
 
     //ideally we want to do this before the skybox to reduce overdraw

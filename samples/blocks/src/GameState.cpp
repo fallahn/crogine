@@ -38,6 +38,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "Chunk.hpp"
 #include "ChunkSystem.hpp"
+#include "BorderMeshBuilder.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -55,8 +56,11 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Matrix.hpp>
+#include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 
@@ -137,13 +141,18 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::Text("Pitch: %3.3f", playerEntity.getComponent<Player>().cameraPitch);
                 ImGui::Text("Yaw: %3.3f", playerEntity.getComponent<Player>().cameraYaw);
 
+                auto forward = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getForwardVector();
+                ImGui::Text("Forward: %3.3f, %3.3f, %3.3f", forward.x, forward.y, forward.z);
+
                 auto mouse = playerEntity.getComponent<Player>().inputStack[playerEntity.getComponent<Player>().lastUpdatedInput];
                 ImGui::Text("Mouse Movement: %d, %d", mouse.xMove, mouse.yMove);
 
                 ImGui::NewLine();
                 ImGui::Separator();
                 ImGui::NewLine();
-                ImGui::Text("Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
+                ImGui::Text("Application average:\n%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                ImGui::NewLine();
+                ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
 
                 ImGui::End();
             }
@@ -330,12 +339,14 @@ void GameState::render()
 void GameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_gameScene.addSystem<cro::CommandSystem>(mb);
-    m_gameScene.addSystem<cro::CallbackSystem>(mb);
+
+    m_gameScene.addSystem<cro::CommandSystem>(mb);   
     m_gameScene.addSystem<InterpolationSystem>(mb);
-    m_gameScene.addSystem<PlayerSystem>(mb);
+    m_gameScene.addSystem<PlayerSystem>(mb, m_chunkManager);
+    m_gameScene.addSystem<cro::CallbackSystem>(mb); //currently used to update body model positions so needs to come after player update
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<ChunkSystem>(mb, m_resources);
+    m_gameScene.addSystem<ChunkSystem>(mb, m_resources, m_chunkManager, m_voxelData);
+    m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
@@ -346,12 +357,15 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
-
+    auto& shader = m_resources.shaders.get(ShaderID::ChunkDebug);
+    m_materialIDs[MaterialID::ChunkDebug] = m_resources.materials.add(shader);
+    m_meshIDs[MeshID::Border] = m_resources.meshes.loadMesh(BorderMeshBuilder());
 }
 
 void GameState::createScene()
 {
     m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
+    m_gameScene.getSunlight().setDirection({ 0.2f, -0.8f, -0.2f });
 }
 
 void GameState::createUI()
@@ -365,6 +379,15 @@ void GameState::createUI()
     entity.getComponent<cro::Text>().setColour(TextNormalColour);
     entity.addComponent<cro::CommandTarget>().ID = UI::CommandID::WaitMessage;
 
+    //player crosshair
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::DefaultSceneSize.x / 2, cro::DefaultSceneSize.y / 2));
+    entity.getComponent<cro::Transform>().setScale({ 2.f, 2.f });
+    entity.addComponent<cro::Sprite>().setTexture(m_resources.textures.get("assets/images/hud.png"));
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureRect();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+    //camera
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Camera>().projectionMatrix = 
@@ -469,7 +492,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
 
 void GameState::spawnPlayer(PlayerInfo info)
 {
-    auto createActor = [&]()->cro::Entity
+    auto createActor = [&](bool hideBody)->cro::Entity
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
@@ -477,7 +500,82 @@ void GameState::spawnPlayer(PlayerInfo info)
             
         entity.addComponent<Actor>().id = info.playerID;
         entity.getComponent<Actor>().serverEntityId = info.serverID;
-        return entity;
+
+        cro::ModelDefinition modelDef;
+        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
+        modelDef.createModel(entity, m_resources);
+
+        auto headEnt = entity;
+
+        //body model
+        modelDef.loadFromFile("assets/models/body_animated.cmt", m_resources);
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::BodyMesh;
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().userData = std::make_any<std::uint8_t>(info.playerID); //this is used to ID the body model when hiding it
+        entity.getComponent<cro::Callback>().function =
+            [&, headEnt](cro::Entity e, float dt)
+        {
+            //remove this entity if the head entity was removed
+            if (headEnt.destroyed())
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+            else
+            {
+                const auto& headTx = headEnt.getComponent<cro::Transform>();
+                const auto& mat = headTx.getLocalTransform();
+                float y = -std::atan2(mat[0][2], mat[0][0]);
+
+                auto& tx = e.getComponent<cro::Transform>();
+                //auto currentY = tx.getRotation().z;
+                //auto rotation = cro::Util::Maths::shortestRotation(currentY, y);
+
+                //if (std::abs(rotation) < 0.5f)
+                {
+                    tx.setRotation(glm::vec3(0.f, 0.f, y));
+                }
+                /*else
+                {
+                    tx.rotate(glm::vec3(0.f, 1.f, 0.f), rotation * dt * 4.f);
+                }*/
+
+                tx.setPosition(headTx.getPosition());
+
+                //TODO interpolate rotation to delay slightly
+            }
+        };
+        modelDef.createModel(entity, m_resources);
+        entity.getComponent<cro::Model>().setHidden(hideBody);
+        entity.getComponent<cro::Skeleton>().play(0);
+
+        //used to draw AABB
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();// .setOrigin(-Player::aabb[0]);
+        entity.getComponent<cro::Transform>().setScale(Player::aabb.getSize());
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
+        material.setProperty("u_colour", cro::Colour::White());
+        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), material);
+        entity.getComponent<cro::Model>().setHidden(true);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, headEnt](cro::Entity e, float)
+        {
+            if (headEnt.destroyed())
+            {
+                m_gameScene.destroyEntity(e);
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setPosition(
+                    headEnt.getComponent<cro::Transform>().getPosition() + Player::aabb[0]);
+            }
+        };
+        entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::DebugMesh;
+
+        return headEnt;
     };
 
 
@@ -486,7 +584,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         if (!m_inputParser.getEntity().isValid())
         {
             //this is us
-            auto entity = createActor();
+            auto entity = createActor(true);
 
             auto rotation = entity.getComponent<cro::Transform>().getRotation();
             auto pitch = rotation.x;
@@ -516,10 +614,49 @@ void GameState::spawnPlayer(PlayerInfo info)
             m_gameScene.setActiveCamera(entity);
             updateView();
 
-            //TODO create a head/body that only gets drawn in third person
+            auto camEnt = entity;
+
+            //create a wireframe to highlight the block we look at
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>();
 
 
-            //reove the plase wait message
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
+            material.setProperty("u_colour", cro::Colour::Black());
+            material.blendMode = cro::Material::BlendMode::Alpha;
+            entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), material);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&, camEnt](cro::Entity e, float)
+            {
+                const auto& camTx = camEnt.getComponent<cro::Transform>();
+                auto voxelList = vx::intersectedVoxel(camTx.getWorldPosition(), camTx.getForwardVector(), 4.f);
+                if (voxelList.empty())
+                {
+                    e.getComponent<cro::Model>().setHidden(true);
+                }
+                else
+                {
+                    bool hidden = true;
+                    glm::vec3 pos(0.f);
+                    for (auto p : voxelList)
+                    {
+                        //auto id = m_chunkManager.getVoxel(p);
+                        //if (id != 0 && id != vx::OutOfBounds)
+                        if(m_voxelData.getVoxel(m_chunkManager.getVoxel(p)).type == vx::Type::Solid)
+                        {
+                            pos = p;
+                            hidden = false;
+                            break;
+                        }
+                    }
+                    e.getComponent<cro::Model>().setHidden(hidden);
+                    e.getComponent<cro::Transform>().setPosition(pos);
+                }
+            };
+
+
+            //remove the please wait message
             cro::Command cmd;
             cmd.targetFlags = UI::CommandID::WaitMessage;
             cmd.action = [&](cro::Entity e, float)
@@ -535,39 +672,11 @@ void GameState::spawnPlayer(PlayerInfo info)
         //spawn an avatar
         //TODO check this avatar doesn't already exist
         
-        auto entity = createActor();
+        auto entity = createActor(false);
         auto rotation = entity.getComponent<cro::Transform>().getRotationQuat();
-
-        //TODO do we want to cache this model def?
-        cro::ModelDefinition modelDef;
-        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
-        modelDef.createModel(entity, m_resources);
-
-        auto headEnt = entity;
-
-        //body model
-        modelDef.loadFromFile("assets/models/body.cmt", m_resources);
-        entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.55f, 0.f }); //TODO we need to get some sizes from the mesh - will AABB do?
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&, headEnt](cro::Entity e, float)
-        {
-            //remove this entity if the head entity was removed
-            if (headEnt.destroyed())
-            {
-                e.getComponent<cro::Callback>().active = false;
-                m_gameScene.destroyEntity(e);
-            }
-            else
-            {
-                e.getComponent<cro::Transform>().setPosition(headEnt.getComponent<cro::Transform>().getPosition());
-            }
-        };
-        modelDef.createModel(entity, m_resources);
     }
 }
 
@@ -581,9 +690,39 @@ void GameState::updateCameraPosition()
     case 0:
         tx.setRotation(glm::quat(1.f, 0.f, 0.f, 0.f));
         tx.setOrigin(glm::vec3(0.f, -0.2f, 0.f));
+
+        {
+            cro::Command cmd;
+            cmd.targetFlags = Client::CommandID::BodyMesh;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                auto id = std::any_cast<std::uint8_t>(e.getComponent<cro::Callback>().userData);
+                if (id == m_sharedData.clientConnection.playerID)
+                {
+                    e.getComponent<cro::Model>().setHidden(true);
+                }
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        }
+
         break;
     case 1:
-        tx.setOrigin(glm::vec3(0.f, 0.f, -10.f)); //TODO update this once we settle on a scale (need smaller heads!)
+        tx.setOrigin(glm::vec3(0.f, 0.f, -4.f)); //TODO update this once we settle on a scale (need smaller heads!)
+
+        {
+            cro::Command cmd;
+            cmd.targetFlags = Client::CommandID::BodyMesh;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                auto id = std::any_cast<std::uint8_t>(e.getComponent<cro::Callback>().userData);
+                if (id == m_sharedData.clientConnection.playerID)
+                {
+                    e.getComponent<cro::Model>().setHidden(false);
+                }
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        }
+
         break;
     case 2:
         tx.rotate(glm::vec3(0.f, 1.f, 0.f), cro::Util::Const::PI);

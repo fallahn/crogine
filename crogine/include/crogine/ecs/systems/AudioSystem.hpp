@@ -34,7 +34,7 @@ source distribution.
 namespace cro
 {
     /*!
-    \brief Processes the Scene's AudioSource components
+    \brief Processes the Scene's AudioEmitter components
     based on the Scene's active AudioListener.
     Because the audio subsystem at a hardware level only has a 
     single listener point when using multiple scenes (for

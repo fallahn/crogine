@@ -33,6 +33,8 @@ source distribution.
 #include "ResourceIDs.hpp"
 #include "InputParser.hpp"
 #include "ServerPacketData.hpp"
+#include "ChunkManager.hpp"
+#include "Voxel.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConsoleClient.hpp>
@@ -57,6 +59,11 @@ public:
     void render() override;
 
 private:
+    //hm is this dangerous to put here
+    //because multiple class can request concurrent access?
+    ChunkManager m_chunkManager;
+    vx::DataManager m_voxelData;
+
 
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
@@ -64,6 +71,9 @@ private:
     std::uint32_t m_fontID;
 
     cro::ResourceCollection m_resources;
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
+    std::array<std::size_t, MeshID::Count> m_meshIDs = {};
+
 
     InputParser m_inputParser;
 

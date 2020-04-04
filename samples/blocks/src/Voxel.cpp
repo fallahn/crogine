@@ -27,8 +27,10 @@ SOFTWARE.
 */
 
 #include "Voxel.hpp"
+#include "Coordinate.hpp"
 
 #include <crogine/detail/Assert.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 namespace vx
 {
@@ -100,6 +102,12 @@ namespace vx
         data.name = "short_grass02";
         data.tileIDs[0] = 23;
         addVoxel(data);
+
+        //return this data if we try accessing a voxel outside of the map
+        m_outOfBoundsData.collidable = false;
+        m_outOfBoundsData.id = CommonType::OutOfBounds;
+        m_outOfBoundsData.style = MeshStyle::None;
+        m_outOfBoundsData.type = Type::Gas;
     }
 
     std::uint8_t DataManager::addVoxel(const Data& voxel)
@@ -115,6 +123,11 @@ namespace vx
 
     const Data& DataManager::getVoxel(std::uint8_t id) const
     {
+        if (id == OutOfBounds)
+        {
+            return m_outOfBoundsData;
+        }
+
         return m_voxels[id];
     }
 
@@ -137,4 +150,67 @@ namespace vx
     {
         return m_voxels;
     }
+
+    //see https://github.com/francisengelmann/fast_voxel_traversal/blob/master/main.cpp (MIT license)
+    std::vector<glm::ivec3> intersectedVoxel(glm::vec3 start, glm::vec3 direction, float range)
+    {
+        direction = glm::normalize(direction);
+        auto end = start + (direction * range);
+        auto startVoxel = toVoxelPosition(start);
+
+        std::int32_t stepX = (direction.x > 0) ? 1 : (direction.x < 0) ? -1 : 0;
+        std::int32_t stepY = (direction.y > 0) ? 1 : (direction.y < 0) ? -1 : 0;
+        std::int32_t stepZ = (direction.z > 0) ? 1 : (direction.z < 0) ? -1 : 0;
+
+        static constexpr float MaxFloat = std::numeric_limits<float>::max();
+        float deltaX = (stepX != 0) ? std::min(stepX / (end.x - start.x), MaxFloat) : MaxFloat;
+        float deltaY = (stepY != 0) ? std::min(stepY / (end.y - start.y), MaxFloat) : MaxFloat;
+        float deltaZ = (stepZ != 0) ? std::min(stepZ / (end.z - start.z), MaxFloat) : MaxFloat;
+
+        float maxX = (stepX > 0) ? deltaX * (1.f - start.x + startVoxel.x) : deltaX * (start.x - startVoxel.x);
+        float maxY = (stepY > 0) ? deltaY * (1.f - start.y + startVoxel.y) : deltaY * (start.y - startVoxel.y);
+        float maxZ = (stepZ > 0) ? deltaZ * (1.f - start.z + startVoxel.z) : deltaZ * (start.z - startVoxel.z);
+
+        auto currVoxel = startVoxel;
+        std::vector<glm::ivec3> retVal;
+        retVal.push_back(startVoxel);
+
+        while (retVal.size() < range * 3)
+        {
+            if (maxX < maxY)
+            {
+                if (maxX < maxZ)
+                {
+                    currVoxel.x += stepX;
+                    maxX += deltaX;
+                }
+                else
+                {
+                    currVoxel.z += stepZ;
+                    maxZ += deltaZ;
+                }
+            }
+            else
+            {
+                if (maxY < maxZ)
+                {
+                    currVoxel.y += stepY;
+                    maxY += deltaY;
+                }
+                else
+                {
+                    currVoxel.z += stepZ;
+                    maxZ += deltaZ;
+                }
+            }
+
+            if (maxX > 1 && maxY > 1 && maxZ > 1)
+            {
+                break;
+            }
+            retVal.push_back(currVoxel);
+        }
+        return retVal;
+    }
 }
+

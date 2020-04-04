@@ -297,7 +297,7 @@ void MenuState::buildUI()
                     {
                         m_showPreferences = true;
                     }
-                    ImGui::MenuItem("Animation Data", nullptr, nullptr);
+                    //ImGui::MenuItem("Animation Data", nullptr, nullptr);
                     ImGui::MenuItem("Material Data", nullptr, nullptr);
                     if (ImGui::MenuItem("Ground Plane", nullptr, &m_showGroundPlane))
                     {
@@ -469,6 +469,61 @@ void MenuState::buildUI()
                         }
                         ImGui::SameLine();
                         HelpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.");
+                    }
+
+
+                    if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+                    {
+                        auto& skeleton = entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+
+                        ImGui::NewLine();
+                        ImGui::Separator();
+                        ImGui::NewLine();
+
+                        ImGui::Text("Animations: %d", skeleton.animations.size());
+                        static std::string label("Stopped");
+                        if (skeleton.animations.empty())
+                        {
+                            label = "No Animations Found.";
+                        }
+                        else
+                        {
+                            static int currentAnim = 0;
+                            auto prevAnim = currentAnim;
+
+                            if (ImGui::InputInt("Anim", &currentAnim, 1, 1)
+                                && !skeleton.animations[currentAnim].playing)
+                            {
+                                currentAnim = std::min(currentAnim, static_cast<int>(skeleton.animations.size()) - 1);
+                            }
+                            else
+                            {
+                                currentAnim = prevAnim;
+                            }
+
+                            ImGui::SameLine();
+                            if (skeleton.animations[currentAnim].playing)
+                            {
+                                if (ImGui::Button("Stop"))
+                                {
+                                    skeleton.animations[currentAnim].playing = false;
+                                    label = "Stopped";
+                                }
+                            }
+                            else
+                            {
+                                if (ImGui::Button("Play"))
+                                {
+                                    skeleton.play(currentAnim);
+                                    label = "Playing " + skeleton.animations[currentAnim].name;
+                                }
+                                else
+                                {
+                                    label = "Stopped";
+                                }
+                            }
+                        }
+                        ImGui::Text("%s", label.c_str());
                     }
                 }
                 ImGui::End();

@@ -135,6 +135,8 @@ namespace vx
         std::vector<Data> m_voxels;
         std::vector<std::uint8_t> m_commonVoxels;
         std::unordered_map<std::string, std::uint8_t> m_voxelMap;
+
+        Data m_outOfBoundsData;
     };
 
     struct Update final
@@ -142,4 +144,8 @@ namespace vx
         glm::ivec3 position;
         std::uint8_t id;
     };
+
+    //fast voxel traversal implementation from
+    //https://github.com/francisengelmann/fast_voxel_traversal (MIT license)
+    std::vector<glm::ivec3> intersectedVoxel(glm::vec3 start, glm::vec3 direction, float range);
 }

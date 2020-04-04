@@ -57,33 +57,33 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     //first submesh is all solid geometry
-    data.submeshCount = 3;
-    data.indexData[0].format = GL_UNSIGNED_INT;
-    data.indexData[0].primitiveType = GL_TRIANGLES;
-    data.indexData[0].indexCount = 0;
+    data.submeshCount = SubMeshID::Count;
+    data.indexData[SubMeshID::Solid].format = GL_UNSIGNED_INT;
+    data.indexData[SubMeshID::Solid].primitiveType = GL_TRIANGLES;
+    data.indexData[SubMeshID::Solid].indexCount = 0;
 
-    glCheck(glGenBuffers(1, &data.indexData[0].ibo));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[0].ibo));
+    glCheck(glGenBuffers(1, &data.indexData[SubMeshID::Solid].ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[SubMeshID::Solid].ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    //second submesh is water/fluid
-    data.indexData[1].format = GL_UNSIGNED_INT;
-    data.indexData[1].primitiveType = GL_TRIANGLES;
-    data.indexData[1].indexCount = 0;
+    //second submesh is foliage
+    data.indexData[SubMeshID::Foliage].format = GL_UNSIGNED_INT;
+    data.indexData[SubMeshID::Foliage].primitiveType = GL_TRIANGLES;
+    data.indexData[SubMeshID::Foliage].indexCount = 0;
 
-    glCheck(glGenBuffers(1, &data.indexData[1].ibo));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[1].ibo));
+    glCheck(glGenBuffers(1, &data.indexData[SubMeshID::Foliage].ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[SubMeshID::Foliage].ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    //third submesh is used for drawing details like grass and flowers
-    data.indexData[2].format = GL_UNSIGNED_INT;
-    data.indexData[2].primitiveType = GL_TRIANGLES;
-    data.indexData[2].indexCount = 0;
+    //third submesh is used for water/fluid
+    data.indexData[SubMeshID::Water].format = GL_UNSIGNED_INT;
+    data.indexData[SubMeshID::Water].primitiveType = GL_TRIANGLES;
+    data.indexData[SubMeshID::Water].indexCount = 0;
 
-    glCheck(glGenBuffers(1, &data.indexData[2].ibo));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[2].ibo));
+    glCheck(glGenBuffers(1, &data.indexData[SubMeshID::Water].ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[SubMeshID::Water].ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 

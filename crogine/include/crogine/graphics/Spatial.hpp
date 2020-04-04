@@ -29,17 +29,13 @@ source distribution.
 
 #pragma once
 
-#include <crogine/Config.hpp>
+#include <crogine/graphics/BoundingBox.hpp>
 
-#include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/vec4.hpp>
-
-#include <array>
 
 namespace cro
 {
     using Plane = glm::vec4;
-    using Box = std::array<glm::vec3, 2u>;
     struct CRO_EXPORT_API Sphere final
     {
         float radius = 0.f;

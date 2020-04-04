@@ -1,0 +1,10 @@
+model body
+{
+    mesh = assets/models/body_animated.iqm
+
+    material VertexLit
+    {
+        diffuse = "assets/images/body.png"
+        skinned = true
+    }
+}

@@ -332,6 +332,7 @@
     <ClCompile Include="src\RotateSystem.cpp" />
     <ClCompile Include="src\RoundEndState.cpp" />
     <ClCompile Include="src\SliderSystem.cpp" />
+    <ClCompile Include="src\SoundEffectsDirector.cpp" />
     <ClCompile Include="src\TerrainChunk.cpp" />
     <ClCompile Include="src\VelocitySystem.cpp" />
   </ItemGroup>
@@ -374,6 +375,7 @@
     <ClInclude Include="src\RotateSystem.hpp" />
     <ClInclude Include="src\RoundEndState.hpp" />
     <ClInclude Include="src\Slider.hpp" />
+    <ClInclude Include="src\SoundEffectsDirector.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\MainState.hpp" />
     <ClInclude Include="src\TerrainChunk.hpp" />

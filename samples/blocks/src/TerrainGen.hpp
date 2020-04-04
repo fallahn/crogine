@@ -63,15 +63,22 @@ public:
     TerrainGenerator& operator = (TerrainGenerator&&) = delete;
 
     void generateTerrain(ChunkManager&, std::int32_t x, std::int32_t z, const vx::DataManager&, std::int32_t seed, std::int32_t chunksPerSide);
+    void createSpawnPoints(const ChunkManager&, const vx::DataManager&, std::int32_t);
+
+    std::array<glm::vec3,4u> getSpawnPoints() const { return m_spawnPoints; }
 
     void renderHeightmaps();
 
     enum
     {
         NoiseOne, NoiseTwo,
-        Falloff, Final,
+        Falloff, 
 
         Flora,
+
+        RockMask, RockFalloff, RockOutput,
+
+        Final,
 
         Count
     };
@@ -86,12 +93,18 @@ private:
     std::uint32_t m_lastHeightmapSize;
 
     std::vector<std::uint8_t> m_floraImage;
+    std::vector<std::uint8_t> m_rockMaskImage;
+    std::vector<std::uint8_t> m_rockFalloffImage;
+    std::vector<std::uint8_t> m_rockOutputImage;
 
     std::array<cro::Texture, Count> m_debugTextures;
     cro::Texture m_previewTexture;
 
-    Heightmap createChunkHeightmap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
-    void createTerrain(Chunk& chunk, const Heightmap& heightmap, const Heightmap& flora, const vx::DataManager& voxeldata, std::int32_t seed);
+    std::array<glm::vec3, 4u> m_spawnPoints = {};
 
+    void createTerrain(Chunk& chunk, const Heightmap& heightmap, const Heightmap& flora, const Heightmap& rockmap, const vx::DataManager& voxeldata, std::int32_t seed);
+
+    Heightmap createChunkHeightmap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
     Heightmap createFloraMap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
+    Heightmap createRockMap(glm::ivec3 chunkPos, std::int32_t chunkCount, std::int32_t seed);
 };

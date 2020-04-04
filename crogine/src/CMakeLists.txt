@@ -48,7 +48,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/System.cpp
   ${PROJECT_DIR}/ecs/SystemManager.cpp
 
-  ${PROJECT_DIR}/ecs/components/AudioSource.cpp
+  ${PROJECT_DIR}/ecs/components/AudioEmitter.cpp
   ${PROJECT_DIR}/ecs/components/Model.cpp
   ${PROJECT_DIR}/ecs/components/ParticleEmitter.cpp
   ${PROJECT_DIR}/ecs/components/Sprite.cpp
@@ -70,6 +70,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/TextRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 
+  ${PROJECT_DIR}/graphics/BoundingBox.cpp
   ${PROJECT_DIR}/graphics/Colour.cpp
   ${PROJECT_DIR}/graphics/Font.cpp
   ${PROJECT_DIR}/graphics/FontResource.cpp

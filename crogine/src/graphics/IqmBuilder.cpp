@@ -364,27 +364,27 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
     //NOTE these have to match attribute order of Mesh::Data
     for (auto i = 0u; i < header.vertexCount; ++i)
     {
-        for (auto j = 0u; j < Iqm::positionSize && !positions.empty(); ++j)
+        if(!positions.empty())
         {
-            float value = positions[posIndex++];
-            //guestimate a bounding box
-            switch (j)
-            {
-            default: break;
-            case 0:
-                if (value < boundsMin.x) boundsMin.x = value;
-                else if (value > boundsMax.x)boundsMax.x = value;
-                break;
-            case 1:
-                if (value < boundsMin.y) boundsMin.y = value;
-                else if (value > boundsMax.y) boundsMax.y = value;
-                break;
-            case 2:
-                if (value < boundsMin.z) boundsMin.z = value;
-                else if (value > boundsMax.z) boundsMax.z = value;
-                break;
-            }
-            vertexData.push_back(value);
+            glm::vec3 position
+            (
+                positions[posIndex],
+                positions[posIndex+2],
+                -positions[posIndex+1]
+                );
+            posIndex += Iqm::positionSize;
+
+            vertexData.push_back(position.x);
+            vertexData.push_back(position.y);
+            vertexData.push_back(position.z);
+
+            //guestimate bounds
+            if (position.x < boundsMin.x) boundsMin.x = position.x;
+            else if (position.x > boundsMax.x) boundsMax.x = position.x;
+            if (position.y < boundsMin.y) boundsMin.y = position.y;
+            else if (position.y > boundsMax.y) boundsMax.y = position.y;
+            if (position.z < boundsMin.z) boundsMin.z = position.z;
+            else if (position.z > boundsMax.z) boundsMax.z = position.z;
         }
 
         for (auto j = 0u; j < Iqm::colourSize && !colours.empty(); ++j)
@@ -392,24 +392,63 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
             vertexData.push_back(static_cast<float>(colours[colourIndex++]) / 255.f);
         }
 
-        for (auto j = 0u; j < Iqm::normalSize && !normals.empty(); ++j)
+        //for (auto j = 0u; j < Iqm::normalSize && !normals.empty(); /*++j*/j += Iqm::normalSize)
+        if(!normals.empty())
         {
-            vertexData.push_back(normals[normalIndex++]);
+            glm::vec3 normal(
+                normals[normalIndex],
+                normals[normalIndex+2],
+                -normals[normalIndex+1]
+                );
+            normalIndex += Iqm::normalSize;
+
+            vertexData.push_back(normal.x);
+            vertexData.push_back(normal.y);
+            vertexData.push_back(normal.z);
         }
 
-        for (auto j = 0u; j < Iqm::normalSize && !pureTangents.empty(); ++j)
+        //for (auto j = 0u; j < Iqm::normalSize && !pureTangents.empty(); /*++j*/j += Iqm::normalSize)
+        if(!pureTangents.empty())
         {
-            vertexData.push_back(pureTangents[tanIndex++]);
+            glm::vec3 tan(
+                pureTangents[tanIndex],
+                pureTangents[tanIndex + 2],
+                -pureTangents[tanIndex + 1]
+                );
+
+            tanIndex += Iqm::normalSize;
+
+            vertexData.push_back(tan.x);
+            vertexData.push_back(tan.y);
+            vertexData.push_back(tan.z);
         }
 
-        for (auto j = 0u; j < Iqm::normalSize && !bitangents.empty(); ++j)
+        //for (auto j = 0u; j < Iqm::normalSize && !bitangents.empty(); /*++j*/j += Iqm::normalSize)
+        if(!bitangents.empty())
         {
-            vertexData.push_back(bitangents[bitanIndex++]);
+            glm::vec3 bitan(
+                bitangents[bitanIndex],
+                bitangents[bitanIndex+2],
+                -bitangents[bitanIndex+1]
+                );
+
+            bitanIndex += Iqm::normalSize;
+
+            vertexData.push_back(bitan.x);
+            vertexData.push_back(bitan.y);
+            vertexData.push_back(bitan.z);
         }
 
         for (auto j = 0u; j < Iqm::uvSize && !texCoords.empty(); ++j)
         {
-            vertexData.push_back(texCoords[uvIndex++]);
+            if (j % 2 == 0)
+            {
+                vertexData.push_back(texCoords[uvIndex++]);
+            }
+            else //flip coords vertically
+            {
+                vertexData.push_back(1.f - texCoords[uvIndex++]);
+            }
         }
 
         for (auto j = 0u; j < Iqm::blendIndexSize && !blendIndices.empty(); ++j)
@@ -478,11 +517,11 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         glm::quat rotation(1.f, 0.f, 0.f, 0.f);
         rotation.w = joint.rotate[3];
         rotation.x = joint.rotate[0];
-        rotation.y = joint.rotate[1];
-        rotation.z = joint.rotate[2];
+        rotation.y = joint.rotate[2];
+        rotation.z = -joint.rotate[1];
 
-        glm::vec3 translation(joint.translate[0], joint.translate[1], joint.translate[2]);
-        glm::vec3 scale(joint.scale[0], joint.scale[1], joint.scale[2]);
+        glm::vec3 translation(joint.translate[0], joint.translate[2], -joint.translate[1]);
+        glm::vec3 scale(joint.scale[0], joint.scale[2], joint.scale[1]);
 
         bindPose[i] = Iqm::createBoneMatrix(rotation, translation, scale);
         inverseBindPose[i] = glm::inverse(bindPose[i]);
@@ -521,10 +560,10 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 
                     translation.x = pose.channelOffset[0];
                     if (pose.mask & 0x01) translation.x += *frameIter++ * pose.channelScale[0];
-                    translation.y = pose.channelOffset[1];
-                    if (pose.mask & 0x02) translation.y += *frameIter++ * pose.channelScale[1];
-                    translation.z = pose.channelOffset[2];
-                    if (pose.mask & 0x04) translation.z += *frameIter++ * pose.channelScale[2];
+                    translation.y = pose.channelOffset[2];
+                    if (pose.mask & 0x02) translation.y += *frameIter++ * pose.channelScale[2];
+                    translation.z = -pose.channelOffset[1];
+                    if (pose.mask & 0x04) translation.z -= *frameIter++ * pose.channelScale[1];
 
                     rotation.x = pose.channelOffset[3];
                     if (pose.mask & 0x08) rotation.x += *frameIter++ * pose.channelScale[3];
@@ -534,13 +573,16 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     if (pose.mask & 0x20) rotation.z += *frameIter++ * pose.channelScale[5];
                     rotation.w = pose.channelOffset[6];
                     if (pose.mask & 0x40) rotation.w += *frameIter++ * pose.channelScale[6];
+                    float temp = rotation.y;
+                    rotation.y = rotation.z;
+                    rotation.z = -temp;
 
                     scale.x = pose.channelOffset[7];
                     if (pose.mask & 0x80) scale.x += *frameIter++ * pose.channelScale[7];
-                    scale.y = pose.channelOffset[8];
-                    if (pose.mask & 0x100) scale.y += *frameIter++ * pose.channelScale[8];
-                    scale.z = pose.channelOffset[9];
-                    if (pose.mask & 0x200) scale.z += *frameIter++ * pose.channelScale[9];
+                    scale.y = pose.channelOffset[9];
+                    if (pose.mask & 0x100) scale.y += *frameIter++ * pose.channelScale[9];
+                    scale.z = pose.channelOffset[8];
+                    if (pose.mask & 0x200) scale.z += *frameIter++ * pose.channelScale[8];
 
                     glm::mat4 mat = Iqm::createBoneMatrix(rotation, translation, scale);
                     if (pose.parent >= 0)
@@ -549,7 +591,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     }
                     else
                     {
-                        out.frames[frameIndex + poseIndex] = mat* inverseBindPose[poseIndex];
+                        out.frames[frameIndex + poseIndex] = mat * inverseBindPose[poseIndex];
                     }
                 }
             }
@@ -560,6 +602,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         out.frames.resize(bindPose.size()); //use an empty frame in case we haven't loaded any animations
     }
     out.currentFrame.resize(bindPose.size());
+
 
     //parse animations
     char*  animIter = data + header.animOffset;

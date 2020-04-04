@@ -361,6 +361,34 @@ cro::int32 OpenALImpl::requestAudioSource(cro::int32 buffer, bool streaming)
     return -1;
 }
 
+void OpenALImpl::updateAudioSource(cro::int32 sourceID, cro::int32 bufferID, bool streaming)
+{
+    CRO_ASSERT(sourceID > 0, "Invalid source ID");
+    CRO_ASSERT(bufferID > 0, "Invalid buffer ID");
+
+    //if the src is playing stop it and wait for it to finish
+    stopSource(sourceID);
+
+    auto src = static_cast<ALuint>(sourceID);
+    ALenum state;
+    alCheck(alGetSourcei(src, AL_SOURCE_STATE, &state));
+    while (state == AL_PLAYING)
+    {
+        alCheck(alGetSourcei(src, AL_SOURCE_STATE, &state));
+    }
+
+    if (!streaming)
+    {
+        alCheck(alSourcei(sourceID, AL_BUFFER, bufferID));
+    }
+    else
+    {
+        auto& stream = m_streams[bufferID];
+        stream.sourceID = sourceID;
+        alCheck(alSourceQueueBuffers(sourceID, static_cast<ALsizei>(stream.buffers.size()), stream.buffers.data()));
+    }
+}
+
 void OpenALImpl::deleteAudioSource(cro::int32 source)
 {
     CRO_ASSERT(source > 0, "Invalid source ID");

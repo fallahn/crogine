@@ -37,4 +37,10 @@ namespace WorldConst
     static const std::int32_t ChunkVolume = ChunkArea * ChunkSize;
 
     static const std::int32_t WaterLevel = 24;
+
+#ifdef CRO_DEBUG_
+    static const std::int32_t ChunksPerSide = 4;
+#else
+    static const std::int32_t ChunksPerSide = 14;
+#endif //CRO_DEBUG
 }

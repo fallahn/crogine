@@ -33,6 +33,8 @@ source distribution.
 #define NOMINMAX
 #endif //_MSC_VER
 
+#include "Constants.hpp"
+
 #include <type_traits>
 #include <algorithm>
 
@@ -47,6 +49,17 @@ namespace cro
             {
                 static_assert(std::is_pod<T>::value, "Only available on POD");
                 return std::min(max, std::max(min, value));
+            }
+
+            /*!
+            \brief finds the shortest rotation, in radians, between the given start and end angles
+            */
+            static inline float shortestRotation(float start, float end)
+            {
+                float diff = end - start;
+                if (diff > Const::PI) diff -= Const::TAU;
+                else if (diff < -Const::PI) diff += Const::TAU;
+                return diff;
             }
         }
     }

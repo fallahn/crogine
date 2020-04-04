@@ -44,6 +44,14 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    const std::vector<cro::Colour> colours =
+    {
+        cro::Colour::Red(), cro::Colour::Green(), cro::Colour::Cyan()
+    };
+}
+
 ModelRenderer::ModelRenderer(MessageBus& mb)
     : System            (mb, typeid(ModelRenderer)),
     m_currentTextureUnit(0)

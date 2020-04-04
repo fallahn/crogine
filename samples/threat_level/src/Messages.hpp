@@ -97,7 +97,8 @@ struct PlayerEvent final
         HealthChanged,
         CollectedItem,
         GotLife,
-        FiredEmp
+        FiredEmp,
+        FiredLaser
     }type;
     glm::vec3 position = glm::vec3(0.f);
     cro::uint32 entityID = 0;

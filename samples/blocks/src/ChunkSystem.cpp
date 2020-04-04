@@ -41,10 +41,13 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 
 #include <crogine/graphics/ResourceAutomation.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/util/Constants.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 #include <optional>
 #include <set>
@@ -84,6 +87,7 @@ namespace
     const std::string Fragment = 
         R"(
             uniform float u_alpha;
+            uniform float u_time;
             uniform vec2 u_tileSize;
             uniform sampler2D u_texture;
 
@@ -109,13 +113,27 @@ namespace
 	            return dot(v, vec3(0.67082, 1.0, 0.83666));
             }
 
+            vec3 brightnessContrast(vec3 colour)
+            {
+                float amount = sin(u_time) + 1.0 / 2.0;
+                colour = colour - vec3(0.5) + max(amount, 0.0) * 0.5;
+                return colour;
+            }
+
             void main()
             {
                 vec2 uv = v_colour.rg;
                 uv.x += (u_tileSize.x * fract(v_texCoord.x));
-                uv.y -= (u_tileSize.y * fract(v_texCoord.y));
+                uv.y -= (u_tileSize.y * fract(v_texCoord.y + u_time));
 
                 vec4 colour = TEXTURE(u_texture, uv);
+
+                if(colour.a < 0.1)
+                {
+                    discard;
+                }
+
+                //colour.rgb = brightnessContrast(colour.rgb);
                 colour.rgb *= directionalAmbience(v_normal);
                 colour.a *= u_alpha;
 
@@ -132,6 +150,8 @@ namespace
 
                 float light = v_ao + max(0.15 * dot(v_normal, vec3(1.0)), 0.0);
                 FRAG_OUT = mix(FogColour, colour * light, fogFactor);
+
+                //FRAG_OUT = vec4((v_normal + 1.0 / 2.0), 1.0);
             })";
 
     const std::string VertexDebug = 
@@ -154,11 +174,12 @@ namespace
         R"(
             OUTPUT
 
+            uniform vec4 u_colour;
             VARYING_IN MED vec3 v_colour;
 
             void main()
             {
-                FRAG_OUT = vec4(v_colour, 1.0);
+                FRAG_OUT = vec4(u_colour.rgb, 1.0);
             })";
 
     const std::string FragmentRed =
@@ -175,10 +196,12 @@ namespace
     const std::int32_t TextureTileCount = 8;
 }
 
-ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
-    : cro::System   (mb, typeid(ChunkSystem)),
-    m_resources     (rc),
-    m_threadRunning (false)
+ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc, ChunkManager& cm, vx::DataManager& dm)
+    : cro::System       (mb, typeid(ChunkSystem)),
+    m_resources         (rc),
+    m_sharedChunkManager(cm),
+    m_voxelData         (dm),
+    m_threadRunning     (false)
 {
     requireComponent<ChunkComponent>();
     requireComponent<cro::Transform>();
@@ -189,21 +212,26 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
         //and then material
         m_materialIDs[MaterialID::ChunkSolid] = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
         rc.materials.get(m_materialIDs[MaterialID::ChunkSolid]).setProperty("u_alpha", 1.f);
+        rc.materials.get(m_materialIDs[MaterialID::ChunkSolid]).setProperty("u_time", 0.f);
 
         m_materialIDs[MaterialID::ChunkWater] = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
         rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).blendMode = cro::Material::BlendMode::Alpha;
-        rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_alpha", 0.5f);
+        rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_alpha", 0.4f);
 
         m_materialIDs[MaterialID::ChunkDetail] = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
         rc.materials.get(m_materialIDs[MaterialID::ChunkDetail]).blendMode = cro::Material::BlendMode::Alpha;
         rc.materials.get(m_materialIDs[MaterialID::ChunkDetail]).setProperty("u_alpha", 1.f);
+        rc.materials.get(m_materialIDs[MaterialID::ChunkDetail]).setProperty("u_time", 0.f);
     }
 
     if (rc.shaders.preloadFromString(VertexDebug, FragmentDebug, ShaderID::ChunkDebug))
     {
         auto& shader = rc.shaders.get(ShaderID::ChunkDebug);
         m_materialIDs[MaterialID::ChunkDebug] = rc.materials.add(shader);
+        rc.materials.get(m_materialIDs[MaterialID::ChunkDebug]).setProperty("u_colour", cro::Colour::Magenta());
+
         m_meshIDs[MeshID::Border] = rc.meshes.loadMesh(BorderMeshBuilder());
+        
 
         /*rc.shaders.preloadFromString(VertexDebug, FragmentRed, 500);
         temp = rc.materials.add(rc.shaders.get(500));*/
@@ -252,7 +280,6 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc)
     rc.materials.get(m_materialIDs[MaterialID::ChunkWater]).setProperty("u_texture", texture);
 
     //thread for meshing
-    m_queueMutex = std::make_unique<std::mutex>();
     m_chunkMutex = std::make_unique<std::mutex>();
 
     for (auto& thread : m_meshThreads)
@@ -279,12 +306,19 @@ void ChunkSystem::handleMessage(const cro::Message&)
 
 }
 
-void ChunkSystem::process(float)
+void ChunkSystem::process(float dt)
 {
-    auto& entities = getEntities();
+    static float elapsed = 0.f;
+    elapsed += dt;
 
     std::vector<cro::Entity> dirtyChunks;
 
+    auto forwardVector = getScene()->getActiveCamera().getComponent<cro::Transform>().getForwardVector();
+    //auto camPos = getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
+    auto cam = getScene()->getActiveCamera().getComponent<cro::Camera>();
+    
+
+    auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& chunkComponent = entity.getComponent<ChunkComponent>();
@@ -293,12 +327,44 @@ void ChunkSystem::process(float)
             dirtyChunks.push_back(entity);
             chunkComponent.needsUpdate = false;
         }
+
+        auto& model = entity.getComponent<cro::Model>();
+        model.setMaterialProperty(SubMeshID::Water, "u_time", elapsed * 0.6f);
+
+        //if the model is visible update the semi-transparent
+        //triangles draw order
+        if (!chunkComponent.transparentIndices.empty()
+            && !model.isHidden())
+        {
+            for (auto& t : chunkComponent.transparentIndices)
+            {
+                /*auto dir = t.avgPosition - camPos;
+                t.sortValue = glm::dot(forwardVector, dir);*/
+                /*auto camSpacePos = glm::vec3(cam.viewMatrix * glm::vec4(t.avgPosition, 1.f));
+                t.sortValue = glm::dot(camSpacePos, glm::vec3(0.f,0.f,-1.f));*/
+                t.sortValue = glm::dot(t.normal, forwardVector);
+            }
+
+            std::sort(chunkComponent.transparentIndices.begin(), chunkComponent.transparentIndices.end(),
+                [](const Triangle& a, const Triangle& b) { return a.sortValue > b.sortValue; });
+
+            //shame we have to copy all these again...
+            std::vector<std::uint32_t> indices;
+            for (const auto& t : chunkComponent.transparentIndices)
+            {
+                indices.insert(indices.end(), t.indices.begin(), t.indices.end());
+            }
+
+            auto& meshData = model.getMeshData();
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[SubMeshID::Water].ibo));
+            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
+        }
     }
 
     //push all chunks in one go with a single lock
     if (!dirtyChunks.empty())
     {
-        std::lock_guard<std::mutex> lock(*m_queueMutex);
+        std::lock_guard<std::mutex> lock(*m_chunkMutex);
         for (auto entity : dirtyChunks)
         {
             m_inputQueue.push(entity);
@@ -323,11 +389,13 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
             std::memcpy(voxels.data(), (char*)packet.getData() + static_cast<std::intptr_t>(sizeof(cd)), sizeof(RLEPair)* cd.dataSize);
 
             glm::ivec3 position(cd.x, cd.y, cd.z);
-            std::lock_guard<std::mutex> lock(*m_chunkMutex);
-            if (!m_chunkManager.hasChunk(position))
+            
+            if (!m_sharedChunkManager.hasChunk(position))
             {
-                auto& chunk = m_chunkManager.addChunk(position);
-                chunk.getVoxels() = decompressVoxels(voxels);
+                auto chunkVoxels = decompressVoxels(voxels);
+
+                auto& chunk = m_sharedChunkManager.addChunk(position);
+                chunk.setVoxels(chunkVoxels);
                 chunk.setHighestPoint(cd.highestPoint);
 
                 //create new entity for chunk
@@ -346,10 +414,10 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 entity.addComponent<cro::Model>(mesh, material);
 
                 auto waterMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkWater]);
-                entity.getComponent<cro::Model>().setMaterial(1, waterMaterial);
+                entity.getComponent<cro::Model>().setMaterial(SubMeshID::Water, waterMaterial);
 
                 auto detailMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDetail]);
-                entity.getComponent<cro::Model>().setMaterial(2, detailMaterial);
+                entity.getComponent<cro::Model>().setMaterial(SubMeshID::Foliage, detailMaterial);
 
                 //remember to update this if the chunk is updated
                 //this can nearly double the frame rate when skipping a lot of empty chunks!
@@ -359,10 +427,17 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
                 //create a second entity for debug bounds
                 entity = getScene()->createEntity();
                 entity.addComponent<cro::Transform>().setPosition(glm::vec3(position * WorldConst::ChunkSize));
+                entity.getComponent<cro::Transform>().setScale(glm::vec3(WorldConst::ChunkSize));
                 auto debugMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
                 entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), debugMaterial);
                 entity.getComponent<cro::Model>().setHidden(true);
                 entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::DebugMesh;
+
+                //create a copy of the chunk data for our threads to work on
+                std::lock_guard<std::mutex> lock(*m_chunkMutex);
+                auto& copyChunk = m_chunkManager.addChunk(position);
+                copyChunk.setVoxels(chunkVoxels);
+                copyChunk.setHighestPoint(cd.highestPoint);
             }
         }
     }
@@ -373,7 +448,7 @@ void ChunkSystem::updateMesh()
 {
     VertexOutput vertexOutput;
 
-    m_queueMutex->lock();
+    m_chunkMutex->lock();
     if (!m_outputQueue.empty())
     {
         auto& front = m_outputQueue.front();
@@ -382,9 +457,10 @@ void ChunkSystem::updateMesh()
         vertexOutput.solidIndices.swap(front.solidIndices);
         vertexOutput.waterIndices.swap(front.waterIndices);
         vertexOutput.detailIndices.swap(front.detailIndices);
+        vertexOutput.triangles.swap(front.triangles);
         m_outputQueue.pop();
     }
-    m_queueMutex->unlock();
+    m_chunkMutex->unlock();
 
     if (!vertexOutput.vertexData.empty() && (!vertexOutput.solidIndices.empty() || !vertexOutput.waterIndices.empty()))
     {
@@ -396,17 +472,27 @@ void ChunkSystem::updateMesh()
         glCheck(glBufferData(GL_ARRAY_BUFFER, vertexOutput.vertexData.size() * sizeof(float), vertexOutput.vertexData.data(), GL_DYNAMIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-        meshData.indexData[0].indexCount = static_cast<std::uint32_t>(vertexOutput.solidIndices.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));
+        meshData.indexData[SubMeshID::Solid].indexCount = static_cast<std::uint32_t>(vertexOutput.solidIndices.size());
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[SubMeshID::Solid].ibo));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.solidIndices.size() * sizeof(std::uint32_t), vertexOutput.solidIndices.data(), GL_DYNAMIC_DRAW));
 
-        meshData.indexData[1].indexCount = static_cast<std::uint32_t>(vertexOutput.waterIndices.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[1].ibo));
+        meshData.indexData[SubMeshID::Water].indexCount = static_cast<std::uint32_t>(vertexOutput.waterIndices.size());
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[SubMeshID::Water].ibo));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.waterIndices.size() * sizeof(std::uint32_t), vertexOutput.waterIndices.data(), GL_DYNAMIC_DRAW));
 
-        meshData.indexData[2].indexCount = static_cast<std::uint32_t>(vertexOutput.detailIndices.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[2].ibo));
+        meshData.indexData[SubMeshID::Foliage].indexCount = static_cast<std::uint32_t>(vertexOutput.detailIndices.size());
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[SubMeshID::Foliage].ibo));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexOutput.detailIndices.size() * sizeof(std::uint32_t), vertexOutput.detailIndices.data(), GL_DYNAMIC_DRAW));
+
+        
+        //update position relative to chunk (ie place in world space)
+        /*auto chunkPos = entity.getComponent<cro::Transform>().getPosition();
+        for (auto& t : vertexOutput.triangles)
+        {
+            t.avgPosition += chunkPos;
+        }*/
+
+        entity.getComponent<ChunkComponent>().transparentIndices.swap(vertexOutput.triangles);
     }
 }
 
@@ -419,15 +505,15 @@ void ChunkSystem::threadFunc()
         ChunkComponent::MeshType meshType = ChunkComponent::Greedy;
 
         //lock the input queue
-        m_queueMutex->lock();
+        m_chunkMutex->lock();
 
         //check queue
         if (!m_inputQueue.empty())
         {
             //check the chunk is even visible before updating it
             auto entity = m_inputQueue.front();
-            const auto& model = entity.getComponent<cro::Model>();
-            if (model.isVisible() /*&& !model.isHidden()*/)
+            //const auto& model = entity.getComponent<cro::Model>();
+            //if (model.isVisible() /*&& !model.isHidden()*/)
             {
                 m_inputQueue.pop();
 
@@ -445,7 +531,7 @@ void ChunkSystem::threadFunc()
         }
 
         //unlock queue
-        m_queueMutex->unlock();
+        m_chunkMutex->unlock();
 
         //if input do work
         if (chunk)
@@ -463,7 +549,7 @@ void ChunkSystem::threadFunc()
 
 
             //lock output
-            std::lock_guard<std::mutex> lock(*m_queueMutex);
+            std::lock_guard<std::mutex> lock(*m_chunkMutex);
 
             //swap results
             auto& result = m_outputQueue.emplace();
@@ -472,6 +558,7 @@ void ChunkSystem::threadFunc()
             result.solidIndices.swap(vertexOutput.solidIndices);
             result.waterIndices.swap(vertexOutput.waterIndices);
             result.detailIndices.swap(vertexOutput.detailIndices);
+            result.triangles.swap(vertexOutput.triangles);
         }
         else
         {
@@ -1331,7 +1418,14 @@ void ChunkSystem::generateDebugMesh(const Chunk& chunk, VertexOutput& output)
 void ChunkSystem::addQuad(VertexOutput& output, const std::vector<glm::vec3>& positions, const std::vector<glm::vec2>& UVs,  const std::array<std::uint8_t, 4u>& ao, vx::Face face)
 {
     //add indices to the index array, remembering to offset into the current VBO
-    std::array<std::int32_t, 6> localIndices = { 2,0,1,  1,3,2 };
+    std::array<std::uint32_t, 6> localIndices = { 2,0,1,  1,3,2 };
+    //auto avgPos = [&](bool first)->glm::vec3
+    //{
+    //    auto pos = first ? 
+    //        (positions[2] + positions[0] + positions[1]) : 
+    //        (positions[1] + positions[3] + positions[2]);
+    //    return pos / 3.f;
+    //};
 
     //switch tri direction to maintain ao interp artifacting symmetry
     static const std::array<float, 4u> aoLevels = { 0.25f, 0.6f, 0.8f, 1.f };
@@ -1340,31 +1434,15 @@ void ChunkSystem::addQuad(VertexOutput& output, const std::vector<glm::vec3>& po
         localIndices = { 3,0,1, 2,0,3 };
     }
 
-    //update the index output
-    std::int32_t indexOffset = static_cast<std::int32_t>(output.vertexData.size() / ChunkMeshBuilder::getVertexComponentCount());
-    for (auto& i : localIndices)
-    {
-        i += indexOffset;
-    }
-
-    if (face.id == m_voxelData.getID(vx::CommonType::Water))
-    {
-        output.waterIndices.insert(output.waterIndices.end(), localIndices.begin(), localIndices.end());
-    }
-    else
-    {
-        output.solidIndices.insert(output.solidIndices.end(), localIndices.begin(), localIndices.end());
-    }
-    
-
+    //normal is also used for face sorting...
     glm::vec3 normal = glm::vec3(0.f);
     switch (face.direction)
     {
     case vx::North:
-        normal.z = -1.f;
+        normal.z = 1.f;
         break;
     case vx::South:
-        normal.z = 1.f;
+        normal.z = -1.f;
         break;
     case vx::East:
         normal.x = 1.f;
@@ -1379,6 +1457,29 @@ void ChunkSystem::addQuad(VertexOutput& output, const std::vector<glm::vec3>& po
         normal.y = -1.f;
         break;
     }
+
+    //update the index output
+    std::int32_t indexOffset = static_cast<std::int32_t>(output.vertexData.size() / ChunkMeshBuilder::getVertexComponentCount());
+    for (auto& i : localIndices)
+    {
+        i += indexOffset;
+    }
+
+    if (face.id == m_voxelData.getID(vx::CommonType::Water))
+    {
+        output.waterIndices.insert(output.waterIndices.end(), localIndices.begin(), localIndices.end());
+        output.triangles.emplace_back().indices = { localIndices[0], localIndices[1], localIndices[2] };
+        output.triangles.back().normal = normal;
+        output.triangles.emplace_back().indices = { localIndices[3], localIndices[4], localIndices[5] };
+        output.triangles.back().normal = normal;
+    }
+    else
+    {
+        output.solidIndices.insert(output.solidIndices.end(), localIndices.begin(), localIndices.end());
+    }
+    
+
+
 
     //std::array<glm::vec3, 4u> colours =
     //{

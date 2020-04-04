@@ -42,20 +42,14 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 
 using namespace Sv;
 
 namespace
 {
-    //TODO work out a better way to create spawn points
-    const std::array<glm::vec3, ConstVal::MaxClients> playerSpawns =
-    {
-        glm::vec3(16.f, 48.f, 35.f),
-        glm::vec3(1.5f, 1.f, 1.5f),
-        glm::vec3(1.5f, 1.f, -1.5f),
-        glm::vec3(-1.5f, 1.f, -1.5f)
-    };
+
 }
 
 GameState::GameState(SharedData& sd)
@@ -173,16 +167,21 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
 
 
     //send map data to start building the world
-    //sendChunk(playerID, {});
-    for (auto& c : m_world.chunks.getChunks())
+    //sort the chunk positions first so we start building on the
+    //client with the chunks nearest the player
+    auto chunkPositions = m_world.chunks.getChunkPositions();
+    auto spawnPos = m_terrainGenerator.getSpawnPoints()[playerID];
+    std::sort(chunkPositions.begin(), chunkPositions.end(),
+        [spawnPos](glm::ivec3 a, glm::ivec3 b)
+        {
+            return glm::length2(spawnPos - glm::vec3(a)) < glm::length2(spawnPos - glm::vec3(b));
+        });
+    
+    for (auto p : chunkPositions)
     {
-        sendChunk(playerID, c.first);
+        sendChunk(playerID, p);
     }
 
-    /*for (auto i = 0; i < 4; ++i)
-    {
-        sendChunk(playerID, { i, 0, i });
-    }*/
 
     //client said it was ready, so mark as ready
     m_sharedData.clients[playerID].ready = true;
@@ -239,7 +238,7 @@ void GameState::initScene()
     auto& mb = m_sharedData.messageBus;
 
     m_scene.addSystem<ActorSystem>(mb);
-    m_scene.addSystem<PlayerSystem>(mb);
+    m_scene.addSystem<PlayerSystem>(mb, m_world.chunks);
 
 
 }
@@ -257,7 +256,8 @@ void GameState::buildWorld()
     LOG("Seed: " + std::to_string(seed), cro::Logger::Type::Info);
 
     //count per side
-    static const std::int32_t chunkCount = 2;
+    auto chunkCount = WorldConst::ChunksPerSide;
+
     LOG("Generating...", cro::Logger::Type::Info);
     for (auto z = 0; z < chunkCount; ++z)
     {
@@ -266,20 +266,20 @@ void GameState::buildWorld()
             m_terrainGenerator.generateTerrain(m_world.chunks, x, z, m_voxelData, seed, chunkCount);
         }
     }
+    m_terrainGenerator.createSpawnPoints(m_world.chunks, m_voxelData, chunkCount);
 
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
         if (m_sharedData.clients[i].connected)
         {
             //insert a player in this slot
-            //TODO get spawn position from generated world data
             //TODO figure out how to get correct initial pitch/yaw from any rotation other than 0
             m_playerEntities[i] = m_scene.createEntity();
-            m_playerEntities[i].addComponent<cro::Transform>().setPosition(playerSpawns[i]);
+            m_playerEntities[i].addComponent<cro::Transform>().setPosition(m_terrainGenerator.getSpawnPoints()[i]);
             //m_playerEntities[i].getComponent<cro::Transform>().setRotation( //look at centre of the world
             //    glm::quat_cast(glm::inverse(glm::lookAt(playerSpawns[i], glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f)))));
             m_playerEntities[i].addComponent<Player>().id = i;
-            m_playerEntities[i].getComponent<Player>().spawnPosition = playerSpawns[i];
+            m_playerEntities[i].getComponent<Player>().spawnPosition = m_terrainGenerator.getSpawnPoints()[i];
             //m_playerEntities[i].getComponent<Player>().cameraYaw = m_playerEntities[i].getComponent<cro::Transform>().getRotation().y;
             m_playerEntities[i].addComponent<Actor>().id = i;
             m_playerEntities[i].getComponent<Actor>().serverEntityId = m_playerEntities[i].getIndex();

@@ -52,7 +52,7 @@ bool AudioResource::load(int32 ID, const std::string& path, bool streaming)
         return false;
     }
 
-    std::unique_ptr<AudioDataSource> buffer;
+    std::unique_ptr<AudioSource> buffer;
     
     if (streaming)
     {
@@ -71,7 +71,7 @@ bool AudioResource::load(int32 ID, const std::string& path, bool streaming)
     return result;
 }
 
-const AudioDataSource& AudioResource::get(int32 id) const
+const AudioSource& AudioResource::get(int32 id) const
 {
     if (m_sources.count(id) == 0) return *m_fallback;
     return *m_sources.find(id)->second;

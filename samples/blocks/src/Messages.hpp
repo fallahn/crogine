@@ -38,9 +38,9 @@ namespace MessageID
     enum
     {
         UIMessage = cro::Message::Count,
+        PlayerMessage
     };
 }
-
 
 struct UIEvent final
 {
@@ -57,4 +57,16 @@ struct UIEvent final
         Jump,
         Fire
     }button;
+};
+
+struct PlayerEvent final
+{
+    enum
+    {
+        LeftClick
+    }type = LeftClick;
+
+    glm::vec3 position = glm::vec3(0.f);
+    glm::vec3 forwardVector = glm::vec3(0.f);
+    std::uint8_t playerID = 0;
 };

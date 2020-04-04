@@ -153,6 +153,9 @@
     <ClCompile Include="src\PhysicsObject.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\SoundEffectsDirector.cpp">
+      <Filter>Source Files\TL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -280,6 +283,9 @@
     </ClInclude>
     <ClInclude Include="src\PhysicsObject.hpp">
       <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SoundEffectsDirector.hpp">
+      <Filter>Header Files\TL</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
