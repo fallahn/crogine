@@ -339,7 +339,7 @@ void OpenALImpl::deleteStream(cro::int32 id)
     }
 }
 
-cro::int32 OpenALImpl::requestAudioEmitter(cro::int32 buffer, bool streaming)
+cro::int32 OpenALImpl::requestAudioSource(cro::int32 buffer, bool streaming)
 {
     CRO_ASSERT(buffer > -1, "Invalid audio buffer");
     ALuint source;
@@ -361,7 +361,7 @@ cro::int32 OpenALImpl::requestAudioEmitter(cro::int32 buffer, bool streaming)
     return -1;
 }
 
-void OpenALImpl::deleteAudioEmitter(cro::int32 source)
+void OpenALImpl::deleteAudioSource(cro::int32 source)
 {
     CRO_ASSERT(source > 0, "Invalid source ID");
 

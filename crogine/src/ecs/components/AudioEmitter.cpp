@@ -73,7 +73,7 @@ AudioEmitter::~AudioEmitter()
 {
     if (m_ID > 0)
     {
-        AudioRenderer::deleteAudioEmitter(m_ID);
+        AudioRenderer::deleteAudioSource(m_ID);
     }
 }
 
@@ -147,7 +147,7 @@ void AudioEmitter::setSource(const AudioSource& dataSource)
 {
     if (m_ID > 0)
     {
-        AudioRenderer::deleteAudioEmitter(m_ID);
+        AudioRenderer::deleteAudioSource(m_ID);
         m_ID = -1;
     }
 

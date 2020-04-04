@@ -77,8 +77,9 @@ namespace cro
         virtual void updateStream(int32) = 0;
         virtual void deleteStream(cro::int32) = 0;
 
-        virtual cro::int32 requestAudioEmitter(cro::int32, bool) = 0;
-        virtual void deleteAudioEmitter(cro::int32) = 0;
+        //note that this is the openAL source, not the buffer or stream behind it
+        virtual cro::int32 requestAudioSource(cro::int32, bool) = 0;
+        virtual void deleteAudioSource(cro::int32) = 0;
 
         virtual void playSource(cro::int32, bool) = 0;
         virtual void pauseSource(cro::int32) = 0;
@@ -146,7 +147,7 @@ namespace cro
 
         /*!
         \brief Requests a new buffer be created from the file at the given string.
-        \returns A unique IDfor the new buffer on succes, else -1 if something failed.
+        \returns A unique ID for the new buffer on succes, else -1 if something failed.
         NOTE: there is no resource management done here, no checks are done to see if the
         file requested to be loaded already exists, and it is up to the requester to make
         sure buffers are properly released with deleteBuffer()
@@ -192,14 +193,14 @@ namespace cro
         entirely to the caller to make sucre that the audio source is properly
         deleted with deleteAudioEmitter() when it needs to be disposed
         */
-        static cro::int32 requestAudioEmitter(cro::int32 buffer, bool streaming);
+        static cro::int32 requestAudioSource(cro::int32 buffer, bool streaming);
 
         /*!
         \brief Attempts to delete the audio source with the given ID.
         \param source ID of the audio source to delete.
-        This MUST be called for all audio sources allocated with requestAudioEmitter()
+        This MUST be called for all audio sources allocated with requestSourceEmitter()
         */
-        static void deleteAudioEmitter(cro::int32 source);
+        static void deleteAudioSource(cro::int32 source);
 
         /*!
         \brief Attempts to play the given source.

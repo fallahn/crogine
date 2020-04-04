@@ -67,11 +67,16 @@ void AudioSystem::process(float)
     {
         auto& audioSource = entity.getComponent<AudioEmitter>();
         
+        if (audioSource.m_dataSourceID < 0) //we don't have a valid buffer yet (remember streams are 0 based)
+        {
+            continue;
+        }
+
         //check its flags and update
         if (audioSource.m_newDataSource)
         {
-            AudioRenderer::deleteAudioEmitter(audioSource.m_ID);
-            audioSource.m_ID = AudioRenderer::requestAudioEmitter(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
+            AudioRenderer::deleteAudioSource(audioSource.m_ID);
+            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
             audioSource.m_newDataSource = false;
         }
 
@@ -123,17 +128,11 @@ void AudioSystem::onEntityAdded(Entity entity)
     //check if buffer already added and summon new audio source
     auto& audioSource = entity.getComponent<AudioEmitter>();
     if(AudioRenderer::isValid())
-    {           
-        if (audioSource.m_dataSourceID < 0) //we don't have a valid buffer yet (remember streams are 0 based)
-        {
-            getEntities().pop_back();
-            return;
-        }                     
-
+    {
         if (audioSource.m_newDataSource)
         {
-            AudioRenderer::deleteAudioEmitter(audioSource.m_ID);
-            audioSource.m_ID = AudioRenderer::requestAudioEmitter(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
+            AudioRenderer::deleteAudioSource(audioSource.m_ID);
+            audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
             audioSource.m_newDataSource = false;
         }
     }

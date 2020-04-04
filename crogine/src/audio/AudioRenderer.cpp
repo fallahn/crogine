@@ -29,7 +29,7 @@ source distribution.
 
 #include "AudioRenderer.hpp"
 #include "OpenALImpl.hpp"
-#include "SDLMixerImpl.hpp"
+//#include "SDLMixerImpl.hpp"
 #include "NullImpl.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
@@ -118,17 +118,17 @@ void AudioRenderer::deleteStream(int32 id)
     m_impl->deleteStream(id);
 }
 
-cro::int32 AudioRenderer::requestAudioEmitter(cro::int32 buffer, bool streaming)
+cro::int32 AudioRenderer::requestAudioSource(cro::int32 buffer, bool streaming)
 {
     if (buffer < 0) return -1; //streams are 0 based
-    return m_impl->requestAudioEmitter(buffer, streaming);
+    return m_impl->requestAudioSource(buffer, streaming);
 }
 
-void AudioRenderer::deleteAudioEmitter(cro::int32 source)
+void AudioRenderer::deleteAudioSource(cro::int32 source)
 {
     if (source > 0)
     {
-        m_impl->deleteAudioEmitter(source);
+        m_impl->deleteAudioSource(source);
     }
 }
 
