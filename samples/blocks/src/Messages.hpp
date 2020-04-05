@@ -67,6 +67,5 @@ struct PlayerEvent final
     }type = LeftClick;
 
     glm::vec3 position = glm::vec3(0.f);
-    glm::vec3 forwardVector = glm::vec3(0.f);
     std::uint8_t playerID = 0;
 };

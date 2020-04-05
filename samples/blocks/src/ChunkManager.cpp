@@ -146,10 +146,11 @@ bool ChunkManager::hasChunk(glm::ivec3 position) const
     return (idx >= 0 && idx < m_chunks.size()) && !m_chunks[idx].empty();
 }
 
-cro::Box ChunkManager::collisionTest(glm::vec3 worldPos, cro::Box bounds) const
+Manifold ChunkManager::collisionTest(glm::vec3 worldPos, cro::Box bounds) const
 {
     auto voxelPos = toVoxelPosition(worldPos);
     auto worldBounds = bounds + worldPos;
+    auto result = worldBounds;
 
     //get 9 below, 8 surrounding and 9 voxels above
     static const std::array<glm::ivec3, 26> offsetPositions =
@@ -182,45 +183,28 @@ cro::Box ChunkManager::collisionTest(glm::vec3 worldPos, cro::Box bounds) const
         auto voxel = getVoxel(testPos);
 
         //TODO look up the type/collision in voxel manager
+        //as we only want to collide with solid types (and track if collider is in water)
         if (voxel != 0 && voxel != vx::OutOfBounds)
         {
             auto voxelBox = blockAABB + testPos;
             cro::Box intersection;
             if (voxelBox.intersects(worldBounds, &intersection))
             {
-                //solve collision
-                
+                //solve collision by updating 'result'
+                //TODO track surface normal for reflection of collider velocity
             }
         }
     }
 
-    //TODO return a manifold based on difference between input and output boxes
-    return {};
+    //return a manifold based on difference between input and output boxes
+    Manifold retVal;
+    auto diff = result[0] - worldBounds[0];
+    auto length = glm::length(diff);
+    if (length > 0)
+    {
+        retVal.normal = diff / length;
+        retVal.penetration = length;
+    }
+
+    return retVal;
 }
-
-//bool ChunkManager::hasNeighbours(glm::ivec3 position) const
-//{
-//    return hasChunk(position) 
-//        && hasChunk({ position.x, position.y + 1, position.z }) //top 
-//        && hasChunk({ position.x, position.y - 1, position.z }) //bottom
-//        && hasChunk({ position.x - 1, position.y, position.z }) //left
-//        && hasChunk({ position.x + 1, position.y, position.z }) //right
-//        && hasChunk({ position.x, position.y, position.z - 1 }) //front
-//        && hasChunk({ position.x, position.y, position.z + 1 }); //back
-//}
-
-//void ChunkManager::ensureNeighbours(glm::ivec3 pos)
-//{
-//    //addChunk(pos);
-//    //addChunk({ pos.x, pos.y + 1, pos.z });
-//    //addChunk({ pos.x, pos.y - 1, pos.z });
-//    //addChunk({ pos.x - 1, pos.y, pos.z });
-//    //addChunk({ pos.x + 1, pos.y, pos.z });
-//    //addChunk({ pos.x, pos.y, pos.z - 1 });
-//    //addChunk({ pos.x, pos.y, pos.z + 1 });
-//}
-
-//const PositionMap<Chunk>& ChunkManager::getChunks() const
-//{
-//    return m_chunks;
-//}

@@ -33,6 +33,12 @@ SOFTWARE.
 
 #include <crogine/graphics/BoundingBox.hpp>
 
+struct Manifold final
+{
+    glm::vec3 normal = glm::vec3(1.f, 0.f, 0.f);
+    float penetration = 0.f;
+};
+
 class ChunkManager final
 {
 public:
@@ -49,7 +55,7 @@ public:
     //returns true if there is a chunk at this position
     bool hasChunk(glm::ivec3) const;
 
-    cro::Box collisionTest(glm::vec3 worldPos, cro::Box bounds) const;
+    Manifold collisionTest(glm::vec3 worldPos, cro::Box bounds) const;
 
     //used by the server to decide in which order to send chunks
     //to clients on startup

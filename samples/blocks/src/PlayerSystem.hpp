@@ -50,7 +50,6 @@ struct Player final
     std::size_t nextFreeInput = 0; //POST incremented after adding new input to history
     std::size_t lastUpdatedInput = HistorySize - 1; //index of the last parsed input
 
-    std::uint8_t id = 4; //this should be the same as the ActorID for this entity
     glm::vec3 spawnPosition = glm::vec3(0.f);
 
     float cameraPitch = 0.f; //used to clamp camera
@@ -58,13 +57,22 @@ struct Player final
 
     bool flyMode = true;
     bool waitResync = false; //waiting to resync player with server
+
+    glm::ivec3 targetBlockPosition = glm::ivec3(0);
+
+    std::uint8_t id = 4; //this should be the same as the ActorID for this entity
 };
+
+namespace vx
+{
+    class DataManager;
+}
 
 class ChunkManager;
 class PlayerSystem final : public cro::System
 {
 public:
-    PlayerSystem(cro::MessageBus&, const ChunkManager&);
+    PlayerSystem(cro::MessageBus&, const ChunkManager&, const vx::DataManager&);
 
     void handleMessage(const cro::Message&) override;
 
@@ -75,6 +83,7 @@ public:
 private:
 
     const ChunkManager& m_chunkManager;
+    const vx::DataManager& m_voxelData;
 
     void processInput(cro::Entity);
     void processMovement(cro::Entity, Input);
