@@ -31,6 +31,8 @@ SOFTWARE.
 #include "Chunk.hpp"
 #include "Coordinate.hpp"
 
+#include <crogine/graphics/BoundingBox.hpp>
+
 class ChunkManager final
 {
 public:
@@ -47,12 +49,7 @@ public:
     //returns true if there is a chunk at this position
     bool hasChunk(glm::ivec3) const;
 
-    //returns true if all 6 neighbours exist
-    //bool hasNeighbours(glm::ivec3) const;
-
-    //void ensureNeighbours(glm::ivec3);
-
-    //const PositionMap<Chunk>& getChunks() const;
+    cro::Box collisionTest(glm::vec3 worldPos, cro::Box bounds) const;
 
     //used by the server to decide in which order to send chunks
     //to clients on startup

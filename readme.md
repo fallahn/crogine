@@ -6,11 +6,11 @@ CROGINE
 
 CROssplatform enGINE.
 
-SDL2 Based game engine which runs on Windows, linux and Android. Due to Apple's attitude towards OpenGL support for macOS and iOS is hit and miss. Mostly miss.
+SDL2 Based game engine which runs on Windows, linux and Android. Compatibility with macOS is pretty good despite Apple's efforts to kill off OpenGL. Hardware availability has prevented testing on iOS. Presumably consoles supported by SDL2 (such as Nintendo switch) are also compatible, possibly with a bit of work.
 
 
 #### Building
-Using the CMake file included in the root directory first generate project files for your compiler/environment of choice, then build and install the crogine library. To build the samples set the cmake variables BUILD_BATCAT or BUILD_TL to true. The included findCROGINE.cmake file should find the installed library if it was installed in the default location - else you need to manually point CMake to the crogine lib.
+Using the CMake file included in the root directory first generate project files for your compiler/environment of choice, then build and install the crogine library. To build the samples set the cmake variables BUILD_BATCAT or BUILD_TL to true. Samples each have their own cmake file if you prefer to build them independently. The included findCROGINE.cmake file should find the installed library if it was installed in the default location - else you need to manually point CMake to the crogine lib.
 
 On windows you can use the included Visual Studio 2019 solution to build crogine and the demo projects for both Windows, and Android if the cross platform tools for Visual Studio are installed. To get started with building Android projects with Visual Studio see [this repository](https://github.com/fallahn/sdl2vs) which includes a sample SDL2 application for Android.
 
@@ -20,7 +20,9 @@ Android make files can also be created with the included cmake file, but the too
 #### About
 crogine was built with the aim of creating a flexible ECS based framework to run on mobile devices which support OpenGLES2. crogine supplies renderers for both 2D and 3D GLES2 based graphics, although desktop builds provide an OpenGL 3.3 context.  
 
-crogine uses OpenAL for audio, and SDL2 for cross platform parts. Documentation can be generated with doxygen using the doxy file in common/docs. Eventually I plan to fully document features on the github wiki as and when I have the time. 
+crogine uses OpenAL for audio, and SDL2 for cross platform parts such as windowing, events and context creation. Documentation can be generated with doxygen using the doxy file in common/docs. Eventually I plan to fully document features on the github wiki as and when I have the time. It might be worth noting that the API is very similar to that of my other library [xygine](https://github.com/fallahn/xygine) so studying that may be of some use.
+
+Included systems can be used to create and render 3D scenes, 2D scenes (using sprites), rendering text, particles and playing back 3D audio. The API is designed specifically for creating and extending the ECS for custom use as quickly and easily as possible. See the [samples](https://github.com/fallahn/crogine/tree/master/samples) directory for more detail.
 
 The `extras` directory contains the source for useful systems such as collision detection, which aren't included in the main library.
 

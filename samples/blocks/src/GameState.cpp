@@ -138,6 +138,11 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::Text("Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
                 ImGui::Text("Rotation: %3.3f, %3.3f, %3.3f", rotation.x, rotation.y, rotation.z);
 
+                auto voxelPos = toVoxelPosition(pos);
+                ImGui::Text("Voxel Position: %d, %d, %d", voxelPos.x, voxelPos.y, voxelPos.z);
+                auto voxelType = m_chunkManager.getVoxel(voxelPos);
+                ImGui::Text("VoxelType: %d", voxelType);
+
                 ImGui::Text("Pitch: %3.3f", playerEntity.getComponent<Player>().cameraPitch);
                 ImGui::Text("Yaw: %3.3f", playerEntity.getComponent<Player>().cameraYaw);
 
@@ -325,6 +330,7 @@ bool GameState::simulate(float dt)
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
+
     return true;
 }
 
@@ -578,7 +584,6 @@ void GameState::spawnPlayer(PlayerInfo info)
         return headEnt;
     };
 
-
     if (info.playerID == m_sharedData.clientConnection.playerID)
     {
         if (!m_inputParser.getEntity().isValid())
@@ -641,8 +646,6 @@ void GameState::spawnPlayer(PlayerInfo info)
                     glm::vec3 pos(0.f);
                     for (auto p : voxelList)
                     {
-                        //auto id = m_chunkManager.getVoxel(p);
-                        //if (id != 0 && id != vx::OutOfBounds)
                         if(m_voxelData.getVoxel(m_chunkManager.getVoxel(p)).type == vx::Type::Solid)
                         {
                             pos = p;

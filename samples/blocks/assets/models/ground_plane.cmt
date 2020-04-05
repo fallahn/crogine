@@ -8,5 +8,6 @@ model ground_plane
 	{
 		colour = 1,1,0,1
         blendmode=none
+        rx_shadows=true
 	}	
 }
