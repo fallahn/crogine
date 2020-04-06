@@ -71,6 +71,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Callback.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Camera.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandTarget.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\Drawable2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ParticleEmitter.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ProjectionMap.hpp" />
@@ -130,6 +131,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\StaticMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\TextureResource.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\Vertex2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\Gui.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\GuiClient.hpp" />
     <ClInclude Include="..\crogine\include\crogine\network\NetClient.hpp" />
@@ -209,6 +211,7 @@
     <ClCompile Include="..\crogine\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\crogine\src\ecs\Component.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\AudioEmitter.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\components\Drawable2D.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\ParticleEmitter.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Sprite.cpp" />

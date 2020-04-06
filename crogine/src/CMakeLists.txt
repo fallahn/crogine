@@ -40,6 +40,7 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/ecs/Component.cpp
   ${PROJECT_DIR}/ecs/Director.cpp
+  ${PROJECT_DIR}/ecs/Drawable2D.cpp
   ${PROJECT_DIR}/ecs/Entity.cpp
   ${PROJECT_DIR}/ecs/EntityManager.cpp
   ${PROJECT_DIR}/ecs/Renderable.cpp

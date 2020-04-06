@@ -89,4 +89,6 @@ namespace cro
         void applyBlendMode(Material::BlendMode);
     };
 
+    //just to keep it a bit more inline with the new render system naming
+    using RenderSystem3D = ModelRenderer;
 }
