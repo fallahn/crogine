@@ -63,6 +63,8 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 //public
 void ModelRenderer::process(float)
 {
+    //TODO frustum culling might need to be moved to render function
+    //for cases where multiple cameras are used for example split screen
     auto cameraEnt = getScene()->getActiveCamera();
     auto frustum = cameraEnt.getComponent<Camera>().getFrustum();
     auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();

@@ -51,6 +51,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <cstring>
 
@@ -195,7 +196,8 @@ void MenuState::addSystems()
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::SpriteRenderer>(mb);
-    m_scene.addSystem<cro::TextRenderer>(mb);    
+    m_scene.addSystem<cro::TextRenderer>(mb);  
+    m_scene.addSystem<cro::RenderSystem2D>(mb);
 }
 
 void MenuState::loadAssets()

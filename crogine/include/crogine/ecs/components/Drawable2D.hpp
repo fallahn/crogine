@@ -173,9 +173,15 @@ namespace cro
 
         std::uint32_t m_vbo;
         std::uint32_t m_vao; //!< only used in desktop builds
+        bool m_updateBufferData;
 
         FloatRect m_localBounds;
 
+        //if this changes entities need to be sorted
+        float m_lastSortValue;
+
         friend class RenderSystem2D;
+
+        void applyShader();
     };
 }

@@ -86,7 +86,7 @@ namespace cro
         /*!
         \brief Returns a copy of this rectangle transformed by the given matrix
         */
-        Rectangle<T> transform(const glm::mat4&);
+        Rectangle<T> transform(const glm::mat4&) const;
     };
 
     /*Some short cuts for concrete types*/

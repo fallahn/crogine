@@ -42,7 +42,9 @@ Drawable2D::Drawable2D()
     m_blendMode         (Material::BlendMode::Alpha),
     m_primitiveType     (GL_TRIANGLE_STRIP),
     m_vbo               (0),
-    m_vao               (0)
+    m_vao               (0),
+    m_updateBufferData  (false),
+    m_lastSortValue     (0.f)
 {
 
 }
@@ -59,6 +61,8 @@ void Drawable2D::setShader(Shader* shader)
     m_shader = shader;
     m_customShader = (shader != nullptr);
     m_applyDefaultShader = !m_customShader;
+
+    applyShader();
 }
 
 void Drawable2D::setBlendMode(Material::BlendMode mode)
@@ -142,4 +146,14 @@ void Drawable2D::updateLocalBounds()
     m_localBounds.bottom = yExtremes.first->position.y;
     m_localBounds.width = xExtremes.second->position.x - m_localBounds.left;
     m_localBounds.height = yExtremes.second->position.y - m_localBounds.bottom;
+
+    m_updateBufferData = true; //tells the system we have new data to upload
+}
+//private
+void Drawable2D::applyShader()
+{
+    if (m_shader)
+    {
+
+    }
 }
