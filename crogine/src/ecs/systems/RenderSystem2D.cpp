@@ -106,7 +106,7 @@ RenderSystem2D::~RenderSystem2D()
     //tidy up any remaining drawables
     for (auto entity : getEntities())
     {
-        
+        resetDrawable(entity);
     }
 }
 
@@ -123,11 +123,13 @@ void RenderSystem2D::process(float)
         //check data flag and update buffer if needed
         if (drawable.m_updateBufferData)
         {
-
+            //TODO bind VBO and upload data
             drawable.m_updateBufferData = false;
         }
 
-        //check shader flag and set correct flag if needed
+        //check shader flag and set correct shader if needed
+        //TODO also flag if custom shader so applyShader() is
+        //only ever called from this point
         if (drawable.m_applyDefaultShader)
         {
             if (drawable.m_texture)
@@ -202,7 +204,10 @@ void RenderSystem2D::render(Entity cameraEntity)
         auto bounds = drawable.m_localBounds.transform(transform.getWorldTransform());
     
     
-    
+        //TODO if shader is nullptr for drawable skip, it should drop back to default next update
+        //TODO set glDepthMask(GL_FALSE) and restore again after render
+
+        //TODO set glCheck(glEnable(GL_CULL_FACE)); //and restore again
     }
 }
 
@@ -218,26 +223,72 @@ void RenderSystem2D::applyBlendMode(Material::BlendMode blendMode)
     {
     default: break;
     case Material::BlendMode::Additive:
-
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glBlendFunc(GL_ONE, GL_ONE));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
+        //glCheck(glEnable(GL_DEPTH_TEST));
+        //glCheck(glDepthMask(GL_FALSE));
+        //glCheck(glEnable(GL_CULL_FACE));
         break;
     case Material::BlendMode::Alpha:
-
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
+        //glCheck(glDisable(GL_CULL_FACE));
+        //glCheck(glDisable(GL_DEPTH_TEST));
+        //glCheck(glEnable(GL_DEPTH_TEST));
+        //glCheck(glDepthMask(GL_FALSE));
         break;
     case Material::BlendMode::Multiply:
-
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
+        glCheck(glBlendEquation(GL_FUNC_ADD));
+        //glCheck(glEnable(GL_DEPTH_TEST));
+        //glCheck(glDepthMask(GL_FALSE));
+        //glCheck(glEnable(GL_CULL_FACE));
         break;
     case Material::BlendMode::None:
-
+        glCheck(glDisable(GL_BLEND));
+        //glCheck(glEnable(GL_DEPTH_TEST));
+        //glCheck(glDepthMask(GL_TRUE));
+        //glCheck(glEnable(GL_CULL_FACE));
         break;
     }
 }
 
 void RenderSystem2D::onEntityAdded(Entity entity)
 {
-    //create the VBO (and VAO if desktop)
+    //create the VBO (VAO is applied when shader is set)
+    auto& drawable = entity.getComponent<Drawable2D>();
+    CRO_ASSERT(drawable.m_vbo == 0, "This shouldn't be set yet!");
+    glCheck(glGenBuffers(1, &drawable.m_vbo));
+
+    //set up storage
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
 void RenderSystem2D::onEntityRemoved(Entity entity)
 {
     //remove any OpenGL buffers
+    resetDrawable(entity);
+}
+
+void RenderSystem2D::resetDrawable(Entity entity)
+{
+    auto& drawable = entity.getComponent<Drawable2D>();
+    if (drawable.m_vbo != 0)
+    {
+        glCheck(glDeleteBuffers(1, &drawable.m_vbo));
+    }
+
+#ifdef PLATFORM_DESKTOP
+
+    if (drawable.m_vao != 0)
+    {
+        glCheck(glDeleteVertexArrays(1, &drawable.m_vao));
+    }
+
+#endif //PLATFORM
 }

@@ -106,5 +106,7 @@ namespace cro
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
+
+        void resetDrawable(Entity);
     };
 }

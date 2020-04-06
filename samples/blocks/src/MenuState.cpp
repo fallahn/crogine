@@ -44,6 +44,7 @@ source distribution.
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -328,6 +329,11 @@ void MenuState::createScene()
     entity.addComponent<cro::Camera>().resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
     m_scene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
+
+    //TEST
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)

@@ -166,6 +166,8 @@ namespace cro
         Shader* m_shader;
         bool m_customShader;
         bool m_applyDefaultShader;
+        std::int32_t m_worldViewUniform;
+        std::int32_t m_projectionUniform;
 
         Material::BlendMode m_blendMode;
         std::uint32_t m_primitiveType;

@@ -29,6 +29,9 @@ source distribution.
 
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include "../../detail/glad.hpp"
+#include "../../detail/GLCheck.hpp"
+
+#include <crogine/graphics/Shader.hpp>
 
 #include <limits>
 
@@ -39,6 +42,8 @@ Drawable2D::Drawable2D()
     m_shader            (nullptr),
     m_customShader      (false),
     m_applyDefaultShader(true),
+    m_worldViewUniform  (-1),
+    m_projectionUniform (-1),
     m_blendMode         (Material::BlendMode::Alpha),
     m_primitiveType     (GL_TRIANGLE_STRIP),
     m_vbo               (0),
@@ -62,6 +67,10 @@ void Drawable2D::setShader(Shader* shader)
     m_customShader = (shader != nullptr);
     m_applyDefaultShader = !m_customShader;
 
+    //TODO move this so it doesn't get applied until
+    //the render system sees there's a new shader so
+    //we can safely assume the buffers are already set up
+    //when applying custom shaders
     applyShader();
 }
 
@@ -154,6 +163,93 @@ void Drawable2D::applyShader()
 {
     if (m_shader)
     {
+        //grab uniform locations
+        if (m_shader->getUniformMap().count("u_worldViewMatrix") != 0)
+        {
+            m_worldViewUniform = m_shader->getUniformMap().at("u_worldViewMatrix");
+        }
+        else
+        {
+            m_worldViewUniform = -1;
+            Logger::log("Missing World View Matrix uniform in Drawable2D shader", Logger::Type::Error);
 
+            setShader(nullptr);
+            return;
+        }
+
+        if (m_shader->getUniformMap().count("u_projectionMatrix") != 0)
+        {
+            m_worldViewUniform = m_shader->getUniformMap().at("u_projectionMatrix");
+        }
+        else
+        {
+            m_worldViewUniform = -1;
+            Logger::log("Missing Projection Matrix uniform in Drawable2D shader", Logger::Type::Error);
+
+            setShader(nullptr);
+            return;
+        }
+
+        //apply attribs to VAO
+        auto attribs = m_shader->getAttribMap();
+        if (attribs[Mesh::Attribute::Position] == -1)
+        {
+            Logger::log("Position attribute missing from Drawable2D shader", Logger::Type::Error);
+            setShader(nullptr);
+            return;
+        }
+
+        if (attribs[Mesh::Attribute::Colour] == -1)
+        {
+            Logger::log("Colour attribute missing from Drawable2D shader", Logger::Type::Error);
+            setShader(nullptr);
+            return;
+        }
+
+        if (m_texture && attribs[Mesh::Attribute::UV0] == -1)
+        {
+            Logger::log("UV0 attribute missing from Drawable2D shader", Logger::Type::Error);
+            setShader(nullptr);
+            return;
+        }
+
+#ifdef PLATFORM_DESKTOP
+        //only update the vao on desktop
+        if (m_vao != 0)
+        {
+            glCheck(glDeleteVertexArrays(1, &m_vao));
+            m_vao = 0;
+        }
+
+        glCheck(glGenVertexArrays(1, &m_vao));
+
+        glCheck(glBindVertexArray(m_vao));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+
+        //position attrib
+        glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::Position]));
+        glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Position], 2,
+            GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
+            reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+
+        //UV attrib - only exists on textured shaders
+        if (attribs[Mesh::Attribute::UV0] != -1)
+        {
+            glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::UV0]));
+            glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::UV0], 2,
+                GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
+                reinterpret_cast<void*>(static_cast<intptr_t>(2 * sizeof(float)))));
+        }
+
+        //colour attrib
+        glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::Colour]));
+        glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Colour], 4,
+            GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
+            reinterpret_cast<void*>(static_cast<intptr_t>(4 * sizeof(float))))); //offset from beginning of vertex, not size!
+
+        glCheck(glBindVertexArray(0));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+#endif //PLATFORM
     }
 }
