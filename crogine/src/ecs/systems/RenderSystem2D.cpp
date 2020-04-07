@@ -154,7 +154,6 @@ void RenderSystem2D::process(float)
             //bind VBO and upload data
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
             glCheck(glBufferData(GL_ARRAY_BUFFER, drawable.m_vertices.size() * Vertex2D::Size, drawable.m_vertices.data(), GL_DYNAMIC_DRAW));
-            //glCheck(glBufferData(GL_ARRAY_BUFFER, buns.size() * sizeof(float), buns.data(), GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));            
 
             drawable.m_updateBufferData = false;
@@ -221,7 +220,9 @@ void RenderSystem2D::render(Entity cameraEntity)
         //check local bounds for visibility and draw if visible
         auto bounds = drawable.m_localBounds.transform(worldMat);
         cro::Box aabb(glm::vec3(bounds.left, bounds.bottom, -0.1f), glm::vec3(bounds.left + bounds.width, bounds.bottom + bounds.height, 0.1f));
-        aabb += tx.getWorldPosition();
+        auto pos = tx.getWorldPosition();
+        pos.z = 0.f;
+        aabb += pos;
 
         bool visible = true;
         std::size_t i = 0;
@@ -255,7 +256,6 @@ void RenderSystem2D::render(Entity cameraEntity)
 #ifdef PLATFORM_DESKTOP
             glCheck(glBindVertexArray(drawable.m_vao));
             glCheck(glDrawArrays(static_cast<GLenum>(drawable.m_primitiveType), 0, static_cast<GLsizei>(drawable.m_vertices.size())));
-            //glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
 #else //GLES 2 doesn't have VAO support without extensions
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));

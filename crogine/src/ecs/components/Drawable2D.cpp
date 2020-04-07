@@ -45,7 +45,7 @@ Drawable2D::Drawable2D()
     m_textureUniform    (-1),
     m_worldViewUniform  (-1),
     m_projectionUniform (-1),
-    m_blendMode         (Material::BlendMode::None),
+    m_blendMode         (Material::BlendMode::Alpha),
     m_primitiveType     (GL_TRIANGLE_STRIP),
     m_vbo               (0),
     m_vao               (0),
@@ -200,11 +200,11 @@ void Drawable2D::applyShader()
 
         if (m_shader->getUniformMap().count("u_projectionMatrix") != 0)
         {
-            m_worldViewUniform = m_shader->getUniformMap().at("u_projectionMatrix");
+            m_projectionUniform = m_shader->getUniformMap().at("u_projectionMatrix");
         }
         else
         {
-            m_worldViewUniform = -1;
+            m_projectionUniform = -1;
             Logger::log("Missing Projection Matrix uniform in Drawable2D shader", Logger::Type::Error);
 
             setShader(nullptr);
