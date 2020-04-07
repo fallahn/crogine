@@ -178,6 +178,14 @@ namespace cro
         std::uint32_t m_vao; //!< only used in desktop builds
         bool m_updateBufferData;
 
+        struct AttribData final
+        {
+            std::int32_t id = -1;
+            std::uint32_t size = 0;
+            std::uint32_t offset = 0;
+        };
+        std::vector<AttribData> m_vertexAttributes;
+
         FloatRect m_localBounds;
 
         //if this changes entities need to be sorted

@@ -68,10 +68,6 @@ void Drawable2D::setShader(Shader* shader)
     m_customShader = (shader != nullptr);
     m_applyDefaultShader = !m_customShader;
 
-    //TODO move this so it doesn't get applied until
-    //the render system sees there's a new shader so
-    //we can safely assume the buffers are already set up
-    //when applying custom shaders
     applyShader();
 }
 
@@ -211,13 +207,24 @@ void Drawable2D::applyShader()
             return;
         }
 
-        //apply attribs to VAO
+        //store available attribs so we can also use this on mobile
+        m_vertexAttributes.clear();
+
         auto attribs = m_shader->getAttribMap();
         if (attribs[Mesh::Attribute::Position] == -1)
         {
             Logger::log("Position attribute missing from Drawable2D shader", Logger::Type::Error);
             setShader(nullptr);
             return;
+        }
+        else
+        {
+            //these are fixed properties of Vertex2D - if the struct is
+            //changed then this is going to break...
+            AttribData& data = m_vertexAttributes.emplace_back();
+            data.id = attribs[Mesh::Attribute::Position];
+            data.size = 2;
+            data.offset = 0;
         }
 
         if (attribs[Mesh::Attribute::Colour] == -1)
@@ -226,13 +233,31 @@ void Drawable2D::applyShader()
             setShader(nullptr);
             return;
         }
-
-        if (m_texture && attribs[Mesh::Attribute::UV0] == -1)
+        else
         {
-            Logger::log("UV0 attribute missing from Drawable2D shader", Logger::Type::Error);
-            setShader(nullptr);
-            return;
+            AttribData& data = m_vertexAttributes.emplace_back();
+            data.id = attribs[Mesh::Attribute::Colour];
+            data.size = 4;
+            data.offset = 4 * sizeof(float); //last after 2 position and 2 UV
         }
+
+        if (m_texture)
+        {
+            if (attribs[Mesh::Attribute::UV0] == -1)
+            {
+                Logger::log("UV0 attribute missing from Drawable2D shader", Logger::Type::Error);
+                setShader(nullptr);
+                return;
+            }
+            else
+            {
+                AttribData& data = m_vertexAttributes.emplace_back();
+                data.id = attribs[Mesh::Attribute::UV0];
+                data.size = 2;
+                data.offset = 2 * sizeof(float);
+            }
+        }
+
 
 #ifdef PLATFORM_DESKTOP
         //only update the vao on desktop
@@ -244,36 +269,28 @@ void Drawable2D::applyShader()
 
         glCheck(glGenVertexArrays(1, &m_vao));
 
+        //this might be done before the system has
+        //a chance to create it, ie when setting a custom shader immediately
+        //upon component creation.
+        if (m_vbo == 0)
+        {
+            glCheck(glGenBuffers(1, &m_vbo));
+        }
+
         glCheck(glBindVertexArray(m_vao));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
 
-        //position attrib
-        glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::Position]));
-        glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Position], 2,
-            GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
-            reinterpret_cast<void*>(static_cast<intptr_t>(0))));
-
-        //UV attrib - only exists on textured shaders
-        if (attribs[Mesh::Attribute::UV0] != -1)
+        for (const auto& [id, size, offset] : m_vertexAttributes)
         {
-            glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::UV0]));
-            glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::UV0], 2,
-                GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
-                reinterpret_cast<void*>(static_cast<intptr_t>(2 * sizeof(float)))));
+            glCheck(glEnableVertexAttribArray(id));
+            glCheck(glVertexAttribPointer(id, size,
+                                            GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
+                                            reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
         }
-
-        //colour attrib
-        glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::Colour]));
-        glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Colour], 4,
-            GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
-            reinterpret_cast<void*>(static_cast<intptr_t>(4 * sizeof(float))))); //offset from beginning of vertex, not size!
 
         glCheck(glBindVertexArray(0));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
 #endif //PLATFORM
-
-        //TODO on mobile it might be worth storing indices of available attribs
-        //to improve setting up and removing bindings when drawing
     }
 }

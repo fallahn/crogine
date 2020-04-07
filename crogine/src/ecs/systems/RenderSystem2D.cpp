@@ -207,7 +207,7 @@ void RenderSystem2D::render(Entity cameraEntity)
     auto frustum = camComponent.getFrustum();
 
     glCheck(glDepthMask(GL_FALSE));
-    glCheck(glDisable(GL_CULL_FACE));
+    glCheck(glEnable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));
 
     const auto& entities = getEntities();
@@ -261,37 +261,23 @@ void RenderSystem2D::render(Entity cameraEntity)
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
 
             //bind attribs
-            const auto& attribs = drawable.m_shader->getAttribMap();
-
-            //position attrib
-            glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::Position]));
-            glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Position], 2,
-                GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
-                reinterpret_cast<void*>(static_cast<intptr_t>(0))));
-
-            //UV attrib - only exists on textured shaders
-            if (attribs[Mesh::Attribute::UV0] != -1)
+            //const auto& attribs = drawable.m_vertexAttribs;
+            for (const auto& [id, size, offset] : drawable.m_vertexAttributes)
             {
-                glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::UV0]));
-                glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::UV0], 2,
-                    GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
-                    reinterpret_cast<void*>(static_cast<intptr_t>(2 * sizeof(float)))));
+                glCheck(glEnableVertexAttribArray(id));
+                glCheck(glVertexAttribPointer(id, size,
+                                                GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
+                                                reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
             }
-
-            //colour attrib
-            glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::Colour]));
-            glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Colour], 4,
-                GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
-                reinterpret_cast<void*>(static_cast<intptr_t>(4 * sizeof(float))))); //offset from beginning of vertex, not size!
 
             //draw array
             glCheck(glDrawArrays(static_cast<GLenum>(drawable.m_primitiveType), 0, drawable.m_vertices.size()));
 
-
-            //unbind attribs
-            glCheck(glDisableVertexAttribArray(attribs[Mesh::Attribute::Position]));
-            if (attribs[Mesh::Attribute::UV0] != -1) glCheck(glDisableVertexAttribArray(attribs[Mesh::Attribute::UV0]));
-            glCheck(glDisableVertexAttribArray(attribs[Mesh::Attribute::Colour]));
+            //and unbind... this could be saved by only changing when switching shader
+            for (const auto& attrib : drawable.m_vertexAttributes)
+            {
+                glCheck(glDisableVertexAttribArray(attrib.id));
+            }
 
 #endif //PLATFORM 
         }
@@ -305,7 +291,7 @@ void RenderSystem2D::render(Entity cameraEntity)
     glCheck(glUseProgram(0));
 
     applyBlendMode(Material::BlendMode::None);
-    //glCheck(glDisable(GL_CULL_FACE));
+    glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDepthMask(GL_TRUE));
 }
 
@@ -324,32 +310,19 @@ void RenderSystem2D::applyBlendMode(Material::BlendMode blendMode)
         glCheck(glEnable(GL_BLEND));
         glCheck(glBlendFunc(GL_ONE, GL_ONE));
         glCheck(glBlendEquation(GL_FUNC_ADD));
-        //glCheck(glEnable(GL_DEPTH_TEST));
-        //glCheck(glDepthMask(GL_FALSE));
-        //glCheck(glEnable(GL_CULL_FACE));
         break;
     case Material::BlendMode::Alpha:
         glCheck(glEnable(GL_BLEND));
         glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         glCheck(glBlendEquation(GL_FUNC_ADD));
-        //glCheck(glDisable(GL_CULL_FACE));
-        //glCheck(glDisable(GL_DEPTH_TEST));
-        //glCheck(glEnable(GL_DEPTH_TEST));
-        //glCheck(glDepthMask(GL_FALSE));
         break;
     case Material::BlendMode::Multiply:
         glCheck(glEnable(GL_BLEND));
         glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
         glCheck(glBlendEquation(GL_FUNC_ADD));
-        //glCheck(glEnable(GL_DEPTH_TEST));
-        //glCheck(glDepthMask(GL_FALSE));
-        //glCheck(glEnable(GL_CULL_FACE));
         break;
     case Material::BlendMode::None:
         glCheck(glDisable(GL_BLEND));
-        //glCheck(glEnable(GL_DEPTH_TEST));
-        //glCheck(glDepthMask(GL_TRUE));
-        //glCheck(glEnable(GL_CULL_FACE));
         break;
     }
 }
@@ -358,13 +331,15 @@ void RenderSystem2D::onEntityAdded(Entity entity)
 {
     //create the VBO (VAO is applied when shader is set)
     auto& drawable = entity.getComponent<Drawable2D>();
-    CRO_ASSERT(drawable.m_vbo == 0, "This shouldn't be set yet!");
-    glCheck(glGenBuffers(1, &drawable.m_vbo));
+    if (drawable.m_vbo == 0) //setting a custom shader may have already created this
+    {
+        glCheck(glGenBuffers(1, &drawable.m_vbo));
+    }
 
     //set up storage
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
+    //glCheck(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
+    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
 void RenderSystem2D::onEntityRemoved(Entity entity)

@@ -333,10 +333,10 @@ void MenuState::createScene()
     //TEST
     std::vector<cro::Vertex2D> verts =
     {
-        cro::Vertex2D(glm::vec2(0.f)),
         cro::Vertex2D(glm::vec2(0.f, 500.f), glm::vec2(0.f, 1.f)),
+        cro::Vertex2D(glm::vec2(0.f)),
+        cro::Vertex2D(glm::vec2(500.f, 500.f), glm::vec2(1.f, 1.f)),
         cro::Vertex2D(glm::vec2(500.f, 0.f), glm::vec2(1.f, 0.f)),
-        cro::Vertex2D(glm::vec2(500.f, 500.f), glm::vec2(1.f, 1.f))
     };
 
     entity = m_scene.createEntity();
