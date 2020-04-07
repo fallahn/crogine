@@ -31,6 +31,8 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/graphics/Texture.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
 
 #include "../../detail/glad.hpp"
 #include "../../detail/GLCheck.hpp"
@@ -44,7 +46,7 @@ namespace
             uniform mat4 u_worldViewMatrix;
             uniform mat4 u_projectionMatrix;
 
-            ATTRIBUTE vec4 a_position;
+            ATTRIBUTE vec2 a_position;
             ATTRIBUTE MED vec2 a_texCoord0;
             ATTRIBUTE LOW vec4 a_colour;
 
@@ -56,7 +58,7 @@ namespace
 
             void main()
             {
-                gl_Position = u_projectionMatrix * u_worldViewMatrix * a_position;
+                gl_Position = u_projectionMatrix * u_worldViewMatrix * vec4(a_position, 0.0, 1.0);
                 v_colour = a_colour;
             #if defined(TEXTURED)
                 v_texCoord = a_texCoord0;
@@ -85,6 +87,14 @@ namespace
             {
                 FRAG_OUT  = TEXTURE(u_texture, v_texCoord) * v_colour;
             })";
+
+    std::vector<float> buns =
+    {
+        0.f,0.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
+        0.f,100.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
+        100.f,0.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
+        100.f,100.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
+    };
 }
 
 using namespace cro;
@@ -119,14 +129,6 @@ void RenderSystem2D::process(float)
     for (auto entity : entities)
     {
         auto& drawable = entity.getComponent<Drawable2D>();
-
-        //check data flag and update buffer if needed
-        if (drawable.m_updateBufferData)
-        {
-            //TODO bind VBO and upload data
-            drawable.m_updateBufferData = false;
-        }
-
         //check shader flag and set correct shader if needed
         //TODO also flag if custom shader so applyShader() is
         //only ever called from this point
@@ -144,6 +146,18 @@ void RenderSystem2D::process(float)
             }
             drawable.m_applyDefaultShader = false;
             drawable.applyShader();
+        }
+
+        //check data flag and update buffer if needed
+        if (drawable.m_updateBufferData)
+        {
+            //bind VBO and upload data
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, drawable.m_vertices.size() * Vertex2D::Size, drawable.m_vertices.data(), GL_DYNAMIC_DRAW));
+            //glCheck(glBufferData(GL_ARRAY_BUFFER, buns.size() * sizeof(float), buns.data(), GL_DYNAMIC_DRAW));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));            
+
+            drawable.m_updateBufferData = false;
         }
 
         //check the transform to see if it changed and triggered a
@@ -190,25 +204,109 @@ void RenderSystem2D::process(float)
 
 void RenderSystem2D::render(Entity cameraEntity)
 {
-    //TODO we need to pass in a reference to the active render
-    //target so we can measure its size and multiply it by the
-    //camera's active viewport
+    const auto& camComponent = cameraEntity.getComponent<Camera>();
+    auto frustum = camComponent.getFrustum();
+
+    glCheck(glDepthMask(GL_FALSE));
+    glCheck(glDisable(GL_CULL_FACE));
+    glCheck(glDisable(GL_DEPTH_TEST));
 
     const auto& entities = getEntities();
     for (auto entity : entities)
     {
         const auto& drawable = entity.getComponent<Drawable2D>();
-        const auto& transform = entity.getComponent<cro::Transform>();
+        const auto& tx = entity.getComponent<cro::Transform>();
+        glm::mat4 worldMat = tx.getWorldTransform();
 
         //check local bounds for visibility and draw if visible
-        auto bounds = drawable.m_localBounds.transform(transform.getWorldTransform());
-    
-    
-        //TODO if shader is nullptr for drawable skip, it should drop back to default next update
-        //TODO set glDepthMask(GL_FALSE) and restore again after render
+        auto bounds = drawable.m_localBounds.transform(worldMat);
+        cro::Box aabb(glm::vec3(bounds.left, bounds.bottom, -0.1f), glm::vec3(bounds.left + bounds.width, bounds.bottom + bounds.height, 0.1f));
+        aabb += tx.getWorldPosition();
 
-        //TODO set glCheck(glEnable(GL_CULL_FACE)); //and restore again
+        bool visible = true;
+        std::size_t i = 0;
+        while (visible && i < frustum.size())
+        {
+            visible = (Spatial::intersects(frustum[i++], aabb) != Planar::Back);
+        }
+
+        if (visible && drawable.m_shader)
+        {
+            //apply shader
+            glm::mat4 worldView = camComponent.viewMatrix * worldMat;
+
+            glCheck(glUseProgram(drawable.m_shader->getGLHandle()));
+            //glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, &(worldMat[0].x)));
+            glCheck(glUniformMatrix4fv(drawable.m_worldViewUniform, 1, GL_FALSE, glm::value_ptr(worldView)));
+            glCheck(glUniformMatrix4fv(drawable.m_projectionUniform, 1, GL_FALSE, glm::value_ptr(camComponent.projectionMatrix)));
+
+            //apply texture if active
+            if (drawable.m_texture)
+            {
+                glCheck(glActiveTexture(GL_TEXTURE0));
+                glCheck(glUniform1i(drawable.m_textureUniform, 0));
+                glCheck(glBindTexture(GL_TEXTURE_2D, drawable.m_texture->getGLHandle()));
+            }
+            
+            //TODO if this is a custom shader we want to apply other uniforms here
+
+            applyBlendMode(drawable.m_blendMode);
+            
+#ifdef PLATFORM_DESKTOP
+            glCheck(glBindVertexArray(drawable.m_vao));
+            glCheck(glDrawArrays(static_cast<GLenum>(drawable.m_primitiveType), 0, static_cast<GLsizei>(drawable.m_vertices.size())));
+            //glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+
+#else //GLES 2 doesn't have VAO support without extensions
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
+
+            //bind attribs
+            const auto& attribs = drawable.m_shader->getAttribMap();
+
+            //position attrib
+            glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::Position]));
+            glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Position], 2,
+                GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
+                reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+
+            //UV attrib - only exists on textured shaders
+            if (attribs[Mesh::Attribute::UV0] != -1)
+            {
+                glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::UV0]));
+                glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::UV0], 2,
+                    GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
+                    reinterpret_cast<void*>(static_cast<intptr_t>(2 * sizeof(float)))));
+            }
+
+            //colour attrib
+            glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::Colour]));
+            glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Colour], 4,
+                GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
+                reinterpret_cast<void*>(static_cast<intptr_t>(4 * sizeof(float))))); //offset from beginning of vertex, not size!
+
+            //draw array
+            glCheck(glDrawArrays(static_cast<GLenum>(drawable.m_primitiveType), 0, drawable.m_vertices.size()));
+
+
+            //unbind attribs
+            glCheck(glDisableVertexAttribArray(attribs[Mesh::Attribute::Position]));
+            if (attribs[Mesh::Attribute::UV0] != -1) glCheck(glDisableVertexAttribArray(attribs[Mesh::Attribute::UV0]));
+            glCheck(glDisableVertexAttribArray(attribs[Mesh::Attribute::Colour]));
+
+#endif //PLATFORM 
+        }
     }
+
+#ifdef PLATFORM_DESKTOP
+    glCheck(glBindVertexArray(0));
+#else
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+#endif
+    glCheck(glUseProgram(0));
+
+    applyBlendMode(Material::BlendMode::None);
+    //glCheck(glDisable(GL_CULL_FACE));
+    glCheck(glDepthMask(GL_TRUE));
 }
 
 void RenderSystem2D::setSortOrder(DepthAxis sortOrder)

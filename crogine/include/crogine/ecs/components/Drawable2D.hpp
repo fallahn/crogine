@@ -166,6 +166,7 @@ namespace cro
         Shader* m_shader;
         bool m_customShader;
         bool m_applyDefaultShader;
+        std::int32_t m_textureUniform;
         std::int32_t m_worldViewUniform;
         std::int32_t m_projectionUniform;
 

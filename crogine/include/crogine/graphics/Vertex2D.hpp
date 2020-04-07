@@ -50,6 +50,12 @@ namespace cro
     */
     struct CRO_EXPORT_API Vertex2D final
     {
+        Vertex2D() = default;
+        Vertex2D(glm::vec2 pos) : position(pos) {}
+        Vertex2D(glm::vec2 pos, glm::vec2 coord) : position(pos), UV(coord) {}
+        Vertex2D(glm::vec2 pos, Colour c) : position(pos), colour(c) {}
+        Vertex2D(glm::vec2 pos, glm::vec2 coord, Colour c) : position(pos), UV(coord), colour(c) {}
+
         glm::vec2 position = glm::vec2(0.f);
         glm::vec2 UV = glm::vec2(0.f);
         cro::Colour colour = cro::Colour::White();

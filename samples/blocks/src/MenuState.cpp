@@ -331,9 +331,18 @@ void MenuState::createScene()
     updateView(entity.getComponent<cro::Camera>());
 
     //TEST
+    std::vector<cro::Vertex2D> verts =
+    {
+        cro::Vertex2D(glm::vec2(0.f), cro::Colour::Red()),
+        cro::Vertex2D(glm::vec2(0.f, 100.f), glm::vec2(0.f, 1.f), cro::Colour::Red()),
+        cro::Vertex2D(glm::vec2(100.f, 0.f), glm::vec2(1.f, 0.f), cro::Colour::Blue()),
+        cro::Vertex2D(glm::vec2(100.f, 100.f), glm::vec2(1.f, 1.f), cro::Colour::Red())
+    };
+
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Transform>().setPosition({ 200.f, 500.f, -1000.f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(verts);
+    //entity.getComponent<cro::Drawable2D>().setTexture(&m_textureResource.get("assets/images/menu_background.png"));
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)

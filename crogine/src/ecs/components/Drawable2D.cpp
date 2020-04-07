@@ -42,9 +42,10 @@ Drawable2D::Drawable2D()
     m_shader            (nullptr),
     m_customShader      (false),
     m_applyDefaultShader(true),
+    m_textureUniform    (-1),
     m_worldViewUniform  (-1),
     m_projectionUniform (-1),
-    m_blendMode         (Material::BlendMode::Alpha),
+    m_blendMode         (Material::BlendMode::None),
     m_primitiveType     (GL_TRIANGLE_STRIP),
     m_vbo               (0),
     m_vao               (0),
@@ -164,6 +165,26 @@ void Drawable2D::applyShader()
     if (m_shader)
     {
         //grab uniform locations
+        if (m_texture != nullptr)
+        {
+            if (m_shader->getUniformMap().count("u_texture") != 0)
+            {
+                m_textureUniform = m_shader->getUniformMap().at("u_texture");
+            }
+            else
+            {
+                m_textureUniform = -1;
+                Logger::log("Missing texture uniform in Drawable2D shader", Logger::Type::Error);
+
+                setShader(nullptr);
+                return;
+            }
+        }
+        else
+        {
+            m_textureUniform = -1;
+        }
+
         if (m_shader->getUniformMap().count("u_worldViewMatrix") != 0)
         {
             m_worldViewUniform = m_shader->getUniformMap().at("u_worldViewMatrix");
@@ -251,5 +272,8 @@ void Drawable2D::applyShader()
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
 #endif //PLATFORM
+
+        //TODO on mobile it might be worth storing indices of available attribs
+        //to improve setting up and removing bindings when drawing
     }
 }

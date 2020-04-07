@@ -175,7 +175,9 @@ void ModelRenderer::render(Entity camera)
 
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
+#ifndef PLATFORM_DESKTOP
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
+#endif //PLATFORM
         
         for (auto i : sortData.matIDs)
         {
@@ -233,12 +235,16 @@ void ModelRenderer::render(Entity camera)
             }
 #endif //PLATFORM 
         }
-        glCheck(glBindVertexArray(0));
-        glCheck(glUseProgram(0));
     }
 
+#ifdef PLATFORM_DESKTOP
+    glCheck(glBindVertexArray(0));
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+#endif //PLATFORM
 
+    glCheck(glUseProgram(0));
+    
     glCheck(glDisable(GL_BLEND));
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));

@@ -57,7 +57,9 @@ namespace cro
     /*!
     \brief Renders any entities with a Drawable2D component and Transform component.
     This includes entities with Sprite or Text components, although these require
-    their respective systems in the Scene to update their geometry correctly.
+    their respective systems in the Scene to update their geometry correctly. Usuaully
+    these items would be drawn in a 2D world with an orthographic projection, rather
+    than mixing items with a 3D world.
     \see Drawable2D
     \see Sprite
     \see Text

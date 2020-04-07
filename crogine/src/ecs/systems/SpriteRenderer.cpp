@@ -374,7 +374,7 @@ void SpriteRenderer::rebuildBatch()
                 reinterpret_cast<void*>(static_cast<intptr_t>(m_attribMap[j].offset))));
         }
 
-        glCheck(glEnableVertexAttribArray(0));
+        //glCheck(glEnableVertexAttribArray(0));
         glCheck(glBindVertexArray(0));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif //PLATFORM
