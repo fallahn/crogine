@@ -189,7 +189,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
     entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/images/textbox.png"));
-    bounds = entity.getComponent<cro::Sprite>().getLocalBounds();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] =
@@ -334,7 +334,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
     entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/images/textbox.png"));
-    bounds = entity.getComponent<cro::Sprite>().getLocalBounds();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] =

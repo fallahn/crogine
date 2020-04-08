@@ -31,7 +31,6 @@ source distribution.
 #include "Slider.hpp"
 #include "MyApp.hpp"
 
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -42,6 +41,7 @@ source distribution.
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/Font.hpp>
@@ -71,6 +71,7 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     controlEntity.addComponent<Slider>();
 
     auto backgroundEnt = m_menuScene.createEntity();
+    backgroundEnt.addComponent<cro::Drawable2D>();
     backgroundEnt.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("menu");
     auto size = backgroundEnt.getComponent<cro::Sprite>().getSize();
     backgroundEnt.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y, 0.f });
@@ -87,6 +88,7 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     controlEntity.getComponent<cro::Transform>().addChild(titleTextTx);
     
     auto entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& backTx = entity.addComponent<cro::Transform>();
     backTx.setPosition({ 0.f, -480.f, 0.f });
@@ -106,6 +108,7 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     entity.getComponent<cro::Transform>().addChild(iconEnt.addComponent<cro::Transform>());
     iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
     iconEnt.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("back");
+    iconEnt.addComponent<cro::Drawable2D>();
 
     auto backCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
     {
@@ -134,6 +137,7 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
 
     //music
     entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("music");
     entity.getComponent<cro::Sprite>().setColour(textColourSelected);
     backgroundEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
@@ -142,6 +146,7 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
 
     //sfx
     entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("effects");
     entity.getComponent<cro::Sprite>().setColour(textColourSelected);
     backgroundEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
@@ -150,6 +155,7 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
 #ifdef PLATFORM_DESKTOP
     //resolution
     entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("arrow_inactive");
     size = entity.getComponent<cro::Sprite>().getSize();
     backgroundEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
@@ -174,6 +180,7 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     entity.getComponent<cro::Text>().setCroppingArea({ 0.f, 0.f, 600.f, -64.f });
 
     entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("arrow_inactive");
     size = entity.getComponent<cro::Sprite>().getSize();
     backgroundEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
@@ -183,6 +190,7 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
 
     //full screen
     entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("unchecked_inactive");
     backgroundEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });

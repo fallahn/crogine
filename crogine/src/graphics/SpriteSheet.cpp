@@ -97,14 +97,15 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
             {
                 //override sheet mode
                 std::string mode = p->getValue<std::string>();
-                if (mode == "add") spriteComponent.setBlendMode(Material::BlendMode::Additive);
-                else if (mode == "multiply") spriteComponent.setBlendMode(Material::BlendMode::Multiply);
-                else if (mode == "none") spriteComponent.setBlendMode(Material::BlendMode::None);
+                if (mode == "add") spriteComponent.m_blendMode = Material::BlendMode::Additive;
+                else if (mode == "multiply") spriteComponent.m_blendMode = Material::BlendMode::Multiply;
+                else if (mode == "none") spriteComponent.m_blendMode = Material::BlendMode::None;
             }
             else
             {
-                spriteComponent.setBlendMode(blendMode);
+                spriteComponent.m_blendMode = blendMode;
             }
+            spriteComponent.m_overrideBlendMode = true;
 
             if (auto* p = spr.findProperty("bounds"))
             {

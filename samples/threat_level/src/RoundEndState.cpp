@@ -33,13 +33,15 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -134,7 +136,8 @@ void RoundEndState::load()
     m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
     commandSystem = &m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
-    m_uiScene.addSystem<cro::SpriteRenderer>(mb);
+    m_uiScene.addSystem<cro::SpriteSystem>(mb);
+    m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
 
     auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
@@ -144,6 +147,7 @@ void RoundEndState::load()
     entity.addComponent<cro::Transform>().setScale({ uiRes.x / 2.f, uiRes.y / 2.f, 0.5f });
     entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     entity.addComponent<cro::Sprite>().setTexture(m_backgroundTexture);
+    entity.addComponent<cro::Drawable2D>();
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Text>(font).setString("ROUND END");
@@ -162,8 +166,9 @@ void RoundEndState::load()
     icons.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);*/
 
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = sprites.getSprite("button_inactive");
-    auto area = entity.getComponent<cro::Sprite>().getLocalBounds();
+    auto area = entity.getComponent<cro::Sprite>().getTextureBounds();
     auto& buttonTx = entity.addComponent<cro::Transform>();
     buttonTx.setOrigin({ area.width / 2.f, area.height / 2.f, 0.f });
     buttonTx.setPosition({ uiRes.x / 2.f, 144.f, uiDepth });

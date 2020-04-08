@@ -56,6 +56,12 @@ namespace cro
             static_assert(std::is_pod<T>::value, "Only PODs allowed");
         }
 
+        Rectangle(glm::tvec2<T> position, glm::tvec2<T> size)
+            : left(position.x), bottom(position.y), width(size.x), height(size.y)
+        {
+            static_assert(std::is_pod<T>::value, "Only PODs allowed");
+        }
+
         T left, bottom, width, height;
 
         /*!

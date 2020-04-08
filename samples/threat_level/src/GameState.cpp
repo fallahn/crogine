@@ -71,9 +71,10 @@ source distribution.
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/SpriteSystem.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
@@ -85,6 +86,7 @@ source distribution.
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -250,7 +252,7 @@ void GameState::addSystems()
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
-    m_scene.addSystem<cro::SpriteRenderer>(mb);
+    //m_scene.addSystem<cro::SpriteRenderer>(mb);
     m_scene.addSystem<cro::AudioSystem>(mb);
 
     m_scene.addDirector<PlayerDirector>();
@@ -269,7 +271,8 @@ void GameState::addSystems()
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::ModelRenderer>(mb);
-    m_uiScene.addSystem<cro::SpriteRenderer>(mb);
+    m_uiScene.addSystem<cro::SpriteSystem>(mb);
+    m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
     m_uiScene.addSystem<cro::AudioSystem>(mb);
 
@@ -395,6 +398,7 @@ void GameState::createHUD()
 
     //health bar
     auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bar_outside");
     auto size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setPosition({ uiRes.x - (size.x + UIPadding), uiRes.y - (size.y * 1.5f), 0.f });
@@ -403,6 +407,7 @@ void GameState::createHUD()
     entity.getComponent<cro::Transform>().addChild(innerEntity.addComponent<cro::Transform>());
     innerEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bar_inside");
     innerEntity.addComponent<HudItem>().type = HudItem::Type::HealthBar;
+    innerEntity.addComponent<cro::Drawable2D>();
 
     //lives
     size = spriteSheet.getSprite("life").getSize();
@@ -413,6 +418,7 @@ void GameState::createHUD()
         entity.addComponent<cro::CommandTarget>().ID = CommandID::HudElement;
         entity.addComponent<cro::Transform>().setPosition(startPoint);
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("life");
+        entity.addComponent<cro::Drawable2D>();
         startPoint.x += entity.getComponent<cro::Sprite>().getSize().x + UISpacing;
         entity.addComponent<HudItem>().type = HudItem::Type::Life;
         entity.getComponent<HudItem>().value = static_cast<float>(i);
@@ -438,6 +444,7 @@ void GameState::createHUD()
     startPoint.x += entity.getComponent<cro::Sprite>().getSize().x + UISpacing;
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(startPoint);
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("emp");
     entity.addComponent<HudItem>().type = HudItem::Type::Emp;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::HudElement;
@@ -479,6 +486,7 @@ void GameState::createHUD()
 #ifdef PLATFORM_MOBILE
     //on mobile add a pause icon
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("paws");
     entity.addComponent<cro::Transform>().setPosition({ (uiRes.x - entity.getComponent<cro::Sprite>().getSize()).x / 2.f, UIPadding, 0.f });
     entity.addComponent<HudItem>().type = HudItem::Type::Paws;
@@ -520,7 +528,8 @@ void GameState::createHUD()
     entity.addComponent<HudItem>().type = HudItem::Type::Score;
     entity.getComponent<HudItem>().value = 0.f;
 
-    entity = m_uiScene.createEntity();  
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("mighty_meaty");
     size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setPosition({ uiRes.x, -size.y, 0.f });
@@ -581,6 +590,7 @@ void GameState::createHUD()
     entity.addComponent<HudItem>().type = HudItem::Type::Timer;
 
     auto spriteEntity = m_uiScene.createEntity();
+    spriteEntity.addComponent<cro::Drawable2D>();
     spriteEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bullet1");
     //spriteEntity.getComponent<cro::Sprite>().
     spriteSize = spriteEntity.getComponent<cro::Sprite>().getSize() / 2.f;
@@ -1039,6 +1049,8 @@ void GameState::loadParticles()
 
 void GameState::loadWeapons()
 {
+    LOG("Convert these sprites to batched meshes!", cro::Logger::Type::Info);
+
     //weapon sprites
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/sprites/lasers.spt", m_resources.textures);

@@ -49,7 +49,7 @@ source distribution.
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/SpriteSystem.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
@@ -196,9 +196,9 @@ void MenuState::addSystems()
     m_scene.addSystem<SliderSystem>(mb);
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<cro::SpriteRenderer>(mb);
-    m_scene.addSystem<cro::TextRenderer>(mb);  
+    m_scene.addSystem<cro::SpriteSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
+    m_scene.addSystem<cro::TextRenderer>(mb);  
 }
 
 void MenuState::loadAssets()
@@ -309,6 +309,7 @@ void MenuState::createScene()
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/images/menu_background.png"));
+    entity.addComponent<cro::Drawable2D>();
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -329,20 +330,6 @@ void MenuState::createScene()
     entity.addComponent<cro::Camera>().resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
     m_scene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
-
-    //TEST
-    std::vector<cro::Vertex2D> verts =
-    {
-        cro::Vertex2D(glm::vec2(0.f, 500.f), glm::vec2(0.f, 1.f)),
-        cro::Vertex2D(glm::vec2(0.f)),
-        cro::Vertex2D(glm::vec2(500.f, 500.f), glm::vec2(1.f, 1.f)),
-        cro::Vertex2D(glm::vec2(500.f, 0.f), glm::vec2(1.f, 0.f)),
-    };
-
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 200.f, 500.f, 1.f });
-    entity.addComponent<cro::Drawable2D>().setVertexData(verts);
-    entity.getComponent<cro::Drawable2D>().setTexture(&m_textureResource.get("assets/images/blocks.png"));
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)

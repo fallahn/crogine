@@ -35,11 +35,13 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -134,7 +136,8 @@ void PauseState::load()
     m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
     commandSystem = &m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
-    m_uiScene.addSystem<cro::SpriteRenderer>(mb);
+    m_uiScene.addSystem<cro::SpriteSystem>(mb);
+    m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
 
     cro::Image img;
@@ -147,6 +150,7 @@ void PauseState::load()
     entity.addComponent<cro::Transform>().setScale({ sceneSize.x / 2.f, sceneSize.y / 2.f, 0.5f });
     entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.1f });
     entity.addComponent<cro::Sprite>().setTexture(m_backgroundTexture);
+    entity.addComponent<cro::Drawable2D>();
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/sprites/ui_menu.spt", m_sharedResources.textures);
@@ -231,6 +235,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
 
     //options
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
     entity.addComponent<cro::Transform>().setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -270,9 +275,11 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     entity.getComponent<cro::Transform>().addChild(iconEntity.addComponent<cro::Transform>());
     iconEntity.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
     iconEntity.addComponent<cro::Sprite>() = iconSheet.getSprite("settings");
+    iconEntity.addComponent<cro::Drawable2D>();
 
     //main menu
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
     entity.addComponent<cro::Transform>().setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -311,9 +318,11 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     entity.getComponent<cro::Transform>().addChild(iconEntity.addComponent<cro::Transform>());
     iconEntity.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
     iconEntity.addComponent<cro::Sprite>() = iconSheet.getSprite("menu");
+    iconEntity.addComponent<cro::Drawable2D>();
 
     //resume
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
     entity.addComponent<cro::Transform>().setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -346,9 +355,11 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     entity.getComponent<cro::Transform>().addChild(iconEntity.addComponent<cro::Transform>());
     iconEntity.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
     iconEntity.addComponent<cro::Sprite>() = iconSheet.getSprite("play");
+    iconEntity.addComponent<cro::Drawable2D>();
 
     //quit confirm
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("menu");
     auto size = entity.getComponent<cro::Sprite>().getSize();
     controlEntity.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
@@ -364,6 +375,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
 
     //ok button
     auto buttonEntity = m_uiScene.createEntity();
+    buttonEntity.addComponent<cro::Drawable2D>();
     buttonEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
     entity.getComponent<cro::Transform>().addChild(buttonEntity.addComponent<cro::Transform>());
     buttonEntity.getComponent<cro::Transform>().setPosition({ size.x / 4.f, 82.f, 1.f });
@@ -380,6 +392,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     buttonEntity.getComponent<cro::Transform>().addChild(iconEntity.addComponent<cro::Transform>());
     iconEntity.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.2f });
     iconEntity.addComponent<cro::Sprite>() = iconSheet.getSprite("exit");
+    iconEntity.addComponent<cro::Drawable2D>();
 
     buttonEntity.addComponent<cro::UIInput>();
     buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
@@ -398,6 +411,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
 
     //cancel button
     buttonEntity = m_uiScene.createEntity();
+    buttonEntity.addComponent<cro::Drawable2D>();
     buttonEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
     entity.getComponent<cro::Transform>().addChild(buttonEntity.addComponent<cro::Transform>());
     buttonEntity.getComponent<cro::Transform>().setPosition({ (size.x / 4.f) + (size.x / 2.f), 82.f, 1.f });
@@ -414,6 +428,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     buttonEntity.getComponent<cro::Transform>().addChild(iconEntity.addComponent<cro::Transform>());
     iconEntity.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.2f });
     iconEntity.addComponent<cro::Sprite>() = iconSheet.getSprite("back");
+    iconEntity.addComponent<cro::Drawable2D>();
 
     buttonEntity.addComponent<cro::UIInput>();
     buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
@@ -451,6 +466,7 @@ void PauseState::createOptions(const cro::SpriteSheet& spriteSheet, const cro::S
 
     //panel background
     auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("menu");
     auto size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y, 0.f });
@@ -466,6 +482,7 @@ void PauseState::createOptions(const cro::SpriteSheet& spriteSheet, const cro::S
     
     //back button
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_inactive");
     entity.addComponent<cro::Transform>().setPosition({ 0.f, -480.f, 0.f });
     controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -501,6 +518,7 @@ void PauseState::createOptions(const cro::SpriteSheet& spriteSheet, const cro::S
     textEnt.getComponent<cro::Transform>().setPosition({ 40.f, 100.f, 0.f });
 
     auto iconEnt = m_uiScene.createEntity();
+    iconEnt.addComponent<cro::Drawable2D>();
     iconEnt.addComponent<cro::Sprite>() = iconSheet.getSprite("back");
     entity.getComponent<cro::Transform>().addChild(iconEnt.addComponent<cro::Transform>());
     iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });

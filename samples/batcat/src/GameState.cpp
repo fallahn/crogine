@@ -51,7 +51,8 @@ source distribution.
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ProjectionMapSystem.hpp>
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -67,6 +68,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -167,14 +169,14 @@ void GameState::addSystems()
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
-    m_scene.addSystem<cro::SpriteRenderer>(mb);
 
     m_scene.addDirector<PlayerDirector>();
 
     uiSystem = &m_overlayScene.addSystem<cro::UISystem>(mb);
     m_overlayScene.addSystem<cro::CameraSystem>(mb);
+    m_overlayScene.addSystem<cro::SpriteSystem>(mb);
+    m_overlayScene.addSystem<cro::RenderSystem2D>(mb);
     m_overlayScene.addSystem<cro::TextRenderer>(mb);
-    m_overlayScene.addSystem<cro::SpriteRenderer>(mb);
     commandSystem = &m_overlayScene.addSystem<cro::CommandSystem>(mb);
 }
 
@@ -265,13 +267,15 @@ void GameState::createUI()
     /*ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 20.f, 20.f, 0.f });
     ent.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
-    ent.addComponent<cro::Sprite>().setTexture(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture());*/
+    ent.addComponent<cro::Sprite>(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture());
+    ent.addComponent<cro::Drawable2D>();*/
 
 
     cro::SpriteSheet targetSheet;
     targetSheet.loadFromFile("assets/sprites/target.spt", m_resources.textures);
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Sprite>() = targetSheet.getSprite("target");
+    ent.addComponent<cro::Drawable2D>();
     auto size = ent.getComponent<cro::Sprite>().getSize();
     ent.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
     ent.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
@@ -319,6 +323,7 @@ void GameState::createUI()
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 40.f, 40.f, -0.1f });
     ent.getComponent<cro::Transform>().setScale({ 2.f, 2.f, 2.f });
+    ent.addComponent<cro::Drawable2D>();
     auto& button1 = ent.addComponent<cro::Sprite>();
     button1.setTexture(m_resources.textures.get("assets/ui/ui_buttons.png"));
     button1.setTextureRect(buttonArea);
@@ -335,6 +340,7 @@ void GameState::createUI()
     ent.addComponent<cro::Transform>().setPosition({ 320.f, 168.f, -0.1f });
     ent.getComponent<cro::Transform>().setScale({ 2.f, 2.f, 2.f });
     ent.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, cro::Util::Const::PI);
+    ent.addComponent<cro::Drawable2D>();
     auto& button2 = ent.addComponent<cro::Sprite>();
     button2 = button1;
     auto& ui2 = ent.addComponent<cro::UIInput>();
@@ -348,6 +354,7 @@ void GameState::createUI()
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 960.f, 40.f, -0.1f });
     ent.getComponent<cro::Transform>().setScale({ 2.f, 2.f, 2.f });
+    ent.addComponent<cro::Drawable2D>();
     auto& button3 = ent.addComponent<cro::Sprite>();
     button3.setTexture(m_resources.textures.get("assets/ui/ui_buttons.png"));
     button3.setTextureRect({ 64.f, 0.f, 64.f, 64.f });
@@ -362,6 +369,7 @@ void GameState::createUI()
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 1112.f, 40.f, -0.1f });
     ent.getComponent<cro::Transform>().setScale({ 2.f, 2.f, 2.f });
+    ent.addComponent<cro::Drawable2D>();
     auto& button4 = ent.addComponent<cro::Sprite>();
     button4.setTexture(m_resources.textures.get("assets/ui/ui_buttons.png"));
     button4.setTextureRect({ 128.f, 0.f, 64.f, 64.f });

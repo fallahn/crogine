@@ -34,6 +34,7 @@ source distribution.
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Text.hpp>
@@ -65,6 +66,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
 
     //caves button
     auto entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("caves_normal");
     auto size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
@@ -108,6 +110,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
 
     //forest button
     entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("forest_normal");
     size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
@@ -147,6 +150,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     entity.getComponent<cro::UIInput>().area.height = size.y;
 
     auto lockEnt = m_menuScene.createEntity();
+    lockEnt.addComponent<cro::Drawable2D>();
     lockEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("padlock");
     size = lockEnt.getComponent<cro::Sprite>().getSize();
     lockEnt.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
@@ -157,6 +161,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
 
     //desert button
     entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("desert_normal");
     size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
@@ -196,6 +201,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     entity.getComponent<cro::UIInput>().area.height = size.y;
 
     lockEnt = m_menuScene.createEntity();
+    lockEnt.addComponent<cro::Drawable2D>();
     lockEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("padlock");
     size = lockEnt.getComponent<cro::Sprite>().getSize();
     lockEnt.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
@@ -206,6 +212,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
 
     //comin soon button
     entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("empty_normal");
     size = entity.getComponent<cro::Sprite>().getSize();
     entity.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
@@ -245,6 +252,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     const auto buttonHighlightArea = spriteSheetButtons.getSprite("button_active").getTextureRect();
 
     entity = m_menuScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetButtons.getSprite("button_inactive");
     auto& quitTx = entity.addComponent<cro::Transform>();
     quitTx.setPosition({ 0.f, 1080.f - 480.f, 0.f });
@@ -265,6 +273,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     entity.getComponent<cro::Transform>().addChild(iconEnt.addComponent<cro::Transform>());
     iconEnt.getComponent<cro::Transform>().setPosition({ buttonNormalArea.width - buttonIconOffset, 0.f, 0.f });
     iconEnt.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("back");
+    iconEnt.addComponent<cro::Drawable2D>();
 
 
     auto backCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)

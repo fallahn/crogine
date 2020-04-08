@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
 
@@ -187,8 +188,9 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     //box background
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/images/textbox.png"));
-    bounds = entity.getComponent<cro::Sprite>().getLocalBounds();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] =
@@ -332,8 +334,9 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     //box background
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/images/textbox.png"));
-    bounds = entity.getComponent<cro::Sprite>().getLocalBounds();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] =
@@ -580,6 +583,6 @@ void MenuState::updateReadyDisplay()
 {
     for (auto b : m_readyState)
     {
-        std::cout << b << "\n";
+        
     }
 }

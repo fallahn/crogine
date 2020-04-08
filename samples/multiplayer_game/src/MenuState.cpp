@@ -43,12 +43,14 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 
@@ -195,7 +197,8 @@ void MenuState::addSystems()
     m_scene.addSystem<SliderSystem>(mb);
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<cro::SpriteRenderer>(mb);
+    m_scene.addSystem<cro::SpriteSystem>(mb);
+    m_scene.addSystem<cro::RenderSystem2D>(mb);
     m_scene.addSystem<cro::TextRenderer>(mb);    
 }
 
@@ -306,7 +309,8 @@ void MenuState::createScene()
 
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/images/menu_background.png"));
+    entity.addComponent<cro::Sprite>(m_textureResource.get("assets/images/menu_background.png"));
+    entity.addComponent<cro::Drawable2D>();
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();

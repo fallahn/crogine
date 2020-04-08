@@ -72,7 +72,7 @@ namespace cro
         This has no effect when using Sprite or Text components
         as they override this property with their own.
         */
-        void setTexture(cro::Texture*);
+        void setTexture(const cro::Texture*);
 
         /*!
         \brief Set a custom shader for this drawable.
@@ -109,7 +109,6 @@ namespace cro
         \brief Returns a pointer to the active texture
         May be nullptr is no texture is set.
         */
-        Texture* getTexture();
         const Texture* getTexture() const;
 
         /*!
@@ -162,7 +161,7 @@ namespace cro
 
     private:
 
-        Texture* m_texture;
+        const Texture* m_texture;
         Shader* m_shader;
         bool m_customShader;
         bool m_applyDefaultShader;

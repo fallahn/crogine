@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -49,7 +50,8 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
@@ -190,7 +192,8 @@ void MainState::addSystems()
     //m_menuScene.addSystem<RotateSystem>(mb);
     m_menuScene.addSystem<cro::CallbackSystem>(mb);
     m_menuScene.addSystem<cro::CameraSystem>(mb);
-    m_menuScene.addSystem<cro::SpriteRenderer>(mb);
+    m_menuScene.addSystem<cro::SpriteSystem>(mb);
+    m_menuScene.addSystem<cro::RenderSystem2D>(mb);
     m_menuScene.addSystem<cro::TextRenderer>(mb);
     m_uiSystem = &m_menuScene.addSystem<cro::UISystem>(mb);
 }

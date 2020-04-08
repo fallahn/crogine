@@ -231,7 +231,7 @@ void RenderSystem2D::render(Entity cameraEntity)
             visible = (Spatial::intersects(frustum[i++], aabb) != Planar::Back);
         }
 
-        if (visible && drawable.m_shader)
+        if (/*visible && */drawable.m_shader)
         {
             //apply shader
             glm::mat4 worldView = camComponent.viewMatrix * worldMat;

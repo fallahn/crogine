@@ -56,7 +56,7 @@ Drawable2D::Drawable2D()
 }
 
 //public
-void Drawable2D::setTexture(Texture* texture)
+void Drawable2D::setTexture(const Texture* texture)
 {
     m_texture = texture;
     m_applyDefaultShader = !m_customShader;
@@ -85,11 +85,6 @@ void Drawable2D::setVertexData(const std::vector<Vertex2D>& data)
 void Drawable2D::setPrimitiveType(std::uint32_t primitiveType)
 {
     m_primitiveType = primitiveType;
-}
-
-Texture* Drawable2D::getTexture()
-{
-    return m_texture;
 }
 
 const Texture* Drawable2D::getTexture() const

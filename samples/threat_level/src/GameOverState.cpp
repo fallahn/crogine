@@ -33,12 +33,14 @@ source distribution.
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -176,7 +178,8 @@ void GameOverState::load()
 
     m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
-    m_uiScene.addSystem<cro::SpriteRenderer>(mb);
+    m_uiScene.addSystem<cro::SpriteSystem>(mb);
+    m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::TextRenderer>(mb);
     commandSystem = &m_uiScene.addSystem<cro::CommandSystem>(mb);
 
@@ -191,7 +194,8 @@ void GameOverState::load()
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ uiRes.x / 2.f, uiRes.y / 2.f, 0.5f });
     entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
-    entity.addComponent<cro::Sprite>().setTexture(m_backgroundTexture);
+    entity.addComponent<cro::Sprite>(m_backgroundTexture);
+    entity.addComponent<cro::Drawable2D>();
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Text>(font).setString("GAME OVER");
@@ -210,8 +214,9 @@ void GameOverState::load()
     icons.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
 
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = sprites.getSprite("button_inactive");
-    auto area = entity.getComponent<cro::Sprite>().getLocalBounds();
+    auto area = entity.getComponent<cro::Sprite>().getTextureBounds();
     auto& buttonTx = entity.addComponent<cro::Transform>();
     buttonTx.setOrigin({ area.width / 2.f, area.height / 2.f, 0.f });
     buttonTx.setPosition({ uiRes.x / 2.f, 144.f, uiDepth });
@@ -228,6 +233,7 @@ void GameOverState::load()
     entity.getComponent<cro::Transform>().addChild(iconEnt.addComponent<cro::Transform>());
     iconEnt.getComponent<cro::Transform>().setPosition({ area.width - buttonIconOffset, 0.f, 0.f });
     iconEnt.addComponent<cro::Sprite>() = icons.getSprite("menu");
+    iconEnt.addComponent<cro::Drawable2D>();
 
     auto activeArea = sprites.getSprite("button_active").getTextureRect();
     auto& gameControl = entity.addComponent<cro::UIInput>();
@@ -314,8 +320,9 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     textEnt.getComponent<cro::Transform>().setOrigin({ textSize.width / 2.f, -textSize.height, 0.f });
 
     auto boxEnt = m_uiScene.createEntity();
+    boxEnt.addComponent<cro::Drawable2D>();
     boxEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("textbox_inactive");
-    auto textArea = boxEnt.getComponent<cro::Sprite>().getLocalBounds();
+    auto textArea = boxEnt.getComponent<cro::Sprite>().getTextureBounds();
     parentEnt.getComponent<cro::Transform>().addChild(boxEnt.addComponent<cro::Transform>());
     boxEnt.getComponent<cro::Transform>().setOrigin({ textArea.width / 2.f, textArea.height, 0.f });
     boxEnt.addComponent<cro::UIInput>().area = textArea;

@@ -41,8 +41,10 @@ source distribution.
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
@@ -110,7 +112,8 @@ void PauseState::buildScene()
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<cro::SpriteRenderer>(mb);
+    m_scene.addSystem<cro::SpriteSystem>(mb);
+    m_scene.addSystem<cro::RenderSystem2D>(mb);
     m_scene.addSystem<cro::TextRenderer>(mb);
 
 
@@ -123,7 +126,8 @@ void PauseState::buildScene()
 
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y / 2.f, 1.f });
-    entity.addComponent<cro::Sprite>().setTexture(m_backgroundTexture);
+    entity.addComponent<cro::Sprite>(m_backgroundTexture);
+    entity.addComponent<cro::Drawable2D>();
 
     auto mouseEnter = m_scene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e, glm::vec2) 
