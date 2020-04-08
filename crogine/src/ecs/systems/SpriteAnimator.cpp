@@ -84,7 +84,6 @@ void SpriteAnimator::process(float dt)
                         animation.frameID = std::max(animation.frameID, sprite.m_animations[animation.id].loopStart);
                     }
                 }
-
                 sprite.setTextureRect(sprite.m_animations[animation.id].frames[animation.frameID]);
             }
         }

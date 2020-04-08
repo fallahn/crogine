@@ -36,8 +36,6 @@ Sprite::Sprite()
     : m_texture         (nullptr),
     m_colour            (Colour::White()),
     m_dirty             (true),
-    //m_animationCount    (0),
-    m_animations        (MaxAnimations),
     m_overrideBlendMode (false),
     m_blendMode         (Material::BlendMode::Alpha)
 {
@@ -48,8 +46,6 @@ Sprite::Sprite(const Texture& texture)
     : m_texture         (nullptr),
     m_colour            (Colour::White()),
     m_dirty             (true),
-    //m_animationCount    (0),
-    m_animations        (MaxAnimations),
     m_overrideBlendMode (false),
     m_blendMode         (Material::BlendMode::Alpha)
 {

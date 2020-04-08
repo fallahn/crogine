@@ -317,7 +317,7 @@ void MainState::createScene()
     cam2D.projectionMatrix = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
     m_menuScene.setActiveCamera(entity);
 
-    updateView();
+    updateView();    
 }
 
 void MainState::createMenus()
