@@ -122,25 +122,29 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
             {
                 if (sprOb.getName() == "animation")
                 {
+                    auto& animation = spriteComponent.m_animations.emplace_back();
+
                     const auto& properties = sprOb.getProperties();
                     for (const auto& p : properties)
                     {
                         std::string name = p.getName();
                         if (name == "frame")
                         {
-                            auto& anim = spriteComponent.m_animations[spriteComponent.m_animationCount];
-                            anim.frames[anim.frameCount++] = p.getValue<FloatRect>();
+                            //auto& anim = spriteComponent.m_animations[spriteComponent.m_animationCount];
+                            animation.frames.emplace_back() = p.getValue<FloatRect>();
                         }
                         else if (name == "framerate")
                         {
-                            spriteComponent.m_animations[spriteComponent.m_animationCount].framerate = p.getValue<float>();
+                            //spriteComponent.m_animations[spriteComponent.m_animationCount]
+                            animation.framerate = p.getValue<float>();
                         }
                         else if (name == "loop")
                         {
-                            spriteComponent.m_animations[spriteComponent.m_animationCount].looped = p.getValue<bool>();
+                            //spriteComponent.m_animations[spriteComponent.m_animationCount]
+                            animation.looped = p.getValue<bool>();
                         }
                     }
-                    spriteComponent.m_animationCount++;
+                    //spriteComponent.m_animationCount++;
                 }
             }
 

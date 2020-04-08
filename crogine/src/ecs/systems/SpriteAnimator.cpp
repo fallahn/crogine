@@ -53,17 +53,36 @@ void SpriteAnimator::process(float dt)
         if (animation.playing)
         {
             auto& sprite = entity.getComponent<Sprite>();
+            CRO_ASSERT(animation.id < sprite.m_animations.size(), "");
+
+            //TODO this should be an assertion as we should never have
+            //tried playing the animation in the first place...
+            if (sprite.m_animations[animation.id].frames.empty())
+            {
+                animation.stop();
+                continue;
+            }
+            
+
             animation.currentFrameTime -= dt;
             if (animation.currentFrameTime < 0)
             {
                 animation.currentFrameTime += (1.f / sprite.m_animations[animation.id].framerate);
 
                 auto lastFrame = animation.frameID;
-                animation.frameID = (animation.frameID + 1) % sprite.m_animations[animation.id].frameCount;
+                animation.frameID = (animation.frameID + 1) % sprite.m_animations[animation.id].frames.size();
 
-                if (animation.frameID < lastFrame && !sprite.m_animations[animation.id].looped)
+                if (animation.frameID < lastFrame)
                 {
-                    animation.stop();
+                    if (!sprite.m_animations[animation.id].looped)
+                    {
+                        animation.stop();
+                        continue;
+                    }
+                    else
+                    {
+                        animation.frameID = std::max(animation.frameID, sprite.m_animations[animation.id].loopStart);
+                    }
                 }
 
                 sprite.setTextureRect(sprite.m_animations[animation.id].frames[animation.frameID]);

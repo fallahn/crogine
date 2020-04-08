@@ -38,7 +38,7 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/vec4.hpp>
 
-#include <array>
+#include <vector>
 
 namespace cro
 {
@@ -127,31 +127,23 @@ namespace cro
             */
             static constexpr std::size_t MaxAnimationIdLength = 32;
 
-            std::array<char, MaxAnimationIdLength> id = { {0} };
-            std::array<FloatRect, MaxFrames> frames = {};
-            std::size_t frameCount = 0;
+            std::vector<char> id;
+            std::vector<FloatRect> frames;
             std::uint32_t loopStart = 0; //!< looped animations can jump to somewhere other than the beginning
             bool looped = false;
             float framerate = 12.f;
         };
 
-        /*!
-        \brief Returns the number of animations for this sprite when loaded
-        from a sprite sheet definition file.
-        */
-        std::size_t getAnimationCount() const { return m_animationCount; }
 
         /*!
         /brief Returns a reference to the sprites animation array.
-        Use getAnimationCount() to check how many of the animations are valid
         */
-        std::array<Animation, MaxAnimations>& getAnimations() { return m_animations; }
+        std::vector<Animation>& getAnimations() { return m_animations; }
 
         /*!
         /brief Returns a const reference to the sprites animation array.
-        Use getAnimationCount() to check how many of the animations are valid
         */
-        const std::array<Animation, MaxAnimations>& getAnimations() const { return m_animations; }
+        const std::vector<Animation>& getAnimations() const { return m_animations; }
 
     private:
         FloatRect m_textureRect;
@@ -159,8 +151,7 @@ namespace cro
         Colour m_colour;
         bool m_dirty;
 
-        std::size_t m_animationCount;
-        std::array<Animation, MaxAnimations> m_animations;
+        std::vector<Animation> m_animations;
 
         //if this was loaded from a sprite sheet the blend
         //mode was set here and needs to be forwarded to
