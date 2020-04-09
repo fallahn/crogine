@@ -220,9 +220,9 @@ void RenderSystem2D::render(Entity cameraEntity)
         //check local bounds for visibility and draw if visible
         auto bounds = drawable.m_localBounds.transform(worldMat);
         cro::Box aabb(glm::vec3(bounds.left, bounds.bottom, -0.1f), glm::vec3(bounds.left + bounds.width, bounds.bottom + bounds.height, 0.1f));
-        auto pos = tx.getWorldPosition();
-        pos.z = 0.f;
-        aabb += pos;
+        //auto pos = tx.getWorldPosition();
+        //pos.z = 0.f;
+        //aabb += pos;
 
         bool visible = true;
         std::size_t i = 0;
@@ -231,7 +231,7 @@ void RenderSystem2D::render(Entity cameraEntity)
             visible = (Spatial::intersects(frustum[i++], aabb) != Planar::Back);
         }
 
-        if (/*visible && */drawable.m_shader)
+        if (visible && drawable.m_shader)
         {
             //apply shader
             glm::mat4 worldView = camComponent.viewMatrix * worldMat;
