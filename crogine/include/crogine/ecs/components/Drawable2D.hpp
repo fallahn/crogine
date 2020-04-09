@@ -33,13 +33,13 @@ source distribution.
 #include <crogine/graphics/Vertex2D.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/Rectangle.hpp>
+#include <crogine/graphics/Shader.hpp>
 
 #include <vector>
 
 namespace cro
 {
     class Texture;
-    class Shader;
 
     /*!
     \brief Component used for creating 2D drawable entities.

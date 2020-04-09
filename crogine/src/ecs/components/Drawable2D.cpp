@@ -31,7 +31,6 @@ source distribution.
 #include "../../detail/glad.hpp"
 #include "../../detail/GLCheck.hpp"
 
-#include <crogine/graphics/Shader.hpp>
 
 #include <limits>
 
