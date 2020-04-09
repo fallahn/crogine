@@ -81,7 +81,9 @@ namespace cro
         Setting a custom shader will override this behaviour,
         although custom vertex shaders much match the attribute layout
         of Vertex2D. Setting this to nullptr returns the drawable
-        to the default shader.
+        to the default shader. Note that this also resets any
+        bound uniform values so unforms must be set after setting a
+        new shader for the drawable
         */
         void setShader(Shader*);
 
@@ -156,8 +158,36 @@ namespace cro
         */
         void updateLocalBounds();
 
+        /*!
+        \brief Adds a uniform binding to be applied to any shader this
+        drawable may have.
+        When sharing a shader between multiple drawables it may be, for
+        instance, desirable to the apply a different texture for each drawble.
+        This function allows mapping a uniform name (assuming it is available
+        in the current shader) to a texture or other value.
+        Note that these are reset if the drawable's shader is changed and
+        must be re-applied if necessary
+        */
+        void bindUniform(const std::string& name, const Texture& texture);
 
-        //TODO filter flags, cropping area, uniform bindings
+        void bindUniform(const std::string& name, float value);
+
+        void bindUniform(const std::string& name, glm::vec2 value);
+
+        void bindUniform(const std::string& name, glm::vec3 value);
+
+        void bindUniform(const std::string& name, glm::vec4 value);
+
+        void bindUniform(const std::string& name, bool value);
+
+        void bindUniform(const std::string& name, Colour colour);
+
+        /*!
+        \brief Binds a pointer to a float array containing a 4x4 matrix
+        */
+        void bindUniform(const std::string& name, const float* value);
+
+        //TODO filter flags, cropping area
 
     private:
 
@@ -189,6 +219,77 @@ namespace cro
 
         //if this changes entities need to be sorted
         float m_lastSortValue;
+
+        std::vector<std::pair<std::int32_t, const Texture*>> m_textureBindings;
+        std::vector<std::pair<std::int32_t, float>> m_floatBindings;
+        std::vector<std::pair<std::int32_t, glm::vec2>> m_vec2Bindings;
+        std::vector<std::pair<std::int32_t, glm::vec3>> m_vec3Bindings;
+        std::vector<std::pair<std::int32_t, glm::vec4>> m_vec4Bindings;
+        std::vector<std::pair<std::int32_t, std::int32_t>> m_boolBindings;
+        std::vector<std::pair<std::int32_t, const float*>> m_matBindings;
+
+        template <typename T>
+        void bindUniform(const std::string& name, T value, std::vector<std::pair<std::int32_t, T>>& dest)
+        {
+            CRO_ASSERT(m_shader != nullptr, "Shader is nullptr");
+            if (m_shader->getUniformMap().count(name) == 0)
+            {
+                Logger::log(name + " not found in shader", Logger::Type::Warning);
+            }
+            else
+            {
+                auto uniform = m_shader->getUniformMap().at(name);
+
+                auto result = std::find_if(dest.begin(), dest.end(),
+                    [uniform](const std::pair<std::int32_t, T>& pair)
+                    {
+                        return pair.first == uniform;
+                    });
+
+                if (result == dest.end())
+                {
+
+                    dest.emplace_back(std::make_pair(uniform, value));
+
+                }
+                else
+                {
+                    result->second = value;
+                }
+            }
+        }
+        //seems a shame to do basically the same thing for const pointers. If anyone knows a clever
+        //way around this answers on a postcard please :)
+        template <typename T>
+        void bindUniform(const std::string& name, const T* value, std::vector<std::pair<std::int32_t, T>>& dest)
+        {
+            CRO_ASSERT(m_shader != nullptr, "Shader is nullptr");
+            if (m_shader->getUniformMap().count(name) == 0)
+            {
+                Logger::log(name + " not found in shader", Logger::Type::Warning);
+            }
+            else
+            {
+                auto uniform = m_shader->getUniformMap().at(name);
+
+                auto result = std::find_if(dest.begin(), dest.end(),
+                    [uniform](const std::pair<std::int32_t, T>& pair)
+                    {
+                        return pair.first == uniform;
+                    });
+
+                if (result == dest.end())
+                {
+
+                    dest.emplace_back(std::make_pair(uniform, value));
+
+                }
+                else
+                {
+                    result->second = value;
+                }
+            }
+        }
 
         friend class RenderSystem2D;
 

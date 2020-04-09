@@ -245,11 +245,42 @@ void RenderSystem2D::render(Entity cameraEntity)
             if (drawable.m_texture)
             {
                 glCheck(glActiveTexture(GL_TEXTURE0));
-                glCheck(glUniform1i(drawable.m_textureUniform, 0));
                 glCheck(glBindTexture(GL_TEXTURE_2D, drawable.m_texture->getGLHandle()));
+                glCheck(glUniform1i(drawable.m_textureUniform, 0));
             }
             
-            //TODO if this is a custom shader we want to apply other uniforms here
+            //apply any custom uniforms
+            std::int32_t j = 1;
+            for (const auto& [uniform, value] : drawable.m_textureBindings)
+            {
+                glCheck(glActiveTexture(GL_TEXTURE0 + j));
+                glCheck(glBindTexture(GL_TEXTURE_2D, value->getGLHandle()));
+                glCheck(glUniform1i(uniform, j));
+            }
+            for (auto [uniform, value] : drawable.m_floatBindings)
+            {
+                glCheck(glUniform1f(uniform, value));
+            }
+            for (auto [uniform, value] : drawable.m_vec2Bindings)
+            {
+                glCheck(glUniform2f(uniform, value.x, value.y));
+            }
+            for (auto [uniform, value] : drawable.m_vec3Bindings)
+            {
+                glCheck(glUniform3f(uniform, value.x, value.y, value.z));
+            }
+            for (auto [uniform, value] : drawable.m_vec4Bindings)
+            {
+                glCheck(glUniform4f(uniform, value.r, value.g, value.b, value.a));
+            }
+            for (auto [uniform, value] : drawable.m_boolBindings)
+            {
+                glCheck(glUniform1i(uniform, value));
+            }
+            for (const auto [uniform, value] : drawable.m_matBindings)
+            {
+                glCheck(glUniformMatrix4fv(uniform, 1, GL_FALSE, value));
+            }
 
             applyBlendMode(drawable.m_blendMode);
             

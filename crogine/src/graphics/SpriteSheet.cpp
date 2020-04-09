@@ -142,7 +142,16 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
                         {
                             animation.looped = p.getValue<bool>();
                         }
+                        else if (name == "loop_start")
+                        {
+                            animation.loopStart = p.getValue<std::int32_t>();
+                        }
                     }
+
+                    auto animId = sprOb.getId();
+                    m_animations[spriteName].push_back(animId);
+                    animation.id.resize(animId.length());
+                    animId.copy(animation.id.data(), animId.length());
                 }
             }
 
@@ -163,4 +172,17 @@ Sprite SpriteSheet::getSprite(const std::string& name) const
     }
     LOG(name + " not found in sprite sheet", Logger::Type::Warning);
     return {};
+}
+
+std::size_t SpriteSheet::getAnimationIndex(const std::string& name, const std::string& spriteName) const
+{
+    if (m_animations.count(spriteName) != 0)
+    {
+        const auto& anims = m_animations[spriteName];
+        const auto& result = std::find(anims.cbegin(), anims.cend(), name);
+        if (result == anims.cend()) return 0;
+
+        return std::distance(anims.cbegin(), result);
+    }
+    return 0;
 }

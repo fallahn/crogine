@@ -68,6 +68,14 @@ void Drawable2D::setShader(Shader* shader)
     m_customShader = (shader != nullptr);
     m_applyDefaultShader = !m_customShader;
 
+    m_textureBindings.clear();
+    m_floatBindings.clear();
+    m_vec2Bindings.clear();
+    m_vec3Bindings.clear();
+    m_vec4Bindings.clear();
+    m_boolBindings.clear();
+    m_matBindings.clear();
+
     applyShader();
 }
 
@@ -150,6 +158,47 @@ void Drawable2D::updateLocalBounds()
 
     m_updateBufferData = true; //tells the system we have new data to upload
 }
+
+void Drawable2D::bindUniform(const std::string& name, const Texture& texture)
+{
+    bindUniform(name, &texture, m_textureBindings);
+}
+
+void Drawable2D::bindUniform(const std::string& name, float value)
+{
+    bindUniform(name, value, m_floatBindings);
+}
+
+void Drawable2D::bindUniform(const std::string& name, glm::vec2 value)
+{
+    bindUniform(name, value, m_vec2Bindings);
+}
+
+void Drawable2D::bindUniform(const std::string& name, glm::vec3 value)
+{
+    bindUniform(name, value, m_vec3Bindings);
+}
+
+void Drawable2D::bindUniform(const std::string& name, glm::vec4 value)
+{
+    bindUniform(name, value, m_vec4Bindings);
+}
+
+void Drawable2D::bindUniform(const std::string& name, bool value)
+{
+    bindUniform(name, value ? 1 : 0, m_boolBindings);
+}
+
+void Drawable2D::bindUniform(const std::string& name, Colour value)
+{
+    bindUniform(name, glm::vec4(value.getRed(), value.getGreen(), value.getBlue(), value.getAlpha()), m_vec4Bindings);
+}
+
+void Drawable2D::bindUniform(const std::string& name, const float* value)
+{
+    bindUniform(name, value, m_matBindings);
+}
+
 //private
 void Drawable2D::applyShader()
 {
