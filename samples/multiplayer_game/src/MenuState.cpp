@@ -46,7 +46,7 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 
-#include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem.hpp>
@@ -198,8 +198,8 @@ void MenuState::addSystems()
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem>(mb);
+    m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
-    m_scene.addSystem<cro::TextRenderer>(mb);    
 }
 
 void MenuState::loadAssets()
@@ -299,12 +299,12 @@ void MenuState::createScene()
     auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e, glm::vec2)
         {
-            e.getComponent<cro::Text>().setColour(TextHighlightColour);        
+            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);        
         });
     auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e, glm::vec2) 
         {
-            e.getComponent<cro::Text>().setColour(TextNormalColour);
+            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
         });
 
     auto entity = m_scene.createEntity();
@@ -448,7 +448,7 @@ void MenuState::handleTextEdit(const cro::Event& evt)
     //update string origin
     if (!m_textEdit.string->empty())
     {
-        auto bounds = m_textEdit.entity.getComponent<cro::Text>().getLocalBounds();
+        auto bounds = cro::Text::getLocalBounds(m_textEdit.entity);
         m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
     }
 }
@@ -462,9 +462,9 @@ void MenuState::applyTextEdit()
             *m_textEdit.string = "INVALID";
         }
 
-        m_textEdit.entity.getComponent<cro::Text>().setColour(cro::Colour::White());
+        m_textEdit.entity.getComponent<cro::Text>().setFillColour(cro::Colour::White());
         m_textEdit.entity.getComponent<cro::Text>().setString(*m_textEdit.string);
-        auto bounds = m_textEdit.entity.getComponent<cro::Text>().getLocalBounds();
+        auto bounds = cro::Text::getLocalBounds(m_textEdit.entity);
         m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
         m_textEdit.entity.getComponent<cro::Callback>().active = false;
         SDL_StopTextInput();

@@ -31,18 +31,31 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/core/String.hpp>
-#include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Rectangle.hpp>
-#include <crogine/graphics/MaterialData.hpp>
+#include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/Vertex2D.hpp>
+#include <crogine/ecs/Entity.hpp>
 
-#include <vector>
+#include <crogine/detail/glm/vec2.hpp>
 
 namespace cro
 {
+    struct Glyph;
     class Font;
+    class Drawable2D;
 
     /*!
-    \brief Component to draw text.
+    \brief 2D Text component.
+    Text components, when used in conjunction with Transformable
+    and Drawable2D components are used to render strings of Text
+    with a RenderSystem2D. The draw order of Text components can
+    be set with their Y or Z transform position, depending on
+    the sort order set in RenderSystem2D. If a text component
+    appears to not render then check that its sort order value is
+    above that of any other Drawable2D types, such as Sprites,
+    currently being rendered by the same RenderSystem2D.
+    Text components also require a TextSystem in the active Scene.
+    \see RenderSystem2D::setSortOrder()
     */
     class CRO_EXPORT_API Text final
     {
@@ -50,117 +63,108 @@ namespace cro
         Text();
 
         /*!
-        \brief Constructor.
-        \param font Font with which to draw text
+        \brief Construct a Text component with a given Font
         */
-        explicit Text(const Font& font);
+        Text(const Font&);
 
         /*!
-        \brief Set the text's string
+        \brief Set the font to be used with this Text
+        */
+        void setFont(const Font&);
+
+        /*!
+        \brief Set the character size of the Text
+        */
+        void setCharacterSize(std::uint32_t);
+
+        /*!
+        \brief Sets the vertical spacing between lines of text
+        */
+        void setVerticalSpacing(float);
+
+        /*!
+        \brief Set the string to render with this Text
         */
         void setString(const String&);
 
         /*!
-        \brief Sets the character size
+        \brief Set the Text fill colour
         */
-        void setCharSize(uint32 charSize);
+        void setFillColour(Colour);
+
+        //void setOutlineColour(Colour)
+        //void setOutlineThickness(float)
 
         /*!
-        \brief Sets the colour with which to render the text
+        \brief Return a pointer to the active font
+        May be nullptr
         */
-        void setColour(Colour);
+        const Font* getFont() const;
 
         /*!
-        \brief Sets the blend mode for the text.
+        \brief Return the current character size
         */
-        void setBlendMode(Material::BlendMode);
+        std::uint32_t getCharacterSize() const;
 
         /*!
-        \brief Returns the current line height of the text
+        \brief Returns the current line spacing
         */
-        float getLineHeight() const;
+        float getVerticalSpacing() const;
 
         /*!
-        \brief Returns the current character size
+        \brief Return the current string
         */
-        uint32 getCharSize() const { return m_charSize; }
+        const String& getString() const;
 
         /*!
-        \brief Returns the local (pre transform) bounds
+        \brief Return the current fill colour
         */
-        const FloatRect& getLocalBounds() const;
+        Colour getFillColour() const;
 
+        //Colour getOutlineColour() const;
+        //float getOutlineThickness() const;
+        
         /*!
-        \brief Sets the cropping area for this instance.
-        For example text may need to be cropped when used within
-        a text box. The given area should be in local coords,
-        with the text origin at the top (because text lines run downwards).
-        This means that the either the height or the bottom parameter of
-        the rectangle should be negative.
+        \brief Returns the AABB of the Text component
+        The given entity must have at least a Text and
+        Drawable2D component attached to it
         */
-        void setCroppingArea(FloatRect area);
+        static FloatRect getLocalBounds(Entity);
 
-        /*!
-        \brief Returns the current cropping area
-        */
-        const FloatRect& getCroppingArea() const { return m_croppingArea; }
-
-        /*!
-        \brief Alignment enum
-        */
-        enum Alignment
+        enum class Alignment
         {
-            Left, Centre, Right
+            Left, Right, Centre
         };
 
         /*!
-        \brief Sets the text alignment
+        \brief Sets whether the Text should be aligned Left,
+        Right, or Centre about its origin. Only affects the
+        X axis
         */
         void setAlignment(Alignment);
 
         /*!
-        \brief Returns the current alignment
+        \brief Returns the Text's current Alignment
         */
         Alignment getAlignment() const { return m_alignment; }
 
-        /*!
-        \brief Returns the width of the line at the given index
-        or 0 if that line does not exist
-        */
-        float getLineWidth(std::size_t) const;
-
     private:
-        const Font* m_font;
+
         String m_string;
-        uint32 m_charSize;
-        Colour m_colour;
-        Material::BlendMode m_blendMode;
-        mutable uint8 m_dirtyFlags;
+        const Font* m_font;
+        std::uint32_t m_charSize;
+        float m_verticalSpacing;
+        Colour m_fillColour;
 
-        bool m_scissor;
-        FloatRect m_croppingArea;
+        //Colour m_outlineColour;
+        //float m_outlineThickness;
 
-        enum Flags
-        {
-            Verts = 0x1, Colours = 0x2, CharSize = 0x4, BlendMode = 0x8
-        };
-
-        struct Vertex final
-        {
-            glm::vec4 position = glm::vec4(0.f);
-            glm::vec4 colour = glm::vec4(0.f);
-            glm::vec2 UV = glm::vec2(0.f);
-        };
-        mutable std::vector<Vertex> m_vertices;
-        int32 m_vboOffset; //starting index in parent VBO
-        std::array<std::size_t, 2u> m_batchIndex = {};
-
-        mutable FloatRect m_localBounds;
-
-        void updateVerts() const;
-
+        bool m_dirty;
         Alignment m_alignment;
 
-        friend class TextRenderer;
+        void updateVertices(Drawable2D&);
+        void addQuad(std::vector<Vertex2D>&, glm::vec2 position, Colour, const Glyph& glyph, float = 0.f);
+
+        friend class TextSystem;
     };
 }

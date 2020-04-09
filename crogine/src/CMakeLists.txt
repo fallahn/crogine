@@ -69,7 +69,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/SkeletalAnimator.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteAnimator.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteSystem.cpp
-  ${PROJECT_DIR}/ecs/systems/TextRenderer.cpp
+  ${PROJECT_DIR}/ecs/systems/TextSystem.cpp
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 
   ${PROJECT_DIR}/graphics/BoundingBox.cpp

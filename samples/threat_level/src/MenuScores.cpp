@@ -96,10 +96,11 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     controlEntity.getComponent<cro::Transform>().addChild(backgroundEnt.getComponent<cro::Transform>());
 
     auto textEnt = m_menuScene.createEntity();
+    textEnt.addComponent<cro::Drawable2D>();
     auto& titleText = textEnt.addComponent<cro::Text>(menuFont);
     titleText.setString("Scores");
-    titleText.setColour(textColourSelected);
-    titleText.setCharSize(TextMedium);
+    titleText.setFillColour(textColourSelected);
+    titleText.setCharacterSize(TextMedium);
     auto& titleTextTx = textEnt.addComponent<cro::Transform>();
     titleTextTx.setPosition({ -84.f, 110.f, 0.f });
     controlEntity.getComponent<cro::Transform>().addChild(titleTextTx);
@@ -114,10 +115,11 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     backTx.setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
 
     textEnt = m_menuScene.createEntity();
+    textEnt.addComponent<cro::Drawable2D>();
     auto& backText = textEnt.addComponent<cro::Text>(menuFont);
     backText.setString("Back");
-    backText.setColour(textColourNormal);
-    backText.setCharSize(TextLarge);
+    backText.setFillColour(textColourNormal);
+    backText.setCharacterSize(TextLarge);
     auto& backTexTx = textEnt.addComponent<cro::Transform>();
     entity.getComponent<cro::Transform>().addChild(backTexTx);
     backTexTx.move({ 40.f, 100.f, 0.f });
@@ -200,44 +202,45 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
 
     entity = m_menuScene.createEntity();
     controlEntity.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(scoreboardFont).setString(scoreString);
-    entity.getComponent<cro::Text>().setCharSize(TextLarge);
-    entity.getComponent<cro::Text>().setColour(textColourSelected);
+    entity.getComponent<cro::Text>().setCharacterSize(TextLarge);
+    entity.getComponent<cro::Text>().setFillColour(textColourSelected);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
 
-    auto bounds = entity.getComponent<cro::Text>().getLocalBounds();
+    auto bounds = cro::Text::getLocalBounds(entity);
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
 
     size = backgroundEnt.getComponent<cro::Sprite>().getSize();
     cro::FloatRect croppingArea(0.f, 0.f, size.x * 0.8f, -(size.y - backgroundEnt.getComponent<cro::Transform>().getPosition().y - 36.f)); //remember text origin is at top
-    entity.getComponent<cro::Text>().setCroppingArea(croppingArea);
+    //entity.getComponent<cro::Text>().setCroppingArea(croppingArea);
 
     //add click /drag
     const auto& scroll = [](cro::Entity entity, float delta)->float
     {
-        auto& text = entity.getComponent<cro::Text>();
-        auto crop = text.getCroppingArea();
+        //auto& text = entity.getComponent<cro::Text>();
+        //auto crop = text.getCroppingArea();
 
-        //clamp movement
-        float movement = 0.f;
-        if (delta > 0)
-        {
-            movement = cro::Util::Maths::clamp((text.getLocalBounds().height + crop.height) - entity.getComponent<cro::Transform>().getPosition().y, 0.f, delta);
-        }
-        else
-        {
-            movement = std::max(-entity.getComponent<cro::Transform>().getPosition().y, delta);
-        }
-        entity.getComponent<cro::Transform>().move({ 0.f, movement, 0.f });
+        ////clamp movement
+        //float movement = 0.f;
+        //if (delta > 0)
+        //{
+        //    movement = cro::Util::Maths::clamp((text.getLocalBounds().height + crop.height) - entity.getComponent<cro::Transform>().getPosition().y, 0.f, delta);
+        //}
+        //else
+        //{
+        //    movement = std::max(-entity.getComponent<cro::Transform>().getPosition().y, delta);
+        //}
+        //entity.getComponent<cro::Transform>().move({ 0.f, movement, 0.f });
 
-        //update the cropping area
-        crop.bottom -= movement;
-        text.setCroppingArea(crop);
+        ////update the cropping area
+        //crop.bottom -= movement;
+        //text.setCroppingArea(crop);
 
-        //update the input area
-        entity.getComponent<cro::UIInput>().area.bottom -= movement;
+        ////update the input area
+        //entity.getComponent<cro::UIInput>().area.bottom -= movement;
 
-        return movement;
+        return 0.f;// movement;
     };
 
 

@@ -38,7 +38,7 @@ source distribution.
 namespace cro
 {
 	/*!
-	\brief Struct representing an RGBA colour.
+	\brief A class representing an RGBA colour.
 	Colours are stored as normalised values so that
 	they may be used to represent greater than 8 bit values
 	*/

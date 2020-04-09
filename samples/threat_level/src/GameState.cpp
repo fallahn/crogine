@@ -73,7 +73,7 @@ source distribution.
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/SpriteSystem.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
-#include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
@@ -272,8 +272,8 @@ void GameState::addSystems()
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::ModelRenderer>(mb);
     m_uiScene.addSystem<cro::SpriteSystem>(mb);
+    m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
-    m_uiScene.addSystem<cro::TextRenderer>(mb);
     m_uiScene.addSystem<cro::AudioSystem>(mb);
 
     m_uiScene.addDirector<HudDirector>();
@@ -520,11 +520,12 @@ void GameState::createHUD()
     auto& scoreFont = m_resources.fonts.get(0);
     scoreFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(scoreFont);
     //entity.getComponent<cro::Text>().setString("0000000000");
-    entity.getComponent<cro::Text>().setCharSize(50);
-    entity.getComponent<cro::Text>().setColour(cro::Colour::Cyan());
-    entity.addComponent<cro::Transform>().setPosition({ UIPadding, UIPadding + entity.getComponent<cro::Text>().getLineHeight(), 0.f });
+    entity.getComponent<cro::Text>().setCharacterSize(50);
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Cyan());
+    entity.addComponent<cro::Transform>().setPosition({ UIPadding, UIPadding + entity.getComponent<cro::Text>().getVerticalSpacing(), 0.f });
     entity.addComponent<HudItem>().type = HudItem::Type::Score;
     entity.getComponent<HudItem>().value = 0.f;
 

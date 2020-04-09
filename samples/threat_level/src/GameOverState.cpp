@@ -42,7 +42,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
-#include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 
@@ -157,7 +157,7 @@ bool GameOverState::simulate(float dt)
     {
         auto& txt = entity.getComponent<cro::Text>();
         txt.setString("Score: " + std::to_string(m_sharedResources.score));
-        auto bounds = txt.getLocalBounds();
+        auto bounds = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
     };
     commandSystem->sendCommand(cmd);
@@ -179,8 +179,9 @@ void GameOverState::load()
     m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem>(mb);
+    m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
-    m_uiScene.addSystem<cro::TextRenderer>(mb);
+
     commandSystem = &m_uiScene.addSystem<cro::CommandSystem>(mb);
 
     auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
@@ -198,10 +199,11 @@ void GameOverState::load()
     entity.addComponent<cro::Drawable2D>();
 
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("GAME OVER");
-    entity.getComponent<cro::Text>().setCharSize(TextXL);
-    entity.getComponent<cro::Text>().setColour(textColourSelected);
-    auto textSize = entity.getComponent<cro::Text>().getLocalBounds();
+    entity.getComponent<cro::Text>().setCharacterSize(TextXL);
+    entity.getComponent<cro::Text>().setFillColour(textColourSelected);
+    auto textSize = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::Transform>();
     entity.getComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 4.f) * 3.4f, uiDepth });
     entity.getComponent<cro::Transform>().setOrigin({ textSize.width / 2.f, -textSize.height / 2.f, 0.f });
@@ -222,10 +224,11 @@ void GameOverState::load()
     buttonTx.setPosition({ uiRes.x / 2.f, 144.f, uiDepth });
 
     auto textEnt = m_uiScene.createEntity();
+    textEnt.addComponent<cro::Drawable2D>();
     auto& gameText = textEnt.addComponent<cro::Text>(font);
     gameText.setString("OK");
-    gameText.setColour(textColourNormal);
-    gameText.setCharSize(TextLarge);
+    gameText.setFillColour(textColourNormal);
+    gameText.setCharacterSize(TextLarge);
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
     gameTextTx.setPosition({ 40.f, 100.f, 0.f });
     entity.getComponent<cro::Transform>().addChild(gameTextTx);
@@ -242,14 +245,14 @@ void GameOverState::load()
     {
         e.getComponent<cro::Sprite>().setTextureRect(activeArea);
         iconEnt.getComponent<cro::Sprite>().setColour(textColourSelected);
-        textEnt.getComponent<cro::Text>().setColour(textColourSelected);
+        textEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
     });
     gameControl.callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
         [&, area, iconEnt, textEnt](cro::Entity e, glm::vec2) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(area);
         iconEnt.getComponent<cro::Sprite>().setColour(textColourNormal);
-        textEnt.getComponent<cro::Text>().setColour(textColourNormal);
+        textEnt.getComponent<cro::Text>().setFillColour(textColourNormal);
     });
     gameControl.callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([&]
     (cro::Entity, cro::uint64 flags)
@@ -275,10 +278,11 @@ void GameOverState::load()
 
 
     auto scoreEnt = m_uiScene.createEntity();
+    scoreEnt.addComponent<cro::Drawable2D>();
     auto& scoreText = scoreEnt.addComponent<cro::Text>(font);
     scoreText.setString("Score: 0000");
-    scoreText.setCharSize(TextXL);
-    scoreText.setColour(textColourSelected);
+    scoreText.setCharacterSize(TextXL);
+    scoreText.setFillColour(textColourSelected);
     scoreEnt.addComponent<cro::Transform>().setPosition({uiRes.x / 2.f, (uiRes.y / 2.f) * 1.1f, uiDepth});
     scoreEnt.addComponent<cro::CommandTarget>().ID = UICommand::ScoreText;
 
@@ -311,11 +315,12 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     auto& font = m_sharedResources.fonts.get(FontID::ScoreboardFont);
 
     auto textEnt = m_uiScene.createEntity();
+    textEnt.addComponent<cro::Drawable2D>();
     textEnt.addComponent<cro::Text>(font).setString("Enter Your Name:");
-    textEnt.getComponent<cro::Text>().setCharSize(TextMedium);
-    textEnt.getComponent<cro::Text>().setColour(textColourSelected);
+    textEnt.getComponent<cro::Text>().setCharacterSize(TextMedium);
+    textEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
 
-    auto textSize = textEnt.getComponent<cro::Text>().getLocalBounds();
+    auto textSize = cro::Text::getLocalBounds(textEnt);
     parentEnt.getComponent<cro::Transform>().addChild(textEnt.addComponent<cro::Transform>());
     textEnt.getComponent<cro::Transform>().setOrigin({ textSize.width / 2.f, -textSize.height, 0.f });
 
@@ -342,9 +347,10 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     boxEnt.addComponent<cro::CommandTarget>().ID = UICommand::InputBox;
 
     auto inputEnt = m_uiScene.createEntity();
+    inputEnt.addComponent<cro::Drawable2D>();
     inputEnt.addComponent<cro::Text>(font).setString(names[cro::Util::Random::value(0, names.size()-1)]);
-    inputEnt.getComponent<cro::Text>().setCharSize(TextLarge);
-    inputEnt.getComponent<cro::Text>().setColour(textColourSelected);
+    inputEnt.getComponent<cro::Text>().setCharacterSize(TextLarge);
+    inputEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
     parentEnt.getComponent<cro::Transform>().addChild(inputEnt.addComponent<cro::Transform>());
     inputEnt.getComponent<cro::Transform>().setPosition({ (-textArea.width / 2.f) + 32.f, -32.f, 0.f });
     inputEnt.addComponent<cro::CommandTarget>().ID = UICommand::NameText;
@@ -359,7 +365,7 @@ void GameOverState::handleTextEvent(const cro::Event& evt)
     cmd.targetFlags = UICommand::NameText;
     cmd.action = [&, text](cro::Entity entity, float)
     {
-        if (entity.getComponent<cro::Text>().getLocalBounds().width < inactiveArea.width - 100.f)
+        if (cro::Text::getLocalBounds(entity).width < inactiveArea.width - 100.f)
         {
             m_sharedResources.playerName += text;
             entity.getComponent<cro::Text>().setString(m_sharedResources.playerName + "_");

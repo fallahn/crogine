@@ -56,7 +56,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
-#include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
@@ -362,8 +362,8 @@ void GameState::addSystems()
     m_uiScene.addSystem<cro::SpriteSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
+    m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
-    m_uiScene.addSystem<cro::TextRenderer>(mb);
 }
 
 void GameState::loadAssets()
@@ -389,8 +389,9 @@ void GameState::createUI()
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 60.f });
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Waiting for server...");
-    entity.getComponent<cro::Text>().setColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::CommandTarget>().ID = UI::CommandID::WaitMessage;
 
     //player crosshair

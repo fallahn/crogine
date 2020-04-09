@@ -48,7 +48,6 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
-#include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ProjectionMapSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem.hpp>
@@ -176,7 +175,7 @@ void GameState::addSystems()
     m_overlayScene.addSystem<cro::CameraSystem>(mb);
     m_overlayScene.addSystem<cro::SpriteSystem>(mb);
     m_overlayScene.addSystem<cro::RenderSystem2D>(mb);
-    m_overlayScene.addSystem<cro::TextRenderer>(mb);
+
     commandSystem = &m_overlayScene.addSystem<cro::CommandSystem>(mb);
 }
 

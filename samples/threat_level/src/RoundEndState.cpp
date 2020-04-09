@@ -42,7 +42,7 @@ source distribution.
 
 #include <crogine/ecs/systems/SpriteSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
-#include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -114,7 +114,7 @@ bool RoundEndState::simulate(float dt)
     {
         auto& txt = entity.getComponent<cro::Text>();
         txt.setString("Score: " + std::to_string(m_sharedResources.score));
-        auto bounds = txt.getLocalBounds();
+        auto bounds = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
     };
     commandSystem->sendCommand(cmd);
@@ -137,8 +137,8 @@ void RoundEndState::load()
     commandSystem = &m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem>(mb);
+    m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
-    m_uiScene.addSystem<cro::TextRenderer>(mb);
 
     auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
 
@@ -150,10 +150,11 @@ void RoundEndState::load()
     entity.addComponent<cro::Drawable2D>();
 
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("ROUND END");
-    entity.getComponent<cro::Text>().setCharSize(TextXL);
-    entity.getComponent<cro::Text>().setColour(textColourSelected);
-    auto textSize = entity.getComponent<cro::Text>().getLocalBounds();
+    entity.getComponent<cro::Text>().setCharacterSize(TextXL);
+    entity.getComponent<cro::Text>().setFillColour(textColourSelected);
+    auto textSize = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::Transform>();
     entity.getComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 4.f) * 3.f, uiDepth });
     entity.getComponent<cro::Transform>().setOrigin({ textSize.width / 2.f, -textSize.height / 2.f, 0.f });
@@ -174,10 +175,11 @@ void RoundEndState::load()
     buttonTx.setPosition({ uiRes.x / 2.f, 144.f, uiDepth });
 
     auto textEnt = m_uiScene.createEntity();
+    textEnt.addComponent<cro::Drawable2D>();
     auto& gameText = textEnt.addComponent<cro::Text>(font);
     gameText.setString("Continue...");
-    gameText.setColour(textColourNormal);
-    gameText.setCharSize(TextLarge);
+    gameText.setFillColour(textColourNormal);
+    gameText.setCharacterSize(TextLarge);
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
     gameTextTx.setPosition({ 40.f, 100.f, 0.f });
     entity.getComponent<cro::Transform>().addChild(gameTextTx);
@@ -192,13 +194,13 @@ void RoundEndState::load()
         [&, activeArea, textEnt](cro::Entity e, glm::vec2) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(activeArea);
-        textEnt.getComponent<cro::Text>().setColour(textColourSelected);
+        textEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
     });
     gameControl.callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
         [&, area, textEnt] (cro::Entity e, glm::vec2) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(area);
-        textEnt.getComponent<cro::Text>().setColour(textColourNormal);
+        textEnt.getComponent<cro::Text>().setFillColour(textColourNormal);
     });
     gameControl.callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([&]
     (cro::Entity, cro::uint64 flags)
@@ -218,10 +220,11 @@ void RoundEndState::load()
 
 
     auto scoreEnt = m_uiScene.createEntity();
+    scoreEnt.addComponent<cro::Drawable2D>();
     auto& scoreText = scoreEnt.addComponent<cro::Text>(font);
     scoreText.setString("Score: 0000");
-    scoreText.setCharSize(TextXL);
-    scoreText.setColour(textColourSelected);
+    scoreText.setCharacterSize(TextXL);
+    scoreText.setFillColour(textColourSelected);
     scoreEnt.addComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 2.f) * 1.1f, uiDepth });
     scoreEnt.addComponent<cro::CommandTarget>().ID = UICommand::ScoreText;
 
