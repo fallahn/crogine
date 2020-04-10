@@ -103,7 +103,7 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     backText.setCharacterSize(TextLarge);
     auto& backTexTx = textEnt.addComponent<cro::Transform>();
     entity.getComponent<cro::Transform>().addChild(backTexTx);
-    backTexTx.move({ 40.f, 100.f, 0.f });
+    backTexTx.move({ 20.f, 80.f, 1.f });
 
     auto iconEnt = m_menuScene.createEntity();
     entity.getComponent<cro::Transform>().addChild(iconEnt.addComponent<cro::Transform>());
@@ -174,11 +174,11 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     entity = m_menuScene.createEntity();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_sharedResources.fonts.get(FontID::ScoreboardFont)).setString(resString);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setCharacterSize(TextLarge);
     entity.getComponent<cro::Text>().setFillColour(textColourSelected);
     backgroundEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
-    entity.getComponent<cro::Transform>().setPosition({ 260.f, 118.f, 0.f });
+    entity.getComponent<cro::Transform>().setPosition({ 270.f, 108.f, 1.f });
     //entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 600.f, -64.f });
 
     entity = m_menuScene.createEntity();

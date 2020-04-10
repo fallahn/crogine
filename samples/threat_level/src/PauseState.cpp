@@ -272,7 +272,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     textEntity.getComponent<cro::Text>().setCharacterSize(TextLarge);
     textEntity.getComponent<cro::Text>().setFillColour(textColourNormal);
     entity.getComponent<cro::Transform>().addChild(textEntity.addComponent<cro::Transform>());
-    textEntity.getComponent<cro::Transform>().move({ 40.f, 100.f, 0.f });
+    textEntity.getComponent<cro::Transform>().move({ 20.f, 80.f, 1.f });
 
     auto iconEntity = m_uiScene.createEntity();
     entity.getComponent<cro::Transform>().addChild(iconEntity.addComponent<cro::Transform>());
@@ -316,7 +316,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     textEntity.getComponent<cro::Text>().setCharacterSize(TextLarge);
     textEntity.getComponent<cro::Text>().setFillColour(textColourNormal);
     entity.getComponent<cro::Transform>().addChild(textEntity.addComponent<cro::Transform>());
-    textEntity.getComponent<cro::Transform>().move({ 40.f, 100.f, 0.f });
+    textEntity.getComponent<cro::Transform>().move({ 20.f, 80.f, 1.f });
 
     iconEntity = m_uiScene.createEntity();
     entity.getComponent<cro::Transform>().addChild(iconEntity.addComponent<cro::Transform>());
@@ -354,7 +354,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     textEntity.getComponent<cro::Text>().setCharacterSize(TextLarge);
     textEntity.getComponent<cro::Text>().setFillColour(textColourNormal);
     entity.getComponent<cro::Transform>().addChild(textEntity.addComponent<cro::Transform>());
-    textEntity.getComponent<cro::Transform>().move({ 40.f, 100.f, 0.f });
+    textEntity.getComponent<cro::Transform>().move({ 20.f, 80.f, 0.f });
 
     iconEntity = m_uiScene.createEntity();
     entity.getComponent<cro::Transform>().addChild(iconEntity.addComponent<cro::Transform>());
@@ -393,7 +393,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     textEntity.getComponent<cro::Text>().setFillColour(textColourNormal);
     textEntity.getComponent<cro::Text>().setCharacterSize(TextXL);
     buttonEntity.getComponent<cro::Transform>().addChild(textEntity.addComponent<cro::Transform>());
-    textEntity.getComponent<cro::Transform>().setPosition({ 60.f, 110.f, 0.2f });
+    textEntity.getComponent<cro::Transform>().setPosition({ 40.f, 80.f, 0.2f });
 
     iconEntity = m_uiScene.createEntity();
     buttonEntity.getComponent<cro::Transform>().addChild(iconEntity.addComponent<cro::Transform>());
@@ -430,7 +430,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     textEntity.getComponent<cro::Text>().setFillColour(textColourNormal);
     textEntity.getComponent<cro::Text>().setCharacterSize(TextXL);
     buttonEntity.getComponent<cro::Transform>().addChild(textEntity.addComponent<cro::Transform>());
-    textEntity.getComponent<cro::Transform>().setPosition({ 60.f, 110.f, 0.2f });
+    textEntity.getComponent<cro::Transform>().setPosition({ 40.f, 80.f, 0.2f });
 
     iconEntity = m_uiScene.createEntity();
     buttonEntity.getComponent<cro::Transform>().addChild(iconEntity.addComponent<cro::Transform>());
@@ -525,7 +525,7 @@ void PauseState::createOptions(const cro::SpriteSheet& spriteSheet, const cro::S
     textEnt.getComponent<cro::Text>().setFillColour(textColourNormal);
     textEnt.getComponent<cro::Text>().setCharacterSize(TextLarge);
     entity.getComponent<cro::Transform>().addChild(textEnt.addComponent<cro::Transform>());
-    textEnt.getComponent<cro::Transform>().setPosition({ 40.f, 100.f, 0.f });
+    textEnt.getComponent<cro::Transform>().setPosition({ 20.f, 80.f, 0.f });
 
     auto iconEnt = m_uiScene.createEntity();
     iconEnt.addComponent<cro::Drawable2D>();

@@ -213,7 +213,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
 
 
 
-    //comin soon button
+    //coming soon button
     entity = m_menuScene.createEntity();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("empty_normal");
@@ -271,7 +271,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     textEnt.getComponent<cro::Text>().setCharacterSize(60);
     textEnt.addComponent<cro::Transform>();
     entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
-    textEnt.getComponent<cro::Transform>().move({ 40.f, 100.f, 0.f });
+    textEnt.getComponent<cro::Transform>().move({ 20.f, 80.f, 1.f });
 
 
     auto iconEnt = m_menuScene.createEntity();

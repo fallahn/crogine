@@ -181,7 +181,7 @@ void RoundEndState::load()
     gameText.setFillColour(textColourNormal);
     gameText.setCharacterSize(TextLarge);
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
-    gameTextTx.setPosition({ 40.f, 100.f, 0.f });
+    gameTextTx.setPosition({ 20.f, 80.f, 0.f });
     entity.getComponent<cro::Transform>().addChild(gameTextTx);
     /*auto iconEnt = m_uiScene.createEntity();
     iconEnt.addComponent<cro::Transform>().setParent(entity);

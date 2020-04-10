@@ -205,7 +205,7 @@ void GameOverState::load()
     entity.getComponent<cro::Text>().setFillColour(textColourSelected);
     auto textSize = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::Transform>();
-    entity.getComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 4.f) * 3.4f, uiDepth });
+    entity.getComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 4.f) * 3.f, uiDepth });
     entity.getComponent<cro::Transform>().setOrigin({ textSize.width / 2.f, -textSize.height / 2.f, 0.f });
 
 
@@ -230,7 +230,7 @@ void GameOverState::load()
     gameText.setFillColour(textColourNormal);
     gameText.setCharacterSize(TextLarge);
     auto& gameTextTx = textEnt.addComponent<cro::Transform>();
-    gameTextTx.setPosition({ 40.f, 100.f, 0.f });
+    gameTextTx.setPosition({ 20.f, 80.f, 0.f });
     entity.getComponent<cro::Transform>().addChild(gameTextTx);
     auto iconEnt = m_uiScene.createEntity();
     entity.getComponent<cro::Transform>().addChild(iconEnt.addComponent<cro::Transform>());
@@ -283,7 +283,7 @@ void GameOverState::load()
     scoreText.setString("Score: 0000");
     scoreText.setCharacterSize(TextXL);
     scoreText.setFillColour(textColourSelected);
-    scoreEnt.addComponent<cro::Transform>().setPosition({uiRes.x / 2.f, (uiRes.y / 2.f) * 1.1f, uiDepth});
+    scoreEnt.addComponent<cro::Transform>().setPosition({uiRes.x / 2.f, (uiRes.y / 2.f) * 0.8f, uiDepth});
     scoreEnt.addComponent<cro::CommandTarget>().ID = UICommand::ScoreText;
 
     createTextBox(sprites);
@@ -310,7 +310,7 @@ void GameOverState::updateView()
 void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
 {
     auto parentEnt = m_uiScene.createEntity();
-    parentEnt.addComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 3.f) * 2.f, uiDepth });
+    parentEnt.addComponent<cro::Transform>().setPosition({ uiRes.x / 2.f, (uiRes.y / 3.f) * 1.8f, uiDepth });
 
     auto& font = m_sharedResources.fonts.get(FontID::ScoreboardFont);
 
@@ -330,6 +330,7 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     auto textArea = boxEnt.getComponent<cro::Sprite>().getTextureBounds();
     parentEnt.getComponent<cro::Transform>().addChild(boxEnt.addComponent<cro::Transform>());
     boxEnt.getComponent<cro::Transform>().setOrigin({ textArea.width / 2.f, textArea.height, 0.f });
+    boxEnt.getComponent<cro::Transform>().move({ 0.f, -20, 1.f });
     boxEnt.addComponent<cro::UIInput>().area = textArea;
     inactiveArea = boxEnt.getComponent<cro::Sprite>().getTextureRect();
     auto activeArea = spriteSheet.getSprite("textbox_active").getTextureRect();
@@ -352,7 +353,7 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     inputEnt.getComponent<cro::Text>().setCharacterSize(TextLarge);
     inputEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
     parentEnt.getComponent<cro::Transform>().addChild(inputEnt.addComponent<cro::Transform>());
-    inputEnt.getComponent<cro::Transform>().setPosition({ (-textArea.width / 2.f) + 32.f, -32.f, 0.f });
+    inputEnt.getComponent<cro::Transform>().setPosition({ (-textArea.width / 2.f) + 42.f, -52.f, 1.f });
     inputEnt.addComponent<cro::CommandTarget>().ID = UICommand::NameText;
 }
 

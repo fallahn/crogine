@@ -525,7 +525,7 @@ void GameState::createHUD()
     //entity.getComponent<cro::Text>().setString("0000000000");
     entity.getComponent<cro::Text>().setCharacterSize(50);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::Cyan());
-    entity.addComponent<cro::Transform>().setPosition({ UIPadding, UIPadding + entity.getComponent<cro::Text>().getVerticalSpacing(), 0.f });
+    entity.addComponent<cro::Transform>().setPosition({ UIPadding, UIPadding + entity.getComponent<cro::Text>().getVerticalSpacing() + 40.f, 0.f });
     entity.addComponent<HudItem>().type = HudItem::Type::Score;
     entity.getComponent<HudItem>().value = 0.f;
 

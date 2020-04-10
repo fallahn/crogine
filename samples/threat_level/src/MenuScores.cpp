@@ -122,7 +122,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     backText.setCharacterSize(TextLarge);
     auto& backTexTx = textEnt.addComponent<cro::Transform>();
     entity.getComponent<cro::Transform>().addChild(backTexTx);
-    backTexTx.move({ 40.f, 100.f, 0.f });
+    backTexTx.move({ 20.f, 80.f, 1.f });
 
 
     auto iconEnt = m_menuScene.createEntity();
