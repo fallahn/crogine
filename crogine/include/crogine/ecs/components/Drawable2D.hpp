@@ -157,6 +157,7 @@ namespace cro
         as well as when vertex data is updated via setVertexData().
         */
         void updateLocalBounds();
+        void updateLocalBounds(FloatRect bounds);
 
         /*!
         \brief Adds a uniform binding to be applied to any shader this

@@ -163,7 +163,7 @@ namespace cro
         Alignment m_alignment;
 
         void updateVertices(Drawable2D&);
-        void addQuad(std::vector<Vertex2D>&, glm::vec2 position, Colour, const Glyph& glyph, float = 0.f);
+        void addQuad(std::vector<Vertex2D>&, glm::vec2 position, Colour, const Glyph& glyph, glm::vec2 textureSize, float = 0.f);
 
         friend class TextSystem;
     };

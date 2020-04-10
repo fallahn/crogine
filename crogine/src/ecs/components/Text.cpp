@@ -175,10 +175,168 @@ void Text::setAlignment(Text::Alignment alignment)
 //private
 void Text::updateVertices(Drawable2D& drawable)
 {
+    m_dirty = false;
 
+    auto& vertices = drawable.getVertexData();
+    vertices.clear();
+
+    FloatRect localBounds;
+
+    //skip if nothing to build
+    if (!m_font || m_string.empty())
+    {
+        drawable.updateLocalBounds(localBounds);
+        return;
+    }
+
+    //update glyphs
+    glm::vec2 textureSize = m_font->getTexture(m_charSize).getSize();
+    float xOffset = static_cast<float>(m_font->getGlyph(L' ', m_charSize).advance);
+    float yOffset = static_cast<float>(m_font->getLineHeight(m_charSize));
+    float x = 0.f;
+    float y = 0.f;// static_cast<float>(m_charSize);
+
+    float minX = x;
+    float minY = y;
+    float maxX = 0.f;
+    float maxY = 0.f;
+
+    std::uint32_t prevChar = 0;
+    const auto& string = m_string;
+    for (auto i = 0u; i < string.size(); ++i)
+    {
+        std::uint32_t currChar = string[i];
+
+        x += m_font->getKerning(prevChar, currChar, m_charSize);
+        prevChar = currChar;
+
+        //whitespace chars
+        if (currChar == ' ' || currChar == '\t' || currChar == '\n')
+        {
+            minX = std::min(minX, x);
+            minY = std::min(minY, y);
+
+            switch (currChar)
+            {
+            default: break;
+            case ' ':
+                x += xOffset;
+                break;
+            case '\t':
+                x += xOffset * 4.f; //4 spaces for tab suckas
+                break;
+            case '\n':
+                y -= yOffset + m_verticalSpacing;
+                x = 0.f;
+                break;
+            }
+
+            maxX = std::max(maxX, x);
+            maxY = std::max(maxY, y);
+
+            continue; //skip quad for whitespace
+        }
+
+        //create the quads. //TODO reimplement (font doesn't yet support it)
+        //auto addOutline = [&]()
+        //{
+        //    const auto& glyph = m_font->getGlyph(currChar, m_charSize, m_outlineThickness);
+
+        //    float left = glyph.bounds.left;
+        //    float top = glyph.bounds.top;
+        //    float right = glyph.bounds.left + glyph.bounds.width;
+        //    float bottom = glyph.bounds.top + glyph.bounds.height;
+
+        //    //add the outline glyph to the vertices
+        //    addQuad(vertices, glm::vec2(x, y), m_outlineColour, glyph, m_outlineThickness);
+
+        //    minX = std::min(minX, x + left - m_outlineThickness);
+        //    maxX = std::max(maxX, x + right - m_outlineThickness);
+        //    minY = std::min(minY, y + top - m_outlineThickness);
+        //    maxY = std::max(maxY, y + bottom - m_outlineThickness);
+        //};
+
+        //if outline is larger, add first
+        /*if (m_outlineThickness > 0)
+        {
+            addOutline();
+        }*/
+
+        const auto& glyph = m_font->getGlyph(currChar, m_charSize);
+        addQuad(vertices, glm::vec2(x, y), m_fillColour, glyph, textureSize);
+
+        //else add outline on top TODO this just doesn't make sense, don't bother
+        /*if (m_outlineThickness < 0)
+        {
+            addOutline();
+        }*/
+
+        //only do this if not outlined
+        //if (m_outlineThickness == 0)
+        {
+            float left = glyph.bounds.left;
+            float top = glyph.bounds.bottom + glyph.bounds.height;
+            float right = glyph.bounds.left + glyph.bounds.width;
+            float bottom = glyph.bounds.bottom;
+
+            minX = std::min(minX, x + left);
+            maxX = std::max(maxX, x + right);
+            minY = std::min(minY, y + bottom);
+            maxY = std::max(maxY, y + top);
+        }
+
+        x += glyph.advance;
+    }
+
+    localBounds.left = minX;
+    localBounds.bottom = minY;
+    localBounds.width = maxX - minX;
+    localBounds.height = maxY - minY;
+
+
+    //check for alignment
+    float offset = 0.f;
+    if (m_alignment == Text::Alignment::Centre)
+    {
+        offset = localBounds.width / 2.f;
+    }
+    else if (m_alignment == Text::Alignment::Right)
+    {
+        offset = localBounds.width;
+    }
+    //if (offset > 0)
+    {
+        for (auto& v : vertices)
+        {
+            v.position.x -= offset;
+            v.position.y -= maxY;
+        }
+        localBounds.left -= offset;
+        localBounds.bottom -= maxY;
+    }
+
+    drawable.updateLocalBounds(localBounds);
 }
 
-void Text::addQuad(std::vector<Vertex2D>&, glm::vec2 position, Colour, const Glyph& glyph, float outline)
+void Text::addQuad(std::vector<Vertex2D>& vertices, glm::vec2 position, Colour colour, const Glyph& glyph, glm::vec2 textureSize, float outlineThickness)
 {
+    //this might sound counter intuitive - but we're
+    //making the characters top to bottom
+    float left = glyph.bounds.left;
+    float bottom = glyph.bounds.bottom;
+    float right = glyph.bounds.left + glyph.bounds.width;
+    float top = glyph.bounds.bottom + glyph.bounds.height;
 
+    float u1 = static_cast<float>(glyph.textureBounds.left) / textureSize.x;
+    float v1 = static_cast<float>(glyph.textureBounds.bottom) / textureSize.y;
+    float u2 = static_cast<float>(glyph.textureBounds.left + glyph.textureBounds.width) / textureSize.x;
+    float v2 = static_cast<float>(glyph.textureBounds.bottom + glyph.textureBounds.height) / textureSize.y;
+
+    vertices.emplace_back(glm::vec2(position.x + left - outlineThickness, position.y + top - outlineThickness), glm::vec2(u1, v1), colour);
+    vertices.emplace_back(glm::vec2(position.x + left - outlineThickness, position.y + bottom - outlineThickness), glm::vec2(u1, v2), colour);
+    vertices.emplace_back(glm::vec2(position.x + right - outlineThickness, position.y + top - outlineThickness), glm::vec2(u2, v1), colour);
+
+    vertices.emplace_back(glm::vec2(position.x + right - outlineThickness, position.y + top - outlineThickness), glm::vec2(u2, v1), colour);
+    vertices.emplace_back(glm::vec2(position.x + left - outlineThickness, position.y + bottom - outlineThickness), glm::vec2(u1, v2), colour);
+    vertices.emplace_back(glm::vec2(position.x + right - outlineThickness, position.y + bottom - outlineThickness), glm::vec2(u2, v2), colour);
 }

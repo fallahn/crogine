@@ -51,10 +51,9 @@ void TextSystem::process(float)
         auto& drawable = entity.getComponent<Drawable2D>();
         auto& text = entity.getComponent<Text>();
 
-        if (text.m_dirty)
+        if (text.m_dirty || text.m_font->pageUpdated())
         {
             text.updateVertices(drawable);
-
             drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
             drawable.setPrimitiveType(GL_TRIANGLES);
         }

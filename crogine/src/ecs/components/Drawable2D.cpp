@@ -158,6 +158,12 @@ void Drawable2D::updateLocalBounds()
     m_updateBufferData = true; //tells the system we have new data to upload
 }
 
+void Drawable2D::updateLocalBounds(FloatRect localBounds)
+{
+    m_localBounds = localBounds;
+    m_updateBufferData = true;
+}
+
 void Drawable2D::bindUniform(const std::string& name, const Texture& texture)
 {
     bindUniform(name, &texture, m_textureBindings);
