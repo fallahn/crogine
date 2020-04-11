@@ -359,7 +359,7 @@ void TextRenderer::rebuildBatch()
             glCheck(glVertexAttribPointer(m_shaders[/*Font::Bitmap*/0].attribMap[j].location, m_shaders[/*Font::Bitmap*/0].attribMap[j].size, GL_FLOAT, GL_FALSE, vertexSize,
                 reinterpret_cast<void*>(static_cast<intptr_t>(m_shaders[/*Font::Bitmap*/0].attribMap[j].offset))));
         }
-        glCheck(glEnableVertexAttribArray(0));
+        //glCheck(glEnableVertexAttribArray(0));
         glCheck(glBindVertexArray(0));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif //PLATFORM

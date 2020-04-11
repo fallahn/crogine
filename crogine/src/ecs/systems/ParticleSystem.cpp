@@ -307,7 +307,7 @@ void ParticleSystem::process(float dt)
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
-void ParticleSystem::render(Entity camera)
+void ParticleSystem::render(Entity camera, const RenderTarget&)
 {
     glCheck(glEnable(GL_CULL_FACE));
     glCheck(glEnable(GL_BLEND));

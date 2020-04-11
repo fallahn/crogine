@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2017 - 2020
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,45 +27,35 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/graphics/Font.hpp>
 
-#include <crogine/core/Message.hpp>
+#include "../../detail/glad.hpp"
 
-#include <crogine/detail/glm/vec3.hpp>
+using namespace cro;
 
-namespace MessageID
+TextSystem::TextSystem(MessageBus& mb)
+    : System(mb, typeid(TextSystem))
 {
-    enum
-    {
-        UIMessage = cro::Message::Count,
-        PlayerMessage
-    };
+    requireComponent<Drawable2D>();
+    requireComponent<Text>();
 }
 
-struct UIEvent final
+void TextSystem::process(float)
 {
-    enum
+    auto entities = getEntities();
+    for (auto entity : entities)
     {
-        ButtonPressed,
-        ButtonReleased
-    }type;
+        auto& drawable = entity.getComponent<Drawable2D>();
+        auto& text = entity.getComponent<Text>();
 
-    enum Button
-    {
-        Left,
-        Right,
-        Jump,
-        Fire
-    }button;
-};
-
-struct PlayerEvent final
-{
-    enum
-    {
-        LeftClick
-    }type = LeftClick;
-
-    glm::vec3 position = glm::vec3(0.f);
-    std::uint8_t playerID = 0;
-};
+        if (text.m_dirty || text.m_font->pageUpdated())
+        {
+            text.updateVertices(drawable);
+            drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
+            drawable.setPrimitiveType(GL_TRIANGLES);
+        }
+    }
+}

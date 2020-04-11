@@ -30,35 +30,36 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+
 #include <crogine/detail/glm/vec2.hpp>
-#include <crogine/graphics/Rectangle.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/graphics/Colour.hpp>
 
 namespace cro
 {
     /*!
-    \brief Base class used by Windows and RenderTextures to
-    pass information about themselves to Scenes when rendering
+    \brief 2D vertex data struct
+    Used to describe the layout of 2D drawable vertices
+    vertex data contains position, colour and UV coordinates.
+    Vertex2D is used in conjunction with Drawable2D components
+    providing a fixed layout. Custom Drawable2D shaders should
+    provide these attributes in the vertex shader.
+
+    Texture coords should be provided in the normalised (0 - 1) range.
+    \see Drawable2D
     */
-    class CRO_EXPORT_API RenderTarget
+    struct CRO_EXPORT_API Vertex2D final
     {
-    public:
-        virtual ~RenderTarget() = default;
+        Vertex2D() = default;
+        Vertex2D(glm::vec2 pos) : position(pos) {}
+        Vertex2D(glm::vec2 pos, glm::vec2 coord) : position(pos), UV(coord) {}
+        Vertex2D(glm::vec2 pos, Colour c) : position(pos), colour(c) {}
+        Vertex2D(glm::vec2 pos, glm::vec2 coord, Colour c) : position(pos), UV(coord), colour(c) {}
 
-        virtual glm::uvec2 getSize() const = 0;
+        glm::vec2 position = glm::vec2(0.f);
+        glm::vec2 UV = glm::vec2(0.f);
+        cro::Colour colour = cro::Colour::White();
 
-        /*!
-        \brief Returns the viewport in screen coordinates from
-        the given normalised viewport of a camera.
-        */
-        IntRect getViewport(FloatRect normalised) const
-        {
-            float width = static_cast<float>(getSize().x);
-            float height = static_cast<float>(getSize().y);
-
-            return IntRect(static_cast<int>(0.5f + width * normalised.left),
-                            static_cast<int>(0.5f + height * normalised.bottom),
-                            static_cast<int>(0.5f + width * normalised.width),
-                            static_cast<int>(0.5f + height * normalised.height));
-        }
+        static constexpr std::size_t Size = (sizeof(float) * 4) + sizeof(cro::Colour);
     };
 }

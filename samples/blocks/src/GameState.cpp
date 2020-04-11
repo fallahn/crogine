@@ -39,6 +39,7 @@ source distribution.
 #include "Chunk.hpp"
 #include "ChunkSystem.hpp"
 #include "BorderMeshBuilder.hpp"
+#include "ErrorCheck.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -49,20 +50,23 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
-#include <crogine/ecs/systems/TextRenderer.hpp>
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
+#include <crogine/detail/OpenGL.hpp>
 
 namespace
 {
@@ -137,6 +141,11 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
                 auto rotation = playerEntity.getComponent<cro::Transform>().getRotation();// *cro::Util::Const::radToDeg;
                 ImGui::Text("Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
                 ImGui::Text("Rotation: %3.3f, %3.3f, %3.3f", rotation.x, rotation.y, rotation.z);
+
+                auto voxelPos = playerEntity.getComponent<Player>().targetBlockPosition;
+                ImGui::Text("Target Position: %d, %d, %d", voxelPos.x, voxelPos.y, voxelPos.z);
+                auto voxelType = m_chunkManager.getVoxel(voxelPos);
+                ImGui::Text("Target Type: %d", voxelType);
 
                 ImGui::Text("Pitch: %3.3f", playerEntity.getComponent<Player>().cameraPitch);
                 ImGui::Text("Yaw: %3.3f", playerEntity.getComponent<Player>().cameraYaw);
@@ -325,6 +334,7 @@ bool GameState::simulate(float dt)
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
+
     return true;
 }
 
@@ -342,17 +352,18 @@ void GameState::addSystems()
 
     m_gameScene.addSystem<cro::CommandSystem>(mb);   
     m_gameScene.addSystem<InterpolationSystem>(mb);
-    m_gameScene.addSystem<PlayerSystem>(mb, m_chunkManager);
+    m_gameScene.addSystem<PlayerSystem>(mb, m_chunkManager, m_voxelData);
     m_gameScene.addSystem<cro::CallbackSystem>(mb); //currently used to update body model positions so needs to come after player update
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<ChunkSystem>(mb, m_resources, m_chunkManager, m_voxelData);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
+    m_uiScene.addSystem<cro::SpriteSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
-    m_uiScene.addSystem<cro::SpriteRenderer>(mb);
-    m_uiScene.addSystem<cro::TextRenderer>(mb);
+    m_uiScene.addSystem<cro::TextSystem>(mb);
+    m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 }
 
 void GameState::loadAssets()
@@ -360,6 +371,9 @@ void GameState::loadAssets()
     auto& shader = m_resources.shaders.get(ShaderID::ChunkDebug);
     m_materialIDs[MaterialID::ChunkDebug] = m_resources.materials.add(shader);
     m_meshIDs[MeshID::Border] = m_resources.meshes.loadMesh(BorderMeshBuilder());
+
+    //glCheck(glLineWidth(1.5f));
+    //glCheck(glEnable(GL_LINE_SMOOTH));
 }
 
 void GameState::createScene()
@@ -375,8 +389,9 @@ void GameState::createUI()
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 60.f });
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Waiting for server...");
-    entity.getComponent<cro::Text>().setColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::CommandTarget>().ID = UI::CommandID::WaitMessage;
 
     //player crosshair
@@ -386,6 +401,7 @@ void GameState::createUI()
     entity.addComponent<cro::Sprite>().setTexture(m_resources.textures.get("assets/images/hud.png"));
     auto bounds = entity.getComponent<cro::Sprite>().getTextureRect();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::Drawable2D>();
 
     //camera
     entity = m_uiScene.createEntity();
@@ -578,7 +594,6 @@ void GameState::spawnPlayer(PlayerInfo info)
         return headEnt;
     };
 
-
     if (info.playerID == m_sharedData.clientConnection.playerID)
     {
         if (!m_inputParser.getEntity().isValid())
@@ -617,42 +632,22 @@ void GameState::spawnPlayer(PlayerInfo info)
             auto camEnt = entity;
 
             //create a wireframe to highlight the block we look at
+            //scaling by a small amount fixes the z-fighting
             entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Transform>().setScale(glm::vec3(1.01f));
 
 
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
             material.setProperty("u_colour", cro::Colour::Black());
-            material.blendMode = cro::Material::BlendMode::Alpha;
+
             entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), material);
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [&, camEnt](cro::Entity e, float)
+                [&](cro::Entity e, float)
             {
-                const auto& camTx = camEnt.getComponent<cro::Transform>();
-                auto voxelList = vx::intersectedVoxel(camTx.getWorldPosition(), camTx.getForwardVector(), 4.f);
-                if (voxelList.empty())
-                {
-                    e.getComponent<cro::Model>().setHidden(true);
-                }
-                else
-                {
-                    bool hidden = true;
-                    glm::vec3 pos(0.f);
-                    for (auto p : voxelList)
-                    {
-                        //auto id = m_chunkManager.getVoxel(p);
-                        //if (id != 0 && id != vx::OutOfBounds)
-                        if(m_voxelData.getVoxel(m_chunkManager.getVoxel(p)).type == vx::Type::Solid)
-                        {
-                            pos = p;
-                            hidden = false;
-                            break;
-                        }
-                    }
-                    e.getComponent<cro::Model>().setHidden(hidden);
-                    e.getComponent<cro::Transform>().setPosition(pos);
-                }
+                const auto& player = playerEntity.getComponent<Player>();
+                e.getComponent<cro::Model>().setHidden(m_voxelData.getVoxel(m_chunkManager.getVoxel(player.targetBlockPosition)).type != vx::Type::Solid);
+                e.getComponent<cro::Transform>().setPosition(glm::vec3(player.targetBlockPosition) - glm::vec3(0.005f));
             };
 
 
@@ -707,7 +702,7 @@ void GameState::updateCameraPosition()
 
         break;
     case 1:
-        tx.setOrigin(glm::vec3(0.f, 0.f, -4.f)); //TODO update this once we settle on a scale (need smaller heads!)
+        tx.setOrigin(glm::vec3(0.f, 0.f, -3.f)); //TODO update this once we settle on a scale (need smaller heads!)
 
         {
             cro::Command cmd;

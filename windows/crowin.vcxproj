@@ -71,6 +71,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Callback.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Camera.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandTarget.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\Drawable2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ParticleEmitter.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ProjectionMap.hpp" />
@@ -96,11 +97,12 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ParticleSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ProjectionMapSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ModelRenderer.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\RenderSystem2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ShadowMapRenderer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SkeletalAnimator.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteAnimator.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteRenderer.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\ecs\systems\TextRenderer.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\TextSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\UISystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\BoundingBox.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Colour.hpp" />
@@ -130,6 +132,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\StaticMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\TextureResource.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\Vertex2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\Gui.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\GuiClient.hpp" />
     <ClInclude Include="..\crogine\include\crogine\network\NetClient.hpp" />
@@ -140,6 +143,7 @@
     <ClInclude Include="..\crogine\include\crogine\util\Maths.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Matrix.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Random.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\util\Rectangle.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\String.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Wavetable.hpp" />
     <ClInclude Include="..\crogine\src\audio\ALCheck.hpp" />
@@ -209,6 +213,7 @@
     <ClCompile Include="..\crogine\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\crogine\src\ecs\Component.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\AudioEmitter.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\components\Drawable2D.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\ParticleEmitter.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Sprite.cpp" />
@@ -230,11 +235,12 @@
     <ClCompile Include="..\crogine\src\ecs\systems\ParticleSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ProjectionMapSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ModelRenderer.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\systems\RenderSystem2D.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ShadowMapRenderer.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\SkeletalAnimator.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\SpriteAnimator.cpp" />
-    <ClCompile Include="..\crogine\src\ecs\systems\SpriteRenderer.cpp" />
-    <ClCompile Include="..\crogine\src\ecs\systems\TextRenderer.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\systems\SpriteSystem.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\systems\TextSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\UISystem.cpp" />
     <ClCompile Include="..\crogine\src\graphics\BoundingBox.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Colour.cpp" />

@@ -41,9 +41,11 @@ source distribution.
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
-#include <crogine/ecs/systems/TextRenderer.hpp>
+#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 
@@ -110,9 +112,9 @@ void PauseState::buildScene()
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<cro::SpriteRenderer>(mb);
-    m_scene.addSystem<cro::TextRenderer>(mb);
-
+    m_scene.addSystem<cro::SpriteSystem>(mb);
+    m_scene.addSystem<cro::TextSystem>(mb);
+    m_scene.addSystem<cro::RenderSystem2D>(mb);
 
     //background image
     cro::Image img;
@@ -123,34 +125,37 @@ void PauseState::buildScene()
 
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y / 2.f, 1.f });
-    entity.addComponent<cro::Sprite>().setTexture(m_backgroundTexture);
+    entity.addComponent<cro::Sprite>(m_backgroundTexture);
+    entity.addComponent<cro::Drawable2D>();
 
     auto mouseEnter = m_scene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e, glm::vec2) 
         {
-            e.getComponent<cro::Text>().setColour(TextHighlightColour);
+            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
         });
     auto mouseExit = m_scene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e, glm::vec2)
         {
-            e.getComponent<cro::Text>().setColour(TextNormalColour);
+            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
         });
 
     //menu items
     m_font.loadFromFile("assets/fonts/VeraMono.ttf");
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_font).setString("PAUSED");
-    entity.getComponent<cro::Text>().setCharSize(120);
-    entity.getComponent<cro::Text>().setColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(120);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
 
     //options
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 500.f });
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_font).setString("Options");
-    entity.getComponent<cro::Text>().setCharSize(50);
-    entity.getComponent<cro::Text>().setColour(TextNormalColour);
-    auto bounds = entity.getComponent<cro::Text>().getLocalBounds();
+    entity.getComponent<cro::Text>().setCharacterSize(50);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    auto bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
@@ -167,10 +172,11 @@ void PauseState::buildScene()
     //back
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 440.f });
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_font).setString("Back");
-    entity.getComponent<cro::Text>().setCharSize(50);
-    entity.getComponent<cro::Text>().setColour(TextNormalColour);
-    bounds = entity.getComponent<cro::Text>().getLocalBounds();
+    entity.getComponent<cro::Text>().setCharacterSize(50);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
@@ -188,10 +194,11 @@ void PauseState::buildScene()
     //quit
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 380.f });
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_font).setString("Quit");
-    entity.getComponent<cro::Text>().setCharSize(50);
-    entity.getComponent<cro::Text>().setColour(TextNormalColour);
-    bounds = entity.getComponent<cro::Text>().getLocalBounds();
+    entity.getComponent<cro::Text>().setCharacterSize(50);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;

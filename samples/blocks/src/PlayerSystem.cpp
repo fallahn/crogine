@@ -33,6 +33,7 @@ source distribution.
 #include "Messages.hpp"
 #include "ChunkManager.hpp"
 #include "Coordinate.hpp"
+#include "Voxel.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -47,9 +48,10 @@ namespace
 
 const cro::Box Player::aabb = { glm::vec3(-0.3f, -1.34f, -0.3f), glm::vec3(0.3f, 0.5f, 0.3f) };
 
-PlayerSystem::PlayerSystem(cro::MessageBus& mb, const ChunkManager& cm)
-    : cro::System(mb, typeid(PlayerSystem)),
-    m_chunkManager(cm)
+PlayerSystem::PlayerSystem(cro::MessageBus& mb, const ChunkManager& cm, const vx::DataManager& dm)
+    : cro::System   (mb, typeid(PlayerSystem)),
+    m_chunkManager  (cm),
+    m_voxelData     (dm)
 {
     requireComponent<Player>();
     requireComponent<cro::Transform>();
@@ -136,14 +138,28 @@ void PlayerSystem::processInput(cro::Entity entity)
         player.lastUpdatedInput = (player.lastUpdatedInput + 1) % Player::HistorySize;
     }
 
+    //take the resulting player data and find the current target block
+    const auto& tx = entity.getComponent<cro::Transform>();
+    auto voxelList = vx::intersectedVoxel(tx.getWorldPosition(), tx.getForwardVector(), 6.f);
+    player.targetBlockPosition = glm::ivec3(-255);
+
+    for (auto p : voxelList)
+    {
+        //we still have to query this because although we don't need the ID
+        //we do need to know it's the first solid block returned
+        if (m_voxelData.getVoxel(m_chunkManager.getVoxel(p)).type == vx::Type::Solid)
+        {
+            player.targetBlockPosition = p;
+            break;
+        }
+    }
+
+    //raise message to say mouse button is held (so engine can tell if it needs to process targeted block)
     if (player.inputStack[player.lastUpdatedInput].buttonFlags & Input::LeftMouse)
     {
-        //raise message to say mouse button is held (so engine can tell if it needs to process targeted block)
-        const auto& tx = entity.getComponent<cro::Transform>();
         auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
         msg->type = PlayerEvent::LeftClick;
-        msg->position = tx.getWorldPosition();
-        msg->forwardVector = tx.getForwardVector();
+        msg->position = player.targetBlockPosition;
         msg->playerID = player.id;
     }
 }
@@ -243,58 +259,11 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
     }
 }
 
-#include "Voxel.hpp"
 void PlayerSystem::processCollision(cro::Entity entity)
 {
     auto& tx = entity.getComponent<cro::Transform>();
+    auto result = m_chunkManager.collisionTest(tx.getPosition(), Player::aabb);
 
-    //get voxel position from current position
-    auto voxelPos = toVoxelPosition(tx.getPosition());
-    auto playerBounds = Player::aabb + tx.getPosition();
-
-
-    //TODO move this to chunk manager so we can query arbitrary AABBs
-
-    //get 9 below, 8 surrounding and 9 voxels above
-    static const std::array<glm::ivec3, 26> offsetPositions =
-    {
-        glm::ivec3(-1,-1,-1), glm::ivec3(0,-1,-1), glm::ivec3(1,-1,-1),
-        glm::ivec3(-1,-1, 0), glm::ivec3(0,-1, 0), glm::ivec3(1,-1, 0),
-        glm::ivec3(-1,-1, 1), glm::ivec3(0,-1, 1), glm::ivec3(1,-1, 1),
-        
-        glm::ivec3(-1, 0,-1), glm::ivec3(0, 0,-1), glm::ivec3(1, 0,-1),
-        glm::ivec3(-1, 0, 0),                      glm::ivec3(1, 0, 0),
-        glm::ivec3(-1, 0, 1), glm::ivec3(0, 0, 1), glm::ivec3(1, 0, 1),
-        
-        glm::ivec3(-1, 1,-1), glm::ivec3(0, 1,-1), glm::ivec3(1, 1,-1),
-        glm::ivec3(-1, 1, 0), glm::ivec3(0, 1, 0), glm::ivec3(1, 1, 0),
-        glm::ivec3(-1, 1, 1), glm::ivec3(0, 1, 1), glm::ivec3(1, 1, 1)
-    };
-
-    
-
-    //if we get these in order every time we can
-    //make an assumption about the direction we're approaching
-    //from to calculate the normal
-
-    //for each ID check if it's solid, create an AABB if it is
-    //then test / correct against player AABB
-    static const cro::Box blockAABB(glm::vec3(0.f), glm::vec3(1.f));
-
-    for (const auto& offset : offsetPositions)
-    {
-        auto voxel = m_chunkManager.getVoxel(offset + voxelPos);
-        
-        //TODO look up the type/collision in voxel manager
-        if (voxel != 0 && voxel != vx::OutOfBounds)
-        {
-            auto voxelBox = blockAABB + offset;
-            cro::Box intersection;
-            if (voxelBox.intersects(playerBounds, &intersection))
-            {
-                //solve collision
-                std::cout << "Collision!\n";
-            }
-        }
-    }
+    //shift player by result - TODO reflect around surface normal?
+    tx.move(result.normal * result.penetration);
 }

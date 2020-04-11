@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2017 - 2020
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,43 +29,18 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/Message.hpp>
+#include <crogine/ecs/System.hpp>
 
-#include <crogine/detail/glm/vec3.hpp>
-
-namespace MessageID
+namespace cro
 {
-    enum
+    class CRO_EXPORT_API SpriteSystem final : public cro::System
     {
-        UIMessage = cro::Message::Count,
-        PlayerMessage
+    public:
+        explicit SpriteSystem(cro::MessageBus&);
+
+        void process(float) override;
+
+    private:
+        void onEntityAdded(Entity) override;
     };
 }
-
-struct UIEvent final
-{
-    enum
-    {
-        ButtonPressed,
-        ButtonReleased
-    }type;
-
-    enum Button
-    {
-        Left,
-        Right,
-        Jump,
-        Fire
-    }button;
-};
-
-struct PlayerEvent final
-{
-    enum
-    {
-        LeftClick
-    }type = LeftClick;
-
-    glm::vec3 position = glm::vec3(0.f);
-    std::uint8_t playerID = 0;
-};

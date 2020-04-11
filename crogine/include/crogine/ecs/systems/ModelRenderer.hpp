@@ -77,7 +77,7 @@ namespace cro
         /*!
         \brief Attempts to render the scene based on the current entity lists
         */
-        void render(Entity) override;
+        void render(Entity, const RenderTarget&) override;
 
     private:
         MaterialList m_visibleEntities;
@@ -89,4 +89,6 @@ namespace cro
         void applyBlendMode(Material::BlendMode);
     };
 
+    //just to keep it a bit more inline with the new render system naming
+    using RenderSystem3D = ModelRenderer;
 }

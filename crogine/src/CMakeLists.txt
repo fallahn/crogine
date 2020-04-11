@@ -49,6 +49,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/SystemManager.cpp
 
   ${PROJECT_DIR}/ecs/components/AudioEmitter.cpp
+  ${PROJECT_DIR}/ecs/components/Drawable2D.cpp
   ${PROJECT_DIR}/ecs/components/Model.cpp
   ${PROJECT_DIR}/ecs/components/ParticleEmitter.cpp
   ${PROJECT_DIR}/ecs/components/Sprite.cpp
@@ -63,11 +64,12 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/ModelRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/ParticleSystem.cpp
   ${PROJECT_DIR}/ecs/systems/ProjectionMapSystem.cpp
+  ${PROJECT_DIR}/ecs/systems/RenderSystem2D.cpp
   ${PROJECT_DIR}/ecs/systems/ShadowMapRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/SkeletalAnimator.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteAnimator.cpp
-  ${PROJECT_DIR}/ecs/systems/SpriteRenderer.cpp
-  ${PROJECT_DIR}/ecs/systems/TextRenderer.cpp
+  ${PROJECT_DIR}/ecs/systems/SpriteSystem.cpp
+  ${PROJECT_DIR}/ecs/systems/TextSystem.cpp
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 
   ${PROJECT_DIR}/graphics/BoundingBox.cpp

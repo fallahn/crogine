@@ -270,7 +270,7 @@ glm::vec3 Transform::getPosition() const
 
 glm::vec3 Transform::getWorldPosition() const
 {
-    return glm::vec3(getWorldTransform()[3]) + ((m_origin * m_scale) * m_rotation);
+    return glm::vec3(getWorldTransform()[3]) - ((m_origin * m_scale) * m_rotation);
 }
 
 glm::vec3 Transform::getRotation() const
@@ -292,13 +292,10 @@ const glm::mat4& Transform::getLocalTransform() const
 {
     if (m_dirtyFlags & Tx)
     {
-        glm::mat4 translation = glm::translate(glm::mat4(1.f), m_position);
-
-        auto rotation = glm::toMat4(m_rotation);
-        rotation = glm::scale(rotation, m_scale);
-        rotation = glm::translate(rotation, -m_origin);
-
-        m_transform = translation * rotation;
+        m_transform = glm::translate(glm::mat4(1.f), m_position);
+        m_transform *= glm::toMat4(m_rotation);
+        m_transform = glm::scale(m_transform, m_scale);
+        m_transform = glm::translate(m_transform, -m_origin);
     }
 
     return m_transform;
