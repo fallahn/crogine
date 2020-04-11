@@ -247,6 +247,15 @@ namespace cro
         */
         std::pair<const float*, std::size_t> getActiveProjectionMaps() const;
 
+        /*!
+        \brief Passes the given camera to each Renderable system so that they
+        may update the Camera's drawList property.
+        This is called automatically by the CameraSystem to update all active
+        Camera components in the Scene
+        \see Renderable::updateDrawLists()
+        */
+        void updateDrawLists(Camera&);
+
     private:
         MessageBus& m_messageBus;
         Entity::ID m_defaultCamera;

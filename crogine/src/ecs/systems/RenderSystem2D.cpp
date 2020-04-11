@@ -123,6 +123,11 @@ RenderSystem2D::~RenderSystem2D()
 }
 
 //public
+void RenderSystem2D::updateDrawList(Camera& camera) const
+{
+
+}
+
 void RenderSystem2D::process(float)
 {
     bool needsSorting = false; 

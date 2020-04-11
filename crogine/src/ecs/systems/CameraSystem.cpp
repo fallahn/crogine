@@ -30,7 +30,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 
@@ -59,6 +59,9 @@ void CameraSystem::process(float)
         camera.viewProjectionMatrix = camera.projectionMatrix * camera.viewMatrix;
 
         updateFrustum(camera);
+
+        camera.drawList.clear();
+        getScene()->updateDrawLists(camera);
     }
 }
 

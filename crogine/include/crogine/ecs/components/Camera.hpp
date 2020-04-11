@@ -41,6 +41,7 @@ source distribution.
 
 #include <array>
 #include <functional>
+#include <vector>
 
 namespace cro
 {
@@ -112,6 +113,17 @@ namespace cro
         takes the current camera as a parameter and returns void
         */
         std::function<void(Camera&)> resizeCallback;
+
+        /*!
+        \brief List of entities which should be rendered when this camera is active.
+        This is automatically cleared by the camera system each Scene update, and
+        passed to the Scene so that Renderable systems can update it with visible
+        entities, sorted in draw order. This list is then used when the Renderable
+        system is drawn.
+        \see Renderable::updateDrawList()
+        \see Renderable::render()
+        */
+        std::vector<Entity> drawList;
 
     private:
 

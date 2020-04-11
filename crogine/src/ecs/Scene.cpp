@@ -522,6 +522,14 @@ std::pair<const float*, std::size_t> Scene::getActiveProjectionMaps() const
     return std::pair<const float*, std::size_t>(&m_projectionMaps[0][0].x, m_projectionMapCount);
 }
 
+void Scene::updateDrawLists(Camera& camera)
+{
+    for (auto r : m_renderables)
+    {
+        r->updateDrawList(camera);
+    }
+}
+
 //private
 void Scene::defaultRenderPath(const RenderTarget& rt)
 {

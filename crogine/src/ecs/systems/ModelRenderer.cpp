@@ -61,6 +61,11 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 }
 
 //public
+void ModelRenderer::updateDrawList(Camera& camera) const
+{
+
+}
+
 void ModelRenderer::process(float)
 {
     //TODO frustum culling might need to be moved to render function
