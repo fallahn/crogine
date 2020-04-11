@@ -58,7 +58,7 @@ namespace cro
 
         void process(float) override;
 
-        void render(Entity) override;
+        void render(Entity, const RenderTarget&) override;
 
         /*!
         \brief Sets the offset of the Scene's sunlight object relative to the camera.

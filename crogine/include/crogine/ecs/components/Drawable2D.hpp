@@ -93,6 +93,16 @@ namespace cro
         void setBlendMode(Material::BlendMode);
 
         /*!
+        \brief Sets the area in local coordinates to crop this drawable.
+        If this area is larger or does not overlap the local bounds then
+        no cropping is visible. Useful for UI components such as cropping
+        Text components to fit text boxes. Note that Text components in
+        particular have a *negative* bottom value as text is drawn (usually)
+        from top to bottom.
+        */
+        void setCroppingArea(FloatRect);
+
+        /*!
         \brief Sets the vertex data to be used when the geometry is drawn.
         The vertex data is copied into the drawable. Setting new
         vertex data like this automatically calls updateLocalBounds(),
@@ -124,6 +134,12 @@ namespace cro
         \brief Returns the current blend mode
         */
         Material::BlendMode getBlendMode() const;
+
+        /*!
+        \brief Returns the current cropping area.
+        \see setCroppingArea()
+        */
+        FloatRect getCroppingArea() const { return m_croppingArea; }
 
         /*!
         \brief Returns a reference to the vector of vertex data
@@ -220,6 +236,11 @@ namespace cro
 
         //if this changes entities need to be sorted
         float m_lastSortValue;
+
+        //used to crop drawables
+        FloatRect m_croppingArea;
+        FloatRect m_croppingWorldArea;
+        bool m_cropped;
 
         std::vector<std::pair<std::int32_t, const Texture*>> m_textureBindings;
         std::vector<std::pair<std::int32_t, float>> m_floatBindings;

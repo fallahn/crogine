@@ -49,7 +49,10 @@ Drawable2D::Drawable2D()
     m_vbo               (0),
     m_vao               (0),
     m_updateBufferData  (false),
-    m_lastSortValue     (0.f)
+    m_lastSortValue     (0.f),
+    m_croppingArea      (-std::numeric_limits<float>::max() / 2.f, -std::numeric_limits<float>::max() / 2.f,
+                            std::numeric_limits<float>::max(), std::numeric_limits<float>::max()),
+    m_cropped           (false)
 {
 
 }
@@ -81,6 +84,11 @@ void Drawable2D::setShader(Shader* shader)
 void Drawable2D::setBlendMode(Material::BlendMode mode)
 {
     m_blendMode = mode;
+}
+
+void Drawable2D::setCroppingArea(FloatRect area)
+{
+    m_croppingArea = area;
 }
 
 void Drawable2D::setVertexData(const std::vector<Vertex2D>& data)

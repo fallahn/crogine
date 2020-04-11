@@ -172,14 +172,12 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     }
     resString.pop_back();
     entity = m_menuScene.createEntity();
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, -64.f, 600.f, 64.f });
     entity.addComponent<cro::Text>(m_sharedResources.fonts.get(FontID::ScoreboardFont)).setString(resString);
-    //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setCharacterSize(TextLarge);
     entity.getComponent<cro::Text>().setFillColour(textColourSelected);
     backgroundEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setPosition({ 270.f, 108.f, 1.f });
-    //entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 600.f, -64.f });
 
     entity = m_menuScene.createEntity();
     entity.addComponent<cro::Drawable2D>();

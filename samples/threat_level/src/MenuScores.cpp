@@ -31,7 +31,6 @@ source distribution.
 #include "Slider.hpp"
 #include "MyApp.hpp"
 
-#include <crogine/ecs/systems/TextRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/DebugInfo.hpp>
@@ -206,41 +205,46 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.addComponent<cro::Text>(scoreboardFont).setString(scoreString);
     entity.getComponent<cro::Text>().setCharacterSize(TextLarge);
     entity.getComponent<cro::Text>().setFillColour(textColourSelected);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
 
     auto bounds = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -20.f, 0.f });
 
     size = backgroundEnt.getComponent<cro::Sprite>().getSize();
-    cro::FloatRect croppingArea(0.f, 0.f, size.x * 0.8f, -(size.y - backgroundEnt.getComponent<cro::Transform>().getPosition().y - 36.f)); //remember text origin is at top
-    //entity.getComponent<cro::Text>().setCroppingArea(croppingArea);
+    cro::FloatRect croppingArea(0.f, -(size.y - backgroundEnt.getComponent<cro::Transform>().getPosition().y - 36.f), size.x * 0.8f, 0.f); 
+    croppingArea.height = -croppingArea.bottom;//remember text origin is at top
+                                                                                                                                           
+    entity.getComponent<cro::Drawable2D>().setCroppingArea(croppingArea);
+
+    //flip this back and use it for the scroll area
+    croppingArea.bottom = 0.f;
+    croppingArea.height = -croppingArea.height;
 
     //add click /drag
     const auto& scroll = [](cro::Entity entity, float delta)->float
     {
-        //auto& text = entity.getComponent<cro::Text>();
-        //auto crop = text.getCroppingArea();
+        auto& text = entity.getComponent<cro::Drawable2D>();
+        auto crop = text.getCroppingArea();
 
-        ////clamp movement
-        //float movement = 0.f;
-        //if (delta > 0)
-        //{
-        //    movement = cro::Util::Maths::clamp((text.getLocalBounds().height + crop.height) - entity.getComponent<cro::Transform>().getPosition().y, 0.f, delta);
-        //}
-        //else
-        //{
-        //    movement = std::max(-entity.getComponent<cro::Transform>().getPosition().y, delta);
-        //}
-        //entity.getComponent<cro::Transform>().move({ 0.f, movement, 0.f });
+        //clamp movement
+        float movement = 0.f;
+        if (delta > 0)
+        {
+            movement = cro::Util::Maths::clamp((text.getLocalBounds().height + crop.height) - entity.getComponent<cro::Transform>().getPosition().y, 0.f, delta);
+        }
+        else
+        {
+            movement = std::max(-entity.getComponent<cro::Transform>().getPosition().y, delta);
+        }
+        entity.getComponent<cro::Transform>().move({ 0.f, movement, 0.f });
 
-        ////update the cropping area
-        //crop.bottom -= movement;
-        //text.setCroppingArea(crop);
+        //update the cropping area
+        crop.bottom -= movement;
+        text.setCroppingArea(crop);
 
-        ////update the input area
-        //entity.getComponent<cro::UIInput>().area.bottom -= movement;
+        //update the input area
+        entity.getComponent<cro::UIInput>().area.bottom -= movement;
 
-        return 0.f;// movement;
+        return movement;
     };
 
 

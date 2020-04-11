@@ -92,6 +92,7 @@ bool Rectangle<T>::contains(glm::vec2 point) const
 
     return false;
 }
+
 template <class T>
 Rectangle<T> Rectangle<T>::transform(const glm::mat4& tx) const
 {

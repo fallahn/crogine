@@ -240,7 +240,7 @@ void CollisionSystem::process(float dt)
     m_collisionWorld->debugDrawWorld();  
 }
 
-void CollisionSystem::render(Entity camera)
+void CollisionSystem::render(Entity camera, const RenderTarget&)
 {   
     const auto& tx = camera.getComponent<Transform>();
     const auto& camComponent = camera.getComponent<Camera>();

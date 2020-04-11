@@ -38,6 +38,7 @@ source distribution.
 namespace cro
 {
     class Entity;
+    class RenderTarget;
     /*!
     \brief Renderable interface for systems which draw parts of the scene.
     Systems which implement this will be drawn by any scene to which they are added.
@@ -52,8 +53,10 @@ namespace cro
         \brief Renders this system.
         \param camera Entity containing a camera and transform component, automatically
         passed in by the scene when this system is drawn. Use this to accurately draw the system.
+        \param target RenderTarget currently being drawn to. Provides information such as
+        the dimensions of the target
         */
-        virtual void render(Entity) = 0;
+        virtual void render(Entity camera, const RenderTarget& target) = 0;
 
     protected:
         /*!

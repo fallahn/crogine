@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/glm/vec2.hpp>
+#include <crogine/graphics/Rectangle.hpp>
 
 namespace cro
 {
@@ -44,5 +45,20 @@ namespace cro
         virtual ~RenderTarget() = default;
 
         virtual glm::uvec2 getSize() const = 0;
+
+        /*!
+        \brief Returns the viewport in screen coordinates from
+        the given normalised viewport of a camera.
+        */
+        IntRect getViewport(FloatRect normalised) const
+        {
+            float width = static_cast<float>(getSize().x);
+            float height = static_cast<float>(getSize().y);
+
+            return IntRect(static_cast<int>(0.5f + width * normalised.left),
+                            static_cast<int>(0.5f + height * normalised.bottom),
+                            static_cast<int>(0.5f + width * normalised.width),
+                            static_cast<int>(0.5f + height * normalised.height));
+        }
     };
 }

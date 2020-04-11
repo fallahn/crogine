@@ -504,6 +504,9 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\TextSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\util\Rectangle.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">

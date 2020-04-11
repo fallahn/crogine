@@ -156,7 +156,7 @@ void ModelRenderer::process(float)
     });
 }
 
-void ModelRenderer::render(Entity camera)
+void ModelRenderer::render(Entity camera, const RenderTarget&)
 {
     const auto& camComponent = camera.getComponent<Camera>();
     

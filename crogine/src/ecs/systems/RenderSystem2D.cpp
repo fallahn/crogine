@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/RenderTarget.hpp>
+#include <crogine/util/Rectangle.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 
 #include "../../detail/glad.hpp"
@@ -130,8 +132,6 @@ void RenderSystem2D::process(float)
     {
         auto& drawable = entity.getComponent<Drawable2D>();
         //check shader flag and set correct shader if needed
-        //TODO also flag if custom shader so applyShader() is
-        //only ever called from this point
         if (drawable.m_applyDefaultShader)
         {
             if (drawable.m_texture)
@@ -177,6 +177,24 @@ void RenderSystem2D::process(float)
             needsSorting = true;
         }
         drawable.m_lastSortValue = newSort;
+
+        //check if the cropping area is smaller than
+        //the local bounds and update cropping properties
+        drawable.m_cropped = !Util::Rectangle::contains(drawable.m_croppingArea, drawable.m_localBounds);
+
+        if (drawable.m_cropped)
+        {
+            auto pos = tx.getWorldPosition();
+            auto scale = tx.getScale();
+
+            //update world positions - using world tx directly doesn't account for origna offset
+            drawable.m_croppingWorldArea = drawable.m_croppingArea;
+            drawable.m_croppingWorldArea.left += pos.x;
+            drawable.m_croppingWorldArea.bottom += pos.y;
+            drawable.m_croppingWorldArea.width *= scale.x;
+            drawable.m_croppingWorldArea.height *= scale.y;
+        }
+
     }
 
     //sort drawlist depending on Z or Y sort
@@ -201,14 +219,16 @@ void RenderSystem2D::process(float)
     }
 }
 
-void RenderSystem2D::render(Entity cameraEntity)
+void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
 {
     const auto& camComponent = cameraEntity.getComponent<Camera>();
     auto frustum = camComponent.getFrustum();
+    auto viewport = rt.getViewport(camComponent.viewport);
 
     glCheck(glDepthMask(GL_FALSE));
     glCheck(glEnable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));
+    glCheck(glEnable(GL_SCISSOR_TEST));
 
     const auto& entities = getEntities();
     for (auto entity : entities)
@@ -220,9 +240,6 @@ void RenderSystem2D::render(Entity cameraEntity)
         //check local bounds for visibility and draw if visible
         auto bounds = drawable.m_localBounds.transform(worldMat);
         cro::Box aabb(glm::vec3(bounds.left, bounds.bottom, -0.1f), glm::vec3(bounds.left + bounds.width, bounds.bottom + bounds.height, 0.1f));
-        //auto pos = tx.getWorldPosition();
-        //pos.z = 0.f;
-        //aabb += pos;
 
         bool visible = true;
         std::size_t i = 0;
@@ -284,6 +301,23 @@ void RenderSystem2D::render(Entity cameraEntity)
 
             applyBlendMode(drawable.m_blendMode);
             
+            if (drawable.m_cropped)
+            {
+                //convert cropping area to target coords (remember this might not be a window!)
+                glm::vec2 start(drawable.m_croppingWorldArea.left, drawable.m_croppingWorldArea.bottom);
+                glm::vec2 end(start.x + drawable.m_croppingWorldArea.width, start.y + drawable.m_croppingWorldArea.height);
+
+                auto scissorStart = mapCoordsToPixel(start, camComponent.viewProjectionMatrix, viewport);
+                auto scissorEnd = mapCoordsToPixel(end, camComponent.viewProjectionMatrix, viewport);
+
+                glCheck(glScissor(scissorStart.x, scissorStart.y, scissorEnd.x - scissorStart.x, scissorEnd.y - scissorStart.y));
+            }
+            else
+            {
+                auto rtSize = rt.getSize();
+                glCheck(glScissor(0, 0, rtSize.x, rtSize.y));
+            }
+
 #ifdef PLATFORM_DESKTOP
             glCheck(glBindVertexArray(drawable.m_vao));
             glCheck(glDrawArrays(static_cast<GLenum>(drawable.m_primitiveType), 0, static_cast<GLsizei>(drawable.m_vertices.size())));
@@ -321,6 +355,7 @@ void RenderSystem2D::render(Entity cameraEntity)
 #endif
     glCheck(glUseProgram(0));
 
+    glCheck(glDisable(GL_SCISSOR_TEST));
     applyBlendMode(Material::BlendMode::None);
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDepthMask(GL_TRUE));
@@ -356,6 +391,16 @@ void RenderSystem2D::applyBlendMode(Material::BlendMode blendMode)
         glCheck(glDisable(GL_BLEND));
         break;
     }
+}
+
+glm::ivec2 RenderSystem2D::mapCoordsToPixel(glm::vec2 coord, const glm::mat4& viewProjectionMatrix, IntRect viewport) const
+{
+    auto worldPoint = viewProjectionMatrix * glm::vec4(coord, 0.f, 1.f);
+
+    glm::ivec2 retVal(static_cast<int>((worldPoint.x + 1.f) / 2.f * viewport.width + viewport.left), 
+                      static_cast<int>((worldPoint.y + 1.f) / 2.f * viewport.height + viewport.bottom));
+
+    return retVal;
 }
 
 void RenderSystem2D::onEntityAdded(Entity entity)

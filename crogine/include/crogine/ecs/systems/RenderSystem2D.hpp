@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/matrix.hpp>
 
 namespace cro
 {
@@ -88,7 +90,7 @@ namespace cro
         /*!
         \brief Attempts to render the scene based on the current entity lists
         */
-        void render(Entity) override;
+        void render(Entity, const RenderTarget&) override;
 
         /*!
         \brief Sets whether Drawable components should be sorted by the Y or
@@ -105,6 +107,7 @@ namespace cro
         DepthAxis m_sortOrder;
 
         void applyBlendMode(Material::BlendMode);
+        glm::ivec2 mapCoordsToPixel(glm::vec2, const glm::mat4& viewProjMat, IntRect) const;
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
