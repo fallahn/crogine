@@ -97,14 +97,15 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
             {
                 //override sheet mode
                 std::string mode = p->getValue<std::string>();
-                if (mode == "add") spriteComponent.setBlendMode(Material::BlendMode::Additive);
-                else if (mode == "multiply") spriteComponent.setBlendMode(Material::BlendMode::Multiply);
-                else if (mode == "none") spriteComponent.setBlendMode(Material::BlendMode::None);
+                if (mode == "add") spriteComponent.m_blendMode = Material::BlendMode::Additive;
+                else if (mode == "multiply") spriteComponent.m_blendMode = Material::BlendMode::Multiply;
+                else if (mode == "none") spriteComponent.m_blendMode = Material::BlendMode::None;
             }
             else
             {
-                spriteComponent.setBlendMode(blendMode);
+                spriteComponent.m_blendMode = blendMode;
             }
+            spriteComponent.m_overrideBlendMode = true;
 
             if (auto* p = spr.findProperty("bounds"))
             {
@@ -119,27 +120,38 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
             const auto& spriteObjs = spr.getObjects();
             for (const auto& sprOb : spriteObjs)
             {
-                if (sprOb.getName() == "animation")
+                if (sprOb.getName() == "animation"
+                    && spriteComponent.m_animations.size() < Sprite::MaxAnimations)
                 {
+                    auto& animation = spriteComponent.m_animations.emplace_back();
+
                     const auto& properties = sprOb.getProperties();
                     for (const auto& p : properties)
                     {
                         std::string name = p.getName();
-                        if (name == "frame")
+                        if (name == "frame"
+                            && animation.frames.size() < Sprite::MaxFrames)
                         {
-                            auto& anim = spriteComponent.m_animations[spriteComponent.m_animationCount];
-                            anim.frames[anim.frameCount++] = p.getValue<FloatRect>();
+                            animation.frames.emplace_back(p.getValue<FloatRect>());
                         }
                         else if (name == "framerate")
                         {
-                            spriteComponent.m_animations[spriteComponent.m_animationCount].framerate = p.getValue<float>();
+                            animation.framerate = p.getValue<float>();
                         }
                         else if (name == "loop")
                         {
-                            spriteComponent.m_animations[spriteComponent.m_animationCount].looped = p.getValue<bool>();
+                            animation.looped = p.getValue<bool>();
+                        }
+                        else if (name == "loop_start")
+                        {
+                            animation.loopStart = p.getValue<std::int32_t>();
                         }
                     }
-                    spriteComponent.m_animationCount++;
+
+                    auto animId = sprOb.getId();
+                    m_animations[spriteName].push_back(animId);
+                    animation.id.resize(animId.length());
+                    animId.copy(animation.id.data(), animId.length());
                 }
             }
 
@@ -160,4 +172,17 @@ Sprite SpriteSheet::getSprite(const std::string& name) const
     }
     LOG(name + " not found in sprite sheet", Logger::Type::Warning);
     return {};
+}
+
+std::size_t SpriteSheet::getAnimationIndex(const std::string& name, const std::string& spriteName) const
+{
+    if (m_animations.count(spriteName) != 0)
+    {
+        const auto& anims = m_animations[spriteName];
+        const auto& result = std::find(anims.cbegin(), anims.cend(), name);
+        if (result == anims.cend()) return 0;
+
+        return std::distance(anims.cbegin(), result);
+    }
+    return 0;
 }

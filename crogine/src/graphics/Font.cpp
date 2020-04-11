@@ -54,6 +54,7 @@ namespace
 }
 
 Font::Font()
+    : m_pageUpdated(false)
 {
 
 }
@@ -261,10 +262,10 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize) const
         retVal.textureBounds.height -= padding * 2;
 
         retVal.bounds.left = static_cast<float>(face->glyph->metrics.horiBearingX) / MagicNumber;
-        retVal.bounds.bottom = -static_cast<float>(face->glyph->metrics.horiBearingY) / MagicNumber;
+        retVal.bounds.bottom = static_cast<float>(face->glyph->metrics.horiBearingY) / MagicNumber;
         retVal.bounds.width = static_cast<float>(face->glyph->metrics.width) / MagicNumber;
         retVal.bounds.height = static_cast<float>(face->glyph->metrics.height) / MagicNumber;
-
+        retVal.bounds.bottom -= retVal.bounds.height;
 
         //buffer the pixel data and update the page texture
         m_pixelBuffer.resize(width * height * 4);
@@ -370,6 +371,7 @@ FloatRect Font::getGlyphRect(Page& page, std::uint32_t width, std::uint32_t heig
                 texture.setSmooth(true);
                 texture.update(page.texture);
                 page.texture.swap(texture);
+                m_pageUpdated = true;
             }
             else
             {

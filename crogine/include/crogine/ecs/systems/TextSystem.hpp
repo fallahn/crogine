@@ -29,36 +29,23 @@ source distribution.
 
 #pragma once
 
-#include <crogine/Config.hpp>
-#include <crogine/detail/glm/vec2.hpp>
-#include <crogine/graphics/Rectangle.hpp>
+#include <crogine/ecs/System.hpp>
 
 namespace cro
 {
     /*!
-    \brief Base class used by Windows and RenderTextures to
-    pass information about themselves to Scenes when rendering
+    \brief Updates the geometry of Drawable2D components which
+    are attached to entities with a Text component.
     */
-    class CRO_EXPORT_API RenderTarget
+    class CRO_EXPORT_API TextSystem final : public cro::System
     {
     public:
-        virtual ~RenderTarget() = default;
+        explicit TextSystem(MessageBus&);
 
-        virtual glm::uvec2 getSize() const = 0;
+        void process(float) override;
 
-        /*!
-        \brief Returns the viewport in screen coordinates from
-        the given normalised viewport of a camera.
-        */
-        IntRect getViewport(FloatRect normalised) const
-        {
-            float width = static_cast<float>(getSize().x);
-            float height = static_cast<float>(getSize().y);
+    private:
 
-            return IntRect(static_cast<int>(0.5f + width * normalised.left),
-                            static_cast<int>(0.5f + height * normalised.bottom),
-                            static_cast<int>(0.5f + width * normalised.width),
-                            static_cast<int>(0.5f + height * normalised.height));
-        }
+
     };
 }

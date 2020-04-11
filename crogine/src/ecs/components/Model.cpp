@@ -141,7 +141,7 @@ void Model::updateVAO(std::size_t idx)
             GL_FLOAT, GL_FALSE, static_cast<GLsizei>(m_meshData.vertexSize),
             reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
     }
-    glCheck(glEnableVertexAttribArray(0));
+    //glCheck(glEnableVertexAttribArray(0));
 
     glCheck(glBindVertexArray(0));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));

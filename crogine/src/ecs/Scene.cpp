@@ -534,10 +534,10 @@ void Scene::defaultRenderPath(const RenderTarget& rt)
     std::array<std::int32_t, 4u> previousViewport;
     glCheck(glGetIntegerv(GL_VIEWPORT, previousViewport.data()));
 
-    auto vp = cam.viewport;
-    IntRect rect(static_cast<int32>(size.x * vp.left), static_cast<int32>(size.y * vp.bottom),
-        static_cast<int32>(size.x * vp.width), static_cast<int32>(size.y * vp.height));
+    auto rect = rt.getViewport(cam.viewport);
     glViewport(rect.left, rect.bottom, rect.width, rect.height);
+
+
 
     //see comment after skybox render
     //for (auto r : m_renderables)
@@ -596,7 +596,7 @@ void Scene::defaultRenderPath(const RenderTarget& rt)
     //and not other systems.... hum. Ideas on a postcard please.
     for (auto r : m_renderables)
     {
-        r->render(camera);
+        r->render(camera, rt);
     }
 
     //restore old view port

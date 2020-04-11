@@ -38,18 +38,18 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/vec4.hpp>
 
-#include <array>
+#include <vector>
 
 namespace cro
 {
     class Texture;
     /*!
     \brief 2D Sprite component.
-    Sprites are rendered with a sprite renderer system rather than
+    Sprites are rendered with a RenderSystem2D rather than
     a model renderer. The 2D renderer can be used on its own, or rendered
     over the top of a 3D scene, for example as a user interface. Sprites
-    can exist on entities which are either part of the existing 3D scene
-    or an independent scene used for a specific purpose.
+    require their Entity to have a Transform component and a Drawable2D component.
+    Sprites also require a SpriteSystem in the Scene to update their properties.
     */
     class CRO_EXPORT_API Sprite final
     {
@@ -57,20 +57,16 @@ namespace cro
         Sprite();
 
         /*!
-        \brief Sets the texture used to render this sprite.
-        Sprites are batched by the sprite renderer according to
-        their texture, so using a texture atlas will result in
-        fewer draw calls and improved rendering. setTextureRect() can
-        be used to display a smaller area of a texture. By default
-        the entire texture is used across the sprite.
+        \brief Construct a sprite with the given Texture
         */
-        void setTexture(const Texture&);
+        explicit Sprite(const Texture&);
 
         /*!
-        \brief Sets the size of the sprite.
-        This is initally set to the size of the texture.
+        \brief Sets the texture used to render this sprite.
+        By default the Sprite is resized to match the given Texture.
+        Set resize to false to maintain the current size.
         */
-        void setSize(glm::vec2);
+        void setTexture(const Texture&, bool resize = true);
 
         /*!
         \brief Sets a sub-rectangle of the texture to draw.
@@ -87,9 +83,9 @@ namespace cro
         void setColour(Colour);
 
         /*!
-        \brief Gets the current size of the sprite
+        \brief Returns a pointer to the Sprite's texture
         */
-        glm::vec2 getSize() const;
+        const Texture* getTexture() const { return m_texture; }
 
         /*!
         \brief Returns the current Texture Rectangle
@@ -102,70 +98,68 @@ namespace cro
         Colour getColour() const;
 
         /*!
-        \brief Returns the local (pre-transform) AABB
+        \brief Gets the current size of the sprite
         */
-        const FloatRect& getLocalBounds() const { return m_localBounds; }
-
+        glm::vec2 getSize() const { return { m_textureRect.width, m_textureRect.height }; }
         /*!
-        \brief Returns the global (post-transform) AABB
-        */
-        const FloatRect& getGlobalBounds() const { return m_globalBounds; }
 
-        /*!
-        \brief Sets the blend mode of the sprite.
-        By default sprites are Alpha blended, but can use the Material::BlendModes
-        additive, multiply and none.
+        \brief Returns the created by the active texture rectangle's size
         */
-        void setBlendMode(Material::BlendMode mode);
+        FloatRect getTextureBounds() const { return { glm::vec2(0.f), getSize() }; }
 
         /*!
         \brief Maximum number of frames in an animation
         */
-        static constexpr std::size_t MaxFrames = 100;
+        static constexpr std::size_t MaxFrames = 64;
 
         /*!
         \brief Maximum number of animations per sprite
         */
-        static constexpr std::size_t MaxAnimations = 10;
+        static constexpr std::size_t MaxAnimations = 32;
 
         /*!
         \brief Represents a single animation
         */
         struct Animation final
         {
-            std::array<FloatRect, MaxFrames> frames;
-            std::size_t frameCount = 0;
+            /*!
+            \brief Maximum  length of animation id
+            */
+            static constexpr std::size_t MaxAnimationIdLength = 32;
 
+            std::vector<char> id;
+            std::vector<FloatRect> frames;
+            std::uint32_t loopStart = 0; //!< looped animations can jump to somewhere other than the beginning
             bool looped = false;
             float framerate = 12.f;
         };
 
 
+        /*!
+        /brief Returns a reference to the sprites animation array.
+        */
+        std::vector<Animation>& getAnimations() { return m_animations; }
+
+        /*!
+        /brief Returns a const reference to the sprites animation array.
+        */
+        const std::vector<Animation>& getAnimations() const { return m_animations; }
+
     private:
-        int32 m_textureID;
-        glm::vec3 m_textureSize;
         FloatRect m_textureRect;
-        struct Vertex final
-        {
-            glm::vec4 position = glm::vec4(0.f);
-            glm::vec4 colour = glm::vec4(0.f);
-            glm::vec2 UV = glm::vec2(0.f);
-        };
-        std::array<Vertex, 4u> m_quad;
+        const Texture* m_texture;
+        Colour m_colour;
         bool m_dirty;
-        int32 m_vboOffset; //where this sprite starts in its VBO - used when updating sub buffer data
 
-        FloatRect m_localBounds;
-        FloatRect m_globalBounds;
+        std::vector<Animation> m_animations;
 
-        bool m_visible; //used in culling
+        //if this was loaded from a sprite sheet the blend
+        //mode was set here and needs to be forwarded to
+        //the drawable component.
+        bool m_overrideBlendMode;
         Material::BlendMode m_blendMode;
-        bool m_needsSorting;
 
-        std::size_t m_animationCount;
-        std::array<Animation, MaxAnimations> m_animations;
-
-        friend class SpriteRenderer;
+        friend class SpriteSystem;
         friend class SpriteAnimator;
         friend class SpriteSheet;
     };

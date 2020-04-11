@@ -219,9 +219,6 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Sprite.hpp">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteRenderer.hpp">
-      <Filter>Header Files\ecs\systems</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\src\graphics\shaders\Sprite.hpp">
       <Filter>Header Files\graphics\shaders</Filter>
     </ClInclude>
@@ -257,12 +254,6 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\Font.hpp">
       <Filter>Header Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\ecs\components\Text.hpp">
-      <Filter>Header Files\ecs\components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\ecs\systems\TextRenderer.hpp">
-      <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\FontResource.hpp">
       <Filter>Header Files\graphics</Filter>
@@ -495,6 +486,27 @@
     <ClInclude Include="..\crogine\include\crogine\audio\AudioSource.hpp">
       <Filter>Header Files\audio</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\Drawable2D.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\Vertex2D.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\RenderSystem2D.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\Text.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\TextSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\util\Rectangle.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -572,9 +584,6 @@
     <ClCompile Include="..\crogine\src\ecs\components\Sprite.cpp">
       <Filter>Source Files\ecs\components</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\ecs\systems\SpriteRenderer.cpp">
-      <Filter>Source Files\ecs\systems</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\core\App.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
@@ -607,12 +616,6 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\Font.cpp">
       <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\ecs\components\Text.cpp">
-      <Filter>Source Files\ecs\components</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\ecs\systems\TextRenderer.cpp">
-      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\FontResource.cpp">
       <Filter>Source Files\graphics</Filter>
@@ -802,6 +805,21 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\components\AudioEmitter.cpp">
       <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\Drawable2D.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\RenderSystem2D.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\SpriteSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\Text.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\TextSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

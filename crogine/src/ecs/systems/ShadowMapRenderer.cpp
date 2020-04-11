@@ -81,7 +81,7 @@ void ShadowMapRenderer::process(float)
     getScene()->getSunlight().m_textureID = m_target.getTexture().getGLHandle();
 }
 
-void ShadowMapRenderer::render(Entity camera)
+void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
 {
     //enable face culling and render rear faces
     glCheck(glEnable(GL_CULL_FACE));

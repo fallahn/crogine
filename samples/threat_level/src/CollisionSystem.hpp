@@ -66,7 +66,7 @@ namespace cro
 
         void process(float) override;
 
-        void render(Entity) override;
+        void render(Entity, const RenderTarget&) override;
 
     private:
         void onEntityAdded(cro::Entity) override;

@@ -27,38 +27,35 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/graphics/Font.hpp>
 
-#include <crogine/Config.hpp>
-#include <crogine/detail/glm/vec2.hpp>
-#include <crogine/graphics/Rectangle.hpp>
+#include "../../detail/glad.hpp"
 
-namespace cro
+using namespace cro;
+
+TextSystem::TextSystem(MessageBus& mb)
+    : System(mb, typeid(TextSystem))
 {
-    /*!
-    \brief Base class used by Windows and RenderTextures to
-    pass information about themselves to Scenes when rendering
-    */
-    class CRO_EXPORT_API RenderTarget
+    requireComponent<Drawable2D>();
+    requireComponent<Text>();
+}
+
+void TextSystem::process(float)
+{
+    auto entities = getEntities();
+    for (auto entity : entities)
     {
-    public:
-        virtual ~RenderTarget() = default;
+        auto& drawable = entity.getComponent<Drawable2D>();
+        auto& text = entity.getComponent<Text>();
 
-        virtual glm::uvec2 getSize() const = 0;
-
-        /*!
-        \brief Returns the viewport in screen coordinates from
-        the given normalised viewport of a camera.
-        */
-        IntRect getViewport(FloatRect normalised) const
+        if (text.m_dirty || text.m_font->pageUpdated())
         {
-            float width = static_cast<float>(getSize().x);
-            float height = static_cast<float>(getSize().y);
-
-            return IntRect(static_cast<int>(0.5f + width * normalised.left),
-                            static_cast<int>(0.5f + height * normalised.bottom),
-                            static_cast<int>(0.5f + width * normalised.width),
-                            static_cast<int>(0.5f + height * normalised.height));
+            text.updateVertices(drawable);
+            drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
+            drawable.setPrimitiveType(GL_TRIANGLES);
         }
-    };
+    }
 }

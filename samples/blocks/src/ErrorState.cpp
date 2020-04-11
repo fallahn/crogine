@@ -38,7 +38,10 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Camera.hpp>
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
+
+#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
@@ -103,7 +106,8 @@ void ErrorState::render()
 void ErrorState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::SpriteRenderer>(mb);
+    m_scene.addSystem<cro::SpriteSystem>(mb);
+    m_scene.addSystem<cro::RenderSystem2D>(mb);
 
     cro::Image img;
     img.create(2, 2, cro::Colour(std::uint8_t(0),0u,0u,120u));
@@ -114,7 +118,8 @@ void ErrorState::buildScene()
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y / 2.f, 1.f });
     entity.getComponent<cro::Transform>().setPosition({ -(cro::DefaultSceneSize.x / 2.f), -(cro::DefaultSceneSize.y / 2.f), 0.f });
-    entity.addComponent<cro::Sprite>().setTexture(m_backgroundTexture);
+    entity.addComponent<cro::Sprite>(m_backgroundTexture);
+    entity.addComponent<cro::Drawable2D>();
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();

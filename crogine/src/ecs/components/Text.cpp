@@ -28,247 +28,315 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/graphics/Font.hpp>
-#include <crogine/util/String.hpp>
+
+#include "../../detail/glad.hpp"
 
 using namespace cro;
 
 Text::Text()
-    : m_font        (nullptr),
-    m_charSize      (0),
-    m_colour        (cro::Colour::White()),
-    m_blendMode     (Material::BlendMode::Alpha),
-    m_dirtyFlags    (Flags::Verts | Flags::Colours),
-    m_scissor       (false),
-    m_vboOffset     (0),
-    m_alignment     (Left)
+    : m_font            (nullptr),
+    m_charSize          (30),
+    m_verticalSpacing   (0.f),
+    m_fillColour        (Colour::White()),
+    //m_outlineThickness(0.f),
+    m_dirty             (true),
+    m_alignment         (Alignment::Left)
 {
 
 }
 
 Text::Text(const Font& font)
-    : m_font        (&font),
-    m_charSize      (30),
-    m_colour        (cro::Colour::White()),
-    m_blendMode     (Material::BlendMode::Alpha),
-    m_dirtyFlags    (Flags::Verts | Flags::Colours),
-    m_scissor       (false),
-    m_vboOffset     (0),
-    m_alignment     (Left)
+    : m_font            (nullptr),
+    m_charSize          (30),
+    m_verticalSpacing   (0.f),
+    m_fillColour        (Colour::White()),
+    //m_outlineThickness(0.f),
+    m_dirty             (true),
+    m_alignment         (Alignment::Left)
 {
-
+    setFont(font);
 }
 
 //public
+void Text::setFont(const Font& font)
+{
+    m_font = &font;
+    m_dirty = true;
+}
+
+void Text::setCharacterSize(std::uint32_t size)
+{
+    m_charSize = size;
+    m_dirty = true;
+}
+
+void Text::setVerticalSpacing(float spacing)
+{
+    m_verticalSpacing = spacing;
+    m_dirty = true;
+}
+
 void Text::setString(const String& str)
 {
-    m_string = str;
-    m_dirtyFlags |= Flags::Verts;
-}
-
-void Text::setCharSize(uint32 charSize)
-{
-    m_charSize = charSize;
-    m_dirtyFlags |= Flags::CharSize;
-}
-
-void Text::setColour(Colour colour)
-{
-    m_colour = colour;
-    for (auto& v : m_vertices)
+    if (m_string != str)
     {
-        v.colour = { colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha() };
+        m_string = str;
+        m_dirty = true;
     }
-    m_dirtyFlags |= Flags::Colours;
 }
 
-void Text::setBlendMode(Material::BlendMode mode)
+void Text::setFillColour(Colour colour)
 {
-    m_blendMode = mode;
-    m_dirtyFlags |= Flags::BlendMode;
-}
-
-float Text::getLineHeight() const
-{
-    //TODO return height depending on whether or
-    //not the font is a bitmap or SDF
-    CRO_ASSERT(m_font, "Font not loaded!");
-    return m_font->getLineHeight(m_charSize);
-}
-
-const FloatRect& Text::getLocalBounds() const
-{
-    if (m_dirtyFlags & (Flags::CharSize | Flags::Verts))
+    if (m_fillColour != colour)
     {
-        updateVerts();
+        //TODO rather than dirty just update the vert
+        //colours if the text is not already dirty
+        m_fillColour = colour;
+        m_dirty = true;
     }
-    return m_localBounds;
 }
 
-void Text::setCroppingArea(FloatRect area)
+//void Text::setOutlineColour(sf::Color colour)
+//{
+//    if (m_outlineColour != colour)
+//    {
+//        m_outlineColour = colour;
+//        m_dirty = true;
+//    }
+//}
+//
+//void Text::setOutlineThickness(float thickness)
+//{
+//    if (m_outlineThickness != thickness)
+//    {
+//        m_outlineThickness = thickness;
+//        m_dirty = true;
+//    }
+//}
+
+const Font* Text::getFont() const
 {
-    m_croppingArea = area;
-    m_scissor = true;
+    return m_font;
 }
 
-void Text::setAlignment(Alignment a)
+std::uint32_t Text::getCharacterSize() const
 {
-    if (a != m_alignment) m_dirtyFlags |= Flags::Verts;
-    m_alignment = a;
+    return m_charSize;
 }
 
-float Text::getLineWidth(std::size_t idx) const
+float Text::getVerticalSpacing() const
 {
-    CRO_ASSERT(m_font, "No font assigned!");
-    
-    auto start = (idx) ? Util::String::findNthOf(m_string, '\n', idx) : 0;
-    if (start == std::string::npos)
+    return m_verticalSpacing;
+}
+
+const String& Text::getString() const
+{
+    return m_string;
+}
+
+Colour Text::getFillColour() const
+{
+    return m_fillColour;
+}
+
+//Colour Text::getOutlineColour() const
+//{
+//    return m_outlineColour;
+//}
+//
+//float Text::getOutlineThickness() const
+//{
+//    return m_outlineThickness;
+//}
+
+FloatRect Text::getLocalBounds(Entity entity)
+{
+    CRO_ASSERT(entity.hasComponent<Text>() && entity.hasComponent<Drawable2D>(), "Invalid Entity");
+
+    auto& text = entity.getComponent<Text>();
+    auto& drawable = entity.getComponent<Drawable2D>();
+    if (text.m_dirty)
     {
-        return 0.f;
+        text.updateVertices(drawable);
+        drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
+        drawable.setPrimitiveType(GL_TRIANGLES);
     }
+    return drawable.getLocalBounds();
+}
 
-    float width = 0.f;
-    for (auto i = start + 1; i < m_string.size(); ++i)
-    {
-        if (m_string[i] == '\n')
-        {
-            break;
-        }
-        width += m_font->getGlyph(m_string[i], m_charSize).advance;
-    }
-
-    return width;
+void Text::setAlignment(Text::Alignment alignment)
+{
+    m_alignment = alignment;
+    m_dirty = true;
 }
 
 //private
-void Text::updateVerts() const
+void Text::updateVertices(Drawable2D& drawable)
 {
-    /*
-    0-------2
-    |       |
-    |       |
-    1-------3
-    */
-    CRO_ASSERT(m_font, "Must construct text with a font!");
-    if (m_string.empty()) return;
+    m_dirty = false;
 
-    m_vertices.clear();
-    m_vertices.reserve(m_string.size() * 6); //4 verts per char + degen tri
+    auto& vertices = drawable.getVertexData();
+    vertices.clear();
 
-    //we need to update the verts twice if setting an alignment
-    bool clearFlags = false;
-    auto getStart = [&](std::size_t idx)->float
+    FloatRect localBounds;
+
+    //skip if nothing to build
+    if (!m_font || m_string.empty())
     {
-        auto lineWidth = getLineWidth(idx);
-        if (m_localBounds.width < getLineWidth(idx))
-        {
-            return 0.f;
-        }
+        drawable.updateLocalBounds(localBounds);
+        return;
+    }
 
-        float pos = 0.f;
-        if (m_alignment == Text::Right)
-        {
-            float maxWidth = m_localBounds.width;
-            pos = maxWidth - lineWidth;
-        }
-        else if (m_alignment == Text::Centre)
-        {
-            float maxWidth = m_localBounds.width;
-            pos = maxWidth - lineWidth;
-            pos /= 2.f;
-        }
+    //update glyphs
+    glm::vec2 textureSize = m_font->getTexture(m_charSize).getSize();
+    float xOffset = static_cast<float>(m_font->getGlyph(L' ', m_charSize).advance);
+    float yOffset = static_cast<float>(m_font->getLineHeight(m_charSize));
+    float x = 0.f;
+    float y = 0.f;// static_cast<float>(m_charSize);
 
-        clearFlags = true;
-        return pos;
-    };
-
-    float xPos = getStart(0);
-    float yPos = -getLineHeight();
-    float lineHeight = -yPos;
-    glm::vec2 texSize(m_font->getTexture(m_charSize).getSize());
-    CRO_ASSERT(texSize.x > 0 && texSize.y > 0, "Font texture not loaded!");
-
-    float top = 0.f;
-    float width = 0.f;
-    std::size_t lineCount = 0;
+    float minX = x;
+    float minY = y;
+    float maxX = 0.f;
+    float maxY = 0.f;
 
     std::uint32_t prevChar = 0;
-    for (auto c : m_string)
+    const auto& string = m_string;
+    for (auto i = 0u; i < string.size(); ++i)
     {
-        //check for end of lines
-        if (c == '\n') //newline is a new line!!
+        std::uint32_t currChar = string[i];
+
+        x += m_font->getKerning(prevChar, currChar, m_charSize);
+        prevChar = currChar;
+
+        //whitespace chars
+        if (currChar == ' ' || currChar == '\t' || currChar == '\n')
         {
-            lineCount++;
+            minX = std::min(minX, x);
+            minY = std::min(minY, y);
 
-            xPos = getStart(lineCount);
-            yPos -= lineHeight;
+            switch (currChar)
+            {
+            default: break;
+            case ' ':
+                x += xOffset;
+                break;
+            case '\t':
+                x += xOffset * 4.f; //4 spaces for tab suckas
+                break;
+            case '\n':
+                y -= yOffset + m_verticalSpacing;
+                x = 0.f;
+                break;
+            }
 
-            continue;
+            maxX = std::max(maxX, x);
+            maxY = std::max(maxY, y);
+
+            continue; //skip quad for whitespace
         }
 
-        auto glyph = m_font->getGlyph(c, m_charSize);
-        auto rect = glyph.textureBounds;
-        auto bounds = glyph.bounds;
-        auto descender = 8.f;// bounds.bottom + bounds.height;
-        Text::Vertex v;
+        //create the quads. //TODO reimplement (font doesn't yet support it)
+        //auto addOutline = [&]()
+        //{
+        //    const auto& glyph = m_font->getGlyph(currChar, m_charSize, m_outlineThickness);
 
-        v.position.x = xPos;
-        v.position.y = yPos - bounds.bottom + descender;
-        v.position.z = 0.f;
+        //    float left = glyph.bounds.left;
+        //    float top = glyph.bounds.top;
+        //    float right = glyph.bounds.left + glyph.bounds.width;
+        //    float bottom = glyph.bounds.top + glyph.bounds.height;
 
-        v.UV.x = rect.left / texSize.x;
-        v.UV.y = rect.bottom / texSize.y;
+        //    //add the outline glyph to the vertices
+        //    addQuad(vertices, glm::vec2(x, y), m_outlineColour, glyph, m_outlineThickness);
 
-        m_vertices.push_back(v);
-        m_vertices.push_back(v); //twice for degen tri
+        //    minX = std::min(minX, x + left - m_outlineThickness);
+        //    maxX = std::max(maxX, x + right - m_outlineThickness);
+        //    minY = std::min(minY, y + top - m_outlineThickness);
+        //    maxY = std::max(maxY, y + bottom - m_outlineThickness);
+        //};
 
+        //if outline is larger, add first
+        /*if (m_outlineThickness > 0)
+        {
+            addOutline();
+        }*/
 
-        v.position.y = yPos - bounds.bottom - bounds.height + descender;
+        const auto& glyph = m_font->getGlyph(currChar, m_charSize);
+        addQuad(vertices, glm::vec2(x, y), m_fillColour, glyph, textureSize);
 
-        v.UV.x = rect.left / texSize.x;
-        v.UV.y = (rect.bottom + rect.height) / texSize.y;
+        //else add outline on top TODO this just doesn't make sense, don't bother
+        /*if (m_outlineThickness < 0)
+        {
+            addOutline();
+        }*/
 
-        m_vertices.push_back(v);
+        //only do this if not outlined
+        //if (m_outlineThickness == 0)
+        {
+            float left = glyph.bounds.left;
+            float top = glyph.bounds.bottom + glyph.bounds.height;
+            float right = glyph.bounds.left + glyph.bounds.width;
+            float bottom = glyph.bounds.bottom;
 
+            minX = std::min(minX, x + left);
+            maxX = std::max(maxX, x + right);
+            minY = std::min(minY, y + bottom);
+            maxY = std::max(maxY, y + top);
+        }
 
-        v.position.x = xPos + rect.width;
-        v.position.y = yPos - bounds.bottom + descender;
-
-        v.UV.x = (rect.left + rect.width) / texSize.x;
-        v.UV.y = rect.bottom / texSize.y;
-
-        m_vertices.push_back(v);
-
-
-        v.position.y = yPos - bounds.bottom - bounds.height + descender;
-
-        v.UV.x = (rect.left + rect.width) / texSize.x;
-        v.UV.y = (rect.bottom + rect.height) / texSize.y;
-
-        m_vertices.push_back(v);
-        m_vertices.push_back(v); //end degen tri
-
-        if (v.position.x > width) width = v.position.x;
-
-        xPos += m_font->getKerning(prevChar, c, m_charSize);
-        xPos += glyph.advance;
-        prevChar = c;
+        x += glyph.advance;
     }
 
-    m_localBounds.bottom = yPos;
-    m_localBounds.height = top - yPos;
-    m_localBounds.width = width;
+    localBounds.left = minX;
+    localBounds.bottom = minY;
+    localBounds.width = maxX - minX;
+    localBounds.height = maxY - minY;
 
-    m_vertices.erase(m_vertices.begin()); //remove front/back degens as these are added by renderer
-    m_vertices.pop_back();
 
-    for (auto& v : m_vertices)
+    //check for alignment
+    float offset = 0.f;
+    if (m_alignment == Text::Alignment::Centre)
     {
-        v.colour = { m_colour.getRed(), m_colour.getGreen(), m_colour.getBlue(), m_colour.getAlpha() };
+        offset = localBounds.width / 2.f;
+    }
+    else if (m_alignment == Text::Alignment::Right)
+    {
+        offset = localBounds.width;
+    }
+    //if (offset > 0)
+    {
+        for (auto& v : vertices)
+        {
+            v.position.x -= offset;
+            v.position.y -= maxY;
+        }
+        localBounds.left -= offset;
+        localBounds.bottom -= maxY;
     }
 
-    if (clearFlags)
-    {
-        m_dirtyFlags &= ~Flags::Verts;
-    }
+    drawable.updateLocalBounds(localBounds);
+}
+
+void Text::addQuad(std::vector<Vertex2D>& vertices, glm::vec2 position, Colour colour, const Glyph& glyph, glm::vec2 textureSize, float outlineThickness)
+{
+    //this might sound counter intuitive - but we're
+    //making the characters top to bottom
+    float left = glyph.bounds.left;
+    float bottom = glyph.bounds.bottom;
+    float right = glyph.bounds.left + glyph.bounds.width;
+    float top = glyph.bounds.bottom + glyph.bounds.height;
+
+    float u1 = static_cast<float>(glyph.textureBounds.left) / textureSize.x;
+    float v1 = static_cast<float>(glyph.textureBounds.bottom) / textureSize.y;
+    float u2 = static_cast<float>(glyph.textureBounds.left + glyph.textureBounds.width) / textureSize.x;
+    float v2 = static_cast<float>(glyph.textureBounds.bottom + glyph.textureBounds.height) / textureSize.y;
+
+    vertices.emplace_back(glm::vec2(position.x + left - outlineThickness, position.y + top - outlineThickness), glm::vec2(u1, v1), colour);
+    vertices.emplace_back(glm::vec2(position.x + left - outlineThickness, position.y + bottom - outlineThickness), glm::vec2(u1, v2), colour);
+    vertices.emplace_back(glm::vec2(position.x + right - outlineThickness, position.y + top - outlineThickness), glm::vec2(u2, v1), colour);
+
+    vertices.emplace_back(glm::vec2(position.x + right - outlineThickness, position.y + top - outlineThickness), glm::vec2(u2, v1), colour);
+    vertices.emplace_back(glm::vec2(position.x + left - outlineThickness, position.y + bottom - outlineThickness), glm::vec2(u1, v2), colour);
+    vertices.emplace_back(glm::vec2(position.x + right - outlineThickness, position.y + bottom - outlineThickness), glm::vec2(u2, v2), colour);
 }

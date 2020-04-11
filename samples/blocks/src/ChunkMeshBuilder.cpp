@@ -52,9 +52,9 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     data.vertexCount = 0;
     
     glCheck(glGenBuffers(1, &data.vbo));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vbo));
+    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, data.vbo));
     glCheck(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     //first submesh is all solid geometry
     data.submeshCount = SubMeshID::Count;
@@ -63,9 +63,9 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     data.indexData[SubMeshID::Solid].indexCount = 0;
 
     glCheck(glGenBuffers(1, &data.indexData[SubMeshID::Solid].ibo));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[SubMeshID::Solid].ibo));
+    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[SubMeshID::Solid].ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
     //second submesh is foliage
     data.indexData[SubMeshID::Foliage].format = GL_UNSIGNED_INT;
@@ -73,9 +73,9 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     data.indexData[SubMeshID::Foliage].indexCount = 0;
 
     glCheck(glGenBuffers(1, &data.indexData[SubMeshID::Foliage].ibo));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[SubMeshID::Foliage].ibo));
+    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[SubMeshID::Foliage].ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
     //third submesh is used for water/fluid
     data.indexData[SubMeshID::Water].format = GL_UNSIGNED_INT;
@@ -83,9 +83,9 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     data.indexData[SubMeshID::Water].indexCount = 0;
 
     glCheck(glGenBuffers(1, &data.indexData[SubMeshID::Water].ibo));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[SubMeshID::Water].ibo));
+    /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[SubMeshID::Water].ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
     //this needs to be set to be culled properly
     data.boundingBox[0] = glm::vec3(0.f);

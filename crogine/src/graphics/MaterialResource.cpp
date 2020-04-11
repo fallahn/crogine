@@ -73,78 +73,78 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
         optional = -1;
     }*/
 
-    for (const auto& uniform : uniformMap)
+    for (const auto& [uniform, handle] : uniformMap)
     {
-        if (uniform.first == "u_worldMatrix")
+        if (uniform == "u_worldMatrix")
         {
-            data.uniforms[Material::World] = uniform.second;
+            data.uniforms[Material::World] = handle;
         }
-        else if (uniform.first == "u_viewMatrix")
+        else if (uniform == "u_viewMatrix")
         {
-            data.uniforms[Material::View] = uniform.second;
+            data.uniforms[Material::View] = handle;
         }
-        else if (uniform.first == "u_worldViewMatrix")
+        else if (uniform == "u_worldViewMatrix")
         {
-            data.uniforms[Material::WorldView] = uniform.second;
+            data.uniforms[Material::WorldView] = handle;
         }
-        else if (uniform.first == "u_projectionMatrix")
+        else if (uniform == "u_projectionMatrix")
         {
-            data.uniforms[Material::Projection] = uniform.second;
+            data.uniforms[Material::Projection] = handle;
         }
-        else if (uniform.first == "u_worldViewProjectionMatrix")
+        else if (uniform == "u_worldViewProjectionMatrix")
         {
-            data.uniforms[Material::WorldViewProjection] = uniform.second;
+            data.uniforms[Material::WorldViewProjection] = handle;
         }
-        else if (uniform.first == "u_normalMatrix")
+        else if (uniform == "u_normalMatrix")
         {
-            data.uniforms[Material::Normal] = uniform.second;
+            data.uniforms[Material::Normal] = handle;
         }
-        else if (uniform.first == "u_cameraWorldPosition")
+        else if (uniform == "u_cameraWorldPosition")
         {
-            data.uniforms[Material::Camera] = uniform.second;
+            data.uniforms[Material::Camera] = handle;
         }
         //these are optionally standard so they are added to 'optional' list to to mark that they exist
         //but not added as a property as they are not user settable - rather they are used internally by renderers
-        else if (uniform.first == "u_boneMatrices[0]")
+        else if (uniform == "u_boneMatrices[0]")
         {
-            data.uniforms[Material::Skinning] = uniform.second;
+            data.uniforms[Material::Skinning] = handle;
             data.optionalUniforms[data.optionalUniformCount++] = Material::Skinning;
         }
-        else if (uniform.first == "u_projectionMapMatrix[0]")
+        else if (uniform == "u_projectionMapMatrix[0]")
         {
-            data.uniforms[Material::ProjectionMap] = uniform.second;
+            data.uniforms[Material::ProjectionMap] = handle;
             data.optionalUniforms[data.optionalUniformCount++] = Material::ProjectionMap;
         }
-        else if (uniform.first == "u_projectionMapCount")
+        else if (uniform == "u_projectionMapCount")
         {
-            data.uniforms[Material::ProjectionMapCount] = uniform.second;
+            data.uniforms[Material::ProjectionMapCount] = handle;
             data.optionalUniforms[data.optionalUniformCount++] = Material::ProjectionMapCount;
         }
-        else if (uniform.first == "u_lightViewProjectionMatrix")
+        else if (uniform == "u_lightViewProjectionMatrix")
         {
-            data.uniforms[Material::ShadowMapProjection] = uniform.second;
+            data.uniforms[Material::ShadowMapProjection] = handle;
             data.optionalUniforms[data.optionalUniformCount++] = Material::ShadowMapProjection;
         }
-        else if (uniform.first == "u_shadowMap")
+        else if (uniform == "u_shadowMap")
         {
-            data.uniforms[Material::ShadowMapSampler] = uniform.second;
+            data.uniforms[Material::ShadowMapSampler] = handle;
             data.optionalUniforms[data.optionalUniformCount++] = Material::ShadowMapSampler;
         }
-        else if(uniform.first == "u_lightDirection")
+        else if(uniform == "u_lightDirection")
         {
-            data.uniforms[Material::SunlightDirection] = uniform.second;
+            data.uniforms[Material::SunlightDirection] = handle;
             data.optionalUniforms[data.optionalUniformCount++] = Material::SunlightDirection;
         }
-        else if (uniform.first == "u_lightColour")
+        else if (uniform == "u_lightColour")
         {
-            data.uniforms[Material::SunlightColour] = uniform.second;
+            data.uniforms[Material::SunlightColour] = handle;
             data.optionalUniforms[data.optionalUniformCount++] = Material::SunlightColour;
         }
         //else these are user settable uniforms - ie optional, but set by user such as textures
         else
         {
             //add to list of material properties
-            data.properties.insert(std::make_pair(uniform.first, std::make_pair(uniform.second, Material::Property())));
+            data.properties.insert(std::make_pair(uniform, std::make_pair(handle, Material::Property())));
         }
     }
 

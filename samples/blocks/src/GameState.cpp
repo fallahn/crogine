@@ -50,14 +50,16 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
-#include <crogine/ecs/systems/TextRenderer.hpp>
-#include <crogine/ecs/systems/SpriteRenderer.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Matrix.hpp>
@@ -357,10 +359,11 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
+    m_uiScene.addSystem<cro::SpriteSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
-    m_uiScene.addSystem<cro::SpriteRenderer>(mb);
-    m_uiScene.addSystem<cro::TextRenderer>(mb);
+    m_uiScene.addSystem<cro::TextSystem>(mb);
+    m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 }
 
 void GameState::loadAssets()
@@ -386,8 +389,9 @@ void GameState::createUI()
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 60.f });
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Waiting for server...");
-    entity.getComponent<cro::Text>().setColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::CommandTarget>().ID = UI::CommandID::WaitMessage;
 
     //player crosshair
@@ -397,6 +401,7 @@ void GameState::createUI()
     entity.addComponent<cro::Sprite>().setTexture(m_resources.textures.get("assets/images/hud.png"));
     auto bounds = entity.getComponent<cro::Sprite>().getTextureRect();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::Drawable2D>();
 
     //camera
     entity = m_uiScene.createEntity();

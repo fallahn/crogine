@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/graphics/Texture.hpp>
 
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <any>
 #include <memory>
@@ -94,6 +95,11 @@ namespace cro
         */
         float getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charSize) const;
 
+        /*!
+        \brief Returns true if any underlying textures have been updated
+        */
+        bool pageUpdated() const { return m_pageUpdated; }
+
     private:
 
         std::vector<Uint8> m_buffer;
@@ -115,9 +121,10 @@ namespace cro
             std::vector<Row> rows;
         };
 
-        mutable std::map<uint32, Page> m_pages;
+        mutable std::unordered_map<uint32, Page> m_pages;
         mutable std::vector<std::uint8_t> m_pixelBuffer;
 
+        mutable bool m_pageUpdated; //if a page has been updated we want to trigger an update on any text components
 
         //use std::any so we don't expose freetype pointers to public API
         std::any m_library;

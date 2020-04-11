@@ -56,6 +56,12 @@ namespace cro
             static_assert(std::is_pod<T>::value, "Only PODs allowed");
         }
 
+        Rectangle(glm::tvec2<T> position, glm::tvec2<T> size)
+            : left(position.x), bottom(position.y), width(size.x), height(size.y)
+        {
+            static_assert(std::is_pod<T>::value, "Only PODs allowed");
+        }
+
         T left, bottom, width, height;
 
         /*!
@@ -86,7 +92,7 @@ namespace cro
         /*!
         \brief Returns a copy of this rectangle transformed by the given matrix
         */
-        Rectangle<T> transform(const glm::mat4&);
+        Rectangle<T> transform(const glm::mat4&) const;
     };
 
     /*Some short cuts for concrete types*/
