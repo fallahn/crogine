@@ -44,6 +44,27 @@ CameraSystem::CameraSystem(cro::MessageBus& mb)
 }
 
 //public
+void CameraSystem::handleMessage(const Message& msg)
+{
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            auto& entities = getEntities();
+
+            for (auto entity : entities)
+            {
+                auto& camera = entity.getComponent<Camera>();
+                if (camera.resizeCallback)
+                {
+                    camera.resizeCallback(camera);
+                }
+            }
+        }
+    }
+}
+
 void CameraSystem::process(float)
 {
     auto& entities = getEntities();

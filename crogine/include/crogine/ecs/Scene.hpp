@@ -238,9 +238,19 @@ namespace cro
 
         /*!
         \brief Draws any renderable systems in this scene, in the order in which they were added
+        using the currently active camera
         \param target The target to be rendered to, either the active window or a render texture
+        \see setActiveCamera()
         */
-        void render(const RenderTarget&);
+        void render(const RenderTarget& target);
+
+        /*!
+        \brief Draws any renderable systems in this scene, in the order in which they were added
+        using the given list of camera entities. Useful for split screen views for example
+        \param target The target to be rendered to, either the active window or a render texture
+        \param cameras Vector of camera entities to draw the Scene with
+        */
+        void render(const RenderTarget& target, const std::vector<Entity>& cameras);
 
         /*!
         \brief Returns a pointer to the array of active projection maps, with the count.
@@ -259,9 +269,11 @@ namespace cro
 
     private:
         MessageBus& m_messageBus;
-        Entity::ID m_defaultCamera;
-        Entity::ID m_activeCamera;
-        Entity::ID m_activeListener;
+
+        Entity m_defaultCamera;
+        Entity m_activeCamera;
+        Entity m_activeListener;
+
         Sunlight m_sunlight;
 
         std::vector<Entity> m_pendingEntities;
@@ -294,9 +306,11 @@ namespace cro
         }m_skybox;
         Shader m_skyboxShader;
 
-        void defaultRenderPath(const RenderTarget&);
-        void postRenderPath(const RenderTarget&);
-        std::function<void(const RenderTarget&)> currentRenderPath;
+        //we use a pointer here so we can create an array of just one
+        //camera without having to create a vector from it
+        void defaultRenderPath(const RenderTarget&, const Entity* cameraList, std::size_t cameraCount);
+        void postRenderPath(const RenderTarget&, const Entity* cameraList, std::size_t cameraCount);
+        std::function<void(const RenderTarget&, const Entity*, std::size_t)> currentRenderPath;
 
         void destroySkybox();
     };

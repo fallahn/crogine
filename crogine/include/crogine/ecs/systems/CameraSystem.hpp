@@ -54,6 +54,8 @@ namespace cro
     public:
         explicit CameraSystem(cro::MessageBus&);
 
+        void handleMessage(const Message&) override;
+
         void process(float) override;
 
 

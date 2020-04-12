@@ -89,7 +89,8 @@ T& Scene::addPostProcess(Args&&... args)
         if (m_sceneBuffer.create(size.x, size.y))
         {
             //set render path
-            currentRenderPath = std::bind(&Scene::postRenderPath, this, std::placeholders::_1);
+            using namespace std::placeholders;
+            currentRenderPath = std::bind(&Scene::postRenderPath, this, _1, _2, _3);
         }
         else
         {
