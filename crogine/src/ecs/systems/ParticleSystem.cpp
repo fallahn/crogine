@@ -111,7 +111,6 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     m_vboIDs            (MaxParticleSystems),
     m_nextBuffer        (0),
     m_bufferCount       (0),
-    m_visibleCount      (0),
     m_projectionUniform (-1),
     m_textureUniform    (-1),
     m_viewProjUniform   (-1),
@@ -151,13 +150,6 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
         m_attribData[2].attribSize = 3;
         m_attribData[2].offset = (3 + 4) * sizeof(float);
     }
-
-    //reserve some space
-    m_visibleSystems.reserve(MaxParticleSystems);
-    for (auto i = 0u; i < MaxParticleSystems; ++i)
-    {
-        m_visibleSystems.emplace_back(-1, -1);
-    }
 }
 
 ParticleSystem::~ParticleSystem()
@@ -173,14 +165,46 @@ ParticleSystem::~ParticleSystem()
 }
 
 //public
+void ParticleSystem::updateDrawList(Entity cameraEnt)
+{
+    auto frustum = cameraEnt.getComponent<Camera>().getFrustum();
+    std::vector<Entity> visibleSystems;
+
+    const auto& entities = getEntities();
+    for (auto entity : entities)
+    {
+        const auto& emitter = entity.getComponent<ParticleEmitter>();
+        auto inView = [&frustum, &emitter]()->bool
+        {
+            bool visible = true;
+            std::size_t i = 0;
+            while (visible && i < frustum.size())
+            {
+                visible = (Spatial::intersects(frustum[i++], emitter.m_bounds) != Planar::Back);
+            }
+            return visible;
+        };
+        if (emitter.m_nextFreeParticle > 0 && inView())
+        {
+            visibleSystems.push_back(entity);
+        }
+    }
+
+    DPRINT("Visible particle Systems", std::to_string(visibleSystems.size()));
+
+    cameraEnt.getComponent<Camera>().drawList[getType()] = std::make_any<std::vector<Entity>>(std::move(visibleSystems));
+}
+
 void ParticleSystem::process(float dt)
 {
-    m_visibleCount = 0;
-
     auto& entities = getEntities();
-    auto frustum = getScene()->getActiveCamera().getComponent<Camera>().getFrustum();
     for (auto& e : entities)
     {
+        //TODO we're not anticipating large worlds, but it might be worth
+        //skipping emitter updates that are a long way from the camera.
+        //this if course also means per camera updates, and therefore suddenly
+        //gets complicated....
+
         //check each emitter to see if it should spawn a new particle
         auto& emitter = e.getComponent<ParticleEmitter>();
         if (emitter.m_running &&
@@ -259,7 +283,7 @@ void ParticleSystem::process(float dt)
         }
         //DPRINT("Next free Particle", std::to_string(emitter.m_nextFreeParticle));
 
-        //TODO sort by depth? should be drawing back to front for transparency really.
+        //TODO sort verts by depth? should be drawing back to front for transparency really.
 
         //update VBO
         std::size_t idx = 0;
@@ -285,23 +309,6 @@ void ParticleSystem::process(float dt)
         }
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
         glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, idx * sizeof(float), m_dataBuffer.data()));
-
-
-        //check if not empty and within frustum and add to draw list
-        auto inView = [&frustum, &emitter]()->bool
-        {
-            bool visible = true;
-            std::size_t i = 0;
-            while (visible && i < frustum.size())
-            {
-                visible = (Spatial::intersects(frustum[i++], emitter.m_bounds) != Planar::Back);
-            }
-            return visible;
-        };
-        if (emitter.m_nextFreeParticle > 0 && inView())
-        {
-            m_visibleSystems[m_visibleCount++] = e;
-        }
     }
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -330,10 +337,10 @@ void ParticleSystem::render(Entity camera, const RenderTarget&)
     glCheck(glUniform1i(m_textureUniform, 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
     
-
-    for(auto i = 0u; i < m_visibleCount; ++i)
+    const auto& entities = std::any_cast<const std::vector<Entity>&>(cam.drawList.at(getType()));
+    for(auto entity : entities)
     {
-        const auto& emitter = m_visibleSystems[i].getComponent<ParticleEmitter>();
+        const auto& emitter = entity.getComponent<ParticleEmitter>();
         //bind emitter texture
         glCheck(glBindTexture(GL_TEXTURE_2D, emitter.emitterSettings.textureID));
         glCheck(glUniform1f(m_sizeUniform, emitter.emitterSettings.size));
@@ -424,4 +431,6 @@ void ParticleSystem::allocateBuffer()
     glCheck(glBufferData(GL_ARRAY_BUFFER, MaxVertData * sizeof(float), nullptr, GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     m_bufferCount++;
+
+    //TODO generate VAOs on desktop
 }

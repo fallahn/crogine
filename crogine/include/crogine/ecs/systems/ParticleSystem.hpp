@@ -53,8 +53,7 @@ namespace cro
         const ParticleSystem operator = (const ParticleSystem&) = delete;
         ParticleSystem& operator = (ParticleSystem&&) = delete;
 
-        //TODO implement this
-        void updateDrawList(Entity) override {}
+        void updateDrawList(Entity) override;
 
         void process(float) override;
 
@@ -70,8 +69,6 @@ namespace cro
         std::size_t m_nextBuffer;
         std::size_t m_bufferCount;
 
-        std::size_t m_visibleCount;
-        std::vector<Entity> m_visibleSystems;
         void allocateBuffer();
 
         Shader m_shader;
