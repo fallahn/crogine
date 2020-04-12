@@ -30,7 +30,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 
@@ -44,6 +44,27 @@ CameraSystem::CameraSystem(cro::MessageBus& mb)
 }
 
 //public
+void CameraSystem::handleMessage(const Message& msg)
+{
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            auto& entities = getEntities();
+
+            for (auto entity : entities)
+            {
+                auto& camera = entity.getComponent<Camera>();
+                if (camera.resizeCallback)
+                {
+                    camera.resizeCallback(camera);
+                }
+            }
+        }
+    }
+}
+
 void CameraSystem::process(float)
 {
     auto& entities = getEntities();
@@ -53,12 +74,18 @@ void CameraSystem::process(float)
         //requires 6(!!) sqrts
 
         auto& camera = entity.getComponent<Camera>();
-        const auto& tx = entity.getComponent<Transform>();
+        if (camera.active)
+        {
+            const auto& tx = entity.getComponent<Transform>();
 
-        camera.viewMatrix = glm::inverse(tx.getWorldTransform());
-        camera.viewProjectionMatrix = camera.projectionMatrix * camera.viewMatrix;
+            camera.viewMatrix = glm::inverse(tx.getWorldTransform());
+            camera.viewProjectionMatrix = camera.projectionMatrix * camera.viewMatrix;
 
-        updateFrustum(camera);
+            updateFrustum(camera);
+
+            camera.drawList.clear();
+            getScene()->updateDrawLists(entity);
+        }
     }
 }
 

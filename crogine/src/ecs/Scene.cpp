@@ -134,11 +134,13 @@ Scene::Scene(MessageBus& mb)
     defaultCamera.addComponent<AudioListener>();
     updateView(defaultCamera.getComponent<Camera>());
 
-    m_defaultCamera = defaultCamera.getIndex();
+    //TODO why store IDs when we can just store the entity?
+    m_defaultCamera = defaultCamera;// .getIndex();
     m_activeCamera = m_defaultCamera;
     m_activeListener = m_defaultCamera;
 
-    currentRenderPath = std::bind(&Scene::defaultRenderPath, this, std::placeholders::_1);
+    using namespace std::placeholders;
+    currentRenderPath = std::bind(&Scene::defaultRenderPath, this, _1, _2, _3);
 }
 
 Scene::~Scene()
@@ -190,9 +192,11 @@ Entity Scene::getEntity(Entity::ID id) const
 
 void Scene::setPostEnabled(bool enabled)
 {
+    using namespace std::placeholders;
+
     if (enabled && !m_postEffects.empty())
     {
-        currentRenderPath = std::bind(&Scene::postRenderPath, this, std::placeholders::_1);
+        currentRenderPath = std::bind(&Scene::postRenderPath, this, _1, _2, _3);
         auto size = App::getWindow().getSize();
         m_sceneBuffer.create(size.x, size.y, true);
         for (auto& p : m_postEffects)
@@ -202,7 +206,7 @@ void Scene::setPostEnabled(bool enabled)
     }
     else
     {       
-        currentRenderPath = std::bind(&Scene::defaultRenderPath, this, std::placeholders::_1);
+        currentRenderPath = std::bind(&Scene::defaultRenderPath, this, _1, _2, _3);
     }
 }
 
@@ -420,21 +424,28 @@ void Scene::setSkyboxColours(cro::Colour dark, cro::Colour light)
 
 Entity Scene::getDefaultCamera() const
 {
-    return m_entityManager.getEntity(m_defaultCamera);
+    return m_defaultCamera;
 }
 
 Entity Scene::setActiveCamera(Entity entity)
 {
     CRO_ASSERT(entity.hasComponent<Transform>() && entity.hasComponent<Camera>(), "Entity requires at least a transform and a camera component");
     CRO_ASSERT(m_entityManager.owns(entity), "This entity must belong to this scene!");
-    auto oldCam = m_entityManager.getEntity(m_activeCamera);
-    m_activeCamera = entity.getIndex();
+
+    auto oldCam = m_activeCamera;
+    m_activeCamera = entity;
 
     auto& cam = entity.getComponent<cro::Camera>();
     if (cam.resizeCallback)
     {
         cam.resizeCallback(cam);
     }
+
+    //assume if we're using any kind of custom camera
+    //we're not going to use the default one any more
+    //(this prevents draw lists being unnecessarily updated
+    //on the default camera if it is not used)
+    m_defaultCamera.getComponent<Camera>().active = (entity == m_defaultCamera);
 
     return oldCam;
 }
@@ -443,19 +454,19 @@ Entity Scene::setActiveListener(Entity entity)
 {
     CRO_ASSERT(entity.hasComponent<Transform>() && entity.hasComponent<AudioListener>(), "Entity requires at least a transform and a camera component");
     CRO_ASSERT(m_entityManager.owns(entity), "This entity must belong to this scene!");
-    auto oldListener = m_entityManager.getEntity(m_activeListener);
-    m_activeListener = entity.getIndex();
+    auto oldListener = m_activeListener;
+    m_activeListener = entity;
     return oldListener;
 }
 
 Entity Scene::getActiveListener() const
 {
-    return m_entityManager.getEntity(m_activeListener);
+    return m_activeListener;
 }
 
 Entity Scene::getActiveCamera() const
 {
-    return m_entityManager.getEntity(m_activeCamera);
+    return m_activeCamera;
 }
 
 void Scene::forwardEvent(const Event& evt)
@@ -468,19 +479,6 @@ void Scene::forwardEvent(const Event& evt)
 
 void Scene::forwardMessage(const Message& msg)
 {
-    if (msg.id == cro::Message::WindowMessage)
-    {
-        const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-        {
-            auto& camera = m_entityManager.getEntity(m_activeCamera).getComponent<Camera>();
-            if (camera.resizeCallback)
-            {
-                camera.resizeCallback(camera);
-            }
-        }
-    }
-
     m_systemManager.forwardMessage(msg);
     for (auto& d : m_directors)
     {
@@ -514,7 +512,12 @@ void Scene::forwardMessage(const Message& msg)
 
 void Scene::render(const RenderTarget& rt)
 {
-    currentRenderPath(rt);
+    currentRenderPath(rt, &m_activeCamera, 1);
+}
+
+void Scene::render(const RenderTarget& rt, const std::vector<Entity>& cameras)
+{
+    currentRenderPath(rt, cameras.data(), cameras.size());
 }
 
 std::pair<const float*, std::size_t> Scene::getActiveProjectionMaps() const
@@ -522,11 +525,22 @@ std::pair<const float*, std::size_t> Scene::getActiveProjectionMaps() const
     return std::pair<const float*, std::size_t>(&m_projectionMaps[0][0].x, m_projectionMapCount);
 }
 
-//private
-void Scene::defaultRenderPath(const RenderTarget& rt)
+void Scene::updateDrawLists(Entity camera)
 {
-    auto camera = m_entityManager.getEntity(m_activeCamera);
-    const auto& cam = camera.getComponent<Camera>();
+    CRO_ASSERT(camera.hasComponent<Camera>(), "Camera component missing!");
+    CRO_ASSERT(m_entityManager.owns(camera), "This entity must belong to this scene!");
+
+    for (auto r : m_renderables)
+    {
+        r->updateDrawList(camera);
+    }
+}
+
+//private
+void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, std::size_t cameraCount)
+{
+    CRO_ASSERT(cameraList, "Must not be nullptr");
+    CRO_ASSERT(cameraCount, "Needs at least one camera");
 
     //make sure we're using the active viewport
     //generic target size - this might be a buffer not the window!
@@ -534,79 +548,86 @@ void Scene::defaultRenderPath(const RenderTarget& rt)
     std::array<std::int32_t, 4u> previousViewport;
     glCheck(glGetIntegerv(GL_VIEWPORT, previousViewport.data()));
 
-    auto rect = rt.getViewport(cam.viewport);
-    glViewport(rect.left, rect.bottom, rect.width, rect.height);
-
-
-
-    //see comment after skybox render
-    //for (auto r : m_renderables)
-    //{
-    //    r->render(camera);
-    //}
-
-    //draw the skybox if enabled
-    if (m_skybox.vbo)
+    for (auto i = 0u; i < cameraCount; ++i)
     {
-        //change depth function so depth test passes when values are equal to depth buffer's content
-        glCheck(glDepthFunc(GL_LEQUAL));
-        glCheck(glEnable(GL_DEPTH_TEST));
+        //auto camera = m_activeCamera;
+        const auto& cam = cameraList[i].getComponent<Camera>();
 
-        //remove translation from the view matrix
-        auto view = glm::mat4(glm::mat3(cam.viewMatrix)); 
+        auto rect = rt.getViewport(cam.viewport);
+        glViewport(rect.left, rect.bottom, rect.width, rect.height);
 
-        glCheck(glUseProgram(m_skyboxShader.getGLHandle()));
-        glCheck(glUniformMatrix4fv(m_skybox.viewUniform, 1, GL_FALSE, glm::value_ptr(view)));
-        glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projectionMatrix)));
+        //see comment after skybox render
+        //for (auto r : m_renderables)
+        //{
+        //    r->render(camera);
+        //}
 
-        //bind the texture if it exists
-        if (m_skybox.texture)
+        //draw the skybox if enabled
+        if (m_skybox.vbo)
         {
-            glCheck(glActiveTexture(GL_TEXTURE0));
-            glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_skybox.texture));
-            glCheck(glUniform1i(m_skybox.textureUniform, 0));
+            //change depth function so depth test passes when values are equal to depth buffer's content
+            glCheck(glDepthFunc(GL_LEQUAL));
+            glCheck(glEnable(GL_DEPTH_TEST));
+
+            //remove translation from the view matrix
+            auto view = glm::mat4(glm::mat3(cam.viewMatrix));
+
+            glCheck(glUseProgram(m_skyboxShader.getGLHandle()));
+            glCheck(glUniformMatrix4fv(m_skybox.viewUniform, 1, GL_FALSE, glm::value_ptr(view)));
+            glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projectionMatrix)));
+
+            //bind the texture if it exists
+            if (m_skybox.texture)
+            {
+                glCheck(glActiveTexture(GL_TEXTURE0));
+                glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_skybox.texture));
+                glCheck(glUniform1i(m_skybox.textureUniform, 0));
+            }
+
+            //draw cube
+#ifdef PLATFORM_DESKTOP
+            glCheck(glBindVertexArray(m_skybox.vao));
+            glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
+            glCheck(glBindVertexArray(0));
+#else
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
+
+            const auto& attribs = m_skyboxShader.getAttribMap();
+            glCheck(glEnableVertexAttribArray(attribs[0]));
+            glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3 * sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+
+            glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
+
+            glCheck(glDisableVertexAttribArray(attribs[0]));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+#endif //PLATFORM
+            glCheck(glUseProgram(0));
+
+            glDisable(GL_DEPTH_TEST);
+            glCheck(glDepthFunc(GL_LESS));
         }
 
-        //draw cube
-#ifdef PLATFORM_DESKTOP
-        glCheck(glBindVertexArray(m_skybox.vao));
-        glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
-        glCheck(glBindVertexArray(0));
-#else
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
+        //ideally we want to do this before the skybox to reduce overdraw
+        //but this breaks transparent objects... ideally opaque and transparent
+        //passes should be separated, but this only affects the model renderer
+        //and not other systems.... hum. Ideas on a postcard please.
+        for (auto r : m_renderables)
+        {
+            r->render(cameraList[i], rt);
+        }
 
-        const auto& attribs = m_skyboxShader.getAttribMap();
-        glCheck(glEnableVertexAttribArray(attribs[0]));
-        glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3*sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
-
-        glCheck(glDrawArrays(GL_TRIANGLES, 0, 36));
-
-        glCheck(glDisableVertexAttribArray(attribs[0]));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-#endif //PLATFORM
-        glCheck(glUseProgram(0));
-
-        glDisable(GL_DEPTH_TEST);
-        glCheck(glDepthFunc(GL_LESS));
-    }
-
-    //ideally we want to do this before the skybox to reduce overdraw
-    //but this breaks transparent objects... ideally opaque and transparent
-    //passes should be separated, but this only affects the model renderer
-    //and not other systems.... hum. Ideas on a postcard please.
-    for (auto r : m_renderables)
-    {
-        r->render(camera, rt);
     }
 
     //restore old view port
     glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
 }
 
-void Scene::postRenderPath(const RenderTarget&)
+void Scene::postRenderPath(const RenderTarget&, const Entity* cameraList, std::size_t cameraCount)
 {
-    m_sceneBuffer.clear();
-    defaultRenderPath(m_sceneBuffer);
+    //TODO this only needs to be cleared once per frame
+    //currently it is cleared for every active camera we draw...
+    m_sceneBuffer.clear(Colour::Transparent());
+    defaultRenderPath(m_sceneBuffer, cameraList, cameraCount);
     m_sceneBuffer.display();
 
     RenderTexture* inTex = &m_sceneBuffer;

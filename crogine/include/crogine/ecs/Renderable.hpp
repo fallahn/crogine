@@ -38,10 +38,13 @@ source distribution.
 namespace cro
 {
     class Entity;
+    struct Camera;
     class RenderTarget;
     /*!
     \brief Renderable interface for systems which draw parts of the scene.
-    Systems which implement this will be drawn by any scene to which they are added.
+    Systems which implement this will be drawn by any scene to which they are added,
+    as well as having any camera components in the Scene passed to them via
+    updateDrawLists() for entity culling and sorting.
     */
     class CRO_EXPORT_API Renderable : public Detail::SDLResource
     {
@@ -50,9 +53,23 @@ namespace cro
         virtual ~Renderable() = default;
 
         /*!
+        \brief Updates the given camera's draw lists.
+        For each camera component in the Scene this function is used to
+        update the list of entities visible to the camera and sort their
+        draw order. This function should use the given camera's frustum
+        (or some other method) do determine an entity's visibility. Once
+        visible entities are found (and potentially depth sorted) they
+        should be appended to the camera's draw list. This list should
+        then be used when rendering this system.
+        \see Camera::drawList
+        */
+        virtual void updateDrawList(Entity camera) = 0;
+
+        /*!
         \brief Renders this system.
         \param camera Entity containing a camera and transform component, automatically
-        passed in by the scene when this system is drawn. Use this to accurately draw the system.
+        passed in by the scene when this system is drawn. Use this to accurately draw the
+        system, usually via the camera's draw list as determined by updateDrawList().
         \param target RenderTarget currently being drawn to. Provides information such as
         the dimensions of the target
         */

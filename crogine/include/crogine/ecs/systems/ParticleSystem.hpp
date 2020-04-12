@@ -53,6 +53,8 @@ namespace cro
         const ParticleSystem operator = (const ParticleSystem&) = delete;
         ParticleSystem& operator = (ParticleSystem&&) = delete;
 
+        void updateDrawList(Entity) override;
+
         void process(float) override;
 
         void render(Entity, const RenderTarget&) override;
@@ -64,11 +66,10 @@ namespace cro
 
         std::vector<float> m_dataBuffer;
         std::vector<uint32> m_vboIDs;
+        std::vector<uint32> m_vaoIDs; //< used on desktop
         std::size_t m_nextBuffer;
         std::size_t m_bufferCount;
 
-        std::size_t m_visibleCount;
-        std::vector<Entity> m_visibleSystems;
         void allocateBuffer();
 
         Shader m_shader;

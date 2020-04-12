@@ -142,6 +142,9 @@ void MainState::handleMessage(const cro::Message& msg)
     m_backgroundScene.forwardMessage(msg);
     m_menuScene.forwardMessage(msg);
 
+
+    //TODO this should be a camera callback
+    //see Camera::resizeCallback
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
@@ -167,6 +170,7 @@ void MainState::render()
 {
     auto& rt = cro::App::getWindow();
     m_backgroundScene.render(rt);
+
     m_menuScene.render(rt);
 }
 
@@ -191,11 +195,12 @@ void MainState::addSystems()
     m_menuScene.addSystem<SliderSystem>(mb);
     //m_menuScene.addSystem<RotateSystem>(mb);
     m_menuScene.addSystem<cro::CallbackSystem>(mb);
-    m_menuScene.addSystem<cro::CameraSystem>(mb);
     m_menuScene.addSystem<cro::SpriteSystem>(mb);
     m_menuScene.addSystem<cro::TextSystem>(mb);
     m_menuScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiSystem = &m_menuScene.addSystem<cro::UISystem>(mb);
+
+    m_menuScene.addSystem<cro::CameraSystem>(mb);
 }
 
 void MainState::loadAssets()
@@ -302,11 +307,8 @@ void MainState::createScene()
     entity.addComponent<cro::Transform>();// .setPosition({ 0.f, 0.f, 4.f });
     entity.addComponent<cro::Camera>();
     entity.addComponent<cro::AudioListener>();
-
-    /*auto &camRot = entity.addComponent<Rotator>();
-    camRot.axis.y = 1.f; camRot.speed = 0.2f;*/
-
     entity.addComponent<Drifter>().amplitude = 0.1f;
+
     m_backgroundScene.setActiveCamera(entity);
     m_backgroundScene.setActiveListener(entity);
 

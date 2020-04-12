@@ -85,6 +85,8 @@ namespace cro
         /*!
         \brief Performs frustum culling and Material sorting by depth and blend mode
         */
+        void updateDrawList(Entity) override;
+
         void process(float) override;
 
         /*!
