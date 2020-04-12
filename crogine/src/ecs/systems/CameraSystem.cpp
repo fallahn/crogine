@@ -53,15 +53,18 @@ void CameraSystem::process(float)
         //requires 6(!!) sqrts
 
         auto& camera = entity.getComponent<Camera>();
-        const auto& tx = entity.getComponent<Transform>();
+        if (camera.active)
+        {
+            const auto& tx = entity.getComponent<Transform>();
 
-        camera.viewMatrix = glm::inverse(tx.getWorldTransform());
-        camera.viewProjectionMatrix = camera.projectionMatrix * camera.viewMatrix;
+            camera.viewMatrix = glm::inverse(tx.getWorldTransform());
+            camera.viewProjectionMatrix = camera.projectionMatrix * camera.viewMatrix;
 
-        updateFrustum(camera);
+            updateFrustum(camera);
 
-        camera.drawList.clear();
-        getScene()->updateDrawLists(camera);
+            camera.drawList.clear();
+            getScene()->updateDrawLists(entity);
+        }
     }
 }
 

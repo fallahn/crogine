@@ -41,7 +41,9 @@ source distribution.
 
 #include <array>
 #include <functional>
-#include <vector>
+#include <unordered_map>
+#include <typeindex>
+#include <any>
 
 namespace cro
 {
@@ -120,10 +122,20 @@ namespace cro
         passed to the Scene so that Renderable systems can update it with visible
         entities, sorted in draw order. This list is then used when the Renderable
         system is drawn.
+        type_index allows multiple systems to store draw lists of differing types
+        which themselves are stored in std::any. It's up to the specific systems
+        to maintain which types are stored.
+        \see System::getType()
         \see Renderable::updateDrawList()
         \see Renderable::render()
         */
-        std::vector<Entity> drawList;
+        std::unordered_map<std::type_index, std::any> drawList;
+
+        /*!
+        \brief If this is set to false the CameraSystem will ignore
+        this Camera component.
+        */
+        bool active = true;
 
     private:
 

@@ -134,6 +134,7 @@ Scene::Scene(MessageBus& mb)
     defaultCamera.addComponent<AudioListener>();
     updateView(defaultCamera.getComponent<Camera>());
 
+    //TODO why store IDs when we can just store the entity?
     m_defaultCamera = defaultCamera.getIndex();
     m_activeCamera = m_defaultCamera;
     m_activeListener = m_defaultCamera;
@@ -427,6 +428,7 @@ Entity Scene::setActiveCamera(Entity entity)
 {
     CRO_ASSERT(entity.hasComponent<Transform>() && entity.hasComponent<Camera>(), "Entity requires at least a transform and a camera component");
     CRO_ASSERT(m_entityManager.owns(entity), "This entity must belong to this scene!");
+
     auto oldCam = m_entityManager.getEntity(m_activeCamera);
     m_activeCamera = entity.getIndex();
 
@@ -435,6 +437,12 @@ Entity Scene::setActiveCamera(Entity entity)
     {
         cam.resizeCallback(cam);
     }
+
+    //assume if we're using any kind of custom camera
+    //we're not going to use the default one any more
+    //(this prevents draw lists being unnecessarily updated
+    //on the default camera if it is not used)
+    m_entityManager.getEntity(m_defaultCamera).getComponent<Camera>().active = (entity.getIndex() == m_defaultCamera);
 
     return oldCam;
 }
@@ -522,8 +530,11 @@ std::pair<const float*, std::size_t> Scene::getActiveProjectionMaps() const
     return std::pair<const float*, std::size_t>(&m_projectionMaps[0][0].x, m_projectionMapCount);
 }
 
-void Scene::updateDrawLists(Camera& camera)
+void Scene::updateDrawLists(Entity camera)
 {
+    CRO_ASSERT(camera.hasComponent<Camera>(), "Camera component missing!");
+    CRO_ASSERT(m_entityManager.owns(camera), "This entity must belong to this scene!");
+
     for (auto r : m_renderables)
     {
         r->updateDrawList(camera);

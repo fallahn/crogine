@@ -124,11 +124,10 @@ RenderSystem2D::~RenderSystem2D()
 }
 
 //public
-void RenderSystem2D::updateDrawList(Camera& camera)
+void RenderSystem2D::updateDrawList(Entity camEnt)
 {
-    //hmmm this kills model perf in TL - is it the
-    //odd order in which this is performed (mid cam system update)?
     std::vector<Entity> drawList;
+    auto& camera = camEnt.getComponent<Camera>();
     const auto& frustum = camera.getFrustum();
 
     auto& entities = getEntities();
@@ -154,7 +153,7 @@ void RenderSystem2D::updateDrawList(Camera& camera)
         }
     }
 
-    DPRINT("Visible 2D", std::to_string(drawList.size()));
+    DPRINT("Visible 2D ents", std::to_string(drawList.size()));
 
     //sort drawlist
     std::sort(drawList.begin(), drawList.end(),
@@ -163,7 +162,7 @@ void RenderSystem2D::updateDrawList(Camera& camera)
             return a.getComponent<Drawable2D>().m_sortCriteria < b.getComponent<Drawable2D>().m_sortCriteria;
         });
  
-    camera.drawList.insert(camera.drawList.end(), drawList.begin(), drawList.end());
+    camera.drawList[getType()] = std::make_any<std::vector<Entity>>(std::move(drawList));
 }
 
 void RenderSystem2D::process(float)
@@ -245,8 +244,8 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glEnable(GL_SCISSOR_TEST));
 
-    const auto& entities = getEntities();
-    for (auto entity : camComponent.drawList)
+    const auto& entities = std::any_cast<const std::vector<Entity>&>(camComponent.drawList.at(getType()));
+    for (auto entity : entities)
     {
         const auto& drawable = entity.getComponent<Drawable2D>();
         const auto& tx = entity.getComponent<cro::Transform>();

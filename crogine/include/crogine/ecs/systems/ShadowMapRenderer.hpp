@@ -58,8 +58,8 @@ namespace cro
 
         void process(float) override;
 
-        //unimplemented. uses the draw list updated by ModelRenderer
-        void updateDrawList(Camera&) override {};
+        //TODO implement this
+        void updateDrawList(Entity) override {};
 
         void render(Entity, const RenderTarget&) override;
 

@@ -253,8 +253,9 @@ namespace cro
         This is called automatically by the CameraSystem to update all active
         Camera components in the Scene
         \see Renderable::updateDrawLists()
+        \see Camera::drawList
         */
-        void updateDrawLists(Camera&);
+        void updateDrawLists(Entity);
 
     private:
         MessageBus& m_messageBus;

@@ -54,7 +54,7 @@ namespace cro
         ParticleSystem& operator = (ParticleSystem&&) = delete;
 
         //TODO implement this
-        void updateDrawList(Camera&) override {}
+        void updateDrawList(Entity) override {}
 
         void process(float) override;
 
