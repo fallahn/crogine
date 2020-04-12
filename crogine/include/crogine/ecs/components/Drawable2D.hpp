@@ -204,7 +204,7 @@ namespace cro
         */
         void bindUniform(const std::string& name, const float* value);
 
-        //TODO filter flags, cropping area
+        //TODO filter flags
 
     private:
 
@@ -234,13 +234,12 @@ namespace cro
 
         FloatRect m_localBounds;
 
-        //if this changes entities need to be sorted
-        float m_lastSortValue;
-
         //used to crop drawables
         FloatRect m_croppingArea;
         FloatRect m_croppingWorldArea;
         bool m_cropped;
+
+        std::int32_t m_sortCriteria; //either Y or Z value depending on system sort mode
 
         std::vector<std::pair<std::int32_t, const Texture*>> m_textureBindings;
         std::vector<std::pair<std::int32_t, float>> m_floatBindings;

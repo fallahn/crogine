@@ -61,7 +61,7 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 }
 
 //public
-void ModelRenderer::updateDrawList(Camera& camera) const
+void ModelRenderer::updateDrawList(Camera& camera)
 {
 
 }

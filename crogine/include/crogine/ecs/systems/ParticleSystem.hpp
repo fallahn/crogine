@@ -54,7 +54,7 @@ namespace cro
         ParticleSystem& operator = (ParticleSystem&&) = delete;
 
         //TODO implement this
-        void updateDrawList(Camera&) const override {}
+        void updateDrawList(Camera&) override {}
 
         void process(float) override;
 

@@ -191,11 +191,12 @@ void MainState::addSystems()
     m_menuScene.addSystem<SliderSystem>(mb);
     //m_menuScene.addSystem<RotateSystem>(mb);
     m_menuScene.addSystem<cro::CallbackSystem>(mb);
-    m_menuScene.addSystem<cro::CameraSystem>(mb);
     m_menuScene.addSystem<cro::SpriteSystem>(mb);
     m_menuScene.addSystem<cro::TextSystem>(mb);
     m_menuScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiSystem = &m_menuScene.addSystem<cro::UISystem>(mb);
+
+    m_menuScene.addSystem<cro::CameraSystem>(mb);
 }
 
 void MainState::loadAssets()
