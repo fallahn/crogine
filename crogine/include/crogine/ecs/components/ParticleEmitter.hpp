@@ -105,6 +105,7 @@ namespace cro
 
     private:
         uint32 m_vbo;
+        uint32 m_vao; //< used on desktop
         
         std::array<Particle, MaxParticles> m_particles;
         std::size_t m_nextFreeParticle;

@@ -104,6 +104,9 @@ namespace
     }
 
     //cro::CommandSystem* buns = nullptr;
+
+    cro::Entity cam1;
+    cro::Entity cam2;
 }
 
 MainState::MainState(cro::StateStack& stack, cro::State::Context context, ResourcePtr& sharedResources)
@@ -166,7 +169,11 @@ bool MainState::simulate(float dt)
 void MainState::render()
 {
     auto& rt = cro::App::getWindow();
+    m_backgroundScene.setActiveCamera(cam1);
     m_backgroundScene.render(rt);
+    m_backgroundScene.setActiveCamera(cam2);
+    m_backgroundScene.render(rt);
+
     m_menuScene.render(rt);
 }
 
@@ -303,13 +310,20 @@ void MainState::createScene()
     entity.addComponent<cro::Transform>();// .setPosition({ 0.f, 0.f, 4.f });
     entity.addComponent<cro::Camera>();
     entity.addComponent<cro::AudioListener>();
-
-    /*auto &camRot = entity.addComponent<Rotator>();
-    camRot.axis.y = 1.f; camRot.speed = 0.2f;*/
-
     entity.addComponent<Drifter>().amplitude = 0.1f;
+
+    //split screen test
+    entity.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 0.5f, 1.f };
+    cam1 = entity;
+
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 4.f });
+    entity.addComponent<cro::Camera>().viewport = { 0.5f, 0.f, 0.5f, 1.f };
+    cam2 = entity;
+    //------
+
     m_backgroundScene.setActiveCamera(entity);
-    m_backgroundScene.setActiveListener(entity);
+    //m_backgroundScene.setActiveListener(entity); //reenable when split screen is done
 
     //used for menu scene
     entity = m_menuScene.createEntity();

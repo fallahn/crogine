@@ -109,6 +109,7 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     : System            (mb, typeid(ParticleSystem)),
     m_dataBuffer        (MaxVertData),
     m_vboIDs            (MaxParticleSystems),
+    m_vaoIDs            (MaxParticleSystems),
     m_nextBuffer        (0),
     m_bufferCount       (0),
     m_projectionUniform (-1),
@@ -117,7 +118,16 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     m_viewportUniform   (-1),
     m_sizeUniform       (-1)
 {
-    for (auto& vbo : m_vboIDs) vbo = 0;
+    for (auto& vbo : m_vboIDs)
+    {
+        vbo = 0;
+    }
+
+    //required for core profile on desktop
+    for (auto& vao : m_vaoIDs)
+    {
+        vao = 0;
+    }
 
     requireComponent<Transform>();
     requireComponent<ParticleEmitter>();
@@ -162,6 +172,13 @@ ParticleSystem::~ParticleSystem()
             glCheck(glDeleteBuffers(1, &vbo));
         }
     }
+#ifdef PLATFORM_DESKTOP
+    for (auto vao : m_vaoIDs)
+    {
+        glCheck(glDeleteVertexArrays(1, &vao));
+    }
+
+#endif
 }
 
 //public
@@ -345,18 +362,6 @@ void ParticleSystem::render(Entity camera, const RenderTarget&)
         glCheck(glBindTexture(GL_TEXTURE_2D, emitter.emitterSettings.textureID));
         glCheck(glUniform1f(m_sizeUniform, emitter.emitterSettings.size));
         
-        //bind emitter vbo
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
-
-        //bind vertex attribs
-        for (auto j = 0u; j < m_attribData.size(); ++j)
-        {
-            glCheck(glEnableVertexAttribArray(m_attribData[j].index));
-            glCheck(glVertexAttribPointer(m_attribData[j].index, m_attribData[j].attribSize,
-                GL_FLOAT, GL_FALSE, VertexSize,
-                reinterpret_cast<void*>(static_cast<intptr_t>(m_attribData[j].offset))));
-        }
-
         //apply blend mode
         switch (emitter.emitterSettings.blendmode)
         {
@@ -372,6 +377,22 @@ void ParticleSystem::render(Entity camera, const RenderTarget&)
             break;
         }
 
+#ifdef PLATFORM_DESKTOP
+        glCheck(glBindVertexArray(emitter.m_vao));
+        glCheck(glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(emitter.m_nextFreeParticle)));
+#else
+        //bind emitter vbo
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
+
+        //bind vertex attribs
+        for (auto [index, attribSize, offset] : m_attribData)
+        {
+            glCheck(glEnableVertexAttribArray(index));
+            glCheck(glVertexAttribPointer(index, attribSize,
+                GL_FLOAT, GL_FALSE, VertexSize,
+                reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
+        }
+
         //draw
         glCheck(glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(emitter.m_nextFreeParticle)));
 
@@ -380,10 +401,16 @@ void ParticleSystem::render(Entity camera, const RenderTarget&)
         {
             glCheck(glDisableVertexAttribArray(m_attribData[j].index));
         }
+#endif //PLATFORM
     }
 
-    glCheck(glUseProgram(0));
+#ifdef PLATFORM_DESKTOP
+    glCheck(glBindVertexArray(0));
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+#endif //PLATFORM
+
+    glCheck(glUseProgram(0));
     glCheck(glBindTexture(GL_TEXTURE_2D, 0));
 
     restorePreviousViewport();
@@ -407,18 +434,26 @@ void ParticleSystem::onEntityAdded(Entity entity)
     }
 
     entity.getComponent<ParticleEmitter>().m_vbo = m_vboIDs[m_nextBuffer];
+    entity.getComponent<ParticleEmitter>().m_vao = m_vaoIDs[m_nextBuffer];
     m_nextBuffer++;
 }
 
 void ParticleSystem::onEntityRemoved(Entity entity)
 {
     auto vboID = entity.getComponent<ParticleEmitter>().m_vbo;
+    auto vaoID = entity.getComponent<ParticleEmitter>().m_vao;
     
     //update available VBOs
     std::size_t idx = 0;
     while (m_vboIDs[idx] != vboID) { idx++; }
 
     std::swap(m_vboIDs[idx], m_vboIDs[m_nextBuffer]);
+
+    //and vaos
+    idx = 0;
+    while (m_vaoIDs[idx] != vaoID) { idx++; }
+
+    std::swap(m_vaoIDs[idx], m_vaoIDs[m_nextBuffer]);
 
     m_nextBuffer--;
 }
@@ -427,10 +462,28 @@ void ParticleSystem::allocateBuffer()
 {
     CRO_ASSERT(m_bufferCount < m_vboIDs.size(), "Max Buffers Reached!");
     glCheck(glGenBuffers(1, &m_vboIDs[m_bufferCount]));
+
+#ifdef PLATFORM_DESKTOP
+    glCheck(glGenVertexArrays(1, &m_vaoIDs[m_bufferCount]));
+    glCheck(glBindVertexArray(m_vaoIDs[m_bufferCount]));
+#endif //PLATFORM
+
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vboIDs[m_bufferCount]));
     glCheck(glBufferData(GL_ARRAY_BUFFER, MaxVertData * sizeof(float), nullptr, GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-    m_bufferCount++;
 
-    //TODO generate VAOs on desktop
+#ifdef PLATFORM_DESKTOP
+    for(auto [index, attribSize, offset] : m_attribData)
+    {
+        glCheck(glEnableVertexAttribArray(index));
+        glCheck(glVertexAttribPointer(index, attribSize,
+            GL_FLOAT, GL_FALSE, VertexSize,
+            reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
+    }
+
+    glCheck(glBindVertexArray(0));
+#endif //PLATFORM
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    m_bufferCount++;
 }

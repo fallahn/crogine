@@ -58,7 +58,8 @@ namespace cro
 
         void process(float) override;
 
-        //TODO implement this
+        //this system uses the visiblity result of ModelRenderer
+        //so draw lists are not implemented here
         void updateDrawList(Entity) override {};
 
         void render(Entity, const RenderTarget&) override;

@@ -624,7 +624,9 @@ void Scene::defaultRenderPath(const RenderTarget& rt)
 
 void Scene::postRenderPath(const RenderTarget&)
 {
-    m_sceneBuffer.clear();
+    //TODO this only needs to be cleared once per frame
+    //currently it is cleared for every active camera we draw...
+    m_sceneBuffer.clear(Colour::Transparent());
     defaultRenderPath(m_sceneBuffer);
     m_sceneBuffer.display();
 

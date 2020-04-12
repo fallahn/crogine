@@ -66,6 +66,7 @@ namespace cro
 
         std::vector<float> m_dataBuffer;
         std::vector<uint32> m_vboIDs;
+        std::vector<uint32> m_vaoIDs; //< used on desktop
         std::size_t m_nextBuffer;
         std::size_t m_bufferCount;
 
