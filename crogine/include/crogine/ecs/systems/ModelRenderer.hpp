@@ -72,6 +72,8 @@ namespace cro
         /*!
         \brief Performs frustum culling and Material sorting by depth and blend mode
         */
+        void updateDrawList(Entity) override;
+
         void process(float) override;
 
         /*!
@@ -80,7 +82,7 @@ namespace cro
         void render(Entity, const RenderTarget&) override;
 
     private:
-        MaterialList m_visibleEntities;
+        //MaterialList m_visibleEntities;
         //TODO list of lighting
 
         uint32 m_currentTextureUnit;

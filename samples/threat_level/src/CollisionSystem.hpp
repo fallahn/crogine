@@ -64,6 +64,8 @@ namespace cro
         CollisionSystem(CollisionSystem&&) = delete;
         CollisionSystem& operator = (CollisionSystem&&) = delete;
 
+        void updateDrawList(cro::Entity) override {}
+
         void process(float) override;
 
         void render(Entity, const RenderTarget&) override;

@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/graphics/RenderTarget.hpp>
 #include <crogine/util/Rectangle.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/core/App.hpp>
 
 #include "../../detail/glad.hpp"
 #include "../../detail/GLCheck.hpp"
@@ -123,10 +124,49 @@ RenderSystem2D::~RenderSystem2D()
 }
 
 //public
+void RenderSystem2D::updateDrawList(Entity camEnt)
+{
+    std::vector<Entity> drawList;
+    auto& camera = camEnt.getComponent<Camera>();
+    const auto& frustum = camera.getFrustum();
+
+    auto& entities = getEntities();
+    for (auto entity : entities)
+    {
+        auto& drawable = entity.getComponent<Drawable2D>();
+        const auto worldMat = entity.getComponent<cro::Transform>().getWorldTransform();
+
+        //check local bounds for visibility and draw if visible
+        auto bounds = drawable.m_localBounds.transform(worldMat);
+        cro::Box aabb(glm::vec3(bounds.left, bounds.bottom, -0.1f), glm::vec3(bounds.left + bounds.width, bounds.bottom + bounds.height, 0.1f));
+
+        bool visible = true;
+        std::size_t i = 0;
+        while (visible && i < frustum.size())
+        {
+            visible = (Spatial::intersects(frustum[i++], aabb) != Planar::Back);
+        }
+
+        if (visible)
+        {
+            drawList.push_back(entity);
+        }
+    }
+
+    DPRINT("Visible 2D ents", std::to_string(drawList.size()));
+
+    //sort drawlist
+    std::sort(drawList.begin(), drawList.end(),
+        [](Entity a, Entity b)
+        {
+            return a.getComponent<Drawable2D>().m_sortCriteria < b.getComponent<Drawable2D>().m_sortCriteria;
+        });
+ 
+    camera.drawList[getType()] = std::make_any<std::vector<Entity>>(std::move(drawList));
+}
+
 void RenderSystem2D::process(float)
 {
-    bool needsSorting = false; 
-
     auto& entities = getEntities();
     for (auto entity : entities)
     {
@@ -154,29 +194,26 @@ void RenderSystem2D::process(float)
             //bind VBO and upload data
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
             glCheck(glBufferData(GL_ARRAY_BUFFER, drawable.m_vertices.size() * Vertex2D::Size, drawable.m_vertices.data(), GL_DYNAMIC_DRAW));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));            
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
             drawable.m_updateBufferData = false;
         }
 
-        //check the transform to see if it changed and triggered a
-        //sort update for the entity list
         const auto& tx = entity.getComponent<Transform>();
-        float newSort = 0.f;
+        auto pos = tx.getWorldPosition();
+
+        //set sort criteria based on position
+        //faster to do a sort on int than float
         if (m_sortOrder == DepthAxis::Y)
         {
-            newSort = tx.getWorldPosition().y;
+            //multiplying by 100 preserves two places of precision
+            //which is enough to sort on
+            drawable.m_sortCriteria = static_cast<std::int32_t>(-pos.y * 100.f);
         }
         else
         {
-            newSort = tx.getWorldPosition().z;
+            drawable.m_sortCriteria = static_cast<std::int32_t>(pos.z * 100.f);
         }
-
-        if (drawable.m_lastSortValue != newSort)
-        {
-            needsSorting = true;
-        }
-        drawable.m_lastSortValue = newSort;
 
         //check if the cropping area is smaller than
         //the local bounds and update cropping properties
@@ -184,37 +221,15 @@ void RenderSystem2D::process(float)
 
         if (drawable.m_cropped)
         {
-            auto pos = tx.getWorldPosition();
+            
             auto scale = tx.getScale();
 
-            //update world positions - using world tx directly doesn't account for origna offset
+            //update world positions - using world tx directly doesn't account for orignal offset
             drawable.m_croppingWorldArea = drawable.m_croppingArea;
             drawable.m_croppingWorldArea.left += pos.x;
             drawable.m_croppingWorldArea.bottom += pos.y;
             drawable.m_croppingWorldArea.width *= scale.x;
             drawable.m_croppingWorldArea.height *= scale.y;
-        }
-
-    }
-
-    //sort drawlist depending on Z or Y sort
-    if (needsSorting)
-    {
-        if (m_sortOrder == DepthAxis::Y)
-        {
-            std::sort(entities.begin(), entities.end(),
-                [](Entity a, Entity b)
-                {
-                    return a.getComponent<cro::Transform>().getWorldPosition().y > b.getComponent<cro::Transform>().getWorldPosition().y;
-                });
-        }
-        else
-        {
-            std::sort(entities.begin(), entities.end(),
-                [](Entity a, Entity b)
-                {
-                    return a.getComponent<cro::Transform>().getWorldPosition().z < b.getComponent<cro::Transform>().getWorldPosition().z;
-                });
         }
     }
 }
@@ -222,7 +237,6 @@ void RenderSystem2D::process(float)
 void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
 {
     const auto& camComponent = cameraEntity.getComponent<Camera>();
-    auto frustum = camComponent.getFrustum();
     auto viewport = rt.getViewport(camComponent.viewport);
 
     glCheck(glDepthMask(GL_FALSE));
@@ -230,25 +244,14 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glEnable(GL_SCISSOR_TEST));
 
-    const auto& entities = getEntities();
+    const auto& entities = std::any_cast<const std::vector<Entity>&>(camComponent.drawList.at(getType()));
     for (auto entity : entities)
     {
         const auto& drawable = entity.getComponent<Drawable2D>();
         const auto& tx = entity.getComponent<cro::Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
 
-        //check local bounds for visibility and draw if visible
-        auto bounds = drawable.m_localBounds.transform(worldMat);
-        cro::Box aabb(glm::vec3(bounds.left, bounds.bottom, -0.1f), glm::vec3(bounds.left + bounds.width, bounds.bottom + bounds.height, 0.1f));
-
-        bool visible = true;
-        std::size_t i = 0;
-        while (visible && i < frustum.size())
-        {
-            visible = (Spatial::intersects(frustum[i++], aabb) != Planar::Back);
-        }
-
-        if (visible && drawable.m_shader)
+        if (drawable.m_shader)
         {
             //apply shader
             glm::mat4 worldView = camComponent.viewMatrix * worldMat;
@@ -411,11 +414,6 @@ void RenderSystem2D::onEntityAdded(Entity entity)
     {
         glCheck(glGenBuffers(1, &drawable.m_vbo));
     }
-
-    //set up storage
-    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
-    //glCheck(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
 void RenderSystem2D::onEntityRemoved(Entity entity)

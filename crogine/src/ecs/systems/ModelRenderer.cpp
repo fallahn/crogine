@@ -61,20 +61,19 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 }
 
 //public
-void ModelRenderer::process(float)
+void ModelRenderer::updateDrawList(Entity cameraEnt)
 {
-    //TODO frustum culling might need to be moved to render function
-    //for cases where multiple cameras are used for example split screen
-    auto cameraEnt = getScene()->getActiveCamera();
-    auto frustum = cameraEnt.getComponent<Camera>().getFrustum();
+    auto& camComponent = cameraEnt.getComponent<Camera>();
+    auto frustum = camComponent.getFrustum();
     auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
     auto forwardVector = cameraEnt.getComponent<Transform>().getForwardVector();;
 
     auto& entities = getEntities();    
 
     //cull entities by viewable into draw lists by pass
-    m_visibleEntities.clear();
-    m_visibleEntities.reserve(entities.size() * 2);
+    MaterialList visibleEntities;
+    visibleEntities.reserve(entities.size() * 2);
+
     for (auto& entity : entities)
     {
         auto& model = entity.getComponent<Model>();
@@ -134,26 +133,33 @@ void ModelRenderer::process(float)
 
             if (!opaque.second.matIDs.empty())
             {
-                m_visibleEntities.push_back(opaque);
+                visibleEntities.push_back(opaque);
             }
 
             if (!transparent.second.matIDs.empty())
             {
-                m_visibleEntities.push_back(transparent);
+                visibleEntities.push_back(transparent);
             }
         }
     }
-    //DPRINT("Visible ents", std::to_string(m_visibleEntities.size()));
+    DPRINT("Visible 3D ents", std::to_string(visibleEntities.size()));
     //DPRINT("Total ents", std::to_string(entities.size()));
 
     //sort lists by depth
     //flag values make sure transparent materials are rendered last
     //with opaque going front to back and transparent back to front
-    std::sort(std::begin(m_visibleEntities), std::end(m_visibleEntities),
+    std::sort(std::begin(visibleEntities), std::end(visibleEntities),
         [](MaterialPair& a, MaterialPair& b)
     {
         return a.second.flags < b.second.flags;
     });
+
+    camComponent.drawList[getType()] = std::make_any<MaterialList>(std::move(visibleEntities));
+}
+
+void ModelRenderer::process(float)
+{
+
 }
 
 void ModelRenderer::render(Entity camera, const RenderTarget&)
@@ -166,7 +172,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget&)
     glCheck(glCullFace(GL_BACK));
 
     //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
-    for (const auto& [entity, sortData] : m_visibleEntities)
+    const auto& visibleEntities = std::any_cast<const MaterialList&>(camComponent.drawList.at(getType()));
+    for (const auto& [entity, sortData] : visibleEntities)
     {
         //calc entity transform
         const auto& tx = entity.getComponent<Transform>();
