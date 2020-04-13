@@ -358,10 +358,10 @@ void GameState::loadAssets()
 namespace
 {
     //temporarily hold values shared between load functions
-    cro::Entity chunkEntityA(0, 0);
-    cro::Entity chunkEntityB(0, 0);
-    cro::Entity playerEntity(0, 0);
-    cro::Entity weaponEntity(0, 0);
+    cro::Entity chunkEntityA;
+    cro::Entity chunkEntityB;
+    cro::Entity playerEntity;
+    cro::Entity weaponEntity;
 }
 
 void GameState::createScene()

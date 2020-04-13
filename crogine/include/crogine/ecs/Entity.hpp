@@ -69,7 +69,7 @@ namespace cro
 		using ID = uint32;
 		using Generation = uint8;
 
-		Entity(ID index = std::numeric_limits<ID>::max(), Generation generation = 0);
+		Entity();
 
 		/*
 		\brief Returns the index of this entity
@@ -162,6 +162,8 @@ namespace cro
             return getIndex() >= r.getIndex();
         }
 	private:
+
+        explicit Entity(ID index, Generation generation);
 
 		ID m_id;
         EntityManager* m_entityManager;

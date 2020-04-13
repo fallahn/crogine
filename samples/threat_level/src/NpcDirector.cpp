@@ -390,7 +390,7 @@ void NpcDirector::process(float dt)
                     auto yPos = cro::Util::Random::value(-1.9f, 1.9f);
                     tx.setPosition({ startX + (status.choppa.ident * ChoppaNavigator::spacing), yPos, zDepth });
                 }
-                tx.setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
+                tx.setRotation({0.f,  /*-cro::Util::Const::PI / 2.f*/0.f, 0.f });
 
                 auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
                 msg->type = NpcEvent::HealthChanged;

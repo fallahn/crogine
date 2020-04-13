@@ -38,6 +38,13 @@ namespace
     const uint32 GenerationMask = (1 << Detail::GenerationBits) - 1;
 }
 
+Entity::Entity()
+    : m_id          ((0 << Detail::IndexBits) | std::numeric_limits<ID>::max()),
+    m_entityManager (nullptr)
+{
+
+}
+
 Entity::Entity(Entity::ID index, Entity::Generation generation)
     : m_id          ((generation << Detail::IndexBits) | index),
     m_entityManager (nullptr)
