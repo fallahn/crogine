@@ -507,6 +507,9 @@
     <ClInclude Include="..\crogine\include\crogine\util\Rectangle.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\DynamicMeshBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -820,6 +823,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\systems\TextSystem.cpp">
       <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\DynamicMeshBuilder.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

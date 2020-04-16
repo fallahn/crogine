@@ -72,24 +72,29 @@ void EntityManager::destroyEntity(Entity entity)
     const auto index = entity.getIndex();
     CRO_ASSERT(index < m_generations.size(), "Index out of range");
 
-    ++m_generations[index];
-    m_freeIDs.push_back(index);
-    m_componentMasks[index].reset();
-
-    //forcefully reset components which might
-    //otherwise orphan moveable only types
-    for (auto& pool : m_componentPools)
+    //if the generation doesn't match this entity is
+    //already deleted
+    if (m_generations[index] == entity.getGeneration())
     {
-        if (pool)
-        {
-            pool->reset(index);
-        }
-    }
+        ++m_generations[index];
+        m_freeIDs.push_back(index);
+        m_componentMasks[index].reset();
 
-    //let the world know the entity was destroyed
-    auto msg = m_messageBus.post<Message::SceneEvent>(Message::SceneMessage);
-    msg->entityID = index;
-    msg->event = Message::SceneEvent::EntityDestroyed;
+        //forcefully reset components which might
+        //otherwise orphan moveable only types
+        for (auto& pool : m_componentPools)
+        {
+            if (pool)
+            {
+                pool->reset(index);
+            }
+        }
+
+        //let the world know the entity was destroyed
+        auto msg = m_messageBus.post<Message::SceneEvent>(Message::SceneMessage);
+        msg->entityID = index;
+        msg->event = Message::SceneEvent::EntityDestroyed;
+    }
 
 }
 

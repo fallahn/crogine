@@ -36,6 +36,20 @@ source distribution.
 #include <vector>
 #include <array>
 
+namespace VertexProperty
+{
+    enum
+    {
+        Position = (1 << 0),
+        Colour = (1 << 1),
+        Normal = (1 << 2),
+        Tangent = (1 << 3),
+        Bitangent = (1 << 4),
+        UV0 = (1 << 5),
+        UV1 = (1 << 6)
+    };
+}
+
 namespace cro
 {
     /*!

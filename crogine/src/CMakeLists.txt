@@ -74,6 +74,7 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/graphics/BoundingBox.cpp
   ${PROJECT_DIR}/graphics/Colour.cpp
+  ${PROJECT_DIR}/graphics/DynamicMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/Font.cpp
   ${PROJECT_DIR}/graphics/FontResource.cpp
   ${PROJECT_DIR}/graphics/Image.cpp
