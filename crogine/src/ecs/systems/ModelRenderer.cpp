@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/Console.hpp>
 
 #include "../../detail/GLCheck.hpp"
 

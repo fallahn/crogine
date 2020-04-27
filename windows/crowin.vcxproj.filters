@@ -827,6 +827,9 @@
     <ClCompile Include="..\crogine\src\graphics\DynamicMeshBuilder.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\crogine\src\core\Log.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\ecs\Entity.inl">

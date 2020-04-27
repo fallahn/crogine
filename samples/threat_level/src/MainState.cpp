@@ -71,6 +71,7 @@ source distribution.
 #include <crogine/audio/AudioMixer.hpp>
 
 #include <iomanip>
+#include <fstream>
 
 namespace
 {

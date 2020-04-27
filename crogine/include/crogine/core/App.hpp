@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/core/MessageBus.hpp>
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/Console.hpp>
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/graphics/Colour.hpp>

@@ -32,25 +32,21 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
-#include <crogine/core/Console.hpp>
 #include <crogine/core/FileSystem.hpp>
+#include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/vec4.hpp>
+#include <crogine/graphics/Rectangle.hpp>
 
 #include <string>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <sstream>
 #include <list>
-#include <ctime>
+#include <ostream>
+#include <streambuf>
 
 #ifdef _MSC_VER
 #define NOMINMAX
 #include <Windows.h>
 #endif //_MSC_VER
-
-#ifdef __ANDROID__
-#include <android/log.h>
-#endif //__ANDROID__
 
 namespace cro
 {
@@ -81,90 +77,79 @@ namespace cro
         \param type Whether this message gets tagged as information, a warning or an error
         \param output Destination for the message. Can be the console via cout, a log file on disk, or both
         */
-        static void log(const std::string& message, Type type = Type::Info, Output output = Output::Console)
-        {
-            std::string outstring;
-            switch (type)
-            {
-            case Type::Info:
-            default:
-                outstring = "INFO: " + message;
-                break;
-            case Type::Error:
-                outstring = "ERROR: " + message;
-                break;
-            case Type::Warning:
-                outstring = "WARNING: " + message;
-                break;
-            }
-#ifndef __ANDROID__
-            if (output == Output::Console || output == Output::All)
-            {
-                (type == Type::Error) ?
-                    std::cerr << outstring << std::endl
-                    :
-                    std::cout << outstring << std::endl;
+        static void log(const std::string& message, Type type = Type::Info, Output output = Output::Console);
 
-                Console::print(outstring);
-                
-                const std::size_t maxBuffer = 30;
-                buffer().push_back(outstring);
-                if (buffer().size() > maxBuffer)buffer().pop_front(); //no majick here pl0x
-                updateOutString(maxBuffer);
-
-#ifdef _MSC_VER
-                outstring += "\n";
-                OutputDebugStringA(outstring.c_str());
-#endif //_MSC_VER
-            }
-            if (output == Output::File || output == Output::All)
-            {
-                //output to a log file
-                std::ofstream file("output.log", std::ios::app);
-                if (file.good())
-                {
-
-                    std::time_t time = std::time(nullptr);
-                    auto tm = *std::localtime(&time);
-
-                    file.imbue(std::locale());
-                    file << std::put_time(&tm, "%d/%m/%y-%H:%M:%S: ");
-
-                    file << outstring << std::endl;
-                    file.close();
-                }
-                else
-                {
-                    log(message, type, Output::Console);
-                    log("Above message was intended for log file. Opening file probably failed.", Type::Warning, Output::Console);
-                }
-            }
-#else
-			//use logcat
-			__android_log_print(ANDROID_LOG_VERBOSE, "CroApp", message.c_str(), 1);
-#endif //__ANDROID__
-        }
-
-        static const std::string& bufferString(){ return stringOutput(); }
+        /*!
+        \brief Allows logging with C++ streams.
+        \param type Type of log message to print.
+        Note that this will not output to file, only to the console
+        */
+        static std::ostream& log(Type type = Type::Info);
 
     private:
-        static std::list<std::string>& buffer(){ static std::list<std::string> buffer; return buffer; }
-        static std::string& stringOutput() { static std::string output; return output; }
-        static void updateOutString(std::size_t maxBuffer)
-        {
-            static size_t count = 0;
-            stringOutput().append(buffer().back());
-            stringOutput().append("\n");
-            count++;
+        static std::list<std::string> m_buffer;
+        static std::string m_output;
 
-            if (count > maxBuffer)
-            {
-                stringOutput() = stringOutput().substr(stringOutput().find_first_of('\n') + 1, stringOutput().size());
-                count--;
-            }
-        }
+        static void updateOutString(std::size_t maxBuffer);
     };
+
+    namespace Detail
+    {
+        class LogBuf final : public std::streambuf
+        {
+        public:
+            LogBuf();
+            ~LogBuf();
+
+        private:
+
+            int overflow(int character) override;
+            int sync() override;
+        };
+
+        class LogStream final : public std::ostream
+        {
+        public:
+            LogStream();
+
+        private:
+            LogBuf m_buffer;
+        };
+    }
 }
+
+template <typename T>
+std::ostream& operator << (std::ostream& out, glm::tvec2<T> v)
+{
+    out << "{ " << v.x << ", " << v.y << " }";
+    return out;
+}
+
+template <typename T>
+std::ostream& operator << (std::ostream& out, glm::tvec3<T> v)
+{
+    out << "{ " << v.x << ", " << v.y << ", " << v.z << " }";
+    return out;
+}
+
+template <typename T>
+std::ostream& operator << (std::ostream& out, glm::tvec4<T> v)
+{
+    out << "{ " << v.x << ", " << v.y << ", " << v.z << ", " << v.w << " }";
+    return out;
+}
+
+template <typename T>
+std::ostream& operator << (std::ostream& out, cro::Rectangle<T> r)
+{
+    out << "[ " << r.left << ", " << r.bottom << ", " << r.width << ", " << r.height << " ]";
+    return out;
+}
+
+#define LogI cro::Logger::log(cro::Logger::Type::Info)
+#define LogW cro::Logger::log(cro::Logger::Type::Warning)
+#define LogE cro::Logger::log(cro::Logger::Type::Error)
+
 #ifndef CRO_DEBUG_
 #define LOG(message, type)
 #else

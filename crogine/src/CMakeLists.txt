@@ -14,9 +14,10 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/core/ConfigFile.cpp
   ${PROJECT_DIR}/core/Console.cpp
   ${PROJECT_DIR}/core/ConsoleClient.cpp
-  ${PROJECT_DIR}/core/GameController.cpp
   ${PROJECT_DIR}/core/DefaultLoadingScreen.cpp
   ${PROJECT_DIR}/core/FileSystem.cpp
+  ${PROJECT_DIR}/core/GameController.cpp
+  ${PROJECT_DIR}/core/Log.cpp
   ${PROJECT_DIR}/core/MessageBus.cpp
   ${PROJECT_DIR}/core/State.cpp
   ${PROJECT_DIR}/core/StateStack.cpp
