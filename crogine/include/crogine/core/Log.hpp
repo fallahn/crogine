@@ -33,6 +33,10 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/core/FileSystem.hpp>
+#include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/vec4.hpp>
+#include <crogine/graphics/Rectangle.hpp>
 
 #include <string>
 #include <list>
@@ -112,6 +116,34 @@ namespace cro
             LogBuf m_buffer;
         };
     }
+}
+
+template <typename T>
+std::ostream& operator << (std::ostream& out, glm::tvec2<T> v)
+{
+    out << "{ " << v.x << ", " << v.y << " }";
+    return out;
+}
+
+template <typename T>
+std::ostream& operator << (std::ostream& out, glm::tvec3<T> v)
+{
+    out << "{ " << v.x << ", " << v.y << ", " << v.z << " }";
+    return out;
+}
+
+template <typename T>
+std::ostream& operator << (std::ostream& out, glm::tvec4<T> v)
+{
+    out << "{ " << v.x << ", " << v.y << ", " << v.z << ", " << v.w << " }";
+    return out;
+}
+
+template <typename T>
+std::ostream& operator << (std::ostream& out, cro::Rectangle<T> r)
+{
+    out << "[ " << r.left << ", " << r.bottom << ", " << r.width << ", " << r.height << " ]";
+    return out;
 }
 
 #define LogI cro::Logger::log(cro::Logger::Type::Info)
