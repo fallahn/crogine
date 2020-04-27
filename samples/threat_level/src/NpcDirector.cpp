@@ -34,6 +34,7 @@ source distribution.
 #include "BackgroundSystem.hpp"
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/Console.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>

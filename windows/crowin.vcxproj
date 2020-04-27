@@ -193,6 +193,7 @@
     <ClCompile Include="..\crogine\src\core\DefaultLoadingScreen.cpp" />
     <ClCompile Include="..\crogine\src\core\FileSystem.cpp" />
     <ClCompile Include="..\crogine\src\core\GameController.cpp" />
+    <ClCompile Include="..\crogine\src\core\Log.cpp" />
     <ClCompile Include="..\crogine\src\core\MessageBus.cpp" />
     <ClCompile Include="..\crogine\src\core\State.cpp" />
     <ClCompile Include="..\crogine\src\core\StateStack.cpp" />

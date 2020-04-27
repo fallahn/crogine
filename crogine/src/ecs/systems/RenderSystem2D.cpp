@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/util/Rectangle.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/core/Console.hpp>
 
 #include "../../detail/glad.hpp"
 #include "../../detail/GLCheck.hpp"

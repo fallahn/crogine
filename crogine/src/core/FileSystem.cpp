@@ -38,6 +38,8 @@ source distribution.
 
 #include <iostream>
 #include <algorithm>
+#include <sstream>
+#include <fstream>
 
 //TODO check this macro works on all windows compilers
 //(only tested in VC right now)

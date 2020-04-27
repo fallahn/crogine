@@ -31,6 +31,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/core/Console.hpp>
 
 using namespace cro;
 

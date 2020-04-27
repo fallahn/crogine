@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/core/Console.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
 
