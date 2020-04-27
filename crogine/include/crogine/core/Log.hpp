@@ -36,7 +36,8 @@ source distribution.
 
 #include <string>
 #include <list>
-
+#include <ostream>
+#include <streambuf>
 
 #ifdef _MSC_VER
 #define NOMINMAX
@@ -74,13 +75,49 @@ namespace cro
         */
         static void log(const std::string& message, Type type = Type::Info, Output output = Output::Console);
 
+        /*!
+        \brief Allows logging with C++ streams.
+        \param type Type of log message to print.
+        Note that this will not output to file, only to the console
+        */
+        static std::ostream& log(Type type = Type::Info);
+
     private:
         static std::list<std::string> m_buffer;
         static std::string m_output;
 
         static void updateOutString(std::size_t maxBuffer);
     };
+
+    namespace Detail
+    {
+        class LogBuf final : public std::streambuf
+        {
+        public:
+            LogBuf();
+            ~LogBuf();
+
+        private:
+
+            int overflow(int character) override;
+            int sync() override;
+        };
+
+        class LogStream final : public std::ostream
+        {
+        public:
+            LogStream();
+
+        private:
+            LogBuf m_buffer;
+        };
+    }
 }
+
+#define LogI cro::Logger::log(cro::Logger::Type::Info)
+#define LogW cro::Logger::log(cro::Logger::Type::Warning)
+#define LogE cro::Logger::log(cro::Logger::Type::Error)
+
 #ifndef CRO_DEBUG_
 #define LOG(message, type)
 #else

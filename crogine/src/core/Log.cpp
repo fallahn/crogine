@@ -34,6 +34,8 @@ source distribution.
 
 #include <SDL_log.h>
 
+#include <sstream>
+
 using namespace cro;
 
 std::list<std::string> Logger::m_buffer;
@@ -112,6 +114,25 @@ void Logger::log(const std::string& message, Type type, Output output)
 #endif //__ANDROID__
 }
 
+std::ostream& Logger::log(Logger::Type type)
+{
+    static cro::Detail::LogStream stream;
+    switch (type)
+    {
+    default:
+    case Type::Info:
+        stream << "INFO: ";
+        break;
+    case Type::Warning:
+        stream << "WARNING: ";
+        break;
+    case Type::Error:
+        stream << "ERROR: ";
+        break;
+    }
+    return stream;
+}
+
 //private
 void Logger::updateOutString(std::size_t maxBuffer)
 {
@@ -125,4 +146,81 @@ void Logger::updateOutString(std::size_t maxBuffer)
         m_output = m_output.substr(m_output.find_first_of('\n') + 1, m_output.size());
         count--;
     }
+}
+
+using namespace Detail;
+//log buffer class
+LogBuf::LogBuf()
+{
+    static const std::size_t BuffSize = 128;
+    char* buffer = new char[BuffSize];
+    setp(buffer, buffer + BuffSize);
+}
+
+LogBuf::~LogBuf()
+{
+    sync();
+    delete[] pbase();
+}
+
+//private
+int LogBuf::overflow(int character)
+{
+    if ((character != EOF) && (pptr() != epptr()))
+    {
+        return sputc(static_cast<char>(character));
+    }
+    else if (character != EOF)
+    {
+        sync();
+        return overflow(character);
+    }
+    else
+    {
+        return sync();
+    }
+
+    return 0;
+}
+
+int LogBuf::sync()
+{
+    if (pbase() != pptr())
+    {
+        //print the contents of the write buffer into the logger
+        std::size_t size = static_cast<int>(pptr() - pbase());
+
+        std::stringstream ss; //TODO this should be a member to buffer truncated messages between flushes
+        ss.write(pbase(), size);
+
+        std::string outline;
+        while (std::getline(ss, outline))
+        {
+            outline += '\n';
+            Console::print(outline);
+            std::fwrite(outline.data(), 1, outline.size(), stdout);
+
+#ifdef __ANDROID__
+            //use logcat
+            __android_log_print(ANDROID_LOG_VERBOSE, "CroApp", outline.c_str(), 1);
+#endif //__ANDROID__
+
+#ifdef _MSC_VER
+            outline += "\n";
+            OutputDebugStringA(outline.c_str());
+#endif //_MSC_VER
+        }
+
+        setp(pbase(), epptr());
+    }
+
+    return 0;
+}
+
+//output stream
+LogStream::LogStream()
+    : m_buffer  (),
+    std::ostream(&m_buffer)
+{
+
 }
