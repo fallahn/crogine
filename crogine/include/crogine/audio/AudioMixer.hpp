@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 
 #include <array>
+#include <string>
 
 namespace cro
 {
