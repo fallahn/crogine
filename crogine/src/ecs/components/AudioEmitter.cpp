@@ -80,65 +80,36 @@ AudioEmitter::~AudioEmitter()
 AudioEmitter::AudioEmitter(AudioEmitter&& other) noexcept
     : m_state(State::Stopped)
 {
-    m_pitch = other.m_pitch;
-    other.m_pitch = 1.f;
-
-    m_volume = other.m_volume;
-    other.m_volume = 1.f;
-
-    m_rolloff = other.m_rolloff;
-    other.m_rolloff = 1.f;
-    
-    m_mixerChannel = other.m_mixerChannel;
-    other.m_mixerChannel = 0;
-
-    m_ID = other.m_ID;
-    other.m_ID = -1;
-
-    m_dataSourceID = other.m_dataSourceID;
-    other.m_dataSourceID = -1;
-
-    m_sourceType = other.m_sourceType;
-    other.m_sourceType = AudioSource::Type::None;
-
     m_newDataSource = true;
-    other.m_newDataSource = false;
+    other.m_newDataSource = true;
 
-    m_transportFlags = other.m_transportFlags;
-    other.m_transportFlags = 0;
-
-    other.m_state = State::Stopped;
+    std::swap(m_pitch, other.m_pitch);
+    std::swap(m_volume, other.m_volume);
+    std::swap(m_rolloff, other.m_rolloff);
+    std::swap(m_mixerChannel, other.m_mixerChannel);
+    std::swap(m_ID, other.m_ID);
+    std::swap(m_dataSourceID, other.m_dataSourceID);
+    std::swap(m_sourceType, other.m_sourceType);
+    std::swap(m_transportFlags, other.m_transportFlags);
+    std::swap(m_state, other.m_state);
 }
 
 AudioEmitter& AudioEmitter::operator=(AudioEmitter&& other) noexcept
 {
     if (&other != this)
     {
-        m_pitch = other.m_pitch;
-        other.m_pitch = 1.f;
-
-        m_volume = other.m_volume;
-        other.m_volume = 1.f;
-
-        m_rolloff = other.m_rolloff;
-        other.m_rolloff = 1.f;
-        
-        m_mixerChannel = other.m_mixerChannel;
-        other.m_mixerChannel = 0;
-
-        m_ID = other.m_ID;
-        other.m_ID = -1;
-
-        m_dataSourceID = other.m_dataSourceID;
-        other.m_dataSourceID = -1;
-
-        m_sourceType = other.m_sourceType;
-        other.m_sourceType = AudioSource::Type::None;
-
         m_newDataSource = true;
-        other.m_newDataSource = false;
+        other.m_newDataSource = true;
 
-        other.m_state = State::Stopped;
+        std::swap(m_pitch, other.m_pitch);
+        std::swap(m_volume, other.m_volume);
+        std::swap(m_rolloff, other.m_rolloff);
+        std::swap(m_mixerChannel, other.m_mixerChannel);
+        std::swap(m_ID, other.m_ID);
+        std::swap(m_dataSourceID, other.m_dataSourceID);
+        std::swap(m_sourceType, other.m_sourceType);
+        std::swap(m_transportFlags, other.m_transportFlags);
+        std::swap(m_state, other.m_state);
     }    
     return *this;
 }

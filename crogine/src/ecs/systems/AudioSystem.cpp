@@ -119,7 +119,7 @@ void AudioSystem::process(float)
 
         //check properties such as pitch and gain
         AudioRenderer::setSourcePitch(audioSource.m_ID, audioSource.m_pitch);
-        AudioRenderer::setSourceVolume(audioSource.m_ID, audioSource.m_volume * AudioMixer::m_channels[audioSource.m_mixerChannel]);
+        AudioRenderer::setSourceVolume(audioSource.m_ID, audioSource.m_volume * AudioMixer::m_channels[audioSource.m_mixerChannel] * AudioMixer::m_prefadeChannels[audioSource.m_mixerChannel]);
         AudioRenderer::setSourceRolloff(audioSource.m_ID, audioSource.m_rolloff);
 
         //if we're steaming make sure to update the stream buffer

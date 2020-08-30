@@ -27,13 +27,14 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef DH_GAME_STATE_HPP_
-#define DH_GAME_STATE_HPP_
+#pragma once
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ResourceAutomation.hpp>
 #include <crogine/gui/GuiClient.hpp>
+
+#include <crogine/audio/AudioBuffer.hpp>
 
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
@@ -64,6 +65,8 @@ private:
     cro::ResourceCollection m_resources;
     std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs;
 
+    cro::AudioBuffer m_audioBuffer;
+
     void addSystems();
     void loadAssets();
     void createScene();
@@ -71,4 +74,3 @@ private:
 
     void updateView();
 };
-#endif //DH_GAME_STATE_HPP_

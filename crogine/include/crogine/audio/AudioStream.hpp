@@ -54,9 +54,9 @@ namespace cro
         AudioStream();
         ~AudioStream();
         AudioStream(const AudioStream&) = delete;
-        AudioStream(AudioStream&&);
+        AudioStream(AudioStream&&) noexcept;
         AudioStream& operator = (const AudioStream&) = delete;
-        AudioStream& operator = (AudioStream&&);
+        AudioStream& operator = (AudioStream&&) noexcept;
 
         /*!
         \brief Attempts to open the *.ogg or *.wav file fomr the given path.

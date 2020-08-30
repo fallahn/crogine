@@ -57,8 +57,9 @@ AudioBuffer::AudioBuffer(AudioBuffer&& other) noexcept
         setID(-1);
     }
     
+    auto id = getID();
     setID(other.getID());
-    other.setID(-1);
+    other.setID(id);
 }
 
 AudioBuffer& AudioBuffer::operator=(AudioBuffer&& other) noexcept
@@ -71,8 +72,9 @@ AudioBuffer& AudioBuffer::operator=(AudioBuffer&& other) noexcept
             setID(-1);
         }
         
+        auto id = getID();
         setID(other.getID());
-        other.setID(-1);
+        other.setID(id);
     }
     return *this;
 }

@@ -71,6 +71,7 @@ source distribution.
 #include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -217,6 +218,8 @@ void GameState::loadAssets()
     m_modelDefs[GameModelID::Arrow].loadFromFile("assets/models/arrow.cmt", m_resources);
 
     //CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
+
+    m_audioBuffer.loadFromFile("assets/sound/boop_loop.wav");
 }
 
 void GameState::createScene()
@@ -306,6 +309,11 @@ void GameState::createScene()
                 m_scene.destroyEntity(ett);
             }
         };
+
+        e.addComponent<cro::AudioEmitter>(m_audioBuffer);
+        e.getComponent<cro::AudioEmitter>().play();
+        e.getComponent<cro::AudioEmitter>().setVolume(1.f);
+        e.getComponent<cro::AudioEmitter>().setRolloff(0.1f);
     };
 
     //this ent spawns our sound entities
