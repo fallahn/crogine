@@ -63,7 +63,7 @@ namespace cro
     class CRO_EXPORT_API Scene final
     {
     public:
-        explicit Scene(MessageBus&);
+        explicit Scene(MessageBus&, std::size_t initialPoolSize = 128);
 
         ~Scene();
         Scene(const Scene&) = delete;

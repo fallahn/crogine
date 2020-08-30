@@ -177,7 +177,7 @@ namespace cro
     class CRO_EXPORT_API EntityManager final
     {
     public:
-        EntityManager(MessageBus&, ComponentManager&);
+        EntityManager(MessageBus&, ComponentManager&, std::size_t = 128);
 
         ~EntityManager() = default;
         EntityManager(const EntityManager&) = delete;
@@ -248,6 +248,7 @@ namespace cro
 
     private:
         MessageBus& m_messageBus;
+        std::size_t m_initialPoolSize;
         std::deque<Entity::ID> m_freeIDs;
         std::vector<Entity::Generation> m_generations; // < indexed by entity ID
         std::vector<std::unique_ptr<Detail::Pool>> m_componentPools; // < index is component ID. Pool index is entity ID.

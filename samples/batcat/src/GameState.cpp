@@ -93,7 +93,7 @@ namespace
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
-    m_scene         (context.appInstance.getMessageBus()),
+    m_scene         (context.appInstance.getMessageBus(), 1024),
     m_overlayScene  (context.appInstance.getMessageBus())
 {
     context.mainWindow.loadResources([this]() {
@@ -313,10 +313,10 @@ void GameState::createScene()
             }
         };
 
-        e.addComponent<cro::AudioEmitter>(m_audioBuffer);
+        /*e.addComponent<cro::AudioEmitter>(m_audioBuffer);
         e.getComponent<cro::AudioEmitter>().play(true);
         e.getComponent<cro::AudioEmitter>().setVolume(1.f);
-        e.getComponent<cro::AudioEmitter>().setRolloff(0.1f);
+        e.getComponent<cro::AudioEmitter>().setRolloff(0.1f);*/
     };
 
     //this ent spawns our sound entities
@@ -337,6 +337,7 @@ void GameState::createScene()
         if (timer > 1.f / fireRate)
         {
             launchEnt();
+
             timer = 0.f;
         }
     };

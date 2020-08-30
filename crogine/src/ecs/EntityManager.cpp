@@ -38,18 +38,21 @@ namespace
     const std::size_t MinComponentMasks = 50;
 }
 
-EntityManager::EntityManager(MessageBus& mb, ComponentManager& cm)
+EntityManager::EntityManager(MessageBus& mb, ComponentManager& cm, std::size_t initialPoolSize)
     : m_messageBus      (mb),
+    m_initialPoolSize   (initialPoolSize),
     m_componentPools    (Detail::MaxComponents),
     m_entityCount       (0),
     m_componentManager  (cm)
-{}
+{
+    CRO_ASSERT(initialPoolSize <= Detail::MinFreeIDs, "More than this is just a waste of memory");
+}
 
 //public
 Entity EntityManager::createEntity()
 {
     Entity::ID idx;
-    if (m_freeIDs.size() > Detail::MinFreeIDs)
+    if (m_generations.size() == Detail::MinFreeIDs)
     {
         idx = m_freeIDs.front();
         m_freeIDs.pop_front();
