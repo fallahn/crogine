@@ -244,12 +244,16 @@ namespace cro
         */
         bool owns(Entity) const;
 
+        std::size_t getEntityCount() const { return m_entityCount; }
+
     private:
         MessageBus& m_messageBus;
         std::deque<Entity::ID> m_freeIDs;
         std::vector<Entity::Generation> m_generations; // < indexed by entity ID
         std::vector<std::unique_ptr<Detail::Pool>> m_componentPools; // < index is component ID. Pool index is entity ID.
         std::vector<ComponentMask> m_componentMasks;
+
+        std::size_t m_entityCount;
 
         ComponentManager& m_componentManager;
 

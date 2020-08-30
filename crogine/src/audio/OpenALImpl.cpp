@@ -421,7 +421,7 @@ void OpenALImpl::deleteAudioSource(cro::int32 source)
     alCheck(alSourcei(src, AL_BUFFER, 0));
     alCheck(alDeleteSources(1, &src));
 
-    LOG("Deleted audio source", Logger::Type::Info);
+    //LOG("Deleted audio source", Logger::Type::Info);
 }
 
 void OpenALImpl::playSource(int32 source, bool looped)

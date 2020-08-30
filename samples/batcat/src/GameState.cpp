@@ -103,7 +103,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         createUI();
 
 
-        registerWindow([]() 
+        registerWindow([&]() 
             {
                 ImGui::SetNextWindowSize({ 200.f, 400.f }, ImGuiCond_FirstUseEver);
 
@@ -113,6 +113,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
                     ImGui::DragFloat("Position", &sourcePosition.x, 0.1f, -19.f, 19.f);
                     ImGui::DragFloat("Rotation", &sourceRotation, 0.02f, -cro::Util::Const::PI, cro::Util::Const::PI);
                     
+                    auto count = m_scene.getEntityCount();
+                    ImGui::Text("Entity Count: %d", count);
                 }
                 ImGui::End();
             });
@@ -282,6 +284,7 @@ void GameState::createScene()
 
 
     //function for creating sound ents
+    static int c = 0;
     auto launchEnt = [&]()
     {
         auto e = m_scene.createEntity();
@@ -311,7 +314,7 @@ void GameState::createScene()
         };
 
         e.addComponent<cro::AudioEmitter>(m_audioBuffer);
-        e.getComponent<cro::AudioEmitter>().play();
+        e.getComponent<cro::AudioEmitter>().play(true);
         e.getComponent<cro::AudioEmitter>().setVolume(1.f);
         e.getComponent<cro::AudioEmitter>().setRolloff(0.1f);
     };

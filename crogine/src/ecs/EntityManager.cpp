@@ -33,9 +33,15 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    const std::size_t MinComponentMasks = 50;
+}
+
 EntityManager::EntityManager(MessageBus& mb, ComponentManager& cm)
     : m_messageBus      (mb),
     m_componentPools    (Detail::MaxComponents),
+    m_entityCount       (0),
     m_componentManager  (cm)
 {}
 
@@ -56,13 +62,15 @@ Entity EntityManager::createEntity()
         CRO_ASSERT(idx < (1 << Detail::IndexBits), "Index out of range");
         if (idx >= m_componentMasks.size())
         {
-            m_componentMasks.resize(idx + 1);
+            m_componentMasks.resize(m_componentMasks.size() + MinComponentMasks);
         }
     }
 
     CRO_ASSERT(idx < m_generations.size(), "Index out of range");
     Entity e(idx, m_generations[idx]);
     e.m_entityManager = this;
+
+    m_entityCount++;
 
     return e;
 }
@@ -79,6 +87,8 @@ void EntityManager::destroyEntity(Entity entity)
         ++m_generations[index];
         m_freeIDs.push_back(index);
         m_componentMasks[index].reset();
+
+        m_entityCount--;
 
         //forcefully reset components which might
         //otherwise orphan moveable only types

@@ -63,10 +63,10 @@ namespace cro
 			T& at(std::size_t idx) { return m_pool[idx]; }
 			const T& at(std::size_t idx) const { return m_pool[idx]; }
 
-			T& operator [] (std::size_t index) { return m_pool[index]; }
-			const T& operator [] (std::size_t index) const { return m_pool[index]; }
+			T& operator [] (std::size_t index) { CRO_ASSERT(index < m_pool.size(), "Index out of range"); return m_pool[index]; }
+			const T& operator [] (std::size_t index) const { CRO_ASSERT(index < m_pool.size(), "Index out of range"); return m_pool[index]; }
 
-			void reset(std::size_t idx) override { m_pool[idx] = T(); }
+			void reset(std::size_t idx) override { if(idx < m_pool.size()) m_pool[idx] = T(); }
 
 		private:
 			std::vector<T> m_pool;

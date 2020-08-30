@@ -94,6 +94,11 @@ namespace cro
         Entity getEntity(Entity::ID) const;
 
         /*!
+        \brief Returns the number of active entities in the scene
+        */
+        std::size_t getEntityCount() const { return m_entityManager.getEntityCount(); }
+
+        /*!
         \brief Creates a new system of the given type.
         All systems need to be fully created before adding entities, else
         entities will not be correctly processed by desired systems.

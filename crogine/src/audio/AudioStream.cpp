@@ -49,12 +49,6 @@ AudioStream::~AudioStream()
 
 AudioStream::AudioStream(AudioStream&& other) noexcept
 {
-    if (getID() > 0)
-    {
-        AudioRenderer::deleteStream(getID());
-        setID(-1);
-    }
-    
     auto id = getID();
     setID(other.getID());
     other.setID(id);
@@ -64,12 +58,6 @@ AudioStream& AudioStream::operator=(AudioStream&& other) noexcept
 {
     if (&other != this)
     {
-        if (getID() > 0)
-        {
-            AudioRenderer::deleteStream(getID());
-            setID(-1);
-        }
-        
         auto id = getID();
         setID(other.getID());
         other.setID(id);
