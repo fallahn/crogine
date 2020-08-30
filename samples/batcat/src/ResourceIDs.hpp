@@ -57,6 +57,10 @@ namespace GameModelID
         Grenade,
         Moon,
         Stars,
+
+        Cube,
+        Arrow,
+
         Count
     };
 }

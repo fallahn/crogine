@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
@@ -42,7 +43,7 @@ namespace cro
     class UISystem;
 }
 
-class GameState final : public cro::State
+class GameState final : public cro::State, public cro::GuiClient
 {
 public:
     GameState(cro::StateStack&, cro::State::Context);

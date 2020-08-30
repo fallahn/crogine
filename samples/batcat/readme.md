@@ -1,7 +1,7 @@
-Threat Level
-------------
+Batcat
+------
 
-Small shmup game designed to test framework features (and expose the need for new ones). Has been tested to run on Windows, linux, macOS and android.
+Sample crogine application designed to test framework features such as skeletal animation and shadow mapping, as well as expose the need for new features. Batcat model is by Josh Mercier: https://www.artstation.com/joshimon
 
 -----------------------------------------------------------------------
 

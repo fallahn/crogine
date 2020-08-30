@@ -1,0 +1,11 @@
+model cube
+{
+    mesh = cube
+
+    cast_shadows = true
+
+    material VertexLit
+    {
+        colour = 1.0, 0.65, 0.1
+    }
+}
