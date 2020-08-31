@@ -94,7 +94,7 @@ namespace
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
-    m_scene         (context.appInstance.getMessageBus(), 1024),
+    m_scene         (context.appInstance.getMessageBus(), 124),
     m_overlayScene  (context.appInstance.getMessageBus())
 {
     context.mainWindow.loadResources([this]() {
@@ -243,7 +243,7 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
     entity.addComponent<cro::Transform>().setScale({ 200.f / 175.f, 1.f, 1.f });
-    auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+    //auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
     entity.addComponent<TerrainChunk>().inUse = true;
     entity.getComponent<TerrainChunk>().width = 200.f;// bb[1].x - bb[0].x; //TODO fix this
 

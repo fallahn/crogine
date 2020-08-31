@@ -52,7 +52,14 @@ namespace cro
 		class ComponentPool final : public Pool
 		{
 		public:
-			explicit ComponentPool(std::size_t size = 128) : m_pool(size){ }
+			explicit ComponentPool(std::size_t size = 128) : m_pool(size)
+			{
+				if (!std::is_copy_assignable<T>::value)
+				{
+					m_pool.reserve(1024);
+					LOG("Reserved maximum pool size for " + std::string(typeid(T).name()), cro::Logger::Type::Info);
+				}
+			}
 
 			bool empty() const { return m_pool.empty(); }
 			std::size_t size() const { return m_pool.size(); }

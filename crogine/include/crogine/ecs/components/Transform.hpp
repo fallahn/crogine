@@ -60,10 +60,10 @@ namespace cro
         //the existing transform including the
         //parental hierarchy, and resets the existing
         //transform to an identity.
-        Transform(Transform&&) = default;// noexcept;
+        Transform(Transform&&) noexcept;
 
         Transform& operator = (const Transform&) = delete;
-        Transform& operator = (Transform&&) = default;// noexcept;
+        Transform& operator = (Transform&&) noexcept;
 
         ~Transform();
 

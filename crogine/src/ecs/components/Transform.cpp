@@ -49,114 +49,114 @@ Transform::Transform()
 
 }
 
-//Transform::Transform(Transform&& other) noexcept
-//    : m_origin          (0.f, 0.f, 0.f),
-//    m_position          (0.f, 0.f, 0.f),
-//    m_scale             (1.f, 1.f, 1.f),
-//    m_rotation          (1.f, 0.f, 0.f, 0.f),
-//    m_transform         (1.f),
-//    m_parent            (nullptr),
-//    m_dirtyFlags        (0)
-//{
-//    CRO_ASSERT(other.m_parent != this, "Invalid assignment");
-//
-//    if (other.m_parent != this)
-//    {
-//        //orphan any children
-//        for (auto c : m_children)
-//        {
-//            c->m_parent = nullptr;
-//        }
-//
-//        //and adopt new
-//        m_parent = other.m_parent;
-//
-//        other.m_parent = nullptr;
-//
-//        //swap ourself into siblings list
-//        if (m_parent)
-//        {
-//            auto& siblings = m_parent->m_children;
-//            for (auto i = 0u; i < siblings.size(); ++i)
-//            {
-//                if (siblings[i] == &other)
-//                {
-//                    siblings[i] = this;
-//                    break;
-//                }
-//            }
-//        }
-//        m_children = std::move(other.m_children);
-//
-//        //update the children's new parent
-//        for (auto* c : m_children)
-//        {
-//            CRO_ASSERT(c != this, "we already exist in the child list!");
-//
-//            c->m_parent = this;
-//        }
-//
-//        //actually take on the other transform
-//        setPosition(other.getPosition());
-//        setRotation(other.getRotation());
-//        setScale(other.getScale());
-//        setOrigin(other.getOrigin());
-//        m_dirtyFlags = Flags::Tx;
-//
-//        other.reset();
-//    }
-//}
+Transform::Transform(Transform&& other) noexcept
+    : m_origin          (0.f, 0.f, 0.f),
+    m_position          (0.f, 0.f, 0.f),
+    m_scale             (1.f, 1.f, 1.f),
+    m_rotation          (1.f, 0.f, 0.f, 0.f),
+    m_transform         (1.f),
+    m_parent            (nullptr),
+    m_dirtyFlags        (0)
+{
+    CRO_ASSERT(other.m_parent != this, "Invalid assignment");
 
-//Transform& Transform::operator=(Transform&& other) noexcept
-//{
-//    CRO_ASSERT(&other != this && other.m_parent != this, "Invalid assignment");
-//
-//    if (&other != this && other.m_parent != this)
-//    {
-//        //orphan any children
-//        for (auto c : m_children)
-//        {
-//            c->m_parent = nullptr;
-//        }
-//
-//        m_parent = other.m_parent;
-//
-//        other.m_parent = nullptr;
-//
-//        //swap ourself into siblings list
-//        if (m_parent)
-//        {
-//            auto& siblings = m_parent->m_children;
-//            for (auto i = 0u; i < siblings.size(); ++i)
-//            {
-//                if (siblings[i] == &other)
-//                {
-//                    siblings[i] = this;
-//                    break;
-//                }
-//            }
-//        }
-//
-//        m_children = std::move(other.m_children);
-//
-//        //update the children's new parent
-//        for (auto c : m_children)
-//        {
-//            CRO_ASSERT(c != this, "we already exist in the child list!");
-//            c->m_parent = this;
-//        }
-//
-//        //actually take on the other transform
-//        setPosition(other.getPosition());
-//        setRotation(other.getRotation());
-//        setScale(other.getScale());
-//        setOrigin(other.getOrigin());
-//        m_dirtyFlags = Flags::Tx;
-//
-//        other.reset();
-//    }
-//    return *this;
-//}
+    if (other.m_parent != this)
+    {
+        //orphan any children
+        for (auto c : m_children)
+        {
+            c->m_parent = nullptr;
+        }
+
+        //and adopt new
+        m_parent = other.m_parent;
+
+        other.m_parent = nullptr;
+
+        //swap ourself into siblings list
+        if (m_parent)
+        {
+            auto& siblings = m_parent->m_children;
+            for (auto i = 0u; i < siblings.size(); ++i)
+            {
+                if (siblings[i] == &other)
+                {
+                    siblings[i] = this;
+                    break;
+                }
+            }
+        }
+        m_children = std::move(other.m_children);
+
+        //update the children's new parent
+        for (auto* c : m_children)
+        {
+            CRO_ASSERT(c != this, "we already exist in the child list!");
+
+            c->m_parent = this;
+        }
+
+        //actually take on the other transform
+        setPosition(other.getPosition());
+        setRotation(other.getRotation());
+        setScale(other.getScale());
+        setOrigin(other.getOrigin());
+        m_dirtyFlags = Flags::Tx;
+
+        other.reset();
+    }
+}
+
+Transform& Transform::operator=(Transform&& other) noexcept
+{
+    CRO_ASSERT(&other != this && other.m_parent != this, "Invalid assignment");
+
+    if (&other != this && other.m_parent != this)
+    {
+        //orphan any children
+        for (auto c : m_children)
+        {
+            c->m_parent = nullptr;
+        }
+
+        m_parent = other.m_parent;
+
+        other.m_parent = nullptr;
+
+        //swap ourself into siblings list
+        if (m_parent)
+        {
+            auto& siblings = m_parent->m_children;
+            for (auto i = 0u; i < siblings.size(); ++i)
+            {
+                if (siblings[i] == &other)
+                {
+                    siblings[i] = this;
+                    break;
+                }
+            }
+        }
+
+        m_children = std::move(other.m_children);
+
+        //update the children's new parent
+        for (auto c : m_children)
+        {
+            CRO_ASSERT(c != this, "we already exist in the child list!");
+            c->m_parent = this;
+        }
+
+        //actually take on the other transform
+        setPosition(other.getPosition());
+        setRotation(other.getRotation());
+        setScale(other.getScale());
+        setOrigin(other.getOrigin());
+        m_dirtyFlags = Flags::Tx;
+
+        other.reset();
+    }
+    return *this;
+}
 
 Transform::~Transform()
 {
