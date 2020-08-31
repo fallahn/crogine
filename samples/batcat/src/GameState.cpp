@@ -72,6 +72,7 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
+#include <crogine/ecs/components/AudioListener.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -86,7 +87,7 @@ namespace
     cro::UISystem* uiSystem = nullptr;
     cro::CommandSystem* commandSystem = nullptr;
 
-    float fireRate = 1.f; //rate per second
+    float fireRate = 0.1f; //rate per second
     glm::vec3 sourcePosition = glm::vec3(-19.f, 10.f, 6.f);
     float sourceRotation = -cro::Util::Const::PI / 2.f;
 }
@@ -109,7 +110,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
                 if (ImGui::Begin("Window of funnage"))
                 {
-                    ImGui::DragFloat("Rate", &fireRate, 0.1f, 1.f, 10.f);
+                    ImGui::DragFloat("Rate", &fireRate, 0.1f, 0.1f, 10.f);
                     ImGui::DragFloat("Position", &sourcePosition.x, 0.1f, -19.f, 19.f);
                     ImGui::DragFloat("Rotation", &sourceRotation, 0.02f, -cro::Util::Const::PI, cro::Util::Const::PI);
                     
@@ -221,7 +222,7 @@ void GameState::loadAssets()
 
     //CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
 
-    m_audioBuffer.loadFromFile("assets/sound/boop_loop.wav");
+    m_audioBuffer.loadFromFile("assets/sound/laser.wav");
 }
 
 void GameState::createScene()
@@ -280,11 +281,12 @@ void GameState::createScene()
     m_scene.getSunlight().setDirection({ -0.f, -1.f, -0.4f });
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
+    ent.addComponent<cro::AudioListener>();
     m_scene.setActiveCamera(ent);
+    m_scene.setActiveListener(ent);
 
 
     //function for creating sound ents
-    static int c = 0;
     auto launchEnt = [&]()
     {
         auto e = m_scene.createEntity();
@@ -293,6 +295,7 @@ void GameState::createScene()
         m_modelDefs[GameModelID::Cube].createModel(e, m_resources);
 
         static const float Speed = 35.f;
+
         auto velocity = e.getComponent<cro::Transform>().getForwardVector() * Speed;
         e.addComponent<cro::Callback>().active = true;
         e.getComponent<cro::Callback>().setUserData<std::pair<float, glm::vec3>>(0.f, velocity);
@@ -301,9 +304,9 @@ void GameState::createScene()
         {
             static const float MaxLifetime = 6.f;
 
-            auto& [lifetime, velocity] = ett.getComponent<cro::Callback>().getUserData<std::pair<float, glm::vec3>>();
+            auto& [lifetime, vel] = ett.getComponent<cro::Callback>().getUserData<std::pair<float, glm::vec3>>();
             auto& tx = ett.getComponent<cro::Transform>();
-            tx.move(velocity * dt);
+            tx.move(vel * dt);
 
             lifetime += dt;
             if (lifetime > MaxLifetime)
@@ -313,10 +316,10 @@ void GameState::createScene()
             }
         };
 
-        /*e.addComponent<cro::AudioEmitter>(m_audioBuffer);
+        e.addComponent<cro::AudioEmitter>(m_audioBuffer);
         e.getComponent<cro::AudioEmitter>().play(true);
         e.getComponent<cro::AudioEmitter>().setVolume(1.f);
-        e.getComponent<cro::AudioEmitter>().setRolloff(0.1f);*/
+        e.getComponent<cro::AudioEmitter>().setRolloff(0.8f);
     };
 
     //this ent spawns our sound entities
@@ -324,7 +327,7 @@ void GameState::createScene()
     m_modelDefs[GameModelID::Arrow].createModel(entity, m_resources);
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().setUserData<float>(10.f);
     entity.getComponent<cro::Callback>().function =
         [launchEnt](cro::Entity e, float dt)
     {

@@ -52,7 +52,7 @@ namespace cro
 		class ComponentPool final : public Pool
 		{
 		public:
-			explicit ComponentPool(std::size_t size = 128){	m_pool.resize(size); }
+			explicit ComponentPool(std::size_t size = 128) : m_pool(size){ }
 
 			bool empty() const { return m_pool.empty(); }
 			std::size_t size() const { return m_pool.size(); }
@@ -62,10 +62,9 @@ namespace cro
 				LOG("Warning component pool " + std::string(typeid(T).name()) + " has been resized to " + std::to_string(m_pool.size()) + " - existing component references may be invalidated", cro::Logger::Type::Warning);
 			}
 			void clear() override { m_pool.clear(); }
-			void add(T c) { m_pool.push_back(c); }
 
-			T& at(std::size_t idx) { return m_pool[idx]; }
-			const T& at(std::size_t idx) const { return m_pool[idx]; }
+			T& at(std::size_t idx) { return m_pool.at(idx); }
+			const T& at(std::size_t idx) const { return m_pool.at(idx); }
 
 			T& operator [] (std::size_t index) { CRO_ASSERT(index < m_pool.size(), "Index out of range"); return m_pool[index]; }
 			const T& operator [] (std::size_t index) const { CRO_ASSERT(index < m_pool.size(), "Index out of range"); return m_pool[index]; }
