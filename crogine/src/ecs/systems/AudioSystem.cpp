@@ -102,8 +102,8 @@ void AudioSystem::process(float)
         {
             AudioRenderer::stopSource(audioSource.m_ID);
         }
-        //reset all flags
-        audioSource.m_transportFlags = 0;
+        //reset all flags, but preserve Loop flag
+        audioSource.m_transportFlags &= AudioEmitter::Looped;
         //set current state
         audioSource.m_state = static_cast<AudioEmitter::State>(AudioRenderer::getSourceState(audioSource.m_ID));
         //DPRINT("Audio State", (audioSource.m_state == AudioEmitter::State::Playing) ? "Playing" : "Stopped");

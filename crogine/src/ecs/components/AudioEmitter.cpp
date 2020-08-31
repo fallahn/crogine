@@ -128,13 +128,9 @@ void AudioEmitter::setSource(const AudioSource& dataSource)
     m_newDataSource = true;
 }
 
-void AudioEmitter::play(bool looped)
+void AudioEmitter::play()
 {
     m_transportFlags |= Play;
-    if (looped)
-    {
-        m_transportFlags |= Looped;
-    }
 }
 
 void AudioEmitter::pause()
@@ -145,6 +141,18 @@ void AudioEmitter::pause()
 void AudioEmitter::stop()
 {
     m_transportFlags |= Stop;
+}
+
+void AudioEmitter::setLooped(bool looped)
+{
+    if (looped)
+    {
+        m_transportFlags |= Looped;
+    }
+    else
+    {
+        m_transportFlags &= ~Looped;
+    }
 }
 
 void AudioEmitter::setPitch(float pitch)
