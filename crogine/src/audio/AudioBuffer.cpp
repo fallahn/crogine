@@ -51,28 +51,18 @@ AudioBuffer::~AudioBuffer()
 
 AudioBuffer::AudioBuffer(AudioBuffer&& other) noexcept
 {
-    if (getID() > 0)
-    {
-        AudioRenderer::deleteBuffer(getID());
-        setID(-1);
-    }
-    
+    auto id = getID();
     setID(other.getID());
-    other.setID(-1);
+    other.setID(id);
 }
 
 AudioBuffer& AudioBuffer::operator=(AudioBuffer&& other) noexcept
 {
     if (&other != this)
     {
-        if (getID() > 0)
-        {
-            AudioRenderer::deleteBuffer(getID());
-            setID(-1);
-        }
-        
+        auto id = getID();
         setID(other.getID());
-        other.setID(-1);
+        other.setID(id);
     }
     return *this;
 }

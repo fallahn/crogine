@@ -351,7 +351,7 @@ void MenuState::buildUI()
                     ImGui::SameLine();
                     if (ImGui::Button("Browse"))
                     {
-                        auto path = cro::FileSystem::openFolderDialogue();
+                        auto path = cro::FileSystem::openFolderDialogue(m_preferences.workingDirectory);
                         if (!path.empty())
                         {
                             m_preferences.workingDirectory = path;
@@ -815,7 +815,7 @@ void MenuState::importModel()
 
 void MenuState::exportModel()
 {
-    //TODO asset we at least have valid header data
+    //TODO assert we at least have valid header data
     //prevent accidentally writing a bad file
 
     auto path = cro::FileSystem::saveFileDialogue(m_lastExportPath, "cmf");

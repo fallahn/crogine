@@ -595,13 +595,13 @@ std::string FileSystem::openFileDialogue(const std::string& defaultDir, const st
 #endif //__ANDROID__
 }
 
-std::string FileSystem::openFolderDialogue()
+std::string FileSystem::openFolderDialogue(const std::string& defPath)
 {
 #ifdef __ANDROID__
     Logger::log("File Dialogues are not supported", Logger::Type::Error);
     return {};
 #else
-    auto path = tinyfd_selectFolderDialog("Select Folder", nullptr);
+    auto path = tinyfd_selectFolderDialog("Select Folder", defPath.c_str());
     return path ? path : std::string();
 #endif //__ANDROID__
 }

@@ -27,6 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include <crogine/core/App.hpp>
+#include <crogine/core/Message.hpp>
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/util/Maths.hpp>
 #include <crogine/detail/Assert.hpp>
@@ -61,6 +63,9 @@ std::array<std::string, AudioMixer::MaxChannels> AudioMixer::m_labels
 std::array<float, AudioMixer::MaxChannels> AudioMixer::m_channels
 { { 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f } };
 
+std::array<float, AudioMixer::MaxChannels> AudioMixer::m_prefadeChannels
+{ { 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f } };
+
 float AudioMixer::m_masterVol = 1.f;
 
 void AudioMixer::setMasterVolume(float vol)
@@ -77,12 +82,30 @@ void AudioMixer::setVolume(float vol, uint8 channel)
 {
     CRO_ASSERT(channel < MaxChannels, "Channel index out of range");
     AudioMixer::m_channels[channel] = Util::Maths::clamp(vol, 0.f, 10.f);
+
+    auto* msg = cro::App::getInstance().getMessageBus().post<Message::AudioEvent>(Message::AudioMessage);
+    msg->action = Message::AudioEvent::ChannelVolumeChanged;
 }
 
 float AudioMixer::getVolume(uint8 channel)
 {
     CRO_ASSERT(channel < MaxChannels, "Channel index out of range");
     return AudioMixer::m_channels[channel];
+}
+
+void AudioMixer::setPrefadeVolume(float vol, uint8 channel)
+{
+    CRO_ASSERT(channel < MaxChannels, "Channel index out of range");
+    AudioMixer::m_prefadeChannels[channel] = Util::Maths::clamp(vol, 0.f, 1.f);
+
+    auto* msg = cro::App::getInstance().getMessageBus().post<Message::AudioEvent>(Message::AudioMessage);
+    msg->action = Message::AudioEvent::ChannelVolumeChanged;
+}
+
+float AudioMixer::getPrefadeVolume(uint8 channel)
+{
+    CRO_ASSERT(channel < MaxChannels, "Channel index out of range");
+    return AudioMixer::m_prefadeChannels[channel];
 }
 
 void AudioMixer::setLabel(const std::string& label, std::uint8_t channel)

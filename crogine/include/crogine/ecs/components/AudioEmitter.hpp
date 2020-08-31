@@ -66,9 +66,8 @@ namespace cro
 
         /*!
         \brief Plays the AudioEmitter
-        \param loop Whether or not this sound should be played looped
         */
-        void play(bool looped = false);
+        void play();
 
         /*!
         \brief Pauses the currently playing sound if it is playing
@@ -82,10 +81,27 @@ namespace cro
         void stop();
 
         /*!
+        \brief Sets whether this sound should be played looped or not.
+        Note that this is not effective on sounds which are already playing
+        until they are stopped/paused then restarted.
+        */
+        void setLooped(bool looped);
+
+        /*!
+        \brief Returns true is this emitter is set to play looped
+        */
+        bool getLooped() const { return m_transportFlags & Looped; }
+
+        /*!
         \brief Sets the playback pitch of the sound.
         Must be a positive value, where 1 is normal speed.
         */
         void setPitch(float);
+
+        /*!
+        \brief Returns the current pitch of the emitter
+        */
+        float getPitch() const { return m_pitch; }
 
         /*!
         \brief Sets the volume of the AudioEmitter.
@@ -97,6 +113,11 @@ namespace cro
         void setVolume(float);
 
         /*!
+        \brief Returns the current volume of this emitter
+        */
+        float getVolume() const { return m_volume; }
+
+        /*!
         \brief Sets the volume rolloff of the sound.
         The larger this value the more quickly the sounds
         volume will fade with distance from the active listener.
@@ -104,6 +125,11 @@ namespace cro
         AudioEmitter to not fade at all.
         */
         void setRolloff(float);
+
+        /*!
+        \brief Returns the current rolloff value of this emitter
+        */
+        float getRolloff() const { return m_rolloff; }
 
         /*!
         \brief Sets the AudioMixer channel for the AudioEmitter.

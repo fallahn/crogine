@@ -63,7 +63,7 @@ namespace cro
     class CRO_EXPORT_API Scene final
     {
     public:
-        explicit Scene(MessageBus&);
+        explicit Scene(MessageBus&, std::size_t initialPoolSize = 128);
 
         ~Scene();
         Scene(const Scene&) = delete;
@@ -92,6 +92,11 @@ namespace cro
         \brief Returns the entity with the given ID if it exists
         */
         Entity getEntity(Entity::ID) const;
+
+        /*!
+        \brief Returns the number of active entities in the scene
+        */
+        std::size_t getEntityCount() const { return m_entityManager.getEntityCount(); }
 
         /*!
         \brief Creates a new system of the given type.

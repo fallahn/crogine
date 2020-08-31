@@ -58,6 +58,8 @@ Transform::Transform(Transform&& other) noexcept
     m_parent            (nullptr),
     m_dirtyFlags        (0)
 {
+    CRO_ASSERT(other.m_parent != this, "Invalid assignment");
+
     if (other.m_parent != this)
     {
         //orphan any children
@@ -107,6 +109,8 @@ Transform::Transform(Transform&& other) noexcept
 
 Transform& Transform::operator=(Transform&& other) noexcept
 {
+    CRO_ASSERT(&other != this && other.m_parent != this, "Invalid assignment");
+
     if (&other != this && other.m_parent != this)
     {
         //orphan any children

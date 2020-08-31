@@ -36,7 +36,7 @@ void EntityManager::addComponent(Entity entity, T component)
     auto& pool = getPool<T>();
     if (entID >= pool.size())
     {
-        pool.resize(m_generations.size());
+        pool.resize(std::min(static_cast<std::int32_t>(Detail::MinFreeIDs), static_cast<std::int32_t>(pool.size()) + 128));
     }
 
     pool[entID] = std::move(component);
@@ -96,7 +96,7 @@ Detail::ComponentPool<T>& EntityManager::getPool()
 
     if (!m_componentPools[componentID])
     {
-        m_componentPools[componentID] = std::make_unique<Detail::ComponentPool<T>>();
+        m_componentPools[componentID] = std::make_unique<Detail::ComponentPool<T>>(m_initialPoolSize);
     }
 
     return *(dynamic_cast<Detail::ComponentPool<T>*>(m_componentPools[componentID].get()));

@@ -134,9 +134,10 @@ namespace cro
 
         /*!
         \brief Show a native file dialog to open a folder
+        \param defaultPath String cntaining the default path to browse to
         \returns path the path selected by the user
         */
-        static std::string openFolderDialogue();
+        static std::string openFolderDialogue(const std::string& path = "");
         
         /*!
         \brief Show a platform native file dialogue for saving files.

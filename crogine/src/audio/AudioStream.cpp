@@ -47,30 +47,20 @@ AudioStream::~AudioStream()
     }
 }
 
-AudioStream::AudioStream(AudioStream&& other)
+AudioStream::AudioStream(AudioStream&& other) noexcept
 {
-    if (getID() > 0)
-    {
-        AudioRenderer::deleteStream(getID());
-        setID(-1);
-    }
-    
+    auto id = getID();
     setID(other.getID());
-    other.setID(-1);
+    other.setID(id);
 }
 
-AudioStream& AudioStream::operator=(AudioStream&& other)
+AudioStream& AudioStream::operator=(AudioStream&& other) noexcept
 {
     if (&other != this)
     {
-        if (getID() > 0)
-        {
-            AudioRenderer::deleteStream(getID());
-            setID(-1);
-        }
-        
+        auto id = getID();
         setID(other.getID());
-        other.setID(-1);
+        other.setID(id);
     }
     return *this;
 }

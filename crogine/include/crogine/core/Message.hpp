@@ -70,7 +70,8 @@ namespace cro
             {
                 Play,
                 Pause,
-                Stop
+                Stop,
+                ChannelVolumeChanged
             }action;
         };
         /*!

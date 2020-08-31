@@ -122,9 +122,9 @@ namespace
     }
 }
 
-Scene::Scene(MessageBus& mb)
+Scene::Scene(MessageBus& mb, std::size_t initialPoolSize)
     : m_messageBus      (mb),
-    m_entityManager     (mb, m_componentManager),
+    m_entityManager     (mb, m_componentManager, initialPoolSize),
     m_systemManager     (*this, m_componentManager),
     m_projectionMapCount(0)
 {

@@ -55,6 +55,8 @@ source distribution.
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -68,6 +70,9 @@ source distribution.
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
+#include <crogine/ecs/components/AudioListener.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -75,15 +80,21 @@ source distribution.
 
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+#include <crogine/gui/Gui.hpp>
+
 namespace
 {
     cro::UISystem* uiSystem = nullptr;
     cro::CommandSystem* commandSystem = nullptr;
+
+    float fireRate = 0.1f; //rate per second
+    glm::vec3 sourcePosition = glm::vec3(-19.f, 10.f, 6.f);
+    float sourceRotation = -cro::Util::Const::PI / 2.f;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
-    m_scene         (context.appInstance.getMessageBus()),
+    m_scene         (context.appInstance.getMessageBus(), 124),
     m_overlayScene  (context.appInstance.getMessageBus())
 {
     context.mainWindow.loadResources([this]() {
@@ -91,6 +102,24 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         loadAssets();
         createScene();
         createUI();
+
+
+        registerWindow([&]() 
+            {
+                ImGui::SetNextWindowSize({ 200.f, 400.f }, ImGuiCond_FirstUseEver);
+
+                if (ImGui::Begin("Window of funnage"))
+                {
+                    ImGui::DragFloat("Rate", &fireRate, 0.1f, 0.1f, 10.f);
+                    ImGui::DragFloat("Position", &sourcePosition.x, 0.1f, -19.f, 19.f);
+                    ImGui::DragFloat("Rotation", &sourceRotation, 0.02f, -cro::Util::Const::PI, cro::Util::Const::PI);
+                    
+                    auto count = m_scene.getEntityCount();
+                    ImGui::Text("Entity Count: %d", count);
+                }
+                ImGui::End();
+            });
+
     });
 
     updateView();
@@ -163,11 +192,13 @@ void GameState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_scene.addSystem<cro::CommandSystem>(mb);
+    m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<TerrainSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
+    m_scene.addSystem<cro::AudioSystem>(mb);
 
     m_scene.addDirector<PlayerDirector>();
 
@@ -186,7 +217,12 @@ void GameState::loadAssets()
     m_modelDefs[GameModelID::Moon].loadFromFile("assets/models/moon.cmt", m_resources);
     m_modelDefs[GameModelID::Stars].loadFromFile("assets/models/stars.cmt", m_resources);
 
+    m_modelDefs[GameModelID::Cube].loadFromFile("assets/models/cube.cmt", m_resources);
+    m_modelDefs[GameModelID::Arrow].loadFromFile("assets/models/arrow.cmt", m_resources);
+
     //CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
+
+    m_audioBuffer.loadFromFile("assets/sound/laser.wav");
 }
 
 void GameState::createScene()
@@ -207,7 +243,7 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
     entity.addComponent<cro::Transform>().setScale({ 200.f / 175.f, 1.f, 1.f });
-    auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+    //auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
     entity.addComponent<TerrainChunk>().inUse = true;
     entity.getComponent<TerrainChunk>().width = 200.f;// bb[1].x - bb[0].x; //TODO fix this
 
@@ -245,7 +281,69 @@ void GameState::createScene()
     m_scene.getSunlight().setDirection({ -0.f, -1.f, -0.4f });
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
+    ent.addComponent<cro::AudioListener>();
     m_scene.setActiveCamera(ent);
+    m_scene.setActiveListener(ent);
+
+
+    //function for creating sound ents
+    auto launchEnt = [&]()
+    {
+        auto e = m_scene.createEntity();
+        e.addComponent<cro::Transform>().setPosition(sourcePosition);
+        e.getComponent<cro::Transform>().setRotation(glm::vec3(0.f, 0.f, sourceRotation));
+        m_modelDefs[GameModelID::Cube].createModel(e, m_resources);
+
+        static const float Speed = 35.f;
+
+        auto velocity = e.getComponent<cro::Transform>().getForwardVector() * Speed;
+        e.addComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Callback>().setUserData<std::pair<float, glm::vec3>>(0.f, velocity);
+        e.getComponent<cro::Callback>().function =
+            [&](cro::Entity ett, float dt)
+        {
+            static const float MaxLifetime = 6.f;
+
+            auto& [lifetime, vel] = ett.getComponent<cro::Callback>().getUserData<std::pair<float, glm::vec3>>();
+            auto& tx = ett.getComponent<cro::Transform>();
+            tx.move(vel * dt);
+
+            lifetime += dt;
+            if (lifetime > MaxLifetime)
+            {
+                ett.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(ett);
+            }
+        };
+
+        e.addComponent<cro::AudioEmitter>(m_audioBuffer);
+        e.getComponent<cro::AudioEmitter>().play(true);
+        e.getComponent<cro::AudioEmitter>().setVolume(1.f);
+        e.getComponent<cro::AudioEmitter>().setRolloff(0.8f);
+    };
+
+    //this ent spawns our sound entities
+    entity = m_scene.createEntity();
+    m_modelDefs[GameModelID::Arrow].createModel(entity, m_resources);
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(10.f);
+    entity.getComponent<cro::Callback>().function =
+        [launchEnt](cro::Entity e, float dt)
+    {
+        auto& tx = e.getComponent<cro::Transform>();
+        tx.setPosition(sourcePosition);
+        tx.setRotation(glm::vec3(0.f, 0.f, sourceRotation));
+
+        auto& timer = e.getComponent<cro::Callback>().getUserData<float>();
+        timer += dt;
+        if (timer > 1.f / fireRate)
+        {
+            launchEnt();
+
+            timer = 0.f;
+        }
+    };
 }
 
 namespace

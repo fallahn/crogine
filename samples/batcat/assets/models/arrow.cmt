@@ -1,0 +1,11 @@
+model arrow
+{
+    mesh = "assets/models/arrow.cmf"
+
+    cast_shadows = true
+
+    material VertexLit
+    {
+        colour = 1.0, 0.0, 0.9
+    }
+}

@@ -31,6 +31,7 @@ template <typename T>
 void Entity::addComponent(const T& component)
 {
     CRO_ASSERT(isValid(), "Not a valid Entity");
+    CRO_ASSERT(!hasComponent<T>(), "Already has this component");
     m_entityManager->addComponent<T>(*this, component);
 }
 
@@ -38,6 +39,7 @@ template <typename T, typename... Args>
 T& Entity::addComponent(Args&&... args)
 {
     CRO_ASSERT(isValid(), "Not a valid Entity");
+    CRO_ASSERT(!hasComponent<T>(), "Already has this component");
     return m_entityManager->addComponent<T>(*this, std::forward<Args>(args)...);
 }
 
@@ -61,6 +63,7 @@ template <typename T>
 T& Entity::getComponent()
 {
     CRO_ASSERT(isValid(), "Not a valid Entity");
+    CRO_ASSERT(hasComponent<T>(), std::string(typeid(T).name()) + ": Component does not exist!");
     return m_entityManager->getComponent<T>(*this);
 }
 
@@ -68,5 +71,6 @@ template <typename T>
 const T& Entity::getComponent() const
 {
     CRO_ASSERT(isValid(), "Not a valid Entity");
+    CRO_ASSERT(hasComponent<T>(), std::string(typeid(T).name()) + ": Component does not exist!");
     return m_entityManager->getComponent<T>(*this);
 }

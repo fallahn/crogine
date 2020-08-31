@@ -259,7 +259,8 @@ void MainState::createScene()
     arcticTx.setOrigin({ 5.8f, 0.f, 5.f });
     entity.getComponent<cro::Transform>().addChild(arcticTx);
     m_modelDefs[MenuModelID::ArcticPost].createModel(arcticEntity, m_resources);
-    arcticEntity.addComponent<cro::AudioEmitter>(m_resources.audio.get(AudioID::TestStream)).play(true);
+    arcticEntity.addComponent<cro::AudioEmitter>(m_resources.audio.get(AudioID::TestStream)).setLooped(true);
+    arcticEntity.getComponent<cro::AudioEmitter>().play();
     //arcticEntity.getComponent<cro::AudioEmitter>().setRolloff(20.f);
     arcticEntity.getComponent<cro::AudioEmitter>().setVolume(0.5f);
     arcticEntity.addComponent<cro::CommandTarget>().ID = (1 << 30);

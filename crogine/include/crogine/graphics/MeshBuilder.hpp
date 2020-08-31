@@ -36,7 +36,8 @@ source distribution.
 #include <vector>
 #include <array>
 
-namespace VertexProperty
+
+namespace cro::VertexProperty
 {
     enum
     {
