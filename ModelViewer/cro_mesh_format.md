@@ -28,7 +28,7 @@ This is the the offset, in bytes, from the beginning of the file to the beginnin
 An array of 4 byte values describing the size *in bytes* of each of the index arrays in the mesh file. It is the size of `index array count` or should contain a single 0xffffffff value if `index array count` is zero.
 
 ###### float[] vertex array.
-The vertex data. The size of each vertex can be calculated from the flag data stating which properties the vertex is expected to have multiplied by the size of float multiplied by the numbr of components of each property. The total length of the array is measured from the current file offset (after the header has been read) substracted from the `index array offset` value. The length can be validated by making sure it divides equally by the size of a vertex.
+The vertex data. The size of each vertex can be calculated from the flag data stating which properties the vertex is expected to have multiplied by the size of float multiplied by the number of components of each property. The total length of the array is measured from the current file offset (after the header has been read) substracted from the `index array offset` value. The length can be validated by making sure it divides equally by the size of a vertex.
 
 ###### index arrays.
 The index arrays are contiguously packed uint32 values. There should be `index array count` number of arrays, each one `indices size array[x]` in size. The order of these arrays should match the order in which materials appear in any model definition file which may refer to the current mesh.
