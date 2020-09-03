@@ -94,7 +94,9 @@ namespace cro
 
         /*!
         \brief Returns the path to the current platform's directory
-        for storing preference files.
+        for storing preference files. Before using this the application's
+        organisation name and app name should be set with setApplicationStrings()
+        \see setApplicationStrings()
         */
         static const std::string& getPreferencePath();
 
@@ -140,6 +142,15 @@ namespace cro
         */
         virtual void finalise() {};
 
+        /*!
+        \brief Set the organisation name and application name.
+        These should be set immediately on construction of your application,
+        as they are used to form the preferences path retrieved with 
+        getPreferencePath(). The application name should be unique to prevent
+        overwriting settings files used by other crogine applications.
+        */
+        void setApplicationStrings(const std::string& organisation, const std::string& applicationName);
+
 	private:
 
 		Window m_window;
@@ -172,6 +183,8 @@ namespace cro
         friend class GuiClient;
         friend class Console;
       
+        std::string m_orgString;
+        std::string m_appString;
         std::string m_prefPath;
         
         struct WindowSettings final

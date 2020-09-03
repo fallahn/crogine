@@ -36,6 +36,8 @@ source distribution.
 MyApp::MyApp()
 	: m_stateStack({*this, getWindow()})
 {
+	setApplicationStrings("Trederia", "CrogineModelViewer");
+
     m_stateStack.registerState<MenuState>(States::ID::MainMenu);
 }
 

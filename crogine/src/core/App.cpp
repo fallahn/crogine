@@ -68,18 +68,14 @@ namespace
 
 #include "../detail/DefaultIcon.inl"
 
-#ifndef ORG_PATH
-#define ORG_PATH "Trederia"
-#endif
-#ifndef APP_PATH
-#define APP_PATH "CrogineApp"
-#endif
-
     const std::string cfgName("cfg.cfg");
 }
 
 App::App()
-    : m_frameClock(nullptr), m_running (false)
+    : m_frameClock  (nullptr),
+    m_running       (false),
+    m_orgString     ("Trederia"),
+    m_appString     ("CrogineApp")
 {
 	CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
@@ -111,7 +107,7 @@ App::App()
             Logger::log("Failed to initialise audio renderer", Logger::Type::Error);
         }
 
-        char* pp = SDL_GetPrefPath(ORG_PATH, APP_PATH);
+        char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
         m_prefPath = std::string(pp);
         SDL_free(pp);
 	}
@@ -258,6 +254,15 @@ App& App::getInstance()
 {
     CRO_ASSERT(m_instance, "");
     return *m_instance;
+}
+
+//protected
+void App::setApplicationStrings(const std::string& organisation, const std::string& appName)
+{
+    CRO_ASSERT(!organisation.empty(), "String cannot be empty");
+    CRO_ASSERT(!appName.empty(), "String cannot be empty");
+    m_orgString = organisation;
+    m_appString = appName;
 }
 
 //private

@@ -533,11 +533,13 @@ void MenuState::buildUI()
 
 void MenuState::openModel()
 {
-    auto path = cro::FileSystem::openFileDialogue(m_preferences.workingDirectory, "cmt");
+    auto path = cro::FileSystem::openFileDialogue(m_preferences.lastModelDirectory, "cmt");
     if (!path.empty()
         && cro::FileSystem::getFileExtension(path) == ".cmt")
     {
         openModelAtPath(path);
+
+        m_preferences.lastModelDirectory = cro::FileSystem::getFilePath(path);
     }
     else
     {
@@ -634,7 +636,7 @@ void MenuState::importModel()
         return retVal;
     };
 
-    auto path = cro::FileSystem::openFileDialogue(m_lastImportPath, "obj,dae,fbx");
+    auto path = cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory, "obj,dae,fbx");
     if (!path.empty())
     {
         ai::Importer importer;
@@ -809,7 +811,8 @@ void MenuState::importModel()
             }
         }
 
-        m_lastImportPath = cro::FileSystem::getFilePath(path);
+        m_preferences.lastImportDirectory = cro::FileSystem::getFilePath(path);
+        savePrefs();
     }
 }
 
@@ -818,7 +821,7 @@ void MenuState::exportModel()
     //TODO assert we at least have valid header data
     //prevent accidentally writing a bad file
 
-    auto path = cro::FileSystem::saveFileDialogue(m_lastExportPath, "cmf");
+    auto path = cro::FileSystem::saveFileDialogue(m_preferences.lastExportDirectory, "cmf");
     if (!path.empty())
     {
         if (cro::FileSystem::getFileExtension(path) != ".cmf")
@@ -880,7 +883,8 @@ void MenuState::exportModel()
                 cfg.save(path);
             }
 
-            m_lastExportPath = cro::FileSystem::getFilePath(path);
+            m_preferences.lastExportDirectory = cro::FileSystem::getFilePath(path);
+            savePrefs();
 
             openModelAtPath(path);
         }
@@ -1009,6 +1013,18 @@ void MenuState::loadPrefs()
                 m_preferences.skyBottom = prop.getValue<cro::Colour>();
                 m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
             }
+            else if (name == "import_dir")
+            {
+                m_preferences.lastImportDirectory = prop.getValue<std::string>();
+            }
+            else if (name == "export_dir")
+            {
+                m_preferences.lastExportDirectory = prop.getValue<std::string>();
+            }
+            else if (name == "model_dir")
+            {
+                m_preferences.lastModelDirectory = prop.getValue<std::string>();
+            }
         }
 
         updateWorldScale();
@@ -1029,6 +1045,10 @@ void MenuState::savePrefs()
     prefsOut.addProperty("show_skybox", m_showSkybox ? "true" : "false");
     prefsOut.addProperty("sky_top", toString(m_preferences.skyTop));
     prefsOut.addProperty("sky_bottom", toString(m_preferences.skyBottom));
+
+    prefsOut.addProperty("import_dir", m_preferences.lastImportDirectory);
+    prefsOut.addProperty("export_dir", m_preferences.lastExportDirectory);
+    prefsOut.addProperty("model_dir", m_preferences.lastModelDirectory);
 
     prefsOut.save(prefPath);
 }
