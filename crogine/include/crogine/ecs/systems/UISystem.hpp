@@ -93,6 +93,23 @@ namespace cro
             Finger = 0x8
         };
 
+
+        /*!
+        \brief Sets the active group of UIInput components.
+        By default all components are added to group 0. If a single
+        UISystem handles multiple menus, for example, UIInput components
+        can be grouped by a given index, one for each menu. This function
+        will set the active group of UIInput components to receive events.
+        \see cro::UIInput::setGroup()
+        */
+        void setActiveGroup(std::size_t);
+
+        /*!
+        \brief Returns the current active group
+        */
+        std::size_t getActiveGroup() const { return m_activeGroup; }
+
+
     private:
 
         std::vector<ButtonCallback> m_buttonCallbacks;
@@ -111,5 +128,15 @@ namespace cro
         //void setViewPort(int32, int32);
         glm::vec2 toWorldCoords(int32 x, int32 y); //converts screen coords
         glm::vec2 toWorldCoords(float, float); //converts normalised coords
+
+
+
+        std::unordered_map<std::size_t, std::vector<Entity>> m_groups;
+        std::size_t m_activeGroup;
+
+        void updateGroupAssignments();
+
+        void onEntityAdded(Entity) override;
+        void onEntityRemoved(Entity) override;
     };
 }

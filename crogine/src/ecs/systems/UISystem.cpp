@@ -42,7 +42,9 @@ source distribution.
 using namespace cro;
 
 UISystem::UISystem(MessageBus& mb)
-    : System    (mb, typeid(UISystem))
+    : System        (mb, typeid(UISystem)),
+    m_groups        (1),
+    m_activeGroup   (0)
 {
     requireComponent<UIInput>();
     requireComponent<Transform>();
@@ -122,9 +124,9 @@ void UISystem::handleEvent(const Event& evt)
 
 void UISystem::process(float)
 {    
-    //TODO we probably want some partitioning? Checking every entity for a collision could be a bit pants
-    auto& entities = getEntities();
-    for (auto& e : entities)
+    updateGroupAssignments();
+
+    for (auto& e : m_groups[m_activeGroup])
     {
         //TODO probably want to cache these and only update if control moved
         auto tx = e.getComponent<Transform>().getWorldTransform();
@@ -196,6 +198,21 @@ uint32 UISystem::addCallback(const MovementCallback& cb)
     return static_cast<uint32>(m_movementCallbacks.size() - 1);
 }
 
+void UISystem::setActiveGroup(std::size_t group)
+{
+    updateGroupAssignments();
+
+    CRO_ASSERT(m_groups.count(group) != 0, "Group doesn't exist");
+    CRO_ASSERT(!m_groups[group].empty(), "Group is empty");
+
+    //unselect(m_selectedIndex);
+
+    m_activeGroup = group;
+    //m_selectedIndex = 0;
+
+    //select(m_selectedIndex);
+}
+
 //private
 glm::vec2 UISystem::toWorldCoords(int32 x, int32 y)
 {
@@ -222,4 +239,77 @@ glm::vec2 UISystem::toWorldCoords(float x, float y)
     //and unproject
     auto worldPos = glm::inverse(getScene()->getActiveCamera().getComponent<Camera>().viewProjectionMatrix) * glm::vec4(x, y, 0.f, 1.f);
     return { worldPos };
+}
+
+void UISystem::updateGroupAssignments()
+{
+    auto& entities = getEntities();
+    for (auto& e : entities)
+    {
+        //check to see if the hitbox group changed - remove from old first before adding to new
+        auto& input = e.getComponent<UIInput>();
+
+        if (input.m_updateGroup)
+        {
+            //only swap group if we changed - we may have only changed index order
+            if (input.m_previousGroup != input.m_group)
+            {
+                //remove from old group first
+                m_groups[input.m_previousGroup].erase(std::remove_if(m_groups[input.m_previousGroup].begin(),
+                    m_groups[input.m_previousGroup].end(),
+                    [e](Entity entity)
+                    {
+                        return e == entity;
+                    }), m_groups[input.m_previousGroup].end());
+
+                //create new group if needed
+                if (m_groups.count(input.m_group) == 0)
+                {
+                    m_groups.insert(std::make_pair(input.m_group, std::vector<Entity>()));
+                }
+
+                //add to group
+                if (input.m_selectionIndex == 0)
+                {
+                    //set a default order
+                    input.m_selectionIndex = m_groups[input.m_group].size();
+                }
+                m_groups[input.m_group].push_back(e);
+            }
+
+
+            //sort the group by selection index
+            std::sort(m_groups[input.m_group].begin(), m_groups[input.m_group].end(),
+                [](Entity a, Entity b)
+                {
+                    return a.getComponent<UIInput>().m_selectionIndex < b.getComponent<UIInput>().m_selectionIndex;
+                });
+
+
+            input.m_updateGroup = false;
+        }
+    }
+}
+
+void UISystem::onEntityAdded(Entity entity)
+{
+    //add to group 0 by default, process() will move the entity if needed
+    m_groups[0].push_back(entity);
+}
+
+void UISystem::onEntityRemoved(Entity entity)
+{
+    //remove the entity from its group
+    auto group = entity.getComponent<UIInput>().m_group;
+
+    /*if (m_activeGroup == group)
+    {
+        selectPrev(1);
+    }*/
+
+    m_groups[group].erase(std::remove_if(m_groups[group].begin(), m_groups[group].end(),
+        [entity](Entity e)
+        {
+            return e == entity;
+        }), m_groups[group].end());
 }

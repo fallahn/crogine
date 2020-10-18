@@ -57,5 +57,41 @@ namespace cro
         bool active;
         std::array<uint32, CallbackID::Count> callbacks{};
         int32 ID = -1;
+
+        /*!
+        \brief Sets the group of UIInput controls to which
+        this component belongs.
+        By default all UIInput components are added to
+        group 0. When creating multiple menus it is sometimes
+        advantagous to activate smaller groups of components
+        at a time. Use UISystem::setActiveGroup() to control
+        which group of UIInputs currently receive input.
+        \see UISystem::setActiveGroup()
+        */
+        void setGroup(std::size_t group)
+        {
+            m_previousGroup = m_group;
+            m_group = group;
+            m_updateGroup = true;
+        }
+
+        /*!
+        \brief Defines the order in which components in a group are selected.
+        By default this is set based on the order in which components
+        are added to a group.
+        */
+        void setSelectionIndex(std::size_t index)
+        {
+            m_selectionIndex = index;
+            m_updateGroup = true;
+        }
+
+    private:
+        std::size_t m_previousGroup = 0;
+        std::size_t m_group = 0;
+        std::size_t m_selectionIndex = 0;
+        bool m_updateGroup = true; //do order sorting by default
+
+        friend class UISystem;
     };
 }

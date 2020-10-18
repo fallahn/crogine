@@ -161,6 +161,16 @@ namespace cro
         {
             return getIndex() >= r.getIndex();
         }
+
+        friend bool operator < (const Entity& l, const Entity& r)
+        {
+            return (l.getIndex() < r.getIndex());
+        }
+
+        friend bool operator == (const Entity& l, const Entity& r)
+        {
+            return (l.getIndex() == r.getIndex());
+        }
 	private:
 
         explicit Entity(ID index, Generation generation);
