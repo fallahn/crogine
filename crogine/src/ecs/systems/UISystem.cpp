@@ -49,8 +49,8 @@ UISystem::UISystem(MessageBus& mb)
     requireComponent<UIInput>();
     requireComponent<Transform>();
 
-    m_buttonCallbacks.push_back([](Entity, uint64) {}); //default callback for components which don't have one assigned
-    m_movementCallbacks.push_back([](Entity, glm::vec2) {});
+    m_buttonCallbacks.push_back([](Entity, ButtonEvent) {}); //default callback for components which don't have one assigned
+    m_movementCallbacks.push_back([](Entity, glm::vec2, MotionEvent) {});
 
     m_windowSize = App::getWindow().getSize();
 }
@@ -64,38 +64,28 @@ void UISystem::handleEvent(const Event& evt)
         m_eventPosition = toWorldCoords(evt.motion.x, evt.motion.y);
         m_movementDelta = m_eventPosition - m_prevMousePosition;
         m_prevMousePosition = m_eventPosition;
+        {
+            auto motionEvent = m_motionEvents.emplace_back();
+            motionEvent.type = evt.type;
+            motionEvent.motion = evt.motion;
+        }
         break;
     case SDL_MOUSEBUTTONDOWN:
-        m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
         m_previousEventPosition = m_eventPosition;
-        switch (evt.button.button)
+
+        m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
         {
-        default: break;
-        case SDL_BUTTON_LEFT:
-            m_downEvents.push_back(LeftMouse);
-            break;
-        case SDL_BUTTON_RIGHT:
-            m_downEvents.push_back(RightMouse);
-            break;
-        case SDL_BUTTON_MIDDLE:
-            m_downEvents.push_back(MiddleMouse);
-            break;
+            auto buttonEvent = m_downEvents.emplace_back();
+            buttonEvent.type = evt.type;
+            buttonEvent.button = evt.button;
         }
         break;
     case SDL_MOUSEBUTTONUP:
         m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
-        switch (evt.button.button)
         {
-        default: break;
-        case SDL_BUTTON_LEFT:
-            m_upEvents.push_back(Flags::LeftMouse);
-            break;
-        case SDL_BUTTON_RIGHT:
-            m_upEvents.push_back(Flags::RightMouse);
-            break;
-        case SDL_BUTTON_MIDDLE:
-            m_upEvents.push_back(Flags::MiddleMouse);
-            break;
+            auto buttonEvent = m_upEvents.emplace_back();
+            buttonEvent.type = evt.type;
+            buttonEvent.button = evt.button;
         }
         break;
         /*
@@ -107,17 +97,29 @@ void UISystem::handleEvent(const Event& evt)
     case SDL_FINGERMOTION:
         m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         //TODO check finger IDs for gestures etc
+        {
+            auto motionEvent = m_motionEvents.emplace_back();
+            motionEvent.type = evt.type;
+            motionEvent.mgesture = evt.mgesture;
+        }
+
         break;
     case SDL_FINGERDOWN:
         m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         m_previousEventPosition = m_eventPosition;
-        //TODO check finger IDs for gestures etc
-        m_downEvents.push_back(Finger);
-        //Logger::log("Touch pos: " + std::to_string(m_eventPosition.x) + ", " + std::to_string(m_eventPosition.y), Logger::Type::Info);
+        {
+            auto buttonEvent = m_downEvents.emplace_back();
+            buttonEvent.type = evt.type;
+            buttonEvent.tfinger = evt.tfinger;
+        }
         break;
     case SDL_FINGERUP:
         m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
-        m_upEvents.push_back(Finger);
+        {
+            auto buttonEvent = m_upEvents.emplace_back();
+            buttonEvent.type = evt.type;
+            buttonEvent.tfinger = evt.tfinger;
+        }
         break;
     }
 }
@@ -149,9 +151,9 @@ void UISystem::process(float)
             {
                 m_buttonCallbacks[input.callbacks[UIInput::MouseUp]](e, f);
             }
-            if (glm::length2(m_movementDelta) > 0)
+            for (auto m : m_motionEvents)
             {
-                m_movementCallbacks[input.callbacks[UIInput::MouseMotion]](e, m_movementDelta);
+                m_movementCallbacks[input.callbacks[UIInput::MouseMotion]](e, m_movementDelta, m);
             }
         }
         else
@@ -160,12 +162,17 @@ void UISystem::process(float)
             {
                 //mouse left
                 input.active = false;
-                m_movementCallbacks[input.callbacks[UIInput::MouseExit]](e, m_movementDelta);
+
+                MotionEvent m;
+                m.type = MotionEvent::CursorExit;
+                m_movementCallbacks[input.callbacks[UIInput::MouseExit]](e, m_movementDelta, m);
             }
         }
     }
 
     //DPRINT("Window Pos", std::to_string(m_eventPosition.x) + ", " + std::to_string(m_eventPosition.y));
+
+    //TODO selecting previous and next input in active group with the keyboard or controller
 
     m_previousEventPosition = m_eventPosition;
     m_upEvents.clear();

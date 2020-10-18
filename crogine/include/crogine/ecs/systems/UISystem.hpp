@@ -38,13 +38,50 @@ source distribution.
 
 namespace cro
 {
+    /*!
+    \brief Button event data
+    Contains the SDL button event data for button down and up events.
+    This is passed to any ButtonCallbacks so that the user may
+    handle the event based on its type as they wish.
+    */
+    union ButtonEvent
+    {
+        uint32 type = 0;                   //!< SDL_Event type
+        SDL_KeyboardEvent key;             //!< SDL_KeyboardEvent data if this is a keyboard event
+        SDL_MouseButtonEvent button;       //!< SDL_MouseButtonEvent data if this is a mouse button event
+        SDL_JoyButtonEvent jbutton;        //!< SDL_JoyButtonEvent data if this is a joystick button event
+        SDL_ControllerButtonEvent cbutton; //!< SDL_ControllerButtonEvent data if this is a controller button event
+        SDL_TouchFingerEvent tfinger;      //!< SDL_TouchFingerEvent data if this is a touch event
+    };
+
+    /*!
+    \brief Motion event data
+    Contains the SDL motion event data for any motion supported devices
+    including the mouse, joystick or controller.
+    This is passed to any MovementCallbacks so that the user may
+    handle the event based on its type as they wish.
+    */
+    union MotionEvent
+    {
+        uint32 type = 0;                //!< SDL_Event type
+        SDL_MouseMotionEvent motion;    //!< Mouse motion event data
+        SDL_JoyAxisEvent jaxis;         //!< Joystick axis event data
+        SDL_JoyBallEvent jball;         //!< Joystick ball event data
+        SDL_JoyHatEvent jhat;           //!< Joystick hat event data
+        SDL_ControllerAxisEvent caxis;  //!< Game Controller axis event data
+        SDL_MultiGestureEvent mgesture; //!< Gesture event data
+        SDL_DollarGestureEvent dgesture;//!< Gesture event data
+
+        static constexpr uint32 CursorExit = std::numeric_limits<uint32>::max(); //!< event type when cursor deactivates an input
+    };
+
     class CRO_EXPORT_API UISystem final : public System
     {
     public:
-        //passes in the entity for whom the callback was triggered and a copy of the flags
-        //which contain the input which triggered it. Use the Flags enum to find the input type
-        using ButtonCallback = std::function<void(Entity, uint64 flags)>;
-        using MovementCallback = std::function<void(Entity, glm::vec2)>;
+        //passes in the entity for whom the callback was triggered and a ButtonEvent
+        //containing the SDL event data for the device which triggered it
+        using ButtonCallback = std::function<void(Entity, ButtonEvent event)>;
+        using MovementCallback = std::function<void(Entity, glm::vec2, MotionEvent event)>;
 
         explicit UISystem(MessageBus&);
 
@@ -68,31 +105,20 @@ namespace cro
         \brief Adds a button event callback.
         \returns ID of the callback. This should be used to assigned the callback
         to the relative callback slot of a UIInput component. eg:
+        \begincode
         auto id = system.addCallback(cb);
         component.callbacks[UIInput::MouseDown] = id;
+        \endcode
         */
         uint32 addCallback(const ButtonCallback&);
 
         /*!
         \brief Adds a mouse or touch input movement callback.
-        This is similar to button even callbacks, only the movement delta is
+        This is similar to button event callbacks, only the movement delta is
         passed in as a parameter instead of a button ID. These are also used for
         mouse enter/exit events
         */
         uint32 addCallback(const MovementCallback&);
-
-        /*!
-        \brief Input flags.
-        Use these with the callback bitmask to find which input triggered it
-        */
-        enum Flags
-        {
-            RightMouse = 0x1,
-            LeftMouse = 0x2,
-            MiddleMouse = 0x4,
-            Finger = 0x8
-        };
-
 
         /*!
         \brief Sets the active group of UIInput components.
@@ -120,8 +146,9 @@ namespace cro
         glm::vec2 m_eventPosition = glm::vec2(0.f);
         glm::vec2 m_movementDelta = glm::vec2(0.f); //in world coords
 
-        std::vector<Flags> m_downEvents;
-        std::vector<Flags> m_upEvents;
+        std::vector<ButtonEvent> m_downEvents;
+        std::vector<ButtonEvent> m_upEvents;
+        std::vector<MotionEvent> m_motionEvents;
 
         glm::uvec2 m_windowSize;
 
