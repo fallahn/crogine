@@ -51,6 +51,25 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+namespace
+{
+    bool activated(const cro::ButtonEvent& evt)
+    {
+        switch (evt.type)
+        {
+        default: return false;
+        case SDL_MOUSEBUTTONUP:
+            return evt.button.button == SDL_BUTTON_LEFT;
+        case SDL_CONTROLLERBUTTONUP:
+            return evt.cbutton.button == SDL_CONTROLLER_BUTTON_A;
+        case SDL_FINGERUP:
+            return true;
+        case SDL_KEYUP:
+            return (evt.key.keysym.sym == SDLK_SPACE || evt.key.keysym.sym == SDLK_RETURN);
+        }
+    }
+}
+
 PauseState::PauseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State(ss, ctx),
     m_scene         (ctx.appInstance.getMessageBus()),
@@ -129,12 +148,12 @@ void PauseState::buildScene()
     entity.addComponent<cro::Drawable2D>();
 
     auto mouseEnter = m_scene.getSystem<cro::UISystem>().addCallback(
-        [](cro::Entity e, glm::vec2) 
+        [](cro::Entity e)
         {
             e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
         });
     auto mouseExit = m_scene.getSystem<cro::UISystem>().addCallback(
-        [](cro::Entity e, glm::vec2)
+        [](cro::Entity e)
         {
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
         });
@@ -157,13 +176,13 @@ void PauseState::buildScene()
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     auto bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] =
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>().addCallback(
-            [&](cro::Entity e, std::uint64_t flags)
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
             {
-                if (flags & cro::UISystem::LeftMouse)
+                if (activated(evt))
                 {
                     cro::Console::show();
                 }
@@ -178,13 +197,13 @@ void PauseState::buildScene()
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] =
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>().addCallback(
-            [&](cro::Entity e, std::uint64_t flags)
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
             {
-                if (flags & cro::UISystem::LeftMouse)
+                if (activated(evt))
                 {
                     cro::App::getWindow().setMouseCaptured(true);
                     requestStackPop();
@@ -200,13 +219,13 @@ void PauseState::buildScene()
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnter;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExit;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] =
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>().addCallback(
-            [&](cro::Entity e, std::uint64_t flags)
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
             {
-                if (flags & cro::UISystem::LeftMouse)
+                if (activated(evt))
                 {
                     //TODO some sort of OK/Cancel box
                     m_sharedData.clientConnection.netClient.disconnect();

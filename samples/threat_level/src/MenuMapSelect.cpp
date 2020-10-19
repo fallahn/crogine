@@ -86,26 +86,30 @@ void MainState::createMapSelect(cro::Entity parentEnt,
 
     auto normalRect = spriteSheet.getSprite("caves_normal").getTextureRect();
     auto activeRect = spriteSheet.getSprite("caves_active").getTextureRect();
-    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
-        [this, activeRect, textEnt](cro::Entity ent, glm::vec2) mutable
+    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_uiSystem->addCallback(
+        [this, activeRect, textEnt](cro::Entity ent) mutable
     {
         ent.getComponent<cro::Sprite>().setTextureRect(activeRect);
         textEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
     });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
-        [this, normalRect, textEnt](cro::Entity ent, glm::vec2) mutable
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_uiSystem->addCallback(
+        [this, normalRect, textEnt](cro::Entity ent) mutable
     {
         ent.getComponent<cro::Sprite>().setTextureRect(normalRect);
         textEnt.getComponent<cro::Text>().setFillColour(textColourNormal);
     });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback(
-        [this](cro::Entity, cro::uint64)
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback(
+        [this](cro::Entity, const cro::ButtonEvent& evt)
     {
-        requestStackClear();
-        requestStackPush(States::ID::GamePlaying);
+            if (activated(evt))
+            {
+                requestStackClear();
+                requestStackPush(States::ID::GamePlaying);
+            }
     });
     entity.getComponent<cro::UIInput>().area.width = size.x;
     entity.getComponent<cro::UIInput>().area.height = size.y;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::MapSelect);
 
 
 
@@ -130,26 +134,27 @@ void MainState::createMapSelect(cro::Entity parentEnt,
 
     normalRect = spriteSheet.getSprite("forest_normal").getTextureRect();
     activeRect = spriteSheet.getSprite("forest_active").getTextureRect();
-    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
-        [this, activeRect, textEnt](cro::Entity ent, glm::vec2) mutable
+    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_uiSystem->addCallback(
+        [this, activeRect, textEnt](cro::Entity ent) mutable
     {
         ent.getComponent<cro::Sprite>().setTextureRect(activeRect);
         textEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
     });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
-        [this, normalRect, textEnt](cro::Entity ent, glm::vec2) mutable
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_uiSystem->addCallback(
+        [this, normalRect, textEnt](cro::Entity ent) mutable
     {
         ent.getComponent<cro::Sprite>().setTextureRect(normalRect);
         textEnt.getComponent<cro::Text>().setFillColour(textColourNormal);
     });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback(
-        [this](cro::Entity, cro::uint64)
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback(
+        [this](cro::Entity, const cro::ButtonEvent&)
     {
         /*requestStackClear();
         requestStackPush(States::ID::GamePlaying);*/
     });
     entity.getComponent<cro::UIInput>().area.width = size.x;
     entity.getComponent<cro::UIInput>().area.height = size.y;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::MapSelect);
 
     auto lockEnt = m_menuScene.createEntity();
     lockEnt.addComponent<cro::Drawable2D>();
@@ -182,26 +187,27 @@ void MainState::createMapSelect(cro::Entity parentEnt,
 
     normalRect = spriteSheet.getSprite("desert_normal").getTextureRect();
     activeRect = spriteSheet.getSprite("desert_active").getTextureRect();
-    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
-        [this, activeRect, textEnt](cro::Entity ent, glm::vec2 flags) mutable
+    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_uiSystem->addCallback(
+        [this, activeRect, textEnt](cro::Entity ent) mutable
     {
         ent.getComponent<cro::Sprite>().setTextureRect(activeRect);
         textEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
     });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
-        [this, normalRect, textEnt](cro::Entity ent, glm::vec2) mutable
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_uiSystem->addCallback(
+        [this, normalRect, textEnt](cro::Entity ent) mutable
     {
         ent.getComponent<cro::Sprite>().setTextureRect(normalRect);
         textEnt.getComponent<cro::Text>().setFillColour(textColourNormal);
     });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback(
-        [this](cro::Entity, cro::uint64)
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback(
+        [this](cro::Entity, const cro::ButtonEvent&)
     {
         /*requestStackClear();
         requestStackPush(States::ID::GamePlaying);*/
     });
     entity.getComponent<cro::UIInput>().area.width = size.x;
     entity.getComponent<cro::UIInput>().area.height = size.y;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::MapSelect);
 
     lockEnt = m_menuScene.createEntity();
     lockEnt.addComponent<cro::Drawable2D>();
@@ -234,20 +240,21 @@ void MainState::createMapSelect(cro::Entity parentEnt,
 
     normalRect = spriteSheet.getSprite("empty_normal").getTextureRect();
     activeRect = spriteSheet.getSprite("empty_active").getTextureRect();
-    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
-        [this, activeRect, textEnt](cro::Entity ent, glm::vec2) mutable
+    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_uiSystem->addCallback(
+        [this, activeRect, textEnt](cro::Entity ent) mutable
     {
         ent.getComponent<cro::Sprite>().setTextureRect(activeRect);
         textEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
     });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
-        [this, normalRect, textEnt](cro::Entity ent, glm::vec2) mutable
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_uiSystem->addCallback(
+        [this, normalRect, textEnt](cro::Entity ent) mutable
     {
         ent.getComponent<cro::Sprite>().setTextureRect(normalRect);
         textEnt.getComponent<cro::Text>().setFillColour(textColourNormal);
     });
     entity.getComponent<cro::UIInput>().area.width = size.x;
     entity.getComponent<cro::UIInput>().area.height = size.y;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::MapSelect);
 
 
 
@@ -281,10 +288,9 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     iconEnt.addComponent<cro::Drawable2D>();
 
 
-    auto backCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
+    auto backCallback = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
     {
-        if ((flags & cro::UISystem::LeftMouse)
-            /*|| flags & cro::UISystem::Finger*/)
+        if (activated(evt))
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
@@ -295,18 +301,20 @@ void MainState::createMapSelect(cro::Entity parentEnt,
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, static_cast<float>(cro::DefaultSceneSize.y), 0.f);
             };
             m_commandSystem->sendCommand(cmd);
+
+            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
         }
     });
 
     auto mouseEnterCallback = m_uiSystem->addCallback(
-        [&, buttonHighlightArea, iconEnt, textEnt](cro::Entity e, glm::vec2) mutable
+        [&, buttonHighlightArea, iconEnt, textEnt](cro::Entity e) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
         textEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
         iconEnt.getComponent<cro::Sprite>().setColour(textColourSelected);
     });
     auto mouseExitCallback = m_uiSystem->addCallback(
-        [&, buttonNormalArea, textEnt, iconEnt](cro::Entity e, glm::vec2) mutable
+        [&, buttonNormalArea, textEnt, iconEnt](cro::Entity e) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
         textEnt.getComponent<cro::Text>().setFillColour(textColourNormal);
@@ -314,9 +322,10 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     });
 
     auto& backControl = entity.addComponent<cro::UIInput>();
-    backControl.callbacks[cro::UIInput::MouseUp] = backCallback;
-    backControl.callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
-    backControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
+    backControl.callbacks[cro::UIInput::ButtonUp] = backCallback;
+    backControl.callbacks[cro::UIInput::Selected] = mouseEnterCallback;
+    backControl.callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     backControl.area.width = buttonNormalArea.width;
     backControl.area.height = buttonNormalArea.height;
+    backControl.setGroup(GroupID::MapSelect);
 }

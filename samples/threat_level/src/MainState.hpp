@@ -38,6 +38,17 @@ source distribution.
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
 
+namespace GroupID
+{
+    enum
+    {
+        Main,
+        Options,
+        MapSelect,
+        Scores,
+        QuitConfirm
+    };
+}
 
 namespace cro
 {

@@ -190,23 +190,22 @@ void RoundEndState::load()
 
     auto activeArea = sprites.getSprite("button_active").getTextureRect();
     auto& gameControl = entity.addComponent<cro::UIInput>();
-    gameControl.callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
-        [&, activeArea, textEnt](cro::Entity e, glm::vec2) mutable
+    gameControl.callbacks[cro::UIInput::Selected] = m_uiSystem->addCallback(
+        [&, activeArea, textEnt](cro::Entity e) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(activeArea);
         textEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
     });
-    gameControl.callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
-        [&, area, textEnt] (cro::Entity e, glm::vec2) mutable
+    gameControl.callbacks[cro::UIInput::Unselected] = m_uiSystem->addCallback(
+        [&, area, textEnt] (cro::Entity e) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(area);
         textEnt.getComponent<cro::Text>().setFillColour(textColourNormal);
     });
-    gameControl.callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([&]
-    (cro::Entity, cro::uint64 flags)
+    gameControl.callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback([&]
+    (cro::Entity, const cro::ButtonEvent& evt)
     {
-        if ((flags & cro::UISystem::LeftMouse)
-            /*|| flags & cro::UISystem::Finger*/)
+        if (activated(evt))
         {
             //TODO continue to next round or load next map
             //TODO change background colour on round change

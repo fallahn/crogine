@@ -111,10 +111,9 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
     iconEnt.addComponent<cro::Sprite>() = spriteSheetIcons.getSprite("back");
     iconEnt.addComponent<cro::Drawable2D>();
 
-    auto backCallback = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
+    auto backCallback = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
     {
-        if ((flags & cro::UISystem::LeftMouse)
-            || flags & cro::UISystem::Finger)
+        if (activated(evt))
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
@@ -125,12 +124,15 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(-static_cast<float>(cro::DefaultSceneSize.x), 0.f, 0.f);
             };
             m_commandSystem->sendCommand(cmd);
+
+            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
         }
     });
     auto& backControl = entity.addComponent<cro::UIInput>();
-    backControl.callbacks[cro::UIInput::MouseUp] = backCallback;
-    backControl.callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
-    backControl.callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
+    backControl.setGroup(GroupID::Options);
+    backControl.callbacks[cro::UIInput::ButtonUp] = backCallback;
+    backControl.callbacks[cro::UIInput::Selected] = mouseEnterCallback;
+    backControl.callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     backControl.area.width = buttonNormalArea.width;
     backControl.area.height = buttonNormalArea.height;
 

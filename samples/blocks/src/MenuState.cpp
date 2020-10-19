@@ -296,12 +296,12 @@ void MenuState::createScene()
 #endif //CRO_DEBUG_
 
     auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>().addCallback(
-        [](cro::Entity e, glm::vec2)
+        [](cro::Entity e)
         {
             e.getComponent<cro::Text>().setFillColour(TextHighlightColour);        
         });
     auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
-        [](cro::Entity e, glm::vec2) 
+        [](cro::Entity e) 
         {
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
         });
@@ -364,9 +364,10 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
 
                 cro::Command cmd;
                 cmd.targetFlags = MenuCommandID::RootNode;
-                cmd.action = [](cro::Entity e, float)
+                cmd.action = [&](cro::Entity e, float)
                 {
                     e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
+                    m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
                 };
                 m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 

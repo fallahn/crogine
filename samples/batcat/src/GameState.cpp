@@ -317,7 +317,7 @@ void GameState::createScene()
         };
 
         e.addComponent<cro::AudioEmitter>(m_audioBuffer);
-        e.getComponent<cro::AudioEmitter>().play(true);
+        e.getComponent<cro::AudioEmitter>().play();
         e.getComponent<cro::AudioEmitter>().setVolume(1.f);
         e.getComponent<cro::AudioEmitter>().setRolloff(0.8f);
     };
