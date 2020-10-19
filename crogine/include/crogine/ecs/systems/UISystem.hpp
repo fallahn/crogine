@@ -176,8 +176,10 @@ namespace cro
         glm::vec2 m_eventPosition = glm::vec2(0.f);
         glm::vec2 m_movementDelta = glm::vec2(0.f); //in world coords
 
-        std::vector<ButtonEvent> m_downEvents;
-        std::vector<ButtonEvent> m_upEvents;
+        std::vector<ButtonEvent> m_buttonDownEvents;
+        std::vector<ButtonEvent> m_mouseDownEvents;
+        std::vector<ButtonEvent> m_buttonUpEvents;
+        std::vector<ButtonEvent> m_mouseUpEvents;
         std::vector<MotionEvent> m_motionEvents;
 
         glm::uvec2 m_windowSize;

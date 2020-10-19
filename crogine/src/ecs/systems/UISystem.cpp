@@ -81,7 +81,7 @@ void UISystem::handleEvent(const Event& evt)
 
         m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
         {
-            auto& buttonEvent = m_downEvents.emplace_back();
+            auto& buttonEvent = m_mouseDownEvents.emplace_back();
             buttonEvent.type = evt.type;
             buttonEvent.button = evt.button;
         }
@@ -89,7 +89,7 @@ void UISystem::handleEvent(const Event& evt)
     case SDL_MOUSEBUTTONUP:
         m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
         {
-            auto& buttonEvent = m_upEvents.emplace_back();
+            auto& buttonEvent = m_mouseUpEvents.emplace_back();
             buttonEvent.type = evt.type;
             buttonEvent.button = evt.button;
         }
@@ -114,7 +114,7 @@ void UISystem::handleEvent(const Event& evt)
         m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         m_previousEventPosition = m_eventPosition;
         {
-            auto& buttonEvent = m_downEvents.emplace_back();
+            auto& buttonEvent = m_mouseDownEvents.emplace_back();
             buttonEvent.type = evt.type;
             buttonEvent.tfinger = evt.tfinger;
         }
@@ -122,14 +122,14 @@ void UISystem::handleEvent(const Event& evt)
     case SDL_FINGERUP:
         m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         {
-            auto& buttonEvent = m_upEvents.emplace_back();
+            auto& buttonEvent = m_mouseUpEvents.emplace_back();
             buttonEvent.type = evt.type;
             buttonEvent.tfinger = evt.tfinger;
         }
         break;
     case SDL_KEYDOWN:
     {
-        auto& buttonEvent = m_downEvents.emplace_back();
+        auto& buttonEvent = m_buttonDownEvents.emplace_back();
         buttonEvent.type = evt.type;
         buttonEvent.key = evt.key;
     }
@@ -140,7 +140,7 @@ void UISystem::handleEvent(const Event& evt)
         {
         default:
         {
-            auto& buttonEvent = m_upEvents.emplace_back();
+            auto& buttonEvent = m_buttonUpEvents.emplace_back();
             buttonEvent.type = evt.type;
             buttonEvent.key = evt.key;
         }
@@ -166,7 +166,7 @@ void UISystem::handleEvent(const Event& evt)
         {
         default:
         {
-            auto& buttonEvent = m_downEvents.emplace_back();
+            auto& buttonEvent = m_buttonDownEvents.emplace_back();
             buttonEvent.type = evt.type;
             buttonEvent.cbutton = evt.cbutton;
         }
@@ -188,21 +188,21 @@ void UISystem::handleEvent(const Event& evt)
         break;
     case SDL_CONTROLLERBUTTONUP:
     {
-        auto& buttonEvent = m_upEvents.emplace_back();
+        auto& buttonEvent = m_buttonUpEvents.emplace_back();
         buttonEvent.type = evt.type;
         buttonEvent.cbutton = evt.cbutton;
     }
         break;
     case SDL_JOYBUTTONDOWN:
     {
-        auto& buttonEvent = m_downEvents.emplace_back();
+        auto& buttonEvent = m_buttonDownEvents.emplace_back();
         buttonEvent.type = evt.type;
         buttonEvent.jbutton = evt.jbutton;
     }
         break;
     case SDL_JOYBUTTONUP:
     {
-        auto& buttonEvent = m_upEvents.emplace_back();
+        auto& buttonEvent = m_buttonUpEvents.emplace_back();
         buttonEvent.type = evt.type;
         buttonEvent.jbutton = evt.jbutton;
     }
@@ -297,13 +297,26 @@ void UISystem::process(float)
             }
         }
 
-        if (contains || currentIndex == m_selectedIndex)
+        //only do mouse/touch events if they're within the bounds of an input
+        if (contains)
         {
-            for (const auto& f : m_downEvents)
+            for (const auto& f : m_mouseDownEvents)
             {
                 m_buttonCallbacks[input.callbacks[UIInput::ButtonDown]](e, f);
             }
-            for (const auto& f : m_upEvents)
+            for (const auto& f : m_mouseUpEvents)
+            {
+                m_buttonCallbacks[input.callbacks[UIInput::ButtonUp]](e, f);
+            }
+        }
+
+        else if (currentIndex == m_selectedIndex)
+        {
+            for (const auto& f : m_buttonDownEvents)
+            {
+                m_buttonCallbacks[input.callbacks[UIInput::ButtonDown]](e, f);
+            }
+            for (const auto& f : m_buttonUpEvents)
             {
                 m_buttonCallbacks[input.callbacks[UIInput::ButtonUp]](e, f);
             }
@@ -315,8 +328,10 @@ void UISystem::process(float)
     //DPRINT("Window Pos", std::to_string(m_eventPosition.x) + ", " + std::to_string(m_eventPosition.y));
 
     m_previousEventPosition = m_eventPosition;
-    m_upEvents.clear();
-    m_downEvents.clear();
+    m_mouseUpEvents.clear();
+    m_buttonUpEvents.clear();
+    m_mouseDownEvents.clear();
+    m_buttonDownEvents.clear();
     m_movementDelta = {};
 }
 
