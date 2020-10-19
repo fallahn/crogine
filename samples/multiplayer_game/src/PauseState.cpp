@@ -51,6 +51,25 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+namespace
+{
+    bool activated(const cro::ButtonEvent& evt)
+    {
+        switch (evt.type)
+        {
+        default: return false;
+        case SDL_MOUSEBUTTONUP:
+            return evt.button.button == SDL_BUTTON_LEFT;
+        case SDL_CONTROLLERBUTTONUP:
+            return evt.cbutton.button == SDL_CONTROLLER_BUTTON_A;
+        case SDL_FINGERUP:
+            return true;
+        case SDL_KEYUP:
+            return (evt.key.keysym.sym == SDLK_SPACE || evt.key.keysym.sym == SDLK_RETURN);
+        }
+    }
+}
+
 PauseState::PauseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State(ss, ctx),
     m_scene         (ctx.appInstance.getMessageBus()),
@@ -159,15 +178,15 @@ void PauseState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
-    /*entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>().addCallback(
-            [&](cro::Entity e, std::uint64_t flags)
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
             {
-                if (flags & cro::UISystem::LeftMouse)
+                if (activated(evt))
                 {
                     cro::Console::show();
                 }
-            });*/
+            });
 
     //back
     entity = m_scene.createEntity();
@@ -180,16 +199,16 @@ void PauseState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
-    /*entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>().addCallback(
-            [&](cro::Entity e, std::uint64_t flags)
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
             {
-                if (flags & cro::UISystem::LeftMouse)
+                if (activated(evt))
                 {
                     cro::App::getWindow().setMouseCaptured(true);
                     requestStackPop();
                 }
-            });*/
+            });
 
     //quit
     entity = m_scene.createEntity();
@@ -202,22 +221,22 @@ void PauseState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
-    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-    //    m_scene.getSystem<cro::UISystem>().addCallback(
-    //        [&](cro::Entity e, std::uint64_t flags)
-    //        {
-    //            if (flags & cro::UISystem::LeftMouse)
-    //            {
-    //                //TODO some sort of OK/Cancel box
-    //                m_sharedData.clientConnection.netClient.disconnect();
-    //                m_sharedData.clientConnection.connected = false;
-    //                m_sharedData.serverInstance.stop();
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_scene.getSystem<cro::UISystem>().addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    //TODO some sort of OK/Cancel box
+                    m_sharedData.clientConnection.netClient.disconnect();
+                    m_sharedData.clientConnection.connected = false;
+                    m_sharedData.serverInstance.stop();
 
-    //                cro::App::getWindow().setMouseCaptured(false);
-    //                requestStackClear();
-    //                requestStackPush(States::ID::MainMenu);
-    //            }
-    //        });
+                    cro::App::getWindow().setMouseCaptured(false);
+                    requestStackClear();
+                    requestStackPush(States::ID::MainMenu);
+                }
+            });
 
     //create a custom camera to allow or own update function
     entity = m_scene.createEntity();

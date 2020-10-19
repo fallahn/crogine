@@ -358,12 +358,12 @@ void UISystem::setActiveGroup(std::size_t group)
     CRO_ASSERT(m_groups.count(group) != 0, "Group doesn't exist");
     CRO_ASSERT(!m_groups[group].empty(), "Group is empty");
 
-    //unselect(m_selectedIndex);
+    unselect(m_selectedIndex);
 
     m_activeGroup = group;
-    //m_selectedIndex = 0;
+    m_selectedIndex = 0;
 
-    //select(m_selectedIndex);
+    select(m_selectedIndex);
 }
 
 void UISystem::setColumnCount(std::size_t count)
