@@ -162,45 +162,13 @@ void PauseState::load()
     const auto buttonNormalArea = spriteSheet.getSprite("button_inactive").getTextureRect();
     const auto buttonHighlightArea = spriteSheet.getSprite("button_active").getTextureRect();
 
-    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, glm::vec2)
+    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
-        LOG("Fix me!!", cro::Logger::Type::Info);
-        /*const auto& children = e.getComponent<cro::Transform>().getChildIDs();
-        std::size_t i = 0;
-        while (children[i] != -1)
-        {
-            auto c = children[i++];
-            auto child = m_uiScene.getEntity(c);
-            if (child.hasComponent<cro::Text>())
-            {
-                child.getComponent<cro::Text>().setColour(textColourSelected);
-            }
-            else if (child.hasComponent<cro::Sprite>())
-            {
-                child.getComponent<cro::Sprite>().setColour(textColourSelected);
-            }
-        }*/
     });
-    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, glm::vec2)
+    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
-        LOG("Fix me!!", cro::Logger::Type::Info);
-        //const auto& children = e.getComponent<cro::Transform>().getChildIDs();
-        //std::size_t i = 0;
-        //while (children[i] != -1)
-        //{
-        //    auto c = children[i++];
-        //    auto child = m_uiScene.getEntity(c);
-        //    if (child.hasComponent<cro::Text>())
-        //    {
-        //        child.getComponent<cro::Text>().setColour(textColourNormal);
-        //    }
-        //    else if (child.hasComponent<cro::Sprite>())
-        //    {
-        //        child.getComponent<cro::Sprite>().setColour(textColourNormal);
-        //    }
-        //}
     });
 
 
@@ -243,13 +211,12 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setPosition({ 0.f, 60.f, 0.f });
     entity.addComponent<cro::UIInput>();
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([this]
-    (cro::Entity e, cro::uint64 flags)
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback([this]
+    (cro::Entity e, const cro::ButtonEvent& evt)
     {
-        if ((flags & cro::UISystem::LeftMouse)
-            || (flags & cro::UISystem::Finger))
+        if (activated(evt))
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
@@ -288,12 +255,11 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setPosition({ 0.f, -120.f, 0.f });
     entity.addComponent<cro::UIInput>();
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
     {
-        if ((flags & cro::UISystem::LeftMouse)
-            || flags & cro::UISystem::Finger)
+        if (activated(evt))
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
@@ -332,13 +298,12 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setPosition({ 0.f, -300.f, 0.f });
     entity.addComponent<cro::UIInput>();
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback(
-        [&](cro::Entity, cro::uint64 flags)
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
     {
-        if ((flags & cro::UISystem::LeftMouse) //gets raised even on touch
-            /*|| flags & cro::UISystem::Finger*/)
+        if (activated(evt))
         {
             requestStackPop();
             //LOG("POP!", cro::Logger::Type::Info);
@@ -402,12 +367,11 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     iconEntity.addComponent<cro::Drawable2D>();
 
     buttonEntity.addComponent<cro::UIInput>();
-    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
-    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
-    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
     {
-        if ((flags & cro::UISystem::LeftMouse)
-            /*|| flags & cro::UISystem::Finger*/)
+        if (activated(evt))
         {
             requestStackClear();
             requestStackPush(States::MainMenu);
@@ -439,11 +403,11 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     iconEntity.addComponent<cro::Drawable2D>();
 
     buttonEntity.addComponent<cro::UIInput>();
-    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
-    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
-    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
     {
-        if ((flags & cro::UISystem::LeftMouse))
+        if (activated(evt))
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;
@@ -497,12 +461,11 @@ void PauseState::createOptions(const cro::SpriteSheet& spriteSheet, const cro::S
     controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     entity.addComponent<cro::UIInput>();
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseEnter] = mouseEnterCallback;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = mouseExitCallback;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([this](cro::Entity, cro::uint64 flags)
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
     {
-        if ((flags & cro::UISystem::LeftMouse)
-            || flags & cro::UISystem::Finger)
+        if (activated(evt))
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MenuController;

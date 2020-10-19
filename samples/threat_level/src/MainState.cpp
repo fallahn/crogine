@@ -334,45 +334,13 @@ void MainState::createMenus()
     cro::SpriteSheet spriteSheetIcons;
     spriteSheetIcons.loadFromFile("assets/sprites/ui_icons.spt", m_sharedResources.textures);
 
-    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e, glm::vec2)
+    auto mouseEnterCallback = m_uiSystem->addCallback([&, buttonHighlightArea](cro::Entity e)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonHighlightArea);
-        LOG("Fix me!!", cro::Logger::Type::Info);
-        /*const auto& children = e.getComponent<cro::Transform>().getChildIDs();
-        std::size_t i = 0;
-        while (children[i] != -1)
-        {
-            auto c = children[i++];
-            auto child = m_menuScene.getEntity(c);
-            if (child.hasComponent<cro::Text>())
-            {
-                child.getComponent<cro::Text>().setColour(textColourSelected);
-            }
-            else if (child.hasComponent<cro::Sprite>())
-            {
-                child.getComponent<cro::Sprite>().setColour(textColourSelected);
-            }
-        }*/
     });
-    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e, glm::vec2)
+    auto mouseExitCallback = m_uiSystem->addCallback([&, buttonNormalArea](cro::Entity e)
     {
         e.getComponent<cro::Sprite>().setTextureRect(buttonNormalArea);
-        LOG("Fix me!!", cro::Logger::Type::Info);
-        /*const auto& children = e.getComponent<cro::Transform>().getChildIDs();
-        std::size_t i = 0;
-        while (children[i] != -1)
-        {
-            auto c = children[i++];
-            auto child = m_menuScene.getEntity(c);
-            if (child.hasComponent<cro::Text>())
-            {
-                child.getComponent<cro::Text>().setColour(textColourNormal);
-            }
-            else if (child.hasComponent<cro::Sprite>())
-            {
-                child.getComponent<cro::Sprite>().setColour(textColourNormal);
-            }
-        }*/
     });
 
     createMainMenu(mouseEnterCallback, mouseExitCallback, spriteSheetButtons, spriteSheetIcons);

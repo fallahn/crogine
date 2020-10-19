@@ -240,25 +240,24 @@ void GameOverState::load()
 
     auto activeArea = sprites.getSprite("button_active").getTextureRect();
     auto& gameControl = entity.addComponent<cro::UIInput>();
-    gameControl.callbacks[cro::UIInput::MouseEnter] = m_uiSystem->addCallback(
-        [&,activeArea, iconEnt, textEnt](cro::Entity e, glm::vec2) mutable
+    gameControl.callbacks[cro::UIInput::Selected] = m_uiSystem->addCallback(
+        [&,activeArea, iconEnt, textEnt](cro::Entity e) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(activeArea);
         iconEnt.getComponent<cro::Sprite>().setColour(textColourSelected);
         textEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
     });
-    gameControl.callbacks[cro::UIInput::MouseExit] = m_uiSystem->addCallback(
-        [&, area, iconEnt, textEnt](cro::Entity e, glm::vec2) mutable
+    gameControl.callbacks[cro::UIInput::Unselected] = m_uiSystem->addCallback(
+        [&, area, iconEnt, textEnt](cro::Entity e) mutable
     {
         e.getComponent<cro::Sprite>().setTextureRect(area);
         iconEnt.getComponent<cro::Sprite>().setColour(textColourNormal);
         textEnt.getComponent<cro::Text>().setFillColour(textColourNormal);
     });
-    gameControl.callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback([&]
-    (cro::Entity, cro::uint64 flags)
+    gameControl.callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback([&]
+    (cro::Entity, const cro::ButtonEvent& evt)
     {
-        if ((flags & cro::UISystem::LeftMouse)
-            /*|| flags & cro::UISystem::Finger*/)
+        if (activated(evt))
         {
             //insert name / score into high score list           
             cro::ConfigFile scores;
@@ -334,11 +333,10 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     boxEnt.addComponent<cro::UIInput>().area = textArea;
     inactiveArea = boxEnt.getComponent<cro::Sprite>().getTextureRect();
     auto activeArea = spriteSheet.getSprite("textbox_active").getTextureRect();
-    boxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = m_uiSystem->addCallback(
-        [&, activeArea](cro::Entity ent, cro::uint64 flags)
+    boxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback(
+        [&, activeArea](cro::Entity ent, const cro::ButtonEvent& evt)
     {
-        if ((flags & cro::UISystem::LeftMouse)
-            || flags & cro::UISystem::Finger)
+        if (activated(evt))
         {
             SDL_StartTextInput();
             ent.getComponent<cro::Sprite>().setTextureRect(activeArea);

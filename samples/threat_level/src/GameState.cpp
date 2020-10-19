@@ -450,21 +450,37 @@ void GameState::createHUD()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::HudElement;
 
     auto spriteSize = spriteSheet.getSprite("emp").getSize();
-    auto empPressedCallback = m_uiSystem->addCallback([this](cro::Entity entity, cro::uint64 flags)
+    auto empPressedCallback = m_uiSystem->addCallback([this](cro::Entity entity, const cro::ButtonEvent& evt)
     {
-        auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);
-        msg->button = UIEvent::Emp;
-        msg->type = UIEvent::ButtonPressed;
+            if(evt.type == SDL_MOUSEBUTTONDOWN
+                && evt.button.button == SDL_BUTTON_LEFT)
+            {
+                auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);
+                msg->button = UIEvent::Emp;
+                msg->type = UIEvent::ButtonPressed;
+            }
     });
-    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::MouseDown] = empPressedCallback;
-    auto empReleasedCallback = m_uiSystem->addCallback([this](cro::Entity entity, cro::uint64 flags)
+    entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = empPressedCallback;
+    auto empReleasedCallback = m_uiSystem->addCallback([this](cro::Entity entity, const cro::ButtonEvent& evt)
     {
-        auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);
-        msg->button = UIEvent::Emp;
-        msg->type = UIEvent::ButtonReleased;
+            if (evt.type == SDL_MOUSEBUTTONUP
+                && evt.button.button == SDL_BUTTON_LEFT)
+            {
+                auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);
+                msg->button = UIEvent::Emp;
+                msg->type = UIEvent::ButtonReleased;
+            }
     });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseUp] = empReleasedCallback;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::MouseExit] = empReleasedCallback; //in case mouse leaves while still pressed
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = empReleasedCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_uiSystem->addCallback([this](cro::Entity entity)
+        {
+            //in case mouse leaves while button still pressed
+            {
+                auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);
+                msg->button = UIEvent::Emp;
+                msg->type = UIEvent::ButtonReleased;
+            }
+        });
     entity.getComponent<cro::UIInput>().area = { 0.f, 0.f, spriteSize.x, spriteSize.y };
 
     //pulse effect on EMP icon
