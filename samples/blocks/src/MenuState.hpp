@@ -55,6 +55,17 @@ namespace MenuCommandID
     };
 }
 
+namespace GroupID
+{
+    enum
+    {
+        Main = 0,
+        Avatar,
+        Join,
+        Lobby,
+        Options
+    };
+}
 
 struct SharedStateData;
 namespace cro

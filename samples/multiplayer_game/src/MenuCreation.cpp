@@ -55,12 +55,16 @@ namespace
         {
         default: return false;
         case SDL_MOUSEBUTTONUP:
+        case SDL_MOUSEBUTTONDOWN:
             return evt.button.button == SDL_BUTTON_LEFT;
         case SDL_CONTROLLERBUTTONUP:
+        case SDL_CONTROLLERBUTTONDOWN:
             return evt.cbutton.button == SDL_CONTROLLER_BUTTON_A;
         case SDL_FINGERUP:
+        case SDL_FINGERDOWN:
             return true;
         case SDL_KEYUP:
+        case SDL_KEYDOWN:
             return (evt.key.keysym.sym == SDLK_SPACE || evt.key.keysym.sym == SDLK_RETURN);
         }
     }
