@@ -148,7 +148,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
         }
     });
     auto& backControl = entity.addComponent<cro::UIInput>();
-    backControl.callbacks[cro::UIInput::ButtonDown] = backCallback;
+    backControl.callbacks[cro::UIInput::ButtonUp] = backCallback;
     backControl.callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     backControl.callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     backControl.area.width = buttonNormalArea.width;

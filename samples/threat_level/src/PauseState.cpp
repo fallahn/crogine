@@ -377,7 +377,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     buttonEntity.addComponent<cro::UIInput>().setGroup(GroupID::Confirm);
     buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
-    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
     {
         if (activated(evt))
         {
@@ -413,7 +413,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     buttonEntity.addComponent<cro::UIInput>().setGroup(GroupID::Confirm);
     buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
-    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
+    buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
     {
         if (activated(evt))
         {
