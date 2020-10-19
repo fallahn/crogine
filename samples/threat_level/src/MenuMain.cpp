@@ -91,6 +91,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     controlEntity.getComponent<cro::Transform>().addChild(gameTx);
     gameTx.setPosition({ 0.f, 60.f, 0.f });
     auto& gameControl = entity.addComponent<cro::UIInput>();
+    gameControl.setGroup(GroupID::Main);
     gameControl.callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     gameControl.callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     gameControl.callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback([this]
@@ -107,6 +108,8 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -static_cast<float>(cro::DefaultSceneSize.y), 0.f);
             };
             m_commandSystem->sendCommand(cmd);
+
+            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::MapSelect);
         }
     });
     gameControl.area.width = buttonNormalArea.width;
@@ -141,6 +144,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     controlEntity.getComponent<cro::Transform>().addChild(optionTx);
     optionTx.setPosition({ 0.f, -120.f, -1.f });
     auto& optionControl = entity.addComponent<cro::UIInput>();
+    optionControl.setGroup(GroupID::Main);
     optionControl.callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     optionControl.callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     optionControl.area.width = buttonNormalArea.width;
@@ -160,6 +164,8 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(cro::DefaultSceneSize.x, 0.f, 0.f);
             };
             m_commandSystem->sendCommand(cmd);
+
+            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Options);
         }
     });
 
@@ -188,6 +194,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
     scoreTx.setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     controlEntity.getComponent<cro::Transform>().addChild(scoreTx);
     auto& scoreControl = entity.addComponent<cro::UIInput>();
+    scoreControl.setGroup(GroupID::Main);
     scoreControl.callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     scoreControl.callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     scoreControl.area.width = buttonNormalArea.width;
@@ -207,6 +214,8 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(-static_cast<float>(cro::DefaultSceneSize.x), 0.f, 0.f);
             };
             m_commandSystem->sendCommand(cmd);
+
+            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Scores);
         }
     });
     scoreControl.callbacks[cro::UIInput::ButtonUp] = scoreCallback;
@@ -265,9 +274,12 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, static_cast<float>(cro::DefaultSceneSize.y), 0.f);
             };
             m_commandSystem->sendCommand(cmd);
+
+            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::QuitConfirm);
         }
     });
     auto& quitControl = entity.addComponent<cro::UIInput>();
+    quitControl.setGroup(GroupID::Main);
     quitControl.callbacks[cro::UIInput::ButtonUp] = quitCallback;
     quitControl.callbacks[cro::UIInput::Selected ] = mouseEnterCallback;
     quitControl.callbacks[cro::UIInput::Unselected] = mouseExitCallback;
@@ -330,6 +342,7 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
         }
     });
     auto& okControl = buttonEnt.addComponent<cro::UIInput>();
+    okControl.setGroup(GroupID::QuitConfirm);
     okControl.callbacks[cro::UIInput::ButtonUp] = okCallback;
     okControl.callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     okControl.callbacks[cro::UIInput::Unselected] = mouseExitCallback;
@@ -375,9 +388,12 @@ void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouse
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -static_cast<float>(cro::DefaultSceneSize.y), 0.f);
             };
             m_commandSystem->sendCommand(cmd);
+
+            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
         }
     });
     auto& cancelControl = buttonEnt.addComponent<cro::UIInput>();
+    cancelControl.setGroup(GroupID::QuitConfirm);
     cancelControl.callbacks[cro::UIInput::ButtonUp] = cancelCallback;
     cancelControl.callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     cancelControl.callbacks[cro::UIInput::Unselected] = mouseExitCallback;

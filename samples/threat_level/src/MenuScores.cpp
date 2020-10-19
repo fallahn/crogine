@@ -143,6 +143,8 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(static_cast<float>(cro::DefaultSceneSize.x), 0.f, 0.f);
             };
             m_commandSystem->sendCommand(cmd);
+
+            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
         }
     });
     auto& backControl = entity.addComponent<cro::UIInput>();
@@ -151,6 +153,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     backControl.callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     backControl.area.width = buttonNormalArea.width;
     backControl.area.height = buttonNormalArea.height;
+    backControl.setGroup(GroupID::Scores);
 
 
     //load scores if we can, fill with fake if not yet created
@@ -282,6 +285,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
         entity.getComponent<cro::UIDraggable>().flags = 0;
     });
     entity.getComponent<cro::UIInput>().area = croppingArea;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::Scores);
 
     //callback gives scrolling some momentum
     entity.addComponent<cro::Callback>().function = 
@@ -327,6 +331,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowExit;
     entity.getComponent<cro::UIInput>().area.width = activeArrow.width;
     entity.getComponent<cro::UIInput>().area.height = activeArrow.height;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::Scores);
 
     entity.addComponent<cro::Callback>().function = [scroll, scoreEnt](cro::Entity entity, float dt)
     {
@@ -335,8 +340,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiSystem->addCallback(
         [](cro::Entity entity, const cro::ButtonEvent& evt)
     {
-        if (evt.type == SDL_MOUSEBUTTONDOWN
-            && evt.button.button == SDL_BUTTON_LEFT)
+        if (activated(evt))
         {
             entity.getComponent<cro::Callback>().active = true;
         }
@@ -344,8 +348,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback(
         [scoreEnt](cro::Entity entity, const cro::ButtonEvent& evt) mutable
     {
-        if (evt.type == SDL_MOUSEBUTTONUP
-            && evt.button.button == SDL_BUTTON_LEFT)
+        if (activated(evt))
         {
             entity.getComponent<cro::Callback>().active = false;
             scoreEnt.getComponent<cro::UIDraggable>().velocity.y = -scrollSpeed / 2.f;
@@ -369,6 +372,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowExit;
     entity.getComponent<cro::UIInput>().area.width = activeArrow.width;
     entity.getComponent<cro::UIInput>().area.height = activeArrow.height;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::Scores);
 
     entity.addComponent<cro::Callback>().function = [scroll, scoreEnt](cro::Entity entity, float dt)
     {
@@ -377,8 +381,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiSystem->addCallback(
         [](cro::Entity entity, const cro::ButtonEvent& evt)
     {
-        if (evt.type == SDL_MOUSEBUTTONDOWN
-            && evt.button.button == SDL_BUTTON_LEFT)
+        if(activated(evt))
         {
             entity.getComponent<cro::Callback>().active = true;
         }
@@ -386,8 +389,7 @@ void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mous
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback(
         [scoreEnt](cro::Entity entity, const cro::ButtonEvent& evt) mutable
     {
-        if (evt.type == SDL_MOUSEBUTTONUP
-            && evt.button.button == SDL_BUTTON_LEFT)
+        if(activated(evt))
         {
             entity.getComponent<cro::Callback>().active = false;
             scoreEnt.getComponent<cro::UIDraggable>().velocity.y = scrollSpeed / 2.f;

@@ -124,9 +124,12 @@ void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mo
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(-static_cast<float>(cro::DefaultSceneSize.x), 0.f, 0.f);
             };
             m_commandSystem->sendCommand(cmd);
+
+            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
         }
     });
     auto& backControl = entity.addComponent<cro::UIInput>();
+    backControl.setGroup(GroupID::Options);
     backControl.callbacks[cro::UIInput::ButtonUp] = backCallback;
     backControl.callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     backControl.callbacks[cro::UIInput::Unselected] = mouseExitCallback;

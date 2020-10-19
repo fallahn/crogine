@@ -56,6 +56,11 @@ namespace
 
     glm::vec2 sceneSize(1920.f, 1080.f);
     cro::CommandSystem* commandSystem = nullptr;
+
+    enum GroupID
+    {
+        Pause, Options, Confirm
+    };
 }
 
 PauseState::PauseState(cro::StateStack& stack, cro::State::Context ctx, ResourcePtr& sharedResources)
@@ -210,7 +215,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     entity.addComponent<cro::Transform>().setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setPosition({ 0.f, 60.f, 0.f });
-    entity.addComponent<cro::UIInput>();
+    entity.addComponent<cro::UIInput>().setGroup(GroupID::Pause);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback([this]
@@ -227,6 +232,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(-sceneSize.x, 0.f, 0.f);
             };
             commandSystem->sendCommand(cmd);
+            m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Options);
         }
     });
     entity.getComponent<cro::UIInput>().area.width = buttonNormalArea.width;
@@ -254,7 +260,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     entity.addComponent<cro::Transform>().setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setPosition({ 0.f, -120.f, 0.f });
-    entity.addComponent<cro::UIInput>();
+    entity.addComponent<cro::UIInput>().setGroup(GroupID::Pause);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
@@ -270,6 +276,8 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, sceneSize.y, 0.f);
             };
             commandSystem->sendCommand(cmd);
+
+            m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Confirm);
         }
     });
     entity.getComponent<cro::UIInput>().area.width = buttonNormalArea.width;
@@ -297,7 +305,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     entity.addComponent<cro::Transform>().setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
     controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setPosition({ 0.f, -300.f, 0.f });
-    entity.addComponent<cro::UIInput>();
+    entity.addComponent<cro::UIInput>().setGroup(GroupID::Pause);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback(
@@ -366,7 +374,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     iconEntity.addComponent<cro::Sprite>() = iconSheet.getSprite("exit");
     iconEntity.addComponent<cro::Drawable2D>();
 
-    buttonEntity.addComponent<cro::UIInput>();
+    buttonEntity.addComponent<cro::UIInput>().setGroup(GroupID::Confirm);
     buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
@@ -402,7 +410,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
     iconEntity.addComponent<cro::Sprite>() = iconSheet.getSprite("back");
     iconEntity.addComponent<cro::Drawable2D>();
 
-    buttonEntity.addComponent<cro::UIInput>();
+    buttonEntity.addComponent<cro::UIInput>().setGroup(GroupID::Confirm);
     buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
@@ -418,6 +426,8 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -sceneSize.y, 0.f);
             };
             commandSystem->sendCommand(cmd);
+
+            m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Pause);
         }
     });
     buttonEntity.getComponent<cro::UIInput>().area.width = buttonNormalArea.width;
@@ -460,7 +470,7 @@ void PauseState::createOptions(const cro::SpriteSheet& spriteSheet, const cro::S
     entity.addComponent<cro::Transform>().setPosition({ 0.f, -480.f, 0.f });
     controlEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setOrigin({ buttonNormalArea.width / 2.f, buttonNormalArea.height / 2.f, 0.f });
-    entity.addComponent<cro::UIInput>();
+    entity.addComponent<cro::UIInput>().setGroup(GroupID::Options);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback([this](cro::Entity, const cro::ButtonEvent& evt)
@@ -476,6 +486,8 @@ void PauseState::createOptions(const cro::SpriteSheet& spriteSheet, const cro::S
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(sceneSize.x, 0.f, 0.f);
             };
             commandSystem->sendCommand(cmd);
+
+            m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Pause);
         }
     });
     entity.getComponent<cro::UIInput>().area.width = buttonNormalArea.width;

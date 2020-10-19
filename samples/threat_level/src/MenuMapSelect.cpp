@@ -109,6 +109,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     });
     entity.getComponent<cro::UIInput>().area.width = size.x;
     entity.getComponent<cro::UIInput>().area.height = size.y;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::MapSelect);
 
 
 
@@ -153,6 +154,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     });
     entity.getComponent<cro::UIInput>().area.width = size.x;
     entity.getComponent<cro::UIInput>().area.height = size.y;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::MapSelect);
 
     auto lockEnt = m_menuScene.createEntity();
     lockEnt.addComponent<cro::Drawable2D>();
@@ -205,6 +207,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     });
     entity.getComponent<cro::UIInput>().area.width = size.x;
     entity.getComponent<cro::UIInput>().area.height = size.y;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::MapSelect);
 
     lockEnt = m_menuScene.createEntity();
     lockEnt.addComponent<cro::Drawable2D>();
@@ -251,6 +254,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     });
     entity.getComponent<cro::UIInput>().area.width = size.x;
     entity.getComponent<cro::UIInput>().area.height = size.y;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::MapSelect);
 
 
 
@@ -297,6 +301,8 @@ void MainState::createMapSelect(cro::Entity parentEnt,
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, static_cast<float>(cro::DefaultSceneSize.y), 0.f);
             };
             m_commandSystem->sendCommand(cmd);
+
+            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
         }
     });
 
@@ -321,4 +327,5 @@ void MainState::createMapSelect(cro::Entity parentEnt,
     backControl.callbacks[cro::UIInput::Unselected] = mouseExitCallback;
     backControl.area.width = buttonNormalArea.width;
     backControl.area.height = buttonNormalArea.height;
+    backControl.setGroup(GroupID::MapSelect);
 }
