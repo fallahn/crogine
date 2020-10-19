@@ -297,12 +297,12 @@ void MenuState::createScene()
 #endif //CRO_DEBUG_
 
     auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>().addCallback(
-        [](cro::Entity e, glm::vec2)
+        [](cro::Entity e)
         {
             e.getComponent<cro::Text>().setFillColour(TextHighlightColour);        
         });
     auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
-        [](cro::Entity e, glm::vec2) 
+        [](cro::Entity e)
         {
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
         });

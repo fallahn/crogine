@@ -45,11 +45,13 @@ namespace cro
     public:
         enum CallbackID
         {
-            MouseEnter = 1,
-            MouseExit,
-            MouseDown,
-            MouseUp,
-            MouseMotion,
+            Enter = 1,
+            Exit,
+            ButtonDown,
+            ButtonUp,
+            Motion,
+            Selected,
+            Unselected,
             Count
         };
 

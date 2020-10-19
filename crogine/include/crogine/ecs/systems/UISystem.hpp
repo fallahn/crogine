@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/detail/glm/mat4x4.hpp>
 
 #include <functional>
+#include <unordered_map>
 
 namespace cro
 {
@@ -72,7 +73,8 @@ namespace cro
         SDL_MultiGestureEvent mgesture; //!< Gesture event data
         SDL_DollarGestureEvent dgesture;//!< Gesture event data
 
-        static constexpr uint32 CursorExit = std::numeric_limits<uint32>::max(); //!< event type when cursor deactivates an input
+        static constexpr uint32 CursorEnter = std::numeric_limits<uint32>::max(); //!< event type when cursor deactivates an input
+        static constexpr uint32 CursorExit = CursorEnter - 1; //!< event type when cursor deactivates an input
     };
 
     class CRO_EXPORT_API UISystem final : public System
@@ -80,8 +82,9 @@ namespace cro
     public:
         //passes in the entity for whom the callback was triggered and a ButtonEvent
         //containing the SDL event data for the device which triggered it
-        using ButtonCallback = std::function<void(Entity, ButtonEvent event)>;
-        using MovementCallback = std::function<void(Entity, glm::vec2, MotionEvent event)>;
+        using ButtonCallback = std::function<void(Entity, const ButtonEvent&)>;
+        using MovementCallback = std::function<void(Entity, glm::vec2, const MotionEvent&)>;
+        using SelectionChangedCallback = std::function<void(Entity)>;
 
         explicit UISystem(MessageBus&);
 
@@ -107,7 +110,7 @@ namespace cro
         to the relative callback slot of a UIInput component. eg:
         \begincode
         auto id = system.addCallback(cb);
-        component.callbacks[UIInput::MouseDown] = id;
+        component.callbacks[UIInput::ButtonDown] = id;
         \endcode
         */
         uint32 addCallback(const ButtonCallback&);
@@ -119,6 +122,15 @@ namespace cro
         mouse enter/exit events
         */
         uint32 addCallback(const MovementCallback&);
+
+        /*!
+        \brief Adds a selection changed callback.
+        These callbacks are executed when the currently selected UI input
+        is unselected, or a new UI input is selected. These should be assigned
+        to component.callbacks[UIInout::Selected] and component.callbacks[UIInput::Unselected]
+        accordingly.
+        */
+        uint32 addCallback(const SelectionChangedCallback&);
 
         /*!
         \brief Sets the active group of UIInput components.
@@ -140,6 +152,7 @@ namespace cro
 
         std::vector<ButtonCallback> m_buttonCallbacks;
         std::vector<MovementCallback> m_movementCallbacks;
+        std::vector<SelectionChangedCallback> m_selectionCallbacks;
 
         glm::vec2 m_prevMousePosition = glm::vec2(0.f);
         glm::vec2 m_previousEventPosition = glm::vec2(0.f); //in screen coords
@@ -156,6 +169,13 @@ namespace cro
         glm::vec2 toWorldCoords(int32 x, int32 y); //converts screen coords
         glm::vec2 toWorldCoords(float, float); //converts normalised coords
 
+
+        std::size_t m_selectedIndex;
+        void selectNext(std::size_t);
+        void selectPrev(std::size_t);
+
+        void unselect(std::size_t);
+        void select(std::size_t);
 
 
         std::unordered_map<std::size_t, std::vector<Entity>> m_groups;

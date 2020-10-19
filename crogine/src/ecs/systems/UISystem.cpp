@@ -43,14 +43,17 @@ using namespace cro;
 
 UISystem::UISystem(MessageBus& mb)
     : System        (mb, typeid(UISystem)),
+    m_selectedIndex (0),
     m_groups        (1),
     m_activeGroup   (0)
 {
     requireComponent<UIInput>();
     requireComponent<Transform>();
 
-    m_buttonCallbacks.push_back([](Entity, ButtonEvent) {}); //default callback for components which don't have one assigned
+    //default callback for components which don't have one assigned
+    m_buttonCallbacks.push_back([](Entity, ButtonEvent) {});
     m_movementCallbacks.push_back([](Entity, glm::vec2, MotionEvent) {});
+    m_selectionCallbacks.push_back([](Entity) {});
 
     m_windowSize = App::getWindow().getSize();
 }
@@ -65,7 +68,7 @@ void UISystem::handleEvent(const Event& evt)
         m_movementDelta = m_eventPosition - m_prevMousePosition;
         m_prevMousePosition = m_eventPosition;
         {
-            auto motionEvent = m_motionEvents.emplace_back();
+            auto& motionEvent = m_motionEvents.emplace_back();
             motionEvent.type = evt.type;
             motionEvent.motion = evt.motion;
         }
@@ -75,7 +78,7 @@ void UISystem::handleEvent(const Event& evt)
 
         m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
         {
-            auto buttonEvent = m_downEvents.emplace_back();
+            auto& buttonEvent = m_downEvents.emplace_back();
             buttonEvent.type = evt.type;
             buttonEvent.button = evt.button;
         }
@@ -83,7 +86,7 @@ void UISystem::handleEvent(const Event& evt)
     case SDL_MOUSEBUTTONUP:
         m_eventPosition = toWorldCoords(evt.button.x, evt.button.y);
         {
-            auto buttonEvent = m_upEvents.emplace_back();
+            auto& buttonEvent = m_upEvents.emplace_back();
             buttonEvent.type = evt.type;
             buttonEvent.button = evt.button;
         }
@@ -98,7 +101,7 @@ void UISystem::handleEvent(const Event& evt)
         m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         //TODO check finger IDs for gestures etc
         {
-            auto motionEvent = m_motionEvents.emplace_back();
+            auto& motionEvent = m_motionEvents.emplace_back();
             motionEvent.type = evt.type;
             motionEvent.mgesture = evt.mgesture;
         }
@@ -108,7 +111,7 @@ void UISystem::handleEvent(const Event& evt)
         m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         m_previousEventPosition = m_eventPosition;
         {
-            auto buttonEvent = m_downEvents.emplace_back();
+            auto& buttonEvent = m_downEvents.emplace_back();
             buttonEvent.type = evt.type;
             buttonEvent.tfinger = evt.tfinger;
         }
@@ -116,10 +119,52 @@ void UISystem::handleEvent(const Event& evt)
     case SDL_FINGERUP:
         m_eventPosition = toWorldCoords(evt.tfinger.x, evt.tfinger.y);
         {
-            auto buttonEvent = m_upEvents.emplace_back();
+            auto& buttonEvent = m_upEvents.emplace_back();
             buttonEvent.type = evt.type;
             buttonEvent.tfinger = evt.tfinger;
         }
+        break;
+    case SDL_KEYDOWN:
+    {
+        auto& buttonEvent = m_downEvents.emplace_back();
+        buttonEvent.type = evt.type;
+        buttonEvent.key = evt.key;
+    }
+        break;
+    case SDL_KEYUP:
+    {
+        auto& buttonEvent = m_upEvents.emplace_back();
+        buttonEvent.type = evt.type;
+        buttonEvent.key = evt.key;
+    }
+        break;
+    case SDL_CONTROLLERBUTTONDOWN:
+    {
+        auto& buttonEvent = m_downEvents.emplace_back();
+        buttonEvent.type = evt.type;
+        buttonEvent.cbutton = evt.cbutton;
+    }
+        break;
+    case SDL_CONTROLLERBUTTONUP:
+    {
+        auto& buttonEvent = m_upEvents.emplace_back();
+        buttonEvent.type = evt.type;
+        buttonEvent.cbutton = evt.cbutton;
+    }
+        break;
+    case SDL_JOYBUTTONDOWN:
+    {
+        auto& buttonEvent = m_downEvents.emplace_back();
+        buttonEvent.type = evt.type;
+        buttonEvent.jbutton = evt.jbutton;
+    }
+        break;
+    case SDL_JOYBUTTONUP:
+    {
+        auto& buttonEvent = m_upEvents.emplace_back();
+        buttonEvent.type = evt.type;
+        buttonEvent.jbutton = evt.jbutton;
+    }
         break;
     }
 }
@@ -128,6 +173,7 @@ void UISystem::process(float)
 {    
     updateGroupAssignments();
 
+    std::size_t currentIndex = 0;
     for (auto& e : m_groups[m_activeGroup])
     {
         //TODO probably want to cache these and only update if control moved
@@ -135,25 +181,25 @@ void UISystem::process(float)
         auto& input = e.getComponent<UIInput>();
 
         auto area = input.area.transform(tx);
-        if (area.contains(m_eventPosition))
+        bool contains = false;
+        if (contains = area.contains(m_eventPosition); contains)
         {
             if (!input.active)
             {
                 //mouse has entered
                 input.active = true;
-                m_movementCallbacks[input.callbacks[UIInput::MouseEnter]](e, m_movementDelta);
+                MotionEvent m;
+                m.type = MotionEvent::CursorEnter;
+                m_movementCallbacks[input.callbacks[UIInput::Enter]](e, m_movementDelta, m);
             }
-            for (auto f : m_downEvents)
+
+            unselect(m_selectedIndex);
+            m_selectedIndex = currentIndex;
+            select(m_selectedIndex);
+
+            for (const auto& m : m_motionEvents)
             {
-                m_buttonCallbacks[input.callbacks[UIInput::MouseDown]](e, f);
-            }
-            for (auto f : m_upEvents)
-            {
-                m_buttonCallbacks[input.callbacks[UIInput::MouseUp]](e, f);
-            }
-            for (auto m : m_motionEvents)
-            {
-                m_movementCallbacks[input.callbacks[UIInput::MouseMotion]](e, m_movementDelta, m);
+                m_movementCallbacks[input.callbacks[UIInput::Motion]](e, m_movementDelta, m);
             }
         }
         else
@@ -165,9 +211,23 @@ void UISystem::process(float)
 
                 MotionEvent m;
                 m.type = MotionEvent::CursorExit;
-                m_movementCallbacks[input.callbacks[UIInput::MouseExit]](e, m_movementDelta, m);
+                m_movementCallbacks[input.callbacks[UIInput::Exit]](e, m_movementDelta, m);
             }
         }
+
+        if (contains || currentIndex == m_selectedIndex)
+        {
+            for (const auto& f : m_downEvents)
+            {
+                m_buttonCallbacks[input.callbacks[UIInput::ButtonDown]](e, f);
+            }
+            for (const auto& f : m_upEvents)
+            {
+                m_buttonCallbacks[input.callbacks[UIInput::ButtonUp]](e, f);
+            }
+        }
+
+        currentIndex++;
     }
 
     //DPRINT("Window Pos", std::to_string(m_eventPosition.x) + ", " + std::to_string(m_eventPosition.y));
@@ -203,6 +263,12 @@ uint32 UISystem::addCallback(const MovementCallback& cb)
 {
     m_movementCallbacks.push_back(cb);
     return static_cast<uint32>(m_movementCallbacks.size() - 1);
+}
+
+uint32 UISystem::addCallback(const SelectionChangedCallback& cb)
+{
+    m_selectionCallbacks.push_back(cb);
+    return static_cast<uint32>(m_selectionCallbacks.size() - 1);
 }
 
 void UISystem::setActiveGroup(std::size_t group)
@@ -246,6 +312,46 @@ glm::vec2 UISystem::toWorldCoords(float x, float y)
     //and unproject
     auto worldPos = glm::inverse(getScene()->getActiveCamera().getComponent<Camera>().viewProjectionMatrix) * glm::vec4(x, y, 0.f, 1.f);
     return { worldPos };
+}
+
+void UISystem::selectNext(std::size_t stride)
+{
+    //call unselected on prev ent
+    auto& entities = m_groups[m_activeGroup];
+    unselect(m_selectedIndex);
+
+    //get new index
+    m_selectedIndex = (m_selectedIndex + stride) % entities.size();
+
+    //and do selected callback
+    select(m_selectedIndex);
+}
+
+void UISystem::selectPrev(std::size_t stride)
+{
+    //call unselected on prev ent
+    auto& entities = m_groups[m_activeGroup];
+    unselect(m_selectedIndex);
+
+    //get new index
+    m_selectedIndex = (m_selectedIndex + (entities.size() - stride)) % entities.size();
+
+    //and do selected callback
+    select(m_selectedIndex);
+}
+
+void UISystem::unselect(std::size_t entIdx)
+{
+    auto& entities = m_groups[m_activeGroup];
+    auto idx = entities[entIdx].getComponent<UIInput>().callbacks[UIInput::Unselected];
+    m_selectionCallbacks[idx](entities[entIdx]);
+}
+
+void UISystem::select(std::size_t entIdx)
+{
+    auto& entities = m_groups[m_activeGroup];
+    auto idx = entities[entIdx].getComponent<UIInput>().callbacks[UIInput::Selected];
+    m_selectionCallbacks[idx](entities[entIdx]);
 }
 
 void UISystem::updateGroupAssignments()
@@ -309,10 +415,10 @@ void UISystem::onEntityRemoved(Entity entity)
     //remove the entity from its group
     auto group = entity.getComponent<UIInput>().m_group;
 
-    /*if (m_activeGroup == group)
+    if (m_activeGroup == group)
     {
         selectPrev(1);
-    }*/
+    }
 
     m_groups[group].erase(std::remove_if(m_groups[group].begin(), m_groups[group].end(),
         [entity](Entity e)
