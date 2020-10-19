@@ -147,6 +147,23 @@ namespace cro
         */
         std::size_t getActiveGroup() const { return m_activeGroup; }
 
+        /*
+        \brief Set the number of columns displayed in the active group.
+        By default the 'up' and 'down' controls move the selected control index
+        in the same direction as the 'left' and 'right' controls - that is, +1
+        or -1 from the currently selected index. In layouts where multiple
+        columns of UI controls exists this feels counter-intuitive as the selected
+        index does not visually move up and down the screen. By setting this value
+        to the number of columns in the display the 'up' and 'down' controls will
+        jump by +/- this number of indices, effectively moving an entire row at a
+        time. This value is not saved per group so when setting a new group active
+        that has a different number of columns, this function should be used to
+        set the new active value.
+
+        \param count The number of columns in the display (or number of indices to
+        skip when moving up/down). Must be greater than zero.
+        */
+        void setColumnCount(std::size_t count);
 
     private:
 
@@ -169,7 +186,14 @@ namespace cro
         glm::vec2 toWorldCoords(int32 x, int32 y); //converts screen coords
         glm::vec2 toWorldCoords(float, float); //converts normalised coords
 
+        std::uint8_t m_controllerMask;
+        std::uint8_t m_prevControllerMask;
+        enum ControllerBits
+        {
+            Up = 0x1, Down = 0x2, Left = 0x4, Right = 0x8
+        };
 
+        std::size_t m_columnCount;
         std::size_t m_selectedIndex;
         void selectNext(std::size_t);
         void selectPrev(std::size_t);

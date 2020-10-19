@@ -42,10 +42,13 @@ source distribution.
 using namespace cro;
 
 UISystem::UISystem(MessageBus& mb)
-    : System        (mb, typeid(UISystem)),
-    m_selectedIndex (0),
-    m_groups        (1),
-    m_activeGroup   (0)
+    : System            (mb, typeid(UISystem)),
+    m_controllerMask    (0),
+    m_prevControllerMask(0),
+    m_columnCount       (1),
+    m_selectedIndex     (0),
+    m_groups            (1),
+    m_activeGroup       (0)
 {
     requireComponent<UIInput>();
     requireComponent<Transform>();
@@ -133,16 +136,54 @@ void UISystem::handleEvent(const Event& evt)
         break;
     case SDL_KEYUP:
     {
-        auto& buttonEvent = m_upEvents.emplace_back();
-        buttonEvent.type = evt.type;
-        buttonEvent.key = evt.key;
+        switch (evt.key.keysym.sym)
+        {
+        default:
+        {
+            auto& buttonEvent = m_upEvents.emplace_back();
+            buttonEvent.type = evt.type;
+            buttonEvent.key = evt.key;
+        }
+            break;
+        case SDLK_LEFT:
+            selectPrev(1);
+            break;
+        case SDLK_RIGHT:
+            selectNext(1);
+            break;
+        case SDLK_UP:
+            selectPrev(m_columnCount);
+            break;
+        case SDLK_DOWN:
+            selectNext(m_columnCount);
+            break;
+        }
     }
         break;
     case SDL_CONTROLLERBUTTONDOWN:
     {
-        auto& buttonEvent = m_downEvents.emplace_back();
-        buttonEvent.type = evt.type;
-        buttonEvent.cbutton = evt.cbutton;
+        switch (evt.cbutton.button)
+        {
+        default:
+        {
+            auto& buttonEvent = m_downEvents.emplace_back();
+            buttonEvent.type = evt.type;
+            buttonEvent.cbutton = evt.cbutton;
+        }
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            m_controllerMask |= ControllerBits::Up;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            m_controllerMask |= ControllerBits::Down;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            m_controllerMask |= ControllerBits::Left;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            m_controllerMask |= ControllerBits::Right;
+            break;
+        }
     }
         break;
     case SDL_CONTROLLERBUTTONUP:
@@ -166,11 +207,52 @@ void UISystem::handleEvent(const Event& evt)
         buttonEvent.jbutton = evt.jbutton;
     }
         break;
+
+        //joystick and controller move events
+    //case SDL_CONTROLLERAXISMOTION:
+
+    //    break;
+    //case SDL_JOYAXISMOTION:
+
+    //    break;
     }
 }
 
 void UISystem::process(float)
 {    
+    //parse conrtoller inputs first
+    auto diff = m_prevControllerMask ^ m_controllerMask;
+    for (auto i = 0; i < 4; ++i)
+    {
+        auto flag = (1 << i);
+        if (diff & flag)
+        {
+            //something changed
+            if (m_controllerMask & flag)
+            {
+                //axis was pressed
+                switch (flag)
+                {
+                default: break;
+                case ControllerBits::Left:
+                    selectPrev(1);
+                    break;
+                case ControllerBits::Up:
+                    selectPrev(m_columnCount);
+                    break;
+                case ControllerBits::Right:
+                    selectNext(1);
+                    break;
+                case ControllerBits::Down:
+                    selectNext(m_columnCount);
+                    break;
+                }
+            }
+        }
+    }
+    m_prevControllerMask = m_controllerMask;
+    m_controllerMask = 0;
+
     updateGroupAssignments();
 
     std::size_t currentIndex = 0;
@@ -232,8 +314,6 @@ void UISystem::process(float)
 
     //DPRINT("Window Pos", std::to_string(m_eventPosition.x) + ", " + std::to_string(m_eventPosition.y));
 
-    //TODO selecting previous and next input in active group with the keyboard or controller
-
     m_previousEventPosition = m_eventPosition;
     m_upEvents.clear();
     m_downEvents.clear();
@@ -284,6 +364,11 @@ void UISystem::setActiveGroup(std::size_t group)
     //m_selectedIndex = 0;
 
     //select(m_selectedIndex);
+}
+
+void UISystem::setColumnCount(std::size_t count)
+{
+    m_columnCount = std::max(std::size_t(1), count);
 }
 
 //private
