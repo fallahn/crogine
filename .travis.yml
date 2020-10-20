@@ -65,6 +65,8 @@ matrix:
     - GENERATOR="Unix Makefiles"
     - CMAKE_FLAGS=""
   - os: windows
+    env:
+    - GENERATOR="Visual Studio 16 2019"
 
   allow_failures:
   - os: osx
