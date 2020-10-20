@@ -66,7 +66,7 @@ matrix:
     - CMAKE_FLAGS=""
   - os: windows
     env:
-    - GENERATOR="Visual Studio 16 2019"
+    - GENERATOR="Visual Studio 15 2017"
 
   allow_failures:
   - os: osx
