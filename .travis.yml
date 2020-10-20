@@ -64,9 +64,9 @@ matrix:
     #- GENERATOR="Xcode"
     - GENERATOR="Unix Makefiles"
     - CMAKE_FLAGS=""
-  - os: windows
-    env:
-    - GENERATOR="Visual Studio 15 2017"
+#  - os: windows
+#    env:
+#    - GENERATOR="Visual Studio 15 2017"
 
   allow_failures:
   - os: osx
