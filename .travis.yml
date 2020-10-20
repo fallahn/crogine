@@ -64,9 +64,7 @@ matrix:
     #- GENERATOR="Xcode"
     - GENERATOR="Unix Makefiles"
     - CMAKE_FLAGS=""
-
-    - name: "Visual Studio Dynamic"
-      os: windows
+  - os: windows
 
   allow_failures:
   - os: osx
