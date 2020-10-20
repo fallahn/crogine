@@ -510,6 +510,12 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\DynamicMeshBuilder.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\DynamicTreeComponent.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\DynamicTreeSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -829,6 +835,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\core\Log.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\DynamicTreeSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

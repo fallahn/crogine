@@ -62,6 +62,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/CameraSystem.cpp
   ${PROJECT_DIR}/ecs/systems/CommandSystem.cpp
   ${PROJECT_DIR}/ecs/systems/DebugInfo.cpp
+  ${PROJECT_DIR}/ecs/systems/DynamicTreeSystem.cpp
   ${PROJECT_DIR}/ecs/systems/ModelRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/ParticleSystem.cpp
   ${PROJECT_DIR}/ecs/systems/ProjectionMapSystem.cpp

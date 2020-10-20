@@ -72,6 +72,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Camera.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandTarget.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Drawable2D.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\DynamicTreeComponent.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ParticleEmitter.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ProjectionMap.hpp" />
@@ -94,6 +95,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CameraSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CommandSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DebugInfo.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\DynamicTreeSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ParticleSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ProjectionMapSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ModelRenderer.hpp" />
@@ -234,6 +236,7 @@
     <ClCompile Include="..\crogine\src\ecs\systems\CameraSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\CommandSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\DebugInfo.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\systems\DynamicTreeSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ParticleSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ProjectionMapSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ModelRenderer.cpp" />
