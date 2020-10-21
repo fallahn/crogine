@@ -29,7 +29,7 @@ source distribution.
 
 /*
 Based on the source of SFML's font class
-by Laurent Gomila et al
+by Laurent Gomila et al https://github.com/SFML/SFML/blob/master/src/SFML/Graphics/Font.cpp 
 */
 
 #include <crogine/graphics/Font.hpp>

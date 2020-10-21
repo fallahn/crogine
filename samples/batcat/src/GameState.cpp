@@ -87,6 +87,8 @@ namespace
     cro::UISystem* uiSystem = nullptr;
     cro::CommandSystem* commandSystem = nullptr;
 
+    std::size_t queryCount = 0;
+
     float fireRate = 0.1f; //rate per second
     glm::vec3 sourcePosition = glm::vec3(-19.f, 10.f, 6.f);
     float sourceRotation = -cro::Util::Const::PI / 2.f;
@@ -116,6 +118,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
                     
                     auto count = m_scene.getEntityCount();
                     ImGui::Text("Entity Count: %d", count);
+
+                    ImGui::Text("Query Count %lu", queryCount);
                 }
                 ImGui::End();
             });

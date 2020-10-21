@@ -57,7 +57,7 @@ namespace cro
 				if (!std::is_copy_assignable<T>::value)
 				{
 					m_pool.reserve(1024);
-					LOG("Reserved maximum pool size for " + std::string(typeid(T).name()), cro::Logger::Type::Info);
+					LOG("Reserved maximum pool size of 1024 for " + std::string(typeid(T).name()), cro::Logger::Type::Info);
 				}
 			}
 

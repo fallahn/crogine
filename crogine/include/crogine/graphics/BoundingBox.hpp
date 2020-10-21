@@ -76,17 +76,33 @@ namespace cro
         bool intersects(const Box& box, Box* overlap = nullptr);
 
         /*!
+        \brief Returns true if this box fully contains the given box
+        */
+        bool contains(const Box& box);
+
+        /*!
         \brief Returns the size of the box as width/height/depth
         */
         glm::vec3 getSize() const { return m_points[1] - m_points[0]; }
+
+        float getPerimeter() const;
 
         /*!
         \brief Adds the given position to the box
         */
         void operator += (glm::vec3 position) { m_points[0] += position; m_points[1] += position; }
 
+        /*!
+        \brief Returns a new box created by merging the two given boxes
+        */
+        static Box merge(Box, Box);
+
     private:
         std::array<glm::vec3, 2u> m_points;
+
+        std::array<glm::vec3, 8> getCorners() const;
+
+        friend Box operator * (const glm::mat4&, const Box&);
     };
 
     /*!
@@ -100,10 +116,49 @@ namespace cro
     }
 
     /*!
-    \brief Transforms the min/max values of the box by the given matrix
+    \brief Transforms a box by the given matrix
     */
     inline Box operator * (const glm::mat4& mat, const Box& box)
     {
-        return { glm::vec3(mat * glm::vec4(box[0], 1.f)), glm::vec3(mat * glm::vec4(box[1], 1.f)) };
+        auto corners = box.getCorners();
+
+        auto newMin = glm::vec3(mat * glm::vec4(corners[0], 1.f));
+        auto newMax = newMin;
+
+        auto updateMinMax = [&newMin, &newMax](glm::vec3 point)
+        {
+            if (point.x < newMin.x)
+            {
+                newMin.x = point.x;
+            }
+            if (point.x > newMax.x)
+            {
+                newMax.x = point.x;
+            }
+            if (point.y < newMin.y)
+            {
+                newMin.y = point.y;
+            }
+            if (point.y > newMax.y)
+            {
+                newMax.y = point.y;
+            }
+            if (point.z < newMin.z)
+            {
+                newMin.z = point.z;
+            }
+            if (point.z > newMax.z)
+            {
+                newMax.z = point.z;
+            }
+        };
+
+        for (auto i = 1u; i < 8u; ++i)
+        {
+            auto point = glm::vec3(mat * glm::vec4(corners[i], 1.f));
+            updateMinMax(point);
+        }
+
+        return { newMin, newMax };
     }
 }

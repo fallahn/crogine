@@ -79,3 +79,68 @@ bool Box::intersects(const Box& other, Box* overlap)
     }
     return result;
 }
+
+bool Box::contains(const Box& box)
+{
+    if (box[0].x < m_points[0].x) return false;
+    if (box[0].y < m_points[0].y) return false;
+    if (box[0].z < m_points[0].z) return false;
+    
+    if (box[1].x > m_points[1].x) return false;
+    if (box[1].y > m_points[1].y) return false;
+    if (box[1].z > m_points[1].z) return false;
+
+    return true;
+}
+
+float Box::getPerimeter() const
+{
+    auto size = m_points[1] - m_points[0];
+    return (size.x + size.y + size.z) * 2.f;
+}
+
+Box Box::merge(Box a, Box b)
+{
+    Box retVal;
+
+    retVal[0].x = std::min(a[0].x, b[0].x);
+    retVal[0].y = std::min(a[0].y, b[0].y);
+    retVal[0].z = std::min(a[0].z, b[0].z);
+
+    retVal[1].x = std::max(a[1].x, b[1].x);
+    retVal[1].y = std::max(a[1].y, b[1].y);
+    retVal[1].z = std::max(a[1].z, b[1].z);
+
+    return retVal;
+}
+
+//private
+std::array<glm::vec3, 8> Box::getCorners() const
+{
+    std::array<glm::vec3, 8> retVal = {};
+
+    auto min = m_points[0];
+    auto max = m_points[1];
+
+    //near face, specified anti-clockwise looking towards the origin from the positive z-axis.
+    //left-top-front.
+    retVal[0] = { min.x, max.y, max.z };
+    //left-bottom-front.
+    retVal[1] = { min.x, min.y, max.z };
+    //right-bottom-front.
+    retVal[2] = { max.x, min.y, max.z };
+    //right-top-front.
+    retVal[3] = { max.x, max.y, max.z };
+
+    //far face, specified anti-clockwise looking towards the origin from the negative z-axis.
+    //right-top-back.
+    retVal[4] = { max.x, max.y, min.z };
+    //right-bottom-back.
+    retVal[5] = { max.x, min.y, min.z };
+    //left-bottom-back.
+    retVal[6] = { min.x, min.y, min.z };
+    //left-top-back.
+    retVal[7] = { min.x, max.y, min.z };
+
+    return retVal;
+}

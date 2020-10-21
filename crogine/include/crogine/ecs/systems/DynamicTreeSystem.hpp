@@ -29,8 +29,8 @@ source distribution.
 
 #pragma once
 
-#include "crogine/ecs/System.hpp"
-#include "crogine/graphics/BoundingBox.hpp"
+#include <crogine/ecs/System.hpp>
+#include <crogine/graphics/BoundingBox.hpp>
 
 #include <vector>
 #include <limits>

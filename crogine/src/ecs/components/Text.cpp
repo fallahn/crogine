@@ -188,7 +188,7 @@ void Text::updateVertices(Drawable2D& drawable)
         drawable.updateLocalBounds(localBounds);
         return;
     }
-
+    
     //update glyphs
     glm::vec2 textureSize = m_font->getTexture(m_charSize).getSize();
     float xOffset = static_cast<float>(m_font->getGlyph(L' ', m_charSize).advance);

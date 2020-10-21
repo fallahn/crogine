@@ -29,8 +29,8 @@ source distribution.
 
 #pragma once
 
-#include "crogine/Config.hpp"
-#include "crogine/graphics/BoundingBox.hpp"
+#include <crogine/Config.hpp>
+#include <crogine/graphics/BoundingBox.hpp>
 
 #include <cstdint>
 #include <limits>
@@ -90,7 +90,7 @@ namespace cro
         Box m_bounds; //<! AABB of the entity
         std::int32_t m_treeID = -1;
         std::uint64_t m_filterFlags = std::numeric_limits<std::uint64_t>::max();
-        glm::vec3 m_lastWorldPosition;
+        glm::vec3 m_lastWorldPosition = glm::vec3(0.f);
 
         friend class DynamicTreeSystem;
     };

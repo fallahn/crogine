@@ -70,7 +70,7 @@ void Logger::log(const std::string& message, Type type, Output output)
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s", message.c_str());
             break;
         case Type::Error:
-            SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", message.c_str());
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", message.c_str());
             break;
         }
 

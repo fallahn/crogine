@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/graphics/Font.hpp>
 
@@ -41,6 +42,7 @@ TextSystem::TextSystem(MessageBus& mb)
 {
     requireComponent<Drawable2D>();
     requireComponent<Text>();
+    requireComponent<Transform>();
 }
 
 void TextSystem::process(float)
@@ -51,6 +53,7 @@ void TextSystem::process(float)
         auto& drawable = entity.getComponent<Drawable2D>();
         auto& text = entity.getComponent<Text>();
 
+        CRO_ASSERT(text.m_font, "no font has been assigned");
         if (text.m_dirty || text.m_font->pageUpdated())
         {
             text.updateVertices(drawable);

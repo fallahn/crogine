@@ -28,13 +28,13 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "crogine/ecs/components/Transform.hpp"
-#include "crogine/ecs/components/DynamicTreeComponent.hpp"
-#include "crogine/ecs/systems/DynamicTreeSystem.hpp"
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/DynamicTreeComponent.hpp>
+#include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 
 namespace
 {
-    const float FattenAmount = 10.f; //this assumes approximately 1px / cm in world scale
+    const glm::vec3 FattenAmount = glm::vec3(10.f); //TODO this ought to be scaled with world units
     const float DisplacementMultiplier = 2.f;
 }
 
@@ -79,6 +79,9 @@ void DynamicTreeSystem::process(float)
             worldBounds.top += tx.getOrigin().y * tx.getScale().y;
 
             worldBounds = tx.getWorldTransform().transformRect(worldBounds);*/
+
+            worldBounds += tx.getOrigin() * tx.getScale();
+            worldBounds = tx.getWorldTransform() * worldBounds;
 
             moveNode(bpc.m_treeID, worldBounds, worldPosition - bpc.m_lastWorldPosition);
 
@@ -144,8 +147,13 @@ std::int32_t DynamicTreeSystem::addToTree(Entity entity)
     bounds.top += tx.getOrigin().y * tx.getScale().y;
     bounds = tx.getWorldTransform().transformRect(bounds);*/
 
+    bounds += tx.getOrigin() * tx.getScale();
+    bounds = tx.getWorldTransform() * bounds;
 
     //fatten AABB
+    bounds[0] -= FattenAmount;
+    bounds[1] += FattenAmount;
+
     /*bounds.left -= FattenAmount;
     bounds.top -= FattenAmount;
     bounds.width += (FattenAmount * 2.f);
@@ -174,7 +182,7 @@ bool DynamicTreeSystem::moveNode(std::int32_t treeID, Box worldArea, glm::vec3 d
     CRO_ASSERT(treeID > -1 && treeID < m_nodeCapacity, "Invalid tree id");
     CRO_ASSERT(m_nodes[treeID].isLeaf(), "Not a leaf node!");
 
-    //if (xy::Util::Rectangle::contains(m_nodes[treeID].fatBounds, worldArea))
+    if (m_nodes[treeID].fatBounds.contains(worldArea))
     {
         return false;
     }
@@ -182,6 +190,9 @@ bool DynamicTreeSystem::moveNode(std::int32_t treeID, Box worldArea, glm::vec3 d
     removeLeaf(treeID);
 
     //expand the new aabb and reinsert in tree
+    worldArea[0] -= FattenAmount;
+    worldArea[1] += FattenAmount;
+
     /*worldArea.left -= FattenAmount;
     worldArea.top -= FattenAmount;
     worldArea.width += (FattenAmount * 2.f);
@@ -190,23 +201,32 @@ bool DynamicTreeSystem::moveNode(std::int32_t treeID, Box worldArea, glm::vec3 d
     //displacment prediction
     displacement *= DisplacementMultiplier;
 
-    //if (displacement.x < 0) //not really understanding the original here, so quite possibly creating a bug!
-    //{
-    //    worldArea.left += displacement.x;
-    //}
-    //else
-    //{
-    //    worldArea.width += displacement.x;
-    //}
+    if (displacement.x < 0) //not really understanding the original here, so quite possibly creating a bug!
+    {
+        worldArea[0].x += displacement.x;
+    }
+    else
+    {
+        worldArea[1].x += displacement.x;
+    }
 
-    //if (displacement.y < 0)
-    //{
-    //    worldArea.top += displacement.y;
-    //}
-    //else
-    //{
-    //    worldArea.height += displacement.y;
-    //}
+    if (displacement.y < 0)
+    {
+        worldArea[0].y += displacement.y;
+    }
+    else
+    {
+        worldArea[1].y += displacement.y;
+    }
+
+    if (displacement.z < 0)
+    {
+        worldArea[0].z += displacement.z;
+    }
+    else
+    {
+        worldArea[1].z += displacement.z;
+    }
 
     //reinsert
     m_nodes[treeID].fatBounds = worldArea;
@@ -249,19 +269,19 @@ float DynamicTreeSystem::getAreaRatio() const
     }
 
     const auto& rootNode = m_nodes[m_root];
-    //auto rootArea = xy::Util::Rectangle::getPerimeter(rootNode.fatBounds);
+    auto rootArea = rootNode.fatBounds.getPerimeter();
 
-    //float totalArea = 0.f;
-    //for (auto i = 0u; i < m_nodeCapacity; ++i)
-    //{
-    //    const auto& node = m_nodes[i];
-    //    if (node.height > -1) //not a free node
-    //    {
-    //        totalArea += xy::Util::Rectangle::getPerimeter(node.fatBounds);
-    //    }
-    //}
+    float totalArea = 0.f;
+    for (auto i = 0u; i < m_nodeCapacity; ++i)
+    {
+        const auto& node = m_nodes[i];
+        if (node.height > -1) //not a free node
+        {
+            totalArea += node.fatBounds.getPerimeter();
+        }
+    }
 
-    return 0.f;// totalArea / rootArea;
+    return totalArea / rootArea;
 }
 
 std::int32_t DynamicTreeSystem::allocateNode()
@@ -327,78 +347,78 @@ void DynamicTreeSystem::insertLeaf(std::int32_t treeID)
     auto leafBounds = m_nodes[treeID].fatBounds;
     auto index = m_root;
 
-    //while (!m_nodes[index].isLeaf())
-    //{
-    //    auto childA = m_nodes[index].childA;
-    //    auto childB = m_nodes[index].childB;
+    while (!m_nodes[index].isLeaf())
+    {
+        auto childA = m_nodes[index].childA;
+        auto childB = m_nodes[index].childB;
 
-    //    float perimeter = xy::Util::Rectangle::getPerimeter(m_nodes[index].fatBounds);
+        float perimeter = m_nodes[index].fatBounds.getPerimeter();
 
-    //    auto combinedAABB = xy::Util::Rectangle::combine(m_nodes[index].fatBounds, leafBounds);
-    //    auto combinedPerimeter = xy::Util::Rectangle::getPerimeter(combinedAABB);
+        auto combinedAABB = Box::merge(m_nodes[index].fatBounds, leafBounds);
+        auto combinedPerimeter = combinedAABB.getPerimeter();
 
-    //    //cost of creating a new node / parent for the leaf
-    //    float cost = 2.f * combinedPerimeter;
+        //cost of creating a new node / parent for the leaf
+        float cost = 2.f * combinedPerimeter;
 
-    //    //minimum cost for pushing the leaf down the tree
-    //    float inheritedCost = 2.f * (combinedPerimeter - perimeter);
+        //minimum cost for pushing the leaf down the tree
+        float inheritedCost = 2.f * (combinedPerimeter - perimeter);
 
-    //    //cost of descending to childA
-    //    float costA = 0.f;
-    //    if (m_nodes[childA].isLeaf())
-    //    {
-    //        auto bounds = xy::Util::Rectangle::combine(leafBounds, m_nodes[childA].fatBounds);
-    //        costA = xy::Util::Rectangle::getPerimeter(bounds) + inheritedCost;
-    //    }
-    //    else
-    //    {
-    //        auto bounds = xy::Util::Rectangle::combine(leafBounds, m_nodes[childA].fatBounds);
-    //        auto oldPerimeter = xy::Util::Rectangle::getPerimeter(m_nodes[childA].fatBounds);
-    //        auto newPerimenter = xy::Util::Rectangle::getPerimeter(bounds);
-    //        costA = (newPerimenter - oldPerimeter) + inheritedCost;
-    //    }
+        //cost of descending to childA
+        float costA = 0.f;
+        if (m_nodes[childA].isLeaf())
+        {
+            auto bounds = Box::merge(leafBounds, m_nodes[childA].fatBounds);
+            costA = bounds.getPerimeter() + inheritedCost;
+        }
+        else
+        {
+            auto bounds = Box::merge(leafBounds, m_nodes[childA].fatBounds);
+            auto oldPerimeter = m_nodes[childA].fatBounds.getPerimeter();
+            auto newPerimenter = bounds.getPerimeter();
+            costA = (newPerimenter - oldPerimeter) + inheritedCost;
+        }
 
 
-    //    //cost of descending to childB
-    //    float costB = 0.f;
-    //    if (m_nodes[childB].isLeaf())
-    //    {
-    //        auto bounds = xy::Util::Rectangle::combine(leafBounds, m_nodes[childB].fatBounds);
-    //        costB = xy::Util::Rectangle::getPerimeter(bounds) + inheritedCost;
-    //    }
-    //    else
-    //    {
-    //        auto bounds = xy::Util::Rectangle::combine(leafBounds, m_nodes[childB].fatBounds);
-    //        auto oldPerimeter = xy::Util::Rectangle::getPerimeter(m_nodes[childB].fatBounds);
-    //        auto newPerimenter = xy::Util::Rectangle::getPerimeter(bounds);
-    //        costB = (newPerimenter - oldPerimeter) + inheritedCost;
-    //    }
+        //cost of descending to childB
+        float costB = 0.f;
+        if (m_nodes[childB].isLeaf())
+        {
+            auto bounds = Box::merge(leafBounds, m_nodes[childB].fatBounds);
+            costB = bounds.getPerimeter() + inheritedCost;
+        }
+        else
+        {
+            auto bounds = Box::merge(leafBounds, m_nodes[childB].fatBounds);
+            auto oldPerimeter = m_nodes[childB].fatBounds.getPerimeter();
+            auto newPerimenter = bounds.getPerimeter();
+            costB = (newPerimenter - oldPerimeter) + inheritedCost;
+        }
 
-    //    //and descend according to least cost
-    //    if (cost < costA && cost < costB)
-    //    {
-    //        break; //we arrived!
-    //    }
+        //and descend according to least cost
+        if (cost < costA && cost < costB)
+        {
+            break; //we arrived!
+        }
 
-    //    if (costA < costB)
-    //    {
-    //        index = childA;
-    //    }
-    //    else
-    //    {
-    //        index = childB;
-    //    }
-    //}
+        if (costA < costB)
+        {
+            index = childA;
+        }
+        else
+        {
+            index = childB;
+        }
+    }
 
     auto sibling = index;
 
     //create new parent
     auto oldParent = m_nodes[sibling].parent;
     auto newParent = allocateNode();
-    /*m_nodes[newParent].parent = oldParent;
+    m_nodes[newParent].parent = oldParent;
     m_nodes[newParent].entity = {};
-    m_nodes[newParent].fatBounds = xy::Util::Rectangle::combine(leafBounds, m_nodes[sibling].fatBounds);
-    m_nodes[newParent].height = m_nodes[sibling].height + 1;*/
+    m_nodes[newParent].fatBounds = Box::merge(leafBounds, m_nodes[sibling].fatBounds);
+    m_nodes[newParent].height = m_nodes[sibling].height + 1;
 
     if (oldParent != TreeNode::Null)
     {
@@ -439,7 +459,7 @@ void DynamicTreeSystem::insertLeaf(std::int32_t treeID)
         CRO_ASSERT(childB != TreeNode::Null, "Can't be null");
 
         m_nodes[index].height = std::max(m_nodes[childA].height, m_nodes[childB].height);
-        //m_nodes[index].fatBounds = xy::Util::Rectangle::combine(m_nodes[childA].fatBounds, m_nodes[childB].fatBounds);
+        m_nodes[index].fatBounds = Box::merge(m_nodes[childA].fatBounds, m_nodes[childB].fatBounds);
 
         index = m_nodes[index].parent;
     }
@@ -488,7 +508,7 @@ void DynamicTreeSystem::removeLeaf(std::int32_t treeID)
             auto childA = m_nodes[index].childA;
             auto childB = m_nodes[index].childB;
 
-            //m_nodes[index].fatBounds = xy::Util::Rectangle::combine(m_nodes[childA].fatBounds, m_nodes[childB].fatBounds);
+            m_nodes[index].fatBounds = Box::merge(m_nodes[childA].fatBounds, m_nodes[childB].fatBounds);
             m_nodes[index].height = std::max(m_nodes[childA].height, m_nodes[childB].height) + 1;
 
             index = m_nodes[index].parent;
@@ -566,8 +586,8 @@ std::int32_t DynamicTreeSystem::balance(std::int32_t iA)
             C.childB = iF;
             A.childB = iG;
             G.parent = iA;
-            //A.fatBounds = xy::Util::Rectangle::combine(B.fatBounds, G.fatBounds);
-            //C.fatBounds = xy::Util::Rectangle::combine(A.fatBounds, F.fatBounds);
+            A.fatBounds = Box::merge(B.fatBounds, G.fatBounds);
+            C.fatBounds = Box::merge(A.fatBounds, F.fatBounds);
 
             A.height = std::max(B.height, G.height) + 1;
             C.height = std::max(A.height, F.height) + 1;
@@ -577,8 +597,8 @@ std::int32_t DynamicTreeSystem::balance(std::int32_t iA)
             C.childB = iG;
             A.childB = iF;
             F.parent = iA;
-            //A.fatBounds = xy::Util::Rectangle::combine(B.fatBounds, F.fatBounds);
-            //C.fatBounds = xy::Util::Rectangle::combine(A.fatBounds, G.fatBounds);
+            A.fatBounds = Box::merge(B.fatBounds, F.fatBounds);
+            C.fatBounds = Box::merge(A.fatBounds, G.fatBounds);
 
             A.height = std::max(B.height, F.height) + 1;
             C.height = std::max(A.height, G.height) + 1;
@@ -626,8 +646,8 @@ std::int32_t DynamicTreeSystem::balance(std::int32_t iA)
             B.childB = iD;
             A.childA = iE;
             E.parent = iA;
-            //A.fatBounds = xy::Util::Rectangle::combine(C.fatBounds, E.fatBounds);
-            //B.fatBounds = xy::Util::Rectangle::combine(A.fatBounds, D.fatBounds);
+            A.fatBounds = Box::merge(C.fatBounds, E.fatBounds);
+            B.fatBounds = Box::merge(A.fatBounds, D.fatBounds);
             
             A.height = std::max(C.height, E.height) + 1;
             B.height = std::max(A.height, D.height) + 1;
@@ -637,8 +657,8 @@ std::int32_t DynamicTreeSystem::balance(std::int32_t iA)
             B.childB = iE;
             A.childA = iD;
             D.parent = iA;
-            //A.fatBounds = xy::Util::Rectangle::combine(C.fatBounds, D.fatBounds);
-            //B.fatBounds = xy::Util::Rectangle::combine(A.fatBounds, E.fatBounds);
+            A.fatBounds = Box::merge(C.fatBounds, D.fatBounds);
+            B.fatBounds = Box::merge(A.fatBounds, E.fatBounds);
             
             A.height = std::max(C.height, D.height) + 1;
             B.height = std::max(A.height, E.height) + 1;

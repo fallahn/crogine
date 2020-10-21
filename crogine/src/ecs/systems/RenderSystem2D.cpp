@@ -252,7 +252,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
         const auto& tx = entity.getComponent<cro::Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
 
-        if (drawable.m_shader)
+        if (drawable.m_shader && !drawable.m_updateBufferData)
         {
             //apply shader
             glm::mat4 worldView = camComponent.viewMatrix * worldMat;
