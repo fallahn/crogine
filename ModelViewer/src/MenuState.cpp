@@ -198,15 +198,15 @@ void MenuState::loadAssets()
 {
     //create a default material to display models on import
     auto flags = cro::ShaderResource::DiffuseColour;
-    auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::VertexLit, flags);
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, flags);
     materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 0.f, 1.f));
 
-    shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::Skinning | cro::ShaderResource::DepthMap);
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::Skinning | cro::ShaderResource::DepthMap);
     materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
 
     //used for drawing debug lines
-    shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     materialIDs[MaterialID::DebugDraw] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
 }

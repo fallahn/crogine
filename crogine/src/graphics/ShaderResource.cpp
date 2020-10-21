@@ -50,7 +50,7 @@ ShaderResource::ShaderResource()
 }
 
 //public
-bool ShaderResource::preloadFromFile(const std::string& vertex, const std::string& fragment, int32 ID)
+bool ShaderResource::loadFromFile(int32 ID, const std::string& vertex, const std::string& fragment)
 {
     if (m_shaders.count(ID) > 0)
     {
@@ -67,7 +67,7 @@ bool ShaderResource::preloadFromFile(const std::string& vertex, const std::strin
     return true;
 }
 
-bool ShaderResource::preloadFromString(const std::string& vertex, const std::string& fragment, int32 ID, const std::string& defines)
+bool ShaderResource::loadFromString(int32 ID, const std::string& vertex, const std::string& fragment, const std::string& defines)
 {
     if (m_shaders.count(ID) > 0)
     {
@@ -84,7 +84,7 @@ bool ShaderResource::preloadFromString(const std::string& vertex, const std::str
     return true;
 }
 
-int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
+int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
 {
     CRO_ASSERT(type >= BuiltIn::Unlit && flags > 0, "Invalid type of flags value");
     int32 id = type | flags;
@@ -157,14 +157,14 @@ int32 ShaderResource::preloadBuiltIn(BuiltIn type, int32 flags)
     {
     default:
     case BuiltIn::Unlit:
-        success = preloadFromString(Shaders::Unlit::Vertex, Shaders::Unlit::Fragment, id, defines);
+        success = loadFromString(id, Shaders::Unlit::Vertex, Shaders::Unlit::Fragment, defines);
         break;
     case BuiltIn::VertexLit:
-        success = preloadFromString(Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, id, defines);
+        success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, defines);
         break;
     case BuiltIn::ShadowMap:
         //TODO assess platform and load desktop version when necessary
-        success = preloadFromString(Shaders::ShadowMap::Vertex, Shaders::ShadowMap::FragmentMobile, id, defines);
+        success = loadFromString(id, Shaders::ShadowMap::Vertex, Shaders::ShadowMap::FragmentMobile, defines);
         break;
     }
 

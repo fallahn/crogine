@@ -77,16 +77,17 @@ namespace cro
 
         /*!
         \brief Preloads a shader from given files on disk, if possible
+        \param ID Integer value, such as an enumeration, to map to the loaded shader.
         \param vertex String containing path to file containing the source code for the vertex shader
         \param fragment String containing the path to the file containing the source code for
         the fragment shader.
-        \param ID Integer value, such as an enumeration, to map to the load shader.
         \returns true if successful, else false.
         */
-        bool preloadFromFile(const std::string& vertex, const std::string& fragment, int32 ID);
+        bool loadFromFile(int32 id, const std::string& vertex, const std::string& fragment);
 
         /*!
         \brief Preloads a shader and maps it to the given ID from source code in memory
+
         \param vertex String containing the source for the vertex shader. Version directives
         are automatically prepended depending on the current platform so should be omitted.
         \param fragment String containing the source code for the fragment shader. Version
@@ -95,7 +96,7 @@ namespace cro
         \param defines Optional list of newline delimited defines used with given shader source
         \returns true if successful, else returns false
         */
-        bool preloadFromString(const std::string& vertex, const std::string& fragment, int32 ID, const std::string& defines = "");
+        bool loadFromString(int32 id, const std::string& vertex, const std::string& fragment, const std::string& defines = "");
 
         /*!
         \brief Preloads one of the built in shaders.
@@ -105,7 +106,7 @@ namespace cro
         \returns int32 representing the ID of the preloaded shader if it succeeds, else returns -1. The returned ID
         can be used with get() to return an instance of the shader.
         */
-        int32 preloadBuiltIn(BuiltIn type, int32 flags);
+        int32 loadBuiltIn(BuiltIn type, int32 flags);
 
         /*!
         \brief Returns the shader with the given ID if it exists, else the default system shader.
