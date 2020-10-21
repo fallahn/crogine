@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/FileSystem.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/util/String.hpp>
 
@@ -107,8 +108,10 @@ std::vector<float> ConfigProperty::valueAsArray() const
 ConfigObject::ConfigObject(const std::string& name, const std::string& id)
     : ConfigItem	(name), m_id(id){}
 
-bool ConfigObject::loadFromFile(const std::string& path)
+bool ConfigObject::loadFromFile(const std::string& filePath)
 {
+    auto path = FileSystem::getResourcePath() + filePath;
+
     m_id = "";
     setName("");
     m_properties.clear();

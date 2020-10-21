@@ -27,7 +27,6 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/core/FileSystem.hpp>
 #include <crogine/graphics/TextureResource.hpp>
 #include <crogine/graphics/Image.hpp>
 
@@ -50,7 +49,7 @@ bool TextureResource::load(uint32 id, const std::string& path, bool createMipMap
     if (m_textures.count(id) == 0)
     {
         std::unique_ptr<Texture> tex = std::make_unique<Texture>();
-        if (!tex->loadFromFile(FileSystem::getResourcePath() + path, createMipMaps))
+        if (!tex->loadFromFile(path, createMipMaps))
         {
             //loadFromFile() should print error message
             return false;

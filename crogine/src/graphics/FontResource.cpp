@@ -28,7 +28,6 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/graphics/FontResource.hpp>
-#include <crogine/core/FileSystem.hpp>
 
 using namespace cro;
 
@@ -46,7 +45,7 @@ bool FontResource::load(uint32 id, const std::string& path)
     }
 
     auto font = std::make_unique<Font>();
-    if (!font->loadFromFile(FileSystem::getResourcePath() + path))
+    if (!font->loadFromFile(path))
     {
         //load function should print error
         return false;
