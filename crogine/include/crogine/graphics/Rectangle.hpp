@@ -43,6 +43,8 @@ source distribution.
 
 namespace cro
 {
+    class Box;
+
     /*!
     \brief Defines a 2D rectangle, starting at the bottom left position with width and height
     */
@@ -60,6 +62,16 @@ namespace cro
             : left(position.x), bottom(position.y), width(size.x), height(size.y)
         {
             static_assert(std::is_pod<T>::value, "Only PODs allowed");
+        }
+
+        Rectangle(const Box&)
+        {
+            static_assert(std::is_floating_point<T>::value, "Only available for FloatRect");
+        }
+
+        Rectangle& operator = (const Box&)
+        {
+            static_assert(std::is_floating_point<T>::value, "Only available for FloatRect");
         }
 
         T left, bottom, width, height;
@@ -99,6 +111,12 @@ namespace cro
     using IntRect = Rectangle<int32>;
     using URect = Rectangle<uint32>;
     using FloatRect = Rectangle<float>;
+
+    template <>
+    FloatRect::Rectangle(const Box&);
+
+    template <>
+    FloatRect& FloatRect::operator=(const Box&);
 
 #include "Rectangle.inl"
 }

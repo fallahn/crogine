@@ -355,6 +355,7 @@ namespace
     const cro::FloatRect buttonArea(0.f, 0.f, 64.f, 64.f);
 }
 
+#include <crogine/graphics/BoundingBox.hpp>
 void GameState::createUI()
 {
     //2D camera

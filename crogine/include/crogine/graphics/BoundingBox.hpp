@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/matrix.hpp>
 
+#include <crogine/graphics/Rectangle.hpp>
+
 #include <array>
 
 namespace cro
@@ -54,6 +56,14 @@ namespace cro
         \param max The maximum extent
         */
         Box(glm::vec3 min, glm::vec3 max);
+
+        /*!
+        \brief Constructs a Box from a 2D FloatRect with a given thickness
+        \param rect FloatRect to take x and y coordinates from
+        \param thickness Thickness for the box to create. The created box is
+        centred about this value.
+        */
+        Box(FloatRect rect, float thickness = 1.f);
 
         /*!
         \brief Returns the centre of the box in local coordinates

@@ -32,6 +32,27 @@ source distribution.
 
 using namespace cro;
 
+template <>
+FloatRect::Rectangle(const Box& box)
+    : left  (box[0].x),
+    bottom  (box[0].y),
+    width   (box[1].x - box[0].x),
+    height  (box[1].y - box[0].y)
+{
+
+}
+
+template <>
+FloatRect& FloatRect::operator=(const Box& box)
+{
+    left = box[0].x;
+    bottom = box[0].y;
+    width = box[1].x - box[0].x;
+    height = box[1].y - box[0].y;
+
+    return *this;
+}
+
 Box::Box()
     : m_points({ glm::vec3(0.f), glm::vec3(0.f) })
 {
@@ -42,6 +63,12 @@ Box::Box(glm::vec3 min, glm::vec3 max)
     : m_points({ min, max })
 {
 
+}
+
+Box::Box(FloatRect rect, float thickness)
+    : m_points({ glm::vec3(rect.left, rect.bottom, -(thickness / 2.f)), glm::vec3(rect.left + rect.width, rect.bottom + rect.height, thickness / 2.f) })
+{
+    CRO_ASSERT(thickness > 0, "");
 }
 
 glm::vec3 Box::getCentre() const

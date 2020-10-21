@@ -83,10 +83,10 @@ namespace cro
         void onEntityRemoved(Entity) override;
 
         /*!
-        \brief returns a list of entities whose broadphase bounds
+        \brief returns a list of entities whose dynamic tree component bounds
         intersect the given query area.
         \param area Area in world coordinates to query
-        \param filter Only entities with BroadphaseComponents matching
+        \param filter Only entities with DynamicTreeComponents matching
         the given bit flags are returned. Defaults to all flags set.
         */
         std::vector<Entity> query(Box area, std::uint64_t filter = std::numeric_limits<std::uint64_t>::max()) const;

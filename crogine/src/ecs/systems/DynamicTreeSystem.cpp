@@ -34,7 +34,9 @@ source distribution.
 
 namespace
 {
-    const glm::vec3 FattenAmount = glm::vec3(10.f); //TODO this ought to be scaled with world units
+    //TODO this ought to be scaled with world units - for instance when used in a
+    //2D scene this could be considerably larger than in a 3D scene.
+    const glm::vec3 FattenAmount = glm::vec3(10.f);
     const float DisplacementMultiplier = 2.f;
 }
 
