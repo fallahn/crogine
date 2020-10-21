@@ -51,11 +51,19 @@ namespace cro
         FontResource& operator = (FontResource&&) = delete;
 
         /*!
-        \brief Creates a new font and associates it with a given ID if it doesn't
-        yet exist, and returns a reference to it.
-        By default fonts are not loaded, merely added to the resource.
-        The returned font needs to be properly created using Font::loadFromFile()
-        or Font::loadFromImage() at least once before it can be used.
+        \brief Loads a font and assigns the given ID to it
+        \param id ID to assign to the newly loaded font
+        \param path Path to the font to attempt to load
+        \returns bool True if the font loaded successfully, else false
+        */
+        bool load(uint32_t id, const std::string& path);
+
+        /*!
+        \brief Returns a reference to the font assigned the given ID
+        \param id ID of the font to fetch.
+        If the given ID does not map to a loaded font a new, empty font
+        is returned. This can be then loaded directly using Font::loadFromFile()
+        \see FontResource::load()
         */
         Font& get(uint32 id);
 

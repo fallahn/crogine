@@ -57,6 +57,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -73,6 +74,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
+#include <crogine/ecs/components/Text.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -209,6 +211,7 @@ void GameState::addSystems()
     uiSystem = &m_overlayScene.addSystem<cro::UISystem>(mb);
     m_overlayScene.addSystem<cro::CameraSystem>(mb);
     m_overlayScene.addSystem<cro::SpriteSystem>(mb);
+    m_overlayScene.addSystem<cro::TextSystem>(mb);
     m_overlayScene.addSystem<cro::RenderSystem2D>(mb);
 
     commandSystem = &m_overlayScene.addSystem<cro::CommandSystem>(mb);
@@ -382,6 +385,13 @@ void GameState::createUI()
     ent.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
     ent.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Cursor;
+
+    m_resources.fonts.load(1, "assets/VeraMono.ttf");
+    
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>().setPosition({ 200.f, 100.f });
+    ent.addComponent<cro::Drawable2D>();
+    ent.addComponent<cro::Text>(m_resources.fonts.get(1)).setString("dslkdfgklfd");
 
 #ifdef PLATFORM_MOBILE
     m_resources.textures.get("assets/ui/ui_buttons.png", false).setSmooth(true);
