@@ -92,28 +92,31 @@ Mesh::Data StaticMeshBuilder::build() const
         SDL_RWclose(m_file);
         m_file = nullptr;
 
-        CRO_ASSERT(flags && (flags & (1 << Mesh::Position)), "Invalid flag value");
+        CRO_ASSERT(flags && (flags & VertexProperty::Position), "Invalid flag value");
 
         Mesh::Data meshData;
         meshData.attributes[Mesh::Position] = 3;
-        if (flags & (1 << Mesh::Colour))
+        if (flags & VertexProperty::Colour)
         {
             meshData.attributes[Mesh::Colour] = 3;
         }
 
-        meshData.attributes[Mesh::Normal] = 3;
+        if (flags & VertexProperty::Normal)
+        {
+            meshData.attributes[Mesh::Normal] = 3;
+        }
 
-        if (flags & ((1 << Mesh::Tangent) | (1 << Mesh::Bitangent)))
+        if (flags & (VertexProperty::Tangent | VertexProperty::Bitangent))
         {
             meshData.attributes[Mesh::Tangent] = 3;
             meshData.attributes[Mesh::Bitangent] = 3;
         }
 
-        if (flags & (1 << Mesh::UV0))
+        if (flags & VertexProperty::UV0)
         {
             meshData.attributes[Mesh::UV0] = 2;
         }
-        if (flags & (1 << Mesh::UV1))
+        if (flags & VertexProperty::UV1)
         {
             meshData.attributes[Mesh::UV1] = 2;
         }

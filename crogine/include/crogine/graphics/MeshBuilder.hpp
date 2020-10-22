@@ -41,13 +41,13 @@ namespace cro::VertexProperty
 {
     enum
     {
-        Position = (1 << 0),
-        Colour = (1 << 1),
-        Normal = (1 << 2),
-        Tangent = (1 << 3),
+        Position  = (1 << 0),
+        Colour    = (1 << 1),
+        Normal    = (1 << 2),
+        Tangent   = (1 << 3),
         Bitangent = (1 << 4),
-        UV0 = (1 << 5),
-        UV1 = (1 << 6)
+        UV0       = (1 << 5),
+        UV1       = (1 << 6)
     };
 }
 
@@ -61,12 +61,13 @@ namespace cro
 
     Mesh builder types should be used to pre-load mesh data with the
     MeshResource class. Mesh data created with a MeshBuilder instance
-    will apparently work with the Model component, but will not be 
+    will, on the surface, work with the Model component, but will not be 
     properly memory managed unless it is assigned a valid ID via the
     MeshResource manager, and lead to memory leaks.
 
     All meshes are drawn with at least one index array so this should
     be considered if creating a builder which dynamically builds meshes.
+    \see DynamicMeshBuilder
     */
     class CRO_EXPORT_API MeshBuilder : public Detail::SDLResource
     {
@@ -81,7 +82,10 @@ namespace cro
         /*!
         \brief If creating a builder which loads a mesh from disk, for example,
         create a Unique ID based on the hash of the file path to prevent the
-        same mesh being loaded more than once if using the ResourceAutomation
+        same mesh being loaded more than once if using the ResourceAutomation.
+
+        Otherwise returning 0 will ensure each request from the mesh resource
+        returns a unique instance of the mesh data.
         */
         virtual std::size_t getUID() const { return 0; }
 

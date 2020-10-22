@@ -39,14 +39,63 @@ DynamicMeshBuilder::DynamicMeshBuilder(std::uint32_t flags, std::uint8_t submesh
     m_submeshCount  (submeshCount),
     m_primitiveType (primitiveType)
 {
-    CRO_ASSERT(flags != 0, "must specify at least one atribute");
+    CRO_ASSERT((flags & VertexProperty::Position) != 0, "must specify at least a position attribute");
     CRO_ASSERT(submeshCount > 0, "must request at least one submesh");
 }
 
 //private
 Mesh::Data DynamicMeshBuilder::build() const
 {
+    Mesh::Data meshData;
+    meshData.attributes[Mesh::Position] = 3;
+    if (m_flags & VertexProperty::Colour)
+    {
+        meshData.attributes[Mesh::Colour] = 3;
+    }
 
+    if (m_flags & VertexProperty::Normal)
+    {
+        meshData.attributes[Mesh::Normal] = 3;
+    }
 
-    return {};
+    if (m_flags & (VertexProperty::Tangent | VertexProperty::Bitangent))
+    {
+        meshData.attributes[Mesh::Tangent] = 3;
+        meshData.attributes[Mesh::Bitangent] = 3;
+    }
+
+    if (m_flags & VertexProperty::UV0)
+    {
+        meshData.attributes[Mesh::UV0] = 2;
+    }
+    if (m_flags & VertexProperty::UV1)
+    {
+        meshData.attributes[Mesh::UV1] = 2;
+    }
+
+    meshData.primitiveType = m_primitiveType;
+    meshData.vertexSize = getVertexSize(meshData.attributes);
+    meshData.vertexCount = 0;
+
+    //create vbo
+    glCheck(glGenBuffers(1, &meshData.vbo));
+    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
+
+    meshData.submeshCount = m_submeshCount;
+    for (auto i = 0; i < m_submeshCount; ++i)
+    {
+        meshData.indexData[i].format = GL_UNSIGNED_INT;
+        meshData.indexData[i].primitiveType = meshData.primitiveType;
+        meshData.indexData[i].indexCount = 0;
+
+        //create IBO
+        glCheck(glGenBuffers(1, &meshData.indexData[i].ibo));
+        /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
+    }
+
+    return meshData;
 }
