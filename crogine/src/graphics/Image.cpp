@@ -31,6 +31,7 @@ source distribution.
 #include <crogine/graphics/Colour.hpp>
 
 #include <crogine/detail/Assert.hpp>
+#include <crogine/core/FileSystem.hpp>
 #include <crogine/core/Log.hpp>
 
 #define STBI_ONLY_JPEG
@@ -143,8 +144,10 @@ void Image::create(uint32 width, uint32 height, Colour colour, ImageFormat::Type
     m_format = format;
 }
 
-bool Image::loadFromFile(const std::string& path)
+bool Image::loadFromFile(const std::string& filePath)
 {
+    auto path = FileSystem::getResourcePath() + filePath;
+
     auto* file = SDL_RWFromFile(path.c_str(), "rb");
     if (!file)
     {

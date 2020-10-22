@@ -207,7 +207,7 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc, Chunk
     requireComponent<cro::Transform>();
 
     //create shaders for chunk meshes
-    if (rc.shaders.preloadFromString(Vertex, Fragment, ShaderID::Chunk))
+    if (rc.shaders.loadFromString(ShaderID::Chunk, Vertex, Fragment))
     {
         //and then material
         m_materialIDs[MaterialID::ChunkSolid] = rc.materials.add(rc.shaders.get(ShaderID::Chunk));
@@ -224,7 +224,7 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc, Chunk
         rc.materials.get(m_materialIDs[MaterialID::ChunkDetail]).setProperty("u_time", 0.f);
     }
 
-    if (rc.shaders.preloadFromString(VertexDebug, FragmentDebug, ShaderID::ChunkDebug))
+    if (rc.shaders.loadFromString(ShaderID::ChunkDebug, VertexDebug, FragmentDebug))
     {
         auto& shader = rc.shaders.get(ShaderID::ChunkDebug);
         m_materialIDs[MaterialID::ChunkDebug] = rc.materials.add(shader);

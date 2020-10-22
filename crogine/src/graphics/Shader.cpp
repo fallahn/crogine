@@ -28,6 +28,9 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/core/FileSystem.hpp>
+
+#include <crogine/detail/Types.hpp>
 
 #include "../detail/GLCheck.hpp"
 
@@ -116,7 +119,22 @@ Shader::~Shader()
 //public
 bool Shader::loadFromFile(const std::string& vertex, const std::string& fragment)
 {
-    return loadFromString(parseFile(vertex), parseFile(fragment));
+    auto vertPath = FileSystem::getResourcePath() + vertex;
+    auto fragPath = FileSystem::getResourcePath() + fragment;
+
+    if (!FileSystem::fileExists(vertPath))
+    {
+        LogE << "Failed opening " << vertex << ": file not found" << std::endl;
+        return false;
+    }
+
+    if (!FileSystem::fileExists(fragPath))
+    {
+        LogE << "Failed opening " << fragment << ": file not found" << std::endl;
+        return false;
+    }
+
+    return loadFromString(parseFile(vertPath), parseFile(fragPath));
 }
 
 bool Shader::loadFromString(const std::string& vertex, const std::string& fragment, const std::string& defines)
@@ -356,24 +374,30 @@ void Shader::resetUniformMap()
     m_uniformMap.clear();
 }
 
-std::string Shader::parseFile(const std::string& file)
+std::string Shader::parseFile(const std::string& path)
 {
-    /*NOTE Remember to use SDL_RWops when opening files*/
-
     std::string retVal;
     retVal.reserve(1000);
 
     //open file and verify
+    RaiiRWops file;
+    file.file = SDL_RWFromFile(path.c_str(), "r");
+    if (!file.file)
+    {
+        Logger::log("Failed opening " + path, Logger::Type::Error);
+        return {};
+    }
 
-    //read line by line - 
-    //if line starts with #include increase inclusion depth
-    //if depth under limit append parseFile(include)
-    //else append line
+    char buf;
+    while (SDL_RWread(file.file, &buf, 1, 1))
+    {
+        retVal.push_back(buf);
+    }
 
-    //if line is a version number remove it 
-    //as platform specific number is appeanded by loadFromString
+    //TODO we could do some primitive parsing on the file such as removing
+    //version directives or parsing our own includes, but for now
+    //just assume the user knows what they're doing and let the shader
+    //compilation fail if it finds two version directives.
 
-    //close file
-
-    return {};
+    return retVal;
 }

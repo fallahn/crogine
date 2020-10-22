@@ -281,7 +281,7 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
-    m_resources.shaders.preloadFromString(Shaders::Background::Vertex, Shaders::Background::Fragment, ShaderID::Background);
+    m_resources.shaders.loadFromString(ShaderID::Background, Shaders::Background::Vertex, Shaders::Background::Fragment);
     auto& farTexture = m_resources.textures.get("assets/materials/background_far.png");
     farTexture.setRepeated(true);
     farTexture.setSmooth(true);
@@ -326,7 +326,7 @@ void GameState::loadAssets()
     m_modelDefs[GameModelID::Boss].loadFromFile("assets/models/placeholder.cmt", m_resources);
 
 
-    auto shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
     m_resources.materials.add(MaterialID::TerrainChunk, m_resources.shaders.get(shaderID));
 
     ChunkBuilder chunkBuilder;
@@ -334,7 +334,7 @@ void GameState::loadAssets()
     m_resources.meshes.loadMesh(MeshID::TerrainChunkB, chunkBuilder);
 
 
-    shaderID = m_resources.shaders.preloadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::Subrects);
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::Subrects);
     for (auto i = 0u; i < rockfallCount; ++i)
     {
         auto& rockMat = m_resources.materials.add(MaterialID::Rockfall + i, m_resources.shaders.get(shaderID));
@@ -349,7 +349,7 @@ void GameState::loadAssets()
     const glm::vec2 quadSize(6.f);
     cro::QuadBuilder quadBuilder(quadSize);
     m_resources.meshes.loadMesh(MeshID::EmpQuad, quadBuilder);
-    m_resources.shaders.preloadFromString(Shaders::FX::Vertex, Shaders::FX::EMPFragment, ShaderID::EmpBlast);
+    m_resources.shaders.loadFromString(ShaderID::EmpBlast, Shaders::FX::Vertex, Shaders::FX::EMPFragment);
     m_resources.materials.add(MaterialID::EmpBlast, m_resources.shaders.get(ShaderID::EmpBlast)).blendMode = cro::Material::BlendMode::Additive;
 
     m_resources.audio.load(AudioID::Meaty, "assets/audio/effects/meaty.wav");
@@ -598,7 +598,7 @@ void GameState::createHUD()
     const glm::vec2 quadSize(160.f);
     cro::QuadBuilder quadBuilder(quadSize);
     m_resources.meshes.loadMesh(MeshID::HudQuad, quadBuilder);
-    m_resources.shaders.preloadFromString(Shaders::FX::Vertex, Shaders::Hud::TimerFragment, ShaderID::HudTimer);
+    m_resources.shaders.loadFromString(ShaderID::HudTimer, Shaders::FX::Vertex, Shaders::Hud::TimerFragment);
     m_resources.materials.add(MaterialID::HudTimer, m_resources.shaders.get(ShaderID::HudTimer)).blendMode = cro::Material::BlendMode::Alpha;
 
     entity = m_uiScene.createEntity();

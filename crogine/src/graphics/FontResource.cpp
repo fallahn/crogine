@@ -36,12 +36,32 @@ FontResource::FontResource()
 
 }
 
+bool FontResource::load(uint32 id, const std::string& path)
+{
+    if (m_fonts.count(id) != 0)
+    {
+        LogW << "Font wwith ID " << id << " already loaded." << std::endl;
+        return false;
+    }
+
+    auto font = std::make_unique<Font>();
+    if (!font->loadFromFile(path))
+    {
+        //load function should print error
+        return false;
+    }
+
+    m_fonts.insert(std::make_pair(id, std::move(font)));
+    return true;
+}
+
 //public
 Font& FontResource::get(uint32 id)
 {
     if (m_fonts.count(id) == 0)
     {
         m_fonts.insert(std::make_pair(id, std::make_unique<Font>()));
+        LogW << "Font with id " << id << " not currently loaded. Returning empty font." << std::endl;
     }
     return *m_fonts.find(id)->second;
 }

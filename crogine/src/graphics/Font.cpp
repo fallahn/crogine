@@ -37,6 +37,7 @@ by Laurent Gomila et al https://github.com/SFML/SFML/blob/master/src/SFML/Graphi
 #include <crogine/graphics/Colour.hpp>
 #include "../detail/DistanceField.hpp"
 #include <crogine/detail/Types.hpp>
+#include <crogine/core/FileSystem.hpp>
 
 #include <array>
 #include <cstring>
@@ -65,8 +66,10 @@ Font::~Font()
 }
 
 //public
-bool Font::loadFromFile(const std::string& path)
+bool Font::loadFromFile(const std::string& filePath)
 {
+    auto path = FileSystem::getResourcePath() + filePath;
+
     //init freetype
     FT_Library library;
     if (FT_Init_FreeType(&library) != 0)

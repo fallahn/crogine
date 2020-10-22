@@ -68,16 +68,22 @@ namespace cro
         TextureResource& operator = (TextureResource&&) noexcept = default;
         
         /*!
-        \brief Attempts to load the given texture if not already loaded and
-        returns a reference to it.
-        If the texture fails to load then a texture containing the current
-        fallback colour is returned.
+        \brief Attempts to load the image at the given path
+        If the texture fails to load then this function returns false,
+        else it returns true.
+        \param id ID to assign to the loaded texture, if successful.
         \param path String containing the path of the image to attempt to load
         \param createMipMaps Attempts to create the default MipMap levels 
-        when loading the texture the first time. If the texture is already
-        loaded then this has no effect.
+        when loading the texture.
         */
-        Texture& get(const std::string& path, bool createMipMaps = false);
+        bool load(uint32 id, const std::string& path, bool createMipMaps = false);
+
+        /*!
+        \brief Returns a reference to the texture currently assigned to the given ID
+        If the ID doesn't correspond to a loaded texture then a reference to the fallback
+        texture is returned
+        */
+        Texture& get(uint32 id);
 
         /*!
         \brief Sets the current fallback colour.
@@ -92,8 +98,15 @@ namespace cro
         */
         Colour getFallbackColour() const;
 
+        /*!
+        \brief Deprecated, maintained until backwards compat no longer required
+        */
+        //[[deprecated("Use load() with get(id)")]] //hum this errors in VC instead of warns
+        Texture& get(const std::string&, bool = false);
+
+
     private:
-        std::unordered_map<std::string, std::unique_ptr<Texture>> m_textures;
+        std::unordered_map<uint32, std::pair<std::string, std::unique_ptr<Texture>>> m_textures;
         std::unordered_map<Colour, std::unique_ptr<Texture>> m_fallbackTextures;
         Colour m_fallbackColour;
     };

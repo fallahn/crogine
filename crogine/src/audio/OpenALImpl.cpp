@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 #include <crogine/util/String.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/core/FileSystem.hpp>
 
 //oh apple you so quirky
 #ifdef __APPLE__
@@ -168,8 +169,10 @@ void OpenALImpl::setListenerVolume(float volume)
     alCheck(alListenerf(AL_GAIN, volume));
 }
 
-cro::int32 OpenALImpl::requestNewBuffer(const std::string& path)
+cro::int32 OpenALImpl::requestNewBuffer(const std::string& filePath)
 {
+    auto path = FileSystem::getResourcePath() + filePath;
+
     std::unique_ptr<AudioFile> loader;
     
     auto ext = FileSystem::getFileExtension(path);

@@ -32,6 +32,11 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    uint32 fallbackID = std::numeric_limits<uint32>::max();
+}
+
 TextureResource::TextureResource()
     : m_fallbackColour(Colour::Magenta())
 {
@@ -39,14 +44,63 @@ TextureResource::TextureResource()
 }
 
 //public
-Texture& TextureResource::get(const std::string& path, bool createMipMaps)
+bool TextureResource::load(uint32 id, const std::string& path, bool createMipMaps)
 {
-    if (m_textures.count(path) == 0)
+    if (m_textures.count(id) == 0)
     {
         std::unique_ptr<Texture> tex = std::make_unique<Texture>();
         if (!tex->loadFromFile(path, createMipMaps))
         {
-            //find the fallback
+            //loadFromFile() should print error message
+            return false;
+        }
+        m_textures.insert(std::make_pair(id, std::make_pair(path, std::move(tex))));
+        return true;
+    }
+    else
+    {
+        //return whether or not this ID was assigned to the same path already
+        const auto& currentPath = m_textures.at(id).first;
+        LogI << "Texture ID " << id << " already assigned to " << currentPath << std::endl;
+        return path == currentPath;
+    }
+
+    return false;
+}
+
+Texture& TextureResource::get(uint32 id)
+{
+    if (m_textures.count(id) == 0)
+    {
+        //find the fallback
+        if (m_fallbackTextures.count(m_fallbackColour) == 0)
+        {
+            Image img;
+            img.create(32, 32, m_fallbackColour);
+            std::unique_ptr<Texture> fbTex = std::make_unique<Texture>();
+            fbTex->create(32, 32);
+            fbTex->update(img.getPixelData());
+
+            m_fallbackTextures.insert(std::make_pair(m_fallbackColour, std::move(fbTex)));
+        }
+        return *m_fallbackTextures.at(m_fallbackColour);
+    }
+    return *m_textures.at(id).second;
+}
+
+Texture& TextureResource::get(const std::string& path, bool useMipMaps)
+{
+    auto result = std::find_if(m_textures.begin(), m_textures.end(), 
+        [&path](const auto& pair)
+        {
+            return pair.second.first == path;
+        });
+
+    if (result == m_textures.end())
+    {
+        auto tex = std::make_unique<Texture>();
+        if (!tex->loadFromFile(FileSystem::getResourcePath() + path, useMipMaps))
+        {
             if (m_fallbackTextures.count(m_fallbackColour) == 0)
             {
                 Image img;
@@ -57,12 +111,14 @@ Texture& TextureResource::get(const std::string& path, bool createMipMaps)
 
                 m_fallbackTextures.insert(std::make_pair(m_fallbackColour, std::move(fbTex)));
             }
-            //and return it
-            return *m_fallbackTextures.find(m_fallbackColour)->second;
+            return *m_fallbackTextures.at(m_fallbackColour);
         }
-        m_textures.insert(std::make_pair(path, std::move(tex)));
+
+        auto id = fallbackID--;
+        m_textures.insert(std::make_pair(id, std::make_pair(path, std::move(tex))));
+        return *m_textures.at(id).second;
     }
-    return *m_textures.find(path)->second;
+    return *result->second.second;
 }
 
 void TextureResource::setFallbackColour(Colour colour)

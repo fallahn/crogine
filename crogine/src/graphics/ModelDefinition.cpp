@@ -299,7 +299,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         }
 
         //load the material then check properties again for material properties
-        auto shaderID = rc.shaders.preloadBuiltIn(shaderType, flags);
+        auto shaderID = rc.shaders.loadBuiltIn(shaderType, flags);
         auto matID = rc.materials.add(rc.shaders.get(shaderID));
         auto& material = rc.materials.get(matID);
 
@@ -408,7 +408,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             //needless variants.
             flags = ShaderResource::DepthMap | (flags & ShaderResource::Skinning);
 
-            shaderID = rc.shaders.preloadBuiltIn(ShaderResource::ShadowMap, flags);
+            shaderID = rc.shaders.loadBuiltIn(ShaderResource::ShadowMap, flags);
             matID = rc.materials.add(rc.shaders.get(shaderID));
             m_shadowIDs[m_materialCount] = matID;
         }
