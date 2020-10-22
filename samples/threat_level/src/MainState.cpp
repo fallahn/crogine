@@ -214,11 +214,8 @@ void MainState::loadAssets()
     m_modelDefs[MenuModelID::Stars].loadFromFile("assets/models/stars.cmt", m_resources);
     m_modelDefs[MenuModelID::Sun].loadFromFile("assets/models/sun.cmt", m_resources);
 
-    auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
-    menuFont.loadFromFile("assets/fonts/Audiowide-Regular.ttf");
-
-    auto& scoreboardFont = m_sharedResources.fonts.get(FontID::ScoreboardFont);
-    scoreboardFont.loadFromFile("assets/fonts/Now-Bold.otf");
+    m_sharedResources.fonts.load(FontID::MenuFont, "assets/fonts/Audiowide-Regular.ttf");
+    m_sharedResources.fonts.load(FontID::ScoreboardFont, "assets/fonts/Now-Bold.otf");
 
     //audio
     m_resources.audio.load(AudioID::TestStream, "assets/audio/music/background.ogg", true);
