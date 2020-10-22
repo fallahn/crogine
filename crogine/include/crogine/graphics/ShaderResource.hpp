@@ -47,7 +47,8 @@ namespace cro
     public:
         enum BuiltIn
         {
-            Unlit = 0x7FFD0000,
+            Unlit = 0x7FFC0000,
+            Billboard = 0x7FFD0000,
             VertexLit = 0x7FFE0000,
             ShadowMap = 0x7FFF0000
         };

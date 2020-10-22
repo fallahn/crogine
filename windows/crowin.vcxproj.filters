@@ -516,6 +516,12 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DynamicTreeSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\src\graphics\shaders\Billboard.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\NoResize.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">

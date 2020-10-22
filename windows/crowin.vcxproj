@@ -62,6 +62,7 @@
     <ClInclude Include="..\crogine\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\GlobalConsts.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\HashCombine.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\NoResize.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Types.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Component.hpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="..\crogine\src\detail\glad.hpp" />
     <ClInclude Include="..\crogine\src\detail\GLCheck.hpp" />
     <ClInclude Include="..\crogine\src\detail\HiResTimer.hpp" />
+    <ClInclude Include="..\crogine\src\graphics\shaders\Billboard.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Debug.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Default.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\ShadowMap.hpp" />

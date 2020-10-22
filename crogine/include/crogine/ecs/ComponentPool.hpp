@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/detail/Assert.hpp>
+#include <crogine/detail/NoResize.hpp>
 
 #include <vector>
 
@@ -54,7 +55,8 @@ namespace cro
 		public:
 			explicit ComponentPool(std::size_t size = 128) : m_pool(size)
 			{
-				if (!std::is_copy_assignable<T>::value)
+				if constexpr (!std::is_copy_assignable_v<T>
+					|| std::is_base_of_v<NonResizeable, T>)
 				{
 					m_pool.reserve(1024);
 					LOG("Reserved maximum pool size of 1024 for " + std::string(typeid(T).name()), cro::Logger::Type::Info);
@@ -65,8 +67,11 @@ namespace cro
 			std::size_t size() const { return m_pool.size(); }
 			void resize(std::size_t size)
 			{ 
-				m_pool.resize(size);
-				LOG("Warning component pool " + std::string(typeid(T).name()) + " has been resized to " + std::to_string(m_pool.size()) + " - existing component references may be invalidated", cro::Logger::Type::Warning);
+				if (size > m_pool.size())
+				{
+					m_pool.resize(size);
+					LOG("Warning component pool " + std::string(typeid(T).name()) + " has been resized to " + std::to_string(m_pool.size()) + " - existing component references may be invalidated", cro::Logger::Type::Warning);
+				}
 			}
 			void clear() override { m_pool.clear(); }
 
