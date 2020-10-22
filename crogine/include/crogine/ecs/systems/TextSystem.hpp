@@ -35,12 +35,21 @@ namespace cro
 {
     /*!
     \brief Updates the geometry of Drawable2D components which
-    are attached to entities with a Text component.
+    are attached to entities with a Text component. Each entity
+    is treated individually - for batching of text geometry a
+    custom System can be defined which will combine multiple
+    text instances into a single Drawable2D component.
+
+    \see System, Text, RenderSystem2D
     */
     class CRO_EXPORT_API TextSystem final : public cro::System
     {
     public:
-        explicit TextSystem(MessageBus&);
+        /*!
+        \brief Default constructor
+        \param mb A reference to the active MessageBus
+        */
+        explicit TextSystem(MessageBus& mb);
 
         void process(float) override;
 

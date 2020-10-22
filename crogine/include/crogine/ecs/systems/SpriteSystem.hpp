@@ -33,10 +33,27 @@ source distribution.
 
 namespace cro
 {
+    /*!
+    \brief Sprite System. This system will update the vertex data
+    of Drawable2D components attached to an entity which has a Sprite
+    component.
+
+    This means that each sprite entity will have its own vertex buffer
+    and be drawn individually. For cases where sprite batching is
+    required a custom System can be created which will batch multiple
+    sprites in a single Drawable2D component.
+
+    \see System, Sprite, RenderSystem2D
+    */
+
     class CRO_EXPORT_API SpriteSystem final : public cro::System
     {
     public:
-        explicit SpriteSystem(cro::MessageBus&);
+        /*!
+        \brief Default constructor
+        \param mb A reference to the active MessageBus
+        */
+        explicit SpriteSystem(cro::MessageBus& mb);
 
         void process(float) override;
 
