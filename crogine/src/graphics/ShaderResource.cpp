@@ -158,6 +158,7 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
     {
     default:
     case BuiltIn::Billboard:
+        //TODO lit and unlit variants
         success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::Unlit::Fragment, defines);
         break;
     case BuiltIn::Unlit:

@@ -29,20 +29,22 @@ source distribution.
 
 #pragma once
 
-#include <crogine/detail/Types.hpp>
+#include <crogine/ecs/System.hpp>
 
-namespace cro::Detail
+namespace cro
 {
     /*!
-    \brief Declares pooled resources which inherit this not have their component
-    pools resized in cases where it will harmfully invalidate references.
-
-    Classes inheriting this should be components in the ECS (else this base class
-    will have no effect), and will have the maximum memory pool size of 1024
-    components allocated to them immediately.
+    \brief Updates the geometry data of BillboardCollection components
+    \see BillboardCollection
     */
-    class CRO_EXPORT_API NonResizeable
+    class CRO_EXPORT_API BillboardSystem final : public cro::System
     {
-    public: virtual ~NonResizeable() {};
+    public:
+        explicit BillboardSystem(MessageBus&);
+
+        void process(float) override;
+
+    private:
+
     };
 }

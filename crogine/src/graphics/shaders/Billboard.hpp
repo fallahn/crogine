@@ -76,4 +76,18 @@ namespace cro::Shaders::Billboard
                     v_texCoord0 = a_texCoord0;
                 #endif
         })";
+
+    //not actually used, rather the VertxLit/Unlit fragment shaders are
+    const static std::string Fragment = R"(
+
+        #if defined (VERTEX_COLOUR)
+        VARYING_IN LOW vec4 v_colour;
+        #endif
+
+        OUTPUT
+
+        void main()
+        {
+            FRAG_OUT = v_colour;
+        })";
 }

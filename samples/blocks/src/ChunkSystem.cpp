@@ -43,7 +43,7 @@ source distribution.
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 
-#include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/util/Constants.hpp>

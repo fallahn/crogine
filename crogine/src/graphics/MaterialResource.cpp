@@ -87,6 +87,10 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
         {
             data.uniforms[Material::WorldView] = handle;
         }
+        else if (uniform == "u_viewProjectionMatrix")
+        {
+            data.uniforms[Material::ViewProjection] = handle;
+        }
         else if (uniform == "u_projectionMatrix")
         {
             data.uniforms[Material::Projection] = handle;

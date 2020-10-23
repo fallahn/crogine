@@ -53,6 +53,7 @@ namespace cro
             World = 0,
             View,
             WorldView,
+            ViewProjection,
             Projection,
             WorldViewProjection,
             Normal,

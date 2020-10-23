@@ -27,28 +27,31 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/graphics/IqmBuilder.hpp>
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
 
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/util/String.hpp>
 #include <crogine/util/Maths.hpp>
 
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
+#include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/ecs/Entity.hpp>
 
 using namespace cro;
 
 namespace
 {
-    std::array<std::string, 2u> materialTypes =
+    std::array<std::string, 3u> materialTypes =
     {
-        {"VertexLit", "Unlit"}
+        "VertexLit", "Unlit", "Billboard"
     };
 }
 
@@ -89,7 +92,9 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     const std::string& meshValue = meshPath->getValue<std::string>();
     auto ext = FileSystem::getFileExtension(meshValue);
     std::unique_ptr<MeshBuilder> meshBuilder;
+
     bool checkSkeleton = false;
+
     if (ext == ".cmf")
     {
         //we have a static mesh
@@ -138,6 +143,11 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             size.y = std::max(0.001f, size.y);
             meshBuilder = std::make_unique<QuadBuilder>(size, uv);
         }
+    }
+    else if (Util::String::toLower(meshValue) == "billboard")
+    {
+        meshBuilder = std::make_unique<DynamicMeshBuilder>(VertexProperty::Position | VertexProperty::Normal | VertexProperty::Colour | VertexProperty::UV0, 1, GL_TRIANGLES);
+        m_billboard = true;
     }
     else
     {
@@ -201,7 +211,15 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     for (auto& mat : materials)
     {
         ShaderResource::BuiltIn shaderType = ShaderResource::Unlit;
-        if (mat.getId() == "VertexLit") shaderType = ShaderResource::VertexLit;
+        if (m_billboard)
+        {
+            shaderType = ShaderResource::Billboard;
+        }
+        else if (mat.getId() == "VertexLit")
+        {
+            shaderType = ShaderResource::VertexLit;
+        }
+         
 
         //enable shader attribs based on what the material requests
         //TODO this doesn't check valid combinations
@@ -212,6 +230,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         for (const auto& p : properties)
         {
             const std::string& name = Util::String::toLower(p.getName());
+
             if (name == "diffuse")
             {
                 //diffuse map path
@@ -441,6 +460,11 @@ bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
             }
             entity.addComponent<ShadowCaster>().skinned = (m_skeleton);
 
+        }
+
+        if (m_billboard)
+        {
+            entity.addComponent<BillboardCollection>();
         }
 
         if (hasSkeleton())

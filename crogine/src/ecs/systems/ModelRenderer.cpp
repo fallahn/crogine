@@ -198,6 +198,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget&)
 
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camComponent.viewMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camComponent.viewProjectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.projectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
             glCheck(glUniformMatrix3fv(model.m_materials[i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));

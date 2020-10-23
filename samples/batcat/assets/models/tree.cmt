@@ -1,0 +1,11 @@
+model tree
+{
+	mesh = billboard
+
+	material Billboard
+	{
+		vertex_coloured = true
+        diffuse = "assets/textures/billboard.png"
+        blendmode = alpha
+	}
+}
