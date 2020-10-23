@@ -260,6 +260,24 @@ void GameState::createScene()
 
     auto chunkEnt = entity;
 
+    //billboard ent
+    cro::Billboard board;
+    board.size = { 2.f, 5.f };
+    board.colour = cro::Colour::Green();
+
+    auto bbEnt = m_scene.createEntity();
+    m_modelDefs[GameModelID::Billboards].createModel(bbEnt, m_resources);
+    bbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 6.f });
+
+    for (auto i = 0u; i < 46u; ++i)
+    {
+        bbEnt.getComponent<cro::BillboardCollection>().addBillboard(board);
+        board.position.x += 3.3f;
+        board.position.z = static_cast<float>(cro::Util::Random::value(-2, 2));
+    }
+
+    entity.getComponent<cro::Transform>().addChild(bbEnt.getComponent<cro::Transform>());
+
     //TODO these will be different types of chunk
     const int count = 3;
     for (auto i = 0; i < count; ++i)
@@ -270,6 +288,19 @@ void GameState::createScene()
         entity.getComponent<cro::Transform>().setScale({ 200.f / 175.f, 1.f, 1.f });
         //auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
         entity.addComponent<TerrainChunk>().width = 200.f;
+
+        bbEnt = m_scene.createEntity();
+        m_modelDefs[GameModelID::Billboards].createModel(bbEnt, m_resources);
+        bbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 3.f + (3.f * i) });
+
+        board.position.x = 0.f;
+        for (auto i = 0u; i < 46u; ++i)
+        {
+            bbEnt.getComponent<cro::BillboardCollection>().addBillboard(board);
+            board.position.x += 3.3f;
+            board.position.z = static_cast<float>(cro::Util::Random::value(-2, 2));
+        }
+        entity.getComponent<cro::Transform>().addChild(bbEnt.getComponent<cro::Transform>());
     }
 
 
@@ -357,23 +388,6 @@ void GameState::createScene()
             timer = 0.f;
         }
     };
-
-    //billboard ent
-    cro::Billboard board;
-    board.size = { 2.f, 5.f };
-    board.colour = cro::Colour::Green();
-
-    entity = m_scene.createEntity();
-    m_modelDefs[GameModelID::Billboards].createModel(entity, m_resources);
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 6.f });
-
-    for (auto i = 0u; i < 10u; ++i)
-    {
-        entity.getComponent<cro::BillboardCollection>().addBillboard(board);
-        board.position.x += 3.3f;
-    }
-
-    chunkEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 namespace

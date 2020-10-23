@@ -182,6 +182,8 @@ namespace cro
                 #if defined(COLOURED)
                 uniform LOW vec4 u_colour;
                 uniform LOW vec4 u_maskColour;
+                #elif defined(VERTEX_COLOUR)
+                uniform LOW vec4 u_maskColour;
                 #endif
 
                 #if defined(PROJECTIONS)
@@ -318,6 +320,7 @@ namespace cro
                 #if defined (TEXTURED)
                     diffuseColour = TEXTURE(u_diffuseMap, v_texCoord0);
                     mask = TEXTURE(u_maskMap, v_texCoord0).rgb;
+
                 #elif defined(COLOURED)
                     diffuseColour = u_colour;
                     mask = u_maskColour.rgb;

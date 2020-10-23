@@ -157,9 +157,12 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
     switch (type)
     {
     default:
-    case BuiltIn::Billboard:
-        //TODO lit and unlit variants
+    case BuiltIn::BillboardUnlit:
         success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::Unlit::Fragment, defines);
+        break;
+    case BuiltIn::BillboardVertexLit:
+        defines += "#define VERTEX_LIT\n";
+        success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::VertexLit::Fragment, defines);
         break;
     case BuiltIn::Unlit:
         success = loadFromString(id, Shaders::Unlit::Vertex, Shaders::Unlit::Fragment, defines);

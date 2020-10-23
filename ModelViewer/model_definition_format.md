@@ -6,18 +6,23 @@ Models in crogine are described in a text format that can be loaded via the `Mod
     //root node. All models require the model root node, along with a name, containing no spaces
     model <model_name>
     {
-        //the mesh property. This can be a path in quotation marks to a mesh file
-        //or the name of an auto-generated primitive. For example:
+        //the mesh property. This can be a path in quotation marks to a mesh file,
+        //a billboard or the name of an auto-generated primitive. For example:
 
         mesh = "path/to/model.cmf"
         //or
         mesh = "path/to/skinned_model.iqm"
+        //or
+        mesh = billboard
         //or
         mesh = sphere
 
         //*.cmf extension mesh files are static mesh in the Crogine Mesh Format. These can be created by loading
         //*.obj files into the model viewer application and exporting them in the *.cmf format. *.iqm meshes are
         //Inter Quake Models - more about authoring those can be founde at http://sauerbraten.org/iqm/
+
+        //billboards are quad primitives which always face the camera no matter the orientation. For more information
+        //see the documentation for the BillboardCollection component.
 
         //primitive types are: sphere, cube and quad. Sphere meshes also expect a radius property with a float
         //value greater an 0. Cubes are 1x1x1 by default, but may have a size property with 3 components. 
@@ -28,10 +33,12 @@ Models in crogine are described in a text format that can be loaded via the `Mod
         //used for texturing.
 
         //if models are required to cast shadows via shadow mapping then it needs to be explicitly stated
+        //these do not work with billboard geometry.
         cast_shadows = true
 
         //models require at least one material to describe how they are lit, and can have as many as they have
-        //sub-meshes. They should be described in the order in which the sub-meshes appear in the mesh file.
+        //sub-meshes, unless they are a billboard, in which case they can only have one material. They should be
+        //described in the order in which the sub-meshes appear in the mesh file.
         //materials currently have two variations, Unlit and VertexLit which uses the default blinn-phong shading.
         material Unlit
         {
@@ -55,12 +62,13 @@ Models in crogine are described in a text format that can be loaded via the `Mod
             //if a rim property is supplied then rim lighting will be applied to the material.
             //the rim property contains a 4 component normalised colour value, and can have an
             //optional rim_falloff property applied which affects the strength of the rim light effect
+            //as billboards always face the camera this has no visible effect on billboard meshes.
             rim = 1,0.9,0.89,1
             rim_falloff = 0.7
 
             //the lightmap property supplies an optional path to a pre-baked lightmap. Lightmaps are
             //mapped with the UV channel 2 properties of the mesh, so will not appear correctly
-            //if the UV information is missing.
+            //if the UV information is missing. This is ignored by billboards.
             lightmap = "path/to/lightmap.png"
 
             //if a material should recieve shadows from the shadow mapping path
@@ -96,6 +104,7 @@ Models in crogine are described in a text format that can be loaded via the `Mod
             mask_colour = 0.2,1,0.88,1
 
             //the normal property supplies a path to a normal map used for bump-mapping
+            //currently billboards do not support normal mapping as they lack the tangent space data.
             normal = "path/to/normal_map.png"
         }
 

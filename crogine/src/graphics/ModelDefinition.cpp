@@ -211,13 +211,13 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     for (auto& mat : materials)
     {
         ShaderResource::BuiltIn shaderType = ShaderResource::Unlit;
-        if (m_billboard)
+        if (mat.getId() == "VertexLit")
         {
-            shaderType = ShaderResource::Billboard;
+            shaderType = m_billboard ? ShaderResource::BillboardVertexLit : ShaderResource::VertexLit;
         }
-        else if (mat.getId() == "VertexLit")
+        else if (m_billboard)
         {
-            shaderType = ShaderResource::VertexLit;
+            shaderType = ShaderResource::BillboardUnlit;
         }
          
 

@@ -2,10 +2,9 @@ model tree
 {
 	mesh = billboard
 
-	material Billboard
+	material Unlit
 	{
-		vertex_coloured = true
         diffuse = "assets/textures/billboard.png"
-        blendmode = alpha
+        rx_shadows = true
 	}
 }

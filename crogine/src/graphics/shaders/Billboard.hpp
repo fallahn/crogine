@@ -47,6 +47,15 @@ namespace cro::Shaders::Billboard
         uniform mat4 u_worldMatrix;
         uniform mat4 u_viewMatrix;
         uniform mat4 u_viewProjectionMatrix;
+        #if defined(VERTEX_LIT)
+        uniform mat3 u_normalMatrix;
+        #endif
+
+        #if defined(RX_SHADOWS)
+        uniform mat4 u_lightViewProjectionMatrix;
+
+        VARYING_OUT LOW vec4 v_lightWorldPosition;
+        #endif
 
         #if defined (VERTEX_COLOUR)
         VARYING_OUT LOW vec4 v_colour;
@@ -54,9 +63,14 @@ namespace cro::Shaders::Billboard
         #if defined (TEXTURED)
         VARYING_OUT MED vec2 v_texCoord0;
         #endif
+        #if defined (VERTEX_LIT)
+        VARYING_OUT vec3 v_normalVector;
+        VARYING_OUT vec3 v_worldPosition;
+        #endif
 
         void main()
         {
+                //TODO setting these as uniforms is more efficient, but also more faff.
                 vec3 camRight = vec3(u_viewMatrix[0][0], u_viewMatrix[1][0], u_viewMatrix[2][0]);
                 vec3 camUp = vec3(u_viewMatrix[0][1], u_viewMatrix[1][1], u_viewMatrix[2][1]);
                 vec3 position = (u_worldMatrix * vec4(a_normal, 1.0)).xyz;
@@ -66,8 +80,18 @@ namespace cro::Shaders::Billboard
 
                 gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
 
+                #if defined (VERTEX_LIT)
+                vec3 normal = cross(camRight, camUp);
+                v_normalVector = u_normalMatrix * normal;
+                v_worldPosition = position;
+                #endif
+
+
 //TODO: defs for scaled billboards
-//TODO: defs for rx_shadow
+
+                #if defined (RX_SHADOWS)
+                    v_lightWorldPosition = u_lightViewProjectionMatrix * vec4(position, 1.0);
+                #endif
 
                 #if defined (VERTEX_COLOUR)
                     v_colour = a_colour;
