@@ -99,7 +99,7 @@ Texture& TextureResource::get(const std::string& path, bool useMipMaps)
     if (result == m_textures.end())
     {
         auto tex = std::make_unique<Texture>();
-        if (!tex->loadFromFile(FileSystem::getResourcePath() + path, useMipMaps))
+        if (!tex->loadFromFile(path, useMipMaps))
         {
             if (m_fallbackTextures.count(m_fallbackColour) == 0)
             {
