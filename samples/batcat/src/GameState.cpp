@@ -121,7 +121,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
                     ImGui::DragFloat("Rotation", &sourceRotation, 0.02f, -cro::Util::Const::PI, cro::Util::Const::PI);
                     
                     auto count = m_scene.getEntityCount();
-                    ImGui::Text("Entity Count: %d", count);
+                    ImGui::Text("Entity Count: %lu", count);
 
                     ImGui::Text("Query Count %lu", queryCount);
                 }
