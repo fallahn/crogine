@@ -315,6 +315,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             {
                 repeatTextures = p.getValue<bool>();
             }
+            else if (name == "alpha_clip")
+            {
+                flags |= ShaderResource::AlphaClip;
+            }
         }
 
         //load the material then check properties again for material properties
@@ -415,6 +419,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                     material.blendMode = Material::BlendMode::Multiply;
                 }
                 //mode is None by default
+            }
+            else if (name == "alpha_clip")
+            {
+                material.setProperty("u_alphaClip", Util::Maths::clamp(p.getValue<float>(), 0.f, 1.f));
             }
         }
 

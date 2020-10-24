@@ -89,6 +89,12 @@ Models in crogine are described in a text format that can be loaded via the `Mod
             //or
             blendmode = multiply
 
+            //tells the material to discard fragments with an alpha value belowe this threshold.
+            //useful for full transparent pixels in materials with blend modes other than alpha.
+            //value should be between 0 and 1 and is automatically clamped on load. Only applied
+            //to materials which have a diffuse texture.
+            alpha_clip = 0.2
+
         }
 
         //vertex lit materials support all of the above, plus accept these further properties

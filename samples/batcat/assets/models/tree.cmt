@@ -5,6 +5,8 @@ model tree
 	material Unlit
 	{
         diffuse = "assets/textures/billboard.png"
+        mask = "assets/textures/billboard_mask.png"
         rx_shadows = true
+        alpha_clip = 0.2
 	}
 }

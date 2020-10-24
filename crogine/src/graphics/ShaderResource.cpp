@@ -151,6 +151,10 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
         //few vectors available for both bone matrices and projection matrices :(
         defines += "\n#define PROJECTIONS";
     }
+    if (flags & BuiltInFlags::AlphaClip)
+    {
+        defines += "\n#define ALPHA_CLIP";
+    }
     defines += "\n";
 
     bool success = false;
