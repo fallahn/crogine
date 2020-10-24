@@ -161,9 +161,9 @@ bool GameState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
+        case SDLK_ESCAPE:
         case SDLK_p:
         case SDLK_PAUSE:
-            //case SDLK_ESCAPE:
             requestStackPush(States::PauseMenu);
             break;
         }

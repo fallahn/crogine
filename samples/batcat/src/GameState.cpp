@@ -58,6 +58,7 @@ source distribution.
 #include <crogine/ecs/systems/AudioSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/BillboardSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -75,6 +76,7 @@ source distribution.
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/BillboardCollection.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -119,7 +121,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
                     ImGui::DragFloat("Rotation", &sourceRotation, 0.02f, -cro::Util::Const::PI, cro::Util::Const::PI);
                     
                     auto count = m_scene.getEntityCount();
-                    ImGui::Text("Entity Count: %d", count);
+                    ImGui::Text("Entity Count: %lu", count);
 
                     ImGui::Text("Query Count %lu", queryCount);
                 }
@@ -199,6 +201,7 @@ void GameState::addSystems()
 
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
+    m_scene.addSystem<cro::BillboardSystem>(mb);
     m_scene.addSystem<TerrainSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
@@ -226,6 +229,7 @@ void GameState::loadAssets()
 
     m_modelDefs[GameModelID::Cube].loadFromFile("assets/models/cube.cmt", m_resources);
     m_modelDefs[GameModelID::Arrow].loadFromFile("assets/models/arrow.cmt", m_resources);
+    m_modelDefs[GameModelID::Billboards].loadFromFile("assets/models/tree.cmt", m_resources);
 
     //CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
 
@@ -254,16 +258,49 @@ void GameState::createScene()
     entity.addComponent<TerrainChunk>().inUse = true;
     entity.getComponent<TerrainChunk>().width = 200.f;// bb[1].x - bb[0].x; //TODO fix this
 
+    auto chunkEnt = entity;
+
+    //billboard ent
+    cro::Billboard board;
+    board.size = { 2.f, 5.f };
+    board.colour = cro::Colour::Green();
+
+    auto bbEnt = m_scene.createEntity();
+    m_modelDefs[GameModelID::Billboards].createModel(bbEnt, m_resources);
+    bbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 6.f });
+
+    for (auto i = 0u; i < 46u; ++i)
+    {
+        bbEnt.getComponent<cro::BillboardCollection>().addBillboard(board);
+        board.position.x += 3.3f;
+        board.position.z = static_cast<float>(cro::Util::Random::value(-2, 2));
+    }
+
+    entity.getComponent<cro::Transform>().addChild(bbEnt.getComponent<cro::Transform>());
+
     //TODO these will be different types of chunk
-    static const int count = 3;
+    const int count = 3;
     for (auto i = 0; i < count; ++i)
     {
         entity = m_scene.createEntity();
         m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
         entity.addComponent<cro::Transform>().setPosition({ 400.f, 0.f, 0.f });
         entity.getComponent<cro::Transform>().setScale({ 200.f / 175.f, 1.f, 1.f });
-        auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+        //auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
         entity.addComponent<TerrainChunk>().width = 200.f;
+
+        bbEnt = m_scene.createEntity();
+        m_modelDefs[GameModelID::Billboards].createModel(bbEnt, m_resources);
+        bbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 3.f + (3.f * i) });
+
+        board.position.x = 0.f;
+        for (auto i = 0u; i < 46u; ++i)
+        {
+            bbEnt.getComponent<cro::BillboardCollection>().addBillboard(board);
+            board.position.x += 3.3f;
+            board.position.z = static_cast<float>(cro::Util::Random::value(-2, 2));
+        }
+        entity.getComponent<cro::Transform>().addChild(bbEnt.getComponent<cro::Transform>());
     }
 
 

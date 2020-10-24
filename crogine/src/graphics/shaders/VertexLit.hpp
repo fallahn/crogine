@@ -171,6 +171,9 @@ namespace cro
                 #if defined(BUMP)
                 uniform sampler2D u_normalMap;
                 #endif
+                #if defined(ALPHA_CLIP)
+                uniform float u_alphaClip;
+                #endif
                 #endif
                 #if defined(LIGHTMAPPED)
                 uniform sampler2D u_lightMap;
@@ -181,6 +184,8 @@ namespace cro
                 uniform HIGH vec3 u_cameraWorldPosition;
                 #if defined(COLOURED)
                 uniform LOW vec4 u_colour;
+                uniform LOW vec4 u_maskColour;
+                #elif defined(VERTEX_COLOUR)
                 uniform LOW vec4 u_maskColour;
                 #endif
 
@@ -318,6 +323,10 @@ namespace cro
                 #if defined (TEXTURED)
                     diffuseColour = TEXTURE(u_diffuseMap, v_texCoord0);
                     mask = TEXTURE(u_maskMap, v_texCoord0).rgb;
+                #if defined(ALPHA_CLIP)
+                if(diffuseColour.a < u_alphaClip) discard;
+                #endif
+
                 #elif defined(COLOURED)
                     diffuseColour = u_colour;
                     mask = u_maskColour.rgb;

@@ -42,6 +42,7 @@ using namespace cro;
 namespace
 {
     const std::string indentBlock("    ");
+    std::size_t currentLine = 0;
 }
 
 //--------------------//
@@ -111,6 +112,7 @@ ConfigObject::ConfigObject(const std::string& name, const std::string& id)
 bool ConfigObject::loadFromFile(const std::string& filePath)
 {
     auto path = FileSystem::getResourcePath() + filePath;
+    currentLine = 0;
 
     m_id = "";
     setName("");
@@ -239,6 +241,7 @@ bool ConfigObject::loadFromFile(const std::string& filePath)
                     }
                     else //last line was probably garbage
                     {
+                        LogW << filePath << ": Missing line or incorrect syntax at " << currentLine << std::endl;
                         continue;
                     }
                 }
@@ -252,7 +255,7 @@ bool ConfigObject::loadFromFile(const std::string& filePath)
         return true;
     }
     
-    Logger::log(path + " file invalid or not found.", Logger::Type::Error);
+    Logger::log(filePath + " file invalid or not found.", Logger::Type::Error);
     return false;
 }
 
@@ -480,6 +483,12 @@ void ConfigObject::removeComment(std::string& line)
     {
         line = line.substr(start);
     }
+
+    if (line.find(';') != std::string::npos)
+    {
+        LogW << "Line " << currentLine << " contains semi-colon, is this intentional?" << std::endl;
+    }
+    currentLine++;
 }
 
 bool ConfigObject::save(const std::string& path)

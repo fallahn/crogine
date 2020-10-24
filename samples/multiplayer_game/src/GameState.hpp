@@ -38,7 +38,7 @@ source distribution.
 #include <crogine/core/ConsoleClient.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/network/NetData.hpp>
 
 struct SharedStateData;

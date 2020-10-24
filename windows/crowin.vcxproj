@@ -62,12 +62,14 @@
     <ClInclude Include="..\crogine\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\GlobalConsts.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\HashCombine.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\NoResize.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Types.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Component.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\ComponentPool.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioListener.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioEmitter.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\BillboardCollection.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Callback.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Camera.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\CommandTarget.hpp" />
@@ -91,6 +93,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\Sunlight.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\System.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\AudioSystem.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\BillboardSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CallbackSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CameraSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CommandSystem.hpp" />
@@ -126,7 +129,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\Rectangle.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\RenderTarget.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\RenderTexture.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\graphics\ResourceAutomation.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\ModelDefinition.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Shader.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\ShaderResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Spatial.hpp" />
@@ -162,6 +165,7 @@
     <ClInclude Include="..\crogine\src\detail\glad.hpp" />
     <ClInclude Include="..\crogine\src\detail\GLCheck.hpp" />
     <ClInclude Include="..\crogine\src\detail\HiResTimer.hpp" />
+    <ClInclude Include="..\crogine\src\graphics\shaders\Billboard.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Debug.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Default.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\ShadowMap.hpp" />
@@ -232,6 +236,7 @@
     <ClCompile Include="..\crogine\src\ecs\System.cpp" />
     <ClCompile Include="..\crogine\src\ecs\SystemManager.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\AudioSystem.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\systems\BillboardSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\CallbackSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\CameraSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\CommandSystem.cpp" />

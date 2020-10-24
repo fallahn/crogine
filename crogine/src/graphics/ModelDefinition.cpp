@@ -27,28 +27,31 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/graphics/IqmBuilder.hpp>
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
 
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/util/String.hpp>
 #include <crogine/util/Maths.hpp>
 
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
+#include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/ecs/Entity.hpp>
 
 using namespace cro;
 
 namespace
 {
-    std::array<std::string, 2u> materialTypes =
+    std::array<std::string, 3u> materialTypes =
     {
-        {"VertexLit", "Unlit"}
+        "VertexLit", "Unlit", "Billboard"
     };
 }
 
@@ -89,7 +92,11 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     const std::string& meshValue = meshPath->getValue<std::string>();
     auto ext = FileSystem::getFileExtension(meshValue);
     std::unique_ptr<MeshBuilder> meshBuilder;
+
     bool checkSkeleton = false;
+    bool lockRotation = false;
+    bool lockScale = false;
+
     if (ext == ".cmf")
     {
         //we have a static mesh
@@ -137,6 +144,22 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             size.x = std::max(0.001f, size.x);
             size.y = std::max(0.001f, size.y);
             meshBuilder = std::make_unique<QuadBuilder>(size, uv);
+        }
+    }
+    else if (Util::String::toLower(meshValue) == "billboard")
+    {
+        auto flags = VertexProperty::Position | VertexProperty::Normal | VertexProperty::Colour | VertexProperty::UV0 | VertexProperty::UV1;
+        meshBuilder = std::make_unique<DynamicMeshBuilder>(flags, 1, GL_TRIANGLES);
+        m_billboard = true;
+
+        if (auto* prop = cfg.findProperty("lock_rotation"); prop != nullptr)
+        {
+            lockRotation = prop->getValue<bool>();
+        }
+
+        if (auto* prop = cfg.findProperty("lock_scale"); prop != nullptr)
+        {
+            lockScale = prop->getValue<bool>();
         }
     }
     else
@@ -201,7 +224,15 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     for (auto& mat : materials)
     {
         ShaderResource::BuiltIn shaderType = ShaderResource::Unlit;
-        if (mat.getId() == "VertexLit") shaderType = ShaderResource::VertexLit;
+        if (mat.getId() == "VertexLit")
+        {
+            shaderType = m_billboard ? ShaderResource::BillboardVertexLit : ShaderResource::VertexLit;
+        }
+        else if (m_billboard)
+        {
+            shaderType = ShaderResource::BillboardUnlit;
+        }
+         
 
         //enable shader attribs based on what the material requests
         //TODO this doesn't check valid combinations
@@ -212,6 +243,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         for (const auto& p : properties)
         {
             const std::string& name = Util::String::toLower(p.getName());
+
             if (name == "diffuse")
             {
                 //diffuse map path
@@ -296,6 +328,20 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             {
                 repeatTextures = p.getValue<bool>();
             }
+            else if (name == "alpha_clip")
+            {
+                flags |= ShaderResource::AlphaClip;
+            }
+        }
+
+        if (lockRotation)
+        {
+            flags |= ShaderResource::BuiltInFlags::LockRotation;
+        }
+
+        if (lockScale)
+        {
+            flags |= ShaderResource::BuiltInFlags::LockScale;
         }
 
         //load the material then check properties again for material properties
@@ -397,6 +443,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                 }
                 //mode is None by default
             }
+            else if (name == "alpha_clip")
+            {
+                material.setProperty("u_alphaClip", Util::Maths::clamp(p.getValue<float>(), 0.f, 1.f));
+            }
         }
 
         m_materialIDs[m_materialCount] = matID;
@@ -432,15 +482,26 @@ bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
 
         if (m_castShadows)
         {
-            for (auto i = 0u; i < m_materialCount; ++i)
+            if (!m_billboard)
             {
-                if (m_shadowIDs[i] > 0)
+                for (auto i = 0u; i < m_materialCount; ++i)
                 {
-                    model.setShadowMaterial(i, rc.materials.get(m_shadowIDs[i]));
+                    if (m_shadowIDs[i] > 0)
+                    {
+                        model.setShadowMaterial(i, rc.materials.get(m_shadowIDs[i]));
+                    }
                 }
+                entity.addComponent<ShadowCaster>().skinned = (m_skeleton);
             }
-            entity.addComponent<ShadowCaster>().skinned = (m_skeleton);
+            else
+            {
+                LogW << "Billboard materials do not support shadow casting, property is ignored." << std::endl;
+            }
+        }
 
+        if (m_billboard)
+        {
+            entity.addComponent<BillboardCollection>();
         }
 
         if (hasSkeleton())

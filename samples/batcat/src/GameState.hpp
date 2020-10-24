@@ -31,7 +31,7 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/audio/AudioBuffer.hpp>

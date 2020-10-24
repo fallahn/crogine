@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2017 - 2020
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,38 +29,22 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/ecs/System.hpp>
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
-
-
-class GameState final : public cro::State
+namespace cro
 {
-public:
-    GameState(cro::StateStack&, cro::State::Context);
-    ~GameState() = default;
+    /*!
+    \brief Updates the geometry data of BillboardCollection components
+    \see BillboardCollection
+    */
+    class CRO_EXPORT_API BillboardSystem final : public cro::System
+    {
+    public:
+        explicit BillboardSystem(MessageBus&);
 
-    cro::StateID getStateID() const override { return States::Game; }
+        void process(float) override;
 
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
+    private:
 
-private:
-
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-
-    cro::ResourceCollection m_resources;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
-    void updateView();
-};
+    };
+}

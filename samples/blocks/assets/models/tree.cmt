@@ -1,0 +1,13 @@
+model tree
+{
+	mesh = billboard
+    lock_rotation = true
+
+	material VertexLit
+	{
+        diffuse = "assets/images/billboard.png"
+        mask = "assets/images/billboard_mask.png"
+
+        alpha_clip = 0.2
+	}
+}

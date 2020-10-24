@@ -53,6 +53,7 @@ namespace cro
             World = 0,
             View,
             WorldView,
+            ViewProjection,
             Projection,
             WorldViewProjection,
             Normal,
@@ -64,6 +65,7 @@ namespace cro
             ShadowMapSampler,
             SunlightDirection,
             SunlightColour,
+            ScreenSize,
             Total
         };
         

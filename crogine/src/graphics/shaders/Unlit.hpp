@@ -138,6 +138,9 @@ namespace cro
                 OUTPUT
                 #if defined (TEXTURED)
                 uniform sampler2D u_diffuseMap;
+                #if defined(ALPHA_CLIP)
+                uniform float u_alphaClip;
+                #endif
                 #endif
                 #if defined (LIGHTMAPPED)
                 uniform sampler2D u_lightMap;
@@ -250,6 +253,9 @@ namespace cro
                 #endif
                 #if defined (TEXTURED)
                     FRAG_OUT *= TEXTURE(u_diffuseMap, v_texCoord0);
+                #if defined(ALPHA_CLIP)
+                    if(FRAG_OUT.a < u_alphaClip) discard;
+                #endif
                 #endif
                 #if defined (LIGHTMAPPED)
                     FRAG_OUT *= TEXTURE(u_lightMap, v_texCoord1);

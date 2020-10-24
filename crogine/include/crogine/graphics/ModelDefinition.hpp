@@ -66,6 +66,23 @@ namespace cro
     These may be populated by loading from a path
     to a valid ConfigFile. The information can then
     be used to load data into a model component at run time.
+    This is useful for loading model data from disk once and
+    then creating multiple instances of it:
+    \begincode
+    ModelDefinition definition;
+    if(definition.loadFromFile("assets/models/crate.cmt", resources))
+    {
+        //createa the first model
+        auto entity = scene.createEntity();
+        entity.addComponent<Transform>().setPosition({100.f, 0.f, 100.f}):
+        definition.createModel(entity, resources);
+
+        //create a second model
+        entity = scene.createEntity();
+        entity.addComponent<Transform>().setPosition({40.f, 0.f, -30.f});
+        definition.createModel(entity, resources);
+    }
+    \endcode
     */
     class CRO_EXPORT_API ModelDefinition final
     {
@@ -102,9 +119,15 @@ namespace cro
         /*!
         \brief Creates a Model component from the loaded config on the given entity.
         \returns true on success, else false (no model definition has been loaded)
-        Note that this does not add other necessary components such as Transform
+        Note that this may also add Skeleton components, ShadowCast components
+        or BillboardCollection components necessary for a complete material, but 
+        not components such as Transform, which still need to be added manually.
+        \param entity A valid entity with a Transform component to which the Model
+        component should be attached
+        \param resources A reference to the ResourceCollection used when loading 
+        the mdel definition from disk.
         */
-        bool createModel(Entity, ResourceCollection&);
+        bool createModel(Entity entity, ResourceCollection& resoures);
 
         /*!
         \brief Returns true if the material for this model requested that it casts
@@ -130,12 +153,13 @@ namespace cro
     private:
         std::string m_workingDir;
 
-        std::size_t m_meshID = 0; //< ID of the mesh in the mesh resource
-        std::array<int32, Mesh::IndexData::MaxBuffers> m_materialIDs{}; //< list of material IDs in the order in which they appear on the model
-        std::array<int32, Mesh::IndexData::MaxBuffers> m_shadowIDs{}; //< IDs of shadow map materials if this model casts shadows
-        std::size_t m_materialCount = 0; //< number of active materials
-        Skeleton m_skeleton; //< overloaded operator bool indicates if currently valid
-        bool m_castShadows = false; //< if this is true the model entity also requires a shadow cast component
+        std::size_t m_meshID = 0; //!< ID of the mesh in the mesh resource
+        std::array<int32, Mesh::IndexData::MaxBuffers> m_materialIDs{}; //!< list of material IDs in the order in which they appear on the model
+        std::array<int32, Mesh::IndexData::MaxBuffers> m_shadowIDs{}; //!< IDs of shadow map materials if this model casts shadows
+        std::size_t m_materialCount = 0; //!< number of active materials
+        Skeleton m_skeleton; //!< overloaded operator bool indicates if currently valid
+        bool m_castShadows = false; //!< if this is true the model entity also requires a shadow cast component
+        bool m_billboard = false; //!< if this is true then the model is a dynamically created set of billboards
 
         bool m_modelLoaded = false;
 

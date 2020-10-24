@@ -60,6 +60,7 @@ namespace GameModelID
 
         Cube,
         Arrow,
+        Billboards,
 
         Count
     };

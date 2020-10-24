@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2017 - 2020
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,38 +29,20 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/detail/Types.hpp>
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
-
-
-class GameState final : public cro::State
+namespace cro::Detail
 {
-public:
-    GameState(cro::StateStack&, cro::State::Context);
-    ~GameState() = default;
+    /*!
+    \brief Declares pooled resources which inherit this not have their component
+    pools resized in cases where it will harmfully invalidate references.
 
-    cro::StateID getStateID() const override { return States::Game; }
-
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
-
-private:
-
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-
-    cro::ResourceCollection m_resources;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
-    void updateView();
-};
+    Classes inheriting this should be components in the ECS (else this base class
+    will have no effect), and will have the maximum memory pool size of 1024
+    components allocated to them immediately.
+    */
+    class CRO_EXPORT_API NonResizeable
+    {
+    public: virtual ~NonResizeable() {};
+    };
+}

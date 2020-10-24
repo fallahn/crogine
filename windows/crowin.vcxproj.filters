@@ -333,9 +333,6 @@
     <ClInclude Include="..\crogine\include\crogine\detail\GlobalConsts.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\ResourceAutomation.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostChromeAB.hpp">
       <Filter>Header Files\graphics\post process</Filter>
     </ClInclude>
@@ -514,6 +511,21 @@
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DynamicTreeSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\graphics\shaders\Billboard.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\NoResize.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\ModelDefinition.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\BillboardCollection.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\BillboardSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
   </ItemGroup>
@@ -837,6 +849,9 @@
       <Filter>Source Files\core</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\systems\DynamicTreeSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\BillboardSystem.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>

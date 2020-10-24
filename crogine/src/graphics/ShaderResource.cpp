@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/graphics/ShaderResource.hpp>
 #include "shaders/Default.hpp"
 #include "shaders/Unlit.hpp"
+#include "shaders/Billboard.hpp"
 #include "shaders/VertexLit.hpp"
 #include "shaders/ShadowMap.hpp"
 #include "../detail/GLCheck.hpp"
@@ -150,12 +151,31 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
         //few vectors available for both bone matrices and projection matrices :(
         defines += "\n#define PROJECTIONS";
     }
+    if (flags & BuiltInFlags::AlphaClip)
+    {
+        defines += "\n#define ALPHA_CLIP";
+    }
+    if (flags & BuiltInFlags::LockRotation)
+    {
+        defines += "\n#define LOCK_ROTATION";
+    }
+    if (flags & BuiltInFlags::LockScale)
+    {
+        defines += "\n#define LOCK_SCALE";
+    }
     defines += "\n";
 
     bool success = false;
     switch (type)
     {
     default:
+    case BuiltIn::BillboardUnlit:
+        success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::Unlit::Fragment, defines);
+        break;
+    case BuiltIn::BillboardVertexLit:
+        defines += "#define VERTEX_LIT\n";
+        success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::VertexLit::Fragment, defines);
+        break;
     case BuiltIn::Unlit:
         success = loadFromString(id, Shaders::Unlit::Vertex, Shaders::Unlit::Fragment, defines);
         break;

@@ -384,8 +384,8 @@ void GameState::createScene()
 
 void GameState::createUI()
 {
+    m_resources.fonts.load(m_fontID, "assets/fonts/VeraMono.ttf");
     auto& font = m_resources.fonts.get(m_fontID);
-    font.loadFromFile("assets/fonts/VeraMono.ttf");
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 60.f });

@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/detail/NoResize.hpp>
 
 #include <functional>
 #include <any>
@@ -43,7 +44,7 @@ namespace cro
     \brief Allows attaching a callback function to an entity.
     \see CallbackSystem
     */
-    struct CRO_EXPORT_API Callback final
+    struct CRO_EXPORT_API Callback final : public Detail::NonResizeable
     {
         bool active = false; //!< disabling callbacks when not in use can avoid unnecessary cache misses looking up callback functions
         CallbackFunction function;

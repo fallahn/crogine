@@ -86,7 +86,7 @@ Mesh::Data DynamicMeshBuilder::build() const
     meshData.submeshCount = m_submeshCount;
     for (auto i = 0; i < m_submeshCount; ++i)
     {
-        meshData.indexData[i].format = GL_UNSIGNED_INT;
+        meshData.indexData[i].format = GL_UNSIGNED_INT; //TODO we could make this an option when constructing
         meshData.indexData[i].primitiveType = meshData.primitiveType;
         meshData.indexData[i].indexCount = 0;
 

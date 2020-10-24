@@ -40,7 +40,7 @@ source distribution.
 #include <crogine/core/ConsoleClient.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ResourceAutomation.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/network/NetData.hpp>
 
 struct SharedStateData;
@@ -73,7 +73,6 @@ private:
     cro::ResourceCollection m_resources;
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
     std::array<std::size_t, MeshID::Count> m_meshIDs = {};
-
 
     InputParser m_inputParser;
 
