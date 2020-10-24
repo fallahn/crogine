@@ -36,19 +36,17 @@ namespace cro::Shaders::Billboard
     const static std::string Vertex = R"(
         ATTRIBUTE vec4 a_position; //relative to root position (below)
         ATTRIBUTE vec3 a_normal; //actually contains root position of billboard
-        #if defined(VERTEX_COLOUR)
         ATTRIBUTE vec4 a_colour;
-        #endif
 
-        #if defined(TEXTURED)
         ATTRIBUTE MED vec2 a_texCoord0;
-        #endif
+        ATTRIBUTE MED vec2 a_texCoord1; //contains the size of the billboard to which this vertex belongs
 
         uniform mat4 u_worldMatrix;
         uniform mat4 u_viewMatrix;
         uniform mat4 u_viewProjectionMatrix;
-        #if defined(VERTEX_LIT)
-        uniform mat3 u_normalMatrix;
+
+        #if defined (LOCK_SCALE)
+        uniform vec2 u_screenSize;
         #endif
 
         #if defined(RX_SHADOWS)
@@ -70,21 +68,38 @@ namespace cro::Shaders::Billboard
 
         void main()
         {
-                //TODO setting these as uniforms is more efficient, but also more faff.
-                vec3 camRight = vec3(u_viewMatrix[0][0], u_viewMatrix[1][0], u_viewMatrix[2][0]);
-                vec3 camUp = vec3(u_viewMatrix[0][1], u_viewMatrix[1][1], u_viewMatrix[2][1]);
                 vec3 position = (u_worldMatrix * vec4(a_normal, 1.0)).xyz;
 
+#if defined (LOCK_SCALE)
+
+                gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
+                gl_Position /= gl_Position.w;
+                gl_Position.xy += a_position.xy * (a_texCoord1 / u_screenSize);
+
+                #if defined (VERTEX_LIT)
+                v_normalVector = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
+                v_worldPosition = position;
+                #endif
+#else
+                //TODO setting these as uniforms is more efficient, but also more faff.
+                vec3 camRight = vec3(u_viewMatrix[0][0], u_viewMatrix[1][0], u_viewMatrix[2][0]);
+#if defined(LOCK_ROTATION)
+                vec3 camUp = vec3(0.0, 1.0, 0.0);
+#else
+                vec3 camUp = vec3(u_viewMatrix[0][1], u_viewMatrix[1][1], u_viewMatrix[2][1]);
+#endif
                 position = position + camRight * a_position.x
                                     + camUp * a_position.y;
 
                 gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
 
                 #if defined (VERTEX_LIT)
-                vec3 normal = cross(camRight, camUp);
-                v_normalVector = u_normalMatrix * normal;
+                v_normalVector = normalize(cross(camRight, camUp));
                 v_worldPosition = position;
                 #endif
+#endif
+
+
 
 
 //TODO: defs for scaled billboards

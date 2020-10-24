@@ -21,8 +21,20 @@ Models in crogine are described in a text format that can be loaded via the `Mod
         //*.obj files into the model viewer application and exporting them in the *.cmf format. *.iqm meshes are
         //Inter Quake Models - more about authoring those can be founde at http://sauerbraten.org/iqm/
 
-        //billboards are quad primitives which always face the camera no matter the orientation. For more information
-        //see the documentation for the BillboardCollection component.
+        //billboards are quad primitives which always face the camera no matter the orientation. Billboards have two
+        //optional proprties.
+        lock_rotation = true
+        lock_scale = true
+
+        //When rotation locking is set to true billboards will only rotate to face the camera on the y axis, remaining
+        //perpendicular to the ground (x/z) plane. This is usually the preferred behaviour of billboards used to represent
+        //grass or foliage for example. When rotation locking is disabled the billboard will always rotate to face the
+        //camera.
+        //When the scale lock is set to true the billboards will always remain the same scale relative to the display
+        //ie no perspective is applied. This might be preferred for health or other status indicators which need to remain
+        //visible regardless of the camera distance. Note that rotation locking has no effect in this case, and using
+        //a VertexLit material will likely have undesirable results. For more information about how to create billboard
+        //geometry see the documentation for the BillboardCollection component.
 
         //primitive types are: sphere, cube and quad. Sphere meshes also expect a radius property with a float
         //value greater an 0. Cubes are 1x1x1 by default, but may have a size property with 3 components. 

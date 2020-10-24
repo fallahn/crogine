@@ -163,12 +163,13 @@ void ModelRenderer::process(float)
 
 }
 
-void ModelRenderer::render(Entity camera, const RenderTarget&)
+void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 {
     const auto& camComponent = camera.getComponent<Camera>();
     
     const auto& camTx = camera.getComponent<Transform>();
     auto cameraPosition = camTx.getWorldPosition();
+    auto screenSize = glm::vec2(rt.getSize());
 
     glCheck(glCullFace(GL_BACK));
 
@@ -198,6 +199,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget&)
 
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
+            glCheck(glUniform2f(model.m_materials[i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camComponent.viewMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camComponent.viewProjectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.projectionMatrix)));

@@ -107,6 +107,10 @@ Material::Data& MaterialResource::add(int32 ID, const Shader& shader)
         {
             data.uniforms[Material::Camera] = handle;
         }
+        else if (uniform == "u_screenSize")
+        {
+            data.uniforms[Material::ScreenSize] = handle;
+        }
         //these are optionally standard so they are added to 'optional' list to to mark that they exist
         //but not added as a property as they are not user settable - rather they are used internally by renderers
         else if (uniform == "u_boneMatrices[0]")

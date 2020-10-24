@@ -155,6 +155,14 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
     {
         defines += "\n#define ALPHA_CLIP";
     }
+    if (flags & BuiltInFlags::LockRotation)
+    {
+        defines += "\n#define LOCK_ROTATION";
+    }
+    if (flags & BuiltInFlags::LockScale)
+    {
+        defines += "\n#define LOCK_SCALE";
+    }
     defines += "\n";
 
     bool success = false;

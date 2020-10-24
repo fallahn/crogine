@@ -2,10 +2,11 @@ model tree
 {
 	mesh = billboard
 
-	material Unlit
+	material VertexLit
 	{
         diffuse = "assets/textures/billboard.png"
         mask = "assets/textures/billboard_mask.png"
+        //colour = 1.0,0.0,0.0,1.0
         rx_shadows = true
         alpha_clip = 0.2
 	}

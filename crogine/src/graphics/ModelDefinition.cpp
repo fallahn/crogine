@@ -94,6 +94,8 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     std::unique_ptr<MeshBuilder> meshBuilder;
 
     bool checkSkeleton = false;
+    bool lockRotation = false;
+    bool lockScale = false;
 
     if (ext == ".cmf")
     {
@@ -146,8 +148,19 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     }
     else if (Util::String::toLower(meshValue) == "billboard")
     {
-        meshBuilder = std::make_unique<DynamicMeshBuilder>(VertexProperty::Position | VertexProperty::Normal | VertexProperty::Colour | VertexProperty::UV0, 1, GL_TRIANGLES);
+        auto flags = VertexProperty::Position | VertexProperty::Normal | VertexProperty::Colour | VertexProperty::UV0 | VertexProperty::UV1;
+        meshBuilder = std::make_unique<DynamicMeshBuilder>(flags, 1, GL_TRIANGLES);
         m_billboard = true;
+
+        if (auto* prop = cfg.findProperty("lock_rotation"); prop != nullptr)
+        {
+            lockRotation = prop->getValue<bool>();
+        }
+
+        if (auto* prop = cfg.findProperty("lock_scale"); prop != nullptr)
+        {
+            lockScale = prop->getValue<bool>();
+        }
     }
     else
     {
@@ -321,6 +334,16 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             }
         }
 
+        if (lockRotation)
+        {
+            flags |= ShaderResource::BuiltInFlags::LockRotation;
+        }
+
+        if (lockScale)
+        {
+            flags |= ShaderResource::BuiltInFlags::LockScale;
+        }
+
         //load the material then check properties again for material properties
         auto shaderID = rc.shaders.loadBuiltIn(shaderType, flags);
         auto matID = rc.materials.add(rc.shaders.get(shaderID));
@@ -459,15 +482,21 @@ bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
 
         if (m_castShadows)
         {
-            for (auto i = 0u; i < m_materialCount; ++i)
+            if (!m_billboard)
             {
-                if (m_shadowIDs[i] > 0)
+                for (auto i = 0u; i < m_materialCount; ++i)
                 {
-                    model.setShadowMaterial(i, rc.materials.get(m_shadowIDs[i]));
+                    if (m_shadowIDs[i] > 0)
+                    {
+                        model.setShadowMaterial(i, rc.materials.get(m_shadowIDs[i]));
+                    }
                 }
+                entity.addComponent<ShadowCaster>().skinned = (m_skeleton);
             }
-            entity.addComponent<ShadowCaster>().skinned = (m_skeleton);
-
+            else
+            {
+                LogW << "Billboard materials do not support shadow casting, property is ignored." << std::endl;
+            }
         }
 
         if (m_billboard)

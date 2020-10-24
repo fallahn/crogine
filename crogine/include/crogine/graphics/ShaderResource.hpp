@@ -67,7 +67,9 @@ namespace cro
             RimLighting       = 0x100,
             DepthMap          = 0x200,
             RxShadows         = 0x400,
-            AlphaClip         = 0x800
+            AlphaClip         = 0x800,
+            LockRotation      = 0x1000,
+            LockScale         = 0x2000
         };
         
         ShaderResource();

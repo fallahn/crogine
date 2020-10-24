@@ -65,6 +65,7 @@ namespace cro
             ShadowMapSampler,
             SunlightDirection,
             SunlightColour,
+            ScreenSize,
             Total
         };
         

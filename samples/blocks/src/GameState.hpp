@@ -74,7 +74,6 @@ private:
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
     std::array<std::size_t, MeshID::Count> m_meshIDs = {};
 
-
     InputParser m_inputParser;
 
     cro::Clock m_bitrateClock; //< updates the bitrate display in the debug window
