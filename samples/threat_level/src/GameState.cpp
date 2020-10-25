@@ -247,12 +247,11 @@ void GameState::addSystems()
     m_scene.addSystem<BossSystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
-    m_scene.addSystem<cro::SpriteAnimator>(mb);
+    //m_scene.addSystem<cro::SpriteAnimator>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
-    //m_scene.addSystem<cro::SpriteRenderer>(mb);
     m_scene.addSystem<cro::AudioSystem>(mb);
 
     m_scene.addDirector<PlayerDirector>();
@@ -325,6 +324,11 @@ void GameState::loadAssets()
     m_modelDefs[GameModelID::Buddy].loadFromFile("assets/models/buddy.cmt", m_resources);
     m_modelDefs[GameModelID::Boss].loadFromFile("assets/models/placeholder.cmt", m_resources);
 
+    m_modelDefs[GameModelID::PlayerPulse].loadFromFile("assets/models/player_pulse.cmt", m_resources);
+    m_modelDefs[GameModelID::PlayerLaser].loadFromFile("assets/models/player_laser.cmt", m_resources);
+    m_modelDefs[GameModelID::EnemyPulse].loadFromFile("assets/models/enemy_pulse.cmt", m_resources);
+    m_modelDefs[GameModelID::EnemyLaser].loadFromFile("assets/models/enemy_laser.cmt", m_resources);
+    m_modelDefs[GameModelID::EnemyOrb].loadFromFile("assets/models/enemy_orb.cmt", m_resources);
 
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
     m_resources.materials.add(MaterialID::TerrainChunk, m_resources.shaders.get(shaderID));
@@ -1066,28 +1070,19 @@ void GameState::loadParticles()
 
 void GameState::loadWeapons()
 {
-    LOG("Convert these sprites to batched meshes!", cro::Logger::Type::Info);
-
     //weapon sprites
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/sprites/lasers.spt", m_resources.textures);
-    glm::vec3 pulseScale(0.006f);
     const std::size_t maxPulses = 6;
     for (auto i = 0u; i < maxPulses; ++i)
     {
         auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_pulse");
-        auto size = entity.getComponent<cro::Sprite>().getSize();
 
-        entity.addComponent<cro::Transform>().setScale(pulseScale);
-        entity.getComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
-        entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
+        m_modelDefs[GameModelID::PlayerPulse].createModel(entity, m_resources);
+        auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
 
         cro::PhysicsShape ps;
         ps.type = cro::PhysicsShape::Type::Box;
-        ps.extent = { size.x * pulseScale.x, size.y * pulseScale.y, 0.2f };
-        ps.extent /= 2.f;
-        ps.extent *= glm::vec3(0.85f);
+        ps.extent = { bb[1].x, bb[1].y, 0.2f };
 
         entity.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::PlayerLaser);
         entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Collectable | CollisionID::NPC);
@@ -1097,22 +1092,18 @@ void GameState::loadWeapons()
     }
 
     //use a single laser we'll scale it to make it look bigger or smaller
-    glm::vec3 laserScale(0.15f, 0.006f, 1.f);
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_laser");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
-    auto size = entity.getComponent<cro::Sprite>().getSize();
+    m_modelDefs[GameModelID::PlayerLaser].createModel(entity, m_resources);
+    auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
 
-    entity.addComponent<cro::Transform>().setScale(laserScale);
-    entity.getComponent<cro::Transform>().setPosition(glm::vec3(-9.3f));
-    //entity.getComponent<cro::Transform>().setOrigin({ 0.f, size.y / 2.f, 0.f });
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(-9.3f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f)); //hides the laser intially
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bb[0].x, 0.f, 0.f));
     playerEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     cro::PhysicsShape laserPhys;
     laserPhys.type = cro::PhysicsShape::Type::Box;
-    laserPhys.extent = { size.x * laserScale.x, size.y * laserScale.y, 0.2f };
-    laserPhys.extent /= 2.f;
-    laserPhys.extent *= glm::vec3(0.85f);
+    laserPhys.extent = { bb[1].x, bb[1].y, 0.2f };
 
     entity.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::PlayerLaser);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Collectable | CollisionID::NPC);
@@ -1125,19 +1116,16 @@ void GameState::loadWeapons()
     cro::PhysicsShape ps;
     ps.type = cro::PhysicsShape::Type::Box;
 
-    auto orbScale = glm::vec3(0.005f);
     static const std::size_t orbCount = 20;
     for (auto i = 0u; i < orbCount; ++i)
     {
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("npc_orb");
-        size = entity.getComponent<cro::Sprite>().getSize();
+        m_modelDefs[GameModelID::EnemyOrb].createModel(entity, m_resources);
+        auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
 
         entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, -8.f });
-        entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
-        entity.getComponent<cro::Transform>().setScale(orbScale);
 
-        ps.extent = glm::vec3(size.x / 2.f, size.y / 2.f, 1.f) * orbScale;
+        ps.extent = glm::vec3(bb[1].x / 2.f, bb[1].y / 2.f, 1.f);
         entity.addComponent<cro::PhysicsObject>().addShape(ps);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NpcLaser);
         entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Environment | CollisionID::Player);
@@ -1146,57 +1134,46 @@ void GameState::loadWeapons()
     }
 
     //elite laser is an orb and a beam attached to the weapon ent (see elite entity above)
-    laserScale.y = 0.004f;
     auto laserEnt = m_scene.createEntity();
-    laserEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("npc_laser");
-    laserEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
-    size = laserEnt.getComponent<cro::Sprite>().getSize();
-    laserEnt.addComponent<cro::Transform>().setScale(laserScale);
+    m_modelDefs[GameModelID::EnemyLaser].createModel(laserEnt, m_resources);
+    bb = laserEnt.getComponent<cro::Model>().getMeshData().boundingBox;
+
+    laserEnt.addComponent<cro::Transform>().setScale(glm::vec3(0.f)); //initially invisible
     weaponEntity.getComponent<cro::Transform>().addChild(laserEnt.getComponent<cro::Transform>());
     laserEnt.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, cro::Util::Const::PI);
-    laserEnt.getComponent<cro::Transform>().setOrigin({ 0.f, size.y / 2.f, 0.f });
+    laserEnt.getComponent<cro::Transform>().setOrigin({ bb[1].x, 0.f, 0.f });
     laserEnt.getComponent<cro::Transform>().setPosition({ 0.f, -50.f, 0.f });
-    //laserEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, -9.3f });
 
-    //laserPhys.extent.x = -laserPhys.extent.x;
     cro::PhysicsShape laserShape;
     laserShape.type = cro::PhysicsShape::Type::Box;
-    laserShape.extent = { size.x * laserScale.x, size.y * laserScale.y, 0.2f };
-    laserShape.extent /= 2.f;
-    laserShape.extent *= glm::vec3(0.85f);
-    //laserShape.position.x = -laserShape.extent.x;
+    laserShape.extent = { bb[1].x, bb[1].y, 0.2f };
+
     laserEnt.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NpcLaser);
     laserEnt.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
     laserEnt.getComponent<cro::PhysicsObject>().addShape(laserShape);
     
-    auto orbEnt = m_scene.createEntity();
-    orbEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("npc_orb");
-    orbEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
-    size = orbEnt.getComponent<cro::Sprite>().getSize();
-    weaponEntity.getComponent<cro::Transform>().addChild(orbEnt.addComponent<cro::Transform>());
-    orbEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.01f)); //approx orbScale * 1/eliteScale. So many magic numbers!!!
-    orbEnt.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
-    orbEnt.getComponent<cro::Transform>().setPosition({ 0.f, -50.f, 0.f });
+    //TODO fix this
+    //auto orbEnt = m_scene.createEntity();
+    //orbEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("npc_orb");
+    //orbEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
+    //size = orbEnt.getComponent<cro::Sprite>().getSize();
+    //weaponEntity.getComponent<cro::Transform>().addChild(orbEnt.addComponent<cro::Transform>());
+    //orbEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.01f)); //approx orbScale * 1/eliteScale. So many magic numbers!!!
+    //orbEnt.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
+    //orbEnt.getComponent<cro::Transform>().setPosition({ 0.f, -50.f, 0.f });
 
 
     //choppa pulses
-    static const std::size_t choppaPulseCount = 18;
-    pulseScale *= 0.5f;
+    const std::size_t choppaPulseCount = 18;
     for (auto i = 0u; i < choppaPulseCount; ++i)
     {
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("npc_pulse");
-        auto size = entity.getComponent<cro::Sprite>().getSize();
+        m_modelDefs[GameModelID::EnemyPulse].createModel(entity, m_resources);
+        auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(10.f));
 
-        entity.addComponent<cro::Transform>().setScale(pulseScale);
-        entity.getComponent<cro::Transform>().setPosition(glm::vec3(10.f));
-        entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
-
-        //cro::PhysicsShape cs;
         ps.type = cro::PhysicsShape::Type::Box;
-        ps.extent = { size.x * pulseScale.x, size.y * pulseScale.y, 0.2f };
-        ps.extent /= 2.f;
-        ps.extent *= glm::vec3(0.85f);
+        ps.extent = {bb[1].x, bb[1].y, 0.2f };
 
         entity.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NpcLaser);
         entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Bounds | CollisionID::Player);

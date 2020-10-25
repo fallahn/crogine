@@ -152,7 +152,7 @@ void PlayerWeaponSystem::process(float dt)
                 
                 auto laserEnt = getScene()->getEntity(m_aliveList[m_aliveCount]);
                 laserEnt.getComponent<cro::Transform>().setPosition(glm::vec3(0.f, -0.1f, 0.f));
-                laserEnt.getComponent<cro::Sprite>().setColour(cro::Colour::White());
+                laserEnt.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
                 m_aliveCount++;
             }
             break;
@@ -213,11 +213,11 @@ void PlayerWeaponSystem::process(float dt)
             
             if (laserTime > laserRate)
             {
-                //fade laser colour
-                auto& sprite = e.getComponent<cro::Sprite>();
+                //fade laser colour - TODO fix this (it's not a sprite any more)
+                /*auto& sprite = e.getComponent<cro::Sprite>();
                 auto colour = sprite.getColour();
                 colour.setAlpha(colour.getAlpha() < 1 ? 1.f : 0.5f);
-                sprite.setColour(colour);
+                sprite.setColour(colour);*/
                 laserTime = 0.f;
             }
 
@@ -225,7 +225,7 @@ void PlayerWeaponSystem::process(float dt)
             {
                 //remove from alive list
                 e.getComponent<cro::Transform>().setPosition(idlePos);
-                e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent());
+                e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
 
                 //move to dead list
                 m_deadLasers[m_deadLaserCount] = m_aliveList[i];

@@ -117,6 +117,7 @@ void NpcWeaponSystem::handleMessage(const cro::Message& msg)
                 //childEnt.getComponent<cro::Sprite>().setColour(cro::Colour::White());
 
                 //m_activeLasers.push_back(laserEntID);
+
                 LOG("Elite lasers are disabled", cro::Logger::Type::Info);
             }
                 break;

@@ -94,6 +94,13 @@ namespace GameModelID
         WeaverBody,
         Buddy,
         Boss,
+
+        PlayerPulse,
+        PlayerLaser,
+        EnemyPulse,
+        EnemyLaser,
+        EnemyOrb,
+
         Count
     };
 }

@@ -202,7 +202,7 @@ void RoundEndState::load()
         e.getComponent<cro::Sprite>().setTextureRect(area);
         textEnt.getComponent<cro::Text>().setFillColour(textColourNormal);
     });
-    gameControl.callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback([&]
+    gameControl.callbacks[cro::UIInput::ButtonDown] = m_uiSystem->addCallback([&]
     (cro::Entity, const cro::ButtonEvent& evt)
     {
         if (activated(evt))

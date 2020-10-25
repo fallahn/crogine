@@ -1,0 +1,12 @@
+model PlayerPulse
+{
+    mesh = quad
+    size = 1.12,0.15
+    uv = 0,0,0.73,0.2
+
+    material Unlit
+    {
+        diffuse = "assets/sprites/lasers.png"
+        blendmode = alpha
+    }
+}

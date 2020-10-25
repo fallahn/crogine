@@ -1,0 +1,12 @@
+model EnemyOrb
+{
+    mesh = quad
+    size = 0.195,0.195
+    uv = 0.843,0.67,0.152,0.315
+
+    material Unlit
+    {
+        diffuse = "assets/sprites/lasers.png"
+        blendmode = alpha
+    }
+}

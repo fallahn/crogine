@@ -1,0 +1,12 @@
+model PlayerLaser
+{
+    mesh = quad
+    size = 32.0,0.21
+    uv = 0,0.2,0.835,0.282
+
+    material Unlit
+    {
+        diffuse = "assets/sprites/lasers.png"
+        blendmode = alpha
+    }
+}

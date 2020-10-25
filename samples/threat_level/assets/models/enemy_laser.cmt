@@ -1,0 +1,12 @@
+model EnemyLaser
+{
+    mesh = quad
+    size = 32.0,0.14
+    uv = 0,0.7,0.835,0.282
+
+    material Unlit
+    {
+        diffuse = "assets/sprites/lasers.png"
+        blendmode = alpha
+    }
+}
