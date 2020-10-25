@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/graphics/MeshBuilder.hpp>
+#include <crogine/graphics/Rectangle.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
 
@@ -44,17 +45,15 @@ namespace cro
         /*!
         \brief Constructor.
         \param size Dimensions of the quad created by this mesh builder
-        \param texRepeat Number of times to repeat the texture in the S and T
-        axes. NOTE texture repeat should be applied to the textures used
-        for the quad material when setting to a value greater than 1
+        \param textureRect Normalised UV coordinates given as a cro::FloatRect
         */
-        QuadBuilder(glm::vec2 size, glm::vec2 texRepeat = glm::vec2(1.f, 1.f));
+        QuadBuilder(glm::vec2 size, FloatRect textureRect = {glm::vec2(0.f), glm::vec2(1.f)});
 
         std::size_t getUID() const override { return m_uid; }
 
     private:
         glm::vec2 m_size = glm::vec2(0.f);
-        glm::vec2 m_repeat = glm::vec2(0.f);
+        FloatRect m_textureRect;
         std::size_t m_uid;
         Mesh::Data build() const override;
     };

@@ -40,9 +40,10 @@ Models in crogine are described in a text format that can be loaded via the `Mod
         //value greater an 0. Cubes are 1x1x1 by default, but may have a size property with 3 components. 
         //Quads require two properties: size and uv. For example:
         size = 2,3.4
-        uv = 0.5,1
+        uv = 0.0,0.0,0.5,1
         //these are used to describe the size of the quad in x,y coordinates, as well as the UV coordinates used
-        //used for texturing.
+        //used for texturing. UV coordinates are a rectangle described as left,bottom,width,height in normalised
+        //coordinates
 
         //if models are required to cast shadows via shadow mapping then it needs to be explicitly stated
         //these do not work with billboard geometry.

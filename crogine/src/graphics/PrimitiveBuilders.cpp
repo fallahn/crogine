@@ -48,16 +48,16 @@ namespace
     static const float degToRad = PI / 180.f;
 }
 
-QuadBuilder::QuadBuilder(glm::vec2 size, glm::vec2 texRepeat)
-    : m_size(size),
-    m_repeat(texRepeat),
-    m_uid   (0)
+QuadBuilder::QuadBuilder(glm::vec2 size, FloatRect textureRect)
+    : m_size        (size),
+    m_textureRect   (textureRect),
+    m_uid           (0)
 {
     CRO_ASSERT(size.x > 0 && size.y > 0, "Invalid size");
 
     std::hash<std::string> hashIt;
     //this isn't flawless, for example if dimensions are swapped....
-    m_uid = hashIt(std::to_string(size.x) + std::to_string(size.y) + std::to_string(texRepeat.x) + std::to_string(texRepeat.y));
+    m_uid = hashIt(std::to_string(size.x) + std::to_string(size.y) + std::to_string(textureRect.left) + std::to_string(textureRect.height));
 }
 
 Mesh::Data QuadBuilder::build() const
@@ -68,10 +68,10 @@ Mesh::Data QuadBuilder::build() const
     const float halfSizeY = m_size.y / 2.f;
     std::vector<float> vertexData =
     {
-        -halfSizeX, halfSizeY, 0.f,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, m_repeat.y,
-        -halfSizeX, -halfSizeY, 0.f,  0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     0.f, 0.f,
-        halfSizeX, halfSizeY, 0.f,    0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     m_repeat.x, m_repeat.y,
-        halfSizeX, -halfSizeY, 0.f,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     m_repeat.x, 0.f
+        -halfSizeX, halfSizeY, 0.f,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     m_textureRect.left, m_textureRect.bottom + m_textureRect.height,
+        -halfSizeX, -halfSizeY, 0.f,  0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     m_textureRect.left, m_textureRect.bottom,
+        halfSizeX, halfSizeY, 0.f,    0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     m_textureRect.left + m_textureRect.width, m_textureRect.bottom + m_textureRect.height,
+        halfSizeX, -halfSizeY, 0.f,   0.f,0.f,1.f,   1.f,0.f,0.f,   0.f,1.f,0.f,     m_textureRect.left + m_textureRect.width, m_textureRect.bottom
     };
 
     meshData.attributes[Mesh::Position] = 3;

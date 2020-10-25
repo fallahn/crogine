@@ -183,6 +183,7 @@ bool WavLoader::open(const std::string& path)
 
         return true;
     }
+    LogE << "Failed to open " << path << std::endl;
     return false; //no file :(
 }
 

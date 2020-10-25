@@ -132,10 +132,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     }
     else if (Util::String::toLower(meshValue) == "quad")
     {
-        glm::vec2 uv(1.f);
+        FloatRect uv(0.f, 0.f, 1.f, 1.f);
         if (auto* prop = cfg.findProperty("uv"))
         {
-            uv = prop->getValue<glm::vec2>();
+            uv = prop->getValue<FloatRect>();
         }
         
         if (auto* prop = cfg.findProperty("size"))
