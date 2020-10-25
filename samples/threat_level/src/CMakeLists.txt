@@ -27,6 +27,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/NpcDirector.cpp
   ${PROJECT_DIR}/NpcSystem.cpp 
   ${PROJECT_DIR}/NpcWeaponSystem.cpp 
+  ${PROJECT_DIR}/ParticleDirector.cpp
   ${PROJECT_DIR}/PauseState.cpp
   ${PROJECT_DIR}/PhysicsDebug.cpp
   ${PROJECT_DIR}/PhysicsObject.cpp

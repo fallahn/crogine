@@ -100,6 +100,8 @@ namespace cro
         void start();
         void stop();
 
+        const bool stopped() const { return !m_running; }
+
         static const uint32 MaxParticles = 1000u;
         EmitterSettings emitterSettings;
 

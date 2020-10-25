@@ -156,6 +156,9 @@
     <ClCompile Include="src\SoundEffectsDirector.cpp">
       <Filter>Source Files\TL</Filter>
     </ClCompile>
+    <ClCompile Include="src\ParticleDirector.cpp">
+      <Filter>Source Files\TL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MyApp.hpp">
@@ -285,6 +288,9 @@
       <Filter>Header Files\systems</Filter>
     </ClInclude>
     <ClInclude Include="src\SoundEffectsDirector.hpp">
+      <Filter>Header Files\TL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleDirector.hpp">
       <Filter>Header Files\TL</Filter>
     </ClInclude>
   </ItemGroup>

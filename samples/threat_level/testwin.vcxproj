@@ -328,6 +328,7 @@
     <ClCompile Include="src\NpcDirector.cpp" />
     <ClCompile Include="src\NpcSystem.cpp" />
     <ClCompile Include="src\NpcWeaponSystem.cpp" />
+    <ClCompile Include="src\ParticleDirector.cpp" />
     <ClCompile Include="src\PauseState.cpp" />
     <ClCompile Include="src\PhysicsDebug.cpp" />
     <ClCompile Include="src\PhysicsObject.cpp" />
@@ -370,6 +371,7 @@
     <ClInclude Include="src\NpcDirector.hpp" />
     <ClInclude Include="src\NPCSystem.hpp" />
     <ClInclude Include="src\NpcWeaponSystem.hpp" />
+    <ClInclude Include="src\ParticleDirector.hpp" />
     <ClInclude Include="src\PauseState.hpp" />
     <ClInclude Include="src\PhysicsDebug.hpp" />
     <ClInclude Include="src\PhysicsObject.hpp" />
