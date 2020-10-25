@@ -2,7 +2,7 @@ model Stars
 {
 	mesh = quad
 	size = 48.0,27.0
-	uv = 1.78, 1.0
+	uv = 0,0,1.78,1.0
 
 	material Unlit
 	{

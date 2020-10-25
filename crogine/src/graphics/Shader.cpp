@@ -97,6 +97,11 @@ Shader& Shader::operator=(Shader&& other) noexcept
 {
     if (this != &other)
     {
+        Shader temp;
+        std::swap(m_handle, temp.m_handle);
+        std::swap(m_attribMap, temp.m_attribMap);
+        std::swap(m_uniformMap, temp.m_uniformMap);
+
         m_handle = other.m_handle;
         m_attribMap = other.m_attribMap;
         m_uniformMap = other.m_uniformMap;

@@ -138,6 +138,15 @@ namespace cro
         */
         void swap(Texture& other);
 
+        /*!
+        \brief Converts a subrect whose value is in pixels to
+        normalised coordinates according to this texture's size.
+        \param rect A FloatRect containing the cordinates to convert
+        \returns FloatRect containing normalised coordinates, which will be
+        empty if there is no texture currently loaded.
+        */
+        FloatRect getNormalisedSubrect(FloatRect rect) const;
+
     private:
         glm::uvec2 m_size;
         ImageFormat::Type m_format;

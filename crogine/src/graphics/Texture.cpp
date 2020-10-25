@@ -82,6 +82,9 @@ Texture& Texture::operator=(Texture&& other) noexcept
 {
     if (this != &other)
     {
+        Texture temp;
+        swap(temp); //make sure this deals with any existing texture we had.
+
         m_size = other.m_size;
         m_format = other.m_format;
         m_handle = other.m_handle;
@@ -362,7 +365,7 @@ uint32 Texture::getMaxTextureSize()
         return size;
     }
 
-    Logger::log("No valid gl context which querying max teure size", Logger::Type::Error);
+    Logger::log("No valid gl context when querying max texture size", Logger::Type::Error);
     return 0;
 }
 
@@ -374,4 +377,14 @@ void Texture::swap(Texture& other)
     std::swap(m_smooth, other.m_smooth);
     std::swap(m_repeated, other.m_repeated);
     std::swap(m_hasMipMaps, other.m_hasMipMaps);
+}
+
+FloatRect Texture::getNormalisedSubrect(FloatRect rect) const
+{
+    if (m_handle == 0)
+    {
+        return {};
+    }
+
+    return { rect.left / m_size.x, rect.bottom / m_size.y, rect.width / m_size.x, rect.height / m_size.y };
 }
