@@ -454,7 +454,7 @@ void NpcSystem::onEntityAdded(cro::Entity entity)
         status.elite.movementCount = cro::Util::Random::value(4, 8);
         status.elite.pauseTime = cro::Util::Random::value(1.2f, 2.2f);
         status.elite.idleIndex = cro::Util::Random::value(0, m_eliteIdlePositions.size());
-        status.elite.maxEmitRate = entity.getComponent<cro::ParticleEmitter>().emitterSettings.emitRate;
+        status.elite.maxEmitRate = entity.getComponent<cro::ParticleEmitter>().settings.emitRate;
         status.scoreValue = eliteScore;
         break;
     case Npc::Choppa:

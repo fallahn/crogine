@@ -93,7 +93,7 @@ void BackgroundDirector::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::SnowParticles;
             cmd.action = [=](cro::Entity entity, float)
             {
-                entity.getComponent<cro::ParticleEmitter>().emitterSettings.initialVelocity.x = (data.value * -11.f);
+                entity.getComponent<cro::ParticleEmitter>().settings.initialVelocity.x = (data.value * -11.f);
             };
             sendCommand(cmd);
         }

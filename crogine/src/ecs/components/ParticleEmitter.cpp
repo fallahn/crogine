@@ -36,8 +36,10 @@ using namespace cro;
 
 ParticleEmitter::ParticleEmitter()
     : m_vbo             (0),
+    m_vao               (0),
     m_nextFreeParticle  (0),
-    m_running           (false)
+    m_running           (false),
+    m_releaseCount      (-1)
 {
 
 }
@@ -53,11 +55,17 @@ ParticleEmitter::ParticleEmitter()
 void ParticleEmitter::start()
 {
     m_running = true;
+
+    if (settings.releaseCount)
+    {
+        m_releaseCount = settings.releaseCount;
+    }
 }
 
 void ParticleEmitter::stop()
 {
     m_running = false;
+    m_releaseCount = -1;
 }
 
 bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource& textures)
@@ -73,7 +81,18 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             auto name = p.getName();
             if (name == "src")
             {
-                textureID = textures.get(p.getValue<std::string>()).getGLHandle();
+                auto texPath = p.getValue<std::string>();
+                if (!texPath.empty())
+                {
+                    std::replace(texPath.begin(), texPath.end(), '\\', '/');
+
+                    if (texPath[0] == '/')
+                    {
+                        texPath = texPath.substr(1);
+                    }
+                    texturePath = texPath;
+                    textureID = textures.get(texPath).getGLHandle();
+                }
             }
             else if (name == "blendmode")
             {
@@ -91,6 +110,10 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
                     blendmode = EmitterSettings::Alpha;
                 }
             }
+            else if (name == "acceleration")
+            {
+                acceleration = p.getValue<float>();
+            }
             else if (name == "gravity")
             {
                 gravity = p.getValue<glm::vec3>();
@@ -98,6 +121,10 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             else if (name == "velocity")
             {
                 initialVelocity = p.getValue<glm::vec3>();
+            }
+            else if (name == "spread")
+            {
+                spread = p.getValue<float>() / 2.f; //because the initial rotation is +- this
             }
             else if (name == "lifetime")
             {
@@ -111,6 +138,10 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             {
                 glm::vec4 c = p.getValue<glm::vec4>();
                 colour = cro::Colour(c.r, c.g, c.b, c.a);
+            }
+            else if (name == "random_initial_rotation")
+            {
+                randomInitialRotation = p.getValue<bool>();
             }
             else if (name == "rotation_speed")
             {
@@ -128,9 +159,25 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             {
                 emitRate = p.getValue<float>();
             }
+            else if (name == "emit_count")
+            {
+                emitCount = p.getValue<std::int32_t>();
+            }
             else if (name == "spawn_radius")
             {
                 spawnRadius = p.getValue<float>();
+            }
+            else if (name == "spawn_offset")
+            {
+                spawnOffset = glm::vec3(p.getValue<glm::vec2>(), 1.f);
+            }
+            else if (name == "release_count")
+            {
+                releaseCount = p.getValue<std::int32_t>();
+            }
+            else if (name == "inherit_rotation")
+            {
+                inheritRotation = p.getValue<bool>();
             }
         }
 
@@ -163,4 +210,63 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
     }
 
     return false;
+}
+
+bool EmitterSettings::saveToFile(const std::string& path)
+{
+    auto emitterName = FileSystem::getFileName(path);
+    emitterName = emitterName.substr(0, emitterName.size() - 4);
+
+    ConfigFile cfg("particle_system", emitterName);
+
+    auto texPath = texturePath;
+    std::replace(texPath.begin(), texPath.end(), '\\', '/');
+    if (!texPath.empty())
+    {
+        if (texPath[0] == '/')
+        {
+            texPath = texPath.substr(1);
+        }
+    }
+
+    cfg.addProperty("src", "\"" + texPath + "\"");
+
+    if (blendmode == Add)
+    {
+        cfg.addProperty("blendmode", "add");
+    }
+    else if (blendmode == Multiply)
+    {
+        cfg.addProperty("blendmode", "multiply");
+    }
+    else
+    {
+        cfg.addProperty("blendmode", "alpha");
+    }
+
+    cfg.addProperty("acceleration").setValue(acceleration);
+    cfg.addProperty("gravity").setValue(gravity);
+    cfg.addProperty("velocity").setValue(initialVelocity);
+    cfg.addProperty("spread").setValue(spread * 2.f);
+    cfg.addProperty("lifetime").setValue(lifetime);
+    cfg.addProperty("lifetime_variance").setValue(lifetimeVariance);
+    cfg.addProperty("colour").setValue(glm::vec4(colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()));
+    cfg.addProperty("random_initial_rotation").setValue(randomInitialRotation);
+    cfg.addProperty("rotation_speed").setValue(rotationSpeed);
+    cfg.addProperty("scale_affector").setValue(scaleModifier);
+    cfg.addProperty("size").setValue(size);
+    cfg.addProperty("emit_rate").setValue(emitRate);
+    cfg.addProperty("emit_count").setValue(static_cast<std::int32_t>(emitCount));
+    cfg.addProperty("spawn_radius").setValue(spawnRadius);
+    cfg.addProperty("spawn_offset").setValue(spawnOffset);
+    cfg.addProperty("release_count").setValue(releaseCount);
+    cfg.addProperty("inherit_rotation").setValue(inheritRotation);
+
+    auto forceObj = cfg.addObject("forces");
+    for (const auto& f : forces)
+    {
+        forceObj->addProperty("force").setValue(f);
+    }
+
+    return cfg.save(path);
 }

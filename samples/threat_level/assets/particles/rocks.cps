@@ -11,5 +11,6 @@ particle_system rocks
 	scale_affector = 0
 	size = 0.06
 	emit_rate = 4
-	spawn_radius = 0.8	
+	spawn_radius = 0.8
+	release_count = 0;
 }

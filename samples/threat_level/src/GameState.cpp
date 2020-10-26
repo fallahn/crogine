@@ -58,6 +58,7 @@ source distribution.
 #include "CollisionSystem.hpp"
 #include "PhysicsObject.hpp"
 #include "SoundEffectsDirector.hpp"
+#include "ParticleDirector.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -248,6 +249,7 @@ void GameState::addSystems()
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     //m_scene.addSystem<cro::SpriteAnimator>(mb);
+    //m_scene.addSystem<cro::SpriteSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
@@ -259,6 +261,7 @@ void GameState::addSystems()
     m_scene.addDirector<ItemDirector>();
     m_scene.addDirector<NpcDirector>();
     m_scene.addDirector<SFXDirector>();
+    m_scene.addDirector<ParticleDirector>(m_resources.textures);
 #ifdef PLATFORM_DESKTOP
     m_scene.addPostProcess<cro::PostChromeAB>();
     m_scene.addPostProcess<PostRadial>();
@@ -734,7 +737,7 @@ void GameState::loadModels()
     
     cro::EmitterSettings smokeEmitter;
     smokeEmitter.loadFromFile("assets/particles/smoke.cps", m_resources.textures);
-    entity.addComponent<cro::ParticleEmitter>().emitterSettings = smokeEmitter;
+    entity.addComponent<cro::ParticleEmitter>().settings = smokeEmitter;
     //entity.getComponent<cro::ParticleEmitter>().start();
     
     playerEntity = entity;
@@ -761,7 +764,7 @@ void GameState::loadModels()
     axisEnt.getComponent<cro::Transform>().addChild(buddyEnt.addComponent<cro::Transform>());
     buddyEnt.getComponent<cro::Transform>().setPosition({ 0.f, 1.8f, 0.f });
     buddyEnt.addComponent<Buddy>().parent = axisEnt;
-    buddyEnt.addComponent<cro::ParticleEmitter>().emitterSettings.loadFromFile("assets/particles/buddy_smoke.cps", m_resources.textures);
+    buddyEnt.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/particles/buddy_smoke.cps", m_resources.textures);
     auto& buddyRot = buddyEnt.addComponent<Rotator>();
     buddyRot.speed = -4.f;
     buddyRot.axis.x = 1.f;
@@ -874,7 +877,7 @@ void GameState::loadModels()
     entity.addComponent<cro::PhysicsObject>().addShape(eliteShape);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
-    entity.addComponent<cro::ParticleEmitter>().emitterSettings = smokeEmitter;
+    entity.addComponent<cro::ParticleEmitter>().settings = smokeEmitter;
 
     weaponEntity = m_scene.createEntity(); //weapon sprites are added below
     entity.getComponent<cro::Transform>().addChild(weaponEntity.addComponent<cro::Transform>());
@@ -909,7 +912,7 @@ void GameState::loadModels()
         entity.addComponent<cro::PhysicsObject>().addShape(choppaShape);
         entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::NPC);
         entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
-        entity.addComponent<cro::ParticleEmitter>().emitterSettings = flames;
+        entity.addComponent<cro::ParticleEmitter>().settings = flames;
     }
 
     //speedray
@@ -1008,7 +1011,7 @@ void GameState::loadParticles()
     //particle systems
     auto entity = m_scene.createEntity();
     auto& snowEmitter = entity.addComponent<cro::ParticleEmitter>();
-    snowEmitter.emitterSettings.loadFromFile("assets/particles/snow.cps", m_resources.textures);
+    snowEmitter.settings.loadFromFile("assets/particles/snow.cps", m_resources.textures);
     snowEmitter.start();
     entity.addComponent<cro::Transform>();
     auto& translator = entity.addComponent<RandomTranslation>();
@@ -1023,7 +1026,7 @@ void GameState::loadParticles()
     //rock fragments from ceiling
     entity = m_scene.createEntity();
     auto& rockEmitter = entity.addComponent<cro::ParticleEmitter>();
-    rockEmitter.emitterSettings.loadFromFile("assets/particles/rocks.cps", m_resources.textures);
+    rockEmitter.settings.loadFromFile("assets/particles/rocks.cps", m_resources.textures);
 
     entity.addComponent<cro::Transform>();
     auto& rockTrans = entity.addComponent<RandomTranslation>();

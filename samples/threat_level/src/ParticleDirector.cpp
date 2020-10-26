@@ -37,38 +37,56 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 
 #include <crogine/detail/Types.hpp>
+#include <crogine/graphics/TextureResource.hpp>
 
 #include <cstddef>
 
 namespace
 {
     const std::size_t MinEmitters = 4;
+    const std::size_t MaxEmitters = 48;
 }
 
-ParticleDirector::ParticleDirector(cro::ResourceCollection& tr)
+ParticleDirector::ParticleDirector(cro::TextureResource& tr)
     : m_nextFreeEmitter (0)
 {
     //load particle presets
-    //m_settings[SettingsID::Explosion].loadFromFile("assets/particles/explosion.cps", tr.textures);
+    m_settings[SettingsID::Explosion].loadFromFile("assets/particles/explosion.cps", tr);
 }
 
 //public
 void ParticleDirector::handleMessage(const cro::Message& msg)
 {
-
-    //auto particleEnt = getNextEntity();
-    //const auto& player = data.player.getComponent<Player>();
-    //auto& emitter = particleEnt.getComponent<xy::ParticleEmitter>();
-    //emitter.settings = m_settings[SettingsID::Berries];
-    //emitter.settings.spawnOffset = sf::Vector2f(player.direction.x, player.direction.y) * 40.f;
-    //emitter.settings.colour *= m_skyColour;
-    //emitter.start();
-
-    //auto position = data.player.getComponent<xy::Transform>().getPosition();
-    //particleEnt.getComponent<xy::Transform>().setPosition(position);
-
-    //fire a particle system based on event
-    
+    if (m_nextFreeEmitter < MaxEmitters)
+    {
+        //fire a particle system based on event
+        if (msg.id == MessageID::NpcMessage)
+        {
+            const auto& data = msg.getData<NpcEvent>();
+            if (data.type == NpcEvent::Died
+                /*|| data.type == NpcEvent::HealthChanged*/)
+            {
+                //explosion
+                auto particleEnt = getNextEntity();
+                auto& emitter = particleEnt.getComponent<cro::ParticleEmitter>();
+                emitter.settings = m_settings[SettingsID::Explosion];
+                emitter.start();
+                particleEnt.getComponent<cro::Transform>().setPosition(data.position);
+            }
+        }
+        else if (msg.id == MessageID::PlayerMessage)
+        {
+            const auto& data = msg.getData<PlayerEvent>();
+            if (data.type == PlayerEvent::Died)
+            {
+                auto particleEnt = getNextEntity();
+                auto& emitter = particleEnt.getComponent<cro::ParticleEmitter>();
+                emitter.settings = m_settings[SettingsID::Explosion];
+                emitter.start();
+                particleEnt.getComponent<cro::Transform>().setPosition(data.position);
+            }
+        }
+    }
 }
 
 void ParticleDirector::handleEvent(const cro::Event&)

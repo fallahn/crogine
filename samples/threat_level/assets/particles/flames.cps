@@ -11,5 +11,6 @@ particle_system flames
 	scale_affector = 0.9
 	size = 0.19
 	emit_rate = 30
-	spawn_radius = 0.2	
+	spawn_radius = 0.2
+	release_count = 0;
 }

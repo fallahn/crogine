@@ -165,7 +165,14 @@ namespace cro
         WARNING this will most likely invalidate any pointers retreived
         with findProperty()
         */
-        void addProperty(const std::string& name, const std::string& value);
+        ConfigProperty& addProperty(const std::string& name, const std::string& value = "");
+
+        /*!
+        \brief Adds a name / value property pair to this object
+        WARNING this will most likely invalidate any pointers retreived
+        with findProperty()
+        */
+        void addProperty(const ConfigProperty& prop);
 
         /*!
         \brief Adds an object with the given name and optional id to this object

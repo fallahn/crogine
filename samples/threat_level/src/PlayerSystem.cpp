@@ -352,5 +352,5 @@ void PlayerSystem::updateRoundEnd(cro::Entity entity, float dt)
 
 void PlayerSystem::onEntityAdded(cro::Entity entity)
 {
-    entity.getComponent<PlayerInfo>().maxParticleRate = entity.getComponent<cro::ParticleEmitter>().emitterSettings.emitRate;
+    entity.getComponent<PlayerInfo>().maxParticleRate = entity.getComponent<cro::ParticleEmitter>().settings.emitRate;
 }

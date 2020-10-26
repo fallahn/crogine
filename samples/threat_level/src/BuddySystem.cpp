@@ -128,7 +128,7 @@ void BuddySystem::processActive(float dt, cro::Entity entity)
     buddy.lifespan -= dt;
 
     //increase particle effect
-    entity.getComponent<cro::ParticleEmitter>().emitterSettings.emitRate = maxEmitRate * (1.f - (buddy.lifespan / lifespan));
+    entity.getComponent<cro::ParticleEmitter>().settings.emitRate = maxEmitRate * (1.f - (buddy.lifespan / lifespan));
 
     if (buddy.lifespan < 0 || m_requestDespawn)
     {

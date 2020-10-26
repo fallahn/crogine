@@ -358,10 +358,16 @@ std::vector<ConfigObject>& ConfigObject::getObjects()
     return m_objects;
 }
 
-void ConfigObject::addProperty(const std::string& name, const std::string& value)
+ConfigProperty& ConfigObject::addProperty(const std::string& name, const std::string& value)
 {
     m_properties.emplace_back(name, value);
     m_properties.back().setParent(this);
+    return m_properties.back();
+}
+
+void ConfigObject::addProperty(const ConfigProperty& prop)
+{
+    m_properties.push_back(prop);
 }
 
 ConfigObject* ConfigObject::addObject(const std::string& name, const std::string& id)

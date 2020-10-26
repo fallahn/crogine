@@ -103,7 +103,7 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
                 {
                     const auto& playerInfo = entity.getComponent<PlayerInfo>();
                     float emitRate = std::max((1.f - (health / 100.f)) * playerInfo.maxParticleRate, 0.f);
-                    entity.getComponent<cro::ParticleEmitter>().emitterSettings.emitRate = emitRate;
+                    entity.getComponent<cro::ParticleEmitter>().settings.emitRate = emitRate;
                     entity.getComponent<cro::ParticleEmitter>().start();
                 };
                 sendCommand(cmd);

@@ -57,6 +57,7 @@ namespace cro
         Colour colour;
         float rotation = 0.f;
         float scale = 1.f;
+        float acceleration = 1.f;
     };
 
     /*!
@@ -65,6 +66,8 @@ namespace cro
     */
     struct CRO_EXPORT_API EmitterSettings final
     {
+        std::string texturePath;
+
         enum
         {
             Alpha,
@@ -73,17 +76,31 @@ namespace cro
         } blendmode = Alpha;
         glm::vec3 gravity = glm::vec3(0.f);
         glm::vec3 initialVelocity = glm::vec3(0.f);
+        glm::vec3 spawnOffset = glm::vec3(0.f);
+
         std::array<glm::vec3, 4> forces{ glm::vec3(0.f) };
+        Colour colour;
+
+        std::uint32_t emitCount = 1; //!< amount released at once
+        std::int32_t releaseCount = 1; //!< number of particles released before stopping (0 for infinite)
+
         float lifetime = 1.f;
         float lifetimeVariance = 0.f;
-        Colour colour;
-        float rotationSpeed = 0.f;
+        float spread = 0.f;
         float scaleModifier = 0.f;
+        float acceleration = 1.f;
         float size = 1.f; //diameter of particle
         float emitRate = 1.f; //< particles per second
+        float rotationSpeed = 0.f;
         float spawnRadius = 0.f;
+
         uint32 textureID = 0;
+
+        bool randomInitialRotation = true;
+        bool inheritRotation = true;
+
         bool loadFromFile(const std::string&, TextureResource&);
+        bool saveToFile(const std::string&); //! <saves the current settings to a config file
     };
 
     /*!
@@ -100,10 +117,10 @@ namespace cro
         void start();
         void stop();
 
-        const bool stopped() const { return !m_running; }
+        const bool stopped() const { return (!m_running && m_nextFreeParticle == 0); }
 
         static const uint32 MaxParticles = 1000u;
-        EmitterSettings emitterSettings;
+        EmitterSettings settings;
 
     private:
         uint32 m_vbo;
@@ -115,6 +132,8 @@ namespace cro
         bool m_running;
         Clock m_emissionClock;
         Sphere m_bounds;
+
+        std::int32_t m_releaseCount;
 
         friend class ParticleSystem;
     };

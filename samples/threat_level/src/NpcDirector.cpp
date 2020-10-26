@@ -201,7 +201,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
                     float amount = (1.f - (health / 100.f));
                     if (amount > 0)
                     {
-                        entity.getComponent<cro::ParticleEmitter>().emitterSettings.emitRate = amount * entity.getComponent<Npc>().elite.maxEmitRate;
+                        entity.getComponent<cro::ParticleEmitter>().settings.emitRate = amount * entity.getComponent<Npc>().elite.maxEmitRate;
                         entity.getComponent<cro::ParticleEmitter>().start();
                     }
                     else

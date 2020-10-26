@@ -38,13 +38,13 @@ source distribution.
 
 namespace cro
 {
-    struct ResourceCollection;
+    class TextureResource;
 }
 
 class ParticleDirector final : public cro::Director 
 {
 public:
-    explicit ParticleDirector(cro::ResourceCollection&);
+    explicit ParticleDirector(cro::TextureResource&);
 
     void handleMessage(const cro::Message&) override;
 
