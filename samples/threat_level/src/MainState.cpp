@@ -50,7 +50,7 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
-#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -196,7 +196,7 @@ void MainState::addSystems()
     m_menuScene.addSystem<SliderSystem>(mb);
     //m_menuScene.addSystem<RotateSystem>(mb);
     m_menuScene.addSystem<cro::CallbackSystem>(mb);
-    m_menuScene.addSystem<cro::SpriteSystem>(mb);
+    m_menuScene.addSystem<cro::SpriteSystem2D>(mb);
     m_menuScene.addSystem<cro::TextSystem>(mb);
     m_menuScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiSystem = &m_menuScene.addSystem<cro::UISystem>(mb);

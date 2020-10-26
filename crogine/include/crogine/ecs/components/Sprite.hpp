@@ -45,11 +45,23 @@ namespace cro
     class Texture;
     /*!
     \brief 2D Sprite component.
-    Sprites are rendered with a RenderSystem2D rather than
-    a model renderer. The 2D renderer can be used on its own, or rendered
-    over the top of a 3D scene, for example as a user interface. Sprites
-    require their Entity to have a Transform component and a Drawable2D component.
-    Sprites also require a SpriteSystem in the Scene to update their properties.
+    Sprites are 2D geometry usually loaded from a SpriteSheet. When
+    placed on an entity with a Drawable2D component a scene requires
+    a SpriteSystem2D to update them and a RenderSystem2D to draw them.
+    Sprite components can also be placed on an entity with a Model component
+    in which case a SpriteSystem3D is required to update the sprite
+    geometry and sprites are rendered with the ModelRenderer system.
+
+    Sprites rendered via a Drawable2D are usually measured in pixel units
+    and drawn on screen with an orthographic projection.
+
+    Sprites with a Model component are rendered as part of a 3D scene, and
+    their units will need to be scaled accordingly.
+
+    Bother versions of a Sprite can be animated with a SpriteAnimation component
+    and SpriteAnimator system.
+
+    \see SpriteSheet, SpriteAnimation
     */
     class CRO_EXPORT_API Sprite final
     {
@@ -159,7 +171,8 @@ namespace cro
         bool m_overrideBlendMode;
         Material::BlendMode m_blendMode;
 
-        friend class SpriteSystem;
+        friend class SpriteSystem2D;
+        friend class SpriteSystem3D;
         friend class SpriteAnimator;
         friend class SpriteSheet;
     };

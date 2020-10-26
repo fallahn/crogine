@@ -106,7 +106,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ShadowMapRenderer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SkeletalAnimator.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteAnimator.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\TextSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\UISystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\BoundingBox.hpp" />
@@ -249,7 +249,7 @@
     <ClCompile Include="..\crogine\src\ecs\systems\ShadowMapRenderer.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\SkeletalAnimator.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\SpriteAnimator.cpp" />
-    <ClCompile Include="..\crogine\src\ecs\systems\SpriteSystem.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\systems\SpriteSystem2D.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\TextSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\UISystem.cpp" />
     <ClCompile Include="..\crogine\src\graphics\BoundingBox.cpp" />

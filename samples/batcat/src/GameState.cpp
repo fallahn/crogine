@@ -50,7 +50,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ProjectionMapSystem.hpp>
-#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
@@ -213,7 +213,7 @@ void GameState::addSystems()
 
     uiSystem = &m_overlayScene.addSystem<cro::UISystem>(mb);
     m_overlayScene.addSystem<cro::CameraSystem>(mb);
-    m_overlayScene.addSystem<cro::SpriteSystem>(mb);
+    m_overlayScene.addSystem<cro::SpriteSystem2D>(mb);
     m_overlayScene.addSystem<cro::TextSystem>(mb);
     m_overlayScene.addSystem<cro::RenderSystem2D>(mb);
 

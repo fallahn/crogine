@@ -492,9 +492,6 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\RenderSystem2D.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem.hpp">
-      <Filter>Header Files\ecs\systems</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Text.hpp">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
@@ -526,6 +523,9 @@
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\BillboardSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem2D.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
   </ItemGroup>
@@ -833,9 +833,6 @@
     <ClCompile Include="..\crogine\src\ecs\systems\RenderSystem2D.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\ecs\systems\SpriteSystem.cpp">
-      <Filter>Source Files\ecs\systems</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\components\Text.cpp">
       <Filter>Source Files\ecs\components</Filter>
     </ClCompile>
@@ -852,6 +849,9 @@
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\systems\BillboardSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\SpriteSystem2D.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>

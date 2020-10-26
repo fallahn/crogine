@@ -34,7 +34,7 @@ source distribution.
 namespace cro
 {
     /*!
-    \brief Sprite System. This system will update the vertex data
+    \brief Sprite System 2D. This system will update the vertex data
     of Drawable2D components attached to an entity which has a Sprite
     component.
 
@@ -46,14 +46,14 @@ namespace cro
     \see System, Sprite, RenderSystem2D
     */
 
-    class CRO_EXPORT_API SpriteSystem final : public cro::System
+    class CRO_EXPORT_API SpriteSystem2D final : public cro::System
     {
     public:
         /*!
         \brief Default constructor
         \param mb A reference to the active MessageBus
         */
-        explicit SpriteSystem(cro::MessageBus& mb);
+        explicit SpriteSystem2D(cro::MessageBus& mb);
 
         void process(float) override;
 

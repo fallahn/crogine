@@ -39,7 +39,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
-#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -105,7 +105,7 @@ void ErrorState::render()
 void ErrorState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::SpriteSystem>(mb);
+    m_scene.addSystem<cro::SpriteSystem2D>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
 
     cro::Image img;

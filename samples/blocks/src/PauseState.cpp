@@ -43,7 +43,7 @@ source distribution.
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 
-#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -131,7 +131,7 @@ void PauseState::buildScene()
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<cro::SpriteSystem>(mb);
+    m_scene.addSystem<cro::SpriteSystem2D>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
 

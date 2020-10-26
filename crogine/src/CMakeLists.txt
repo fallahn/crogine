@@ -71,7 +71,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/ShadowMapRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/SkeletalAnimator.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteAnimator.cpp
-  ${PROJECT_DIR}/ecs/systems/SpriteSystem.cpp
+  ${PROJECT_DIR}/ecs/systems/SpriteSystem2D.cpp
   ${PROJECT_DIR}/ecs/systems/TextSystem.cpp
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 

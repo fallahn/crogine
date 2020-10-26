@@ -27,22 +27,22 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/systems/SpriteSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/graphics/Texture.hpp>
 
 using namespace cro;
 
-SpriteSystem::SpriteSystem(MessageBus& mb)
-    : System(mb, typeid(SpriteSystem))
+SpriteSystem2D::SpriteSystem2D(MessageBus& mb)
+    : System(mb, typeid(SpriteSystem2D))
 {
     requireComponent<Sprite>();
     requireComponent<Drawable2D>();
 }
 
 //public
-void SpriteSystem::process(float)
+void SpriteSystem2D::process(float)
 {
     auto& entities = getEntities();
     for (auto entity : entities)
@@ -87,7 +87,7 @@ void SpriteSystem::process(float)
 }
 
 //private
-void SpriteSystem::onEntityAdded(Entity entity)
+void SpriteSystem2D::onEntityAdded(Entity entity)
 {
     //this applies a blend mode if it was loaded from a sprite sheet
     if (entity.getComponent<Sprite>().m_overrideBlendMode)
