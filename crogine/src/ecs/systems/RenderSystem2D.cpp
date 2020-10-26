@@ -40,58 +40,12 @@ source distribution.
 
 #include "../../detail/glad.hpp"
 #include "../../detail/GLCheck.hpp"
+#include "../../graphics/shaders/Sprite.hpp"
 
 #include <string>
 
 namespace
 {
-    const std::string VertexShader = 
-        R"(
-            uniform mat4 u_worldViewMatrix;
-            uniform mat4 u_projectionMatrix;
-
-            ATTRIBUTE vec2 a_position;
-            ATTRIBUTE MED vec2 a_texCoord0;
-            ATTRIBUTE LOW vec4 a_colour;
-
-            VARYING_OUT LOW vec4 v_colour;
-
-            #if defined(TEXTURED)
-            VARYING_OUT MED vec2 v_texCoord;
-            #endif
-
-            void main()
-            {
-                gl_Position = u_projectionMatrix * u_worldViewMatrix * vec4(a_position, 0.0, 1.0);
-                v_colour = a_colour;
-            #if defined(TEXTURED)
-                v_texCoord = a_texCoord0;
-            #endif
-            })";
-
-    const std::string ColouredFragmentShader = 
-        R"(
-            VARYING_IN LOW vec4 v_colour;
-            OUTPUT
-            
-            void main()
-            {
-                FRAG_OUT  = v_colour;
-            })";
-
-    const std::string TexturedFragmentShader = 
-        R"(
-            uniform sampler2D u_texture;
-
-            VARYING_IN LOW vec4 v_colour;
-            VARYING_IN MED vec2 v_texCoord;
-            OUTPUT
-            
-            void main()
-            {
-                FRAG_OUT  = TEXTURE(u_texture, v_texCoord) * v_colour;
-            })";
-
     std::vector<float> buns =
     {
         0.f,0.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
@@ -111,8 +65,8 @@ RenderSystem2D::RenderSystem2D(MessageBus& mb)
     requireComponent<Transform>();
 
     //load default shaders
-    m_colouredShader.loadFromString(VertexShader, ColouredFragmentShader);
-    m_texturedShader.loadFromString(VertexShader, TexturedFragmentShader, "#define TEXTURED\n");
+    m_colouredShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Coloured);
+    m_texturedShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Textured, "#define TEXTURED\n");
 }
 
 RenderSystem2D::~RenderSystem2D()
