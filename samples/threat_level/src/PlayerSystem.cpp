@@ -120,7 +120,7 @@ void PlayerSystem::handleMessage(const cro::Message& msg)
 
 void PlayerSystem::process(float dt)
 {
-    auto entities = getEntities();
+    auto& entities = getEntities();
 
     for (auto& entity : entities)
     {
