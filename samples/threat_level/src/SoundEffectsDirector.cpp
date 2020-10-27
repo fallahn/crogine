@@ -44,6 +44,7 @@ namespace
     enum AudioID
     {
         NPCLaser, Explode,
+        EMP, Buddy,
 
         Count
     };
@@ -53,7 +54,9 @@ namespace
     const std::array<std::string, AudioID::Count> paths = 
     {
         "assets/audio/effects/laser.wav",
-        "assets/audio/effects/explode.wav"     
+        "assets/audio/effects/explode.wav",   
+        "assets/audio/effects/emp.wav",   
+        "assets/audio/effects/buddy_arrive.wav"   
     };
 
     const std::size_t MinEntities = 32;
@@ -79,7 +82,7 @@ void SFXDirector::handleMessage(const cro::Message& msg)
         {
             const auto& data = msg.getData<NpcEvent>();
             if (data.type == NpcEvent::Died
-                /*|| data.type == NpcEvent::HealthChanged*/)
+                || data.type == NpcEvent::HealthChanged)
             {
                 //explosion
                 playSound(AudioID::Explode, data.position).setPitch(cro::Util::Random::value(0.9f, 1.1f));
@@ -100,6 +103,22 @@ void SFXDirector::handleMessage(const cro::Message& msg)
             else if (data.type == PlayerEvent::FiredLaser)
             {
                 playSound(AudioID::NPCLaser, data.position).setPitch(cro::Util::Random::value(0.7f, 1.f));
+            }
+            else if (data.type == PlayerEvent::FiredEmp)
+            {
+                playSound(AudioID::EMP, data.position).setPitch(cro::Util::Random::value(0.7f, 1.f));
+            }
+        }
+        else if (msg.id == MessageID::BuddyMessage)
+        {
+            const auto& data = msg.getData<BuddyEvent>();
+            if (data.type == BuddyEvent::FiredWeapon)
+            {
+                playSound(AudioID::NPCLaser, data.position).setPitch(0.4f);
+            }
+            else if (data.type == BuddyEvent::Spawned)
+            {
+                playSound(AudioID::Buddy, data.position).setVolume(2.f);
             }
         }
     }

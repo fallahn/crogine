@@ -135,11 +135,11 @@ void NpcSystem::process(float dt)
     
     auto& entities = getEntities();
        
-    for (auto& entity : entities)
+    for (auto entity : entities)
     {
         auto& status = entity.getComponent<Npc>();
-
         bool hasCollision = false;
+
         if (status.wantsReset) //we're on screen
         {
             //check for collision with player weapons
@@ -169,10 +169,10 @@ void NpcSystem::process(float dt)
             if (m_empFired)
             {
                 status.health = -1.f;
-                //LOG("EMP killed everything", cro::Logger::Type::Info)
             }
 
-            if (status.health <= 0)
+            if (status.health <= 0
+                && status.prevHealth > 0)
             {
                 //raise a message 
                 auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
@@ -190,6 +190,27 @@ void NpcSystem::process(float dt)
                 }
             }
         }
+
+
+        //check if entity has moved off-screen and
+        //reset it if it has
+        bool visible = (entity.getComponent<cro::Model>().isVisible() && !hasCollision);
+        if (!visible && status.wantsReset) //moved out of area
+        {
+            status.wantsReset = false;
+            status.active = false;
+
+            auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
+            msg->entityID = entity.getIndex();
+            msg->npcType = status.type;
+            msg->type = NpcEvent::ExitScreen;
+        }
+        else if (visible)
+        {
+            //we've entered the visible area so will eventually want resetting
+            status.wantsReset = true;
+        }
+
 
         if (status.active)
         {
@@ -214,29 +235,11 @@ void NpcSystem::process(float dt)
                 processWeaver(entity, dt);
                 break;
             }
-
-            //check if entity has moved off-screen and
-            //reset it if it has
-            bool visible = (entity.getComponent<cro::Model>().isVisible() && !hasCollision);
-            if (!visible && status.wantsReset) //moved out of area
-            {
-                status.wantsReset = false;
-                status.active = false;
-
-                auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
-                msg->entityID = entity.getIndex();
-                msg->npcType = status.type;
-                msg->type = NpcEvent::ExitScreen;
-            }
-            else if (visible)
-            {
-                //we've entered the visible area so will eventually want resetting
-                status.wantsReset = true;
-            }
         }
 
-        m_empFired = false;
+        status.prevHealth = status.health;
     }
+    m_empFired = false;
 }
 
 //private
@@ -443,7 +446,6 @@ void NpcSystem::processWeaver(cro::Entity entity, float dt)
 
 void NpcSystem::onEntityAdded(cro::Entity entity)
 {
-
     auto& status = entity.getComponent<Npc>();
     switch (status.type)
     {

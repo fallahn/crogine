@@ -213,11 +213,11 @@ void PlayerWeaponSystem::process(float dt)
             
             if (laserTime > laserRate)
             {
-                //fade laser colour - TODO fix this (it's not a sprite any more)
-                /*auto& sprite = e.getComponent<cro::Sprite>();
-                auto colour = sprite.getColour();
-                colour.setAlpha(colour.getAlpha() < 1 ? 1.f : 0.5f);
-                sprite.setColour(colour);*/
+                //animates the laser beam
+                auto scale = e.getComponent<cro::Transform>().getScale();
+                scale.y = scale.y < 1 ? 1.3f : 0.25f;
+                e.getComponent<cro::Transform>().setScale(scale);
+
                 laserTime = 0.f;
             }
 

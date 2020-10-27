@@ -168,6 +168,35 @@ bool GameState::handleEvent(const cro::Event& evt)
         case SDLK_PAUSE:
             requestStackPush(States::PauseMenu);
             break;
+#ifdef CRO_DEBUG_
+        case SDLK_1:
+        {
+            auto* msg = getContext().appInstance.getMessageBus().post<PlayerEvent>(MessageID::PlayerMessage);
+            msg->entityID = 0;// entity.getIndex();
+            msg->type = PlayerEvent::CollectedItem;
+            msg->itemID = CollectableItem::Buddy;
+        }
+            break;
+        case SDLK_2:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::MeatMan;
+            cmd.action = [](cro::Entity entity, float)
+            {
+                entity.getComponent<cro::Callback>().active = true;
+            };
+            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        }
+            break;
+        case SDLK_3:
+        {
+            auto* msg = getContext().appInstance.getMessageBus().post<PlayerEvent>(MessageID::PlayerMessage);
+            msg->type = PlayerEvent::FiredEmp;
+            msg->position = { 0.f, 0.f, -9.f };
+            //msg->entityID = entity.getIndex();
+        }
+            break;
+#endif
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -1109,7 +1138,7 @@ void GameState::loadWeapons()
 
     cro::PhysicsShape laserPhys;
     laserPhys.type = cro::PhysicsShape::Type::Box;
-    laserPhys.extent = { bb[1].x, bb[1].y, 0.2f };
+    laserPhys.extent = { bb[1].x * 2.f, bb[1].y, 0.2f };
 
     entity.addComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::PlayerLaser);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Collectable | CollisionID::NPC);

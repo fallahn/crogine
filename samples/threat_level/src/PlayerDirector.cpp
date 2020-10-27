@@ -114,7 +114,7 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
                 cro::Command empCommand;
                 empCommand.targetFlags = CommandID::EmpBlast;
                 auto position = data.position;
-                empCommand.action = [this, position](cro::Entity ent, float)
+                empCommand.action = [position](cro::Entity ent, float)
                 {
                     ent.getComponent<cro::Transform>().setPosition(position);
                     ent.getComponent<Emp>().currentTime = 0.f;
