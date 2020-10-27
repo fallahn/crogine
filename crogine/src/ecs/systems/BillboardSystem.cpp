@@ -77,6 +77,7 @@ void BillboardSystem::process(float)
                 vertexData.push_back(quad.colour.getRed());
                 vertexData.push_back(quad.colour.getGreen());
                 vertexData.push_back(quad.colour.getBlue());
+                vertexData.push_back(quad.colour.getAlpha());
 
                 //normal (actually root position)
                 vertexData.push_back(quad.position.x);
@@ -102,6 +103,7 @@ void BillboardSystem::process(float)
                 vertexData.push_back(quad.colour.getRed());
                 vertexData.push_back(quad.colour.getGreen());
                 vertexData.push_back(quad.colour.getBlue());
+                vertexData.push_back(quad.colour.getAlpha());
 
                 //normal (actually root position)
                 vertexData.push_back(quad.position.x);
@@ -127,6 +129,7 @@ void BillboardSystem::process(float)
                 vertexData.push_back(quad.colour.getRed());
                 vertexData.push_back(quad.colour.getGreen());
                 vertexData.push_back(quad.colour.getBlue());
+                vertexData.push_back(quad.colour.getAlpha());
 
                 //normal (actually root position)
                 vertexData.push_back(quad.position.x);
@@ -152,6 +155,7 @@ void BillboardSystem::process(float)
                 vertexData.push_back(quad.colour.getRed());
                 vertexData.push_back(quad.colour.getGreen());
                 vertexData.push_back(quad.colour.getBlue());
+                vertexData.push_back(quad.colour.getAlpha());
 
                 //normal (actually root position)
                 vertexData.push_back(quad.position.x);

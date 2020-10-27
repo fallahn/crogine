@@ -91,6 +91,7 @@ namespace cro
 
     protected:
         friend class MeshResource;
+        friend class SpriteSystem3D;
         /*!
         \brief Implement this to create the appropriate VBO / IBO
         and return a Mesh::Data struct.

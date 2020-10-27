@@ -73,6 +73,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
@@ -248,8 +249,8 @@ void GameState::addSystems()
     m_scene.addSystem<BossSystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
-    //m_scene.addSystem<cro::SpriteAnimator>(mb);
-    //m_scene.addSystem<cro::SpriteSystem>(mb);
+    m_scene.addSystem<cro::SpriteAnimator>(mb);
+    m_scene.addSystem<cro::SpriteSystem3D>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::CollisionSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
@@ -1051,6 +1052,7 @@ void GameState::loadParticles()
             entity.getComponent<cro::Transform>().setScale(glm::vec3(0.04f));
             entity.getComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
             entity.addComponent<cro::SpriteAnimation>();
+            entity.addComponent<cro::Model>();
             entity.addComponent<Explosion>().ident = i;
         }
     };

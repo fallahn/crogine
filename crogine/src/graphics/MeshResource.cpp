@@ -74,8 +74,6 @@ bool MeshResource::loadMesh(std::size_t ID, const MeshBuilder& mb)
 
 std::size_t MeshResource::loadMesh(const MeshBuilder& mb)
 {
-    //CRO_ASSERT(autoID > 0, "Christ you've loaded a lot of meshes!");
-    //int32 nextID = autoID--;
     std::size_t nextID = mb.getUID();
     if (nextID == 0)
     {

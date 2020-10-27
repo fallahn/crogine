@@ -59,6 +59,7 @@ Model::Model(Mesh::Data data, Material::Data material)
 void Model::setMaterial(std::size_t idx, Material::Data data)
 {
     CRO_ASSERT(idx < m_materials.size(), "Index out of range");
+    CRO_ASSERT(m_meshData.vbo != 0, "Can't set a material until mesh has been added");
     bindMaterial(data);
     m_materials[idx] = data;
 

@@ -27,18 +27,22 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../../detail/GLCheck.hpp"
+
 #include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Model.hpp>
-#include <crogine/graphics/MeshResource.hpp>
+#include <crogine/graphics/Texture.hpp>
+
+#include <crogine/detail/OpenGL.hpp>
 
 #include "../../graphics/shaders/Sprite.hpp"
 
 using namespace cro;
 
-SpriteSystem3D::SpriteSystem3D(MessageBus& mb, MeshResource& mr)
-    : System        (mb, typeid(SpriteSystem3D)),
-    m_meshResource  (mr)
+SpriteSystem3D::SpriteSystem3D(MessageBus& mb)
+    : System            (mb, typeid(SpriteSystem3D)),
+    m_meshBuilder       (std::make_unique<DynamicMeshBuilder>(VertexProperty::Position | VertexProperty::Colour | VertexProperty::UV0, 1, GL_TRIANGLES))
 {
     requireComponent<Sprite>();
     requireComponent<Model>();
@@ -46,7 +50,8 @@ SpriteSystem3D::SpriteSystem3D(MessageBus& mb, MeshResource& mr)
     m_colouredShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Coloured);
     m_texturedShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Textured, "#define TEXTURED\n");
 
-    //TODO create a dynamic mesh builder with correct flags
+    m_colouredMaterial = createMaterial(m_colouredShader);
+    m_texturedMaterial = createMaterial(m_texturedShader);
 }
 
 //public
@@ -54,10 +59,223 @@ void SpriteSystem3D::process(float)
 {
     //check sprites for dirty flags and update geom as necessary.
     //remember to switch shaders if a texture is added or removed.
+    auto& entities = getEntities();
+    for (auto entity : entities)
+    {
+        auto& sprite = entity.getComponent<Sprite>();
+        if (sprite.m_dirty)
+        {
+            auto subRect = sprite.m_textureRect;
+            FloatRect textureRect;
+            if (sprite.getTexture())
+            {
+                textureRect = sprite.getTexture()->getNormalisedSubrect(subRect);
+
+                //TODO we need to check if we previously had no texture and update
+                //the material (definitely don't do this if we don't have to)
+            }
+
+            std::vector<float> verts;
+
+            //0------3
+            //|      |
+            //|      |
+            //1------2
+
+            //postion
+            verts.push_back(0.f);
+            verts.push_back(subRect.height);
+            verts.push_back(0.f);
+
+            //colour
+            verts.push_back(sprite.getColour().getRed());
+            verts.push_back(sprite.getColour().getGreen());
+            verts.push_back(sprite.getColour().getBlue());
+            verts.push_back(sprite.getColour().getAlpha());
+
+            //UV
+            verts.push_back(textureRect.left);
+            verts.push_back(textureRect.bottom + textureRect.height);
+
+            //------------------------
+
+            //postion
+            verts.push_back(0.f);
+            verts.push_back(0.f);
+            verts.push_back(0.f);
+
+            //colour
+            verts.push_back(sprite.getColour().getRed());
+            verts.push_back(sprite.getColour().getGreen());
+            verts.push_back(sprite.getColour().getBlue());
+            verts.push_back(sprite.getColour().getAlpha());
+
+            //UV
+            verts.push_back(textureRect.left);
+            verts.push_back(textureRect.bottom);
+
+            //------------------------
+
+           //postion
+            verts.push_back(subRect.width);
+            verts.push_back(0.f);
+            verts.push_back(0.f);
+
+            //colour
+            verts.push_back(sprite.getColour().getRed());
+            verts.push_back(sprite.getColour().getGreen());
+            verts.push_back(sprite.getColour().getBlue());
+            verts.push_back(sprite.getColour().getAlpha());
+
+            //UV
+            verts.push_back(textureRect.left + textureRect.width);
+            verts.push_back(textureRect.bottom);
+
+            //------------------------
+
+           //postion
+            verts.push_back(subRect.width);
+            verts.push_back(subRect.height);
+            verts.push_back(0.f);
+
+            //colour
+            verts.push_back(sprite.getColour().getRed());
+            verts.push_back(sprite.getColour().getGreen());
+            verts.push_back(sprite.getColour().getBlue());
+            verts.push_back(sprite.getColour().getAlpha());
+
+            //UV
+            verts.push_back(textureRect.left + textureRect.width);
+            verts.push_back(textureRect.bottom + textureRect.height);
+
+            //update index array
+            std::vector<std::uint32_t> indexData =
+            {
+                0, 1, 3,  3, 1, 2
+            };
+
+            auto& meshData = entity.getComponent<Model>().getMeshData();
+            meshData.vertexCount = verts.size() / (meshData.vertexSize / sizeof(float));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_DYNAMIC_DRAW));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+            meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indexData.size());
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo));
+            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
+
+
+            //update bounding box
+            meshData.boundingBox[0] = { subRect.left, subRect.bottom, -0.01f };
+            meshData.boundingBox[1] = { subRect.left + subRect.width, subRect.bottom + subRect.height, 0.01f };
+
+            //update bounding sphere
+            auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;
+            meshData.boundingSphere.centre = meshData.boundingBox[0] + rad;
+            meshData.boundingSphere.radius = glm::length(rad);
+
+            sprite.m_dirty = false;
+        }
+    }
 }
 
 //private
 void SpriteSystem3D::onEntityAdded(Entity entity)
 {
-    //init the Model component with the mesh and corresponding shader.
+    CRO_ASSERT(entity.getComponent<Model>().getMeshData().vbo == 0, "Model data already exists!");
+
+    //init the Model component with the mesh and corresponding material.
+    auto meshData = m_meshBuilder->build();
+
+    //we want to make sure we copy this so it has
+    //its own parameters
+    Material::Data material;
+
+    const auto& sprite = entity.getComponent<Sprite>();
+    if (sprite.getTexture())
+    {
+        material = m_texturedMaterial;
+        material.setProperty("u_texture", *sprite.getTexture());
+    }
+    else
+    {
+        material = m_colouredMaterial;
+    }
+
+    if (sprite.m_overrideBlendMode)
+    {
+        material.blendMode = sprite.m_blendMode;
+    }
+
+    entity.getComponent<Model>() = Model(meshData, material);
+}
+
+void SpriteSystem3D::onEntityRemoved(Entity entity)
+{
+    //tidy up entity resources
+
+    auto& meshData = entity.getComponent<Model>().getMeshData();
+
+    //delete index buffers
+    for (auto& id : meshData.indexData)
+    {
+        if (id.ibo)
+        {
+            glCheck(glDeleteBuffers(1, &id.ibo));
+        }
+
+#ifdef PLATFORM_DESKTOP
+        if (id.vao)
+        {
+            glCheck(glDeleteVertexArrays(1, &id.vao));
+        }
+#endif
+    }
+    //delete vertex buffer
+    if (meshData.vbo)
+    {
+        glCheck(glDeleteBuffers(1, &meshData.vbo));
+    }
+}
+
+Material::Data SpriteSystem3D::createMaterial(const Shader& shader)
+{
+    Material::Data data;
+    data.shader = shader.getGLHandle();
+    std::fill(data.uniforms.begin(), data.uniforms.end(), -1);
+
+    //get the available attribs. This is sorted and culled
+    //when added to a model according to the requirements of
+    //the model's mesh
+    const auto& shaderAttribs = shader.getAttribMap();
+    for (auto i = 0u; i < shaderAttribs.size(); ++i)
+    {
+        data.attribs[i][Material::Data::Index] = shaderAttribs[i];
+    }
+
+    //find which uniforms exist and add them to the material
+    //here we only look for the ones which we know exist in the
+    //default shaders for sprites. It's up to the user to set
+    //a different material on the sprite model if they want
+    //something more custom.
+    const auto& uniformMap = shader.getUniformMap();
+    for (const auto& [uniform, handle] : uniformMap)
+    {
+        if (uniform == "u_worldViewMatrix")
+        {
+            data.uniforms[Material::WorldView] = handle;
+        }
+        else if (uniform == "u_projectionMatrix")
+        {
+            data.uniforms[Material::Projection] = handle;
+        }
+
+        //else these are user settable uniforms - ie optional, but set by user such as textures
+        else
+        {
+            //add to list of material properties
+            data.properties.insert(std::make_pair(uniform, std::make_pair(handle, Material::Property())));
+        }
+    }
+    return data;
 }

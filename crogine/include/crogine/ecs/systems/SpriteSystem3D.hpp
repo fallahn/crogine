@@ -30,28 +30,37 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/System.hpp>
-
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/MaterialData.hpp>
+
+#include <unordered_map>
+#include <memory>
 
 namespace cro
 {
-    class MeshResource;
+    class MaterialResource;
 
     /*!
     \brief 3D Sprite System
     Updates entities which have a Sprite component and Model
-    component attached so that the Sprite can be drawn in a 3D scene
+    component attached so that the Sprite can be drawn in a 3D scene.
+
+    When an entity is added to this system it is automatically assigned
+    a default sprite shader which is either textured or just vertex coloured.
+    These materials can be overridden with more complex ones, for example
+    ones which support 3D lighting, by setting the material directly on
+    the Model component. (currently this must be done AFTER the system
+    has been updated at least once - this will be fixed eventually)
     */
-    class SpriteSystem3D final : public cro::System
+    class CRO_EXPORT_API SpriteSystem3D final : public cro::System
     {
     public:
         /*!
         \brief Constructor
         \param mb A reference to the active MessageBus
-        \param mr A reference to the MeshResource used by the
-        Scene to which this system was added.
         */
-        SpriteSystem3D(MessageBus& mb, MeshResource& mr);
+        explicit SpriteSystem3D(MessageBus& mb);
 
         void process(float) override;
 
@@ -60,8 +69,13 @@ namespace cro
         Shader m_colouredShader;
         Shader m_texturedShader;
 
-        MeshResource& m_meshResource;
-        void onEntityAdded(Entity) override;
+        Material::Data m_colouredMaterial;
+        Material::Data m_texturedMaterial;
 
+        std::unique_ptr<MeshBuilder> m_meshBuilder; //needs the polymorphism I'm afraid
+
+        void onEntityAdded(Entity) override;
+        void onEntityRemoved(Entity) override;
+        Material::Data createMaterial(const Shader&);
     };
 }
