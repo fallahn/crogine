@@ -248,6 +248,7 @@ void GameState::addSystems()
     m_scene.addSystem<EmpSystem>(mb);
     m_scene.addSystem<BossSystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
+    //m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::SpriteAnimator>(mb);
     m_scene.addSystem<cro::SpriteSystem3D>(mb);

@@ -276,7 +276,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
 void NpcDirector::process(float dt)
 {   
     DPRINT("NPC Count", std::to_string(m_npcCount));
-    
+
     //track how many enemies spawned / died
     //then switch to boss mode when needed
     if (m_totalReleaseCount > totalReleaseCount)

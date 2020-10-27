@@ -130,17 +130,30 @@ void AudioEmitter::setSource(const AudioSource& dataSource)
 
 void AudioEmitter::play()
 {
-    m_transportFlags |= Play;
+    /*
+    Using these flags means there's a delay until the next
+    AudioSystem updte which actually plays the sound, so we
+    set the status here so it  will return the expected value
+    on any immediate state queries. The AudioSystem will then
+    update the state with the correct value.
+    */
+    if (m_state != State::Playing)
+    {
+        m_transportFlags |= Play;
+        m_state = State::Playing;
+    }
 }
 
 void AudioEmitter::pause()
 {
     m_transportFlags |= Pause;
+    m_state = State::Paused;
 }
 
 void AudioEmitter::stop()
 {
     m_transportFlags |= Stop;
+    m_state = State::Stopped;
 }
 
 void AudioEmitter::setLooped(bool looped)

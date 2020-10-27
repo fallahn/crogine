@@ -466,8 +466,16 @@ int32 OpenALImpl::getSourceState(int32 source) const
     ALenum state;
     alCheck(alGetSourcei(src, AL_SOURCE_STATE, &state));
 
-    if (state == AL_PLAYING) return 0;
-    if (state == AL_PAUSED) return 1;
+    if (state == AL_PLAYING)
+    {
+        return 0;
+    }
+
+    if (state == AL_PAUSED)
+    {
+        return 1;
+    }
+
     return 2;
 }
 

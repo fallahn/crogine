@@ -88,8 +88,9 @@ void AudioSystem::process(float)
             audioSource.m_newDataSource = false;
         }
 
+
         if ((audioSource.m_transportFlags & AudioEmitter::Play)
-            && audioSource.m_state != AudioEmitter::State::Playing)
+            /*&& audioSource.m_state != AudioEmitter::State::Playing*/)
         {
             bool loop = (audioSource.m_transportFlags & AudioEmitter::Looped);
             AudioRenderer::playSource(audioSource.m_ID, loop);
@@ -104,9 +105,8 @@ void AudioSystem::process(float)
         }
         //reset all flags, but preserve Loop flag
         audioSource.m_transportFlags &= AudioEmitter::Looped;
-        //set current state
+        //check the actual state as we map have stopped...
         audioSource.m_state = static_cast<AudioEmitter::State>(AudioRenderer::getSourceState(audioSource.m_ID));
-        //DPRINT("Audio State", (audioSource.m_state == AudioEmitter::State::Playing) ? "Playing" : "Stopped");
 
         //check its position and update
         if (entity.hasComponent<Transform>())

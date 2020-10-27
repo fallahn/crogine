@@ -160,7 +160,10 @@ void AudioRenderer::stopSource(int32 src)
 
 int32 AudioRenderer::getSourceState(int32 src)
 {
-    if (src < 1) return 2;
+    if (src < 1)
+    {
+        return 2;
+    }
 
     return m_impl->getSourceState(src);
 }
