@@ -39,6 +39,7 @@ source distribution.
 #include "Messages.hpp"
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/audio/AudioMixer.hpp>
 
 MyApp::MyApp()
 	: m_stateStack({*this, getWindow()})
@@ -121,6 +122,9 @@ bool MyApp::initialise()
 
     m_sharedResources = std::make_unique<SharedResources>();
     m_stateStack.pushState(States::MainMenu);
+
+    cro::AudioMixer::setLabel("Music", 0);
+    cro::AudioMixer::setLabel("FX", 1);
 
     return true;
 }

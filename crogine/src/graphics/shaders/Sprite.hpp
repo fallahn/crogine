@@ -37,37 +37,48 @@ namespace cro
     {
         namespace Sprite
         {
-            const static std::string Vertex = R"(
-                ATTRIBUTE vec4 a_position;
-                ATTRIBUTE LOW vec4 a_colour;
-                ATTRIBUTE MED vec2 a_texCoord0;
-                ATTRIBUTE MED vec2 a_texCoord1; //this actually has the matrix index in the x component
-
+            static const std::string Vertex = R"(
+                uniform mat4 u_worldViewMatrix;
                 uniform mat4 u_projectionMatrix;
-                uniform mat4 u_worldMatrix[MAX_MATRICES];               
-               
+
+                ATTRIBUTE vec2 a_position;
+                ATTRIBUTE MED vec2 a_texCoord0;
+                ATTRIBUTE LOW vec4 a_colour;
+
                 VARYING_OUT LOW vec4 v_colour;
-                VARYING_OUT MED vec2 v_texCoord0;
+
+                #if defined(TEXTURED)
+                VARYING_OUT MED vec2 v_texCoord;
+                #endif
 
                 void main()
                 {
-                    int idx = int(clamp(a_texCoord1.x, 0.0, float(MAX_MATRICES - 1)));/* u_worldMatrix[idx]*/
-                    gl_Position = u_projectionMatrix * u_worldMatrix[idx] * a_position;
+                    gl_Position = u_projectionMatrix * u_worldViewMatrix * vec4(a_position, 0.0, 1.0);
                     v_colour = a_colour;
-                    //v_colour *= a_texCoord1.y;
-                    v_texCoord0 = a_texCoord0;// * a_texCoord1;
+                #if defined(TEXTURED)
+                    v_texCoord = a_texCoord0;
+                #endif
                 })";
 
-            const static std::string Fragment = R"(
-                uniform sampler2D u_texture;
-                
+            static const std::string Coloured = R"(
                 VARYING_IN LOW vec4 v_colour;
-                VARYING_IN MED vec2 v_texCoord0;
                 OUTPUT
-
+            
                 void main()
                 {
-                    FRAG_OUT = TEXTURE(u_texture, v_texCoord0) * v_colour;
+                    FRAG_OUT  = v_colour;
+                })";
+
+            static const std::string Textured = R"(
+                uniform sampler2D u_texture;
+
+                VARYING_IN LOW vec4 v_colour;
+                VARYING_IN MED vec2 v_texCoord;
+                OUTPUT
+            
+                void main()
+                {
+                    FRAG_OUT  = TEXTURE(u_texture, v_texCoord) * v_colour;
                 })";
         }
 

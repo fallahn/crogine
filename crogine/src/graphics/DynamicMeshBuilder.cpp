@@ -50,7 +50,7 @@ Mesh::Data DynamicMeshBuilder::build() const
     meshData.attributes[Mesh::Position] = 3;
     if (m_flags & VertexProperty::Colour)
     {
-        meshData.attributes[Mesh::Colour] = 3;
+        meshData.attributes[Mesh::Colour] = 4;
     }
 
     if (m_flags & VertexProperty::Normal)

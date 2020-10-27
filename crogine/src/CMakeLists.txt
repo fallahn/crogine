@@ -72,6 +72,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/SkeletalAnimator.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteAnimator.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteSystem2D.cpp
+  ${PROJECT_DIR}/ecs/systems/SpriteSystem3D.cpp
   ${PROJECT_DIR}/ecs/systems/TextSystem.cpp
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 
