@@ -72,6 +72,8 @@ void ShadowMapRenderer::process(float)
     for (auto& entity : entities)
     {
         //basic culling - this relies on the visibility test of ModelRenderer
+        //TODO these lists have changed to per-camera so this probably needs updating
+        //to use the shadow projection frustum
         if (entity.getComponent<cro::Model>().isVisible())
         {
             m_visibleEntities.push_back(entity);
