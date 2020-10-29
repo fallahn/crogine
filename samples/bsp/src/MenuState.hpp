@@ -65,4 +65,5 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
+    void updateView();
 };

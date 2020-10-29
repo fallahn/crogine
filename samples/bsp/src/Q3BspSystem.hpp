@@ -34,11 +34,20 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/MeshData.hpp>
+#include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/MaterialData.hpp>
 
 class Q3BspSystem final : public cro::System, public cro::Renderable
 {
 public:
     explicit Q3BspSystem(cro::MessageBus&);
+    ~Q3BspSystem();
+
+    Q3BspSystem(const Q3BspSystem&) = delete;
+    Q3BspSystem(Q3BspSystem&&) = delete;
+    const Q3BspSystem& operator = (const Q3BspSystem&) = delete;
+    Q3BspSystem& operator = (Q3BspSystem&&) = delete;
 
     void process(float) override;
     void updateDrawList(cro::Entity camera) override;
@@ -49,17 +58,45 @@ public:
 
 private:
 
+    std::vector<std::int32_t> m_indices;
     std::vector<Q3::Face> m_faces;
+    std::vector<std::uint16_t> m_faceMatIDs;
     std::vector<cro::Texture> m_lightmaps;
 
+    //we're using these structs for convenience
+    //not necessarily all fields are populated
+    std::vector<cro::Mesh::IndexData> m_submeshes;
+    cro::Mesh::Data m_mesh;
+    std::size_t m_activeSubmeshCount;
+
+    cro::Shader m_shader;
+    cro::Material::Data m_material;
+
+    struct UniformLocation final
+    {
+        enum
+        {
+            WorldViewMatrix,
+            ViewProjectionMatrix,
+            NormalMatrix,
+
+            Texture0,
+            Texture1,
+
+            Count
+        };
+    };
+    std::array<std::int32_t, UniformLocation::Count> m_uniforms = {};
+
     void buildLightmaps(SDL_RWops* file, std::uint32_t count);
+    void createMesh(const std::vector<Q3::Vertex>&, std::size_t);
 
     template <typename T>
-    void parseLump(std::vector<T>& dest, SDL_RWops* file, std::int64_t offsetStart, Q3::Lump lumpInfo)
+    void parseLump(std::vector<T>& dest, SDL_RWops* file, Q3::Lump lumpInfo)
     {
         auto lumpCount = lumpInfo.length / sizeof(T);
         dest.resize(lumpCount);
-        SDL_RWseek(file, offsetStart + lumpInfo.offset, RW_SEEK_SET);
+        SDL_RWseek(file, lumpInfo.offset, RW_SEEK_SET);
         SDL_RWread(file, dest.data(), sizeof(T), lumpCount);
     }
 };

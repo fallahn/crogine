@@ -90,10 +90,10 @@ namespace Q3
         std::int32_t materialID = 0;         //index in the material lookup array
         std::int32_t effect = 0;             //index for effect, -1 for no effect
         std::int32_t type = 0;               //1=poly, 2=patch, 3=mesh, 4=billboard
-        std::int32_t firstVertIndex = 0;     //index to the first vert in this face
-        std::int32_t vertCount = 0;          //number of vertices in this face
-        std::int32_t startIndex = 0;         //start index in the indices array for the face
-        std::int32_t indexCount = 0;         //number of indices in this face
+        std::int32_t firstPolyIndex = 0;     //index to the first vert in this face if it is type 1
+        std::int32_t polyVertCount = 0;      //number of vertices in this face if it is type 1
+        std::int32_t firstMeshIndex = 0;     //start index in the indices array for the face if it is type 3
+        std::int32_t meshVertCount = 0;      //number of indices in this face if it is type 3
         std::int32_t lightmapID = 0;         //index in the texture array for the light map texture
         std::int32_t lightmapCorner[2];      //face's lightmap corner
         std::int32_t lightmapSize[2];        //lightmap dimensions
@@ -130,6 +130,7 @@ namespace Q3
         Lightmaps,
         LightVolumes,
         VisData,
+
         MaxLumps
     };
 

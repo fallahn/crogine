@@ -71,6 +71,7 @@ namespace cro
             UV1,
             BlendIndices,
             BlendWeights,
+
             Total
         };
 
