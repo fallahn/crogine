@@ -65,5 +65,5 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
-    void updateView();
+    void updateView(cro::Camera&);
 };

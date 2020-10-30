@@ -79,10 +79,10 @@ namespace Q3
 
     enum FaceType
     {
-        POLY = 1,
-        PATCH,
-        MESH,
-        BILLBOARD
+        Poly = 1,
+        Patch,
+        Mesh,
+        Billboard
     };
 
     /*

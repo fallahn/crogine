@@ -31,14 +31,18 @@ source distribution.
 
 #include "Q3Bsp.hpp"
 
+#include <crogine/gui/GuiClient.hpp>
+
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
+
+#include <crogine/graphics/BoundingBox.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 
-class Q3BspSystem final : public cro::System, public cro::Renderable
+class Q3BspSystem final : public cro::System, public cro::Renderable, public cro::GuiClient
 {
 public:
     explicit Q3BspSystem(cro::MessageBus&);
@@ -58,11 +62,32 @@ public:
 
 private:
 
+    //----raw map data----//
+
+    //geometry
     std::vector<std::int32_t> m_indices;
     std::vector<Q3::Face> m_faces;
-    std::vector<std::uint16_t> m_faceMatIDs;
+    struct FaceMatData final
+    {
+        std::int32_t materialID = 0;
+        std::int32_t lighmapID = 0;
+        std::uint32_t combinedID = 0;
+    };
+    //material data
+    std::vector<FaceMatData> m_faceMatIDs;
     std::vector<cro::Texture> m_lightmaps;
 
+    //visibility data
+    std::vector<Q3::Plane> m_planes;
+    std::vector<Q3::Node> m_nodes;
+    std::vector<Q3::Leaf> m_leaves;
+    Q3::VisiData m_clusters;
+    std::vector<std::int8_t> m_clusterBitsets; //the m_clusters.bitset points to this to save on manual memory management.
+    std::vector<std::pair<cro::Box, cro::Box>> m_leafBoundingBoxes;
+    std::vector<std::int32_t> m_leafFaces;
+
+
+    //----Parsed data for rendering----//
     //we're using these structs for convenience
     //not necessarily all fields are populated
     std::vector<cro::Mesh::IndexData> m_submeshes;
@@ -92,11 +117,15 @@ private:
     void createMesh(const std::vector<Q3::Vertex>&, std::size_t);
 
     template <typename T>
-    void parseLump(std::vector<T>& dest, SDL_RWops* file, Q3::Lump lumpInfo)
+    void parseLump(std::vector<T>& dest, SDL_RWops* file, Q3::Lump lumpInfo) const
     {
         auto lumpCount = lumpInfo.length / sizeof(T);
         dest.resize(lumpCount);
         SDL_RWseek(file, lumpInfo.offset, RW_SEEK_SET);
         SDL_RWread(file, dest.data(), sizeof(T), lumpCount);
     }
+
+    //visibility calc
+    std::int32_t findLeaf(glm::vec3) const;
+    bool clusterVisible(std::int32_t currentCluster, std::int32_t testCluster) const;
 };

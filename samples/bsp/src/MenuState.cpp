@@ -77,14 +77,14 @@ bool MenuState::handleEvent(const cro::Event& evt)
 
 void MenuState::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == cro::Message::WindowMessage)
+    /*if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             updateView();
         }
-    }
+    }*/
 
     m_scene.forwardMessage(msg);
 }
@@ -165,16 +165,18 @@ void MenuState::createScene()
 {
 
 
-    updateView();
+    //add the resize callback to the camera so window change events
+    //properly update the camera properties
+    updateView(m_scene.getActiveCamera().getComponent<cro::Camera>());
+    m_scene.getActiveCamera().getComponent<cro::Camera>().resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
 }
 
-void MenuState::updateView()
+void MenuState::updateView(cro::Camera& cam3D)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
-    auto& cam3D = m_scene.getActiveCamera().getComponent<cro::Camera>();
     cam3D.projectionMatrix = glm::perspective(75.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 4024.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
