@@ -108,6 +108,9 @@ Q3BspSystem::Q3BspSystem(cro::MessageBus& mb)
             ImGui::SetNextWindowSize({ 380.f, 400.f }, ImGuiCond_FirstUseEver);
             if (ImGui::Begin("Window of Joy"))
             {
+                ImGui::Text("Hold TAB to unlock mouse");
+                ImGui::NewLine();
+
                 auto frameRate = ImGui::GetIO().Framerate;
                 ImGui::Text("Average Frame Time %3.3fms (%4.3f FPS)", (1.f / frameRate) * 1000.f, frameRate);
                 ImGui::NewLine();
@@ -178,7 +181,8 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
     clustersSkipped = 0;
     leavesCulled = 0;
 
-    std::vector<bool> usedFaces(m_faces.size());
+    static std::vector<bool> usedFaces;
+    usedFaces.resize(m_faces.size());
     std::fill(usedFaces.begin(), usedFaces.end(), false);
 
     const auto frustum = camera.getComponent<cro::Camera>().getFrustum();

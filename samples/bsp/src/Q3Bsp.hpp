@@ -29,6 +29,14 @@ source distribution.
 
 #pragma once
 
+/*
+Much of this is derived from http://www.mralligator.com/q3/
+
+However some data regarding the Face struct is incorrect (or I misinterpreted it)
+and corrections are noted by the struct definition, below.
+
+*/
+
 #include <cstdint>
 
 namespace Q3

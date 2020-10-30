@@ -29,45 +29,34 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
 #include "InputParser.hpp"
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/MeshResource.hpp>
-#include <crogine/graphics/ShaderResource.hpp>
-#include <crogine/graphics/MaterialResource.hpp>
-#include <crogine/graphics/TextureResource.hpp>
+#include <crogine/ecs/System.hpp>
 
-
-/*!
-Creates a state to render a menu.
+/*
+First person camera controller. Probably works as 3rd person too with some adjustments
 */
-class MenuState final : public cro::State
+
+struct FpsCamera final
+{
+    Input currentInput;
+
+    float cameraPitch = 0.f; //used to clamp camera
+    float cameraYaw = 0.f; //used to calc forward vector
+
+    float moveSpeed = 100.f; //units per second
+
+    bool flyMode = true;
+};
+
+
+class FpsCameraSystem final : public cro::System
 {
 public:
-	MenuState(cro::StateStack&, cro::State::Context);
-	~MenuState() = default;
+    explicit FpsCameraSystem(cro::MessageBus&);
 
-	cro::StateID getStateID() const override { return States::MainMenu; }
-
-	bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-	bool simulate(float) override;
-	void render() override;
+    void process(float) override;
 
 private:
 
-    cro::Scene m_scene;
-    cro::MeshResource m_meshResource;
-    cro::ShaderResource m_shaderResource;
-    cro::MaterialResource m_materialResource;
-    cro::TextureResource m_textureResource;
-
-    InputParser m_inputParser;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void updateView(cro::Camera&);
 };

@@ -29,45 +29,59 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
-#include "InputParser.hpp"
-
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/MeshResource.hpp>
-#include <crogine/graphics/ShaderResource.hpp>
-#include <crogine/graphics/MaterialResource.hpp>
-#include <crogine/graphics/TextureResource.hpp>
-
-
-/*!
-Creates a state to render a menu.
+/*
+Input parser. In charge of reading input events and applying
+them to the camera controller of the active entity.
 */
-class MenuState final : public cro::State
+
+#include <crogine/core/Clock.hpp>
+#include <crogine/ecs/Entity.hpp>
+
+#include <SDL_events.h>
+
+struct Input final
+{
+    enum Flags
+    {
+        Forward = 0x1,
+        Backward = 0x2,
+        Left = 0x4,
+        Right = 0x8,
+        LeftMouse = 0x10,
+        RightMouse = 0x20,
+        Crouch = 0x40,
+        Jump = 0x80
+    };
+
+    std::uint32_t timeStamp = 0;
+    std::uint16_t buttonFlags = 0;
+    std::int8_t xMove = 0;
+    std::int8_t yMove = 0;
+};
+
+
+class InputParser final
 {
 public:
-	MenuState(cro::StateStack&, cro::State::Context);
-	~MenuState() = default;
+    InputParser();
 
-	cro::StateID getStateID() const override { return States::MainMenu; }
+    void handleEvent(const SDL_Event&);
 
-	bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-	bool simulate(float) override;
-	void render() override;
+    void update();
+
+    void setEntity(cro::Entity);
+
+    cro::Entity getEntity() const { return m_entity; }
+
+    void setEnabled(bool enabled) { m_enabled = enabled; }
 
 private:
+    std::uint16_t m_inputFlags;
+    cro::Entity m_entity;
+    std::int32_t m_mouseMoveX;
+    std::int32_t m_mouseMoveY;
 
-    cro::Scene m_scene;
-    cro::MeshResource m_meshResource;
-    cro::ShaderResource m_shaderResource;
-    cro::MaterialResource m_materialResource;
-    cro::TextureResource m_textureResource;
+    bool m_enabled;
 
-    InputParser m_inputParser;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void updateView(cro::Camera&);
+    cro::Clock m_timestampClock;
 };

@@ -154,7 +154,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\FpsCameraSystem.cpp" />
     <ClCompile Include="src\GameState.cpp" />
+    <ClCompile Include="src\InputParser.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
@@ -163,7 +165,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp" />
+    <ClInclude Include="src\FpsCameraSystem.hpp" />
     <ClInclude Include="src\GameState.hpp" />
+    <ClInclude Include="src\InputParser.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />

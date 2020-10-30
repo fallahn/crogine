@@ -56,11 +56,11 @@ Planar Spatial::intersects(Plane plane, Sphere sphere)
 
 Planar Spatial::intersects(Plane plane, Box box)
 {
-    glm::vec3 centre = (box[0] + box[1]) / 2.f;
-    const float dist = distance(plane, centre);
-
     glm::vec3 extents = (box[1] - box[0]) / 2.f;
+    glm::vec3 centre = box[0] + extents;
+
     extents *= glm::vec3(plane.x, plane.y, plane.z);
+    const float dist = distance(plane, centre);
 
     if (std::abs(dist) <= (std::abs(extents.x) + std::abs(extents.y) + std::abs(extents.z)))
     {
