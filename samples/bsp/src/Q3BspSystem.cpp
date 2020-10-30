@@ -45,12 +45,14 @@ namespace
         
         ATTRIBUTE vec4 a_position;
         ATTRIBUTE vec3 a_normal;
+        ATTRIBUTE vec4 a_colour;
         ATTRIBUTE vec2 a_texCoord0;
 
         uniform mat4 u_viewProjectionMatrix;
         uniform mat3 u_normalMatrix;
 
         VARYING_OUT vec3 v_normal;
+        VARYING_OUT vec4 v_colour;
         VARYING_OUT vec2 v_texCoord0;
 
         void main()
@@ -58,7 +60,7 @@ namespace
             gl_Position = u_viewProjectionMatrix * a_position;
 
             v_normal = a_normal;
-
+            v_colour = a_colour;
             v_texCoord0 = a_texCoord0;
         })";
 
@@ -68,6 +70,7 @@ namespace
         uniform sampler2D u_texture;
 
         VARYING_IN vec3 v_normal;
+        VARYING_IN vec4 v_colour;
         VARYING_IN vec2 v_texCoord0;
 
         OUTPUT
@@ -77,8 +80,11 @@ namespace
         void main()
         {
             float amount = dot(v_normal, normalize(LightDir));
+            amount = 0.5 + (amount / 2.0);
 
-            FRAG_OUT = vec4(vec3(amount), 1.0);// TEXTURE(u_texture, v_texCoord0);
+            vec4 colour = v_colour;
+            colour.rgb *= amount;
+            FRAG_OUT = colour;// TEXTURE(u_texture, v_texCoord0);
         })";
 }
 
@@ -153,8 +159,8 @@ void Q3BspSystem::render(cro::Entity camera, const cro::RenderTarget&)
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_mesh.vbo));
 #endif //PLATFORM
 
-    //glCheck(glEnable(GL_CULL_FACE));
-    //glCheck(glCullFace(GL_BACK)); //TODO enable this when we know faces are wound correctly
+    glCheck(glEnable(GL_CULL_FACE));
+    glCheck(glCullFace(GL_BACK)); //TODO enable this when we know faces are wound correctly
     glCheck(glEnable(GL_DEPTH_TEST));
 
     //bind shader
@@ -269,6 +275,7 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
 
         //this is stored as member data as it's used by the PVS during rendering
         parseLump(m_faces, file.file, lumpInfo[Q3::Faces]);
+
 
         //create a unique lightmap/material ID pair so we can assign each group
         //of faces to a single IBO when rendering
@@ -399,6 +406,11 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
             vertexData.push_back(vertex.position.z);
             vertexData.push_back(-vertex.position.y);
 
+            vertexData.push_back(static_cast<float>(vertex.colour[0]) / 255.f);
+            vertexData.push_back(static_cast<float>(vertex.colour[1]) / 255.f);
+            vertexData.push_back(static_cast<float>(vertex.colour[2]) / 255.f);
+            vertexData.push_back(static_cast<float>(vertex.colour[3]) / 255.f);
+
             vertexData.push_back(vertex.normal.x);
             vertexData.push_back(vertex.normal.z);
             vertexData.push_back(-vertex.normal.y);
@@ -411,6 +423,7 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         CRO_ASSERT(m_submeshes.empty(), "ibos not empty!");
 
         m_mesh.attributes[cro::Mesh::Position] = 3;
+        m_mesh.attributes[cro::Mesh::Colour] = 4;
         m_mesh.attributes[cro::Mesh::Normal] = 3;
         m_mesh.attributes[cro::Mesh::UV0] = 2;
 
@@ -511,12 +524,12 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         std::vector<std::uint32_t> indexData;
         for (const auto& face : m_faces)
         {
-            if (face.type == 3)
+            if (face.type != 2)
             {
-                //TODO mark this correction in the header file - online doc is wrong.
-                for (auto k = 0; k < face.meshVertCount; ++k)
+                //reverse the winding
+                for (auto k = face.meshIndexCount - 1; k >= 0; --k)
                 {
-                    indexData.push_back(face.firstPolyIndex + m_indices[face.firstMeshIndex + k]);
+                    indexData.push_back(face.firstVertIndex + m_indices[face.firstMeshIndex + k]);
                 }
             }
         }

@@ -85,15 +85,28 @@ namespace Q3
         BILLBOARD
     };
 
+    /*
+    Some of the specs for this outlined here are wrong: http://www.mralligator.com/q3/
+    See the comments below for correction.
+
+    To correctly calculate the indices for a face do something like 
+
+    for (auto i = 0; i < face.meshVertCount; ++i)
+    {
+        indexData.push_back(face.firstVertIndex + m_indices[face.firstMeshIndex + i]);
+    }
+
+    */
+
     struct Face final
     {
         std::int32_t materialID = 0;         //index in the material lookup array
         std::int32_t effect = 0;             //index for effect, -1 for no effect
         std::int32_t type = 0;               //1=poly, 2=patch, 3=mesh, 4=billboard
-        std::int32_t firstPolyIndex = 0;     //index to the first vert in this face if it is type 1
-        std::int32_t polyVertCount = 0;      //number of vertices in this face if it is type 1
-        std::int32_t firstMeshIndex = 0;     //start index in the indices array for the face if it is type 3
-        std::int32_t meshVertCount = 0;      //number of indices in this face if it is type 3
+        std::int32_t firstVertIndex = 0;     //index to the first vert in this face - directly indexes the vertex array, for both types 1 & 3
+        std::int32_t vertexCount = 0;        //number of vertices in the face - not necessarily the same as number of indices as vertices are shared
+        std::int32_t firstMeshIndex = 0;     //start index in the indices array for the face if it is type 1 or 3, the value of which is ADDED to firstVertIndex
+        std::int32_t meshIndexCount = 0;     //number of indices in this face if it is type 1 or 3
         std::int32_t lightmapID = 0;         //index in the texture array for the light map texture
         std::int32_t lightmapCorner[2];      //face's lightmap corner
         std::int32_t lightmapSize[2];        //lightmap dimensions
