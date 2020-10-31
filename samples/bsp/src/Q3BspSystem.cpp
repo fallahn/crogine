@@ -92,6 +92,7 @@ namespace
         })";
 
     std::int32_t visibleFaceCount = 0;
+    std::int32_t visiblePatchCount = 0;
     std::int32_t clustersSkipped = 0;
     std::int32_t leavesCulled = 0; //this only counts the leaves skipped in the active cluster
 }
@@ -179,6 +180,7 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
     auto clusterIndex = m_leaves[leafIndex].cluster;
 
     visibleFaceCount = 0;
+    visiblePatchCount = 0;
     clustersSkipped = 0;
     leavesCulled = 0;
 
@@ -190,8 +192,9 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
     static std::vector<std::int32_t> visibleFaces;
     visibleFaces.clear();
 
-    //not convinced searching all the leaves is the way to go
-    //as there are nearly as many leaves as there are faces.
+    static std::vector<std::int32_t> visiblePatches;
+    visiblePatches.clear();
+
     auto i = m_leaves.size();
     while (i--)
     {
@@ -227,18 +230,25 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
         {
             auto faceIndex = m_leafFaces[leaf.firstFace + faceCount];
 
-            if (m_faces[faceIndex].type == Q3::Patch
-                || m_faces[faceIndex].type == Q3::Billboard)
+            auto type = m_faces[faceIndex].type;
+            if (type == Q3::Billboard)
             {
-                //TODO draw functions for other types
                 continue; 
             }
 
             if (!usedFaces[faceIndex])
             {
                 usedFaces[faceIndex] = true;
-                visibleFaces.push_back(faceIndex);
-                visibleFaceCount++;
+                if (type == Q3::Patch)
+                {
+                    visiblePatches.push_back(faceIndex);
+                    visiblePatchCount++;
+                }
+                else
+                {
+                    visibleFaces.push_back(faceIndex);
+                    visibleFaceCount++;
+                }
             }
         }
 
@@ -283,6 +293,10 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
         m_activeSubmeshCount++;
     }
+
+    //TODO - the same thing for the patches mesh
+
+
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
 
@@ -395,6 +409,7 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
     m_clusterBitsets.clear();
     m_leafBoundingBoxes.clear();
     m_leafFaces.clear();
+    m_patches.clear();
     m_activeSubmeshCount = 0;
 
     auto path = cro::FileSystem::getResourcePath() + mapPath;
@@ -466,8 +481,23 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
 
         createMesh(vertices, submeshCount);
 
+        //go over faces and create patch meshes
+        m_patchIndices.resize(m_faces.size());
+        std::fill(m_patchIndices.begin(), m_patchIndices.end(), -1);
 
-        //TODO load texture/material info
+        std::vector<float> patchVerts;
+        for (auto i = 0u; i < m_faces.size(); ++i)
+        {
+            if (m_faces[i].type == Q3::Patch)
+            {
+                m_patchIndices.push_back(static_cast<std::int32_t>(m_patches.size()));
+                auto& patch = m_patches.emplace_back(m_faces[i], vertices, patchVerts);
+            }
+        }
+        createPatchMesh(patchVerts);
+
+
+        //TODO load texture/material info - needed to split alpha blend pass, and set face culling
         //TODO load entity lump for props etc?
 
         //load the plane data
@@ -514,8 +544,8 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
 void Q3BspSystem::buildLightmaps(SDL_RWops* file, std::uint32_t count)
 {
     //this would be a perfect opportunity to use GL_TEXTURE_2D_ARRAY
-    //but guess what - no GLES2 support :(
-
+    //because we'd only have as many submeshes as materials, and fewer
+    //texture switches... but guess what - no GLES2 support :(
 
     std::vector<std::uint8_t> buffer(128 * 128 * 3);
 
@@ -539,16 +569,16 @@ void Q3BspSystem::buildLightmaps(SDL_RWops* file, std::uint32_t count)
         }
     };
 
+
     for (auto i = 0u; i < count; ++i)
     {
         SDL_RWread(file, buffer.data(), buffer.size(), 1);
         adjustGamma();
-        //TODO flip vertically?
 
         auto& texture = m_lightmaps.emplace_back();
         texture.create(128, 128, cro::ImageFormat::RGB);
         texture.update(buffer.data());
-        texture.setSmooth(true);
+        //texture.setSmooth(true);
 
         /*cro::Image img;
         img.loadFromMemory(buffer.data(), 128, 128, cro::ImageFormat::RGB);
@@ -564,7 +594,7 @@ void Q3BspSystem::buildLightmaps(SDL_RWops* file, std::uint32_t count)
     texture.update(buffer.data());
 
     //and correct the face indices to point to the correct location
-    for (auto& face : m_faces)
+    for (auto& face : m_faceMatIDs)
     {
         if (face.lightmapID == -1)
         {
@@ -752,6 +782,11 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
     //glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_submeshes[0].first.ibo));
     //glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_submeshes[0].first.indexCount * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
     //glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+}
+
+void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
+{
+
 }
 
 std::int32_t Q3BspSystem::findLeaf(glm::vec3 camPos) const

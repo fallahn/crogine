@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "Q3Bsp.hpp"
+#include "Patch.hpp"
 
 #include <crogine/gui/GuiClient.hpp>
 
@@ -75,6 +76,10 @@ private:
         std::int32_t lightmapID = 0;
         std::uint32_t combinedID = 0;
     };
+
+    std::vector<std::int32_t> m_patchIndices;
+    std::vector<Patch> m_patches;
+
     //material data
     std::vector<FaceMatData> m_faceMatIDs;
     std::vector<cro::Texture> m_lightmaps;
@@ -118,6 +123,7 @@ private:
 
     void buildLightmaps(SDL_RWops* file, std::uint32_t count);
     void createMesh(const std::vector<Q3::Vertex>&, std::size_t);
+    void createPatchMesh(const std::vector<float>&);
 
     template <typename T>
     void parseLump(std::vector<T>& dest, SDL_RWops* file, Q3::Lump lumpInfo) const

@@ -162,6 +162,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
+    <ClCompile Include="src\Patch.cpp" />
     <ClCompile Include="src\Q3BspSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -173,6 +174,7 @@
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
+    <ClInclude Include="src\Patch.hpp" />
     <ClInclude Include="src\Q3Bsp.hpp" />
     <ClInclude Include="src\Q3BspSystem.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
