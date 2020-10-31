@@ -179,6 +179,7 @@
     <ClInclude Include="src\Q3BspSystem.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
+    <ClInclude Include="src\stb_image_resize.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -98,9 +98,14 @@ private:
     //----Parsed data for rendering----//
     //we're using these structs for convenience
     //not necessarily all fields are populated
-    std::vector<std::pair<cro::Mesh::IndexData, FaceMatData>> m_submeshes;
-    cro::Mesh::Data m_mesh;
-    std::size_t m_activeSubmeshCount;
+    struct MeshData final
+    {
+        std::vector<std::pair<cro::Mesh::IndexData, FaceMatData>> submeshes;
+        cro::Mesh::Data mesh;
+        std::size_t activeSubmeshCount = 0;
+    };
+    MeshData m_brushMesh;
+    MeshData m_patchMesh;
 
     cro::Shader m_shader;
     cro::Material::Data m_material;

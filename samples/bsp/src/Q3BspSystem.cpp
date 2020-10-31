@@ -42,6 +42,10 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#define STBIR_DEFAULT_FILTER_UPSAMPLE    STBIR_FILTER_CUBICBSPLINE
+#include "stb_image_resize.h"
+
 namespace
 {
     const std::string Vertex = 
@@ -99,8 +103,7 @@ namespace
 
 Q3BspSystem::Q3BspSystem(cro::MessageBus& mb)
     : cro::System       (mb, typeid(Q3BspSystem)),
-    m_loaded            (false),
-    m_activeSubmeshCount(0)
+    m_loaded            (false)
 {
     std::fill(m_uniforms.begin(), m_uniforms.end(), -1);
 
@@ -116,7 +119,7 @@ Q3BspSystem::Q3BspSystem(cro::MessageBus& mb)
                 ImGui::Text("Average Frame Time %3.3fms (%4.3f FPS)", (1.f / frameRate) * 1000.f, frameRate);
                 ImGui::NewLine();
 
-                ImGui::Text("Draw Count: %lu", m_activeSubmeshCount);
+                ImGui::Text("Draw Count: %lu", m_brushMesh.activeSubmeshCount);
                 ImGui::Text("Visible Faces: %d", visibleFaceCount);
                 ImGui::Text("Clusters Skipped: %d", clustersSkipped);
                 ImGui::Text("Leaves Culled This Cluster: %d", leavesCulled);
@@ -150,9 +153,9 @@ Q3BspSystem::Q3BspSystem(cro::MessageBus& mb)
 Q3BspSystem::~Q3BspSystem()
 {
     //delete opengl stuffs
-    if (m_mesh.vbo)
+    if (m_brushMesh.mesh.vbo)
     {
-        for (auto& [ibo, mat] : m_submeshes)
+        for (auto& [ibo, mat] : m_brushMesh.submeshes)
         {
 #ifdef PLATFORM_DESKTOP
             glCheck(glDeleteVertexArrays(1, &ibo.vao));
@@ -160,7 +163,7 @@ Q3BspSystem::~Q3BspSystem()
             glCheck(glDeleteBuffers(1, &ibo.ibo));
         }
 
-        glCheck(glDeleteBuffers(1, &m_mesh.vbo));
+        glCheck(glDeleteBuffers(1, &m_brushMesh.mesh.vbo));
     }
 }
 
@@ -265,12 +268,12 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
 
     //update the IBOs with the face data and count how many we used
     //for each IBO keep the texture ID/lightmap ID so it can be bound when drawing
-    m_activeSubmeshCount = 0;
+    m_brushMesh.activeSubmeshCount = 0;
     std::vector<std::uint32_t> indexData;
 
     for (auto i = 0u; i < visibleFaces.size(); /*++i*/)
     {
-        auto& [submesh, matData] = m_submeshes[m_activeSubmeshCount];
+        auto& [submesh, matData] = m_brushMesh.submeshes[m_brushMesh.activeSubmeshCount];
         matData = m_faceMatIDs[visibleFaces[i]];
 
         indexData.clear();
@@ -291,7 +294,7 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
         submesh.indexCount = indexData.size();
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
-        m_activeSubmeshCount++;
+        m_brushMesh.activeSubmeshCount++;
     }
 
     //TODO - the same thing for the patches mesh
@@ -328,9 +331,9 @@ void Q3BspSystem::render(cro::Entity camera, const cro::RenderTarget&)
 
     m_activeMatData.lightmapID = -1;
     m_activeMatData.materialID = -1;
-    for (auto i = 0u; i < m_activeSubmeshCount; ++i)
+    for (auto i = 0u; i < m_brushMesh.activeSubmeshCount; ++i)
     {
-        const auto& [submesh, matData] = m_submeshes[i];
+        const auto& [submesh, matData] = m_brushMesh.submeshes[i];
         
         if (m_activeMatData.lightmapID != matData.lightmapID)
         {
@@ -341,6 +344,7 @@ void Q3BspSystem::render(cro::Entity camera, const cro::RenderTarget&)
         if (m_activeMatData.materialID != matData.materialID)
         {
             //switch material textures
+            //apply blend/face culling
         }
         m_activeMatData = matData;
 
@@ -410,7 +414,7 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
     m_leafBoundingBoxes.clear();
     m_leafFaces.clear();
     m_patches.clear();
-    m_activeSubmeshCount = 0;
+    m_brushMesh.activeSubmeshCount = 0;
 
     auto path = cro::FileSystem::getResourcePath() + mapPath;
 
@@ -547,7 +551,11 @@ void Q3BspSystem::buildLightmaps(SDL_RWops* file, std::uint32_t count)
     //because we'd only have as many submeshes as materials, and fewer
     //texture switches... but guess what - no GLES2 support :(
 
-    std::vector<std::uint8_t> buffer(128 * 128 * 3);
+    const std::uint32_t smallSize = 128;
+    const std::uint32_t largeSize = 512;
+
+    std::vector<std::uint8_t> buffer(smallSize * smallSize * 3);
+    std::vector<std::uint8_t> resizeBuffer(largeSize * largeSize * 3);
 
     auto adjustGamma = [&buffer]()
     {
@@ -575,10 +583,21 @@ void Q3BspSystem::buildLightmaps(SDL_RWops* file, std::uint32_t count)
         SDL_RWread(file, buffer.data(), buffer.size(), 1);
         adjustGamma();
 
+        //stbir_resize_uint8(buffer.data(), smallSize, smallSize, 0,
+        //                    resizeBuffer.data(), largeSize, largeSize, 0, 3);
+
+        //stbir_resize_uint8_generic(buffer.data(), smallSize, smallSize, 0,
+        //                            resizeBuffer.data(), largeSize, largeSize, 0, 3,
+        //                            0, 0,
+        //                            STBIR_EDGE_ZERO, STBIR_FILTER_CUBICBSPLINE, STBIR_COLORSPACE_LINEAR,
+        //                            nullptr);
+
+
         auto& texture = m_lightmaps.emplace_back();
-        texture.create(128, 128, cro::ImageFormat::RGB);
+        texture.create(smallSize, smallSize, cro::ImageFormat::RGB);
         texture.update(buffer.data());
-        //texture.setSmooth(true);
+        texture.setSmooth(true);
+        //texture.setRepeated(true);
 
         /*cro::Image img;
         img.loadFromMemory(buffer.data(), 128, 128, cro::ImageFormat::RGB);
@@ -588,10 +607,10 @@ void Q3BspSystem::buildLightmaps(SDL_RWops* file, std::uint32_t count)
     //add a blank lightmap at the end of the array so faces with no
     //lightmap can be assigned this in the shader, as the shader still
     //requires the lightmap uniform be set.
-    std::fill(buffer.begin(), buffer.end(), 255);
+    std::vector<std::uint8_t> smallBuff = { 255,255,255,255, 255,255,255,255, 255,255,255,255 };
     auto& texture = m_lightmaps.emplace_back();
-    texture.create(128, 128, cro::ImageFormat::RGB);
-    texture.update(buffer.data());
+    texture.create(2,2, cro::ImageFormat::RGB);
+    texture.update(smallBuff.data());
 
     //and correct the face indices to point to the correct location
     for (auto& face : m_faceMatIDs)
@@ -607,7 +626,7 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
 {
     auto addSubmesh = [&]()
     {
-        auto& [submesh, matData] = m_submeshes.emplace_back();
+        auto& [submesh, matData] = m_brushMesh.submeshes.emplace_back();
         submesh.format = GL_UNSIGNED_INT;
         submesh.primitiveType = GL_TRIANGLES;
 
@@ -617,7 +636,7 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         glCheck(glGenVertexArrays(1, &submesh.vao));
 
         glCheck(glBindVertexArray(submesh.vao));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_mesh.vbo));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_brushMesh.mesh.vbo));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
 
         const auto& attribs = m_material.attribs;
@@ -625,7 +644,7 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         {
             glCheck(glEnableVertexAttribArray(attribs[j][cro::Material::Data::Index]));
             glCheck(glVertexAttribPointer(attribs[j][cro::Material::Data::Index], attribs[j][cro::Material::Data::Size],
-                GL_FLOAT, GL_FALSE, static_cast<GLsizei>(m_mesh.vertexSize),
+                GL_FLOAT, GL_FALSE, static_cast<GLsizei>(m_brushMesh.mesh.vertexSize),
                 reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][cro::Material::Data::Offset]))));
         }
 
@@ -636,23 +655,23 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
     };
 
     //check we don't already have a buffer before creating a new one
-    if (!m_mesh.vbo)
+    if (!m_brushMesh.mesh.vbo)
     {
         //create new buffers
-        CRO_ASSERT(m_submeshes.empty(), "ibos not empty!");
-        glCheck(glGenBuffers(1, &m_mesh.vbo));
+        CRO_ASSERT(m_brushMesh.submeshes.empty(), "ibos not empty!");
+        glCheck(glGenBuffers(1, &m_brushMesh.mesh.vbo));
 
-        m_mesh.attributes[cro::Mesh::Position] = 3;
-        m_mesh.attributes[cro::Mesh::Colour] = 4;
-        m_mesh.attributes[cro::Mesh::Normal] = 3;
-        m_mesh.attributes[cro::Mesh::UV0] = 2;
+        m_brushMesh.mesh.attributes[cro::Mesh::Position] = 3;
+        m_brushMesh.mesh.attributes[cro::Mesh::Colour] = 4;
+        m_brushMesh.mesh.attributes[cro::Mesh::Normal] = 3;
+        m_brushMesh.mesh.attributes[cro::Mesh::UV0] = 2;
 
-        m_mesh.primitiveType = GL_TRIANGLES;
-        for (auto a : m_mesh.attributes)
+        m_brushMesh.mesh.primitiveType = GL_TRIANGLES;
+        for (auto a : m_brushMesh.mesh.attributes)
         {
-            m_mesh.vertexSize += a;
+            m_brushMesh.mesh.vertexSize += a;
         }
-        m_mesh.vertexSize *= sizeof(float);
+        m_brushMesh.mesh.vertexSize *= sizeof(float);
         
         //calc attrib map for the shader
         const auto& shaderAttribs = m_shader.getAttribMap();
@@ -667,12 +686,12 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
             if (m_material.attribs[i][cro::Material::Data::Index] > -1)
             {
                 //attrib exists in shader so map its size
-                m_material.attribs[i][cro::Material::Data::Size] = static_cast<std::int32_t>(m_mesh.attributes[i]);
+                m_material.attribs[i][cro::Material::Data::Size] = static_cast<std::int32_t>(m_brushMesh.mesh.attributes[i]);
 
                 //calc the pointer offset for each attrib
                 m_material.attribs[i][cro::Material::Data::Offset] = static_cast<std::int32_t>(pointerOffset * sizeof(float));
             }
-            pointerOffset += m_mesh.attributes[i]; //count the offset regardless as the mesh may have more attributes than material
+            pointerOffset += m_brushMesh.mesh.attributes[i]; //count the offset regardless as the mesh may have more attributes than material
         }
 
         //sort by size
@@ -695,42 +714,12 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         {
             addSubmesh();
         }
-        //m_submeshes.resize(submeshCount);
-
-        //for (auto& [submesh, matData] : m_submeshes)
-        //{
-            /*submesh.format = GL_UNSIGNED_INT;
-            submesh.primitiveType = GL_TRIANGLES;
-
-            glCheck(glGenBuffers(1, &submesh.ibo));
-
-#ifdef PLATFORM_DESKTOP
-            glCheck(glGenVertexArrays(1, &submesh.vao));
-
-            glCheck(glBindVertexArray(submesh.vao));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_mesh.vbo));
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
-
-            const auto& attribs = m_material.attribs;
-            for (auto j = 0u; j < m_material.attribCount; ++j)
-            {
-                glCheck(glEnableVertexAttribArray(attribs[j][cro::Material::Data::Index]));
-                glCheck(glVertexAttribPointer(attribs[j][cro::Material::Data::Index], attribs[j][cro::Material::Data::Size],
-                    GL_FLOAT, GL_FALSE, static_cast<GLsizei>(m_mesh.vertexSize),
-                    reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][cro::Material::Data::Offset]))));
-            }
-
-            glCheck(glBindVertexArray(0));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-#endif*/
-        //}
     }
 
     //TODO check if we need to increase the IBO size when loading a new map
-    if (submeshCount > m_submeshes.size())
+    if (submeshCount > m_brushMesh.submeshes.size())
     {
-        for (auto j = m_submeshes.size(); j < submeshCount; ++j)
+        for (auto j = m_brushMesh.submeshes.size(); j < submeshCount; ++j)
         {
             addSubmesh();
         }
@@ -756,32 +745,12 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         vertexData.push_back(vertex.uv1.x);
         vertexData.push_back(vertex.uv1.y);
     }
-    m_mesh.vertexCount = vertexData.size() / (m_mesh.vertexSize / sizeof(float));
+    m_brushMesh.mesh.vertexCount = vertexData.size() / (m_brushMesh.mesh.vertexSize / sizeof(float));
 
     //upload vert data
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_mesh.vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, m_mesh.vertexSize * m_mesh.vertexCount, vertexData.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_brushMesh.mesh.vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, m_brushMesh.mesh.vertexSize * m_brushMesh.mesh.vertexCount, vertexData.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-    //test the index data
-    //std::vector<std::uint32_t> indexData;
-    //for (const auto& face : m_faces)
-    //{
-    //    if (face.type != 2)
-    //    {
-    //        //reverse the winding
-    //        for (auto k = face.meshIndexCount - 1; k >= 0; --k)
-    //        {
-    //            indexData.push_back(face.firstVertIndex + m_indices[face.firstMeshIndex + k]);
-    //        }
-    //    }
-    //}
-
-    //m_activeSubmeshCount = 1;
-    //m_submeshes[0].first.indexCount = indexData.size();
-    //glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_submeshes[0].first.ibo));
-    //glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_submeshes[0].first.indexCount * sizeof(std::uint32_t), indexData.data(), GL_DYNAMIC_DRAW));
-    //glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
 
 void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
