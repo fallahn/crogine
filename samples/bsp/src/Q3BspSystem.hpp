@@ -62,6 +62,8 @@ public:
 
 private:
 
+    bool m_loaded;
+
     //----raw map data----//
 
     //geometry
@@ -70,12 +72,13 @@ private:
     struct FaceMatData final
     {
         std::int32_t materialID = 0;
-        std::int32_t lighmapID = 0;
+        std::int32_t lightmapID = 0;
         std::uint32_t combinedID = 0;
     };
     //material data
     std::vector<FaceMatData> m_faceMatIDs;
     std::vector<cro::Texture> m_lightmaps;
+    FaceMatData m_activeMatData;
 
     //visibility data
     std::vector<Q3::Plane> m_planes;
@@ -83,14 +86,14 @@ private:
     std::vector<Q3::Leaf> m_leaves;
     Q3::VisiData m_clusters;
     std::vector<std::int8_t> m_clusterBitsets; //the m_clusters.bitset points to this to save on manual memory management.
-    std::vector<std::pair<cro::Box, cro::Box>> m_leafBoundingBoxes;
+    std::vector<cro::Box> m_leafBoundingBoxes;
     std::vector<std::int32_t> m_leafFaces;
 
 
     //----Parsed data for rendering----//
     //we're using these structs for convenience
     //not necessarily all fields are populated
-    std::vector<cro::Mesh::IndexData> m_submeshes;
+    std::vector<std::pair<cro::Mesh::IndexData, FaceMatData>> m_submeshes;
     cro::Mesh::Data m_mesh;
     std::size_t m_activeSubmeshCount;
 
