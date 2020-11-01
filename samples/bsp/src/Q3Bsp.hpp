@@ -99,7 +99,7 @@ namespace Q3
         Vec2f uv0;
         Vec2f uv1; //shadow map coord
         Vec3f normal;
-        std::uint8_t colour[4]; //RGBA
+        std::uint8_t colour[4] = {255,255,255,255}; //RGBA
 
         //operators are used when tesselating patches
         //TODO how do we set the normal/colour of the return value?
@@ -115,6 +115,11 @@ namespace Q3
 
             retVal.uv1.x = uv1.x + r.uv1.x;
             retVal.uv1.y = uv1.y + r.uv1.y;
+
+            retVal.colour[0] = colour[0];// (colour[0] + r.colour[0]) / 2;
+            retVal.colour[1] = colour[1];//(colour[1] + r.colour[1]) / 2;
+            retVal.colour[2] = colour[2];//(colour[2] + r.colour[2]) / 2;
+            retVal.colour[3] = colour[3];//(colour[3] + r.colour[3]) / 2;
 
             return retVal;
         }

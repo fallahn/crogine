@@ -62,7 +62,8 @@ Patch::Patch(const Q3::Face& face, const std::vector<Q3::Vertex>& mapVerts, std:
         }
     }
 
-    //TODO create degen triangles at front and back of indices.
+    //remove the final degen tri
+    m_indices.pop_back();
 }
 
 //private
@@ -143,12 +144,27 @@ void Patch::tesselate(const std::array<Q3::Vertex, 9u>& quad, std::vector<float>
     std::vector<std::uint32_t> indices;
     for (auto row = 0; row < TesselationLevel; ++row)
     {
+        if (row > 0)
+        {
+            //create the first degen
+            indices.push_back(indexTemp[row * 2 * (TesselationLevel + 1)] + indexOffset);
+        }
+
+        //create the strip
         for (auto col = 0; col < colCount; ++col)
         {
             indices.push_back(indexTemp[row * 2 * (TesselationLevel + 1) + col] + indexOffset);
         }
+
+        //add the final degen
+        indices.push_back(indices.back());
     }
 
-    std::reverse(indices.begin(), indices.end());
+    //if this is not the first quad then prepend a degen tri
+    if (!m_indices.empty())
+    {
+        m_indices.push_back(indices[0]);
+    }
+
     m_indices.insert(m_indices.end(), indices.begin(), indices.end());
 }

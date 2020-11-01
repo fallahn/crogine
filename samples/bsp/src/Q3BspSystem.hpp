@@ -103,9 +103,15 @@ private:
         std::vector<std::pair<cro::Mesh::IndexData, FaceMatData>> submeshes;
         cro::Mesh::Data mesh;
         std::size_t activeSubmeshCount = 0;
+
+        enum
+        {
+            Brush, Patch,
+
+            Count
+        };
     };
-    MeshData m_brushMesh;
-    MeshData m_patchMesh;
+    std::array<MeshData, MeshData::Count> m_meshes = {};
 
     cro::Shader m_shader;
     cro::Material::Data m_material;
