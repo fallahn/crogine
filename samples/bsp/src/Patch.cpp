@@ -33,7 +33,7 @@ source distribution.
 
 namespace
 {
-    const std::int32_t TesselationLevel = 10;
+    const std::int32_t TessellationLevel = 10;
     const std::int32_t pointCountX = 3;
     const std::int32_t pointCountY = 3;
 }
@@ -58,7 +58,7 @@ Patch::Patch(const Q3::Face& face, const std::vector<Q3::Vertex>& mapVerts, std:
                 }
             }
 
-            tesselate(quad, verts);
+            tessellate(quad, verts);
         }
     }
 
@@ -67,27 +67,31 @@ Patch::Patch(const Q3::Face& face, const std::vector<Q3::Vertex>& mapVerts, std:
 }
 
 //private
-void Patch::tesselate(const std::array<Q3::Vertex, 9u>& quad, std::vector<float>& verts)
+void Patch::tessellate(const std::array<Q3::Vertex, 9u>& quad, std::vector<float>& verts)
 {
-    std::vector<Q3::Vertex> vertTemp((TesselationLevel + 1) * (TesselationLevel + 1));
+    std::vector<Q3::Vertex> vertTemp((TessellationLevel + 1) * (TessellationLevel + 1));
 
-    for (auto i = 0; i <= TesselationLevel; ++i)
+    //first column
+    for (auto i = 0; i <= TessellationLevel; ++i)
     {
-        float a = static_cast<float>(i) / TesselationLevel;
+        float a = static_cast<float>(i) / TessellationLevel;
         float b = 1.f - a;
 
         vertTemp[i] = quad[0] * (b * b) +
                         quad[3] * (2.f * b * a) +
                         quad[6] * (a * a);
+
+        vertTemp[i].uv1.y = quad[0].uv1.y + ((quad[6].uv1.y - quad[0].uv1.y) * a);
     }
 
-    for (int i = 1; i <= TesselationLevel; ++i)
+    for (int i = 1; i <= TessellationLevel; ++i)
     {
-        float a = static_cast<float>(i) / TesselationLevel;
+        float a = static_cast<float>(i) / TessellationLevel;
         float b = 1.f - a;
 
         std::array<Q3::Vertex, 3> temp;
 
+        //extend the row
         for (auto j = 0, k = 0; j < 3; ++j, k = 3 * j)
         {
             temp[j] = quad[k + 0] * (b * b) +
@@ -95,14 +99,18 @@ void Patch::tesselate(const std::array<Q3::Vertex, 9u>& quad, std::vector<float>
                         quad[k + 2] * (a * a);
         }
 
-        for (auto j = 0; j <= TesselationLevel; ++j)
+        //then crete next column
+        for (auto j = 0; j <= TessellationLevel; ++j)
         {
-            float a = static_cast<float>(j) / TesselationLevel;
-            float b = 1.f - a;
+            float c = static_cast<float>(j) / TessellationLevel;
+            float d = 1.f - c;
 
-            vertTemp[i * (TesselationLevel + 1) + j] = temp[0] * (b * b) +
-                                                        temp[1] * (2.f * b * a) +
-                                                        temp[2] * (a * a);
+            auto idx = i * (TessellationLevel + 1) + j;
+            vertTemp[idx] = temp[0] * (d * d) +
+                            temp[1] * (2.f * d * c) +
+                            temp[2] * (c * c);
+
+            vertTemp[idx].uv1.y = temp[0].uv1.y + ((temp[2].uv1.y - temp[0].uv1.y) * c);
         }
     }
 
@@ -129,31 +137,31 @@ void Patch::tesselate(const std::array<Q3::Vertex, 9u>& quad, std::vector<float>
     }
 
 
-    std::vector<std::uint32_t> indexTemp(TesselationLevel * (TesselationLevel + 1) * 2);
-    for (auto row = 0; row < TesselationLevel; ++row)
+    std::vector<std::uint32_t> indexTemp(TessellationLevel * (TessellationLevel + 1) * 2);
+    for (auto row = 0; row < TessellationLevel; ++row)
     {
-        for (auto col = 0; col <= TesselationLevel; ++col)
+        for (auto col = 0; col <= TessellationLevel; ++col)
         {
-            indexTemp[(row * (TesselationLevel + 1) + col) * 2 + 1] = row * (TesselationLevel + 1) + col;
-            indexTemp[(row * (TesselationLevel + 1) + col) * 2] = (row + 1) * (TesselationLevel + 1) + col;
+            indexTemp[(row * (TessellationLevel + 1) + col) * 2 + 1] = row * (TessellationLevel + 1) + col;
+            indexTemp[(row * (TessellationLevel + 1) + col) * 2] = (row + 1) * (TessellationLevel + 1) + col;
         }
     }
 
     //arrange indices in correct order and add offset into the vertex array
-    const auto colCount = 2 * (TesselationLevel + 1);
+    const auto colCount = 2 * (TessellationLevel + 1);
     std::vector<std::uint32_t> indices;
-    for (auto row = 0; row < TesselationLevel; ++row)
+    for (auto row = 0; row < TessellationLevel; ++row)
     {
         if (row > 0)
         {
             //create the first degen
-            indices.push_back(indexTemp[row * 2 * (TesselationLevel + 1)] + indexOffset);
+            indices.push_back(indexTemp[row * 2 * (TessellationLevel + 1)] + indexOffset);
         }
 
         //create the strip
         for (auto col = 0; col < colCount; ++col)
         {
-            indices.push_back(indexTemp[row * 2 * (TesselationLevel + 1) + col] + indexOffset);
+            indices.push_back(indexTemp[row * 2 * (TessellationLevel + 1) + col] + indexOffset);
         }
 
         //add the final degen

@@ -44,5 +44,5 @@ public:
 private:
     std::vector<std::uint32_t> m_indices;
 
-    void tesselate(const std::array<Q3::Vertex, 9u>&, std::vector<float>&);
+    void tessellate(const std::array<Q3::Vertex, 9u>&, std::vector<float>&);
 };
