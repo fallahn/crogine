@@ -33,16 +33,6 @@ source distribution.
 
 #include <vector>
 
-
-/*
-On patch creation add the vertices to a passed in vertex array owned by the map class
-Patch then tracks its own set of indices
-    
-Map class owns VBO/IBOs for patches and IBOs are updated with visible patch indices
-in the same way other faces are.
-
-*/
-
 class Patch final
 {
 public: 
@@ -54,5 +44,5 @@ public:
 private:
     std::vector<std::uint32_t> m_indices;
 
-
+    void tesselate(const std::array<Q3::Vertex, 9u>&, std::vector<float>&);
 };

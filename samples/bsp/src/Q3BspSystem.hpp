@@ -129,6 +129,7 @@ private:
     void buildLightmaps(SDL_RWops* file, std::uint32_t count);
     void createMesh(const std::vector<Q3::Vertex>&, std::size_t);
     void createPatchMesh(const std::vector<float>&);
+    void initMaterial();
 
     template <typename T>
     void parseLump(std::vector<T>& dest, SDL_RWops* file, Q3::Lump lumpInfo) const

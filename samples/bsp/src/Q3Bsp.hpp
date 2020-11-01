@@ -52,6 +52,23 @@ namespace Q3
         float x = 0.f;
         float y = 0.f;
         float z = 0.f;
+
+        void operator /= (float r)
+        {
+            x /= r;
+            y /= r;
+            z /= r;
+        }
+
+        Vec3f operator + (Vec3f r) const
+        {
+            Vec3f retVal;
+            retVal.x = x + r.x;
+            retVal.y = y + r.y;
+            retVal.z = z + r.z;
+
+            return retVal;
+        }
     };
 
     struct Vec3i final
@@ -83,6 +100,40 @@ namespace Q3
         Vec2f uv1; //shadow map coord
         Vec3f normal;
         std::uint8_t colour[4]; //RGBA
+
+        //operators are used when tesselating patches
+        //TODO how do we set the normal/colour of the return value?
+        Vertex operator + (const Vertex& r) const
+        {
+            Vertex retVal;
+            retVal.position = position + r.position;
+            retVal.normal = normal + r.normal;
+            retVal.normal /= 2.f;
+
+            retVal.uv0.x = uv0.x + r.uv0.x;
+            retVal.uv0.y = uv0.y + r.uv0.y;
+
+            retVal.uv1.x = uv1.x + r.uv1.x;
+            retVal.uv1.y = uv1.y + r.uv1.y;
+
+            return retVal;
+        }
+
+        Vertex operator * (float r) const
+        {
+            Vertex retVal;
+            retVal.position.x = position.x * r;
+            retVal.position.y = position.y * r;
+            retVal.position.z = position.z * r;
+
+            retVal.uv0.x = uv0.x * r;
+            retVal.uv0.y = uv0.y * r;
+
+            retVal.uv1.x = uv1.x * r;
+            retVal.uv1.y = uv1.y * r;
+
+            return retVal;
+        }
     };
 
     enum FaceType
