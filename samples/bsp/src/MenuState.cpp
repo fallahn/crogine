@@ -147,6 +147,8 @@ void MenuState::createScene()
     //add the first person controller
     camEnt.addComponent<FpsCamera>();
     m_inputParser.setEntity(camEnt);
+
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 256.f });
 }
 
 void MenuState::updateView(cro::Camera& cam3D)

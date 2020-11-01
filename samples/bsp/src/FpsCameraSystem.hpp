@@ -44,7 +44,7 @@ struct FpsCamera final
     float cameraPitch = 0.f; //used to clamp camera
     float cameraYaw = 0.f; //used to calc forward vector
 
-    float moveSpeed = 100.f; //units per second
+    float moveSpeed = 80.f; //units per second
 
     bool flyMode = true;
 };

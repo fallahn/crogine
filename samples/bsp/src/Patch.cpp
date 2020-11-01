@@ -77,13 +77,13 @@ void Patch::tesselate(const std::array<Q3::Vertex, 9u>& quad, std::vector<float>
         float b = 1.f - a;
 
         vertTemp[i] = quad[0] * (b * b) +
-                    quad[3] * (2 * b * a) +
-                    quad[6] * (a * a);
+                        quad[3] * (2.f * b * a) +
+                        quad[6] * (a * a);
     }
 
     for (int i = 1; i <= TesselationLevel; ++i)
     {
-        float a = (float)i / TesselationLevel;
+        float a = static_cast<float>(i) / TesselationLevel;
         float b = 1.f - a;
 
         std::array<Q3::Vertex, 3> temp;
@@ -91,8 +91,8 @@ void Patch::tesselate(const std::array<Q3::Vertex, 9u>& quad, std::vector<float>
         for (auto j = 0, k = 0; j < 3; ++j, k = 3 * j)
         {
             temp[j] = quad[k + 0] * (b * b) +
-                    quad[k + 1] * (2 * b * a) +
-                    quad[k + 2] * (a * a);
+                        quad[k + 1] * (2.f * b * a) +
+                        quad[k + 2] * (a * a);
         }
 
         for (auto j = 0; j <= TesselationLevel; ++j)
@@ -101,8 +101,8 @@ void Patch::tesselate(const std::array<Q3::Vertex, 9u>& quad, std::vector<float>
             float b = 1.f - a;
 
             vertTemp[i * (TesselationLevel + 1) + j] = temp[0] * (b * b) +
-                                                    temp[1] * (2 * b * a) +
-                                                    temp[2] * (a * a);
+                                                        temp[1] * (2.f * b * a) +
+                                                        temp[2] * (a * a);
         }
     }
 

@@ -90,15 +90,17 @@ namespace
             float amount = dot(v_normal, normalize(LightDir));
             amount = 0.5 + (amount / 2.0);
 
-            vec4 colour = TEXTURE(u_texture, v_texCoord0) + v_colour;
+            vec4 colour = TEXTURE(u_texture, v_texCoord0);// + v_colour;
             colour.rgb *= amount;
             FRAG_OUT = colour;
         })";
 
+    std::int32_t currentLeaf = 0;
     std::int32_t visibleFaceCount = 0;
     std::int32_t visiblePatchCount = 0;
     std::int32_t clustersSkipped = 0;
     std::int32_t leavesCulled = 0; //this only counts the leaves skipped in the active cluster
+    glm::vec3 camPos;
 }
 
 Q3BspSystem::Q3BspSystem(cro::MessageBus& mb)
@@ -126,6 +128,10 @@ Q3BspSystem::Q3BspSystem(cro::MessageBus& mb)
                 ImGui::Text("Visible Patches: %d", visiblePatchCount);
                 ImGui::Text("Clusters Skipped: %d", clustersSkipped);
                 ImGui::Text("Leaves Culled This Cluster: %d", leavesCulled);
+                ImGui::Text("Current Leaf %d", currentLeaf);
+
+                ImGui::NewLine();
+                ImGui::Text("Position: %3.3f, %3.3f, %3.3f", camPos.x, camPos.y, camPos.z);
             }
             ImGui::End();
         
@@ -185,10 +191,12 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
     auto leafIndex = findLeaf(position);
     auto clusterIndex = m_leaves[leafIndex].cluster;
 
+    currentLeaf = leafIndex;
     visibleFaceCount = 0;
     visiblePatchCount = 0;
     clustersSkipped = 0;
     leavesCulled = 0;
+    camPos = position;
 
     static std::vector<bool> usedFaces;
     usedFaces.resize(m_faces.size());
@@ -203,6 +211,7 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
 
     auto i = m_leaves.size();
     while (i--)
+    //for(auto i = 0; i < m_leaves.size(); ++i)
     {
         const auto& leaf = m_leaves[i];
 
@@ -880,8 +889,11 @@ std::int32_t Q3BspSystem::findLeaf(glm::vec3 camPos) const
         const auto& plane = m_planes[node.planeIndex];
 
         //this is the dot product - but we don't have a handy function for differing vector types :(
-        distance = plane.normal.x * camPos.x + plane.normal.y * camPos.y + plane.normal.z * camPos.z - plane.distance;
+        //remember to switch the plane normal as with the rest of the map coords...
+        distance = plane.normal.x * camPos.x + plane.normal.z * camPos.y + -plane.normal.y * camPos.z - plane.distance;
         i = (distance >= 0) ? node.frontIndex : node.rearIndex;
+
+        //LogI << node.planeIndex << std::endl;
     }
     return ~i;
 }
@@ -895,10 +907,10 @@ bool Q3BspSystem::clusterVisible(std::int32_t currentCluster, std::int32_t testC
 
     auto index = (currentCluster * m_clusters.bytesPerCluster) + (testCluster >> 3);
 
-    if (index < 0)
+    /*if (index < 0)
     {
         return false;
-    }
+    }*/
 
     std::int8_t visSet = m_clusterBitsets[index];
 
