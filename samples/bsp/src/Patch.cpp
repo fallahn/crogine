@@ -77,10 +77,11 @@ void Patch::tessellate(const std::array<Q3::Vertex, 9u>& quad, std::vector<float
         float a = static_cast<float>(i) / TessellationLevel;
         float b = 1.f - a;
 
-        vertTemp[i] = quad[0] * (b * b) +
-                        quad[3] * (2.f * b * a) +
-                        quad[6] * (a * a);
+        vertTemp[i].position = quad[0].position * (b * b) +
+                                quad[3].position * (2.f * b * a) +
+                                quad[6].position * (a * a);
 
+        vertTemp[i].uv1.x = quad[0].uv1.x + ((quad[6].uv1.x - quad[0].uv1.x) * a);
         vertTemp[i].uv1.y = quad[0].uv1.y + ((quad[6].uv1.y - quad[0].uv1.y) * a);
     }
 
@@ -89,14 +90,18 @@ void Patch::tessellate(const std::array<Q3::Vertex, 9u>& quad, std::vector<float
         float a = static_cast<float>(i) / TessellationLevel;
         float b = 1.f - a;
 
-        std::array<Q3::Vertex, 3> temp;
+        std::array<Q3::Vertex, pointCountX> temp;
 
         //extend the row
-        for (auto j = 0, k = 0; j < 3; ++j, k = 3 * j)
+        for (auto j = 0, k = 0; j < pointCountX; ++j, k = pointCountX * j)
         {
-            temp[j] = quad[k + 0] * (b * b) +
-                        quad[k + 1] * (2.f * b * a) +
-                        quad[k + 2] * (a * a);
+            temp[j].position = quad[k].position * (b * b) +
+                                quad[k + 1].position * (2.f * b * a) +
+                                quad[k + 2].position * (a * a);
+
+
+            temp[j].uv1.x = quad[k].uv1.x + ((quad[k+2].uv1.x - quad[k].uv1.x) * a);
+            temp[j].uv1.y = quad[k].uv1.y + ((quad[k+2].uv1.y - quad[k].uv1.y) * a);
         }
 
         //then crete next column
@@ -106,10 +111,11 @@ void Patch::tessellate(const std::array<Q3::Vertex, 9u>& quad, std::vector<float
             float d = 1.f - c;
 
             auto idx = i * (TessellationLevel + 1) + j;
-            vertTemp[idx] = temp[0] * (d * d) +
-                            temp[1] * (2.f * d * c) +
-                            temp[2] * (c * c);
+            vertTemp[idx].position = temp[0].position * (d * d) +
+                                        temp[1].position * (2.f * d * c) +
+                                        temp[2].position * (c * c);
 
+            vertTemp[idx].uv1.x = temp[0].uv1.x + ((temp[2].uv1.x - temp[0].uv1.x) * c);
             vertTemp[idx].uv1.y = temp[0].uv1.y + ((temp[2].uv1.y - temp[0].uv1.y) * c);
         }
     }
