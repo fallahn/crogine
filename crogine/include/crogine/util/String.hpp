@@ -223,6 +223,26 @@ namespace cro
                 }
                 return codePoints;
             }
+
+            /*!
+            \brief Splits a string with a given token and returns a vector of results
+            */
+            static inline std::vector<std::string> tokenize(const std::string& str, char delim, bool keepEmpty = false)
+            {
+                CRO_ASSERT(!str.empty(), "string empty");
+                std::stringstream ss(str);
+                std::string token;
+                std::vector<std::string> output;
+                while (std::getline(ss, token, delim))
+                {
+                    if (!token.empty() ||
+                        (token.empty() && keepEmpty))
+                    {
+                        output.push_back(token);
+                    }
+                }
+                return output;
+            }
         }
     }
 }

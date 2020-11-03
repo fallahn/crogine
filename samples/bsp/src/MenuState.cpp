@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -68,10 +69,10 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
-    if(cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    /*if(cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
         return true;
-    }
+    }*/
 
     if (evt.type == SDL_KEYDOWN)
     {
@@ -133,7 +134,7 @@ void MenuState::loadAssets()
 {
 
 }
-
+#include <iostream>
 void MenuState::createScene()
 {
 
@@ -148,7 +149,18 @@ void MenuState::createScene()
     camEnt.addComponent<FpsCamera>();
     m_inputParser.setEntity(camEnt);
 
-    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 256.f });
+    const auto& spawnPoints = m_scene.getSystem<Q3BspSystem>().getSpawnPoints();
+
+    if (spawnPoints.size() > 1)
+    {
+        const auto& spawn = spawnPoints[cro::Util::Random::value(0, spawnPoints.size() - 1)];
+        camEnt.getComponent<cro::Transform>().setPosition(spawn.position);
+        camEnt.getComponent<cro::Transform>().setRotation(glm::vec3(0.f, 0.f, cro::Util::Const::degToRad * spawn.rotation));
+    }
+    else
+    {
+        camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 256.f });
+    }
 }
 
 void MenuState::updateView(cro::Camera& cam3D)

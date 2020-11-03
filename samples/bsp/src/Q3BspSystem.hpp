@@ -43,6 +43,23 @@ source distribution.
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 
+namespace Q3
+{
+    using EntityData = std::vector<std::pair<std::string, std::string>>;
+
+    struct SpawnPoint final
+    {
+        glm::vec3 position = glm::vec3(0.f);
+        float rotation = 0.f;
+    };
+
+    struct PointLight final
+    {
+        glm::vec3 position = glm::vec3(0.f);
+        cro::Colour colour;
+    };
+}
+
 class Q3BspSystem final : public cro::System, public cro::Renderable, public cro::GuiClient
 {
 public:
@@ -58,8 +75,8 @@ public:
     void updateDrawList(cro::Entity camera) override;
     void render(cro::Entity camera, const cro::RenderTarget& target) override;
 
-
     bool loadMap(const std::string&);
+    const std::vector<Q3::SpawnPoint>& getSpawnPoints() const { return m_spawnPoints; }
 
 private:
 
@@ -131,6 +148,11 @@ private:
         };
     };
     std::array<std::int32_t, UniformLocation::Count> m_uniforms = {};
+
+    std::vector<Q3::EntityData> m_entityData;
+    void parseEntities(const std::vector<char>&);
+
+    std::vector<Q3::SpawnPoint> m_spawnPoints;
 
     void buildLightmaps(SDL_RWops* file, std::uint32_t count);
     void createMesh(const std::vector<Q3::Vertex>&, std::size_t);

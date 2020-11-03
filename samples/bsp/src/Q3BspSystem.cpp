@@ -38,6 +38,7 @@ source distribution.
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/gui/Gui.hpp>
+#include <crogine/util/String.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -462,6 +463,8 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
     m_leafBoundingBoxes.clear();
     m_leafFaces.clear();
     m_patches.clear();
+    m_entityData.clear();
+    m_spawnPoints.clear();
     m_meshes[MeshData::Brush].activeSubmeshCount = 0;
     m_meshes[MeshData::Patch].activeSubmeshCount = 0;
 
@@ -570,6 +573,10 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
 
         parseLump(m_leafFaces, file.file, lumpInfo[Q3::LeafFaces]);
 
+        std::vector<char> entityData;
+        parseLump(entityData, file.file, lumpInfo[Q3::Entities]);
+        parseEntities(entityData);
+
         //read the cluster data
         SDL_RWseek(file.file, lumpInfo[Q3::VisData].offset, RW_SEEK_SET);
         SDL_RWread(file.file, &m_clusters.clusterCount, sizeof(std::int32_t), 1);
@@ -594,6 +601,101 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
 }
 
 //private
+void Q3BspSystem::parseEntities(const std::vector<char>& entData)
+{
+    //TODO no error checking is currently done because it assumes we're
+    //loading a valid BSP...
+    bool first = true;
+    for (auto i = 0u; i < entData.size(); ++i)
+    {
+        if (entData[i] == '{')
+        {
+            m_entityData.push_back(Q3::EntityData());
+        }
+
+        if (entData[i] == '\"')
+        {
+            i++;
+
+            if (first)
+            {
+                m_entityData.back().emplace_back(std::make_pair("", ""));
+            }
+
+            do
+            {
+                if (first)
+                {
+                    m_entityData.back().back().first.push_back(entData[i]);
+                }
+                else
+                {
+                    m_entityData.back().back().second.push_back(entData[i]);
+                }
+            } while (entData[++i] != '\"');
+            first = !first;
+        }
+    }
+
+    for (const auto& data : m_entityData)
+    {
+        const std::pair<std::string, std::string>* result = nullptr;
+        for (const auto& p : data)
+        {
+            if (p.first == "classname")
+            {
+                result = &p;
+                break;
+            }
+        }
+
+        if (result)
+        {
+            //find spawns
+            if (result->second == "info_player_deathmatch")
+            {
+                auto& spawn = m_spawnPoints.emplace_back();
+                for (const auto& prop : data)
+                {
+                    if (prop.first == "angle")
+                    {
+                        try
+                        {
+                            spawn.rotation = std::stof(prop.second.c_str());
+                        }
+                        catch (...)
+                        {
+                            LogE << prop.second << ": invalid spawn angle" << std::endl;
+                        }
+                    }
+                    else if (prop.first == "origin")
+                    {
+                        try
+                        {
+                            auto values = cro::Util::String::tokenize(prop.second, ' ');
+                            if (values.size() == 3)
+                            {
+                                spawn.position = { std::stof(values[0]), std::stof(values[2]), -std::stof(values[1]) };
+                            }
+                            else
+                            {
+                                LogE << "Too few components found in spawn position vector" << std::endl;
+                            }
+                        }
+                        catch (...)
+                        {
+                            LogE << prop.second << ": invalid spawn position" << std::endl;
+                        }
+                    }
+                }
+            }
+
+            //TODO parse other entity types
+        }
+    }
+
+}
+
 void Q3BspSystem::buildLightmaps(SDL_RWops* file, std::uint32_t count)
 {
     //this would be a perfect opportunity to use GL_TEXTURE_2D_ARRAY
