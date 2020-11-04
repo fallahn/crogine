@@ -103,7 +103,7 @@ private:
     FaceMatData m_activeMatData;
 
     //visibility data
-    std::vector<Q3::Plane> m_planes;
+    std::vector<glm::vec4> m_planes;
     std::vector<Q3::Node> m_nodes;
     std::vector<Q3::Leaf> m_leaves;
     Q3::VisiData m_clusters;

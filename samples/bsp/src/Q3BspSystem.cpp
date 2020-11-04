@@ -557,7 +557,12 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
         //TODO load entity lump for props etc?
 
         //load the plane data
-        parseLump(m_planes, file.file, lumpInfo[Q3::Planes]);
+        std::vector<Q3::Plane> planes;
+        parseLump(planes, file.file, lumpInfo[Q3::Planes]);
+        for (const auto& plane : planes)
+        {
+            m_planes.emplace_back(plane.normal.x, plane.normal.z, -plane.normal.y, plane.distance);
+        }
 
         //load the bsp node data
         parseLump(m_nodes, file.file, lumpInfo[Q3::Nodes]);
@@ -988,11 +993,9 @@ std::int32_t Q3BspSystem::findLeaf(glm::vec3 camPos) const
     while (i >= 0)
     {
         const auto& node = m_nodes[i];
-        const auto& plane = m_planes[node.planeIndex];
+        auto plane = m_planes[node.planeIndex];
 
-        //this is the dot product - but we don't have a handy function for differing vector types :(
-        //remember to switch the plane normal as with the rest of the map coords...
-        distance = plane.normal.x * camPos.x + plane.normal.z * camPos.y + -plane.normal.y * camPos.z - plane.distance;
+        distance = glm::dot(glm::vec3(plane), camPos) - plane.w;
         i = (distance >= 0) ? node.frontIndex : node.rearIndex;
 
         //LogI << node.planeIndex << std::endl;
