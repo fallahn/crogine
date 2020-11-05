@@ -133,7 +133,10 @@ void Window::setVsyncEnabled(bool enabled)
 {
 	if (m_mainContext)
 	{
-        SDL_GL_SetSwapInterval(enabled ? 1 : 0);
+        if (SDL_GL_SetSwapInterval(enabled ? 1 : 0) != 0)
+        {
+            LogE << SDL_GetError() << std::endl;
+        }
     }
 }
 
