@@ -163,6 +163,12 @@ void Scene::simulate(float dt)
     }
     m_pendingEntities.clear();
 
+    /*
+    Destroyed ents are double buffered to any calls
+    to destroyEntity which further destroy more entities
+    don't affect the entity vector mid iteration
+    */
+    m_destroyedEntities.swap(m_destroyedBuffer);
     for (const auto& entity : m_destroyedEntities)
     {
         m_systemManager.removeFromSystems(entity);
@@ -171,7 +177,10 @@ void Scene::simulate(float dt)
     m_destroyedEntities.clear();
 
     m_systemManager.process(dt);
-    for (auto& p : m_postEffects) p->process(dt);
+    for (auto& p : m_postEffects)
+    {
+        p->process(dt);
+    }
 }
 
 Entity Scene::createEntity()
@@ -182,7 +191,8 @@ Entity Scene::createEntity()
 
 void Scene::destroyEntity(Entity entity)
 {
-    m_destroyedEntities.push_back(entity);
+    m_destroyedBuffer.push_back(entity);
+    entity.m_destroyed = true;
 }
 
 Entity Scene::getEntity(Entity::ID id) const

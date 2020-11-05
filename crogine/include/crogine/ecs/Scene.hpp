@@ -283,6 +283,7 @@ namespace cro
 
         std::vector<Entity> m_pendingEntities;
         std::vector<Entity> m_destroyedEntities;
+        std::vector<Entity> m_destroyedBuffer;
 
         ComponentManager m_componentManager;
         EntityManager m_entityManager;

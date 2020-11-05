@@ -40,14 +40,16 @@ namespace
 
 Entity::Entity()
     : m_id          ((0 << Detail::IndexBits) | std::numeric_limits<ID>::max()),
-    m_entityManager (nullptr)
+    m_entityManager (nullptr),
+    m_destroyed     (false)
 {
 
 }
 
 Entity::Entity(Entity::ID index, Entity::Generation generation)
     : m_id          ((generation << Detail::IndexBits) | index),
-    m_entityManager (nullptr)
+    m_entityManager (nullptr),
+    m_destroyed     (false)
 {
 
 }
@@ -63,19 +65,10 @@ Entity::Generation Entity::getGeneration() const
     return (m_id >> Detail::IndexBits) & GenerationMask;
 }
 
-//TODO fix this so that it goes through its parent scene.
-//destroying here is not enough as it will not unregister
-//from all the active scene systems
-//void Entity::destroy() 
-//{
-//    CRO_ASSERT(m_entityManager, "Invalid Entity instance");
-//    m_entityManager->destroyEntity(*this);
-//}
-
 bool Entity::destroyed() const
 {
     CRO_ASSERT(m_entityManager, "Invalid Entity instance");
-    return m_entityManager->entityDestroyed(*this);
+    return m_destroyed || m_entityManager->entityDestroyed(*this);
 }
 
 const ComponentMask& Entity::getComponentMask() const

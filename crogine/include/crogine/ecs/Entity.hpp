@@ -81,15 +81,9 @@ namespace cro
 		Generation getGeneration() const;
 
 		/*!
-		\brief Marks the entity for destruction
-		*/
-		//void destroy();
-
-		/*!
 		\brief Returns true if the entity is marked for destruction
 		*/
 		bool destroyed() const;
-
 
 		/*!
 		\brief Adds a copy of the given instance of a component to
@@ -104,12 +98,6 @@ namespace cro
 		*/
 		template <typename T, typename... Args>
 		T& addComponent(Args&&...);
-
-		/*!
-		\brief Removes the component of this type if it exists
-		*/
-		/*template <typename T>
-		void removeComponent()*/;
 
 		/*!
 		\brief returns true if the component type exists on thie entity
@@ -177,7 +165,9 @@ namespace cro
 
 		ID m_id;
         EntityManager* m_entityManager;
+        bool m_destroyed;
         friend class EntityManager;
+        friend class Scene;
 	};
 
     class MessageBus;
