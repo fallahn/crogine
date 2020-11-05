@@ -97,9 +97,22 @@ namespace cro
         /*!
         \brief Returns the camera frustum including any parent transformation,
         IE the frustum of the ViewProjection matrix. This requires an active
-        CameraSystem in the Scene to be up to date.
+        CameraSystem in the Scene for the result to be up to date.
         */
         std::array<Plane, 6u> getFrustum() const {return m_frustum; }
+
+        /*!
+        \brief Returns the AABB of the current frustum.
+        The Box returned is in world coordinates, encompassing the frustum.
+        This is useful for world queries of the DynamicTree system to early
+        cull objects which do not intersect the frustum. Submitting this
+        to the DynamicTree system will return a list of entities which
+        can then be further tested with the frustum culling during
+        Scene::updateDrawLists()
+        \see DynamicTreeSystem, Scene::updateDrawLists()
+        \returns a Box encompassing the current frustum
+        */
+        Box getAABB() const { return m_aabb; }
 
         Camera() : viewport(0.f, 0.f, 1.f, 1.f)
         {
@@ -140,6 +153,7 @@ namespace cro
     private:
 
         std::array<Plane, 6u> m_frustum = {};
+        Box m_aabb;
         friend class CameraSystem;
     };
 }

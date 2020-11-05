@@ -36,6 +36,23 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    std::array ClipPoints =
+    {
+        //far
+        glm::vec4(-1.f, -1.f, -1.f, 1.f),
+        glm::vec4( 1.f, -1.f, -1.f, 1.f),
+        glm::vec4( 1.f,  1.f, -1.f, 1.f),
+        glm::vec4(-1.f,  1.f, -1.f, 1.f),
+        //near
+        glm::vec4(-1.f, -1.f, 1.f, 1.f),
+        glm::vec4( 1.f, -1.f, 1.f, 1.f),
+        glm::vec4( 1.f,  1.f, 1.f, 1.f),
+        glm::vec4(-1.f,  1.f, 1.f, 1.f)
+    };
+}
+
 CameraSystem::CameraSystem(cro::MessageBus& mb)
     : System(mb, typeid(CameraSystem))
 {
@@ -148,4 +165,41 @@ void CameraSystem::updateFrustum(Camera& camera)
         p.z *= factor;
         p.w *= factor;
     }
+
+    auto invViewProjection = glm::inverse(camera.viewProjectionMatrix);
+    std::array points =
+    {
+        invViewProjection * ClipPoints[0],
+        invViewProjection * ClipPoints[1],
+        invViewProjection * ClipPoints[2],
+        invViewProjection * ClipPoints[3],
+        invViewProjection * ClipPoints[4],
+        invViewProjection * ClipPoints[5],
+        invViewProjection * ClipPoints[6],
+        invViewProjection * ClipPoints[7]
+    };
+    for (auto& p : points)
+    {
+        p /= p.w;
+    }
+
+    auto [minX, maxX] = std::minmax_element(points.begin(), points.end(),
+        [](const glm::vec4& lhs, const glm::vec4& rhs)
+        {
+            return lhs.x < rhs.x;
+        });
+
+    auto [minY, maxY] = std::minmax_element(points.begin(), points.end(),
+        [](const glm::vec4& lhs, const glm::vec4& rhs)
+        {
+            return lhs.y < rhs.y;
+        });
+
+    auto [minZ, maxZ] = std::minmax_element(points.begin(), points.end(),
+        [](const glm::vec4& lhs, const glm::vec4& rhs)
+        {
+            return lhs.z < rhs.z;
+        });
+
+    camera.m_aabb = { glm::vec3(minX->x, minY->y, minZ->z), glm::vec3(maxX->x, maxY->y, maxZ->z ) };
 }

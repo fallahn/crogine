@@ -102,6 +102,7 @@ namespace
     std::int32_t clustersSkipped = 0;
     std::int32_t leavesCulled = 0; //this only counts the leaves skipped in the active cluster
     glm::vec3 camPos;
+    cro::Box camAABB;
 }
 
 Q3BspSystem::Q3BspSystem(cro::MessageBus& mb)
@@ -132,7 +133,10 @@ Q3BspSystem::Q3BspSystem(cro::MessageBus& mb)
                 ImGui::Text("Current Leaf %d", currentLeaf);
 
                 ImGui::NewLine();
+                cro::Box rel = { camAABB[0] - camPos, camAABB[1] - camPos };
                 ImGui::Text("Position: %3.3f, %3.3f, %3.3f", camPos.x, camPos.y, camPos.z);
+                ImGui::Text("Frustum AABB: %3.1f, %3.1f, %3.1f, - %3.1f, %3.1f, %3.1f", camAABB[0].x, camAABB[0].y, camAABB[0].z, camAABB[1].x, camAABB[1].y, camAABB[1].z);
+                ImGui::Text("Frustum Relative: %3.1f, %3.1f, %3.1f, - %3.1f, %3.1f, %3.1f", rel[0].x, rel[0].y, rel[0].z, rel[1].x, rel[1].y, rel[1].z);
             }
             ImGui::End();
         
@@ -198,6 +202,7 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
     clustersSkipped = 0;
     leavesCulled = 0;
     camPos = position;
+    camAABB = camera.getComponent<cro::Camera>().getAABB();
 
     static std::vector<bool> usedFaces;
     usedFaces.resize(m_faces.size());
