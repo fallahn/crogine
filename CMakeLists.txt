@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.2.2)
 project(cro)
 
-set(BUILD_MVC false CACHE BOOL "Build the model viewer/converter")
+set(BUILD_EDITOR false CACHE BOOL "Build the world editor / model viewer")
 set(BUILD_BATCAT false CACHE BOOL "Build the batcat sample application")
 set(BUILD_TL false CACHE BOOL "Build the Threat Level sample application")
 
@@ -15,6 +15,6 @@ if(BUILD_TL)
 add_subdirectory(samples/threat_level)
 endif()
 
-if(BUILD_MVC)
-add_subdirectory(ModelViewer)
+if(BUILD_EDITOR)
+add_subdirectory(editor)
 endif()

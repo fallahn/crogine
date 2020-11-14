@@ -1,5 +1,5 @@
-project(model_viewer)
-SET(PROJECT_NAME model_viewer)
+project(crogine_editor)
+SET(PROJECT_NAME crogine_editor)
 cmake_minimum_required(VERSION 3.2.2)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -9,13 +9,13 @@ endif()
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/")
 SET (PROJECT_STATIC_RUNTIME FALSE)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
-  if(PROJECT_STATIC_RUNTIME)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17 -static")
-  else()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
-  endif()
+
+if(PROJECT_STATIC_RUNTIME)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17 -static")
+else()
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
 endif()
+
 
 SET (CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_")
 SET (CMAKE_CXX_FLAGS_RELEASE "-O4 -DNDEBUG")
@@ -28,14 +28,14 @@ SET (OpenGL_GL_PREFERENCE "GLVND")
 
 find_package(CROGINE REQUIRED)
 find_package(SDL2 REQUIRED)
-find_package(Bullet REQUIRED)
+#find_package(Bullet REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(ASSIMP REQUIRED)
 
 include_directories(
   ${CROGINE_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
-  ${BULLET_INCLUDE_DIRS}
+  #${BULLET_INCLUDE_DIRS}
   ${OPENGL_INCLUDE_DIR}
   ${assimp_INCLUDE_DIRS}
   src)
@@ -48,6 +48,6 @@ add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
   ${SDL2_LIBRARY}
-  ${BULLET_LIBRARIES}
+  #${BULLET_LIBRARIES}
   ${OPENGL_LIBRARIES}
   ${assimp_LIBRARIES})
