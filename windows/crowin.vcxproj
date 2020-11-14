@@ -142,6 +142,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\Vertex2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\Gui.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\GuiClient.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\gui\imgui.h" />
     <ClInclude Include="..\crogine\include\crogine\network\NetClient.hpp" />
     <ClInclude Include="..\crogine\include\crogine\network\NetData.hpp" />
     <ClInclude Include="..\crogine\include\crogine\network\NetHost.hpp" />
@@ -175,7 +176,6 @@
     <ClInclude Include="..\crogine\src\graphics\shaders\VertexLit.hpp" />
     <ClInclude Include="..\crogine\src\graphics\stb_image.h" />
     <ClInclude Include="..\crogine\src\imgui\imconfig.h" />
-    <ClInclude Include="..\crogine\src\imgui\imgui.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_impl_opengl3.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_impl_sdl.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_internal.h" />

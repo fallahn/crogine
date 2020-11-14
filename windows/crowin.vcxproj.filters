@@ -201,9 +201,6 @@
     <ClInclude Include="..\crogine\src\imgui\imconfig.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\src\imgui\imgui.h">
-      <Filter>Header Files\imgui</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\src\imgui\imgui_internal.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
@@ -530,6 +527,9 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem3D.hpp">
       <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\gui\imgui.h">
+      <Filter>Header Files\imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
