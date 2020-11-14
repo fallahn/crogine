@@ -13,41 +13,41 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\model viewer">
+      <UniqueIdentifier>{66f9e606-9606-46ad-8cce-1f22b4a80b8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\model viewer">
+      <UniqueIdentifier>{c3177e8a-1656-4946-9bca-16bda3273cff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\LoadingScreen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MenuState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\MyApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ImportedMeshBuilder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\OriginIconBuilder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\NormalVisMeshBuilder.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\model viewer</Filter>
     </ClCompile>
     <ClCompile Include="src\ImportIQM.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LoadingScreen.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NormalVisMeshBuilder.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OriginIconBuilder.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ModelState.cpp">
+      <Filter>Source Files\model viewer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\LoadingScreen.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\MenuState.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Messages.hpp">
@@ -56,20 +56,26 @@
     <ClInclude Include="src\MyApp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ResourceIDs.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\StateIDs.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ImportedMeshBuilder.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\model viewer</Filter>
     </ClInclude>
-    <ClInclude Include="src\OriginIconBuilder.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="src\LoadingScreen.hpp">
+      <Filter>Header Files\model viewer</Filter>
     </ClInclude>
     <ClInclude Include="src\NormalVisMeshBuilder.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\OriginIconBuilder.hpp">
+      <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ResourceIDs.hpp">
+      <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ModelState.hpp">
+      <Filter>Header Files\model viewer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "MenuState.hpp"
+#include "ModelState.hpp"
 #include "OriginIconBuilder.hpp"
 #include "ResourceIDs.hpp"
 #include "NormalVisMeshBuilder.hpp"
@@ -113,7 +113,7 @@ namespace
     std::array<cro::Entity, EntityID::Count> entities = {};
 }
 
-MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
+ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
 	: cro::State            (stack, context),
     m_scene                 (context.appInstance.getMessageBus()),
     m_showPreferences       (false),
@@ -136,7 +136,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 }
 
 //public
-bool MenuState::handleEvent(const cro::Event& evt)
+bool ModelState::handleEvent(const cro::Event& evt)
 {
     if(cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
@@ -161,28 +161,28 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
 
     m_scene.forwardEvent(evt);
-	return true;
+	return false;
 }
 
-void MenuState::handleMessage(const cro::Message& msg)
+void ModelState::handleMessage(const cro::Message& msg)
 {
     m_scene.forwardMessage(msg);
 }
 
-bool MenuState::simulate(float dt)
+bool ModelState::simulate(float dt)
 {
     m_scene.simulate(dt);
-	return true;
+	return false;
 }
 
-void MenuState::render()
+void ModelState::render()
 {
 	//draw any renderable systems
     m_scene.render(cro::App::getWindow());
 }
 
 //private
-void MenuState::addSystems()
+void ModelState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
@@ -194,7 +194,7 @@ void MenuState::addSystems()
     m_scene.addSystem<cro::ModelRenderer>(mb);
 }
 
-void MenuState::loadAssets()
+void ModelState::loadAssets()
 {
     //create a default material to display models on import
     auto flags = cro::ShaderResource::DiffuseColour;
@@ -211,7 +211,7 @@ void MenuState::loadAssets()
     m_resources.materials.get(materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
 }
 
-void MenuState::createScene()
+void ModelState::createScene()
 {
     //create ground plane
     cro::ModelDefinition modelDef;
@@ -256,7 +256,7 @@ void MenuState::createScene()
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 }
 
-void MenuState::buildUI()
+void ModelState::buildUI()
 {
     loadPrefs();
     registerWindow([&]()
@@ -531,7 +531,7 @@ void MenuState::buildUI()
         });
 }
 
-void MenuState::openModel()
+void ModelState::openModel()
 {
     auto path = cro::FileSystem::openFileDialogue(m_preferences.lastModelDirectory, "cmt");
     if (!path.empty()
@@ -547,7 +547,7 @@ void MenuState::openModel()
     }
 }
 
-void MenuState::openModelAtPath(const std::string& path)
+void ModelState::openModelAtPath(const std::string& path)
 {
     closeModel();
 
@@ -578,7 +578,7 @@ void MenuState::openModelAtPath(const std::string& path)
     }
 }
 
-void MenuState::closeModel()
+void ModelState::closeModel()
 {
     if (entities[EntityID::ActiveModel].isValid())
     {
@@ -596,7 +596,7 @@ void MenuState::closeModel()
     m_currentModelConfig = {};
 }
 
-void MenuState::importModel()
+void ModelState::importModel()
 {
     auto calcFlags = [](const aiMesh * mesh, std::uint32_t& vertexSize)->std::uint8_t
     {
@@ -816,7 +816,7 @@ void MenuState::importModel()
     }
 }
 
-void MenuState::exportModel()
+void ModelState::exportModel()
 {
     //TODO assert we at least have valid header data
     //prevent accidentally writing a bad file
@@ -891,7 +891,7 @@ void MenuState::exportModel()
     }
 }
 
-void MenuState::applyImportTransform()
+void ModelState::applyImportTransform()
 {
     //keep rotation separate as we don't apply scale to normal data
     auto rotation = glm::toMat4(glm::toQuat(glm::orientate3(m_importedTransform.rotation)));
@@ -974,7 +974,7 @@ void MenuState::applyImportTransform()
     entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(glm::vec3(0.f));
 }
 
-void MenuState::loadPrefs()
+void ModelState::loadPrefs()
 {
     cro::ConfigFile prefs;
     if (prefs.loadFromFile(prefPath))
@@ -1031,7 +1031,7 @@ void MenuState::loadPrefs()
     }
 }
 
-void MenuState::savePrefs()
+void ModelState::savePrefs()
 {
     auto toString = [](cro::Colour c)->std::string
     {
@@ -1053,7 +1053,7 @@ void MenuState::savePrefs()
     prefsOut.save(prefPath);
 }
 
-void MenuState::updateWorldScale()
+void ModelState::updateWorldScale()
 {
     const float scale = worldScales[m_preferences.unitsPerMetre];
     if (m_showGroundPlane)
@@ -1070,7 +1070,7 @@ void MenuState::updateWorldScale()
     updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], DefaultFOV);
 }
 
-void MenuState::updateNormalVis()
+void ModelState::updateNormalVis()
 {
     if (entities[EntityID::ActiveModel].isValid())
     {
@@ -1091,7 +1091,7 @@ void MenuState::updateNormalVis()
     }
 }
 
-void MenuState::updateMouseInput(const cro::Event& evt)
+void ModelState::updateMouseInput(const cro::Event& evt)
 {
     const float moveScale = 0.004f;
     if (evt.motion.state & SDL_BUTTON_LMASK)

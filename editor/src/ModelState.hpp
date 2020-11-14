@@ -41,13 +41,12 @@ source distribution.
 /*!
 Creates a state to render a menu.
 */
-class MenuState final : public cro::State, public cro::GuiClient
+class ModelState final : public cro::State, public cro::GuiClient
 {
 public:
-	MenuState(cro::StateStack&, cro::State::Context);
-	~MenuState() = default;
+	ModelState(cro::StateStack&, cro::State::Context);
 
-	cro::StateID getStateID() const override { return States::MainMenu; }
+	cro::StateID getStateID() const override { return States::ModelViewer; }
 
 	bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;

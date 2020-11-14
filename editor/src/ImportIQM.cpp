@@ -27,9 +27,9 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "MenuState.hpp"
+#include "ModelState.hpp"
 
-void MenuState::importIQM(const std::string& path)
+void ModelState::importIQM(const std::string& path)
 {
     //we're only interested in the VBO data
     //so we'll copy that and the attribute flags

@@ -33,6 +33,7 @@ namespace States
 {
 	enum ID
 	{
-		MainMenu
+		WorldEditor,
+		ModelViewer
 	};
 }

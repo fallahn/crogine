@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MyApp.hpp"
-#include "MenuState.hpp"
+#include "ModelState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -36,9 +36,9 @@ source distribution.
 MyApp::MyApp()
 	: m_stateStack({*this, getWindow()})
 {
-	setApplicationStrings("Trederia", "CrogineModelViewer");
+	setApplicationStrings("Trederia", "Crogine Editor");
 
-    m_stateStack.registerState<MenuState>(States::ID::MainMenu);
+    m_stateStack.registerState<ModelState>(States::ID::ModelViewer);
 }
 
 //public
@@ -77,9 +77,9 @@ void MyApp::render()
 bool MyApp::initialise()
 {
     getWindow().setLoadingScreen<LoadingScreen>();
-    getWindow().setTitle("Crogine Model Viewer / Importer");
+    getWindow().setTitle("Crogine Editor");
 
-	m_stateStack.pushState(States::MainMenu);
+	m_stateStack.pushState(States::ModelViewer);
 
 	return true;
 }
