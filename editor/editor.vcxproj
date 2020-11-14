@@ -162,6 +162,7 @@
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\NormalVisMeshBuilder.cpp" />
     <ClCompile Include="src\OriginIconBuilder.cpp" />
+    <ClCompile Include="src\WorldState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="src\OriginIconBuilder.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
+    <ClInclude Include="src\WorldState.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

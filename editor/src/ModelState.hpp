@@ -38,9 +38,7 @@ source distribution.
 #include "StateIDs.hpp"
 #include "ImportedMeshBuilder.hpp"
 
-/*!
-Creates a state to render a menu.
-*/
+
 class ModelState final : public cro::State, public cro::GuiClient
 {
 public:

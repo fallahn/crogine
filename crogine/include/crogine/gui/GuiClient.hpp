@@ -61,7 +61,7 @@ namespace cro
         \param name Title to give the new tab
         \param function Gui function to render the contents of the tab
         */
-        void registerConsoleTab(const std::string& name, const std::function<void()>&);
+        void registerConsoleTab(const std::string& name, const std::function<void()>&) const;
 
         /*!
         \brief Registers a custom window with the ImGui renderer.
@@ -69,6 +69,16 @@ namespace cro
         fully stand-alone window with ImGui. The window will exist all the time
         the object which inherits this interface exists.
         */
-        void registerWindow(const std::function<void()>&);
+        void registerWindow(const std::function<void()>&) const;
+
+        /*!
+        \brief Removes all ImGui windows currently registered by this state
+        */
+        void unregisterWindows() const;
+
+        /*!
+        \brief Removes all console tabs currently registered by this state
+        */
+        void unregisterConsoleTabs() const;
     };
 }

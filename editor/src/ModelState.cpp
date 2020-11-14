@@ -133,6 +133,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
     });
 
     context.appInstance.resetFrameTime();
+    context.mainWindow.setTitle("Crogine Model Importer");
 }
 
 //public
@@ -264,7 +265,7 @@ void ModelState::buildUI()
             if(ImGui::BeginMainMenuBar())
             {
                 //file menu
-                if (ImGui::BeginMenu("File"))
+                if (ImGui::BeginMenu("File##Model"))
                 {
                     if (ImGui::MenuItem("Open Model", nullptr, nullptr))
                     {
@@ -283,6 +284,16 @@ void ModelState::buildUI()
                     {
                         exportModel();
                     }
+                    
+                    if (getStateCount() > 1)
+                    {
+                        if (ImGui::MenuItem("Return To World Editor"))
+                        {
+                            getContext().mainWindow.setTitle("Crogine Editor");
+                            requestStackPop();
+                        }
+                    }
+                    
                     if (ImGui::MenuItem("Quit", nullptr, nullptr))
                     {
                         cro::App::quit();

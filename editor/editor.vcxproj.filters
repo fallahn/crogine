@@ -19,6 +19,12 @@
     <Filter Include="Source Files\model viewer">
       <UniqueIdentifier>{c3177e8a-1656-4946-9bca-16bda3273cff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\world viewer">
+      <UniqueIdentifier>{8c87316d-b04c-4eb7-a778-0533cdfe6bc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\world viewer">
+      <UniqueIdentifier>{54486e91-4e69-4544-9072-ea0e9783de78}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -44,6 +50,9 @@
     </ClCompile>
     <ClCompile Include="src\ModelState.cpp">
       <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WorldState.cpp">
+      <Filter>Source Files\world viewer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -76,6 +85,9 @@
     </ClInclude>
     <ClInclude Include="src\ModelState.hpp">
       <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WorldState.hpp">
+      <Filter>Header Files\world viewer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

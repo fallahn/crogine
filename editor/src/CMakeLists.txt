@@ -7,4 +7,5 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ModelState.cpp
   ${PROJECT_DIR}/MyApp.cpp
   ${PROJECT_DIR}/NormalVisMeshBuilder.cpp
-  ${PROJECT_DIR}/OriginIconBuilder.cpp)
+  ${PROJECT_DIR}/OriginIconBuilder.cpp
+  ${PROJECT_DIR}/WorldState.cpp)

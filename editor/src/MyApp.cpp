@@ -29,6 +29,7 @@ source distribution.
 
 #include "MyApp.hpp"
 #include "ModelState.hpp"
+#include "WorldState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -39,6 +40,7 @@ MyApp::MyApp()
 	setApplicationStrings("Trederia", "Crogine Editor");
 
     m_stateStack.registerState<ModelState>(States::ID::ModelViewer);
+    m_stateStack.registerState<WorldState>(States::ID::WorldEditor);
 }
 
 //public
@@ -79,7 +81,7 @@ bool MyApp::initialise()
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Crogine Editor");
 
-	m_stateStack.pushState(States::ModelViewer);
+	m_stateStack.pushState(States::WorldEditor);
 
 	return true;
 }

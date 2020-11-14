@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2020
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+crogine model viewer/importer - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,34 +27,32 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#pragma once
+
+#include "StateIDs.hpp"
+
+#include <crogine/core/State.hpp>
 #include <crogine/gui/GuiClient.hpp>
-#include <crogine/core/App.hpp>
+#include <crogine/ecs/Scene.hpp>
 
-using namespace cro;
-
-GuiClient::~GuiClient()
+class WorldState final : public cro::State, public cro::GuiClient
 {
-    App::removeConsoleTab(this);
-    App::removeWindows(this);
-}
+public:
+    WorldState(cro::StateStack&, cro::State::Context);
 
-//public
-void GuiClient::registerConsoleTab(const std::string& name, const std::function<void()>& f) const
-{
-    App::addConsoleTab(name, f, this);
-}
+    cro::StateID getStateID() const override { return States::WorldEditor; }
 
-void GuiClient::registerWindow(const std::function<void()>& f) const
-{
-    App::addWindow(f, this);
-}
+    bool handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
+    bool simulate(float) override;
+    void render() override;
 
-void GuiClient::unregisterWindows() const
-{
-    App::removeWindows(this);
-}
+private:
 
-void GuiClient::unregisterConsoleTabs() const
-{
-    App::removeConsoleTab(this);
-}
+    cro::Scene m_scene;
+
+    void loadAssets();
+    void addSystems();
+    void initUI();
+    void updateLayout(std::int32_t, std::int32_t);
+};
