@@ -103,4 +103,8 @@ private:
     void updateNormalVis();
 
     void updateMouseInput(const cro::Event&);
+
+    void updateLayout(std::int32_t, std::int32_t);
+    void drawInspector();
+    void drawBrowser();
 };

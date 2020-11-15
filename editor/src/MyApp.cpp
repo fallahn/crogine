@@ -51,10 +51,12 @@ void MyApp::handleEvent(const cro::Event& evt)
 		switch (evt.key.keysym.sym)
 		{
 		default: break;
+#ifdef CRO_DEBUG_
 		case SDLK_ESCAPE:
 		case SDLK_AC_BACK:
             App::quit();
 			break;
+#endif
 		}
 	}
 	
@@ -81,7 +83,8 @@ bool MyApp::initialise()
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Crogine Editor");
 
-	m_stateStack.pushState(States::WorldEditor);
+	//m_stateStack.pushState(States::WorldEditor);
+	m_stateStack.pushState(States::ModelViewer);
 
 	return true;
 }

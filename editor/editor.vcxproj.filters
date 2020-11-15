@@ -89,5 +89,8 @@
     <ClInclude Include="src\WorldState.hpp">
       <Filter>Header Files\world viewer</Filter>
     </ClInclude>
+    <ClInclude Include="src\UIConsts.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

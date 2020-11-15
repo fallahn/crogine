@@ -32,6 +32,7 @@ source distribution.
 #include "ResourceIDs.hpp"
 #include "NormalVisMeshBuilder.hpp"
 #include "GLCheck.hpp"
+#include "UIConsts.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
@@ -80,13 +81,15 @@ namespace
     void updateView(cro::Entity entity, float farPlane, float fov)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
-        size.y = ((size.x / 16.f) * 9.f) / size.y;
-        size.x = 1.f;
+        size.x -= (size.x * ui::InspectorWidth);
+        size.y -= (size.y * ui::BrowserHeight);
 
         auto& cam3D = entity.getComponent<cro::Camera>();
-        cam3D.projectionMatrix = glm::perspective(fov, 16.f / 9.f, 0.1f, farPlane);
-        cam3D.viewport.bottom = (1.f - size.y) / 2.f;
-        cam3D.viewport.height = size.y;
+        cam3D.projectionMatrix = glm::perspective(fov, size.x / size.y, 0.1f, farPlane);
+        cam3D.viewport.left = ui::InspectorWidth;
+        cam3D.viewport.width = 1.f - ui::InspectorWidth;
+        cam3D.viewport.bottom = ui::BrowserHeight;
+        cam3D.viewport.height = 1.f - ui::BrowserHeight;
     }
 
 
@@ -111,6 +114,19 @@ namespace
 
     std::array<std::int32_t, MaterialID::Count> materialIDs = {};
     std::array<cro::Entity, EntityID::Count> entities = {};
+
+    enum WindowID
+    {
+        Inspector,
+        Browser,
+
+        Count
+    };
+    std::array<std::pair<glm::vec2, glm::vec2>, WindowID::Count> WindowLayouts =
+    {
+        std::make_pair(glm::vec2(0.f), glm::vec2(0.f)),
+        std::make_pair(glm::vec2(0.f), glm::vec2(0.f))
+    };
 }
 
 ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
@@ -156,9 +172,6 @@ bool ModelState::handleEvent(const cro::Event& evt)
         m_scene.getActiveCamera().getComponent<cro::Transform>().move(glm::vec3(0.f, 0.f, -(evt.wheel.y * 0.5f)) * worldScales[m_preferences.unitsPerMetre] * acceleration);
     }
         break;
-    case SDL_WINDOWEVENT_RESIZED:
-        updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], DefaultFOV);
-        break;
     }
 
     m_scene.forwardEvent(evt);
@@ -167,6 +180,16 @@ bool ModelState::handleEvent(const cro::Event& evt)
 
 void ModelState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            updateLayout(data.data0, data.data1);
+            updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], DefaultFOV);
+        }
+    }
+
     m_scene.forwardMessage(msg);
 }
 
@@ -308,8 +331,6 @@ void ModelState::buildUI()
                     {
                         m_showPreferences = true;
                     }
-                    //ImGui::MenuItem("Animation Data", nullptr, nullptr);
-                    ImGui::MenuItem("Material Data", nullptr, nullptr);
                     if (ImGui::MenuItem("Ground Plane", nullptr, &m_showGroundPlane))
                     {
                         if (m_showGroundPlane)
@@ -420,126 +441,12 @@ void ModelState::buildUI()
                 ImGui::End();
             }
 
-            //model detail window
-            if (entities[EntityID::ActiveModel].isValid())
-            {
-                ImGui::SetNextWindowSize({ 280.f, 430.f });
-                if (ImGui::Begin("Model Properties"))
-                {
-                    std::string worldScale("World Scale:\n");
-                    worldScale += std::to_string(worldScales[m_preferences.unitsPerMetre]);
-                    worldScale += " units per metre";
-                    ImGui::Text("%s", worldScale.c_str());
-
-                    if (!m_importedVBO.empty())
-                    {
-                        ImGui::Separator();
-
-                        std::string flags = "Flags:\n";
-                        if (m_importedHeader.flags & cro::VertexProperty::Position)
-                        {
-                            flags += "Position\n";
-                        }
-                        if (m_importedHeader.flags & cro::VertexProperty::Colour)
-                        {
-                            flags += "Colour\n";
-                        }
-                        if (m_importedHeader.flags & cro::VertexProperty::Normal)
-                        {
-                            flags += "Normal\n";
-                        }
-                        if (m_importedHeader.flags & cro::VertexProperty::Tangent)
-                        {
-                            flags += "Tan/Bitan\n";
-                        }
-                        if (m_importedHeader.flags & cro::VertexProperty::UV0)
-                        {
-                            flags += "Texture Coords\n";
-                        }
-                        if (m_importedHeader.flags & cro::VertexProperty::UV1)
-                        {
-                            flags += "Shadowmap Coords\n";
-                        }
-                        ImGui::Text("%s", flags.c_str());
-                        ImGui::Text("Materials: %d", m_importedHeader.arrayCount);
-
-                        ImGui::NewLine();
-                        ImGui::Text("Transform"); ImGui::SameLine(); HelpMarker("Double Click to change Values");
-                        if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], -180.f, 180.f))
-                        {
-                            entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(m_importedTransform.rotation * cro::Util::Const::degToRad);
-                        }
-                        if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.1f, 10.f))
-                        {
-                            //scale needs to be uniform, else we'd have to recalc all the normal data
-                            entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
-                        }
-                        if (ImGui::Button("Apply"))
-                        {
-                            applyImportTransform();
-                        }
-                        ImGui::SameLine();
-                        HelpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.");
-                    }
-
-
-                    if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
-                    {
-                        auto& skeleton = entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
-
-                        ImGui::NewLine();
-                        ImGui::Separator();
-                        ImGui::NewLine();
-
-                        ImGui::Text("Animations: %d", skeleton.animations.size());
-                        static std::string label("Stopped");
-                        if (skeleton.animations.empty())
-                        {
-                            label = "No Animations Found.";
-                        }
-                        else
-                        {
-                            static int currentAnim = 0;
-                            auto prevAnim = currentAnim;
-
-                            if (ImGui::InputInt("Anim", &currentAnim, 1, 1)
-                                && !skeleton.animations[currentAnim].playing)
-                            {
-                                currentAnim = std::min(currentAnim, static_cast<int>(skeleton.animations.size()) - 1);
-                            }
-                            else
-                            {
-                                currentAnim = prevAnim;
-                            }
-
-                            ImGui::SameLine();
-                            if (skeleton.animations[currentAnim].playing)
-                            {
-                                if (ImGui::Button("Stop"))
-                                {
-                                    skeleton.animations[currentAnim].playing = false;
-                                    label = "Stopped";
-                                }
-                            }
-                            else
-                            {
-                                if (ImGui::Button("Play"))
-                                {
-                                    skeleton.play(currentAnim);
-                                    label = "Playing " + skeleton.animations[currentAnim].name;
-                                }
-                                else
-                                {
-                                    label = "Stopped";
-                                }
-                            }
-                        }
-                        ImGui::Text("%s", label.c_str());
-                    }
-                }
-                ImGui::End();
-            }
+            drawInspector();
+            drawBrowser();
         });
+
+    auto size = getContext().mainWindow.getSize();
+    updateLayout(size.x, size.y);
 }
 
 void ModelState::openModel()
@@ -1136,4 +1043,191 @@ void ModelState::updateMouseInput(const cro::Event& evt)
         //TODO multiply this by zoom factor
         tx.move((glm::vec3(evt.motion.xrel, -evt.motion.yrel, 0.f) / 60.f) * worldScales[m_preferences.unitsPerMetre]);
     }
+}
+
+void ModelState::updateLayout(std::int32_t w, std::int32_t h)
+{
+    float width = static_cast<float>(w);
+    float height = static_cast<float>(h);
+
+    WindowLayouts[WindowID::Inspector] = 
+        std::make_pair(glm::vec2(0.f, ui::TitleHeight), 
+                        glm::vec2(width * ui::InspectorWidth, height - (ui::TitleHeight + (height * ui::BrowserHeight))));
+
+    WindowLayouts[WindowID::Browser] = 
+        std::make_pair(glm::vec2(0.f, height - (height * ui::BrowserHeight)),
+                        glm::vec2(width, height * ui::BrowserHeight));
+}
+
+void ModelState::drawInspector()
+{
+    auto [pos, size] = WindowLayouts[WindowID::Inspector];
+
+    ImGui::SetNextWindowPos({ pos.x, pos.y });
+    ImGui::SetNextWindowSize({ size.x, size.y });
+    if (ImGui::Begin("Inspector", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    {
+        ImGui::BeginTabBar("##a");
+
+
+        if (ImGui::BeginTabItem("Model"))
+        {
+            //model details
+            if (entities[EntityID::ActiveModel].isValid())
+            {
+                std::string worldScale("World Scale:\n");
+                worldScale += std::to_string(worldScales[m_preferences.unitsPerMetre]);
+                worldScale += " units per metre";
+                ImGui::Text("%s", worldScale.c_str());
+
+                if (!m_importedVBO.empty())
+                {
+                    ImGui::Separator();
+
+                    std::string flags = "Flags:\n";
+                    if (m_importedHeader.flags & cro::VertexProperty::Position)
+                    {
+                        flags += "Position\n";
+                    }
+                    if (m_importedHeader.flags & cro::VertexProperty::Colour)
+                    {
+                        flags += "Colour\n";
+                    }
+                    if (m_importedHeader.flags & cro::VertexProperty::Normal)
+                    {
+                        flags += "Normal\n";
+                    }
+                    if (m_importedHeader.flags & cro::VertexProperty::Tangent)
+                    {
+                        flags += "Tan/Bitan\n";
+                    }
+                    if (m_importedHeader.flags & cro::VertexProperty::UV0)
+                    {
+                        flags += "Texture Coords\n";
+                    }
+                    if (m_importedHeader.flags & cro::VertexProperty::UV1)
+                    {
+                        flags += "Shadowmap Coords\n";
+                    }
+                    ImGui::Text("%s", flags.c_str());
+                    ImGui::Text("Materials: %d", m_importedHeader.arrayCount);
+
+                    ImGui::NewLine();
+                    ImGui::Text("Transform"); ImGui::SameLine(); HelpMarker("Double Click to change Values");
+                    if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], -180.f, 180.f))
+                    {
+                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(m_importedTransform.rotation * cro::Util::Const::degToRad);
+                    }
+                    if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.1f, 10.f))
+                    {
+                        //scale needs to be uniform, else we'd have to recalc all the normal data
+                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                    }
+                    if (ImGui::Button("Apply"))
+                    {
+                        applyImportTransform();
+                    }
+                    ImGui::SameLine();
+                    HelpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.");
+                }
+
+
+                if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+                {
+                    auto& skeleton = entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+
+                    ImGui::NewLine();
+                    ImGui::Separator();
+                    ImGui::NewLine();
+
+                    ImGui::Text("Animations: %d", skeleton.animations.size());
+                    static std::string label("Stopped");
+                    if (skeleton.animations.empty())
+                    {
+                        label = "No Animations Found.";
+                    }
+                    else
+                    {
+                        static int currentAnim = 0;
+                        auto prevAnim = currentAnim;
+
+                        if (ImGui::InputInt("Anim", &currentAnim, 1, 1)
+                            && !skeleton.animations[currentAnim].playing)
+                        {
+                            currentAnim = std::min(currentAnim, static_cast<int>(skeleton.animations.size()) - 1);
+                        }
+                        else
+                        {
+                            currentAnim = prevAnim;
+                        }
+
+                        ImGui::SameLine();
+                        if (skeleton.animations[currentAnim].playing)
+                        {
+                            if (ImGui::Button("Stop"))
+                            {
+                                skeleton.animations[currentAnim].playing = false;
+                                label = "Stopped";
+                            }
+                        }
+                        else
+                        {
+                            if (ImGui::Button("Play"))
+                            {
+                                skeleton.play(currentAnim);
+                                label = "Playing " + skeleton.animations[currentAnim].name;
+                            }
+                            else
+                            {
+                                label = "Stopped";
+                            }
+                        }
+                    }
+                    ImGui::Text("%s", label.c_str());
+                }
+            }
+            
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Material"))
+        {
+
+
+
+            ImGui::EndTabItem();
+        }
+
+
+        ImGui::EndTabBar();
+    }
+    ImGui::End();
+
+    
+}
+
+void ModelState::drawBrowser()
+{
+    auto [pos, size] = WindowLayouts[WindowID::Browser];
+
+    ImGui::SetNextWindowPos({ pos.x, pos.y });
+    ImGui::SetNextWindowSize({ size.x, size.y });
+    if (ImGui::Begin("Browser", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    {
+        ImGui::BeginTabBar("##b");
+        if (ImGui::BeginTabItem("Materials"))
+        {
+
+
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Textures"))
+        {
+
+
+
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
+    ImGui::End();
 }

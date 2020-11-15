@@ -29,6 +29,7 @@ source distribution.
 
 #include "WorldState.hpp"
 #include "Messages.hpp"
+#include "UIConsts.hpp"
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/glm/vec2.hpp>
@@ -185,9 +186,7 @@ void WorldState::initUI()
 
 void WorldState::updateLayout(std::int32_t w, std::int32_t h)
 {
-    const float TitleHeight = 22.f;
-
     float width = static_cast<float>(w);
     float height = static_cast<float>(h);
-    WindowLayouts[WindowID::ModelBrowser] = std::make_pair(glm::vec2(0.f, TitleHeight), glm::vec2(width * 0.2f, height - TitleHeight));
+    WindowLayouts[WindowID::ModelBrowser] = std::make_pair(glm::vec2(0.f, ui::TitleHeight), glm::vec2(width * ui::InspectorWidth, height - ui::TitleHeight));
 }
