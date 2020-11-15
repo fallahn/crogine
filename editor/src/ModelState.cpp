@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/gui/imgui.h>
 
 #include <crogine/graphics/StaticMeshBuilder.hpp>
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
@@ -238,16 +239,51 @@ void ModelState::loadAssets()
 void ModelState::createScene()
 {
     //create ground plane
-    cro::ModelDefinition modelDef;
-    modelDef.loadFromFile("assets/models/ground_plane.cmt", m_resources);
+    const float GridWidth = 3.f;
+    std::vector<float> verts;
+    for (auto y = 0; y < 4; ++y)
+    {
+        for (auto x = 0; x < 4; ++x)
+        {
+            verts.push_back(static_cast<float>(x) - (GridWidth / 2.f));
+            verts.push_back(0.f);
+            verts.push_back(static_cast<float>(y) - (GridWidth / 2.f));
 
-    entities[EntityID::GroundPlane] = m_scene.createEntity();
-    entities[EntityID::GroundPlane].addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
-    entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
-    modelDef.createModel(entities[EntityID::GroundPlane], m_resources);
+            verts.push_back(1.f);
+            verts.push_back(1.f);
+            verts.push_back(1.f);
+            verts.push_back(1.f);
+        }
+    }
+    std::vector<std::uint32_t> indices =
+    {
+        0,3,15,12,0,
+        1,13,14,2,3,
+        7,4,8,11
+    };
+
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
+
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    auto material = m_resources.materials.get(materialIDs[MaterialID::DebugDraw]);
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    auto& meshData = entity.getComponent<cro::Model>().getMeshData();
+    meshData.vertexCount = verts.size() / (meshData.vertexSize / sizeof(float));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto& submesh = meshData.indexData[0];
+    submesh.indexCount = indices.size();
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    entities[EntityID::GroundPlane] = entity;
 
     //create the camera - using a custom camera prevents the scene updating the projection on window resize
-    auto entity = m_scene.createEntity();
+    entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition);
     entity.addComponent<cro::Camera>();
     updateView(entity, DefaultFarPlane, DefaultFOV);
@@ -259,8 +295,8 @@ void ModelState::createScene()
     entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::GroundPlane].getComponent<cro::Transform>());
 
     //axis icon
-    auto meshID = m_resources.meshes.loadMesh(OriginIconBuilder());
-    auto material = m_resources.materials.get(materialIDs[MaterialID::DebugDraw]);
+    meshID = m_resources.meshes.loadMesh(OriginIconBuilder());
+    material = m_resources.materials.get(materialIDs[MaterialID::DebugDraw]);
     material.enableDepthTest = false;
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
