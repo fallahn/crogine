@@ -74,6 +74,11 @@ source distribution.
 
 namespace ai = Assimp;
 
+const std::array<std::string, MaterialDefinition::Type::Count> MaterialDefinition::TypeStrings =
+{
+    "Unlit", "VertexLit", "PBR"
+};
+
 namespace
 {
     const float DefaultFOV = 35.f * cro::Util::Const::degToRad;
@@ -1371,7 +1376,6 @@ void ModelState::drawBrowser()
                 if (ImGui::ImageButton((void*)(std::size_t)m_materialThumb, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
                 {
                     m_selectedMaterial = count;
-                    LogI << count << std::endl;
                 }
                 ImGui::PopID();
                 ImGui::PopStyleColor();
@@ -1381,11 +1385,10 @@ void ModelState::drawBrowser()
                     //set payload to carry the index of the material
                     ImGui::SetDragDropPayload("MATERIAL_SRC", &count, sizeof(cro::int32));
 
-                    //display preview (could be anything, e.g. when dragging an image we could decide to display
-                    //the filename and a small preview of the image, etc.)
+                    //display preview
                     ImGui::Image((void*)(std::size_t)m_materialThumb, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
                     ImGui::Text("%s", material.name.c_str());
-                    ImGui::Text("%s", material.type == MaterialDefinition::Unlit ? "Unlit" : "VertexLit");
+                    ImGui::Text("%s", MaterialDefinition::TypeStrings[material.type]);
                     ImGui::EndDragDropSource();
 
                     m_selectedMaterial = count;

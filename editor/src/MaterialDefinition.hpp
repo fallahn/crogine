@@ -29,11 +29,40 @@ source distribution.
 
 #pragma once
 
+#include <crogine/graphics/MaterialData.hpp>
+
+#include <cstdint>
+#include <string>
+#include <array>
+
 struct MaterialDefinition final
 {
     enum Type
     {
-        Unlit, VertexLit, PBR
+        Unlit, VertexLit, PBR,
+
+        Count
     }type = Unlit;
     std::string name;
+
+    std::uint32_t diffuse = 0;
+    std::uint32_t mask = 0;
+    std::uint32_t normal = 0;
+    std::uint32_t lightmap = 0;
+
+    cro::Colour colour;
+    cro::Colour maskColour;
+
+    float alphaClip = 0.f;
+
+    bool vertexColoured = false;
+    bool skinned = false; //TODO this could be inferred from the model to which it's applied?
+    bool recieveShadows = false;
+
+    bool textureRepeat = false;
+    bool textureSmooth = false;
+
+    cro::Material::BlendMode blendMode = cro::Material::BlendMode::None;
+
+    static const std::array<std::string, Type::Count> TypeStrings;
 };

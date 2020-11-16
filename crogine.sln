@@ -35,6 +35,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bsp", "samples\bsp\bsp.vcxproj", "{300621C9-B35A-453C-8B52-8179F7AFF955}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "editor", "editor\editor.vcxproj", "{E0EFE715-086C-4FC0-90A5-54BE5E86C7D2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{72B8CEB9-E80A-4707-BF7C-80ED4028D0F3} = {72B8CEB9-E80A-4707-BF7C-80ED4028D0F3}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
