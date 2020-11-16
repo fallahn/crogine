@@ -113,6 +113,7 @@ private:
     };
     std::map<std::uint32_t, MaterialTexture> m_materialTextures;
     std::uint32_t m_selectedTexture;
+    std::uint32_t addTextureToBrowser(const std::string&);
 
     void updateLayout(std::int32_t, std::int32_t);
     void drawInspector();

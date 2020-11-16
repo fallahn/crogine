@@ -70,6 +70,8 @@ source distribution.
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
+#include <string_view>
+
 namespace ai = Assimp;
 
 namespace
@@ -424,6 +426,7 @@ void ModelState::buildUI()
                         if (!path.empty())
                         {
                             m_preferences.workingDirectory = path;
+                            std::replace(m_preferences.workingDirectory.begin(), m_preferences.workingDirectory.end(), '\\', '/');
                         }
                     }
 
@@ -525,6 +528,38 @@ void ModelState::openModelAtPath(const std::string& path)
         if (cro::FileSystem::getFileExtension(path) == "*.iqm")
         {
             importIQM(path);
+        }
+
+        //parse all of the material properties into the material/texture browser
+        const auto& objects = m_currentModelConfig.getObjects();
+        for (const auto& obj : objects)
+        {
+            std::string_view id = obj.getId();
+            if (id == "Unlit")
+            {
+                //TODO add an unlit material
+            }
+            else if (id == "VertexLit")
+            {
+                //TODO add a vertex lit material
+            }
+            //TODO PBR shader
+
+            //read textures
+            const auto& properties = obj.getProperties();
+            for (const auto& prop : properties)
+            {
+                std::string_view name = prop.getName();
+                if (name == "diffuse"
+                    || name == "mask"
+                    || name == "normal")
+                {
+                    auto path = m_preferences.workingDirectory + "/" + prop.getValue<std::string>();
+                    addTextureToBrowser(path);
+
+                    //TODO map these to the current created material properties
+                }
+            }
         }
     }
     else
@@ -941,6 +976,7 @@ void ModelState::loadPrefs()
             if (name == "working_dir")
             {
                 m_preferences.workingDirectory = prop.getValue<std::string>();
+                std::replace(m_preferences.workingDirectory.begin(), m_preferences.workingDirectory.end(), '\\', '/');
             }
             else if (name == "units_per_metre")
             {
@@ -1080,6 +1116,39 @@ void ModelState::updateMouseInput(const cro::Event& evt)
         //TODO multiply this by zoom factor
         tx.move((glm::vec3(evt.motion.xrel, -evt.motion.yrel, 0.f) / 60.f) * worldScales[m_preferences.unitsPerMetre]);
     }
+}
+
+std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
+{
+    auto fileName = cro::FileSystem::getFileName(path);
+
+    std::uint32_t id = 0;
+    for (auto& [i, t] : m_materialTextures)
+    {
+        if (t.name == fileName)
+        {
+            id = i;
+            break;
+        }
+    }
+    m_materialTextures.erase(id);
+    m_selectedTexture = 0;
+
+    MaterialTexture tex;
+    tex.texture = std::make_unique<cro::Texture>();
+    if (tex.texture->loadFromFile(path))
+    {
+        m_selectedTexture = tex.texture->getGLHandle();
+        tex.texture->setRepeated(true);
+        tex.name = fileName;
+        m_materialTextures.insert(std::make_pair(tex.texture->getGLHandle(), std::move(tex)));
+        return m_selectedTexture;
+    }
+    else
+    {
+        cro::FileSystem::showMessageBox("Error", "Failed to open image", cro::FileSystem::OK, cro::FileSystem::Error);
+    }
+    return 0;
 }
 
 void ModelState::updateLayout(std::int32_t w, std::int32_t h)
@@ -1266,33 +1335,7 @@ void ModelState::drawBrowser()
                 auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
                 if (!path.empty())
                 {
-                    auto fileName = cro::FileSystem::getFileName(path);
-
-                    std::uint32_t id = 0;
-                    for (auto& [i, t] : m_materialTextures)
-                    {
-                        if (t.name == fileName)
-                        {
-                            id = i;
-                            break;
-                        }
-                    }
-                    m_materialTextures.erase(id);
-                    m_selectedTexture = 0;
-
-                    MaterialTexture tex;
-                    tex.texture = std::make_unique<cro::Texture>();
-                    if (tex.texture->loadFromFile(path))
-                    {
-                        m_selectedTexture = tex.texture->getGLHandle();
-                        tex.texture->setRepeated(true);
-                        tex.name = fileName;
-                        m_materialTextures.insert(std::make_pair(tex.texture->getGLHandle(), std::move(tex)));
-                    }
-                    else
-                    {
-                        cro::FileSystem::showMessageBox("Error", "Failed to open image", cro::FileSystem::OK, cro::FileSystem::Error);
-                    }
+                    addTextureToBrowser(path);
                 }
             }
             ImGui::SameLine();
@@ -1334,6 +1377,8 @@ void ModelState::drawBrowser()
                     ImGui::Image((void*)(std::size_t)id, { thumbSize.x, thumbSize.y }, { 0.f, 0.f }, { 1.f, -1.f });
                     ImGui::Text("%s", tex.name.c_str());
                     ImGui::EndDragDropSource();
+
+                    m_selectedTexture = id;
                 }
                 
                 //put on same line if we fit
@@ -1342,8 +1387,8 @@ void ModelState::drawBrowser()
                 {
                     ImGui::SameLine();
                 }
-                //TODO scroll to selected if not on first line
             }
+            
             //see ImGui::BeginDragDropTarget() for dropping textures on material properties
             ImGui::EndTabItem();
         }
