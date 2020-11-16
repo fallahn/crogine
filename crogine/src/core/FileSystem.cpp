@@ -662,5 +662,46 @@ void FileSystem::setResourceDirectory(const std::string& path)
 	}
 }
 
+bool FileSystem::showMessageBox(const std::string& title, const std::string& message, ButtonType buttonType, IconType iconType)
+{
+    std::string button;
+    switch (buttonType)
+    {
+    default:
+    case ButtonType::OK:
+        button = "ok";
+        break;
+    case ButtonType::OKCancel:
+        button = "okcancel";
+        break;
+    case ButtonType::YesNo:
+        button = "yesno";
+        break;
+    case ButtonType::YesNoCancel:
+        button = "yesnocancel";
+        break;
+    }
+
+    std::string icon;
+    switch (iconType)
+    {
+    default:
+    case IconType::Error:
+        icon = "error";
+        break;
+    case IconType::Info:
+        icon = "info";
+        break;
+    case IconType::Question:
+        icon = "question";
+        break;
+    case IconType::Warning:
+        icon = "warning";
+        break;
+    }
+
+    return tinyfd_messageBox(title.c_str(), message.c_str(), button.c_str(), icon.c_str(), 0) != 0;
+}
+
 //private
 std::string FileSystem::m_resourceDirectory = std::string();

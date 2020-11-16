@@ -162,6 +162,28 @@ namespace cro
 		*/
 		static void setResourceDirectory(const std::string& path);
 
+        enum ButtonType
+        {
+            OK, OKCancel, YesNo, YesNoCancel
+        };
+
+        enum IconType
+        {
+            Info, Warning, Error, Question
+        };
+
+        /*!
+        \brief Shows a pop up message box to the user.
+        Can be used to express an error or ask a question.
+        \param title The title string to display in the message box
+        \param message The message string to display in the message box
+        \param buttonType Button type to display. Defaults to OK
+        \param iconType Type of icon to display. Defaults to Info
+        \returns true on OK or Yes, false on No or Cancel
+        \see ButtonType, IconType
+        */
+        static bool showMessageBox(const std::string& title, const std::string& message, ButtonType buttonType = ButtonType::OK, IconType iconType = IconType::Info);
+
     private:
 		static std::string m_resourceDirectory;
     };

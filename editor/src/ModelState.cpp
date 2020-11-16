@@ -135,7 +135,8 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
     m_scene                 (context.appInstance.getMessageBus()),
     m_showPreferences       (false),
     m_showGroundPlane       (false),
-    m_showSkybox            (false)
+    m_showSkybox            (false),
+    m_selectedTexture       (0)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -1243,6 +1244,8 @@ void ModelState::drawInspector()
 
 void ModelState::drawBrowser()
 {
+    ImGui::ShowDemoWindow();
+
     auto [pos, size] = WindowLayouts[WindowID::Browser];
 
     ImGui::SetNextWindowPos({ pos.x, pos.y });
@@ -1258,9 +1261,90 @@ void ModelState::drawBrowser()
         }
         if (ImGui::BeginTabItem("Textures"))
         {
+            if (ImGui::Button("Load##00"))
+            {
+                auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
+                if (!path.empty())
+                {
+                    auto fileName = cro::FileSystem::getFileName(path);
 
+                    std::uint32_t id = 0;
+                    for (auto& [i, t] : m_materialTextures)
+                    {
+                        if (t.name == fileName)
+                        {
+                            id = i;
+                            break;
+                        }
+                    }
+                    m_materialTextures.erase(id);
+                    m_selectedTexture = 0;
 
+                    MaterialTexture tex;
+                    tex.texture = std::make_unique<cro::Texture>();
+                    if (tex.texture->loadFromFile(path))
+                    {
+                        m_selectedTexture = tex.texture->getGLHandle();
+                        tex.texture->setRepeated(true);
+                        tex.name = fileName;
+                        m_materialTextures.insert(std::make_pair(tex.texture->getGLHandle(), std::move(tex)));
+                    }
+                    else
+                    {
+                        cro::FileSystem::showMessageBox("Error", "Failed to open image", cro::FileSystem::OK, cro::FileSystem::Error);
+                    }
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Delete##00"))
+            {
+                if (m_selectedTexture != 0
+                    && cro::FileSystem::showMessageBox("Delete?", "Remove this texture?", cro::FileSystem::YesNo, cro::FileSystem::Question))
+                {
+                    m_materialTextures.erase(m_selectedTexture);
+                    m_selectedTexture = m_materialTextures.empty() ? 0 : m_materialTextures.begin()->first;
 
+                    //TODO update any materials which were using this texture...
+                    LOG("UPDATE MATERIALS WHICH USED THIS TEXTURE", cro::Logger::Type::Info);
+                }
+            }
+
+            auto thumbSize = size;
+            thumbSize.y *= ui::ThumbnailHeight;
+            thumbSize.x = thumbSize.y;
+
+            std::int32_t thumbsPerRow = std::floor(size.x / thumbSize.x) - 1;
+            std::int32_t count = 0;
+            for (const auto& [id, tex] : m_materialTextures)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Border, id == m_selectedTexture ? ImVec4(1.f, 1.f, 0.f, 1.f) : ImVec4(0.f,0.f,0.f,1.f));
+                if (ImGui::ImageButton((void*)(std::size_t)id, { thumbSize.x, thumbSize.y }, { 0.f, 0.f }, { 1.f, -1.f }))
+                {
+                    m_selectedTexture = id;
+                }
+                ImGui::PopStyleColor();
+
+                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                {
+                    //set payload to carry the GL id of the texture
+                    ImGui::SetDragDropPayload("TEXTURE_SRC", &id, sizeof(cro::uint32));
+
+                    //display preview (could be anything, e.g. when dragging an image we could decide to display
+                    //the filename and a small preview of the image, etc.)
+                    ImGui::Image((void*)(std::size_t)id, { thumbSize.x, thumbSize.y }, { 0.f, 0.f }, { 1.f, -1.f });
+                    ImGui::Text("%s", tex.name.c_str());
+                    ImGui::EndDragDropSource();
+                }
+                
+                //put on same line if we fit
+                count++;
+                if (count % thumbsPerRow != 0)
+                {
+                    ImGui::SameLine();
+                }
+                //TODO scroll to selected if not on first line
+            }
+            //see ImGui::BeginDragDropTarget() for dropping textures on material properties
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();

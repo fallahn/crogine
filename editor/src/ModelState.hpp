@@ -38,6 +38,8 @@ source distribution.
 #include "StateIDs.hpp"
 #include "ImportedMeshBuilder.hpp"
 
+#include <map>
+#include <memory>
 
 class ModelState final : public cro::State, public cro::GuiClient
 {
@@ -103,6 +105,14 @@ private:
     void updateNormalVis();
 
     void updateMouseInput(const cro::Event&);
+
+    struct MaterialTexture final
+    {
+        std::unique_ptr<cro::Texture> texture;
+        std::string name;
+    };
+    std::map<std::uint32_t, MaterialTexture> m_materialTextures;
+    std::uint32_t m_selectedTexture;
 
     void updateLayout(std::int32_t, std::int32_t);
     void drawInspector();
