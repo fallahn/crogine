@@ -138,7 +138,9 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
     m_showPreferences       (false),
     m_showGroundPlane       (false),
     m_showSkybox            (false),
-    m_selectedTexture       (0)
+    m_selectedTexture       (0),
+    m_materialThumb         (0),
+    m_selectedMaterial      (0)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -237,6 +239,11 @@ void ModelState::loadAssets()
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     materialIDs[MaterialID::DebugDraw] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
+
+    //texture for material thumbnail - TODO we'll unhackify this when rendering real time
+    //thumbnail textures is implemented
+    m_resources.textures.load(99999, "assets/images/material.png");
+    m_materialThumb = m_resources.textures.get(99999).getGLHandle();
 }
 
 void ModelState::createScene()
@@ -534,30 +541,33 @@ void ModelState::openModelAtPath(const std::string& path)
         const auto& objects = m_currentModelConfig.getObjects();
         for (const auto& obj : objects)
         {
-            std::string_view id = obj.getId();
-            if (id == "Unlit")
+            if (obj.getName() == "material")
             {
-                //TODO add an unlit material
-            }
-            else if (id == "VertexLit")
-            {
-                //TODO add a vertex lit material
-            }
-            //TODO PBR shader
-
-            //read textures
-            const auto& properties = obj.getProperties();
-            for (const auto& prop : properties)
-            {
-                std::string_view name = prop.getName();
-                if (name == "diffuse"
-                    || name == "mask"
-                    || name == "normal")
+                std::string_view id = obj.getId();
+                if (id == "Unlit")
                 {
-                    auto path = m_preferences.workingDirectory + "/" + prop.getValue<std::string>();
-                    addTextureToBrowser(path);
+                    //TODO add an unlit material
+                }
+                else if (id == "VertexLit")
+                {
+                    //TODO add a vertex lit material
+                }
+                //TODO PBR shader
 
-                    //TODO map these to the current created material properties
+                //read textures
+                const auto& properties = obj.getProperties();
+                for (const auto& prop : properties)
+                {
+                    std::string_view name = prop.getName();
+                    if (name == "diffuse"
+                        || name == "mask"
+                        || name == "normal")
+                    {
+                        auto path = m_preferences.workingDirectory + "/" + prop.getValue<std::string>();
+                        addTextureToBrowser(path);
+
+                        //TODO map these to the current created material properties
+                    }
                 }
             }
         }
@@ -1139,7 +1149,6 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
     if (tex.texture->loadFromFile(path))
     {
         m_selectedTexture = tex.texture->getGLHandle();
-        tex.texture->setRepeated(true);
         tex.name = fileName;
         m_materialTextures.insert(std::make_pair(tex.texture->getGLHandle(), std::move(tex)));
         return m_selectedTexture;
@@ -1324,13 +1333,77 @@ void ModelState::drawBrowser()
         ImGui::BeginTabBar("##b");
         if (ImGui::BeginTabItem("Materials"))
         {
+            if (ImGui::Button("Add##01"))
+            {
+                m_materialDefs.emplace_back();
+                m_selectedMaterial = m_materialDefs.size() - 1;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Open##01"))
+            {
 
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Remove##01"))
+            {
+                if (!m_materialDefs.empty()
+                    && cro::FileSystem::showMessageBox("Delete?", "Remove the selected material?", cro::FileSystem::YesNo, cro::FileSystem::Question))
+                {
+                    m_materialDefs.erase(m_materialDefs.begin() + m_selectedMaterial);
+                    if (m_selectedMaterial >= m_materialDefs.size()
+                        && !m_materialDefs.empty())
+                    {
+                        m_selectedMaterial--;
+                    }
+                }
+            }
+
+            auto thumbSize = size;
+            thumbSize.y *= ui::ThumbnailHeight;
+            thumbSize.x = thumbSize.y;
+
+            std::int32_t thumbsPerRow = std::floor(size.x / thumbSize.x) - 1;
+            std::int32_t count = 0;
+            for (const auto& material : m_materialDefs)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Border, count == m_selectedMaterial ? ImVec4(1.f, 1.f, 0.f, 1.f) : ImVec4(0.f, 0.f, 0.f, 1.f));
+                ImGui::PushID(9999 + count);
+                if (ImGui::ImageButton((void*)(std::size_t)m_materialThumb, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
+                {
+                    m_selectedMaterial = count;
+                    LogI << count << std::endl;
+                }
+                ImGui::PopID();
+                ImGui::PopStyleColor();
+
+                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                {
+                    //set payload to carry the index of the material
+                    ImGui::SetDragDropPayload("MATERIAL_SRC", &count, sizeof(cro::int32));
+
+                    //display preview (could be anything, e.g. when dragging an image we could decide to display
+                    //the filename and a small preview of the image, etc.)
+                    ImGui::Image((void*)(std::size_t)m_materialThumb, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::Text("%s", material.name.c_str());
+                    ImGui::Text("%s", material.type == MaterialDefinition::Unlit ? "Unlit" : "VertexLit");
+                    ImGui::EndDragDropSource();
+
+                    m_selectedMaterial = count;
+                }
+
+                //put on same line if we fit
+                count++;
+                if (count % thumbsPerRow != 0)
+                {
+                    ImGui::SameLine();
+                }
+            }
 
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Textures"))
         {
-            if (ImGui::Button("Load##00"))
+            if (ImGui::Button("Add##00"))
             {
                 auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
                 if (!path.empty())
@@ -1339,7 +1412,7 @@ void ModelState::drawBrowser()
                 }
             }
             ImGui::SameLine();
-            if (ImGui::Button("Delete##00"))
+            if (ImGui::Button("Remove##00"))
             {
                 if (m_selectedTexture != 0
                     && cro::FileSystem::showMessageBox("Delete?", "Remove this texture?", cro::FileSystem::YesNo, cro::FileSystem::Question))
@@ -1361,7 +1434,7 @@ void ModelState::drawBrowser()
             for (const auto& [id, tex] : m_materialTextures)
             {
                 ImGui::PushStyleColor(ImGuiCol_Border, id == m_selectedTexture ? ImVec4(1.f, 1.f, 0.f, 1.f) : ImVec4(0.f,0.f,0.f,1.f));
-                if (ImGui::ImageButton((void*)(std::size_t)id, { thumbSize.x, thumbSize.y }, { 0.f, 0.f }, { 1.f, -1.f }))
+                if (ImGui::ImageButton((void*)(std::size_t)id, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
                 {
                     m_selectedTexture = id;
                 }
@@ -1374,7 +1447,7 @@ void ModelState::drawBrowser()
 
                     //display preview (could be anything, e.g. when dragging an image we could decide to display
                     //the filename and a small preview of the image, etc.)
-                    ImGui::Image((void*)(std::size_t)id, { thumbSize.x, thumbSize.y }, { 0.f, 0.f }, { 1.f, -1.f });
+                    ImGui::Image((void*)(std::size_t)id, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
                     ImGui::Text("%s", tex.name.c_str());
                     ImGui::EndDragDropSource();
 

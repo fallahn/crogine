@@ -168,6 +168,7 @@
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\ImportedMeshBuilder.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
+    <ClInclude Include="src\MaterialDefinition.hpp" />
     <ClInclude Include="src\ModelState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />

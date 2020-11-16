@@ -37,6 +37,7 @@ source distribution.
 
 #include "StateIDs.hpp"
 #include "ImportedMeshBuilder.hpp"
+#include "MaterialDefinition.hpp"
 
 #include <map>
 #include <memory>
@@ -114,6 +115,10 @@ private:
     std::map<std::uint32_t, MaterialTexture> m_materialTextures;
     std::uint32_t m_selectedTexture;
     std::uint32_t addTextureToBrowser(const std::string&);
+
+    std::uint32_t m_materialThumb;
+    std::vector<MaterialDefinition> m_materialDefs;
+    std::size_t m_selectedMaterial;
 
     void updateLayout(std::int32_t, std::int32_t);
     void drawInspector();

@@ -92,5 +92,8 @@
     <ClInclude Include="src\UIConsts.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\MaterialDefinition.hpp">
+      <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
