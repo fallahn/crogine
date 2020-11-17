@@ -51,7 +51,7 @@ struct MaterialDefinition final
     std::uint32_t normal = 0;
     std::uint32_t lightmap = 0;
 
-    cro::Colour colour;
+    cro::Colour colour = glm::vec4(1.f);
     cro::Colour maskColour;
 
     float alphaClip = 0.f;

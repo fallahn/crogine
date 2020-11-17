@@ -45,6 +45,8 @@ source distribution.
 
 namespace cro
 {
+    class Colour;
+
     /*!
     \brief Base class for all items loaded from a configuration file
     */
@@ -98,9 +100,11 @@ namespace cro
         void setValue(const glm::vec2& v);
         void setValue(const glm::vec3& v);
         void setValue(const glm::vec4& v);
+        void setValue(const cro::Colour& v);
         
     private:
         std::string m_value;
+        bool m_isStringValue;
         std::vector<float> valueAsArray() const;
     };
 
