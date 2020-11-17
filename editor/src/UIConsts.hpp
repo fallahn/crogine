@@ -35,6 +35,8 @@ namespace ui
 {
     static const float TitleHeight = 22.f;
     static const float InspectorWidth = 0.25f; //percent of window width
-    static const float BrowserHeight = 0.3f;
+    static const float BrowserHeight = 0.32f;
     static const float ThumbnailHeight = 0.5f; //percent of browser height
+    static const float MaterialPreviewWidth = 0.45f;
+    static const float TextBoxWidth = 0.915f;
 }

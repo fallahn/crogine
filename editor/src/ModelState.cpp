@@ -39,9 +39,11 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/gui/imgui.h>
+#include <crogine/gui/imgui_stdlib.h>
 
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/Image.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
@@ -135,6 +137,54 @@ namespace
         std::make_pair(glm::vec2(0.f), glm::vec2(0.f)),
         std::make_pair(glm::vec2(0.f), glm::vec2(0.f))
     };
+
+    void helpMarker(const char* desc)
+    {
+        ImGui::TextDisabled("(?)");
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+            ImGui::TextUnformatted(desc);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
+
+    void drawTextureSlot(const std::string label, std::uint32_t& dest, std::uint32_t thumbnail)
+    {
+        glm::vec2 imgSize = glm::vec2(20.f);
+        if (ImGui::ImageButton((void*)(std::size_t)thumbnail, { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
+        {
+            if (cro::FileSystem::showMessageBox("Confirm", "Clear this slot? Drag a texture from the browser to set it", cro::FileSystem::YesNo, cro::FileSystem::Question))
+            {
+                dest = 0;
+            }
+        }
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("TEXTURE_SRC"))
+            {
+                CRO_ASSERT(payload->DataSize == sizeof(std::uint32_t), "");
+                dest = *(const std::uint32_t*)payload->Data;
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        ImGui::SameLine();
+        
+        //seems a waste to keep calling this but hey
+        auto textSize = ImGui::CalcTextSize("Aty");
+
+        auto pos = ImGui::GetCursorPosY();
+        pos += (imgSize.y - textSize.y);// / 2.f;
+        ImGui::SetCursorPosY(pos);
+        ImGui::Text("%s", label.c_str());
+
+        ImGui::SameLine();
+        helpMarker("Drag a texture from the Texture Browser to fill the slot, or click the icon to clear it.");
+    }
 }
 
 ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
@@ -249,6 +299,12 @@ void ModelState::loadAssets()
     //thumbnail textures is implemented
     m_resources.textures.load(99999, "assets/images/material.png");
     m_materialThumb = m_resources.textures.get(99999).getGLHandle();
+
+    cro::Image img;
+    img.create(2, 2, cro::Colour::Black());
+    LOG("Add creating textures from images", cro::Logger::Type::Info);
+    m_blackTexture.create(2, 2);
+    m_blackTexture.update(img.getPixelData());
 }
 
 void ModelState::createScene()
@@ -1172,11 +1228,11 @@ void ModelState::updateLayout(std::int32_t w, std::int32_t h)
 
     WindowLayouts[WindowID::Inspector] = 
         std::make_pair(glm::vec2(0.f, ui::TitleHeight), 
-                        glm::vec2(width * ui::InspectorWidth, height - (ui::TitleHeight + (height * ui::BrowserHeight))));
+                        glm::vec2(width * ui::InspectorWidth, height - (ui::TitleHeight/* + (height * ui::BrowserHeight)*/)));
 
     WindowLayouts[WindowID::Browser] = 
-        std::make_pair(glm::vec2(0.f, height - (height * ui::BrowserHeight)),
-                        glm::vec2(width, height * ui::BrowserHeight));
+        std::make_pair(glm::vec2(width * ui::InspectorWidth, height - (height * ui::BrowserHeight)),
+                        glm::vec2(width - (width * ui::InspectorWidth), height * ui::BrowserHeight));
 }
 
 void ModelState::drawInspector()
@@ -1185,10 +1241,9 @@ void ModelState::drawInspector()
 
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
-    if (ImGui::Begin("Inspector", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    if (ImGui::Begin("Inspector", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_HorizontalScrollbar))
     {
         ImGui::BeginTabBar("##a");
-
 
         if (ImGui::BeginTabItem("Model"))
         {
@@ -1311,12 +1366,129 @@ void ModelState::drawInspector()
         }
         if (ImGui::BeginTabItem("Material"))
         {
+            if (!m_materialDefs.empty())
+            {
+                ImGui::PushItemWidth(size.x * ui::TextBoxWidth);
+                ImGui::InputText("##name", &m_materialDefs[m_selectedMaterial].name);
+                ImGui::PopItemWidth();
+
+                auto imgSize = size;
+                imgSize.x *= ui::MaterialPreviewWidth;
+                imgSize.y = imgSize.x;
+
+                ImGui::SetCursorPos({ pos.x + ((size.x - imgSize.y) / 2.f), pos.y + 60.f });
+                ImGui::Image((void*)(std::size_t)m_materialThumb, { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                ImGui::NewLine();
+                ImGui::Text("Shader Type:");
+                ImGui::PushItemWidth(size.x* ui::TextBoxWidth);
+                if (ImGui::BeginCombo("##Shader", MaterialDefinition::TypeStrings[m_materialDefs[m_selectedMaterial].type].c_str()))
+                {
+                    for (auto i = 0; i < MaterialDefinition::TypeStrings.size(); ++i)
+                    {
+                        bool selected = m_materialDefs[m_selectedMaterial].type == i;
+                        if (ImGui::Selectable(MaterialDefinition::TypeStrings[i].c_str(), selected))
+                        {
+                            m_materialDefs[m_selectedMaterial].type = static_cast<MaterialDefinition::Type>(i);
+                        }
+
+                        if (selected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+
+                    ImGui::EndCombo();
+                }
+                ImGui::PopItemWidth();
 
 
+                ImGui::NewLine();
+                ImGui::Text("Texture Maps:");
+                auto type = m_materialDefs[m_selectedMaterial].type;
+                std::string slotLabel;
+                std::uint32_t thumb = m_blackTexture.getGLHandle();
+                if (type != MaterialDefinition::PBR)
+                {
+                    //diffuse map
+                    slotLabel = "Diffuse";
+                    
+                    if (m_materialDefs[m_selectedMaterial].diffuse == 0)
+                    {
+                        slotLabel += ": Empty";
+                    }
+                    else
+                    {
+                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].diffuse).name;
+                        thumb = m_materialDefs[m_selectedMaterial].diffuse;
+                    }
+                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].diffuse, thumb);
+
+                    //lightmap
+                    slotLabel = "Light Map";
+                    if (m_materialDefs[m_selectedMaterial].lightmap == 0)
+                    {
+                        slotLabel += ": Empty";
+                        thumb = m_blackTexture.getGLHandle();
+                    }
+                    else
+                    {
+                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].lightmap).name;
+                        thumb = m_materialDefs[m_selectedMaterial].lightmap;
+                    }
+                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].lightmap, thumb);
+                }
+
+                if (type == MaterialDefinition::VertexLit)
+                {
+                    //mask map
+                    slotLabel = "Mask Map";
+                    if (m_materialDefs[m_selectedMaterial].mask == 0)
+                    {
+                        slotLabel += ": Empty";
+                        thumb = m_blackTexture.getGLHandle();
+                    }
+                    else
+                    {
+                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].mask).name;
+                        thumb = m_materialDefs[m_selectedMaterial].mask;
+                    }
+                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].mask, thumb);
+                }
+
+                if (type != MaterialDefinition::Unlit)
+                {
+                    //normal map
+                    slotLabel = "Normal Map";
+                    if (m_materialDefs[m_selectedMaterial].normal == 0)
+                    {
+                        slotLabel += ": Empty";
+                        thumb = m_blackTexture.getGLHandle();
+                    }
+                    else
+                    {
+                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].normal).name;
+                        thumb = m_materialDefs[m_selectedMaterial].normal;
+                    }
+                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].normal, thumb);
+                }
+
+                if (type == MaterialDefinition::PBR)
+                {
+                    ImGui::Text("Coming Soon!");
+                    //metal map
+                    //drawTextureSlot("Metalness", m_materialDefs[m_selectedMaterial].metalness, m_materialThumb);
+                    //spec map
+                    //ao map
+                }
+            }
+            else
+            {
+                ImGui::Text("Add a material in the Browser window");
+            }
 
             ImGui::EndTabItem();
         }
-
 
         ImGui::EndTabBar();
     }
@@ -1338,6 +1510,13 @@ void ModelState::drawBrowser()
         ImGui::BeginTabBar("##b");
         if (ImGui::BeginTabItem("Materials"))
         {
+            auto thumbSize = size;
+            thumbSize.y *= ui::ThumbnailHeight;
+            thumbSize.x = thumbSize.y;
+
+            std::int32_t thumbsPerRow = static_cast<std::int32_t>(std::floor(size.x / thumbSize.x) - 1);
+            auto currentRow = m_selectedMaterial / thumbsPerRow;
+
             if (ImGui::Button("Add##01"))
             {
                 m_materialDefs.emplace_back();
@@ -1363,11 +1542,6 @@ void ModelState::drawBrowser()
                 }
             }
 
-            auto thumbSize = size;
-            thumbSize.y *= ui::ThumbnailHeight;
-            thumbSize.x = thumbSize.y;
-
-            std::int32_t thumbsPerRow = std::floor(size.x / thumbSize.x) - 1;
             std::int32_t count = 0;
             for (const auto& material : m_materialDefs)
             {
@@ -1401,6 +1575,11 @@ void ModelState::drawBrowser()
                     ImGui::SameLine();
                 }
             }
+            //scroll to selected
+            /*if (currentRow != m_selectedMaterial / thumbsPerRow)
+            {
+                ImGui::SetScrollY((currentRow + 1) * thumbSize.y);
+            }*/
 
             ImGui::EndTabItem();
         }
@@ -1432,7 +1611,7 @@ void ModelState::drawBrowser()
             thumbSize.y *= ui::ThumbnailHeight;
             thumbSize.x = thumbSize.y;
 
-            std::int32_t thumbsPerRow = std::floor(size.x / thumbSize.x) - 1;
+            std::int32_t thumbsPerRow = static_cast<std::int32_t>(std::floor(size.x / thumbSize.x) - 1);
             std::int32_t count = 0;
             for (const auto& [id, tex] : m_materialTextures)
             {
@@ -1465,7 +1644,6 @@ void ModelState::drawBrowser()
                 }
             }
             
-            //see ImGui::BeginDragDropTarget() for dropping textures on material properties
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();

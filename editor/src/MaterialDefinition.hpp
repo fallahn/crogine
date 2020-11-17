@@ -37,13 +37,14 @@ source distribution.
 
 struct MaterialDefinition final
 {
+    std::string name = "Untitled";
+
     enum Type
     {
         Unlit, VertexLit, PBR,
 
         Count
     }type = Unlit;
-    std::string name;
 
     std::uint32_t diffuse = 0;
     std::uint32_t mask = 0;
