@@ -1245,24 +1245,12 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
     {
         for (auto& mat : m_materialDefs)
         {
-            if (mat.diffuse == id)
+            for (auto& texID : mat.textureIDs)
             {
-                mat.diffuse = retVal;
-            }
-
-            if (mat.mask == id)
-            {
-                mat.mask = retVal;
-            }
-
-            if (mat.lightmap == id)
-            {
-                mat.lightmap = retVal;
-            }
-
-            if (mat.normal == id)
-            {
-                mat.normal = retVal;
+                if (texID == id)
+                {
+                    texID = retVal;
+                }
             }
         }
     }
@@ -1468,64 +1456,64 @@ void ModelState::drawInspector()
                     //diffuse map
                     slotLabel = "Diffuse";
                     
-                    if (m_materialDefs[m_selectedMaterial].diffuse == 0)
+                    if (m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Diffuse] == 0)
                     {
                         slotLabel += ": Empty";
                     }
                     else
                     {
-                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].diffuse).name;
-                        thumb = m_materialDefs[m_selectedMaterial].diffuse;
+                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Diffuse]).name;
+                        thumb = m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Diffuse];
                     }
-                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].diffuse, thumb);
+                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Diffuse], thumb);
 
                     //lightmap
                     slotLabel = "Light Map";
-                    if (m_materialDefs[m_selectedMaterial].lightmap == 0)
+                    if (m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Lightmap] == 0)
                     {
                         slotLabel += ": Empty";
                         thumb = m_blackTexture.getGLHandle();
                     }
                     else
                     {
-                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].lightmap).name;
-                        thumb = m_materialDefs[m_selectedMaterial].lightmap;
+                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Lightmap]).name;
+                        thumb = m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Lightmap];
                     }
-                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].lightmap, thumb);
+                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Lightmap], thumb);
                 }
 
                 if (type == MaterialDefinition::VertexLit)
                 {
                     //mask map
                     slotLabel = "Mask Map";
-                    if (m_materialDefs[m_selectedMaterial].mask == 0)
+                    if (m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Mask] == 0)
                     {
                         slotLabel += ": Empty";
                         thumb = m_blackTexture.getGLHandle();
                     }
                     else
                     {
-                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].mask).name;
-                        thumb = m_materialDefs[m_selectedMaterial].mask;
+                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Mask]).name;
+                        thumb = m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Mask];
                     }
-                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].mask, thumb);
+                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Mask], thumb);
                 }
 
                 if (type != MaterialDefinition::Unlit)
                 {
                     //normal map
                     slotLabel = "Normal Map";
-                    if (m_materialDefs[m_selectedMaterial].normal == 0)
+                    if (m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Normal] == 0)
                     {
                         slotLabel += ": Empty";
                         thumb = m_blackTexture.getGLHandle();
                     }
                     else
                     {
-                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].normal).name;
-                        thumb = m_materialDefs[m_selectedMaterial].normal;
+                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Normal]).name;
+                        thumb = m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Normal];
                     }
-                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].normal, thumb);
+                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Normal], thumb);
                 }
 
                 if (type == MaterialDefinition::PBR)
@@ -1538,14 +1526,14 @@ void ModelState::drawInspector()
                 }
 
                 ImGui::NewLine();
-                if (m_materialDefs[m_selectedMaterial].diffuse == 0)
+                if (m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Diffuse] == 0)
                 {
                     ImGui::ColorEdit3("Diffuse Colour", m_materialDefs[m_selectedMaterial].colour.asArray());
                     ImGui::SameLine();
                     helpMarker("If the Diffuse texture map is not set then this defines the diffuse colour of the material");
                 }
                 if (type == MaterialDefinition::VertexLit
-                    && m_materialDefs[m_selectedMaterial].mask == 0)
+                    && m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Mask] == 0)
                 {
                     ImGui::ColorEdit3("Mask Colour", m_materialDefs[m_selectedMaterial].maskColour.asArray());
                     ImGui::SameLine();
@@ -1774,24 +1762,12 @@ void ModelState::drawBrowser()
                     //remove from any materials using this
                     for (auto& mat : m_materialDefs)
                     {
-                        if (mat.diffuse == m_selectedTexture)
+                        for (auto& texID : mat.textureIDs)
                         {
-                            mat.diffuse = 0;
-                        }
-
-                        if (mat.mask == m_selectedTexture)
-                        {
-                            mat.mask = 0;
-                        }
-
-                        if (mat.lightmap == m_selectedTexture)
-                        {
-                            mat.lightmap = 0;
-                        }
-
-                        if (mat.normal == m_selectedTexture)
-                        {
-                            mat.normal = 0;
+                            if (texID == m_selectedTexture)
+                            {
+                                texID = 0;
+                            }
                         }
                     }
 
@@ -1898,24 +1874,24 @@ void ModelState::exportMaterial()
             return t.relPath + t.name;
         };
 
-        if (matDef.diffuse != 0)
+        if (matDef.textureIDs[MaterialDefinition::Diffuse] != 0)
         {
-            file.addProperty("diffuse", getTextureName(matDef.diffuse));
+            file.addProperty("diffuse", getTextureName(matDef.textureIDs[MaterialDefinition::Diffuse]));
         }
 
-        if (matDef.mask != 0)
+        if (matDef.textureIDs[MaterialDefinition::Mask] != 0)
         {
-            file.addProperty("mask", getTextureName(matDef.mask));
+            file.addProperty("mask", getTextureName(matDef.textureIDs[MaterialDefinition::Mask]));
         }
 
-        if (matDef.normal != 0)
+        if (matDef.textureIDs[MaterialDefinition::Normal] != 0)
         {
-            file.addProperty("normal", getTextureName(matDef.normal));
+            file.addProperty("normal", getTextureName(matDef.textureIDs[MaterialDefinition::Normal]));
         }
 
-        if (matDef.lightmap != 0)
+        if (matDef.textureIDs[MaterialDefinition::Lightmap] != 0)
         {
-            file.addProperty("lightmap", getTextureName(matDef.lightmap));
+            file.addProperty("lightmap", getTextureName(matDef.textureIDs[MaterialDefinition::Lightmap]));
         }
 
         file.save(path);
@@ -1980,32 +1956,32 @@ void ModelState::importMaterial(const std::string& path)
             }
             else if (name == "diffuse")
             {
-                def.diffuse = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
-                if (def.diffuse == 0)
+                def.textureIDs[MaterialDefinition::Diffuse] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                if (def.textureIDs[MaterialDefinition::Diffuse] == 0)
                 {
                     cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
                 }
             }
             else if (name == "mask")
             {
-                def.mask = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
-                if (def.mask == 0)
+                def.textureIDs[MaterialDefinition::Mask] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                if (def.textureIDs[MaterialDefinition::Mask] == 0)
                 {
                     cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
                 }
             }
             else if (name == "lightmap")
             {
-                def.lightmap = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
-                if (def.lightmap == 0)
+                def.textureIDs[MaterialDefinition::Lightmap] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                if (def.textureIDs[MaterialDefinition::Lightmap] == 0)
                 {
                     cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
                 }
             }
             else if (name == "normal")
             {
-                def.normal = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
-                if (def.normal == 0)
+                def.textureIDs[MaterialDefinition::Normal] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                if (def.textureIDs[MaterialDefinition::Normal] == 0)
                 {
                     cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
                 }

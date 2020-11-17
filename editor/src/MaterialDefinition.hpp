@@ -46,10 +46,16 @@ struct MaterialDefinition final
         Count
     }type = Unlit;
 
-    std::uint32_t diffuse = 0;
-    std::uint32_t mask = 0;
-    std::uint32_t normal = 0;
-    std::uint32_t lightmap = 0;
+    enum TextureID
+    {
+        Diffuse,
+        Mask,
+        Normal,
+        Lightmap,
+
+        Size
+    };
+    std::array<std::uint32_t, TextureID::Size> textureIDs = {};
 
     cro::Colour colour = glm::vec4(1.f);
     cro::Colour maskColour;
@@ -61,4 +67,10 @@ struct MaterialDefinition final
     bool recieveShadows = false;
 
     cro::Material::BlendMode blendMode = cro::Material::BlendMode::None;
+
+    //hmmm is there not a better way to default init an array?
+    MaterialDefinition()
+    {
+        std::fill(textureIDs.begin(), textureIDs.end(), 0);
+    }
 };
