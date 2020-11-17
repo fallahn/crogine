@@ -60,10 +60,5 @@ struct MaterialDefinition final
     bool skinned = false; //TODO this could be inferred from the model to which it's applied?
     bool recieveShadows = false;
 
-    bool textureRepeat = false;
-    bool textureSmooth = false;
-
     cro::Material::BlendMode blendMode = cro::Material::BlendMode::None;
-
-    static const std::array<std::string, Type::Count> TypeStrings;
 };

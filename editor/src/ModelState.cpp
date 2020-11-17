@@ -76,13 +76,18 @@ source distribution.
 
 namespace ai = Assimp;
 
-const std::array<std::string, MaterialDefinition::Type::Count> MaterialDefinition::TypeStrings =
-{
-    "Unlit", "VertexLit", "PBR"
-};
-
 namespace
 {
+    const std::array ShaderStrings =
+    {
+        "Unlit", "VertexLit", "PBR"
+    };
+
+    const std::array BlendStrings =
+    {
+        "None", "Alpha", "Multiply", "Additive"
+    };
+
     const float DefaultFOV = 35.f * cro::Util::Const::degToRad;
     const float DefaultFarPlane = 50.f;
     const float MinZoom = 0.1f;
@@ -1364,6 +1369,7 @@ void ModelState::drawInspector()
             
             ImGui::EndTabItem();
         }
+
         if (ImGui::BeginTabItem("Material"))
         {
             if (!m_materialDefs.empty())
@@ -1382,12 +1388,12 @@ void ModelState::drawInspector()
                 ImGui::NewLine();
                 ImGui::Text("Shader Type:");
                 ImGui::PushItemWidth(size.x* ui::TextBoxWidth);
-                if (ImGui::BeginCombo("##Shader", MaterialDefinition::TypeStrings[m_materialDefs[m_selectedMaterial].type].c_str()))
+                if (ImGui::BeginCombo("##Shader", ShaderStrings[m_materialDefs[m_selectedMaterial].type]))
                 {
-                    for (auto i = 0; i < MaterialDefinition::TypeStrings.size(); ++i)
+                    for (auto i = 0; i < ShaderStrings.size(); ++i)
                     {
                         bool selected = m_materialDefs[m_selectedMaterial].type == i;
-                        if (ImGui::Selectable(MaterialDefinition::TypeStrings[i].c_str(), selected))
+                        if (ImGui::Selectable(ShaderStrings[i], selected))
                         {
                             m_materialDefs[m_selectedMaterial].type = static_cast<MaterialDefinition::Type>(i);
                         }
@@ -1481,20 +1487,108 @@ void ModelState::drawInspector()
                     //spec map
                     //ao map
                 }
-            }
-            else
-            {
-                ImGui::Text("Add a material in the Browser window");
+
+                ImGui::NewLine();
+                if (m_materialDefs[m_selectedMaterial].diffuse == 0)
+                {
+                    ImGui::ColorEdit3("Diffuse Colour", m_materialDefs[m_selectedMaterial].colour.asArray());
+                    ImGui::SameLine();
+                    helpMarker("If the Diffuse texture map is not set then this defines the diffuse colour of the material");
+                }
+                if (type == MaterialDefinition::VertexLit
+                    && m_materialDefs[m_selectedMaterial].mask == 0)
+                {
+                    ImGui::ColorEdit3("Mask Colour", m_materialDefs[m_selectedMaterial].maskColour.asArray());
+                    ImGui::SameLine();
+                    helpMarker("If the Mask texture map is not set then this defines the mask colour of the material");
+                }
+
+                ImGui::NewLine();
+                ImGui::SliderFloat("Alpha Clip", &m_materialDefs[m_selectedMaterial].alphaClip, 0.f, 1.f);
+                ImGui::SameLine();
+                helpMarker("Alpha values of the diffuse colour below this value will cause the current fragment to be discarded");
+
+                ImGui::NewLine();
+                ImGui::Checkbox("Use Vertex Colours", &m_materialDefs[m_selectedMaterial].vertexColoured);
+                ImGui::SameLine();
+                helpMarker("Any colour information stored in the model's vertex data will be multiplied with the diffuse colour of the material");
+
+                ImGui::Checkbox("Receive Shadows", &m_materialDefs[m_selectedMaterial].recieveShadows);
+                ImGui::SameLine();
+                helpMarker("Check this box if the material should receive shadows from the active shadow map.");
+
+                ImGui::NewLine();
+                ImGui::Text("Blend Mode:");
+                ImGui::PushItemWidth(size.x * ui::TextBoxWidth);
+                if (ImGui::BeginCombo("##BlendMode", BlendStrings[static_cast<std::int32_t>(m_materialDefs[m_selectedMaterial].blendMode)]))
+                {
+                    for (auto i = 0; i < BlendStrings.size(); ++i)
+                    {
+                        bool selected = static_cast<std::int32_t>(m_materialDefs[m_selectedMaterial].blendMode) == i;
+                        if (ImGui::Selectable(BlendStrings[i], selected))
+                        {
+                            m_materialDefs[m_selectedMaterial].blendMode = static_cast<cro::Material::BlendMode>(i);
+                        }
+
+                        if (selected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+
+                    ImGui::EndCombo();
+                }
+                ImGui::PopItemWidth();
+
+                ImGui::NewLine();
+                if (ImGui::Button("Export"))
+                {
+
+                }
+                ImGui::SameLine();
+                helpMarker("Export this material to a Material Definition file which cane be loaded by the Material Browser");
             }
 
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Texture"))
+        {
+            if (!m_materialTextures.empty())
+            {
+                const auto& texture = m_materialTextures.at(m_selectedTexture);
+                ImGui::Text("%s", texture.name.c_str());
+
+                auto imgSize = size;
+                imgSize.x *= ui::TexturePreviewWidth;
+                imgSize.y = imgSize.x;
+
+                ImGui::SetCursorPos({ pos.x + ((size.x - imgSize.y) / 2.f), pos.y + 60.f });
+                ImGui::Image((void*)(std::size_t)m_selectedTexture, { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                ImGui::NewLine();
+
+                auto texSize = texture.texture->getSize();
+                ImGui::Text("Size: %u, %u", texSize.x, texSize.y);
+
+                bool smooth = texture.texture->isSmooth();
+                if (ImGui::Checkbox("Smoothed", &smooth))
+                {
+                    texture.texture->setSmooth(smooth);
+                }
+
+                bool repeated = texture.texture->isRepeated();
+                if (ImGui::Checkbox("Repeated", &repeated))
+                {
+                    texture.texture->setRepeated(repeated);
+                }
+            }
             ImGui::EndTabItem();
         }
 
         ImGui::EndTabBar();
     }
     ImGui::End();
-
-    
 }
 
 void ModelState::drawBrowser()
@@ -1508,19 +1602,20 @@ void ModelState::drawBrowser()
     if (ImGui::Begin("Browser", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         ImGui::BeginTabBar("##b");
+
         if (ImGui::BeginTabItem("Materials"))
         {
-            auto thumbSize = size;
-            thumbSize.y *= ui::ThumbnailHeight;
-            thumbSize.x = thumbSize.y;
-
-            std::int32_t thumbsPerRow = static_cast<std::int32_t>(std::floor(size.x / thumbSize.x) - 1);
-            auto currentRow = m_selectedMaterial / thumbsPerRow;
-
             if (ImGui::Button("Add##01"))
             {
-                m_materialDefs.emplace_back();
-                m_selectedMaterial = m_materialDefs.size() - 1;
+                if (m_materialDefs.size() < ui::MaxMaterials)
+                {
+                    m_materialDefs.emplace_back();
+                    m_selectedMaterial = m_materialDefs.size() - 1;
+                }
+                else
+                {
+                    cro::FileSystem::showMessageBox("Error", "Max Materials Have Been Added.");
+                }
             }
             ImGui::SameLine();
             if (ImGui::Button("Open##01"))
@@ -1538,18 +1633,40 @@ void ModelState::drawBrowser()
                         && !m_materialDefs.empty())
                     {
                         m_selectedMaterial--;
+                        LOG("Remove this material from any sub meshes used by it...", cro::Logger::Type::Info);
                     }
                 }
             }
 
+            ImGui::BeginChild("##matChild");
+
+            static std::size_t lastSelected = 0;
+
+            auto thumbSize = size;
+            thumbSize.y *= ui::ThumbnailHeight;
+            thumbSize.x = thumbSize.y;
+
+            std::int32_t thumbsPerRow = static_cast<std::int32_t>(std::floor(size.x / thumbSize.x) - 1);
+
             std::int32_t count = 0;
             for (const auto& material : m_materialDefs)
             {
-                ImGui::PushStyleColor(ImGuiCol_Border, count == m_selectedMaterial ? ImVec4(1.f, 1.f, 0.f, 1.f) : ImVec4(0.f, 0.f, 0.f, 1.f));
+                ImVec4 colour(0.f, 0.f, 0.f, 1.f);
+                if (count == m_selectedMaterial)
+                {
+                    colour = { 1.f, 1.f, 0.f, 1.f };
+                    if (lastSelected != m_selectedMaterial)
+                    {
+                        ImGui::SetScrollHereY();
+                    }
+                }
+
+                ImGui::PushStyleColor(ImGuiCol_Border, colour);
                 ImGui::PushID(9999 + count);
                 if (ImGui::ImageButton((void*)(std::size_t)m_materialThumb, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
                 {
                     m_selectedMaterial = count;
+                    ImGui::SetScrollHereY();
                 }
                 ImGui::PopID();
                 ImGui::PopStyleColor();
@@ -1562,10 +1679,11 @@ void ModelState::drawBrowser()
                     //display preview
                     ImGui::Image((void*)(std::size_t)m_materialThumb, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
                     ImGui::Text("%s", material.name.c_str());
-                    ImGui::Text("%s", MaterialDefinition::TypeStrings[material.type]);
+                    ImGui::Text(ShaderStrings[material.type]);
                     ImGui::EndDragDropSource();
 
                     m_selectedMaterial = count;
+                    ImGui::SetScrollHereY();
                 }
 
                 //put on same line if we fit
@@ -1575,20 +1693,21 @@ void ModelState::drawBrowser()
                     ImGui::SameLine();
                 }
             }
-            //scroll to selected
-            /*if (currentRow != m_selectedMaterial / thumbsPerRow)
-            {
-                ImGui::SetScrollY((currentRow + 1) * thumbSize.y);
-            }*/
+
+            lastSelected = m_selectedMaterial;
+
+            ImGui::EndChild();
 
             ImGui::EndTabItem();
         }
+
         if (ImGui::BeginTabItem("Textures"))
         {
             if (ImGui::Button("Add##00"))
             {
                 auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
-                if (!path.empty())
+                if (!path.empty()
+                    && m_materialTextures.size() < ui::MaxMaterials)
                 {
                     addTextureToBrowser(path);
                 }
@@ -1599,13 +1718,38 @@ void ModelState::drawBrowser()
                 if (m_selectedTexture != 0
                     && cro::FileSystem::showMessageBox("Delete?", "Remove this texture?", cro::FileSystem::YesNo, cro::FileSystem::Question))
                 {
+                    //remove from any materials using this
+                    for (auto& mat : m_materialDefs)
+                    {
+                        if (mat.diffuse == m_selectedTexture)
+                        {
+                            mat.diffuse = 0;
+                        }
+
+                        if (mat.mask == m_selectedTexture)
+                        {
+                            mat.mask = 0;
+                        }
+
+                        if (mat.lightmap == m_selectedTexture)
+                        {
+                            mat.lightmap = 0;
+                        }
+
+                        if (mat.normal == m_selectedTexture)
+                        {
+                            mat.normal = 0;
+                        }
+                    }
+
                     m_materialTextures.erase(m_selectedTexture);
                     m_selectedTexture = m_materialTextures.empty() ? 0 : m_materialTextures.begin()->first;
-
-                    //TODO update any materials which were using this texture...
-                    LOG("UPDATE MATERIALS WHICH USED THIS TEXTURE", cro::Logger::Type::Info);
                 }
             }
+
+            ImGui::BeginChild("##texChild");
+
+            static std::size_t lastSelected = 0;
 
             auto thumbSize = size;
             thumbSize.y *= ui::ThumbnailHeight;
@@ -1615,10 +1759,21 @@ void ModelState::drawBrowser()
             std::int32_t count = 0;
             for (const auto& [id, tex] : m_materialTextures)
             {
-                ImGui::PushStyleColor(ImGuiCol_Border, id == m_selectedTexture ? ImVec4(1.f, 1.f, 0.f, 1.f) : ImVec4(0.f,0.f,0.f,1.f));
+                ImVec4 colour(0.f, 0.f, 0.f, 1.f);
+                if (id == m_selectedTexture)
+                {
+                    colour = { 1.f, 1.f, 0.f, 1.f };
+                    if (lastSelected != m_selectedTexture)
+                    {
+                        ImGui::SetScrollHereY();
+                    }
+                }
+
+                ImGui::PushStyleColor(ImGuiCol_Border, colour);
                 if (ImGui::ImageButton((void*)(std::size_t)id, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
                 {
                     m_selectedTexture = id;
+                    ImGui::SetScrollHereY();
                 }
                 ImGui::PopStyleColor();
 
@@ -1634,6 +1789,7 @@ void ModelState::drawBrowser()
                     ImGui::EndDragDropSource();
 
                     m_selectedTexture = id;
+                    ImGui::SetScrollHereY();
                 }
                 
                 //put on same line if we fit
@@ -1644,8 +1800,13 @@ void ModelState::drawBrowser()
                 }
             }
             
+            lastSelected = m_selectedTexture;
+
+            ImGui::EndChild();
+
             ImGui::EndTabItem();
         }
+
         ImGui::EndTabBar();
     }
     ImGui::End();
