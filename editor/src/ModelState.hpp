@@ -126,4 +126,5 @@ private:
     void drawInspector();
     void drawBrowser();
     void exportMaterial();
+    void importMaterial(const std::string&);
 };

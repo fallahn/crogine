@@ -107,5 +107,9 @@ template <>
 inline Colour ConfigProperty::getValue<Colour>() const
 {
     auto values = valueAsArray();
-    return cro::Colour(values[0], values[1], values[2], values[3]);
+    auto clamp = [](float v)
+    {
+        return std::max(0.f, std::min(1.f, v));
+    };
+    return cro::Colour(clamp(values[0]), clamp(values[1]), clamp(values[2]), clamp(values[3]));
 }

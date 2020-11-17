@@ -134,11 +134,13 @@ namespace
     {
         Inspector,
         Browser,
+        MaterialSlot,
 
         Count
     };
     std::array<std::pair<glm::vec2, glm::vec2>, WindowID::Count> WindowLayouts =
     {
+        std::make_pair(glm::vec2(0.f), glm::vec2(0.f)),
         std::make_pair(glm::vec2(0.f), glm::vec2(0.f)),
         std::make_pair(glm::vec2(0.f), glm::vec2(0.f))
     };
@@ -158,7 +160,7 @@ namespace
 
     void drawTextureSlot(const std::string label, std::uint32_t& dest, std::uint32_t thumbnail)
     {
-        glm::vec2 imgSize = glm::vec2(20.f);
+        glm::vec2 imgSize = WindowLayouts[WindowID::MaterialSlot].second;
         if (ImGui::ImageButton((void*)(std::size_t)thumbnail, { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
         {
             if (cro::FileSystem::showMessageBox("Confirm", "Clear this slot? Drag a texture from the browser to set it", cro::FileSystem::YesNo, cro::FileSystem::Question))
@@ -183,7 +185,7 @@ namespace
         auto textSize = ImGui::CalcTextSize("Aty");
 
         auto pos = ImGui::GetCursorPosY();
-        pos += (imgSize.y - textSize.y);// / 2.f;
+        pos += (imgSize.y - textSize.y) / 2.f;
         ImGui::SetCursorPosY(pos);
         ImGui::Text("%s", label.c_str());
 
@@ -1212,8 +1214,17 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
             break;
         }
     }
-    m_materialTextures.erase(id);
+
+    bool updateMaterials = false;
+    if (id != 0)
+    {
+        m_materialTextures.erase(id);
+        updateMaterials = true;
+    }
     m_selectedTexture = 0;
+
+
+    std::uint32_t retVal = 0;
 
     MaterialTexture tex;
     tex.texture = std::make_unique<cro::Texture>();
@@ -1223,13 +1234,40 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
         tex.name = fileName;
         tex.relPath = relPath;
         m_materialTextures.insert(std::make_pair(tex.texture->getGLHandle(), std::move(tex)));
-        return m_selectedTexture;
+        retVal = m_selectedTexture;
     }
     else
     {
         cro::FileSystem::showMessageBox("Error", "Failed to open image", cro::FileSystem::OK, cro::FileSystem::Error);
     }
-    return 0;
+
+    if (updateMaterials)
+    {
+        for (auto& mat : m_materialDefs)
+        {
+            if (mat.diffuse == id)
+            {
+                mat.diffuse = retVal;
+            }
+
+            if (mat.mask == id)
+            {
+                mat.mask = retVal;
+            }
+
+            if (mat.lightmap == id)
+            {
+                mat.lightmap = retVal;
+            }
+
+            if (mat.normal == id)
+            {
+                mat.normal = retVal;
+            }
+        }
+    }
+
+    return retVal;
 }
 
 void ModelState::updateLayout(std::int32_t w, std::int32_t h)
@@ -1244,6 +1282,11 @@ void ModelState::updateLayout(std::int32_t w, std::int32_t h)
     WindowLayouts[WindowID::Browser] = 
         std::make_pair(glm::vec2(width * ui::InspectorWidth, height - (height * ui::BrowserHeight)),
                         glm::vec2(width - (width * ui::InspectorWidth), height * ui::BrowserHeight));
+
+    float ratio = width / 800.f;
+    float matSlotWidth = std::max(ui::MinMaterialSlotSize, ui::MinMaterialSlotSize * ratio);
+    WindowLayouts[WindowID::MaterialSlot] =
+        std::make_pair(glm::vec2(0.f), glm::vec2(matSlotWidth));
 }
 
 void ModelState::drawInspector()
@@ -1599,7 +1642,7 @@ void ModelState::drawInspector()
 
 void ModelState::drawBrowser()
 {
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
 
     auto [pos, size] = WindowLayouts[WindowID::Browser];
 
@@ -1626,7 +1669,11 @@ void ModelState::drawBrowser()
             ImGui::SameLine();
             if (ImGui::Button("Open##01"))
             {
-
+                auto path = cro::FileSystem::openFileDialogue(m_preferences.workingDirectory + "/untitled", "mdf");
+                if (!path.empty() && cro::FileSystem::getFileExtension(path) == ".mdf")
+                {
+                    importMaterial(path);
+                }
             }
             ImGui::SameLine();
             if (ImGui::Button("Remove##01"))
@@ -1820,7 +1867,7 @@ void ModelState::drawBrowser()
 
 void ModelState::exportMaterial()
 {
-    auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory, "mdf");
+    auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/untitled", "mdf");
     if (!path.empty())
     {
         if (cro::FileSystem::getFileExtension(path) != ".mdf")
@@ -1872,5 +1919,101 @@ void ModelState::exportMaterial()
         }
 
         file.save(path);
+    }
+}
+
+void ModelState::importMaterial(const std::string& path)
+{
+    cro::ConfigFile file;
+    if (file.loadFromFile(path))
+    {
+        auto name = file.getId();
+        std::replace(name.begin(), name.end(), '_', ' ');        
+        
+        auto& def = m_materialDefs.emplace_back();
+        m_selectedMaterial = m_materialDefs.size() - 1;
+        
+        if (!name.empty())
+        {
+            def.name = name;
+        }
+
+        const auto& properties = file.getProperties();
+        for (const auto& prop : properties)
+        {
+            name = prop.getName();
+            if (name == "type")
+            {
+                auto val = prop.getValue<std::int32_t>();
+                if (val > -1 && val < MaterialDefinition::Count)
+                {
+                    def.type = static_cast<MaterialDefinition::Type>(val);
+                }
+            }
+            else if (name == "colour")
+            {
+                def.colour = prop.getValue<cro::Colour>();
+            }
+            else if (name == "mask_colour")
+            {
+                def.maskColour = prop.getValue<cro::Colour>();
+            }
+            else if (name == "alpha_clip")
+            {
+                def.alphaClip = std::max(0.f, std::min(1.f, prop.getValue<float>()));
+            }
+            else if (name == "vertex_coloured")
+            {
+                def.vertexColoured = prop.getValue<bool>();
+            }
+            else if (name == "rx_shadow")
+            {
+                def.recieveShadows = prop.getValue<bool>();
+            }
+            else if (name == "blend_mode")
+            {
+                auto val = prop.getValue<std::int32_t>();
+                if (val > -1 && val <= static_cast<std::int32_t>(cro::Material::BlendMode::Additive))
+                {
+                    def.blendMode = static_cast<cro::Material::BlendMode>(val);
+                }
+            }
+            else if (name == "diffuse")
+            {
+                def.diffuse = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                if (def.diffuse == 0)
+                {
+                    cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
+                }
+            }
+            else if (name == "mask")
+            {
+                def.mask = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                if (def.mask == 0)
+                {
+                    cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
+                }
+            }
+            else if (name == "lightmap")
+            {
+                def.lightmap = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                if (def.lightmap == 0)
+                {
+                    cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
+                }
+            }
+            else if (name == "normal")
+            {
+                def.normal = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                if (def.normal == 0)
+                {
+                    cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
+                }
+            }
+        }
+    }
+    else
+    {
+        cro::FileSystem::showMessageBox("Error", "Could not open material file.");
     }
 }

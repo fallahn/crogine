@@ -125,7 +125,7 @@ namespace cro
 
         /*!
         \brief Show a native file dialog to open a file
-        \param defaultDir Default path to open (optional)
+        \param defaultDir Default path *and file* to open (optional)
         \param filter File extention filter in the format "png,jpg,bmp"
         \param selectMultiple If true then allows selecting multiple files
         \returns path the path selected by the user
@@ -141,7 +141,7 @@ namespace cro
         
         /*!
         \brief Show a platform native file dialogue for saving files.
-        \param defaultDir Default directory to save to - optional
+        \param defaultDir Default directory *and file* to save to - optional
         \param filter String containing file extension filter in the format "png,jpg,bmp"
         \returns string containing the selected file path
         */
@@ -150,7 +150,6 @@ namespace cro
         /*!
          \brief Currently only relevant on macOS when creating an app bundle.
          Basically a wrapper around the SFML resourcePath() function.
-         Might potentially provide some portable way of bundling resources nicely in the future.
          \returns path to the resource directory
          */
         static std::string getResourcePath();
