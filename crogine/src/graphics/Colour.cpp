@@ -162,6 +162,11 @@ cro::int32 cro::Colour::getPacked() const
     return (getRedByte() << 24 | getGreenByte() << 16 | getBlueByte() << 8 | getAlphaByte());
 }
 
+glm::vec4 cro::Colour::getVec4() const
+{
+    return { r,g,b,a };
+}
+
 //operators
 bool cro::operator == (const Colour& l, const Colour& r)
 {

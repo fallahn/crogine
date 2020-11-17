@@ -1198,6 +1198,11 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
 {
     auto fileName = cro::FileSystem::getFileName(path);
 
+    auto relPath = path;
+    std::replace(relPath.begin(), relPath.end(), '\\', '/');
+    relPath = cro::FileSystem::getFilePath(relPath);
+    relPath = cro::FileSystem::getRelativePath(relPath, m_preferences.workingDirectory);
+
     std::uint32_t id = 0;
     for (auto& [i, t] : m_materialTextures)
     {
@@ -1216,6 +1221,7 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
     {
         m_selectedTexture = tex.texture->getGLHandle();
         tex.name = fileName;
+        tex.relPath = relPath;
         m_materialTextures.insert(std::make_pair(tex.texture->getGLHandle(), std::move(tex)));
         return m_selectedTexture;
     }
@@ -1543,7 +1549,7 @@ void ModelState::drawInspector()
                 ImGui::NewLine();
                 if (ImGui::Button("Export"))
                 {
-
+                    exportMaterial();
                 }
                 ImGui::SameLine();
                 helpMarker("Export this material to a Material Definition file which cane be loaded by the Material Browser");
@@ -1810,4 +1816,61 @@ void ModelState::drawBrowser()
         ImGui::EndTabBar();
     }
     ImGui::End();
+}
+
+void ModelState::exportMaterial()
+{
+    auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory, "mdf");
+    if (!path.empty())
+    {
+        if (cro::FileSystem::getFileExtension(path) != ".mdf")
+        {
+            path += ".mdf";
+        }
+
+        const auto& matDef = m_materialDefs[m_selectedMaterial];
+        auto name = matDef.name;
+        std::replace(name.begin(), name.end(), ' ', '_');
+
+        //TODO should this be the same layout as
+        //the model definition format, or keep it simple
+        //just for the sake of the material editor?
+        cro::ConfigFile file("material_definition", name);
+        file.addProperty("type").setValue(matDef.type);
+        file.addProperty("colour").setValue(matDef.colour.getVec4());
+        file.addProperty("mask_colour").setValue(matDef.maskColour.getVec4());
+        file.addProperty("alpha_clip").setValue(matDef.alphaClip);
+        file.addProperty("vertex_coloured").setValue(matDef.vertexColoured);
+        file.addProperty("rx_shadow").setValue(matDef.recieveShadows);
+        file.addProperty("blend_mode").setValue(static_cast<std::int32_t>(matDef.blendMode));
+
+        //textures
+        auto getTextureName = [&](std::uint32_t id)
+        {
+            const auto& t = m_materialTextures.at(id);
+            return t.relPath + t.name;
+        };
+
+        if (matDef.diffuse != 0)
+        {
+            file.addProperty("diffuse", getTextureName(matDef.diffuse));
+        }
+
+        if (matDef.mask != 0)
+        {
+            file.addProperty("mask", getTextureName(matDef.mask));
+        }
+
+        if (matDef.normal != 0)
+        {
+            file.addProperty("normal", getTextureName(matDef.normal));
+        }
+
+        if (matDef.lightmap != 0)
+        {
+            file.addProperty("lightmap", getTextureName(matDef.lightmap));
+        }
+
+        file.save(path);
+    }
 }

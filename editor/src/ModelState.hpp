@@ -111,6 +111,7 @@ private:
     {
         std::unique_ptr<cro::Texture> texture;
         std::string name;
+        std::string relPath; //inc trailing '/'
     };
     std::map<std::uint32_t, MaterialTexture> m_materialTextures;
     std::uint32_t m_selectedTexture;
@@ -124,4 +125,5 @@ private:
     void updateLayout(std::int32_t, std::int32_t);
     void drawInspector();
     void drawBrowser();
+    void exportMaterial();
 };

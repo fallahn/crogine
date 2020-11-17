@@ -142,6 +142,10 @@ namespace cro
 		*/
         int32 getPacked() const;
 
+		/*!
+		\brief Returns the colour as a RGBA vec4 float
+		*/
+		glm::vec4 getVec4() const;
 
 		static Colour Red();
 		static Colour Green();
