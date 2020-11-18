@@ -43,6 +43,7 @@ source distribution.
 
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -197,6 +198,7 @@ namespace
 ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
 	: cro::State            (stack, context),
     m_scene                 (context.appInstance.getMessageBus()),
+    m_previewScene          (context.appInstance.getMessageBus()),
     m_showPreferences       (false),
     m_showGroundPlane       (false),
     m_showSkybox            (false),
@@ -242,6 +244,7 @@ bool ModelState::handleEvent(const cro::Event& evt)
         break;
     }
 
+    m_previewScene.forwardEvent(evt);
     m_scene.forwardEvent(evt);
 	return false;
 }
@@ -258,18 +261,28 @@ void ModelState::handleMessage(const cro::Message& msg)
         }
     }
 
+    m_previewScene.forwardMessage(msg);
     m_scene.forwardMessage(msg);
 }
 
 bool ModelState::simulate(float dt)
 {
+    m_previewScene.simulate(dt);
     m_scene.simulate(dt);
 	return false;
 }
 
 void ModelState::render()
 {
-	//draw any renderable systems
+    //render active material preview
+    if (!m_materialDefs.empty())
+    {
+        m_materialDefs[m_selectedMaterial].previewTexture.clear();
+        m_previewScene.render(m_materialDefs[m_selectedMaterial].previewTexture);
+        m_materialDefs[m_selectedMaterial].previewTexture.display();
+    }
+
+	
     m_scene.render(cro::App::getWindow());
 }
 
@@ -284,6 +297,9 @@ void ModelState::addSystems()
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
+
+    m_previewScene.addSystem<cro::CameraSystem>(mb);
+    m_previewScene.addSystem<cro::ModelRenderer>(mb);
 }
 
 void ModelState::loadAssets()
@@ -392,6 +408,29 @@ void ModelState::createScene()
     m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 6.f, -5.f });
     m_scene.getSunlight().setDirection({ -0.f, -1.f, -0.f });
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
+
+
+
+    //create the material preview scene
+    meshID = m_resources.meshes.loadMesh(cro::SphereBuilder(0.5f, 8));
+    material = m_resources.materials.get(materialIDs[MaterialID::Default]);
+    entity = m_previewScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+
+
+    //camera
+    entity = m_previewScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
+    entity.addComponent<cro::Camera>();
+    auto& cam3D = entity.getComponent<cro::Camera>();
+    cam3D.projectionMatrix = glm::perspective(DefaultFOV, 1.f, 0.1f, 10.f);
+
+    m_previewScene.setActiveCamera(entity);
+
+    //not rendering shadows on here, but we still want a light direction
+    m_previewScene.getSunlight().setDirection({ 0.5f, -0.5f, -0.5f });
+    m_previewScene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 }
 
 void ModelState::buildUI()
@@ -1420,7 +1459,8 @@ void ModelState::drawInspector()
                 imgSize.y = imgSize.x;
 
                 ImGui::SetCursorPos({ pos.x + ((size.x - imgSize.y) / 2.f), pos.y + 60.f });
-                ImGui::Image((void*)(std::size_t)m_materialThumb, { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::Image((void*)(std::size_t)m_materialDefs[m_selectedMaterial].previewTexture.getTexture().getGLHandle(),
+                                                    { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
 
                 ImGui::NewLine();
                 ImGui::Text("Shader Type:");
@@ -1552,7 +1592,20 @@ void ModelState::drawInspector()
 
                 ImGui::Checkbox("Receive Shadows", &m_materialDefs[m_selectedMaterial].recieveShadows);
                 ImGui::SameLine();
-                helpMarker("Check this box if the material should receive shadows from the active shadow map.");
+                helpMarker("Check this box if the material should receive shadows from the active shadow map");
+
+                ImGui::NewLine();
+                ImGui::Checkbox("Use Rimlighting", &m_materialDefs[m_selectedMaterial].useRimlighing);
+                ImGui::SameLine();
+                helpMarker("Enable the rim lighting effect. Not available with the PBR shader");
+
+                ImGui::SliderFloat("Rim Falloff", &m_materialDefs[m_selectedMaterial].rimlightFalloff, 0.f, 1.f);
+                ImGui::SameLine();
+                helpMarker("Adjusts the point at which the rimlight falloff affects the fade");
+
+                ImGui::ColorEdit3("Rimlight Colour", m_materialDefs[m_selectedMaterial].rimlightColour.asArray());
+                ImGui::SameLine();
+                helpMarker("Sets the colour of the rimlight effect, if it is enabled");
 
                 ImGui::NewLine();
                 ImGui::Text("Blend Mode:");
@@ -1704,7 +1757,7 @@ void ModelState::drawBrowser()
 
                 ImGui::PushStyleColor(ImGuiCol_Border, colour);
                 ImGui::PushID(9999 + count);
-                if (ImGui::ImageButton((void*)(std::size_t)m_materialThumb, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
+                if (ImGui::ImageButton((void*)(std::size_t)material.previewTexture.getTexture().getGLHandle(), { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
                 {
                     m_selectedMaterial = count;
                     ImGui::SetScrollHereY();
@@ -1866,6 +1919,9 @@ void ModelState::exportMaterial()
         file.addProperty("vertex_coloured").setValue(matDef.vertexColoured);
         file.addProperty("rx_shadow").setValue(matDef.recieveShadows);
         file.addProperty("blend_mode").setValue(static_cast<std::int32_t>(matDef.blendMode));
+        file.addProperty("use_rimlight").setValue(matDef.useRimlighing);
+        file.addProperty("rimlight_falloff").setValue(matDef.rimlightFalloff);
+        file.addProperty("rimlight_colour").setValue(matDef.rimlightColour);
 
         //textures
         auto getTextureName = [&](std::uint32_t id)
@@ -1985,6 +2041,18 @@ void ModelState::importMaterial(const std::string& path)
                 {
                     cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
                 }
+            }
+            else if (name == "use_rimlight")
+            {
+                def.useRimlighing = prop.getValue<bool>();
+            }
+            else if (name == "rimlight_colour")
+            {
+                def.rimlightColour = prop.getValue<cro::Colour>();
+            }
+            else if (name == "rimlight_falloff")
+            {
+                def.rimlightFalloff = std::min(1.f, std::max(0.f, prop.getValue<float>()));
             }
         }
     }

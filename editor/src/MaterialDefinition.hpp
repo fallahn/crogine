@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/graphics/MaterialData.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 #include <cstdint>
 #include <string>
@@ -59,18 +60,27 @@ struct MaterialDefinition final
 
     cro::Colour colour = glm::vec4(1.f);
     cro::Colour maskColour;
+    cro::Colour rimlightColour = glm::vec4(1.f);
 
     float alphaClip = 0.f;
+    float rimlightFalloff = 0.f;
 
     bool vertexColoured = false;
-    bool skinned = false; //TODO this could be inferred from the model to which it's applied?
+    bool useRimlighing = false;
     bool recieveShadows = false;
 
     cro::Material::BlendMode blendMode = cro::Material::BlendMode::None;
+
+
+    //used for rendering preview
+    cro::RenderTexture previewTexture;
+    std::int32_t shaderFlags = 0; //used to detect when the shader needs to change
+    std::int32_t shaderID = -1; //shader ID in the resource manager, not OpenGL ID
 
     //hmmm is there not a better way to default init an array?
     MaterialDefinition()
     {
         std::fill(textureIDs.begin(), textureIDs.end(), 0);
+        previewTexture.create(128, 128);
     }
 };

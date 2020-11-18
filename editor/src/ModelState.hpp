@@ -57,6 +57,7 @@ public:
 private:
 
     cro::Scene m_scene;
+    cro::Scene m_previewScene;
     cro::ResourceCollection m_resources;
 
     struct Preferences final
