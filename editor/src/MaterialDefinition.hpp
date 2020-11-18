@@ -83,6 +83,7 @@ struct MaterialDefinition final
     MaterialDefinition()
     {
         std::fill(textureIDs.begin(), textureIDs.end(), 0);
-        previewTexture.create(128, 128);
+        previewTexture.create(256, 256);
+        previewTexture.setSmooth(true);
     }
 };
