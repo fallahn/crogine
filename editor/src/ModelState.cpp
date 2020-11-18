@@ -1508,6 +1508,14 @@ void ModelState::drawInspector()
                 ImGui::Image((void*)(std::size_t)m_materialDefs[m_selectedMaterial].previewTexture.getTexture().getGLHandle(),
                                                     { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
 
+                static float rotation = 0.f;
+                ImGui::PushItemWidth(size.x* ui::TextBoxWidth);
+                if (ImGui::SliderFloat("##rotation", &rotation, -180.f, 180.f))
+                {
+                    m_previewEntity.getComponent<cro::Transform>().setRotation({ 0.f, 0.f, rotation * cro::Util::Const::degToRad });
+                }
+                ImGui::PopItemWidth();
+
                 ImGui::NewLine();
                 ImGui::Text("Shader Type:");
                 ImGui::PushItemWidth(size.x* ui::TextBoxWidth);
