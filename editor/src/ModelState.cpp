@@ -650,14 +650,16 @@ void ModelState::openModelAtPath(const std::string& path)
         {
             if (obj.getName() == "material")
             {
+                MaterialDefinition def;
+
                 std::string_view id = obj.getId();
                 if (id == "Unlit")
                 {
-                    //TODO add an unlit material
+                    def.type = MaterialDefinition::Unlit;
                 }
                 else if (id == "VertexLit")
                 {
-                    //TODO add a vertex lit material
+                    def.type = MaterialDefinition::VertexLit;
                 }
                 //TODO PBR shader
 
@@ -668,14 +670,73 @@ void ModelState::openModelAtPath(const std::string& path)
                     std::string_view name = prop.getName();
                     if (name == "diffuse"
                         || name == "mask"
-                        || name == "normal")
+                        || name == "normal"
+                        || name == "lightmap")
                     {
                         auto path = m_preferences.workingDirectory + "/" + prop.getValue<std::string>();
-                        addTextureToBrowser(path);
 
-                        //TODO map these to the current created material properties
+                        if(name == "diffuse") def.textureIDs[MaterialDefinition::Diffuse] = addTextureToBrowser(path);
+                        if(name == "mask") def.textureIDs[MaterialDefinition::Mask] = addTextureToBrowser(path);
+                        if(name == "normal") def.textureIDs[MaterialDefinition::Normal] = addTextureToBrowser(path);
+                        if(name == "lightmap") def.textureIDs[MaterialDefinition::Lightmap] = addTextureToBrowser(path);
+                    }
+                    else if (name == "colour")
+                    {
+                        def.colour = prop.getValue<cro::Colour>();
+                    }
+                    else if (name == "vertex_coloured")
+                    {
+                        def.vertexColoured = prop.getValue<bool>();
+                    }
+                    else if (name == "rim")
+                    {
+                        def.useRimlighing = true;
+                        def.rimlightColour = prop.getValue<cro::Colour>();
+                    }
+                    else if (name == "rim_falloff")
+                    {
+                        def.useRimlighing = true;
+                        def.rimlightFalloff = prop.getValue<float>();
+                    }
+                    else if (name == "rx_shadows")
+                    {
+                        def.receiveShadows = prop.getValue<bool>();
+                    }
+                    else if (name == "blendmode")
+                    {
+                        auto mode = prop.getValue<std::string>();
+                        if (mode == "alpha")
+                        {
+                            def.blendMode = cro::Material::BlendMode::Alpha;
+                        }
+                        else if (mode == "add")
+                        {
+                            def.blendMode = cro::Material::BlendMode::Additive;
+                        }
+                        else if (mode == "multiply")
+                        {
+                            def.blendMode = cro::Material::BlendMode::Multiply;
+                        }
+                    }
+                    else if (name == "alpha_clip")
+                    {
+                        def.alphaClip = prop.getValue<float>();
+                    }
+                    else if (name == "mask_colour")
+                    {
+                        def.maskColour = prop.getValue<cro::Colour>();
+                    }
+                    else if (name == "name")
+                    {
+                        auto val = prop.getValue<std::string>();
+                        if (!val.empty())
+                        {
+                            def.name = val;
+                        }
                     }
                 }
+
+                addMaterialToBrowser(std::move(def));
             }
         }
     }
@@ -1297,9 +1358,70 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
     return retVal;
 }
 
-void ModelState::applyPreviewSettings()
+void ModelState::addMaterialToBrowser(MaterialDefinition&& def)
 {
-    auto& matDef = m_materialDefs[m_selectedMaterial];
+    auto shaderType = cro::ShaderResource::Unlit;
+    if (def.type == MaterialDefinition::VertexLit)
+    {
+        shaderType = cro::ShaderResource::VertexLit;
+        if (def.textureIDs[MaterialDefinition::Normal])
+        {
+            def.shaderFlags |= cro::ShaderResource::NormalMap;
+        }
+    }
+
+    if (def.textureIDs[MaterialDefinition::Lightmap])
+    {
+        def.shaderFlags |= cro::ShaderResource::LightMap;
+    }
+
+    if (def.textureIDs[MaterialDefinition::Diffuse])
+    {
+        def.shaderFlags |= cro::ShaderResource::DiffuseMap;
+    }
+    else
+    {
+        def.shaderFlags |= cro::ShaderResource::DiffuseColour;
+    }
+
+    if (def.alphaClip > 0)
+    {
+        def.shaderFlags |= cro::ShaderResource::AlphaClip;
+    }
+
+    if (def.vertexColoured)
+    {
+        def.shaderFlags |= cro::ShaderResource::VertexColour;
+    }
+
+    if (def.receiveShadows)
+    {
+        def.shaderFlags |= cro::ShaderResource::RxShadows;
+    }
+
+    if (def.useRimlighing)
+    {
+        def.shaderFlags |= cro::ShaderResource::RimLighting;
+    }
+
+    def.shaderID = m_resources.shaders.loadBuiltIn(shaderType, def.shaderFlags);
+    def.materialData.setShader(m_resources.shaders.get(def.shaderID));
+
+    //update the thumbnail
+    applyPreviewSettings(def);
+    m_previewEntity.getComponent<cro::Model>().setMaterial(0, def.materialData);
+
+    def.previewTexture.clear(cro::Colour(0.f, 0.f, 0.f, 0.2f));
+    m_previewScene.render(def.previewTexture);
+    def.previewTexture.display();
+
+    m_materialDefs.push_back(std::move(def));
+    m_selectedMaterial = m_materialDefs.size() - 1;
+}
+
+void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
+{
+    //auto& matDef = m_materialDefs[m_selectedMaterial];
 
     if (matDef.textureIDs[MaterialDefinition::Diffuse])
     {
@@ -1777,7 +1899,7 @@ void ModelState::drawInspector()
 
                 if (applyMaterial)
                 {
-                    applyPreviewSettings();
+                    applyPreviewSettings(m_materialDefs[m_selectedMaterial]);
                     m_previewEntity.getComponent<cro::Model>().setMaterial(0, matDef.materialData);
                 }
             }
@@ -1932,7 +2054,7 @@ void ModelState::drawBrowser()
 
             if (lastSelected != m_selectedMaterial)
             {
-                applyPreviewSettings();
+                applyPreviewSettings(m_materialDefs[m_selectedMaterial]);
                 m_previewEntity.getComponent<cro::Model>().setMaterial(0, m_materialDefs[m_selectedMaterial].materialData);
             }
 
@@ -2169,9 +2291,8 @@ void ModelState::importMaterial(const std::string& path)
         auto name = file.getId();
         std::replace(name.begin(), name.end(), '_', ' ');        
         
-        auto& def = m_materialDefs.emplace_back();
+        MaterialDefinition def;
         def.materialData = m_resources.materials.get(materialIDs[MaterialID::Default]);
-        m_selectedMaterial = m_materialDefs.size() - 1;
         
         if (!name.empty())
         {
@@ -2264,52 +2385,7 @@ void ModelState::importMaterial(const std::string& path)
             }
         }
 
-        auto shaderType = cro::ShaderResource::Unlit;
-        if (def.type == MaterialDefinition::VertexLit)
-        {
-            shaderType = cro::ShaderResource::VertexLit;
-            if (def.textureIDs[MaterialDefinition::Normal])
-            {
-                def.shaderFlags |= cro::ShaderResource::NormalMap;
-            }
-        }
-
-        if (def.textureIDs[MaterialDefinition::Lightmap])
-        {
-            def.shaderFlags |= cro::ShaderResource::LightMap;
-        }
-
-        if (def.textureIDs[MaterialDefinition::Diffuse])
-        {
-            def.shaderFlags |= cro::ShaderResource::DiffuseMap;
-        }
-        else
-        {
-            def.shaderFlags |= cro::ShaderResource::DiffuseColour;
-        }
-
-        if (def.alphaClip > 0)
-        {
-            def.shaderFlags |= cro::ShaderResource::AlphaClip;
-        }
-
-        if (def.vertexColoured)
-        {
-            def.shaderFlags |= cro::ShaderResource::VertexColour;
-        }
-
-        if (def.receiveShadows)
-        {
-            def.shaderFlags |= cro::ShaderResource::RxShadows;
-        }
-
-        if (def.useRimlighing)
-        {
-            def.shaderFlags |= cro::ShaderResource::RimLighting;
-        }
-
-        def.shaderID = m_resources.shaders.loadBuiltIn(shaderType, def.shaderFlags);
-        def.materialData.setShader(m_resources.shaders.get(def.shaderID));
+        addMaterialToBrowser(std::move(def));
     }
     else
     {

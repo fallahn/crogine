@@ -117,12 +117,13 @@ private:
     std::map<std::uint32_t, MaterialTexture> m_materialTextures;
     std::uint32_t m_selectedTexture;
     std::uint32_t addTextureToBrowser(const std::string&);
+    void addMaterialToBrowser(MaterialDefinition&&);
 
     cro::Texture m_blackTexture;
     std::vector<MaterialDefinition> m_materialDefs;
     std::size_t m_selectedMaterial;
     cro::Entity m_previewEntity;
-    void applyPreviewSettings();
+    void applyPreviewSettings(MaterialDefinition&);
 
     void updateLayout(std::int32_t, std::int32_t);
     void drawInspector();
