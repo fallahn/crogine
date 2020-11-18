@@ -122,13 +122,12 @@ void Texture::create(uint32 width, uint32 height, ImageFormat::Type format)
     width = std::min(width, getMaxTextureSize());
     height = std::min(height, getMaxTextureSize());
 
-    if (m_handle)
+    if (!m_handle)
     {
-        glCheck(glDeleteTextures(1, &m_handle));
+        GLuint handle;
+        glCheck(glGenTextures(1, &handle));
+        m_handle = handle;
     }
-    GLuint handle;
-    glCheck(glGenTextures(1, &handle));
-    m_handle = handle;
 
     m_size = { width, height };
     m_format = format;

@@ -1818,8 +1818,6 @@ void ModelState::drawInspector()
 
 void ModelState::drawBrowser()
 {
-    //ImGui::ShowDemoWindow();
-
     auto [pos, size] = WindowLayouts[WindowID::Browser];
 
     ImGui::SetNextWindowPos({ pos.x, pos.y });
@@ -1970,6 +1968,21 @@ void ModelState::drawBrowser()
                     m_selectedTexture = m_materialTextures.empty() ? 0 : m_materialTextures.begin()->first;
                 }
             }
+            ImGui::SameLine();
+            if (ImGui::Button("Reload##00"))
+            {
+                if (m_selectedTexture != 0)
+                {
+                    auto path = m_preferences.workingDirectory + "/" + m_materialTextures.at(m_selectedTexture).relPath + m_materialTextures.at(m_selectedTexture).name;
+                    if (cro::FileSystem::fileExists(path))
+                    {
+                        if (!m_materialTextures.at(m_selectedTexture).texture->loadFromFile(path))
+                        {
+                            cro::FileSystem::showMessageBox("Error", "Could not refresh texture. Has the file been removed?");
+                        }
+                    }
+                }
+            }
 
             ImGui::BeginChild("##texChild");
 
@@ -1981,6 +1994,7 @@ void ModelState::drawBrowser()
 
             std::int32_t thumbsPerRow = static_cast<std::int32_t>(std::floor(size.x / thumbSize.x) - 1);
             std::int32_t count = 0;
+            std::uint32_t removeID = 0;
             for (const auto& [id, tex] : m_materialTextures)
             {
                 ImVec4 colour(0.f, 0.f, 0.f, 1.f);
@@ -2016,6 +2030,34 @@ void ModelState::drawBrowser()
                     ImGui::SetScrollHereY();
                 }
                 
+                //TODO for some reason id always returns the same as the selected texture, not the current id
+                /*std::string label = "##" + std::to_string(id);
+                if (ImGui::BeginPopupContextWindow(label.c_str()))
+                {
+                    label = "Reload##" + std::to_string(id);
+                    if (ImGui::MenuItem(label.c_str(), nullptr, nullptr))
+                    {
+                        auto path = m_preferences.workingDirectory + "/" + m_materialTextures.at(id).relPath + m_materialTextures.at(id).name;
+                        if (cro::FileSystem::fileExists(path))
+                        {
+                            if (!m_materialTextures.at(id).texture->loadFromFile(path))
+                            {
+                                cro::FileSystem::showMessageBox("Error", "Could not refresh texture. Has the file been removed?");
+                            }
+                        }
+                        LogI << m_selectedTexture << ", " << id << std::endl;
+                    }
+                    label = "Remove##" + std::to_string(id);
+                    if (ImGui::MenuItem(label.c_str(), nullptr, nullptr))
+                    {
+                        if (cro::FileSystem::showMessageBox("Delete?", "Remove this texture?", cro::FileSystem::YesNo, cro::FileSystem::Question))
+                        {
+                            removeID = id;
+                        }
+                    }
+                    ImGui::EndPopup();
+                }*/
+
                 //put on same line if we fit
                 count++;
                 if (count % thumbsPerRow != 0)
@@ -2024,6 +2066,24 @@ void ModelState::drawBrowser()
                 }
             }
             
+            if (removeID)
+            {
+                //remove from any materials using this
+                for (auto& mat : m_materialDefs)
+                {
+                    for (auto& texID : mat.textureIDs)
+                    {
+                        if (texID == removeID)
+                        {
+                            texID = 0;
+                        }
+                    }
+                }
+
+                m_materialTextures.erase(removeID);
+                m_selectedTexture = m_materialTextures.empty() ? 0 : m_materialTextures.begin()->first;
+            }
+
             lastSelected = m_selectedTexture;
 
             ImGui::EndChild();
@@ -2050,9 +2110,6 @@ void ModelState::exportMaterial()
         auto name = matDef.name;
         std::replace(name.begin(), name.end(), ' ', '_');
 
-        //TODO should this be the same layout as
-        //the model definition format, or keep it simple
-        //just for the sake of the material editor?
         cro::ConfigFile file("material_definition", name);
         file.addProperty("type").setValue(matDef.type);
         file.addProperty("colour").setValue(matDef.colour.getVec4());
