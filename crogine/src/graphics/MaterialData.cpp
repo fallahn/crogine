@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/Shader.hpp>
 #include <crogine/core/Log.hpp>
 
 using namespace cro;
@@ -145,5 +146,130 @@ void Data::setProperty(const std::string& name, const Texture& value)
     {
         result->second.second.textureID = value.getGLHandle();
         result->second.second.type = Property::Texture;
+    }
+}
+
+void Data::setShader(const Shader& s)
+{
+    //this will get remapped if the uniform location changes
+    auto oldProperties = properties;
+
+    properties.clear();
+    optionalUniformCount = 0;
+
+    shader = s.getGLHandle();
+
+    //get the available attribs. This is sorted and culled
+    //when added to a model according to the requirements of
+    //the model's mesh
+    const auto& shaderAttribs = s.getAttribMap();
+    for (auto i = 0u; i < shaderAttribs.size(); ++i)
+    {
+        attribs[i][Material::Data::Index] = shaderAttribs[i];
+    }
+
+    //check the shader for standard uniforms and map them if they exist
+    const auto& uniformMap = s.getUniformMap();
+    for (auto& uniform : uniforms)
+    {
+        uniform = -1;
+    }
+
+    /*for (auto& optional : data.optionalUniforms)
+    {
+        optional = -1;
+    }*/
+
+    for (const auto& [uniform, handle] : uniformMap)
+    {
+        if (uniform == "u_worldMatrix")
+        {
+            uniforms[Material::World] = handle;
+        }
+        else if (uniform == "u_viewMatrix")
+        {
+            uniforms[Material::View] = handle;
+        }
+        else if (uniform == "u_worldViewMatrix")
+        {
+            uniforms[Material::WorldView] = handle;
+        }
+        else if (uniform == "u_viewProjectionMatrix")
+        {
+            uniforms[Material::ViewProjection] = handle;
+        }
+        else if (uniform == "u_projectionMatrix")
+        {
+            uniforms[Material::Projection] = handle;
+        }
+        else if (uniform == "u_worldViewProjectionMatrix")
+        {
+            uniforms[Material::WorldViewProjection] = handle;
+        }
+        else if (uniform == "u_normalMatrix")
+        {
+            uniforms[Material::Normal] = handle;
+        }
+        else if (uniform == "u_cameraWorldPosition")
+        {
+            uniforms[Material::Camera] = handle;
+        }
+        else if (uniform == "u_screenSize")
+        {
+            uniforms[Material::ScreenSize] = handle;
+        }
+        //these are optionally standard so they are added to 'optional' list to to mark that they exist
+        //but not added as a property as they are not user settable - rather they are used internally by renderers
+        else if (uniform == "u_boneMatrices[0]")
+        {
+            uniforms[Material::Skinning] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::Skinning;
+        }
+        else if (uniform == "u_projectionMapMatrix[0]")
+        {
+            uniforms[Material::ProjectionMap] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::ProjectionMap;
+        }
+        else if (uniform == "u_projectionMapCount")
+        {
+            uniforms[Material::ProjectionMapCount] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::ProjectionMapCount;
+        }
+        else if (uniform == "u_lightViewProjectionMatrix")
+        {
+            uniforms[Material::ShadowMapProjection] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::ShadowMapProjection;
+        }
+        else if (uniform == "u_shadowMap")
+        {
+            uniforms[Material::ShadowMapSampler] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::ShadowMapSampler;
+        }
+        else if (uniform == "u_lightDirection")
+        {
+            uniforms[Material::SunlightDirection] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::SunlightDirection;
+        }
+        else if (uniform == "u_lightColour")
+        {
+            uniforms[Material::SunlightColour] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::SunlightColour;
+        }
+        //else these are user settable uniforms - ie optional, but set by user such as textures
+        else
+        {
+            //add to list of material properties
+            properties.insert(std::make_pair(uniform, std::make_pair(handle, Material::Property())));
+        }
+    }
+
+    //remap existing properties if they appear in the new shader
+    for (const auto& [name, prop] : oldProperties)
+    {
+        auto result = properties.find(name);
+        if (result != properties.end())
+        {
+            result->second.second = prop.second;
+        }
     }
 }

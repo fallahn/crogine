@@ -67,7 +67,7 @@ struct MaterialDefinition final
 
     bool vertexColoured = false;
     bool useRimlighing = false;
-    bool recieveShadows = false;
+    bool receiveShadows = false;
 
     cro::Material::BlendMode blendMode = cro::Material::BlendMode::None;
 
@@ -75,7 +75,9 @@ struct MaterialDefinition final
     //used for rendering preview
     cro::RenderTexture previewTexture;
     std::int32_t shaderFlags = 0; //used to detect when the shader needs to change
+    Type activeType = Unlit;
     std::int32_t shaderID = -1; //shader ID in the resource manager, not OpenGL ID
+    cro::Material::Data materialData;
 
     //hmmm is there not a better way to default init an array?
     MaterialDefinition()

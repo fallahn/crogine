@@ -159,8 +159,11 @@ namespace
         }
     }
 
-    void drawTextureSlot(const std::string label, std::uint32_t& dest, std::uint32_t thumbnail)
+    //returns true if texture was changed
+    bool drawTextureSlot(const std::string label, std::uint32_t& dest, std::uint32_t thumbnail)
     {
+        bool retVal = false;
+
         glm::vec2 imgSize = WindowLayouts[WindowID::MaterialSlot].second;
         if (ImGui::ImageButton((void*)(std::size_t)thumbnail, { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
         {
@@ -174,8 +177,10 @@ namespace
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("TEXTURE_SRC"))
             {
+                auto old = dest;
                 CRO_ASSERT(payload->DataSize == sizeof(std::uint32_t), "");
                 dest = *(const std::uint32_t*)payload->Data;
+                retVal = (old != dest);
             }
             ImGui::EndDragDropTarget();
         }
@@ -192,6 +197,7 @@ namespace
 
         ImGui::SameLine();
         helpMarker("Drag a texture from the Texture Browser to fill the slot, or click the icon to clear it.");
+        return retVal;
     }
 }
 
@@ -202,9 +208,8 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
     m_showPreferences       (false),
     m_showGroundPlane       (false),
     m_showSkybox            (false),
-    m_selectedTexture       (0),
-    m_materialThumb         (0),
-    m_selectedMaterial      (0)
+    m_selectedTexture       (std::numeric_limits<std::uint32_t>::max()),
+    m_selectedMaterial      (std::numeric_limits<std::uint32_t>::max())
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -277,12 +282,11 @@ void ModelState::render()
     //render active material preview
     if (!m_materialDefs.empty())
     {
-        m_materialDefs[m_selectedMaterial].previewTexture.clear();
+        m_materialDefs[m_selectedMaterial].previewTexture.clear(cro::Colour(0.f,0.f,0.f,0.2f));
         m_previewScene.render(m_materialDefs[m_selectedMaterial].previewTexture);
         m_materialDefs[m_selectedMaterial].previewTexture.display();
     }
 
-	
     m_scene.render(cro::App::getWindow());
 }
 
@@ -318,11 +322,7 @@ void ModelState::loadAssets()
     materialIDs[MaterialID::DebugDraw] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
 
-    //texture for material thumbnail - TODO we'll unhackify this when rendering real time
-    //thumbnail textures is implemented
-    m_resources.textures.load(99999, "assets/images/material.png");
-    m_materialThumb = m_resources.textures.get(99999).getGLHandle();
-
+    //black texture for empty texture slots
     cro::Image img;
     img.create(2, 2, cro::Colour::Black());
     LOG("Add creating textures from images", cro::Logger::Type::Info);
@@ -417,7 +417,7 @@ void ModelState::createScene()
     entity = m_previewScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-
+    m_previewEntity = entity;
 
     //camera
     entity = m_previewScene.createEntity();
@@ -1297,6 +1297,50 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
     return retVal;
 }
 
+void ModelState::applyPreviewSettings()
+{
+    auto& matDef = m_materialDefs[m_selectedMaterial];
+
+    if (matDef.textureIDs[MaterialDefinition::Diffuse])
+    {
+        matDef.materialData.setProperty("u_diffuseMap", *m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Diffuse]).texture);
+    }
+
+    if (matDef.textureIDs[MaterialDefinition::Mask])
+    {
+        matDef.materialData.setProperty("u_maskMap", *m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Mask]).texture);
+    }
+
+    if (matDef.textureIDs[MaterialDefinition::Normal])
+    {
+        matDef.materialData.setProperty("u_normalMap", *m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Normal]).texture);
+    }
+
+    if (matDef.textureIDs[MaterialDefinition::Lightmap])
+    {
+        matDef.materialData.setProperty("u_lightMap", *m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Lightmap]).texture);
+    }
+
+    if (matDef.shaderFlags & cro::ShaderResource::DiffuseColour)
+    {
+        matDef.materialData.setProperty("u_colour", matDef.colour);
+        matDef.materialData.setProperty("u_maskColour", matDef.maskColour);
+    }
+
+    if (matDef.useRimlighing)
+    {
+        matDef.materialData.setProperty("u_rimColour", matDef.rimlightColour);
+        matDef.materialData.setProperty("u_rimFalloff", matDef.rimlightFalloff);
+    }
+
+    if (matDef.alphaClip > 0)
+    {
+        matDef.materialData.setProperty("u_alphaClip", matDef.alphaClip);
+    }
+
+    matDef.materialData.blendMode = matDef.blendMode;
+}
+
 void ModelState::updateLayout(std::int32_t w, std::int32_t h)
 {
     float width = static_cast<float>(w);
@@ -1450,8 +1494,10 @@ void ModelState::drawInspector()
         {
             if (!m_materialDefs.empty())
             {
+                auto& matDef = m_materialDefs[m_selectedMaterial];
+
                 ImGui::PushItemWidth(size.x * ui::TextBoxWidth);
-                ImGui::InputText("##name", &m_materialDefs[m_selectedMaterial].name);
+                ImGui::InputText("##name", &matDef.name);
                 ImGui::PopItemWidth();
 
                 auto imgSize = size;
@@ -1465,14 +1511,14 @@ void ModelState::drawInspector()
                 ImGui::NewLine();
                 ImGui::Text("Shader Type:");
                 ImGui::PushItemWidth(size.x* ui::TextBoxWidth);
-                if (ImGui::BeginCombo("##Shader", ShaderStrings[m_materialDefs[m_selectedMaterial].type]))
+                if (ImGui::BeginCombo("##Shader", ShaderStrings[matDef.type]))
                 {
                     for (auto i = 0; i < ShaderStrings.size(); ++i)
                     {
-                        bool selected = m_materialDefs[m_selectedMaterial].type == i;
+                        bool selected = matDef.type == i;
                         if (ImGui::Selectable(ShaderStrings[i], selected))
                         {
-                            m_materialDefs[m_selectedMaterial].type = static_cast<MaterialDefinition::Type>(i);
+                            matDef.type = static_cast<MaterialDefinition::Type>(i);
                         }
 
                         if (selected)
@@ -1485,10 +1531,12 @@ void ModelState::drawInspector()
                 }
                 ImGui::PopItemWidth();
 
+                std::int32_t shaderFlags = 0;
+                bool applyMaterial = false;
 
                 ImGui::NewLine();
                 ImGui::Text("Texture Maps:");
-                auto type = m_materialDefs[m_selectedMaterial].type;
+                auto type = matDef.type;
                 std::string slotLabel;
                 std::uint32_t thumb = m_blackTexture.getGLHandle();
                 if (type != MaterialDefinition::PBR)
@@ -1496,64 +1544,94 @@ void ModelState::drawInspector()
                     //diffuse map
                     slotLabel = "Diffuse";
                     
-                    if (m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Diffuse] == 0)
+                    if (matDef.textureIDs[MaterialDefinition::Diffuse] == 0)
                     {
                         slotLabel += ": Empty";
                     }
                     else
                     {
-                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Diffuse]).name;
-                        thumb = m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Diffuse];
+                        slotLabel += ": " + m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Diffuse]).name;
+                        thumb = matDef.textureIDs[MaterialDefinition::Diffuse];
                     }
-                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Diffuse], thumb);
+                    if (drawTextureSlot(slotLabel, matDef.textureIDs[MaterialDefinition::Diffuse], thumb))
+                    {
+                        applyMaterial = true;
+                    }
+
+                    //drawTextureSlot() may have updated this
+                    if (matDef.textureIDs[MaterialDefinition::Diffuse] != 0)
+                    {
+                        shaderFlags |= cro::ShaderResource::DiffuseMap;
+                    }
 
                     //lightmap
                     slotLabel = "Light Map";
-                    if (m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Lightmap] == 0)
+                    if (matDef.textureIDs[MaterialDefinition::Lightmap] == 0)
                     {
                         slotLabel += ": Empty";
                         thumb = m_blackTexture.getGLHandle();
                     }
                     else
                     {
-                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Lightmap]).name;
-                        thumb = m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Lightmap];
+                        slotLabel += ": " + m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Lightmap]).name;
+                        thumb = matDef.textureIDs[MaterialDefinition::Lightmap];
                     }
-                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Lightmap], thumb);
+                    if (drawTextureSlot(slotLabel, matDef.textureIDs[MaterialDefinition::Lightmap], thumb))
+                    {
+                        applyMaterial = true;
+                    }
+
+                    if (matDef.textureIDs[MaterialDefinition::Lightmap] != 0)
+                    {
+                        shaderFlags |= cro::ShaderResource::LightMap;
+                    }
                 }
 
                 if (type == MaterialDefinition::VertexLit)
                 {
                     //mask map
                     slotLabel = "Mask Map";
-                    if (m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Mask] == 0)
+                    if (matDef.textureIDs[MaterialDefinition::Mask] == 0)
                     {
                         slotLabel += ": Empty";
                         thumb = m_blackTexture.getGLHandle();
                     }
                     else
                     {
-                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Mask]).name;
-                        thumb = m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Mask];
+                        slotLabel += ": " + m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Mask]).name;
+                        thumb = matDef.textureIDs[MaterialDefinition::Mask];
                     }
-                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Mask], thumb);
+
+                    if (drawTextureSlot(slotLabel, matDef.textureIDs[MaterialDefinition::Mask], thumb))
+                    {
+                        applyMaterial = true;
+                    }
                 }
 
                 if (type != MaterialDefinition::Unlit)
                 {
                     //normal map
                     slotLabel = "Normal Map";
-                    if (m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Normal] == 0)
+                    if (matDef.textureIDs[MaterialDefinition::Normal] == 0)
                     {
                         slotLabel += ": Empty";
                         thumb = m_blackTexture.getGLHandle();
                     }
                     else
                     {
-                        slotLabel += ": " + m_materialTextures.at(m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Normal]).name;
-                        thumb = m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Normal];
+                        slotLabel += ": " + m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Normal]).name;
+                        thumb = matDef.textureIDs[MaterialDefinition::Normal];
                     }
-                    drawTextureSlot(slotLabel, m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Normal], thumb);
+
+                    if (drawTextureSlot(slotLabel, matDef.textureIDs[MaterialDefinition::Normal], thumb))
+                    {
+                        applyMaterial = true;
+                    }
+
+                    if (matDef.textureIDs[MaterialDefinition::Normal] != 0)
+                    {
+                        shaderFlags |= cro::ShaderResource::NormalMap;
+                    }
                 }
 
                 if (type == MaterialDefinition::PBR)
@@ -1566,51 +1644,84 @@ void ModelState::drawInspector()
                 }
 
                 ImGui::NewLine();
-                if (m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Diffuse] == 0)
+                if (matDef.textureIDs[MaterialDefinition::Diffuse] == 0)
                 {
-                    ImGui::ColorEdit3("Diffuse Colour", m_materialDefs[m_selectedMaterial].colour.asArray());
+                    if (ImGui::ColorEdit3("Diffuse Colour", matDef.colour.asArray()))
+                    {
+                        applyMaterial = true;
+                    }
                     ImGui::SameLine();
                     helpMarker("If the Diffuse texture map is not set then this defines the diffuse colour of the material");
+
+                    shaderFlags |= cro::ShaderResource::DiffuseColour;
                 }
                 if (type == MaterialDefinition::VertexLit
-                    && m_materialDefs[m_selectedMaterial].textureIDs[MaterialDefinition::Mask] == 0)
+                    && matDef.textureIDs[MaterialDefinition::Mask] == 0)
                 {
-                    ImGui::ColorEdit3("Mask Colour", m_materialDefs[m_selectedMaterial].maskColour.asArray());
+                    if (ImGui::ColorEdit3("Mask Colour", matDef.maskColour.asArray()))
+                    {
+                        applyMaterial = true;
+                    }
                     ImGui::SameLine();
                     helpMarker("If the Mask texture map is not set then this defines the mask colour of the material");
                 }
 
                 ImGui::NewLine();
-                ImGui::SliderFloat("Alpha Clip", &m_materialDefs[m_selectedMaterial].alphaClip, 0.f, 1.f);
+                if (ImGui::SliderFloat("Alpha Clip", &matDef.alphaClip, 0.f, 1.f))
+                {
+                    applyMaterial = true;
+                }
                 ImGui::SameLine();
                 helpMarker("Alpha values of the diffuse colour below this value will cause the current fragment to be discarded");
+                if (matDef.alphaClip > 0)
+                {
+                    shaderFlags |= cro::ShaderResource::AlphaClip;
+                }
 
                 ImGui::NewLine();
-                ImGui::Checkbox("Use Vertex Colours", &m_materialDefs[m_selectedMaterial].vertexColoured);
+                ImGui::Checkbox("Use Vertex Colours", &matDef.vertexColoured);
                 ImGui::SameLine();
                 helpMarker("Any colour information stored in the model's vertex data will be multiplied with the diffuse colour of the material");
+                if (matDef.vertexColoured)
+                {
+                    shaderFlags |= cro::ShaderResource::VertexColour;
+                }
 
-                ImGui::Checkbox("Receive Shadows", &m_materialDefs[m_selectedMaterial].recieveShadows);
+                ImGui::Checkbox("Receive Shadows", &matDef.receiveShadows);
                 ImGui::SameLine();
                 helpMarker("Check this box if the material should receive shadows from the active shadow map");
+                if (matDef.receiveShadows)
+                {
+                    shaderFlags |= cro::ShaderResource::RxShadows;
+                }
 
                 ImGui::NewLine();
-                ImGui::Checkbox("Use Rimlighting", &m_materialDefs[m_selectedMaterial].useRimlighing);
+                ImGui::Checkbox("Use Rimlighting", &matDef.useRimlighing);
                 ImGui::SameLine();
                 helpMarker("Enable the rim lighting effect. Not available with the PBR shader");
+                if (matDef.useRimlighing)
+                {
+                    shaderFlags |= cro::ShaderResource::RimLighting;
 
-                ImGui::SliderFloat("Rim Falloff", &m_materialDefs[m_selectedMaterial].rimlightFalloff, 0.f, 1.f);
-                ImGui::SameLine();
-                helpMarker("Adjusts the point at which the rimlight falloff affects the fade");
+                    if (ImGui::SliderFloat("Rim Falloff", &matDef.rimlightFalloff, 0.f, 1.f))
+                    {
+                        applyMaterial = true;
+                    }
+                    ImGui::SameLine();
+                    helpMarker("Adjusts the point at which the rimlight falloff affects the fade");
 
-                ImGui::ColorEdit3("Rimlight Colour", m_materialDefs[m_selectedMaterial].rimlightColour.asArray());
-                ImGui::SameLine();
-                helpMarker("Sets the colour of the rimlight effect, if it is enabled");
+                    if (ImGui::ColorEdit3("Rimlight Colour", matDef.rimlightColour.asArray()))
+                    {
+                        applyMaterial = true;
+                    }
+                    ImGui::SameLine();
+                    helpMarker("Sets the colour of the rimlight effect, if it is enabled");
+                }
 
                 ImGui::NewLine();
                 ImGui::Text("Blend Mode:");
                 ImGui::PushItemWidth(size.x * ui::TextBoxWidth);
-                if (ImGui::BeginCombo("##BlendMode", BlendStrings[static_cast<std::int32_t>(m_materialDefs[m_selectedMaterial].blendMode)]))
+                if (ImGui::BeginCombo("##BlendMode", BlendStrings[static_cast<std::int32_t>(matDef.blendMode)]))
                 {
                     for (auto i = 0; i < BlendStrings.size(); ++i)
                     {
@@ -1637,6 +1748,30 @@ void ModelState::drawInspector()
                 }
                 ImGui::SameLine();
                 helpMarker("Export this material to a Material Definition file which cane be loaded by the Material Browser");
+
+
+                if (matDef.shaderFlags != shaderFlags
+                    || matDef.activeType != matDef.type)
+                {
+                    auto shaderType = cro::ShaderResource::Unlit;
+                    if (matDef.type == MaterialDefinition::VertexLit)
+                    {
+                        shaderType = cro::ShaderResource::VertexLit;
+                    }
+
+                    matDef.shaderID = m_resources.shaders.loadBuiltIn(shaderType, shaderFlags);
+                    matDef.shaderFlags = shaderFlags;
+                    matDef.activeType = matDef.type;
+
+                    matDef.materialData.setShader(m_resources.shaders.get(matDef.shaderID));
+                    applyMaterial = true;
+                }
+
+                if (applyMaterial)
+                {
+                    applyPreviewSettings();
+                    m_previewEntity.getComponent<cro::Model>().setMaterial(0, matDef.materialData);
+                }
             }
 
             ImGui::EndTabItem();
@@ -1700,6 +1835,7 @@ void ModelState::drawBrowser()
                 if (m_materialDefs.size() < ui::MaxMaterials)
                 {
                     m_materialDefs.emplace_back();
+                    m_materialDefs.back().materialData = m_resources.materials.get(materialIDs[MaterialID::Default]);
                     m_selectedMaterial = m_materialDefs.size() - 1;
                 }
                 else
@@ -1734,7 +1870,7 @@ void ModelState::drawBrowser()
 
             ImGui::BeginChild("##matChild");
 
-            static std::size_t lastSelected = 0;
+            static std::size_t lastSelected = std::numeric_limits<std::uint32_t>::max();
 
             auto thumbSize = size;
             thumbSize.y *= ui::ThumbnailHeight;
@@ -1771,7 +1907,7 @@ void ModelState::drawBrowser()
                     ImGui::SetDragDropPayload("MATERIAL_SRC", &count, sizeof(cro::int32));
 
                     //display preview
-                    ImGui::Image((void*)(std::size_t)m_materialThumb, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::Image((void*)(std::size_t)material.previewTexture.getTexture().getGLHandle(), { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
                     ImGui::Text("%s", material.name.c_str());
                     ImGui::Text(ShaderStrings[material.type]);
                     ImGui::EndDragDropSource();
@@ -1786,6 +1922,12 @@ void ModelState::drawBrowser()
                 {
                     ImGui::SameLine();
                 }
+            }
+
+            if (lastSelected != m_selectedMaterial)
+            {
+                applyPreviewSettings();
+                m_previewEntity.getComponent<cro::Model>().setMaterial(0, m_materialDefs[m_selectedMaterial].materialData);
             }
 
             lastSelected = m_selectedMaterial;
@@ -1917,7 +2059,7 @@ void ModelState::exportMaterial()
         file.addProperty("mask_colour").setValue(matDef.maskColour.getVec4());
         file.addProperty("alpha_clip").setValue(matDef.alphaClip);
         file.addProperty("vertex_coloured").setValue(matDef.vertexColoured);
-        file.addProperty("rx_shadow").setValue(matDef.recieveShadows);
+        file.addProperty("rx_shadow").setValue(matDef.receiveShadows);
         file.addProperty("blend_mode").setValue(static_cast<std::int32_t>(matDef.blendMode));
         file.addProperty("use_rimlight").setValue(matDef.useRimlighing);
         file.addProperty("rimlight_falloff").setValue(matDef.rimlightFalloff);
@@ -1963,6 +2105,7 @@ void ModelState::importMaterial(const std::string& path)
         std::replace(name.begin(), name.end(), '_', ' ');        
         
         auto& def = m_materialDefs.emplace_back();
+        def.materialData = m_resources.materials.get(materialIDs[MaterialID::Default]);
         m_selectedMaterial = m_materialDefs.size() - 1;
         
         if (!name.empty())
@@ -2000,7 +2143,7 @@ void ModelState::importMaterial(const std::string& path)
             }
             else if (name == "rx_shadow")
             {
-                def.recieveShadows = prop.getValue<bool>();
+                def.receiveShadows = prop.getValue<bool>();
             }
             else if (name == "blend_mode")
             {
@@ -2055,6 +2198,53 @@ void ModelState::importMaterial(const std::string& path)
                 def.rimlightFalloff = std::min(1.f, std::max(0.f, prop.getValue<float>()));
             }
         }
+
+        auto shaderType = cro::ShaderResource::Unlit;
+        if (def.type == MaterialDefinition::VertexLit)
+        {
+            shaderType = cro::ShaderResource::VertexLit;
+            if (def.textureIDs[MaterialDefinition::Normal])
+            {
+                def.shaderFlags |= cro::ShaderResource::NormalMap;
+            }
+        }
+
+        if (def.textureIDs[MaterialDefinition::Lightmap])
+        {
+            def.shaderFlags |= cro::ShaderResource::LightMap;
+        }
+
+        if (def.textureIDs[MaterialDefinition::Diffuse])
+        {
+            def.shaderFlags |= cro::ShaderResource::DiffuseMap;
+        }
+        else
+        {
+            def.shaderFlags |= cro::ShaderResource::DiffuseColour;
+        }
+
+        if (def.alphaClip > 0)
+        {
+            def.shaderFlags |= cro::ShaderResource::AlphaClip;
+        }
+
+        if (def.vertexColoured)
+        {
+            def.shaderFlags |= cro::ShaderResource::VertexColour;
+        }
+
+        if (def.receiveShadows)
+        {
+            def.shaderFlags |= cro::ShaderResource::RxShadows;
+        }
+
+        if (def.useRimlighing)
+        {
+            def.shaderFlags |= cro::ShaderResource::RimLighting;
+        }
+
+        def.shaderID = m_resources.shaders.loadBuiltIn(shaderType, def.shaderFlags);
+        def.materialData.setShader(m_resources.shaders.get(def.shaderID));
     }
     else
     {

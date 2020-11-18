@@ -43,6 +43,7 @@ source distribution.
 namespace cro
 {
     class Texture;
+    class Shader;
     namespace Material
     {
         /*
@@ -188,9 +189,16 @@ namespace cro
             */
             bool enableDepthTest = true;
 
+            /*!
+            \brief Applies a new shader to this material by updating the
+            the uniform and vertex attribute maps
+            */
+            void setShader(const Shader&);
+
+
             /*
             Here be dragons! Don't modify these variables as they are configured
-            by the material resource class when the material is created.
+            by the above function. These values should be considered read-only
             */
 
             uint32 shader = 0;
@@ -203,7 +211,7 @@ namespace cro
             //for example skinning and projection map data which is
             //used internally, and not user-definable
             std::size_t optionalUniformCount = 0;
-            std::array<int32, 3> optionalUniforms{};
+            std::array<int32, 10> optionalUniforms{};
         };
     }
 }
