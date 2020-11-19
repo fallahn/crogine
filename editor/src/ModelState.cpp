@@ -111,20 +111,6 @@ namespace
 
     const std::string prefPath = cro::FileSystem::getConfigDirectory("cro_model_viewer") + "prefs.cfg";
 
-    //tooltip for UI
-    void HelpMarker(const char* desc)
-    {
-        ImGui::TextDisabled("(?)");
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::BeginTooltip();
-            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-            ImGui::TextUnformatted(desc);
-            ImGui::PopTextWrapPos();
-            ImGui::EndTooltip();
-        }
-    }
-
     const std::array<float, 6> worldScales = { 0.01f, 0.1f, 1.f, 10.f, 100.f, 1000.f };
     const glm::vec3 DefaultCameraPosition({ 0.f, 0.25f, 5.f });
 
@@ -208,6 +194,8 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
     m_showPreferences       (false),
     m_showGroundPlane       (false),
     m_showSkybox            (false),
+    m_showAABB              (false),
+    m_showSphere            (false),
     m_selectedTexture       (std::numeric_limits<std::uint32_t>::max()),
     m_selectedMaterial      (std::numeric_limits<std::uint32_t>::max())
 {
@@ -333,29 +321,6 @@ void ModelState::loadAssets()
 void ModelState::createScene()
 {
     //create ground plane
-    const float GridWidth = 3.f;
-    std::vector<float> verts;
-    for (auto y = 0; y < 4; ++y)
-    {
-        for (auto x = 0; x < 4; ++x)
-        {
-            verts.push_back(static_cast<float>(x) - (GridWidth / 2.f));
-            verts.push_back(0.f);
-            verts.push_back(static_cast<float>(y) - (GridWidth / 2.f));
-
-            verts.push_back(1.f);
-            verts.push_back(1.f);
-            verts.push_back(1.f);
-            verts.push_back(1.f);
-        }
-    }
-    std::vector<std::uint32_t> indices =
-    {
-        0,3,15,12,0,
-        1,13,14,2,3,
-        7,4,8,11
-    };
-
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
@@ -364,16 +329,7 @@ void ModelState::createScene()
     auto material = m_resources.materials.get(materialIDs[MaterialID::DebugDraw]);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto& meshData = entity.getComponent<cro::Model>().getMeshData();
-    meshData.vertexCount = verts.size() / (meshData.vertexSize / sizeof(float));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-    auto& submesh = meshData.indexData[0];
-    submesh.indexCount = indices.size();
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    updateGridMesh(meshData, std::nullopt, std::nullopt);
     entities[EntityID::GroundPlane] = entity;
 
     //create the camera - using a custom camera prevents the scene updating the projection on window resize
@@ -445,12 +401,36 @@ void ModelState::buildUI()
                 {
                     if (ImGui::MenuItem("Open Model", nullptr, nullptr))
                     {
+                        if (m_preferences.workingDirectory.empty())
+                        {
+                            if (cro::FileSystem::showMessageBox("", "Working directory currently not set. Would you like to set one now?", cro::FileSystem::YesNo, cro::FileSystem::Question))
+                            {
+                                auto path = cro::FileSystem::openFolderDialogue(m_preferences.workingDirectory);
+                                if (!path.empty())
+                                {
+                                    m_preferences.workingDirectory = path;
+                                    std::replace(m_preferences.workingDirectory.begin(), m_preferences.workingDirectory.end(), '\\', '/');
+                                }
+                            }
+                        }
+
                         openModel();
                     }
+                    if (ImGui::MenuItem("Save", nullptr, nullptr, false))
+                    {
+                        //if a model is open overwrite the model def with current materials
+                    }
+                    if (ImGui::MenuItem("Save As...", nullptr, nullptr, false))
+                    {
+                        //if a model is open create a new model def with current materials
+                    }                    
+                    
                     if (ImGui::MenuItem("Close Model", nullptr, nullptr))
                     {
                         closeModel();
                     }
+
+                    ImGui::Separator();
 
                     if (ImGui::MenuItem("Import Model", nullptr, nullptr))
                     {
@@ -461,6 +441,8 @@ void ModelState::buildUI()
                         exportModel();
                     }
                     
+                    ImGui::Separator();
+
                     if (getStateCount() > 1)
                     {
                         if (ImGui::MenuItem("Return To World Editor"))
@@ -531,7 +513,7 @@ void ModelState::buildUI()
                         auto dir = m_preferences.workingDirectory.substr(0, 30) + "...";
                         ImGui::Text("%s", dir.c_str());
                         ImGui::SameLine();
-                        HelpMarker(m_preferences.workingDirectory.c_str());
+                        helpMarker(m_preferences.workingDirectory.c_str());
                     }
                     ImGui::SameLine();
                     if (ImGui::Button("Browse"))
@@ -609,6 +591,12 @@ void ModelState::openModel()
     if (!path.empty()
         && cro::FileSystem::getFileExtension(path) == ".cmt")
     {
+        std::replace(path.begin(), path.end(), '\\', '/');
+        if (path.find(m_preferences.workingDirectory) == std::string::npos)
+        {
+            cro::FileSystem::showMessageBox("Warning", "This model was not opened from the current working directory.");
+        }
+
         openModelAtPath(path);
 
         m_preferences.lastModelDirectory = cro::FileSystem::getFilePath(path);
@@ -632,7 +620,8 @@ void ModelState::openModelAtPath(const std::string& path)
         def.createModel(entities[EntityID::ActiveModel], m_resources);
         m_currentModelConfig.loadFromFile(path);
 
-        if (entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData().boundingSphere.radius > (2.f * worldScales[m_preferences.unitsPerMetre]))
+        const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+        if (meshData.boundingSphere.radius > (2.f * worldScales[m_preferences.unitsPerMetre]))
         {
             cro::Logger::log("Bounding sphere radius is very large - model may not be visible", cro::Logger::Type::Warning);
         }
@@ -739,6 +728,15 @@ void ModelState::openModelAtPath(const std::string& path)
                 addMaterialToBrowser(std::move(def));
             }
         }
+
+
+        //make sure to update the bounding display if needed
+        std::optional<float> sphere;
+        if (m_showSphere) sphere = meshData.boundingSphere.radius;
+
+        std::optional<cro::Box> box;
+        if (m_showAABB) box = meshData.boundingBox;
+        updateGridMesh(entities[EntityID::GroundPlane].getComponent<cro::Model>().getMeshData(), sphere, box);
     }
     else
     {
@@ -989,7 +987,8 @@ void ModelState::exportModel()
     //TODO assert we at least have valid header data
     //prevent accidentally writing a bad file
 
-    auto path = cro::FileSystem::saveFileDialogue(m_preferences.lastExportDirectory, "cmf");
+    auto path = cro::FileSystem::saveFileDialogue(m_preferences.lastExportDirectory + "/untitled", "cmf");
+    std::replace(path.begin(), path.end(), '\\', '/');
     if (!path.empty())
     {
         if (cro::FileSystem::getFileExtension(path) != ".cmf")
@@ -1046,7 +1045,7 @@ void ModelState::exportModel()
             path.back() = 't';
             
             //TODO make this an option so we don't accidentally overwrite files
-            if (!cro::FileSystem::fileExists(path))
+            //if (!cro::FileSystem::fileExists(path))
             {
                 cfg.save(path);
             }
@@ -1296,6 +1295,164 @@ void ModelState::updateMouseInput(const cro::Event& evt)
     }
 }
 
+void ModelState::updateGridMesh(cro::Mesh::Data& meshData, std::optional<float> radius, std::optional<cro::Box> boundingBox)
+{
+    std::vector<float> verts;
+    auto addVert = [&verts](glm::vec3 pos, glm::vec4 colour)
+    {
+        //pos
+        verts.push_back(pos.x);
+        verts.push_back(pos.y);
+        verts.push_back(pos.z);
+
+        //colour
+        verts.push_back(colour.r);
+        verts.push_back(colour.g);
+        verts.push_back(colour.b);
+        verts.push_back(colour.a);
+    };    
+    
+    //yeah we don't really need the middle 4 verts
+    //but it's just easier to build in a loop
+    const float GridWidth = 3.f;
+    const glm::vec4 grey(0.5f, 0.5f, 0.5f, 1.f);
+    for (auto y = 0; y < 4; ++y)
+    {
+        for (auto x = 0; x < 4; ++x)
+        {
+            addVert({ static_cast<float>(x) - (GridWidth / 2.f) , 0.f, static_cast<float>(y) - (GridWidth / 2.f) }, grey);
+        }
+    }
+    std::vector<std::uint32_t> indices =
+    {
+        0,3,15,12,0,
+        1,13,14,2,3,
+        7,4,8,11
+    };
+
+    auto vertStride = (meshData.vertexSize / sizeof(float));
+    std::vector<float> lastVert(verts.end() - vertStride, verts.end());
+    lastVert.back() = 0.f; //set alpha to zero. problem with vert colours means we dupe verts, but mehhhhh
+
+    auto currentIndex = static_cast<std::uint32_t>(verts.size() / vertStride);
+
+    const glm::vec4 transparent(0.f);
+
+    if (radius)
+    {
+        const glm::vec4 green(0.1f, 0.9f, 0.4f, 1.f);
+        constexpr std::int32_t SegmentCount = 16;
+        constexpr float step = cro::Util::Const::TAU / SegmentCount;
+        float rad = radius.value();
+
+        std::vector<glm::vec2> points;
+        for (auto i = 0; i < SegmentCount; ++i)
+        {
+            points.emplace_back(std::sin(i * step), std::cos(i * step));
+            points.back() *= rad;
+        }
+
+        //draw the circle in all 3 planes
+        //starting with transparent segment
+        verts.insert(verts.end(), lastVert.begin(), lastVert.end());
+        indices.push_back(currentIndex++);
+
+        addVert({ points.front().x, points.front().y, 0.f }, transparent);
+        indices.push_back(currentIndex++);
+
+        for (auto p : points)
+        {
+            addVert({ p.x, p.y, 0.f }, green);
+            indices.push_back(currentIndex++);
+        }
+        //close the circle
+        indices.push_back(currentIndex - static_cast<std::uint32_t>(points.size()));
+
+        //transparent segment
+        addVert({ points.back().x, points.back().y, 0.f }, transparent);
+        indices.push_back(currentIndex++);
+
+
+        addVert({ points.front().x, 0.f, points.front().y }, transparent);
+        indices.push_back(currentIndex++);
+
+        for (auto p : points)
+        {
+            addVert({ p.x, 0.f, p.y }, green);
+            indices.push_back(currentIndex++);
+        }
+        //close the circle
+        indices.push_back(currentIndex - static_cast<std::uint32_t>(points.size()));
+
+        //transparent segment
+        addVert({ points.back().x, 0.f, points.back().y }, transparent);
+        indices.push_back(currentIndex++);
+
+
+        addVert({ 0.f, points.front().x, points.front().y }, transparent);
+        indices.push_back(currentIndex++);
+
+        for (auto p : points)
+        {
+            addVert({ 0.f, p.x, p.y }, green);
+            indices.push_back(currentIndex++);
+        }
+        //close the circle
+        indices.push_back(currentIndex - static_cast<std::uint32_t>(points.size()));
+
+        //update lastVert in case we're also builind an AABB
+        lastVert = { verts.end() - vertStride, verts.end() };
+        lastVert.back() = 0.f;
+    }
+
+    if (boundingBox)
+    {
+        const glm::vec4 red(0.8f, 0.3f, 0.2f, 1.f);
+        cro::Box box = boundingBox.value();
+
+        //transparent seg
+        verts.insert(verts.end(), lastVert.begin(), lastVert.end());
+        indices.push_back(currentIndex++);
+
+        addVert(box[0], transparent);
+        indices.push_back(currentIndex++);
+
+        //create the 8 verts
+        addVert(box[0], red);
+        addVert({ box[1].x, box[0].y, box[0].z }, red);
+        addVert({ box[0].x, box[0].y, box[1].z }, red);
+        addVert({ box[1].x, box[0].y, box[1].z }, red);
+
+        addVert({ box[0].x, box[1].y, box[0].z }, red);
+        addVert({ box[1].x, box[1].y, box[0].z }, red);
+        addVert({ box[0].x, box[1].y, box[1].z }, red);
+        addVert(box[1], red);
+
+
+        //then add the indices
+        std::vector<std::uint32_t> boxIndices =
+        {
+            0,1,3,2,0,  4,5,7,6,4,6,  2,3,7,5,1
+        };
+        for (auto i : boxIndices)
+        {
+            indices.push_back(i + currentIndex);
+        }
+    }
+
+
+    meshData.vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto& submesh = meshData.indexData[0];
+    submesh.indexCount = indices.size();
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+}
+
 std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
 {
     auto fileName = cro::FileSystem::getFileName(path);
@@ -1509,38 +1666,42 @@ void ModelState::drawInspector()
 
                 if (!m_importedVBO.empty())
                 {
+                    ImGui::NewLine();
                     ImGui::Separator();
-
+                    ImGui::NewLine();
+                    ImGui::Text("Imported Mesh Info:");
                     std::string flags = "Flags:\n";
                     if (m_importedHeader.flags & cro::VertexProperty::Position)
                     {
-                        flags += "Position\n";
+                        flags += "  Position\n";
                     }
                     if (m_importedHeader.flags & cro::VertexProperty::Colour)
                     {
-                        flags += "Colour\n";
+                        flags += "  Colour\n";
                     }
                     if (m_importedHeader.flags & cro::VertexProperty::Normal)
                     {
-                        flags += "Normal\n";
+                        flags += "  Normal\n";
                     }
                     if (m_importedHeader.flags & cro::VertexProperty::Tangent)
                     {
-                        flags += "Tan/Bitan\n";
+                        flags += "  Tan/Bitan\n";
                     }
                     if (m_importedHeader.flags & cro::VertexProperty::UV0)
                     {
-                        flags += "Texture Coords\n";
+                        flags += "  Texture Coords\n";
                     }
                     if (m_importedHeader.flags & cro::VertexProperty::UV1)
                     {
-                        flags += "Shadowmap Coords\n";
+                        flags += "  Shadowmap Coords\n";
                     }
                     ImGui::Text("%s", flags.c_str());
+                    
+                    ImGui::NewLine();
                     ImGui::Text("Materials: %d", m_importedHeader.arrayCount);
 
                     ImGui::NewLine();
-                    ImGui::Text("Transform"); ImGui::SameLine(); HelpMarker("Double Click to change Values");
+                    ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");
                     if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], -180.f, 180.f))
                     {
                         entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(m_importedTransform.rotation * cro::Util::Const::degToRad);
@@ -1550,67 +1711,126 @@ void ModelState::drawInspector()
                         //scale needs to be uniform, else we'd have to recalc all the normal data
                         entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
                     }
-                    if (ImGui::Button("Apply"))
+                    if (ImGui::Button("Apply Transform"))
                     {
                         applyImportTransform();
                     }
                     ImGui::SameLine();
-                    HelpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.");
+                    helpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.");
+
+                    ImGui::NewLine();
+                    if (ImGui::Button("Export##01"))
+                    {
+                        exportModel();
+                    }
+                    ImGui::SameLine();
+                    helpMarker("Export this model to Crogine format, and create a model definition file.\nThe model will then be automatically re-opened for material editing.");
                 }
-
-
-                if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+                else
                 {
-                    auto& skeleton = entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
-
                     ImGui::NewLine();
                     ImGui::Separator();
                     ImGui::NewLine();
-
-                    ImGui::Text("Animations: %d", skeleton.animations.size());
-                    static std::string label("Stopped");
-                    if (skeleton.animations.empty())
+                    const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+                    ImGui::Text("Materials:");
+                    for (auto i = 0u; i < meshData.submeshCount; ++i)
                     {
-                        label = "No Animations Found.";
+                        ImGui::Text("Material Placeholder");
                     }
-                    else
+                    ImGui::NewLine();
+                    ImGui::Text("Vertex Attributes:");
+                    for (auto i = 0u; i < meshData.attributes.size(); ++i)
                     {
-                        static int currentAnim = 0;
-                        auto prevAnim = currentAnim;
-
-                        if (ImGui::InputInt("Anim", &currentAnim, 1, 1)
-                            && !skeleton.animations[currentAnim].playing)
+                        if (meshData.attributes[i] > 0)
                         {
-                            currentAnim = std::min(currentAnim, static_cast<int>(skeleton.animations.size()) - 1);
+                            ImGui::Text("  Attrib placeholder");
+                        }
+                    }
+
+                    ImGui::NewLine();
+                    //TODO make these members so their state can be read when opening a new model
+                    bool refreshBounds = false;
+                    if (ImGui::Checkbox("Show AABB", &m_showAABB))
+                    {
+                        //toggle box
+                        refreshBounds = true;
+                    }
+
+                    if (ImGui::Checkbox("Show Bounding Sphere", &m_showSphere))
+                    {
+                        //toggle sphere display
+                        refreshBounds = true;
+                    }
+                    if (refreshBounds)
+                    {
+                        std::optional<float> sphere;
+                        if (m_showSphere) sphere = meshData.boundingSphere.radius;
+                        
+                        std::optional<cro::Box> box;
+                        if (m_showAABB) box = meshData.boundingBox;
+
+                        updateGridMesh(entities[EntityID::GroundPlane].getComponent<cro::Model>().getMeshData(), sphere, box);
+                    }
+
+                    if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+                    {
+                        auto& skeleton = entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+
+                        ImGui::NewLine();
+                        ImGui::Separator();
+                        ImGui::NewLine();
+
+                        static bool showSkeleton = false;
+                        if (ImGui::Checkbox("Show Skeleton", &showSkeleton))
+                        {
+                            //TODO toggle skeleton display
+                        }
+
+                        ImGui::Text("Animations: %d", skeleton.animations.size());
+                        static std::string label("Stopped");
+                        if (skeleton.animations.empty())
+                        {
+                            label = "No Animations Found.";
                         }
                         else
                         {
-                            currentAnim = prevAnim;
-                        }
+                            static int currentAnim = 0;
+                            auto prevAnim = currentAnim;
 
-                        ImGui::SameLine();
-                        if (skeleton.animations[currentAnim].playing)
-                        {
-                            if (ImGui::Button("Stop"))
+                            if (ImGui::InputInt("Anim", &currentAnim, 1, 1)
+                                && !skeleton.animations[currentAnim].playing)
                             {
-                                skeleton.animations[currentAnim].playing = false;
-                                label = "Stopped";
-                            }
-                        }
-                        else
-                        {
-                            if (ImGui::Button("Play"))
-                            {
-                                skeleton.play(currentAnim);
-                                label = "Playing " + skeleton.animations[currentAnim].name;
+                                currentAnim = std::min(currentAnim, static_cast<int>(skeleton.animations.size()) - 1);
                             }
                             else
                             {
-                                label = "Stopped";
+                                currentAnim = prevAnim;
+                            }
+
+                            ImGui::SameLine();
+                            if (skeleton.animations[currentAnim].playing)
+                            {
+                                if (ImGui::Button("Stop"))
+                                {
+                                    skeleton.animations[currentAnim].playing = false;
+                                    label = "Stopped";
+                                }
+                            }
+                            else
+                            {
+                                if (ImGui::Button("Play"))
+                                {
+                                    skeleton.play(currentAnim);
+                                    label = "Playing " + skeleton.animations[currentAnim].name;
+                                }
+                                else
+                                {
+                                    label = "Stopped";
+                                }
                             }
                         }
+                        ImGui::Text("%s", label.c_str());
                     }
-                    ImGui::Text("%s", label.c_str());
                 }
             }
             

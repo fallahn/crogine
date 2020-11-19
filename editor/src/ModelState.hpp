@@ -41,6 +41,7 @@ source distribution.
 
 #include <map>
 #include <memory>
+#include <optional>
 
 class ModelState final : public cro::State, public cro::GuiClient
 {
@@ -103,10 +104,14 @@ private:
     void loadPrefs();
     void savePrefs();
 
+    bool m_showAABB;
+    bool m_showSphere;
     void updateWorldScale();
     void updateNormalVis();
+    void updateGridMesh(cro::Mesh::Data&, std::optional<float>, std::optional<cro::Box>);
 
     void updateMouseInput(const cro::Event&);
+
 
     struct MaterialTexture final
     {
