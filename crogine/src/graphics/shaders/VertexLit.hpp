@@ -68,7 +68,7 @@ namespace cro
 
                 uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;
-                uniform mat3 u_normalMatrix;                
+                uniform mat3 u_normalMatrix;
                 uniform mat4 u_projectionMatrix;
 
                 #if defined(RX_SHADOWS)
