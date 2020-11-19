@@ -98,16 +98,25 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
 
     //create shader defines based on flags
     std::string defines;
+    bool needUVs = false;
     if (flags & BuiltInFlags::DiffuseMap)
     {
-        defines += "\n#define TEXTURED";
+        needUVs = true;
+        defines += "\n#define DIFFUSE_MAP";
     }
     if (flags & BuiltInFlags::NormalMap)
     {
+        needUVs = true;
         defines += "\n#define BUMP";
+    }
+    if (flags & BuiltInFlags::MaskMap)
+    {
+        needUVs = true;
+        defines += "\n#define MASK_MAP";
     }
     if (flags & BuiltInFlags::LightMap)
     {
+        needUVs = true;
         defines += "\n#define LIGHTMAPPED";
     }
     if (flags & BuiltInFlags::VertexColour)
@@ -162,6 +171,10 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
     if (flags & BuiltInFlags::LockScale)
     {
         defines += "\n#define LOCK_SCALE";
+    }
+    if (needUVs)
+    {
+        defines += "\n#define TEXTURED";
     }
     defines += "\n";
 

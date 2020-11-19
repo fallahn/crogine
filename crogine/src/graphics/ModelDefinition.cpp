@@ -260,6 +260,13 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                     flags |= ShaderResource::NormalMap;
                 }
             }
+            else if (name == "mask")
+            {
+                if (!p.getValue<std::string>().empty())
+                {
+                    flags |= ShaderResource::MaskMap;
+                }
+            }
             else if (name == "subrect")
             {
                 if (!p.getValue<std::string>().empty())

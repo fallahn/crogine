@@ -1375,6 +1375,11 @@ void ModelState::addMaterialToBrowser(MaterialDefinition&& def)
         def.shaderFlags |= cro::ShaderResource::LightMap;
     }
 
+    if (def.textureIDs[MaterialDefinition::Mask])
+    {
+        def.shaderFlags |= cro::ShaderResource::MaskMap;
+    }
+
     if (def.textureIDs[MaterialDefinition::Diffuse])
     {
         def.shaderFlags |= cro::ShaderResource::DiffuseMap;
@@ -1421,16 +1426,22 @@ void ModelState::addMaterialToBrowser(MaterialDefinition&& def)
 
 void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
 {
-    //auto& matDef = m_materialDefs[m_selectedMaterial];
-
     if (matDef.textureIDs[MaterialDefinition::Diffuse])
     {
         matDef.materialData.setProperty("u_diffuseMap", *m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Diffuse]).texture);
+        if (matDef.alphaClip > 0)
+        {
+            matDef.materialData.setProperty("u_alphaClip", matDef.alphaClip);
+        }
     }
 
     if (matDef.textureIDs[MaterialDefinition::Mask])
     {
         matDef.materialData.setProperty("u_maskMap", *m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Mask]).texture);
+    }
+    else if(matDef.type == MaterialDefinition::VertexLit)
+    {
+        matDef.materialData.setProperty("u_maskColour", matDef.maskColour);
     }
 
     if (matDef.textureIDs[MaterialDefinition::Normal])
@@ -1446,18 +1457,12 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
     if (matDef.shaderFlags & cro::ShaderResource::DiffuseColour)
     {
         matDef.materialData.setProperty("u_colour", matDef.colour);
-        matDef.materialData.setProperty("u_maskColour", matDef.maskColour);
     }
 
     if (matDef.useRimlighing)
     {
         matDef.materialData.setProperty("u_rimColour", matDef.rimlightColour);
         matDef.materialData.setProperty("u_rimFalloff", matDef.rimlightFalloff);
-    }
-
-    if (matDef.alphaClip > 0)
-    {
-        matDef.materialData.setProperty("u_alphaClip", matDef.alphaClip);
     }
 
     matDef.materialData.blendMode = matDef.blendMode;
@@ -1736,6 +1741,11 @@ void ModelState::drawInspector()
                     {
                         applyMaterial = true;
                     }
+
+                    if (matDef.textureIDs[MaterialDefinition::Mask] != 0)
+                    {
+                        shaderFlags |= cro::ShaderResource::MaskMap;
+                    }
                 }
 
                 if (type != MaterialDefinition::Unlit)
@@ -1796,16 +1806,19 @@ void ModelState::drawInspector()
                     helpMarker("If the Mask texture map is not set then this defines the mask colour of the material");
                 }
 
-                ImGui::NewLine();
-                if (ImGui::SliderFloat("Alpha Clip", &matDef.alphaClip, 0.f, 1.f))
+                if (matDef.textureIDs[MaterialDefinition::Diffuse])
                 {
-                    applyMaterial = true;
-                }
-                ImGui::SameLine();
-                helpMarker("Alpha values of the diffuse colour below this value will cause the current fragment to be discarded");
-                if (matDef.alphaClip > 0)
-                {
-                    shaderFlags |= cro::ShaderResource::AlphaClip;
+                    ImGui::NewLine();
+                    if (ImGui::SliderFloat("Alpha Clip", &matDef.alphaClip, 0.f, 1.f))
+                    {
+                        applyMaterial = true;
+                    }
+                    ImGui::SameLine();
+                    helpMarker("Alpha values of the diffuse colour below this value will cause the current fragment to be discarded");
+                    if (matDef.alphaClip > 0)
+                    {
+                        shaderFlags |= cro::ShaderResource::AlphaClip;
+                    }
                 }
 
                 ImGui::NewLine();
