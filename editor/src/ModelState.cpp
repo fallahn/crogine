@@ -1786,7 +1786,7 @@ void ModelState::drawInspector()
                 ImGui::NewLine();
                 if (matDef.textureIDs[MaterialDefinition::Diffuse] == 0)
                 {
-                    if (ImGui::ColorEdit3("Diffuse Colour", matDef.colour.asArray()))
+                    if (ImGui::ColorEdit4("Diffuse Colour", matDef.colour.asArray()))
                     {
                         applyMaterial = true;
                     }
@@ -1864,6 +1864,7 @@ void ModelState::drawInspector()
                 ImGui::NewLine();
                 ImGui::Text("Blend Mode:");
                 ImGui::PushItemWidth(size.x * ui::TextBoxWidth);
+                auto oldMode = matDef.blendMode;
                 if (ImGui::BeginCombo("##BlendMode", BlendStrings[static_cast<std::int32_t>(matDef.blendMode)]))
                 {
                     for (auto i = 0; i < BlendStrings.size(); ++i)
@@ -1881,6 +1882,10 @@ void ModelState::drawInspector()
                     }
 
                     ImGui::EndCombo();
+                }
+                if (oldMode != matDef.blendMode)
+                {
+                    applyMaterial = true;
                 }
                 ImGui::PopItemWidth();
 

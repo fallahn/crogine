@@ -45,7 +45,7 @@ struct MaterialDefinition final
         Unlit, VertexLit, PBR,
 
         Count
-    }type = Unlit;
+    }type = VertexLit;
 
     enum TextureID
     {
@@ -58,7 +58,7 @@ struct MaterialDefinition final
     };
     std::array<std::uint32_t, TextureID::Size> textureIDs = {};
 
-    cro::Colour colour = glm::vec4(1.f);
+    cro::Colour colour = glm::vec4(1.f, 0.f, 1.f, 1.f);
     cro::Colour maskColour = glm::vec4(1.f, 1.f, 0.f, 1.f);
     cro::Colour rimlightColour = glm::vec4(1.f);
 
