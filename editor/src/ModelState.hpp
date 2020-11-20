@@ -130,6 +130,8 @@ private:
     cro::Entity m_previewEntity;
     void applyPreviewSettings(MaterialDefinition&);
 
+    std::vector<std::int32_t> m_activeMaterials; //indices into the materials array of materials used on the currently open model. -1 means default material is applied
+
     void updateLayout(std::int32_t, std::int32_t);
     void drawInspector();
     void drawBrowser();

@@ -169,6 +169,7 @@ namespace
             if (cro::FileSystem::showMessageBox("Confirm", "Clear this slot? Drag a texture from the browser to set it", cro::FileSystem::YesNo, cro::FileSystem::Question))
             {
                 dest = 0;
+                retVal = true;
             }
         }
 
@@ -196,6 +197,47 @@ namespace
 
         ImGui::SameLine();
         helpMarker("Drag a texture from the Texture Browser to fill the slot, or click the icon to clear it.");
+        return retVal;
+    }
+
+    bool drawMaterialSlot(const std::string label, std::int32_t& dest, std::uint32_t thumbnail)
+    {
+        bool retVal = false;
+
+        glm::vec2 imgSize = WindowLayouts[WindowID::MaterialSlot].second;
+        if (ImGui::ImageButton((void*)(std::size_t)thumbnail, { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
+        {
+            if (cro::FileSystem::showMessageBox("Confirm", "Clear this slot? Drag a material from the browser to set it", cro::FileSystem::YesNo, cro::FileSystem::Question))
+            {
+                dest = -1;
+                retVal = true;
+            }
+        }
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MATERIAL_SRC"))
+            {
+                auto old = dest;
+                CRO_ASSERT(payload->DataSize == sizeof(std::int32_t), "");
+                dest = *(const std::uint32_t*)payload->Data;
+                retVal = (dest != old);
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        ImGui::SameLine();
+
+        //seems a waste to keep calling this but hey
+        auto textSize = ImGui::CalcTextSize("Aty");
+
+        auto pos = ImGui::GetCursorPosY();
+        pos += (imgSize.y - textSize.y) / 2.f;
+        ImGui::SetCursorPosY(pos);
+        ImGui::Text("%s", label.c_str());
+
+        ImGui::SameLine();
+        helpMarker("Drag a texture from the Material Browser to fill the slot, or click the icon to clear it.");
         return retVal;
     }
 }
@@ -740,6 +782,7 @@ void ModelState::openModelAtPath(const std::string& path)
                 }
 
                 def.submeshIDs.push_back(submeshID++);
+                m_activeMaterials.push_back(static_cast<std::int32_t>(m_materialDefs.size()));
                 addMaterialToBrowser(std::move(def));
             }
         }
@@ -777,13 +820,14 @@ void ModelState::closeModel()
     m_currentModelConfig = {};
 
     //remove any IDs from active materials
-    //TODO this could be slow if there are a lot of
-    //materials so instead use the active material
-    //list and update only those instead
-    for (auto& matDef : m_materialDefs)
+    for (auto i : m_activeMaterials)
     {
-        matDef.submeshIDs.clear();
+        if (i > -1)
+        {
+            m_materialDefs[i].submeshIDs.clear();
+        }
     }
+    m_activeMaterials.clear();
 }
 
 void ModelState::importModel()
@@ -1757,9 +1801,45 @@ void ModelState::drawInspector()
                     ImGui::NewLine();
                     const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
                     ImGui::Text("Materials:");
+                    CRO_ASSERT(meshData.submeshCount == m_activeMaterials.size(), "");
                     for (auto i = 0u; i < meshData.submeshCount; ++i)
                     {
-                        ImGui::Text("Material Placeholder");
+                        std::uint32_t texID = m_blackTexture.getGLHandle();
+                        std::string matName = "Default";
+                        if (m_activeMaterials[i] > -1)
+                        {
+                            texID = m_materialDefs[m_activeMaterials[i]].previewTexture.getTexture().getGLHandle();
+                            matName = m_materialDefs[m_activeMaterials[i]].name;
+                        }
+
+                        auto oldIndex = m_activeMaterials[i];
+                        if (drawMaterialSlot(matName, m_activeMaterials[i], texID))
+                        {
+                            //remove this index from the material which was unassigned
+                            if (oldIndex > -1)
+                            {
+                                auto& oldMat = m_materialDefs[oldIndex];
+                                oldMat.submeshIDs.erase(std::remove_if(oldMat.submeshIDs.begin(), oldMat.submeshIDs.end(), 
+                                    [i](std::int32_t a)
+                                    {
+                                        return a == i;
+                                    }), oldMat.submeshIDs.end());
+                            }
+
+                            //add this index to the new material
+                            if (m_activeMaterials[i] > -1)
+                            {
+                                m_materialDefs[m_activeMaterials[i]].submeshIDs.push_back(i);
+
+                                //and update the actual model
+                                entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(i, m_materialDefs[m_activeMaterials[i]].materialData);
+                            }
+                            else
+                            {
+                                //apply default material
+                                entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(i, m_resources.materials.get(materialIDs[MaterialID::Default]));
+                            }
+                        }
                     }
                     ImGui::NewLine();
                     ImGui::Text("Vertex Attributes:");
