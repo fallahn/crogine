@@ -49,7 +49,12 @@ namespace EntityID
 {
     enum
     {
-        GroundPlane, ActiveModel, CamController, NormalVis, Count
+        GroundPlane, //< also has AABB and Sphere attached
+        ActiveModel, //< model being viewed
+        CamController, //< actually has the ground plane / model attached to it, camera stays still
+        NormalVis,
+        
+        Count
     };
 }
 

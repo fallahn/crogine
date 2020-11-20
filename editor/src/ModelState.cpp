@@ -485,7 +485,7 @@ void ModelState::buildUI()
                         //if a model is open create a new model def with current materials
                     }                    
                     
-                    if (ImGui::MenuItem("Close Model", nullptr, nullptr))
+                    if (ImGui::MenuItem("Close Model", nullptr, nullptr, entities[EntityID::ActiveModel].isValid()))
                     {
                         closeModel();
                     }
@@ -586,30 +586,30 @@ void ModelState::buildUI()
                         }
                     }
 
-                    ImGui::PushItemWidth(100.f);
-                    //world scale selection
-                    const char* items[] = { "0.01", "0.1", "1", "10", "100", "1000" };
-                    static const char* currentItem = items[m_preferences.unitsPerMetre];
-                    if (ImGui::BeginCombo("World Scale (units per metre)", currentItem))
-                    {
-                        for (auto i = 0u; i < worldScales.size(); ++i)
-                        {
-                            bool selected = (currentItem == items[i]);
-                            if (ImGui::Selectable(items[i], selected))
-                            {
-                                currentItem = items[i];
-                                m_preferences.unitsPerMetre = i;
-                                updateWorldScale();
-                            }
+                    //ImGui::PushItemWidth(100.f);
+                    ////world scale selection
+                    //const char* items[] = { "0.01", "0.1", "1", "10", "100", "1000" };
+                    //static const char* currentItem = items[m_preferences.unitsPerMetre];
+                    //if (ImGui::BeginCombo("World Scale (units per metre)", currentItem))
+                    //{
+                    //    for (auto i = 0u; i < worldScales.size(); ++i)
+                    //    {
+                    //        bool selected = (currentItem == items[i]);
+                    //        if (ImGui::Selectable(items[i], selected))
+                    //        {
+                    //            currentItem = items[i];
+                    //            m_preferences.unitsPerMetre = i;
+                    //            updateWorldScale();
+                    //        }
 
-                            if (selected)
-                            {
-                                ImGui::SetItemDefaultFocus();
-                            }
-                        }
-                        ImGui::EndCombo();
-                    }
-                    ImGui::PopItemWidth();
+                    //        if (selected)
+                    //        {
+                    //            ImGui::SetItemDefaultFocus();
+                    //        }
+                    //    }
+                    //    ImGui::EndCombo();
+                    //}
+                    //ImGui::PopItemWidth();
                     
                     ImGui::NewLine();
                     ImGui::Separator();
@@ -789,9 +789,25 @@ void ModelState::openModelAtPath(const std::string& path)
                 def.submeshIDs.push_back(submeshID++);
                 m_activeMaterials.push_back(static_cast<std::int32_t>(m_materialDefs.size()));
                 addMaterialToBrowser(std::move(def));
+
+                //don't add more materials than we can use
+                if (m_activeMaterials.size() == meshData.submeshCount)
+                {
+                    break;
+                }
             }
         }
 
+        if (m_activeMaterials.size() < meshData.submeshCount)
+        {
+            //pad with default material
+            auto defMat = m_resources.materials.get(materialIDs[MaterialID::Default]);
+            for (auto i = m_activeMaterials.size(); i < meshData.submeshCount; ++i)
+            {
+                m_activeMaterials.push_back(-1);
+                entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(i, defMat);
+            }
+        }
 
         //make sure to update the bounding display if needed
         std::optional<float> sphere;
@@ -1365,8 +1381,7 @@ void ModelState::updateMouseInput(const cro::Event& evt)
     else if (evt.motion.state & SDL_BUTTON_MMASK)
     {
         auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
-        //TODO multiply this by zoom factor
-        tx.move((glm::vec3(evt.motion.xrel, -evt.motion.yrel, 0.f) / 60.f) * worldScales[m_preferences.unitsPerMetre]);
+        tx.move((glm::vec3(evt.motion.xrel, -evt.motion.yrel, 0.f) / 160.f) * worldScales[m_preferences.unitsPerMetre]);
     }
 }
 
@@ -1734,18 +1749,12 @@ void ModelState::drawInspector()
             //model details
             if (entities[EntityID::ActiveModel].isValid())
             {
-                std::string worldScale("World Scale:\n");
-                worldScale += std::to_string(worldScales[m_preferences.unitsPerMetre]);
-                worldScale += " units per metre";
-                ImGui::Text("%s", worldScale.c_str());
-
                 if (!m_importedVBO.empty())
                 {
-                    ImGui::NewLine();
+                    ImGui::Text("Material / Submesh Count: %d", m_importedHeader.arrayCount);
                     ImGui::Separator();
-                    ImGui::NewLine();
-                    ImGui::Text("Imported Mesh Info:");
-                    std::string flags = "Flags:\n";
+
+                    std::string flags = "Vertex Attributes:\n";
                     if (m_importedHeader.flags & cro::VertexProperty::Position)
                     {
                         flags += "  Position\n";
@@ -1773,7 +1782,7 @@ void ModelState::drawInspector()
                     ImGui::Text("%s", flags.c_str());
                     
                     ImGui::NewLine();
-                    ImGui::Text("Materials: %d", m_importedHeader.arrayCount);
+                    ImGui::Separator();
 
                     ImGui::NewLine();
                     ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");
@@ -1794,7 +1803,7 @@ void ModelState::drawInspector()
                     helpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.");
 
                     ImGui::NewLine();
-                    if (ImGui::Button("Export##01"))
+                    if (ImGui::Button("Convert##01"))
                     {
                         exportModel();
                     }
@@ -1803,12 +1812,9 @@ void ModelState::drawInspector()
                 }
                 else
                 {
-                    ImGui::NewLine();
-                    ImGui::Separator();
-                    ImGui::NewLine();
                     const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
                     ImGui::Text("Materials:");
-                    CRO_ASSERT(meshData.submeshCount == m_activeMaterials.size(), "");
+                    CRO_ASSERT(meshData.submeshCount <= m_activeMaterials.size(), "");
                     for (auto i = 0u; i < meshData.submeshCount; ++i)
                     {
                         std::uint32_t texID = m_magentaTexture.getGLHandle();
@@ -1859,6 +1865,7 @@ void ModelState::drawInspector()
                     }
 
                     ImGui::NewLine();
+                    ImGui::Separator();
                     bool refreshBounds = false;
                     if (ImGui::Checkbox("Show AABB", &m_showAABB))
                     {
