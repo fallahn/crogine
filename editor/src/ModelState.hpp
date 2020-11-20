@@ -61,6 +61,8 @@ private:
     cro::Scene m_previewScene;
     cro::ResourceCollection m_resources;
 
+    float m_fov;
+
     struct Preferences final
     {
         std::string workingDirectory;

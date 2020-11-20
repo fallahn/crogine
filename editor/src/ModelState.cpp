@@ -103,9 +103,9 @@ namespace
     };
 
     const float DefaultFOV = 35.f * cro::Util::Const::degToRad;
+    const float MaxFOV = 120.f * cro::Util::Const::degToRad;
+    const float MinFOV = 5.f * cro::Util::Const::degToRad;
     const float DefaultFarPlane = 50.f;
-    const float MinZoom = 0.1f;
-    const float MaxZoom = 2.5f;
 
     void updateView(cro::Entity entity, float farPlane, float fov)
     {
@@ -246,6 +246,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
 	: cro::State            (stack, context),
     m_scene                 (context.appInstance.getMessageBus()),
     m_previewScene          (context.appInstance.getMessageBus()),
+    m_fov                   (DefaultFOV),
     m_showPreferences       (false),
     m_showGroundPlane       (false),
     m_showSkybox            (false),
@@ -286,8 +287,8 @@ bool ModelState::handleEvent(const cro::Event& evt)
         break;
     case SDL_MOUSEWHEEL:
     {
-        float acceleration = m_scene.getActiveCamera().getComponent<cro::Transform>().getPosition().z / DefaultCameraPosition.z;
-        m_scene.getActiveCamera().getComponent<cro::Transform>().move(glm::vec3(0.f, 0.f, -(evt.wheel.y * 0.5f)) * worldScales[m_preferences.unitsPerMetre] * acceleration);
+        m_fov = std::min(MaxFOV, std::max(MinFOV, m_fov - (evt.wheel.y * 0.1f)));
+        updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
     }
         break;
     }
@@ -305,7 +306,7 @@ void ModelState::handleMessage(const cro::Message& msg)
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             updateLayout(data.data0, data.data1);
-            updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], DefaultFOV);
+            updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_fov);
         }
     }
 
@@ -811,6 +812,7 @@ void ModelState::closeModel()
     if (entities[EntityID::ActiveModel].isValid())
     {
         m_scene.destroyEntity(entities[EntityID::ActiveModel]);
+        entities[EntityID::ActiveModel] = {};
 
         m_importedIndexArrays.clear();
         m_importedVBO.clear();
@@ -819,6 +821,7 @@ void ModelState::closeModel()
     if (entities[EntityID::NormalVis].isValid())
     {
         m_scene.destroyEntity(entities[EntityID::NormalVis]);
+        entities[EntityID::NormalVis] = {};
     }
 
     m_currentModelConfig = {};
@@ -1307,7 +1310,7 @@ void ModelState::updateWorldScale()
     m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(DefaultCameraPosition * scale);
     
     entities[EntityID::CamController].getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
-    updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], DefaultFOV);
+    updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_fov);
 }
 
 void ModelState::updateNormalVis()
@@ -2222,7 +2225,7 @@ void ModelState::drawInspector()
                     exportMaterial();
                 }
                 ImGui::SameLine();
-                helpMarker("Export this material to a Material Definition file which cane be loaded by the Material Browser");
+                helpMarker("Export this material to a Material Definition file which can be loaded by the Material Browser");
 
 
                 if (matDef.shaderFlags != shaderFlags
