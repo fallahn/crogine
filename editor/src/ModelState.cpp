@@ -325,7 +325,7 @@ void ModelState::render()
     //render active material preview
     if (!m_materialDefs.empty())
     {
-        m_materialDefs[m_selectedMaterial].previewTexture.clear(cro::Colour(0.f,0.f,0.f,0.2f));
+        m_materialDefs[m_selectedMaterial].previewTexture.clear(ui::PreviewClearColour);
         m_previewScene.render(m_materialDefs[m_selectedMaterial].previewTexture);
         m_materialDefs[m_selectedMaterial].previewTexture.display();
     }
@@ -371,6 +371,10 @@ void ModelState::loadAssets()
     LOG("Add creating textures from images", cro::Logger::Type::Info);
     m_blackTexture.create(2, 2);
     m_blackTexture.update(img.getPixelData());
+
+    img.create(2, 2, cro::Colour::Magenta());
+    m_magentaTexture.create(2, 2);
+    m_magentaTexture.update(img.getPixelData());
 }
 
 void ModelState::createScene()
@@ -1641,7 +1645,7 @@ void ModelState::addMaterialToBrowser(MaterialDefinition&& def)
     applyPreviewSettings(def);
     m_previewEntity.getComponent<cro::Model>().setMaterial(0, def.materialData);
 
-    def.previewTexture.clear(cro::Colour(0.f, 0.f, 0.f, 0.2f));
+    def.previewTexture.clear(ui::PreviewClearColour);
     m_previewScene.render(def.previewTexture);
     def.previewTexture.display();
 
@@ -1804,7 +1808,7 @@ void ModelState::drawInspector()
                     CRO_ASSERT(meshData.submeshCount == m_activeMaterials.size(), "");
                     for (auto i = 0u; i < meshData.submeshCount; ++i)
                     {
-                        std::uint32_t texID = m_blackTexture.getGLHandle();
+                        std::uint32_t texID = m_magentaTexture.getGLHandle();
                         std::string matName = "Default";
                         if (m_activeMaterials[i] > -1)
                         {
@@ -2337,12 +2341,41 @@ void ModelState::drawBrowser()
                 if (!m_materialDefs.empty()
                     && cro::FileSystem::showMessageBox("Delete?", "Remove the selected material?", cro::FileSystem::YesNo, cro::FileSystem::Question))
                 {
+                    //if the material is in use remove it from the model
+                    if (!m_materialDefs[m_selectedMaterial].submeshIDs.empty())
+                    {
+                        auto defMat = m_resources.materials.get(materialIDs[MaterialID::Default]);
+                        for (auto i : m_materialDefs[m_selectedMaterial].submeshIDs)
+                        {
+                            m_activeMaterials[i] = -1;
+                            entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(i, defMat);
+                        }
+                    }
+
                     m_materialDefs.erase(m_materialDefs.begin() + m_selectedMaterial);
                     if (m_selectedMaterial >= m_materialDefs.size()
                         && !m_materialDefs.empty())
                     {
                         m_selectedMaterial--;
-                        LOG("Remove this material from any sub meshes used by it...", cro::Logger::Type::Info);
+                    }
+
+                    //update the active materials so they point to the correct slot
+                    for (auto& i : m_activeMaterials)
+                    {
+                        if (i > m_selectedMaterial)
+                        {
+                            i--;
+                        }
+                    }
+
+                    //update the newly selected thumbnail
+                    if (!m_materialDefs.empty())
+                    {
+                        m_previewEntity.getComponent<cro::Model>().setMaterial(0, m_materialDefs[m_selectedMaterial].materialData);
+
+                        m_materialDefs[m_selectedMaterial].previewTexture.clear(ui::PreviewClearColour);
+                        m_previewScene.render(m_materialDefs[m_selectedMaterial].previewTexture);
+                        m_materialDefs[m_selectedMaterial].previewTexture.display();
                     }
                 }
             }

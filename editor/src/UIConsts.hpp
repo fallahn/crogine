@@ -46,4 +46,6 @@ namespace ui
     static const float MinMaterialSlotSize = 20.f;
 
     static const std::size_t MaxMaterials = 99;
+
+    static const cro::Colour PreviewClearColour = cro::Colour(0.f, 0.f, 0.f, 0.2f);
 }

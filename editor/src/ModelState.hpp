@@ -125,6 +125,7 @@ private:
     void addMaterialToBrowser(MaterialDefinition&&);
 
     cro::Texture m_blackTexture;
+    cro::Texture m_magentaTexture;
     std::vector<MaterialDefinition> m_materialDefs;
     std::size_t m_selectedMaterial;
     cro::Entity m_previewEntity;
