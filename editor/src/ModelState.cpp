@@ -1790,9 +1790,21 @@ void ModelState::drawInspector()
                     {
                         entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(m_importedTransform.rotation * cro::Util::Const::degToRad);
                     }
-                    if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.1f, 10.f))
+                    if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.01f, 0.1f, 10.f))
                     {
                         //scale needs to be uniform, else we'd have to recalc all the normal data
+                        m_importedTransform.scale = std::min(10.f, std::max(0.1f, m_importedTransform.scale));
+                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                    }
+                    ImGui::Text("Quick Scale:"); ImGui::SameLine();
+                    if (ImGui::Button("0.5"))
+                    {
+                        m_importedTransform.scale = std::max(0.1f, m_importedTransform.scale / 2.f);
+                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                    }ImGui::SameLine();
+                    if (ImGui::Button("2.0"))
+                    {
+                        m_importedTransform.scale = std::min(10.f, m_importedTransform.scale * 2.f);
                         entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
                     }
                     if (ImGui::Button("Apply Transform"))
@@ -1800,7 +1812,7 @@ void ModelState::drawInspector()
                         applyImportTransform();
                     }
                     ImGui::SameLine();
-                    helpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.");
+                    helpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.\nTIP: if a model doesn't scale enough in either direction try applying the current scale first before rescaling");
 
                     ImGui::NewLine();
                     if (ImGui::Button("Convert##01"))
