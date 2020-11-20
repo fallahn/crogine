@@ -79,6 +79,8 @@ struct MaterialDefinition final
     std::int32_t shaderID = -1; //shader ID in the resource manager, not OpenGL ID
     cro::Material::Data materialData;
 
+    std::vector<std::uint32_t> submeshIDs; //if this material is applied to any meshes on the currently open model, the IDs are here.
+
     //hmmm is there not a better way to default init an array?
     MaterialDefinition()
     {

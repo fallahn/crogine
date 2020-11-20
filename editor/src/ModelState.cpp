@@ -89,6 +89,19 @@ namespace
         "None", "Alpha", "Multiply", "Additive"
     };
 
+    const std::array AttribStrings =
+    {
+        "  Position",
+        "  Colour",
+        "  Normal",
+        "  Tangent",
+        "  Bitangent",
+        "  UV0",
+        "  UV1",
+        "  BlendIndices",
+        "  BlendWeights"
+    };
+
     const float DefaultFOV = 35.f * cro::Util::Const::degToRad;
     const float DefaultFarPlane = 50.f;
     const float MinZoom = 0.1f;
@@ -635,6 +648,7 @@ void ModelState::openModelAtPath(const std::string& path)
 
         //parse all of the material properties into the material/texture browser
         const auto& objects = m_currentModelConfig.getObjects();
+        std::uint32_t submeshID = 0;
         for (const auto& obj : objects)
         {
             if (obj.getName() == "material")
@@ -725,6 +739,7 @@ void ModelState::openModelAtPath(const std::string& path)
                     }
                 }
 
+                def.submeshIDs.push_back(submeshID++);
                 addMaterialToBrowser(std::move(def));
             }
         }
@@ -760,6 +775,15 @@ void ModelState::closeModel()
     }
 
     m_currentModelConfig = {};
+
+    //remove any IDs from active materials
+    //TODO this could be slow if there are a lot of
+    //materials so instead use the active material
+    //list and update only those instead
+    for (auto& matDef : m_materialDefs)
+    {
+        matDef.submeshIDs.clear();
+    }
 }
 
 void ModelState::importModel()
@@ -1743,12 +1767,11 @@ void ModelState::drawInspector()
                     {
                         if (meshData.attributes[i] > 0)
                         {
-                            ImGui::Text("  Attrib placeholder");
+                            ImGui::Text(AttribStrings[i]);
                         }
                     }
 
                     ImGui::NewLine();
-                    //TODO make these members so their state can be read when opening a new model
                     bool refreshBounds = false;
                     if (ImGui::Checkbox("Show AABB", &m_showAABB))
                     {
@@ -2138,7 +2161,17 @@ void ModelState::drawInspector()
                 if (applyMaterial)
                 {
                     applyPreviewSettings(m_materialDefs[m_selectedMaterial]);
+
+                    //we have to always do this because we might have switched to a new
+                    //material and they all share the  same preview mesh
                     m_previewEntity.getComponent<cro::Model>().setMaterial(0, matDef.materialData);
+
+                    //if no model is open then this should be empty, so skip checking validity of the
+                    //destination model.
+                    for (auto idx : matDef.submeshIDs)
+                    {
+                        entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(idx, matDef.materialData);
+                    }
                 }
             }
 
