@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/glm/vec2.hpp>
+
 #include <cstdint>
 
 namespace ui
@@ -36,7 +38,8 @@ namespace ui
     static const float TitleHeight = 22.f;
     static const float InspectorWidth = 0.25f; //percent of window width
     static const float BrowserHeight = 0.32f;
-    static const float ThumbnailHeight = 0.5f; //percent of browser height
+    static const float ThumbnailHeight = 0.45f; //percent of browser height
+    static const glm::vec2 FramePadding = glm::vec2(4.f, 9.f); //how much to expand frame padding of thumbnails
     static const float MaterialPreviewWidth = 0.45f;
     static const float TexturePreviewWidth = 0.65f;
     static const float TextBoxWidth = 0.915f;

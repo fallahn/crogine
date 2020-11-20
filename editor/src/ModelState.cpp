@@ -2242,7 +2242,11 @@ void ModelState::drawBrowser()
             thumbSize.y *= ui::ThumbnailHeight;
             thumbSize.x = thumbSize.y;
 
-            std::int32_t thumbsPerRow = static_cast<std::int32_t>(std::floor(size.x / thumbSize.x) - 1);
+            auto frameSize = thumbSize;
+            frameSize.x += ImGui::GetStyle().FramePadding.x * ui::FramePadding.x;
+            frameSize.y += ImGui::GetStyle().FramePadding.y * ui::FramePadding.y;
+
+            std::int32_t thumbsPerRow = static_cast<std::int32_t>(std::floor(size.x / frameSize.x) - 1);
 
             std::int32_t count = 0;
             for (const auto& material : m_materialDefs)
@@ -2256,6 +2260,8 @@ void ModelState::drawBrowser()
                         ImGui::SetScrollHereY();
                     }
                 }
+
+                ImGui::BeginChildFrame(7767 + count, { frameSize.x, frameSize.y}, ImGuiWindowFlags_NoScrollbar);
 
                 ImGui::PushStyleColor(ImGuiCol_Border, colour);
                 ImGui::PushID(9999 + count);
@@ -2281,6 +2287,16 @@ void ModelState::drawBrowser()
                     m_selectedMaterial = count;
                     ImGui::SetScrollHereY();
                 }
+
+                ImGui::Text("%s", material.name.c_str());
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("%s", material.name.c_str());
+                    ImGui::Text("%s", ShaderStrings[material.type]);
+                    ImGui::EndTooltip();
+                }
+                ImGui::EndChildFrame();
 
                 //put on same line if we fit
                 count++;
@@ -2360,7 +2376,11 @@ void ModelState::drawBrowser()
             thumbSize.y *= ui::ThumbnailHeight;
             thumbSize.x = thumbSize.y;
 
-            std::int32_t thumbsPerRow = static_cast<std::int32_t>(std::floor(size.x / thumbSize.x) - 1);
+            auto frameSize = thumbSize;
+            frameSize.x += ImGui::GetStyle().FramePadding.x * ui::FramePadding.x;
+            frameSize.y += ImGui::GetStyle().FramePadding.y * ui::FramePadding.y;
+
+            std::int32_t thumbsPerRow = static_cast<std::int32_t>(std::floor(size.x / frameSize.x) - 1);
             std::int32_t count = 0;
             std::uint32_t removeID = 0;
             for (const auto& [id, tex] : m_materialTextures)
@@ -2374,6 +2394,8 @@ void ModelState::drawBrowser()
                         ImGui::SetScrollHereY();
                     }
                 }
+
+                ImGui::BeginChildFrame(8394854 + id, { frameSize.x, frameSize.y }, ImGuiWindowFlags_NoScrollbar);
 
                 ImGui::PushStyleColor(ImGuiCol_Border, colour);
                 if (ImGui::ImageButton((void*)(std::size_t)id, { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f }))
@@ -2425,6 +2447,16 @@ void ModelState::drawBrowser()
                     }
                     ImGui::EndPopup();
                 }*/
+
+                ImGui::Text("%s", tex.name.c_str());
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("%s", tex.name.c_str());
+                    ImGui::EndTooltip();
+                }
+
+                ImGui::EndChildFrame();
 
                 //put on same line if we fit
                 count++;
