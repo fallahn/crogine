@@ -138,6 +138,7 @@ private:
     void updateLayout(std::int32_t, std::int32_t);
     void drawInspector();
     void drawBrowser();
-    void exportMaterial();
+    void exportMaterial() const;
     void importMaterial(const std::string&);
+    void readMaterialDefinition(MaterialDefinition&, const cro::ConfigObject&);
 };

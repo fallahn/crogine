@@ -700,95 +700,12 @@ void ModelState::openModelAtPath(const std::string& path)
         {
             if (obj.getName() == "material")
             {
-                MaterialDefinition def;
-
-                std::string_view id = obj.getId();
-                if (id == "Unlit")
-                {
-                    def.type = MaterialDefinition::Unlit;
-                }
-                else if (id == "VertexLit")
-                {
-                    def.type = MaterialDefinition::VertexLit;
-                }
-                //TODO PBR shader
-
-                //read textures
-                const auto& properties = obj.getProperties();
-                for (const auto& prop : properties)
-                {
-                    std::string_view name = prop.getName();
-                    if (name == "diffuse"
-                        || name == "mask"
-                        || name == "normal"
-                        || name == "lightmap")
-                    {
-                        auto path = m_preferences.workingDirectory + "/" + prop.getValue<std::string>();
-
-                        if(name == "diffuse") def.textureIDs[MaterialDefinition::Diffuse] = addTextureToBrowser(path);
-                        if(name == "mask") def.textureIDs[MaterialDefinition::Mask] = addTextureToBrowser(path);
-                        if(name == "normal") def.textureIDs[MaterialDefinition::Normal] = addTextureToBrowser(path);
-                        if(name == "lightmap") def.textureIDs[MaterialDefinition::Lightmap] = addTextureToBrowser(path);
-                    }
-                    else if (name == "colour")
-                    {
-                        def.colour = prop.getValue<cro::Colour>();
-                    }
-                    else if (name == "vertex_coloured")
-                    {
-                        def.vertexColoured = prop.getValue<bool>();
-                    }
-                    else if (name == "rim")
-                    {
-                        def.useRimlighing = true;
-                        def.rimlightColour = prop.getValue<cro::Colour>();
-                    }
-                    else if (name == "rim_falloff")
-                    {
-                        def.useRimlighing = true;
-                        def.rimlightFalloff = prop.getValue<float>();
-                    }
-                    else if (name == "rx_shadows")
-                    {
-                        def.receiveShadows = prop.getValue<bool>();
-                    }
-                    else if (name == "blendmode")
-                    {
-                        auto mode = prop.getValue<std::string>();
-                        if (mode == "alpha")
-                        {
-                            def.blendMode = cro::Material::BlendMode::Alpha;
-                        }
-                        else if (mode == "add")
-                        {
-                            def.blendMode = cro::Material::BlendMode::Additive;
-                        }
-                        else if (mode == "multiply")
-                        {
-                            def.blendMode = cro::Material::BlendMode::Multiply;
-                        }
-                    }
-                    else if (name == "alpha_clip")
-                    {
-                        def.alphaClip = prop.getValue<float>();
-                    }
-                    else if (name == "mask_colour")
-                    {
-                        def.maskColour = prop.getValue<cro::Colour>();
-                    }
-                    else if (name == "name")
-                    {
-                        auto val = prop.getValue<std::string>();
-                        if (!val.empty())
-                        {
-                            def.name = val;
-                        }
-                    }
-                }
-
-                def.submeshIDs.push_back(submeshID++);
+                MaterialDefinition matDef;
+                readMaterialDefinition(matDef, obj);
+                
+                matDef.submeshIDs.push_back(submeshID++);
                 m_activeMaterials.push_back(static_cast<std::int32_t>(m_materialDefs.size()));
-                addMaterialToBrowser(std::move(def));
+                addMaterialToBrowser(std::move(matDef));
 
                 //don't add more materials than we can use
                 if (m_activeMaterials.size() == meshData.submeshCount)
@@ -1331,6 +1248,17 @@ void ModelState::updateWorldScale()
 
 void ModelState::updateNormalVis()
 {
+    //TODO this technically works but only on imported previews where m_importedVBO is populated.
+    /*
+    This is actually not what we want - rather it should only be displayed on the loaded model. If we
+    track the loaded model file name (which ought to be in m_currentModelConfig) we can load the VBO
+    data from there when needed (and check not already loaded etc to facilitate show/hiding already 
+    loaded data). This also means that the entity used only needs a single 'DynamicMesh' where we update
+    the vertex data each time instead of re-creating a new mesh entirely. Also means we can ditch the
+    normal mesh vis class.
+    */
+
+
     if (entities[EntityID::ActiveModel].isValid())
     {
         if (entities[EntityID::NormalVis].isValid())
@@ -1338,7 +1266,7 @@ void ModelState::updateNormalVis()
             m_scene.destroyEntity(entities[EntityID::NormalVis]);
         }
 
-        auto meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+        const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
 
         //pass to mesh builder - TODO we would be better recycling the VBO with new vertex data, rather than
         //destroying and creating a new one (unique instances will build up in the resource manager)
@@ -1347,6 +1275,7 @@ void ModelState::updateNormalVis()
         entities[EntityID::NormalVis] = m_scene.createEntity();
         entities[EntityID::NormalVis].addComponent<cro::Transform>();
         entities[EntityID::NormalVis].addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::DebugDraw]));
+        entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::NormalVis].getComponent<cro::Transform>());
     }
 }
 
@@ -2351,8 +2280,8 @@ void ModelState::drawBrowser()
             ImGui::SameLine();
             if (ImGui::Button("Open##01"))
             {
-                auto path = cro::FileSystem::openFileDialogue(m_preferences.workingDirectory + "/untitled", "mdf");
-                if (!path.empty() && cro::FileSystem::getFileExtension(path) == ".mdf")
+                auto path = cro::FileSystem::openFileDialogue(m_preferences.workingDirectory + "/untitled", "mdf,cmt");
+                if (!path.empty())
                 {
                     importMaterial(path);
                 }
@@ -2664,7 +2593,7 @@ void ModelState::drawBrowser()
     ImGui::End();
 }
 
-void ModelState::exportMaterial()
+void ModelState::exportMaterial() const
 {
     auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/untitled", "mdf");
     if (!path.empty())
@@ -2724,109 +2653,218 @@ void ModelState::exportMaterial()
 void ModelState::importMaterial(const std::string& path)
 {
     cro::ConfigFile file;
-    if (file.loadFromFile(path))
+    auto extension = cro::FileSystem::getFileExtension(path);
+    if (extension == ".mdf")
     {
-        auto name = file.getId();
-        std::replace(name.begin(), name.end(), '_', ' ');        
-        
-        MaterialDefinition def;
-        def.materialData = m_resources.materials.get(materialIDs[MaterialID::Default]);
-        
-        if (!name.empty())
+        if (file.loadFromFile(path))
         {
-            def.name = name;
-        }
+            auto name = file.getId();
+            std::replace(name.begin(), name.end(), '_', ' ');
 
-        const auto& properties = file.getProperties();
-        for (const auto& prop : properties)
+            MaterialDefinition def;
+            def.materialData = m_resources.materials.get(materialIDs[MaterialID::Default]);
+
+            if (!name.empty())
+            {
+                def.name = name;
+            }
+
+            const auto& properties = file.getProperties();
+            for (const auto& prop : properties)
+            {
+                name = prop.getName();
+                if (name == "type")
+                {
+                    auto val = prop.getValue<std::int32_t>();
+                    if (val > -1 && val < MaterialDefinition::Count)
+                    {
+                        def.type = static_cast<MaterialDefinition::Type>(val);
+                    }
+                }
+                else if (name == "colour")
+                {
+                    def.colour = prop.getValue<cro::Colour>();
+                }
+                else if (name == "mask_colour")
+                {
+                    def.maskColour = prop.getValue<cro::Colour>();
+                }
+                else if (name == "alpha_clip")
+                {
+                    def.alphaClip = std::max(0.f, std::min(1.f, prop.getValue<float>()));
+                }
+                else if (name == "vertex_coloured")
+                {
+                    def.vertexColoured = prop.getValue<bool>();
+                }
+                else if (name == "rx_shadow")
+                {
+                    def.receiveShadows = prop.getValue<bool>();
+                }
+                else if (name == "blend_mode")
+                {
+                    auto val = prop.getValue<std::int32_t>();
+                    if (val > -1 && val <= static_cast<std::int32_t>(cro::Material::BlendMode::Additive))
+                    {
+                        def.blendMode = static_cast<cro::Material::BlendMode>(val);
+                    }
+                }
+                else if (name == "diffuse")
+                {
+                    def.textureIDs[MaterialDefinition::Diffuse] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                    if (def.textureIDs[MaterialDefinition::Diffuse] == 0)
+                    {
+                        cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
+                    }
+                }
+                else if (name == "mask")
+                {
+                    def.textureIDs[MaterialDefinition::Mask] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                    if (def.textureIDs[MaterialDefinition::Mask] == 0)
+                    {
+                        cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
+                    }
+                }
+                else if (name == "lightmap")
+                {
+                    def.textureIDs[MaterialDefinition::Lightmap] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                    if (def.textureIDs[MaterialDefinition::Lightmap] == 0)
+                    {
+                        cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
+                    }
+                }
+                else if (name == "normal")
+                {
+                    def.textureIDs[MaterialDefinition::Normal] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                    if (def.textureIDs[MaterialDefinition::Normal] == 0)
+                    {
+                        cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
+                    }
+                }
+                else if (name == "use_rimlight")
+                {
+                    def.useRimlighing = prop.getValue<bool>();
+                }
+                else if (name == "rimlight_colour")
+                {
+                    def.rimlightColour = prop.getValue<cro::Colour>();
+                }
+                else if (name == "rimlight_falloff")
+                {
+                    def.rimlightFalloff = std::min(1.f, std::max(0.f, prop.getValue<float>()));
+                }
+            }
+
+            addMaterialToBrowser(std::move(def));
+        }
+    }
+    else if (extension == ".cmt")
+    {
+        if (file.loadFromFile(path))
         {
-            name = prop.getName();
-            if (name == "type")
+            //this is a regular model def so try parsing the materials
+            const auto& objects = file.getObjects();
+            for (const auto& obj : objects)
             {
-                auto val = prop.getValue<std::int32_t>();
-                if (val > -1 && val < MaterialDefinition::Count)
+                if (obj.getName() == "material")
                 {
-                    def.type = static_cast<MaterialDefinition::Type>(val);
+                    MaterialDefinition matDef;
+                    readMaterialDefinition(matDef, obj);
+
+                    addMaterialToBrowser(std::move(matDef));
                 }
-            }
-            else if (name == "colour")
-            {
-                def.colour = prop.getValue<cro::Colour>();
-            }
-            else if (name == "mask_colour")
-            {
-                def.maskColour = prop.getValue<cro::Colour>();
-            }
-            else if (name == "alpha_clip")
-            {
-                def.alphaClip = std::max(0.f, std::min(1.f, prop.getValue<float>()));
-            }
-            else if (name == "vertex_coloured")
-            {
-                def.vertexColoured = prop.getValue<bool>();
-            }
-            else if (name == "rx_shadow")
-            {
-                def.receiveShadows = prop.getValue<bool>();
-            }
-            else if (name == "blend_mode")
-            {
-                auto val = prop.getValue<std::int32_t>();
-                if (val > -1 && val <= static_cast<std::int32_t>(cro::Material::BlendMode::Additive))
-                {
-                    def.blendMode = static_cast<cro::Material::BlendMode>(val);
-                }
-            }
-            else if (name == "diffuse")
-            {
-                def.textureIDs[MaterialDefinition::Diffuse] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
-                if (def.textureIDs[MaterialDefinition::Diffuse] == 0)
-                {
-                    cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
-                }
-            }
-            else if (name == "mask")
-            {
-                def.textureIDs[MaterialDefinition::Mask] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
-                if (def.textureIDs[MaterialDefinition::Mask] == 0)
-                {
-                    cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
-                }
-            }
-            else if (name == "lightmap")
-            {
-                def.textureIDs[MaterialDefinition::Lightmap] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
-                if (def.textureIDs[MaterialDefinition::Lightmap] == 0)
-                {
-                    cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
-                }
-            }
-            else if (name == "normal")
-            {
-                def.textureIDs[MaterialDefinition::Normal] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
-                if (def.textureIDs[MaterialDefinition::Normal] == 0)
-                {
-                    cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
-                }
-            }
-            else if (name == "use_rimlight")
-            {
-                def.useRimlighing = prop.getValue<bool>();
-            }
-            else if (name == "rimlight_colour")
-            {
-                def.rimlightColour = prop.getValue<cro::Colour>();
-            }
-            else if (name == "rimlight_falloff")
-            {
-                def.rimlightFalloff = std::min(1.f, std::max(0.f, prop.getValue<float>()));
             }
         }
-
-        addMaterialToBrowser(std::move(def));
     }
     else
     {
         cro::FileSystem::showMessageBox("Error", "Could not open material file.");
+    }
+}
+
+void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::ConfigObject& obj)
+{
+    std::string_view id = obj.getId();
+    if (id == "Unlit")
+    {
+        matDef.type = MaterialDefinition::Unlit;
+    }
+    else if (id == "VertexLit")
+    {
+        matDef.type = MaterialDefinition::VertexLit;
+    }
+    //TODO PBR shader
+
+    //read textures
+    const auto& properties = obj.getProperties();
+    for (const auto& prop : properties)
+    {
+        std::string_view name = prop.getName();
+        if (name == "diffuse"
+            || name == "mask"
+            || name == "normal"
+            || name == "lightmap")
+        {
+            auto path = m_preferences.workingDirectory + "/" + prop.getValue<std::string>();
+
+            if (name == "diffuse") matDef.textureIDs[MaterialDefinition::Diffuse] = addTextureToBrowser(path);
+            if (name == "mask") matDef.textureIDs[MaterialDefinition::Mask] = addTextureToBrowser(path);
+            if (name == "normal") matDef.textureIDs[MaterialDefinition::Normal] = addTextureToBrowser(path);
+            if (name == "lightmap") matDef.textureIDs[MaterialDefinition::Lightmap] = addTextureToBrowser(path);
+        }
+        else if (name == "colour")
+        {
+            matDef.colour = prop.getValue<cro::Colour>();
+        }
+        else if (name == "vertex_coloured")
+        {
+            matDef.vertexColoured = prop.getValue<bool>();
+        }
+        else if (name == "rim")
+        {
+            matDef.useRimlighing = true;
+            matDef.rimlightColour = prop.getValue<cro::Colour>();
+        }
+        else if (name == "rim_falloff")
+        {
+            matDef.useRimlighing = true;
+            matDef.rimlightFalloff = prop.getValue<float>();
+        }
+        else if (name == "rx_shadows")
+        {
+            matDef.receiveShadows = prop.getValue<bool>();
+        }
+        else if (name == "blendmode")
+        {
+            auto mode = prop.getValue<std::string>();
+            if (mode == "alpha")
+            {
+                matDef.blendMode = cro::Material::BlendMode::Alpha;
+            }
+            else if (mode == "add")
+            {
+                matDef.blendMode = cro::Material::BlendMode::Additive;
+            }
+            else if (mode == "multiply")
+            {
+                matDef.blendMode = cro::Material::BlendMode::Multiply;
+            }
+        }
+        else if (name == "alpha_clip")
+        {
+            matDef.alphaClip = prop.getValue<float>();
+        }
+        else if (name == "mask_colour")
+        {
+            matDef.maskColour = prop.getValue<cro::Colour>();
+        }
+        else if (name == "name")
+        {
+            auto val = prop.getValue<std::string>();
+            if (!val.empty())
+            {
+                matDef.name = val;
+            }
+        }
     }
 }
