@@ -413,7 +413,17 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             }
             else if (name == "subrect")
             {
-                material.setProperty("u_subrect", p.getValue<glm::vec4>());
+                auto subrect = p.getValue<glm::vec4>();
+                auto clamp = [](float& v)
+                {
+                    v = std::min(1.f, std::max(0.f, v));
+                };
+                clamp(subrect.x);
+                clamp(subrect.y);
+                clamp(subrect.z);
+                clamp(subrect.w);
+
+                material.setProperty("u_subrect", subrect);
             }
             else if (name == "colour")
             {

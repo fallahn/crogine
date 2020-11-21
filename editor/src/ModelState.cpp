@@ -1641,6 +1641,11 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
         matDef.materialData.setProperty("u_rimFalloff", matDef.rimlightFalloff);
     }
 
+    if (matDef.useSubrect)
+    {
+        matDef.materialData.setProperty("u_subrect", matDef.subrect);
+    }
+
     matDef.materialData.blendMode = matDef.blendMode;
 }
 
@@ -1799,10 +1804,15 @@ void ModelState::drawInspector()
                     ImGui::Text("Vertex Attributes:");
                     for (auto i = 0u; i < meshData.attributes.size(); ++i)
                     {
+                        auto colour = ImGui::GetStyle().Colors[ImGuiCol_TextDisabled];
                         if (meshData.attributes[i] > 0)
                         {
-                            ImGui::Text(AttribStrings[i]);
+                            
+                            colour = ImGui::GetStyle().Colors[ImGuiCol_Text];
                         }
+                        ImGui::PushStyleColor(0, colour);
+                        ImGui::Text(AttribStrings[i]);
+                        ImGui::PopStyleColor();
                     }
 
                     ImGui::NewLine();
@@ -2137,6 +2147,23 @@ void ModelState::drawInspector()
                     }
                     ImGui::SameLine();
                     helpMarker("Sets the colour of the rimlight effect, if it is enabled");
+                }
+
+                if (shaderFlags & (cro::ShaderResource::DiffuseMap | cro::ShaderResource::NormalMap | cro::ShaderResource::LightMap | cro::ShaderResource::MaskMap))
+                {
+                    ImGui::NewLine();
+                    ImGui::Checkbox("Use Subrect", &matDef.useSubrect);
+                    ImGui::SameLine();
+                    helpMarker("Tell this material to use the given subrect in normalised coords when drawing a texture. Coords are given as Left, Bottom, Width and Height");
+
+                    if (ImGui::InputFloat4("SubRect", &matDef.subrect[0]))
+                    {
+                        applyMaterial = true;
+                    }
+                }
+                if (matDef.useSubrect)
+                {
+                    shaderFlags |= cro::ShaderResource::Subrects;
                 }
 
                 ImGui::NewLine();
@@ -2618,6 +2645,8 @@ void ModelState::exportMaterial() const
         file.addProperty("use_rimlight").setValue(matDef.useRimlighing);
         file.addProperty("rimlight_falloff").setValue(matDef.rimlightFalloff);
         file.addProperty("rimlight_colour").setValue(matDef.rimlightColour);
+        file.addProperty("use_subrect").setValue(matDef.useSubrect);
+        file.addProperty("subrect").setValue(matDef.subrect);
 
         //textures
         auto getTextureName = [&](std::uint32_t id)
@@ -2753,6 +2782,23 @@ void ModelState::importMaterial(const std::string& path)
                 {
                     def.rimlightFalloff = std::min(1.f, std::max(0.f, prop.getValue<float>()));
                 }
+                else if (name == "use_subrect")
+                {
+                    def.useSubrect = prop.getValue<bool>();
+                }
+                else if (name == "subrect")
+                {
+                    auto subrect = prop.getValue<glm::vec4>();
+                    auto clamp = [](float& v)
+                    {
+                        v = std::min(1.f, std::max(0.f, v));
+                    };
+                    clamp(subrect.x);
+                    clamp(subrect.y);
+                    clamp(subrect.z);
+                    clamp(subrect.w);
+                    def.subrect = subrect;
+                }
             }
 
             addMaterialToBrowser(std::move(def));
@@ -2865,6 +2911,20 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
             {
                 matDef.name = val;
             }
+        }
+        else if (name == "subrect")
+        {
+            matDef.useSubrect = true;
+            auto subrect = prop.getValue<glm::vec4>();
+            auto clamp = [](float& v)
+            {
+                v = std::min(1.f, std::max(0.f, v));
+            };
+            clamp(subrect.x);
+            clamp(subrect.y);
+            clamp(subrect.z);
+            clamp(subrect.w);
+            matDef.subrect = subrect;
         }
     }
 }

@@ -65,6 +65,9 @@ struct MaterialDefinition final
     float alphaClip = 0.f;
     float rimlightFalloff = 0.f;
 
+    glm::vec4 subrect = glm::vec4(0.f, 0.f, 1.f, 1.f);
+
+    bool useSubrect = false;
     bool vertexColoured = false;
     bool useRimlighing = false;
     bool receiveShadows = false;
