@@ -127,6 +127,11 @@ namespace cro
         const std::string& getId() const;
 
         /*!
+        \brief Sets the ID of this object
+        */
+        void setId(const std::string id) { m_id = id; }
+
+        /*!
         \brief Returns a pointer to the property if found, else nullptr
         Pointers returned from this function should only be used within
         a small scope as adding or removing any properties from the parent

@@ -356,7 +356,7 @@ void ModelState::loadAssets()
     auto flags = cro::ShaderResource::DiffuseColour;
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, flags);
     materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
-    m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 0.f, 1.f));
+    m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
 
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::Skinning | cro::ShaderResource::DepthMap);
     materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
@@ -422,7 +422,7 @@ void ModelState::createScene()
 
     //set the default sunlight properties
     m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 6.f, -5.f });
-    m_scene.getSunlight().setDirection({ -0.f, -1.f, -0.f });
+    m_scene.getSunlight().setDirection({ 0.5f, -0.5f, -0.5f });
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
 
@@ -476,13 +476,19 @@ void ModelState::buildUI()
 
                         openModel();
                     }
-                    if (ImGui::MenuItem("Save", nullptr, nullptr, false))
+                    if (ImGui::MenuItem("Save", nullptr, nullptr, !m_currentFilePath.empty()))
                     {
                         //if a model is open overwrite the model def with current materials
+                        saveModel(m_currentFilePath);
                     }
-                    if (ImGui::MenuItem("Save As...", nullptr, nullptr, false))
+                    if (ImGui::MenuItem("Save As...", nullptr, nullptr, !m_currentFilePath.empty()))
                     {
                         //if a model is open create a new model def with current materials
+                        auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/untitled", "cmt");
+                        if (!path.empty())
+                        {
+                            saveModel(path);
+                        }
                     }                    
                     
                     if (ImGui::MenuItem("Close Model", nullptr, nullptr, entities[EntityID::ActiveModel].isValid()))
@@ -674,6 +680,8 @@ void ModelState::openModelAtPath(const std::string& path)
     cro::ModelDefinition def(m_preferences.workingDirectory);
     if (def.loadFromFile(path, m_resources))
     {
+        m_currentFilePath = path;
+
         entities[EntityID::ActiveModel] = m_scene.createEntity();
         entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
 
@@ -740,6 +748,127 @@ void ModelState::openModelAtPath(const std::string& path)
     }
 }
 
+void ModelState::saveModel(const std::string& path)
+{
+    const auto& properties = m_currentModelConfig.getProperties();
+
+    cro::ConfigFile newCfg(m_currentModelConfig.getName(), m_currentModelConfig.getId());
+    for (const auto& prop : properties)
+    {
+        newCfg.addProperty(prop.getName()) = prop;
+    }
+
+    auto textureName = [&](std::uint32_t id)
+    {
+        const auto& t = m_materialTextures.at(id);
+        return t.relPath + t.name;
+    };
+
+    //add all the active materials
+    for (auto i : m_activeMaterials)
+    {
+        auto* obj = newCfg.addObject("material");
+
+        const auto& mat = m_materialDefs[i];
+        switch (mat.type)
+        {
+        case MaterialDefinition::PBR:
+        default:
+        case MaterialDefinition::VertexLit:
+        
+            obj->setId("VertexLit");
+
+            if (mat.textureIDs[MaterialDefinition::Mask] != 0)
+            {
+                obj->addProperty("mask").setValue(textureName(mat.textureIDs[MaterialDefinition::Mask]));
+            }
+            else
+            {
+                obj->addProperty("mask_colour").setValue(mat.maskColour);
+            }
+
+            if (mat.textureIDs[MaterialDefinition::Normal] != 0)
+            {
+                obj->addProperty("normal").setValue(textureName(mat.textureIDs[MaterialDefinition::Normal]));
+            }
+            break;
+        case MaterialDefinition::Unlit:
+
+            obj->setId("Unlit");
+
+            break;
+        }
+
+        obj->addProperty("name").setValue(mat.name);
+        obj->addProperty("colour").setValue(mat.colour);
+
+        if (mat.useRimlighing)
+        {
+            obj->addProperty("rim").setValue(mat.rimlightColour);
+            obj->addProperty("rim_falloff").setValue(mat.rimlightFalloff);
+        }
+
+        if (mat.useSubrect)
+        {
+            obj->addProperty("subrect").setValue(mat.subrect);
+        }
+
+        if (mat.vertexColoured)
+        {
+            obj->addProperty("vertex_coloured").setValue(true);
+        }
+
+        if (mat.receiveShadows)
+        {
+            obj->addProperty("rx_shadows").setValue(true);
+        }
+
+        switch (mat.blendMode)
+        {
+        default:
+        case cro::Material::BlendMode::None:
+            obj->addProperty("blendmode").setValue("none");
+            break;
+        case cro::Material::BlendMode::Additive:
+            obj->addProperty("blendmode").setValue("add");
+            break;
+        case cro::Material::BlendMode::Alpha:
+            obj->addProperty("blendmode").setValue("alpha");
+            break;
+        case cro::Material::BlendMode::Multiply:
+            obj->addProperty("blendmode").setValue("multiply");
+            break;
+        }
+
+        if (mat.textureIDs[MaterialDefinition::Diffuse] != 0)
+        {
+            obj->addProperty("diffuse").setValue(textureName(mat.textureIDs[MaterialDefinition::Diffuse]));
+
+            if (mat.alphaClip < 1)
+            {
+                obj->addProperty("alpha_clip").setValue(mat.alphaClip);
+            }
+        }
+
+        if (mat.textureIDs[MaterialDefinition::Lightmap] != 0)
+        {
+            obj->addProperty("lightmap").setValue(textureName(mat.textureIDs[MaterialDefinition::Lightmap]));
+        }
+
+        //TODO check if this is an IQM file and set the skinning property if necessary
+    }
+
+    if (newCfg.save(path))
+    {
+        m_currentFilePath = path;
+        m_currentModelConfig = newCfg;
+    }
+    else
+    {
+        cro::FileSystem::showMessageBox("Error", "Failed writing model to " + path);
+    }
+}
+
 void ModelState::closeModel()
 {
     if (entities[EntityID::ActiveModel].isValid())
@@ -768,6 +897,8 @@ void ModelState::closeModel()
         }
     }
     m_activeMaterials.clear();
+
+    m_currentFilePath.clear();
 }
 
 void ModelState::importModel()
@@ -994,6 +1125,12 @@ void ModelState::exportModel(bool modelOnly)
 {
     //TODO assert we at least have valid header data
     //prevent accidentally writing a bad file
+
+    if (!modelOnly
+        && !cro::FileSystem::showMessageBox("Confirm", "This will overwrite any existing model definition with the default material. Are you sure?", cro::FileSystem::YesNo, cro::FileSystem::Warning))
+    {
+        return;
+    }
 
     auto path = cro::FileSystem::saveFileDialogue(m_preferences.lastExportDirectory + "/untitled", "cmf");
     std::replace(path.begin(), path.end(), '\\', '/');
@@ -1505,6 +1642,9 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
     tex.texture = std::make_unique<cro::Texture>();
     if (tex.texture->loadFromFile(path))
     {
+        //TODO we should be reading the smooth/repeat property from the material file
+        tex.texture->setSmooth(true);
+
         m_selectedTexture = tex.texture->getGLHandle();
         tex.name = fileName;
         tex.relPath = relPath;
@@ -1748,7 +1888,7 @@ void ModelState::drawInspector()
                     helpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.\nTIP: if a model doesn't scale enough in either direction try applying the current scale first before rescaling");
 
                     ImGui::NewLine();
-                    static bool modelOnly = true;
+                    static bool modelOnly = false;
                     ImGui::Checkbox("Export Model Only", &modelOnly);
                     ImGui::SameLine();
                     helpMarker("If this is checked then only the model data will exported to the crogine file, leaving any existing material data in tact.");
@@ -1987,6 +2127,7 @@ void ModelState::drawInspector()
                     //diffuse map
                     slotLabel = "Diffuse";
                     
+                    auto prevDiffuse = matDef.textureIDs[MaterialDefinition::Diffuse];
                     if (matDef.textureIDs[MaterialDefinition::Diffuse] == 0)
                     {
                         slotLabel += ": Empty";
@@ -2005,6 +2146,12 @@ void ModelState::drawInspector()
                     if (matDef.textureIDs[MaterialDefinition::Diffuse] != 0)
                     {
                         shaderFlags |= cro::ShaderResource::DiffuseMap;
+                        
+                        //if this slot was previously empty we probably want to set the colour to white
+                        if (prevDiffuse == 0)
+                        {
+                            matDef.colour = glm::vec4(1.f);
+                        }
                     }
 
                     //lightmap
@@ -2092,14 +2239,15 @@ void ModelState::drawInspector()
                 }
 
                 ImGui::NewLine();
-                if (matDef.textureIDs[MaterialDefinition::Diffuse] == 0)
+                //if (matDef.textureIDs[MaterialDefinition::Diffuse] == 0)
                 {
                     if (ImGui::ColorEdit4("Diffuse Colour", matDef.colour.asArray()))
                     {
                         applyMaterial = true;
                     }
                     ImGui::SameLine();
-                    helpMarker("If the Diffuse texture map is not set then this defines the diffuse colour of the material");
+                    //helpMarker("If the Diffuse texture map is not set then this defines the diffuse colour of the material");
+                    helpMarker("Defines the diffuse colour of the material. This is multiplied with any diffuse map which may be assigned to the material.");
 
                     shaderFlags |= cro::ShaderResource::DiffuseColour;
                 }

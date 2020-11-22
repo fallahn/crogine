@@ -60,8 +60,8 @@ Models in crogine are described in a text format that can be loaded via the `Mod
             //Supplies a path to a texture to be used for this material
             diffuse = "path/to/image.png"
 
-            //If no diffuse texture is provided then a colour value can be supplied.
-            //Thisis a 4 component normalised value in RGBA order
+            //Defines the diffuse colour of the material. If a diffuse map is supplied then it is
+            //multiplied by this colour. This is a 4 component normalised value in RGBA order
             colour = 1,0.65,0.8,1
 
             //Tells the material to use any vertex colour property in the mesh, and multiplies

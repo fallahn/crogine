@@ -79,6 +79,7 @@ private:
     bool m_showSkybox;
 
     cro::ConfigFile m_currentModelConfig;
+    std::string m_currentFilePath;
 
     void addSystems();
     void loadAssets();
@@ -87,6 +88,7 @@ private:
 
     void openModel();
     void openModelAtPath(const std::string&);
+    void saveModel(const std::string&);
     void closeModel();
 
     CMFHeader m_importedHeader;
