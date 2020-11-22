@@ -44,6 +44,7 @@ source distribution.
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/graphics/SphereBuilder.hpp>
+#include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -120,7 +121,6 @@ namespace
         cam3D.viewport.bottom = ui::BrowserHeight;
         cam3D.viewport.height = 1.f - ui::BrowserHeight;
     }
-
 
     const std::string prefPath = cro::FileSystem::getConfigDirectory("cro_model_viewer") + "prefs.cfg";
 
@@ -428,11 +428,11 @@ void ModelState::createScene()
 
 
     //create the material preview scene
-    meshID = m_resources.meshes.loadMesh(cro::SphereBuilder(0.5f, 8));
-    material = m_resources.materials.get(materialIDs[MaterialID::Default]);
+    cro::ModelDefinition modelDef;
+    modelDef.loadFromFile("assets/models/preview.cmt", m_resources);
     entity = m_previewScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    modelDef.createModel(entity, m_resources);
     m_previewEntity = entity;
 
     //camera
@@ -990,7 +990,7 @@ void ModelState::importModel()
     }
 }
 
-void ModelState::exportModel()
+void ModelState::exportModel(bool modelOnly)
 {
     //TODO assert we at least have valid header data
     //prevent accidentally writing a bad file
@@ -1052,8 +1052,7 @@ void ModelState::exportModel()
 
             path.back() = 't';
             
-            //TODO make this an option so we don't accidentally overwrite files
-            //if (!cro::FileSystem::fileExists(path))
+            if (!modelOnly)
             {
                 cfg.save(path);
             }
@@ -1749,9 +1748,13 @@ void ModelState::drawInspector()
                     helpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.\nTIP: if a model doesn't scale enough in either direction try applying the current scale first before rescaling");
 
                     ImGui::NewLine();
+                    static bool modelOnly = true;
+                    ImGui::Checkbox("Export Model Only", &modelOnly);
+                    ImGui::SameLine();
+                    helpMarker("If this is checked then only the model data will exported to the crogine file, leaving any existing material data in tact.");
                     if (ImGui::Button("Convert##01"))
                     {
-                        exportModel();
+                        exportModel(modelOnly);
                     }
                     ImGui::SameLine();
                     helpMarker("Export this model to Crogine format, and create a model definition file.\nThe model will then be automatically re-opened for material editing.");
@@ -1930,6 +1933,23 @@ void ModelState::drawInspector()
                     m_previewEntity.getComponent<cro::Transform>().setRotation({ 0.f, 0.f, rotation * cro::Util::Const::degToRad });
                 }
                 ImGui::PopItemWidth();
+                static bool quad = false;
+                if (quad)
+                {
+                    if (ImGui::Button("Sphere"))
+                    {
+                        m_previewEntity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
+                        quad = false;
+                    }
+                }
+                else
+                {
+                    if (ImGui::Button("Quad"))
+                    {
+                        m_previewEntity.getComponent<cro::Transform>().setPosition({ 0.f, -1.5f, 0.f });
+                        quad = true;
+                    }
+                }
 
                 ImGui::NewLine();
                 ImGui::Text("Shader Type:");

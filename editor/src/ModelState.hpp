@@ -98,7 +98,7 @@ private:
         float scale = 1.f;
     }m_importedTransform;
     void importModel();
-    void exportModel();
+    void exportModel(bool = false);
     void applyImportTransform();
 
     void importIQM(const std::string&); //used to apply modified transforms
