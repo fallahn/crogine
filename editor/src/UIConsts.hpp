@@ -48,4 +48,5 @@ namespace ui
     static const std::size_t MaxMaterials = 99;
 
     static const cro::Colour PreviewClearColour = cro::Colour(0.f, 0.f, 0.f, 0.2f);
+    static const std::uint32_t PreviewTextureSize = 512u;
 }

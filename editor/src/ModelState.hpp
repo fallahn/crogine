@@ -77,6 +77,7 @@ private:
     bool m_showPreferences;
     bool m_showGroundPlane;
     bool m_showSkybox;
+    bool m_showMaterialWindow;
 
     cro::ConfigFile m_currentModelConfig;
     std::string m_currentFilePath;

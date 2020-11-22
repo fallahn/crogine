@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "UIConsts.hpp"
+
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 
@@ -71,6 +73,7 @@ struct MaterialDefinition final
     bool vertexColoured = false;
     bool useRimlighing = false;
     bool receiveShadows = false;
+    bool skinned = false;
 
     cro::Material::BlendMode blendMode = cro::Material::BlendMode::None;
 
@@ -88,7 +91,7 @@ struct MaterialDefinition final
     MaterialDefinition()
     {
         std::fill(textureIDs.begin(), textureIDs.end(), 0);
-        previewTexture.create(256, 256);
+        previewTexture.create(ui::PreviewTextureSize, ui::PreviewTextureSize);
         previewTexture.setSmooth(true);
     }
 };

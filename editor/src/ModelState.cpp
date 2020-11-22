@@ -250,6 +250,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
     m_showPreferences       (false),
     m_showGroundPlane       (false),
     m_showSkybox            (false),
+    m_showMaterialWindow    (false),
     m_showAABB              (false),
     m_showSphere            (false),
     m_selectedTexture       (std::numeric_limits<std::uint32_t>::max()),
@@ -557,6 +558,10 @@ void ModelState::buildUI()
                         }
                         savePrefs();
                     }
+                    if (ImGui::MenuItem("Show Material Preview", nullptr, &m_showMaterialWindow))
+                    {
+                        savePrefs();
+                    }
                     ImGui::EndMenu();
                 }
 
@@ -639,6 +644,19 @@ void ModelState::buildUI()
                         savePrefs();
                         m_showPreferences = false;
                     }
+                }
+                ImGui::End();
+            }
+
+            //material window
+            if (m_showMaterialWindow)
+            {
+                ImGui::SetNextWindowSize({ 528.f, 554.f });
+                ImGui::Begin("Material Preview", &m_showMaterialWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+                if (!m_materialDefs.empty())
+                {
+                    ImGui::Image((void*)(std::size_t)m_materialDefs[m_selectedMaterial].previewTexture.getTexture().getGLHandle(),
+                        { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });
                 }
                 ImGui::End();
             }
@@ -844,7 +862,7 @@ void ModelState::saveModel(const std::string& path)
         {
             obj->addProperty("diffuse").setValue(textureName(mat.textureIDs[MaterialDefinition::Diffuse]));
 
-            if (mat.alphaClip < 1)
+            if (mat.alphaClip > 0)
             {
                 obj->addProperty("alpha_clip").setValue(mat.alphaClip);
             }
@@ -855,7 +873,10 @@ void ModelState::saveModel(const std::string& path)
             obj->addProperty("lightmap").setValue(textureName(mat.textureIDs[MaterialDefinition::Lightmap]));
         }
 
-        //TODO check if this is an IQM file and set the skinning property if necessary
+        if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+        {
+            obj->addProperty("skinned").setValue(true);
+        }
     }
 
     if (newCfg.save(path))
@@ -1315,6 +1336,10 @@ void ModelState::loadPrefs()
                     m_scene.enableSkybox();
                 }
             }
+            else if (name == "show_material")
+            {
+                m_showMaterialWindow = prop.getValue<bool>();
+            }
             else if (name == "sky_top")
             {
                 m_preferences.skyTop = prop.getValue<cro::Colour>();
@@ -1357,6 +1382,7 @@ void ModelState::savePrefs()
     prefsOut.addProperty("show_skybox", m_showSkybox ? "true" : "false");
     prefsOut.addProperty("sky_top", toString(m_preferences.skyTop));
     prefsOut.addProperty("sky_bottom", toString(m_preferences.skyBottom));
+    prefsOut.addProperty("show_material").setValue(m_showMaterialWindow);
 
     prefsOut.addProperty("import_dir", m_preferences.lastImportDirectory);
     prefsOut.addProperty("export_dir", m_preferences.lastExportDirectory);
@@ -1722,6 +1748,16 @@ void ModelState::addMaterialToBrowser(MaterialDefinition&& def)
     if (def.useRimlighing)
     {
         def.shaderFlags |= cro::ShaderResource::RimLighting;
+    }
+
+    if (def.useSubrect)
+    {
+        def.shaderFlags |= cro::ShaderResource::Subrects;
+    }
+
+    if (def.skinned)
+    {
+        def.shaderFlags |= cro::ShaderResource::Skinning;
     }
 
     def.shaderID = m_resources.shaders.loadBuiltIn(shaderType, def.shaderFlags);
@@ -2370,6 +2406,10 @@ void ModelState::drawInspector()
                 ImGui::SameLine();
                 helpMarker("Export this material to a Material Definition file which can be loaded by the Material Browser");
 
+                if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+                {
+                    shaderFlags |= cro::ShaderResource::Skinning;
+                }
 
                 if (matDef.shaderFlags != shaderFlags
                     || matDef.activeType != matDef.type)
@@ -2615,11 +2655,15 @@ void ModelState::drawBrowser()
         {
             if (ImGui::Button("Add##00"))
             {
-                auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
+                auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp", true);
                 if (!path.empty()
                     && m_materialTextures.size() < ui::MaxMaterials)
                 {
-                    addTextureToBrowser(path);
+                    auto files = cro::Util::String::tokenize(path, '|');
+                    for (const auto& f : files)
+                    {
+                        addTextureToBrowser(f);
+                    }
                 }
             }
             ImGui::SameLine();
@@ -3093,6 +3137,10 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
             clamp(subrect.z);
             clamp(subrect.w);
             matDef.subrect = subrect;
+        }
+        else if (name == "skinned")
+        {
+            matDef.skinned = prop.getValue<bool>();
         }
     }
 }

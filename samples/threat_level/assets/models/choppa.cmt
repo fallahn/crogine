@@ -1,13 +1,17 @@
 model Choppa
 {
-	mesh = "assets/models/choppa_pod.iqm"
+    mesh = "assets/models/choppa_pod.iqm"
 
-	material VertexLit
-	{
-		diffuse = "assets/materials/npc/turret_cannon_diffuse.png"
-		mask = "assets/materials/npc/turret_cannon_mask.png"
-		skinned = true
-		rim = 0.9,0.87,0.7,1.0
-		rim_falloff = 0.4
-	}
+    material VertexLit
+    {
+        mask = "assets/materials/npc/choppa_mask.png"
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        rim = 0.900000,0.870000,0.700000,1.000000
+        rim_falloff = 0.400000
+        blendmode = true
+        diffuse = "assets/materials/npc/choppa_diffuse.png"
+        skinned = true
+
+    }
 }
