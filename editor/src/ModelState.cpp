@@ -2197,38 +2197,39 @@ void ModelState::drawInspector()
                 auto type = matDef.type;
                 std::string slotLabel;
                 std::uint32_t thumb = m_blackTexture.getGLHandle();
+
+                //diffuse map
+                slotLabel = "Diffuse";
+                    
+                auto prevDiffuse = matDef.textureIDs[MaterialDefinition::Diffuse];
+                if (matDef.textureIDs[MaterialDefinition::Diffuse] == 0)
+                {
+                    slotLabel += ": Empty";
+                }
+                else
+                {
+                    slotLabel += ": " + m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Diffuse]).name;
+                    thumb = matDef.textureIDs[MaterialDefinition::Diffuse];
+                }
+                if (drawTextureSlot(slotLabel, matDef.textureIDs[MaterialDefinition::Diffuse], thumb))
+                {
+                    applyMaterial = true;
+                }
+
+                //drawTextureSlot() may have updated this
+                if (matDef.textureIDs[MaterialDefinition::Diffuse] != 0)
+                {
+                    shaderFlags |= cro::ShaderResource::DiffuseMap;
+                        
+                    //if this slot was previously empty we probably want to set the colour to white
+                    if (prevDiffuse == 0)
+                    {
+                        matDef.colour = glm::vec4(1.f);
+                    }
+                }
+
                 if (type != MaterialDefinition::PBR)
                 {
-                    //diffuse map
-                    slotLabel = "Diffuse";
-                    
-                    auto prevDiffuse = matDef.textureIDs[MaterialDefinition::Diffuse];
-                    if (matDef.textureIDs[MaterialDefinition::Diffuse] == 0)
-                    {
-                        slotLabel += ": Empty";
-                    }
-                    else
-                    {
-                        slotLabel += ": " + m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Diffuse]).name;
-                        thumb = matDef.textureIDs[MaterialDefinition::Diffuse];
-                    }
-                    if (drawTextureSlot(slotLabel, matDef.textureIDs[MaterialDefinition::Diffuse], thumb))
-                    {
-                        applyMaterial = true;
-                    }
-
-                    //drawTextureSlot() may have updated this
-                    if (matDef.textureIDs[MaterialDefinition::Diffuse] != 0)
-                    {
-                        shaderFlags |= cro::ShaderResource::DiffuseMap;
-                        
-                        //if this slot was previously empty we probably want to set the colour to white
-                        if (prevDiffuse == 0)
-                        {
-                            matDef.colour = glm::vec4(1.f);
-                        }
-                    }
-
                     //lightmap
                     slotLabel = "Light Map";
                     if (matDef.textureIDs[MaterialDefinition::Lightmap] == 0)
@@ -2252,7 +2253,7 @@ void ModelState::drawInspector()
                     }
                 }
 
-                if (type == MaterialDefinition::VertexLit)
+                if (type != MaterialDefinition::Unlit)
                 {
                     //mask map
                     slotLabel = "Mask Map";
@@ -2304,29 +2305,28 @@ void ModelState::drawInspector()
                     }
                 }
 
-                if (type == MaterialDefinition::PBR)
-                {
-                    ImGui::Text("Coming Soon!");
-                    //metal map
-                    //drawTextureSlot("Metalness", m_materialDefs[m_selectedMaterial].metalness, m_materialThumb);
-                    //spec map
-                    //ao map
-                }
-
                 ImGui::NewLine();
-                //if (matDef.textureIDs[MaterialDefinition::Diffuse] == 0)
+                /*if (type != MaterialDefinition::PBR
+                    || matDef.textureIDs[MaterialDefinition::Diffuse] == 0
+                    )*/
                 {
                     if (ImGui::ColorEdit4("Diffuse Colour", matDef.colour.asArray()))
                     {
                         applyMaterial = true;
                     }
                     ImGui::SameLine();
-                    //helpMarker("If the Diffuse texture map is not set then this defines the diffuse colour of the material");
-                    helpMarker("Defines the diffuse colour of the material. This is multiplied with any diffuse map which may be assigned to the material.");
+                    if (type != MaterialDefinition::PBR)
+                    {
+                        helpMarker("Defines the diffuse colour of the material. This is multiplied with any diffuse map which may be assigned to the material.");
+                    }
+                    else
+                    {
+                        helpMarker("Defines the albedo colour or the material. This is multiplied with the albedo map if one is assigned.");
+                    }
 
                     shaderFlags |= cro::ShaderResource::DiffuseColour;
                 }
-                if (type == MaterialDefinition::VertexLit
+                if (type != MaterialDefinition::Unlit
                     && matDef.textureIDs[MaterialDefinition::Mask] == 0)
                 {
                     if (ImGui::ColorEdit3("Mask Colour", matDef.maskColour.asArray()))
@@ -2334,10 +2334,18 @@ void ModelState::drawInspector()
                         applyMaterial = true;
                     }
                     ImGui::SameLine();
-                    helpMarker("If the Mask texture map is not set then this defines the mask colour of the material");
+                    if (type == MaterialDefinition::VertexLit)
+                    {
+                        helpMarker("Defines the mask colour of the material. Specular intensity is stored in the red channel, specular amount in the green channel, and self-illumination is stored in the blue channel");
+                    }
+                    else
+                    {
+                        helpMarker("Defines the mask colour of the material in lieu of a mask map. The metallic value is stored n the red channel, roughness in the blue channel and AO in the green channel");
+                    }
                 }
 
-                if (matDef.textureIDs[MaterialDefinition::Diffuse])
+                if (matDef.textureIDs[MaterialDefinition::Diffuse]
+                    && type != MaterialDefinition::PBR)
                 {
                     ImGui::NewLine();
                     if (ImGui::SliderFloat("Alpha Clip", &matDef.alphaClip, 0.f, 1.f))
@@ -2352,15 +2360,6 @@ void ModelState::drawInspector()
                     }
                 }
 
-                ImGui::NewLine();
-                ImGui::Checkbox("Use Vertex Colours", &matDef.vertexColoured);
-                ImGui::SameLine();
-                helpMarker("Any colour information stored in the model's vertex data will be multiplied with the diffuse colour of the material");
-                if (matDef.vertexColoured)
-                {
-                    shaderFlags |= cro::ShaderResource::VertexColour;
-                }
-
                 ImGui::Checkbox("Receive Shadows", &matDef.receiveShadows);
                 ImGui::SameLine();
                 helpMarker("Check this box if the material should receive shadows from the active shadow map");
@@ -2369,27 +2368,39 @@ void ModelState::drawInspector()
                     shaderFlags |= cro::ShaderResource::RxShadows;
                 }
 
-                ImGui::NewLine();
-                ImGui::Checkbox("Use Rimlighting", &matDef.useRimlighing);
-                ImGui::SameLine();
-                helpMarker("Enable the rim lighting effect. Not available with the PBR shader");
-                if (matDef.useRimlighing)
+                if (type != MaterialDefinition::PBR)
                 {
-                    shaderFlags |= cro::ShaderResource::RimLighting;
-
-                    if (ImGui::SliderFloat("Rim Falloff", &matDef.rimlightFalloff, 0.f, 1.f))
-                    {
-                        applyMaterial = true;
-                    }
+                    ImGui::NewLine();
+                    ImGui::Checkbox("Use Vertex Colours", &matDef.vertexColoured);
                     ImGui::SameLine();
-                    helpMarker("Adjusts the point at which the rimlight falloff affects the fade");
-
-                    if (ImGui::ColorEdit3("Rimlight Colour", matDef.rimlightColour.asArray()))
+                    helpMarker("Any colour information stored in the model's vertex data will be multiplied with the diffuse colour of the material");
+                    if (matDef.vertexColoured)
                     {
-                        applyMaterial = true;
+                        shaderFlags |= cro::ShaderResource::VertexColour;
                     }
+
+                    ImGui::NewLine();
+                    ImGui::Checkbox("Use Rimlighting", &matDef.useRimlighing);
                     ImGui::SameLine();
-                    helpMarker("Sets the colour of the rimlight effect, if it is enabled");
+                    helpMarker("Enable the rim lighting effect. Not available with the PBR shader");
+                    if (matDef.useRimlighing)
+                    {
+                        shaderFlags |= cro::ShaderResource::RimLighting;
+
+                        if (ImGui::SliderFloat("Rim Falloff", &matDef.rimlightFalloff, 0.f, 1.f))
+                        {
+                            applyMaterial = true;
+                        }
+                        ImGui::SameLine();
+                        helpMarker("Adjusts the point at which the rimlight falloff affects the fade");
+
+                        if (ImGui::ColorEdit3("Rimlight Colour", matDef.rimlightColour.asArray()))
+                        {
+                            applyMaterial = true;
+                        }
+                        ImGui::SameLine();
+                        helpMarker("Sets the colour of the rimlight effect, if it is enabled");
+                    }
                 }
 
                 if (shaderFlags & (cro::ShaderResource::DiffuseMap | cro::ShaderResource::NormalMap | cro::ShaderResource::LightMap | cro::ShaderResource::MaskMap))
@@ -2458,6 +2469,10 @@ void ModelState::drawInspector()
                     if (matDef.type == MaterialDefinition::VertexLit)
                     {
                         shaderType = cro::ShaderResource::VertexLit;
+                    }
+                    else if (matDef.type == MaterialDefinition::PBR)
+                    {
+                        shaderType = cro::ShaderResource::PBR;
                     }
 
                     matDef.shaderID = m_resources.shaders.loadBuiltIn(shaderType, shaderFlags);

@@ -33,6 +33,7 @@ source distribution.
 #include "shaders/Billboard.hpp"
 #include "shaders/VertexLit.hpp"
 #include "shaders/ShadowMap.hpp"
+#include "shaders/PBR.hpp"
 #include "../detail/GLCheck.hpp"
 
 using namespace cro;
@@ -198,6 +199,9 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
     case BuiltIn::ShadowMap:
         //TODO assess platform and load desktop version when necessary
         success = loadFromString(id, Shaders::ShadowMap::Vertex, Shaders::ShadowMap::FragmentMobile, defines);
+        break;
+    case BuiltIn::PBR:
+        success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::PBR::Fragment, defines);
         break;
     }
 

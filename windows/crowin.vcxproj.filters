@@ -531,6 +531,9 @@
     <ClInclude Include="..\crogine\include\crogine\gui\imgui.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\src\graphics\shaders\PBR.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">

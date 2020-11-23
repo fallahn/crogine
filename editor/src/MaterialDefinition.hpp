@@ -42,6 +42,7 @@ struct MaterialDefinition final
 {
     std::string name = "Untitled";
 
+    //TODO why not use shader type directly from cro?
     enum Type
     {
         Unlit, VertexLit, PBR,

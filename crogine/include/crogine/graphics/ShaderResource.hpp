@@ -47,11 +47,12 @@ namespace cro
     public:
         enum BuiltIn
         {
-            Unlit              = 0x7FFB0000,
-            BillboardUnlit     = 0x7FFC0000,
-            VertexLit          = 0x7FFD0000,
-            BillboardVertexLit = 0x7FFE0000,
-            ShadowMap          = 0x7FFF0000
+            Unlit              = 0x7A000000,
+            BillboardUnlit     = 0x7B000000,
+            VertexLit          = 0x7C000000,
+            BillboardVertexLit = 0x7D000000,
+            ShadowMap          = 0x7E000000,
+            PBR                = 0x7F000000
         };
 
         enum BuiltInFlags
