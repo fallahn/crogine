@@ -256,7 +256,7 @@ ImageFormat::Type Image::getFormat() const
 
 const uint8* Image::getPixelData() const
 {
-    return m_data.data();
+    return m_data.empty() ? nullptr : m_data.data();
 }
 
 void image_writer_func(void* context, void* data, int size)

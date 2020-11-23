@@ -356,11 +356,28 @@ void ModelState::addSystems()
 
 void ModelState::loadAssets()
 {
+    //black texture for empty texture slots
+    cro::Image img;
+    img.create(2, 2, cro::Colour::Black());
+
+    m_blackTexture.loadFromImage(img);
+
+    //checkered texture for default material
+    std::array<std::uint8_t, 16> pixels =
+    {
+        0,0,0,255, 255,0,255,255,
+        255,0,255,255, 0,0,0,255
+    };
+    m_magentaTexture.create(2, 2);
+    m_magentaTexture.update(pixels.data());
+
+
     //create a default material to display models on import
-    auto flags = cro::ShaderResource::DiffuseColour;
+    auto flags = cro::ShaderResource::DiffuseColour;// | cro::ShaderResource::DiffuseMap;
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, flags);
     materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
+    //m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_diffuseMap", m_magentaTexture);
 
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::Skinning | cro::ShaderResource::DepthMap);
     materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
@@ -369,17 +386,6 @@ void ModelState::loadAssets()
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     materialIDs[MaterialID::DebugDraw] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
-
-    //black texture for empty texture slots
-    cro::Image img;
-    img.create(2, 2, cro::Colour::Black());
-    LOG("Add creating textures from images", cro::Logger::Type::Info);
-    m_blackTexture.create(2, 2);
-    m_blackTexture.update(img.getPixelData());
-
-    img.create(2, 2, cro::Colour::Magenta());
-    m_magentaTexture.create(2, 2);
-    m_magentaTexture.update(img.getPixelData());
 }
 
 void ModelState::createScene()
@@ -2620,11 +2626,7 @@ void ModelState::drawBrowser()
                     //update the newly selected thumbnail
                     if (!m_materialDefs.empty())
                     {
-                        m_previewEntity.getComponent<cro::Model>().setMaterial(0, m_materialDefs[m_selectedMaterial].materialData);
-
-                        m_materialDefs[m_selectedMaterial].previewTexture.clear(ui::PreviewClearColour);
-                        m_previewScene.render(m_materialDefs[m_selectedMaterial].previewTexture);
-                        m_materialDefs[m_selectedMaterial].previewTexture.display();
+                        refreshMaterialThumbnail(m_materialDefs[m_selectedMaterial]);
                     }
                 }
             }

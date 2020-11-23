@@ -158,18 +158,29 @@ bool Texture::loadFromFile(const std::string& path, bool createMipMaps)
     Image image;
     if (image.loadFromFile(path))
     {
-        auto size = image.getSize();
-        /*if (!((size.x & (size.x - 1)) == 0) && ((size.y & (size.y - 1)) == 0))
-        {
-            LOG("Image not POW2", Logger::Type::Error);
-            return false;
-        }*/
-        
-        create(size.x, size.y, image.getFormat());
-        return update(image.getPixelData(), createMipMaps);
+        return loadFromImage(image, createMipMaps);
     }
     
     return false;
+}
+
+bool Texture::loadFromImage(const Image& image, bool createMipMaps)
+{
+    if (image.getPixelData() == nullptr)
+    {
+        LogE << "Failed creating texture from image: Image is empty." << std::endl;
+        return false;
+    }
+
+    auto size = image.getSize();
+    /*if (!((size.x & (size.x - 1)) == 0) && ((size.y & (size.y - 1)) == 0))
+    {
+        LOG("Image not POW2", Logger::Type::Error);
+        return false;
+    }*/
+
+    create(size.x, size.y, image.getFormat());
+    return update(image.getPixelData(), createMipMaps);
 }
 
 bool Texture::update(const uint8* pixels, bool createMipMaps, URect area)
