@@ -139,4 +139,16 @@ Models in crogine are described in a text format that can be loaded via the `Mod
             normal = "path/to/normal_map.png"
         }
 
+        //On desktop builds PBR (physically based rendering) materials are available. These have the
+        //same properties as VertexLit materials, but some of the properties behave slightly differently.
+        //The most notable difference is that the mask values represent the metallicness (metallic based
+        //workflow) in the red channel, the roughness in the green channel and the ambient occlusion
+        //(ao) in the green channel. The diffuse property (both colour and texture map) is used to
+        //store the albedo of the PBR material. PBR materials are not designed with mobile builds in
+        //mind, however crogine will still attempt to load them.
+        material PBR
+        {
+            //see VertexLit for properties.
+        }
+
     }

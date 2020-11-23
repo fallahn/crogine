@@ -1752,7 +1752,7 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
         tex->setSmooth(matDef.smoothTexture);
         tex->setRepeated(matDef.repeatTexture);
     }
-    else if(matDef.type == MaterialDefinition::VertexLit)
+    else if(matDef.type != MaterialDefinition::Unlit)
     {
         matDef.materialData.setProperty("u_maskColour", matDef.maskColour);
     }
@@ -1765,7 +1765,8 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
         tex->setRepeated(matDef.repeatTexture);
     }
 
-    if (matDef.textureIDs[MaterialDefinition::Lightmap])
+    if (matDef.textureIDs[MaterialDefinition::Lightmap]
+        && matDef.type != MaterialDefinition::PBR)
     {
         auto& tex = m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Lightmap]).texture;
         matDef.materialData.setProperty("u_lightMap", *tex);
@@ -1778,7 +1779,8 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
         matDef.materialData.setProperty("u_colour", matDef.colour);
     }
 
-    if (matDef.useRimlighing)
+    if (matDef.useRimlighing
+        && matDef.type != MaterialDefinition::PBR)
     {
         matDef.materialData.setProperty("u_rimColour", matDef.rimlightColour);
         matDef.materialData.setProperty("u_rimFalloff", matDef.rimlightFalloff);
