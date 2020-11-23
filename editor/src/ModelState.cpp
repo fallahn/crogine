@@ -240,6 +240,9 @@ namespace
         helpMarker("Drag a texture from the Material Browser to fill the slot, or click the icon to clear it.");
         return retVal;
     }
+
+    bool setInspectorTab = false;
+    std::int32_t inspectorTabIndex = 0;
 }
 
 ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
@@ -1703,75 +1706,8 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
 
 void ModelState::addMaterialToBrowser(MaterialDefinition&& def)
 {
-    auto shaderType = cro::ShaderResource::Unlit;
-    if (def.type == MaterialDefinition::VertexLit)
-    {
-        shaderType = cro::ShaderResource::VertexLit;
-        if (def.textureIDs[MaterialDefinition::Normal])
-        {
-            def.shaderFlags |= cro::ShaderResource::NormalMap;
-        }
-    }
-
-    if (def.textureIDs[MaterialDefinition::Lightmap])
-    {
-        def.shaderFlags |= cro::ShaderResource::LightMap;
-    }
-
-    if (def.textureIDs[MaterialDefinition::Mask])
-    {
-        def.shaderFlags |= cro::ShaderResource::MaskMap;
-    }
-
-    if (def.textureIDs[MaterialDefinition::Diffuse])
-    {
-        def.shaderFlags |= cro::ShaderResource::DiffuseMap;
-    }
-    else
-    {
-        def.shaderFlags |= cro::ShaderResource::DiffuseColour;
-    }
-
-    if (def.alphaClip > 0)
-    {
-        def.shaderFlags |= cro::ShaderResource::AlphaClip;
-    }
-
-    if (def.vertexColoured)
-    {
-        def.shaderFlags |= cro::ShaderResource::VertexColour;
-    }
-
-    if (def.receiveShadows)
-    {
-        def.shaderFlags |= cro::ShaderResource::RxShadows;
-    }
-
-    if (def.useRimlighing)
-    {
-        def.shaderFlags |= cro::ShaderResource::RimLighting;
-    }
-
-    if (def.useSubrect)
-    {
-        def.shaderFlags |= cro::ShaderResource::Subrects;
-    }
-
-    if (def.skinned)
-    {
-        def.shaderFlags |= cro::ShaderResource::Skinning;
-    }
-
-    def.shaderID = m_resources.shaders.loadBuiltIn(shaderType, def.shaderFlags);
-    def.materialData.setShader(m_resources.shaders.get(def.shaderID));
-
     //update the thumbnail
-    applyPreviewSettings(def);
-    m_previewEntity.getComponent<cro::Model>().setMaterial(0, def.materialData);
-
-    def.previewTexture.clear(ui::PreviewClearColour);
-    m_previewScene.render(def.previewTexture);
-    def.previewTexture.display();
+    refreshMaterialThumbnail(def);
 
     m_materialDefs.push_back(std::move(def));
     m_selectedMaterial = m_materialDefs.size() - 1;
@@ -1821,7 +1757,7 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
         tex->setSmooth(matDef.smoothTexture);
     }
 
-    if (matDef.shaderFlags & cro::ShaderResource::DiffuseColour)
+    //if (matDef.shaderFlags & cro::ShaderResource::DiffuseColour)
     {
         matDef.materialData.setProperty("u_colour", matDef.colour);
     }
@@ -1838,6 +1774,80 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
     }
 
     matDef.materialData.blendMode = matDef.blendMode;
+}
+
+void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
+{
+    def.shaderFlags = 0;
+
+    auto shaderType = cro::ShaderResource::Unlit;
+    if (def.type == MaterialDefinition::VertexLit)
+    {
+        shaderType = cro::ShaderResource::VertexLit;
+        if (def.textureIDs[MaterialDefinition::Normal])
+        {
+            def.shaderFlags |= cro::ShaderResource::NormalMap;
+        }
+    }
+
+    if (def.textureIDs[MaterialDefinition::Lightmap])
+    {
+        def.shaderFlags |= cro::ShaderResource::LightMap;
+    }
+
+    if (def.textureIDs[MaterialDefinition::Mask])
+    {
+        def.shaderFlags |= cro::ShaderResource::MaskMap;
+    }
+
+    if (def.textureIDs[MaterialDefinition::Diffuse])
+    {
+        def.shaderFlags |= cro::ShaderResource::DiffuseMap;
+    }
+    //else
+    {
+        def.shaderFlags |= cro::ShaderResource::DiffuseColour;
+    }
+
+    if (def.alphaClip > 0)
+    {
+        def.shaderFlags |= cro::ShaderResource::AlphaClip;
+    }
+
+    if (def.vertexColoured)
+    {
+        def.shaderFlags |= cro::ShaderResource::VertexColour;
+    }
+
+    if (def.receiveShadows)
+    {
+        def.shaderFlags |= cro::ShaderResource::RxShadows;
+    }
+
+    if (def.useRimlighing)
+    {
+        def.shaderFlags |= cro::ShaderResource::RimLighting;
+    }
+
+    if (def.useSubrect)
+    {
+        def.shaderFlags |= cro::ShaderResource::Subrects;
+    }
+
+    if (def.skinned)
+    {
+        def.shaderFlags |= cro::ShaderResource::Skinning;
+    }
+
+    def.shaderID = m_resources.shaders.loadBuiltIn(shaderType, def.shaderFlags);
+    def.materialData.setShader(m_resources.shaders.get(def.shaderID));
+
+    applyPreviewSettings(def);
+    m_previewEntity.getComponent<cro::Model>().setMaterial(0, def.materialData);
+
+    def.previewTexture.clear(ui::PreviewClearColour);
+    m_previewScene.render(def.previewTexture);
+    def.previewTexture.display();
 }
 
 void ModelState::updateLayout(std::int32_t w, std::int32_t h)
@@ -1869,7 +1879,10 @@ void ModelState::drawInspector()
     {
         ImGui::BeginTabBar("##a");
 
-        if (ImGui::BeginTabItem("Model"))
+        auto idx = 0;
+        auto flags = (setInspectorTab && inspectorTabIndex == idx) ? ImGuiTabItemFlags_SetSelected : 0;
+
+        if (ImGui::BeginTabItem("Model", nullptr, flags))
         {
             //model details
             if (entities[EntityID::ActiveModel].isValid())
@@ -2100,7 +2113,10 @@ void ModelState::drawInspector()
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Material"))
+        idx++;
+        flags = (setInspectorTab && inspectorTabIndex == idx) ? ImGuiTabItemFlags_SetSelected : 0;
+
+        if (ImGui::BeginTabItem("Material", nullptr, flags))
         {
             if (!m_materialDefs.empty())
             {
@@ -2422,7 +2438,8 @@ void ModelState::drawInspector()
                 ImGui::SameLine();
                 helpMarker("Export this material to a Material Definition file which can be loaded by the Material Browser");
 
-                if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+                if (entities[EntityID::ActiveModel].isValid()
+                    && entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
                 {
                     shaderFlags |= cro::ShaderResource::Skinning;
                 }
@@ -2464,7 +2481,10 @@ void ModelState::drawInspector()
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Texture"))
+        idx++;
+        flags = (setInspectorTab && inspectorTabIndex == idx) ? ImGuiTabItemFlags_SetSelected : 0;
+
+        if (ImGui::BeginTabItem("Texture", nullptr, flags))
         {
             if (!m_materialTextures.empty())
             {
@@ -2525,6 +2545,7 @@ void ModelState::drawInspector()
         }
 
         ImGui::EndTabBar();
+        setInspectorTab = false;
     }
     ImGui::End();
 }
@@ -2728,6 +2749,18 @@ void ModelState::drawBrowser()
 
                     m_materialTextures.erase(m_selectedTexture);
                     m_selectedTexture = m_materialTextures.empty() ? 0 : m_materialTextures.begin()->first;
+
+                    for (auto& def : m_materialDefs)
+                    {
+                        refreshMaterialThumbnail(def);
+
+                        //if no model is open then this should be empty, so skip checking validity of the
+                        //destination model.
+                        for (auto idx : def.submeshIDs)
+                        {
+                            entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(idx, def.materialData);
+                        }
+                    }
                 }
             }
             ImGui::SameLine();

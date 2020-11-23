@@ -135,6 +135,7 @@ private:
     std::size_t m_selectedMaterial;
     cro::Entity m_previewEntity;
     void applyPreviewSettings(MaterialDefinition&);
+    void refreshMaterialThumbnail(MaterialDefinition&);
 
     std::vector<std::int32_t> m_activeMaterials; //indices into the materials array of materials used on the currently open model. -1 means default material is applied
 
