@@ -2973,7 +2973,17 @@ void ModelState::drawBrowser()
 
 void ModelState::exportMaterial() const
 {
-    auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/untitled", "mdf");
+    auto defaultName = m_materialDefs[m_selectedMaterial].name;
+    if (defaultName.empty())
+    {
+        defaultName = "untitled";
+    }
+    else
+    {
+        std::replace(defaultName.begin(), defaultName.end(), ' ', '_');
+        defaultName = cro::Util::String::toLower(defaultName);
+    }
+    auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/" + defaultName, "mdf");
     if (!path.empty())
     {
         if (cro::FileSystem::getFileExtension(path) != ".mdf")

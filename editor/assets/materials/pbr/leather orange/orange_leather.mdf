@@ -1,0 +1,21 @@
+material_definition Orange_Leather
+{
+    type = 2
+    colour = 1.000000,1.000000,1.000000,1.000000
+    mask_colour = 0.000000,0.000000,1.000000,1.000000
+    alpha_clip = 0.000000
+    vertex_coloured = false
+    rx_shadow = false
+    blend_mode = 0
+    use_rimlight = false
+    rimlight_falloff = 0.000000
+    rimlight_colour = 1.000000,1.000000,1.000000,1.000000
+    use_subrect = false
+    subrect = 0.000000,0.000000,1.000000,1.000000
+    texture_smooth = true
+    texture_repeat = true
+    diffuse = "materials/pbr/leather orange/leather_albedo.png"
+    mask = "materials/pbr/leather orange/leather_mask.png"
+    normal = "materials/pbr/leather orange/leather_normal.png"
+
+}
