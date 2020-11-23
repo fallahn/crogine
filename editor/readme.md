@@ -1,7 +1,11 @@
-CROGINE Model Viewer and Converter
-----------------------------------
+CROGINE World Editor, Model Converter and Material Editor (WIP)
+---------------------------------------------------------------
 
-Allows opening and importing model files to the crogine model format, as well as displaying data such as material info and animation data. See cro_mesh_format.md for details on the mesh file format, and model_definition_format.md for examples on authoring model definition files
+World Editor allows importing models into a scene and placing them in world space. Current plan is only for geometry layout - gameplay programming is still required in code.
+
+Model Converter allows opening and importing model files for conversion to the crogine model format, as well as displaying data such as material info and animation data. See cro_mesh_format.md for details on the mesh file format, and model_definition_format.md for examples on authoring model definition files.
+
+Material Editor is designed for fast preview and easy reuse of material definitions which can be applied to models loaded in the model converter/viewer.
 
 -----------------------------------------------------------------------
 

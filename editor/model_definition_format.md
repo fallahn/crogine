@@ -89,7 +89,9 @@ Models in crogine are described in a text format that can be loaded via the `Mod
             //then rx_shadows must be set to true, else can be omitted if it is not needed.
             rx_shadows = true
 
-            //Texture properties can also be set which are applied to all textures used in the material
+            //Texture properties can also be set which are applied to all textures used in the material.
+            //Note that if these textures are shared with other models that the last loaded definition
+            //file will overwrite the current texture settings.
             smooth = true
             repeat = false
 

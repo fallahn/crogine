@@ -819,6 +819,8 @@ void ModelState::saveModel(const std::string& path)
 
         obj->addProperty("name").setValue(mat.name);
         obj->addProperty("colour").setValue(mat.colour);
+        obj->addProperty("smooth").setValue(mat.smoothTexture);
+        obj->addProperty("repeat").setValue(mat.repeatTexture);
 
         if (mat.useRimlighing)
         {
@@ -1779,7 +1781,12 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
 {
     if (matDef.textureIDs[MaterialDefinition::Diffuse])
     {
-        matDef.materialData.setProperty("u_diffuseMap", *m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Diffuse]).texture);
+        auto& tex = m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Diffuse]).texture;
+        
+        matDef.materialData.setProperty("u_diffuseMap", *tex);
+        tex->setRepeated(matDef.repeatTexture);
+        tex->setSmooth(matDef.smoothTexture);
+
         if (matDef.alphaClip > 0)
         {
             matDef.materialData.setProperty("u_alphaClip", matDef.alphaClip);
@@ -1788,7 +1795,10 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
 
     if (matDef.textureIDs[MaterialDefinition::Mask])
     {
-        matDef.materialData.setProperty("u_maskMap", *m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Mask]).texture);
+        auto& tex = m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Mask]).texture;
+        matDef.materialData.setProperty("u_maskMap", *tex);
+        tex->setSmooth(matDef.smoothTexture);
+        tex->setRepeated(matDef.repeatTexture);
     }
     else if(matDef.type == MaterialDefinition::VertexLit)
     {
@@ -1797,12 +1807,18 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
 
     if (matDef.textureIDs[MaterialDefinition::Normal])
     {
-        matDef.materialData.setProperty("u_normalMap", *m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Normal]).texture);
+        auto& tex = m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Normal]).texture;
+        matDef.materialData.setProperty("u_normalMap", *tex);
+        tex->setSmooth(matDef.smoothTexture);
+        tex->setRepeated(matDef.repeatTexture);
     }
 
     if (matDef.textureIDs[MaterialDefinition::Lightmap])
     {
-        matDef.materialData.setProperty("u_lightMap", *m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Lightmap]).texture);
+        auto& tex = m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Lightmap]).texture;
+        matDef.materialData.setProperty("u_lightMap", *tex);
+        tex->setRepeated(matDef.repeatTexture);
+        tex->setSmooth(matDef.smoothTexture);
     }
 
     if (matDef.shaderFlags & cro::ShaderResource::DiffuseColour)
@@ -2471,12 +2487,38 @@ void ModelState::drawInspector()
                 if (ImGui::Checkbox("Smoothed", &smooth))
                 {
                     texture.texture->setSmooth(smooth);
+
+                    //if this texture is used in the active material
+                    //update the material definition
+                    if (!m_materialDefs.empty())
+                    {
+                        for (auto t : m_materialDefs[m_selectedMaterial].textureIDs)
+                        {
+                            if (t == m_selectedTexture)
+                            {
+                                m_materialDefs[m_selectedMaterial].smoothTexture = smooth;
+                            }
+                        }
+                    }
                 }
 
                 bool repeated = texture.texture->isRepeated();
                 if (ImGui::Checkbox("Repeated", &repeated))
                 {
                     texture.texture->setRepeated(repeated);
+
+                    //if this texture is used in the active material
+                    //update the material definition
+                    if (!m_materialDefs.empty())
+                    {
+                        for (auto t : m_materialDefs[m_selectedMaterial].textureIDs)
+                        {
+                            if (t == m_selectedTexture)
+                            {
+                                m_materialDefs[m_selectedMaterial].repeatTexture = repeated;
+                            }
+                        }
+                    }
                 }
             }
             ImGui::EndTabItem();
@@ -2859,6 +2901,8 @@ void ModelState::exportMaterial() const
         file.addProperty("rimlight_colour").setValue(matDef.rimlightColour);
         file.addProperty("use_subrect").setValue(matDef.useSubrect);
         file.addProperty("subrect").setValue(matDef.subrect);
+        file.addProperty("texture_smooth").setValue(matDef.smoothTexture);
+        file.addProperty("texture_repeat").setValue(matDef.repeatTexture);
 
         //textures
         auto getTextureName = [&](std::uint32_t id)
@@ -3011,6 +3055,14 @@ void ModelState::importMaterial(const std::string& path)
                     clamp(subrect.w);
                     def.subrect = subrect;
                 }
+                else if (name == "texture_smooth")
+                {
+                    def.smoothTexture = prop.getValue<bool>();
+                }
+                else if (name == "texture_repeat")
+                {
+                    def.repeatTexture = prop.getValue<bool>();
+                }
             }
 
             addMaterialToBrowser(std::move(def));
@@ -3141,6 +3193,14 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
         else if (name == "skinned")
         {
             matDef.skinned = prop.getValue<bool>();
+        }
+        else if (name == "smooth")
+        {
+            matDef.smoothTexture = prop.getValue<bool>();
+        }
+        else if (name == "repeat")
+        {
+            matDef.repeatTexture = prop.getValue<bool>();
         }
     }
 }

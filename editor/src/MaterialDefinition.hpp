@@ -75,6 +75,9 @@ struct MaterialDefinition final
     bool receiveShadows = false;
     bool skinned = false;
 
+    bool smoothTexture = true;
+    bool repeatTexture = true;
+
     cro::Material::BlendMode blendMode = cro::Material::BlendMode::None;
 
 
