@@ -921,13 +921,14 @@ void ModelState::closeModel()
     m_currentModelConfig = {};
 
     //remove any IDs from active materials
-    for (auto i : m_activeMaterials)
-    {
-        if (i > -1)
-        {
-            m_materialDefs[i].submeshIDs.clear();
-        }
-    }
+    //for (auto i : m_activeMaterials)
+    //{
+    //    if (i > -1)
+    //    {
+    //        m_materialDefs[i].submeshIDs.clear();
+    //    }
+    //}
+    m_materialDefs.clear();
     m_activeMaterials.clear();
 
     m_currentFilePath.clear();
@@ -2630,6 +2631,14 @@ void ModelState::drawBrowser()
                     }
                 }
             }
+            ImGui::SameLine();
+            if (ImGui::Button("Export##01"))
+            {
+                exportMaterial();
+            }
+            ImGui::SameLine();
+            helpMarker("Export this material to a Material Definition file which can be loaded by the Material Browser");
+
 
             ImGui::BeginChild("##matChild");
 
