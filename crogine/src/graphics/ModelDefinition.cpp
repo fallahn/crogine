@@ -49,9 +49,9 @@ using namespace cro;
 
 namespace
 {
-    std::array<std::string, 3u> materialTypes =
+    std::array<std::string, 4u> materialTypes =
     {
-        "VertexLit", "Unlit", "Billboard"
+        "VertexLit", "Unlit", "Billboard", "PBR"
     };
 }
 
@@ -222,6 +222,18 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         if (mat.getId() == "VertexLit")
         {
             shaderType = m_billboard ? ShaderResource::BillboardVertexLit : ShaderResource::VertexLit;
+        }
+        else if (mat.getId() == "PBR")
+        {
+            if (m_billboard)
+            {
+                LogE << "PBR materials cannot currently be used on billboard meshes." << std::endl;
+                shaderType = ShaderResource::BillboardVertexLit;
+            }
+            else
+            {
+                shaderType = ShaderResource::PBR;
+            }
         }
         else if (m_billboard)
         {

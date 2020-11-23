@@ -805,11 +805,21 @@ void ModelState::saveModel(const std::string& path)
         switch (mat.type)
         {
         case MaterialDefinition::PBR:
+            obj->setId("PBR");
+            break;
         default:
-        case MaterialDefinition::VertexLit:
-        
+        case MaterialDefinition::VertexLit:      
             obj->setId("VertexLit");
+            break;
+        case MaterialDefinition::Unlit:
 
+            obj->setId("Unlit");
+
+            break;
+        }
+
+        if (mat.type != MaterialDefinition::Unlit)
+        {
             if (mat.textureIDs[MaterialDefinition::Mask] != 0)
             {
                 obj->addProperty("mask").setValue(textureName(mat.textureIDs[MaterialDefinition::Mask]));
@@ -823,12 +833,6 @@ void ModelState::saveModel(const std::string& path)
             {
                 obj->addProperty("normal").setValue(textureName(mat.textureIDs[MaterialDefinition::Normal]));
             }
-            break;
-        case MaterialDefinition::Unlit:
-
-            obj->setId("Unlit");
-
-            break;
         }
 
         obj->addProperty("name").setValue(mat.name);
@@ -861,16 +865,16 @@ void ModelState::saveModel(const std::string& path)
         {
         default:
         case cro::Material::BlendMode::None:
-            obj->addProperty("blendmode").setValue("none");
+            obj->addProperty("blendmode", "none");
             break;
         case cro::Material::BlendMode::Additive:
-            obj->addProperty("blendmode").setValue("add");
+            obj->addProperty("blendmode", "add");
             break;
         case cro::Material::BlendMode::Alpha:
-            obj->addProperty("blendmode").setValue("alpha");
+            obj->addProperty("blendmode", "alpha");
             break;
         case cro::Material::BlendMode::Multiply:
-            obj->addProperty("blendmode").setValue("multiply");
+            obj->addProperty("blendmode", "multiply");
             break;
         }
 
@@ -1796,13 +1800,21 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
     if (def.type == MaterialDefinition::VertexLit)
     {
         shaderType = cro::ShaderResource::VertexLit;
-        if (def.textureIDs[MaterialDefinition::Normal])
-        {
-            def.shaderFlags |= cro::ShaderResource::NormalMap;
-        }
+    }
+    else if (def.type == MaterialDefinition::PBR)
+    {
+        shaderType = cro::ShaderResource::PBR;
     }
 
-    if (def.textureIDs[MaterialDefinition::Lightmap])
+    if (def.type != cro::ShaderResource::Unlit &&
+        def.textureIDs[MaterialDefinition::Normal])
+    {
+        def.shaderFlags |= cro::ShaderResource::NormalMap;
+    }
+
+
+    if (def.type != cro::ShaderResource::PBR &&
+        def.textureIDs[MaterialDefinition::Lightmap])
     {
         def.shaderFlags |= cro::ShaderResource::LightMap;
     }
@@ -2216,12 +2228,15 @@ void ModelState::drawInspector()
                 ImGui::NewLine();
                 ImGui::Text("Texture Maps:");
 
-                std::string slotLabel;
+                std::string slotLabel("Diffuse");
                 std::uint32_t thumb = m_blackTexture.getGLHandle();
 
                 //diffuse map
-                slotLabel = "Diffuse";
-                    
+                if (type == MaterialDefinition::PBR)
+                {
+                    slotLabel = "Albedo";
+                }
+
                 auto prevDiffuse = matDef.textureIDs[MaterialDefinition::Diffuse];
                 if (matDef.textureIDs[MaterialDefinition::Diffuse] == 0)
                 {
@@ -3183,7 +3198,10 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
     {
         matDef.type = MaterialDefinition::VertexLit;
     }
-    //TODO PBR shader
+    else if (id == "PBR")
+    {
+        matDef.type = MaterialDefinition::PBR;
+    }
 
     //read textures
     const auto& properties = obj.getProperties();
