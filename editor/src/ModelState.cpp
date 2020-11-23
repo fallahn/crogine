@@ -668,6 +668,11 @@ void ModelState::buildUI()
                         { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });
                 }
                 ImGui::End();
+
+                if (!m_showMaterialWindow)
+                {
+                    savePrefs();
+                }
             }
 
             drawInspector();
@@ -2169,6 +2174,7 @@ void ModelState::drawInspector()
                 ImGui::NewLine();
                 ImGui::Text("Shader Type:");
                 ImGui::PushItemWidth(size.x* ui::TextBoxWidth);
+                auto oldType = matDef.type;
                 if (ImGui::BeginCombo("##Shader", ShaderStrings[matDef.type]))
                 {
                     for (auto i = 0; i < ShaderStrings.size(); ++i)
@@ -2188,13 +2194,28 @@ void ModelState::drawInspector()
                     ImGui::EndCombo();
                 }
                 ImGui::PopItemWidth();
+                auto type = matDef.type;
+                if (oldType != type)
+                {
+                    //set the corresponding default mask colour
+                    if (type == MaterialDefinition::PBR)
+                    {
+                        //metal/rough/ao
+                        matDef.maskColour = glm::vec4(0.f, 0.f, 1.f, 1.f);
+                    }
+                    else
+                    {
+                        //spec intens/spec amount/self illum
+                        matDef.maskColour = glm::vec4(1.f, 1.f, 0.f, 1.f);
+                    }
+                }
 
                 std::int32_t shaderFlags = 0;
                 bool applyMaterial = false;
 
                 ImGui::NewLine();
                 ImGui::Text("Texture Maps:");
-                auto type = matDef.type;
+
                 std::string slotLabel;
                 std::uint32_t thumb = m_blackTexture.getGLHandle();
 
