@@ -93,7 +93,6 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     auto ext = FileSystem::getFileExtension(meshValue);
     std::unique_ptr<MeshBuilder> meshBuilder;
 
-    bool checkSkeleton = false;
     bool lockRotation = false;
     bool lockScale = false;
 
@@ -106,7 +105,6 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     {
         //use iqm loader
         meshBuilder = std::make_unique<IqmBuilder>(m_workingDir + meshValue);
-        checkSkeleton = true;
     }
     else if (Util::String::toLower(meshValue) == "sphere")
     {
@@ -212,13 +210,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         return false;
     }
 
-    if (checkSkeleton)
+    auto skel = rc.meshes.getSkeltalAnimation(m_meshID);
+    if (skel)
     {
-        auto skel = dynamic_cast<IqmBuilder*>(meshBuilder.get())->getSkeleton();
-        if (skel.frameCount > 0)
-        {
-            m_skeleton = skel;
-        }
+        m_skeleton = skel;
     }
 
     for (auto& mat : materials)

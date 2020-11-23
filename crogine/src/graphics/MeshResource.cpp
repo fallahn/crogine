@@ -66,6 +66,13 @@ bool MeshResource::loadMesh(std::size_t ID, const MeshBuilder& mb)
     if (meshData.vbo > 0 && meshData.submeshCount > 0)
     {
         m_meshData.insert(std::make_pair(ID, meshData));
+
+        auto skeleton = mb.getSkeleton();
+        if (skeleton)
+        {
+            m_skeletalData.insert(std::make_pair(ID, skeleton));
+        }
+
         return true;
     }
     LOG("Invalid mesh data was returned from MeshBuilder", Logger::Type::Error);
@@ -94,10 +101,19 @@ std::size_t MeshResource::loadMesh(const MeshBuilder& mb)
     return 0;
 }
 
-const Mesh::Data MeshResource::getMesh(std::size_t id) const
+const Mesh::Data& MeshResource::getMesh(std::size_t id) const
 {
     CRO_ASSERT(m_meshData.count(id) != 0, "Mesh not found");
-    return m_meshData.find(id)->second;
+    return m_meshData.at(id);
+}
+
+Skeleton MeshResource::getSkeltalAnimation(std::size_t ID) const
+{
+    if (m_skeletalData.count(ID) != 0)
+    {
+        return m_skeletalData.at(ID);
+    }
+    return {};
 }
 
 void MeshResource::flush()
@@ -127,5 +143,6 @@ void MeshResource::flush()
         }
     }
     m_meshData.clear();
+    m_skeletalData.clear();
     autoID = std::numeric_limits<std::size_t>::max();
 }

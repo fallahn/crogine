@@ -60,10 +60,10 @@ namespace cro
         The returned Skeleton struct can be used directly as a component
         on entities which also use the IQM mesh data in a Model component.
         This data is not valid until after the mesh data has been loaded into
-        a MeshResource. Usually you would keep a copy of the Skeleton stuct
+        a MeshResource. Usually you would keep a copy of the Skeleton struct
         somewhere so that it may be added to entities as required.
         */
-        Skeleton getSkeleton() const { return m_skeleton; }
+        Skeleton getSkeleton() const override { return m_skeleton; }
 
         /*!
         \brief Implenets the UID based on the file path given in the constructor
