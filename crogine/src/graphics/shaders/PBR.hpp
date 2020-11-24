@@ -89,75 +89,105 @@ namespace cro::Shaders::PBR
             return F0 + (1.0 - F0) * pow(1.0 - min(cosTheta, 1.0), 5.0);
         }        
 
+        vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+        {
+            return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - min(cosTheta, 1.0), 5.0);
+        }
+
+        struct MaterialProperties
+        {
+            vec3 albedo;
+            float metallic;
+            float roughness;
+            float ao;
+        };
+
+        struct SurfaceProperties
+        {
+            vec3 viewDir;
+            vec3 normalDir;
+            vec3 lightDir;
+        };
+
+        vec3 calcLighting(MaterialProperties matProp, SurfaceProperties surfProp, vec3 lightColour, vec3 F0)
+        {
+            vec3 halfDir = normalize(surfProp.viewDir + surfProp.lightDir);
+            vec3 radiance = lightColour;
+
+            //Cook-Torrance BRDF
+            float NDF = distributionGGX(surfProp.normalDir, halfDir, matProp.roughness);   
+            float G   = geometrySmith(surfProp.normalDir, surfProp.viewDir, surfProp.lightDir, matProp.roughness);      
+            vec3 F    = fresnelSchlick(max(dot(halfDir, surfProp.viewDir), 0.0), F0);
+           
+            vec3 nominator = NDF * G * F; 
+            float denominator = 4 * max(dot(surfProp.normalDir, surfProp.viewDir), 0.0) * max(dot(surfProp.normalDir, surfProp.lightDir), 0.0) + 0.001; // 0.001 to prevent divide by zero.
+            vec3 specular = nominator / denominator;
+        
+            vec3 kS = F;
+            vec3 kD = vec3(1.0) - kS;
+            kD *= 1.0 - matProp.metallic;	  
+
+            //scale light by NdotL
+            float NdotL = max(dot(surfProp.normalDir, surfProp.lightDir), 0.0);        
+
+            return (kD * matProp.albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+        }
+
         void main()
         {
+            MaterialProperties matProp;
+            SurfaceProperties surfProp;
+
         #if defined(BUMP)
             vec3 texNormal = TEXTURE(u_normalMap, v_texCoord0).rgb * 2.0 - 1.0;
-            vec3 normalDir = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
+            surfProp.normalDir = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
         #else
-            vec3 normalDir = normalize(v_normalVector);
+            surfProp.normalDir = normalize(v_normalVector);
         #endif
-            vec3 viewDir = normalize(u_cameraWorldPosition - v_worldPosition);
+            surfProp.viewDir = normalize(u_cameraWorldPosition - v_worldPosition);
 
         #if defined(DIFFUSE_MAP)
-            vec3 albedo = TEXTURE(u_diffuseMap, v_texCoord0).rgb;
-            albedo *= u_colour.rgb;
+            matProp.albedo = TEXTURE(u_diffuseMap, v_texCoord0).rgb;
+            matProp.albedo *= u_colour.rgb;
         #else
-            vec3 albedo = u_colour.rgb;
+            matProp.albedo = u_colour.rgb;
         #endif
-            albedo = pow(albedo, vec3(2.2));
+            matProp.albedo = pow(matProp.albedo, vec3(2.2));
 
         #if defined(MASK_MAP)
             vec3 mask = TEXTURE(u_maskMap, v_texCoord0).rgb;
         #else
             vec3 mask = u_maskColour.rgb;
         #endif
-            float metallic = mask.r;
-            float roughness = mask.g;
-            float ao = mask.b;
+            matProp.metallic = mask.r;
+            matProp.roughness = mask.g;
+            matProp.ao = mask.b;
 
 
             vec3 F0 = vec3(0.04); 
-            F0 = mix(F0, albedo, metallic);
+            F0 = mix(F0, matProp.albedo, matProp.metallic);
 
             vec3 Lo = vec3(0.0);
 
-            //this would normally be looped for multiple lights
-            //here, and ideally farmed out to a function
-            //-------------------------------------//
-            vec3 lightDir = normalize(-u_lightDirection);
-            vec3 halfDir = normalize(viewDir + lightDir);
-            
-            //this only needs to be attenuated on point lights
-            //float distance = length(u_lightDirection);
-            //float attenuation = 1.0 / (distance * distance);
-            //vec3 radiance = u_lightColour.rgb * attenuation;
-            
-            vec3 radiance = u_lightColour.rgb;
+            //point lights
+            /*
+            for( int i = 0; i < POINT_LIGHT_COUNT; ++i)
+            {
+                vec3 lightDir = u_pointLights[i].worldPos - v_worldPosition;
+                surfProp.lightDir = normalize(lightDir);
 
-            //Cook-Torrance BRDF
-            float NDF = distributionGGX(normalDir, halfDir, roughness);   
-            float G   = geometrySmith(normalDir, viewDir, lightDir, roughness);      
-            vec3 F    = fresnelSchlick(max(dot(halfDir, viewDir), 0.0), F0);
-           
-            vec3 nominator = NDF * G * F; 
-            float denominator = 4 * max(dot(normalDir, viewDir), 0.0) * max(dot(normalDir, lightDir), 0.0) + 0.001; // 0.001 to prevent divide by zero.
-            vec3 specular = nominator / denominator;
-        
+                float distance = length(lightDir);
+                float attenuation = 1.0 / (distance * distance);
+                Lo += calcLighting(matProp, surfProp, u_pointLights[i].colour.rgb * attenuation, F0);
+            }
+            */
 
-            vec3 kS = F;
-            vec3 kD = vec3(1.0) - kS;
-            kD *= 1.0 - metallic;	  
-
-            //scale light by NdotL
-            float NdotL = max(dot(normalDir, lightDir), 0.0);        
-
-            //add to outgoing radiance Lo
-            Lo += (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
-            //-------------------------------------//
+            //directional light
+            surfProp.lightDir = normalize(-u_lightDirection);
+            Lo += calcLighting(matProp, surfProp, u_lightColour.rgb, F0);
 
             //ambient lighting  - potentially replace this with environment lighting
-            vec3 ambient = vec3(0.03) * albedo * ao;
+            vec3 ambient = vec3(0.03) * matProp.albedo * matProp.ao;
     
             vec3 colour = ambient + Lo;
 

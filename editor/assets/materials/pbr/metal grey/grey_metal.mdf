@@ -14,8 +14,8 @@ material_definition Grey_Metal
     subrect = 0.000000,0.000000,1.000000,1.000000
     texture_smooth = true
     texture_repeat = true
-    diffuse = "materials/pbr/metal grey/grey_albedo.png"
-    mask = "materials/pbr/metal grey/grey_mask.png"
-    normal = "materials/pbr/metal grey/grey_normal.png"
+    diffuse = "assets/materials/pbr/metal grey/grey_albedo.png"
+    mask = "assets/materials/pbr/metal grey/grey_mask.png"
+    normal = "assets/materials/pbr/metal grey/grey_normal.png"
 
 }

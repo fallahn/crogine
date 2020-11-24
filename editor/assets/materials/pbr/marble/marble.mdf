@@ -14,8 +14,8 @@ material_definition Marble
     subrect = 0.000000,0.000000,1.000000,1.000000
     texture_smooth = true
     texture_repeat = true
-    diffuse = "materials/pbr/marble/marble_albedo.png"
-    mask = "materials/pbr/marble/marble_mask.png"
-    normal = "materials/pbr/marble/marble_normal.png"
+    diffuse = "assets/materials/pbr/marble/marble_albedo.png"
+    mask = "assets/materials/pbr/marble/marble_mask.png"
+    normal = "assets/materials/pbr/marble/marble_normal.png"
 
 }

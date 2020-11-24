@@ -43,7 +43,7 @@ namespace cro
     class Texture;
 
     /*!
-    \brief Encapsulates a compiled/linked shader program
+    \brief Encapsulates a compiled/linked shader program.
     */
     class CRO_EXPORT_API Shader : public Detail::SDLResource
     {

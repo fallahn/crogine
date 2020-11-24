@@ -14,8 +14,8 @@ material_definition Orange_Leather
     subrect = 0.000000,0.000000,1.000000,1.000000
     texture_smooth = true
     texture_repeat = true
-    diffuse = "materials/pbr/leather orange/leather_albedo.png"
-    mask = "materials/pbr/leather orange/leather_mask.png"
-    normal = "materials/pbr/leather orange/leather_normal.png"
+    diffuse = "assets/materials/pbr/leather orange/leather_albedo.png"
+    mask = "assets/materials/pbr/leather orange/leather_mask.png"
+    normal = "assets/materials/pbr/leather orange/leather_normal.png"
 
 }

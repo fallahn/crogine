@@ -726,11 +726,64 @@ void ModelState::openModelAtPath(const std::string& path)
             cro::Logger::log("Bounding sphere radius is very large - model may not be visible", cro::Logger::Type::Warning);
         }
 
-        //if this is an IQM file load the vert data into the import
-        //structures so we can adjust the model and re-export if needed
-        if (cro::FileSystem::getFileExtension(path) == "*.iqm")
+        //read all the model properties
+        m_modelProperties.name = m_currentModelConfig.getId();
+        if (m_modelProperties.name.empty())
         {
-            importIQM(path);
+            m_modelProperties.name = "Untitled";
+        }
+        const auto& properties = m_currentModelConfig.getProperties();
+        for (const auto& prop : properties)
+        {
+            const auto& name = prop.getName();
+            if (name == "mesh")
+            {
+                auto val = prop.getValue<std::string>();
+                auto ext = cro::FileSystem::getFileExtension(val);
+                if (ext == ".cmf")
+                {
+                    m_modelProperties.type = ModelProperties::Static;
+                }
+                else if (ext == ".iqm")
+                {
+                    m_modelProperties.type = ModelProperties::Skinned;
+                }
+                else
+                {
+                    if (val == "quad")
+                    {
+                        m_modelProperties.type = ModelProperties::Quad;
+                    }
+                    else if (val == "sphere")
+                    {
+                        m_modelProperties.type = ModelProperties::Sphere;
+                    }
+                    else if (val == "billboard")
+                    {
+                        m_modelProperties.type = ModelProperties::Billboard;
+                    }
+                }
+            }
+            else if (name == "radius")
+            {
+                m_modelProperties.radius = prop.getValue<float>();
+            }
+            else if (name == "size")
+            {
+                m_modelProperties.size = prop.getValue<glm::vec2>();
+            }
+            else if (name == "uv")
+            {
+                m_modelProperties.uv = prop.getValue<glm::vec4>();
+            }
+            else if (name == "lock_rotation")
+            {
+                m_modelProperties.lockRotation = prop.getValue<bool>();
+            }
+            else if (name == "lock_scale")
+            {
+                m_modelProperties.lockScale = prop.getValue<bool>();
+            }
         }
 
         //parse all of the material properties into the material/texture browser
@@ -782,13 +835,38 @@ void ModelState::openModelAtPath(const std::string& path)
 
 void ModelState::saveModel(const std::string& path)
 {
-    const auto& properties = m_currentModelConfig.getProperties();
-
-    cro::ConfigFile newCfg(m_currentModelConfig.getName(), m_currentModelConfig.getId());
-    for (const auto& prop : properties)
+    cro::ConfigFile newCfg("model", m_modelProperties.name);
+    switch (m_modelProperties.type)
     {
-        newCfg.addProperty(prop.getName()) = prop;
+    default: 
+        //is a static or skinned type
+    {
+        const auto& properties = m_currentModelConfig.getProperties();
+        for (const auto& prop : properties)
+        {
+            if (prop.getName() == "mesh")
+            {
+                newCfg.addProperty(prop);
+            }
+        }
     }
+        break;
+    case ModelProperties::Billboard:
+        newCfg.addProperty("mesh", "billboard");
+        newCfg.addProperty("lock_rotation").setValue(m_modelProperties.lockRotation);
+        newCfg.addProperty("lock_scale").setValue(m_modelProperties.lockScale);
+        break;
+    case ModelProperties::Quad:
+        newCfg.addProperty("mesh", "quad");
+        newCfg.addProperty("size").setValue(m_modelProperties.size);
+        newCfg.addProperty("uv").setValue(m_modelProperties.uv);
+        break;
+    case ModelProperties::Sphere:
+        newCfg.addProperty("mesh", "sphere");
+        newCfg.addProperty("radius").setValue(m_modelProperties.radius);
+        break;
+    }
+    newCfg.addProperty("cast_shadows").setValue(m_modelProperties.castShadows);
 
     auto textureName = [&](std::uint32_t id)
     {
@@ -914,6 +992,30 @@ void ModelState::closeModel()
 {
     if (entities[EntityID::ActiveModel].isValid())
     {
+        if (cro::FileSystem::showMessageBox("", "Do you want to save the model first?", cro::FileSystem::YesNo, cro::FileSystem::Question))
+        {
+            if (m_currentFilePath.empty())
+            {
+                if (m_importedVBO.empty())
+                {
+                    auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/untitled", "cmt");
+                    if (!path.empty())
+                    {
+                        saveModel(path);
+                    }
+                }
+                else
+                {
+                    //export the model
+                    exportModel(false, false);
+                }
+            }
+            else
+            {
+                saveModel(m_currentFilePath);
+            }
+        }
+
         m_scene.destroyEntity(entities[EntityID::ActiveModel]);
         entities[EntityID::ActiveModel] = {};
 
@@ -928,6 +1030,7 @@ void ModelState::closeModel()
     }
 
     m_currentModelConfig = {};
+    m_modelProperties = {};
 
     //remove any IDs from active materials
     //for (auto i : m_activeMaterials)
@@ -1163,7 +1266,7 @@ void ModelState::importModel()
     }
 }
 
-void ModelState::exportModel(bool modelOnly)
+void ModelState::exportModel(bool modelOnly, bool openOnSave)
 {
     //TODO assert we at least have valid header data
     //prevent accidentally writing a bad file
@@ -1239,7 +1342,10 @@ void ModelState::exportModel(bool modelOnly)
             m_preferences.lastExportDirectory = cro::FileSystem::getFilePath(path);
             savePrefs();
 
-            openModelAtPath(path);
+            if (openOnSave)
+            {
+                openModelAtPath(path);
+            }
         }
     }
 }

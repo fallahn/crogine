@@ -87,6 +87,26 @@ private:
     void createScene();
     void buildUI();
 
+    struct ModelProperties final
+    {
+        std::string name = "Untitled";
+
+        enum Type
+        {
+            Static, Skinned,
+            Quad, Sphere, Billboard
+        }type = Static;
+
+        bool lockRotation = false;
+        bool lockScale = false;
+        bool castShadows = true;
+
+        float radius = 0.5f;
+        glm::vec2 size = glm::vec2(1.f);
+        glm::vec4 uv = glm::vec4(0.f, 0.f, 1.f, 1.f);
+
+    }m_modelProperties;
+
     void openModel();
     void openModelAtPath(const std::string&);
     void saveModel(const std::string&);
@@ -101,7 +121,7 @@ private:
         float scale = 1.f;
     }m_importedTransform;
     void importModel();
-    void exportModel(bool = false);
+    void exportModel(bool = false, bool = true);
     void applyImportTransform();
 
     void importIQM(const std::string&); //used to apply modified transforms

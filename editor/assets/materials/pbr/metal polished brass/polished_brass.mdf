@@ -14,8 +14,8 @@ material_definition Polished_Brass
     subrect = 0.000000,0.000000,1.000000,1.000000
     texture_smooth = true
     texture_repeat = true
-    diffuse = "materials/pbr/metal polished brass/polished_brass_albedo.png"
-    mask = "materials/pbr/metal polished brass/polished_brass_mask.png"
-    normal = "materials/pbr/metal polished brass/polished_brass_normal.png"
+    diffuse = "assets/materials/pbr/metal polished brass/polished_brass_albedo.png"
+    mask = "assets/materials/pbr/metal polished brass/polished_brass_mask.png"
+    normal = "assets/materials/pbr/metal polished brass/polished_brass_normal.png"
 
 }
