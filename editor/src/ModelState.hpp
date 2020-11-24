@@ -93,7 +93,7 @@ private:
 
         enum Type
         {
-            Static, Skinned,
+            Static, Skinned, Cube,
             Quad, Sphere, Billboard
         }type = Static;
 
@@ -102,8 +102,10 @@ private:
         bool castShadows = true;
 
         float radius = 0.5f;
-        glm::vec2 size = glm::vec2(1.f);
+        glm::vec3 size = glm::vec3(1.f);
         glm::vec4 uv = glm::vec4(0.f, 0.f, 1.f, 1.f);
+
+        std::vector<float> vertexData;
 
     }m_modelProperties;
 
@@ -115,6 +117,7 @@ private:
     CMFHeader m_importedHeader;
     std::vector<float> m_importedVBO;
     std::vector<std::vector<std::uint32_t>> m_importedIndexArrays;
+    std::unordered_map<std::uint8_t, std::size_t> m_importedMeshes; //< maps created VBOs to vert flags - this recycles matching VBOs if they exist and only creates new when necessary
     struct ImportTransform final
     {
         glm::vec3 rotation = glm::vec3(0.f);

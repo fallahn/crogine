@@ -108,6 +108,8 @@ namespace
     const float MinFOV = 5.f * cro::Util::Const::degToRad;
     const float DefaultFarPlane = 50.f;
 
+    const std::uint8_t MaxSubMeshes = 8; //for imported models. Can be made bigger but this is generally a waste of memory
+
     void updateView(cro::Entity entity, float farPlane, float fov)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
@@ -436,7 +438,6 @@ void ModelState::createScene()
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
 
-
     //create the material preview scene
     cro::ModelDefinition modelDef;
     modelDef.loadFromFile("assets/models/preview.cmt", m_resources);
@@ -762,6 +763,10 @@ void ModelState::openModelAtPath(const std::string& path)
                     {
                         m_modelProperties.type = ModelProperties::Billboard;
                     }
+                    else if (val == "cube")
+                    {
+                        m_modelProperties.type = ModelProperties::Cube;
+                    }
                 }
             }
             else if (name == "radius")
@@ -770,7 +775,7 @@ void ModelState::openModelAtPath(const std::string& path)
             }
             else if (name == "size")
             {
-                m_modelProperties.size = prop.getValue<glm::vec2>();
+                m_modelProperties.size = prop.getValue<glm::vec3>();
             }
             else if (name == "uv")
             {
@@ -826,6 +831,14 @@ void ModelState::openModelAtPath(const std::string& path)
         std::optional<cro::Box> box;
         if (m_showAABB) box = meshData.boundingBox;
         updateGridMesh(entities[EntityID::GroundPlane].getComponent<cro::Model>().getMeshData(), sphere, box);
+
+
+        //read back the buffer data into the imported buffer so we can do things like normal vis
+        m_modelProperties.vertexData.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, 0, meshData.vertexCount * meshData.vertexSize, m_modelProperties.vertexData.data()));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        updateNormalVis();
     }
     else
     {
@@ -838,7 +851,7 @@ void ModelState::saveModel(const std::string& path)
     cro::ConfigFile newCfg("model", m_modelProperties.name);
     switch (m_modelProperties.type)
     {
-    default: 
+    default:
         //is a static or skinned type
     {
         const auto& properties = m_currentModelConfig.getProperties();
@@ -850,15 +863,19 @@ void ModelState::saveModel(const std::string& path)
             }
         }
     }
-        break;
+    break;
     case ModelProperties::Billboard:
         newCfg.addProperty("mesh", "billboard");
         newCfg.addProperty("lock_rotation").setValue(m_modelProperties.lockRotation);
         newCfg.addProperty("lock_scale").setValue(m_modelProperties.lockScale);
         break;
+    case ModelProperties::Cube:
+        newCfg.addProperty("mesh", "cube");
+        newCfg.addProperty("size").setValue(m_modelProperties.size);
+        break;
     case ModelProperties::Quad:
         newCfg.addProperty("mesh", "quad");
-        newCfg.addProperty("size").setValue(m_modelProperties.size);
+        newCfg.addProperty("size").setValue(glm::vec2(m_modelProperties.size.x, m_modelProperties.size.y));
         newCfg.addProperty("uv").setValue(m_modelProperties.uv);
         break;
     case ModelProperties::Sphere:
@@ -1086,7 +1103,7 @@ void ModelState::importModel()
         return retVal;
     };
 
-    auto path = cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory, "obj,dae,fbx");
+    auto path = cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory + "/untitled", "obj,dae,fbx");
     if (!path.empty())
     {
         ai::Importer importer;
@@ -1237,12 +1254,47 @@ void ModelState::importModel()
                 //TODO check the size and flush after a certain amount
                 //remembering to reload the ground plane..
                 //m_resources.meshes.flush();
-                ImportedMeshBuilder builder(m_importedHeader, m_importedVBO, m_importedIndexArrays, header.flags);
-                auto meshID = m_resources.meshes.loadMesh(builder);
+                /*ImportedMeshBuilder builder(m_importedHeader, m_importedVBO, m_importedIndexArrays, header.flags);
+                auto meshID = m_resources.meshes.loadMesh(builder);*/
+
+                //create a new VBO if it doesn't exist, else recycle it
+                if (m_importedMeshes.count(header.flags) == 0)
+                {
+                    m_importedMeshes.insert(std::make_pair(header.flags, m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(header.flags, MaxSubMeshes, GL_TRIANGLES))));
+                    LOG("Created new import mesh", cro::Logger::Type::Info);
+                }
+                else
+                {
+                    LOG("Recycled imported mesh VBO", cro::Logger::Type::Info);
+                }
+                auto meshID = m_importedMeshes.at(header.flags);
+                auto meshData = m_resources.meshes.getMesh(meshID);
+
+                //make sure we draw the correct number of sub-meshes
+                meshData.vertexCount = m_importedVBO.size() / (meshData.vertexSize / sizeof(float));
+                meshData.submeshCount = std::min(MaxSubMeshes, header.arrayCount);
+
+                //update the buffers
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+                glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexCount * meshData.vertexSize, m_importedVBO.data(), GL_STATIC_DRAW));
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+                for (auto i = 0u; i < meshData.submeshCount; ++i)
+                {
+                    meshData.indexData[i].indexCount = m_importedIndexArrays[i].size();
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+                    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].indexCount * sizeof(std::uint32_t), m_importedIndexArrays[i].data(), GL_STATIC_DRAW));
+                }
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+                //TODO we need to correctly calc the bounding geom
+                meshData.boundingBox[0] = glm::vec3(-0.5f);
+                meshData.boundingBox[1] = glm::vec3(0.5f);
+                meshData.boundingSphere.radius = 0.5f;
 
                 entities[EntityID::ActiveModel] = m_scene.createEntity();
                 entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
-                entities[EntityID::ActiveModel].addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::Default]));
+                entities[EntityID::ActiveModel].addComponent<cro::Model>(meshData, m_resources.materials.get(materialIDs[MaterialID::Default]));
                 
                 for (auto i = 0; i < header.arrayCount; ++i)
                 {
@@ -1251,8 +1303,6 @@ void ModelState::importModel()
                 entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>();
 
                 m_importedTransform = {};
-
-                //updateNormalVis();
             }
             else
             {
@@ -1550,21 +1600,21 @@ void ModelState::updateNormalVis()
 
     if (entities[EntityID::ActiveModel].isValid())
     {
-        if (entities[EntityID::NormalVis].isValid())
-        {
-            m_scene.destroyEntity(entities[EntityID::NormalVis]);
-        }
+        //if (entities[EntityID::NormalVis].isValid())
+        //{
+        //    m_scene.destroyEntity(entities[EntityID::NormalVis]);
+        //}
 
-        const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+        //const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
 
-        //pass to mesh builder - TODO we would be better recycling the VBO with new vertex data, rather than
-        //destroying and creating a new one (unique instances will build up in the resource manager)
-        auto meshID = m_resources.meshes.loadMesh(NormalVisMeshBuilder(meshData, m_importedVBO));
+        ////pass to mesh builder - TODO we would be better recycling the VBO with new vertex data, rather than
+        ////destroying and creating a new one (unique instances will build up in the resource manager)
+        //auto meshID = m_resources.meshes.loadMesh(NormalVisMeshBuilder(meshData, m_modelProperties.vertexData));
 
-        entities[EntityID::NormalVis] = m_scene.createEntity();
-        entities[EntityID::NormalVis].addComponent<cro::Transform>();
-        entities[EntityID::NormalVis].addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::DebugDraw]));
-        entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::NormalVis].getComponent<cro::Transform>());
+        //entities[EntityID::NormalVis] = m_scene.createEntity();
+        //entities[EntityID::NormalVis].addComponent<cro::Transform>();
+        //entities[EntityID::NormalVis].addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::DebugDraw]));
+        //entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::NormalVis].getComponent<cro::Transform>());
     }
 }
 
@@ -2098,6 +2148,46 @@ void ModelState::drawInspector()
                 }
                 else
                 {
+                    ImGui::PushItemWidth(size.x * ui::TextBoxWidth);
+                    ImGui::InputText("##name_model", &m_modelProperties.name);
+                    ImGui::PopItemWidth();
+
+                    switch (m_modelProperties.type)
+                    {
+                    default:
+                        
+                        break;
+                    case ModelProperties::Sphere:
+                        ImGui::Text("Radius: %2.2f", m_modelProperties.radius);
+                        break;
+                    case ModelProperties::Quad:
+                        ImGui::Text("Size: %2.2f, %2.2f", m_modelProperties.size.x, m_modelProperties.size.y);
+                        ImGui::Text("UV: %2.2f, %2.2f, %2.2f, %2.2f", m_modelProperties.uv.x, m_modelProperties.uv.y, m_modelProperties.uv.z, m_modelProperties.uv.w);
+                        break;
+                    case ModelProperties::Cube:
+                        ImGui::Text("Size: %2.2f, %2.2f, %2.2f", m_modelProperties.size.x, m_modelProperties.size.y, m_modelProperties.size.z);
+                        break;
+                    case ModelProperties::Billboard:
+                        if (ImGui::Checkbox("Lock Rotation", &m_modelProperties.lockRotation))
+                        {
+                            //TODO update component/material
+                        }
+                        if (ImGui::Checkbox("Lock Scale", &m_modelProperties.lockScale))
+                        {
+                            //TODO update component/material
+                        }
+                        break;
+                    }
+
+                    if (ImGui::Checkbox("Cast Shadow", &m_modelProperties.castShadows))
+                    {
+                        //TODO update preview
+                    }
+
+                    ImGui::NewLine();
+                    ImGui::Separator();
+                    ImGui::NewLine();
+
                     const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
                     ImGui::Text("Materials:");
                     CRO_ASSERT(meshData.submeshCount <= m_activeMaterials.size(), "");

@@ -79,9 +79,6 @@ Mesh::Data DynamicMeshBuilder::build() const
 
     //create vbo
     glCheck(glGenBuffers(1, &meshData.vbo));
-    /*glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));*/
 
     meshData.submeshCount = m_submeshCount;
     for (auto i = 0; i < m_submeshCount; ++i)
@@ -92,9 +89,6 @@ Mesh::Data DynamicMeshBuilder::build() const
 
         //create IBO
         glCheck(glGenBuffers(1, &meshData.indexData[i].ibo));
-        /*glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
-        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
     }
 
     return meshData;
