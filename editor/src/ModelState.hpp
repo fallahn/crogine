@@ -36,12 +36,19 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 
 #include "StateIDs.hpp"
-#include "ImportedMeshBuilder.hpp"
 #include "MaterialDefinition.hpp"
 
 #include <map>
 #include <memory>
 #include <optional>
+
+struct CMFHeader final
+{
+    std::uint8_t flags = 0;
+    std::uint8_t arrayCount = 0;
+    std::int32_t arrayOffset = 0;
+    std::vector<std::int32_t> arraySizes;
+};
 
 class ModelState final : public cro::State, public cro::GuiClient
 {

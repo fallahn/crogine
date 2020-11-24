@@ -31,14 +31,6 @@ source distribution.
 
 #include <crogine/graphics/MeshBuilder.hpp>
 
-struct CMFHeader final
-{
-    std::uint8_t flags = 0;
-    std::uint8_t arrayCount = 0;
-    std::int32_t arrayOffset = 0;
-    std::vector<std::int32_t> arraySizes;
-};
-
 class ImportedMeshBuilder final : public cro::MeshBuilder
 {
 public:

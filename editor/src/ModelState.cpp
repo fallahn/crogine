@@ -55,12 +55,14 @@ source distribution.
 #include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/BillboardCollection.hpp>
 
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/BillboardSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
@@ -348,6 +350,7 @@ void ModelState::addSystems()
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
+    m_scene.addSystem<cro::BillboardSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
@@ -532,6 +535,30 @@ void ModelState::buildUI()
                     if (ImGui::MenuItem("Quit", nullptr, nullptr))
                     {
                         cro::App::quit();
+                    }
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Create"))
+                {
+                    if (ImGui::MenuItem("Quad", nullptr, nullptr))
+                    {
+
+                    }
+
+                    if (ImGui::MenuItem("Sphere", nullptr, nullptr))
+                    {
+
+                    }
+
+                    if (ImGui::MenuItem("Cube", nullptr, nullptr))
+                    {
+
+                    }
+
+                    if (ImGui::MenuItem("Billboard", nullptr, nullptr))
+                    {
+
                     }
                     ImGui::EndMenu();
                 }
@@ -762,6 +789,8 @@ void ModelState::openModelAtPath(const std::string& path)
                     else if (val == "billboard")
                     {
                         m_modelProperties.type = ModelProperties::Billboard;
+
+                        entities[EntityID::ActiveModel].getComponent<cro::BillboardCollection>().addBillboard({});
                     }
                     else if (val == "cube")
                     {
@@ -833,7 +862,7 @@ void ModelState::openModelAtPath(const std::string& path)
         updateGridMesh(entities[EntityID::GroundPlane].getComponent<cro::Model>().getMeshData(), sphere, box);
 
 
-        //read back the buffer data into the imported buffer so we can do things like normal vis
+        //read back the buffer data into the imported buffer so we can do things like normal vis and lightmap baking
         m_modelProperties.vertexData.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
         glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, 0, meshData.vertexCount * meshData.vertexSize, m_modelProperties.vertexData.data()));
@@ -1009,6 +1038,7 @@ void ModelState::closeModel()
 {
     if (entities[EntityID::ActiveModel].isValid())
     {
+        //TODO don't show this on exporting models - probably move somewhere else in general.
         if (cro::FileSystem::showMessageBox("", "Do you want to save the model first?", cro::FileSystem::YesNo, cro::FileSystem::Question))
         {
             if (m_currentFilePath.empty())
@@ -1250,13 +1280,6 @@ void ModelState::importModel()
                 m_importedIndexArrays.swap(importedIndexArrays);
                 m_importedVBO.swap(importedVBO);
 
-                
-                //TODO check the size and flush after a certain amount
-                //remembering to reload the ground plane..
-                //m_resources.meshes.flush();
-                /*ImportedMeshBuilder builder(m_importedHeader, m_importedVBO, m_importedIndexArrays, header.flags);
-                auto meshID = m_resources.meshes.loadMesh(builder);*/
-
                 //create a new VBO if it doesn't exist, else recycle it
                 if (m_importedMeshes.count(header.flags) == 0)
                 {
@@ -1287,7 +1310,10 @@ void ModelState::importModel()
                 }
                 glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-                //TODO we need to correctly calc the bounding geom
+                //TODO we ought to correctly calc the bounding geom
+                //but as it's only needed to tell the renderer this model is visible
+                //imported models don't have the bounds display option)
+                //this will work long enough to convert the model and calc the correct bounds
                 meshData.boundingBox[0] = glm::vec3(-0.5f);
                 meshData.boundingBox[1] = glm::vec3(0.5f);
                 meshData.boundingSphere.radius = 0.5f;
@@ -1895,13 +1921,15 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
         tex->setRepeated(matDef.repeatTexture);
         tex->setSmooth(matDef.smoothTexture);
 
-        if (matDef.alphaClip > 0)
+        if (matDef.alphaClip > 0
+            && matDef.type != MaterialDefinition::PBR)
         {
             matDef.materialData.setProperty("u_alphaClip", matDef.alphaClip);
         }
     }
 
-    if (matDef.textureIDs[MaterialDefinition::Mask])
+    if (matDef.textureIDs[MaterialDefinition::Mask]
+        && matDef.type != MaterialDefinition::Unlit)
     {
         auto& tex = m_materialTextures.at(matDef.textureIDs[MaterialDefinition::Mask]).texture;
         matDef.materialData.setProperty("u_maskMap", *tex);
@@ -1955,9 +1983,17 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
     def.shaderFlags = 0;
 
     auto shaderType = cro::ShaderResource::Unlit;
+    if (m_modelProperties.type == ModelProperties::Billboard)
+    {
+        shaderType = cro::ShaderResource::BillboardUnlit;
+    }
     if (def.type == MaterialDefinition::VertexLit)
     {
         shaderType = cro::ShaderResource::VertexLit;
+        if (m_modelProperties.type == ModelProperties::Billboard)
+        {
+            shaderType = cro::ShaderResource::BillboardVertexLit;
+        }
     }
     else if (def.type == MaterialDefinition::PBR)
     {
@@ -2106,7 +2142,7 @@ void ModelState::drawInspector()
 
                     ImGui::NewLine();
                     ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");
-                    if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], -180.f, 180.f))
+                    if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], 1.f, -180.f, 180.f))
                     {
                         entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(m_importedTransform.rotation * cro::Util::Const::degToRad);
                     }
@@ -2170,11 +2206,29 @@ void ModelState::drawInspector()
                     case ModelProperties::Billboard:
                         if (ImGui::Checkbox("Lock Rotation", &m_modelProperties.lockRotation))
                         {
-                            //TODO update component/material
+                            auto& matDef = m_materialDefs[m_selectedMaterial];
+                            if (m_modelProperties.lockRotation)
+                            {
+                                matDef.shaderFlags |= cro::ShaderResource::LockRotation;
+                            }
+                            else
+                            {
+                                matDef.shaderFlags &= ~cro::ShaderResource::LockRotation;
+                            }
+                            refreshMaterialThumbnail(matDef);
                         }
                         if (ImGui::Checkbox("Lock Scale", &m_modelProperties.lockScale))
                         {
-                            //TODO update component/material
+                            auto& matDef = m_materialDefs[m_selectedMaterial];
+                            if (m_modelProperties.lockScale)
+                            {
+                                matDef.shaderFlags |= cro::ShaderResource::LockScale;
+                            }
+                            else
+                            {
+                                matDef.shaderFlags &= ~cro::ShaderResource::LockScale;
+                            }
+                            refreshMaterialThumbnail(matDef);
                         }
                         break;
                     }
@@ -2696,13 +2750,33 @@ void ModelState::drawInspector()
                     shaderFlags |= cro::ShaderResource::Skinning;
                 }
 
+                if (m_modelProperties.lockRotation)
+                {
+                    shaderFlags |= cro::ShaderResource::LockRotation;
+                }
+
+                if (m_modelProperties.lockScale)
+                {
+                    shaderFlags |= cro::ShaderResource::LockScale;
+                }
+
                 if (matDef.shaderFlags != shaderFlags
                     || matDef.activeType != matDef.type)
                 {
                     auto shaderType = cro::ShaderResource::Unlit;
+                    if (m_modelProperties.type == ModelProperties::Billboard)
+                    {
+                        shaderType = cro::ShaderResource::BillboardUnlit;
+                    }
+
                     if (matDef.type == MaterialDefinition::VertexLit)
                     {
                         shaderType = cro::ShaderResource::VertexLit;
+
+                        if (m_modelProperties.type == ModelProperties::Billboard)
+                        {
+                            shaderType = cro::ShaderResource::BillboardVertexLit;
+                        }
                     }
                     else if (matDef.type == MaterialDefinition::PBR)
                     {
