@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/graphics/MaterialData.hpp>
 
 #include <string>
 
@@ -53,8 +54,8 @@ namespace cro
 
         bool loadFromFile(const std::string& path);
 
-        std::uint32_t getSkybox() const { return m_skyboxTexture; }
-        std::uint32_t getIrradianceMap() const { return m_irradianceTexture; }
+        CubemapID getSkybox() const { return CubemapID(m_skyboxTexture); }
+        CubemapID getIrradianceMap() const { return CubemapID(m_irradianceTexture); }
 
     private:
 

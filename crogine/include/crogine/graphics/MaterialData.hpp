@@ -42,6 +42,24 @@ source distribution.
 
 namespace cro
 {
+    /*!
+    \brief Allows assigning Texture handles directly to material properties
+    */
+    struct TextureID final
+    {
+        std::uint32_t textureID = 0;
+        explicit TextureID(std::uint32_t id) : textureID(id) {}
+    };
+
+    /*!
+    \brief Allows assigning Cubemap handles directly to material properties
+    */
+    struct CubemapID final
+    {
+        std::uint32_t textureID = 0;
+        explicit CubemapID(std::uint32_t id) : textureID(id) {}
+    };
+
     class Texture;
     class Shader;
     namespace Material
@@ -88,14 +106,10 @@ namespace cro
                 Vec3,
                 Vec4,
                 Mat4,
-                Texture
+                Texture,
+                Cubemap
             }type = None;
 
-            struct TextureID final
-            {
-                std::uint32_t textureID = 0;
-                explicit TextureID(std::uint32_t id) : textureID(id) {}
-            };
 
             union
             {
@@ -145,54 +159,70 @@ namespace cro
 
             //arbitrary uniforms are stored as properties
             PropertyList properties;
+            
             /*!
             \brief Sets a float value uniform
             \param name Name of the uniform
             \param value Value of the uniform
             */
             void setProperty(const std::string& name, float value);
+            
             /*!
             \brief Sets a 2 component vector value uniform
             \param name Name of the uniform
             \param value Value of the uniform
             */
             void setProperty(const std::string& name, glm::vec2 value);
+            
             /*!
             \brief Sets a 3 component vector uniform
             \param name String containing the name of the uniform
             \param value Value of the unform
             */
             void setProperty(const std::string& name, glm::vec3 value);
+            
             /*!
             \brief Sets a 4 component vector uniform
             \param name String containing the name of the uniform
             \param value Value of the unform
             */
             void setProperty(const std::string& name, glm::vec4 value);
+            
             /*!
             \brief Sets a Mat4x4 uniform.
             \param name String containing the name of the uniform
             \param value The 4x4 matrix to set
             */
             void setProperty(const std::string& name, glm::mat4 value);            
+            
             /*!
             \brief Sets a colour value uniform
             \param name String containing the name of the uniform
             \param value Colour value of the uniform
             */
             void setProperty(const std::string& name, Colour value);
+            
             /*!
             \brief Sets a texture sampler uniform
             \param name String containing the name of the uniform to set
             \param value A reference to the texture to bind to the sampler
             */
             void setProperty(const std::string& name, const Texture& value);
+            
             /*!
             \brief Sets a texture sampler uniform from a textureID
             \param name String containing the name of the uniform to set
-            \param value Property::TextureID containing the ID to set
+            \param value TextureID containing the ID to set
             */
-            void setProperty(const std::string& name, const Property::TextureID value);
+            void setProperty(const std::string& name, TextureID value);
+            
+            /*!
+            \brief Sets a texture sampler uniform from a textureID
+            \param name String containing the name of the uniform to set
+            \param value TextureID containing the ID to set
+            */
+            void setProperty(const std::string& name, CubemapID value);
+
 
             /*!
             \brief Overrides the material's depth test setting. 

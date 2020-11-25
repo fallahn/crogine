@@ -149,7 +149,7 @@ void Data::setProperty(const std::string& name, const Texture& value)
     }
 }
 
-void Data::setProperty(const std::string& name, const Property::TextureID value)
+void Data::setProperty(const std::string& name, TextureID value)
 {
     VERIFY(name, properties);
     auto result = properties.find(name);
@@ -157,6 +157,17 @@ void Data::setProperty(const std::string& name, const Property::TextureID value)
     {
         result->second.second.textureID = value.textureID;
         result->second.second.type = Property::Texture;
+    }
+}
+
+void Data::setProperty(const std::string& name, CubemapID value)
+{
+    VERIFY(name, properties);
+    auto result = properties.find(name);
+    if (result != properties.end())
+    {
+        result->second.second.textureID = value.textureID;
+        result->second.second.type = Property::Cubemap;
     }
 }
 

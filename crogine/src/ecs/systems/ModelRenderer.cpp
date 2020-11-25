@@ -279,6 +279,11 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
             glCheck(glUniform1i(prop.second.first, m_currentTextureUnit++));
             break;
+        case Material::Property::Cubemap:
+            glCheck(glActiveTexture(GL_TEXTURE0 + m_currentTextureUnit));
+            glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, prop.second.second.textureID));
+            glCheck(glUniform1i(prop.second.first, m_currentTextureUnit++));
+            break;
         case Material::Property::Number:
             glCheck(glUniform1f(prop.second.first,
                 prop.second.second.numberValue));

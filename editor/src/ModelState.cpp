@@ -463,6 +463,8 @@ void ModelState::createScene()
     //not rendering shadows on here, but we still want a light direction
     m_previewScene.getSunlight().setDirection({ 0.5f, -0.5f, -0.5f });
     m_previewScene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
+
+    m_previewScene.setEnvironmentMap("assets/images/brooklyn_bridge.hdr");
 }
 
 void ModelState::buildUI()
@@ -1981,7 +1983,7 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
     
     if (matDef.type == MaterialDefinition::PBR)
     {
-        matDef.materialData.setProperty("u_irradianceMap", cro::Material::Property::TextureID(m_scene.getEnvironmentMap().getIrradianceMap()));
+        matDef.materialData.setProperty("u_irradianceMap", m_scene.getEnvironmentMap().getIrradianceMap());
     }
 }
 

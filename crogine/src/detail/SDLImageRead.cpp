@@ -41,6 +41,8 @@ source distribution.
 
 #include <crogine/detail/Assert.hpp>
 
+#include <cstring>
+
 namespace cro
 {
 
