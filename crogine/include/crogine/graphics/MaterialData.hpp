@@ -91,11 +91,17 @@ namespace cro
                 Texture
             }type = None;
 
+            struct TextureID final
+            {
+                std::uint32_t textureID = 0;
+                explicit TextureID(std::uint32_t id) : textureID(id) {}
+            };
+
             union
             {
                 float numberValue;
                 float vecValue[4];
-                int32 textureID = 0;
+                uint32 textureID = 0;
                 glm::mat4 matrixValue;
             };
 
@@ -181,6 +187,12 @@ namespace cro
             \param value A reference to the texture to bind to the sampler
             */
             void setProperty(const std::string& name, const Texture& value);
+            /*!
+            \brief Sets a texture sampler uniform from a textureID
+            \param name String containing the name of the uniform to set
+            \param value Property::TextureID containing the ID to set
+            */
+            void setProperty(const std::string& name, const Property::TextureID value);
 
             /*!
             \brief Overrides the material's depth test setting. 

@@ -54,6 +54,7 @@ namespace cro
         bool loadFromFile(const std::string& path);
 
         std::uint32_t getSkybox() const { return m_skyboxTexture; }
+        std::uint32_t getIrradianceMap() const { return m_irradianceTexture; }
 
     private:
 

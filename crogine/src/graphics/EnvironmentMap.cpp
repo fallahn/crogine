@@ -85,6 +85,44 @@ namespace
             FRAG_OUT = vec4(colour, 1.0);
         })";
 
+    const std::string IrradianceFrag = R"(
+
+        OUTPUT
+        VARYING_IN vec3 v_worldPosition;
+
+        uniform samplerCube u_environmentMap;
+
+        const float PI = 3.14159265359;
+
+        void main()
+        {		
+            vec3 normal = normalize(v_worldPosition);
+
+            vec3 irradiance = vec3(0.0);   
+    
+            //tangent space calculation from origin point
+            vec3 up    = vec3(0.0, 1.0, 0.0);
+            vec3 right = cross(up, normal);
+            up         = cross(normal, right);
+       
+            float sampleDelta = 0.025;
+            float sampleCount = 0.0;
+            for(float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
+            {
+                for(float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta)
+                {
+                    vec3 tangentSample = vec3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));
+                    vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal; 
+
+                    irradiance += TEXTURE(u_environmentMap, sampleVec).rgb * cos(theta) * sin(theta);
+                    sampleCount++;
+                }
+            }
+            irradiance = PI * irradiance * (1.0 / float(sampleCount));
+    
+            FRAG_OUT = vec4(irradiance, 1.0);
+        })";
+
     //raii wrapper to delete temp textures
     //should an error occur
     struct TempTexture final
@@ -128,6 +166,7 @@ namespace
     };
 
     const std::uint32_t CubemapSize = 1024u;
+    const std::uint32_t IrradianceMapSize = 32u;
 }
 
 EnvironmentMap::EnvironmentMap()
@@ -287,8 +326,59 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
         glBindVertexArray(m_cubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
-    glBindVertexArray(0);
 
+    //create a smaller cube map to hold the irradiance map
+    if (m_irradianceTexture == 0)
+    {
+        glCheck(glGenTextures(1, &m_irradianceTexture));
+    }
+    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_irradianceTexture));
+
+    for (auto i = 0u; i < 6u; ++i)
+    {
+        glCheck(glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, IrradianceMapSize, IrradianceMapSize, 0, GL_RGB, GL_FLOAT, nullptr));
+    }
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+    //and rescale the FBO accordingly
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, tempFBO.handle));
+    glCheck(glBindRenderbuffer(GL_RENDERBUFFER, tempRBO.handle));
+    glCheck(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, IrradianceMapSize, IrradianceMapSize));
+
+
+    //then render each face
+    if (!shader.loadFromString(HDRToCubeVertex, IrradianceFrag))
+    {
+        LogE << "Failed creating irradiance convolution shader" << std::endl;
+        return false;
+    }
+
+    glCheck(glUseProgram(shader.getGLHandle()));
+    glCheck(glUniform1i(shader.getUniformMap().at("u_environmentMap"), 0));
+    glCheck(glActiveTexture(GL_TEXTURE0));
+    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexture));
+
+    glCheck(glViewport(0, 0, IrradianceMapSize, IrradianceMapSize));
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, tempFBO.handle));
+
+    for (auto i = 0u; i < 6u; ++i)
+    {
+        auto viewProj = projectionMatrix * viewMatrices[i];
+        glCheck(glUniformMatrix4fv(shader.getUniformMap().at("u_viewProjectionMatrix"), 1, GL_FALSE, &viewProj[0][0]));
+        glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_irradianceTexture, 0));
+
+        glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
+        CRO_ASSERT(m_cubeVAO && m_cubeVBO, "cube not correctly built!");
+        glBindVertexArray(m_cubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+    glCheck(glBindVertexArray(0));
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
     deleteCube();
     return true;
@@ -298,7 +388,7 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
 
 void EnvironmentMap::createCube()
 {
-    //position, normal, UV0
+    //position, normal, UV0 - TODO do we need anything but positions?
 
     std::vector<float> verts = {
         //back

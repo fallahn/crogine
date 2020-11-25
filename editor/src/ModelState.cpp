@@ -1978,6 +1978,11 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
     }
 
     matDef.materialData.blendMode = matDef.blendMode;
+    
+    if (matDef.type == MaterialDefinition::PBR)
+    {
+        matDef.materialData.setProperty("u_irradianceMap", cro::Material::Property::TextureID(m_scene.getEnvironmentMap().getIrradianceMap()));
+    }
 }
 
 void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)

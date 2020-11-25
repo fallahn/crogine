@@ -149,6 +149,17 @@ void Data::setProperty(const std::string& name, const Texture& value)
     }
 }
 
+void Data::setProperty(const std::string& name, const Property::TextureID value)
+{
+    VERIFY(name, properties);
+    auto result = properties.find(name);
+    if (result != properties.end())
+    {
+        result->second.second.textureID = value.textureID;
+        result->second.second.type = Property::Texture;
+    }
+}
+
 void Data::setShader(const Shader& s)
 {
     //this will get remapped if the uniform location changes

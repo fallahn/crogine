@@ -35,6 +35,8 @@ namespace cro::Shaders::PBR
         uniform vec4 u_lightColour;
         uniform vec3 u_cameraWorldPosition;
 
+        uniform samplerCube u_irradianceMap;
+
         VARYING_IN vec3 v_worldPosition;
 
         #if defined(BUMP)
@@ -186,10 +188,17 @@ namespace cro::Shaders::PBR
             surfProp.lightDir = normalize(-u_lightDirection);
             Lo += calcLighting(matProp, surfProp, u_lightColour.rgb, F0);
 
-            //ambient lighting  - potentially replace this with environment lighting
-            vec3 ambient = vec3(0.03) * matProp.albedo * matProp.ao;
+            //ambient lighting
+            vec3 kS = fresnelSchlick(max(dot(surfProp.normalDir, surfProp.viewDir), 0.0), F0);
+            vec3 kD = 1.0 - kS;
+            kD *= 1.0 - matProp.metallic;
+            vec3 irradiance = TEXTURE(u_irradianceMap, surfProp.normalDir).rgb;
+            vec3 diffuse = irradiance * matProp.albedo;
+            vec3 ambient = (kD * diffuse) * matProp.ao;
     
             vec3 colour = ambient + Lo;
+
+            //TODO specular component
 
             //HDR tonemapping
             colour = colour / (colour + vec3(1.0));
