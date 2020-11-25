@@ -106,10 +106,10 @@ namespace
             vec3 texCoords = v_texCoords;
             //texCoords.y = 1.0 - texCoords.y;
             vec3 colour = TEXTURE_CUBE(u_skybox, texCoords).rgb;
-
+#if defined(GAMMA_CORRECT)
             colour = colour / (colour + vec3(1.0));
             colour = pow(colour, vec3(1.0/2.2));
-
+#endif
             FRAG_OUT = vec4(colour, 1.0);
         })";
 
@@ -132,7 +132,8 @@ Scene::Scene(MessageBus& mb, std::size_t initialPoolSize)
     m_entityManager         (mb, m_componentManager, initialPoolSize),
     m_systemManager         (*this, m_componentManager),
     m_projectionMapCount    (0),
-    m_activeSkyboxTexture   (0)
+    m_activeSkyboxTexture   (0),
+    m_shaderIndex           (0)
 {
     auto defaultCamera = createEntity();
     defaultCamera.addComponent<Transform>();
@@ -245,7 +246,8 @@ void Scene::enableSkybox()
 {
     if (!m_skybox.vbo)
     {
-        if (m_skyboxShader.loadFromString(skyboxVertex, skyboxFrag))
+        if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle() ||
+            m_skyboxShaders[SkyboxType::Coloured].loadFromString(skyboxVertex, skyboxFrag))
         {
             //only using positions
             std::array<float, 108> verts = {
@@ -301,7 +303,7 @@ void Scene::enableSkybox()
             glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
 
 #ifdef PLATFORM_DESKTOP
-            const auto& attribs = m_skyboxShader.getAttribMap();
+            const auto& attribs = m_skyboxShaders[SkyboxType::Coloured].getAttribMap();
             glCheck(glEnableVertexAttribArray(attribs[0]));
             glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3 * sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
             glCheck(glEnableVertexAttribArray(0));
@@ -310,9 +312,10 @@ void Scene::enableSkybox()
 #endif
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-            m_skybox.viewUniform = m_skyboxShader.getUniformMap().at("u_viewMatrix");
-            m_skybox.projectionUniform = m_skyboxShader.getUniformMap().at("u_projectionMatrix");
+            m_skybox.setShader(m_skyboxShaders[Coloured]);
             setSkyboxColours();
+
+            m_shaderIndex = SkyboxType::Coloured;
         }
         else
         {
@@ -369,22 +372,23 @@ void Scene::setCubemap(const std::string& path)
         }
     }
 
-    //recreate shader if no texture yet exists
-    if (m_skybox.texture == 0)
+    //create shader if it doesn't exist
+    if (m_skyboxShaders[SkyboxType::Cubemap].getGLHandle() == 0)
     {
-        if (!m_skyboxShader.loadFromString(skyboxVertex, skyboxFragTextured))
+        if (!m_skyboxShaders[SkyboxType::Cubemap].loadFromString(skyboxVertex, skyboxFragTextured))
         {
-            cro::Logger::log("Failed to create skybox shader", cro::Logger::Type::Error);
-            destroySkybox();
+            LogE << "Failed creatng cubemap shader" << std::endl;
             return;
         }
-        m_skybox.viewUniform = m_skyboxShader.getUniformMap().at("u_viewMatrix");
-        m_skybox.projectionUniform = m_skyboxShader.getUniformMap().at("u_projectionMatrix");
-        m_skybox.textureUniform = m_skyboxShader.getUniformMap().at("u_skybox");
-
-        glCheck(glGenTextures(1, &m_skybox.texture));
     }
 
+    m_skybox.setShader(m_skyboxShaders[Cubemap]);
+    m_shaderIndex = SkyboxType::Cubemap;
+
+    if (m_skybox.texture == 0)
+    {
+        glCheck(glGenTextures(1, &m_skybox.texture));
+    }
 
     //load textures, filling in fallback where needed
     cro::Image fallback;
@@ -433,14 +437,30 @@ void Scene::setCubemap(const std::string& path)
     m_activeSkyboxTexture = m_skybox.texture;
 }
 
+void Scene::setEnvironmentMap(const std::string& hdri)
+{
+    enableSkybox();
+
+    if (m_skyboxShaders[SkyboxType::Environment].getGLHandle() == 0)
+    {
+        m_skyboxShaders[SkyboxType::Environment].loadFromString(skyboxVertex, skyboxFragTextured, "#define GAMMA_CORRECT\n");
+    }
+
+    if (m_environmentMap.loadFromFile(hdri))
+    {
+        m_activeSkyboxTexture = m_environmentMap.m_skyboxTexture;
+        m_skybox.setShader(m_skyboxShaders[Environment]);
+        m_shaderIndex = SkyboxType::Environment;
+    }
+}
+
 void Scene::setSkyboxColours(cro::Colour dark, cro::Colour light)
 {
-    if (m_skybox.texture == 0 &&
-        m_skyboxShader.getGLHandle())
+    if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle())
     {
-        glCheck(glUseProgram(m_skyboxShader.getGLHandle()));
-        glCheck(glUniform3f(m_skyboxShader.getUniformMap().at("u_darkColour"), dark.getRed(), dark.getGreen(), dark.getBlue()));
-        glCheck(glUniform3f(m_skyboxShader.getUniformMap().at("u_lightColour"), light.getRed(), light.getGreen(), light.getBlue()));
+        glCheck(glUseProgram(m_skyboxShaders[SkyboxType::Coloured].getGLHandle()));
+        glCheck(glUniform3f(m_skyboxShaders[SkyboxType::Coloured].getUniformMap().at("u_darkColour"), dark.getRed(), dark.getGreen(), dark.getBlue()));
+        glCheck(glUniform3f(m_skyboxShaders[SkyboxType::Coloured].getUniformMap().at("u_lightColour"), light.getRed(), light.getGreen(), light.getBlue()));
         glCheck(glUseProgram(0));
     }
 }
@@ -595,15 +615,15 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
             //remove translation from the view matrix
             auto view = glm::mat4(glm::mat3(cam.viewMatrix));
 
-            glCheck(glUseProgram(m_skyboxShader.getGLHandle()));
+            glCheck(glUseProgram(m_skyboxShaders[m_shaderIndex].getGLHandle()));
             glCheck(glUniformMatrix4fv(m_skybox.viewUniform, 1, GL_FALSE, glm::value_ptr(view)));
             glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projectionMatrix)));
 
             //bind the texture if it exists
-            if (/*m_skybox.texture*/m_activeSkyboxTexture)
+            if (m_activeSkyboxTexture)
             {
                 glCheck(glActiveTexture(GL_TEXTURE0));
-                glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, /*m_skybox.texture*/m_activeSkyboxTexture));
+                glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_activeSkyboxTexture));
                 glCheck(glUniform1i(m_skybox.textureUniform, 0));
             }
 

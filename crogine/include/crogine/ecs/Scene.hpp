@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/postprocess/PostProcess.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
 
 #include <functional>
 
@@ -189,10 +190,28 @@ namespace cro
         \endcode
         */
         void setCubemap(const std::string& path);
-        void setTestMap(std::uint32_t test) { m_activeSkyboxTexture = test; }
+
+        /*!
+        \brief Loads the given HDRI map into the skybox, and sets the skybox active.
+        The environment map is used for PBR shaded materials, provding the relevant
+        irradiance and pre-filter maps required for PBR shaders.
+        Note that this does nothing on mobile platforms, and setCubemap() should be
+        used instead.
+        \param path A string containing the path to an HDR image.
+        */
+        void setEnvironmentMap(const std::string& path);
+
+        /*!
+        \brief Returns a reference to the Scene's EnvironmentMap.
+        This may or may not be valid depending on whether setEnvironmentMap() has
+        yet been called. Use this to set the parameters of materials which use
+        the PBR hader and require environmental lighting information.
+        */
+        const EnvironmentMap& getEnvironmentMap() const { return m_environmentMap; }
+
         /*!
         \brief Sets the colours used in the default skybox.
-        If a skybox texture has been set then this does nothing.
+        If a skybox texture or environment map has been set then this does nothing.
         */
         void setSkyboxColours(cro::Colour top = cro::Colour(0.82f, 0.98f, 0.99f), cro::Colour bottom = cro::Colour(0.21f, 0.5f, 0.96f));
 
@@ -302,6 +321,7 @@ namespace cro
         std::array<RenderTexture, 2u> m_postBuffers;
         std::vector<std::unique_ptr<PostProcess>> m_postEffects;
 
+
         struct Skybox final
         {
             std::uint32_t vbo = 0;
@@ -310,10 +330,28 @@ namespace cro
             std::uint32_t projectionUniform = 0;
             std::uint32_t texture = 0;
             std::uint32_t textureUniform = 0;
-        }m_skybox;
-        Shader m_skyboxShader;
 
+            void setShader(const Shader& shader)
+            {
+                viewUniform = shader.getUniformMap().at("u_viewMatrix");
+                projectionUniform = shader.getUniformMap().at("u_projectionMatrix");
+                if (shader.getUniformMap().count("u_skybox"))
+                {
+                    textureUniform = shader.getUniformMap().at("u_skybox");
+                }
+            }
+        }m_skybox;
+
+        EnvironmentMap m_environmentMap;
         std::uint32_t m_activeSkyboxTexture;
+
+        enum SkyboxType
+        {
+            Cubemap, Environment, Coloured,
+            Count
+        };
+        std::array<Shader, SkyboxType::Count> m_skyboxShaders;
+        std::size_t m_shaderIndex;
 
         //we use a pointer here so we can create an array of just one
         //camera without having to create a vector from it

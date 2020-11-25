@@ -440,11 +440,8 @@ void ModelState::createScene()
     m_scene.getSunlight().setDirection({ 0.5f, -0.5f, -0.5f });
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
-
-    m_scene.setCubemap("assets/images/sky.ccm"); //do this first to create the shader
-    m_environmentMap.loadFromFile("assets/images/brooklyn_bridge.hdr");
-    m_scene.setTestMap(m_environmentMap.getSkybox());
-
+    m_scene.setEnvironmentMap("assets/images/brooklyn_bridge.hdr");
+    //m_scene.setCubemap("assets/images/sky.ccm");
 
     //create the material preview scene
     cro::ModelDefinition modelDef;

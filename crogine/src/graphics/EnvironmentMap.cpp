@@ -228,7 +228,10 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, tempRBO.handle));
 
     //create the cubemap which will be the skybox
-    glCheck(glGenTextures(1, &m_skyboxTexture));
+    if (m_skyboxTexture == 0)
+    {
+        glCheck(glGenTextures(1, &m_skyboxTexture));
+    }
     glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexture));
 
     for (auto i = 0; i < 6u; ++i)
