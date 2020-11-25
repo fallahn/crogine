@@ -114,6 +114,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\Colour.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\CubeBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\DynamicMeshBuilder.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\EnvironmentMap.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Font.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\FontResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Image.hpp" />
@@ -167,6 +168,7 @@
     <ClInclude Include="..\crogine\src\detail\glad.hpp" />
     <ClInclude Include="..\crogine\src\detail\GLCheck.hpp" />
     <ClInclude Include="..\crogine\src\detail\HiResTimer.hpp" />
+    <ClInclude Include="..\crogine\src\detail\SDLImageRead.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Billboard.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Debug.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Default.hpp" />
@@ -220,6 +222,7 @@
     <ClCompile Include="..\crogine\src\detail\enet\protocol.c" />
     <ClCompile Include="..\crogine\src\detail\enet\win32.c" />
     <ClCompile Include="..\crogine\src\detail\glad.c" />
+    <ClCompile Include="..\crogine\src\detail\SDLImageRead.cpp" />
     <ClCompile Include="..\crogine\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\crogine\src\ecs\Component.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\AudioEmitter.cpp" />
@@ -258,6 +261,7 @@
     <ClCompile Include="..\crogine\src\graphics\BoundingBox.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Colour.cpp" />
     <ClCompile Include="..\crogine\src\graphics\DynamicMeshBuilder.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\EnvironmentMap.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Font.cpp" />
     <ClCompile Include="..\crogine\src\graphics\FontResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Image.cpp" />

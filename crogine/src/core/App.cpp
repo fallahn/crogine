@@ -47,7 +47,7 @@ source distribution.
 #include "../imgui/imgui_impl_sdl.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../graphics/stb_image_write.h"
+#include "../detail/stb_image_write.h"
 
 
 #include "../audio/AudioRenderer.hpp"

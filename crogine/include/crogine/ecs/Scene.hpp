@@ -189,9 +189,10 @@ namespace cro
         \endcode
         */
         void setCubemap(const std::string& path);
-
+        void setTestMap(std::uint32_t test) { m_activeSkyboxTexture = test; }
         /*!
-        \brief Sets the colours used in the default skybox
+        \brief Sets the colours used in the default skybox.
+        If a skybox texture has been set then this does nothing.
         */
         void setSkyboxColours(cro::Colour top = cro::Colour(0.82f, 0.98f, 0.99f), cro::Colour bottom = cro::Colour(0.21f, 0.5f, 0.96f));
 
@@ -311,6 +312,8 @@ namespace cro
             std::uint32_t textureUniform = 0;
         }m_skybox;
         Shader m_skyboxShader;
+
+        std::uint32_t m_activeSkyboxTexture;
 
         //we use a pointer here so we can create an array of just one
         //camera without having to create a vector from it

@@ -29,6 +29,7 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/detail/DistanceField.cpp
   ${PROJECT_DIR}/detail/glad.c
+  ${PROJECT_DIR}/detail/SDLImageRead.cpp
   ${PROJECT_DIR}/detail/SDLResource.cpp
 
   ${PROJECT_DIR}/detail/enet/callbacks.c
@@ -79,6 +80,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/BoundingBox.cpp
   ${PROJECT_DIR}/graphics/Colour.cpp
   ${PROJECT_DIR}/graphics/DynamicMeshBuilder.cpp
+  ${PROJECT_DIR}/graphics/EnvironmentMap.cpp
   ${PROJECT_DIR}/graphics/Font.cpp
   ${PROJECT_DIR}/graphics/FontResource.cpp
   ${PROJECT_DIR}/graphics/Image.cpp

@@ -534,6 +534,12 @@
     <ClInclude Include="..\crogine\src\graphics\shaders\PBR.hpp">
       <Filter>Header Files\graphics\shaders</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\EnvironmentMap.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\SDLImageRead.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -865,6 +871,12 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\imgui\imgui_stdlib.cpp">
       <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\EnvironmentMap.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\SDLImageRead.cpp">
+      <Filter>Source Files\detail</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

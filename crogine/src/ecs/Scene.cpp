@@ -105,7 +105,12 @@ namespace
         {
             vec3 texCoords = v_texCoords;
             //texCoords.y = 1.0 - texCoords.y;
-            FRAG_OUT = TEXTURE_CUBE(u_skybox, texCoords);
+            vec3 colour = TEXTURE_CUBE(u_skybox, texCoords).rgb;
+
+            colour = colour / (colour + vec3(1.0));
+            colour = pow(colour, vec3(1.0/2.2));
+
+            FRAG_OUT = vec4(colour, 1.0);
         })";
 
     const float DefaultFOV = 35.f * Util::Const::degToRad;
@@ -123,10 +128,11 @@ namespace
 }
 
 Scene::Scene(MessageBus& mb, std::size_t initialPoolSize)
-    : m_messageBus      (mb),
-    m_entityManager     (mb, m_componentManager, initialPoolSize),
-    m_systemManager     (*this, m_componentManager),
-    m_projectionMapCount(0)
+    : m_messageBus          (mb),
+    m_entityManager         (mb, m_componentManager, initialPoolSize),
+    m_systemManager         (*this, m_componentManager),
+    m_projectionMapCount    (0),
+    m_activeSkyboxTexture   (0)
 {
     auto defaultCamera = createEntity();
     defaultCamera.addComponent<Transform>();
@@ -237,78 +243,81 @@ Sunlight& Scene::getSunlight()
 
 void Scene::enableSkybox()
 {
-    if (!m_skybox.vbo && m_skyboxShader.loadFromString(skyboxVertex, skyboxFrag))
+    if (!m_skybox.vbo)
     {
-        //only using positions
-        std::array<float, 108> verts = {
-            -0.5f,  0.5f, -0.5f,
-            -0.5f, -0.5f, -0.5f,
-             0.5f, -0.5f, -0.5f,
-             0.5f, -0.5f, -0.5f,
-             0.5f,  0.5f, -0.5f,
-            -0.5f,  0.5f, -0.5f,
+        if (m_skyboxShader.loadFromString(skyboxVertex, skyboxFrag))
+        {
+            //only using positions
+            std::array<float, 108> verts = {
+                -0.5f,  0.5f, -0.5f,
+                -0.5f, -0.5f, -0.5f,
+                 0.5f, -0.5f, -0.5f,
+                 0.5f, -0.5f, -0.5f,
+                 0.5f,  0.5f, -0.5f,
+                -0.5f,  0.5f, -0.5f,
 
-            -0.5f, -0.5f,  0.5f,
-            -0.5f, -0.5f, -0.5f,
-            -0.5f,  0.5f, -0.5f,
-            -0.5f,  0.5f, -0.5f,
-            -0.5f,  0.5f,  0.5f,
-            -0.5f, -0.5f,  0.5f,
+                -0.5f, -0.5f,  0.5f,
+                -0.5f, -0.5f, -0.5f,
+                -0.5f,  0.5f, -0.5f,
+                -0.5f,  0.5f, -0.5f,
+                -0.5f,  0.5f,  0.5f,
+                -0.5f, -0.5f,  0.5f,
 
-             0.5f, -0.5f, -0.5f,
-             0.5f, -0.5f,  0.5f,
-             0.5f,  0.5f,  0.5f,
-             0.5f,  0.5f,  0.5f,
-             0.5f,  0.5f, -0.5f,
-             0.5f, -0.5f, -0.5f,
+                 0.5f, -0.5f, -0.5f,
+                 0.5f, -0.5f,  0.5f,
+                 0.5f,  0.5f,  0.5f,
+                 0.5f,  0.5f,  0.5f,
+                 0.5f,  0.5f, -0.5f,
+                 0.5f, -0.5f, -0.5f,
 
-            -0.5f, -0.5f,  0.5f,
-            -0.5f,  0.5f,  0.5f,
-             0.5f,  0.5f,  0.5f,
-             0.5f,  0.5f,  0.5f,
-             0.5f, -0.5f,  0.5f,
-            -0.5f, -0.5f,  0.5f,
+                -0.5f, -0.5f,  0.5f,
+                -0.5f,  0.5f,  0.5f,
+                 0.5f,  0.5f,  0.5f,
+                 0.5f,  0.5f,  0.5f,
+                 0.5f, -0.5f,  0.5f,
+                -0.5f, -0.5f,  0.5f,
 
-            -0.5f,  0.5f, -0.5f,
-             0.5f,  0.5f, -0.5f,
-             0.5f,  0.5f,  0.5f,
-             0.5f,  0.5f,  0.5f,
-            -0.5f,  0.5f,  0.5f,
-            -0.5f,  0.5f, -0.5f,
+                -0.5f,  0.5f, -0.5f,
+                 0.5f,  0.5f, -0.5f,
+                 0.5f,  0.5f,  0.5f,
+                 0.5f,  0.5f,  0.5f,
+                -0.5f,  0.5f,  0.5f,
+                -0.5f,  0.5f, -0.5f,
 
-            -0.5f, -0.5f, -0.5f,
-            -0.5f, -0.5f,  0.5f,
-             0.5f, -0.5f, -0.5f,
-             0.5f, -0.5f, -0.5f,
-            -0.5f, -0.5f,  0.5f,
-             0.5f, -0.5f,  0.5f
-        };
+                -0.5f, -0.5f, -0.5f,
+                -0.5f, -0.5f,  0.5f,
+                 0.5f, -0.5f, -0.5f,
+                 0.5f, -0.5f, -0.5f,
+                -0.5f, -0.5f,  0.5f,
+                 0.5f, -0.5f,  0.5f
+            };
 
 #ifdef PLATFORM_DESKTOP
-        glCheck(glGenVertexArrays(1, &m_skybox.vao));
-        glCheck(glBindVertexArray(m_skybox.vao));
+            glCheck(glGenVertexArrays(1, &m_skybox.vao));
+            glCheck(glBindVertexArray(m_skybox.vao));
 #endif
-        glCheck(glGenBuffers(1, &m_skybox.vbo));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
-        glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
-        
+            glCheck(glGenBuffers(1, &m_skybox.vbo));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_skybox.vbo));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
+
 #ifdef PLATFORM_DESKTOP
-        const auto& attribs = m_skyboxShader.getAttribMap();
-        glCheck(glEnableVertexAttribArray(attribs[0]));
-        glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3 * sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
-        glCheck(glEnableVertexAttribArray(0));
+            const auto& attribs = m_skyboxShader.getAttribMap();
+            glCheck(glEnableVertexAttribArray(attribs[0]));
+            glCheck(glVertexAttribPointer(attribs[0], 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(3 * sizeof(float)), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+            glCheck(glEnableVertexAttribArray(0));
 
-        glCheck(glBindVertexArray(0));
+            glCheck(glBindVertexArray(0));
 #endif
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-        m_skybox.viewUniform = m_skyboxShader.getUniformMap().at("u_viewMatrix");
-        m_skybox.projectionUniform = m_skyboxShader.getUniformMap().at("u_projectionMatrix");
-        setSkyboxColours();
-    }
-    else
-    {
-        Logger::log("Failed to create skybox", cro::Logger::Type::Error);
+            m_skybox.viewUniform = m_skyboxShader.getUniformMap().at("u_viewMatrix");
+            m_skybox.projectionUniform = m_skyboxShader.getUniformMap().at("u_projectionMatrix");
+            setSkyboxColours();
+        }
+        else
+        {
+            Logger::log("Failed to create skybox", cro::Logger::Type::Error);
+        }
     }
 }
 
@@ -372,6 +381,8 @@ void Scene::setCubemap(const std::string& path)
         m_skybox.viewUniform = m_skyboxShader.getUniformMap().at("u_viewMatrix");
         m_skybox.projectionUniform = m_skyboxShader.getUniformMap().at("u_projectionMatrix");
         m_skybox.textureUniform = m_skyboxShader.getUniformMap().at("u_skybox");
+
+        glCheck(glGenTextures(1, &m_skybox.texture));
     }
 
 
@@ -381,7 +392,6 @@ void Scene::setCubemap(const std::string& path)
 
     cro::Image side(true);
 
-    glCheck(glGenTextures(1, &m_skybox.texture));
     glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_skybox.texture));
 
     cro::Image* currImage = &fallback;
@@ -419,11 +429,14 @@ void Scene::setCubemap(const std::string& path)
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
+
+    m_activeSkyboxTexture = m_skybox.texture;
 }
 
 void Scene::setSkyboxColours(cro::Colour dark, cro::Colour light)
 {
-    if (m_skyboxShader.getGLHandle())
+    if (m_skybox.texture == 0 &&
+        m_skyboxShader.getGLHandle())
     {
         glCheck(glUseProgram(m_skyboxShader.getGLHandle()));
         glCheck(glUniform3f(m_skyboxShader.getUniformMap().at("u_darkColour"), dark.getRed(), dark.getGreen(), dark.getBlue()));
@@ -587,10 +600,10 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
             glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projectionMatrix)));
 
             //bind the texture if it exists
-            if (m_skybox.texture)
+            if (/*m_skybox.texture*/m_activeSkyboxTexture)
             {
                 glCheck(glActiveTexture(GL_TEXTURE0));
-                glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_skybox.texture));
+                glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, /*m_skybox.texture*/m_activeSkyboxTexture));
                 glCheck(glUniform1i(m_skybox.textureUniform, 0));
             }
 
