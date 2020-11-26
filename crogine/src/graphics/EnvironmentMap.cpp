@@ -116,6 +116,8 @@ EnvironmentMap::EnvironmentMap()
     m_cubeVAO           (0)
 {
     std::fill(m_textures.begin(), m_textures.end(), 0);
+
+    glCheck(glGenTextures(4, m_textures.data()));
 }
 
 EnvironmentMap::~EnvironmentMap()
@@ -124,8 +126,6 @@ EnvironmentMap::~EnvironmentMap()
     {
         glCheck(glDeleteTextures(4, m_textures.data()));
     }
-
-
     deleteCube();
 }
 
@@ -202,7 +202,8 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     //create the cubemap which will be the skybox
     if (m_textures[Skybox] == 0)
     {
-        glCheck(glGenTextures(4, m_textures.data()));
+        LogE << "No valid textures were created." << std::endl;
+        return false;
     }
 
     for (auto t : m_textures)

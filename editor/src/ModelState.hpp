@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include "StateIDs.hpp"
@@ -64,6 +65,7 @@ public:
 
 private:
 
+    cro::EnvironmentMap m_environmentMap;
     cro::Scene m_scene;
     cro::Scene m_previewScene;
     cro::ResourceCollection m_resources;

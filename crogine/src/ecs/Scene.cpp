@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
@@ -437,7 +438,7 @@ void Scene::setCubemap(const std::string& path)
     m_activeSkyboxTexture = m_skybox.texture;
 }
 
-void Scene::setEnvironmentMap(const std::string& hdri)
+void Scene::setCubemap(const EnvironmentMap& map)
 {
     enableSkybox();
 
@@ -446,12 +447,9 @@ void Scene::setEnvironmentMap(const std::string& hdri)
         m_skyboxShaders[SkyboxType::Environment].loadFromString(skyboxVertex, skyboxFragTextured, "#define GAMMA_CORRECT\n");
     }
 
-    if (m_environmentMap.loadFromFile(hdri))
-    {
-        m_activeSkyboxTexture = m_environmentMap.m_textures[0];
-        m_skybox.setShader(m_skyboxShaders[Environment]);
-        m_shaderIndex = SkyboxType::Environment;
-    }
+    m_activeSkyboxTexture = map.m_textures[0];
+    m_skybox.setShader(m_skyboxShaders[Environment]);
+    m_shaderIndex = SkyboxType::Environment;
 }
 
 void Scene::setSkyboxColours(cro::Colour dark, cro::Colour light)

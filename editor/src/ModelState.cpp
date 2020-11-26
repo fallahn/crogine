@@ -376,6 +376,7 @@ void ModelState::loadAssets()
     m_magentaTexture.create(2, 2);
     m_magentaTexture.update(pixels.data());
 
+    m_environmentMap.loadFromFile("assets/images/brooklyn_bridge.hdr");
 
     //create a default material to display models on import
     auto flags = cro::ShaderResource::DiffuseColour;// | cro::ShaderResource::DiffuseMap;
@@ -440,7 +441,7 @@ void ModelState::createScene()
     m_scene.getSunlight().setDirection({ 0.5f, -0.5f, -0.5f });
     m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
-    m_scene.setEnvironmentMap("assets/images/brooklyn_bridge.hdr");
+    //m_scene.setCubemap(m_environmentMap);
     //m_scene.setCubemap("assets/images/sky.ccm");
 
     //create the material preview scene
@@ -464,7 +465,7 @@ void ModelState::createScene()
     m_previewScene.getSunlight().setDirection({ 0.5f, -0.5f, -0.5f });
     m_previewScene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
-    m_previewScene.setEnvironmentMap("assets/images/brooklyn_bridge.hdr");
+    m_previewScene.setCubemap(m_environmentMap);
 }
 
 void ModelState::buildUI()
@@ -1983,9 +1984,9 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
     
     if (matDef.type == MaterialDefinition::PBR)
     {
-        matDef.materialData.setProperty("u_irradianceMap", m_scene.getEnvironmentMap().getIrradianceMap());
-        matDef.materialData.setProperty("u_prefilterMap", m_scene.getEnvironmentMap().getPrefilterMap());
-        matDef.materialData.setProperty("u_brdfMap", m_scene.getEnvironmentMap().getBRDFMap());
+        matDef.materialData.setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
+        matDef.materialData.setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
+        matDef.materialData.setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
     }
 }
 

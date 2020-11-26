@@ -41,7 +41,6 @@ source distribution.
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/postprocess/PostProcess.hpp>
-#include <crogine/graphics/EnvironmentMap.hpp>
 
 #include <functional>
 
@@ -49,6 +48,7 @@ namespace cro
 {
     class MessageBus;
     class Renderable;
+    class EnvironmentMap;
 
     /*!
     \brief Encapsulates a single scene.
@@ -192,22 +192,13 @@ namespace cro
         void setCubemap(const std::string& path);
 
         /*!
-        \brief Loads the given HDRI map into the skybox, and sets the skybox active.
-        The environment map is used for PBR shaded materials, provding the relevant
-        irradiance and pre-filter maps required for PBR shaders.
-        Note that this does nothing on mobile platforms, and setCubemap() should be
-        used instead.
-        \param path A string containing the path to an HDR image.
+        \brief Sets the skybox cubemap to that of the given EnvironmentMap.
+        As EnvironmentMaps are only available on desktop platforms this will
+        do nothing on mobile. Mobile platforms should use setCubemap(std::string)
+        instead. Note that as a reference is store to the map, the map should
+        be kept valid for at least as long as a Scene using it.
         */
-        void setEnvironmentMap(const std::string& path);
-
-        /*!
-        \brief Returns a reference to the Scene's EnvironmentMap.
-        This may or may not be valid depending on whether setEnvironmentMap() has
-        yet been called. Use this to set the parameters of materials which use
-        the PBR hader and require environmental lighting information.
-        */
-        const EnvironmentMap& getEnvironmentMap() const { return m_environmentMap; }
+        void setCubemap(const EnvironmentMap& map);
 
         /*!
         \brief Sets the colours used in the default skybox.
@@ -342,7 +333,6 @@ namespace cro
             }
         }m_skybox;
 
-        EnvironmentMap m_environmentMap;
         std::uint32_t m_activeSkyboxTexture;
 
         enum SkyboxType
