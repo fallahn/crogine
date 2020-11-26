@@ -145,7 +145,7 @@ private:
     bool m_showSphere;
     void updateWorldScale();
     void updateNormalVis();
-    void updateGridMesh(cro::Mesh::Data&, std::optional<float>, std::optional<cro::Box>);
+    void updateGridMesh(cro::Mesh::Data&, std::optional<cro::Sphere>, std::optional<cro::Box>);
 
     void updateMouseInput(const cro::Event&);
 

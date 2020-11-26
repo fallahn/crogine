@@ -79,7 +79,6 @@ void ShadowMapRenderer::process(float)
             m_visibleEntities.push_back(entity);
         }
     }
-
     getScene()->getSunlight().m_textureID = m_target.getTexture().getGLHandle();
 }
 
@@ -92,9 +91,12 @@ void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
     
     const auto& camTx = camera.getComponent<Transform>();
 
-    auto dir = glm::translate(getScene()->getSunlight().getRotation(), (camTx.getWorldPosition() - m_projectionOffset));
-    auto viewMat = glm::inverse(dir);
+    //auto dir = glm::translate(getScene()->getSunlight().getRotation(), /*(camTx.getWorldPosition() - m_projectionOffset)*/glm::vec3(0.f));
+    //auto viewMat = glm::inverse(dir);
     //auto viewMat = glm::inverse(camTx.getWorldTransform());
+    auto viewMat = glm::translate(glm::mat4(1.f), getScene()->getSunlight().getDirection());
+    viewMat = getScene()->getSunlight().getRotation() * viewMat;
+    viewMat = glm::inverse(viewMat);
 
     auto projMat = getScene()->getSunlight().getProjectionMatrix();
     getScene()->getSunlight().setViewProjectionMatrix(projMat * viewMat);

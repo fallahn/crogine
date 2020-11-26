@@ -766,6 +766,14 @@ void ModelState::buildUI()
 
             drawInspector();
             drawBrowser();
+
+            ImGui::SetNextWindowSize({ 528.f, 554.f });
+            ImGui::Begin("Shadow Map", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+
+            ImGui::Image((void*)(std::size_t)m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture().getGLHandle(),
+                { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });
+
+            ImGui::End();
         });
 
     auto size = getContext().mainWindow.getSize();
@@ -915,8 +923,8 @@ void ModelState::openModelAtPath(const std::string& path)
         }
 
         //make sure to update the bounding display if needed
-        std::optional<float> sphere;
-        if (m_showSphere) sphere = meshData.boundingSphere.radius;
+        std::optional<cro::Sphere> sphere;
+        if (m_showSphere) sphere = meshData.boundingSphere;
 
         std::optional<cro::Box> box;
         if (m_showAABB) box = meshData.boundingBox;
@@ -1748,7 +1756,7 @@ void ModelState::updateMouseInput(const cro::Event& evt)
     }
 }
 
-void ModelState::updateGridMesh(cro::Mesh::Data& meshData, std::optional<float> radius, std::optional<cro::Box> boundingBox)
+void ModelState::updateGridMesh(cro::Mesh::Data& meshData, std::optional<cro::Sphere> sphere, std::optional<cro::Box> boundingBox)
 {
     std::vector<float> verts;
     auto addVert = [&verts](glm::vec3 pos, glm::vec4 colour)
@@ -1791,18 +1799,18 @@ void ModelState::updateGridMesh(cro::Mesh::Data& meshData, std::optional<float> 
 
     const glm::vec4 transparent(0.f);
 
-    if (radius)
+    if (sphere)
     {
         const glm::vec4 green(0.1f, 0.9f, 0.4f, 1.f);
         constexpr std::int32_t SegmentCount = 16;
         constexpr float step = cro::Util::Const::TAU / SegmentCount;
-        float rad = radius.value();
+        cro::Sphere rad = sphere.value();
 
         std::vector<glm::vec2> points;
         for (auto i = 0; i < SegmentCount; ++i)
         {
             points.emplace_back(std::sin(i * step), std::cos(i * step));
-            points.back() *= rad;
+            points.back() *= rad.radius;
         }
 
         //draw the circle in all 3 planes
@@ -1810,6 +1818,7 @@ void ModelState::updateGridMesh(cro::Mesh::Data& meshData, std::optional<float> 
         verts.insert(verts.end(), lastVert.begin(), lastVert.end());
         indices.push_back(currentIndex++);
 
+        auto vertsStart = verts.size();
         addVert({ points.front().x, points.front().y, 0.f }, transparent);
         indices.push_back(currentIndex++);
 
@@ -1853,9 +1862,17 @@ void ModelState::updateGridMesh(cro::Mesh::Data& meshData, std::optional<float> 
         //close the circle
         indices.push_back(currentIndex - static_cast<std::uint32_t>(points.size()));
 
-        //update lastVert in case we're also builind an AABB
+        //update lastVert in case we're also building an AABB
         lastVert = { verts.end() - vertStride, verts.end() };
         lastVert.back() = 0.f;
+
+        //update all the verts with centre offset
+        for (auto i = vertsStart; i < verts.size(); i += vertStride)
+        {
+            verts[i] += rad.centre.x;
+            verts[i+1] += rad.centre.y;
+            verts[i+2] += rad.centre.z;
+        }
     }
 
     if (boundingBox)
@@ -2391,8 +2408,8 @@ void ModelState::drawInspector()
                     }
                     if (refreshBounds)
                     {
-                        std::optional<float> sphere;
-                        if (m_showSphere) sphere = meshData.boundingSphere.radius;
+                        std::optional<cro::Sphere> sphere;
+                        if (m_showSphere) sphere = meshData.boundingSphere;
                         
                         std::optional<cro::Box> box;
                         if (m_showAABB) box = meshData.boundingBox;
