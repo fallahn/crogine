@@ -126,9 +126,9 @@ namespace cro
         populated with IDs referring to the newly loaded data.
         \param envMap A pointer to a valid EnvironmentMap instance. This will
         automatically assign any required lighting parameters to PBR materials.
-        This can be omitted if not PBR materials are being loaded.
+        This can be omitted if no PBR materials are being loaded.
         \returns true if the configuration file was parsed without error.
-        \see ConfigFile
+        \see ConfigFile, EnvironmentMap
         */
         bool loadFromFile(const std::string& path, ResourceCollection& resources, EnvironmentMap* envMap = nullptr);
 

@@ -392,21 +392,30 @@ void ModelState::loadAssets()
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     materialIDs[MaterialID::DebugDraw] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
+
+    //for receiving shadows on the ground plane
+    std::size_t texID = 10000;
+    m_resources.textures.load(texID, "assets/images/grid.png");
+    m_resources.textures.get(texID).setSmooth(true);
+
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::RxShadows);
+    materialIDs[MaterialID::GroundPlane] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_resources.materials.get(materialIDs[MaterialID::GroundPlane]).setProperty("u_diffuseMap", m_resources.textures.get(texID));
+    m_resources.materials.get(materialIDs[MaterialID::GroundPlane]).setProperty("u_maskColour", cro::Colour(0.f, 0.f, 0.f));
 }
 
 void ModelState::createScene()
 {
-    //create ground plane
+    //create grid // bounding box mesh
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     auto material = m_resources.materials.get(materialIDs[MaterialID::DebugDraw]);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto& meshData = entity.getComponent<cro::Model>().getMeshData();
     updateGridMesh(meshData, std::nullopt, std::nullopt);
-    entities[EntityID::GroundPlane] = entity;
+    entities[EntityID::GridMesh] = entity;
 
     //create the camera - using a custom camera prevents the scene updating the projection on window resize
     entity = m_scene.createEntity();
@@ -418,7 +427,7 @@ void ModelState::createScene()
     entities[EntityID::CamController] = m_scene.createEntity();
     entities[EntityID::CamController].addComponent<cro::Transform>();
     //entities[EntityID::CamController].addComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::GroundPlane].getComponent<cro::Transform>());
+    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::GridMesh].getComponent<cro::Transform>());
 
     //axis icon
     meshID = m_resources.meshes.loadMesh(OriginIconBuilder());
@@ -435,6 +444,44 @@ void ModelState::createScene()
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     };
     entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //ground plane for receiving shadows
+    std::vector<float> verts =
+    {
+        -1.5f, 0.f, -1.5f, 0.f, 1.f, 0.f,  0.f, 1.f,
+        -1.5f, 0.f, 1.5f,  0.f, 1.f, 0.f,  0.f, 0.f,
+        1.5f, 0.f, -1.5f,  0.f, 1.f, 0.f,  1.f, 1.f,
+        1.5f, 0.f, 1.5f,   0.f, 1.f, 0.f,  1.f, 0.f,
+    };
+    std::vector<std::uint32_t> indices =
+    {
+        0, 1, 2, 3
+    };
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Normal | cro::VertexProperty::UV0, 1, GL_TRIANGLE_STRIP));
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::GroundPlane]));
+    auto& mesh = entity.getComponent<cro::Model>().getMeshData();
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexData[0].ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    mesh.boundingBox[0] = { -1.5f, 0.25f, -1.5f };
+    mesh.boundingBox[1] = { 1.5f, -0.25f, 1.5f };
+    mesh.boundingSphere.radius = 1.5f;
+    mesh.vertexCount = 4;
+    mesh.indexData[0].indexCount = 4;
+
+    entities[EntityID::GroundPlane] = entity;
+    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //set the default sunlight properties
     m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 6.f, -5.f });
@@ -600,11 +647,12 @@ void ModelState::buildUI()
                         if (m_showGroundPlane)
                         {
                             //set this to whichever world scale we're currently using
-                            updateWorldScale();
+                            //updateWorldScale();
+                            entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
                         }
                         else
                         {
-                            entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
+                            entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
                         }
                         savePrefs();
                     }
@@ -872,7 +920,7 @@ void ModelState::openModelAtPath(const std::string& path)
 
         std::optional<cro::Box> box;
         if (m_showAABB) box = meshData.boundingBox;
-        updateGridMesh(entities[EntityID::GroundPlane].getComponent<cro::Model>().getMeshData(), sphere, box);
+        updateGridMesh(entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), sphere, box);
 
 
         //read back the buffer data into the imported buffer so we can do things like normal vis and lightmap baking
@@ -1543,6 +1591,14 @@ void ModelState::loadPrefs()
             else if (name == "show_groundplane")
             {
                 m_showGroundPlane = prop.getValue<bool>();
+                if (m_showGroundPlane)
+                {
+                    entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                }
+                else
+                {
+                    entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                }
             }
             else if (name == "show_skybox")
             {
@@ -1609,19 +1665,19 @@ void ModelState::savePrefs()
 
 void ModelState::updateWorldScale()
 {
-    const float scale = worldScales[m_preferences.unitsPerMetre];
-    if (m_showGroundPlane)
-    {
-        entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale({ scale, scale, scale });
-    }
-    else
-    {
-        entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-    }
-    m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(DefaultCameraPosition * scale);
-    
-    entities[EntityID::CamController].getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
-    updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_fov);
+    //const float scale = worldScales[m_preferences.unitsPerMetre];
+    //if (m_showGroundPlane)
+    //{
+    //    entities[EntityID::GridMesh].getComponent<cro::Transform>().setScale({ scale, scale, scale });
+    //}
+    //else
+    //{
+    //    entities[EntityID::GridMesh].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+    //}
+    //m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(DefaultCameraPosition * scale);
+    //
+    //entities[EntityID::CamController].getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
+    //updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_fov);
 }
 
 void ModelState::updateNormalVis()
@@ -2341,7 +2397,7 @@ void ModelState::drawInspector()
                         std::optional<cro::Box> box;
                         if (m_showAABB) box = meshData.boundingBox;
 
-                        updateGridMesh(entities[EntityID::GroundPlane].getComponent<cro::Model>().getMeshData(), sphere, box);
+                        updateGridMesh(entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), sphere, box);
                     }
 
                     if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())

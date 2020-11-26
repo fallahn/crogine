@@ -53,7 +53,9 @@ namespace cro
     \endcode
 
     These properties will supply the correct environment information
-    needed for PBR lighting.
+    needed for PBR lighting. When using the ModelDefinition class
+    this can be automated by supplying a pointer to an EnironmentMap
+    as a parameter to the load function.
 
     EnvironmentMaps load their data from radiance *.hdr files.
     For visual feedback an environment map can be set as a Scene's
@@ -61,6 +63,8 @@ namespace cro
 
     Note that PBR rendering, and therefore EnvironmentMaps, are not
     available on mobile hardware.
+
+    \see ModelDefinition
     */
 
     class CRO_EXPORT_API EnvironmentMap final

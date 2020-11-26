@@ -412,7 +412,8 @@ void EnvironmentMap::renderBRDFMap(std::uint32_t fbo, std::uint32_t rbo, Shader&
     std::uint32_t quadVBO = 0;
     std::uint32_t quadVAO = 0;
 
-    std::vector<float> verts = {
+    std::vector<float> verts =
+    {
         -1.0f,  1.0f, 0.0f,   0.0f, 1.0f,
         -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,
         1.0f,  1.0f, 0.0f,    1.0f, 1.0f,
@@ -444,7 +445,8 @@ void EnvironmentMap::renderBRDFMap(std::uint32_t fbo, std::uint32_t rbo, Shader&
 
 void EnvironmentMap::createCube()
 {
-    std::vector<float> verts = {
+    std::vector<float> verts =
+    {
         //back
         -1.0f, -1.0f, -1.0f,
          1.0f,  1.0f, -1.0f,
