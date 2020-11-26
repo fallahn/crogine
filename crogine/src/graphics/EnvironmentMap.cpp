@@ -97,6 +97,7 @@ namespace
     const std::uint32_t CubemapSize = 1024u;
     const std::uint32_t IrradianceMapSize = 32u;
     const std::uint32_t PrefilterMapSize = 128u;
+    const std::int32_t CubeVertCount = 36;
 
     const auto projectionMatrix = glm::perspective(90.f * cro::Util::Const::degToRad, 1.f, 0.1f, 2.f);
     const std::array viewMatrices =
@@ -254,8 +255,8 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
 
         CRO_ASSERT(m_cubeVAO&& m_cubeVBO, "cube not correctly built!");
         //can't use VAOs on mobile - but this should be marked mobile incompatible anyway.
-        glBindVertexArray(m_cubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glCheck(glBindVertexArray(m_cubeVAO));
+        glCheck(glDrawArrays(GL_TRIANGLES, 0, CubeVertCount));
     }
 
     if (!shader.loadFromString(PBRCubeVertex, IrradianceFrag))
@@ -331,8 +332,8 @@ void EnvironmentMap::renderIrradianceMap(std::uint32_t fbo, std::uint32_t rbo, S
         glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
         CRO_ASSERT(m_cubeVAO && m_cubeVBO, "cube not correctly built!");
-        glBindVertexArray(m_cubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glCheck(glBindVertexArray(m_cubeVAO));
+        glCheck(glDrawArrays(GL_TRIANGLES, 0, CubeVertCount));
     }
 }
 
@@ -383,8 +384,8 @@ void EnvironmentMap::renderPrefilterMap(std::uint32_t fbo, std::uint32_t rbo, Sh
             glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
             CRO_ASSERT(m_cubeVAO && m_cubeVBO, "cube not correctly built!");
-            glBindVertexArray(m_cubeVAO);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            glCheck(glBindVertexArray(m_cubeVAO));
+            glCheck(glDrawArrays(GL_TRIANGLES, 0, CubeVertCount));
         }
     }
 }
@@ -432,58 +433,59 @@ void EnvironmentMap::renderBRDFMap(std::uint32_t fbo, std::uint32_t rbo, Shader&
     glCheck(glViewport(0, 0, CubemapSize, CubemapSize));
     
     glCheck(glUseProgram(shader.getGLHandle()));
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glBindVertexArray(quadVAO);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    glCheck(glBindVertexArray(quadVAO));
+    glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+
+    glCheck(glDeleteBuffers(1, &quadVBO));
+    glCheck(glDeleteVertexArrays(1, &quadVAO));
 }
 
 void EnvironmentMap::createCube()
 {
-    //position, normal, UV0 - TODO do we need anything but positions?
-
     std::vector<float> verts = {
         //back
-        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f,
-         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f,
-         1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f,         
-         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f,
-        -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
         //front
-        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f,
-         1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f,
-         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,
-         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,
-        -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
         //left
-        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
-        -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f,
-        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
         //right
-         1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
-         1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
-         1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f,         
-         1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
-         1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
-         1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f,     
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
         //bottom
-        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f,
-         1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f,
-         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f,
-         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f,
-        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
         //top
-        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f,
-         1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f,
-         1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f,     
-         1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f,
-        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f,
-        -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f        
+        -1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f , 1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f
     };
 
     glGenBuffers(1, &m_cubeVBO);
@@ -492,15 +494,9 @@ void EnvironmentMap::createCube()
     glBindBuffer(GL_ARRAY_BUFFER, m_cubeVBO);
     glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW);
 
-    //this kinda makes some assumptions about the attribute positions
-    //so we'll have to be extra careful when writing the shaders
     glBindVertexArray(m_cubeVAO);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
