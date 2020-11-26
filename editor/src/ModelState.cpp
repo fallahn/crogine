@@ -1984,6 +1984,8 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
     if (matDef.type == MaterialDefinition::PBR)
     {
         matDef.materialData.setProperty("u_irradianceMap", m_scene.getEnvironmentMap().getIrradianceMap());
+        matDef.materialData.setProperty("u_prefilterMap", m_scene.getEnvironmentMap().getPrefilterMap());
+        matDef.materialData.setProperty("u_brdfMap", m_scene.getEnvironmentMap().getBRDFMap());
     }
 }
 

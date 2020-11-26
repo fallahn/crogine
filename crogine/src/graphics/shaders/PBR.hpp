@@ -1,6 +1,6 @@
 /*
 PBR Lighting calculations based on Joey DeVries OpenGL tutorial
-https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/6.pbr/1.2.lighting_textured/1.2.pbr.fs
+https://learnopengl.com/PBR
 
 */
 
@@ -36,6 +36,8 @@ namespace cro::Shaders::PBR
         uniform vec3 u_cameraWorldPosition;
 
         uniform samplerCube u_irradianceMap;
+        uniform samplerCube u_prefilterMap;
+        uniform sampler2D u_brdfMap;
 
         VARYING_IN vec3 v_worldPosition;
 
@@ -189,16 +191,21 @@ namespace cro::Shaders::PBR
             Lo += calcLighting(matProp, surfProp, u_lightColour.rgb, F0);
 
             //ambient lighting
-            vec3 kS = fresnelSchlick(max(dot(surfProp.normalDir, surfProp.viewDir), 0.0), F0);
+            vec3 kS = fresnelSchlickRoughness(max(dot(surfProp.normalDir, surfProp.viewDir), 0.0), F0, matProp.roughness);
             vec3 kD = 1.0 - kS;
             kD *= 1.0 - matProp.metallic;
             vec3 irradiance = TEXTURE(u_irradianceMap, surfProp.normalDir).rgb;
             vec3 diffuse = irradiance * matProp.albedo;
-            vec3 ambient = (kD * diffuse) * matProp.ao;
+
+            //specular
+            const float MAX_REFLECTION_LOD = 4.0;
+            vec3 prefilteredColor = textureLod(u_prefilterMap, reflect(-surfProp.viewDir, surfProp.normalDir),  matProp.roughness * MAX_REFLECTION_LOD).rgb;    
+            vec2 brdf  = TEXTURE(u_brdfMap, vec2(max(dot(surfProp.normalDir, surfProp.viewDir), 0.0), matProp.roughness)).rg;
+            vec3 specular = prefilteredColor * (kS * brdf.x + brdf.y);
+
+            vec3 ambient = (kD * diffuse + specular) * matProp.ao;
     
             vec3 colour = ambient + Lo;
-
-            //TODO specular component
 
             //HDR tonemapping
             colour = colour / (colour + vec3(1.0));

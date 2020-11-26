@@ -49,79 +49,8 @@ using namespace cro;
 
 namespace
 {
-    const std::string HDRToCubeVertex = R"(
-        attribute vec4 a_position;
-
-        VARYING_OUT vec3 v_worldPosition;
-
-        uniform mat4 u_viewProjectionMatrix;
-
-        void main()
-        {
-            v_worldPosition = a_position.xyz;
-            gl_Position =  u_viewProjectionMatrix * a_position;
-        })";
-
-    const std::string HDRToCubeFrag = R"(
-        OUTPUT
-        VARYING_IN vec3 v_worldPosition;
-
-        uniform sampler2D u_hdrMap;
-
-        const vec2 invAtan = vec2(0.1591, 0.3183);
-        vec2 sampleSphericalMap(vec3 v)
-        {
-            vec2 uv = vec2(atan(v.z, v.x), asin(v.y));
-            uv *= invAtan;
-            uv += 0.5;
-            return uv;
-        }
-
-        void main()
-        {		
-            vec2 uv = sampleSphericalMap(normalize(v_worldPosition));
-            vec3 colour = TEXTURE(u_hdrMap, uv).rgb;
-    
-            FRAG_OUT = vec4(colour, 1.0);
-        })";
-
-    const std::string IrradianceFrag = R"(
-
-        OUTPUT
-        VARYING_IN vec3 v_worldPosition;
-
-        uniform samplerCube u_environmentMap;
-
-        const float PI = 3.14159265359;
-
-        void main()
-        {		
-            vec3 normal = normalize(v_worldPosition);
-
-            vec3 irradiance = vec3(0.0);   
-    
-            //tangent space calculation from origin point
-            vec3 up    = vec3(0.0, 1.0, 0.0);
-            vec3 right = cross(up, normal);
-            up         = cross(normal, right);
-       
-            float sampleDelta = 0.025;
-            float sampleCount = 0.0;
-            for(float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
-            {
-                for(float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta)
-                {
-                    vec3 tangentSample = vec3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));
-                    vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal; 
-
-                    irradiance += TEXTURE(u_environmentMap, sampleVec).rgb * cos(theta) * sin(theta);
-                    sampleCount++;
-                }
-            }
-            irradiance = PI * irradiance * (1.0 / float(sampleCount));
-    
-            FRAG_OUT = vec4(irradiance, 1.0);
-        })";
+#include "shaders/PBRCubemap.hpp"
+#include "shaders/PBRBRDF.hpp"
 
     //raii wrapper to delete temp textures
     //should an error occur
@@ -167,29 +96,33 @@ namespace
 
     const std::uint32_t CubemapSize = 1024u;
     const std::uint32_t IrradianceMapSize = 32u;
+    const std::uint32_t PrefilterMapSize = 128u;
+
+    const auto projectionMatrix = glm::perspective(90.f * cro::Util::Const::degToRad, 1.f, 0.1f, 2.f);
+    const std::array viewMatrices =
+    {
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+    };
 }
 
 EnvironmentMap::EnvironmentMap()
-    : m_skyboxTexture   (0),
-    m_irradianceTexture (0),
-    m_cubeVBO           (0),
+    : m_cubeVBO         (0),
     m_cubeVAO           (0)
 {
-
+    std::fill(m_textures.begin(), m_textures.end(), 0);
 }
 
 EnvironmentMap::~EnvironmentMap()
 {
-    if (m_skyboxTexture)
+    if (m_textures[Skybox])
     {
-        glCheck(glDeleteTextures(1, &m_skyboxTexture));
+        glCheck(glDeleteTextures(4, m_textures.data()));
     }
-
-    if (m_irradianceTexture)
-    {
-        glCheck(glDeleteTextures(1, &m_irradianceTexture));
-    }
-
 
 
     deleteCube();
@@ -229,7 +162,6 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
 
     stbi_set_flip_vertically_on_load(1);
     auto* data = stbi_loadf_from_callbacks(&io.stb_cbs, &io, &width, &height, &componentCount, 0);
-    //auto* data = stbi_loadf(path.c_str(), &width, &height, &componentCount, 0);
     if (data)
     {
         //store the image in a temp texture - we're going to write this to a cube map
@@ -267,11 +199,21 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, tempRBO.handle));
 
     //create the cubemap which will be the skybox
-    if (m_skyboxTexture == 0)
+    if (m_textures[Skybox] == 0)
     {
-        glCheck(glGenTextures(1, &m_skyboxTexture));
+        glCheck(glGenTextures(4, m_textures.data()));
     }
-    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexture));
+
+    for (auto t : m_textures)
+    {
+        if (t == 0)
+        {
+            LogE << "Failed creating one or more textures" << std::endl;
+            return false;
+        }
+    }
+
+    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_textures[Skybox]));
 
     for (auto i = 0; i < 6u; ++i)
     {
@@ -285,19 +227,8 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
     //render each side of the cube map
-    auto projectionMatrix = glm::perspective(90.f * cro::Util::Const::degToRad, 1.f, 0.1f, 2.f);
-    std::array viewMatrices =
-    {
-        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
-        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
-        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
-    };
-
     cro::Shader shader;
-    if (!shader.loadFromString(HDRToCubeVertex, HDRToCubeFrag))
+    if (!shader.loadFromString(PBRCubeVertex, HDRToCubeFrag))
     {
         LogE << "Failed creating HDR to Cubemap shader" << std::endl;
         return false;
@@ -317,7 +248,7 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     {
         auto viewProj = projectionMatrix * viewMatrices[i];
         glCheck(glUniformMatrix4fv(uniforms.at("u_viewProjectionMatrix"), 1, GL_FALSE, &viewProj[0][0]));
-        glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_skyboxTexture, 0));
+        glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_textures[Skybox], 0));
 
         glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
@@ -327,12 +258,45 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
-    //create a smaller cube map to hold the irradiance map
-    if (m_irradianceTexture == 0)
+    if (!shader.loadFromString(PBRCubeVertex, IrradianceFrag))
     {
-        glCheck(glGenTextures(1, &m_irradianceTexture));
+        LogE << "Failed creating irradiance convolution shader" << std::endl;
+        return false;
     }
-    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_irradianceTexture));
+
+    renderIrradianceMap(tempFBO.handle, tempRBO.handle, shader);
+
+
+    if (!shader.loadFromString(PBRCubeVertex, PrefilterFrag))
+    {
+        LogE << "Failed creating prefilter convolution shader" << std::endl;
+        return false;
+    }
+    renderPrefilterMap(tempFBO.handle, tempRBO.handle, shader);
+
+
+    if (!shader.loadFromString(BRDFVert, BRDFFrag))
+    {
+        LogE << "Failed creating BRDF shader" << std::endl;
+        return false;
+    }
+    renderBRDFMap(tempFBO.handle, tempRBO.handle, shader);
+
+    //make sure everything is put back neat :)
+    glCheck(glBindVertexArray(0));
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    glCheck(glUseProgram(0));
+
+    deleteCube();
+    return true;
+
+#endif //PLATFORM_MOBILE
+}
+
+void EnvironmentMap::renderIrradianceMap(std::uint32_t fbo, std::uint32_t rbo, Shader& shader)
+{
+    //create a smaller cube map to hold the irradiance map
+    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_textures[Irradiance]));
 
     for (auto i = 0u; i < 6u; ++i)
     {
@@ -345,31 +309,24 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
     //and rescale the FBO accordingly
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, tempFBO.handle));
-    glCheck(glBindRenderbuffer(GL_RENDERBUFFER, tempRBO.handle));
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
+    glCheck(glBindRenderbuffer(GL_RENDERBUFFER, rbo));
     glCheck(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, IrradianceMapSize, IrradianceMapSize));
 
-
     //then render each face
-    if (!shader.loadFromString(HDRToCubeVertex, IrradianceFrag))
-    {
-        LogE << "Failed creating irradiance convolution shader" << std::endl;
-        return false;
-    }
-
     glCheck(glUseProgram(shader.getGLHandle()));
     glCheck(glUniform1i(shader.getUniformMap().at("u_environmentMap"), 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
-    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexture));
+    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_textures[Skybox]));
 
     glCheck(glViewport(0, 0, IrradianceMapSize, IrradianceMapSize));
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, tempFBO.handle));
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
 
     for (auto i = 0u; i < 6u; ++i)
     {
         auto viewProj = projectionMatrix * viewMatrices[i];
         glCheck(glUniformMatrix4fv(shader.getUniformMap().at("u_viewProjectionMatrix"), 1, GL_FALSE, &viewProj[0][0]));
-        glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_irradianceTexture, 0));
+        glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_textures[Irradiance], 0));
 
         glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
@@ -377,13 +334,107 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
         glBindVertexArray(m_cubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
-    glCheck(glBindVertexArray(0));
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+}
 
-    deleteCube();
-    return true;
+void EnvironmentMap::renderPrefilterMap(std::uint32_t fbo, std::uint32_t rbo, Shader& shader)
+{
+    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_textures[Prefilter]));
 
-#endif //PLATFORM_MOBILE
+    for(auto i = 0u; i < 6u; ++i)
+    {
+        glCheck(glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, PrefilterMapSize, PrefilterMapSize, 0, GL_RGB, GL_FLOAT, nullptr));
+    }
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)); // be sure to set minification filter to mip_linear 
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    glCheck(glGenerateMipmap(GL_TEXTURE_CUBE_MAP));
+
+    //read from the skybox
+    glCheck(glUseProgram(shader.getGLHandle()));
+    glCheck(glUniform1i(shader.getUniformMap().at("u_environmentMap"), 0));
+    glCheck(glActiveTexture(GL_TEXTURE0));
+    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_textures[Skybox]));
+
+    //render multiple mip levels to vary the roughness
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
+    const std::uint32_t MaxLevels = 5;
+    for (auto i = 0u; i < MaxLevels; ++i)
+    {
+        //resize the RBO for each level...
+        auto mipSize = static_cast<std::uint32_t>(PrefilterMapSize * std::pow(0.5f, i));
+
+        glCheck(glBindRenderbuffer(GL_RENDERBUFFER, rbo));
+        glCheck(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipSize, mipSize));
+
+        glViewport(0, 0, mipSize, mipSize);
+
+        float roughness = static_cast<float>(i) / static_cast<float>(MaxLevels - 1);
+        glCheck(glUniform1f(shader.getUniformMap().at("u_roughness"), roughness));
+
+        //render each side of this level
+        for (auto j = 0; j < 6; ++j)
+        {
+            auto viewProj = projectionMatrix * viewMatrices[j];
+            glCheck(glUniformMatrix4fv(shader.getUniformMap().at("u_viewProjectionMatrix"), 1, GL_FALSE, &viewProj[0][0]));
+            glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + j, m_textures[Prefilter], i));
+
+            glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
+            CRO_ASSERT(m_cubeVAO && m_cubeVBO, "cube not correctly built!");
+            glBindVertexArray(m_cubeVAO);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+    }
+}
+
+void EnvironmentMap::renderBRDFMap(std::uint32_t fbo, std::uint32_t rbo, Shader& shader)
+{
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_textures[BRDF]));
+    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, CubemapSize, CubemapSize, 0, GL_RG, GL_FLOAT, 0));
+
+    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+    //update the fbo
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
+    glCheck(glBindRenderbuffer(GL_RENDERBUFFER, rbo));
+    glCheck(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, CubemapSize, CubemapSize));
+    glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textures[BRDF], 0));
+
+
+    //create a quad
+    std::uint32_t quadVBO = 0;
+    std::uint32_t quadVAO = 0;
+
+    std::vector<float> verts = {
+        -1.0f,  1.0f, 0.0f,   0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,
+        1.0f,  1.0f, 0.0f,    1.0f, 1.0f,
+        1.0f, -1.0f, 0.0f,    1.0f, 0.0f,
+    };
+    
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+
+    //and render it...
+    glCheck(glViewport(0, 0, CubemapSize, CubemapSize));
+    
+    glCheck(glUseProgram(shader.getGLHandle()));
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
 void EnvironmentMap::createCube()

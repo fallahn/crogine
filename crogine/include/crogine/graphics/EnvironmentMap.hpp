@@ -54,16 +54,26 @@ namespace cro
 
         bool loadFromFile(const std::string& path);
 
-        CubemapID getSkybox() const { return CubemapID(m_skyboxTexture); }
-        CubemapID getIrradianceMap() const { return CubemapID(m_irradianceTexture); }
+        CubemapID getSkybox() const { return CubemapID(m_textures[Skybox]); }
+        CubemapID getIrradianceMap() const { return CubemapID(m_textures[Irradiance]); }
+        CubemapID getPrefilterMap() const { return CubemapID(m_textures[Prefilter]); }
+        TextureID getBRDFMap() const { return TextureID(m_textures[BRDF]); }
 
     private:
 
         friend class Scene;
 
-        std::uint32_t m_skyboxTexture;
-        std::uint32_t m_irradianceTexture;
+        enum TexType
+        {
+            Skybox, Irradiance, Prefilter, BRDF,
 
+            Count
+        };
+        std::array<std::uint32_t, TexType::Count> m_textures = {};
+
+        void renderIrradianceMap(std::uint32_t fbo, std::uint32_t rbo, Shader&);
+        void renderPrefilterMap(std::uint32_t fbo, std::uint32_t rbo, Shader&);
+        void renderBRDFMap(std::uint32_t fbo, std::uint32_t rbo, Shader&);
 
         std::uint32_t m_cubeVBO;
         std::uint32_t m_cubeVAO;

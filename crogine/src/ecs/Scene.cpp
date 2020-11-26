@@ -448,7 +448,7 @@ void Scene::setEnvironmentMap(const std::string& hdri)
 
     if (m_environmentMap.loadFromFile(hdri))
     {
-        m_activeSkyboxTexture = m_environmentMap.m_skyboxTexture;
+        m_activeSkyboxTexture = m_environmentMap.m_textures[0];
         m_skybox.setShader(m_skyboxShaders[Environment]);
         m_shaderIndex = SkyboxType::Environment;
     }
