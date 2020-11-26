@@ -94,7 +94,7 @@ namespace
         }
     };
 
-    const std::uint32_t CubemapSize = 1024u;
+    const std::uint32_t CubemapSize = 512u;
     const std::uint32_t IrradianceMapSize = 32u;
     const std::uint32_t PrefilterMapSize = 128u;
     const std::int32_t CubeVertCount = 36;

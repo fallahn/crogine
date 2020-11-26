@@ -575,18 +575,13 @@ void ModelState::buildUI()
                     {
                         m_showPreferences = true;
                     }
-                    if (ImGui::MenuItem("Ground Plane", nullptr, &m_showGroundPlane))
+                    if (ImGui::MenuItem("Choose Skybox", nullptr, nullptr))
                     {
-                        if (m_showGroundPlane)
+                        auto path = cro::FileSystem::openFileDialogue(m_preferences.workingDirectory + "/", "hdr");
+                        if (!path.empty())
                         {
-                            //set this to whichever world scale we're currently using
-                            updateWorldScale();
+                            m_environmentMap.loadFromFile(path);
                         }
-                        else
-                        {
-                            entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
-                        }
-                        savePrefs();
                     }
                     if (ImGui::MenuItem("Show Skybox", nullptr, &m_showSkybox))
                     {
@@ -597,6 +592,19 @@ void ModelState::buildUI()
                         else
                         {
                             m_scene.disableSkybox();
+                        }
+                        savePrefs();
+                    }
+                    if (ImGui::MenuItem("Ground Plane", nullptr, &m_showGroundPlane))
+                    {
+                        if (m_showGroundPlane)
+                        {
+                            //set this to whichever world scale we're currently using
+                            updateWorldScale();
+                        }
+                        else
+                        {
+                            entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
                         }
                         savePrefs();
                     }
@@ -743,7 +751,7 @@ void ModelState::openModelAtPath(const std::string& path)
     closeModel();
 
     cro::ModelDefinition def(m_preferences.workingDirectory);
-    if (def.loadFromFile(path, m_resources))
+    if (def.loadFromFile(path, m_resources, &m_environmentMap))
     {
         m_currentFilePath = path;
 

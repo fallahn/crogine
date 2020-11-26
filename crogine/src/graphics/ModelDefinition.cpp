@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
 
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -55,7 +56,7 @@ namespace
     };
 }
 
-bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& rc)
+bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& rc, EnvironmentMap* envMap)
 {
     if (m_modelLoaded)
     {
@@ -470,6 +471,21 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             else if (name == "alpha_clip")
             {
                 material.setProperty("u_alphaClip", Util::Maths::clamp(p.getValue<float>(), 0.f, 1.f));
+            }
+        }
+
+        //check to see if we can map environment lighting
+        if (shaderType == ShaderResource::PBR)
+        {
+            if (envMap)
+            {
+                material.setProperty("u_irradianceMap", envMap->getIrradianceMap());
+                material.setProperty("u_prefilterMap", envMap->getPrefilterMap());
+                material.setProperty("u_brdfMap", envMap->getBRDFMap());
+            }
+            else
+            {
+                LogW << "No environment mapping has been supplied to PBR material. This will need to be done manually." << std::endl;
             }
         }
 
