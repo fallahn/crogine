@@ -91,12 +91,12 @@ void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
     
     const auto& camTx = camera.getComponent<Transform>();
 
-    //auto dir = glm::translate(getScene()->getSunlight().getRotation(), /*(camTx.getWorldPosition() - m_projectionOffset)*/glm::vec3(0.f));
-    //auto viewMat = glm::inverse(dir);
+    auto dir = glm::translate(getScene()->getSunlight().getRotation(), (camTx.getWorldPosition() - m_projectionOffset));
+    auto viewMat = glm::inverse(dir);
     //auto viewMat = glm::inverse(camTx.getWorldTransform());
-    auto viewMat = glm::translate(glm::mat4(1.f), getScene()->getSunlight().getDirection());
+    /*auto viewMat = glm::translate(glm::mat4(1.f), getScene()->getSunlight().getDirection());
     viewMat = getScene()->getSunlight().getRotation() * viewMat;
-    viewMat = glm::inverse(viewMat);
+    viewMat = glm::inverse(viewMat);*/
 
     auto projMat = getScene()->getSunlight().getProjectionMatrix();
     getScene()->getSunlight().setViewProjectionMatrix(projMat * viewMat);
@@ -113,7 +113,9 @@ void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
 
         //foreach submesh / material:
         const auto& model = e.getComponent<Model>();
+#ifndef PLATFORM_DESKTOP
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
+#endif
 
         for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
         {
@@ -136,6 +138,11 @@ void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
             glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
             glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(projMat)));
 
+#ifdef PLATFORM_DESKTOP
+            const auto& indexData = model.m_meshData.indexData[i];
+            glCheck(glBindVertexArray(indexData.vao));
+            glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+#else
             //bind attribs
             const auto& attribs = mat.attribs;
             for (auto j = 0u; j < mat.attribCount; ++j)
@@ -160,11 +167,19 @@ void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
             {
                 glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
             }
+#endif //PLATFORM
         }
-        glCheck(glUseProgram(0));
+
     }
 
+#ifdef PLATFORM_DESKTOP
+    glCheck(glBindVertexArray(0));
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+#endif //PLATFORM
+
+     glCheck(glUseProgram(0));
+
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glCullFace(GL_BACK));
