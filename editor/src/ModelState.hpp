@@ -108,7 +108,7 @@ private:
 
         bool lockRotation = false;
         bool lockScale = false;
-        bool castShadows = true;
+        bool castShadows = false;
 
         float radius = 0.5f;
         glm::vec3 size = glm::vec3(1.f);

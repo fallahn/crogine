@@ -356,6 +356,12 @@ namespace cro
                     blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, vec3(1.0), 1.0);
                 #if defined (RX_SHADOWS)
                     blendedColour *= shadowAmount(v_lightWorldPosition);
+//if(v_lightWorldPosition.w > 0.0)
+//{
+//vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
+//if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
+//blendedColour *= vec3(0.0,1.0,0.0);
+//}
                 #endif
 
                     FRAG_OUT.rgb = mix(blendedColour, diffuseColour.rgb, mask.b);

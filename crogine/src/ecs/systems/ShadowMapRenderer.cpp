@@ -85,6 +85,11 @@ void ShadowMapRenderer::updateDrawList(Entity)
     auto& entities = getEntities();
     for (auto& entity : entities)
     {
+        if (!entity.getComponent<ShadowCaster>().active)
+        {
+            continue;
+        }
+
         auto& model = entity.getComponent<Model>();
         if (model.isHidden())
         {

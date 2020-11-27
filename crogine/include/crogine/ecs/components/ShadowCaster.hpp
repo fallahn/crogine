@@ -36,5 +36,6 @@ namespace cro
     struct ShadowCaster final
     {
         bool skinned = false;
+        bool active = true;
     };
 }

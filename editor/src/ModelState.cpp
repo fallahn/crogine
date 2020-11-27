@@ -398,8 +398,11 @@ void ModelState::loadAssets()
     m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
     //m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_diffuseMap", m_magentaTexture);
 
-    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::Skinning | cro::ShaderResource::DepthMap);
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
     materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::Skinning | cro::ShaderResource::DepthMap);
+    materialIDs[MaterialID::DefaultShadowSkinned] = m_resources.materials.add(m_resources.shaders.get(shaderID));
 
     //used for drawing debug lines
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
@@ -829,6 +832,22 @@ void ModelState::openModelAtPath(const std::string& path)
         entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
 
         def.createModel(entities[EntityID::ActiveModel], m_resources);
+
+        //always have the option to cast shadows
+        if (!entities[EntityID::ActiveModel].hasComponent<cro::ShadowCaster>())
+        {
+            entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>().active = false;
+
+            if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+            {
+                entities[EntityID::ActiveModel].getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(materialIDs[MaterialID::DefaultShadowSkinned]));
+            }
+            else
+            {
+                entities[EntityID::ActiveModel].getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(materialIDs[MaterialID::DefaultShadow]));
+            }
+        }
+
         m_currentModelConfig.loadFromFile(path);
 
         const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
@@ -900,6 +919,11 @@ void ModelState::openModelAtPath(const std::string& path)
             else if (name == "lock_scale")
             {
                 m_modelProperties.lockScale = prop.getValue<bool>();
+            }
+            else if (name == "cast_shadows")
+            {
+                m_modelProperties.castShadows = prop.getValue<bool>();
+                entities[EntityID::ActiveModel].getComponent<cro::ShadowCaster>().active = m_modelProperties.castShadows;
             }
         }
 
@@ -2342,7 +2366,7 @@ void ModelState::drawInspector()
 
                     if (ImGui::Checkbox("Cast Shadow", &m_modelProperties.castShadows))
                     {
-                        //TODO update preview
+                        entities[EntityID::ActiveModel].getComponent<cro::ShadowCaster>().active = m_modelProperties.castShadows;
                     }
 
                     ImGui::NewLine();
