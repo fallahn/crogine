@@ -52,8 +52,6 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
     requireComponent<cro::Transform>();
     requireComponent<cro::ShadowCaster>();
 
-    m_projectionOffset = { 0.f, 0.5f, -0.5f };
-
 #ifdef PLATFORM_DESKTOP
     m_target.create(1024, 1024);
 #else
@@ -73,13 +71,15 @@ void ShadowMapRenderer::process(float)
     {
         //basic culling - this relies on the visibility test of ModelRenderer
         //TODO these lists have changed to per-camera so this probably needs updating
-        //to use the shadow projection frustum
+        //to use the shadow projection frustum, as what might be visible to one
+        //camera may not be visible to another (eg in split screen)
+        //in other words - implement the updateDrawList() function!!
         if (entity.getComponent<cro::Model>().isVisible())
         {
             m_visibleEntities.push_back(entity);
         }
     }
-    getScene()->getSunlight().m_textureID = m_target.getTexture().getGLHandle();
+    getScene()->getSunlight().getComponent<Sunlight>().m_textureID = m_target.getTexture().getGLHandle();
 }
 
 void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
@@ -88,18 +88,12 @@ void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
     glCheck(glEnable(GL_CULL_FACE));
     glCheck(glCullFace(GL_FRONT));
     glCheck(glEnable(GL_DEPTH_TEST));
-    
-    const auto& camTx = camera.getComponent<Transform>();
 
-    auto dir = glm::translate(getScene()->getSunlight().getRotation(), (camTx.getWorldPosition() - m_projectionOffset));
-    auto viewMat = glm::inverse(dir);
-    //auto viewMat = glm::inverse(camTx.getWorldTransform());
-    /*auto viewMat = glm::translate(glm::mat4(1.f), getScene()->getSunlight().getDirection());
-    viewMat = getScene()->getSunlight().getRotation() * viewMat;
-    viewMat = glm::inverse(viewMat);*/
+    //TODO move this to update func or draw list update.
+    auto viewMat = glm::inverse(getScene()->getSunlight().getComponent<Transform>().getWorldTransform());
 
-    auto projMat = getScene()->getSunlight().getProjectionMatrix();
-    getScene()->getSunlight().setViewProjectionMatrix(projMat * viewMat);
+    auto projMat = getScene()->getSunlight().getComponent<Sunlight>().getProjectionMatrix();
+    getScene()->getSunlight().getComponent<Sunlight>().setViewProjectionMatrix(projMat * viewMat);
 
     m_target.clear(cro::Colour::White());
 
@@ -184,11 +178,6 @@ void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glCullFace(GL_BACK));
     m_target.display();
-}
-
-void ShadowMapRenderer::setProjectionOffset(glm::vec3 offset)
-{
-    m_projectionOffset = offset;
 }
 
 const Texture& ShadowMapRenderer::getDepthMapTexture() const

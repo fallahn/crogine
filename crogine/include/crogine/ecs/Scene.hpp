@@ -146,16 +146,17 @@ namespace cro
 
         /*!
         \brief Sets the active Sunlight object.
+        \param sun An entity which has at least a Transform component and
+        Sunlight component
         \see Sunlight
         */
-        void setSunlight(const Sunlight&);
+        void setSunlight(Entity sun);
 
         /*!
-        \brief Returns a reference to the active Sunlight object.
+        \brief Returns a copy the active Sunlight entity.
         \see Sunlight
         */
-        const Sunlight& getSunlight() const;
-        Sunlight& getSunlight();
+        Entity getSunlight() const;
 
         /*!
         \brief Enables the skybox.
@@ -289,8 +290,7 @@ namespace cro
         Entity m_defaultCamera;
         Entity m_activeCamera;
         Entity m_activeListener;
-
-        Sunlight m_sunlight;
+        Entity m_sunlight;
 
         std::vector<Entity> m_pendingEntities;
         std::vector<Entity> m_destroyedEntities;

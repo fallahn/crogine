@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/Keyboard.hpp>
 
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
@@ -112,7 +113,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
         registerWindow([&]() 
             {
-                ImGui::SetNextWindowSize({ 200.f, 400.f }, ImGuiCond_FirstUseEver);
+                ImGui::SetNextWindowSize({ 300.f, 400.f }, ImGuiCond_FirstUseEver);
 
                 if (ImGui::Begin("Window of funnage"))
                 {
@@ -321,9 +322,11 @@ void GameState::createScene()
     //projection is set in updateView()
     ent.addComponent<cro::Camera>();// .projection = glm::perspective(45.f, 16.f / 9.f, 0.1f, 20.f);
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
-    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 19.f, 16.4f, -10.3f });
-    m_scene.getSunlight().setDirection({ -0.f, -1.f, -0.4f });
-    m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
+
+    auto sunEnt = m_scene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().setPosition({ -19.f, 11.f, 12.f });
+    sunEnt.getComponent<cro::Transform>().setRotation(glm::vec3(-1.f, 0.f, 0.f));
+    sunEnt.getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
     ent.addComponent<cro::AudioListener>();
     m_scene.setActiveCamera(ent);

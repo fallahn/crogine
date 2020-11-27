@@ -142,10 +142,13 @@ Scene::Scene(MessageBus& mb, std::size_t initialPoolSize)
     defaultCamera.addComponent<AudioListener>();
     updateView(defaultCamera.getComponent<Camera>());
 
-    //TODO why store IDs when we can just store the entity?
-    m_defaultCamera = defaultCamera;// .getIndex();
+    m_defaultCamera = defaultCamera;
     m_activeCamera = m_defaultCamera;
     m_activeListener = m_defaultCamera;
+
+    m_sunlight = createEntity();
+    m_sunlight.addComponent<Transform>();
+    m_sunlight.addComponent<Sunlight>();
 
     using namespace std::placeholders;
     currentRenderPath = std::bind(&Scene::defaultRenderPath, this, _1, _2, _3);
@@ -159,6 +162,10 @@ Scene::~Scene()
 //public
 void Scene::simulate(float dt)
 {
+    //update the sun entity to make sure the direction is correctly rotated
+    auto& sun = m_sunlight.getComponent<Sunlight>();
+    sun.m_directionRotated = m_sunlight.getComponent<Transform>().getRotationQuat() * sun.m_direction;
+
     //update directors first as they'll be working on data from the last frame
     for (auto& d : m_directors)
     {
@@ -228,17 +235,13 @@ void Scene::setPostEnabled(bool enabled)
     }
 }
 
-void Scene::setSunlight(const Sunlight& sunlight)
+void Scene::setSunlight(Entity sunlight)
 {
+    CRO_ASSERT(sunlight.hasComponent<Transform>(), "Must have a transform component");
     m_sunlight = sunlight;
 }
 
-const Sunlight& Scene::getSunlight() const
-{
-    return m_sunlight;
-}
-
-Sunlight& Scene::getSunlight()
+Entity Scene::getSunlight() const
 {
     return m_sunlight;
 }

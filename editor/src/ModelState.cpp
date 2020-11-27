@@ -484,9 +484,8 @@ void ModelState::createScene()
 
 
     //set the default sunlight properties
-    m_scene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ 0.f, 6.f, -5.f });
-    m_scene.getSunlight().setDirection({ 0.5f, -0.5f, -0.5f });
-    m_scene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
+    m_scene.getSunlight().getComponent<cro::Sunlight>().setDirection({ 0.5f, -0.5f, -0.5f });
+    m_scene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
     //m_scene.setCubemap(m_environmentMap);
     //m_scene.setCubemap("assets/images/sky.ccm");
@@ -509,8 +508,7 @@ void ModelState::createScene()
     m_previewScene.setActiveCamera(entity);
 
     //not rendering shadows on here, but we still want a light direction
-    m_previewScene.getSunlight().setDirection({ 0.5f, -0.5f, -0.5f });
-    m_previewScene.getSunlight().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
+    m_previewScene.getSunlight().getComponent<cro::Sunlight>().setDirection({ 0.5f, -0.5f, -0.5f });
 
     m_previewScene.setCubemap(m_environmentMap);
 }

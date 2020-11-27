@@ -324,22 +324,22 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         }
             break;
         case Material::ShadowMapProjection:
-            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, glm::value_ptr(getScene()->getSunlight().getViewProjectionMatrix())));
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, glm::value_ptr(getScene()->getSunlight().getComponent<Sunlight>().getViewProjectionMatrix())));
             break;
         case Material::ShadowMapSampler:
             glCheck(glActiveTexture(GL_TEXTURE0 + m_currentTextureUnit));
-            glCheck(glBindTexture(GL_TEXTURE_2D, getScene()->getSunlight().getMapID()));
+            glCheck(glBindTexture(GL_TEXTURE_2D, getScene()->getSunlight().getComponent<Sunlight>().getMapID()));
             glCheck(glUniform1i(material.uniforms[Material::ShadowMapSampler], m_currentTextureUnit++));
             break;
         case Material::SunlightColour:
         {
-            auto colour = getScene()->getSunlight().getColour();
+            auto colour = getScene()->getSunlight().getComponent<Sunlight>().getColour();
             glCheck(glUniform4f(material.uniforms[Material::SunlightColour], colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()));
         }
             break;
         case Material::SunlightDirection:
         {
-            auto dir = getScene()->getSunlight().getDirection();
+            auto dir = getScene()->getSunlight().getComponent<Sunlight>().getDirection();
             glCheck(glUniform3f(material.uniforms[Material::SunlightDirection], dir.x, dir.y, dir.z));
         }
             break;

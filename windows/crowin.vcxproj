@@ -49,6 +49,7 @@
     <ClInclude Include="..\crogine\include\crogine\core\ConsoleClient.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\FileSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\GameController.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\core\Keyboard.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Log.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Message.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\MessageBus.hpp" />

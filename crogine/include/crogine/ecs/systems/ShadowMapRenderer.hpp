@@ -65,13 +65,6 @@ namespace cro
         void render(Entity, const RenderTarget&) override;
 
         /*!
-        \brief Sets the offset of the Scene's sunlight object relative to the camera.
-        Use this to best align the shadow map with the visible scene. This value is added
-        to the camera's current position.
-        */
-        void setProjectionOffset(glm::vec3);
-
-        /*!
         \brief Returns a reference to the texture used to render the depth map
         */
         const Texture& getDepthMapTexture() const;
@@ -79,6 +72,5 @@ namespace cro
     private:
         RenderTexture m_target;
         std::vector<Entity> m_visibleEntities;
-        glm::vec3 m_projectionOffset;
     };
 }

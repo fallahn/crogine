@@ -546,6 +546,9 @@
     <ClInclude Include="..\crogine\src\graphics\shaders\PBRBRDF.hpp">
       <Filter>Header Files\graphics\shaders</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\core\Keyboard.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
