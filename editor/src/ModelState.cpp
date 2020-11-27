@@ -2440,7 +2440,7 @@ void ModelState::drawInspector()
                             colour = ImGui::GetStyle().Colors[ImGuiCol_Text];
                         }
                         ImGui::PushStyleColor(0, colour);
-                        ImGui::Text(AttribStrings[i]);
+                        ImGui::Text("%s", AttribStrings[i]);
                         ImGui::PopStyleColor();
                     }
 
@@ -2483,7 +2483,7 @@ void ModelState::drawInspector()
                             //TODO toggle skeleton display
                         }
 
-                        ImGui::Text("Animations: %d", skeleton.animations.size());
+                        ImGui::Text("Animations: %ld", skeleton.animations.size());
                         static std::string label("Stopped");
                         if (skeleton.animations.empty())
                         {
@@ -2586,7 +2586,7 @@ void ModelState::drawInspector()
                 auto oldType = matDef.type;
                 if (ImGui::BeginCombo("##Shader", ShaderStrings[matDef.type]))
                 {
-                    for (auto i = 0; i < ShaderStrings.size(); ++i)
+                    for (auto i = 0u; i < ShaderStrings.size(); ++i)
                     {
                         bool selected = matDef.type == i;
                         if (ImGui::Selectable(ShaderStrings[i], selected))
@@ -2859,7 +2859,7 @@ void ModelState::drawInspector()
                 auto oldMode = matDef.blendMode;
                 if (ImGui::BeginCombo("##BlendMode", BlendStrings[static_cast<std::int32_t>(matDef.blendMode)]))
                 {
-                    for (auto i = 0; i < BlendStrings.size(); ++i)
+                    for (auto i = 0u; i < BlendStrings.size(); ++i)
                     {
                         bool selected = static_cast<std::int32_t>(m_materialDefs[m_selectedMaterial].blendMode) == i;
                         if (ImGui::Selectable(BlendStrings[i], selected))
@@ -3155,7 +3155,7 @@ void ModelState::drawBrowser()
                     //display preview
                     ImGui::Image((void*)(std::size_t)material.previewTexture.getTexture().getGLHandle(), { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
                     ImGui::Text("%s", material.name.c_str());
-                    ImGui::Text(ShaderStrings[material.type]);
+                    ImGui::Text("%s", ShaderStrings[material.type]);
                     ImGui::EndDragDropSource();
 
                     m_selectedMaterial = count;
