@@ -392,7 +392,7 @@ void ModelState::loadAssets()
     m_environmentMap.loadFromFile("assets/images/brooklyn_bridge.hdr");
 
     //create a default material to display models on import
-    auto flags = cro::ShaderResource::DiffuseColour;// | cro::ShaderResource::DiffuseMap;
+    auto flags = cro::ShaderResource::DiffuseColour;// | cro::ShaderResource::MaskMap;
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, flags);
     materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
@@ -499,7 +499,7 @@ void ModelState::createScene()
     //set the default sunlight properties
     m_scene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-4.f, 4.f, -4.f, 4.f, 0.1f, 10.f));
     m_scene.getSunlight().getComponent<cro::Transform>().setPosition({ -1.5f, 1.5f, 1.5f });
-    m_scene.getSunlight().getComponent<cro::Transform>().setRotation({ -0.616f, -0.616f, 0.f });
+    m_scene.getSunlight().getComponent<cro::Transform>().setRotation({ -0.726f, -1.608f, -0.23f });
 
     entities[EntityID::CamController].getComponent<cro::Transform>().addChild(m_scene.getSunlight().getComponent<cro::Transform>());
 
@@ -768,8 +768,7 @@ void ModelState::buildUI()
                 ImGui::Begin("Material Preview", &m_showMaterialWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
                 if (!m_materialDefs.empty())
                 {
-                    ImGui::Image((void*)(std::size_t)m_materialDefs[m_selectedMaterial].previewTexture.getTexture().getGLHandle(),
-                        { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::Image(m_materialDefs[m_selectedMaterial].previewTexture.getTexture(), { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });
                 }
                 ImGui::End();
 
@@ -785,7 +784,7 @@ void ModelState::buildUI()
             /*ImGui::SetNextWindowSize({ 528.f, 554.f });
             ImGui::Begin("Shadow Map", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
-            ImGui::Image((void*)(std::size_t)m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture().getGLHandle(),
+            ImGui::Image(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture(),
                 { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });
 
             ImGui::End();*/
