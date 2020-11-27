@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/Keyboard.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/gui/imgui.h>
 #include <crogine/gui/imgui_stdlib.h>
@@ -324,6 +325,18 @@ void ModelState::handleMessage(const cro::Message& msg)
 
 bool ModelState::simulate(float dt)
 {
+    auto& tx = m_scene.getSunlight().getComponent<cro::Transform>();
+    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_W))
+    {
+        tx.rotate(glm::vec3(1.f, 0.f, 0.f), -dt);
+    }
+    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_D))
+    {
+        tx.rotate(glm::vec3(0.f, 1.f, 0.f), -dt);
+    }
+    auto rot = tx.getRotation();
+    DPRINT("rot", std::to_string(rot.x) + ", " + std::to_string(rot.y) + ", " + std::to_string(rot.z));
+
     m_previewScene.simulate(dt);
     m_scene.simulate(dt);
 	return false;
@@ -481,14 +494,16 @@ void ModelState::createScene()
 
     entities[EntityID::GroundPlane] = entity;
     entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    //entity.addComponent<cro::ShadowCaster>();
 
     //set the default sunlight properties
-    m_scene.getSunlight().getComponent<cro::Sunlight>().setDirection({ 0.5f, -0.5f, -0.5f });
-    m_scene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
+    m_scene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-4.f, 4.f, -4.f, 4.f, 0.1f, 10.f));
+    m_scene.getSunlight().getComponent<cro::Transform>().setPosition({ -1.5f, 1.5f, 1.5f });
+    m_scene.getSunlight().getComponent<cro::Transform>().setRotation({ -0.616f, -0.616f, 0.f });
 
-    //m_scene.setCubemap(m_environmentMap);
-    //m_scene.setCubemap("assets/images/sky.ccm");
+    cro::ModelDefinition def;
+    def.loadFromFile("assets/models/light.cmt", m_resources);
+    def.createModel(m_scene.getSunlight(), m_resources);
 
     //create the material preview scene
     cro::ModelDefinition modelDef;

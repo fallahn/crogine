@@ -110,13 +110,13 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 
     DPRINT("Visible 2D ents", std::to_string(drawList.size()));
 
-    //sort drawlist
-    std::sort(drawList.begin(), drawList.end(),
+    //sort drawlist - this is SLLOOOOOWWW
+    /*std::sort(drawList.begin(), drawList.end(),
         [](Entity a, Entity b)
         {
             return a.getComponent<Drawable2D>().m_sortCriteria < b.getComponent<Drawable2D>().m_sortCriteria;
-        });
- 
+        });*/
+
     camera.drawList[getType()] = std::make_any<std::vector<Entity>>(std::move(drawList));
 }
 
@@ -192,6 +192,11 @@ void RenderSystem2D::process(float)
 void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
 {
     const auto& camComponent = cameraEntity.getComponent<Camera>();
+    if (camComponent.drawList.count(getType()) == 0)
+    {
+        return;
+    }
+
     auto viewport = rt.getViewport(camComponent.viewport);
 
     glCheck(glDepthMask(GL_FALSE));

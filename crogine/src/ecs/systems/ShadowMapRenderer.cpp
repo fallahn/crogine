@@ -56,7 +56,7 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
 
 #ifdef PLATFORM_DESKTOP
     //TODO make this variable
-    m_target.create(1024, 1024);
+    m_target.create(2048, 2048);
 #else
     m_target.create(512, 512);
 #endif

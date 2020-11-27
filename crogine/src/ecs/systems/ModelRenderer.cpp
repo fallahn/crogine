@@ -166,6 +166,10 @@ void ModelRenderer::process(float)
 void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 {
     const auto& camComponent = camera.getComponent<Camera>();
+    if (camComponent.drawList.count(getType()) == 0)
+    {
+        return;
+    }
     
     const auto& camTx = camera.getComponent<Transform>();
     auto cameraPosition = camTx.getWorldPosition();
