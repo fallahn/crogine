@@ -164,7 +164,7 @@ void Scene::simulate(float dt)
 {
     //update the sun entity to make sure the direction is correctly rotated
     auto& sun = m_sunlight.getComponent<Sunlight>();
-    sun.m_directionRotated = m_sunlight.getComponent<Transform>().getRotationQuat() * sun.m_direction;
+    sun.m_directionRotated = glm::quat_cast(m_sunlight.getComponent<Transform>().getWorldTransform()) * sun.m_direction;
 
     //update directors first as they'll be working on data from the last frame
     for (auto& d : m_directors)

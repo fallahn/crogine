@@ -48,10 +48,11 @@ namespace
 }
 
 Window::Window()
-	: m_window	    (nullptr),
-    m_threadContext (nullptr),
-	m_mainContext	(nullptr),
-    m_fullscreen    (false)
+	: m_window	            (nullptr),
+    m_threadContext         (nullptr),
+	m_mainContext	        (nullptr),
+    m_fullscreen            (false),
+    m_multisamplingEnabled  (false)
 {
 
 }
@@ -78,8 +79,8 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
 	if (borderless) styleMask |= SDL_WINDOW_BORDERLESS;
 	//TODO set up proper masks for all window options
 
-    /*SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);*/
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
     m_window = SDL_CreateWindow(title.c_str(),SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, styleMask);
 
@@ -143,6 +144,27 @@ void Window::setVsyncEnabled(bool enabled)
 bool Window::getVsyncEnabled() const
 {
     return SDL_GL_GetSwapInterval() != 0;
+}
+
+void Window::setMultisamplingEnabled(bool enabled)
+{
+    if (enabled != m_multisamplingEnabled)
+    {
+        if (enabled)
+        {
+            glCheck(glEnable(GL_MULTISAMPLE));
+        }
+        else
+        {
+            glCheck(glDisable(GL_MULTISAMPLE));
+        }
+        m_multisamplingEnabled = enabled;
+    }
+}
+
+bool Window::getMultisamplingEnabled() const
+{
+    return m_multisamplingEnabled;
 }
 
 void Window::clear()

@@ -78,6 +78,16 @@ namespace cro
         \brief Returns whether or not vsync is enabled
         */
         bool getVsyncEnabled() const;
+        /*!
+        \brief Attempts to enable or disable MSAA if multisampling is available on the current platform
+        */
+        void setMultisamplingEnabled(bool);
+        /*!
+        \brief Returns whether or not multisampling is enabled if it is available on the current platform
+        Note not all hardware supports multisampling so this may falsely return true if multisampling
+        has attempted to be set but failed.
+        */
+        bool getMultisamplingEnabled() const;
 		/*!
 		\brief Clears the window for drawing with the given colour
 		*/
@@ -184,6 +194,7 @@ namespace cro
         mutable std::vector<glm::uvec2> m_resolutions;
 
         bool m_fullscreen;
+        bool m_multisamplingEnabled;
 
 		void destroy();
 

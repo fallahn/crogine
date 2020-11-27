@@ -220,6 +220,8 @@ void App::run()
 			return;
 		}
         
+        m_window.setMultisamplingEnabled(glIsEnabled(GL_MULTISAMPLE));
+
         ImGui::CreateContext();
         setImguiStyle(&ImGui::GetStyle());
         ImGui_ImplSDL2_InitForOpenGL(m_window.m_window, m_window.m_mainContext);
@@ -233,6 +235,7 @@ void App::run()
         m_window.setIcon(defaultIcon);
         m_window.setFullScreen(settings.fullscreen);
         m_window.setVsyncEnabled(settings.vsync);
+        m_window.setMultisamplingEnabled(settings.useMultisampling);
         Console::init();
 	}
 	else
@@ -495,6 +498,10 @@ App::WindowSettings App::loadSettings()
             {
                 settings.vsync = prop.getValue<bool>();
             }
+            else if (prop.getName() == "multisample")
+            {
+                settings.useMultisampling = prop.getValue<bool>();
+            }
         }
 
         //load mixer settings
@@ -542,14 +549,13 @@ App::WindowSettings App::loadSettings()
 void App::saveSettings()
 {
     auto size = m_window.getSize();
-    auto fullscreen = m_window.isFullscreen();
-    auto vsync = m_window.getVsyncEnabled();
 
     ConfigFile saveSettings;
     saveSettings.addProperty("width", std::to_string(size.x));
     saveSettings.addProperty("height", std::to_string(size.y));
-    saveSettings.addProperty("fullscreen", fullscreen ? "true" : "false");
-    saveSettings.addProperty("vsync", vsync ? "true" : "false");
+    saveSettings.addProperty("fullscreen").setValue(m_window.isFullscreen());
+    saveSettings.addProperty("vsync").setValue(m_window.getVsyncEnabled());
+    saveSettings.addProperty("multisample").setValue(m_window.getMultisamplingEnabled());
 
     auto* aObj = saveSettings.addObject("audio");
     aObj->addProperty("master", std::to_string(AudioMixer::getMasterVolume()));

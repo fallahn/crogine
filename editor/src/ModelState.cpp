@@ -501,6 +501,8 @@ void ModelState::createScene()
     m_scene.getSunlight().getComponent<cro::Transform>().setPosition({ -1.5f, 1.5f, 1.5f });
     m_scene.getSunlight().getComponent<cro::Transform>().setRotation({ -0.616f, -0.616f, 0.f });
 
+    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(m_scene.getSunlight().getComponent<cro::Transform>());
+
     cro::ModelDefinition def;
     def.loadFromFile("assets/models/light.cmt", m_resources);
     def.createModel(m_scene.getSunlight(), m_resources);
@@ -780,13 +782,13 @@ void ModelState::buildUI()
             drawInspector();
             drawBrowser();
 
-            ImGui::SetNextWindowSize({ 528.f, 554.f });
+            /*ImGui::SetNextWindowSize({ 528.f, 554.f });
             ImGui::Begin("Shadow Map", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
             ImGui::Image((void*)(std::size_t)m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture().getGLHandle(),
                 { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });
 
-            ImGui::End();
+            ImGui::End();*/
         });
 
     auto size = getContext().mainWindow.getSize();
