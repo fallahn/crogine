@@ -291,6 +291,12 @@ bool ModelState::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
+    case SDL_QUIT:
+        if (entities[EntityID::ActiveModel].isValid())
+        {
+            showSaveMessage();
+        }
+        break;
     case SDL_MOUSEMOTION:
         updateMouseInput(evt);
         break;
@@ -821,6 +827,11 @@ void ModelState::openModel()
 
 void ModelState::openModelAtPath(const std::string& path)
 {
+    if (entities[EntityID::ActiveModel].isValid())
+    {
+        showSaveMessage();
+    }
+    
     closeModel();
 
     cro::ModelDefinition def(m_preferences.workingDirectory);
@@ -1145,31 +1156,6 @@ void ModelState::closeModel()
 {
     if (entities[EntityID::ActiveModel].isValid())
     {
-        //TODO don't show this on exporting models - probably move somewhere else in general.
-        if (cro::FileSystem::showMessageBox("", "Do you want to save the model first?", cro::FileSystem::YesNo, cro::FileSystem::Question))
-        {
-            if (m_currentFilePath.empty())
-            {
-                if (m_importedVBO.empty())
-                {
-                    auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/untitled", "cmt");
-                    if (!path.empty())
-                    {
-                        saveModel(path);
-                    }
-                }
-                else
-                {
-                    //export the model
-                    exportModel(false, false);
-                }
-            }
-            else
-            {
-                saveModel(m_currentFilePath);
-            }
-        }
-
         m_scene.destroyEntity(entities[EntityID::ActiveModel]);
         entities[EntityID::ActiveModel] = {};
 
@@ -1198,6 +1184,33 @@ void ModelState::closeModel()
     m_activeMaterials.clear();
 
     m_currentFilePath.clear();
+}
+
+void ModelState::showSaveMessage()
+{
+    if (cro::FileSystem::showMessageBox("", "Do you want to save the model first?", cro::FileSystem::YesNo, cro::FileSystem::Question))
+    {
+        if (m_currentFilePath.empty())
+        {
+            if (m_importedVBO.empty())
+            {
+                auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/untitled", "cmt");
+                if (!path.empty())
+                {
+                    saveModel(path);
+                }
+            }
+            else
+            {
+                //export the model
+                exportModel(false, false);
+            }
+        }
+        else
+        {
+            saveModel(m_currentFilePath);
+        }
+    }
 }
 
 void ModelState::importModel()
@@ -1527,6 +1540,7 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
 
             if (openOnSave)
             {
+                closeModel();
                 openModelAtPath(path);
             }
         }

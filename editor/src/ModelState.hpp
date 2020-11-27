@@ -122,6 +122,7 @@ private:
     void openModelAtPath(const std::string&);
     void saveModel(const std::string&);
     void closeModel();
+    void showSaveMessage();
 
     CMFHeader m_importedHeader;
     std::vector<float> m_importedVBO;
