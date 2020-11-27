@@ -33,7 +33,7 @@ source distribution.
 
 #include <crogine/detail/glm/vec4.hpp>
 
-#include <Array>
+#include <array>
 
 namespace cro
 {
