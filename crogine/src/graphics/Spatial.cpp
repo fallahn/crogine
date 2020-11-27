@@ -34,6 +34,24 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    //used to calculate the AABB for a frustum.
+    std::array ClipPoints =
+    {
+        //far
+        glm::vec4(-1.f, -1.f, -1.f, 1.f),
+        glm::vec4(1.f, -1.f, -1.f, 1.f),
+        glm::vec4(1.f,  1.f, -1.f, 1.f),
+        glm::vec4(-1.f,  1.f, -1.f, 1.f),
+        //near
+        glm::vec4(-1.f, -1.f, 1.f, 1.f),
+        glm::vec4(1.f, -1.f, 1.f, 1.f),
+        glm::vec4(1.f,  1.f, 1.f, 1.f),
+        glm::vec4(-1.f,  1.f, 1.f, 1.f)
+    };
+}
+
 float Spatial::distance(Plane plane, glm::vec3 point)
 {
     return glm::dot({ plane.x, plane.y, plane.z }, point) + plane.w;
@@ -67,4 +85,101 @@ Planar Spatial::intersects(Plane plane, Box box)
         return Planar::Intersection;
     }
     return (dist > 0) ? Planar::Front : Planar::Back;
+}
+
+Box Spatial::updateFrustum(std::array<Plane, 6u>& frustum, glm::mat4 viewProj)
+{
+    frustum =
+    {
+        { Plane //left
+        (
+            viewProj[0][3] + viewProj[0][0],
+            viewProj[1][3] + viewProj[1][0],
+            viewProj[2][3] + viewProj[2][0],
+            viewProj[3][3] + viewProj[3][0]
+        ),
+        Plane //right
+        (
+            viewProj[0][3] - viewProj[0][0],
+            viewProj[1][3] - viewProj[1][0],
+            viewProj[2][3] - viewProj[2][0],
+            viewProj[3][3] - viewProj[3][0]
+        ),
+        Plane //bottom
+        (
+            viewProj[0][3] + viewProj[0][1],
+            viewProj[1][3] + viewProj[1][1],
+            viewProj[2][3] + viewProj[2][1],
+            viewProj[3][3] + viewProj[3][1]
+        ),
+        Plane //top
+        (
+            viewProj[0][3] - viewProj[0][1],
+            viewProj[1][3] - viewProj[1][1],
+            viewProj[2][3] - viewProj[2][1],
+            viewProj[3][3] - viewProj[3][1]
+        ),
+        Plane //near
+        (
+            viewProj[0][3] + viewProj[0][2],
+            viewProj[1][3] + viewProj[1][2],
+            viewProj[2][3] + viewProj[2][2],
+            viewProj[3][3] + viewProj[3][2]
+        ),
+        Plane //far
+        (
+            viewProj[0][3] - viewProj[0][2],
+            viewProj[1][3] - viewProj[1][2],
+            viewProj[2][3] - viewProj[2][2],
+            viewProj[3][3] - viewProj[3][2]
+        ) }
+    };
+
+    //normalise the planes
+    for (auto& p : frustum)
+    {
+        const float factor = 1.f / std::sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
+        p.x *= factor;
+        p.y *= factor;
+        p.z *= factor;
+        p.w *= factor;
+    }
+
+    //calc th AABB
+    auto invViewProjection = glm::inverse(viewProj);
+    std::array points =
+    {
+        invViewProjection * ClipPoints[0],
+        invViewProjection * ClipPoints[1],
+        invViewProjection * ClipPoints[2],
+        invViewProjection * ClipPoints[3],
+        invViewProjection * ClipPoints[4],
+        invViewProjection * ClipPoints[5],
+        invViewProjection * ClipPoints[6],
+        invViewProjection * ClipPoints[7]
+    };
+    for (auto& p : points)
+    {
+        p /= p.w;
+    }
+
+    auto [minX, maxX] = std::minmax_element(points.begin(), points.end(),
+        [](const glm::vec4& lhs, const glm::vec4& rhs)
+        {
+            return lhs.x < rhs.x;
+        });
+
+    auto [minY, maxY] = std::minmax_element(points.begin(), points.end(),
+        [](const glm::vec4& lhs, const glm::vec4& rhs)
+        {
+            return lhs.y < rhs.y;
+        });
+
+    auto [minZ, maxZ] = std::minmax_element(points.begin(), points.end(),
+        [](const glm::vec4& lhs, const glm::vec4& rhs)
+        {
+            return lhs.z < rhs.z;
+        });
+
+    return { glm::vec3(minX->x, minY->y, minZ->z), glm::vec3(maxX->x, maxY->y, maxZ->z) };
 }

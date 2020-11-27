@@ -31,9 +31,12 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/Spatial.hpp>
 
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+
+#include <array>
 
 namespace cro
 {
@@ -136,11 +139,16 @@ namespace cro
         cro::Colour m_colour;
         glm::vec3 m_direction;
         glm::vec3 m_directionRotated;
-        glm::mat4 m_projection;
-        glm::mat4 m_viewProjection;
+
+        glm::mat4 m_viewMatrix;
+        glm::mat4 m_projectionMatrix;
+        glm::mat4 m_viewProjectionMatrix;
 
         cro::int32 m_textureID;
         friend class ShadowMapRenderer;
         friend class Scene;
+
+        std::array<Plane, 6u> m_frustum;
+        Box m_aabb; //used for early testing with AABB tree
     };
 }

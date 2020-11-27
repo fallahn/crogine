@@ -33,9 +33,12 @@ source distribution.
 
 #include <crogine/detail/glm/vec4.hpp>
 
+#include <Array>
+
 namespace cro
 {
     using Plane = glm::vec4;
+    using Frustum = std::array<Plane, 6u>;
     struct CRO_EXPORT_API Sphere final
     {
         float radius = 0.f;
@@ -65,6 +68,14 @@ namespace cro
         normal), Planar::Intersects when intersecting or Planar::Back
         */
         Planar CRO_EXPORT_API intersects(Plane plane, Box box);
+
+        /*!
+        \brief Updates the given frustum based on the given viewProjection matrix
+        \param frustum An array of 6 Planes which make up the frustum
+        \param viewProj A matrix containing the view-projection transform to apply to the frustum
+        \return cro::Box containing the AABB of thenewly updated frustum
+        */
+        cro::Box CRO_EXPORT_API updateFrustum(std::array<Plane, 6u>& frustum, glm::mat4 viewProj);
 
     }
 }
