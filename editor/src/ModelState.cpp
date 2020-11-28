@@ -483,7 +483,7 @@ void ModelState::createScene()
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Normal | cro::VertexProperty::UV0, 1, GL_TRIANGLE_STRIP));
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::GroundPlane]));
     auto& mesh = entity.getComponent<cro::Model>().getMeshData();
 
@@ -503,7 +503,6 @@ void ModelState::createScene()
 
     entities[EntityID::GroundPlane] = entity;
     entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    //entity.addComponent<cro::ShadowCaster>();
 
     //set the default sunlight properties
     m_scene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-4.f, 4.f, -4.f, 4.f, 0.1f, 10.f));
@@ -610,6 +609,11 @@ void ModelState::buildUI()
                     
                     if (ImGui::MenuItem("Quit", nullptr, nullptr))
                     {
+                        if (entities[EntityID::ActiveModel].isValid())
+                        {
+                            showSaveMessage();
+                        }
+
                         cro::App::quit();
                     }
                     ImGui::EndMenu();

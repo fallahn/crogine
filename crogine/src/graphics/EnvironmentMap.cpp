@@ -217,7 +217,7 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
 
     glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_textures[Skybox]));
 
-    for (auto i = 0; i < 6u; ++i)
+    for (auto i = 0u; i < 6u; ++i)
     {
         glCheck(glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, CubemapSize, CubemapSize, 0, GL_RGB, GL_FLOAT, nullptr));
     }
