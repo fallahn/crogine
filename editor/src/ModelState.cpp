@@ -402,6 +402,7 @@ void ModelState::loadAssets()
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, flags);
     materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
+    m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_maskColour", cro::Colour(1.f, 1.f, 0.f));
     //m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_diffuseMap", m_magentaTexture);
 
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
@@ -858,13 +859,19 @@ void ModelState::openModelAtPath(const std::string& path)
         {
             entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>().active = false;
 
+            const cro::Material::Data* matData = nullptr;
             if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
             {
-                entities[EntityID::ActiveModel].getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(materialIDs[MaterialID::DefaultShadowSkinned]));
+                matData = &m_resources.materials.get(materialIDs[MaterialID::DefaultShadowSkinned]);
             }
             else
             {
-                entities[EntityID::ActiveModel].getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(materialIDs[MaterialID::DefaultShadow]));
+                matData = &m_resources.materials.get(materialIDs[MaterialID::DefaultShadow]);
+            }
+
+            for (auto i = 0u; i < entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+            {
+                entities[EntityID::ActiveModel].getComponent<cro::Model>().setShadowMaterial(i, *matData);
             }
         }
 

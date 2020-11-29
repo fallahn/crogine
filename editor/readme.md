@@ -7,6 +7,10 @@ Model Converter allows opening and importing model files for conversion to the c
 
 Material Editor is designed for fast preview and easy reuse of material definitions which can be applied to models loaded in the model converter/viewer.
 
+
+![alt text](material_preview.png "PBR, Blinn-Phong and unlit shaded materials")
+
+
 -----------------------------------------------------------------------
 
 Matt Marchant 2020  
