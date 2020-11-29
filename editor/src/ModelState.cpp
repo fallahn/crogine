@@ -602,6 +602,11 @@ void ModelState::buildUI()
                     {
                         if (ImGui::MenuItem("Return To World Editor"))
                         {
+                            if (entities[EntityID::ActiveModel].isValid())
+                            {
+                                showSaveMessage();
+                            }
+
                             getContext().mainWindow.setTitle("Crogine Editor");
                             requestStackPop();
                         }
