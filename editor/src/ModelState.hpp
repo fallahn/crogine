@@ -115,6 +115,7 @@ private:
         glm::vec4 uv = glm::vec4(0.f, 0.f, 1.f, 1.f);
 
         std::vector<float> vertexData;
+        std::vector<std::vector<std::uint32_t>> indexData;
 
     }m_modelProperties;
 
@@ -178,4 +179,8 @@ private:
     void exportMaterial() const;
     void importMaterial(const std::string&);
     void readMaterialDefinition(MaterialDefinition&, const cro::ConfigObject&);
+
+    std::vector<std::unique_ptr<cro::Texture>> m_lightmapTextures;
+    std::vector<std::vector<float>> m_lightmapBuffers;
+    void bakeLightmap();
 };

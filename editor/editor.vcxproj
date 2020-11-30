@@ -177,6 +177,9 @@
     <ClInclude Include="src\UIConsts.hpp" />
     <ClInclude Include="src\WorldState.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="src\LightmapShader.inl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

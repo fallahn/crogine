@@ -110,22 +110,13 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 
     DPRINT("Visible 2D ents", std::to_string(m_drawList.size()));
 
-    //sort drawlist - this is SLLOOOOOWWW
     std::sort(m_drawList.begin(), m_drawList.end(),
         [](Entity a, Entity b)
         {
             return a.getComponent<Drawable2D>().m_sortCriteria < b.getComponent<Drawable2D>().m_sortCriteria;
         });
 
-    auto& oldList = camera.drawList[getType()] = std::make_any<std::vector<Entity>>(m_drawList);
-    /*if (oldList.has_value())
-    {
-        std::any_cast<std::vector<Entity>>(oldList).swap(m_drawList);
-    }
-    else
-    {
-        oldList = std::make_any<std::vector<Entity>>(m_drawList);
-    }*/
+    camera.drawList[getType()] = std::make_any<std::vector<Entity>>(m_drawList);
 }
 
 void RenderSystem2D::process(float)

@@ -79,10 +79,15 @@ source distribution.
 
 #include <string_view>
 
+#define LIGHTMAPPER_IMPLEMENTATION
+#include "lightmapper.h"
+
 namespace ai = Assimp;
 
 namespace
 {
+#include "LightmapShader.inl"
+
     const std::array ShaderStrings =
     {
         "Unlit", "VertexLit", "PBR"
@@ -110,6 +115,8 @@ namespace
     const float MaxFOV = 120.f * cro::Util::Const::degToRad;
     const float MinFOV = 5.f * cro::Util::Const::degToRad;
     const float DefaultFarPlane = 50.f;
+
+    const std::uint32_t LightmapSize = 1024;
 
     const std::uint8_t MaxSubMeshes = 8; //for imported models. Can be made bigger but this is generally a waste of memory
 
@@ -248,6 +255,8 @@ namespace
 
     bool setInspectorTab = false;
     std::int32_t inspectorTabIndex = 0;
+
+    const std::int32_t LightmapShaderID = 1;
 }
 
 ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
@@ -425,6 +434,8 @@ void ModelState::loadAssets()
     materialIDs[MaterialID::GroundPlane] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(materialIDs[MaterialID::GroundPlane]).setProperty("u_diffuseMap", m_resources.textures.get(texID));
     m_resources.materials.get(materialIDs[MaterialID::GroundPlane]).setProperty("u_maskColour", cro::Colour(0.f, 0.f, 0.f));
+
+    m_resources.shaders.loadFromString(LightmapShaderID, Lightmap::Vertex, Lightmap::Fragment);
 }
 
 void ModelState::createScene()
@@ -690,9 +701,13 @@ void ModelState::buildUI()
                         }
                         savePrefs();
                     }
-                    if (ImGui::MenuItem("Show Material Preview", nullptr, &m_showMaterialWindow))
+                    if (ImGui::MenuItem("Material Preview", nullptr, &m_showMaterialWindow))
                     {
                         savePrefs();
+                    }
+                    if (ImGui::MenuItem("Lightmap Baker", nullptr, nullptr, entities[EntityID::ActiveModel].isValid()))
+                    {
+                        bakeLightmap();
                     }
                     ImGui::EndMenu();
                 }
@@ -800,13 +815,18 @@ void ModelState::buildUI()
             drawInspector();
             drawBrowser();
 
-            /*ImGui::SetNextWindowSize({ 528.f, 554.f });
+            ImGui::SetNextWindowSize({ 528.f, 554.f });
             ImGui::Begin("Shadow Map", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
-            ImGui::Image(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture(),
-                { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });
+            /*ImGui::Image(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture(),
+                { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });*/
 
-            ImGui::End();*/
+            for (auto i = 0u; i < m_lightmapTextures.size(); ++i)
+            {
+                ImGui::Image(*m_lightmapTextures[i], { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+
+            ImGui::End();
         });
 
     auto size = getContext().mainWindow.getSize();
@@ -997,10 +1017,51 @@ void ModelState::openModelAtPath(const std::string& path)
 
 
         //read back the buffer data into the imported buffer so we can do things like normal vis and lightmap baking
+        m_modelProperties.vertexData.clear();
         m_modelProperties.vertexData.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
         glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, 0, meshData.vertexCount * meshData.vertexSize, m_modelProperties.vertexData.data()));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+        m_modelProperties.indexData.clear();
+        m_modelProperties.indexData.resize(meshData.submeshCount);
+
+        for (auto i = 0u; i < meshData.submeshCount; ++i)
+        {
+            m_modelProperties.indexData[i].resize(meshData.indexData[i].indexCount);
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+
+            //fudgy kludge for different index types
+            switch (meshData.indexData[i].format)
+            {
+            default: break;
+            case GL_UNSIGNED_BYTE:
+            {
+                std::vector<std::uint8_t> temp(meshData.indexData[i].indexCount);
+                glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount, temp.data()));
+                for (auto j = 0u; j < meshData.indexData[i].indexCount; ++j)
+                {
+                    m_modelProperties.indexData[i][j] = temp[j];
+                }
+            }
+                break;
+            case GL_UNSIGNED_SHORT:
+            {
+                std::vector<std::uint16_t> temp(meshData.indexData[i].indexCount);
+                glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount * sizeof(std::uint16_t), temp.data()));
+                for (auto j = 0u; j < meshData.indexData[i].indexCount; ++j)
+                {
+                    m_modelProperties.indexData[i][j] = temp[j];
+                }
+            }
+                break;
+            case GL_UNSIGNED_INT:
+                glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount * sizeof(std::uint32_t), m_modelProperties.indexData[i].data()));
+                break;
+            }            
+        }
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
         updateNormalVis();
     }
     else
@@ -3744,4 +3805,140 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
             matDef.repeatTexture = prop.getValue<bool>();
         }
     }
+}
+
+void ModelState::bakeLightmap()
+{
+    const auto drawScene = [&](glm::mat4 viewMat, glm::mat4 projMat, const cro::Mesh::Data& meshData)
+    {
+        CRO_ASSERT(entities[EntityID::ActiveModel].isValid(), "");
+
+        glCheck(glEnable(GL_DEPTH_TEST));
+
+        const auto& shader = m_resources.shaders.get(LightmapShaderID);
+        glCheck(glUseProgram(shader.getGLHandle()));
+        glCheck(glUniformMatrix4fv(shader.getUniformMap().at("u_projectionMatrix"), 1, GL_FALSE, &projMat[0][0]));
+        glCheck(glUniformMatrix4fv(shader.getUniformMap().at("u_viewMatrix"), 1, GL_FALSE, &viewMat[0][0]));
+
+        for (auto i = 0u; i < meshData.submeshCount; ++i)
+        {
+            const auto& indexData = meshData.indexData[i];
+            glCheck(glBindVertexArray(indexData.vao));
+            glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+        }
+
+        glCheck(glUseProgram(0));
+        glCheck(glDisable(GL_DEPTH_TEST));
+    };
+
+    lm_context* ctx = lmCreate(
+        64,               // hemicube rendering resolution/quality
+        0.001f, 100.0f,   // zNear, zFar
+        1.0f, 1.0f, 1.0f, // sky/clear colour
+        2, 0.01f,         // hierarchical selective interpolation for speedup (passes, threshold)
+        0.0f);            // modifier for camera-to-surface distance for hemisphere rendering.
+                          // tweak this to trade-off between interpolated vertex normal quality and other artifacts (see declaration).
+    if (!ctx)
+    {
+        LogE << "Failed creating lightmapper" << std::endl;
+        return;
+    }
+
+
+    const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+
+    //make sure we have enough buffers / output textures
+    if (m_lightmapBuffers.size() < meshData.submeshCount)
+    {
+        for (auto i = m_lightmapBuffers.size(); i < meshData.submeshCount; ++i)
+        {
+            m_lightmapBuffers.emplace_back(LightmapSize * LightmapSize * 3 * sizeof(float));
+            m_lightmapTextures.emplace_back(std::make_unique<cro::Texture>())->create(LightmapSize, LightmapSize, cro::ImageFormat::RGB);
+        }
+    }
+
+    glm::mat4 modelMatrix = glm::mat4(1.f);
+    glm::mat4 view = glm::mat4(1.f);
+    glm::mat4 proj = glm::mat4(1.f);
+    
+    std::int32_t normalOffset = 0;
+    std::int32_t uvOffset = 0;
+
+    for (auto i = 0u; i < meshData.attributes.size(); ++i)
+    {
+        if (i < cro::Mesh::Normal)
+        {
+            normalOffset += meshData.attributes[i];
+        }
+
+        if (i < cro::Mesh::UV0)
+        {
+            uvOffset += meshData.attributes[i];
+        }
+    }
+    normalOffset *= sizeof(float);
+    uvOffset *= sizeof(float);
+
+    cro::Clock timer; //push progress update
+
+    //std::int32_t bounces = 2;
+    //for (auto b = 0; b < bounces; b++)
+    {
+        //render all geometry to their lightmaps
+        for (auto i = 0u; i < meshData.submeshCount; i++)
+        {
+            //fill black
+            std::fill(m_lightmapBuffers[i].begin(), m_lightmapBuffers[i].end(), 0.f);
+
+            lmSetTargetLightmap(ctx, m_lightmapBuffers[i].data(), LightmapSize, LightmapSize, 3);
+
+            lmSetGeometry(ctx, &modelMatrix[0][0],
+                LM_FLOAT, (uint8_t*)m_modelProperties.vertexData.data(), meshData.vertexSize, //position
+                LM_FLOAT, (uint8_t*)m_modelProperties.vertexData.data() + normalOffset, meshData.vertexSize, //normal
+                LM_FLOAT, (uint8_t*)m_modelProperties.vertexData.data() + uvOffset, meshData.vertexSize, //UV - TODO select which set to use
+                meshData.indexData[i].indexCount, GL_UNSIGNED_INT, m_modelProperties.indexData[i].data());
+
+            GLint vp[4];            
+            while (lmBegin(ctx, vp, &view[0][0], &proj[0][0]))
+            {
+                //don't glClear on your own here!
+                glCheck(glViewport(vp[0], vp[1], vp[2], vp[3]));
+                drawScene(view, proj, meshData);
+                if (timer.elapsed().asSeconds() > 1.f)
+                {
+                    printf("\r%6.2f%%", lmProgress(ctx) * 100.0f);
+                    timer.restart();
+                }
+                lmEnd(ctx);
+            }
+        }
+
+        //// postprocess and upload all lightmaps to the GPU now to use them for indirect lighting during the next bounce.
+        //for (int i = 0; i < meshes; i++)
+        //{
+        //    // you can also call other lmImage* here to postprocess the lightmap.
+        //    lmImageDilate(mesh[i].lightmap, temp, mesh[i].lightmapWidth, mesh[i].lightmapHeight, 3);
+        //    lmImageDilate(temp, mesh[i].lightmap, mesh[i].lightmapWidth, mesh[i].lightmapHeight, 3);
+
+        //    glBindTexture(GL_TEXTURE_2D, mesh[i].lightmapHandle);
+        //    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mesh[i].lightmapWidth, mesh[i].lightmapHeight, 0, GL_RGB, GL_FLOAT, data);
+        //}
+    }
+
+    lmDestroy(ctx);
+
+    //gamma correct and upload lightmaps to texture
+    std::vector<float> temp;
+    for (auto i = 0u; i < meshData.submeshCount; ++i)
+    {
+        temp.resize(m_lightmapBuffers[i].size());
+        lmImageDilate(m_lightmapBuffers[i].data(), temp.data(), LightmapSize, LightmapSize, 3);
+        lmImageDilate(temp.data(), m_lightmapBuffers[i].data(), LightmapSize, LightmapSize, 3);
+        lmImagePower(m_lightmapBuffers[i].data(), LightmapSize, LightmapSize, 3, 1.0f / 2.2f);
+
+        glCheck(glBindTexture(GL_TEXTURE_2D, m_lightmapTextures[i]->getGLHandle()));
+        glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, LightmapSize, LightmapSize, 0, GL_RGB, GL_FLOAT, m_lightmapBuffers[i].data()));
+        //lmImageSaveTGAf(mesh[i].lightmapFilename, mesh[i].lightmap, mesh[i].lightmapWidth, mesh[i].lightmapHeight, 3);
+    }
+    glCheck(glBindTexture(GL_TEXTURE_2D, 0));
 }

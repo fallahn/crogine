@@ -90,4 +90,9 @@
       <Filter>Header Files\model viewer</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="src\LightmapShader.inl">
+      <Filter>Header Files\model viewer</Filter>
+    </None>
+  </ItemGroup>
 </Project>
