@@ -43,6 +43,7 @@ source distribution.
 #include <SDL_filesystem.h>
 
 #include "../detail/GLCheck.hpp"
+#include "../detail/SDLImageRead.hpp"
 #include "../imgui/imgui_impl_opengl3.h"
 #include "../imgui/imgui_impl_sdl.h"
 
@@ -565,12 +566,6 @@ void App::saveSettings()
     }
 
     saveSettings.save(m_prefPath + cfgName);
-}
-
-void image_write_func(void* context, void* data, int size)
-{
-    SDL_RWops* file = (SDL_RWops*)context;
-    SDL_RWwrite(file, data, size, 1);
 }
 
 void App::saveScreenshot()

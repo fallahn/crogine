@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 
 #include "../detail/GLCheck.hpp"
+#include "../detail/stb_image_write.h"
+#include "../detail/SDLImageRead.hpp"
 
 #include <algorithm>
 
@@ -397,4 +399,40 @@ FloatRect Texture::getNormalisedSubrect(FloatRect rect) const
     }
 
     return { rect.left / m_size.x, rect.bottom / m_size.y, rect.width / m_size.x, rect.height / m_size.y };
+}
+
+bool Texture::saveToFile(const std::string& path)
+{
+    if (m_handle == 0)
+    {
+        LogE << "Failed to save " << path << "Texture not created." << std::endl;
+        return false;
+    }
+
+    auto filePath = path;
+    if (cro::FileSystem::getFileExtension(filePath) != ".png")
+    {
+        filePath += ".png";
+    }
+
+    std::vector<GLubyte> buffer(m_size.x * m_size.y * 4);
+
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
+    glCheck(glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data()));
+    glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+
+    //flip row order
+    stbi_flip_vertically_on_write(1);
+
+    RaiiRWops out;
+    out.file = SDL_RWFromFile(filePath.c_str(), "w");
+    auto result = stbi_write_png_to_func(image_write_func, out.file, m_size.x, m_size.y, 4, buffer.data(), m_size.x * 4);
+
+    if (result == 0)
+    {
+        LogE << "Failed writing " << path << std::endl;
+
+        return false;
+    }
+    return true;
 }

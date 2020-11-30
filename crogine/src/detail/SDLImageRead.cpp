@@ -89,4 +89,10 @@ namespace cro
         out->stb_cbs.skip = cro::STBIMG__io_skip;
         out->stb_cbs.eof = cro::STBIMG__io_eof;
     }
+
+    void image_write_func(void* context, void* data, int size)
+    {
+        SDL_RWops* file = (SDL_RWops*)context;
+        SDL_RWwrite(file, data, size, 1);
+    }
 }

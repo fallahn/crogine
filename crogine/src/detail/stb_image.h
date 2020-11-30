@@ -347,6 +347,14 @@ typedef struct
    int      (*eof)   (void *user);                       // returns nonzero if we are at end of file/data
 } stbi_io_callbacks;
 
+struct SDL_RWops;
+struct STBIMG_stbio_RWops final
+{
+    SDL_RWops* src = nullptr;
+    stbi_io_callbacks stb_cbs;
+    int atEOF = 0; //defaults to 0; 1: reached EOF or error on read, 2: error on seek
+};
+
 ////////////////////////////////////
 //
 // 8-bits-per-channel interface

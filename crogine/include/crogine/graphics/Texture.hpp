@@ -159,6 +159,15 @@ namespace cro
         */
         FloatRect getNormalisedSubrect(FloatRect rect) const;
 
+        /*
+        \brief Saves the texture to a png file if it is a valid texture.
+        If the texture contains no data, or create() had not been called
+        then this function does nothing.
+        \param path A string containg a path to same the texture to.
+        \returns true if successful else returns false
+        */
+        bool saveToFile(const std::string& path);
+
     private:
         glm::uvec2 m_size;
         ImageFormat::Type m_format;

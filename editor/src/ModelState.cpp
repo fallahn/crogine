@@ -268,6 +268,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
     m_showGroundPlane       (false),
     m_showSkybox            (false),
     m_showMaterialWindow    (false),
+    m_showBakingWindow      (false),
     m_showAABB              (false),
     m_showSphere            (false),
     m_selectedTexture       (std::numeric_limits<std::uint32_t>::max()),
@@ -705,9 +706,9 @@ void ModelState::buildUI()
                     {
                         savePrefs();
                     }
-                    if (ImGui::MenuItem("Lightmap Baker", nullptr, nullptr, entities[EntityID::ActiveModel].isValid()))
+                    if (ImGui::MenuItem("AO Baker", nullptr, &m_showBakingWindow, entities[EntityID::ActiveModel].isValid() && m_importedVBO.empty()))
                     {
-                        bakeLightmap();
+                        
                     }
                     ImGui::EndMenu();
                 }
@@ -812,21 +813,60 @@ void ModelState::buildUI()
                 }
             }
 
+            if (m_showBakingWindow && entities[EntityID::ActiveModel].isValid() && m_importedVBO.empty())
+            {
+                ImGui::SetNextWindowSize({ 528.f, 554.f });
+                ImGui::Begin("AO Baker##0", &m_showBakingWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+
+                const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+                if (meshData.attributes[cro::Mesh::UV1] > 0)
+                {
+                    //TODO show combo to select which UV coords to use
+                }
+
+                if (ImGui::Button("Bake"))
+                {
+                    bakeLightmap(/*TODO pass UV channel*/);
+                }
+
+                ImGui::Separator();
+
+                for (auto i = 0u; i < meshData.submeshCount && i < m_lightmapTextures.size(); ++i) //only show tetures for the current model (there may be more from a previous bake)
+                {
+                    ImGui::Image(*m_lightmapTextures[i], { ui::PreviewTextureSize / 4.f, ui::PreviewTextureSize / 4.f }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                    if (i > 0 && (i % 3) != 0)
+                    {
+                        ImGui::SameLine();
+                    }
+                }
+
+                if (! m_lightmapTextures.empty() && ImGui::Button("Save All"))
+                {
+                    auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/" + "ao_untitled", "png");
+                    if (!path.empty())
+                    {
+                        auto preString = path.substr(0, path.find_last_of('.'));
+                        for (auto i = 0u; i < meshData.submeshCount; ++i)
+                        {
+                            m_lightmapTextures[i]->saveToFile(preString + "0" + std::to_string(i) + ".png");
+                        }
+                    }
+                }
+
+                ImGui::End();
+            }
+
             drawInspector();
             drawBrowser();
 
-            ImGui::SetNextWindowSize({ 528.f, 554.f });
-            ImGui::Begin("Shadow Map", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+            //ImGui::SetNextWindowSize({ 528.f, 554.f });
+            //ImGui::Begin("Shadow Map", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
-            /*ImGui::Image(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture(),
-                { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });*/
+            ///*ImGui::Image(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture(),
+            //    { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });*/
 
-            for (auto i = 0u; i < m_lightmapTextures.size(); ++i)
-            {
-                ImGui::Image(*m_lightmapTextures[i], { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });
-            }
-
-            ImGui::End();
+            //ImGui::End();
         });
 
     auto size = getContext().mainWindow.getSize();
