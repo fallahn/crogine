@@ -243,6 +243,7 @@ namespace cro
         static constexpr glm::vec3 X_AXIS = glm::vec3(1.f, 0.f, 0.f);
         static constexpr glm::vec3 Y_AXIS = glm::vec3(0.f, 1.f, 0.f);
         static constexpr glm::vec3 Z_AXIS = glm::vec3(0.f, 0.f, 1.f);
+        static constexpr glm::quat QUAT_IDENTY = glm::quat(1.f, 0.f, 0.f, 0.f);
 
     private:
         glm::vec3 m_origin;

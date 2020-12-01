@@ -804,7 +804,8 @@ void GameState::loadModels()
     auto bossEnt = m_scene.createEntity();
     m_modelDefs[GameModelID::Boss].createModel(bossEnt, m_resources);
     bossEnt.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, -9.3f });
-    bossEnt.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.5f, -cro::Util::Const::PI / 2.f, 0.f });
+    bossEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.5f);
+    bossEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 2.f);
     bossEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
     bossEnt.addComponent<cro::CommandTarget>().ID = CommandID::Boss;
     bossEnt.addComponent<Boss>();
@@ -929,7 +930,7 @@ void GameState::loadModels()
     {
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 5.9f, -choppaSpacing + (i * choppaSpacing), -9.3f });
-        entity.getComponent<cro::Transform>().setRotation({ -cro::Util::Const::PI / 2.f, 0.f, 0.f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
         entity.getComponent<cro::Transform>().setScale(choppaScale);
         m_modelDefs[GameModelID::Choppa].createModel(entity, m_resources);
         CRO_ASSERT(m_modelDefs[GameModelID::Choppa].hasSkeleton(), "Skeleton missing from choppa!");

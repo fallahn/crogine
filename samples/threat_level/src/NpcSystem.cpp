@@ -363,7 +363,7 @@ void NpcSystem::processTurret(cro::Entity entity, float)
     glm::vec3 target = m_playerPosition - tx.getWorldPosition();
 
     float rotation = -atan2(target.x, target.y);
-    tx.setRotation({ 0.f, rotation, 0.f });
+    tx.setRotation(cro::Transform::Y_AXIS, rotation);
 }
 
 void NpcSystem::processSpeedray(cro::Entity entity, float dt)

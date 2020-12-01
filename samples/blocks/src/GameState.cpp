@@ -668,7 +668,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         //TODO check this avatar doesn't already exist
         
         auto entity = createActor(false);
-        auto rotation = entity.getComponent<cro::Transform>().getRotationQuat();
+        auto rotation = entity.getComponent<cro::Transform>().getRotation();
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));

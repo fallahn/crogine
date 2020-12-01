@@ -227,7 +227,7 @@ void MainState::createScene()
     //create planet / moon
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(planetPos);
-    entity.getComponent<cro::Transform>().setRotation({ -0.5f, 0.f, 0.4f });
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS -0.5f);
     m_modelDefs[MenuModelID::GasPlanet].createModel(entity, m_resources);
     auto& planetRotator = entity.addComponent<Rotator>();
     planetRotator.speed = 0.02f;
