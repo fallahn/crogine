@@ -288,7 +288,7 @@ namespace cro
                 #endif
                 #endif
                 #if defined (LIGHTMAPPED)
-                    FRAG_OUT *= TEXTURE(u_lightMap, v_texCoord1);
+                    FRAG_OUT.rgb *= TEXTURE(u_lightMap, v_texCoord1).rgb;
                 #endif
 
                 #if defined(COLOURED)

@@ -2797,6 +2797,28 @@ void ModelState::drawInspector()
                         applyMaterial = true;
                     }
 
+                    //warn if model has no lightmap coords
+                    if (entities[EntityID::ActiveModel].isValid())
+                    {
+                        const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+                        if (meshData.attributes[cro::Mesh::UV1] == 0)
+                        {
+                            ImGui::SameLine();
+                            ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 0.f, 0.f, 1.f });
+                            ImGui::Text("(!!)");
+                            ImGui::PopStyleColor();
+                            
+                            if (ImGui::IsItemHovered())
+                            {
+                                ImGui::BeginTooltip();
+                                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                                ImGui::TextUnformatted("Current Model Has No Lightmap Texture Coordinates.");
+                                ImGui::PopTextWrapPos();
+                                ImGui::EndTooltip();
+                            }
+                        }
+                    }
+
                     if (matDef.textureIDs[MaterialDefinition::Lightmap] != 0)
                     {
                         shaderFlags |= cro::ShaderResource::LightMap;
@@ -3981,4 +4003,8 @@ void ModelState::bakeLightmap()
         //lmImageSaveTGAf(mesh[i].lightmapFilename, mesh[i].lightmap, mesh[i].lightmapWidth, mesh[i].lightmapHeight, 3);
     }
     glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+
+    //reset the background
+    glClearColor(0.f, 0.f, 0.f, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT);
 }

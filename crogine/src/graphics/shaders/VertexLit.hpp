@@ -367,7 +367,7 @@ namespace cro
                     FRAG_OUT.rgb = mix(blendedColour, diffuseColour.rgb, mask.b);
 
                 #if defined (LIGHTMAPPED)
-                    FRAG_OUT *= TEXTURE(u_lightMap, v_texCoord1);
+                    FRAG_OUT.rgb *= TEXTURE(u_lightMap, v_texCoord1).rgb;
                 #endif
                     FRAG_OUT.a = diffuseColour.a;
 

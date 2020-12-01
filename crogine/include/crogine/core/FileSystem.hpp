@@ -183,6 +183,14 @@ namespace cro
         */
         static bool showMessageBox(const std::string& title, const std::string& message, ButtonType buttonType = ButtonType::OK, IconType iconType = IconType::Info);
 
+        /*!
+        \brief Shows a notification in the tray area.
+        \param title String containing title
+        \param message String containing messge to display
+        \param iconType Type of icon to display. Defaults to Info
+        */
+        static void showNotification(const std::string& title, const std::string& message, IconType = IconType::Info);
+
     private:
 		static std::string m_resourceDirectory;
     };

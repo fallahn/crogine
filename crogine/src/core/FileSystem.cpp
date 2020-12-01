@@ -703,5 +703,27 @@ bool FileSystem::showMessageBox(const std::string& title, const std::string& mes
     return tinyfd_messageBox(title.c_str(), message.c_str(), button.c_str(), icon.c_str(), 0) != 0;
 }
 
+void FileSystem::showNotification(const std::string& title, const std::string& message, IconType iconType)
+{
+    std::string icon;
+    switch (iconType)
+    {
+    default:
+    case IconType::Question:
+        [[fallthrough]];
+    case IconType::Info:
+        icon = "info";
+        break;
+    case IconType::Error:
+        icon = "error";
+        break;
+    case IconType::Warning:
+        icon = "warning";
+        break;
+    }
+
+    tinyfd_notifyPopup(title.c_str(), message.c_str(), icon.c_str());
+}
+
 //private
 std::string FileSystem::m_resourceDirectory = std::string();
