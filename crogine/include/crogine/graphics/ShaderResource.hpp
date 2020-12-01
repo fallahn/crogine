@@ -47,11 +47,12 @@ namespace cro
     public:
         enum BuiltIn
         {
-            Unlit              = 0x7FFB0000,
-            BillboardUnlit     = 0x7FFC0000,
-            VertexLit          = 0x7FFD0000,
-            BillboardVertexLit = 0x7FFE0000,
-            ShadowMap          = 0x7FFF0000
+            Unlit              = 0x7A000000,
+            BillboardUnlit     = 0x7B000000,
+            VertexLit          = 0x7C000000,
+            BillboardVertexLit = 0x7D000000,
+            ShadowMap          = 0x7E000000,
+            PBR                = 0x7F000000
         };
 
         enum BuiltInFlags
@@ -59,17 +60,18 @@ namespace cro
             VertexColour      = 0x1,
             DiffuseColour     = 0x2,
             DiffuseMap        = 0x4,
-            NormalMap         = 0x8,
-            LightMap          = 0x10,
-            Skinning          = 0x20,
-            Subrects          = 0x40,
-            ReceiveProjection = 0x80,
-            RimLighting       = 0x100,
-            DepthMap          = 0x200,
-            RxShadows         = 0x400,
-            AlphaClip         = 0x800,
-            LockRotation      = 0x1000,
-            LockScale         = 0x2000
+            MaskMap           = 0x8,
+            NormalMap         = 0x10,
+            LightMap          = 0x20,
+            Skinning          = 0x40,
+            Subrects          = 0x80,
+            ReceiveProjection = 0x100,
+            RimLighting       = 0x200,
+            DepthMap          = 0x400,
+            RxShadows         = 0x800,
+            AlphaClip         = 0x1000,
+            LockRotation      = 0x2000,
+            LockScale         = 0x4000
         };
         
         ShaderResource();

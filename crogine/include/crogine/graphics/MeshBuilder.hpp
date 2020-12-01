@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/MeshData.hpp>
+#include <crogine/ecs/components/Skeleton.hpp>
 
 #include <vector>
 #include <array>
@@ -88,6 +89,14 @@ namespace cro
         returns a unique instance of the mesh data.
         */
         virtual std::size_t getUID() const { return 0; }
+
+        /*!
+        \brief If the derived class is used to patse a format which contains
+        skeletal animation data override this to return the base pose skeleton.
+        These will then be cached by the mesh resource when the mesh is built
+        and applied to any entities created via the ModelDefinition class.
+        */
+        virtual Skeleton getSkeleton() const { return {}; }
 
     protected:
         friend class MeshResource;

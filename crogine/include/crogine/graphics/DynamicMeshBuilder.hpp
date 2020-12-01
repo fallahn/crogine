@@ -53,6 +53,10 @@ namespace cro
     Buffers are also drawn using index arrays so at least 1 submesh needs to
     be requested and index data updated with the accompanying vertex data.
     Index arrays use unsigned integer format.
+
+    Remember when updating the vertex buffer and index arrays to also
+    update the Mesh::Data with the new vertex count and new index count.
+
     */
 
     class CRO_EXPORT_API DynamicMeshBuilder final : public cro::MeshBuilder

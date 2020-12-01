@@ -79,5 +79,5 @@ const ComponentMask& Entity::getComponentMask() const
 
 bool Entity::isValid() const
 {
-    return (m_entityManager != nullptr && !m_entityManager->entityDestroyed(*this));
+    return (m_entityManager != nullptr && !destroyed());
 }

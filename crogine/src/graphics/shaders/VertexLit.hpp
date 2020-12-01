@@ -68,7 +68,7 @@ namespace cro
 
                 uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;
-                uniform mat3 u_normalMatrix;                
+                uniform mat3 u_normalMatrix;
                 uniform mat4 u_projectionMatrix;
 
                 #if defined(RX_SHADOWS)
@@ -165,16 +165,25 @@ namespace cro
 
             const static std::string Fragment = R"(
                 OUTPUT
-                #if defined(TEXTURED)
+                #if defined(DIFFUSE_MAP)
                 uniform sampler2D u_diffuseMap;
-                uniform sampler2D u_maskMap;
-                #if defined(BUMP)
-                uniform sampler2D u_normalMap;
-                #endif
+
                 #if defined(ALPHA_CLIP)
                 uniform float u_alphaClip;
                 #endif
+
                 #endif
+
+                #if defined(MASK_MAP)
+                uniform sampler2D u_maskMap;
+                #else
+                uniform LOW vec4 u_maskColour;
+                #endif
+
+                #if defined(BUMP)
+                uniform sampler2D u_normalMap;
+                #endif
+
                 #if defined(LIGHTMAPPED)
                 uniform sampler2D u_lightMap;
                 #endif
@@ -182,11 +191,9 @@ namespace cro
                 uniform HIGH vec3 u_lightDirection;
                 uniform LOW vec4 u_lightColour;
                 uniform HIGH vec3 u_cameraWorldPosition;
+                
                 #if defined(COLOURED)
                 uniform LOW vec4 u_colour;
-                uniform LOW vec4 u_maskColour;
-                #elif defined(VERTEX_COLOUR)
-                uniform LOW vec4 u_maskColour;
                 #endif
 
                 #if defined(PROJECTIONS)
@@ -296,7 +303,7 @@ namespace cro
 
                 #endif               
 
-                LOW vec4 diffuseColour;
+                LOW vec4 diffuseColour = vec4(1.0);
                 HIGH vec3 eyeDirection;
                 LOW vec3 mask = vec3(1.0, 1.0, 0.0);
                 vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
@@ -320,22 +327,27 @@ namespace cro
                 #else
                     MED vec3 normal = normalize(v_normalVector);
                 #endif
-                #if defined (TEXTURED)
-                    diffuseColour = TEXTURE(u_diffuseMap, v_texCoord0);
-                    mask = TEXTURE(u_maskMap, v_texCoord0).rgb;
+
+                #if defined (DIFFUSE_MAP)
+                    diffuseColour *= TEXTURE(u_diffuseMap, v_texCoord0);
+
                 #if defined(ALPHA_CLIP)
                 if(diffuseColour.a < u_alphaClip) discard;
                 #endif
+                #endif
 
-                #elif defined(COLOURED)
-                    diffuseColour = u_colour;
-                    mask = u_maskColour.rgb;
-                #elif defined(VERTEX_COLOURED)
-                    diffuseColour = v_colour;
-                    mask = u_maskColour.rgb;
+                #if defined(MASK_MAP)
+                    mask = TEXTURE(u_maskMap, v_texCoord0).rgb;
                 #else
-                    diffuseColour = vec4(1.0);
                     mask = u_maskColour.rgb;
+                #endif
+
+                #if defined(COLOURED)
+                    diffuseColour *= u_colour;
+                #endif
+                
+                #if defined(VERTEX_COLOURED)
+                    diffuseColour *= v_colour;
                 #endif
                     //diffuseColour = vec3(0.0, 0.0, 1.0);//diffuse.rgb;
                     LOW vec3 blendedColour = diffuseColour.rgb * 0.2; //ambience
@@ -344,15 +356,18 @@ namespace cro
                     blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, vec3(1.0), 1.0);
                 #if defined (RX_SHADOWS)
                     blendedColour *= shadowAmount(v_lightWorldPosition);
+//if(v_lightWorldPosition.w > 0.0)
+//{
+//vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
+//if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
+//blendedColour *= vec3(0.0,1.0,0.0);
+//}
                 #endif
 
-                #if defined(TEXTURED)
                     FRAG_OUT.rgb = mix(blendedColour, diffuseColour.rgb, mask.b);
-                #else     
-                    FRAG_OUT.rgb = blendedColour;
-                #endif
+
                 #if defined (LIGHTMAPPED)
-                    FRAG_OUT *= TEXTURE(u_lightMap, v_texCoord1);
+                    FRAG_OUT.rgb *= TEXTURE(u_lightMap, v_texCoord1).rgb;
                 #endif
                     FRAG_OUT.a = diffuseColour.a;
 

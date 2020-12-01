@@ -125,7 +125,7 @@ namespace cro
 
         /*!
         \brief Show a native file dialog to open a file
-        \param defaultDir Default path to open (optional)
+        \param defaultDir Default path *and file* to open (optional)
         \param filter File extention filter in the format "png,jpg,bmp"
         \param selectMultiple If true then allows selecting multiple files
         \returns path the path selected by the user
@@ -141,7 +141,7 @@ namespace cro
         
         /*!
         \brief Show a platform native file dialogue for saving files.
-        \param defaultDir Default directory to save to - optional
+        \param defaultDir Default directory *and file* to save to - optional
         \param filter String containing file extension filter in the format "png,jpg,bmp"
         \returns string containing the selected file path
         */
@@ -150,19 +150,48 @@ namespace cro
         /*!
          \brief Currently only relevant on macOS when creating an app bundle.
          Basically a wrapper around the SFML resourcePath() function.
-         Might potentially provide some portable way of bundling resources nicely in the future.
          \returns path to the resource directory
          */
         static std::string getResourcePath();
 
-		/*!
-		\brief Sets the resource directory relative to the working directory.
-		When using getResourcePath() this path will be appended to the working directory.
-		Used, for example, when setting a sub-directory as a resource directory
-		*/
-		static void setResourceDirectory(const std::string& path);
+        /*!
+        \brief Sets the resource directory relative to the working directory.
+        When using getResourcePath() this path will be appended to the working directory.
+        Used, for example, when setting a sub-directory as a resource directory
+        */
+        static void setResourceDirectory(const std::string& path);
+
+        enum ButtonType
+        {
+            OK, OKCancel, YesNo, YesNoCancel
+        };
+
+        enum IconType
+        {
+            Info, Warning, Error, Question
+        };
+
+        /*!
+        \brief Shows a pop up message box to the user.
+        Can be used to express an error or ask a question.
+        \param title The title string to display in the message box
+        \param message The message string to display in the message box
+        \param buttonType Button type to display. Defaults to OK
+        \param iconType Type of icon to display. Defaults to Info
+        \returns true on OK or Yes, false on No or Cancel
+        \see ButtonType, IconType
+        */
+        static bool showMessageBox(const std::string& title, const std::string& message, ButtonType buttonType = ButtonType::OK, IconType iconType = IconType::Info);
+
+        /*!
+        \brief Shows a notification in the tray area.
+        \param title String containing title
+        \param message String containing messge to display
+        \param iconType Type of icon to display. Defaults to Info
+        */
+        static void showNotification(const std::string& title, const std::string& message, IconType = IconType::Info);
 
     private:
-		static std::string m_resourceDirectory;
+        static std::string m_resourceDirectory;
     };
 }

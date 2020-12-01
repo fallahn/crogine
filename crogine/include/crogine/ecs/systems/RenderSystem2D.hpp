@@ -107,6 +107,7 @@ namespace cro
         Shader m_texturedShader;
 
         DepthAxis m_sortOrder;
+        std::vector<Entity> m_drawList;
 
         void applyBlendMode(Material::BlendMode);
         glm::ivec2 mapCoordsToPixel(glm::vec2, const glm::mat4& viewProjMat, IntRect) const;

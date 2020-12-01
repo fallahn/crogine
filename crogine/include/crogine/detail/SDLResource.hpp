@@ -33,21 +33,21 @@ source distribution.
 
 namespace cro
 {
-	namespace Detail
-	{
-		/*!
-		\brief Any classes which rely on SDL subsystems or opengl
-		should inherit this class.
-		This is done to ensure that the class required to maintain SDL
-		(the App class) exists before any resources can be created.
-		*/
-		class CRO_EXPORT_API SDLResource
-		{
-		public:
-			SDLResource();
-			virtual ~SDLResource() = default;
+    namespace Detail
+    {
+        /*!
+        \brief Any classes which rely on SDL subsystems or opengl
+        should inherit this class.
+        This is done to ensure that the class required to maintain SDL
+        (the App class) exists before any resources can be created.
+        */
+        class CRO_EXPORT_API SDLResource
+        {
+        public:
+            SDLResource();
+            virtual ~SDLResource() = default;
 
-			static bool valid();
-		};
-	}
+            static bool valid();
+        };
+    }
 }

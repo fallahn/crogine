@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
 
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -49,13 +50,13 @@ using namespace cro;
 
 namespace
 {
-    std::array<std::string, 3u> materialTypes =
+    std::array<std::string, 4u> materialTypes =
     {
-        "VertexLit", "Unlit", "Billboard"
+        "VertexLit", "Unlit", "Billboard", "PBR"
     };
 }
 
-bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& rc)
+bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& rc, EnvironmentMap* envMap)
 {
     if (m_modelLoaded)
     {
@@ -93,7 +94,6 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     auto ext = FileSystem::getFileExtension(meshValue);
     std::unique_ptr<MeshBuilder> meshBuilder;
 
-    bool checkSkeleton = false;
     bool lockRotation = false;
     bool lockScale = false;
 
@@ -106,7 +106,6 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     {
         //use iqm loader
         meshBuilder = std::make_unique<IqmBuilder>(m_workingDir + meshValue);
-        checkSkeleton = true;
     }
     else if (Util::String::toLower(meshValue) == "sphere")
     {
@@ -212,13 +211,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         return false;
     }
 
-    if (checkSkeleton)
+    auto skel = rc.meshes.getSkeltalAnimation(m_meshID);
+    if (skel)
     {
-        auto skel = dynamic_cast<IqmBuilder*>(meshBuilder.get())->getSkeleton();
-        if (skel.frameCount > 0)
-        {
-            m_skeleton = skel;
-        }
+        m_skeleton = skel;
     }
 
     for (auto& mat : materials)
@@ -227,6 +223,18 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         if (mat.getId() == "VertexLit")
         {
             shaderType = m_billboard ? ShaderResource::BillboardVertexLit : ShaderResource::VertexLit;
+        }
+        else if (mat.getId() == "PBR")
+        {
+            if (m_billboard)
+            {
+                LogE << "PBR materials cannot currently be used on billboard meshes." << std::endl;
+                shaderType = ShaderResource::BillboardVertexLit;
+            }
+            else
+            {
+                shaderType = ShaderResource::PBR;
+            }
         }
         else if (m_billboard)
         {
@@ -258,6 +266,13 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                 if (!p.getValue<std::string>().empty())
                 {
                     flags |= ShaderResource::NormalMap;
+                }
+            }
+            else if (name == "mask")
+            {
+                if (!p.getValue<std::string>().empty())
+                {
+                    flags |= ShaderResource::MaskMap;
                 }
             }
             else if (name == "subrect")
@@ -406,7 +421,17 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             }
             else if (name == "subrect")
             {
-                material.setProperty("u_subrect", p.getValue<glm::vec4>());
+                auto subrect = p.getValue<glm::vec4>();
+                auto clamp = [](float& v)
+                {
+                    v = std::min(1.f, std::max(0.f, v));
+                };
+                clamp(subrect.x);
+                clamp(subrect.y);
+                clamp(subrect.z);
+                clamp(subrect.w);
+
+                material.setProperty("u_subrect", subrect);
             }
             else if (name == "colour")
             {
@@ -446,6 +471,21 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             else if (name == "alpha_clip")
             {
                 material.setProperty("u_alphaClip", Util::Maths::clamp(p.getValue<float>(), 0.f, 1.f));
+            }
+        }
+
+        //check to see if we can map environment lighting
+        if (shaderType == ShaderResource::PBR)
+        {
+            if (envMap)
+            {
+                material.setProperty("u_irradianceMap", envMap->getIrradianceMap());
+                material.setProperty("u_prefilterMap", envMap->getPrefilterMap());
+                material.setProperty("u_brdfMap", envMap->getBRDFMap());
+            }
+            else
+            {
+                LogW << "No environment mapping has been supplied to PBR material. This will need to be done manually." << std::endl;
             }
         }
 

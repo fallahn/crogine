@@ -68,10 +68,15 @@ RenderTexture::~RenderTexture()
     }
 }
 
-RenderTexture::RenderTexture(RenderTexture&& other)
+RenderTexture::RenderTexture(RenderTexture&& other) noexcept
+    : m_fboID   (0),
+    m_rboID     (0),
+    m_clearBits (0),
+    m_lastBuffer(0)
 {
     m_fboID = other.m_fboID;
     m_rboID = other.m_rboID;
+    m_clearBits = other.m_clearBits;
     m_texture = std::move(other.m_texture);
     m_viewport = other.m_viewport;
     m_lastViewport = other.m_lastViewport;
@@ -81,17 +86,20 @@ RenderTexture::RenderTexture(RenderTexture&& other)
     other.m_rboID = 0;
 }
 
-RenderTexture& RenderTexture::operator=(RenderTexture&& other)
+RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
 {
     if (&other != this)
     {
         m_fboID = other.m_fboID;
+        m_rboID = other.m_rboID;
+        m_clearBits = other.m_clearBits;
         m_texture = std::move(other.m_texture);
         m_viewport = other.m_viewport;
         m_lastViewport = other.m_lastViewport;
         m_lastBuffer = other.m_lastBuffer;
 
         other.m_fboID = 0;
+        other.m_rboID = 0;
     }
     return *this;
 }

@@ -379,7 +379,7 @@ void GameState::loadAssets()
 void GameState::createScene()
 {
     m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
-    m_gameScene.getSunlight().setDirection({ 0.2f, -0.8f, -0.2f });
+    m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(glm::vec3(1.f, 0.f, 0.f));
 }
 
 void GameState::createUI()

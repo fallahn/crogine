@@ -81,7 +81,7 @@ RenderSystem2D::~RenderSystem2D()
 //public
 void RenderSystem2D::updateDrawList(Entity camEnt)
 {
-    std::vector<Entity> drawList;
+    m_drawList.clear();
     auto& camera = camEnt.getComponent<Camera>();
     const auto& frustum = camera.getFrustum();
 
@@ -104,20 +104,19 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 
         if (visible)
         {
-            drawList.push_back(entity);
+            m_drawList.push_back(entity);
         }
     }
 
-    DPRINT("Visible 2D ents", std::to_string(drawList.size()));
+    DPRINT("Visible 2D ents", std::to_string(m_drawList.size()));
 
-    //sort drawlist
-    std::sort(drawList.begin(), drawList.end(),
+    std::sort(m_drawList.begin(), m_drawList.end(),
         [](Entity a, Entity b)
         {
             return a.getComponent<Drawable2D>().m_sortCriteria < b.getComponent<Drawable2D>().m_sortCriteria;
         });
- 
-    camera.drawList[getType()] = std::make_any<std::vector<Entity>>(std::move(drawList));
+
+    camera.drawList[getType()] = std::make_any<std::vector<Entity>>(m_drawList);
 }
 
 void RenderSystem2D::process(float)
@@ -192,6 +191,11 @@ void RenderSystem2D::process(float)
 void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
 {
     const auto& camComponent = cameraEntity.getComponent<Camera>();
+    if (camComponent.drawList.count(getType()) == 0)
+    {
+        return;
+    }
+
     auto viewport = rt.getViewport(camComponent.viewport);
 
     glCheck(glDepthMask(GL_FALSE));

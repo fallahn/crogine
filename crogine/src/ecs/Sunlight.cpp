@@ -36,15 +36,16 @@ source distribution.
 using namespace cro;
 
 Sunlight::Sunlight()
-    : m_colour      (1.f, 1.f, 1.f),
-    m_direction     (0.f, -1.f, 0.f),
-    m_rotation      (0.f),
-    m_projection    (1.f),
-    m_viewProjection(1.f),
-    m_textureID     (0)
+    : m_colour              (1.f, 1.f, 1.f),
+    m_direction             (0.f, 0.f, -1.f),
+    m_directionRotated      (0.f, 0.f, -1.f),
+    m_viewMatrix            (1.f),
+    m_projectionMatrix      (1.f),
+    m_viewProjectionMatrix  (1.f),
+    m_textureID             (0)
 {
     //m_projection = glm::perspective(0.52f, 1.f, 0.1f, 100.f);
-    m_projection = glm::ortho(-0.6f, 0.6f, -0.6f, 0.6f, 0.1f, 10.f);
+    m_projectionMatrix = glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 10.f);
     setDirection(m_direction);
 }
 
@@ -62,37 +63,31 @@ cro::Colour Sunlight::getColour() const
 void Sunlight::setDirection(glm::vec3 direction)
 {
     m_direction = glm::normalize(direction);
-    m_rotation = glm::inverse(glm::lookAt(-m_direction, glm::vec3(0.f), { m_direction.x, m_direction.z, m_direction.y }));
 }
 
 glm::vec3 Sunlight::getDirection() const
 {
-    return m_direction;
-}
-
-const glm::mat4& Sunlight::getRotation() const
-{
-    return m_rotation;
+    return m_directionRotated;
 }
 
 void Sunlight::setProjectionMatrix(const glm::mat4& mat)
 {
-    m_projection = mat;
+    m_projectionMatrix = mat;
 }
 
 const glm::mat4& Sunlight::getProjectionMatrix() const
 {
-    return m_projection;
+    return m_projectionMatrix;
 }
 
 void Sunlight::setViewProjectionMatrix(const glm::mat4& mat)
 {
-    m_viewProjection = mat;
+    m_viewProjectionMatrix = mat;
 }
 
 const glm::mat4& Sunlight::getViewProjectionMatrix() const
 {
-    return m_viewProjection;
+    return m_viewProjectionMatrix;
 }
 
 int32 Sunlight::getMapID() const

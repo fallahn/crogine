@@ -27,6 +27,11 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../detail/stb_image.h"
+#include "../detail/stb_image_write.h"
+#include "../detail/SDLImageRead.hpp"
+#include <SDL_rwops.h>
+
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/Colour.hpp>
 
@@ -34,73 +39,10 @@ source distribution.
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/Log.hpp>
 
-#define STBI_ONLY_JPEG
-#define STBI_ONLY_PNG
-#define STBI_ONLY_BMP
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-#include "stb_image_write.h"
-#include <SDL_rwops.h>
-
 #include <array>
 #include <cstring>
 
 using namespace cro;
-
-namespace
-{
-    //creates an stbi image load callback using SDL_RWops
-    struct STBIMG_stbio_RWops final
-    {
-        SDL_RWops* src = nullptr;
-        stbi_io_callbacks stb_cbs;
-        int32 atEOF = 0; //defaults to 0; 1: reached EOF or error on read, 2: error on seek
-    };
-
-    static int32 STBIMG__io_read(void* user, char* data, int32 size)
-    {
-        STBIMG_stbio_RWops* io = (STBIMG_stbio_RWops*)user;
-
-        auto ret = SDL_RWread(io->src, data, sizeof(char), size);
-        if (ret == 0)
-        {
-            //we're at EOF or some error happened
-            io->atEOF = 1;
-        }
-        return ret * sizeof(char);
-    }
-
-    static void STBIMG__io_skip(void* user, int32 n)
-    {
-        STBIMG_stbio_RWops* io = (STBIMG_stbio_RWops*)user;
-
-        if (SDL_RWseek(io->src, n, RW_SEEK_CUR) == -1)
-        {
-            //an error happened during seeking, hopefully setting EOF will make stb_image abort
-            io->atEOF = 2; //set this to 2 for "aborting because seeking failed" (stb_image only cares about != 0)
-        }
-    }
-
-    static int32 STBIMG__io_eof(void* user)
-    {
-        STBIMG_stbio_RWops* io = (STBIMG_stbio_RWops*)user;
-        return io->atEOF;
-    }
-
-    void stbi_callback_from_RW(SDL_RWops* src, STBIMG_stbio_RWops* out)
-    {
-        CRO_ASSERT(src && out, "Cannot be nullptr!");
-
-        //make sure out is at least initialized to something deterministic
-        std::memset(out, 0, sizeof(*out));
-
-        out->src = src;
-        out->atEOF = 0;
-        out->stb_cbs.read = STBIMG__io_read;
-        out->stb_cbs.skip = STBIMG__io_skip;
-        out->stb_cbs.eof = STBIMG__io_eof;
-    }
-}
 
 Image::Image(bool flipOnLoad)
     : m_format  (ImageFormat::None),
@@ -256,7 +198,7 @@ ImageFormat::Type Image::getFormat() const
 
 const uint8* Image::getPixelData() const
 {
-    return m_data.data();
+    return m_data.empty() ? nullptr : m_data.data();
 }
 
 void image_writer_func(void* context, void* data, int size)

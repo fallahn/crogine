@@ -48,6 +48,7 @@ namespace cro
 {
     class MessageBus;
     class Renderable;
+    class EnvironmentMap;
 
     /*!
     \brief Encapsulates a single scene.
@@ -145,16 +146,17 @@ namespace cro
 
         /*!
         \brief Sets the active Sunlight object.
+        \param sun An entity which has at least a Transform component and
+        Sunlight component
         \see Sunlight
         */
-        void setSunlight(const Sunlight&);
+        void setSunlight(Entity sun);
 
         /*!
-        \brief Returns a reference to the active Sunlight object.
+        \brief Returns a copy the active Sunlight entity.
         \see Sunlight
         */
-        const Sunlight& getSunlight() const;
-        Sunlight& getSunlight();
+        Entity getSunlight() const;
 
         /*!
         \brief Enables the skybox.
@@ -191,7 +193,17 @@ namespace cro
         void setCubemap(const std::string& path);
 
         /*!
-        \brief Sets the colours used in the default skybox
+        \brief Sets the skybox cubemap to that of the given EnvironmentMap.
+        As EnvironmentMaps are only available on desktop platforms this will
+        do nothing on mobile. Mobile platforms should use setCubemap(std::string)
+        instead. Note that as a reference is store to the map, the map should
+        be kept valid for at least as long as a Scene using it.
+        */
+        void setCubemap(const EnvironmentMap& map);
+
+        /*!
+        \brief Sets the colours used in the default skybox.
+        If a skybox texture or environment map has been set then this does nothing.
         */
         void setSkyboxColours(cro::Colour top = cro::Colour(0.82f, 0.98f, 0.99f), cro::Colour bottom = cro::Colour(0.21f, 0.5f, 0.96f));
 
@@ -278,8 +290,7 @@ namespace cro
         Entity m_defaultCamera;
         Entity m_activeCamera;
         Entity m_activeListener;
-
-        Sunlight m_sunlight;
+        Entity m_sunlight;
 
         std::vector<Entity> m_pendingEntities;
         std::vector<Entity> m_destroyedEntities;
@@ -301,6 +312,7 @@ namespace cro
         std::array<RenderTexture, 2u> m_postBuffers;
         std::vector<std::unique_ptr<PostProcess>> m_postEffects;
 
+
         struct Skybox final
         {
             std::uint32_t vbo = 0;
@@ -309,8 +321,27 @@ namespace cro
             std::uint32_t projectionUniform = 0;
             std::uint32_t texture = 0;
             std::uint32_t textureUniform = 0;
+
+            void setShader(const Shader& shader)
+            {
+                viewUniform = shader.getUniformMap().at("u_viewMatrix");
+                projectionUniform = shader.getUniformMap().at("u_projectionMatrix");
+                if (shader.getUniformMap().count("u_skybox"))
+                {
+                    textureUniform = shader.getUniformMap().at("u_skybox");
+                }
+            }
         }m_skybox;
-        Shader m_skyboxShader;
+
+        std::uint32_t m_activeSkyboxTexture;
+
+        enum SkyboxType
+        {
+            Cubemap, Environment, Coloured,
+            Count
+        };
+        std::array<Shader, SkyboxType::Count> m_skyboxShaders;
+        std::size_t m_shaderIndex;
 
         //we use a pointer here so we can create an array of just one
         //camera without having to create a vector from it

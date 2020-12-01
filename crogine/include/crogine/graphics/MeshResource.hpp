@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/MeshData.hpp>
+#include <crogine/ecs/components/Skeleton.hpp>
 
 #include <unordered_map>
 #include <array>
@@ -81,7 +82,15 @@ namespace cro
         /*!
         \brief Returns the mesh data for the given ID.
         */
-        const Mesh::Data getMesh(std::size_t ID) const;
+        const Mesh::Data& getMesh(std::size_t ID) const;
+
+        /*!
+        \brief Returns the skeletal animation for the mesh with the given ID.
+        If the mesh contains no valid skeletal data then the default skeleton
+        is returned.
+        \param ID The mesh ID of the skeletal animation data to fetch.
+        */
+        Skeleton getSkeltalAnimation(std::size_t ID) const;
 
         /*!
         \brief Forcefully deletes all meshes
@@ -93,5 +102,6 @@ namespace cro
 
     private:
         std::unordered_map<std::size_t, Mesh::Data> m_meshData;
+        std::unordered_map<std::size_t, Skeleton> m_skeletalData;
     };
 }

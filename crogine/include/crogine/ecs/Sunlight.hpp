@@ -31,9 +31,12 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/Spatial.hpp>
 
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+
+#include <array>
 
 namespace cro
 {
@@ -44,14 +47,21 @@ namespace cro
     The sunlight object is also the default (and only) shadow
     caster due to limitations of mobile hardware - although
     that's not to say projects can't implement their own shadow
-    mapping. VertexLit and Unlit shaders are both capable of
+    mapping. PBR, VertexLit and Unlit shaders are all capable of
     receiving shadows by default, assuming the rx_shadow flag
-    is set when creating them. VertixLit materials will also
+    is set when creating them. PBR and VertexLit materials will also
     apply the sunlight colour and direction when being rendered.
     For objects to cast shadows the Model component must contain
     shadow casting materials (automatically applied in model config
     files when cast_shadow = true) and a Scene has a ShadowMapRenderer
     system within it.
+
+    Entities with a Sunlight component also require a Transform
+    component, which not only allows setting the orientation of the
+    sunlight (the Direction property is multiplied by the transform)
+    but also allows for the shadow map projection to follow the
+    Scene's active camera if necessary.
+
     \see ShadowMapRenderer
     */
     class CRO_EXPORT_API Sunlight final
@@ -72,25 +82,29 @@ namespace cro
         cro::Colour getColour() const;
 
         /*!
-        \brief Sets the direction in which the Sunlight is pointing
+        \brief Sets the direction in which the Sunlight is pointing without rotation.
+        By default this is straight down the z axis (negative Z). The direction
+        is multiplied by any transform on the Sunlight's entity. Normally there is no
+        need to set this, instead relying on updating the Sunlight entity's transform
+        property, as the camera's orientation is used when rendering shadows.
+        \param direction A vec3 representing the direction the sun is facing. This is
+        automatically normalised when it is set.
         */
-        void setDirection(glm::vec3);
+        void setDirection(glm::vec3 direction);
 
         /*!
-        \brief Returns the current direction of the Sunlight
+        \brief Returns the current direction of the Sunlight.
+        \returns The normalised direction as set with setDirection()
+        multiplied with the parent entity's rotation. Note that
+        this is only accurate when the sunlight component is
+        currently active in the Scene.
         */
         glm::vec3 getDirection() const;
 
         /*!
-        \brief Gets the rotation of the light object as a matrix
-        with a forward vector equivalent to the direction.
-        */
-        const glm::mat4& getRotation() const;
-
-        /*!
         \brief Sets the projection matrix.
         Usually shadow mapping with a directional light such as sunlight
-        requires is best perfomed with an orthogonal projection. Setting
+        requires is best perfomed with an orthographic projection. Setting
         this allows the user to define the area and depth of the scene
         covered by the Sunlight shadow map
         */
@@ -124,11 +138,17 @@ namespace cro
     private:
         cro::Colour m_colour;
         glm::vec3 m_direction;
-        glm::mat4 m_rotation;
-        glm::mat4 m_projection;
-        glm::mat4 m_viewProjection;
+        glm::vec3 m_directionRotated;
+
+        glm::mat4 m_viewMatrix;
+        glm::mat4 m_projectionMatrix;
+        glm::mat4 m_viewProjectionMatrix;
 
         cro::int32 m_textureID;
         friend class ShadowMapRenderer;
+        friend class Scene;
+
+        std::array<Plane, 6u> m_frustum;
+        Box m_aabb; //used for early testing with AABB tree
     };
 }

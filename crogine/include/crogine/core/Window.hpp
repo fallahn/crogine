@@ -44,64 +44,74 @@ source distribution.
 #include <memory>
 
 namespace cro
-{	
+{   
     class LoadingScreen;
 
-	/*!
-	\brief Creates a window to which to draw.
-	*/
-	class CRO_EXPORT_API Window final : public RenderTarget// : public cro::Detail::SDLResource
-	{
-	public:
-		Window();
-		~Window();
-		Window(const Window&) = delete;
-		Window(const Window&&) = delete;
-		Window& operator = (const Window&) = delete;
-		Window& operator = (const Window&&) = delete;
+    /*!
+    \brief Creates a window to which to draw.
+    */
+    class CRO_EXPORT_API Window final : public RenderTarget// : public cro::Detail::SDLResource
+    {
+    public:
+        Window();
+        ~Window();
+        Window(const Window&) = delete;
+        Window(const Window&&) = delete;
+        Window& operator = (const Window&) = delete;
+        Window& operator = (const Window&&) = delete;
 
-		/*!
-		\brief Creates a window with the given parameters
-		\param width Width of the window to create in pixels
-		\param height Height of the widow to create in pixels
-		\param title Title to appear on the window (if supported by the current platform)
-		\param fullscreen If set to true the window is created in fullscreen mode
-		\param borderless If set to true the window is rendered borderless when not fullscreen
-		\returns true on success, else false
-		*/
-		bool create(uint32 width, uint32 height, const std::string& title, bool fullscreen = false, bool borderless = false);
-		/*!
-		\brief Enables or disables vsync
-		*/
-		void setVsyncEnabled(bool);
+        /*!
+        \brief Creates a window with the given parameters
+        \param width Width of the window to create in pixels
+        \param height Height of the widow to create in pixels
+        \param title Title to appear on the window (if supported by the current platform)
+        \param fullscreen If set to true the window is created in fullscreen mode
+        \param borderless If set to true the window is rendered borderless when not fullscreen
+        \returns true on success, else false
+        */
+        bool create(uint32 width, uint32 height, const std::string& title, bool fullscreen = false, bool borderless = false);
+        /*!
+        \brief Enables or disables vsync
+        */
+        void setVsyncEnabled(bool);
         /*!
         \brief Returns whether or not vsync is enabled
         */
         bool getVsyncEnabled() const;
-		/*!
-		\brief Clears the window for drawing with the given colour
-		*/
-		void clear();
-		/*!
-		\brief Swaps the buffers and displays the result of drawing
-		*/
-		void display();
-		/*!
-		\brief Fills the given event struct with the current event data
-		\returns true while events remain on the event stack
-		*/
-		bool pollEvent(Event&);
-		/*!
-		\brief Closes the window
-		*/
-		void close();
-		/*!
-		\brief Returns true if window is open
-		*/
-		bool isOpen() const
-		{
-			return m_window != nullptr;
-		}
+        /*!
+        \brief Attempts to enable or disable MSAA if multisampling is available on the current platform
+        */
+        void setMultisamplingEnabled(bool);
+        /*!
+        \brief Returns whether or not multisampling is enabled if it is available on the current platform
+        Note not all hardware supports multisampling so this may falsely return true if multisampling
+        has attempted to be set but failed.
+        */
+        bool getMultisamplingEnabled() const;
+        /*!
+        \brief Clears the window for drawing with the given colour
+        */
+        void clear();
+        /*!
+        \brief Swaps the buffers and displays the result of drawing
+        */
+        void display();
+        /*!
+        \brief Fills the given event struct with the current event data
+        \returns true while events remain on the event stack
+        */
+        bool pollEvent(Event&);
+        /*!
+        \brief Closes the window
+        */
+        void close();
+        /*!
+        \brief Returns true if window is open
+        */
+        bool isOpen() const
+        {
+            return m_window != nullptr;
+        }
         /*!
         \brief Returns the current size of the window
         */
@@ -173,22 +183,23 @@ namespace cro
         */
         bool getMouseCaptured() const;
 
-	private:
+    private:
 
-		SDL_Window* m_window;
+        SDL_Window* m_window;
         SDL_GLContext m_threadContext;
-		SDL_GLContext m_mainContext;
+        SDL_GLContext m_mainContext;
 
         std::unique_ptr<LoadingScreen> m_loadingScreen;
 
         mutable std::vector<glm::uvec2> m_resolutions;
 
         bool m_fullscreen;
+        bool m_multisamplingEnabled;
 
-		void destroy();
+        void destroy();
 
         friend class App;
-	};
+    };
 
     template <typename T, typename... Args>
     void Window::setLoadingScreen(Args&&... args)

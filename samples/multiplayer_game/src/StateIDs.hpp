@@ -31,11 +31,11 @@ source distribution.
 
 namespace States
 {
-	enum ID
-	{
-		MainMenu,
+    enum ID
+    {
+        MainMenu,
         Game,
-		Error,
-		Pause
-	};
+        Error,
+        Pause
+    };
 }

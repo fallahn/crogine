@@ -45,6 +45,7 @@ source distribution.
 namespace cro
 {
     class Entity;
+    class EnvironmentMap;
 
     /*!
     \brief Struct of resource managers.
@@ -72,7 +73,7 @@ namespace cro
     ModelDefinition definition;
     if(definition.loadFromFile("assets/models/crate.cmt", resources))
     {
-        //createa the first model
+        //create the first model
         auto entity = scene.createEntity();
         entity.addComponent<Transform>().setPosition({100.f, 0.f, 100.f}):
         definition.createModel(entity, resources);
@@ -83,6 +84,18 @@ namespace cro
         definition.createModel(entity, resources);
     }
     \endcode
+
+    Optionally, when loading models with a PBR material, a reference to an
+    EnvironmentMap can be supplied to the load function so that lighting
+    uniforms are automatically mapped to the material properties:
+
+    \begincode
+    if(definition.loadFromFile("assets/models/crate.cmt", resources, &environmentMap))
+    {
+        //create model...
+    }
+    \endcode
+
     */
     class CRO_EXPORT_API ModelDefinition final
     {
@@ -111,10 +124,13 @@ namespace cro
         \param resources A reference to a resource collection. Resources such
         as textures and materials are loaded into this, and the ModelDefinition
         populated with IDs referring to the newly loaded data.
+        \param envMap A pointer to a valid EnvironmentMap instance. This will
+        automatically assign any required lighting parameters to PBR materials.
+        This can be omitted if no PBR materials are being loaded.
         \returns true if the configuration file was parsed without error.
-        \see ConfigFile
+        \see ConfigFile, EnvironmentMap
         */
-        bool loadFromFile(const std::string& path, ResourceCollection& resources);
+        bool loadFromFile(const std::string& path, ResourceCollection& resources, EnvironmentMap* envMap = nullptr);
 
         /*!
         \brief Creates a Model component from the loaded config on the given entity.

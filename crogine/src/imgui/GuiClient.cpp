@@ -39,12 +39,22 @@ GuiClient::~GuiClient()
 }
 
 //public
-void GuiClient::registerConsoleTab(const std::string& name, const std::function<void()>& f)
+void GuiClient::registerConsoleTab(const std::string& name, const std::function<void()>& f) const
 {
     App::addConsoleTab(name, f, this);
 }
 
-void GuiClient::registerWindow(const std::function<void()>& f)
+void GuiClient::registerWindow(const std::function<void()>& f) const
 {
     App::addWindow(f, this);
+}
+
+void GuiClient::unregisterWindows() const
+{
+    App::removeWindows(this);
+}
+
+void GuiClient::unregisterConsoleTabs() const
+{
+    App::removeConsoleTab(this);
 }

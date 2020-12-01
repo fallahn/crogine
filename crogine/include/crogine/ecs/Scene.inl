@@ -30,10 +30,11 @@ source distribution.
 template <typename T, typename... Args>
 T& Scene::addSystem(Args&&... args)
 {
+    static_assert(std::is_base_of<System, T>::value, "Must be a system type");
     auto& system = m_systemManager.addSystem<T>(std::forward<Args>(args)...);
     if constexpr (std::is_base_of<Renderable, T>::value)
     {
-        m_renderables.push_back(dynamic_cast<Renderable*>(&system));
+        m_renderables.push_back(static_cast<Renderable*>(&system));
     }
     return system;
 }

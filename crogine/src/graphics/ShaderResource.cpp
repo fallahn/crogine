@@ -33,6 +33,7 @@ source distribution.
 #include "shaders/Billboard.hpp"
 #include "shaders/VertexLit.hpp"
 #include "shaders/ShadowMap.hpp"
+#include "shaders/PBR.hpp"
 #include "../detail/GLCheck.hpp"
 
 using namespace cro;
@@ -98,16 +99,25 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
 
     //create shader defines based on flags
     std::string defines;
+    bool needUVs = false;
     if (flags & BuiltInFlags::DiffuseMap)
     {
-        defines += "\n#define TEXTURED";
+        needUVs = true;
+        defines += "\n#define DIFFUSE_MAP";
     }
     if (flags & BuiltInFlags::NormalMap)
     {
+        needUVs = true;
         defines += "\n#define BUMP";
+    }
+    if (flags & BuiltInFlags::MaskMap)
+    {
+        needUVs = true;
+        defines += "\n#define MASK_MAP";
     }
     if (flags & BuiltInFlags::LightMap)
     {
+        needUVs = true;
         defines += "\n#define LIGHTMAPPED";
     }
     if (flags & BuiltInFlags::VertexColour)
@@ -163,6 +173,10 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
     {
         defines += "\n#define LOCK_SCALE";
     }
+    if (needUVs)
+    {
+        defines += "\n#define TEXTURED";
+    }
     defines += "\n";
 
     bool success = false;
@@ -185,6 +199,9 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
     case BuiltIn::ShadowMap:
         //TODO assess platform and load desktop version when necessary
         success = loadFromString(id, Shaders::ShadowMap::Vertex, Shaders::ShadowMap::FragmentMobile, defines);
+        break;
+    case BuiltIn::PBR:
+        success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::PBR::Fragment, defines);
         break;
     }
 

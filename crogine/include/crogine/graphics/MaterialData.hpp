@@ -42,7 +42,26 @@ source distribution.
 
 namespace cro
 {
+    /*!
+    \brief Allows assigning Texture handles directly to material properties
+    */
+    struct TextureID final
+    {
+        std::uint32_t textureID = 0;
+        explicit TextureID(std::uint32_t id) : textureID(id) {}
+    };
+
+    /*!
+    \brief Allows assigning Cubemap handles directly to material properties
+    */
+    struct CubemapID final
+    {
+        std::uint32_t textureID = 0;
+        explicit CubemapID(std::uint32_t id) : textureID(id) {}
+    };
+
     class Texture;
+    class Shader;
     namespace Material
     {
         /*
@@ -87,14 +106,16 @@ namespace cro
                 Vec3,
                 Vec4,
                 Mat4,
-                Texture
+                Texture,
+                Cubemap
             }type = None;
+
 
             union
             {
                 float numberValue;
                 float vecValue[4];
-                int32 textureID = 0;
+                uint32 textureID = 0;
                 glm::mat4 matrixValue;
             };
 
@@ -138,48 +159,70 @@ namespace cro
 
             //arbitrary uniforms are stored as properties
             PropertyList properties;
+            
             /*!
             \brief Sets a float value uniform
             \param name Name of the uniform
             \param value Value of the uniform
             */
             void setProperty(const std::string& name, float value);
+            
             /*!
             \brief Sets a 2 component vector value uniform
             \param name Name of the uniform
             \param value Value of the uniform
             */
             void setProperty(const std::string& name, glm::vec2 value);
+            
             /*!
             \brief Sets a 3 component vector uniform
             \param name String containing the name of the uniform
             \param value Value of the unform
             */
             void setProperty(const std::string& name, glm::vec3 value);
+            
             /*!
             \brief Sets a 4 component vector uniform
             \param name String containing the name of the uniform
             \param value Value of the unform
             */
             void setProperty(const std::string& name, glm::vec4 value);
+            
             /*!
             \brief Sets a Mat4x4 uniform.
             \param name String containing the name of the uniform
             \param value The 4x4 matrix to set
             */
             void setProperty(const std::string& name, glm::mat4 value);            
+            
             /*!
             \brief Sets a colour value uniform
             \param name String containing the name of the uniform
             \param value Colour value of the uniform
             */
             void setProperty(const std::string& name, Colour value);
+            
             /*!
             \brief Sets a texture sampler uniform
             \param name String containing the name of the uniform to set
             \param value A reference to the texture to bind to the sampler
             */
             void setProperty(const std::string& name, const Texture& value);
+            
+            /*!
+            \brief Sets a texture sampler uniform from a textureID
+            \param name String containing the name of the uniform to set
+            \param value TextureID containing the ID to set
+            */
+            void setProperty(const std::string& name, TextureID value);
+            
+            /*!
+            \brief Sets a texture sampler uniform from a textureID
+            \param name String containing the name of the uniform to set
+            \param value TextureID containing the ID to set
+            */
+            void setProperty(const std::string& name, CubemapID value);
+
 
             /*!
             \brief Overrides the material's depth test setting. 
@@ -188,9 +231,16 @@ namespace cro
             */
             bool enableDepthTest = true;
 
+            /*!
+            \brief Applies a new shader to this material by updating the
+            the uniform and vertex attribute maps
+            */
+            void setShader(const Shader&);
+
+
             /*
             Here be dragons! Don't modify these variables as they are configured
-            by the material resource class when the material is created.
+            by the above function. These values should be considered read-only
             */
 
             uint32 shader = 0;
@@ -203,7 +253,7 @@ namespace cro
             //for example skinning and projection map data which is
             //used internally, and not user-definable
             std::size_t optionalUniformCount = 0;
-            std::array<int32, 3> optionalUniforms{};
+            std::array<int32, 10> optionalUniforms{};
         };
     }
 }

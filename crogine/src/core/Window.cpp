@@ -48,48 +48,49 @@ namespace
 }
 
 Window::Window()
-	: m_window	    (nullptr),
-    m_threadContext (nullptr),
-	m_mainContext	(nullptr),
-    m_fullscreen    (false)
+    : m_window              (nullptr),
+    m_threadContext         (nullptr),
+    m_mainContext           (nullptr),
+    m_fullscreen            (false),
+    m_multisamplingEnabled  (false)
 {
 
 }
 
 Window::~Window()
 {
-	destroy();
+    destroy();
 }
 
 //public
 bool Window::create(uint32 width, uint32 height, const std::string& title, bool fullscreen, bool borderless)
 {
-	if (!Detail::SDLResource::valid()) return false;
-	
-	destroy();
+    if (!Detail::SDLResource::valid()) return false;
+    
+    destroy();
 
 #ifdef PLATFORM_MOBILE
     fullscreen = true;
     borderless = true;
 #endif //PLATFORM_MOBILE
 
-	int styleMask = SDL_WINDOW_OPENGL;
-	if (fullscreen) styleMask |= SDL_WINDOW_FULLSCREEN;
-	if (borderless) styleMask |= SDL_WINDOW_BORDERLESS;
-	//TODO set up proper masks for all window options
+    int styleMask = SDL_WINDOW_OPENGL;
+    if (fullscreen) styleMask |= SDL_WINDOW_FULLSCREEN;
+    if (borderless) styleMask |= SDL_WINDOW_BORDERLESS;
+    //TODO set up proper masks for all window options
 
-    /*SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);*/
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
     m_window = SDL_CreateWindow(title.c_str(),SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, styleMask);
 
-	if (!m_window)
-	{
-		Logger::log("failed creating Window");
-		return false;
-	}
-	else
-	{
+    if (!m_window)
+    {
+        Logger::log("failed creating Window");
+        return false;
+    }
+    else
+    {
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
         //for some reason this has to be done first on macOS
@@ -115,24 +116,24 @@ bool Window::create(uint32 width, uint32 height, const std::string& title, bool 
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 #endif
 
-		int maj, min;
-		SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &maj);
-		SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &min);
+        int maj, min;
+        SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &maj);
+        SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &min);
 
-		if (maj < 3 || min < 3)
-		{
-			Logger::log("Unable to create requested context version");
-			Logger::log("Returned version was: " + std::to_string(maj) + "." + std::to_string(min));
-		}
-		LOG("Returned version was: " + std::to_string(maj) + "." + std::to_string(min), Logger::Type::Info);
-	}
-	return true;
+        if (maj < 3 || min < 3)
+        {
+            Logger::log("Unable to create requested context version");
+            Logger::log("Returned version was: " + std::to_string(maj) + "." + std::to_string(min));
+        }
+        LOG("Returned version was: " + std::to_string(maj) + "." + std::to_string(min), Logger::Type::Info);
+    }
+    return true;
 }
 
 void Window::setVsyncEnabled(bool enabled)
 {
-	if (m_mainContext)
-	{
+    if (m_mainContext)
+    {
         if (SDL_GL_SetSwapInterval(enabled ? 1 : 0) != 0)
         {
             LogE << SDL_GetError() << std::endl;
@@ -143,6 +144,27 @@ void Window::setVsyncEnabled(bool enabled)
 bool Window::getVsyncEnabled() const
 {
     return SDL_GL_GetSwapInterval() != 0;
+}
+
+void Window::setMultisamplingEnabled(bool enabled)
+{
+    if (enabled != m_multisamplingEnabled)
+    {
+        if (enabled)
+        {
+            glCheck(glEnable(GL_MULTISAMPLE));
+        }
+        else
+        {
+            glCheck(glDisable(GL_MULTISAMPLE));
+        }
+        m_multisamplingEnabled = enabled;
+    }
+}
+
+bool Window::getMultisamplingEnabled() const
+{
+    return m_multisamplingEnabled;
 }
 
 void Window::clear()
@@ -341,12 +363,12 @@ bool Window::getMouseCaptured() const
 //private
 void Window::destroy()
 {
-	if (m_mainContext)
-	{
+    if (m_mainContext)
+    {
         m_loadingScreen.reset(); //delete this while we still have a valid context!
         SDL_GL_DeleteContext(m_mainContext);
-		m_mainContext = nullptr;
-	}
+        m_mainContext = nullptr;
+    }
 
     if(m_threadContext)
     {
@@ -354,9 +376,9 @@ void Window::destroy()
         m_threadContext = nullptr;
     }
 
-	if (m_window)
-	{
-		SDL_DestroyWindow(m_window);
-		m_window = nullptr;
-	}
+    if (m_window)
+    {
+        SDL_DestroyWindow(m_window);
+        m_window = nullptr;
+    }
 }

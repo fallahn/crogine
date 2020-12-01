@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 
 #include "../detail/GLCheck.hpp"
+#include "../detail/stb_image_write.h"
+#include "../detail/SDLImageRead.hpp"
 
 #include <algorithm>
 
@@ -122,13 +124,12 @@ void Texture::create(uint32 width, uint32 height, ImageFormat::Type format)
     width = std::min(width, getMaxTextureSize());
     height = std::min(height, getMaxTextureSize());
 
-    if (m_handle)
+    if (!m_handle)
     {
-        glCheck(glDeleteTextures(1, &m_handle));
+        GLuint handle;
+        glCheck(glGenTextures(1, &handle));
+        m_handle = handle;
     }
-    GLuint handle;
-    glCheck(glGenTextures(1, &handle));
-    m_handle = handle;
 
     m_size = { width, height };
     m_format = format;
@@ -159,18 +160,29 @@ bool Texture::loadFromFile(const std::string& path, bool createMipMaps)
     Image image;
     if (image.loadFromFile(path))
     {
-        auto size = image.getSize();
-        /*if (!((size.x & (size.x - 1)) == 0) && ((size.y & (size.y - 1)) == 0))
-        {
-            LOG("Image not POW2", Logger::Type::Error);
-            return false;
-        }*/
-        
-        create(size.x, size.y, image.getFormat());
-        return update(image.getPixelData(), createMipMaps);
+        return loadFromImage(image, createMipMaps);
     }
     
     return false;
+}
+
+bool Texture::loadFromImage(const Image& image, bool createMipMaps)
+{
+    if (image.getPixelData() == nullptr)
+    {
+        LogE << "Failed creating texture from image: Image is empty." << std::endl;
+        return false;
+    }
+
+    auto size = image.getSize();
+    /*if (!((size.x & (size.x - 1)) == 0) && ((size.y & (size.y - 1)) == 0))
+    {
+        LOG("Image not POW2", Logger::Type::Error);
+        return false;
+    }*/
+
+    create(size.x, size.y, image.getFormat());
+    return update(image.getPixelData(), createMipMaps);
 }
 
 bool Texture::update(const uint8* pixels, bool createMipMaps, URect area)
@@ -387,4 +399,40 @@ FloatRect Texture::getNormalisedSubrect(FloatRect rect) const
     }
 
     return { rect.left / m_size.x, rect.bottom / m_size.y, rect.width / m_size.x, rect.height / m_size.y };
+}
+
+bool Texture::saveToFile(const std::string& path)
+{
+    if (m_handle == 0)
+    {
+        LogE << "Failed to save " << path << "Texture not created." << std::endl;
+        return false;
+    }
+
+    auto filePath = path;
+    if (cro::FileSystem::getFileExtension(filePath) != ".png")
+    {
+        filePath += ".png";
+    }
+
+    std::vector<GLubyte> buffer(m_size.x * m_size.y * 4);
+
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
+    glCheck(glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data()));
+    glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+
+    //flip row order
+    stbi_flip_vertically_on_write(1);
+
+    RaiiRWops out;
+    out.file = SDL_RWFromFile(filePath.c_str(), "w");
+    auto result = stbi_write_png_to_func(image_write_func, out.file, m_size.x, m_size.y, 4, buffer.data(), m_size.x * 4);
+
+    if (result == 0)
+    {
+        LogE << "Failed writing " << path << std::endl;
+
+        return false;
+    }
+    return true;
 }

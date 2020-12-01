@@ -49,7 +49,7 @@ namespace
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
-	: cro::State    (stack, context),
+    : cro::State    (stack, context),
     m_scene         (context.appInstance.getMessageBus())
 {
     //launches a loading screen (registered in MyApp.cpp)
@@ -99,7 +99,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
 
     m_inputParser.handleEvent(evt);
     m_scene.forwardEvent(evt);
-	return true;
+    return true;
 }
 
 void MenuState::handleMessage(const cro::Message& msg)
@@ -111,12 +111,12 @@ bool MenuState::simulate(float dt)
 {
     m_inputParser.update();
     m_scene.simulate(dt);
-	return true;
+    return true;
 }
 
 void MenuState::render()
 {
-	//draw any renderable systems
+    //draw any renderable systems
     m_scene.render(cro::App::getWindow());
 }
 

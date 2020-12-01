@@ -1,0 +1,10 @@
+model preview
+{
+    mesh = "assets/models/preview.cmf"
+
+    material VertexLit
+    {
+        colour = "1,0,1,1"
+
+    }
+}

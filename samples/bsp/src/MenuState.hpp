@@ -46,15 +46,15 @@ Creates a state to render a menu.
 class MenuState final : public cro::State
 {
 public:
-	MenuState(cro::StateStack&, cro::State::Context);
-	~MenuState() = default;
+    MenuState(cro::StateStack&, cro::State::Context);
+    ~MenuState() = default;
 
-	cro::StateID getStateID() const override { return States::MainMenu; }
+    cro::StateID getStateID() const override { return States::MainMenu; }
 
-	bool handleEvent(const cro::Event&) override;
+    bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
-	bool simulate(float) override;
-	void render() override;
+    bool simulate(float) override;
+    void render() override;
 
 private:
 

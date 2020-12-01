@@ -42,6 +42,7 @@ namespace cro
                 #if defined(VERTEX_COLOUR)
                 ATTRIBUTE vec4 a_colour;
                 #endif
+                ATTRIBUTE vec3 a_normal;
 
                 #if defined(TEXTURED)
                 ATTRIBUTE MED vec2 a_texCoord0;
@@ -63,7 +64,8 @@ namespace cro
                 #endif
 
                 uniform mat4 u_worldMatrix;
-                uniform mat4 u_worldViewMatrix;               
+                uniform mat4 u_worldViewMatrix;
+                uniform mat3 u_normalMatrix;
                 uniform mat4 u_projectionMatrix;
 
                 #if defined(RX_SHADOWS)
@@ -74,12 +76,19 @@ namespace cro
                 uniform MED vec4 u_subrect;
                 #endif
                 
+                #if defined (RIMMING)
+                VARYING_OUT vec3 v_worldPosition;
+                VARYING_OUT vec3 v_normalVector;
+                #endif
+
                 #if defined (VERTEX_COLOUR)
                 VARYING_OUT LOW vec4 v_colour;
                 #endif
+
                 #if defined (TEXTURED)
                 VARYING_OUT MED vec2 v_texCoord0;
                 #endif
+
                 #if defined (LIGHTMAPPED)
                 VARYING_OUT MED vec2 v_texCoord1;
                 #endif
@@ -104,6 +113,9 @@ namespace cro
                     }
                 #endif
 
+                #if defined (RIMMING)
+                vec3 normal = a_normal;
+                #endif
 
                 #if defined(SKINNED)
                 	mat4 skinMatrix = u_boneMatrices[int(a_boneIndices.x)] * a_boneWeights.x;
@@ -111,12 +123,20 @@ namespace cro
                 	skinMatrix += u_boneMatrices[int(a_boneIndices.z)] * a_boneWeights.z;
                 	skinMatrix += u_boneMatrices[int(a_boneIndices.w)] * a_boneWeights.w;
                 	position = skinMatrix * position;
+                #if defined (RIMMING)
+                    normal = (skinMatrix * vec4(normal, 0.0)).xyz;
+                #endif
                 #endif
 
                     gl_Position = wvp * position;
 
                 #if defined (RX_SHADOWS)
                     v_lightWorldPosition = u_lightViewProjectionMatrix * u_worldMatrix * position;
+                #endif
+
+                #if defined (RIMMING)
+                    v_normalVector = u_normalMatrix * normal;
+                    v_worldPosition = (u_worldMatrix * a_position).xyz;
                 #endif
 
                 #if defined (VERTEX_COLOUR)
@@ -158,6 +178,12 @@ namespace cro
                 uniform sampler2D u_shadowMap;
                 #endif
 
+                #if defined(RIMMING)
+                uniform LOW vec4 u_rimColour;
+                uniform LOW float u_rimFalloff;
+                uniform HIGH vec3 u_cameraWorldPosition;
+                #endif
+
                 #if defined (VERTEX_COLOUR)
                 VARYING_IN LOW vec4 v_colour;
                 #endif
@@ -166,7 +192,11 @@ namespace cro
                 #endif
                 #if defined (LIGHTMAPPED)
                 VARYING_IN MED vec2 v_texCoord1;
-                #endif                
+                #endif
+                #if defined(RIMMING)
+                VARYING_IN HIGH vec3 v_normalVector;
+                VARYING_IN HIGH vec3 v_worldPosition;
+                #endif
 
                 #if defined(PROJECTIONS)
                 VARYING_IN LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
@@ -258,7 +288,7 @@ namespace cro
                 #endif
                 #endif
                 #if defined (LIGHTMAPPED)
-                    FRAG_OUT *= TEXTURE(u_lightMap, v_texCoord1);
+                    FRAG_OUT.rgb *= TEXTURE(u_lightMap, v_texCoord1).rgb;
                 #endif
 
                 #if defined(COLOURED)
@@ -277,6 +307,21 @@ namespace cro
 
                 #if defined (RX_SHADOWS)
                     FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
+//if(v_lightWorldPosition.w > 0.0)
+//{
+//vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
+//if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
+//FRAG_OUT.rgb *= vec3(0.0,1.0,0.0);
+//}
+                #endif
+
+                #if defined (RIMMING)
+                    MED vec3 normal = normalize(v_normalVector);
+                    MED vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+
+                    LOW float rim = 1.0 - dot(normal, eyeDirection);
+                    rim = smoothstep(u_rimFalloff, 1.0, rim);
+                    FRAG_OUT.rgb += u_rimColour.rgb * rim ;//* 0.5;
                 #endif
 
                 })";

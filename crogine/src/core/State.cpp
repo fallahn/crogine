@@ -35,8 +35,8 @@ source distribution.
 using namespace cro;
 
 State::State(StateStack& stack, State::Context context)
-	: m_stack	(stack),
-	m_context	(context)
+    : m_stack   (stack),
+    m_context   (context)
 {
 
 }
@@ -44,25 +44,25 @@ State::State(StateStack& stack, State::Context context)
 //protected
 void State::requestStackPush(StateID id)
 {
-	m_stack.pushState(id);
+    m_stack.pushState(id);
 }
 
 void State::requestStackPop()
 {
-	m_stack.popState();
+    m_stack.popState();
 }
 
 void State::requestStackClear()
 {
-	m_stack.clearStates();
+    m_stack.clearStates();
 }
 
 State::Context State::getContext() const
 {
-	return m_context;
+    return m_context;
 }
 
 std::size_t State::getStateCount() const
 {
-	return m_stack.getStackSize();
+    return m_stack.getStackSize();
 }

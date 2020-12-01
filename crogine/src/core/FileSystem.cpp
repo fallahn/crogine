@@ -630,36 +630,99 @@ std::string FileSystem::saveFileDialogue(const std::string& defaultDir, const st
 std::string FileSystem::getResourcePath()
 {
 #ifdef __APPLE__
-	return resourcePath() + m_resourceDirectory;
+    return resourcePath() + m_resourceDirectory;
 #endif
-	return m_resourceDirectory;
+    return m_resourceDirectory;
 }
 
 void FileSystem::setResourceDirectory(const std::string& path)
 {
-	m_resourceDirectory = path;
+    m_resourceDirectory = path;
 
-	if (!path.empty())
-	{
-		//strip preceeding slashes
-		if(m_resourceDirectory[0] == '\\'
-			|| m_resourceDirectory[0] == '/')
-		{
-			m_resourceDirectory = m_resourceDirectory.substr(1);
-		}
+    if (!path.empty())
+    {
+        //strip preceeding slashes
+        if(m_resourceDirectory[0] == '\\'
+            || m_resourceDirectory[0] == '/')
+        {
+            m_resourceDirectory = m_resourceDirectory.substr(1);
+        }
 
-		//and add post slashes if missing
-		if (m_resourceDirectory.find('/') != std::string::npos
-			&& m_resourceDirectory.back() != '/')
-		{
-			m_resourceDirectory.push_back('/');
-		}
-		else if (m_resourceDirectory.find('\\') != std::string::npos
-			&& m_resourceDirectory.back() != '\\')
-		{
-			m_resourceDirectory.push_back('\\');
-		}
-	}
+        //and add post slashes if missing
+        if (m_resourceDirectory.find('/') != std::string::npos
+            && m_resourceDirectory.back() != '/')
+        {
+            m_resourceDirectory.push_back('/');
+        }
+        else if (m_resourceDirectory.find('\\') != std::string::npos
+            && m_resourceDirectory.back() != '\\')
+        {
+            m_resourceDirectory.push_back('\\');
+        }
+    }
+}
+
+bool FileSystem::showMessageBox(const std::string& title, const std::string& message, ButtonType buttonType, IconType iconType)
+{
+    std::string button;
+    switch (buttonType)
+    {
+    default:
+    case ButtonType::OK:
+        button = "ok";
+        break;
+    case ButtonType::OKCancel:
+        button = "okcancel";
+        break;
+    case ButtonType::YesNo:
+        button = "yesno";
+        break;
+    case ButtonType::YesNoCancel:
+        button = "yesnocancel";
+        break;
+    }
+
+    std::string icon;
+    switch (iconType)
+    {
+    default:
+    case IconType::Error:
+        icon = "error";
+        break;
+    case IconType::Info:
+        icon = "info";
+        break;
+    case IconType::Question:
+        icon = "question";
+        break;
+    case IconType::Warning:
+        icon = "warning";
+        break;
+    }
+
+    return tinyfd_messageBox(title.c_str(), message.c_str(), button.c_str(), icon.c_str(), 0) != 0;
+}
+
+void FileSystem::showNotification(const std::string& title, const std::string& message, IconType iconType)
+{
+    std::string icon;
+    switch (iconType)
+    {
+    default:
+    case IconType::Question:
+        [[fallthrough]];
+    case IconType::Info:
+        icon = "info";
+        break;
+    case IconType::Error:
+        icon = "error";
+        break;
+    case IconType::Warning:
+        icon = "warning";
+        break;
+    }
+
+    tinyfd_notifyPopup(title.c_str(), message.c_str(), icon.c_str());
 }
 
 //private

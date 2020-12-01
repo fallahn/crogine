@@ -192,9 +192,7 @@ void MainState::addSystems()
 #endif
     
     m_commandSystem = &m_menuScene.addSystem<cro::CommandSystem>(mb);
-    //m_menuScene.addSystem<cro::DebugInfo>(mb);
     m_menuScene.addSystem<SliderSystem>(mb);
-    //m_menuScene.addSystem<RotateSystem>(mb);
     m_menuScene.addSystem<cro::CallbackSystem>(mb);
     m_menuScene.addSystem<cro::SpriteSystem2D>(mb);
     m_menuScene.addSystem<cro::TextSystem>(mb);
@@ -295,10 +293,9 @@ void MainState::createScene()
 
 
     //set up lighting
-    m_backgroundScene.getSunlight().setDirection({ 0.1f, -0.6f, -0.02f });
-    //m_backgroundScene.getSunlight().setColour(cro::Colour(0.48f, 0.48f, 0.48f));
-    m_backgroundScene.getSunlight().setProjectionMatrix(glm::ortho(-3.f, 3.f, -3.f, 3.f, 0.1f, 20.f));
-    //m_backgroundScene.getSystem<cro::ShadowMapRenderer>().setProjectionOffset({ -5.7f, 4.5f, -2.f });
+    m_backgroundScene.getSunlight().getComponent<cro::Transform>().setRotation(glm::vec3(1.f, 0.3f, 0.f));
+    //m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour(0.48f, 0.48f, 0.48f));
+    m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-3.f, 3.f, -3.f, 3.f, 0.1f, 20.f));
 
 
     //2D and 3D cameras

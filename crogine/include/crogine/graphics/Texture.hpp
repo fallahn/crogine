@@ -40,6 +40,8 @@ source distribution.
 
 namespace cro
 {
+    class Image;
+
     /*!
     \brief Generic texture wrapper for OpenGL RGB or RGBA textures.
     This class is intended for use with mesh texturing, rather than any
@@ -52,7 +54,7 @@ namespace cro
         \brief Constructor.
         By default Textures are invalid until create() has been called on
         them, or they have had a successful call to loadFromFile() or
-        loadFromMemory()
+        loadFromImage()
         */
         Texture();
         ~Texture();
@@ -71,11 +73,21 @@ namespace cro
         void create(uint32 width, uint32 height, ImageFormat::Type format = ImageFormat::RGBA);
 
         /*!
-        \brief Attempts to the the file in the given file path.
+        \brief Attempts to load the file in the given file path.
         \param path Path to file to load. The image file should have pow2 dimensions on mobile platforms
+        \param createMipMaps Set true to automatically create mipmap levels for this texture
         \returns true on success, else false
         */
         bool loadFromFile(const std::string& path, bool createMipMaps = false);
+
+        /*!
+        \brief Attempts to create the texture from a given Image.
+        \param image A reference to a loaded image from which to create a texture
+        \param createMipMaps Set true to automatically create mipmap levels for this texture
+        \returns true on success, else false
+        \see Image
+        */
+        bool loadFromImage(const Image& image, bool createMipmaps = false);
 
         /*!
         \brief Updates the pixel data for the texture.
@@ -146,6 +158,15 @@ namespace cro
         empty if there is no texture currently loaded.
         */
         FloatRect getNormalisedSubrect(FloatRect rect) const;
+
+        /*
+        \brief Saves the texture to a png file if it is a valid texture.
+        If the texture contains no data, or create() had not been called
+        then this function does nothing.
+        \param path A string containg a path to same the texture to.
+        \returns true if successful else returns false
+        */
+        bool saveToFile(const std::string& path);
 
     private:
         glm::uvec2 m_size;

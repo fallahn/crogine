@@ -51,7 +51,6 @@ namespace
 
 
     std::vector<glm::uvec2> resolutions;
-    //int currentAALevel = 0;
     int currentResolution = 0;
     std::array<char, 1024> resolutionNames{};
     
@@ -283,12 +282,20 @@ void Console::draw()
                     ui::Checkbox("Full Screen", &fullScreen);
 
                     bool vsync = App::getWindow().getVsyncEnabled();
-                    bool lastSync = vsync;
-                    ImGui::Checkbox("Vsync", &vsync);
-                    if (lastSync != vsync)
+                    if (ImGui::Checkbox("Vsync", &vsync))
                     {
                         App::getWindow().setVsyncEnabled(vsync);
                     }
+
+                    bool aa = App::getWindow().getMultisamplingEnabled();
+                    if (ImGui::Checkbox("Multisampling", &aa))
+                    {
+                        App::getWindow().setMultisamplingEnabled(aa);
+                    }
+                    ImGui::SameLine();
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+                    ImGui::Text("Note not all platforms support this.");
+                    ImGui::PopStyleColor();
 
                     if (ui::Button("Apply", { 50.f, 20.f }))
                     {

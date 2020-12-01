@@ -57,9 +57,9 @@ namespace cro
         ~RenderTexture();
 
         RenderTexture(const RenderTexture&) = delete;
-        RenderTexture(RenderTexture&&);
+        RenderTexture(RenderTexture&&) noexcept;
         const RenderTexture& operator = (const RenderTexture&) = delete;
-        RenderTexture& operator = (RenderTexture&&);
+        RenderTexture& operator = (RenderTexture&&) noexcept;
 
         /*!
         \brief Creates (or recreates) the render texture

@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_POST_PROCESS_HPP_
-#define CRO_POST_PROCESS_HPP_
+#pragma once
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>
@@ -164,5 +163,3 @@ namespace cro
         void createVBO();
     };
 }
-
-#endif //CRO_POST_PROCESS_HPP_

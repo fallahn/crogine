@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/ecs/components/Skeleton.hpp>
 #include <crogine/ecs/Scene.hpp>
 
+#include <crogine/graphics/Spatial.hpp>
 #include <crogine/core/Clock.hpp>
 
 #include "../../detail/GLCheck.hpp"
@@ -41,6 +42,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
+#include <crogine/detail/glm/gtc/matrix_access.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
 using namespace cro;
@@ -52,10 +54,9 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
     requireComponent<cro::Transform>();
     requireComponent<cro::ShadowCaster>();
 
-    m_projectionOffset = { 0.f, 0.5f, -0.5f };
-
 #ifdef PLATFORM_DESKTOP
-    m_target.create(1024, 1024);
+    //TODO make this variable
+    m_target.create(2048, 2048);
 #else
     m_target.create(512, 512);
 #endif
@@ -66,52 +67,89 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
 //public
 void ShadowMapRenderer::process(float)
 {
-    m_visibleEntities.clear();
-    
+    getScene()->getSunlight().getComponent<Sunlight>().m_textureID = m_target.getTexture().getGLHandle();
+}
+
+void ShadowMapRenderer::updateDrawList(Entity)
+{
+    auto& sunlight = getScene()->getSunlight().getComponent<Sunlight>();
+    const auto& sunTx = getScene()->getSunlight().getComponent<Transform>();
+    sunlight.m_viewMatrix = glm::inverse(sunTx.getWorldTransform());
+    sunlight.m_viewProjectionMatrix = sunlight.m_projectionMatrix * sunlight.m_viewMatrix;
+
+    sunlight.m_aabb = Spatial::updateFrustum(sunlight.m_frustum, sunlight.m_viewProjectionMatrix);
+
+    glm::vec3 forwardVec = glm::column(sunlight.m_viewMatrix, 2);
+    m_visibleEntities.clear(); 
+
     auto& entities = getEntities();
     for (auto& entity : entities)
     {
-        //basic culling - this relies on the visibility test of ModelRenderer
-        //TODO these lists have changed to per-camera so this probably needs updating
-        //to use the shadow projection frustum
-        if (entity.getComponent<cro::Model>().isVisible())
+        if (!entity.getComponent<ShadowCaster>().active)
         {
-            m_visibleEntities.push_back(entity);
+            continue;
+        }
+
+        auto& model = entity.getComponent<Model>();
+        if (model.isHidden())
+        {
+            continue;
+        }
+
+        auto sphere = model.m_meshData.boundingSphere;
+        const auto& tx = entity.getComponent<Transform>();
+
+        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
+        auto scale = tx.getScale();
+        sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
+
+
+        model.m_visible = true;
+        std::size_t i = 0;
+        while (model.m_visible && i < sunlight.m_frustum.size())
+        {
+            model.m_visible = (Spatial::intersects(sunlight.m_frustum[i++], sphere) != Planar::Back);
+        }
+
+        if (model.m_visible)
+        {
+            float depth = glm::dot(sunTx.getWorldPosition() - tx.getWorldPosition(), forwardVec);
+            m_visibleEntities.push_back(std::make_pair(entity, depth));
         }
     }
 
-    getScene()->getSunlight().m_textureID = m_target.getTexture().getGLHandle();
+    //sort back to front
+    std::sort(m_visibleEntities.begin(), m_visibleEntities.end(),
+        [](const std::pair<Entity, float>& a, const std::pair<Entity, float>& b)
+        {
+            return a > b;
+        });
 }
 
 void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
 {
+    const auto& sunlight = getScene()->getSunlight().getComponent<Sunlight>();
+
     //enable face culling and render rear faces
     glCheck(glEnable(GL_CULL_FACE));
     glCheck(glCullFace(GL_FRONT));
     glCheck(glEnable(GL_DEPTH_TEST));
-    
-    const auto& camTx = camera.getComponent<Transform>();
-
-    auto dir = glm::translate(getScene()->getSunlight().getRotation(), (camTx.getWorldPosition() - m_projectionOffset));
-    auto viewMat = glm::inverse(dir);
-    //auto viewMat = glm::inverse(camTx.getWorldTransform());
-
-    auto projMat = getScene()->getSunlight().getProjectionMatrix();
-    getScene()->getSunlight().setViewProjectionMatrix(projMat * viewMat);
 
     m_target.clear(cro::Colour::White());
 
     
-    for (const auto& e : m_visibleEntities)
+    for (const auto& [e,f] : m_visibleEntities)
     {
         //calc entity transform
         const auto& tx = e.getComponent<Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
-        glm::mat4 worldView = viewMat * worldMat;
+        glm::mat4 worldView = sunlight.m_viewMatrix * worldMat;
 
         //foreach submesh / material:
         const auto& model = e.getComponent<Model>();
+#ifndef PLATFORM_DESKTOP
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
+#endif
 
         for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
         {
@@ -132,8 +170,13 @@ void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
                 }
             }
             glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-            glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(projMat)));
+            glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(sunlight.m_projectionMatrix)));
 
+#ifdef PLATFORM_DESKTOP
+            const auto& indexData = model.m_meshData.indexData[i];
+            glCheck(glBindVertexArray(indexData.vao));
+            glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+#else
             //bind attribs
             const auto& attribs = mat.attribs;
             for (auto j = 0u; j < mat.attribCount; ++j)
@@ -158,20 +201,23 @@ void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
             {
                 glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
             }
+#endif //PLATFORM
         }
-        glCheck(glUseProgram(0));
+
     }
 
+#ifdef PLATFORM_DESKTOP
+    glCheck(glBindVertexArray(0));
+#else
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+#endif //PLATFORM
+
+     glCheck(glUseProgram(0));
+
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glCullFace(GL_BACK));
     m_target.display();
-}
-
-void ShadowMapRenderer::setProjectionOffset(glm::vec3 offset)
-{
-    m_projectionOffset = offset;
 }
 
 const Texture& ShadowMapRenderer::getDepthMapTexture() const

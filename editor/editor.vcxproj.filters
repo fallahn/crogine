@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\model viewer">
+      <UniqueIdentifier>{66f9e606-9606-46ad-8cce-1f22b4a80b8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\model viewer">
+      <UniqueIdentifier>{c3177e8a-1656-4946-9bca-16bda3273cff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\world viewer">
+      <UniqueIdentifier>{8c87316d-b04c-4eb7-a778-0533cdfe6bc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\world viewer">
+      <UniqueIdentifier>{54486e91-4e69-4544-9072-ea0e9783de78}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MyApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImportIQM.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LoadingScreen.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NormalVisMeshBuilder.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OriginIconBuilder.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ModelState.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WorldState.cpp">
+      <Filter>Source Files\world viewer</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ErrorCheck.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Messages.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MyApp.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\StateIDs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LoadingScreen.hpp">
+      <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NormalVisMeshBuilder.hpp">
+      <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\OriginIconBuilder.hpp">
+      <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ResourceIDs.hpp">
+      <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ModelState.hpp">
+      <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WorldState.hpp">
+      <Filter>Header Files\world viewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UIConsts.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MaterialDefinition.hpp">
+      <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\LightmapShader.inl">
+      <Filter>Header Files\model viewer</Filter>
+    </None>
+  </ItemGroup>
+</Project>

@@ -31,6 +31,7 @@ source distribution.
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/util/String.hpp>
+#include <crogine/graphics/Colour.hpp>
 
 #include <SDL_rwops.h>
 
@@ -48,41 +49,54 @@ namespace
 //--------------------//
 ConfigProperty::ConfigProperty(const std::string& name, const std::string& value)
     : ConfigItem(name),
-    m_value(value) {}
+    m_value(value), m_isStringValue(!value.empty()) {}
 
 void ConfigProperty::setValue(const std::string& value)
 {
     m_value = value;
+    m_isStringValue = true;
 }
 
 void ConfigProperty::setValue(int32 value)
 {
     m_value = std::to_string(value);
+    m_isStringValue = false;
 }
 
 void ConfigProperty::setValue(float value)
 {
     m_value = std::to_string(value);
+    m_isStringValue = false;
 }
 
 void ConfigProperty::setValue(bool value)
 {
     m_value = (value) ? "true" : "false";
+    m_isStringValue = false;
 }
 
 void ConfigProperty::setValue(const glm::vec2& v)
 {
     m_value = std::to_string(v.x) + "," + std::to_string(v.y);
+    m_isStringValue = false;
 }
 
 void ConfigProperty::setValue(const glm::vec3& v)
 {
     m_value = std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z);
+    m_isStringValue = false;
 }
 
 void ConfigProperty::setValue(const glm::vec4& v)
 {
     m_value = std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z) + "," + std::to_string(v.w);
+    m_isStringValue = false;
+}
+
+void ConfigProperty::setValue(const cro::Colour& v)
+{
+    setValue(v.getVec4());
+    m_isStringValue = false;
 }
 
 std::vector<float> ConfigProperty::valueAsArray() const
@@ -107,7 +121,7 @@ std::vector<float> ConfigProperty::valueAsArray() const
 //-------------------------------------
 
 ConfigObject::ConfigObject(const std::string& name, const std::string& id)
-    : ConfigItem	(name), m_id(id){}
+    : ConfigItem    (name), m_id(id){}
 
 bool ConfigObject::loadFromFile(const std::string& filePath)
 {
@@ -191,7 +205,7 @@ bool ConfigObject::loadFromFile(const std::string& filePath)
                     objStack.pop_back();
                 }
                 else if (isProperty(data))
-                {			
+                {           
                     //insert name / value property into current object
                     auto prop = getPropertyName(data);
                     //TODO need to reinstate this and create a property
@@ -245,7 +259,7 @@ bool ConfigObject::loadFromFile(const std::string& filePath)
                         continue;
                     }
                 }
-            }		
+            }       
         }
 
         if (!objStack.empty())
@@ -528,7 +542,7 @@ std::size_t ConfigObject::write(SDL_RWops* file, uint16 depth)
     {
         stream << indent << indentBlock << p.getName() << " = ";
         auto str = p.getValue<std::string>();
-        if (str.find(' ') == std::string::npos)
+        if (/*str.find(' ') == std::string::npos*/!p.m_isStringValue)
         {
             stream << str;
         }
@@ -559,8 +573,8 @@ std::size_t ConfigObject::write(SDL_RWops* file, uint16 depth)
 
 //--------------------//
 ConfigItem::ConfigItem(const std::string& name)
-    : m_parent	(nullptr),
-    m_name		(name){}
+    : m_parent  (nullptr),
+    m_name      (name){}
 
 ConfigItem* ConfigItem::getParent() const
 {

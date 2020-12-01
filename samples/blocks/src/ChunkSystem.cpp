@@ -105,12 +105,12 @@ namespace
 
             float directionalAmbience(vec3 normal)
             {
-	            vec3 v = normal * normal;
-	            if (normal.y < 0)
+                vec3 v = normal * normal;
+                if (normal.y < 0)
                 {
-		            return dot(v, vec3(0.67082, 0.447213, 0.83666));
+                    return dot(v, vec3(0.67082, 0.447213, 0.83666));
                 }
-	            return dot(v, vec3(0.67082, 1.0, 0.83666));
+                return dot(v, vec3(0.67082, 1.0, 0.83666));
             }
 
             vec3 brightnessContrast(vec3 colour)
