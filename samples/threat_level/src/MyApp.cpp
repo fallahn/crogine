@@ -42,14 +42,14 @@ source distribution.
 #include <crogine/audio/AudioMixer.hpp>
 
 MyApp::MyApp()
-	: m_stateStack({*this, getWindow()})
+    : m_stateStack({*this, getWindow()})
 {
-	//register states
+    //register states
 #ifdef PLATFORM_MOBILE
     //m_stateStack.registerState<MenuState>(States::ID::MainMenu);
     m_stateStack.registerState<MainState>(States::ID::MainMenu, m_sharedResources);
 #else
-	m_stateStack.registerState<MainState>(States::ID::MainMenu, m_sharedResources);
+    m_stateStack.registerState<MainState>(States::ID::MainMenu, m_sharedResources);
 #endif //PLATFORM_MOBILE
 
     m_stateStack.registerState<GameState>(States::ID::GamePlaying);
@@ -62,20 +62,20 @@ MyApp::MyApp()
 void MyApp::handleEvent(const cro::Event& evt)
 {
     if (evt.type == SDL_KEYUP)
-	{
-		switch (evt.key.keysym.sym)
-		{
-		default: break;
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
 #ifdef CRO_DEBUG_
-		case SDLK_ESCAPE:
+        case SDLK_ESCAPE:
 #endif
-		case SDLK_AC_BACK:
+        case SDLK_AC_BACK:
             App::quit();
-			break;
-		}
-	}
-	
-	m_stateStack.handleEvent(evt);
+            break;
+        }
+    }
+    
+    m_stateStack.handleEvent(evt);
 }
 
 void MyApp::handleMessage(const cro::Message& msg)
@@ -106,12 +106,12 @@ void MyApp::handleMessage(const cro::Message& msg)
 
 void MyApp::simulate(float dt)
 {
-	m_stateStack.simulate(dt);
+    m_stateStack.simulate(dt);
 }
 
 void MyApp::render()
 {
-	m_stateStack.render();
+    m_stateStack.render();
 }
 
 bool MyApp::initialise()

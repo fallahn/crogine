@@ -32,14 +32,14 @@ source distribution.
 
 namespace States
 {
-	enum ID
-	{
-		MainMenu,
+    enum ID
+    {
+        MainMenu,
         PauseMenu,
         GamePlaying,
         RoundEnd,
         GameOver
-	};
+    };
 }
 
 

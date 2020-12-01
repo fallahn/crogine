@@ -31,9 +31,9 @@ source distribution.
 
 namespace States
 {
-	enum ID
-	{
-		WorldEditor,
-		ModelViewer
-	};
+    enum ID
+    {
+        WorldEditor,
+        ModelViewer
+    };
 }

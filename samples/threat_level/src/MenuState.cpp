@@ -71,7 +71,7 @@ namespace
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
-	: cro::State    (stack, context),
+    : cro::State    (stack, context),
     m_scene         (context.appInstance.getMessageBus()),
     m_commandSystem (nullptr)
 {
@@ -152,7 +152,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         }
         break;
     }
-	return true;
+    return true;
 }
 
 void MenuState::handleMessage(const cro::Message& msg)
@@ -195,12 +195,12 @@ bool MenuState::simulate(cro::Time dt)
     }
 
     m_scene.simulate(dt);
-	return true;
+    return true;
 }
 
 void MenuState::render()
 {
-	//draw any renderable systems
+    //draw any renderable systems
     m_scene.render();
 }
 

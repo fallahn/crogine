@@ -33,8 +33,8 @@ source distribution.
 
 int main(int argc, char** argsv)
 {
-	MyApp mapp;
-	mapp.run();
+    MyApp mapp;
+    mapp.run();
 
-	return 0;
+    return 0;
 }

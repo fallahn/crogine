@@ -35,17 +35,17 @@ source distribution.
 class MyApp final : public cro::App
 {
 public:
-	MyApp();
-	~MyApp() = default;
+    MyApp();
+    ~MyApp() = default;
 
 private:
-	
-	cro::StateStack m_stateStack;
+    
+    cro::StateStack m_stateStack;
 
-	void handleEvent(const cro::Event&) override;
+    void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
-	void simulate(float) override;
-	void render() override;
+    void simulate(float) override;
+    void render() override;
     bool initialise() override;
     void finalise() override;
 };

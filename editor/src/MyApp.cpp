@@ -35,9 +35,9 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 
 MyApp::MyApp()
-	: m_stateStack({*this, getWindow()})
+    : m_stateStack({*this, getWindow()})
 {
-	setApplicationStrings("Trederia", "Crogine Editor");
+    setApplicationStrings("Trederia", "Crogine Editor");
 
     m_stateStack.registerState<ModelState>(States::ID::ModelViewer);
     m_stateStack.registerState<WorldState>(States::ID::WorldEditor);
@@ -47,20 +47,20 @@ MyApp::MyApp()
 void MyApp::handleEvent(const cro::Event& evt)
 {
     if (evt.type == SDL_KEYUP)
-	{
-		switch (evt.key.keysym.sym)
-		{
-		default: break;
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
 #ifdef CRO_DEBUG_
-		case SDLK_ESCAPE:
-		case SDLK_AC_BACK:
+        case SDLK_ESCAPE:
+        case SDLK_AC_BACK:
             App::quit();
-			break;
+            break;
 #endif
-		}
-	}
-	
-	m_stateStack.handleEvent(evt);
+        }
+    }
+    
+    m_stateStack.handleEvent(evt);
 }
 
 void MyApp::handleMessage(const cro::Message& msg)
@@ -70,12 +70,12 @@ void MyApp::handleMessage(const cro::Message& msg)
 
 void MyApp::simulate(float dt)
 {
-	m_stateStack.simulate(dt);
+    m_stateStack.simulate(dt);
 }
 
 void MyApp::render()
 {
-	m_stateStack.render();
+    m_stateStack.render();
 }
 
 bool MyApp::initialise()
@@ -83,10 +83,10 @@ bool MyApp::initialise()
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Crogine Editor");
 
-	//m_stateStack.pushState(States::WorldEditor);
-	m_stateStack.pushState(States::ModelViewer);
+    //m_stateStack.pushState(States::WorldEditor);
+    m_stateStack.pushState(States::ModelViewer);
 
-	return true;
+    return true;
 }
 
 void MyApp::finalise()

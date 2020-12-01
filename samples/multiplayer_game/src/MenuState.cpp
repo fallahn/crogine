@@ -62,7 +62,7 @@ namespace
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
-	: cro::State    (stack, context),
+    : cro::State    (stack, context),
     m_sharedData    (sd),
     m_scene         (context.appInstance.getMessageBus()),
     m_hosting       (false)
@@ -157,7 +157,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     m_scene.getSystem<cro::UISystem>().handleEvent(evt);
 
     m_scene.forwardEvent(evt);
-	return true;
+    return true;
 }
 
 void MenuState::handleMessage(const cro::Message& msg)
@@ -178,12 +178,12 @@ bool MenuState::simulate(float dt)
     }
 
     m_scene.simulate(dt);
-	return true;
+    return true;
 }
 
 void MenuState::render()
 {
-	//draw any renderable systems
+    //draw any renderable systems
     m_scene.render(cro::App::getWindow());
 }
 

@@ -54,14 +54,14 @@ struct CMFHeader final
 class ModelState final : public cro::State, public cro::GuiClient
 {
 public:
-	ModelState(cro::StateStack&, cro::State::Context);
+    ModelState(cro::StateStack&, cro::State::Context);
 
-	cro::StateID getStateID() const override { return States::ModelViewer; }
+    cro::StateID getStateID() const override { return States::ModelViewer; }
 
-	bool handleEvent(const cro::Event&) override;
+    bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
-	bool simulate(float) override;
-	void render() override;
+    bool simulate(float) override;
+    void render() override;
 
 private:
 

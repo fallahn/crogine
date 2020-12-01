@@ -260,7 +260,7 @@ namespace
 }
 
 ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
-	: cro::State            (stack, context),
+    : cro::State            (stack, context),
     m_scene                 (context.appInstance.getMessageBus()),
     m_previewScene          (context.appInstance.getMessageBus()),
     m_fov                   (DefaultFOV),
@@ -320,7 +320,7 @@ bool ModelState::handleEvent(const cro::Event& evt)
 
     m_previewScene.forwardEvent(evt);
     m_scene.forwardEvent(evt);
-	return false;
+    return false;
 }
 
 void ModelState::handleMessage(const cro::Message& msg)
@@ -355,7 +355,7 @@ bool ModelState::simulate(float dt)
 
     m_previewScene.simulate(dt);
     m_scene.simulate(dt);
-	return false;
+    return false;
 }
 
 void ModelState::render()
