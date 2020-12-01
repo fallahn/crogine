@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef CRO_POST_VERTEX_HPP_
-#define CRO_POST_VERTEX_HPP_
+#pragma once
 
 #include <string>
 
@@ -53,5 +52,3 @@ namespace cro
         }
     )";
 }
-
-#endif //CRO_POST_VERTEX_HPP_

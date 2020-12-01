@@ -37,7 +37,7 @@ source distribution.
 using namespace cro;
 
 StateStack::StateStack(State::Context context)
-	: m_context (context),
+    : m_context (context),
     m_messageBus(context.appInstance.getMessageBus())
 {
 
@@ -46,10 +46,10 @@ StateStack::StateStack(State::Context context)
 //public
 void StateStack::handleEvent(const cro::Event& evt)
 {
-	for (auto i = m_stack.rbegin(); i != m_stack.rend(); ++i)
-	{
-		if (!(*i)->handleEvent(evt)) break;
-	}
+    for (auto i = m_stack.rbegin(); i != m_stack.rend(); ++i)
+    {
+        if (!(*i)->handleEvent(evt)) break;
+    }
 }
 
 void StateStack::handleMessage(const Message& msg)
@@ -71,30 +71,30 @@ void StateStack::handleMessage(const Message& msg)
 
 void StateStack::simulate(float dt)
 {
-	applyPendingChanges();
-	for (auto i = m_stack.rbegin(); i != m_stack.rend(); ++i)
-	{
-		if (!(*i)->simulate(dt)) break;
-	}
+    applyPendingChanges();
+    for (auto i = m_stack.rbegin(); i != m_stack.rend(); ++i)
+    {
+        if (!(*i)->simulate(dt)) break;
+    }
 }
 
 void StateStack::render()
 {
-	for (auto& s : m_stack) s->render();
+    for (auto& s : m_stack) s->render();
 }
 
 void StateStack::pushState(StateID id)
 {
-	if ((empty() || m_stack.back()->getStateID() != id)
+    if ((empty() || m_stack.back()->getStateID() != id)
         && !changeExists(Action::Push, id))
-	{
-		m_pendingChanges.emplace_back(Action::Push, id, false);
-	}
+    {
+        m_pendingChanges.emplace_back(Action::Push, id, false);
+    }
 }
 
 void StateStack::popState()
 {
-	m_pendingChanges.emplace_back(Action::Pop);
+    m_pendingChanges.emplace_back(Action::Pop);
 }
 
 void StateStack::clearStates()
@@ -105,12 +105,12 @@ void StateStack::clearStates()
 
 bool StateStack::empty() const
 {
-	return m_stack.empty();
+    return m_stack.empty();
 }
 
 std::size_t StateStack::getStackSize() const
 {
-	return m_stack.size();
+    return m_stack.size();
 }
 
 //private
@@ -125,59 +125,59 @@ bool StateStack::changeExists(Action action, int32 id)
 
 State::Ptr StateStack::createState(StateID id)
 {
-	CRO_ASSERT(m_factories.count(id) != 0, "State not registered with statestack");
-	return m_factories.find(id)->second();
+    CRO_ASSERT(m_factories.count(id) != 0, "State not registered with statestack");
+    return m_factories.find(id)->second();
 }
 
 void StateStack::applyPendingChanges()
 {
-	m_activeChanges.swap(m_pendingChanges);
-	for (const auto& change : m_activeChanges)
-	{
-		switch (change.action)
-		{
-		default: break;
-		case Action::Push:
+    m_activeChanges.swap(m_pendingChanges);
+    for (const auto& change : m_activeChanges)
+    {
+        switch (change.action)
         {
-			if (change.suspendPrevious && !m_stack.empty())
-			{
-				m_suspended.push_back(std::make_pair(change.id, std::move(m_stack.back())));  
-				m_stack.pop_back();
-			}
+        default: break;
+        case Action::Push:
+        {
+            if (change.suspendPrevious && !m_stack.empty())
+            {
+                m_suspended.push_back(std::make_pair(change.id, std::move(m_stack.back())));  
+                m_stack.pop_back();
+            }
             auto* msg = m_messageBus.post<Message::StateEvent>(Message::StateMessage);
             msg->action = Message::StateEvent::Pushed;
             msg->id = change.id;
 
-			m_stack.emplace_back(createState(change.id));
+            m_stack.emplace_back(createState(change.id));
         }
-			break;
-		case Action::Pop:
-		{
-			auto id = m_stack.back()->getStateID();
+            break;
+        case Action::Pop:
+        {
+            auto id = m_stack.back()->getStateID();
 
             auto* msg = m_messageBus.post<Message::StateEvent>(Message::StateMessage);
             msg->action = Message::StateEvent::Popped;
             msg->id = id;
 
-			m_stack.pop_back();
+            m_stack.pop_back();
 
-			if (!m_suspended.empty() && m_suspended.back().first == id)
-			{
-				//restore suspended state
-				m_stack.push_back(std::move(m_suspended.back().second));
-				m_suspended.pop_back();
-			}
-		}
-			break;
-		case Action::Clear:
-			m_stack.clear();
-			m_suspended.clear();
+            if (!m_suspended.empty() && m_suspended.back().first == id)
+            {
+                //restore suspended state
+                m_stack.push_back(std::move(m_suspended.back().second));
+                m_suspended.pop_back();
+            }
+        }
+            break;
+        case Action::Clear:
+            m_stack.clear();
+            m_suspended.clear();
         {
             auto* msg = m_messageBus.post<Message::StateEvent>(Message::StateMessage);
             msg->action = Message::StateEvent::Cleared;
         }
-			break;
-		}
-	}
-	m_activeChanges.clear();
+            break;
+        }
+    }
+    m_activeChanges.clear();
 }

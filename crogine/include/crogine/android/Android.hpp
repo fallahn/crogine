@@ -36,13 +36,13 @@ source distribution.
 #include <sstream>
 namespace std
 {
-	template <typename T>
-	std::string to_string(T value)
-	{
-		std::ostringstream os;
-		os << value;
-		return os.str();
-	}
+    template <typename T>
+    std::string to_string(T value)
+    {
+        std::ostringstream os;
+        os << value;
+        return os.str();
+    }
 
     //merely for base compatibility - does not contain the size nor base params...
     static inline int stoi(const std::string& str)

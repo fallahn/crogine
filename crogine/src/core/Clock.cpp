@@ -39,12 +39,12 @@ Time::Time() : m_value(0) {}
 //public
 float Time::asSeconds() const
 {
-	return static_cast<float>(m_value) / 1000.f;
+    return static_cast<float>(m_value) / 1000.f;
 }
 
 cro::int32 Time::asMilliseconds() const
 {
-	return m_value;
+    return m_value;
 }
 
 //---clock class---//
@@ -57,148 +57,148 @@ Clock::Clock()
 //public
 Time Clock::elapsed() const
 {
-	return milliseconds(SDL_GetTicks()) - m_startTime;
+    return milliseconds(SDL_GetTicks()) - m_startTime;
 }
 
 Time Clock::restart()
 {
-	Time curTime = milliseconds(SDL_GetTicks());
-	Time retVal = curTime - m_startTime;
-	m_startTime = curTime;
-	return retVal;
+    Time curTime = milliseconds(SDL_GetTicks());
+    Time retVal = curTime - m_startTime;
+    m_startTime = curTime;
+    return retVal;
 }
 
 //---operator overloads---//
 CRO_EXPORT_API Time cro::seconds(float seconds)
 {
-	Time t;
-	t.m_value = static_cast<int32>(seconds * 1000.f);
-	return t;
+    Time t;
+    t.m_value = static_cast<int32>(seconds * 1000.f);
+    return t;
 }
 
 CRO_EXPORT_API Time cro::milliseconds(int32 millis)
 {
-	Time t;
-	t.m_value = millis;
-	return t;
+    Time t;
+    t.m_value = millis;
+    return t;
 }
 
 bool cro::operator == (Time l, Time r)
 {
-	return l.asMilliseconds() == r.asMilliseconds();
+    return l.asMilliseconds() == r.asMilliseconds();
 }
 
 bool cro::operator != (Time l, Time r)
 {
-	return l.asMilliseconds() != r.asMilliseconds();
+    return l.asMilliseconds() != r.asMilliseconds();
 }
 
 bool cro::operator > (Time l, Time r)
 {
-	return l.asMilliseconds() > r.asMilliseconds();
+    return l.asMilliseconds() > r.asMilliseconds();
 }
 
 bool cro::operator < (Time l, Time r)
 {
-	return l.asMilliseconds() < r.asMilliseconds();
+    return l.asMilliseconds() < r.asMilliseconds();
 }
 
 bool cro::operator >= (Time l, Time r)
 {
-	return l.asMilliseconds() >= r.asMilliseconds();
+    return l.asMilliseconds() >= r.asMilliseconds();
 }
 
 bool cro::operator <= (Time l, Time r)
 {
-	return l.asMilliseconds() <= r.asMilliseconds();
+    return l.asMilliseconds() <= r.asMilliseconds();
 }
 
 Time cro::operator - (Time r)
 {
-	return milliseconds(-r.asMilliseconds());
+    return milliseconds(-r.asMilliseconds());
 }
 
 Time cro::operator + (Time l, Time r)
 {
-	return milliseconds(l.asMilliseconds() + r.asMilliseconds());
+    return milliseconds(l.asMilliseconds() + r.asMilliseconds());
 }
 
 Time& cro::operator += (Time& l, Time r)
 {
-	return l = l + r;
+    return l = l + r;
 }
 
 Time cro::operator - (Time l, Time r)
 {
-	return milliseconds(l.asMilliseconds() - r.asMilliseconds());
+    return milliseconds(l.asMilliseconds() - r.asMilliseconds());
 }
 
 Time& cro::operator -= (Time& l, Time r)
 {
-	return l = l - r;
+    return l = l - r;
 }
 
 Time cro::operator * (Time l, float r)
 {
-	return seconds(l.asSeconds() * r);
+    return seconds(l.asSeconds() * r);
 }
 
 Time cro::operator * (Time l, int32 r)
 {
-	return milliseconds(l.asMilliseconds() * r);
+    return milliseconds(l.asMilliseconds() * r);
 }
 
 Time cro::operator * (float l, Time r)
 {
-	return r * l;
+    return r * l;
 }
 
 Time cro::operator * (int32 l, Time r)
 {
-	return r * l;
+    return r * l;
 }
 
 Time& cro::operator *= (Time& l, float r)
 {
-	return l = l * r;
+    return l = l * r;
 }
 
 Time& cro::operator *= (Time& l, int32 r)
 {
-	return l = l * r;
+    return l = l * r;
 }
 
 Time cro::operator / (Time l, float r)
 {
-	return seconds(l.asSeconds() / r);
+    return seconds(l.asSeconds() / r);
 }
 
 Time cro::operator / (Time l, int32 r)
 {
-	return milliseconds(l.asMilliseconds() / r);
+    return milliseconds(l.asMilliseconds() / r);
 }
 
 Time& cro::operator /= (Time& l, float r)
 {
-	return l = l / r;
+    return l = l / r;
 }
 
 Time& cro::operator /= (Time& l, int32 r)
 {
-	return l = l / r;
+    return l = l / r;
 }
 
 Time cro::operator / (Time l, Time r)
 {
-	return milliseconds(l.asMilliseconds() / r.asMilliseconds());
+    return milliseconds(l.asMilliseconds() / r.asMilliseconds());
 }
 
 Time cro::operator % (Time l, Time r)
 {
-	return milliseconds(l.asMilliseconds() % r.asMilliseconds());
+    return milliseconds(l.asMilliseconds() % r.asMilliseconds());
 }
 
 Time& cro::operator %= (Time& l, Time r)
 {
-	return l = l % r;
+    return l = l % r;
 }

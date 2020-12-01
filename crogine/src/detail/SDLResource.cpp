@@ -34,10 +34,10 @@ using namespace cro::Detail;
 
 SDLResource::SDLResource()
 {
-	CRO_ASSERT(App::m_instance, "A single instance of cro::App must exist!");
+    CRO_ASSERT(App::m_instance, "A single instance of cro::App must exist!");
 }
 
 bool SDLResource::valid()
 {
-	return App::m_instance != nullptr;
+    return App::m_instance != nullptr;
 }

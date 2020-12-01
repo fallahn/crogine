@@ -35,145 +35,145 @@ source distribution.
 
 namespace cro
 {
-	/*!
-	\brief Represents a duration of time
-	*/
-	class CRO_EXPORT_API Time final
-	{
-	public:
-		Time();
+    /*!
+    \brief Represents a duration of time
+    */
+    class CRO_EXPORT_API Time final
+    {
+    public:
+        Time();
 
-		float asSeconds() const;
-		int32 asMilliseconds() const;
+        float asSeconds() const;
+        int32 asMilliseconds() const;
 
-	private:
-		friend CRO_EXPORT_API Time seconds(float);
-		friend CRO_EXPORT_API Time milliseconds(int32);
+    private:
+        friend CRO_EXPORT_API Time seconds(float);
+        friend CRO_EXPORT_API Time milliseconds(int32);
 
-		int32 m_value;
-	};
+        int32 m_value;
+    };
 
-	/*!
-	\brief Constructs a time object from a duration of seconds
-	*/
-	CRO_EXPORT_API Time seconds(float);
-	/*!
-	\brief Constructs a Time object from a duration of milliseconds
-	*/
-	CRO_EXPORT_API Time milliseconds(int32);
+    /*!
+    \brief Constructs a time object from a duration of seconds
+    */
+    CRO_EXPORT_API Time seconds(float);
+    /*!
+    \brief Constructs a Time object from a duration of milliseconds
+    */
+    CRO_EXPORT_API Time milliseconds(int32);
 
-	/*!
-	\brief Overload of == operator for two Time objects
-	*/
-	CRO_EXPORT_API bool operator == (Time, Time);
-	/*!
-	brief Overload of != operator for two Time objects
-	*/
-	CRO_EXPORT_API bool operator != (Time, Time);
-	/*!
-	\brief Overload of > operator for two Time objects
-	*/
-	CRO_EXPORT_API bool operator > (Time, Time);
-	/*!
-	\brief Overload of < operator for two Time objects
-	*/
-	CRO_EXPORT_API bool operator < (Time, Time);
-	/*!
-	\brief Overload of >= operator for two Time objects
-	*/
-	CRO_EXPORT_API bool operator >= (Time, Time);
-	/*!
-	\brief Overload of <= operator for two Time object
-	*/
-	CRO_EXPORT_API bool operator <= (Time, Time);
-	/*!
-	\brief Overload of - operator for subtracting one Time from another
-	*/
-	CRO_EXPORT_API Time operator - (Time);
-	/*!
-	\brief Overload of + operator for two Time objects
-	*/
-	CRO_EXPORT_API Time operator + (Time, Time);
-	/*!
-	\brief Overload of += to add one Time to another
-	*/
-	CRO_EXPORT_API Time& operator += (Time&, Time);
-	/*!
-	\brief Overload of - for two Time objects
-	*/
-	CRO_EXPORT_API Time operator - (Time, Time);
-	/*!
-	\brief Overload of -= operator for two Time objects
-	*/
-	CRO_EXPORT_API Time& operator -= (Time&, Time);
-	/*!
-	\brief Overload of * operator for multiplying a Time object by 
-	a floating point value in seconds
-	*/
-	CRO_EXPORT_API Time operator * (Time, float);
-	/*!
-	\brief Overload of * operator for multiplying a Time object by 
-	a number of milliseconds
-	*/
-	CRO_EXPORT_API Time operator * (Time, int32);
-	/*
-	\brief Overload of * operator to multiply a floating point
-	value in seconds by a Time object
-	*/
-	CRO_EXPORT_API Time operator * (float, Time);
-	/*!
-	\brief Overload of * operator to multiply a number of milliseconds
-	by a Time object
-	*/
-	CRO_EXPORT_API Time operator * (int32, Time);
-	/*!
-	\brief Overload of *= operator to scale a Time object by a number of seconds
-	*/
-	CRO_EXPORT_API Time& operator *= (Time&, float);
-	/*!
-	\brief Overload of *= operator to scale a Time object by a number of milliseconds
-	*/
-	CRO_EXPORT_API Time& operator *= (Time&, int32);
-	/*!
-	\brief Overload of / operator to scale a Time object by a number of seconds
-	*/
-	CRO_EXPORT_API Time operator / (Time, float);
-	/*!
-	\brief Overload of / operator to scale a Time object by a number of milliseconds
-	*/
-	CRO_EXPORT_API Time operator / (Time, int32);
-	/*!
-	\brief Overload of / operator to scale a Time object by a number of seconds
-	*/
-	CRO_EXPORT_API Time& operator /= (Time&, float);
-	/*!
-	\brief Overload of / operator to scale a Time object by a number of milliseconds
-	*/
-	CRO_EXPORT_API Time& operator /= (Time&, int32);
-	/*!
-	\brief OVerload of / operator to divide one Time object by another
-	*/
-	CRO_EXPORT_API Time operator / (Time, Time);
-	/*!
-	\brief Overload of % opertor to return remainder of one Time object divided by another
-	*/
-	CRO_EXPORT_API Time operator % (Time, Time);
-	/*!
-	\brief Overload of %= opertor to return remainder of one Time object divided by another
-	*/
-	CRO_EXPORT_API Time& operator %= (Time&, Time);
+    /*!
+    \brief Overload of == operator for two Time objects
+    */
+    CRO_EXPORT_API bool operator == (Time, Time);
+    /*!
+    brief Overload of != operator for two Time objects
+    */
+    CRO_EXPORT_API bool operator != (Time, Time);
+    /*!
+    \brief Overload of > operator for two Time objects
+    */
+    CRO_EXPORT_API bool operator > (Time, Time);
+    /*!
+    \brief Overload of < operator for two Time objects
+    */
+    CRO_EXPORT_API bool operator < (Time, Time);
+    /*!
+    \brief Overload of >= operator for two Time objects
+    */
+    CRO_EXPORT_API bool operator >= (Time, Time);
+    /*!
+    \brief Overload of <= operator for two Time object
+    */
+    CRO_EXPORT_API bool operator <= (Time, Time);
+    /*!
+    \brief Overload of - operator for subtracting one Time from another
+    */
+    CRO_EXPORT_API Time operator - (Time);
+    /*!
+    \brief Overload of + operator for two Time objects
+    */
+    CRO_EXPORT_API Time operator + (Time, Time);
+    /*!
+    \brief Overload of += to add one Time to another
+    */
+    CRO_EXPORT_API Time& operator += (Time&, Time);
+    /*!
+    \brief Overload of - for two Time objects
+    */
+    CRO_EXPORT_API Time operator - (Time, Time);
+    /*!
+    \brief Overload of -= operator for two Time objects
+    */
+    CRO_EXPORT_API Time& operator -= (Time&, Time);
+    /*!
+    \brief Overload of * operator for multiplying a Time object by 
+    a floating point value in seconds
+    */
+    CRO_EXPORT_API Time operator * (Time, float);
+    /*!
+    \brief Overload of * operator for multiplying a Time object by 
+    a number of milliseconds
+    */
+    CRO_EXPORT_API Time operator * (Time, int32);
+    /*
+    \brief Overload of * operator to multiply a floating point
+    value in seconds by a Time object
+    */
+    CRO_EXPORT_API Time operator * (float, Time);
+    /*!
+    \brief Overload of * operator to multiply a number of milliseconds
+    by a Time object
+    */
+    CRO_EXPORT_API Time operator * (int32, Time);
+    /*!
+    \brief Overload of *= operator to scale a Time object by a number of seconds
+    */
+    CRO_EXPORT_API Time& operator *= (Time&, float);
+    /*!
+    \brief Overload of *= operator to scale a Time object by a number of milliseconds
+    */
+    CRO_EXPORT_API Time& operator *= (Time&, int32);
+    /*!
+    \brief Overload of / operator to scale a Time object by a number of seconds
+    */
+    CRO_EXPORT_API Time operator / (Time, float);
+    /*!
+    \brief Overload of / operator to scale a Time object by a number of milliseconds
+    */
+    CRO_EXPORT_API Time operator / (Time, int32);
+    /*!
+    \brief Overload of / operator to scale a Time object by a number of seconds
+    */
+    CRO_EXPORT_API Time& operator /= (Time&, float);
+    /*!
+    \brief Overload of / operator to scale a Time object by a number of milliseconds
+    */
+    CRO_EXPORT_API Time& operator /= (Time&, int32);
+    /*!
+    \brief OVerload of / operator to divide one Time object by another
+    */
+    CRO_EXPORT_API Time operator / (Time, Time);
+    /*!
+    \brief Overload of % opertor to return remainder of one Time object divided by another
+    */
+    CRO_EXPORT_API Time operator % (Time, Time);
+    /*!
+    \brief Overload of %= opertor to return remainder of one Time object divided by another
+    */
+    CRO_EXPORT_API Time& operator %= (Time&, Time);
 
-	/*!
-	\brief Clock class, used to measure periods of time
-	*/
-	class CRO_EXPORT_API Clock final : public Detail::SDLResource
-	{
-	public:
-		Clock();
+    /*!
+    \brief Clock class, used to measure periods of time
+    */
+    class CRO_EXPORT_API Clock final : public Detail::SDLResource
+    {
+    public:
+        Clock();
 
-		Time elapsed() const;
-		Time restart();
-	private:
-		Time m_startTime;
-	};
+        Time elapsed() const;
+        Time restart();
+    private:
+        Time m_startTime;
+    };
 }

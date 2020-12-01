@@ -630,36 +630,36 @@ std::string FileSystem::saveFileDialogue(const std::string& defaultDir, const st
 std::string FileSystem::getResourcePath()
 {
 #ifdef __APPLE__
-	return resourcePath() + m_resourceDirectory;
+    return resourcePath() + m_resourceDirectory;
 #endif
-	return m_resourceDirectory;
+    return m_resourceDirectory;
 }
 
 void FileSystem::setResourceDirectory(const std::string& path)
 {
-	m_resourceDirectory = path;
+    m_resourceDirectory = path;
 
-	if (!path.empty())
-	{
-		//strip preceeding slashes
-		if(m_resourceDirectory[0] == '\\'
-			|| m_resourceDirectory[0] == '/')
-		{
-			m_resourceDirectory = m_resourceDirectory.substr(1);
-		}
+    if (!path.empty())
+    {
+        //strip preceeding slashes
+        if(m_resourceDirectory[0] == '\\'
+            || m_resourceDirectory[0] == '/')
+        {
+            m_resourceDirectory = m_resourceDirectory.substr(1);
+        }
 
-		//and add post slashes if missing
-		if (m_resourceDirectory.find('/') != std::string::npos
-			&& m_resourceDirectory.back() != '/')
-		{
-			m_resourceDirectory.push_back('/');
-		}
-		else if (m_resourceDirectory.find('\\') != std::string::npos
-			&& m_resourceDirectory.back() != '\\')
-		{
-			m_resourceDirectory.push_back('\\');
-		}
-	}
+        //and add post slashes if missing
+        if (m_resourceDirectory.find('/') != std::string::npos
+            && m_resourceDirectory.back() != '/')
+        {
+            m_resourceDirectory.push_back('/');
+        }
+        else if (m_resourceDirectory.find('\\') != std::string::npos
+            && m_resourceDirectory.back() != '\\')
+        {
+            m_resourceDirectory.push_back('\\');
+        }
+    }
 }
 
 bool FileSystem::showMessageBox(const std::string& title, const std::string& message, ButtonType buttonType, IconType iconType)

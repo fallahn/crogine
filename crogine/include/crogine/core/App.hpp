@@ -49,33 +49,33 @@ source distribution.
 
 namespace cro
 {
-	namespace Detail
-	{
-		class SDLResource;
-	}
+    namespace Detail
+    {
+        class SDLResource;
+    }
     class GuiClient;
     class HiResTimer;
 
-	/*!
-	\brief Base class for crogine applications.
-	One instance of this must exist before crogine may be used
-	*/
-	class CRO_EXPORT_API App
-	{
-	public:
-		friend class Detail::SDLResource;
-		App();
-		virtual ~App();
+    /*!
+    \brief Base class for crogine applications.
+    One instance of this must exist before crogine may be used
+    */
+    class CRO_EXPORT_API App
+    {
+    public:
+        friend class Detail::SDLResource;
+        App();
+        virtual ~App();
 
-		App(const App&) = delete;
-		App(const App&&) = delete;
-		App& operator = (const App&) = delete;
-		App& operator = (const App&&) = delete;
+        App(const App&) = delete;
+        App(const App&&) = delete;
+        App& operator = (const App&) = delete;
+        App& operator = (const App&&) = delete;
 
-		void run();
+        void run();
 
-		void setClearColour(Colour);
-		const Colour& getClearColour() const;
+        void setClearColour(Colour);
+        const Colour& getClearColour() const;
 
         /*!
         \brief Use this to properly close down the application
@@ -112,11 +112,11 @@ namespace cro
         */
         static App& getInstance();
 
-	protected:
-		
-		virtual void handleEvent(const Event&) = 0;
-		virtual void handleMessage(const cro::Message&) = 0;
-		/*!
+    protected:
+        
+        virtual void handleEvent(const Event&) = 0;
+        virtual void handleMessage(const cro::Message&) = 0;
+        /*!
         \brief Used to update the simulation with a fixed timestep of 60Hz
         */
         virtual void simulate(float) = 0;
@@ -124,9 +124,9 @@ namespace cro
         /*!
         \brief Renders any drawables
         */
-		virtual void render() = 0;
+        virtual void render() = 0;
 
-		/*!
+        /*!
         \brief Called on startup after window is created.
         Use it to perform initial operations such as setting the 
         window title, icon or custom loading screen. Return false
@@ -151,10 +151,10 @@ namespace cro
         */
         void setApplicationStrings(const std::string& organisation, const std::string& applicationName);
 
-	private:
+    private:
 
-		Window m_window;
-		Colour m_clearColour;
+        Window m_window;
+        Colour m_clearColour;
         HiResTimer* m_frameClock;
         bool m_running;
 
@@ -163,7 +163,7 @@ namespace cro
         MessageBus m_messageBus;
         void handleMessages();
 
-		static App* m_instance;
+        static App* m_instance;
 
         std::map<int32, SDL_GameController*> m_controllers;
         std::map<int32, SDL_Joystick*> m_joysticks;
@@ -199,5 +199,5 @@ namespace cro
         void saveSettings();
 
         void saveScreenshot();
-	};
+    };
 }

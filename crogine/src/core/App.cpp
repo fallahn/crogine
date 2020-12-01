@@ -148,16 +148,16 @@ App::App()
     m_orgString     ("Trederia"),
     m_appString     ("CrogineApp")
 {
-	CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
+    CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
-	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-	{
-		const std::string err(SDL_GetError());
-		Logger::log("Failed init: " + err, Logger::Type::Error);
-	}
-	else
-	{
-		m_instance = this;
+    if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+    {
+        const std::string err(SDL_GetError());
+        Logger::log("Failed init: " + err, Logger::Type::Error);
+    }
+    else
+    {
+        m_instance = this;
 
         for (auto i = 0; i < SDL_NumJoysticks(); ++i)
         {
@@ -181,7 +181,7 @@ App::App()
         char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
         m_prefPath = std::string(pp);
         SDL_free(pp);
-	}
+    }
 }
 
 App::~App()
@@ -199,7 +199,7 @@ App::~App()
     }
     
     //SDL cleanup
-	SDL_Quit();
+    SDL_Quit();
 }
 
 //public
@@ -207,19 +207,19 @@ void App::run()
 {
     auto settings = loadSettings();
 
-	if (m_window.create(settings.width, settings.height, "crogine game"))
-	{
-		//load opengl - TODO choose which loader to use based on
+    if (m_window.create(settings.width, settings.height, "crogine game"))
+    {
+        //load opengl - TODO choose which loader to use based on
         //current platform, ie mobile or desktop
 #ifdef PLATFORM_MOBILE
-		if (!gladLoadGLES2Loader(SDL_GL_GetProcAddress))
+        if (!gladLoadGLES2Loader(SDL_GL_GetProcAddress))
 #else
         if (!gladLoadGLLoader(SDL_GL_GetProcAddress))
 #endif //PLATFORM_MOBILE
-		{
-			Logger::log("Failed loading OpenGL", Logger::Type::Error);
-			return;
-		}
+        {
+            Logger::log("Failed loading OpenGL", Logger::Type::Error);
+            return;
+        }
         
         m_window.setMultisamplingEnabled(glIsEnabled(GL_MULTISAMPLE));
 
@@ -238,12 +238,12 @@ void App::run()
         m_window.setVsyncEnabled(settings.vsync);
         m_window.setMultisamplingEnabled(settings.useMultisampling);
         Console::init();
-	}
-	else
-	{
-		Logger::log("Failed creating main window", Logger::Type::Error);
-		return;
-	}
+    }
+    else
+    {
+        Logger::log("Failed creating main window", Logger::Type::Error);
+        return;
+    }
     
     
     HiResTimer frameClock;
@@ -252,28 +252,28 @@ void App::run()
 
     float timeSinceLastUpdate = 0.f;
 
-	while (m_running)
-	{
-		timeSinceLastUpdate += frameClock.restart();
+    while (m_running)
+    {
+        timeSinceLastUpdate += frameClock.restart();
 
-		while (timeSinceLastUpdate > frameTime)
-		{
-			timeSinceLastUpdate -= frameTime;
+        while (timeSinceLastUpdate > frameTime)
+        {
+            timeSinceLastUpdate -= frameTime;
 
             handleEvents();
             handleMessages();
 
-			simulate(frameTime);
-		}
+            simulate(frameTime);
+        }
         //DPRINT("Frame time", std::to_string(timeSinceLastUpdate.asMilliseconds()));
         doImGui();
 
         ImGui::Render();
-		m_window.clear();
+        m_window.clear();
         render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		m_window.display();
-	}
+        m_window.display();
+    }
 
     saveSettings();
 
@@ -288,13 +288,13 @@ void App::run()
 
 void App::setClearColour(Colour colour)
 {
-	m_clearColour = colour;
-	glCheck(glClearColor(colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()));
+    m_clearColour = colour;
+    glCheck(glClearColor(colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()));
 }
 
 const Colour& App::getClearColour() const
 {
-	return m_clearColour;
+    return m_clearColour;
 }
 
 void App::quit()

@@ -30,11 +30,11 @@ source distribution.
 template <typename T>
 void System::requireComponent()
 {
-    m_pendingTypes.push_back(typeid(T));
+	m_pendingTypes.push_back(typeid(T));
 }
 
 template <typename T>
 T* System::postMessage(cro::Message::ID id)
 {
-    return m_messageBus.post<T>(id);
+	return m_messageBus.post<T>(id);
 }

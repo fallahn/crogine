@@ -121,7 +121,7 @@ std::vector<float> ConfigProperty::valueAsArray() const
 //-------------------------------------
 
 ConfigObject::ConfigObject(const std::string& name, const std::string& id)
-    : ConfigItem	(name), m_id(id){}
+    : ConfigItem    (name), m_id(id){}
 
 bool ConfigObject::loadFromFile(const std::string& filePath)
 {
@@ -205,7 +205,7 @@ bool ConfigObject::loadFromFile(const std::string& filePath)
                     objStack.pop_back();
                 }
                 else if (isProperty(data))
-                {			
+                {           
                     //insert name / value property into current object
                     auto prop = getPropertyName(data);
                     //TODO need to reinstate this and create a property
@@ -259,7 +259,7 @@ bool ConfigObject::loadFromFile(const std::string& filePath)
                         continue;
                     }
                 }
-            }		
+            }       
         }
 
         if (!objStack.empty())
@@ -573,8 +573,8 @@ std::size_t ConfigObject::write(SDL_RWops* file, uint16 depth)
 
 //--------------------//
 ConfigItem::ConfigItem(const std::string& name)
-    : m_parent	(nullptr),
-    m_name		(name){}
+    : m_parent  (nullptr),
+    m_name      (name){}
 
 ConfigItem* ConfigItem::getParent() const
 {

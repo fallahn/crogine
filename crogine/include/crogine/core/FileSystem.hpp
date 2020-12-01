@@ -154,12 +154,12 @@ namespace cro
          */
         static std::string getResourcePath();
 
-		/*!
-		\brief Sets the resource directory relative to the working directory.
-		When using getResourcePath() this path will be appended to the working directory.
-		Used, for example, when setting a sub-directory as a resource directory
-		*/
-		static void setResourceDirectory(const std::string& path);
+        /*!
+        \brief Sets the resource directory relative to the working directory.
+        When using getResourcePath() this path will be appended to the working directory.
+        Used, for example, when setting a sub-directory as a resource directory
+        */
+        static void setResourceDirectory(const std::string& path);
 
         enum ButtonType
         {
@@ -192,6 +192,6 @@ namespace cro
         static void showNotification(const std::string& title, const std::string& message, IconType = IconType::Info);
 
     private:
-		static std::string m_resourceDirectory;
+        static std::string m_resourceDirectory;
     };
 }
