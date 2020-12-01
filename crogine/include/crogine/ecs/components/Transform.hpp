@@ -90,22 +90,34 @@ namespace cro
         void setPosition(glm::vec2);
 
         /*!
-        \brief Sets the euler rotation in radians for the x, y and z axis
+        \brief Sets the rotation around the given axis.
+        \param axis A 3 dimention axis around which the rotation is set
+        \param angle The angle in radians to rotate
         */
-        void setRotation(glm::vec3);
+        void setRotation(glm::vec3 axis, float angle);
+
         /*!
         \brief Sets the euler rotation around the z axis, in radians.
-        Useful shortcut when using "D objects such as sprites or text
+        Useful shortcut when using 2D objects such as sprites or text
         */
         void setRotation(float);
+
         /*!
         \brief Sets the rotation with the given quaternion
         */
         void setRotation(glm::quat);
+
+        /*!
+        \brief Sets the rotation with the given matrix.
+        \param rotation A matrix containing the rotation to set
+        */
+        void setRotation(glm::mat4);
+
         /*
         \brief Sets the transform scale for each axis
         */
         void setScale(glm::vec3);
+
         /*!
         \brief Sets the transform scale on the x/y axis.
         Useful for 2D objects such as text or sprites. Z is fixed at 1
@@ -117,28 +129,43 @@ namespace cro
         The given paramter is added to the transform's existing position
         */
         void move(glm::vec3);
+
         /*!
         \brief Moves the transform on the x and y axis only.
         The given paramter is added to the transform's current position.
         Useful for working with 2D objects such as sprites or text
         */
         void move(glm::vec2);
+
         /*!
         \brief Rotates the transform.
         \param axis A vector representing the axis around which to rotate the transform
         \param amount The amount of rotation in radians
         */
         void rotate(glm::vec3 axis, float amount);
+
         /*!
         \brief Rotates the transform around its z axis by the given radians.
         Useful shortcut for working with 2D items such as sprites or text
         */
         void rotate(float amount);
+
+        /*!
+        \brief Rotates the transform by the given quaternion
+        */
+        void rotate(glm::quat rotation);
+
+        /*!
+        \brief Rotates the transform by the given matrix
+        */
+        void rotate(glm::mat4 rotation);
+
         /*!
         \brief Scales the transform.
         The existing scale on the x, y, and z axis is multiplied by the given values
         */
         void scale(glm::vec3);
+
         /*!
         \brief Scales the transform along the x and y axis.
         Useful shortcut for scaling 2D items such as text or sprites
@@ -161,13 +188,11 @@ namespace cro
         glm::vec3 getWorldPosition() const;
 
         /*!
-        \brief Returns the euler rotation of the transform
+        \brief Returns the rotation of the transform
         */
-        glm::vec3 getRotation() const;
-        /*!
-        \brief Returns the rotation as a quaternion
-        */
-        glm::quat getRotationQuat() const;
+        glm::quat getRotation() const;
+
+        
         /*!
         \brief Returns the current scale of the transform
         */
