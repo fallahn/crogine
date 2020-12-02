@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2017 - 2020
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,38 +29,32 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/MeshBuilder.hpp>
+#include <crogine/graphics/Rectangle.hpp>
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
+#include <crogine/detail/glm/vec2.hpp>
 
-
-class GameState final : public cro::State
+namespace cro
 {
-public:
-    GameState(cro::StateStack&, cro::State::Context);
-    ~GameState() = default;
+    /*!
+    \brief Creates a texturable grid mesh formed of a triangle strip
+    UV coordinates are mapped from 0,0 at the bottom left to 1,1 at the top right
+    */
+    class CRO_EXPORT_API GridMeshBuilder final : public MeshBuilder
+    {
+    public:
+        /*!
+        \brief Constructor.
+        \param size Dimensions of the quad created by this mesh builder
+        \param subDivisions Number of sub-divisions along each side of the grid
+        */
+        GridMeshBuilder(glm::vec2 size, std::size_t subDivisions);
 
-    cro::StateID getStateID() const override { return States::Game; }
+        std::size_t getUID() const override { return 0; }
 
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
-
-private:
-
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-
-    cro::ResourceCollection m_resources;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
-    void updateView(cro::Camera&);
-};
+    private:
+        glm::vec2 m_size = glm::vec2(0.f);
+        std::size_t m_subDivisions;
+        Mesh::Data build() const override;
+    };
+}

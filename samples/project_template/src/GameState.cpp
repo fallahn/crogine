@@ -53,8 +53,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         createScene();
         createUI();
     });
-
-    updateView();
 }
 
 //public
@@ -74,15 +72,6 @@ void GameState::handleMessage(const cro::Message& msg)
 {
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
-
-    if (msg.id == cro::Message::WindowMessage)
-    {
-        const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-        {
-            updateView();
-        }
-    }
 }
 
 bool GameState::simulate(float dt)
@@ -114,6 +103,11 @@ void GameState::loadAssets()
 void GameState::createScene()
 {
 
+
+    //this is called when the window is resized to automatically update the camera's matrices/viewport
+    auto camEnt = m_gameScene.getActiveCamera();
+    updateView(camEnt.getComponent<cro::Camera>());
+    camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&GameState::updateView, this, std::placeholders::_1);
 }
 
 void GameState::createUI()
@@ -121,17 +115,18 @@ void GameState::createUI()
 
 }
 
-void GameState::updateView()
+void GameState::updateView(cro::Camera& cam3D)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
-    auto& cam3D = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    cam3D.projectionMatrix = glm::perspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 280.f);
+    //90 deg in x (glm expects fov in y)
+    cam3D.projectionMatrix = glm::perspective(50.6f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 140.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 
+    //update the UI camera to match the new screen size
     auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam2D.viewport = cam3D.viewport;
 }

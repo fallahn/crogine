@@ -62,5 +62,6 @@ private:
     void createScene();
     void createUI();
 
-    void updateView();
+    //assigned to camera resize callback
+    void updateView(cro::Camera&);
 };

@@ -199,6 +199,9 @@ void GameState::handleMessage(const cro::Message& msg)
 
     if (msg.id == cro::Message::WindowMessage)
     {
+        //alternatively this can be handled via the
+        //camera components's resize callback.
+        //see cro::Camera::resizeCallback
         const auto& data = msg.getData<cro::Message::WindowEvent>();
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {

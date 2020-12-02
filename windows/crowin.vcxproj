@@ -118,6 +118,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\EnvironmentMap.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Font.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\FontResource.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\GridMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Image.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\IqmBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\LoadingScreen.hpp" />
@@ -267,6 +268,7 @@
     <ClCompile Include="..\crogine\src\graphics\EnvironmentMap.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Font.cpp" />
     <ClCompile Include="..\crogine\src\graphics\FontResource.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\GridMeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Image.cpp" />
     <ClCompile Include="..\crogine\src\graphics\IqmBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MaterialData.cpp" />
