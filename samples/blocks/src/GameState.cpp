@@ -92,7 +92,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
         createUI();
     });
 
-    updateView();
     context.mainWindow.setMouseCaptured(true);
     sd.clientConnection.ready = false;
 
@@ -271,15 +270,7 @@ void GameState::handleMessage(const cro::Message& msg)
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 
-    if (msg.id == cro::Message::WindowMessage)
-    {
-        const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-        {
-            updateView();
-        }
-    }
-    else if (msg.id == cro::Message::ConsoleMessage)
+    if (msg.id == cro::Message::ConsoleMessage)
     {
         const auto& data = msg.getData<cro::Message::ConsoleEvent>();
         if (getStateCount() == 1) //ignore this if pause menu is open
@@ -410,17 +401,14 @@ void GameState::createUI()
         glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -0.1f, 100.f);
 
     m_uiScene.setActiveCamera(entity);
-
-    updateView();
 }
 
-void GameState::updateView()
+void GameState::updateView(cro::Camera& cam3D)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
-    auto& cam3D = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     cam3D.projectionMatrix = glm::perspective(75.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 1024.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
@@ -627,9 +615,10 @@ void GameState::spawnPlayer(PlayerInfo info)
 
             entity.addComponent<cro::Camera>();
             m_gameScene.setActiveCamera(entity);
-            updateView();
 
             auto camEnt = entity;
+            updateView(camEnt.getComponent<cro::Camera>());
+            camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&GameState::updateView, this, std::placeholders::_1);
 
             //create a wireframe to highlight the block we look at
             //scaling by a small amount fixes the z-fighting

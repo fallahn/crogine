@@ -112,10 +112,13 @@ void GameState::createScene()
     auto gridID = m_resources.meshes.loadMesh(cro::GridMeshBuilder(glm::vec2(100.f), 10));
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
     auto matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    
+    m_tempTexture.loadFromFile("assets/images/batcat_diffuse.png");
 
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -50.f, -50.f, -100.f });
+    entity.addComponent<cro::Transform>().setPosition({ -50.f, -50.f, -120.f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(gridID), m_resources.materials.get(matID));
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", cro::TextureID(m_tempTexture.getGLHandle()));
 
     auto camEnt = m_gameScene.getActiveCamera();
     updateView(camEnt.getComponent<cro::Camera>());

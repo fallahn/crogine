@@ -54,9 +54,12 @@ Mesh::Data GridMeshBuilder::build() const
         //uv
     };
 
-    for (auto y = 0u; y < m_subDivisions; ++y)
+    auto xCount = m_subDivisions + 1;
+    auto yCount = m_subDivisions + 1;
+
+    for (auto y = 0; y < yCount; ++y)
     {
-        for (auto x = 0u; x < m_subDivisions; ++x)
+        for (auto x = 0u; x < xCount; ++x)
         {
             verts.push_back(x * stride.x);
             verts.push_back(y * stride.y);
@@ -67,15 +70,11 @@ Mesh::Data GridMeshBuilder::build() const
             verts.push_back(1.f);
 
             verts.push_back((x * stride.x) / m_size.x);
-            verts.push_back(1.f - ((y * stride.y) / m_size.y));
+            verts.push_back((y * stride.y) / m_size.y);
         }
     }
 
     std::vector<std::uint32_t> indices;
-
-    auto xCount = m_subDivisions + 1;
-    auto yCount = m_subDivisions + 1;
-
     for (auto y = 0u; y < yCount - 1; y++)
     {
         if (y > 0) 
@@ -85,8 +84,9 @@ Mesh::Data GridMeshBuilder::build() const
 
         for (auto x = 0u; x < xCount; x++)
         {
-            indices.push_back((y * yCount) + x);
             indices.push_back(((y + 1) * yCount) + x);
+            indices.push_back((y * yCount) + x);
+            
         }
 
         if (y < yCount - 2)

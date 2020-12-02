@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/Texture.hpp>
 
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
@@ -56,6 +57,8 @@ private:
     cro::Scene m_uiScene;
 
     cro::ResourceCollection m_resources;
+
+    cro::Texture m_tempTexture;
 
     void addSystems();
     void loadAssets();
