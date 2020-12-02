@@ -271,14 +271,13 @@ void GameState::buildWorld()
         if (m_sharedData.clients[i].connected)
         {
             //insert a player in this slot
-            //TODO figure out how to get correct initial pitch/yaw from any rotation other than 0
             m_playerEntities[i] = m_scene.createEntity();
             m_playerEntities[i].addComponent<cro::Transform>().setPosition(m_terrainGenerator.getSpawnPoints()[i]);
-            //m_playerEntities[i].getComponent<cro::Transform>().setRotation( //look at centre of the world
-            //    glm::quat_cast(glm::inverse(glm::lookAt(playerSpawns[i], glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f)))));
+            m_playerEntities[i].getComponent<cro::Transform>().setRotation( //look at centre of the world
+                glm::inverse(glm::lookAt(m_terrainGenerator.getSpawnPoints()[i], glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f))));
             m_playerEntities[i].addComponent<Player>().id = i;
             m_playerEntities[i].getComponent<Player>().spawnPosition = m_terrainGenerator.getSpawnPoints()[i];
-            //m_playerEntities[i].getComponent<Player>().cameraYaw = m_playerEntities[i].getComponent<cro::Transform>().getRotation().y;
+            m_playerEntities[i].getComponent<Player>().cameraYaw = glm::eulerAngles(m_playerEntities[i].getComponent<cro::Transform>().getRotation()).y;
             m_playerEntities[i].addComponent<Actor>().id = i;
             m_playerEntities[i].getComponent<Actor>().serverEntityId = m_playerEntities[i].getIndex();
         }

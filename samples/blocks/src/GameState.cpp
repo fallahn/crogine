@@ -379,7 +379,7 @@ void GameState::loadAssets()
 void GameState::createScene()
 {
     m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
-    m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(glm::vec3(1.f, 0.f, 0.f));
+    m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
 }
 
 void GameState::createUI()
@@ -551,7 +551,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
                 //if (std::abs(rotation) < 0.5f)
                 {
-                    tx.setRotation(glm::vec3(0.f, 0.f, y));
+                    tx.setRotation(cro::Transform::Y_AXIS, y);
                 }
                 /*else
                 {

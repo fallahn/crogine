@@ -325,7 +325,7 @@ void GameState::createScene()
 
     auto sunEnt = m_scene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setPosition({ -19.f, 11.f, 12.f });
-    sunEnt.getComponent<cro::Transform>().setRotation(glm::vec3(-1.f, 0.f, 0.f));
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.797f);
     sunEnt.getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
     ent.addComponent<cro::AudioListener>();
@@ -398,7 +398,6 @@ namespace
     const cro::FloatRect buttonArea(0.f, 0.f, 64.f, 64.f);
 }
 
-#include <crogine/graphics/BoundingBox.hpp>
 void GameState::createUI()
 {
     //2D camera
