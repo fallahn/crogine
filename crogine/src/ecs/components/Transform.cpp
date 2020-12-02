@@ -201,10 +201,16 @@ void Transform::setPosition(glm::vec2 position)
     setPosition(glm::vec3(position.x, position.y, 0.f));
 }
 
-void Transform::setRotation(glm::vec3 rotation)
+void Transform::setRotation(glm::vec3 axis, float angle)
 {
-    m_rotation = glm::toQuat(glm::orientate3(rotation));
+    glm::quat q = glm::quat(1.f, 0.f, 0.f, 0.f);
+    m_rotation = glm::rotate(q, angle, axis);
     m_dirtyFlags |= Tx;
+}
+
+void Transform::setRotation(float radians)
+{
+    setRotation(Z_AXIS, radians);
 }
 
 void Transform::setRotation(glm::quat rotation)
@@ -213,9 +219,10 @@ void Transform::setRotation(glm::quat rotation)
     m_dirtyFlags |= Tx;
 }
 
-void Transform::setRotation(float radians)
+void Transform::setRotation(glm::mat4 rotation)
 {
-    setRotation(glm::vec3(0.f, 0.f, radians));
+    m_rotation = glm::quat_cast(rotation);
+    m_dirtyFlags |= Tx;
 }
 
 void Transform::setScale(glm::vec3 scale)
@@ -248,7 +255,18 @@ void Transform::rotate(glm::vec3 axis, float rotation)
 
 void Transform::rotate(float amount)
 {
-    rotate(glm::vec3(0.f, 0.f, 1.), amount);
+    rotate(Z_AXIS, amount);
+}
+
+void Transform::rotate(glm::quat rotation)
+{
+    m_rotation = rotation * m_rotation;
+    m_dirtyFlags |= Tx;
+}
+
+void Transform::rotate(glm::mat4 rotation)
+{
+    m_rotation = glm::quat_cast(rotation) * m_rotation;
 }
 
 void Transform::scale(glm::vec3 scale)
@@ -277,12 +295,7 @@ glm::vec3 Transform::getWorldPosition() const
     return glm::vec3(getWorldTransform()[3]) - ((m_origin * m_scale) * m_rotation);
 }
 
-glm::vec3 Transform::getRotation() const
-{
-    return glm::eulerAngles(m_rotation);
-}
-
-glm::quat Transform::getRotationQuat() const
+glm::quat Transform::getRotation() const
 {
     return m_rotation;
 }

@@ -12,7 +12,7 @@ particle_system smoke
 	size = 0.01
 	emit_rate = 15
 	spawn_radius = 0.1
-	release_count = 0;
+	release_count = 0
 
 	forces
 	{

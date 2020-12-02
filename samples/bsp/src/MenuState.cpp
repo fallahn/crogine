@@ -134,11 +134,9 @@ void MenuState::loadAssets()
 {
 
 }
-#include <iostream>
+
 void MenuState::createScene()
 {
-
-
     //add the resize callback to the camera so window change events
     //properly update the camera properties
     auto camEnt = m_scene.getActiveCamera();
@@ -155,8 +153,7 @@ void MenuState::createScene()
     {
         const auto& spawn = spawnPoints[cro::Util::Random::value(0, spawnPoints.size() - 1)];
         camEnt.getComponent<cro::Transform>().setPosition(spawn.position);
-        //camEnt.getComponent<cro::Transform>().setRotation(glm::vec3(0.f, 0.f, cro::Util::Const::degToRad * spawn.rotation));
-        //TODO fix the initial rotation for camera controller
+        camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -(cro::Util::Const::degToRad * spawn.rotation));
     }
     else
     {

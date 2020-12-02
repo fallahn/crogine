@@ -12,5 +12,5 @@ particle_system snow
 	size = 0.03
 	emit_rate = 30
 	spawn_radius = 0.8
-	release_count = 0;
+	release_count = 0
 }

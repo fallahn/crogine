@@ -173,7 +173,7 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
                     {
                         pi.state = PlayerInfo::State::Dead;
 
-                        entity.getComponent<cro::Transform>().setRotation({ 0.f, 0.f, 0.f });
+                        entity.getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTY);
                         entity.getComponent<cro::Transform>().setPosition({ -15.4f, 0.f, -9.3f });
                         entity.getComponent<Velocity>().velocity = glm::vec3();
                         entity.getComponent<cro::ParticleEmitter>().stop();
@@ -372,7 +372,7 @@ void PlayerDirector::process(float)
             float rotation = -maxRotation * joyVec.y;
             auto& tx = entity.getComponent<cro::Transform>();
             const float currRotation = tx.getRotation().x;
-            tx.setRotation({ currRotation + ((rotation - currRotation) * (dt * 4.f)), 0.f, 0.f });
+            tx.setRotation(cro::Transform::X_AXIS, currRotation + ((rotation - currRotation) * (dt * 4.f)));
 
         };
         sendCommand(cmd);
@@ -427,7 +427,7 @@ void PlayerDirector::process(float)
 
             auto& tx = entity.getComponent<cro::Transform>();
             const float currRotation = tx.getRotation().x;
-            tx.setRotation({ currRotation + ((rotation - currRotation) * (dt * 4.f)), 0.f, 0.f });
+            tx.setRotation(cro::Transform::X_AXIS, currRotation + ((rotation - currRotation) * (dt * 4.f)));
         };
         sendCommand(cmd);
         m_currentInput &= ~StateChanged;

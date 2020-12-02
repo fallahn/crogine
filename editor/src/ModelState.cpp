@@ -520,7 +520,8 @@ void ModelState::createScene()
     //set the default sunlight properties
     m_scene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-4.f, 4.f, -4.f, 4.f, 0.1f, 10.f));
     m_scene.getSunlight().getComponent<cro::Transform>().setPosition({ -1.5f, 1.5f, 1.5f });
-    m_scene.getSunlight().getComponent<cro::Transform>().setRotation({ -0.726f, -1.608f, -0.23f });
+    m_scene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.79f);
+    m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.79f);
 
     entities[EntityID::CamController].getComponent<cro::Transform>().addChild(m_scene.getSunlight().getComponent<cro::Transform>());
 
@@ -1903,7 +1904,7 @@ void ModelState::updateMouseInput(const cro::Event& evt)
         glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchMove, glm::vec3(1.f, 0.f, 0.f));
         glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yawMove, glm::vec3(0.f, 1.f, 0.f));
 
-        auto rotation =  pitch * yaw * tx.getRotationQuat();
+        auto rotation =  pitch * yaw * tx.getRotation();
         tx.setRotation(rotation);
     }
     else if (evt.motion.state & SDL_BUTTON_RMASK)
@@ -1915,7 +1916,7 @@ void ModelState::updateMouseInput(const cro::Event& evt)
 
         glm::quat roll = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rollMove, glm::vec3(0.f, 0.f, 1.f));
 
-        auto rotation = roll * tx.getRotationQuat();
+        auto rotation = roll * tx.getRotation();
         tx.setRotation(rotation);
     }
     else if (evt.motion.state & SDL_BUTTON_MMASK)
@@ -2676,7 +2677,7 @@ void ModelState::drawInspector()
                 ImGui::PushItemWidth(size.x* ui::TextBoxWidth);
                 if (ImGui::SliderFloat("##rotation", &rotation, -180.f, 180.f))
                 {
-                    m_previewEntity.getComponent<cro::Transform>().setRotation({ 0.f, 0.f, rotation * cro::Util::Const::degToRad });
+                    m_previewEntity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
                 }
                 ImGui::PopItemWidth();
                 static bool quad = false;
