@@ -71,6 +71,7 @@ private:
     cro::ResourceCollection m_resources;
 
     float m_fov;
+    float m_viewportRatio;
 
     struct Preferences final
     {

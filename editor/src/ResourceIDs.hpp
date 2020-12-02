@@ -55,10 +55,12 @@ namespace EntityID
     {
         GridMesh, //< also has AABB and Sphere attached
         ActiveModel, //< model being viewed
-        CamController, //< actually has the ground plane / model attached to it, camera stays still
+        RootNode, //< has the ground plane / model attached to it
         NormalVis,
         GroundPlane,
         
+        ArcBall,
+
         Count
     };
 }
