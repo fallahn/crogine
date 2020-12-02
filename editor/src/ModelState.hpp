@@ -76,7 +76,6 @@ private:
     struct Preferences final
     {
         std::string workingDirectory;
-        std::size_t unitsPerMetre = 2;
         cro::Colour skyBottom = cro::Colour(0.82f, 0.98f, 0.99f);
         cro::Colour skyTop = cro::Colour(0.21f, 0.5f, 0.96f);
 

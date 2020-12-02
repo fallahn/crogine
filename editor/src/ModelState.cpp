@@ -138,7 +138,6 @@ namespace
 
     const std::string prefPath = cro::FileSystem::getConfigDirectory("cro_model_viewer") + "prefs.cfg";
 
-    const std::array<float, 6> worldScales = { 0.01f, 0.1f, 1.f, 10.f, 100.f, 1000.f };
     const glm::vec3 DefaultCameraPosition({ 0.f, 0.25f, 5.f });
 
     std::array<std::int32_t, MaterialID::Count> materialIDs = {};
@@ -334,7 +333,7 @@ void ModelState::handleMessage(const cro::Message& msg)
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             updateLayout(data.data0, data.data1);
-            m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_fov);
+            m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
         }
     }
 
@@ -478,7 +477,7 @@ void ModelState::createScene()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        float scale = worldScales[m_preferences.unitsPerMetre];
+        float scale = m_fov / DefaultFOV;
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     };
     entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -950,10 +949,6 @@ void ModelState::openModelAtPath(const std::string& path)
         m_currentModelConfig.loadFromFile(path);
 
         const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
-        if (meshData.boundingSphere.radius > (2.f * worldScales[m_preferences.unitsPerMetre]))
-        {
-            cro::Logger::log("Bounding sphere radius is very large - model may not be visible", cro::Logger::Type::Warning);
-        }
 
         //read all the model properties
         m_modelProperties.name = m_currentModelConfig.getId();
@@ -1773,10 +1768,6 @@ void ModelState::loadPrefs()
                 m_preferences.workingDirectory = prop.getValue<std::string>();
                 std::replace(m_preferences.workingDirectory.begin(), m_preferences.workingDirectory.end(), '\\', '/');
             }
-            else if (name == "units_per_metre")
-            {
-                m_preferences.unitsPerMetre = cro::Util::Maths::clamp(static_cast<std::size_t>(prop.getValue<std::int32_t>()), std::size_t(0u), worldScales.size());
-            }
             else if (name == "show_groundplane")
             {
                 m_showGroundPlane = prop.getValue<bool>();
@@ -1838,7 +1829,6 @@ void ModelState::savePrefs()
 
     cro::ConfigFile prefsOut;
     prefsOut.addProperty("working_dir", m_preferences.workingDirectory);
-    prefsOut.addProperty("units_per_metre", std::to_string(m_preferences.unitsPerMetre));
     prefsOut.addProperty("show_groundplane", m_showGroundPlane ? "true" : "false");
     prefsOut.addProperty("show_skybox", m_showSkybox ? "true" : "false");
     prefsOut.addProperty("sky_top", toString(m_preferences.skyTop));
