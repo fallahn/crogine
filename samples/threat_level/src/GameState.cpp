@@ -277,7 +277,7 @@ void GameState::addSystems()
     m_scene.addSystem<EmpSystem>(mb);
     m_scene.addSystem<BossSystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
-    //m_scene.addSystem<cro::CallbackSystem>(mb);
+    m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::SpriteAnimator>(mb);
     m_scene.addSystem<cro::SpriteSystem3D>(mb);
@@ -414,6 +414,9 @@ void GameState::createScene()
     ent.addComponent<cro::Transform>();
     ent.addComponent<cro::Camera>();
     m_scene.setActiveCamera(ent);
+
+    m_scene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.79f);
+    m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.79f);
 }
 
 namespace

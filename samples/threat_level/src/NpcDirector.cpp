@@ -497,7 +497,7 @@ void NpcDirector::process(float dt)
             if (entity.getComponent<cro::Model>().isVisible())
             {
                 const auto& tx = entity.getComponent<cro::Transform>();
-                float rotation = entity.getComponent<Family>().child.getComponent<cro::Transform>().getRotation().z;
+                float rotation = glm::eulerAngles(entity.getComponent<Family>().child.getComponent<cro::Transform>().getRotation()).z;
 
                 for (auto i = 0u; i < 2; ++i)
                 {
@@ -507,7 +507,7 @@ void NpcDirector::process(float dt)
                     msg->type = NpcEvent::FiredWeapon;
                     msg->position = tx.getWorldPosition();
                     msg->position.z += 0.18f;
-                    msg->velocity = glm::rotate(glm::vec3(0.f, 1.f, 0.f), (rotation - 0.2f) + (static_cast<float>(i) * 0.4f), glm::vec3(0.f, 0.f, 1.f));
+                    msg->velocity = glm::rotate(cro::Transform::Y_AXIS, (rotation - 0.2f) + (static_cast<float>(i) * 0.4f), cro::Transform::Z_AXIS);
                 }
             }
         };

@@ -113,6 +113,11 @@ namespace cro
         */
         void setRotation(glm::mat4);
 
+        /*!
+        \brief Prevent implicit conversion of vec3 to quat
+        */
+        void setRotation(glm::vec3) = delete;
+
         /*
         \brief Sets the transform scale for each axis
         */
@@ -159,6 +164,11 @@ namespace cro
         \brief Rotates the transform by the given matrix
         */
         void rotate(glm::mat4 rotation);
+
+        /*!
+        \brief Prevent implicit conversion from vec3
+        */
+        void rotate(glm::vec3) = delete;
 
         /*!
         \brief Scales the transform.

@@ -122,6 +122,7 @@ bool MyApp::initialise()
 
     m_sharedResources = std::make_unique<SharedResources>();
     m_stateStack.pushState(States::MainMenu);
+    //m_stateStack.pushState(States::GamePlaying);
 
     cro::AudioMixer::setLabel("Music", 0);
     cro::AudioMixer::setLabel("FX", 1);

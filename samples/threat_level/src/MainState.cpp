@@ -227,7 +227,8 @@ void MainState::createScene()
     //create planet / moon
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(planetPos);
-    entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS -0.5f);
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.25f);
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.8f);
     m_modelDefs[MenuModelID::GasPlanet].createModel(entity, m_resources);
     auto& planetRotator = entity.addComponent<Rotator>();
     planetRotator.speed = 0.02f;
@@ -293,8 +294,9 @@ void MainState::createScene()
 
 
     //set up lighting
-    m_backgroundScene.getSunlight().getComponent<cro::Transform>().setRotation(glm::vec3(1.f, 0.3f, 0.f));
     //m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour(0.48f, 0.48f, 0.48f));
+    m_backgroundScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, cro::Util::Const::PI - 0.79f);
+    m_backgroundScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.79f);
     m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-3.f, 3.f, -3.f, 3.f, 0.1f, 20.f));
 
 
