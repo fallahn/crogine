@@ -120,7 +120,7 @@ namespace
 
     const std::uint8_t MaxSubMeshes = 8; //for imported models. Can be made bigger but this is generally a waste of memory
 
-    void updateView(cro::Entity entity, float farPlane, float fov)
+    float updateView(cro::Entity entity, float farPlane, float fov)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         size.x -= (size.x * ui::InspectorWidth);
@@ -132,11 +132,12 @@ namespace
         cam3D.viewport.width = 1.f - ui::InspectorWidth;
         cam3D.viewport.bottom = ui::BrowserHeight;
         cam3D.viewport.height = 1.f - ui::BrowserHeight;
+
+        return size.x / size.y;
     }
 
     const std::string prefPath = cro::FileSystem::getConfigDirectory("cro_model_viewer") + "prefs.cfg";
 
-    const std::array<float, 6> worldScales = { 0.01f, 0.1f, 1.f, 10.f, 100.f, 1000.f };
     const glm::vec3 DefaultCameraPosition({ 0.f, 0.25f, 5.f });
 
     std::array<std::int32_t, MaterialID::Count> materialIDs = {};
@@ -264,6 +265,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
     m_scene                 (context.appInstance.getMessageBus()),
     m_previewScene          (context.appInstance.getMessageBus()),
     m_fov                   (DefaultFOV),
+    m_viewportRatio         (1.f),
     m_showPreferences       (false),
     m_showGroundPlane       (false),
     m_showSkybox            (false),
@@ -313,7 +315,7 @@ bool ModelState::handleEvent(const cro::Event& evt)
     case SDL_MOUSEWHEEL:
     {
         m_fov = std::min(MaxFOV, std::max(MinFOV, m_fov - (evt.wheel.y * 0.1f)));
-        updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
+        m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
     }
         break;
     }
@@ -331,7 +333,7 @@ void ModelState::handleMessage(const cro::Message& msg)
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             updateLayout(data.data0, data.data1);
-            updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_fov);
+            m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
         }
     }
 
@@ -456,13 +458,13 @@ void ModelState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition);
     entity.addComponent<cro::Camera>();
-    updateView(entity, DefaultFarPlane, DefaultFOV);
+    m_viewportRatio = updateView(entity, DefaultFarPlane, DefaultFOV);
     m_scene.setActiveCamera(entity);
 
-    entities[EntityID::CamController] = m_scene.createEntity();
-    entities[EntityID::CamController].addComponent<cro::Transform>();
-    //entities[EntityID::CamController].addComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::GridMesh].getComponent<cro::Transform>());
+    entities[EntityID::RootNode] = m_scene.createEntity();
+    entities[EntityID::RootNode].addComponent<cro::Transform>();
+    //entities[EntityID::RootNode].addComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entities[EntityID::GridMesh].getComponent<cro::Transform>());
 
     //axis icon
     meshID = m_resources.meshes.loadMesh(OriginIconBuilder());
@@ -475,10 +477,10 @@ void ModelState::createScene()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        float scale = worldScales[m_preferences.unitsPerMetre];
+        float scale = m_fov / DefaultFOV;
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     };
-    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //ground plane for receiving shadows
@@ -515,7 +517,7 @@ void ModelState::createScene()
     mesh.indexData[0].indexCount = 4;
 
     entities[EntityID::GroundPlane] = entity;
-    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //set the default sunlight properties
     m_scene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-4.f, 4.f, -4.f, 4.f, 0.1f, 10.f));
@@ -523,11 +525,19 @@ void ModelState::createScene()
     m_scene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.79f);
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.79f);
 
-    entities[EntityID::CamController].getComponent<cro::Transform>().addChild(m_scene.getSunlight().getComponent<cro::Transform>());
+    entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(m_scene.getSunlight().getComponent<cro::Transform>());
 
     cro::ModelDefinition def;
     def.loadFromFile("assets/models/light.cmt", m_resources);
     def.createModel(m_scene.getSunlight(), m_resources);
+    m_scene.getSunlight().getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", cro::Colour(1.f, 1.f, 0.f, 1.f));
+
+
+    entities[EntityID::ArcBall] = m_scene.createEntity();
+    entities[EntityID::ArcBall].addComponent<cro::Transform>();
+    entities[EntityID::ArcBall].getComponent<cro::Transform>().addChild(m_scene.getActiveCamera().getComponent<cro::Transform>());
+
+
 
     //create the material preview scene
     cro::ModelDefinition modelDef;
@@ -911,7 +921,7 @@ void ModelState::openModelAtPath(const std::string& path)
         m_currentFilePath = path;
 
         entities[EntityID::ActiveModel] = m_scene.createEntity();
-        entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
+        entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
 
         def.createModel(entities[EntityID::ActiveModel], m_resources);
 
@@ -939,10 +949,6 @@ void ModelState::openModelAtPath(const std::string& path)
         m_currentModelConfig.loadFromFile(path);
 
         const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
-        if (meshData.boundingSphere.radius > (2.f * worldScales[m_preferences.unitsPerMetre]))
-        {
-            cro::Logger::log("Bounding sphere radius is very large - model may not be visible", cro::Logger::Type::Warning);
-        }
 
         //read all the model properties
         m_modelProperties.name = m_currentModelConfig.getId();
@@ -1557,7 +1563,7 @@ void ModelState::importModel()
                 meshData.boundingSphere.radius = 0.5f;
 
                 entities[EntityID::ActiveModel] = m_scene.createEntity();
-                entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
+                entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
                 entities[EntityID::ActiveModel].addComponent<cro::Model>(meshData, m_resources.materials.get(materialIDs[MaterialID::Default]));
                 
                 for (auto i = 0; i < header.arrayCount; ++i)
@@ -1668,7 +1674,7 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
 void ModelState::applyImportTransform()
 {
     //keep rotation separate as we don't apply scale to normal data
-    auto rotation = glm::toMat4(glm::toQuat(glm::orientate3(m_importedTransform.rotation)));
+    auto rotation = glm::toMat4(glm::toQuat(glm::orientate3(m_importedTransform.rotation * cro::Util::Const::degToRad)));
     auto transform = rotation * glm::scale(glm::mat4(1.f), glm::vec3(m_importedTransform.scale));
 
     auto meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
@@ -1745,7 +1751,7 @@ void ModelState::applyImportTransform()
 
     m_importedTransform = {};
     entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
-    entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(glm::vec3(0.f));
+    entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTY);
 }
 
 void ModelState::loadPrefs()
@@ -1761,10 +1767,6 @@ void ModelState::loadPrefs()
             {
                 m_preferences.workingDirectory = prop.getValue<std::string>();
                 std::replace(m_preferences.workingDirectory.begin(), m_preferences.workingDirectory.end(), '\\', '/');
-            }
-            else if (name == "units_per_metre")
-            {
-                m_preferences.unitsPerMetre = cro::Util::Maths::clamp(static_cast<std::size_t>(prop.getValue<std::int32_t>()), std::size_t(0u), worldScales.size());
             }
             else if (name == "show_groundplane")
             {
@@ -1827,7 +1829,6 @@ void ModelState::savePrefs()
 
     cro::ConfigFile prefsOut;
     prefsOut.addProperty("working_dir", m_preferences.workingDirectory);
-    prefsOut.addProperty("units_per_metre", std::to_string(m_preferences.unitsPerMetre));
     prefsOut.addProperty("show_groundplane", m_showGroundPlane ? "true" : "false");
     prefsOut.addProperty("show_skybox", m_showSkybox ? "true" : "false");
     prefsOut.addProperty("sky_top", toString(m_preferences.skyTop));
@@ -1854,7 +1855,7 @@ void ModelState::updateWorldScale()
     //}
     //m_scene.getActiveCamera().getComponent<cro::Transform>().setPosition(DefaultCameraPosition * scale);
     //
-    //entities[EntityID::CamController].getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
+    //entities[EntityID::RootNode].getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
     //updateView(m_scene.getActiveCamera(), DefaultFarPlane * worldScales[m_preferences.unitsPerMetre], m_fov);
 }
 
@@ -1887,7 +1888,7 @@ void ModelState::updateNormalVis()
         //entities[EntityID::NormalVis] = m_scene.createEntity();
         //entities[EntityID::NormalVis].addComponent<cro::Transform>();
         //entities[EntityID::NormalVis].addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialIDs[MaterialID::DebugDraw]));
-        //entities[EntityID::CamController].getComponent<cro::Transform>().addChild(entities[EntityID::NormalVis].getComponent<cro::Transform>());
+        //entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entities[EntityID::NormalVis].getComponent<cro::Transform>());
     }
 }
 
@@ -1896,33 +1897,26 @@ void ModelState::updateMouseInput(const cro::Event& evt)
     const float moveScale = 0.004f;
     if (evt.motion.state & SDL_BUTTON_LMASK)
     {
-        float pitchMove = static_cast<float>(evt.motion.yrel)* moveScale;
+        float pitchMove = static_cast<float>(evt.motion.yrel)* moveScale * m_viewportRatio;
         float yawMove = static_cast<float>(evt.motion.xrel)* moveScale;
 
-        auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
-
-        glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchMove, glm::vec3(1.f, 0.f, 0.f));
-        glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yawMove, glm::vec3(0.f, 1.f, 0.f));
-
-        auto rotation =  pitch * yaw * tx.getRotation();
-        tx.setRotation(rotation);
+        auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
+        tx.rotate(cro::Transform::X_AXIS, -pitchMove);
+        tx.rotate(cro::Transform::Y_AXIS, -yawMove);
     }
     else if (evt.motion.state & SDL_BUTTON_RMASK)
     {
         //do roll
         float rollMove = static_cast<float>(-evt.motion.xrel)* moveScale;
 
-        auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
-
-        glm::quat roll = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rollMove, glm::vec3(0.f, 0.f, 1.f));
-
-        auto rotation = roll * tx.getRotation();
-        tx.setRotation(rotation);
+        auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
+        tx.rotate(cro::Transform::Z_AXIS, -rollMove);
     }
     else if (evt.motion.state & SDL_BUTTON_MMASK)
     {
-        auto& tx = entities[EntityID::CamController].getComponent<cro::Transform>();
-        tx.move((glm::vec3(evt.motion.xrel, -evt.motion.yrel, 0.f) / 160.f) * worldScales[m_preferences.unitsPerMetre]);
+        auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
+        tx.move(tx.getRightVector() * -static_cast<float>(evt.motion.xrel) / 160.f);
+        tx.move(tx.getUpVector() * static_cast<float>(evt.motion.yrel) / 160.f);
     }
 }
 
@@ -2407,7 +2401,9 @@ void ModelState::drawInspector()
                     ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");
                     if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], 1.f, -180.f, 180.f))
                     {
-                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(m_importedTransform.rotation * cro::Util::Const::degToRad);
+                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, m_importedTransform.rotation.z * cro::Util::Const::degToRad);
+                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, m_importedTransform.rotation.y * cro::Util::Const::degToRad);
+                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, m_importedTransform.rotation.x * cro::Util::Const::degToRad);
                     }
                     if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.01f, 0.1f, 10.f))
                     {
