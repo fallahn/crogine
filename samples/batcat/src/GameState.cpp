@@ -244,7 +244,7 @@ void GameState::createScene()
     m_modelDefs[GameModelID::BatCat].createModel(entity, m_resources);
 
     entity.addComponent<cro::Transform>().setScale(glm::vec3(0.03f));
-    entity.getComponent<cro::Transform>().setRotation({ 0.f, 0.f, cro::Util::Const::PI / 2.f });
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f);
     entity.getComponent<cro::Transform>().setPosition({ -19.f, 0.f, 6.f });
     entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Run);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
@@ -325,7 +325,7 @@ void GameState::createScene()
 
     auto sunEnt = m_scene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setPosition({ -19.f, 11.f, 12.f });
-    sunEnt.getComponent<cro::Transform>().setRotation(glm::vec3(-1.f, 0.f, 0.f));
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.797f);
     sunEnt.getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
 
     ent.addComponent<cro::AudioListener>();
@@ -338,7 +338,7 @@ void GameState::createScene()
     {
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(sourcePosition);
-        e.getComponent<cro::Transform>().setRotation(glm::vec3(0.f, 0.f, sourceRotation));
+        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, sourceRotation);
         m_modelDefs[GameModelID::Cube].createModel(e, m_resources);
 
         static const float Speed = 35.f;
@@ -380,7 +380,7 @@ void GameState::createScene()
     {
         auto& tx = e.getComponent<cro::Transform>();
         tx.setPosition(sourcePosition);
-        tx.setRotation(glm::vec3(0.f, 0.f, sourceRotation));
+        tx.setRotation(cro::Transform::Y_AXIS, sourceRotation);
 
         auto& timer = e.getComponent<cro::Callback>().getUserData<float>();
         timer += dt;
@@ -398,7 +398,6 @@ namespace
     const cro::FloatRect buttonArea(0.f, 0.f, 64.f, 64.f);
 }
 
-#include <crogine/graphics/BoundingBox.hpp>
 void GameState::createUI()
 {
     //2D camera

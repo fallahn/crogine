@@ -295,7 +295,7 @@ void GameState::createScene()
     modelDef.loadFromFile("assets/models/ground_plane.cmt", m_resources);
 
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setRotation({ -90.f * cro::Util::Const::degToRad, 0.f, 0.f });
+    entity.addComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     modelDef.createModel(entity, m_resources);
 
     entity = m_gameScene.createEntity();
@@ -456,7 +456,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         //TODO check this avatar doesn't already exist
         
         auto entity = createActor();
-        auto rotation = entity.getComponent<cro::Transform>().getRotationQuat();
+        auto rotation = entity.getComponent<cro::Transform>().getRotation();
 
         //TODO do we want to cache this model def?
         cro::ModelDefinition modelDef;

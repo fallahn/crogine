@@ -12,5 +12,5 @@ particle_system flames
 	size = 0.19
 	emit_rate = 30
 	spawn_radius = 0.2
-	release_count = 0;
+	release_count = 0
 }

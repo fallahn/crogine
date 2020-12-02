@@ -118,7 +118,7 @@ void GameState::netBroadcast()
 
             PlayerUpdate update;
             update.position = m_playerEntities[i].getComponent<cro::Transform>().getPosition();
-            update.rotation = Util::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotationQuat());
+            update.rotation = Util::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotation());
             update.pitch = Util::compressFloat(player.cameraPitch);
             update.yaw = Util::compressFloat(player.cameraYaw);
             update.timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
@@ -139,7 +139,7 @@ void GameState::netBroadcast()
         update.actorID = actor.id;
         update.serverID = actor.serverEntityId;
         update.position = tx.getPosition();
-        update.rotation = Util::compressQuat(tx.getRotationQuat());
+        update.rotation = Util::compressQuat(tx.getRotation());
         update.timestamp = timestamp;
         m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, update, cro::NetFlag::Unreliable);
     }
@@ -163,7 +163,7 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
             PlayerInfo info;
             info.playerID = i;
             info.spawnPosition = m_playerEntities[i].getComponent<cro::Transform>().getPosition();
-            info.rotation = Util::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotationQuat());
+            info.rotation = Util::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotation());
             info.serverID = m_playerEntities[i].getIndex();
             info.timestamp = m_serverTime.elapsed().asMilliseconds();
 

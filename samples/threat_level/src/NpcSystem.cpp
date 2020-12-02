@@ -211,8 +211,13 @@ void NpcSystem::process(float dt)
             status.wantsReset = true;
         }
 
+        if (status.type == Npc::Turret)
+        {
+            processTurret(entity, dt);
+            continue; //turrets are parented to terrain entities - so don't need following update
+        }
 
-        if (status.active)
+        else if (status.active)
         {
             //process logic based on type
             switch (status.type)
@@ -225,9 +230,6 @@ void NpcSystem::process(float dt)
                 processChoppa(entity, dt);
                 hasCollision = false; //we want to play dying animation
                 break;
-            case Npc::Turret:
-                processTurret(entity, dt);
-                continue; //turrets are parented to terrain entities - so don't need following update
             case Npc::Speedray:
                 processSpeedray(entity, dt);
                 break;
@@ -362,8 +364,8 @@ void NpcSystem::processTurret(cro::Entity entity, float)
     
     glm::vec3 target = m_playerPosition - tx.getWorldPosition();
 
-    float rotation = -atan2(target.x, target.y);
-    tx.setRotation({ 0.f, rotation, 0.f });
+    float rotation = -std::atan2(target.x, target.y);
+    tx.setRotation(cro::Transform::Z_AXIS, rotation);
 }
 
 void NpcSystem::processSpeedray(cro::Entity entity, float dt)

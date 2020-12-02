@@ -341,7 +341,7 @@ void NpcDirector::process(float dt)
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 tx.setPosition({ 5.6f, cro::Util::Random::value(-2.f, 2.f) , zDepth });
-                tx.setRotation({ 0.f, 0.f, 0.f });
+                tx.setRotation(glm::quat(1.f, 0.f, 0.f, 0.f));
 
                 auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
                 msg->type = NpcEvent::HealthChanged;
@@ -391,7 +391,7 @@ void NpcDirector::process(float dt)
                     auto yPos = cro::Util::Random::value(-1.9f, 1.9f);
                     tx.setPosition({ startX + (status.choppa.ident * ChoppaNavigator::spacing), yPos, zDepth });
                 }
-                tx.setRotation({0.f,  /*-cro::Util::Const::PI / 2.f*/0.f, 0.f });
+                tx.setRotation(glm::quat(1.f, 0.f, 0.f, 0.f));
 
                 auto* msg = postMessage<NpcEvent>(MessageID::NpcMessage);
                 msg->type = NpcEvent::HealthChanged;
@@ -497,7 +497,7 @@ void NpcDirector::process(float dt)
             if (entity.getComponent<cro::Model>().isVisible())
             {
                 const auto& tx = entity.getComponent<cro::Transform>();
-                float rotation = entity.getComponent<Family>().child.getComponent<cro::Transform>().getRotation().z;
+                float rotation = glm::eulerAngles(entity.getComponent<Family>().child.getComponent<cro::Transform>().getRotation()).z;
 
                 for (auto i = 0u; i < 2; ++i)
                 {
@@ -507,7 +507,7 @@ void NpcDirector::process(float dt)
                     msg->type = NpcEvent::FiredWeapon;
                     msg->position = tx.getWorldPosition();
                     msg->position.z += 0.18f;
-                    msg->velocity = glm::rotate(glm::vec3(0.f, 1.f, 0.f), (rotation - 0.2f) + (static_cast<float>(i) * 0.4f), glm::vec3(0.f, 0.f, 1.f));
+                    msg->velocity = glm::rotate(cro::Transform::Y_AXIS, (rotation - 0.2f) + (static_cast<float>(i) * 0.4f), cro::Transform::Z_AXIS);
                 }
             }
         };

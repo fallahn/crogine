@@ -168,7 +168,7 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
     glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yawMove, glm::vec3(0.f, 1.f, 0.f));
     
     auto& tx = entity.getComponent<cro::Transform>();
-    auto rotation = yaw * tx.getRotationQuat() * pitch;
+    auto rotation = yaw * tx.getRotation() * pitch;
     tx.setRotation(rotation);
 
     

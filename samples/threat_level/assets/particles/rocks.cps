@@ -12,5 +12,5 @@ particle_system rocks
 	size = 0.06
 	emit_rate = 4
 	spawn_radius = 0.8
-	release_count = 0;
+	release_count = 0
 }

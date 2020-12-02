@@ -170,7 +170,7 @@ void CollisionSystem::process(float dt)
     for (auto& entity : entities)
     {
         const auto& tx = entity.getComponent<Transform>();
-        auto rot = tx.getRotationQuat();
+        auto rot = tx.getRotation();
         auto pos = tx.getWorldPosition();
         btTransform btXf(btQuaternion(rot.x, rot.y, rot.z, rot.w), btVector3(pos.x, pos.y, pos.z));
         m_collisionData[entity.getIndex()].object->setWorldTransform(btXf);
