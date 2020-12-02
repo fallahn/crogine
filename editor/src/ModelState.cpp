@@ -1668,7 +1668,7 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
 void ModelState::applyImportTransform()
 {
     //keep rotation separate as we don't apply scale to normal data
-    auto rotation = glm::toMat4(glm::toQuat(glm::orientate3(m_importedTransform.rotation)));
+    auto rotation = glm::toMat4(glm::toQuat(glm::orientate3(m_importedTransform.rotation * cro::Util::Const::degToRad)));
     auto transform = rotation * glm::scale(glm::mat4(1.f), glm::vec3(m_importedTransform.scale));
 
     auto meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
@@ -1745,7 +1745,7 @@ void ModelState::applyImportTransform()
 
     m_importedTransform = {};
     entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
-    entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(glm::vec3(0.f));
+    entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTY);
 }
 
 void ModelState::loadPrefs()
@@ -2407,7 +2407,9 @@ void ModelState::drawInspector()
                     ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");
                     if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], 1.f, -180.f, 180.f))
                     {
-                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(m_importedTransform.rotation * cro::Util::Const::degToRad);
+                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, m_importedTransform.rotation.z * cro::Util::Const::degToRad);
+                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, m_importedTransform.rotation.y * cro::Util::Const::degToRad);
+                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, m_importedTransform.rotation.x * cro::Util::Const::degToRad);
                     }
                     if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.01f, 0.1f, 10.f))
                     {
