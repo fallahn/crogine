@@ -38,7 +38,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
-#include <crogine/graphics/GridMeshBuilder.hpp>
+#include <crogine/graphics/CircleMeshBuilder.hpp>
 #include <crogine/util/Constants.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -109,14 +109,14 @@ void GameState::loadAssets()
 
 void GameState::createScene()
 {
-    auto gridID = m_resources.meshes.loadMesh(cro::GridMeshBuilder(glm::vec2(100.f), 10));
+    auto gridID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(50.f, 30));
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
     auto matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
     
     m_tempTexture.loadFromFile("assets/images/batcat_diffuse.png");
 
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -50.f, -50.f, -120.f });
+    entity.addComponent<cro::Transform>().setPosition({ -0.f, -0.f, -120.f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(gridID), m_resources.materials.get(matID));
     entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", cro::TextureID(m_tempTexture.getGLHandle()));
 

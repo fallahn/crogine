@@ -78,6 +78,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 
   ${PROJECT_DIR}/graphics/BoundingBox.cpp
+  ${PROJECT_DIR}/graphics/CircleMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/Colour.cpp
   ${PROJECT_DIR}/graphics/DynamicMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/EnvironmentMap.cpp

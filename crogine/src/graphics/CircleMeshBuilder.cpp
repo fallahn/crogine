@@ -29,71 +29,70 @@ source distribution.
 
 #include "../detail/GLCheck.hpp"
 
-#include <crogine/graphics/GridMeshBuilder.hpp>
+#include <crogine/graphics/CircleMeshBuilder.hpp>
+#include <crogine/util/Constants.hpp>
 
 using namespace cro;
 
-GridMeshBuilder::GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions)
-    : m_size        (size),
-    m_subDivisions  (subDivisions)
+CircleMeshBuilder::CircleMeshBuilder(float radius, std::uint32_t pointCount)
+    : m_radius(radius),
+    m_pointCount(pointCount)
 {
-    CRO_ASSERT(subDivisions > 0, "Must be non-zero");
+    CRO_ASSERT(radius > 0, "Must have a positive radius");
+    CRO_ASSERT(pointCount > 2, "Must have at least 3 points");
 }
 
 //private
-Mesh::Data GridMeshBuilder::build() const
+Mesh::Data CircleMeshBuilder::build() const
 {
-    glm::vec2 stride = m_size / static_cast<float>(m_subDivisions);
+    const float step = cro::Util::Const::TAU / m_pointCount;
+    std::vector<glm::vec2> points;
+
+    for (auto i = 0u; i < m_pointCount; ++i)
+    {
+        points.emplace_back(std::sin(i * step), std::cos(i * step)) *= m_radius;
+    }
 
     //pos, normal, tan, bit, uv
     std::vector<float> verts;
-
-    auto xCount = m_subDivisions + 1;
-    auto yCount = m_subDivisions + 1;
-
-    for (auto y = 0; y < yCount; ++y)
+    for (auto p : points)
     {
-        for (auto x = 0u; x < xCount; ++x)
-        {
-            verts.push_back(x * stride.x);
-            verts.push_back(y * stride.y);
-            verts.push_back(0.f);
+        verts.emplace_back(p.x);
+        verts.emplace_back(p.y);
+        verts.emplace_back(0.f);
 
-            verts.push_back(0.f);
-            verts.push_back(0.f);
-            verts.push_back(1.f);
+        verts.emplace_back(0.f);
+        verts.emplace_back(0.f);
+        verts.emplace_back(1.f);
 
-            verts.push_back(1.f);
-            verts.push_back(0.f);
-            verts.push_back(0.f);
+        verts.emplace_back(1.f);
+        verts.emplace_back(0.f);
+        verts.emplace_back(0.f);
 
-            verts.push_back(0.f);
-            verts.push_back(1.f);
-            verts.push_back(0.f);
+        verts.emplace_back(0.f);
+        verts.emplace_back(1.f);
+        verts.emplace_back(0.f);
 
-            verts.push_back((x * stride.x) / m_size.x);
-            verts.push_back((y * stride.y) / m_size.y);
-        }
+        auto u = p.x + m_radius;
+        u /= (m_radius * 2.f);
+
+        auto v = p.y + m_radius;
+        v /= (m_radius * 2.f);
+
+        verts.emplace_back(u);
+        verts.emplace_back(v);
     }
+    
 
     std::vector<std::uint32_t> indices;
-    for (auto y = 0u; y < yCount - 1; y++)
+    for (auto i = 0u; i < ((m_pointCount + 1) / 2); ++i)
     {
-        if (y > 0) 
-        {
-            indices.push_back(y * yCount);
-        }
+        indices.emplace_back(i);
 
-        for (auto x = 0u; x < xCount; x++)
+        auto next = (m_pointCount - 1) - i;
+        if (next > 0)
         {
-            indices.push_back(((y + 1) * yCount) + x);
-            indices.push_back((y * yCount) + x);
-            
-        }
-
-        if (y < yCount - 2)
-        {
-            indices.push_back(((y + 1) * yCount) + (xCount - 1));
+            indices.emplace_back(next);
         }
     }
 
@@ -116,10 +115,10 @@ Mesh::Data GridMeshBuilder::build() const
     createIBO(meshData, indices.data(), 0, sizeof(uint32));
 
     //spatial bounds
-    meshData.boundingBox[0] = { 0.f, 0.f, -0.01f };
-    meshData.boundingBox[1] = { m_size.x, m_size.y, 0.01f };
-    meshData.boundingSphere.centre = meshData.boundingBox[1] / 2.f;
-    meshData.boundingSphere.radius = glm::length(meshData.boundingSphere.centre);
+    meshData.boundingBox[0] = { -m_radius, -m_radius, -0.01f };
+    meshData.boundingBox[1] = { m_radius, m_radius, 0.01f };
+    meshData.boundingSphere.centre = glm::vec3(0.f);
+    meshData.boundingSphere.radius = m_radius;
 
     return meshData;
 }

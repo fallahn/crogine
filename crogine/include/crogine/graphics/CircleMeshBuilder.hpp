@@ -31,29 +31,28 @@ source distribution.
 
 #include <crogine/graphics/MeshBuilder.hpp>
 
-#include <crogine/detail/glm/vec2.hpp>
-
 namespace cro
 {
     /*!
-    \brief Creates a texturable grid mesh formed of a triangle strip
-    UV coordinates are mapped from 0,0 at the bottom left to 1,1 at the top right
+    \brief Creates a texturable circular mesh formed of a triangle strip.
+    The vertices are positioned around the centre of the circle
     */
-    class CRO_EXPORT_API GridMeshBuilder final : public MeshBuilder
+    class CRO_EXPORT_API CircleMeshBuilder final : public MeshBuilder
     {
     public:
         /*!
         \brief Constructor.
-        \param size Dimensions of the quad created by this mesh builder
-        \param subDivisions Number of sub-divisions along each side of the grid
+        \param radius The radius of the circle to create. Must be greater than 0
+        \param pointCount Number of points which make up the perimeter. Must be
+        3 or more.
         */
-        GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions);
+        CircleMeshBuilder(float radius, std::uint32_t pointCount);
 
         std::size_t getUID() const override { return 0; }
 
     private:
-        glm::vec2 m_size = glm::vec2(0.f);
-        std::uint32_t m_subDivisions;
+        float m_radius;
+        std::uint32_t m_pointCount;
         Mesh::Data build() const override;
     };
 }
