@@ -95,15 +95,15 @@ static const std::string SeaFragment = R"(
 
     vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
     {
-        MED float diffuseAmount = max(dot(normal, lightDirection), 0.0);
+        float diffuseAmount = max(dot(normal, lightDirection), 0.0);
 
-        MED vec3 mixedColour = diffuseColour.rgb * lightDiffuse * diffuseAmount * falloff;
+        vec3 mixedColour = diffuseColour.rgb * lightDiffuse * diffuseAmount * falloff;
 
-        MED vec3 halfVec = normalize(eyeDirection + lightDirection);
-        MED float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
-        LOW vec3 specularColour = lightSpecular * vec3(pow(specularAngle, ((254.0) + 1.0))) * falloff;
+        vec3 halfVec = normalize(eyeDirection + lightDirection);
+        float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
+        vec3 specularColour = lightSpecular * vec3(pow(specularAngle, (254.0 + 1.0))) * falloff;
 
-        return clamp(mixedColour + (specularColour), 0.0, 1.0);
+        return clamp(mixedColour + specularColour, 0.0, 1.0);
     }
 
     void main()
@@ -119,15 +119,17 @@ static const std::string SeaFragment = R"(
         vec3 texNormal = TEXTURE(u_normalMap, coord + vec2(time, time * 0.5)).rgb * 2.0 - 1.0;
         vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
 
-        eyeDirection = u_cameraWorldPosition - v_worldPosition;
-        vec3 skyColour = TEXTURE_CUBE(u_skyBox, reflect(eyeDirection, normal)).rgb;
+        eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+        vec3 skyColour = TEXTURE_CUBE(u_skyBox, reflect(eyeDirection, normal)).rgb * 0.125;
 
         vec2 reflectCoords = v_reflectionPosition.xy / v_reflectionPosition.w / 2.0 + 0.5;
-        vec3 reflectColour = TEXTURE(u_reflectionMap, reflectCoords + (normal.rg * 0.01)).rgb;
+        vec3 reflectColour = TEXTURE(u_reflectionMap, reflectCoords + (normal.rg * 0.01)).rgb * u_lightColour.rgb * 0.25;
 
-        vec3 blendedColour = colour * 0.8; //ambience
-        blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, vec3(1.0), 1.0);
-        blendedColour += skyColour;
+        vec3 blendedColour = colour * 0.2; //ambience
+        blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, u_lightColour.rgb, 1.0);
+        //blendedColour += skyColour;
+        blendedColour += reflectColour;
 
-        FRAG_OUT = vec4(mix(mix(colour, skyColour, 0.4), reflectColour, 0.3), 1.0);
+        //FRAG_OUT = vec4(mix(mix(colour, skyColour, 0.4), reflectColour, 0.3), 1.0);
+        FRAG_OUT = vec4(blendedColour, 1.0);
     })";

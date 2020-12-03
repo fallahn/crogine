@@ -270,6 +270,8 @@ namespace cro::Shaders::PBR
             colour *= shadowAmount(v_lightWorldPosition);
             #endif            
 
+            colour *= u_lightColour.rgb;
+
             FRAG_OUT = vec4(colour, 1.0);
         })";
 }

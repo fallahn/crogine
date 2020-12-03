@@ -36,9 +36,11 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/Sunlight.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/graphics/CircleMeshBuilder.hpp>
@@ -56,6 +58,9 @@ namespace
     const float SeaRadius = 50.f;
     const float CameraHeight = 2.f;
     const std::uint32_t ReflectionMapSize = 512;
+
+    glm::vec3 LightColour = glm::vec3(1.0);
+    glm::vec3 LightRotation = glm::vec3(-cro::Util::Const::PI * 0.9f, 0.f, 0.f);
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -76,7 +81,28 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         {
             if (ImGui::Begin("Buns"))
             {
-                ImGui::Image(m_reflectionBuffer.getTexture(), { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
+                if (ImGui::ColorEdit3("Light Colour", &LightColour[0]))
+                {
+                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour(LightColour.r, LightColour.g, LightColour.b, 1.f));
+                }
+
+                if (ImGui::SliderFloat3("Light Rotation", &LightRotation[0], -cro::Util::Const::PI, cro::Util::Const::PI))
+                {
+                    m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, LightRotation.x);
+                    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, LightRotation.y);
+                    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, LightRotation.z);
+                }
+
+                if (ImGui::CollapsingHeader("ShadowMap"))
+                {
+                    ImGui::Image(m_gameScene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture(),
+                        { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
+                }
+
+                if (ImGui::CollapsingHeader("Reflection Map"))
+                {
+                    ImGui::Image(m_reflectionBuffer.getTexture(), { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
+                }
             }
             ImGui::End();
         });
@@ -155,6 +181,7 @@ void GameState::addSystems()
 
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 }
 
@@ -171,13 +198,13 @@ void GameState::loadAssets()
 
     //m_gameScene.setCubemap(m_environmentMap);
     m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
-    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.79f);
-    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.79f);
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI * 0.9f);
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_skyBox", m_gameScene.getCubemap());
 
-    m_resources.textures.load(TextureID::SeaNormal, "assets/images/water_normal.png");
+    m_resources.textures.load(TextureID::SeaNormal, "assets/images/water_normal.png", true);
     auto& waterNormal = m_resources.textures.get(TextureID::SeaNormal);
     waterNormal.setRepeated(true);
+    waterNormal.setSmooth(true);
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_normalMap", waterNormal);
 }
 
@@ -197,6 +224,7 @@ void GameState::createScene()
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(gridID), m_resources.materials.get(m_materialIDs[MaterialID::Sea]));
 
     //TODO add this to some sort of system for updating sea properties
+    //TODO update material properties with uniform ID setter to save string lookups
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
