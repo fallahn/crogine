@@ -219,7 +219,7 @@ namespace cro
             /*!
             \brief Sets a texture sampler uniform from a textureID
             \param name String containing the name of the uniform to set
-            \param value TextureID containing the ID to set
+            \param value CubemapID containing the ID to set
             */
             void setProperty(const std::string& name, CubemapID value);
 

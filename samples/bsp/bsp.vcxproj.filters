@@ -92,5 +92,13 @@
     <Filter Include="Source Files\systems">
       <UniqueIdentifier>{2748bfca-13ff-4040-a18e-f19d3f0156e5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\shaders">
+      <UniqueIdentifier>{01bc0806-f397-48bf-9616-859ec58c5c4e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\SeaShader.inl">
+      <Filter>Header Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

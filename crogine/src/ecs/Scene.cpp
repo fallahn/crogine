@@ -455,6 +455,11 @@ void Scene::setCubemap(const EnvironmentMap& map)
     m_shaderIndex = SkyboxType::Environment;
 }
 
+CubemapID Scene::getCubemap() const
+{
+    return CubemapID(m_activeSkyboxTexture);
+}
+
 void Scene::setSkyboxColours(cro::Colour dark, cro::Colour light)
 {
     if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle())

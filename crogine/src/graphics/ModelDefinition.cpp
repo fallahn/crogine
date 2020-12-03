@@ -450,6 +450,12 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                     Util::Maths::clamp(c.g, 0.f, 1.f),
                     Util::Maths::clamp(c.b, 0.f, 1.f),
                     Util::Maths::clamp(c.a, 0.f, 1.f)));
+
+                if (shaderType == ShaderResource::PBR
+                    && c.b < 1)
+                {
+                    LogW << "PBR Material has an AO mask value less than one. Is this intentional? " << std::endl;
+                }
             }
             else if (name == "blendmode")
             {

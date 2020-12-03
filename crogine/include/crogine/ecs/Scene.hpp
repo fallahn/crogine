@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/ecs/Component.hpp>
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/postprocess/PostProcess.hpp>
 
@@ -200,6 +201,12 @@ namespace cro
         be kept valid for at least as long as a Scene using it.
         */
         void setCubemap(const EnvironmentMap& map);
+
+        /*!
+        \brief Returns the texture handle to the active cubemap texture.
+        This is useful for settings cubemap properties of materials.
+        */
+        CubemapID getCubemap() const;
 
         /*!
         \brief Sets the colours used in the default skybox.

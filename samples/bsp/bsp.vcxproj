@@ -181,6 +181,9 @@
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\stb_image_resize.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="src\SeaShader.inl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
