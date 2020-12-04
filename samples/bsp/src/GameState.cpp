@@ -64,9 +64,10 @@ namespace
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
-    : cro::State(stack, context),
-    m_gameScene(context.appInstance.getMessageBus()),
-    m_uiScene(context.appInstance.getMessageBus())
+    : cro::State    (stack, context),
+    m_gameScene     (context.appInstance.getMessageBus()),
+    m_uiScene       (context.appInstance.getMessageBus()),
+    m_waterIndex    (0)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -199,13 +200,29 @@ void GameState::loadAssets()
     //m_gameScene.setCubemap(m_environmentMap);
     m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI * 0.9f);
-    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_skyBox", m_gameScene.getCubemap());
 
-    m_resources.textures.load(TextureID::SeaNormal, "assets/images/water_normal.png", true);
-    auto& waterNormal = m_resources.textures.get(TextureID::SeaNormal);
-    waterNormal.setRepeated(true);
-    waterNormal.setSmooth(true);
-    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_normalMap", waterNormal);
+    //m_resources.textures.load(TextureID::SeaNormal, "assets/images/water_normal.png", true);
+    //auto& waterNormal = m_resources.textures.get(TextureID::SeaNormal);
+    //waterNormal.setRepeated(true);
+    //waterNormal.setSmooth(true);
+    //m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_normalMap", waterNormal);
+
+    const std::string basePath = "assets/images/water/water (";
+    for (auto i = 0u; i < m_waterTextures.size(); ++i)
+    {
+        auto path = basePath + std::to_string((i * 3) + 1) + ").png";
+        if (!m_waterTextures[i].loadFromFile(path, true))
+        {
+            LogW << "Failed to load " << path << std::endl;
+        }
+        else
+        {
+            m_waterTextures[i].setSmooth(true);
+            m_waterTextures[i].setRepeated(true);
+
+        }
+    }
+    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_normalMap", m_waterTextures[m_waterIndex]);
 }
 
 void GameState::createScene()
@@ -236,8 +253,16 @@ void GameState::createScene()
         static float elapsed = dt;
         elapsed += dt;
         e.getComponent<cro::Model>().setMaterialProperty(0, "u_time", elapsed);
-
         e.getComponent<cro::Model>().setMaterialProperty(0, "u_reflectionMatrix", m_reflectionCamera.getComponent<cro::Camera>().viewProjectionMatrix);
+
+        static cro::Clock frameClock;
+        if (frameClock.elapsed().asSeconds() > 1.f / 24.f)
+        {
+            frameClock.restart();
+
+            m_waterIndex = (m_waterIndex + 1) % m_waterTextures.size();
+            e.getComponent<cro::Model>().setMaterialProperty(0, "u_normalMap", cro::TextureID(m_waterTextures[m_waterIndex].getGLHandle()));
+        }
     };
 
     //main camera
@@ -272,6 +297,9 @@ void GameState::createScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.85f, -6.f });
     md.createModel(entity, m_resources);
+
+    md.loadFromFile("assets/models/arrow.cmt", m_resources);
+    md.createModel(m_gameScene.getSunlight(), m_resources);
 }
 
 void GameState::createUI()

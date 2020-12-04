@@ -68,6 +68,9 @@ private:
     cro::RenderTexture m_reflectionBuffer;
     cro::Entity m_reflectionCamera;
 
+    std::array<cro::Texture, 40u> m_waterTextures;
+    std::size_t m_waterIndex;
+
     void addSystems();
     void loadAssets();
     void createScene();

@@ -42,12 +42,14 @@ static const std::string SeaVertex = R"(
     uniform mat4 u_viewProjectionMatrix;
 
     uniform mat4 u_reflectionMatrix;
+    uniform mat4 u_lightViewProjectionMatrix;
 
     VARYING_OUT vec3 v_tbn[3];
     VARYING_OUT vec2 v_texCoord;
 
     VARYING_OUT vec3 v_worldPosition;
     VARYING_OUT vec4 v_reflectionPosition;
+    VARYING_OUT LOW vec4 v_lightWorldPosition;
 
     void main()
     {
@@ -62,6 +64,7 @@ static const std::string SeaVertex = R"(
 
         v_worldPosition = position.xyz;
         v_reflectionPosition = u_reflectionMatrix * position;
+        v_lightWorldPosition = u_lightViewProjectionMatrix * position;
 
     })";
 
@@ -71,6 +74,7 @@ static const std::string SeaFragment = R"(
     uniform sampler2D u_depthMap;
     uniform sampler2D u_normalMap;
     uniform sampler2D u_reflectionMap;
+    uniform sampler2D u_shadowMap;
 
     uniform vec3 u_lightDirection;
     uniform vec4 u_lightColour;
@@ -85,6 +89,7 @@ static const std::string SeaFragment = R"(
 
     VARYING_IN vec3 v_worldPosition;
     VARYING_IN vec4 v_reflectionPosition;
+    VARYING_IN LOW vec4 v_lightWorldPosition;
 
     const vec2 TextureScale = vec2(8.0);
     const vec3 colour = vec3(0.137, 0.267, 0.53);
@@ -105,6 +110,51 @@ static const std::string SeaFragment = R"(
         return clamp(mixedColour + specularColour, 0.0, 1.0);
     }
 
+    float unpack(vec4 colour)
+    {
+        const vec4 bitshift = vec4(1.0 / 16777216.0, 1.0 / 65536.0, 1.0 / 256.0, 1.0);
+        return dot(colour, bitshift);
+    }
+
+    const vec2 kernel[16] = vec2[](
+        vec2(-0.94201624, -0.39906216),
+        vec2(0.94558609, -0.76890725),
+        vec2(-0.094184101, -0.92938870),
+        vec2(0.34495938, 0.29387760),
+        vec2(-0.91588581, 0.45771432),
+        vec2(-0.81544232, -0.87912464),
+        vec2(-0.38277543, 0.27676845),
+        vec2(0.97484398, 0.75648379),
+        vec2(0.44323325, -0.97511554),
+        vec2(0.53742981, -0.47373420),
+        vec2(-0.26496911, -0.41893023),
+        vec2(0.79197514, 0.19090188),
+        vec2(-0.24188840, 0.99706507),
+        vec2(-0.81409955, 0.91437590),
+        vec2(0.19984126, 0.78641367),
+        vec2(0.14383161, -0.14100790)
+    );
+    const int filterSize = 3;
+    float shadowAmount(vec4 lightWorldPos)
+    {
+        vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+        projectionCoords = projectionCoords * 0.5 + 0.5;
+
+        if(projectionCoords.z > 1.0) return 1.0;
+
+        float shadow = 0.0;
+        vec2 texelSize = 1.0 / textureSize(u_shadowMap, 0).xy;
+        for(int x = 0; x < filterSize; ++x)
+        {
+            for(int y = 0; y < filterSize; ++y)
+            {
+                float pcfDepth = unpack(TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize));
+                shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
+            }
+        }
+        return 1.0 - (shadow / 9.0);
+    }
+
     void main()
     {
         eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
@@ -121,5 +171,14 @@ static const std::string SeaFragment = R"(
         blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, u_lightColour.rgb, 1.0);
         blendedColour += reflectColour;
 
+if(v_lightWorldPosition.w > 0.0)
+{
+    vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
+    if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
+        blendedColour *= vec3(0.0,1.0,0.0);
+}
+
+
         FRAG_OUT = vec4(blendedColour, 1.0);
+        FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
     })";
