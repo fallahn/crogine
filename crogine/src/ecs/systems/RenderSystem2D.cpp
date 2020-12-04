@@ -46,13 +46,13 @@ source distribution.
 
 namespace
 {
-    std::vector<float> buns =
-    {
-        0.f,0.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
-        0.f,100.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
-        100.f,0.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
-        100.f,100.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
-    };
+    //std::vector<float> buns =
+    //{
+    //    0.f,0.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
+    //    0.f,100.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
+    //    100.f,0.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
+    //    100.f,100.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
+    //};
 }
 
 using namespace cro;
@@ -72,7 +72,8 @@ RenderSystem2D::RenderSystem2D(MessageBus& mb)
 RenderSystem2D::~RenderSystem2D()
 {
     //tidy up any remaining drawables
-    for (auto entity : getEntities())
+    const auto& entities = getEntities();
+    for (auto entity : entities)
     {
         resetDrawable(entity);
     }

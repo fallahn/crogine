@@ -105,9 +105,16 @@ Mesh::Data QuadBuilder::build() const
 //------------------------------------
 
 CubeBuilder::CubeBuilder(glm::vec3 dimensions)
-    : m_dimensions(dimensions) 
+    : m_uid     (0),
+    m_dimensions(dimensions) 
 {
     CRO_ASSERT(dimensions.x > 0 && dimensions.y > 0 && dimensions.z > 0, "Must have non-negative size");
+
+    std::size_t x = static_cast<std::size_t>(dimensions.x * 1000.f);
+    std::size_t y = static_cast<std::size_t>(dimensions.y * 1000.f);
+    std::size_t z = static_cast<std::size_t>(dimensions.z * 1000.f);
+
+    m_uid = x << 32 | y << 16 | z;
 }
 
 Mesh::Data CubeBuilder::build() const

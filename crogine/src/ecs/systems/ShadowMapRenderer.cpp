@@ -126,7 +126,7 @@ void ShadowMapRenderer::updateDrawList(Entity)
         });
 }
 
-void ShadowMapRenderer::render(Entity camera, const RenderTarget&)
+void ShadowMapRenderer::render(Entity, const RenderTarget&)
 {
     const auto& sunlight = getScene()->getSunlight().getComponent<Sunlight>();
 

@@ -40,9 +40,9 @@ namespace cro
     {
     public:
         explicit CubeBuilder(glm::vec3 = glm::vec3(1.f));
-        std::size_t getUID() const override { return Mesh::ID::CubeMesh; }
+        std::size_t getUID() const override { return m_uid; }
     private:
-
+        std::size_t m_uid;
         glm::vec3 m_dimensions;
         Mesh::Data build() const override;
     };

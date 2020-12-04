@@ -174,8 +174,13 @@ static const std::string SeaFragment = R"(
 if(v_lightWorldPosition.w > 0.0)
 {
     vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
-    if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
+
+    //float depth = unpack(TEXTURE(u_shadowMap, coords));
+
+    if(coords.x>0 &&coords.x<1 &&coords.y>0 &&coords.y<1)
+    {
         blendedColour *= vec3(0.0,1.0,0.0);
+    }
 }
 
 

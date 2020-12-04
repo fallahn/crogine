@@ -61,6 +61,9 @@ namespace
 
     glm::vec3 LightColour = glm::vec3(1.0);
     glm::vec3 LightRotation = glm::vec3(-cro::Util::Const::PI * 0.9f, 0.f, 0.f);
+
+    float ShadowmapProjection = 80.f;
+    float ShadowmapClipPlane = 100.f;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -82,6 +85,18 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         {
             if (ImGui::Begin("Buns"))
             {
+                if (ImGui::SliderFloat("Shadow Map Projection", &ShadowmapProjection, 10.f, 200.f))
+                {
+                    auto half = ShadowmapProjection / 2.f;
+                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-half, half, -half, half, 0.1f, ShadowmapClipPlane));
+                }
+
+                if (ImGui::SliderFloat("Shadow Map Far Plane", &ShadowmapClipPlane, 1.f, 500.f))
+                {
+                    auto half = ShadowmapProjection / 2.f;
+                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-half, half, -half, half, 0.1f, ShadowmapClipPlane));
+                }
+
                 if (ImGui::ColorEdit3("Light Colour", &LightColour[0]))
                 {
                     m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour(LightColour.r, LightColour.g, LightColour.b, 1.f));
@@ -265,6 +280,7 @@ void GameState::createScene()
         }
     };
 
+    
     //main camera
     auto camEnt = m_gameScene.getActiveCamera();
     updateView(camEnt.getComponent<cro::Camera>());
@@ -285,6 +301,12 @@ void GameState::createScene()
     rotation = glm::lookAt(m_reflectionCamera.getComponent<cro::Transform>().getWorldPosition(), entity.getComponent<cro::Transform>().getPosition(), cro::Transform::Y_AXIS);
     m_reflectionCamera.getComponent<cro::Transform>().setRotation(glm::inverse(rotation));
 
+
+    //add the light source to the camera so shadow map follows
+    camEnt.getComponent<cro::Transform>().addChild(m_gameScene.getSunlight().getComponent<cro::Transform>());
+    m_gameScene.getSunlight().getComponent<cro::Transform>().setPosition({ 0.f, 10.f, -16.f });
+    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-40.f, 40.f, -40.f, 40.f, 0.1f, 100.f));
+
     //TODO attach the camera to the player and move player instead.
     moveEnt = camEnt;
 
@@ -300,6 +322,19 @@ void GameState::createScene()
 
     md.loadFromFile("assets/models/arrow.cmt", m_resources);
     md.createModel(m_gameScene.getSunlight(), m_resources);
+
+    //box to display shadow frustum
+    md.loadFromFile("assets/models/frustum.cmt", m_resources);
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.5f });
+    md.createModel(entity, m_resources);
+    m_gameScene.getSunlight().getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float) 
+    {
+        e.getComponent<cro::Transform>().setScale({ ShadowmapProjection, ShadowmapProjection, ShadowmapClipPlane });
+    };
 }
 
 void GameState::createUI()
