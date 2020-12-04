@@ -33,11 +33,13 @@ source distribution.
 
 using namespace cro;
 
-GridMeshBuilder::GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions)
+GridMeshBuilder::GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions, glm::vec2 multiplier)
     : m_size        (size),
-    m_subDivisions  (subDivisions)
+    m_subDivisions  (subDivisions),
+    m_uvMultiplier  (multiplier)
 {
     CRO_ASSERT(subDivisions > 0, "Must be non-zero");
+    CRO_ASSERT(multiplier.x > 0 && multiplier.y > 0, "Must be greater than zero");
 }
 
 //private
@@ -71,8 +73,8 @@ Mesh::Data GridMeshBuilder::build() const
             verts.push_back(1.f);
             verts.push_back(0.f);
 
-            verts.push_back((x * stride.x) / m_size.x);
-            verts.push_back((y * stride.y) / m_size.y);
+            verts.push_back(((x * stride.x) / m_size.x) * m_uvMultiplier.x);
+            verts.push_back(((y * stride.y) / m_size.y) * m_uvMultiplier.y);
         }
     }
 

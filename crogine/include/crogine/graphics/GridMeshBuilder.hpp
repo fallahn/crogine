@@ -46,14 +46,18 @@ namespace cro
         \brief Constructor.
         \param size Dimensions of the quad created by this mesh builder
         \param subDivisions Number of sub-divisions along each side of the grid
+        \param multiplier A vec2 containing U and V multipliers for texture coords.
+        By default this has a value of 1,1 but increasing this will tile any given
+        textures across its surface. Must be greater than zero.
         */
-        GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions);
+        GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions, glm::vec2 multiplier = glm::vec2(1.f));
 
         std::size_t getUID() const override { return 0; }
 
     private:
         glm::vec2 m_size = glm::vec2(0.f);
         std::uint32_t m_subDivisions;
+        glm::vec2 m_uvMultiplier;
         Mesh::Data build() const override;
     };
 }

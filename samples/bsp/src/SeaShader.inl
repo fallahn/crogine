@@ -68,7 +68,6 @@ static const std::string SeaVertex = R"(
 static const std::string SeaFragment = R"(
     OUTPUT
 
-    uniform samplerCube u_skyBox;
     uniform sampler2D u_depthMap;
     uniform sampler2D u_normalMap;
     uniform sampler2D u_reflectionMap;
@@ -108,28 +107,19 @@ static const std::string SeaFragment = R"(
 
     void main()
     {
+        eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
         vec2 coord = (v_texCoord + u_textureOffset) * TextureScale;
 
         float time = u_time * 0.01;
-        vec2 rot = vec2(sin(time), -cos(time));
-        mat2 rotation = mat2(0.0);
-        rotation[0] = vec2(rot.y, -rot.x);
-        rotation[1] = rot;
-
         vec3 texNormal = TEXTURE(u_normalMap, coord + vec2(time, time * 0.5)).rgb * 2.0 - 1.0;
         vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
-
-        eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
-        vec3 skyColour = TEXTURE_CUBE(u_skyBox, reflect(eyeDirection, normal)).rgb * 0.125;
 
         vec2 reflectCoords = v_reflectionPosition.xy / v_reflectionPosition.w / 2.0 + 0.5;
         vec3 reflectColour = TEXTURE(u_reflectionMap, reflectCoords + (normal.rg * 0.01)).rgb * u_lightColour.rgb * 0.25;
 
         vec3 blendedColour = colour * 0.2; //ambience
         blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, u_lightColour.rgb, 1.0);
-        //blendedColour += skyColour;
         blendedColour += reflectColour;
 
-        //FRAG_OUT = vec4(mix(mix(colour, skyColour, 0.4), reflectColour, 0.3), 1.0);
         FRAG_OUT = vec4(blendedColour, 1.0);
     })";
