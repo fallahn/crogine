@@ -46,6 +46,7 @@ source distribution.
 #include <crogine/graphics/CircleMeshBuilder.hpp>
 #include <crogine/util/Constants.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
@@ -178,11 +179,12 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
+    //glEnable(GL_CLIP_DISTANCE0);
     auto oldCam = m_gameScene.setActiveCamera(m_reflectionCamera);
     m_reflectionBuffer.clear(cro::Colour::Red());
     m_gameScene.render(m_reflectionBuffer);
     m_reflectionBuffer.display();
-
+    //glDisable(GL_CLIP_DISTANCE0);
 
     auto& rt = cro::App::getWindow();
     m_gameScene.setActiveCamera(oldCam);
@@ -317,7 +319,7 @@ void GameState::createScene()
     cro::ModelDefinition md;
     md.loadFromFile("assets/models/player_box.cmt", m_resources, &m_environmentMap);
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.85f, -6.f });
+    entity.addComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, 0.5f);// .setPosition({ 0.f, 0.85f, -6.f });
     md.createModel(entity, m_resources);
 
     md.loadFromFile("assets/models/arrow.cmt", m_resources);

@@ -46,8 +46,10 @@ namespace cro
                 uniform mat4 u_boneMatrices[MAX_BONES];
                 #endif
 
+                uniform mat4 u_worldMatrix;
                 uniform mat4 u_worldViewMatrix;
                 uniform mat4 u_projectionMatrix;
+                uniform vec4 u_clipPlane;
 
                 VARYING_OUT vec4 v_position;
 
@@ -66,6 +68,13 @@ namespace cro
 
                     gl_Position = wvp * position;
                     v_position = gl_Position;
+
+                #if defined (MOBILE)
+
+                #else
+                gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
+                #endif
+
                 })";
 
             const static std::string FragmentMobile = R"(

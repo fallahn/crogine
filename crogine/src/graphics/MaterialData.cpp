@@ -240,6 +240,10 @@ void Data::setShader(const Shader& s)
         {
             uniforms[Material::ScreenSize] = handle;
         }
+        else if (uniform == "u_clipPlane")
+        {
+            uniforms[Material::ClipPlane] = handle;
+        }
         //these are optionally standard so they are added to 'optional' list to to mark that they exist
         //but not added as a property as they are not user settable - rather they are used internally by renderers
         else if (uniform == "u_boneMatrices[0]")

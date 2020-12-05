@@ -129,6 +129,7 @@ void ShadowMapRenderer::updateDrawList(Entity)
 void ShadowMapRenderer::render(Entity, const RenderTarget&)
 {
     const auto& sunlight = getScene()->getSunlight().getComponent<Sunlight>();
+    glm::vec4 waterLevel = glm::vec4(0.f, 1.f, 0.f, 0.f); //TODO make this a property of something, probabaly the scene
 
     //enable face culling and render rear faces
     glCheck(glEnable(GL_CULL_FACE));
@@ -171,6 +172,7 @@ void ShadowMapRenderer::render(Entity, const RenderTarget&)
             }
             glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
             glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(sunlight.m_projectionMatrix)));
+            glCheck(glUniform4f(mat.uniforms[Material::ClipPlane], waterLevel.r, waterLevel.g, waterLevel.b, waterLevel.a));
 
 #ifdef PLATFORM_DESKTOP
             const auto& indexData = model.m_meshData.indexData[i];

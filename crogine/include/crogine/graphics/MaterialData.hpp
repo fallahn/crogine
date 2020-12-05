@@ -85,6 +85,7 @@ namespace cro
             SunlightDirection,
             SunlightColour,
             ScreenSize,
+            ClipPlane,
             Total
         };
         
