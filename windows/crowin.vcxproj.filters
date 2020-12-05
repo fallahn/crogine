@@ -555,6 +555,9 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\CircleMeshBuilder.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\ReflectionMapRenderer.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -898,6 +901,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\CircleMeshBuilder.cpp">
       <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\ReflectionMapRenderer.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

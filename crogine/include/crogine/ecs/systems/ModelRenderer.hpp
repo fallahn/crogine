@@ -81,9 +81,22 @@ namespace cro
         */
         void render(Entity, const RenderTarget&) override;
 
+        /*!
+        \brief Sets the render flags for the next render operation.
+        Only Model components with render flags which pass the flag test
+        when the flags are bitwise AND'd together will be drawn.
+        \param flags A 64 bit value containing the bits making up the current render flags
+        */
+        void setRenderFlags(std::uint64_t flags) { m_renderFlags = flags; }
+
+        /*!
+        \brief Returns the current render flags.
+        This is by default std::numeric_limits<std::uint64_t>::max() (all flags set)
+        */
+        std::uint64_t getRenderFlags() const { return m_renderFlags; }
+
     private:
-        //MaterialList m_visibleEntities;
-        //TODO list of lighting
+        std::uint64_t m_renderFlags;
 
         uint32 m_currentTextureUnit;
         void applyProperties(const Material::Data&, const Model&);

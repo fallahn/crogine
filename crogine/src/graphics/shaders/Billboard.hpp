@@ -45,6 +45,8 @@ namespace cro::Shaders::Billboard
         uniform mat4 u_viewMatrix;
         uniform mat4 u_viewProjectionMatrix;
 
+        uniform vec4 u_clipPlane;
+
         #if defined (LOCK_SCALE)
         uniform vec2 u_screenSize;
         #endif
@@ -113,6 +115,12 @@ namespace cro::Shaders::Billboard
                 #endif
                 #if defined (TEXTURED)
                     v_texCoord0 = a_texCoord0;
+                #endif
+
+                #if defined (MOBILE)
+
+                #else
+                    gl_ClipDistance[0] = dot(u_worldMatrix * vec4(position, 1.0), u_clipPlane);
                 #endif
         })";
 

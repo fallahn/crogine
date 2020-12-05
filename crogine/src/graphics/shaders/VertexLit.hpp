@@ -71,7 +71,7 @@ namespace cro
                 uniform mat3 u_normalMatrix;
                 uniform mat4 u_projectionMatrix;
 
-uniform vec4 u_clipPlane;
+                uniform vec4 u_clipPlane;
 
                 #if defined(RX_SHADOWS)
                 uniform mat4 u_lightViewProjectionMatrix;
@@ -167,7 +167,7 @@ uniform vec4 u_clipPlane;
                 #if defined (MOBILE)
 
                 #else
-                gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
+                    gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
                 #endif
                 })";
 

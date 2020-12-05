@@ -157,7 +157,7 @@ namespace cro
                 #if defined (MOBILE)
 
                 #else
-                gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
+                    gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
                 #endif
                 })";
 

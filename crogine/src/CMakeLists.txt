@@ -68,6 +68,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/ModelRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/ParticleSystem.cpp
   ${PROJECT_DIR}/ecs/systems/ProjectionMapSystem.cpp
+  ${PROJECT_DIR}/ecs/systems/ReflectionMapRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/RenderSystem2D.cpp
   ${PROJECT_DIR}/ecs/systems/ShadowMapRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/SkeletalAnimator.cpp

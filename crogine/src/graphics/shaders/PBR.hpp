@@ -98,7 +98,7 @@ namespace cro::Shaders::PBR
                 for(int y = 0; y < filterSize; ++y)
                 {
                     float pcfDepth = unpack(TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize));
-                    shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
+                    shadow += (projectionCoords.z - 0.005) > pcfDepth ? 0.4 : 0.0;
                 }
             }
             return 1.0 - (shadow / 9.0);

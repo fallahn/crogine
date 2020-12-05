@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
+#include <crogine/ecs/systems/ReflectionMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/graphics/CircleMeshBuilder.hpp>
@@ -118,7 +119,12 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
                 if (ImGui::CollapsingHeader("Reflection Map"))
                 {
-                    ImGui::Image(m_reflectionBuffer.getTexture(), { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
+                    const auto& reflectionMapRenderer = m_gameScene.getSystem<cro::ReflectionMapRenderer>();
+                    ImGui::Image(reflectionMapRenderer.getReflectionTexture(),
+                        { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
+
+                    ImGui::Image(reflectionMapRenderer.getRefractionTexture(),
+                        { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
                 }
             }
             ImGui::End();
@@ -179,15 +185,7 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
-    //glEnable(GL_CLIP_DISTANCE0);
-    auto oldCam = m_gameScene.setActiveCamera(m_reflectionCamera);
-    m_reflectionBuffer.clear(cro::Colour::Red());
-    m_gameScene.render(m_reflectionBuffer);
-    m_reflectionBuffer.display();
-    //glDisable(GL_CLIP_DISTANCE0);
-
     auto& rt = cro::App::getWindow();
-    m_gameScene.setActiveCamera(oldCam);
     m_gameScene.render(rt);
     m_uiScene.render(rt);
 }
@@ -200,6 +198,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_gameScene.addSystem<cro::ReflectionMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 }
 
@@ -207,10 +206,6 @@ void GameState::loadAssets()
 {
     m_resources.shaders.loadFromString(ShaderID::Sea, SeaVertex, SeaFragment);
     m_materialIDs[MaterialID::Sea] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Sea));
-
-    m_reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
-    m_reflectionBuffer.setSmooth(true);
-    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_reflectionMap", m_reflectionBuffer.getTexture());
 
     m_environmentMap.loadFromFile("assets/images/cubemap/beach02.hdr");
 
@@ -244,11 +239,6 @@ void GameState::loadAssets()
 
 void GameState::createScene()
 {
-    m_reflectionCamera = m_gameScene.createEntity();
-    m_reflectionCamera.addComponent<cro::Transform>();
-    m_reflectionCamera.addComponent<cro::Camera>();
-
-
     //sea plane
     auto gridID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(SeaRadius, 30));
 
@@ -270,7 +260,6 @@ void GameState::createScene()
         static float elapsed = dt;
         elapsed += dt;
         e.getComponent<cro::Model>().setMaterialProperty(0, "u_time", elapsed);
-        e.getComponent<cro::Model>().setMaterialProperty(0, "u_reflectionMatrix", m_reflectionCamera.getComponent<cro::Camera>().viewProjectionMatrix);
 
         static cro::Clock frameClock;
         if (frameClock.elapsed().asSeconds() > 1.f / 24.f)
@@ -295,13 +284,6 @@ void GameState::createScene()
     //rotate the ground plane in the opposite direction to level it out again
     entity.getComponent<cro::Transform>().rotate(rotation);
     camEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-    //attach the reflection cam to the main cam and point it to the same target - only flipped
-    camEnt.getComponent<cro::Transform>().addChild(m_reflectionCamera.getComponent<cro::Transform>());
-    m_reflectionCamera.getComponent<cro::Transform>().move({ 0.f, -CameraHeight * 2.f, 0.f });
-    rotation = glm::lookAt(m_reflectionCamera.getComponent<cro::Transform>().getWorldPosition(), entity.getComponent<cro::Transform>().getPosition(), cro::Transform::Y_AXIS);
-    m_reflectionCamera.getComponent<cro::Transform>().setRotation(glm::inverse(rotation));
 
 
     //add the light source to the camera so shadow map follows
@@ -353,9 +335,6 @@ void GameState::updateView(cro::Camera& cam3D)
     cam3D.projectionMatrix = glm::perspective(42.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 140.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
-
-    auto& reflectCam = m_reflectionCamera.getComponent<cro::Camera>();
-    reflectCam.projectionMatrix = glm::perspective(42.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 140.f);
 
     //update the UI camera to match the new screen size
     auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();

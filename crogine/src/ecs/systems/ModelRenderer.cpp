@@ -55,6 +55,7 @@ namespace
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
     : System            (mb, typeid(ModelRenderer)),
+    m_renderFlags       (std::numeric_limits<std::uint64_t>::max()),
     m_currentTextureUnit(0)
 {
     requireComponent<Transform>();
@@ -79,6 +80,11 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     {
         auto& model = entity.getComponent<Model>();
         if (model.isHidden())
+        {
+            continue;
+        }
+
+        if ((model.m_renderFlags & m_renderFlags) == 0)
         {
             continue;
         }
