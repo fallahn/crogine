@@ -71,11 +71,28 @@ namespace cro
         glm::mat4 viewMatrix = glm::mat4(1.f);
 
         /*!
+        \brief Reflected view matrix.
+        This is the view matrix as seen by this camera
+        as if it were rendering reflections. By default this is not
+        updated unless a ReflectionMapRenderer is active in the Scene.
+        */
+        glm::mat4 reflectedViewMatrix = glm::mat4(1.f);
+
+        /*!
         \brief ViewProjection matrix.
         \see viewMatrix
         */
         glm::mat4 viewProjectionMatrix = glm::mat4(1.f);
         
+        /*!
+        \brief Reflected ViewProjection matrix.
+        This is the view - projection matrix as seen by this camera
+        as if it were rendering reflections. By default this is not
+        updated unless a ReflectionMapRenderer is active in the Scene.
+        Use it to project the reflection map onto the current view.
+        */
+        glm::mat4 reflectedViewProjectionMatrix = glm::mat4(1.f);
+
         /*!
         \brief Projection matrix for this camera.
         This can be either a perspective or orthographic projection.
@@ -83,6 +100,7 @@ namespace cro
         the curent window size.
         */
         glm::mat4 projectionMatrix = glm::mat4(1.f);
+
 
         /*!
         \brief Viewport.

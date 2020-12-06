@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
 
+#include <crogine/ecs/systems/ModelRenderer.hpp>
+
 #include <crogine/graphics/RenderTexture.hpp>
 
 namespace cro
@@ -45,7 +47,6 @@ namespace cro
     shaders to have shaders whose property include a u_clipPlane uniform defined by
     a vec4(vec3 normal, float distance))
     */
-
     class CRO_EXPORT_API ReflectionMapRenderer final : public cro::System, public cro::Renderable
     {
     public:
@@ -79,12 +80,18 @@ namespace cro
         */
         const Texture& getRefractionTexture() const { return m_refractionMap.getTexture(); }
 
+        /*!
+        \brief Sets the height of the reflective plane
+        */
+        void setPlaneHeight(float height) { m_plane.a = -height; }
 
     private:
+
+        glm::vec4 m_plane;
 
         RenderTexture m_reflectionMap;
         RenderTexture m_refractionMap;
 
-
+        void renderList(Entity camera, const RenderTarget&, const glm::mat4& v, const glm::mat4& vp, UniqueType, std::uint32_t);
     };
 }

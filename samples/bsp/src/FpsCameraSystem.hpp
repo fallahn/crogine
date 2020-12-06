@@ -59,4 +59,5 @@ public:
 
 private:
 
+    void onEntityAdded(cro::Entity) override;
 };

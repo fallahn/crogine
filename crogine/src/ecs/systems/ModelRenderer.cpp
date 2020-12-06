@@ -55,8 +55,7 @@ namespace
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
     : System            (mb, typeid(ModelRenderer)),
-    m_renderFlags       (std::numeric_limits<std::uint64_t>::max()),
-    m_currentTextureUnit(0)
+    m_renderFlags       (std::numeric_limits<std::uint64_t>::max())
 {
     requireComponent<Transform>();
     requireComponent<Model>();
@@ -205,7 +204,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
             //apply shader uniforms from material
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-            applyProperties(model.m_materials[i], model);
+            applyProperties(model.m_materials[i], model, *getScene());
 
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
@@ -274,9 +273,9 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 }
 
 //private
-void ModelRenderer::applyProperties(const Material::Data& material, const Model& model)
+void ModelRenderer::applyProperties(const Material::Data& material, const Model& model, const Scene& scene)
 {
-    m_currentTextureUnit = 0;
+    std::uint32_t currentTextureUnit = 0;
     for (const auto& prop : material.properties)
     {
         switch (prop.second.second.type)
@@ -285,14 +284,14 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         case Material::Property::Texture:
             //TODO textures need to track which unit they're currently bound
             //to so that they don't get bounds to multiple units
-            glCheck(glActiveTexture(GL_TEXTURE0 + m_currentTextureUnit));
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
             glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
-            glCheck(glUniform1i(prop.second.first, m_currentTextureUnit++));
+            glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
             break;
         case Material::Property::Cubemap:
-            glCheck(glActiveTexture(GL_TEXTURE0 + m_currentTextureUnit));
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
             glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, prop.second.second.textureID));
-            glCheck(glUniform1i(prop.second.first, m_currentTextureUnit++));
+            glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
             break;
         case Material::Property::Number:
             glCheck(glUniform1f(prop.second.first,
@@ -328,28 +327,28 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             break;
         case Material::ProjectionMap:
         {
-            const auto p = getScene()->getActiveProjectionMaps();
+            const auto p = scene.getActiveProjectionMaps();
             glCheck(glUniformMatrix4fv(material.uniforms[Material::ProjectionMap], static_cast<GLsizei>(p.second), GL_FALSE, p.first));
             glCheck(glUniform1i(material.uniforms[Material::ProjectionMapCount], static_cast<GLint>(p.second)));
         }
             break;
         case Material::ShadowMapProjection:
-            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, glm::value_ptr(getScene()->getSunlight().getComponent<Sunlight>().getViewProjectionMatrix())));
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, glm::value_ptr(scene.getSunlight().getComponent<Sunlight>().getViewProjectionMatrix())));
             break;
         case Material::ShadowMapSampler:
-            glCheck(glActiveTexture(GL_TEXTURE0 + m_currentTextureUnit));
-            glCheck(glBindTexture(GL_TEXTURE_2D, getScene()->getSunlight().getComponent<Sunlight>().getMapID()));
-            glCheck(glUniform1i(material.uniforms[Material::ShadowMapSampler], m_currentTextureUnit++));
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+            glCheck(glBindTexture(GL_TEXTURE_2D, scene.getSunlight().getComponent<Sunlight>().getMapID()));
+            glCheck(glUniform1i(material.uniforms[Material::ShadowMapSampler], currentTextureUnit++));
             break;
         case Material::SunlightColour:
         {
-            auto colour = getScene()->getSunlight().getComponent<Sunlight>().getColour();
+            auto colour = scene.getSunlight().getComponent<Sunlight>().getColour();
             glCheck(glUniform4f(material.uniforms[Material::SunlightColour], colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()));
         }
             break;
         case Material::SunlightDirection:
         {
-            auto dir = getScene()->getSunlight().getComponent<Sunlight>().getDirection();
+            auto dir = scene.getSunlight().getComponent<Sunlight>().getDirection();
             glCheck(glUniform3f(material.uniforms[Material::SunlightDirection], dir.x, dir.y, dir.z));
         }
             break;

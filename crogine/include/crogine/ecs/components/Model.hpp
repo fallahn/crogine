@@ -133,6 +133,7 @@ namespace cro
         std::size_t m_jointCount = 0;
 
         friend class ModelRenderer;
+        friend class ReflectionMapRenderer;
         friend class ShadowMapRenderer;
     };
 }

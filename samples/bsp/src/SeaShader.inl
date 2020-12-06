@@ -49,6 +49,7 @@ static const std::string SeaVertex = R"(
 
     VARYING_OUT vec3 v_worldPosition;
     VARYING_OUT vec4 v_reflectionPosition;
+    VARYING_OUT vec4 v_refractionPosition;
     VARYING_OUT LOW vec4 v_lightWorldPosition;
 
     void main()
@@ -64,6 +65,7 @@ static const std::string SeaVertex = R"(
 
         v_worldPosition = position.xyz;
         v_reflectionPosition = u_reflectionMatrix * position;
+        v_refractionPosition = u_viewProjectionMatrix * position;
         v_lightWorldPosition = u_lightViewProjectionMatrix * position;
 
     })";
@@ -74,13 +76,17 @@ static const std::string SeaFragment = R"(
     uniform sampler2D u_depthMap;
     uniform sampler2D u_normalMap;
     uniform sampler2D u_reflectionMap;
+    uniform sampler2D u_refractionMap;
     uniform sampler2D u_shadowMap;
+
+    uniform samplerCube u_skybox;
 
     uniform vec3 u_lightDirection;
     uniform vec4 u_lightColour;
 
     uniform vec2 u_textureOffset;
     uniform vec3 u_cameraWorldPosition;
+    uniform vec2 u_screenSize;
 
     uniform float u_time;
 
@@ -89,6 +95,7 @@ static const std::string SeaFragment = R"(
 
     VARYING_IN vec3 v_worldPosition;
     VARYING_IN vec4 v_reflectionPosition;
+    VARYING_IN vec4 v_refractionPosition;
     VARYING_IN LOW vec4 v_lightWorldPosition;
 
     const vec2 TextureScale = vec2(8.0);
@@ -165,11 +172,21 @@ static const std::string SeaFragment = R"(
         vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
 
         vec2 reflectCoords = v_reflectionPosition.xy / v_reflectionPosition.w / 2.0 + 0.5;
-        vec3 reflectColour = TEXTURE(u_reflectionMap, reflectCoords + (normal.rg * 0.01)).rgb * u_lightColour.rgb * 0.25;
+        vec4 reflectColour = TEXTURE(u_reflectionMap, reflectCoords + (normal.rg * 0.005));
+        reflectColour.rgb *= u_lightColour.rgb * reflectColour.a * 0.25;
+
+        vec2 refractCoords = v_refractionPosition.xy / v_refractionPosition.w / 2.0 + 0.5;
+        vec4 refractColour = TEXTURE(u_refractionMap, refractCoords + (normal.rg * 0.005));
+        refractColour.rgb *= u_lightColour.rgb * refractColour.a;
+
+        float fresnel = dot(eyeDirection, normal);
 
         vec3 blendedColour = colour * 0.2; //ambience
         blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, u_lightColour.rgb, 1.0);
-        blendedColour += reflectColour;
+        blendedColour += mix(reflectColour.rgb, refractColour.rgb, fresnel);
+        
+        vec3 skyColour = TEXTURE_CUBE(u_skybox, reflect(eyeDirection, normal)).rgb * 0.25;
+        blendedColour += mix(skyColour, vec3(0.0), fresnel);
 
 if(v_lightWorldPosition.w > 0.0)
 {
@@ -179,7 +196,7 @@ if(v_lightWorldPosition.w > 0.0)
 
     if(coords.x>0 &&coords.x<1 &&coords.y>0 &&coords.y<1)
     {
-        blendedColour *= vec3(0.0,1.0,0.0);
+        //blendedColour *= vec3(0.0,1.0,0.0);
     }
 }
 

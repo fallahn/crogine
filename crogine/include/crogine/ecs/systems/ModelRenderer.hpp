@@ -96,12 +96,12 @@ namespace cro
         std::uint64_t getRenderFlags() const { return m_renderFlags; }
 
     private:
+        friend class ReflectionMapRenderer;
+
         std::uint64_t m_renderFlags;
 
-        uint32 m_currentTextureUnit;
-        void applyProperties(const Material::Data&, const Model&);
-
-        void applyBlendMode(Material::BlendMode);
+        static void applyProperties(const Material::Data&, const Model&, const Scene&);
+        static void applyBlendMode(Material::BlendMode);
     };
 
     //just to keep it a bit more inline with the new render system naming

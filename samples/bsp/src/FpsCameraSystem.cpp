@@ -147,3 +147,15 @@ void FpsCameraSystem::process(float dt)
         }
     }
 }
+
+//private
+void FpsCameraSystem::onEntityAdded(cro::Entity entity)
+{
+    CRO_ASSERT(entity.hasComponent<cro::Transform>(), "Transform component is missing");
+
+    auto rotation = glm::eulerAngles(entity.getComponent<cro::Transform>().getRotation());
+
+    auto& cam = entity.getComponent<FpsCamera>();
+    cam.cameraPitch = rotation.x;
+    cam.cameraYaw = rotation.y;
+}
