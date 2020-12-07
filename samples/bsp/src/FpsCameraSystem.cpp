@@ -156,6 +156,6 @@ void FpsCameraSystem::onEntityAdded(cro::Entity entity)
     auto rotation = glm::eulerAngles(entity.getComponent<cro::Transform>().getRotation());
 
     auto& cam = entity.getComponent<FpsCamera>();
-    cam.cameraPitch = rotation.x;
+    //cam.cameraPitch = rotation.x;
     cam.cameraYaw = rotation.y;
 }

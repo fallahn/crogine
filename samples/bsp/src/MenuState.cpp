@@ -126,14 +126,25 @@ bool MenuState::simulate(float dt)
 
 void MenuState::render()
 {
+    auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    auto oldVp = cam.viewport;
+    cam.viewport = { 0.f,0.f,1.f,1.f };
+
+    cam.setActivePass(cro::Camera::Pass::Reflection);
     m_reflectionMap.clear(cro::Colour::Red());
+    m_scene.render(m_reflectionMap);
     m_reflectionMap.display();
 
+
+    cam.setActivePass(cro::Camera::Pass::Refraction);
     m_refractionMap.clear(cro::Colour::Blue());
+    m_scene.render(m_refractionMap);
     m_reflectionMap.display();
 
 
     //draw any renderable systems
+    cam.setActivePass(cro::Camera::Pass::Final);
+    cam.viewport = oldVp;
     m_scene.render(cro::App::getWindow());
 }
 
