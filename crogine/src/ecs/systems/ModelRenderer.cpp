@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Console.hpp>
+#include <crogine/util/Matrix.hpp>
 
 #include "../../detail/GLCheck.hpp"
 
@@ -65,15 +66,15 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 void ModelRenderer::updateDrawList(Entity cameraEnt)
 {
     auto& camComponent = cameraEnt.getComponent<Camera>();
-    auto frustum = camComponent.getFrustum();
     auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
-    auto forwardVector = cameraEnt.getComponent<Transform>().getForwardVector();;
 
     auto& entities = getEntities();    
 
     //cull entities by viewable into draw lists by pass
-    MaterialList visibleEntities;
-    visibleEntities.reserve(entities.size() * 2);
+    for (auto& list : m_visibleEnts)
+    {
+        list.clear();
+    }
 
     for (auto& entity : entities)
     {
@@ -90,77 +91,80 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 
         auto sphere = model.m_meshData.boundingSphere;
         const auto& tx = entity.getComponent<Transform>();
-        //auto pos = tx.getWorldPosition();
 
         sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
         auto scale = tx.getScale();
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
-        /*auto box = model.m_meshData.boundingBox;
-        box[0] += pos;
-        box[1] += pos;*/
 
-        model.m_visible = true;
-        std::size_t i = 0;
-        while (model.m_visible && i < frustum.size())
+        for (auto p = 0u; p < m_visibleEnts.size(); ++p)
         {
-            model.m_visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
-            //model.m_visible = (Spatial::intersects(frustum[i++], box) != Planar::Back);
-        }
+            const auto& frustum = camComponent.getPass(p).getFrustum();
+            auto forwardVector = -cro::Util::Matrix::getForwardVector(camComponent.getPass(p).viewMatrix);
 
-        if (model.m_visible)
-        {
-            auto opaque = std::make_pair(entity, SortData());
-            auto transparent = std::make_pair(entity, SortData());
-
-            //auto worldPos = tx.getWorldPosition();
-            auto direction = (sphere.centre - cameraPos);
-            float distance = glm::dot(forwardVector, direction);
-            //TODO a large model with a centre behind the camera
-            //might still intersect the view but register as being
-            //further away than smaller objects in front
-
-            //foreach material
-            //add ent/index pair to alpha or opaque list
-            for (i = 0u; i < model.m_meshData.submeshCount; ++i)
+            model.m_visible = true;
+            std::size_t i = 0;
+            while (model.m_visible && i < frustum.size())
             {
-                if (model.m_materials[i].blendMode != Material::BlendMode::None)
-                {
-                    transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                    transparent.second.flags = static_cast<int64>(-distance * 1000000.f); //suitably large number to shift decimal point
-                    transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
-                }
-                else
-                {
-                    opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                    opaque.second.flags = static_cast<int64>(distance * 1000000.f);
-                }
+                model.m_visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
             }
 
-            if (!opaque.second.matIDs.empty())
+            if (model.m_visible)
             {
-                visibleEntities.push_back(opaque);
-            }
+                auto opaque = std::make_pair(entity, SortData());
+                auto transparent = std::make_pair(entity, SortData());
 
-            if (!transparent.second.matIDs.empty())
-            {
-                visibleEntities.push_back(transparent);
+                auto direction = (sphere.centre - cameraPos);
+                float distance = glm::dot(forwardVector, direction);
+                //TODO a large model with a centre behind the camera
+                //might still intersect the view but register as being
+                //further away than smaller objects in front
+
+                //foreach material
+                //add ent/index pair to alpha or opaque list
+                for (i = 0u; i < model.m_meshData.submeshCount; ++i)
+                {
+                    if (model.m_materials[i].blendMode != Material::BlendMode::None)
+                    {
+                        transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
+                        transparent.second.flags = static_cast<int64>(-distance * 1000000.f); //suitably large number to shift decimal point
+                        transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
+                    }
+                    else
+                    {
+                        opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
+                        opaque.second.flags = static_cast<int64>(distance * 1000000.f);
+                    }
+                }
+
+                if (!opaque.second.matIDs.empty())
+                {
+                    m_visibleEnts[p].push_back(opaque);
+                }
+
+                if (!transparent.second.matIDs.empty())
+                {
+                    m_visibleEnts[p].push_back(transparent);
+                }
             }
         }
     }
-    DPRINT("Visible 3D ents", std::to_string(visibleEntities.size()));
+    DPRINT("Visible 3D ents", std::to_string(m_visibleEnts[0].size()));
     //DPRINT("Total ents", std::to_string(entities.size()));
 
     //sort lists by depth
     //flag values make sure transparent materials are rendered last
     //with opaque going front to back and transparent back to front
-    std::sort(std::begin(visibleEntities), std::end(visibleEntities),
-        [](MaterialPair& a, MaterialPair& b)
+    for (auto i = 0u; i < m_visibleEnts.size(); ++i)
     {
-        return a.second.flags < b.second.flags;
-    });
+        std::sort(std::begin(m_visibleEnts[i]), std::end(m_visibleEnts[i]),
+            [](MaterialPair& a, MaterialPair& b)
+            {
+                return a.second.flags < b.second.flags;
+            });
 
-    camComponent.getDrawList(Camera::Pass::Final)[getType()] = std::make_any<MaterialList>(std::move(visibleEntities));
+        camComponent.getDrawList(i)[getType()].swap(std::make_any<MaterialList>(m_visibleEnts[i]));
+    }
 }
 
 void ModelRenderer::process(float)
@@ -173,6 +177,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     const auto& camComponent = camera.getComponent<Camera>();
     const auto& pass = camComponent.getActivePass();
 
+    glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, getScene()->getWaterLevel() + (0.05f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
+
     if (pass.drawList.count(getType()) == 0)
     {
         return;
@@ -182,7 +188,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     auto cameraPosition = camTx.getWorldPosition();
     auto screenSize = glm::vec2(rt.getSize());
 
-    glCheck(glCullFace(GL_BACK));
+    glCheck(glCullFace(pass.getCullFace()));
 
     //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
     const auto& visibleEntities = std::any_cast<const MaterialList&>(pass.drawList.at(getType()));
@@ -195,6 +201,12 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
+
+        if ((model.m_renderFlags & m_renderFlags) == 0)
+        {
+            continue;
+        }
+
 #ifndef PLATFORM_DESKTOP
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
 #endif //PLATFORM
@@ -211,6 +223,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
             glCheck(glUniform2f(model.m_materials[i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
+            glCheck(glUniform4f(model.m_materials[i].uniforms[Material::ClipPlane], clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.projectionMatrix)));

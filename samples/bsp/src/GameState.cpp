@@ -57,7 +57,7 @@ namespace
 
     const float SeaRadius = 50.f;
     const float CameraHeight = 2.f;
-    const std::uint32_t ReflectionMapSize = 512;
+    const std::uint32_t ReflectionMapSize = 512u;
 
     glm::vec3 LightColour = glm::vec3(1.0);
     glm::vec3 LightRotation = glm::vec3(-cro::Util::Const::PI * 0.9f, 0.f, 0.f);
@@ -92,7 +92,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
                 if (ImGui::SliderFloat("WaterHeight", &waterPos.y, -2.f, 2.f))
                 {
                     waterPlane.getComponent<cro::Transform>().setPosition(waterPos);
-                    
+                    m_gameScene.setWaterLevel(waterPos.y);
                 }
 
                 if (ImGui::SliderFloat("Shadow Map Projection", &ShadowmapProjection, 10.f, 200.f))
@@ -127,11 +127,11 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
                 if (ImGui::CollapsingHeader("Reflection Map"))
                 {
-                    /*ImGui::Image(reflectionMapRenderer.getReflectionTexture(),
+                    ImGui::Image(m_reflectMap.getTexture(),
                         { 320.f, 320.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
-                    ImGui::Image(reflectionMapRenderer.getRefractionTexture(),
-                        { 320.f, 320.f }, { 0.f, 1.f }, { 1.f, 0.f });*/
+                    ImGui::Image(m_refractMap.getTexture(),
+                        { 320.f, 320.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 }
             }
             ImGui::End();
@@ -200,7 +200,22 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
+    auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    m_gameScene.getSystem<cro::ModelRenderer>().setRenderFlags(std::numeric_limits<std::uint64_t>::max() / 2);
+    
+    cam.setActivePass(cro::Camera::Pass::Reflection);
+    m_reflectMap.clear(cro::Colour::Red());
+    m_gameScene.render(m_reflectMap);
+    m_reflectMap.display();
+
+    cam.setActivePass(cro::Camera::Pass::Refraction);
+    m_refractMap.clear(cro::Colour::Blue());
+    m_gameScene.render(m_refractMap);
+    m_refractMap.display();
+
+    m_gameScene.getSystem<cro::ModelRenderer>().setRenderFlags(std::numeric_limits<std::uint64_t>::max());
     auto& rt = cro::App::getWindow();
+    cam.setActivePass(cro::Camera::Pass::Final);
     m_gameScene.render(rt);
     m_uiScene.render(rt);
 }
@@ -234,6 +249,11 @@ void GameState::loadAssets()
     //waterNormal.setSmooth(true);
     //m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_normalMap", waterNormal);
 
+    m_reflectMap.create(ReflectionMapSize, ReflectionMapSize);
+    m_reflectMap.setSmooth(true);
+    m_refractMap.create(ReflectionMapSize, ReflectionMapSize);
+    m_refractMap.setSmooth(true);
+
     const std::string basePath = "assets/images/water/water (";
     for (auto i = 0u; i < m_waterTextures.size(); ++i)
     {
@@ -250,9 +270,9 @@ void GameState::loadAssets()
         }
     }
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_normalMap", m_waterTextures[m_waterIndex]);
-    //m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_reflectionMap", m_gameScene.getSystem<cro::ReflectionMapRenderer>().getReflectionTexture());
-    //m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_refractionMap", m_gameScene.getSystem<cro::ReflectionMapRenderer>().getRefractionTexture());
-    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_skybox", m_gameScene.getCubemap());
+    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_reflectionMap", m_reflectMap.getTexture());
+    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_refractionMap", m_refractMap.getTexture());
+    //m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_skybox", m_gameScene.getCubemap());
 }
 
 void GameState::createScene()
@@ -280,7 +300,8 @@ void GameState::createScene()
         elapsed += dt;
         e.getComponent<cro::Model>().setMaterialProperty(0, "u_time", elapsed);
 
-        //e.getComponent<cro::Model>().setMaterialProperty(0, "u_reflectionMatrix", m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectedViewProjectionMatrix);
+        const auto& pass = m_gameScene.getActiveCamera().getComponent<cro::Camera>().getPass(cro::Camera::Pass::Reflection);
+        e.getComponent<cro::Model>().setMaterialProperty(0, "u_reflectionMatrix", pass.viewProjectionMatrix);
 
         static cro::Clock frameClock;
         if (frameClock.elapsed().asSeconds() > 1.f / 24.f)
@@ -324,7 +345,7 @@ void GameState::createScene()
     md.loadFromFile("assets/models/player_box.cmt", m_resources, &m_environmentMap);
     //md.loadFromFile("assets/models/choppa.cmt", m_resources, &m_environmentMap);
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.85f, -6.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, /*0.85f*/0.f, -6.f });
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, 0.5f);
     md.createModel(entity, m_resources);
 

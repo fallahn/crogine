@@ -84,17 +84,17 @@ namespace cro
         be selected on the Camera first, before then rendering the Scene
 
         \begincode
-        camera.setPass(Camera::Pass::Reflection);
+        camera.setActivePass(Camera::Pass::Reflection);
         reflectionBuffer.clear();
         scene.draw(reflectionBuffer);
         reflectionBuffer.display();
 
-        camera.setPass(Camera::Pass::Refraction);
+        camera.setActivePass(Camera::Pass::Refraction);
         refractionBuffer.clear();
         scene.draw(refrationBuffer);
         refractionBuffer.display();
 
-        camera.setPass(Camera::Pass::Final);
+        camera.setActivePass(Camera::Pass::Final);
         scene.draw(renderWindow);
         \endcode
         */
@@ -133,12 +133,53 @@ namespace cro
 
             enum
             {
-                Reflection,
-                Refraction,
                 Final,
-
-                Count
+                Reflection,
+                Refraction
             };
+
+            /*!
+            \brief Returns the camera frustum including any parent transformation,
+            IE the frustum of the ViewProjection matrix. This requires an active
+            CameraSystem in the Scene for the result to be up to date.
+            */
+            std::array<Plane, 6u> getFrustum() const { return m_frustum; }
+
+            /*!
+            \brief Returns the AABB of the current frustum.
+            The Box returned is in world coordinates, encompassing the frustum.
+            This is useful for world queries of the DynamicTree system to early
+            cull objects which do not intersect the frustum. Submitting this
+            to the DynamicTree system will return a list of entities which
+            can then be further tested with the frustum culling during
+            Scene::updateDrawLists()
+            \see DynamicTreeSystem, Scene::updateDrawLists()
+            \returns a Box encompassing the current frustum
+            */
+            Box getAABB() const { return m_aabb; }
+
+            /*|
+            \brief Returns the face to be culled in this pass, ie GL_FRONT or GL_BACK
+            */
+            std::uint32_t getCullFace() const { return m_cullFace; }
+
+            /*!
+            \brief Returns which direction the water plane should be facing.
+            When implementing a custom render which uses the reflect/refract passes
+            multiply the Scenes water plane by this value so that it points in
+            the correct direction for clipping.
+            */
+            float getClipPlaneMultiplier() const { return m_planeMultiplier; }
+
+        private:
+            std::array<Plane, 6u> m_frustum = {};
+            Box m_aabb;
+
+            std::uint32_t m_cullFace = 0;
+            float m_planeMultiplier = 1.f;;
+
+            friend struct Camera;
+            friend class CameraSystem;
         };
 
         /*!
@@ -147,7 +188,7 @@ namespace cro
         additional passes then this is not necessary to call.
         \param pass Pass index to set.
         */
-        void setPass(std::uint32_t pass);        
+        void setActivePass(std::uint32_t pass);
 
         /*!
         \brief Returns a reference to the active pass.
@@ -155,6 +196,12 @@ namespace cro
         the current pass when rendering.
         */
         const Pass& getActivePass() const { return m_passes[m_passIndex]; }
+
+        /*!
+        \brief Returns a reference to the requested pass.
+        \param pass The Pass enum value requested.
+        */
+        const Pass& getPass(std::uint32_t pass) const;
 
         /*!
         \brief Returns a reference to the drawlist at the requested pass
@@ -180,26 +227,6 @@ namespace cro
         FloatRect viewport;
 
         /*!
-        \brief Returns the camera frustum including any parent transformation,
-        IE the frustum of the ViewProjection matrix. This requires an active
-        CameraSystem in the Scene for the result to be up to date.
-        */
-        std::array<Plane, 6u> getFrustum() const { return m_frustum; }
-
-        /*!
-        \brief Returns the AABB of the current frustum.
-        The Box returned is in world coordinates, encompassing the frustum.
-        This is useful for world queries of the DynamicTree system to early
-        cull objects which do not intersect the frustum. Submitting this
-        to the DynamicTree system will return a list of entities which
-        can then be further tested with the frustum culling during
-        Scene::updateDrawLists()
-        \see DynamicTreeSystem, Scene::updateDrawLists()
-        \returns a Box encompassing the current frustum
-        */
-        Box getAABB() const { return m_aabb; }
-
-        /*!
         \brief Resize callback.
         Optional callback automatically called by the camera's Scene if the camera
         is currently the active one. Useful for resizing viewports or letterboxing
@@ -216,11 +243,9 @@ namespace cro
 
     private:
 
-        std::array<Pass, Pass::Count> m_passes = {};
+        std::array<Pass, 2u> m_passes = {}; //final pass and refraction pass share the same data
         std::uint32_t m_passIndex = Pass::Final;
 
-        std::array<Plane, 6u> m_frustum = {};
-        Box m_aabb;
         friend class CameraSystem;
     };
 }

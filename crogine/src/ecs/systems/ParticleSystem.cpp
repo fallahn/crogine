@@ -185,7 +185,7 @@ ParticleSystem::~ParticleSystem()
 //public
 void ParticleSystem::updateDrawList(Entity cameraEnt)
 {
-    auto frustum = cameraEnt.getComponent<Camera>().getFrustum();
+    auto frustum = cameraEnt.getComponent<Camera>().getPass(Camera::Pass::Final).getFrustum();
     std::vector<Entity> visibleSystems;
 
     const auto& entities = getEntities();

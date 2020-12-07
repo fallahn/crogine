@@ -62,9 +62,14 @@ namespace cro
     their respective systems in the Scene to update their geometry correctly. Usuaully
     these items would be drawn in a 2D world with an orthographic projection, rather
     than mixing items with a 3D world.
+
+    Note that Render passes other than Camera::Pass::Final have no effect when rendering
+    with this system.
+
     \see Drawable2D
     \see Sprite
     \see Text
+    \see Camera
     */
     class CRO_EXPORT_API RenderSystem2D final : public cro::System, public cro::Renderable
     {

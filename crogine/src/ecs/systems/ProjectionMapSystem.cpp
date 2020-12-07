@@ -51,7 +51,7 @@ void ProjectionMapSystem::process(float)
 {
     Scene* scene = getScene();
     scene->m_projectionMapCount = 0;
-    const auto& frustum = scene->getActiveCamera().getComponent<Camera>().getFrustum();
+    const auto& frustum = scene->getActiveCamera().getComponent<Camera>().getPass(Camera::Pass::Final).getFrustum();
     
     auto& entities = getEntities();
     for (auto& entity : entities)

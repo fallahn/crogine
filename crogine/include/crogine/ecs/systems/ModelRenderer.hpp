@@ -99,6 +99,7 @@ namespace cro
         friend class ReflectionMapRenderer;
 
         std::uint64_t m_renderFlags;
+        std::array<MaterialList, 2u> m_visibleEnts;
 
         static void applyProperties(const Material::Data&, const Model&, const Scene&);
         static void applyBlendMode(Material::BlendMode);

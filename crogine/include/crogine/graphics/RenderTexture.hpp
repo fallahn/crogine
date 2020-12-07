@@ -124,7 +124,7 @@ namespace cro
         void display();
 
         /*!
-        \brief Defines the area of the RenderTexture to which to draw.
+        \brief Defines the area of the RenderTexture on to which to draw.
         */
         void setViewport(URect);
 

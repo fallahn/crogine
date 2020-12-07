@@ -38,11 +38,16 @@ Camera::Camera()
 {
     glm::vec2 windowSize(App::getWindow().getSize());
     projectionMatrix = glm::perspective(0.6f, windowSize.x / windowSize.y, 0.1f, 150.f);
+
+    m_passes[Pass::Final].m_cullFace = GL_BACK;
+    m_passes[Pass::Final].m_planeMultiplier = -1.f;
+
+    m_passes[Pass::Reflection].m_cullFace = GL_FRONT;
 }
 
-void Camera::setPass(std::uint32_t pass)
+void Camera::setActivePass(std::uint32_t pass)
 {
-    CRO_ASSERT(pass < Pass::Count, "Must be a valid Pass enum value");
+    CRO_ASSERT(pass <= Pass::Refraction, "Must be a valid Pass enum value");
 
     switch (pass)
     {
@@ -70,9 +75,23 @@ void Camera::setPass(std::uint32_t pass)
     }
 }
 
+const Camera::Pass& Camera::getPass(std::uint32_t pass) const
+{
+    CRO_ASSERT(pass <= Camera::Pass::Refraction, "Must be a value for Camera::Pass enum");
+    switch (pass)
+    {
+    default:
+    case Camera::Pass::Final:
+    case Camera::Pass::Refraction:
+        return m_passes[Pass::Final];
+    case Camera::Pass::Reflection:
+        return m_passes[Pass::Reflection];
+    }
+}
+
 Camera::DrawList& Camera::getDrawList(std::uint32_t pass)
 {
-    CRO_ASSERT(pass < Camera::Pass::Count, "Must be a value for Camera::Pass enum");
+    CRO_ASSERT(pass <= Camera::Pass::Refraction, "Must be a value for Camera::Pass enum");
     switch (pass)
     {
     default:

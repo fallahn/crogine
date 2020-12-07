@@ -136,6 +136,7 @@ Scene::Scene(MessageBus& mb, std::size_t initialPoolSize)
     m_entityManager         (mb, m_componentManager, initialPoolSize),
     m_systemManager         (*this, m_componentManager),
     m_projectionMapCount    (0),
+    m_waterLevel            (0.f),
     m_activeSkyboxTexture   (0),
     m_shaderIndex           (0)
 {

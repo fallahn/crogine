@@ -202,13 +202,13 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
     clustersSkipped = 0;
     leavesCulled = 0;
     camPos = position;
-    camAABB = camera.getComponent<cro::Camera>().getAABB();
+    camAABB = camera.getComponent<cro::Camera>().getPass(cro::Camera::Pass::Final).getAABB();
 
     static std::vector<bool> usedFaces;
     usedFaces.resize(m_faces.size());
     std::fill(usedFaces.begin(), usedFaces.end(), false);
 
-    const auto frustum = camera.getComponent<cro::Camera>().getFrustum();
+    const auto frustum = camera.getComponent<cro::Camera>().getPass(cro::Camera::Pass::Final).getFrustum();
     static std::vector<std::int32_t> visibleFaces;
     visibleFaces.clear();
 

@@ -84,7 +84,7 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 {
     m_drawList.clear();
     auto& camera = camEnt.getComponent<Camera>();
-    const auto& frustum = camera.getFrustum();
+    const auto& frustum = camera.getPass(Camera::Pass::Final).getFrustum();
 
     auto& entities = getEntities();
     for (auto entity : entities)

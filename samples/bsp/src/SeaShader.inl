@@ -79,7 +79,7 @@ static const std::string SeaFragment = R"(
     uniform sampler2D u_refractionMap;
     uniform sampler2D u_shadowMap;
 
-    uniform samplerCube u_skybox;
+    //uniform samplerCube u_skybox;
 
     uniform vec3 u_lightDirection;
     uniform vec4 u_lightColour;
@@ -185,8 +185,8 @@ static const std::string SeaFragment = R"(
         blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, u_lightColour.rgb, 1.0);
         blendedColour += mix(reflectColour.rgb, refractColour.rgb, fresnel);
         
-        vec3 skyColour = TEXTURE_CUBE(u_skybox, reflect(eyeDirection, normal)).rgb * 0.25;
-        blendedColour += mix(skyColour, vec3(0.0), fresnel);
+        //vec3 skyColour = TEXTURE_CUBE(u_skybox, reflect(eyeDirection, normal)).rgb * 0.25;
+        //blendedColour += mix(skyColour, vec3(0.0), fresnel);
 
 if(v_lightWorldPosition.w > 0.0)
 {
