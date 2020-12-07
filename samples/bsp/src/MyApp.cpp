@@ -79,8 +79,8 @@ bool MyApp::initialise()
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Crogine Application");
 
-    //m_stateStack.pushState(States::Game);
-    m_stateStack.pushState(States::MainMenu);
+    m_stateStack.pushState(States::Game);
+    //m_stateStack.pushState(States::MainMenu);
 
     return true;
 }

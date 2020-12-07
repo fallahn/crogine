@@ -70,6 +70,8 @@ namespace
     cro::Entity moveEnt;
     cro::Entity waterPlane;
     glm::vec3 waterPos = glm::vec3(0.f, 0.f, -SeaRadius);
+
+    cro::Entity cam2;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -202,6 +204,7 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
+    //cam1 buffers
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     auto oldVP = cam.viewport;
     cam.viewport = { 0.f,0.f,1.f,1.f };
@@ -217,11 +220,17 @@ void GameState::render()
     m_gameScene.render(m_refractMap);
     m_refractMap.display();
 
+    //TODO cam2 buffers
+
+
     m_gameScene.getSystem<cro::ModelRenderer>().setRenderFlags(std::numeric_limits<std::uint64_t>::max());
     auto& rt = cro::App::getWindow();
     cam.setActivePass(cro::Camera::Pass::Final);
     cam.viewport = oldVP;
-    m_gameScene.render(rt);
+    //problem with submitting them as a list is that we can't
+    //update the reflection maps on the water material between renders
+    m_gameScene.render(rt, { m_gameScene.getActiveCamera(), cam2 });
+
     m_uiScene.render(rt);
 }
 
@@ -321,6 +330,13 @@ void GameState::createScene()
 
     waterPlane = entity;
 
+
+    //split screen test
+    cam2 = m_gameScene.createEntity();
+    cam2.addComponent<cro::Transform>().setPosition({ 5.f, 3.f, 8.f });
+    cam2.addComponent<cro::Camera>();
+
+
     //main camera
     auto camEnt = m_gameScene.getActiveCamera();
     updateView(camEnt.getComponent<cro::Camera>());
@@ -344,7 +360,8 @@ void GameState::createScene()
     moveEnt = camEnt;
 
 
-    
+    rotation = glm::lookAt(cam2.getComponent<cro::Transform>().getPosition(), entity.getComponent<cro::Transform>().getPosition(), cro::Transform::Y_AXIS);
+    cam2.getComponent<cro::Transform>().setRotation(glm::inverse(rotation));
 
     //placeholder for player scale
     cro::ModelDefinition md;
@@ -389,11 +406,20 @@ void GameState::updateView(cro::Camera& cam3D)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
     size.y = ((size.x / 16.f) * 9.f) / size.y;
-    size.x = 1.f;
+    size.x = 0.5f;
 
-    cam3D.projectionMatrix = glm::perspective(42.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 140.f);
+    cam3D.projectionMatrix = glm::perspective(42.f * cro::Util::Const::degToRad, 8.f / 9.f, 0.1f, 140.f);
+    cam3D.viewport.width = size.x;
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
+
+
+    auto& otherCam = cam2.getComponent<cro::Camera>();
+    otherCam.projectionMatrix = cam3D.projectionMatrix;
+    otherCam.viewport.left = size.x;
+    otherCam.viewport.width = size.x;
+    otherCam.viewport.bottom = (1.f - size.y) / 2.f;
+    otherCam.viewport.height = size.y;
 
     //update the UI camera to match the new screen size
     auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
