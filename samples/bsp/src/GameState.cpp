@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/Sunlight.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
@@ -43,6 +44,7 @@ source distribution.
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <crogine/graphics/CircleMeshBuilder.hpp>
 #include <crogine/util/Constants.hpp>
@@ -201,6 +203,8 @@ bool GameState::simulate(float dt)
 void GameState::render()
 {
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    auto oldVP = cam.viewport;
+    cam.viewport = { 0.f,0.f,1.f,1.f };
     m_gameScene.getSystem<cro::ModelRenderer>().setRenderFlags(std::numeric_limits<std::uint64_t>::max() / 2);
     
     cam.setActivePass(cro::Camera::Pass::Reflection);
@@ -216,6 +220,7 @@ void GameState::render()
     m_gameScene.getSystem<cro::ModelRenderer>().setRenderFlags(std::numeric_limits<std::uint64_t>::max());
     auto& rt = cro::App::getWindow();
     cam.setActivePass(cro::Camera::Pass::Final);
+    cam.viewport = oldVP;
     m_gameScene.render(rt);
     m_uiScene.render(rt);
 }
@@ -230,6 +235,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::ParticleSystem>(mb);
 }
 
 void GameState::loadAssets()
@@ -348,6 +354,12 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, /*0.85f*/0.f, -6.f });
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, 0.5f);
     md.createModel(entity, m_resources);
+
+    //party cules
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 1.f, -6.f });
+    entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/particles/smoke.cps", m_resources.textures);
+    entity.getComponent<cro::ParticleEmitter>().start();
 
 
     md.loadFromFile("assets/models/arrow.cmt", m_resources);

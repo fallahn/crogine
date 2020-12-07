@@ -82,7 +82,7 @@ namespace cro
         Usually one would restore the existing viewport when done rendering, for consistency.
         \returns Newly set viewport in window coords
         */
-        IntRect applyViewport(FloatRect);
+        IntRect applyViewport(FloatRect, const RenderTarget&);
 
         /*!
         \brief Restores the previously active viewport after a call to applyViewport()

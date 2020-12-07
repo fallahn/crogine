@@ -87,7 +87,7 @@ void CameraSystem::process(float)
 
 
             reflectionPass.viewMatrix = glm::scale(finalPass.viewMatrix, glm::vec3(1.f, -1.f, 1.f));
-            reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, getScene()->getWaterLevel() * 2.f, 0.f));
+            reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, -getScene()->getWaterLevel() * 2.f, 0.f));
             reflectionPass.viewProjectionMatrix = camera.projectionMatrix * reflectionPass.viewMatrix;
             reflectionPass.m_aabb = Spatial::updateFrustum(reflectionPass.m_frustum, reflectionPass.viewProjectionMatrix);
 
