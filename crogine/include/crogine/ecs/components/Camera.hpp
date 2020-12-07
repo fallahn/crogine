@@ -61,37 +61,105 @@ namespace cro
     struct CRO_EXPORT_API Camera final
     {
         /*!
-        \brief View Matrix.
-        This matrix is, by default, an identity matrix. This
-        can be updated manually, although it is recommended that
-        a Scene has an active CameraSystem added to it to automatically
-        calculate both the View and ViewProjection matrices for
-        all entities with a Camera component.
+        \brief Maps a Renderable type to a list of drawable objects
         */
-        glm::mat4 viewMatrix = glm::mat4(1.f);
+        using DrawList = std::unordered_map<std::type_index, std::any>;
 
         /*!
-        \brief Reflected view matrix.
-        This is the view matrix as seen by this camera
-        as if it were rendering reflections. By default this is not
-        updated unless a ReflectionMapRenderer is active in the Scene.
+        \brief Default constructor
         */
-        glm::mat4 reflectedViewMatrix = glm::mat4(1.f);
+        Camera();
 
         /*!
-        \brief ViewProjection matrix.
-        \see viewMatrix
+        \brief Contains the View, ViewProjection and draw list for a given render pass.
+
+        Cameras are updated for multiple passes for (optionally) rendering reflections
+        and refraction maps which can be used for flat planes in a Scene such as water.
+
+        The matrices for each pass are updated by the camera system, and the draw lists
+        are updated by any Renderable system. It is up to the user to implement this in
+        any custom renderable systems.
+
+        When rendering passes for reflection or refraction mapping the active pass has to
+        be selected on the Camera first, before then rendering the Scene
+
+        \begincode
+        camera.setPass(Camera::Pass::Reflection);
+        reflectionBuffer.clear();
+        scene.draw(reflectionBuffer);
+        reflectionBuffer.display();
+
+        camera.setPass(Camera::Pass::Refraction);
+        refractionBuffer.clear();
+        scene.draw(refrationBuffer);
+        refractionBuffer.display();
+
+        camera.setPass(Camera::Pass::Final);
+        scene.draw(renderWindow);
+        \endcode
         */
-        glm::mat4 viewProjectionMatrix = glm::mat4(1.f);
-        
+        struct Pass final
+        {
+            /*!
+            \brief List of entities which should be rendered when this camera is active.
+            This is automatically cleared by the camera system each Scene update, and
+            passed to the Scene so that Renderable systems can update it with visible
+            entities, sorted in draw order. This list is then used when the Renderable
+            system is drawn.
+            type_index allows multiple systems to store draw lists of differing types
+            which themselves are stored in std::any. It's up to the specific systems
+            to maintain which types are stored.
+            \see System::getType()
+            \see Renderable::updateDrawList()
+            \see Renderable::render()
+            */
+            DrawList drawList;
+
+            /*!
+            \brief View Matrix.
+            This matrix is, by default, an identity matrix. This
+            can be updated manually, although it is recommended that
+            a Scene has an active CameraSystem added to it to automatically
+            calculate both the View and ViewProjection matrices for
+            all entities with a Camera component.
+            */
+            glm::mat4 viewMatrix = glm::mat4(1.f);
+
+            /*!
+            \brief ViewProjection matrix.
+            \see viewMatrix
+            */
+            glm::mat4 viewProjectionMatrix = glm::mat4(1.f);
+
+            enum
+            {
+                Reflection,
+                Refraction,
+                Final,
+
+                Count
+            };
+        };
+
         /*!
-        \brief Reflected ViewProjection matrix.
-        This is the view - projection matrix as seen by this camera
-        as if it were rendering reflections. By default this is not
-        updated unless a ReflectionMapRenderer is active in the Scene.
-        Use it to project the reflection map onto the current view.
+        \brief Sets the active render pass.
+        By default this is set to 'Final'. If you are not rendering any
+        additional passes then this is not necessary to call.
+        \param pass Pass index to set.
         */
-        glm::mat4 reflectedViewProjectionMatrix = glm::mat4(1.f);
+        void setPass(std::uint32_t pass);        
+
+        /*!
+        \brief Returns a reference to the active pass.
+        Use this to get the View and ViewProjection matrices for
+        the current pass when rendering.
+        */
+        const Pass& getActivePass() const { return m_passes[m_passIndex]; }
+
+        /*!
+        \brief Returns a reference to the drawlist at the requested pass
+        */
+        DrawList& getDrawList(std::uint32_t pass);
 
         /*!
         \brief Projection matrix for this camera.
@@ -100,7 +168,6 @@ namespace cro
         the curent window size.
         */
         glm::mat4 projectionMatrix = glm::mat4(1.f);
-
 
         /*!
         \brief Viewport.
@@ -117,7 +184,7 @@ namespace cro
         IE the frustum of the ViewProjection matrix. This requires an active
         CameraSystem in the Scene for the result to be up to date.
         */
-        std::array<Plane, 6u> getFrustum() const {return m_frustum; }
+        std::array<Plane, 6u> getFrustum() const { return m_frustum; }
 
         /*!
         \brief Returns the AABB of the current frustum.
@@ -132,12 +199,6 @@ namespace cro
         */
         Box getAABB() const { return m_aabb; }
 
-        Camera() : viewport(0.f, 0.f, 1.f, 1.f)
-        {
-            glm::vec2 windowSize(App::getWindow().getSize());
-            projectionMatrix = glm::perspective(0.6f, windowSize.x / windowSize.y, 0.1f, 150.f);
-        }
-
         /*!
         \brief Resize callback.
         Optional callback automatically called by the camera's Scene if the camera
@@ -148,27 +209,15 @@ namespace cro
         std::function<void(Camera&)> resizeCallback;
 
         /*!
-        \brief List of entities which should be rendered when this camera is active.
-        This is automatically cleared by the camera system each Scene update, and
-        passed to the Scene so that Renderable systems can update it with visible
-        entities, sorted in draw order. This list is then used when the Renderable
-        system is drawn.
-        type_index allows multiple systems to store draw lists of differing types
-        which themselves are stored in std::any. It's up to the specific systems
-        to maintain which types are stored.
-        \see System::getType()
-        \see Renderable::updateDrawList()
-        \see Renderable::render()
-        */
-        std::unordered_map<std::type_index, std::any> drawList;
-
-        /*!
         \brief If this is set to false the CameraSystem will ignore
         this Camera component.
         */
         bool active = true;
 
     private:
+
+        std::array<Pass, Pass::Count> m_passes = {};
+        std::uint32_t m_passIndex = Pass::Final;
 
         std::array<Plane, 6u> m_frustum = {};
         Box m_aabb;

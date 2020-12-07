@@ -42,7 +42,6 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
-#include <crogine/ecs/systems/ReflectionMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/graphics/CircleMeshBuilder.hpp>
@@ -93,7 +92,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
                 if (ImGui::SliderFloat("WaterHeight", &waterPos.y, -2.f, 2.f))
                 {
                     waterPlane.getComponent<cro::Transform>().setPosition(waterPos);
-                    m_gameScene.getSystem<cro::ReflectionMapRenderer>().setPlaneHeight(waterPos.y);
+                    
                 }
 
                 if (ImGui::SliderFloat("Shadow Map Projection", &ShadowmapProjection, 10.f, 200.f))
@@ -128,12 +127,11 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
                 if (ImGui::CollapsingHeader("Reflection Map"))
                 {
-                    const auto& reflectionMapRenderer = m_gameScene.getSystem<cro::ReflectionMapRenderer>();
-                    ImGui::Image(reflectionMapRenderer.getReflectionTexture(),
+                    /*ImGui::Image(reflectionMapRenderer.getReflectionTexture(),
                         { 320.f, 320.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                     ImGui::Image(reflectionMapRenderer.getRefractionTexture(),
-                        { 320.f, 320.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                        { 320.f, 320.f }, { 0.f, 1.f }, { 1.f, 0.f });*/
                 }
             }
             ImGui::End();
@@ -216,7 +214,6 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
-    m_gameScene.addSystem<cro::ReflectionMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 }
 
@@ -253,8 +250,8 @@ void GameState::loadAssets()
         }
     }
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_normalMap", m_waterTextures[m_waterIndex]);
-    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_reflectionMap", m_gameScene.getSystem<cro::ReflectionMapRenderer>().getReflectionTexture());
-    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_refractionMap", m_gameScene.getSystem<cro::ReflectionMapRenderer>().getRefractionTexture());
+    //m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_reflectionMap", m_gameScene.getSystem<cro::ReflectionMapRenderer>().getReflectionTexture());
+    //m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_refractionMap", m_gameScene.getSystem<cro::ReflectionMapRenderer>().getRefractionTexture());
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_skybox", m_gameScene.getCubemap());
 }
 
@@ -283,7 +280,7 @@ void GameState::createScene()
         elapsed += dt;
         e.getComponent<cro::Model>().setMaterialProperty(0, "u_time", elapsed);
 
-        e.getComponent<cro::Model>().setMaterialProperty(0, "u_reflectionMatrix", m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectedViewProjectionMatrix);
+        //e.getComponent<cro::Model>().setMaterialProperty(0, "u_reflectionMatrix", m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectedViewProjectionMatrix);
 
         static cro::Clock frameClock;
         if (frameClock.elapsed().asSeconds() > 1.f / 24.f)

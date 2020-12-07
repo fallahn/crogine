@@ -210,7 +210,7 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
 
     DPRINT("Visible particle Systems", std::to_string(visibleSystems.size()));
 
-    cameraEnt.getComponent<Camera>().drawList[getType()] = std::make_any<std::vector<Entity>>(std::move(visibleSystems));
+    cameraEnt.getComponent<Camera>().getDrawList(Camera::Pass::Final)[getType()] = std::make_any<std::vector<Entity>>(std::move(visibleSystems));
 }
 
 void ParticleSystem::process(float dt)
@@ -350,15 +350,21 @@ void ParticleSystem::process(float dt)
 }
 
 void ParticleSystem::render(Entity camera, const RenderTarget&)
-{
+{   
+    //particles are already in world space so just need viewProj
+    const auto& cam = camera.getComponent<Camera>();
+    const auto& pass = cam.getActivePass();
+
+    if (pass.drawList.count(getType()) == 0)
+    {
+        return;
+    }
+
     glCheck(glEnable(GL_CULL_FACE));
     glCheck(glEnable(GL_BLEND));
     glCheck(glEnable(GL_DEPTH_TEST));
     glCheck(glDepthMask(GL_FALSE));
     ENABLE_POINT_SPRITES;
-        
-    //particles are already in world space so just need viewProj
-    const auto& cam = camera.getComponent<Camera>();
 
     auto vp = applyViewport(cam.viewport);
 
@@ -367,12 +373,12 @@ void ParticleSystem::render(Entity camera, const RenderTarget&)
 
     //set shader uniforms (texture/projection)
     glCheck(glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projectionMatrix)));
-    glCheck(glUniformMatrix4fv(m_viewProjUniform, 1, GL_FALSE, glm::value_ptr(cam.viewProjectionMatrix)));
+    glCheck(glUniformMatrix4fv(m_viewProjUniform, 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
     glCheck(glUniform1f(m_viewportUniform, static_cast<float>(vp.height)));
     glCheck(glUniform1i(m_textureUniform, 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
     
-    const auto& entities = std::any_cast<const std::vector<Entity>&>(cam.drawList.at(getType()));
+    const auto& entities = std::any_cast<const std::vector<Entity>&>(pass.drawList.at(getType()));
     for(auto entity : entities)
     {
         const auto& emitter = entity.getComponent<ParticleEmitter>();

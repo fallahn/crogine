@@ -357,6 +357,7 @@ void Q3BspSystem::render(cro::Entity camera, const cro::RenderTarget&)
     if (!m_loaded) return;
 
     const auto& camComponent = camera.getComponent<cro::Camera>();
+    const auto& pass = camComponent.getActivePass();
     glm::mat4 normalMatrix = glm::mat3(1.f);
 
     glCheck(glEnable(GL_CULL_FACE));
@@ -366,7 +367,7 @@ void Q3BspSystem::render(cro::Entity camera, const cro::RenderTarget&)
     //bind shader
     glCheck(glUseProgram(m_shader.getGLHandle()));
 
-    glCheck(glUniformMatrix4fv(m_uniforms[UniformLocation::ViewProjectionMatrix], 1, GL_FALSE, glm::value_ptr(camComponent.viewProjectionMatrix)));
+    glCheck(glUniformMatrix4fv(m_uniforms[UniformLocation::ViewProjectionMatrix], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
     glCheck(glUniformMatrix3fv(m_uniforms[UniformLocation::NormalMatrix], 1, GL_FALSE, &normalMatrix[0][0]));
 
     //assume lightmap is always in unit 0 

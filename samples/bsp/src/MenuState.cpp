@@ -64,6 +64,16 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 
     context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
     context.mainWindow.setMouseCaptured(true);
+
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Window of Buns"))
+            {
+                ImGui::Image(m_reflectionMap.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::Image(m_refractionMap.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+        });
 }
 
 //public
@@ -116,6 +126,13 @@ bool MenuState::simulate(float dt)
 
 void MenuState::render()
 {
+    m_reflectionMap.clear(cro::Colour::Red());
+    m_reflectionMap.display();
+
+    m_refractionMap.clear(cro::Colour::Blue());
+    m_reflectionMap.display();
+
+
     //draw any renderable systems
     m_scene.render(cro::App::getWindow());
 }
@@ -132,7 +149,12 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
+    const std::uint32_t MapSize = 512;
+    m_reflectionMap.create(MapSize, MapSize);
+    m_reflectionMap.setSmooth(true);
 
+    m_refractionMap.create(MapSize, MapSize);
+    m_refractionMap.setSmooth(true);
 }
 
 void MenuState::createScene()

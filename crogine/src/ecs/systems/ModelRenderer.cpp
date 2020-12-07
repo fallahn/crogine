@@ -160,7 +160,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         return a.second.flags < b.second.flags;
     });
 
-    camComponent.drawList[getType()] = std::make_any<MaterialList>(std::move(visibleEntities));
+    camComponent.getDrawList(Camera::Pass::Final)[getType()] = std::make_any<MaterialList>(std::move(visibleEntities));
 }
 
 void ModelRenderer::process(float)
@@ -171,7 +171,9 @@ void ModelRenderer::process(float)
 void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 {
     const auto& camComponent = camera.getComponent<Camera>();
-    if (camComponent.drawList.count(getType()) == 0)
+    const auto& pass = camComponent.getActivePass();
+
+    if (pass.drawList.count(getType()) == 0)
     {
         return;
     }
@@ -183,13 +185,13 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     glCheck(glCullFace(GL_BACK));
 
     //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
-    const auto& visibleEntities = std::any_cast<const MaterialList&>(camComponent.drawList.at(getType()));
+    const auto& visibleEntities = std::any_cast<const MaterialList&>(pass.drawList.at(getType()));
     for (const auto& [entity, sortData] : visibleEntities)
     {
         //calc entity transform
         const auto& tx = entity.getComponent<Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
-        glm::mat4 worldView = camComponent.viewMatrix * worldMat;
+        glm::mat4 worldView = pass.viewMatrix * worldMat;
 
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
@@ -209,8 +211,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
             glCheck(glUniform2f(model.m_materials[i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camComponent.viewMatrix)));
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camComponent.viewProjectionMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.projectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
             glCheck(glUniformMatrix3fv(model.m_materials[i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));

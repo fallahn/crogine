@@ -604,6 +604,7 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
     {
         //auto camera = m_activeCamera;
         const auto& cam = cameraList[i].getComponent<Camera>();
+        const auto& pass = cam.getActivePass();
 
         auto rect = rt.getViewport(cam.viewport);
         glViewport(rect.left, rect.bottom, rect.width, rect.height);
@@ -622,7 +623,7 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
             glCheck(glEnable(GL_DEPTH_TEST));
 
             //remove translation from the view matrix
-            auto view = glm::mat4(glm::mat3(cam.viewMatrix));
+            auto view = glm::mat4(glm::mat3(pass.viewMatrix));
 
             glCheck(glUseProgram(m_skyboxShaders[m_shaderIndex].getGLHandle()));
             glCheck(glUniformMatrix4fv(m_skybox.viewUniform, 1, GL_FALSE, glm::value_ptr(view)));
