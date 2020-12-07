@@ -238,7 +238,14 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
 
     for (auto i = 0u; i < m_visibleEntities.size(); ++i)
     {
-        cam.getDrawList(i)[getType()].swap(std::make_any<std::vector<Entity>>(m_visibleEntities[i]));
+        if (cam.getDrawList(i).count(getType()) == 0)
+        {
+            cam.getDrawList(i)[getType()] = std::make_any<std::vector<Entity>>(m_visibleEntities[i]);
+        }
+        else
+        {
+            std::any_cast<std::vector<Entity>>(cam.getDrawList(i)[getType()]).swap(m_visibleEntities[i]);
+        }
     }
 }
 

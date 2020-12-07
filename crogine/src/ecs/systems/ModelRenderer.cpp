@@ -163,7 +163,14 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
                 return a.second.flags < b.second.flags;
             });
 
-        camComponent.getDrawList(i)[getType()].swap(std::make_any<MaterialList>(m_visibleEnts[i]));
+        if (camComponent.getDrawList(i).count(getType()) == 0)
+        {
+            camComponent.getDrawList(i)[getType()] = std::make_any<MaterialList>(m_visibleEnts[i]);
+        }
+        else
+        {
+            std::any_cast<MaterialList>(camComponent.getDrawList(i)[getType()]).swap(m_visibleEnts[i]);
+        }
     }
 }
 

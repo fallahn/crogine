@@ -32,6 +32,7 @@ source distribution.
 #include "Q3Bsp.hpp"
 
 #include <vector>
+#include <array>
 
 class Patch final
 {
