@@ -80,6 +80,7 @@ bool MyApp::initialise()
     getWindow().setTitle("Crogine Application");
 
     m_stateStack.pushState(States::Game);
+    //m_stateStack.pushState(States::MainMenu);
 
     return true;
 }

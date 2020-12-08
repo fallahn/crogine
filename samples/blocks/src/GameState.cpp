@@ -598,8 +598,8 @@ void GameState::spawnPlayer(PlayerInfo info)
             
             entity.addComponent<Player>().id = info.playerID;
             entity.getComponent<Player>().spawnPosition = info.spawnPosition;
-            //entity.getComponent<Player>().cameraPitch = pitch;
-            //entity.getComponent<Player>().cameraYaw = rotation.y;
+            entity.getComponent<Player>().cameraPitch = pitch;
+            entity.getComponent<Player>().cameraYaw = rotation.y;
 
 
             playerEntity = entity;

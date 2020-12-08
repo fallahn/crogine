@@ -231,6 +231,7 @@
     <ClCompile Include="..\crogine\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\crogine\src\ecs\Component.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\AudioEmitter.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\components\Camera.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Drawable2D.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\ParticleEmitter.cpp" />

@@ -39,11 +39,12 @@ source distribution.
 #include <crogine/graphics/MaterialResource.hpp>
 #include <crogine/graphics/TextureResource.hpp>
 
+#include <crogine/gui/GuiClient.hpp>
 
 /*!
 Creates a state to render a menu.
 */
-class MenuState final : public cro::State
+class MenuState final : public cro::State, public cro::GuiClient
 {
 public:
     MenuState(cro::StateStack&, cro::State::Context);

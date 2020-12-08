@@ -214,6 +214,29 @@ namespace cro
         */
         void setSkyboxColours(cro::Colour top = cro::Colour(0.82f, 0.98f, 0.99f), cro::Colour bottom = cro::Colour(0.21f, 0.5f, 0.96f));
 
+
+        /*!
+        \brief Sets a global level in the Scene to use when rendering an
+        infinite water plane.
+        The CameraSystem uses this value to update the reflection pass
+        matrices, and on built-in shaders the uniform value u_clipPlane
+        is set to this.
+        When the active Pass of the camera is set to Reflection or Refraction
+        this value is used to clip Model geometry and particle geometry.
+
+        This value can be read an applied to custom Renderer systems and
+        shaders for continuity of the effect.
+
+        \param level The water level, in world units, relative to the Y zero axis
+        */
+        void setWaterLevel(float level) { m_waterLevel = level; }
+
+        /*!
+        \brief Returns the current water level
+        \see setWasterLevel()
+        */
+        float getWaterLevel() const { return m_waterLevel; }
+
         /*!
         \brief Returns a copy of the entity containing the default camera
         */
@@ -315,6 +338,8 @@ namespace cro
         std::size_t m_projectionMapCount;
         friend class ProjectionMapSystem;
 
+        float m_waterLevel;
+
         RenderTexture m_sceneBuffer;
         std::array<RenderTexture, 2u> m_postBuffers;
         std::vector<std::unique_ptr<PostProcess>> m_postEffects;
@@ -375,6 +400,8 @@ namespace cro
         std::function<void(const RenderTarget&, const Entity*, std::size_t)> currentRenderPath;
 
         void destroySkybox();
+
+        void resizeBuffers(glm::uvec2);
     };
 
 #include "Scene.inl"

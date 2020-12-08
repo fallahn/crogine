@@ -34,9 +34,9 @@ source distribution.
 using namespace cro;
 
 //protected
-IntRect Renderable::applyViewport(FloatRect vp)
+IntRect Renderable::applyViewport(FloatRect vp, const RenderTarget& rt)
 {
-    glm::vec2 size(App::getWindow().getSize());
+    glm::vec2 size(rt.getSize());
 
     glCheck(glGetIntegerv(GL_VIEWPORT, m_previousViewport.data()));
     IntRect rect(static_cast<int32>(size.x * vp.left), static_cast<int32>(size.y * vp.bottom),

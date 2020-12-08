@@ -36,14 +36,18 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/Sunlight.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <crogine/graphics/CircleMeshBuilder.hpp>
+#include <crogine/graphics/postprocess/PostChromeAB.hpp>
 #include <crogine/util/Constants.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
@@ -54,17 +58,21 @@ namespace
 {
 #include "SeaShader.inl"
 
-    cro::Entity moveEnt;
-
     const float SeaRadius = 50.f;
     const float CameraHeight = 2.f;
-    const std::uint32_t ReflectionMapSize = 512;
+    const std::uint32_t ReflectionMapSize = 512u;
 
     glm::vec3 LightColour = glm::vec3(1.0);
     glm::vec3 LightRotation = glm::vec3(-cro::Util::Const::PI * 0.9f, 0.f, 0.f);
 
     float ShadowmapProjection = 80.f;
     float ShadowmapClipPlane = 100.f;
+
+    cro::Entity moveEnt;
+    cro::Entity waterPlane;
+    glm::vec3 waterPos = glm::vec3(0.f, 0.f, -SeaRadius);
+
+    cro::Entity player2;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -86,6 +94,12 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
         {
             if (ImGui::Begin("Buns"))
             {
+                if (ImGui::SliderFloat("WaterHeight", &waterPos.y, -2.f, 2.f))
+                {
+                    waterPlane.getComponent<cro::Transform>().setPosition(waterPos);
+                    m_gameScene.setWaterLevel(waterPos.y);
+                }
+
                 if (ImGui::SliderFloat("Shadow Map Projection", &ShadowmapProjection, 10.f, 200.f))
                 {
                     auto half = ShadowmapProjection / 2.f;
@@ -118,7 +132,13 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
                 if (ImGui::CollapsingHeader("Reflection Map"))
                 {
-                    ImGui::Image(m_reflectionBuffer.getTexture(), { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
+                    const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+
+                    ImGui::Image(cam.reflectionBuffer.getTexture(),
+                        { 320.f, 320.f }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                    ImGui::Image(cam.refractionBuffer.getTexture(),
+                        { 320.f, 320.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 }
             }
             ImGui::End();
@@ -165,6 +185,14 @@ bool GameState::simulate(float dt)
     {
         movement.z += 1.f;
     }
+    /*if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_Q))
+    {
+        movement.y -= 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_E))
+    {
+        movement.y += 1.f;
+    }*/
     if (glm::length2(movement) > 0)
     {
         movement = glm::normalize(movement);
@@ -179,16 +207,54 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
-    //glEnable(GL_CLIP_DISTANCE0);
-    auto oldCam = m_gameScene.setActiveCamera(m_reflectionCamera);
-    m_reflectionBuffer.clear(cro::Colour::Red());
-    m_gameScene.render(m_reflectionBuffer);
-    m_reflectionBuffer.display();
-    //glDisable(GL_CLIP_DISTANCE0);
+    m_gameScene.setPostEnabled(false);
 
-    auto& rt = cro::App::getWindow();
+    //cam 1 buffers
+    auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    auto oldVP = cam.viewport;
+    cam.viewport = { 0.f,0.f,1.f,1.f };
+    m_gameScene.getSystem<cro::ModelRenderer>().setRenderFlags(~cro::RenderFlags::ReflectionPlane);
+    
+    cam.setActivePass(cro::Camera::Pass::Reflection);
+    cam.reflectionBuffer.clear(cro::Colour::Red());
+    m_gameScene.render(cam.reflectionBuffer);
+    cam.reflectionBuffer.display();
+
+    cam.setActivePass(cro::Camera::Pass::Refraction);
+    cam.refractionBuffer.clear(cro::Colour::Blue());
+    m_gameScene.render(cam.refractionBuffer);
+    cam.refractionBuffer.display();
+
+    //restore cam 1
+    cam.setActivePass(cro::Camera::Pass::Final);
+    cam.viewport = oldVP;
+
+    //cam2 buffers
+    auto oldCam = m_gameScene.setActiveCamera(player2);
+    auto& cam2 = player2.getComponent<cro::Camera>();
+    oldVP = cam2.viewport;
+    cam2.viewport = { 0.f, 0.f, 1.f, 1.f };
+    cam2.setActivePass(cro::Camera::Pass::Reflection);
+    cam2.reflectionBuffer.clear();
+    m_gameScene.render(cam2.reflectionBuffer);
+    cam2.reflectionBuffer.display();
+
+    cam2.setActivePass(cro::Camera::Pass::Refraction);
+    cam2.refractionBuffer.clear();
+    m_gameScene.render(cam2.refractionBuffer);
+    cam2.refractionBuffer.display();
+
+    //restore cam 2
+    cam2.setActivePass(cro::Camera::Pass::Final);
+    cam2.viewport = oldVP;
+
+    //final render (restoring reflection plane geometry)
+    m_gameScene.setPostEnabled(true);
     m_gameScene.setActiveCamera(oldCam);
-    m_gameScene.render(rt);
+    m_gameScene.getSystem<cro::ModelRenderer>().setRenderFlags(cro::RenderFlags::All);
+    auto& rt = cro::App::getWindow();
+    m_gameScene.render(rt, { oldCam, player2 });
+
     m_uiScene.render(rt);
 }
 
@@ -199,18 +265,16 @@ void GameState::addSystems()
 
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::ParticleSystem>(mb);
 }
 
 void GameState::loadAssets()
 {
     m_resources.shaders.loadFromString(ShaderID::Sea, SeaVertex, SeaFragment);
     m_materialIDs[MaterialID::Sea] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Sea));
-
-    m_reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
-    m_reflectionBuffer.setSmooth(true);
-    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_reflectionMap", m_reflectionBuffer.getTexture());
 
     m_environmentMap.loadFromFile("assets/images/cubemap/beach02.hdr");
 
@@ -240,14 +304,12 @@ void GameState::loadAssets()
         }
     }
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_normalMap", m_waterTextures[m_waterIndex]);
+    //m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_skybox", m_gameScene.getCubemap());
 }
 
 void GameState::createScene()
 {
-    m_reflectionCamera = m_gameScene.createEntity();
-    m_reflectionCamera.addComponent<cro::Transform>();
-    m_reflectionCamera.addComponent<cro::Camera>();
-
+    m_gameScene.addPostProcess<cro::PostChromeAB>();
 
     //sea plane
     auto gridID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(SeaRadius, 30));
@@ -256,6 +318,7 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -SeaRadius });
     entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(gridID), m_resources.materials.get(m_materialIDs[MaterialID::Sea]));
+    entity.getComponent<cro::Model>().setRenderFlags(cro::RenderFlags::ReflectionPlane);
 
     //TODO add this to some sort of system for updating sea properties
     //TODO update material properties with uniform ID setter to save string lookups
@@ -270,7 +333,6 @@ void GameState::createScene()
         static float elapsed = dt;
         elapsed += dt;
         e.getComponent<cro::Model>().setMaterialProperty(0, "u_time", elapsed);
-        e.getComponent<cro::Model>().setMaterialProperty(0, "u_reflectionMatrix", m_reflectionCamera.getComponent<cro::Camera>().viewProjectionMatrix);
 
         static cro::Clock frameClock;
         if (frameClock.elapsed().asSeconds() > 1.f / 24.f)
@@ -282,7 +344,19 @@ void GameState::createScene()
         }
     };
 
-    
+    waterPlane = entity;
+
+
+    //split screen test
+    player2 = m_gameScene.createEntity();
+    player2.addComponent<cro::Transform>().setPosition({ 5.f, 3.f, 8.f });
+    auto& camera2 = player2.addComponent<cro::Camera>();
+    camera2.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    camera2.reflectionBuffer.setSmooth(true);
+    camera2.refractionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    camera2.refractionBuffer.setSmooth(true);
+
+
     //main camera
     auto camEnt = m_gameScene.getActiveCamera();
     updateView(camEnt.getComponent<cro::Camera>());
@@ -297,30 +371,40 @@ void GameState::createScene()
     camEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //attach the reflection cam to the main cam and point it to the same target - only flipped
-    camEnt.getComponent<cro::Transform>().addChild(m_reflectionCamera.getComponent<cro::Transform>());
-    m_reflectionCamera.getComponent<cro::Transform>().move({ 0.f, -CameraHeight * 2.f, 0.f });
-    rotation = glm::lookAt(m_reflectionCamera.getComponent<cro::Transform>().getWorldPosition(), entity.getComponent<cro::Transform>().getPosition(), cro::Transform::Y_AXIS);
-    m_reflectionCamera.getComponent<cro::Transform>().setRotation(glm::inverse(rotation));
-
-
     //add the light source to the camera so shadow map follows
     camEnt.getComponent<cro::Transform>().addChild(m_gameScene.getSunlight().getComponent<cro::Transform>());
     m_gameScene.getSunlight().getComponent<cro::Transform>().setPosition({ 0.f, 10.f, -16.f });
     m_gameScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-40.f, 40.f, -40.f, 40.f, 0.1f, 100.f));
 
+    auto& camera = camEnt.getComponent<cro::Camera>();
+    camera.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    camera.reflectionBuffer.setSmooth(true);
+
+    camera.refractionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    camera.refractionBuffer.setSmooth(true);
+
     //TODO attach the camera to the player and move player instead.
     moveEnt = camEnt;
 
 
-    
+    rotation = glm::lookAt(player2.getComponent<cro::Transform>().getPosition(), entity.getComponent<cro::Transform>().getPosition(), cro::Transform::Y_AXIS);
+    player2.getComponent<cro::Transform>().setRotation(glm::inverse(rotation));
 
     //placeholder for player scale
     cro::ModelDefinition md;
     md.loadFromFile("assets/models/player_box.cmt", m_resources, &m_environmentMap);
+    //md.loadFromFile("assets/models/choppa.cmt", m_resources, &m_environmentMap);
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, 0.5f);// .setPosition({ 0.f, 0.85f, -6.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, /*0.85f*/0.f, -6.f });
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, 0.5f);
     md.createModel(entity, m_resources);
+
+    //party cules
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 1.f, -6.f });
+    entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/particles/smoke.cps", m_resources.textures);
+    entity.getComponent<cro::ParticleEmitter>().start();
+
 
     md.loadFromFile("assets/models/arrow.cmt", m_resources);
     md.createModel(m_gameScene.getSunlight(), m_resources);
@@ -330,6 +414,7 @@ void GameState::createScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.5f });
     md.createModel(entity, m_resources);
+    entity.getComponent<cro::Model>().setRenderFlags(cro::RenderFlags::ReflectionPlane);
     m_gameScene.getSunlight().getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -348,16 +433,23 @@ void GameState::updateView(cro::Camera& cam3D)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
     size.y = ((size.x / 16.f) * 9.f) / size.y;
-    size.x = 1.f;
+    size.x = 0.5f;
 
-    cam3D.projectionMatrix = glm::perspective(42.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 140.f);
+    cam3D.projectionMatrix = glm::perspective(42.f * cro::Util::Const::degToRad, 8.f / 9.f, 0.1f, 140.f);
+    cam3D.viewport.width = size.x;
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 
-    auto& reflectCam = m_reflectionCamera.getComponent<cro::Camera>();
-    reflectCam.projectionMatrix = glm::perspective(42.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 140.f);
+
+    auto& otherCam = player2.getComponent<cro::Camera>();
+    otherCam.projectionMatrix = cam3D.projectionMatrix;
+    otherCam.viewport.left = size.x;
+    otherCam.viewport.width = size.x;
+    otherCam.viewport.bottom = (1.f - size.y) / 2.f;
+    otherCam.viewport.height = size.y;
 
     //update the UI camera to match the new screen size
     auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam2D.viewport = cam3D.viewport;
+    cam2D.viewport.width *= 2.f;
 }

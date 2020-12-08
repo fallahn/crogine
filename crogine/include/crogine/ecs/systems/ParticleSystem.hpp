@@ -61,6 +61,8 @@ namespace cro
 
     private:
         
+        std::array<std::vector<Entity>, 2u> m_visibleEntities;
+
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
 
@@ -73,6 +75,7 @@ namespace cro
         void allocateBuffer();
 
         Shader m_shader;
+        int32 m_clipPlaneUniform;
         int32 m_projectionUniform;
         int32 m_textureUniform;
         int32 m_viewProjUniform;

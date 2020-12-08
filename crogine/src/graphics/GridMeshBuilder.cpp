@@ -53,7 +53,7 @@ Mesh::Data GridMeshBuilder::build() const
     auto xCount = m_subDivisions + 1;
     auto yCount = m_subDivisions + 1;
 
-    for (auto y = 0; y < yCount; ++y)
+    for (auto y = 0u; y < yCount; ++y)
     {
         for (auto x = 0u; x < xCount; ++x)
         {

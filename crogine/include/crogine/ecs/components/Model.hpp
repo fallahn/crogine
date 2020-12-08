@@ -41,7 +41,7 @@ namespace cro
     class CRO_EXPORT_API Model final
     {
     public:
-        Model() = default;
+        Model();
         Model(Mesh::Data, Material::Data); //applied to all meshes by default
         
         /*!
@@ -101,9 +101,23 @@ namespace cro
         */
         bool isHidden() const { return m_hidden; }
 
+        /*!
+        \brief Sets the render flags for this model.
+        If the render flags, when AND'd with the current render flags of the ModelRenderer,
+        are non-zero then the model is drawn, else the model is skipped by rendering.
+        Defaults to std::numeric_limits<std::uint64_t>::max() (all flags set)
+        */
+        void setRenderFlags(std::uint64_t flags) { m_renderFlags = flags; }
+
+        /*!
+        \brief Returns the current render flags of this model.
+        */
+        std::uint64_t getRenderFlags() const { return m_renderFlags; }
+
     private:
         bool m_visible = false;
         bool m_hidden = false;
+        std::uint64_t m_renderFlags;
 
         Mesh::Data m_meshData;
         std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_materials{};       
@@ -119,6 +133,7 @@ namespace cro
         std::size_t m_jointCount = 0;
 
         friend class ModelRenderer;
+        friend class ReflectionMapRenderer;
         friend class ShadowMapRenderer;
     };
 }
