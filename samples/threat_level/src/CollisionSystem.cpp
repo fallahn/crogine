@@ -240,14 +240,14 @@ void CollisionSystem::process(float dt)
     m_collisionWorld->debugDrawWorld();  
 }
 
-void CollisionSystem::render(Entity camera, const RenderTarget&)
+void CollisionSystem::render(Entity camera, const RenderTarget& rt)
 {   
     const auto& tx = camera.getComponent<Transform>();
     const auto& camComponent = camera.getComponent<Camera>();
 
     auto viewProj = camComponent.projectionMatrix * glm::inverse(tx.getWorldTransform());
 
-    applyViewport(camComponent.viewport);
+    applyViewport(camComponent.viewport, rt);
     m_debugDrawer.render(viewProj);
 }
 

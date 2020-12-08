@@ -136,12 +136,12 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
                         const auto& cam = ent.getComponent<cro::Camera>();
 
                         ImGui::Image(cam.reflectionBuffer.getTexture(),
-                            { 120.f, 120.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                            { 240.f, 240.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                         ImGui::SameLine();
 
                         ImGui::Image(cam.refractionBuffer.getTexture(),
-                            { 120.f, 120.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                            { 240.f, 240.f }, { 0.f, 1.f }, { 1.f, 0.f });
                     }
                 }
             }
@@ -211,16 +211,17 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
-    m_gameScene.setPostEnabled(false);
-    m_gameScene.getSystem<cro::ModelRenderer>().setRenderFlags(~cro::RenderFlags::ReflectionPlane);
+    //m_gameScene.setPostEnabled(false);
 
     for (auto ent : m_cameras)
     {
         m_gameScene.setActiveCamera(ent);
 
         auto& cam = ent.getComponent<cro::Camera>();
+        cam.renderFlags = ~cro::RenderFlags::ReflectionPlane;
         auto oldVP = cam.viewport;
-        cam.viewport = { 0.f,0.f,1.f,1.f };
+        //TODO reenable this after finding out why reflect is not projectnig on top of refract correctly
+        //cam.viewport = { 0.f,0.f,1.f,1.f };
 
         cam.setActivePass(cro::Camera::Pass::Reflection);
         cam.reflectionBuffer.clear(cro::Colour::Red());
@@ -232,16 +233,15 @@ void GameState::render()
         m_gameScene.render(cam.refractionBuffer);
         cam.refractionBuffer.display();
 
+        cam.renderFlags = cro::RenderFlags::All;
         cam.setActivePass(cro::Camera::Pass::Final);
         cam.viewport = oldVP;
     }
 
     //final render (restoring reflection plane geometry)
-    m_gameScene.setPostEnabled(true);
-    m_gameScene.getSystem<cro::ModelRenderer>().setRenderFlags(cro::RenderFlags::All);
+    //m_gameScene.setPostEnabled(true);
 
     auto& rt = cro::App::getWindow();
-    //m_gameScene.setActiveCamera(m_cameras[0]);
     m_gameScene.render(rt, m_cameras);
     m_uiScene.render(rt);
 }
@@ -297,7 +297,7 @@ void GameState::loadAssets()
 
 void GameState::createScene()
 {
-    m_gameScene.addPostProcess<cro::PostChromeAB>();
+    //m_gameScene.addPostProcess<cro::PostChromeAB>();
 
     //sea plane - TODO in split screen we want one for each camera
     //but only visible to the active camera when drawn.

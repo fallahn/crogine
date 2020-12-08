@@ -49,6 +49,42 @@ source distribution.
 namespace cro
 {
     /*!
+    \brief Render flags.
+    Use these to filter renderable items which should be drawn for a
+    specific pass. For example reflective plane geometry should only
+    be rendered into the final buffer, not the reflection and refraction
+    buffers.
+
+    Set the render flags on the Model component to 'ReflectionPlane' to
+    flag it as such. Then set the RenderFlags of the ModelRenderer to
+    the inverse:
+    \begincode
+    scene.getSystem<ModelRenderer>().setFlags(~RenderFlags::ReflectionPlane);
+    \endcode
+    This will set all flags active on the renderer so that everything but
+    reflection plane geometry will be drawn.
+
+    When renderingto the final buffer return the flags to their default
+    value to render all geometry again:
+    \begincode
+    scene.getSystem<ModelRenderer>().setFlags(RenderFlags::All);
+    \endcode
+
+    Custom flags can be created for any renderable component starting
+    at (1<<1) and incrementing (1<<x) up to the minimum value listed
+    here.
+    */
+
+    struct RenderFlags final
+    {
+        static constexpr std::uint64_t ReflectionPlane = ~(std::numeric_limits<std::uint64_t>::max() / 2);
+
+
+        static constexpr std::uint64_t All = std::numeric_limits<std::uint64_t>::max();
+    };
+
+
+    /*!
     \brief Represents a camera within the scene.
     Use Scene::setActiveCamera() to use an entity with
     a camera component as the current view. The default
@@ -263,6 +299,11 @@ namespace cro
         */
         RenderTexture refractionBuffer;
 
+        /*!
+        \brief Only renderables which match these flags when AND together
+        will be drawn when this camera is active.
+        */
+        std::uint64_t renderFlags = RenderFlags::All;
 
     private:
 

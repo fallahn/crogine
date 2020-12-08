@@ -41,6 +41,11 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/network/NetData.hpp>
 
+namespace cro
+{
+    struct Camera;
+}
+
 struct SharedStateData;
 class GameState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {

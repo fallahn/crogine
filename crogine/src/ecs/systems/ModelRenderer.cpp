@@ -97,7 +97,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         for (auto p = 0u; p < m_visibleEnts.size(); ++p)
         {
             const auto& frustum = camComponent.getPass(p).getFrustum();
-            auto forwardVector = -cro::Util::Matrix::getForwardVector(camComponent.getPass(p).viewMatrix);
+            auto forwardVector = cro::Util::Matrix::getForwardVector(camComponent.getPass(p).viewMatrix);
 
             model.m_visible = true;
             std::size_t i = 0;
@@ -200,7 +200,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
 
-        if ((model.m_renderFlags & getRenderFlags()) == 0)
+        if ((model.m_renderFlags & camComponent.renderFlags) == 0)
         {
             continue;
         }

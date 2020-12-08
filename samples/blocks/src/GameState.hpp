@@ -45,6 +45,11 @@ source distribution.
 
 struct SharedStateData;
 
+namespace cro
+{
+    struct Camera;
+}
+
 class GameState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:

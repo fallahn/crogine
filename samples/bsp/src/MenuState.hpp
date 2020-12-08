@@ -41,6 +41,11 @@ source distribution.
 
 #include <crogine/gui/GuiClient.hpp>
 
+namespace cro
+{
+    struct Camera;
+}
+
 /*!
 Creates a state to render a menu.
 */

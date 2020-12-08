@@ -43,10 +43,15 @@ source distribution.
 
 #include <array>
 
+namespace cro
+{
+    struct Camera;
+}
+
 class GameState final : public cro::State, public cro::GuiClient
 {
 public:
-    GameState(cro::StateStack&, cro::State::Context, std::size_t localPlayerCount = 4);
+    GameState(cro::StateStack&, cro::State::Context, std::size_t localPlayerCount = 1);
     ~GameState() = default;
 
     cro::StateID getStateID() const override { return States::Game; }
