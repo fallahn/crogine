@@ -46,13 +46,13 @@ source distribution.
 
 namespace
 {
-    std::vector<float> buns =
-    {
-        0.f,0.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
-        0.f,100.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
-        100.f,0.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
-        100.f,100.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
-    };
+    //std::vector<float> buns =
+    //{
+    //    0.f,0.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
+    //    0.f,100.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
+    //    100.f,0.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
+    //    100.f,100.f,  0.f,0.f, 1.f,0.f,0.f,1.f,
+    //};
 }
 
 using namespace cro;
@@ -72,7 +72,8 @@ RenderSystem2D::RenderSystem2D(MessageBus& mb)
 RenderSystem2D::~RenderSystem2D()
 {
     //tidy up any remaining drawables
-    for (auto entity : getEntities())
+    const auto& entities = getEntities();
+    for (auto entity : entities)
     {
         resetDrawable(entity);
     }
@@ -83,7 +84,7 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 {
     m_drawList.clear();
     auto& camera = camEnt.getComponent<Camera>();
-    const auto& frustum = camera.getFrustum();
+    const auto& frustum = camera.getPass(Camera::Pass::Final).getFrustum();
 
     auto& entities = getEntities();
     for (auto entity : entities)
@@ -116,7 +117,7 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
             return a.getComponent<Drawable2D>().m_sortCriteria < b.getComponent<Drawable2D>().m_sortCriteria;
         });
 
-    camera.drawList[getType()] = std::make_any<std::vector<Entity>>(m_drawList);
+    camera.getDrawList(Camera::Pass::Final)[getType()] = std::make_any<std::vector<Entity>>(m_drawList);
 }
 
 void RenderSystem2D::process(float)
@@ -191,7 +192,8 @@ void RenderSystem2D::process(float)
 void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
 {
     const auto& camComponent = cameraEntity.getComponent<Camera>();
-    if (camComponent.drawList.count(getType()) == 0)
+    const auto& pass = camComponent.getActivePass();
+    if (pass.drawList.count(getType()) == 0)
     {
         return;
     }
@@ -203,7 +205,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glEnable(GL_SCISSOR_TEST));
 
-    const auto& entities = std::any_cast<const std::vector<Entity>&>(camComponent.drawList.at(getType()));
+    const auto& entities = std::any_cast<const std::vector<Entity>&>(pass.drawList.at(getType()));
     for (auto entity : entities)
     {
         const auto& drawable = entity.getComponent<Drawable2D>();
@@ -213,7 +215,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
         if (drawable.m_shader && !drawable.m_updateBufferData)
         {
             //apply shader
-            glm::mat4 worldView = camComponent.viewMatrix * worldMat;
+            glm::mat4 worldView = pass.viewMatrix * worldMat;
 
             glCheck(glUseProgram(drawable.m_shader->getGLHandle()));
             //glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, &(worldMat[0].x)));
@@ -269,8 +271,8 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 glm::vec2 start(drawable.m_croppingWorldArea.left, drawable.m_croppingWorldArea.bottom);
                 glm::vec2 end(start.x + drawable.m_croppingWorldArea.width, start.y + drawable.m_croppingWorldArea.height);
 
-                auto scissorStart = mapCoordsToPixel(start, camComponent.viewProjectionMatrix, viewport);
-                auto scissorEnd = mapCoordsToPixel(end, camComponent.viewProjectionMatrix, viewport);
+                auto scissorStart = mapCoordsToPixel(start, pass.viewProjectionMatrix, viewport);
+                auto scissorEnd = mapCoordsToPixel(end, pass.viewProjectionMatrix, viewport);
 
                 glCheck(glScissor(scissorStart.x, scissorStart.y, scissorEnd.x - scissorStart.x, scissorEnd.y - scissorStart.y));
             }

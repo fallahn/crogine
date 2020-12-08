@@ -51,6 +51,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/SystemManager.cpp
 
   ${PROJECT_DIR}/ecs/components/AudioEmitter.cpp
+  ${PROJECT_DIR}/ecs/components/Camera.cpp
   ${PROJECT_DIR}/ecs/components/Drawable2D.cpp
   ${PROJECT_DIR}/ecs/components/Model.cpp
   ${PROJECT_DIR}/ecs/components/ParticleEmitter.cpp
@@ -78,11 +79,13 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 
   ${PROJECT_DIR}/graphics/BoundingBox.cpp
+  ${PROJECT_DIR}/graphics/CircleMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/Colour.cpp
   ${PROJECT_DIR}/graphics/DynamicMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/EnvironmentMap.cpp
   ${PROJECT_DIR}/graphics/Font.cpp
   ${PROJECT_DIR}/graphics/FontResource.cpp
+  ${PROJECT_DIR}/graphics/GridMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/Image.cpp
   ${PROJECT_DIR}/graphics/IqmBuilder.cpp
   ${PROJECT_DIR}/graphics/MaterialData.cpp

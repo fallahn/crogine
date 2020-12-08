@@ -75,7 +75,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
         createUI();
     });
 
-    updateView();
     context.mainWindow.setMouseCaptured(true);
     sd.clientConnection.ready = false;
 
@@ -197,15 +196,7 @@ void GameState::handleMessage(const cro::Message& msg)
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 
-    if (msg.id == cro::Message::WindowMessage)
-    {
-        const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-        {
-            updateView();
-        }
-    }
-    else if (msg.id == cro::Message::ConsoleMessage)
+    if (msg.id == cro::Message::ConsoleMessage)
     {
         const auto& data = msg.getData<cro::Message::ConsoleEvent>();
         if (getStateCount() == 1) //ignore this if pause menu is open
@@ -309,13 +300,12 @@ void GameState::createUI()
 
 }
 
-void GameState::updateView()
+void GameState::updateView(cro::Camera& cam3D)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
-    auto& cam3D = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     cam3D.projectionMatrix = glm::perspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 280.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
@@ -445,7 +435,9 @@ void GameState::spawnPlayer(PlayerInfo info)
 
             entity.addComponent<cro::Camera>();
             m_gameScene.setActiveCamera(entity);
-            updateView();
+            
+            updateView(entity.getComponent<cro::Camera>());
+            entity.getComponent<cro::Camera>().resizeCallback = std::bind(&GameState::updateView, this, std::placeholders::_1);
 
             //TODO create a head/body that only gets drawn in third person
         }

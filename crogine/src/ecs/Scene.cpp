@@ -79,6 +79,8 @@ namespace
         uniform LOW vec3 u_darkColour;
         uniform LOW vec3 u_lightColour;
 
+        uniform LOW vec4 u_skyColour;
+
         VARYING_IN vec3 v_texCoords;
 
         //const LOW vec3 lightColour = vec3(0.82, 0.98, 0.99);
@@ -92,15 +94,16 @@ namespace
             float dist = normalize(v_texCoords).y; /*v_texCoords.y + 0.5*/
 
             vec3 colour = mix(u_darkColour, u_lightColour, smoothstep(0.04, 0.88, dist));
-            FRAG_OUT = vec4(colour, 1.0);
+            FRAG_OUT = vec4(colour * u_skyColour.rgb, 1.0);
         })";
     const std::string skyboxFragTextured =
         R"(
         OUTPUT
 
-        VARYING_IN vec3 v_texCoords;
-
         uniform samplerCube u_skybox;
+        uniform vec4 u_skyColour;
+
+        VARYING_IN vec3 v_texCoords;
 
         void main()
         {
@@ -111,7 +114,7 @@ namespace
             colour = colour / (colour + vec3(1.0));
             colour = pow(colour, vec3(1.0/2.2));
 #endif
-            FRAG_OUT = vec4(colour, 1.0);
+            FRAG_OUT = vec4(colour * u_skyColour.rgb, 1.0);
         })";
 
     const float DefaultFOV = 35.f * Util::Const::degToRad;
@@ -133,6 +136,7 @@ Scene::Scene(MessageBus& mb, std::size_t initialPoolSize)
     m_entityManager         (mb, m_componentManager, initialPoolSize),
     m_systemManager         (*this, m_componentManager),
     m_projectionMapCount    (0),
+    m_waterLevel            (0.f),
     m_activeSkyboxTexture   (0),
     m_shaderIndex           (0)
 {
@@ -223,11 +227,7 @@ void Scene::setPostEnabled(bool enabled)
     {
         currentRenderPath = std::bind(&Scene::postRenderPath, this, _1, _2, _3);
         auto size = App::getWindow().getSize();
-        m_sceneBuffer.create(size.x, size.y, true);
-        for (auto& p : m_postEffects)
-        {
-            p->resizeBuffer(size.x, size.y);
-        }
+        resizeBuffers(size);
     }
     else
     {       
@@ -455,6 +455,11 @@ void Scene::setCubemap(const EnvironmentMap& map)
     m_shaderIndex = SkyboxType::Environment;
 }
 
+CubemapID Scene::getCubemap() const
+{
+    return CubemapID(m_activeSkyboxTexture);
+}
+
 void Scene::setSkyboxColours(cro::Colour dark, cro::Colour light)
 {
     if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle())
@@ -535,21 +540,7 @@ void Scene::forwardMessage(const Message& msg)
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             //resizes the post effect buffer if it is in use
-            if (m_sceneBuffer.available())
-            {
-                m_sceneBuffer.create(data.data0, data.data1);
-                for (auto& p : m_postEffects) p->resizeBuffer(data.data0, data.data1);
-            }
-
-            if (m_postBuffers[0].available())
-            {
-                m_postBuffers[0].create(data.data0, data.data1, false);
-            }
-
-            if (m_postBuffers[1].available())
-            {
-                m_postBuffers[1].create(data.data0, data.data1, false);
-            }
+            resizeBuffers({ data.data0, data.data1 });
         }
     }
 }
@@ -596,6 +587,7 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
     {
         //auto camera = m_activeCamera;
         const auto& cam = cameraList[i].getComponent<Camera>();
+        const auto& pass = cam.getActivePass();
 
         auto rect = rt.getViewport(cam.viewport);
         glViewport(rect.left, rect.bottom, rect.width, rect.height);
@@ -614,7 +606,7 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
             glCheck(glEnable(GL_DEPTH_TEST));
 
             //remove translation from the view matrix
-            auto view = glm::mat4(glm::mat3(cam.viewMatrix));
+            auto view = glm::mat4(glm::mat3(pass.viewMatrix));
 
             glCheck(glUseProgram(m_skyboxShaders[m_shaderIndex].getGLHandle()));
             glCheck(glUniformMatrix4fv(m_skybox.viewUniform, 1, GL_FALSE, glm::value_ptr(view)));
@@ -626,6 +618,13 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
                 glCheck(glActiveTexture(GL_TEXTURE0));
                 glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_activeSkyboxTexture));
                 glCheck(glUniform1i(m_skybox.textureUniform, 0));
+            }
+
+            //set sun colour if shader expects it
+            if (m_skybox.skyColourUniform)
+            {
+                auto c = m_sunlight.getComponent<Sunlight>().getColour();
+                glCheck(glUniform4f(m_skybox.skyColourUniform, c.getRed(), c.getGreen(), c.getBlue(), c.getAlpha()));
             }
 
             //draw cube
@@ -652,7 +651,7 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
         }
 
         //ideally we want to do this before the skybox to reduce overdraw
-        //but this breaks transparent objects... ideally opaque and transparent
+        //but this breaks transparent objects... opaque and transparent
         //passes should be separated, but this only affects the model renderer
         //and not other systems.... hum. Ideas on a postcard please.
         for (auto r : m_renderables)
@@ -709,4 +708,29 @@ void Scene::destroySkybox()
     }
 
     m_skybox = {};
+}
+
+void Scene::resizeBuffers(glm::uvec2 size)
+{
+    if (size != m_sceneBuffer.getSize())
+    {
+        if (m_sceneBuffer.available())
+        {
+            m_sceneBuffer.create(size.x, size.y);
+            for (auto& p : m_postEffects)
+            {
+                p->resizeBuffer(size.x, size.y);
+            }
+        }
+
+        if (m_postBuffers[0].available())
+        {
+            m_postBuffers[0].create(size.x, size.y, false);
+        }
+
+        if (m_postBuffers[1].available())
+        {
+            m_postBuffers[1].create(size.x, size.y, false);
+        }
+    }
 }

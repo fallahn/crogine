@@ -60,7 +60,5 @@ namespace cro
 
 
     private:
-
-        void updateFrustum(Camera&);
     };
 }

@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Console.hpp>
+#include <crogine/util/Matrix.hpp>
 
 #include "../../detail/GLCheck.hpp"
 
@@ -54,8 +55,7 @@ namespace
 }
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
-    : System            (mb, typeid(ModelRenderer)),
-    m_currentTextureUnit(0)
+    : System            (mb, typeid(ModelRenderer))
 {
     requireComponent<Transform>();
     requireComponent<Model>();
@@ -65,15 +65,15 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 void ModelRenderer::updateDrawList(Entity cameraEnt)
 {
     auto& camComponent = cameraEnt.getComponent<Camera>();
-    auto frustum = camComponent.getFrustum();
     auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
-    auto forwardVector = cameraEnt.getComponent<Transform>().getForwardVector();;
 
     auto& entities = getEntities();    
 
     //cull entities by viewable into draw lists by pass
-    MaterialList visibleEntities;
-    visibleEntities.reserve(entities.size() * 2);
+    for (auto& list : m_visibleEnts)
+    {
+        list.clear();
+    }
 
     for (auto& entity : entities)
     {
@@ -83,79 +83,86 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
             continue;
         }
 
+        //render flags are tested when drawing as the flags may have changed
+        //between draw calls but without updating the visiblity list.
+
         auto sphere = model.m_meshData.boundingSphere;
         const auto& tx = entity.getComponent<Transform>();
-        //auto pos = tx.getWorldPosition();
 
         sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
         auto scale = tx.getScale();
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
-        /*auto box = model.m_meshData.boundingBox;
-        box[0] += pos;
-        box[1] += pos;*/
 
-        model.m_visible = true;
-        std::size_t i = 0;
-        while (model.m_visible && i < frustum.size())
+        for (auto p = 0u; p < m_visibleEnts.size(); ++p)
         {
-            model.m_visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
-            //model.m_visible = (Spatial::intersects(frustum[i++], box) != Planar::Back);
-        }
+            const auto& frustum = camComponent.getPass(p).getFrustum();
+            auto forwardVector = -cro::Util::Matrix::getForwardVector(camComponent.getPass(p).viewMatrix);
 
-        if (model.m_visible)
-        {
-            auto opaque = std::make_pair(entity, SortData());
-            auto transparent = std::make_pair(entity, SortData());
-
-            //auto worldPos = tx.getWorldPosition();
-            auto direction = (sphere.centre - cameraPos);
-            float distance = glm::dot(forwardVector, direction);
-            //TODO a large model with a centre behind the camera
-            //might still intersect the view but register as being
-            //further away than smaller objects in front
-
-            //foreach material
-            //add ent/index pair to alpha or opaque list
-            for (i = 0u; i < model.m_meshData.submeshCount; ++i)
+            model.m_visible = true;
+            std::size_t i = 0;
+            while (model.m_visible && i < frustum.size())
             {
-                if (model.m_materials[i].blendMode != Material::BlendMode::None)
-                {
-                    transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                    transparent.second.flags = static_cast<int64>(-distance * 1000000.f); //suitably large number to shift decimal point
-                    transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
-                }
-                else
-                {
-                    opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                    opaque.second.flags = static_cast<int64>(distance * 1000000.f);
-                }
+                model.m_visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
             }
 
-            if (!opaque.second.matIDs.empty())
+            if (model.m_visible)
             {
-                visibleEntities.push_back(opaque);
-            }
+                auto opaque = std::make_pair(entity, SortData());
+                auto transparent = std::make_pair(entity, SortData());
 
-            if (!transparent.second.matIDs.empty())
-            {
-                visibleEntities.push_back(transparent);
+                auto direction = (sphere.centre - cameraPos);
+                float distance = glm::dot(forwardVector, direction);
+                //TODO a large model with a centre behind the camera
+                //might still intersect the view but register as being
+                //further away than smaller objects in front
+
+                //foreach material
+                //add ent/index pair to alpha or opaque list
+                for (i = 0u; i < model.m_meshData.submeshCount; ++i)
+                {
+                    if (model.m_materials[i].blendMode != Material::BlendMode::None)
+                    {
+                        transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
+                        transparent.second.flags = static_cast<int64>(-distance * 1000000.f); //suitably large number to shift decimal point
+                        transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
+                    }
+                    else
+                    {
+                        opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
+                        opaque.second.flags = static_cast<int64>(distance * 1000000.f);
+                    }
+                }
+
+                if (!opaque.second.matIDs.empty())
+                {
+                    m_visibleEnts[p].push_back(opaque);
+                }
+
+                if (!transparent.second.matIDs.empty())
+                {
+                    m_visibleEnts[p].push_back(transparent);
+                }
             }
         }
     }
-    DPRINT("Visible 3D ents", std::to_string(visibleEntities.size()));
+    DPRINT("Visible 3D ents", std::to_string(m_visibleEnts[0].size()));
     //DPRINT("Total ents", std::to_string(entities.size()));
 
     //sort lists by depth
     //flag values make sure transparent materials are rendered last
     //with opaque going front to back and transparent back to front
-    std::sort(std::begin(visibleEntities), std::end(visibleEntities),
-        [](MaterialPair& a, MaterialPair& b)
+    for (auto i = 0u; i < m_visibleEnts.size(); ++i)
     {
-        return a.second.flags < b.second.flags;
-    });
+        std::sort(std::begin(m_visibleEnts[i]), std::end(m_visibleEnts[i]),
+            [](MaterialPair& a, MaterialPair& b)
+            {
+                return a.second.flags < b.second.flags;
+            });
 
-    camComponent.drawList[getType()] = std::make_any<MaterialList>(std::move(visibleEntities));
+        //TODO remove this copy with a swap operation somewhere...
+        camComponent.getDrawList(i)[getType()] = std::make_any<MaterialList>(m_visibleEnts[i]);
+    }
 }
 
 void ModelRenderer::process(float)
@@ -166,7 +173,11 @@ void ModelRenderer::process(float)
 void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 {
     const auto& camComponent = camera.getComponent<Camera>();
-    if (camComponent.drawList.count(getType()) == 0)
+    const auto& pass = camComponent.getActivePass();
+
+    glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.05f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
+
+    if (pass.drawList.count(getType()) == 0)
     {
         return;
     }
@@ -175,19 +186,25 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     auto cameraPosition = camTx.getWorldPosition();
     auto screenSize = glm::vec2(rt.getSize());
 
-    glCheck(glCullFace(GL_BACK));
+    glCheck(glCullFace(pass.getCullFace()));
 
     //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
-    const auto& visibleEntities = std::any_cast<const MaterialList&>(camComponent.drawList.at(getType()));
+    const auto& visibleEntities = std::any_cast<const MaterialList&>(pass.drawList.at(getType()));
     for (const auto& [entity, sortData] : visibleEntities)
     {
         //calc entity transform
         const auto& tx = entity.getComponent<Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
-        glm::mat4 worldView = camComponent.viewMatrix * worldMat;
+        glm::mat4 worldView = pass.viewMatrix * worldMat;
 
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
+
+        if ((model.m_renderFlags & getRenderFlags()) == 0)
+        {
+            continue;
+        }
+
 #ifndef PLATFORM_DESKTOP
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
 #endif //PLATFORM
@@ -199,13 +216,14 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
             //apply shader uniforms from material
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-            applyProperties(model.m_materials[i], model);
+            applyProperties(model.m_materials[i], model, *getScene(), camComponent);
 
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
             glCheck(glUniform2f(model.m_materials[i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camComponent.viewMatrix)));
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camComponent.viewProjectionMatrix)));
+            glCheck(glUniform4f(model.m_materials[i].uniforms[Material::ClipPlane], clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.projectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
             glCheck(glUniformMatrix3fv(model.m_materials[i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
@@ -268,9 +286,9 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 }
 
 //private
-void ModelRenderer::applyProperties(const Material::Data& material, const Model& model)
+void ModelRenderer::applyProperties(const Material::Data& material, const Model& model, const Scene& scene, const Camera& camera)
 {
-    m_currentTextureUnit = 0;
+    std::uint32_t currentTextureUnit = 0;
     for (const auto& prop : material.properties)
     {
         switch (prop.second.second.type)
@@ -279,14 +297,14 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         case Material::Property::Texture:
             //TODO textures need to track which unit they're currently bound
             //to so that they don't get bounds to multiple units
-            glCheck(glActiveTexture(GL_TEXTURE0 + m_currentTextureUnit));
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
             glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
-            glCheck(glUniform1i(prop.second.first, m_currentTextureUnit++));
+            glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
             break;
         case Material::Property::Cubemap:
-            glCheck(glActiveTexture(GL_TEXTURE0 + m_currentTextureUnit));
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
             glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, prop.second.second.textureID));
-            glCheck(glUniform1i(prop.second.first, m_currentTextureUnit++));
+            glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
             break;
         case Material::Property::Number:
             glCheck(glUniform1f(prop.second.first,
@@ -322,30 +340,43 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             break;
         case Material::ProjectionMap:
         {
-            const auto p = getScene()->getActiveProjectionMaps();
+            const auto p = scene.getActiveProjectionMaps();
             glCheck(glUniformMatrix4fv(material.uniforms[Material::ProjectionMap], static_cast<GLsizei>(p.second), GL_FALSE, p.first));
             glCheck(glUniform1i(material.uniforms[Material::ProjectionMapCount], static_cast<GLint>(p.second)));
         }
             break;
         case Material::ShadowMapProjection:
-            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, glm::value_ptr(getScene()->getSunlight().getComponent<Sunlight>().getViewProjectionMatrix())));
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, glm::value_ptr(scene.getSunlight().getComponent<Sunlight>().getViewProjectionMatrix())));
             break;
         case Material::ShadowMapSampler:
-            glCheck(glActiveTexture(GL_TEXTURE0 + m_currentTextureUnit));
-            glCheck(glBindTexture(GL_TEXTURE_2D, getScene()->getSunlight().getComponent<Sunlight>().getMapID()));
-            glCheck(glUniform1i(material.uniforms[Material::ShadowMapSampler], m_currentTextureUnit++));
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+            glCheck(glBindTexture(GL_TEXTURE_2D, scene.getSunlight().getComponent<Sunlight>().getMapID()));
+            glCheck(glUniform1i(material.uniforms[Material::ShadowMapSampler], currentTextureUnit++));
             break;
         case Material::SunlightColour:
         {
-            auto colour = getScene()->getSunlight().getComponent<Sunlight>().getColour();
+            auto colour = scene.getSunlight().getComponent<Sunlight>().getColour();
             glCheck(glUniform4f(material.uniforms[Material::SunlightColour], colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()));
         }
             break;
         case Material::SunlightDirection:
         {
-            auto dir = getScene()->getSunlight().getComponent<Sunlight>().getDirection();
+            auto dir = scene.getSunlight().getComponent<Sunlight>().getDirection();
             glCheck(glUniform3f(material.uniforms[Material::SunlightDirection], dir.x, dir.y, dir.z));
         }
+            break;
+        case Material::ReflectionMap:
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+            glCheck(glBindTexture(GL_TEXTURE_2D, camera.reflectionBuffer.getTexture().getGLHandle()));
+            glCheck(glUniform1i(material.uniforms[Material::ReflectionMap], currentTextureUnit++));
+            break;
+        case Material::RefractionMap:
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+            glCheck(glBindTexture(GL_TEXTURE_2D, camera.refractionBuffer.getTexture().getGLHandle()));
+            glCheck(glUniform1i(material.uniforms[Material::RefractionMap], currentTextureUnit++));
+            break;
+        case Material::ReflectionMatrix:
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::ReflectionMatrix], 1, GL_FALSE, &camera.getPass(Camera::Pass::Reflection).viewProjectionMatrix[0][0]));
             break;
         }
     }

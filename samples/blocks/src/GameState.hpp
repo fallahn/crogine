@@ -84,7 +84,7 @@ private:
     void createScene();
     void createUI();
 
-    void updateView();
+    void updateView(cro::Camera&);
 
     void handlePacket(const cro::NetEvent::Packet&);
     void spawnPlayer(PlayerInfo);

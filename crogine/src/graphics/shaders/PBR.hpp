@@ -98,7 +98,7 @@ namespace cro::Shaders::PBR
                 for(int y = 0; y < filterSize; ++y)
                 {
                     float pcfDepth = unpack(TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize));
-                    shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
+                    shadow += (projectionCoords.z - 0.005) > pcfDepth ? 0.4 : 0.0;
                 }
             }
             return 1.0 - (shadow / 9.0);
@@ -269,6 +269,8 @@ namespace cro::Shaders::PBR
             #if defined (RX_SHADOWS)
             colour *= shadowAmount(v_lightWorldPosition);
             #endif            
+
+            colour *= u_lightColour.rgb;
 
             FRAG_OUT = vec4(colour, 1.0);
         })";

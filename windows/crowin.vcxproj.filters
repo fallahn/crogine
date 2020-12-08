@@ -549,6 +549,12 @@
     <ClInclude Include="..\crogine\include\crogine\core\Keyboard.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\GridMeshBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\CircleMeshBuilder.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -886,6 +892,15 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\detail\SDLImageRead.cpp">
       <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\GridMeshBuilder.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\CircleMeshBuilder.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\Camera.cpp">
+      <Filter>Source Files\ecs\components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

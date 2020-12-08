@@ -1,0 +1,9 @@
+model arrow
+{
+    mesh = "assets/models/arrow.cmf"
+
+    material VertexLit
+    {
+        colour = 1.0, 0.2, 0.2
+    }
+}

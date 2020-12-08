@@ -36,8 +36,18 @@ source distribution.
 
 using namespace cro;
 
+Model::Model()
+    : m_visible(true),
+    m_hidden(false),
+    m_renderFlags(std::numeric_limits<std::uint64_t>::max()),
+    m_skeleton(nullptr),
+    m_jointCount(0)
+{}
+
 Model::Model(Mesh::Data data, Material::Data material)
     : m_visible     (true),
+    m_hidden        (false),
+    m_renderFlags    (std::numeric_limits<std::uint64_t>::max()),
     m_meshData      (data),
     m_skeleton      (nullptr),
     m_jointCount    (0)

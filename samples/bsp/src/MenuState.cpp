@@ -64,6 +64,17 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
 
     context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
     context.mainWindow.setMouseCaptured(true);
+
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Window of Buns"))
+            {
+                const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+                ImGui::Image(cam.reflectionBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::Image(cam.refractionBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+        });
 }
 
 //public
@@ -116,7 +127,25 @@ bool MenuState::simulate(float dt)
 
 void MenuState::render()
 {
+    auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    auto oldVp = cam.viewport;
+    cam.viewport = { 0.f,0.f,1.f,1.f };
+
+    cam.setActivePass(cro::Camera::Pass::Reflection);
+    cam.reflectionBuffer.clear(cro::Colour::Red());
+    m_scene.render(cam.reflectionBuffer);
+    cam.reflectionBuffer.display();
+
+
+    cam.setActivePass(cro::Camera::Pass::Refraction);
+    cam.refractionBuffer.clear(cro::Colour::Blue());
+    m_scene.render(cam.refractionBuffer);
+    cam.refractionBuffer.display();
+
+
     //draw any renderable systems
+    cam.setActivePass(cro::Camera::Pass::Final);
+    cam.viewport = oldVp;
     m_scene.render(cro::App::getWindow());
 }
 
@@ -141,7 +170,12 @@ void MenuState::createScene()
     //properly update the camera properties
     auto camEnt = m_scene.getActiveCamera();
     updateView(camEnt.getComponent<cro::Camera>());
-    camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
+    auto& cam = camEnt.getComponent<cro::Camera>();
+    cam.resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
+    cam.reflectionBuffer.create(512, 512);
+    cam.reflectionBuffer.setSmooth(true);
+    cam.refractionBuffer.create(512, 512);
+    cam.refractionBuffer.setSmooth(true);
 
     //add the first person controller
     camEnt.addComponent<FpsCamera>();

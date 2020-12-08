@@ -137,9 +137,12 @@ private:
     {
         enum
         {
+            WorldMatrix,
             WorldViewMatrix,
             ViewProjectionMatrix,
             NormalMatrix,
+
+            ClipPlane,
 
             Texture0,
             Texture1,

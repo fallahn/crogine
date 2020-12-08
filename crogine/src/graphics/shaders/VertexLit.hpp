@@ -71,6 +71,8 @@ namespace cro
                 uniform mat3 u_normalMatrix;
                 uniform mat4 u_projectionMatrix;
 
+                uniform vec4 u_clipPlane;
+
                 #if defined(RX_SHADOWS)
                 uniform mat4 u_lightViewProjectionMatrix;
                 #endif
@@ -126,7 +128,7 @@ namespace cro
                     v_lightWorldPosition = u_lightViewProjectionMatrix * u_worldMatrix * position;
                 #endif
 
-                    v_worldPosition = (u_worldMatrix * a_position).xyz;
+                    v_worldPosition = (u_worldMatrix * position).xyz;
                 #if defined(VERTEX_COLOUR)
                     v_colour = a_colour;
                 #endif
@@ -160,6 +162,12 @@ namespace cro
                 #endif
                 #if defined(LIGHTMAPPED)
                     v_texCoord1 = a_texCoord1;
+                #endif
+
+                #if defined (MOBILE)
+
+                #else
+                    gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
                 #endif
                 })";
 

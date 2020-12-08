@@ -70,6 +70,12 @@ namespace
         uniform LOW float u_viewportHeight;
         uniform LOW float u_particleSize;
 
+#if defined(MOBILE)
+
+#else
+        uniform vec4 u_clipPlane;
+#endif
+
         VARYING_OUT LOW vec4 v_colour;
         VARYING_OUT MED mat2 v_rotation;
 
@@ -83,6 +89,13 @@ namespace
 
             gl_Position = u_viewProjection * a_position;
             gl_PointSize = u_viewportHeight * u_projection[1][1] / gl_Position.w * u_particleSize * a_normal.y;
+
+#if defined (MOBILE)
+
+#else
+            gl_ClipDistance[0] = dot(a_position, u_clipPlane);
+#endif
+
         }
     )";
 
@@ -113,6 +126,7 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     m_vaoIDs            (MaxParticleSystems),
     m_nextBuffer        (0),
     m_bufferCount       (0),
+    m_clipPlaneUniform  (-1),
     m_projectionUniform (-1),
     m_textureUniform    (-1),
     m_viewProjUniform   (-1),
@@ -141,6 +155,9 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     {
         //fetch uniforms.
         const auto& uniforms = m_shader.getUniformMap();
+#ifdef PLATFORM_DESKTOP
+        m_clipPlaneUniform = uniforms.find("u_clipPlane")->second;
+#endif
         m_projectionUniform = uniforms.find("u_projection")->second;
         m_textureUniform = uniforms.find("u_texture")->second;
         m_viewProjUniform = uniforms.find("u_viewProjection")->second;
@@ -185,14 +202,18 @@ ParticleSystem::~ParticleSystem()
 //public
 void ParticleSystem::updateDrawList(Entity cameraEnt)
 {
-    auto frustum = cameraEnt.getComponent<Camera>().getFrustum();
-    std::vector<Entity> visibleSystems;
+    auto& cam = cameraEnt.getComponent<Camera>();
+
+    for (auto& visible : m_visibleEntities)
+    {
+        visible.clear();
+    }
 
     const auto& entities = getEntities();
     for (auto entity : entities)
     {
         const auto& emitter = entity.getComponent<ParticleEmitter>();
-        auto inView = [&frustum, &emitter]()->bool
+        auto inView = [&emitter](const Frustum& frustum)->bool
         {
             bool visible = true;
             std::size_t i = 0;
@@ -202,15 +223,24 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
             }
             return visible;
         };
-        if (emitter.m_nextFreeParticle > 0 && inView())
+
+        for (auto i = 0u; i < m_visibleEntities.size(); ++i)
         {
-            visibleSystems.push_back(entity);
+            const auto& frustum = cam.getPass(i).getFrustum();
+            if (emitter.m_nextFreeParticle > 0 && inView(frustum))
+            {
+                m_visibleEntities[i].push_back(entity);
+            }
         }
     }
 
-    DPRINT("Visible particle Systems", std::to_string(visibleSystems.size()));
+    DPRINT("Visible particle Systems", std::to_string(m_visibleEntities[0].size()));
 
-    cameraEnt.getComponent<Camera>().drawList[getType()] = std::make_any<std::vector<Entity>>(std::move(visibleSystems));
+    for (auto i = 0u; i < m_visibleEntities.size(); ++i)
+    {
+        //TODO find a way to swap this buffer rather than copy each time.
+        cam.getDrawList(i)[getType()] = std::make_any<std::vector<Entity>>(m_visibleEntities[i]);
+    }
 }
 
 void ParticleSystem::process(float dt)
@@ -349,30 +379,40 @@ void ParticleSystem::process(float dt)
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
-void ParticleSystem::render(Entity camera, const RenderTarget&)
-{
+void ParticleSystem::render(Entity camera, const RenderTarget& rt)
+{   
+    //particles are already in world space so just need viewProj
+    const auto& cam = camera.getComponent<Camera>();
+    const auto& pass = cam.getActivePass();
+
+    if (pass.drawList.count(getType()) == 0)
+    {
+        return;
+    }
+
+    glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.05f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
+
     glCheck(glEnable(GL_CULL_FACE));
+    glCheck(glCullFace(pass.getCullFace()));
     glCheck(glEnable(GL_BLEND));
     glCheck(glEnable(GL_DEPTH_TEST));
     glCheck(glDepthMask(GL_FALSE));
     ENABLE_POINT_SPRITES;
-        
-    //particles are already in world space so just need viewProj
-    const auto& cam = camera.getComponent<Camera>();
 
-    auto vp = applyViewport(cam.viewport);
+    auto vp = applyViewport(cam.viewport, rt);
 
     //bind shader
     glCheck(glUseProgram(m_shader.getGLHandle()));
 
     //set shader uniforms (texture/projection)
+    glCheck(glUniform4f(m_clipPlaneUniform, clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
     glCheck(glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projectionMatrix)));
-    glCheck(glUniformMatrix4fv(m_viewProjUniform, 1, GL_FALSE, glm::value_ptr(cam.viewProjectionMatrix)));
+    glCheck(glUniformMatrix4fv(m_viewProjUniform, 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
     glCheck(glUniform1f(m_viewportUniform, static_cast<float>(vp.height)));
     glCheck(glUniform1i(m_textureUniform, 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
     
-    const auto& entities = std::any_cast<const std::vector<Entity>&>(cam.drawList.at(getType()));
+    const auto& entities = std::any_cast<const std::vector<Entity>&>(pass.drawList.at(getType()));
     for(auto entity : entities)
     {
         const auto& emitter = entity.getComponent<ParticleEmitter>();

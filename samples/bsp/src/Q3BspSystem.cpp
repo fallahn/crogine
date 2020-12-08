@@ -43,6 +43,8 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 
+#include <crogine/ecs/Scene.hpp>
+
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #define STBIR_DEFAULT_FILTER_UPSAMPLE    STBIR_FILTER_CUBICBSPLINE
 #include "stb_image_resize.h"
@@ -57,8 +59,11 @@ namespace
         ATTRIBUTE vec4 a_colour;
         ATTRIBUTE vec2 a_texCoord0;
 
+        uniform mat4 u_worldMatrix;
         uniform mat4 u_viewProjectionMatrix;
         uniform mat3 u_normalMatrix;
+
+        uniform vec4 u_clipPlane;
 
         VARYING_OUT vec3 v_normal;
         VARYING_OUT vec4 v_colour;
@@ -71,6 +76,8 @@ namespace
             v_normal = a_normal; //TODO this ought to be multiplied by the normal matrix, but the map geometry shouldn't be transformed anyway
             v_colour = a_colour;
             v_texCoord0 = a_texCoord0;
+
+            gl_ClipDistance[0] = dot(u_worldMatrix * a_position, u_clipPlane);
         })";
 
     const std::string Fragment =
@@ -160,6 +167,14 @@ Q3BspSystem::Q3BspSystem(cro::MessageBus& mb)
             {
                 m_uniforms[UniformLocation::Texture0] = location;
             }
+            else if (uniform == "u_worldMatrix")
+            {
+                m_uniforms[UniformLocation::WorldMatrix] = location;
+            }
+            else if (uniform == "u_clipPlane")
+            {
+                m_uniforms[UniformLocation::ClipPlane] = location;
+            }
         }
     }
 }
@@ -202,13 +217,13 @@ void Q3BspSystem::updateDrawList(cro::Entity camera)
     clustersSkipped = 0;
     leavesCulled = 0;
     camPos = position;
-    camAABB = camera.getComponent<cro::Camera>().getAABB();
+    camAABB = camera.getComponent<cro::Camera>().getPass(cro::Camera::Pass::Final).getAABB();
 
     static std::vector<bool> usedFaces;
     usedFaces.resize(m_faces.size());
     std::fill(usedFaces.begin(), usedFaces.end(), false);
 
-    const auto frustum = camera.getComponent<cro::Camera>().getFrustum();
+    const auto frustum = camera.getComponent<cro::Camera>().getPass(cro::Camera::Pass::Final).getFrustum();
     static std::vector<std::int32_t> visibleFaces;
     visibleFaces.clear();
 
@@ -357,17 +372,26 @@ void Q3BspSystem::render(cro::Entity camera, const cro::RenderTarget&)
     if (!m_loaded) return;
 
     const auto& camComponent = camera.getComponent<cro::Camera>();
+    const auto& pass = camComponent.getActivePass();
+    
+    //we're assuming the level geometry is untransformed
+    //so the world and normal matrices are identity
+    glm::mat4 worldMatrix = glm::mat3(1.f);
     glm::mat4 normalMatrix = glm::mat3(1.f);
 
+    glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.05f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
+
     glCheck(glEnable(GL_CULL_FACE));
-    glCheck(glCullFace(GL_FRONT)); //TODO enable this when we know faces are wound correctly
+    glCheck(glCullFace(/*GL_FRONT*/pass.getCullFace() == GL_FRONT ? GL_BACK : GL_FRONT)); //TODO enable this when we know faces are wound correctly
     glCheck(glEnable(GL_DEPTH_TEST));
 
     //bind shader
     glCheck(glUseProgram(m_shader.getGLHandle()));
 
-    glCheck(glUniformMatrix4fv(m_uniforms[UniformLocation::ViewProjectionMatrix], 1, GL_FALSE, glm::value_ptr(camComponent.viewProjectionMatrix)));
+    glCheck(glUniformMatrix4fv(m_uniforms[UniformLocation::ViewProjectionMatrix], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+    glCheck(glUniformMatrix4fv(m_uniforms[UniformLocation::WorldMatrix], 1, GL_FALSE, glm::value_ptr(worldMatrix)));
     glCheck(glUniformMatrix3fv(m_uniforms[UniformLocation::NormalMatrix], 1, GL_FALSE, &normalMatrix[0][0]));
+    glCheck(glUniform4f(m_uniforms[UniformLocation::ClipPlane], clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
 
     //assume lightmap is always in unit 0 
     glCheck(glUniform1i(m_uniforms[UniformLocation::Texture0], 0));
@@ -375,8 +399,6 @@ void Q3BspSystem::render(cro::Entity camera, const cro::RenderTarget&)
     //and material textures are 1,2,3 etc
 
 
-    //TODO convert this to loop for all mesh data
-    //const auto& currentMesh = m_meshes[MeshData::Patch];
     for (const auto& currentMesh : m_meshes)
     {
 #ifndef PLATFORM_DESKTOP

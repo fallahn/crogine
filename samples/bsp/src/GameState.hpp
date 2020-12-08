@@ -32,12 +32,18 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+
+#include <crogine/gui/GuiClient.hpp>
 
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
 
+#include <array>
 
-class GameState final : public cro::State
+class GameState final : public cro::State, public cro::GuiClient
 {
 public:
     GameState(cro::StateStack&, cro::State::Context);
@@ -56,11 +62,17 @@ private:
     cro::Scene m_uiScene;
 
     cro::ResourceCollection m_resources;
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
+
+    cro::EnvironmentMap m_environmentMap;
+
+    std::array<cro::Texture, 40u> m_waterTextures;
+    std::size_t m_waterIndex;
 
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
 
-    void updateView();
+    void updateView(cro::Camera&);
 };

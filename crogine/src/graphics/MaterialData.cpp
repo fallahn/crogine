@@ -240,6 +240,10 @@ void Data::setShader(const Shader& s)
         {
             uniforms[Material::ScreenSize] = handle;
         }
+        else if (uniform == "u_clipPlane")
+        {
+            uniforms[Material::ClipPlane] = handle;
+        }
         //these are optionally standard so they are added to 'optional' list to to mark that they exist
         //but not added as a property as they are not user settable - rather they are used internally by renderers
         else if (uniform == "u_boneMatrices[0]")
@@ -276,6 +280,21 @@ void Data::setShader(const Shader& s)
         {
             uniforms[Material::SunlightColour] = handle;
             optionalUniforms[optionalUniformCount++] = Material::SunlightColour;
+        }
+        else if (uniform == "u_reflectionMap")
+        {
+            uniforms[Material::ReflectionMap] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::ReflectionMap;
+        }
+        else if (uniform == "u_refractionMap")
+        {
+            uniforms[Material::RefractionMap] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::RefractionMap;
+        }
+        else if (uniform == "u_reflectionMatrix")
+        {
+            uniforms[Material::ReflectionMatrix] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::ReflectionMatrix;
         }
         //else these are user settable uniforms - ie optional, but set by user such as textures
         else

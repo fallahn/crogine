@@ -42,6 +42,7 @@ namespace cro
 {
     class MessageBus;
     class Model;
+    struct Camera;
 
     //don't export this, used internally.
     struct SortData final
@@ -82,13 +83,10 @@ namespace cro
         void render(Entity, const RenderTarget&) override;
 
     private:
-        //MaterialList m_visibleEntities;
-        //TODO list of lighting
+        std::array<MaterialList, 2u> m_visibleEnts;
 
-        uint32 m_currentTextureUnit;
-        void applyProperties(const Material::Data&, const Model&);
-
-        void applyBlendMode(Material::BlendMode);
+        static void applyProperties(const Material::Data&, const Model&, const Scene&, const Camera&);
+        static void applyBlendMode(Material::BlendMode);
     };
 
     //just to keep it a bit more inline with the new render system naming

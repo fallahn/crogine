@@ -29,12 +29,24 @@ source distribution.
 
 #pragma once
 
+namespace TextureID
+{
+    enum
+    {
+        SeaNormal,
+
+        Count
+    };
+}
+
 namespace MaterialID
 {
-    /*enum
+    enum
     {
+        Sea,
 
-    };*/
+        Count
+    };
 }
 
 namespace MeshID
@@ -57,7 +69,13 @@ namespace FontID
 
 namespace ShaderID
 {
+    enum
+    {
+        Sea,
 
+
+        Count
+    };
 }
 
 namespace CommandID

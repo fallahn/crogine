@@ -528,7 +528,7 @@ void ModelState::createScene()
     entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(m_scene.getSunlight().getComponent<cro::Transform>());
 
     cro::ModelDefinition def;
-    def.loadFromFile("assets/models/light.cmt", m_resources);
+    def.loadFromFile("assets/models/arrow.cmt", m_resources);
     def.createModel(m_scene.getSunlight(), m_resources);
     m_scene.getSunlight().getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", cro::Colour(1.f, 1.f, 0.f, 1.f));
 
