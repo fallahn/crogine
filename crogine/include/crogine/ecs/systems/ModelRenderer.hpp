@@ -42,6 +42,7 @@ namespace cro
 {
     class MessageBus;
     class Model;
+    struct Camera;
 
     //don't export this, used internally.
     struct SortData final
@@ -81,27 +82,10 @@ namespace cro
         */
         void render(Entity, const RenderTarget&) override;
 
-        /*!
-        \brief Sets the render flags for the next render operation.
-        Only Model components with render flags which pass the flag test
-        when the flags are bitwise AND'd together will be drawn.
-        \param flags A 64 bit value containing the bits making up the current render flags
-        */
-        void setRenderFlags(std::uint64_t flags) { m_renderFlags = flags; }
-
-        /*!
-        \brief Returns the current render flags.
-        This is by default std::numeric_limits<std::uint64_t>::max() (all flags set)
-        */
-        std::uint64_t getRenderFlags() const { return m_renderFlags; }
-
     private:
-        friend class ReflectionMapRenderer;
-
-        std::uint64_t m_renderFlags;
         std::array<MaterialList, 2u> m_visibleEnts;
 
-        static void applyProperties(const Material::Data&, const Model&, const Scene&);
+        static void applyProperties(const Material::Data&, const Model&, const Scene&, const Camera&);
         static void applyBlendMode(Material::BlendMode);
     };
 

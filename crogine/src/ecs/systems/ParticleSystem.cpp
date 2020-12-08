@@ -238,14 +238,8 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
 
     for (auto i = 0u; i < m_visibleEntities.size(); ++i)
     {
-        if (cam.getDrawList(i).count(getType()) == 0)
-        {
-            cam.getDrawList(i)[getType()] = std::make_any<std::vector<Entity>>(m_visibleEntities[i]);
-        }
-        else
-        {
-            std::any_cast<std::vector<Entity>>(cam.getDrawList(i)[getType()]).swap(m_visibleEntities[i]);
-        }
+        //TODO find a way to swap this buffer rather than copy each time.
+        cam.getDrawList(i)[getType()] = std::make_any<std::vector<Entity>>(m_visibleEntities[i]);
     }
 }
 

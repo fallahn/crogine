@@ -67,10 +67,6 @@ private:
 
     InputParser m_inputParser;
 
-
-    cro::RenderTexture m_reflectionMap;
-    cro::RenderTexture m_refractionMap;
-
     void addSystems();
     void loadAssets();
     void createScene();

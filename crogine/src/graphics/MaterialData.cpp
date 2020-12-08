@@ -281,6 +281,21 @@ void Data::setShader(const Shader& s)
             uniforms[Material::SunlightColour] = handle;
             optionalUniforms[optionalUniformCount++] = Material::SunlightColour;
         }
+        else if (uniform == "u_reflectionMap")
+        {
+            uniforms[Material::ReflectionMap] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::ReflectionMap;
+        }
+        else if (uniform == "u_refractionMap")
+        {
+            uniforms[Material::RefractionMap] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::RefractionMap;
+        }
+        else if (uniform == "u_reflectionMatrix")
+        {
+            uniforms[Material::ReflectionMatrix] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::ReflectionMatrix;
+        }
         //else these are user settable uniforms - ie optional, but set by user such as textures
         else
         {

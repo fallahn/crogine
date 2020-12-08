@@ -55,8 +55,7 @@ namespace
 }
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
-    : System            (mb, typeid(ModelRenderer)),
-    m_renderFlags       (std::numeric_limits<std::uint64_t>::max())
+    : System            (mb, typeid(ModelRenderer))
 {
     requireComponent<Transform>();
     requireComponent<Model>();
@@ -84,10 +83,8 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
             continue;
         }
 
-        if ((model.m_renderFlags & m_renderFlags) == 0)
-        {
-            continue;
-        }
+        //render flags are tested when drawing as the flags may have changed
+        //between draw calls but without updating the visiblity list.
 
         auto sphere = model.m_meshData.boundingSphere;
         const auto& tx = entity.getComponent<Transform>();
@@ -163,14 +160,8 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
                 return a.second.flags < b.second.flags;
             });
 
-        if (camComponent.getDrawList(i).count(getType()) == 0)
-        {
-            camComponent.getDrawList(i)[getType()] = std::make_any<MaterialList>(m_visibleEnts[i]);
-        }
-        else
-        {
-            std::any_cast<MaterialList>(camComponent.getDrawList(i)[getType()]).swap(m_visibleEnts[i]);
-        }
+        //TODO remove this copy with a swap operation somewhere...
+        camComponent.getDrawList(i)[getType()] = std::make_any<MaterialList>(m_visibleEnts[i]);
     }
 }
 
@@ -209,7 +200,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
 
-        if ((model.m_renderFlags & m_renderFlags) == 0)
+        if ((model.m_renderFlags & getRenderFlags()) == 0)
         {
             continue;
         }
@@ -225,7 +216,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
             //apply shader uniforms from material
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-            applyProperties(model.m_materials[i], model, *getScene());
+            applyProperties(model.m_materials[i], model, *getScene(), camComponent);
 
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
@@ -295,7 +286,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 }
 
 //private
-void ModelRenderer::applyProperties(const Material::Data& material, const Model& model, const Scene& scene)
+void ModelRenderer::applyProperties(const Material::Data& material, const Model& model, const Scene& scene, const Camera& camera)
 {
     std::uint32_t currentTextureUnit = 0;
     for (const auto& prop : material.properties)
@@ -373,6 +364,19 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             auto dir = scene.getSunlight().getComponent<Sunlight>().getDirection();
             glCheck(glUniform3f(material.uniforms[Material::SunlightDirection], dir.x, dir.y, dir.z));
         }
+            break;
+        case Material::ReflectionMap:
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+            glCheck(glBindTexture(GL_TEXTURE_2D, camera.reflectionBuffer.getTexture().getGLHandle()));
+            glCheck(glUniform1i(material.uniforms[Material::ReflectionMap], currentTextureUnit++));
+            break;
+        case Material::RefractionMap:
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+            glCheck(glBindTexture(GL_TEXTURE_2D, camera.refractionBuffer.getTexture().getGLHandle()));
+            glCheck(glUniform1i(material.uniforms[Material::RefractionMap], currentTextureUnit++));
+            break;
+        case Material::ReflectionMatrix:
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::ReflectionMatrix], 1, GL_FALSE, &camera.getPass(Camera::Pass::Reflection).viewProjectionMatrix[0][0]));
             break;
         }
     }

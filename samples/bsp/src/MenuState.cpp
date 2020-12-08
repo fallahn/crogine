@@ -69,8 +69,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
         {
             if (ImGui::Begin("Window of Buns"))
             {
-                ImGui::Image(m_reflectionMap.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                ImGui::Image(m_refractionMap.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+                ImGui::Image(cam.reflectionBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::Image(cam.refractionBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
         });
@@ -131,15 +132,15 @@ void MenuState::render()
     cam.viewport = { 0.f,0.f,1.f,1.f };
 
     cam.setActivePass(cro::Camera::Pass::Reflection);
-    m_reflectionMap.clear(cro::Colour::Red());
-    m_scene.render(m_reflectionMap);
-    m_reflectionMap.display();
+    cam.reflectionBuffer.clear(cro::Colour::Red());
+    m_scene.render(cam.reflectionBuffer);
+    cam.reflectionBuffer.display();
 
 
     cam.setActivePass(cro::Camera::Pass::Refraction);
-    m_refractionMap.clear(cro::Colour::Blue());
-    m_scene.render(m_refractionMap);
-    m_reflectionMap.display();
+    cam.refractionBuffer.clear(cro::Colour::Blue());
+    m_scene.render(cam.refractionBuffer);
+    cam.refractionBuffer.display();
 
 
     //draw any renderable systems
@@ -160,12 +161,7 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
-    const std::uint32_t MapSize = 512;
-    m_reflectionMap.create(MapSize, MapSize);
-    m_reflectionMap.setSmooth(true);
 
-    m_refractionMap.create(MapSize, MapSize);
-    m_refractionMap.setSmooth(true);
 }
 
 void MenuState::createScene()
@@ -174,7 +170,12 @@ void MenuState::createScene()
     //properly update the camera properties
     auto camEnt = m_scene.getActiveCamera();
     updateView(camEnt.getComponent<cro::Camera>());
-    camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
+    auto& cam = camEnt.getComponent<cro::Camera>();
+    cam.resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
+    cam.reflectionBuffer.create(512, 512);
+    cam.reflectionBuffer.setSmooth(true);
+    cam.refractionBuffer.create(512, 512);
+    cam.refractionBuffer.setSmooth(true);
 
     //add the first person controller
     camEnt.addComponent<FpsCamera>();

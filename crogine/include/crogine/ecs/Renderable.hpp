@@ -37,6 +37,41 @@ source distribution.
 
 namespace cro
 {
+    /*!
+    \brief Render flags.
+    Use these to filter renderable items which should be drawn for a
+    specific pass. For example reflective plane geometry should only
+    be rendered into the final buffer, not the reflection and refraction
+    buffers.
+
+    Set the render flags on the Model component to 'ReflectionPlane' to
+    flag it as such. Then set the RenderFlags of the ModelRenderer to
+    the inverse: 
+    \begincode
+    scene.getSystem<ModelRenderer>().setFlags(~RenderFlags::ReflectionPlane);
+    \endcode
+    This will set all flags active on the renderer so that everything but
+    reflection plane geometry will be drawn.
+
+    When renderingto the final buffer return the flags to their default
+    value to render all geometry again:
+    \begincode
+    scene.getSystem<ModelRenderer>().setFlags(RenderFlags::All);
+    \endcode
+
+    Custom flags can be created for any renderable component starting
+    at (1<<1) and incrementing (1<<x) up to the minimum value listed
+    here.
+    */
+
+    struct RenderFlags final
+    {
+        static constexpr std::uint64_t ReflectionPlane = ~(std::numeric_limits<std::uint64_t>::max() / 2);
+
+
+        static constexpr std::uint64_t All = std::numeric_limits<std::uint64_t>::max();
+    };
+
     class Entity;
     struct Camera;
     class RenderTarget;
@@ -75,6 +110,20 @@ namespace cro
         */
         virtual void render(Entity camera, const RenderTarget& target) = 0;
 
+        /*!
+        \brief Sets the render flags for the next render operation.
+        Use this to test whether the current renderable component should be rendered
+        by ANDing the renderable flags with the Renderable system flags.
+        \param flags A 64 bit value containing the bits making up the current render flags
+        */
+        void setRenderFlags(std::uint64_t flags) { m_renderFlags = flags; }
+
+        /*!
+        \brief Returns the current render flags.
+        This is by default std::numeric_limits<std::uint64_t>::max() (all flags set)
+        */
+        std::uint64_t getRenderFlags() const { return m_renderFlags; }
+
     protected:
         /*!
         \brief Applies the given normalised viewport.
@@ -91,5 +140,7 @@ namespace cro
 
     private:
         std::array<int32, 4> m_previousViewport{};
+
+        std::uint64_t m_renderFlags = std::numeric_limits<std::uint64_t>::max();
     };
 }

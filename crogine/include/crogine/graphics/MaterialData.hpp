@@ -86,6 +86,9 @@ namespace cro
             SunlightColour,
             ScreenSize,
             ClipPlane,
+            ReflectionMap,
+            RefractionMap,
+            ReflectionMatrix,
             Total
         };
         

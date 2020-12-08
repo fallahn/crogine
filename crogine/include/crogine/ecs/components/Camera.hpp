@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/Window.hpp>
 #include <crogine/graphics/Spatial.hpp>
 #include <crogine/graphics/Rectangle.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
@@ -212,7 +213,7 @@ namespace cro
         \brief Projection matrix for this camera.
         This can be either a perspective or orthographic projection.
         By default it is constructed to a perspective matrix to match
-        the curent window size.
+        the current window size.
         */
         glm::mat4 projectionMatrix = glm::mat4(1.f);
 
@@ -240,6 +241,23 @@ namespace cro
         this Camera component.
         */
         bool active = true;
+
+        /*!
+        \brief Target to use as this camera's reflection buffer.
+        This is up to the user to initiate and draw to - by default
+        the buffer remains uninitialised.
+        \see Camera::Pass
+        */
+        RenderTexture reflectionBuffer;
+
+        /*!
+        \brief Target to use as this camera's refraction buffer.
+        This is up to the user to initiate and draw to - by default
+        the buffer remains uninitialised.
+        \see Camera::Pass
+        */
+        RenderTexture refractionBuffer;
+
 
     private:
 

@@ -65,8 +65,6 @@ private:
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
     cro::EnvironmentMap m_environmentMap;
-    cro::RenderTexture m_reflectMap;
-    cro::RenderTexture m_refractMap;
 
     std::array<cro::Texture, 40u> m_waterTextures;
     std::size_t m_waterIndex;
