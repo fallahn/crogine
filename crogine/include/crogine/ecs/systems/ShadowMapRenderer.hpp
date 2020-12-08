@@ -48,7 +48,7 @@ namespace cro
     employs the depth map rendered by this system) in order
     that the depth map data be up to date.
     */
-    class CRO_EXPORT_API ShadowMapRenderer final : public cro::System, public cro::Renderable
+    class CRO_EXPORT_API ShadowMapRenderer final : public cro::System
     {
     public:
         /*!
@@ -59,10 +59,6 @@ namespace cro
 
         void process(float) override;
 
-        void updateDrawList(Entity) override;
-
-        void render(Entity, const RenderTarget&) override;
-
         /*!
         \brief Returns a reference to the texture used to render the depth map
         */
@@ -71,5 +67,8 @@ namespace cro
     private:
         RenderTexture m_target;
         std::vector<std::pair<Entity, float>> m_visibleEntities;
+
+        void updateDrawList();
+        void render();
     };
 }

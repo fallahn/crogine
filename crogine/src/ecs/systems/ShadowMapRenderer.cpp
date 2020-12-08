@@ -68,9 +68,15 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
 void ShadowMapRenderer::process(float)
 {
     getScene()->getSunlight().getComponent<Sunlight>().m_textureID = m_target.getTexture().getGLHandle();
+
+    //do this here so we know it gets updated just once per frame
+    //during multi-pass rendering.
+    updateDrawList();
+    render();
 }
 
-void ShadowMapRenderer::updateDrawList(Entity)
+//private
+void ShadowMapRenderer::updateDrawList()
 {
     auto& sunlight = getScene()->getSunlight().getComponent<Sunlight>();
     const auto& sunTx = getScene()->getSunlight().getComponent<Transform>();
@@ -126,7 +132,7 @@ void ShadowMapRenderer::updateDrawList(Entity)
         });
 }
 
-void ShadowMapRenderer::render(Entity, const RenderTarget&)
+void ShadowMapRenderer::render()
 {
     const auto& sunlight = getScene()->getSunlight().getComponent<Sunlight>();
 
