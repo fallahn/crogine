@@ -227,11 +227,7 @@ void Scene::setPostEnabled(bool enabled)
     {
         currentRenderPath = std::bind(&Scene::postRenderPath, this, _1, _2, _3);
         auto size = App::getWindow().getSize();
-        m_sceneBuffer.create(size.x, size.y, true);
-        for (auto& p : m_postEffects)
-        {
-            p->resizeBuffer(size.x, size.y);
-        }
+        resizeBuffers(size);
     }
     else
     {       
@@ -544,21 +540,7 @@ void Scene::forwardMessage(const Message& msg)
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             //resizes the post effect buffer if it is in use
-            if (m_sceneBuffer.available())
-            {
-                m_sceneBuffer.create(data.data0, data.data1);
-                for (auto& p : m_postEffects) p->resizeBuffer(data.data0, data.data1);
-            }
-
-            if (m_postBuffers[0].available())
-            {
-                m_postBuffers[0].create(data.data0, data.data1, false);
-            }
-
-            if (m_postBuffers[1].available())
-            {
-                m_postBuffers[1].create(data.data0, data.data1, false);
-            }
+            resizeBuffers({ data.data0, data.data1 });
         }
     }
 }
@@ -669,7 +651,7 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
         }
 
         //ideally we want to do this before the skybox to reduce overdraw
-        //but this breaks transparent objects... ideally opaque and transparent
+        //but this breaks transparent objects... opaque and transparent
         //passes should be separated, but this only affects the model renderer
         //and not other systems.... hum. Ideas on a postcard please.
         for (auto r : m_renderables)
@@ -726,4 +708,29 @@ void Scene::destroySkybox()
     }
 
     m_skybox = {};
+}
+
+void Scene::resizeBuffers(glm::uvec2 size)
+{
+    if (size != m_sceneBuffer.getSize())
+    {
+        if (m_sceneBuffer.available())
+        {
+            m_sceneBuffer.create(size.x, size.y);
+            for (auto& p : m_postEffects)
+            {
+                p->resizeBuffer(size.x, size.y);
+            }
+        }
+
+        if (m_postBuffers[0].available())
+        {
+            m_postBuffers[0].create(size.x, size.y, false);
+        }
+
+        if (m_postBuffers[1].available())
+        {
+            m_postBuffers[1].create(size.x, size.y, false);
+        }
+    }
 }

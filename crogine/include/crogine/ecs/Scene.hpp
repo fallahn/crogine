@@ -400,6 +400,8 @@ namespace cro
         std::function<void(const RenderTarget&, const Entity*, std::size_t)> currentRenderPath;
 
         void destroySkybox();
+
+        void resizeBuffers(glm::uvec2);
     };
 
 #include "Scene.inl"

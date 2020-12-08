@@ -47,6 +47,7 @@ source distribution.
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <crogine/graphics/CircleMeshBuilder.hpp>
+#include <crogine/graphics/postprocess/PostChromeAB.hpp>
 #include <crogine/util/Constants.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
@@ -206,6 +207,8 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
+    m_gameScene.setPostEnabled(false);
+
     //cam 1 buffers
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     auto oldVP = cam.viewport;
@@ -246,6 +249,7 @@ void GameState::render()
     cam2.viewport = oldVP;
 
     //final render (restoring reflection plane geometry)
+    m_gameScene.setPostEnabled(true);
     m_gameScene.setActiveCamera(oldCam);
     m_gameScene.getSystem<cro::ModelRenderer>().setRenderFlags(cro::RenderFlags::All);
     auto& rt = cro::App::getWindow();
@@ -305,6 +309,8 @@ void GameState::loadAssets()
 
 void GameState::createScene()
 {
+    m_gameScene.addPostProcess<cro::PostChromeAB>();
+
     //sea plane
     auto gridID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(SeaRadius, 30));
 

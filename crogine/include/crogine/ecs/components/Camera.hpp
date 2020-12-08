@@ -86,18 +86,23 @@ namespace cro
 
         \begincode
         camera.setActivePass(Camera::Pass::Reflection);
-        reflectionBuffer.clear();
-        scene.draw(reflectionBuffer);
-        reflectionBuffer.display();
+        camera.reflectionBuffer.clear();
+        scene.draw(camera.reflectionBuffer);
+        camera.reflectionBuffer.display();
 
         camera.setActivePass(Camera::Pass::Refraction);
-        refractionBuffer.clear();
-        scene.draw(refrationBuffer);
-        refractionBuffer.display();
+        camera.refractionBuffer.clear();
+        scene.draw(camera.refrationBuffer);
+        camera.refractionBuffer.display();
 
         camera.setActivePass(Camera::Pass::Final);
         scene.draw(renderWindow);
         \endcode
+
+        Note that if any post process effects are active on the Scene that they should be
+        disabled by first calling scene.setPostEnabled(false) and then re-enabling
+        them for the final pass, to prevent post processes getting rendered into the
+        reflection/refraction map buffers.
         */
         struct Pass final
         {
