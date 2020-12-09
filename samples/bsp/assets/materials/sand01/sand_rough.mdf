@@ -1,0 +1,21 @@
+material_definition Sand_Rough
+{
+    type = 2
+    colour = 1.000000,1.000000,1.000000,1.000000
+    mask_colour = 0.000000,0.000000,1.000000,1.000000
+    alpha_clip = 0.000000
+    vertex_coloured = false
+    rx_shadow = true
+    blend_mode = 0
+    use_rimlight = false
+    rimlight_falloff = 0.000000
+    rimlight_colour = 1.000000,1.000000,1.000000,1.000000
+    use_subrect = false
+    subrect = 0.000000,0.000000,1.000000,1.000000
+    texture_smooth = true
+    texture_repeat = true
+    diffuse = "assets/materials/sand01/albedo.png"
+    mask = "assets/materials/sand01/mask.png"
+    normal = "assets/materials/sand01/normal.png"
+
+}

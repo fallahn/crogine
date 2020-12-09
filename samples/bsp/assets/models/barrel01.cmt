@@ -1,0 +1,18 @@
+model barrel01
+{
+    mesh = "assets/models/barrel01.cmf"
+    cast_shadows = true
+
+    material PBR
+    {
+        mask = "assets/images/barrel/barrel_mask.png"
+        normal = "assets/images/barrel/barrel_normal.png"
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        blendmode = "none"
+        diffuse = "assets/images/barrel/barrel_albedo.png"
+
+    }
+}
