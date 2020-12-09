@@ -29,53 +29,43 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/ecs/System.hpp>
+
 #include <crogine/graphics/Texture.hpp>
-#include <crogine/graphics/EnvironmentMap.hpp>
-#include <crogine/graphics/RenderTexture.hpp>
 
-#include <crogine/gui/GuiClient.hpp>
-
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
-
-#include <array>
+#include <crogine/core/Clock.hpp>
 
 namespace cro
 {
-    struct Camera;
+    struct ResourceCollection;
 }
 
-class GameState final : public cro::State, public cro::GuiClient
+struct SeaComponent final
+{
+    std::size_t WaterIndex = 0;
+    static constexpr float FrameTime = 1.f / 24.f;
+};
+
+class SeaSystem final : public cro::System
 {
 public:
-    GameState(cro::StateStack&, cro::State::Context, std::size_t localPlayerCount = 4);
-    ~GameState() = default;
+    explicit SeaSystem(cro::MessageBus&);
 
-    cro::StateID getStateID() const override { return States::Game; }
-
-    bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
+
+    void process(float) override;
+
+    std::int32_t loadResources(cro::ResourceCollection&);
 
 private:
 
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
+    std::array<cro::Texture, 40u> m_waterTextures;
+    std::size_t m_waterIndex;
+    cro::Clock m_waterTimer;
 
-    cro::ResourceCollection m_resources;
-    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
-
-    cro::EnvironmentMap m_environmentMap;
-    std::vector<cro::Entity> m_cameras;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
-    void updateView(cro::Camera&);
+    struct ShaderProperties final
+    {
+        std::int32_t shaderID = 0;
+        std::int32_t timeUniform = -1;
+    }m_shaderProperties;
 };

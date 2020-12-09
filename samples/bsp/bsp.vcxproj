@@ -164,10 +164,12 @@
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\Patch.cpp" />
     <ClCompile Include="src\Q3BspSystem.cpp" />
+    <ClCompile Include="src\SeaSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\FpsCameraSystem.hpp" />
+    <ClInclude Include="src\GameConsts.hpp" />
     <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\InputParser.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
@@ -178,6 +180,7 @@
     <ClInclude Include="src\Q3Bsp.hpp" />
     <ClInclude Include="src\Q3BspSystem.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
+    <ClInclude Include="src\SeaSystem.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\stb_image_resize.h" />
   </ItemGroup>

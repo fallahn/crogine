@@ -28,6 +28,9 @@
     <ClCompile Include="src\Patch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\SeaSystem.cpp">
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -70,6 +73,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\stb_image_resize.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SeaSystem.hpp">
+      <Filter>Header Files\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameConsts.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

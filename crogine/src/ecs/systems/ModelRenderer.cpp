@@ -221,7 +221,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             //apply standard uniforms
             glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
             glCheck(glUniform2f(model.m_materials[i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
-            glCheck(glUniform4f(model.m_materials[i].uniforms[Material::ClipPlane], clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
+            glCheck(glUniform4f(model.m_materials[i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.projectionMatrix)));
@@ -376,8 +376,11 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             glCheck(glUniform1i(material.uniforms[Material::RefractionMap], currentTextureUnit++));
             break;
         case Material::ReflectionMatrix:
-            glCheck(glUniformMatrix4fv(material.uniforms[Material::ReflectionMatrix], 1, GL_FALSE, &camera.getPass(Camera::Pass::Reflection).viewProjectionMatrix[0][0]));
-            break;
+        {
+            //OK this must be a symptom of some obscure bug... we should be setting the vp from REFLECTION here... but that breaks mapping :S
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::ReflectionMatrix], 1, GL_FALSE, &camera.getPass(Camera::Pass::Refraction).viewProjectionMatrix[0][0]));
+        }
+        break;
         }
     }
 }
