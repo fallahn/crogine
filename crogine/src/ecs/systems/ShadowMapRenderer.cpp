@@ -109,7 +109,6 @@ void ShadowMapRenderer::updateDrawList()
         auto scale = tx.getScale();
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
-
         model.m_visible = true;
         std::size_t i = 0;
         while (model.m_visible && i < sunlight.m_frustum.size())
@@ -143,7 +142,6 @@ void ShadowMapRenderer::render()
 
     m_target.clear(cro::Colour::White());
 
-    
     for (const auto& [e,f] : m_visibleEntities)
     {
         //calc entity transform

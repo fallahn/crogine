@@ -65,7 +65,13 @@ namespace
     float ShadowmapProjection = 80.f;
     float ShadowmapClipPlane = 100.f;
 
-    cro::Entity moveEnt;
+    std::array moveEnts =
+    {
+        cro::Entity(),
+        cro::Entity(),
+        cro::Entity(),
+        cro::Entity()
+    };
 
     //render flags for reflection passes
     const std::uint64_t NoPlanes = 0xFFFFFFFFFFFFFFF0;
@@ -130,7 +136,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
                         { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
                 }
 
-                if (ImGui::CollapsingHeader("Reflection Map", ImGuiTreeNodeFlags_DefaultOpen))
+                if (ImGui::CollapsingHeader("Reflection Map"/*, ImGuiTreeNodeFlags_DefaultOpen*/))
                 {
                     for (auto ent : m_cameras)
                     {
@@ -203,7 +209,7 @@ bool GameState::simulate(float dt)
         movement = glm::normalize(movement);
     }
     const float Speed = 10.f;
-    moveEnt.getComponent<cro::Transform>().move(movement * Speed * dt);
+    moveEnts[0].getComponent<cro::Transform>().move(movement * Speed * dt);
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -212,7 +218,7 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
-    m_gameScene.setPostEnabled(false);
+    //m_gameScene.setPostEnabled(false);
 
     for(auto i = 0u; i < m_cameras.size(); ++i)
     {
@@ -240,8 +246,8 @@ void GameState::render()
         cam.viewport = oldVP;
     }
 
-    //final render (restoring reflection plane geometry)
-    m_gameScene.setPostEnabled(true);
+    //final render
+    //m_gameScene.setPostEnabled(true);
 
     auto& rt = cro::App::getWindow();
     m_gameScene.render(rt, m_cameras);
@@ -276,7 +282,7 @@ void GameState::loadAssets()
 
 void GameState::createScene()
 {
-    m_gameScene.addPostProcess<cro::PostChromeAB>();
+    //m_gameScene.addPostProcess<cro::PostChromeAB>();
 
     //sea plane
     auto gridID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(SeaRadius, 30));
@@ -284,8 +290,7 @@ void GameState::createScene()
     auto addSeaplane = [&, gridID]()
     {
         auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, -CameraHeight, -SeaRadius }); //we'll be attached to cam so need to compensate level
-        entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
+        entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(gridID), m_resources.materials.get(m_materialIDs[MaterialID::Sea]));
         entity.addComponent<SeaComponent>();
 
@@ -297,45 +302,39 @@ void GameState::createScene()
     md.loadFromFile("assets/models/player_box.cmt", m_resources, &m_environmentMap);
 
     //as many cameras as there are local players
-    float i = 0.f;
-    for (auto& ent : m_cameras)
+    for (auto i = 0u; i < m_cameras.size(); ++i)
     {
-        ent = m_gameScene.createEntity();
-        ent.addComponent<cro::Transform>().setPosition({ 0.f, CameraHeight, CameraDistance });
+        m_cameras[i] = m_gameScene.createEntity();
+        m_cameras[i].addComponent<cro::Transform>().setPosition({ 0.f, CameraHeight, CameraDistance });
 
-        auto& cam = ent.addComponent<cro::Camera>();
+        auto rotation = glm::lookAt(glm::vec3(0.f), glm::vec3(0.f, 0.f, -SeaRadius), cro::Transform::Y_AXIS);
+        m_cameras[i].getComponent<cro::Transform>().rotate(glm::inverse(rotation));
 
+        auto& cam = m_cameras[i].addComponent<cro::Camera>();
         cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
         cam.reflectionBuffer.setSmooth(true);
         cam.refractionBuffer.create(ReflectionMapSize, ReflectionMapSize);
         cam.refractionBuffer.setSmooth(true);
 
         auto waterEnt = addSeaplane();
-        waterEnt.getComponent<cro::Model>().setRenderFlags(PlayerPlanes[static_cast<std::int32_t>(i)]);
-
-        //the cam is parented so its position is 0,0,0 relative to plane
-        auto rotation = glm::lookAt(glm::vec3(0.f), waterEnt.getComponent<cro::Transform>().getPosition(), cro::Transform::Y_AXIS);
-        ent.getComponent<cro::Transform>().setRotation(glm::inverse(rotation));
-
-        //rotate the ground plane in the opposite direction to level it out again
-        waterEnt.getComponent<cro::Transform>().rotate(rotation);
-        ent.getComponent<cro::Transform>().addChild(waterEnt.getComponent<cro::Transform>());
-
-        waterEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, -SeaRadius }); //for some reason we need to do this to reset world position. bug-tastic.
+        waterEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, -(SeaRadius - CameraDistance) });
+        waterEnt.getComponent<cro::Model>().setRenderFlags(PlayerPlanes[i]);
 
         //placeholder for player model
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ (i * 2.f) - 3.f, 0.8f, 0.f });
-        //entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
-        //entity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-        //entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, 0.5f);
-        md.createModel(entity, m_resources);
+        auto playerEnt = m_gameScene.createEntity();
+        playerEnt.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 0.5f);
+        playerEnt.getComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
+        md.createModel(playerEnt, m_resources);
+        playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[i]);
+        
+        //this is the node actually controlled by the player.
+        auto root = m_gameScene.createEntity();
+        root.addComponent<cro::Transform>().setPosition({ (i * 2.f) - 3.f, 0.f, 0.f });
+        root.getComponent<cro::Transform>().addChild(m_cameras[i].getComponent<cro::Transform>());
+        root.getComponent<cro::Transform>().addChild(waterEnt.getComponent<cro::Transform>());
+        root.getComponent<cro::Transform>().addChild(playerEnt.getComponent<cro::Transform>());
 
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[static_cast<std::int32_t>(i)]);
-
-        moveEnt = entity;
-
-        ++i;
+        moveEnts[i] = root;
     }
     m_gameScene.setActiveCamera(m_cameras[0]);
 
@@ -362,7 +361,7 @@ void GameState::createScene()
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.5f });
     md.createModel(entity, m_resources);
-    entity.getComponent<cro::Model>().setRenderFlags(NoPlanes);
+    entity.getComponent<cro::Model>().setRenderFlags(~NoPlanes);
     m_gameScene.getSunlight().getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
