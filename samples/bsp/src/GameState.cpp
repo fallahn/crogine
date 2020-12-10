@@ -30,6 +30,7 @@ source distribution.
 #include "GameState.hpp"
 #include "SeaSystem.hpp"
 #include "GameConsts.hpp"
+#include "fastnoise/FastNoiseSIMD.h"
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/core/Keyboard.hpp>
@@ -49,7 +50,10 @@ source distribution.
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <crogine/graphics/CircleMeshBuilder.hpp>
+#include <crogine/graphics/GridMeshBuilder.hpp>
+#include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/postprocess/PostChromeAB.hpp>
+
 #include <crogine/util/Constants.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
@@ -85,6 +89,15 @@ namespace
         cro::Colour::Red(), cro::Colour::Magenta(),
         cro::Colour::Green(), cro::Colour::Yellow()
     };
+
+    const float SpawnOffset = 24.f;
+    const std::array PlayerSpawns =
+    {
+        glm::vec3(-SpawnOffset, 0.f, -SpawnOffset),
+        glm::vec3(SpawnOffset, 0.f, -SpawnOffset),
+        glm::vec3(SpawnOffset, 0.f, SpawnOffset),
+        glm::vec3(-SpawnOffset, 0.f, SpawnOffset)
+    };
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::size_t localPlayerCount)
@@ -106,6 +119,9 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
         {
             if (ImGui::Begin("Buns"))
             {
+                ImGui::Image(m_islandTexture,
+                    { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
+
                 if (ImGui::SliderFloat("Shadow Map Projection", &ShadowmapProjection, 10.f, 200.f))
                 {
                     auto half = ShadowmapProjection / 2.f;
@@ -270,6 +286,8 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
+    m_islandTexture.create(IslandTileCount, IslandTileCount);
+
     m_materialIDs[MaterialID::Sea] = m_gameScene.getSystem<SeaSystem>().loadResources(m_resources);
 
     m_environmentMap.loadFromFile("assets/images/cubemap/beach02.hdr");
@@ -322,14 +340,13 @@ void GameState::createScene()
 
         //placeholder for player model
         auto playerEnt = m_gameScene.createEntity();
-        playerEnt.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 0.5f);
-        playerEnt.getComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
+        playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
         md.createModel(playerEnt, m_resources);
         playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[i]);
         
         //this is the node actually controlled by the player.
         auto root = m_gameScene.createEntity();
-        root.addComponent<cro::Transform>().setPosition({ (i * 2.f) - 3.f, 0.f, 0.f });
+        root.addComponent<cro::Transform>().setPosition(PlayerSpawns[i]);
         root.getComponent<cro::Transform>().addChild(m_cameras[i].getComponent<cro::Transform>());
         root.getComponent<cro::Transform>().addChild(waterEnt.getComponent<cro::Transform>());
         root.getComponent<cro::Transform>().addChild(playerEnt.getComponent<cro::Transform>());
@@ -364,11 +381,13 @@ void GameState::createScene()
     entity.getComponent<cro::Model>().setRenderFlags(~NoPlanes);
     m_gameScene.getSunlight().getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float) 
-    {
-        e.getComponent<cro::Transform>().setScale({ ShadowmapProjection, ShadowmapProjection, ShadowmapClipPlane });
-    };
+entity.getComponent<cro::Callback>().function =
+[](cro::Entity e, float)
+{
+    e.getComponent<cro::Transform>().setScale({ ShadowmapProjection, ShadowmapProjection, ShadowmapClipPlane });
+};
+
+createIsland();
 }
 
 void GameState::createUI()
@@ -438,4 +457,141 @@ void GameState::updateView(cro::Camera&)
     {
         cam.getComponent<cro::Camera>().projectionMatrix = glm::perspective(fov, aspect, nearPlane, farPlane);
     }
+}
+
+void GameState::createIsland()
+{
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, cro::Util::Const::PI / 2.f);
+    entity.getComponent<cro::Transform>().move({ 0.f, 0.1f, 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ 32.f, 32.f,0.f });
+
+    auto meshID = m_resources.meshes.loadMesh(cro::GridMeshBuilder({ 64.f, 64.f }, 128));
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::RxShadows);
+
+    m_materialIDs[MaterialID::Island] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_resources.materials.get(m_materialIDs[MaterialID::Island]).setProperty("u_diffuseMap", m_islandTexture);
+
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Island]));
+
+
+    //height mask
+    const float MaxLength = TileSize * IslandFadeSize;
+    const std::uint32_t Offset = IslandBorder + IslandFadeSize;
+
+    std::vector<float> mask(IslandTileCount * IslandTileCount, 0.f);
+    for (auto y = IslandBorder; y < IslandTileCount - IslandBorder; ++y)
+    {
+        for (auto x = IslandBorder; x < IslandTileCount - IslandBorder; ++x)
+        {
+            float val = 0.f;
+            float pos = 0.f;
+            
+            if (x < IslandTileCount / 2)
+            {
+                pos = (x - IslandBorder) * TileSize;
+
+            }
+            else
+            {
+                pos = (IslandTileCount - IslandBorder - x) * TileSize;
+            }
+
+            val = pos / MaxLength;
+            val = std::min(1.f, std::max(0.f, val));
+            
+            if (y > Offset && y < IslandTileCount - Offset)
+            {
+                mask[y * IslandTileCount + x] = val;
+            }
+            
+            if (y < IslandTileCount / 2)
+            {
+                pos = (y - IslandBorder) * TileSize;
+                
+            }
+            else
+            {
+                pos = (IslandTileCount - IslandBorder - y) * TileSize;
+            }
+
+            val = pos / MaxLength;
+            val = std::min(1.f, std::max(0.f, val));
+
+            if (x > Offset && x < IslandTileCount - Offset)
+            {
+                mask[y * IslandTileCount + x] = val;
+            }
+        }
+    }
+
+
+    //mask corners
+    auto corner = [&mask, MaxLength](glm::uvec2 start, glm::uvec2 end, glm::vec2 centre)
+    {
+        for (auto y = start.t; y < end.t + 1; ++y)
+        {
+            for (auto x = start.s; x < end.s + 1; ++x)
+            {
+                glm::vec2 pos = glm::vec2(x, y) * TileSize;
+                float val = 1.f - (glm::length(pos - centre) / MaxLength);
+                val = std::max(0.f, std::min(1.f, val));
+                mask[y * IslandTileCount + x] = val;
+            }
+        }
+    };
+    glm::vec2 centre = glm::vec2(Offset, Offset) * TileSize;
+    corner({IslandBorder, IslandBorder}, {Offset, Offset}, centre);
+    
+    centre.x = (IslandTileCount - Offset) * TileSize;
+    corner({ IslandTileCount - Offset - 1, IslandBorder }, { IslandTileCount - IslandBorder, Offset }, centre);
+
+    centre.y = (IslandTileCount - Offset) * TileSize;
+    corner({ IslandTileCount - Offset - 1, IslandTileCount - Offset - 1 }, { IslandTileCount - IslandBorder, IslandTileCount - IslandBorder }, centre);
+
+    centre.x = Offset * TileSize;
+    corner({ IslandBorder, IslandTileCount - Offset - 1 }, { Offset, IslandTileCount - IslandBorder }, centre);
+
+
+    //fastnoise
+    FastNoiseSIMD* myNoise = FastNoiseSIMD::NewFastNoiseSIMD();
+    float* noiseSet = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount, IslandTileCount, 1);
+
+
+    //TODO using a 1D noise push the edges of the mask in/out by +/-1
+
+
+
+    for (auto y = 0u; y < IslandTileCount; ++y)
+    {
+        for (auto x = 0u; x < IslandTileCount; ++x)
+        {
+            float val = noiseSet[y * IslandTileCount + x];
+            val += 1.f;
+            val /= 2.f;
+
+            val *= IslandLevels;
+            val = std::floor(val);
+            val /= IslandLevels;
+
+            mask[y * IslandTileCount + x] *= val;
+        }
+    }
+    FastNoiseSIMD::FreeNoiseSet(noiseSet);
+
+
+    cro::Image img;
+    img.create(IslandTileCount, IslandTileCount, cro::Colour::Black());
+    for (auto i = 0u; i < mask.size(); ++i)
+    {
+        auto level = mask[i] * 255.f;
+        auto channel = static_cast<std::uint8_t>(level);
+        cro::Colour c(channel, channel, channel);
+
+        auto x = i % IslandTileCount;
+        auto y = i / IslandTileCount;
+        img.setPixel(x, y, c);
+    }
+
+    m_islandTexture.update(img.getPixelData());
 }

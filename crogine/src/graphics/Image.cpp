@@ -241,3 +241,33 @@ bool Image::write(const std::string& path)
     out.file = SDL_RWFromFile(path.c_str(), "w");
     return stbi_write_png_to_func(image_writer_func, out.file, m_size.x, m_size.y, pixelWidth, m_data.data(), m_size.x * pixelWidth) != 0;
 }
+
+void Image::setPixel(std::size_t x, std::size_t y, cro::Colour colour)
+{
+    CRO_ASSERT(!m_data.empty(), "Image is empty");
+
+    std::size_t size = 1;
+    switch (m_format)
+    {
+    default: break;
+    case ImageFormat::Type::RGB:
+        size = 3;
+        break;
+    case ImageFormat::Type::RGBA:
+        size = 4;
+        break;
+    }
+
+    auto index = ((y * m_size.x) + x) * size;
+
+    CRO_ASSERT(index < m_data.size(), "Index out of range");
+
+    m_data[index++] = colour.getRedByte();
+    m_data[index++] = colour.getGreenByte();
+    m_data[index++] = colour.getBlueByte();
+
+    if (size == 4)
+    {
+        m_data[index] = colour.getAlphaByte();
+    }
+}

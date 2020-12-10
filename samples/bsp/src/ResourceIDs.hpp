@@ -44,6 +44,7 @@ namespace MaterialID
     enum
     {
         Sea,
+        Island,
 
         Count
     };

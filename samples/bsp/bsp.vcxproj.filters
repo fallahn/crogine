@@ -31,6 +31,27 @@
     <ClCompile Include="src\SeaSystem.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx2.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx512.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_internal.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_neon.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse2.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse41.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -103,6 +124,9 @@
     </Filter>
     <Filter Include="Header Files\shaders">
       <UniqueIdentifier>{01bc0806-f397-48bf-9616-859ec58c5c4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\fastnoise">
+      <UniqueIdentifier>{151b211a-4727-49ce-a487-27ba8537d4c2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

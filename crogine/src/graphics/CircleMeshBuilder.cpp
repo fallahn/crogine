@@ -104,7 +104,7 @@ Mesh::Data CircleMeshBuilder::build() const
     meshData.attributes[Mesh::Bitangent] = 3;
     meshData.attributes[Mesh::UV0] = 2;
     meshData.primitiveType = GL_TRIANGLE_STRIP;
-    meshData.vertexCount = verts.size() / 8;
+    meshData.vertexCount = verts.size() / 14;
     meshData.vertexSize = getVertexSize(meshData.attributes);
     createVBO(meshData, verts);
 

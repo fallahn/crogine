@@ -72,10 +72,14 @@ private:
     cro::EnvironmentMap m_environmentMap;
     std::vector<cro::Entity> m_cameras;
 
+    cro::Texture m_islandTexture;
+
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
 
     void updateView(cro::Camera&);
+
+    void createIsland();
 };
