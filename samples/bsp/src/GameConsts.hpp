@@ -32,14 +32,15 @@ source distribution.
 #include <cstdint>
 
 static constexpr float SeaRadius = 50.f;
-static constexpr float CameraHeight = 2.f;
+static constexpr float CameraHeight = 3.5f;
 static constexpr float CameraDistance = 8.f;
 static constexpr std::uint32_t ReflectionMapSize = 512u;
 
-static constexpr float IslandSize = 84.f;
+static constexpr float IslandSize = 98.f;
 static constexpr float TileSize = 1.f;
 static constexpr std::size_t IslandTileCount = static_cast<std::size_t>(IslandSize / TileSize);
-static constexpr std::size_t IslandBorder = 5; //Tile count
+static constexpr std::size_t IslandBorder = 9; //Tile count
 static constexpr float IslandLevels = 16.f; //snap height vals to this many levels
-static constexpr std::uint32_t IslandFadeSize = 8u;
+static constexpr std::uint32_t IslandFadeSize = 13u;
 static constexpr float EdgeVariation = 3.f;
+static constexpr float IslandHeight = 4.f;

@@ -120,7 +120,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
             if (ImGui::Begin("Buns"))
             {
                 ImGui::Image(m_islandTexture,
-                    { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
+                    { IslandTileCount * 3.f, IslandTileCount * 3.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                 if (ImGui::SliderFloat("Shadow Map Projection", &ShadowmapProjection, 10.f, 200.f))
                 {
@@ -341,6 +341,7 @@ void GameState::createScene()
         //placeholder for player model
         auto playerEnt = m_gameScene.createEntity();
         playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
+        playerEnt.getComponent<cro::Transform>().setPosition({ 0.f, CameraHeight / 2.f, 0.f });
         md.createModel(playerEnt, m_resources);
         playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[i]);
         
@@ -462,11 +463,11 @@ void GameState::updateView(cro::Camera&)
 void GameState::createIsland()
 {
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, cro::Util::Const::PI / 2.f);
-    entity.getComponent<cro::Transform>().move({ 0.f, 0.1f, 0.f });
-    entity.getComponent<cro::Transform>().setOrigin({ 32.f, 32.f,0.f });
+    entity.addComponent<cro::Transform>().rotate(-cro::Transform::X_AXIS, cro::Util::Const::PI / 2.f);
+    entity.getComponent<cro::Transform>().move({ 0.f, -2.02f, 0.f }); //small extra amount to stop z-fighting
+    entity.getComponent<cro::Transform>().setOrigin({ IslandSize / 2.f, IslandSize / 2.f, 0.f });
 
-    auto meshID = m_resources.meshes.loadMesh(cro::GridMeshBuilder({ 64.f, 64.f }, 128));
+    auto meshID = m_resources.meshes.loadMesh(cro::GridMeshBuilder({ IslandSize, IslandSize }, IslandTileCount - 1)); //this accounts for extra row of vertices
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::RxShadows);
 
     m_materialIDs[MaterialID::Island] = m_resources.materials.add(m_resources.shaders.get(shaderID));
@@ -479,7 +480,7 @@ void GameState::createIsland()
     const float MaxLength = TileSize * IslandFadeSize;
     const std::uint32_t Offset = IslandBorder + IslandFadeSize;
 
-    std::vector<float> mask(IslandTileCount * IslandTileCount, 0.f);
+    std::vector<float> heightData(IslandTileCount * IslandTileCount, 0.f);
     for (auto y = IslandBorder; y < IslandTileCount - IslandBorder; ++y)
     {
         for (auto x = IslandBorder; x < IslandTileCount - IslandBorder; ++x)
@@ -502,7 +503,7 @@ void GameState::createIsland()
             
             if (y > Offset && y < IslandTileCount - Offset)
             {
-                mask[y * IslandTileCount + x] = val;
+                heightData[y * IslandTileCount + x] = val;
             }
             
             if (y < IslandTileCount / 2)
@@ -520,14 +521,14 @@ void GameState::createIsland()
 
             if (x > Offset && x < IslandTileCount - Offset)
             {
-                mask[y * IslandTileCount + x] = val;
+                heightData[y * IslandTileCount + x] = val;
             }
         }
     }
 
 
     //mask corners
-    auto corner = [&mask, MaxLength](glm::uvec2 start, glm::uvec2 end, glm::vec2 centre)
+    auto corner = [&heightData, MaxLength](glm::uvec2 start, glm::uvec2 end, glm::vec2 centre)
     {
         for (auto y = start.t; y < end.t + 1; ++y)
         {
@@ -536,7 +537,7 @@ void GameState::createIsland()
                 glm::vec2 pos = glm::vec2(x, y) * TileSize;
                 float val = 1.f - (glm::length(pos - centre) / MaxLength);
                 val = std::max(0.f, std::min(1.f, val));
-                mask[y * IslandTileCount + x] = val;
+                heightData[y * IslandTileCount + x] = val;
             }
         }
     };
@@ -571,13 +572,13 @@ void GameState::createIsland()
                 //top row
                 for (auto y = IslandBorder; y < Offset + 1; ++y)
                 {
-                    mask[(y - 1) * IslandTileCount + x] = mask[y * IslandTileCount + x];
+                    heightData[(y - 1) * IslandTileCount + x] = heightData[y * IslandTileCount + x];
                 }
 
                 //bottom row
                 for (auto y = IslandTileCount - Offset - 1; y < IslandTileCount - IslandBorder; ++y)
                 {
-                    mask[(y - 1) * IslandTileCount + x] = mask[y * IslandTileCount + x];
+                    heightData[(y - 1) * IslandTileCount + x] = heightData[y * IslandTileCount + x];
                 }
             }            
         }
@@ -588,13 +589,13 @@ void GameState::createIsland()
                 //top row
                 for (auto y = Offset; y > IslandBorder; --y)
                 {
-                    mask[y * IslandTileCount + x] = mask[(y - 1) * IslandTileCount + x];
+                    heightData[y * IslandTileCount + x] = heightData[(y - 1) * IslandTileCount + x];
                 }
 
                 //bottom row
                 for (auto y = IslandTileCount - IslandBorder; y > IslandTileCount - Offset - 1; --y)
                 {
-                    mask[y * IslandTileCount + x] = mask[(y - 1) * IslandTileCount + x];
+                    heightData[y * IslandTileCount + x] = heightData[(y - 1) * IslandTileCount + x];
                 }
             }
         }
@@ -610,13 +611,13 @@ void GameState::createIsland()
                 //left col
                 for (auto x = IslandBorder; x < Offset + 1; ++x)
                 {
-                    mask[y * IslandTileCount + x] = mask[y * IslandTileCount + (x + 1)];
+                    heightData[y * IslandTileCount + x] = heightData[y * IslandTileCount + (x + 1)];
                 }
 
                 //right col
                 for (auto x = IslandTileCount - Offset - 1; x < IslandTileCount - IslandBorder; ++x)
                 {
-                    mask[y * IslandTileCount + x] = mask[y * IslandTileCount + (x + 1)];
+                    heightData[y * IslandTileCount + x] = heightData[y * IslandTileCount + (x + 1)];
                 }
             }
         }
@@ -627,13 +628,13 @@ void GameState::createIsland()
                 //left col
                 for (auto x = Offset; x > IslandBorder; --x)
                 {
-                    mask[y * IslandTileCount + (x + 1)] = mask[y * IslandTileCount + x];
+                    heightData[y * IslandTileCount + (x + 1)] = heightData[y * IslandTileCount + x];
                 }
 
                 //right col
                 for (auto x = IslandTileCount - IslandBorder; x > IslandTileCount - Offset - 1; --x)
                 {
-                    mask[y * IslandTileCount + (x + 1)] = mask[y * IslandTileCount + x];
+                    heightData[y * IslandTileCount + (x + 1)] = heightData[y * IslandTileCount + x];
                 }
             }
         }
@@ -651,21 +652,26 @@ void GameState::createIsland()
             val += 1.f;
             val /= 2.f;
 
-            val *= IslandLevels;
+            const float minAmount = IslandLevels / 2.f;
+            float multiplier = IslandLevels - minAmount;
+
+            val *= multiplier;
             val = std::floor(val);
+            val += minAmount;
             val /= IslandLevels;
 
-            mask[y * IslandTileCount + x] *= val;
+            heightData[y * IslandTileCount + x] *= val;
         }
     }
     FastNoiseSIMD::FreeNoiseSet(noiseSet);
 
-
+    //preview texture / height map
+    //TODO check to see if we could make this a single channel
     cro::Image img;
     img.create(IslandTileCount, IslandTileCount, cro::Colour::Black());
-    for (auto i = 0u; i < mask.size(); ++i)
+    for (auto i = 0u; i < heightData.size(); ++i)
     {
-        auto level = mask[i] * 255.f;
+        auto level = heightData[i] * 255.f;
         auto channel = static_cast<std::uint8_t>(level);
         cro::Colour c(channel, channel, channel);
 
@@ -675,4 +681,35 @@ void GameState::createIsland()
     }
 
     m_islandTexture.update(img.getPixelData());
+
+
+    //create new vertex data from heightmap and upload to our island VBO
+    struct Vertex final
+    {
+        glm::vec3 pos = glm::vec3(0.f);
+        glm::vec3 normal = glm::vec3(0.f);
+        glm::vec3 tan = glm::vec3(0.f);
+        glm::vec3 bitan = glm::vec3(0.f);
+        glm::vec2 uv = glm::vec2(0.f);
+    };
+    std::vector<Vertex> verts(IslandTileCount * IslandTileCount);
+
+    for (auto i = 0u; i < heightData.size(); ++i)
+    {
+        auto x = i % IslandTileCount;
+        auto y = i / IslandTileCount;
+
+        verts[i].pos = { x * TileSize, y * TileSize, heightData[i] * IslandHeight };
+        verts[i].uv = { verts[i].pos.x / IslandSize, verts[i].pos.y / IslandSize };
+    }
+
+    //TODO recalc normal / tangents
+
+    auto& meshData = entity.getComponent<cro::Model>().getMeshData();
+    CRO_ASSERT(verts.size() == meshData.vertexCount, "Incorrect vertex count");
+    CRO_ASSERT(sizeof(Vertex) == meshData.vertexSize, "Incorrect vertex size");
+
+    glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+    glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(Vertex), verts.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
