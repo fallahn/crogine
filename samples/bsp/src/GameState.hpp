@@ -73,6 +73,7 @@ private:
     std::vector<cro::Entity> m_cameras;
 
     cro::Texture m_islandTexture;
+    std::vector<float> m_heightmap;
 
     void addSystems();
     void loadAssets();
@@ -82,4 +83,6 @@ private:
     void updateView(cro::Camera&);
 
     void createIsland();
+    void createHeightmap();
+    void updateIslandVerts(cro::Mesh::Data&);
 };
