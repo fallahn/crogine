@@ -555,12 +555,93 @@ void GameState::createIsland()
 
     //fastnoise
     FastNoiseSIMD* myNoise = FastNoiseSIMD::NewFastNoiseSIMD();
-    float* noiseSet = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount, IslandTileCount, 1);
+    myNoise->SetFrequency(0.05f);
+    float* noiseSet = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount * 4, 1, 1);
 
 
-    //TODO using a 1D noise push the edges of the mask in/out by +/-1
+    //using a 1D noise push the edges of the mask in/out by +/-1
+    std::uint32_t i = 0;
+    for (auto x = Offset; x < IslandTileCount - Offset; ++x)
+    {
+        auto val = std::round(noiseSet[i++] * EdgeVariation);
+        if (val < 0) //move gradient tiles up one
+        {
+            for (auto j = 0; j < std::abs(val); ++j)
+            {
+                //top row
+                for (auto y = IslandBorder; y < Offset + 1; ++y)
+                {
+                    mask[(y - 1) * IslandTileCount + x] = mask[y * IslandTileCount + x];
+                }
 
+                //bottom row
+                for (auto y = IslandTileCount - Offset - 1; y < IslandTileCount - IslandBorder; ++y)
+                {
+                    mask[(y - 1) * IslandTileCount + x] = mask[y * IslandTileCount + x];
+                }
+            }            
+        }
+        else if (val > 0) //move gradient tiles down one
+        {
+            for (auto j = 0; j < val; ++j)
+            {
+                //top row
+                for (auto y = Offset; y > IslandBorder; --y)
+                {
+                    mask[y * IslandTileCount + x] = mask[(y - 1) * IslandTileCount + x];
+                }
 
+                //bottom row
+                for (auto y = IslandTileCount - IslandBorder; y > IslandTileCount - Offset - 1; --y)
+                {
+                    mask[y * IslandTileCount + x] = mask[(y - 1) * IslandTileCount + x];
+                }
+            }
+        }
+    }
+
+    for (auto y = Offset; y < IslandTileCount - Offset; ++y)
+    {
+        auto val = std::round(noiseSet[i++] * EdgeVariation);
+        if (val < 0) //move gradient tiles left one
+        {
+            for (auto j = 0; j < std::abs(val); ++j)
+            {
+                //left col
+                for (auto x = IslandBorder; x < Offset + 1; ++x)
+                {
+                    mask[y * IslandTileCount + x] = mask[y * IslandTileCount + (x + 1)];
+                }
+
+                //right col
+                for (auto x = IslandTileCount - Offset - 1; x < IslandTileCount - IslandBorder; ++x)
+                {
+                    mask[y * IslandTileCount + x] = mask[y * IslandTileCount + (x + 1)];
+                }
+            }
+        }
+        else if (val > 0) //move gradient tiles right one
+        {
+            for (auto j = 0; j < val; ++j)
+            {
+                //left col
+                for (auto x = Offset; x > IslandBorder; --x)
+                {
+                    mask[y * IslandTileCount + (x + 1)] = mask[y * IslandTileCount + x];
+                }
+
+                //right col
+                for (auto x = IslandTileCount - IslandBorder; x > IslandTileCount - Offset - 1; --x)
+                {
+                    mask[y * IslandTileCount + (x + 1)] = mask[y * IslandTileCount + x];
+                }
+            }
+        }
+    }
+    FastNoiseSIMD::FreeNoiseSet(noiseSet);
+
+    myNoise->SetFrequency(0.01f);
+    noiseSet = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount, IslandTileCount, 1);
 
     for (auto y = 0u; y < IslandTileCount; ++y)
     {
