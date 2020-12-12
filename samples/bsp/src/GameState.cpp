@@ -469,10 +469,11 @@ void GameState::createIsland()
     entity.getComponent<cro::Transform>().setOrigin({ IslandSize / 2.f, IslandSize / 2.f, 0.f });
 
     auto meshID = m_resources.meshes.loadMesh(cro::GridMeshBuilder({ IslandSize, IslandSize }, IslandTileCount - 1)); //this accounts for extra row of vertices
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::RxShadows);
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseColour | cro::ShaderResource::RxShadows);
 
     m_materialIDs[MaterialID::Island] = m_resources.materials.add(m_resources.shaders.get(shaderID));
-    m_resources.materials.get(m_materialIDs[MaterialID::Island]).setProperty("u_diffuseMap", m_islandTexture);
+    //m_resources.materials.get(m_materialIDs[MaterialID::Island]).setProperty("u_diffuseMap", m_islandTexture);
+    m_resources.materials.get(m_materialIDs[MaterialID::Island]).setProperty("u_colour", cro::Colour::Green());
 
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Island]));
 
@@ -701,16 +702,37 @@ void GameState::updateIslandVerts(cro::Mesh::Data& meshData)
     };
     std::vector<Vertex> verts(IslandTileCount * IslandTileCount);
 
+    auto heightAt = [&](std::int32_t x, std::int32_t y)
+    {
+        x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
+        y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
+
+        return m_heightmap[y * IslandTileCount + x];
+    };
+
     for (auto i = 0u; i < m_heightmap.size(); ++i)
     {
-        auto x = i % IslandTileCount;
-        auto y = i / IslandTileCount;
+        std::int32_t x = i % IslandTileCount;
+        std::int32_t y = i / IslandTileCount;
 
         verts[i].pos = { x * TileSize, y * TileSize, m_heightmap[i] * IslandHeight };
         verts[i].uv = { verts[i].pos.x / IslandSize, verts[i].pos.y / IslandSize };
-    }
 
-    //TODO recalc normal / tangents
+        //normal calc
+        auto l = heightAt(x - 1, y);
+        auto r = heightAt(x + 1, y);
+        auto u = heightAt(x, y + 1);
+        auto d = heightAt(x, y - 1);
+        
+        verts[i].normal = { l - r, d - u, 2.f };
+        verts[i].normal = glm::normalize(verts[i].normal);
+
+        //tan/bitan
+        //if we assume the UV go parallel with the grid we can just use
+        //a 90 deg rotation and the cross product of the result
+        verts[i].tan = { verts[i].normal.z, verts[i].normal.y, -verts[i].normal.x };
+        verts[i].bitan = glm::cross(verts[i].tan, verts[i].normal);
+    }
 
 
     CRO_ASSERT(verts.size() == meshData.vertexCount, "Incorrect vertex count");
