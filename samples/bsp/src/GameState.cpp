@@ -95,8 +95,8 @@ namespace
     {
         glm::vec3(-SpawnOffset, 0.f, -SpawnOffset),
         glm::vec3(SpawnOffset, 0.f, -SpawnOffset),
-        glm::vec3(SpawnOffset, 0.f, SpawnOffset),
-        glm::vec3(-SpawnOffset, 0.f, SpawnOffset)
+        glm::vec3(-SpawnOffset, 0.f, SpawnOffset),
+        glm::vec3(SpawnOffset, 0.f, SpawnOffset)
     };
 }
 
@@ -342,9 +342,22 @@ void GameState::createScene()
         //placeholder for player model
         auto playerEnt = m_gameScene.createEntity();
         playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
-        playerEnt.getComponent<cro::Transform>().setPosition({ 0.f, CameraHeight / 2.f, 0.f });
+        //playerEnt.getComponent<cro::Transform>().setPosition({ 0.f, CameraHeight / 2.f, 0.f });
         md.createModel(playerEnt, m_resources);
         playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[i]);
+
+        playerEnt.addComponent<cro::Callback>().active = true;
+        playerEnt.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            auto position = e.getComponent<cro::Transform>().getWorldPosition();
+            position.x += (IslandSize / 2.f); //puts the position relative to the grid - this should be the origin coords
+            position.z += (IslandSize / 2.f);
+
+            auto height = getPlayerHeight(position);
+            e.getComponent<cro::Transform>().setPosition({ 0.f, height + IslandWorldHeight, 0.f });
+        };
+
         
         //this is the node actually controlled by the player.
         auto root = m_gameScene.createEntity();
@@ -389,7 +402,7 @@ entity.getComponent<cro::Callback>().function =
     e.getComponent<cro::Transform>().setScale({ ShadowmapProjection, ShadowmapProjection, ShadowmapClipPlane });
 };
 
-createIsland();
+    createIsland();
 }
 
 void GameState::createUI()
@@ -465,17 +478,44 @@ void GameState::createIsland()
 {
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().rotate(-cro::Transform::X_AXIS, cro::Util::Const::PI / 2.f);
-    entity.getComponent<cro::Transform>().move({ 0.f, -2.02f, 0.f }); //small extra amount to stop z-fighting
+    entity.getComponent<cro::Transform>().move({ 0.f, IslandWorldHeight, 0.f }); //small extra amount to stop z-fighting
     entity.getComponent<cro::Transform>().setOrigin({ IslandSize / 2.f, IslandSize / 2.f, 0.f });
 
     auto meshID = m_resources.meshes.loadMesh(cro::GridMeshBuilder({ IslandSize, IslandSize }, IslandTileCount - 1)); //this accounts for extra row of vertices
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseColour | cro::ShaderResource::RxShadows);
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, cro::ShaderResource::DiffuseMap |
+                                                                                cro::ShaderResource::NormalMap | 
+                                                                                cro::ShaderResource::MaskMap |
+                                                                                cro::ShaderResource::RxShadows);
 
     m_materialIDs[MaterialID::Island] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     //m_resources.materials.get(m_materialIDs[MaterialID::Island]).setProperty("u_diffuseMap", m_islandTexture);
-    m_resources.materials.get(m_materialIDs[MaterialID::Island]).setProperty("u_colour", cro::Colour::Green());
+    //m_resources.materials.get(m_materialIDs[MaterialID::Island]).setProperty("u_colour", cro::Colour::Green());
 
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Island]));
+    m_resources.textures.load(TextureID::SandAlbedo, "assets/materials/sand01/albedo.png");
+    m_resources.textures.load(TextureID::SandNormal, "assets/materials/sand01/normal.png");
+    m_resources.textures.load(TextureID::SandMask, "assets/materials/sand01/mask.png");
+
+    auto& albedo = m_resources.textures.get(TextureID::SandAlbedo);
+    albedo.setSmooth(true);
+    albedo.setRepeated(true);
+    auto& normal = m_resources.textures.get(TextureID::SandNormal);
+    normal.setSmooth(true);
+    normal.setRepeated(true);
+    auto& mask = m_resources.textures.get(TextureID::SandMask);
+    mask.setSmooth(true);
+    mask.setRepeated(true);
+
+    auto& material = m_resources.materials.get(m_materialIDs[MaterialID::Island]);
+    material.setProperty("u_diffuseMap", albedo);
+    material.setProperty("u_normalMap", normal);
+    material.setProperty("u_maskMap", mask);
+    material.setProperty("u_colour", cro::Colour::White());
+
+    material.setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
+    material.setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
+    material.setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
+
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
 
     createHeightmap();
 
@@ -718,6 +758,8 @@ void GameState::updateIslandVerts(cro::Mesh::Data& meshData)
         verts[i].pos = { x * TileSize, y * TileSize, m_heightmap[i] * IslandHeight };
         verts[i].uv = { verts[i].pos.x / IslandSize, verts[i].pos.y / IslandSize };
 
+        verts[i].uv *= 8.f;
+
         //normal calc
         auto l = heightAt(x - 1, y);
         auto r = heightAt(x + 1, y);
@@ -742,3 +784,31 @@ void GameState::updateIslandVerts(cro::Mesh::Data& meshData)
     glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(Vertex), verts.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+
+float GameState::getPlayerHeight(glm::vec3 position) 
+{
+    auto lerp = [](float a, float b, float t) constexpr
+    {
+        return a + t * (b - a);
+    };
+
+    const auto getHeightAt = [&](std::int32_t x, std::int32_t y)
+    {
+        //heightmap is flipped relative to the world innit
+        return m_heightmap[(IslandTileCount - y) * IslandTileCount + x];
+    };
+
+    float posX = position.x / TileSize;
+    float posY = position.z / TileSize;
+
+    float intpart = 0.f;
+    auto modX = std::modf(posX, &intpart) / TileSize;
+    auto modY = std::modf(posY, &intpart) / TileSize; //normalise this for lerpitude
+
+    std::int32_t x = static_cast<std::int32_t>(posX);
+    std::int32_t y = static_cast<std::int32_t>(posY);
+
+    float topLine = lerp(getHeightAt(x, y),  getHeightAt(x + 1, y), modX);
+    float botLine = lerp(getHeightAt(x, y + 1), getHeightAt(x + 1, y + 1), modX);
+    return lerp(topLine, botLine, modY) * IslandHeight;
+};

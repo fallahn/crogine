@@ -35,6 +35,10 @@ namespace TextureID
     {
         SeaNormal,
 
+        SandAlbedo,
+        SandNormal,
+        SandMask,
+
         Count
     };
 }

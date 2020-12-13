@@ -85,4 +85,6 @@ private:
     void createIsland();
     void createHeightmap();
     void updateIslandVerts(cro::Mesh::Data&);
+
+    float getPlayerHeight(glm::vec3);
 };
