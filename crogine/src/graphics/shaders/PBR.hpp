@@ -21,6 +21,10 @@ namespace cro::Shaders::PBR
         #endif
         uniform vec4 u_colour;
 
+        #if defined(ALPHA_CLIP)
+        uniform float u_alphaClip;
+        #endif
+
         #if defined(MASK_MAP)
         uniform sampler2D u_maskMap;
         #else
@@ -205,7 +209,13 @@ namespace cro::Shaders::PBR
             surfProp.viewDir = normalize(u_cameraWorldPosition - v_worldPosition);
 
         #if defined(DIFFUSE_MAP)
-            matProp.albedo = TEXTURE(u_diffuseMap, v_texCoord0).rgb;
+            vec4 albedo = TEXTURE(u_diffuseMap, v_texCoord0);
+
+            #if defined(ALPHA_CLIP)
+            if(albedo.a < u_alphaClip) discard;
+            #endif
+
+            matProp.albedo = albedo.rgb;
             matProp.albedo *= u_colour.rgb;
         #else
             matProp.albedo = u_colour.rgb;

@@ -2171,8 +2171,7 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
         tex->setRepeated(matDef.repeatTexture);
         tex->setSmooth(matDef.smoothTexture);
 
-        if (matDef.alphaClip > 0
-            && matDef.type != MaterialDefinition::PBR)
+        if (matDef.alphaClip > 0)
         {
             matDef.materialData.setProperty("u_alphaClip", matDef.alphaClip);
         }
@@ -2846,10 +2845,7 @@ void ModelState::drawInspector()
                     {
                         shaderFlags |= cro::ShaderResource::MaskMap;
                     }
-                }
 
-                if (type != MaterialDefinition::Unlit)
-                {
                     //normal map
                     slotLabel = "Normal Map";
                     if (matDef.textureIDs[MaterialDefinition::Normal] == 0)
@@ -2913,8 +2909,7 @@ void ModelState::drawInspector()
                     }
                 }
 
-                if (matDef.textureIDs[MaterialDefinition::Diffuse]
-                    && type != MaterialDefinition::PBR)
+                if (matDef.textureIDs[MaterialDefinition::Diffuse])
                 {
                     ImGui::NewLine();
                     if (ImGui::SliderFloat("Alpha Clip", &matDef.alphaClip, 0.f, 1.f))
@@ -3913,6 +3908,7 @@ void ModelState::bakeLightmap()
         {
             m_lightmapBuffers.emplace_back(LightmapSize * LightmapSize * 3 * sizeof(float));
             m_lightmapTextures.emplace_back(std::make_unique<cro::Texture>())->create(LightmapSize, LightmapSize, cro::ImageFormat::RGB);
+            m_lightmapTextures.back()->setSmooth(true);
         }
     }
 
