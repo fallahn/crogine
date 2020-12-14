@@ -290,6 +290,7 @@ void GameState::loadAssets()
     m_islandTexture.create(IslandTileCount, IslandTileCount);
 
     m_materialIDs[MaterialID::Sea] = m_gameScene.getSystem<SeaSystem>().loadResources(m_resources);
+    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_depthMap", m_islandTexture);
 
     m_environmentMap.loadFromFile("assets/images/cubemap/beach02.hdr");
 

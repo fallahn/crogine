@@ -117,12 +117,6 @@ static const std::string SeaFragment = R"(
         return clamp(mixedColour + specularColour, 0.0, 1.0);
     }
 
-    float unpack(vec4 colour)
-    {
-        const vec4 bitshift = vec4(1.0 / 16777216.0, 1.0 / 65536.0, 1.0 / 256.0, 1.0);
-        return dot(colour, bitshift);
-    }
-
     const vec2 kernel[16] = vec2[](
         vec2(-0.94201624, -0.39906216),
         vec2(0.94558609, -0.76890725),
@@ -155,7 +149,7 @@ static const std::string SeaFragment = R"(
         {
             for(int y = 0; y < filterSize; ++y)
             {
-                float pcfDepth = unpack(TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize));
+                float pcfDepth = TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize).r;
                 shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
             }
         }
@@ -184,6 +178,9 @@ static const std::string SeaFragment = R"(
         vec3 blendedColour = colour * 0.2; //ambience
         blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, u_lightColour.rgb, 1.0);
         blendedColour += mix(reflectColour.rgb, refractColour.rgb, fresnel);      
+
+        float depth = TEXTURE(u_depthMap, coord).r;
+        blendedColour += vec3(depth);
 
         //vec3 skyColour = TEXTURE_CUBE(u_skybox, reflect(eyeDirection, normal)).rgb * 0.25;
         //blendedColour += mix(skyColour, vec3(0.0), fresnel);

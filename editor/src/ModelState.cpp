@@ -3987,7 +3987,7 @@ void ModelState::bakeLightmap()
     for (auto i = 0u; i < meshData.submeshCount; ++i)
     {
         temp.resize(m_lightmapBuffers[i].size());
-        lmImageDilate(m_lightmapBuffers[i].data(), temp.data(), LightmapSize, LightmapSize, 3);
+        lmImageSmooth(m_lightmapBuffers[i].data(), temp.data(), LightmapSize, LightmapSize, 3);
         lmImageDilate(temp.data(), m_lightmapBuffers[i].data(), LightmapSize, LightmapSize, 3);
         lmImagePower(m_lightmapBuffers[i].data(), LightmapSize, LightmapSize, 3, 1.0f / 2.2f);
 
