@@ -55,8 +55,9 @@ namespace cro
         /*!
         \brief Constructor.
         \param mb Message bus instance
+        \param size Resolution of the depth buffer.
         */
-        explicit ShadowMapRenderer(MessageBus& mb);
+        ShadowMapRenderer(MessageBus& mb, glm::uvec2 size = glm::uvec2(2048, 2048));
 
         void process(float) override;
 

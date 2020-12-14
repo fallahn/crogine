@@ -40,6 +40,10 @@ namespace cro
             const static std::string Vertex = R"(
                 ATTRIBUTE vec4 a_position;
 
+                #if defined (ALPHA_CLIP)
+                ATTRIBUTE vec2 a_texCoord0;
+                #endif
+
                 #if defined(SKINNED)
                 ATTRIBUTE vec4 a_boneIndices;
                 ATTRIBUTE vec4 a_boneWeights;
@@ -53,6 +57,10 @@ namespace cro
 
                 #if defined (MOBILE)
                 VARYING_OUT vec4 v_position;
+                #endif
+
+                #if defined (ALPHA_CLIP)
+                VARYING_OUT vec2 v_texCoord0;
                 #endif
 
                 void main()
@@ -76,7 +84,11 @@ namespace cro
 
 
                 #else
-                gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
+                    gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
+                #endif
+
+                #if defined (ALPHA_CLIP)
+                    v_texCoord0 = a_texCoord0;
                 #endif
 
                 })";
@@ -107,16 +119,29 @@ namespace cro
 
                 void main()
                 {
-                    PREC float distanceNorm = v_position.z /v_position.w;
+                    PREC float distanceNorm = v_position.z / v_position.w;
                     distanceNorm = (distanceNorm + 1.0) / 2.0;
                     FRAG_OUT = pack(distanceNorm);
                 })";
 
             const static std::string FragmentDesktop = R"(
+                #if defined(ALPHA_CLIP)
+
+                uniform sampler2D u_diffuseMap;
+                uniform float u_alphaClip;
+
+                in vec2 v_texCoord0;
+
+                void main()
+                {
+                    if(texture(u_diffuseMap, v_texCoord0).a < u_alphaClip) discard;   
+                }
+                #else
                 void main()
                 {
 
-                })";
+                }
+                #endif)";
         }
     }
 }

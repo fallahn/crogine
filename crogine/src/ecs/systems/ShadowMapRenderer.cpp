@@ -47,7 +47,7 @@ source distribution.
 
 using namespace cro;
 
-ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
+ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb, glm::uvec2 size)
     : System(mb, typeid(ShadowMapRenderer))
 {
     requireComponent<cro::Model>();
@@ -55,8 +55,7 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
     requireComponent<cro::ShadowCaster>();
 
 #ifdef PLATFORM_DESKTOP
-    //TODO make this variable
-    m_target.create(2048, 2048);
+    m_target.create(size.x, size.y);
 #else
     m_target.create(512, 512);
 #endif
@@ -169,6 +168,11 @@ void ShadowMapRenderer::render()
 
         //foreach submesh / material:
         const auto& model = e.getComponent<Model>();
+
+        //TODO we ought to test model flags for visibility
+        //but this is done per camera rather than pre shadow source.
+        //this is another reason to switch to depthmaps per-camera.
+
 #ifndef PLATFORM_DESKTOP
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
 #endif
@@ -191,6 +195,25 @@ void ShadowMapRenderer::render()
                     break;
                 }
             }
+
+            //check material proprties for alpha clipping
+            std::uint32_t currentTextureUnit = 0;
+            for (const auto& prop : mat.properties)
+            {
+                switch (prop.second.second.type)
+                {
+                default: break;
+                case Material::Property::Texture:
+                    glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+                    glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
+                    glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
+                    break;
+                case Material::Property::Number:
+                    glCheck(glUniform1f(prop.second.first, prop.second.second.numberValue));
+                    break;
+                }
+            }
+
             glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
             glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(sunlight.m_projectionMatrix)));
 
