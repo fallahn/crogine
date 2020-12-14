@@ -518,6 +518,8 @@ void GameState::createIsland()
 
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
 
+    //entity.getComponent<cro::Model>().setRenderFlags(0);
+
     createHeightmap();
 
     //create new vertex data from heightmap and upload to our island VBO
@@ -729,6 +731,7 @@ void GameState::createHeightmap()
     }
 
     m_islandTexture.update(img.getPixelData());
+    m_islandTexture.setSmooth(true);
 }
 
 void GameState::updateIslandVerts(cro::Mesh::Data& meshData)

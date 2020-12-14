@@ -173,14 +173,15 @@ static const std::string SeaFragment = R"(
         vec4 refractColour = TEXTURE(u_refractionMap, refractCoords + (normal.rg * 0.005));
         refractColour.rgb *= u_lightColour.rgb * refractColour.a;
 
+        float depth = TEXTURE(u_depthMap, v_texCoord + u_textureOffset).r;
+        refractColour.rgb = mix(vec3(0.2), refractColour.rgb, depth * 4.0);
+
         float fresnel = dot(eyeDirection, normal);
 
         vec3 blendedColour = colour * 0.2; //ambience
         blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, u_lightColour.rgb, 1.0);
         blendedColour += mix(reflectColour.rgb, refractColour.rgb, fresnel);      
 
-        float depth = TEXTURE(u_depthMap, coord).r;
-        blendedColour += vec3(depth);
 
         //vec3 skyColour = TEXTURE_CUBE(u_skybox, reflect(eyeDirection, normal)).rgb * 0.25;
         //blendedColour += mix(skyColour, vec3(0.0), fresnel);
@@ -188,8 +189,6 @@ static const std::string SeaFragment = R"(
 if(v_lightWorldPosition.w > 0.0)
 {
     vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
-
-    //float depth = unpack(TEXTURE(u_shadowMap, coords));
 
     if(coords.x>0 &&coords.x<1 &&coords.y>0 &&coords.y<1)
     {
