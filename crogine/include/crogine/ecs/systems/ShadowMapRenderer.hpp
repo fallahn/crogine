@@ -29,14 +29,15 @@ source distribution.
 
 #pragma once
 
+#include <crogine/graphics/MaterialData.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/DepthTexture.hpp>
 
 namespace cro
 {
     class Texture;
-    class Sunlight;
 
     /*!
     \brief Shadow map renderer.
@@ -62,10 +63,14 @@ namespace cro
         /*!
         \brief Returns a reference to the texture used to render the depth map
         */
-        const Texture& getDepthMapTexture() const;
+        TextureID getDepthMapTexture() const;
 
     private:
+#ifdef PLATFORM_DESKTOP
+        DepthTexture m_target;
+#else
         RenderTexture m_target;
+#endif
         std::vector<std::pair<Entity, float>> m_visibleEntities;
 
         void updateDrawList();

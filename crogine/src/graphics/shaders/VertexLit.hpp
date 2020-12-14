@@ -301,7 +301,7 @@ namespace cro
                     {
                         for(int y = 0; y < filterSize; ++y)
                         {
-                            float pcfDepth = unpack(TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize));
+                            float pcfDepth = TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize).r;
                             shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
                         }
                     }

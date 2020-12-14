@@ -67,12 +67,25 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
 //public
 void ShadowMapRenderer::process(float)
 {
+#ifdef PLATFORM_DESKTOP
+    getScene()->getSunlight().getComponent<Sunlight>().m_textureID = m_target.getTexture().textureID;
+#else
     getScene()->getSunlight().getComponent<Sunlight>().m_textureID = m_target.getTexture().getGLHandle();
+#endif
 
     //do this here so we know it gets updated just once per frame
     //during multi-pass rendering.
     updateDrawList();
     render();
+}
+
+TextureID ShadowMapRenderer::getDepthMapTexture() const
+{
+#ifdef PLATFORM_DESKTOP
+    return m_target.getTexture();
+#else
+    return TextureID(m_target.getTexture().getGLHandle());
+#endif
 }
 
 //private
@@ -137,10 +150,15 @@ void ShadowMapRenderer::render()
 
     //enable face culling and render rear faces
     glCheck(glEnable(GL_CULL_FACE));
-    glCheck(glCullFace(GL_FRONT));
+    glCheck(glCullFace(GL_BACK));
+    //glCheck(glCullFace(GL_FRONT));
     glCheck(glEnable(GL_DEPTH_TEST));
 
+#ifdef PLATFORM_DESKTOP
+    m_target.clear();
+#else
     m_target.clear(cro::Colour::White());
+#endif
 
     for (const auto& [e,f] : m_visibleEntities)
     {
@@ -222,9 +240,4 @@ void ShadowMapRenderer::render()
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glCullFace(GL_BACK));
     m_target.display();
-}
-
-const Texture& ShadowMapRenderer::getDepthMapTexture() const
-{
-    return m_target.getTexture();
 }

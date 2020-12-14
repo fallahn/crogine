@@ -33,24 +33,13 @@ source distribution.
 
 using namespace cro;
 
-namespace
-{
-    /*
-    Using this to track the active frame buffer ID avoids calls
-    to glGetIntegerv - but potentially introduces bugs because
-    the assumption is that only RenderTextures update the active
-    framebuffer. I'm leaving this here for performance reasons
-    on mobile platforms, but bear in mind this needs to be
-    potentially altered should a new class introduce changing the
-    active FBO.
-    */
-    int32 activeBuffer = 0;
-}
+std::int32_t RenderTarget::ActiveTarget = 0;
 
 RenderTexture::RenderTexture()
     : m_fboID   (0),
     m_rboID     (0),
     m_clearBits (0),
+    m_viewport  (0,0,1,1),
     m_lastBuffer(0)
 {
 
@@ -72,6 +61,7 @@ RenderTexture::RenderTexture(RenderTexture&& other) noexcept
     : m_fboID   (0),
     m_rboID     (0),
     m_clearBits (0),
+    m_viewport  (0, 0, 1, 1),
     m_lastBuffer(0)
 {
     m_fboID = other.m_fboID;
@@ -113,6 +103,11 @@ bool RenderTexture::create(uint32 width, uint32 height, bool depthBuffer, bool s
         m_clearBits = 0;
     }
 
+    if (m_rboID)
+    {
+        glCheck(glDeleteRenderbuffers(1, &m_rboID));
+    }
+
     m_texture.create(width, height, ImageFormat::RGBA);
 
     GLuint fbo;
@@ -136,7 +131,7 @@ bool RenderTexture::create(uint32 width, uint32 height, bool depthBuffer, bool s
                 attachment = GL_DEPTH_STENCIL_ATTACHMENT;
                 m_clearBits |= GL_STENCIL_BUFFER_BIT;
             }
-            
+
             GLuint rbo;
             glCheck(glGenRenderbuffers(1, &rbo));
             if (!rbo)
@@ -145,11 +140,11 @@ bool RenderTexture::create(uint32 width, uint32 height, bool depthBuffer, bool s
                 glCheck(glDeleteFramebuffers(1, &fbo));
                 return false;
             }
-
-            glCheck(glBindRenderbuffer(GL_RENDERBUFFER, rbo));
-            glCheck(glRenderbufferStorage(GL_RENDERBUFFER, format, width, height));
-            glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment , GL_RENDERBUFFER, rbo));
             m_rboID = rbo;
+
+            glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
+            glCheck(glRenderbufferStorage(GL_RENDERBUFFER, format, width, height));
+            glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, m_rboID));
             glCheck(glBindRenderbuffer(GL_RENDERBUFFER, 0));
         }
 
@@ -205,11 +200,11 @@ void RenderTexture::clear(Colour colour)
 
     //store active buffer
     //glCheck(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_lastBuffer));
-    m_lastBuffer = activeBuffer;
+    m_lastBuffer = RenderTarget::ActiveTarget;
 
     //set buffer active
     glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
-    activeBuffer = m_fboID;
+    RenderTarget::ActiveTarget = m_fboID;
 
     //clear buffer - UH OH this will clear the main buffer if FBO is null
     glCheck(glGetFloatv(GL_COLOR_CLEAR_VALUE, m_lastClearColour.data()));
@@ -227,7 +222,7 @@ void RenderTexture::display()
 
     //unbind buffer
     glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_lastBuffer));
-    activeBuffer = m_lastBuffer;
+    RenderTarget::ActiveTarget = m_lastBuffer;
 }
 
 void RenderTexture::setViewport(URect viewport)

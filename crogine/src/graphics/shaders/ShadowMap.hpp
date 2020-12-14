@@ -51,7 +51,9 @@ namespace cro
                 uniform mat4 u_projectionMatrix;
                 uniform vec4 u_clipPlane;
 
+                #if defined (MOBILE)
                 VARYING_OUT vec4 v_position;
+                #endif
 
                 void main()
                 {
@@ -67,9 +69,11 @@ namespace cro
                 #endif                    
 
                     gl_Position = wvp * position;
-                    v_position = gl_Position;
 
                 #if defined (MOBILE)
+                    v_position = gl_Position;
+
+
 
                 #else
                 gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
@@ -108,7 +112,11 @@ namespace cro
                     FRAG_OUT = pack(distanceNorm);
                 })";
 
-            const static std::string FragmentDesktop = R"()";
+            const static std::string FragmentDesktop = R"(
+                void main()
+                {
+
+                })";
         }
     }
 }

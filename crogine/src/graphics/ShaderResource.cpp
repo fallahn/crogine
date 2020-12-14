@@ -197,8 +197,11 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
         success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, defines);
         break;
     case BuiltIn::ShadowMap:
-        //TODO assess platform and load desktop version when necessary
+#ifdef PLATFORM_DESKTOP
+        success = loadFromString(id, Shaders::ShadowMap::Vertex, Shaders::ShadowMap::FragmentDesktop, defines);
+#else
         success = loadFromString(id, Shaders::ShadowMap::Vertex, Shaders::ShadowMap::FragmentMobile, defines);
+#endif
         break;
     case BuiltIn::PBR:
         success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::PBR::Fragment, defines);

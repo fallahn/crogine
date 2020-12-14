@@ -29,92 +29,61 @@ source distribution.
 
 #pragma once
 
-#include <crogine/graphics/Texture.hpp>
-#include <crogine/graphics/Colour.hpp>
+#include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/RenderTarget.hpp>
+#include <crogine/graphics/MaterialData.hpp>
 
 #include <array>
 
 namespace cro
 {
     /*!
-    \brief A render buffer which can be used as a texture.
-    RenderTextures are non-copyable objects but *can* be moved.
+    \brief A render buffer with only a depth component attached.
+    DepthTextures are non-copyable objects but *can* be moved.
     */
-    class CRO_EXPORT_API RenderTexture final : public RenderTarget, public Detail::SDLResource
+    class CRO_EXPORT_API DepthTexture final : public RenderTarget, public Detail::SDLResource
     {
     public:
         /*!
         \brief Constructor.
-        By default RenderTextures are in an invalid state until create() has been called
+        By default DepthTextures are in an invalid state until create() has been called
         at least once.
-        To draw to a render texture first call its clear() function, which then activates
+        To draw to a depth texture first call its clear() function, which then activates
         it as the current target. All drawing operations will then be performed on it
-        until display() is called. Both clear AND display() *must* be called either side of 
+        until display() is called. Both clear AND display() *must* be called either side of
         drawing to prevent undefined results.
         */
-        RenderTexture();
-        ~RenderTexture();
+        DepthTexture();
+        ~DepthTexture();
 
-        RenderTexture(const RenderTexture&) = delete;
-        RenderTexture(RenderTexture&&) noexcept;
-        const RenderTexture& operator = (const RenderTexture&) = delete;
-        RenderTexture& operator = (RenderTexture&&) noexcept;
+        DepthTexture(const DepthTexture&) = delete;
+        DepthTexture(DepthTexture&&) noexcept;
+        const DepthTexture& operator = (const DepthTexture&) = delete;
+        DepthTexture& operator = (DepthTexture&&) noexcept;
 
         /*!
-        \brief Creates (or recreates) the render texture
+        \brief Creates (or recreates) the depth texture
         \param width Width of the texture to create. This should be
         power of 2 on mobile platforms
-        \param height Height of the texture. This should be power of
-        2 on mobile platforms.
-        \param depthBuffer Creates an 24 bit depth buffer when set to true (default)
-        \param stencilBuffer Creates an 8 bit stencil buffer when set to true (default false)
-        Stencil buffers must be accompanied by a depth buffer. If depthbuffer is false no stencil
-        buffer will be created.
+        \param height Height of the texture.
         \returns true on success, else returns false
         */
-        bool create(uint32 width, uint32 height, bool depthBuffer = true, bool stencilBuffer = false);
+        bool create(uint32 width, uint32 height);
 
         /*!
-        \brief Returns the current size in pixels of the render texture (zero if not yet created)
+        \brief Returns the current size in pixels of the depth texture (zero if not yet created)
         */
         glm::uvec2 getSize() const override;
 
         /*!
-        \brief Returns a reference to the colour buffer texture to be used in rendering
-        */
-        const Texture& getTexture() const;
-
-        /*!
-        \brief Sets the underlying texture to repeated when wrapping
-        */
-        void setRepeated(bool);
-
-        /*!
-        \brief Returns true if the underlying texture is set to repeat on wrap, else returns false
-        */
-        bool isRepeated() const;
-
-        /*!
-        \brief Sets whether or not smoothing is enabled on the underlying texture.
-        */
-        void setSmooth(bool);
-
-        /*!
-        \brief Returns whether or not smoothing is enabled on the underlying texture.
-        */
-        bool isSmooth() const;
-
-        /*!
         \brief Clears the texture ready for drawing
-        \param colour Colour to clear the texture with.
-        This should be called to activate the render texture as the current draw target.
-        From then on all drawing operations will be applied to the RenderTexture until display()
+        This should be called to activate the depth texture as the current draw target.
+        From then on all drawing operations will be applied to the DepthTexture until display()
         is called. For every clear() call there must be exactly one display() call. This
         also attempts to save and restore any existing viewport, while also applying its
         own during rendering.
         */
-        void clear(Colour colour = Colour::Black());
+        void clear();
 
         /*!
         \brief This must be called once for each call to clear to properly validate
@@ -145,14 +114,18 @@ namespace cro
         */
         bool available() const { return m_fboID != 0; }
 
+        /*!
+        \brief Returns the texture ID wrappped in a handle which can be bound to
+        material uniforms.
+        */
+        TextureID getTexture() const;
+
     private:
         uint32 m_fboID;
-        uint32 m_rboID;
-        uint32 m_clearBits;
-        Texture m_texture;
+        uint32 m_textureID;
+        glm::uvec2 m_size;
         URect m_viewport;
         std::array<int32, 4u> m_lastViewport = {};
-        std::array<float, 4u> m_lastClearColour = {};
         int32 m_lastBuffer;
     };
 }

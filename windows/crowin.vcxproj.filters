@@ -555,6 +555,9 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\CircleMeshBuilder.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\DepthTexture.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -901,6 +904,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\components\Camera.cpp">
       <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\DepthTexture.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -32,6 +32,7 @@ source distribution.
 #include "imgui.h"
 
 #include <crogine/Config.hpp>
+#include <crogine/graphics/MaterialData.hpp>
 
 #include <string>
 
@@ -82,5 +83,10 @@ namespace ImGui
     static inline void Image(const cro::Texture& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1)
     {
         ImGui::Image((void*)(std::size_t)texture.getGLHandle(), size, uv0, uv1);
+    }
+
+    static inline void Image(const cro::TextureID texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1)
+    {
+        ImGui::Image((void*)(std::size_t)texture.textureID, size, uv0, uv1);
     }
 }

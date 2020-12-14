@@ -60,5 +60,14 @@ namespace cro
                             static_cast<int>(0.5f + width * normalised.width),
                             static_cast<int>(0.5f + height * normalised.height));
         }
+
+    private:
+
+        friend class RenderTexture;
+        friend class DepthTexture;
+
+        //used by render targets such as render texture or depth texture
+        //to track the  current FBO without having to query OpenGL
+        static std::int32_t ActiveTarget;
     };
 }
