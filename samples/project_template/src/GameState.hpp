@@ -36,6 +36,10 @@ source distribution.
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
 
+namespace cro
+{
+    struct Camera;
+}
 
 class GameState final : public cro::State
 {

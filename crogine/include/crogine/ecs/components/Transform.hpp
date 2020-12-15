@@ -265,7 +265,6 @@ namespace cro
         Transform* m_parent;
         std::vector<Transform*> m_children = {};
 
-
         enum Flags
         {
             Parent = 0x1,

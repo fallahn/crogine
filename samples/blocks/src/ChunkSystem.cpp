@@ -315,7 +315,7 @@ void ChunkSystem::process(float dt)
 
     auto forwardVector = getScene()->getActiveCamera().getComponent<cro::Transform>().getForwardVector();
     //auto camPos = getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
-    auto cam = getScene()->getActiveCamera().getComponent<cro::Camera>();
+    const auto& cam = getScene()->getActiveCamera().getComponent<cro::Camera>();
     
 
     auto& entities = getEntities();

@@ -109,7 +109,7 @@ namespace cro
         \brief Clears the texture ready for drawing
         \param colour Colour to clear the texture with.
         This should be called to activate the render texture as the current draw target.
-        From then all drawing operations will be applied to the RenderTexture until display()
+        From then on all drawing operations will be applied to the RenderTexture until display()
         is called. For every clear() call there must be exactly one display() call. This
         also attempts to save and restore any existing viewport, while also applying its
         own during rendering.

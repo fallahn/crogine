@@ -29,14 +29,15 @@ source distribution.
 
 #pragma once
 
+#include <crogine/graphics/MaterialData.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/DepthTexture.hpp>
 
 namespace cro
 {
     class Texture;
-    class Sunlight;
 
     /*!
     \brief Shadow map renderer.
@@ -48,28 +49,32 @@ namespace cro
     employs the depth map rendered by this system) in order
     that the depth map data be up to date.
     */
-    class CRO_EXPORT_API ShadowMapRenderer final : public cro::System, public cro::Renderable
+    class CRO_EXPORT_API ShadowMapRenderer final : public cro::System
     {
     public:
         /*!
         \brief Constructor.
         \param mb Message bus instance
+        \param size Resolution of the depth buffer.
         */
-        explicit ShadowMapRenderer(MessageBus& mb);
+        ShadowMapRenderer(MessageBus& mb, glm::uvec2 size = glm::uvec2(2048, 2048));
 
         void process(float) override;
-
-        void updateDrawList(Entity) override;
-
-        void render(Entity, const RenderTarget&) override;
 
         /*!
         \brief Returns a reference to the texture used to render the depth map
         */
-        const Texture& getDepthMapTexture() const;
+        TextureID getDepthMapTexture() const;
 
     private:
+#ifdef PLATFORM_DESKTOP
+        DepthTexture m_target;
+#else
         RenderTexture m_target;
+#endif
         std::vector<std::pair<Entity, float>> m_visibleEntities;
+
+        void updateDrawList();
+        void render();
     };
 }

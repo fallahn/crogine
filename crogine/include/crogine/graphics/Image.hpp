@@ -113,6 +113,14 @@ namespace cro
         */
         bool write(const std::string& path);
 
+        /*!
+        \brief Sets the pixel at the given position to the given colour
+        \param x The x coordinate of the pixel
+        \param y The y coordinate of the pixel
+        \param colour The colour to set the pixel to.
+        */
+        void setPixel(std::size_t x, std::size_t y, cro::Colour colour);
+
     private:
         glm::uvec2 m_size = glm::uvec2(0);
         ImageFormat::Type m_format;

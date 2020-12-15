@@ -35,6 +35,10 @@ namespace TextureID
     {
         SeaNormal,
 
+        SandAlbedo,
+        SandNormal,
+        SandMask,
+
         Count
     };
 }
@@ -44,6 +48,7 @@ namespace MaterialID
     enum
     {
         Sea,
+        Island,
 
         Count
     };

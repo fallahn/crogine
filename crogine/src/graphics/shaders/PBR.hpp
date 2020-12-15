@@ -21,6 +21,10 @@ namespace cro::Shaders::PBR
         #endif
         uniform vec4 u_colour;
 
+        #if defined(ALPHA_CLIP)
+        uniform float u_alphaClip;
+        #endif
+
         #if defined(MASK_MAP)
         uniform sampler2D u_maskMap;
         #else
@@ -55,16 +59,24 @@ namespace cro::Shaders::PBR
         VARYING_IN vec2 v_texCoord0;
         #endif
 
+        struct MaterialProperties
+        {
+            vec3 albedo;
+            float metallic;
+            float roughness;
+            float ao;
+        };
+
+        struct SurfaceProperties
+        {
+            vec3 viewDir;
+            vec3 normalDir;
+            vec3 lightDir;
+        };
+
         #if defined(RX_SHADOWS)
         VARYING_IN LOW vec4 v_lightWorldPosition;
 
-        float unpack(vec4 colour)
-        {
-            const vec4 bitshift = vec4(1.0 / 16777216.0, 1.0 / 65536.0, 1.0 / 256.0, 1.0);
-            return dot(colour, bitshift);
-        }
-                
-        //some fancier pcf on desktop
         const vec2 kernel[16] = vec2[](
             vec2(-0.94201624, -0.39906216),
             vec2(0.94558609, -0.76890725),
@@ -84,12 +96,15 @@ namespace cro::Shaders::PBR
             vec2(0.14383161, -0.14100790)
         );
         const int filterSize = 3;
-        float shadowAmount(vec4 lightWorldPos)
+        float shadowAmount(vec4 lightWorldPos, SurfaceProperties surfProp)
         {
             vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
             projectionCoords = projectionCoords * 0.5 + 0.5;
 
             if(projectionCoords.z > 1.0) return 1.0;
+
+            //float bias = max(0.01 * (1.0 - dot(surfProp.normalDir, surfProp.lightDir)), 0.005);
+            float bias = 0.001;
 
             float shadow = 0.0;
             vec2 texelSize = 1.0 / textureSize(u_shadowMap, 0).xy;
@@ -97,8 +112,8 @@ namespace cro::Shaders::PBR
             {
                 for(int y = 0; y < filterSize; ++y)
                 {
-                    float pcfDepth = unpack(TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize));
-                    shadow += (projectionCoords.z - 0.005) > pcfDepth ? 0.4 : 0.0;
+                    float pcfDepth = TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize).r;
+                    shadow += (projectionCoords.z - bias) > pcfDepth ? 0.4 : 0.0;
                 }
             }
             return 1.0 - (shadow / 9.0);
@@ -152,21 +167,6 @@ namespace cro::Shaders::PBR
             return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - min(cosTheta, 1.0), 5.0);
         }
 
-        struct MaterialProperties
-        {
-            vec3 albedo;
-            float metallic;
-            float roughness;
-            float ao;
-        };
-
-        struct SurfaceProperties
-        {
-            vec3 viewDir;
-            vec3 normalDir;
-            vec3 lightDir;
-        };
-
         vec3 calcLighting(MaterialProperties matProp, SurfaceProperties surfProp, vec3 lightColour, vec3 F0)
         {
             vec3 halfDir = normalize(surfProp.viewDir + surfProp.lightDir);
@@ -205,7 +205,13 @@ namespace cro::Shaders::PBR
             surfProp.viewDir = normalize(u_cameraWorldPosition - v_worldPosition);
 
         #if defined(DIFFUSE_MAP)
-            matProp.albedo = TEXTURE(u_diffuseMap, v_texCoord0).rgb;
+            vec4 albedo = TEXTURE(u_diffuseMap, v_texCoord0);
+
+            #if defined(ALPHA_CLIP)
+            if(albedo.a < u_alphaClip) discard;
+            #endif
+
+            matProp.albedo = albedo.rgb;
             matProp.albedo *= u_colour.rgb;
         #else
             matProp.albedo = u_colour.rgb;
@@ -267,7 +273,7 @@ namespace cro::Shaders::PBR
             colour = pow(colour, vec3(1.0/2.2)); 
 
             #if defined (RX_SHADOWS)
-            colour *= shadowAmount(v_lightWorldPosition);
+            colour *= shadowAmount(v_lightWorldPosition, surfProp);
             #endif            
 
             colour *= u_lightColour.rgb;

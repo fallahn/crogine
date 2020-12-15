@@ -18,7 +18,7 @@ Android make files can also be created with the included cmake file, but the too
 
 
 #### About
-crogine was built with the aim of creating a flexible ECS based framework to run on mobile devices which support OpenGLES2. crogine supplies renderers for both 2D and 3D GLES2 based graphics, although desktop builds provide an OpenGL 3.3 context. As crogine is targeted at lower end hardware it's not an advanced engine - although desktop builds do support some PBR rendering, and new features are still being added.  
+crogine was built with the aim of creating a flexible ECS based framework to run on mobile devices which support OpenGLES2. crogine supplies renderers for both 2D and 3D GLES2 based graphics, although desktop builds provide an OpenGL 3.3 context. As crogine is targeted at lower end hardware it doesn't feature a huge array of cutting edge rendering techniques - however desktop builds do support some PBR rendering, and new features are still being added.  
 
 crogine uses OpenAL for audio, and SDL2 for cross platform parts such as windowing, events and context creation. Documentation can be generated with doxygen using the doxy file in common/docs. Eventually I plan to fully document features on the github wiki as and when I have the time. It might be worth noting that the API is very similar to that of my other library [xygine](https://github.com/fallahn/xygine) so studying that may be of some use.
 

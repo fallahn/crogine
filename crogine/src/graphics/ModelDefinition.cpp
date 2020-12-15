@@ -364,6 +364,11 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         auto matID = rc.materials.add(rc.shaders.get(shaderID));
         auto& material = rc.materials.get(matID);
 
+        //store the diffuse and dalpha clip properties in case
+        //they need to be set on the shadow map material.
+        Texture* diffuseTex = nullptr;
+        float alphaClip = 0.f;
+
         for (const auto& p : properties)
         {
             const auto& name = Util::String::toLower(p.getName());
@@ -373,6 +378,8 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_diffuseMap", tex);
+
+                diffuseTex = &tex;
             }
             else if (name == "mask")
             {
@@ -476,7 +483,8 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             }
             else if (name == "alpha_clip")
             {
-                material.setProperty("u_alphaClip", Util::Maths::clamp(p.getValue<float>(), 0.f, 1.f));
+                alphaClip = Util::Maths::clamp(p.getValue<float>(), 0.f, 1.f);
+                material.setProperty("u_alphaClip", alphaClip);
             }
         }
 
@@ -499,14 +507,19 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 
         if (m_castShadows)
         {
-            //skinning is the only flag valid for shadow
-            //map materials so make sure we don't end up with
-            //needless variants.
-            flags = ShaderResource::DepthMap | (flags & ShaderResource::Skinning);
+            flags = ShaderResource::DepthMap | (flags & (ShaderResource::Skinning | ShaderResource::AlphaClip));
 
             shaderID = rc.shaders.loadBuiltIn(ShaderResource::ShadowMap, flags);
             matID = rc.materials.add(rc.shaders.get(shaderID));
             m_shadowIDs[m_materialCount] = matID;
+
+            if (flags & ShaderResource::AlphaClip
+                && diffuseTex != nullptr)
+            {
+                auto& mat = rc.materials.get(matID);
+                mat.setProperty("u_diffuseMap", *diffuseTex);
+                mat.setProperty("u_alphaClip", alphaClip);
+            }
         }
 
         m_materialCount++;

@@ -383,7 +383,7 @@ void ModelState::addSystems()
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::BillboardSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_scene.addSystem<cro::ShadowMapRenderer>(mb, glm::uvec2(4096));
     m_scene.addSystem<cro::ModelRenderer>(mb);
 
     m_previewScene.addSystem<cro::CameraSystem>(mb);
@@ -520,7 +520,7 @@ void ModelState::createScene()
     entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //set the default sunlight properties
-    m_scene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-4.f, 4.f, -4.f, 4.f, 0.1f, 10.f));
+    m_scene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-2.f, 2.f, -2.f, 2.f, 0.1f, 4.f));
     m_scene.getSunlight().getComponent<cro::Transform>().setPosition({ -1.5f, 1.5f, 1.5f });
     m_scene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.79f);
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.79f);
@@ -2171,8 +2171,7 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
         tex->setRepeated(matDef.repeatTexture);
         tex->setSmooth(matDef.smoothTexture);
 
-        if (matDef.alphaClip > 0
-            && matDef.type != MaterialDefinition::PBR)
+        if (matDef.alphaClip > 0)
         {
             matDef.materialData.setProperty("u_alphaClip", matDef.alphaClip);
         }
@@ -2846,10 +2845,7 @@ void ModelState::drawInspector()
                     {
                         shaderFlags |= cro::ShaderResource::MaskMap;
                     }
-                }
 
-                if (type != MaterialDefinition::Unlit)
-                {
                     //normal map
                     slotLabel = "Normal Map";
                     if (matDef.textureIDs[MaterialDefinition::Normal] == 0)
@@ -2913,8 +2909,7 @@ void ModelState::drawInspector()
                     }
                 }
 
-                if (matDef.textureIDs[MaterialDefinition::Diffuse]
-                    && type != MaterialDefinition::PBR)
+                if (matDef.textureIDs[MaterialDefinition::Diffuse])
                 {
                     ImGui::NewLine();
                     if (ImGui::SliderFloat("Alpha Clip", &matDef.alphaClip, 0.f, 1.f))
@@ -3913,6 +3908,7 @@ void ModelState::bakeLightmap()
         {
             m_lightmapBuffers.emplace_back(LightmapSize * LightmapSize * 3 * sizeof(float));
             m_lightmapTextures.emplace_back(std::make_unique<cro::Texture>())->create(LightmapSize, LightmapSize, cro::ImageFormat::RGB);
+            m_lightmapTextures.back()->setSmooth(true);
         }
     }
 
@@ -3991,7 +3987,7 @@ void ModelState::bakeLightmap()
     for (auto i = 0u; i < meshData.submeshCount; ++i)
     {
         temp.resize(m_lightmapBuffers[i].size());
-        lmImageDilate(m_lightmapBuffers[i].data(), temp.data(), LightmapSize, LightmapSize, 3);
+        lmImageSmooth(m_lightmapBuffers[i].data(), temp.data(), LightmapSize, LightmapSize, 3);
         lmImageDilate(temp.data(), m_lightmapBuffers[i].data(), LightmapSize, LightmapSize, 3);
         lmImagePower(m_lightmapBuffers[i].data(), LightmapSize, LightmapSize, 3, 1.0f / 2.2f);
 

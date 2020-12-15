@@ -43,10 +43,15 @@ source distribution.
 
 #include <array>
 
+namespace cro
+{
+    struct Camera;
+}
+
 class GameState final : public cro::State, public cro::GuiClient
 {
 public:
-    GameState(cro::StateStack&, cro::State::Context);
+    GameState(cro::StateStack&, cro::State::Context, std::size_t localPlayerCount = 4);
     ~GameState() = default;
 
     cro::StateID getStateID() const override { return States::Game; }
@@ -65,9 +70,10 @@ private:
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
     cro::EnvironmentMap m_environmentMap;
+    std::vector<cro::Entity> m_cameras;
 
-    std::array<cro::Texture, 40u> m_waterTextures;
-    std::size_t m_waterIndex;
+    cro::Texture m_islandTexture;
+    std::vector<float> m_heightmap;
 
     void addSystems();
     void loadAssets();
@@ -75,4 +81,10 @@ private:
     void createUI();
 
     void updateView(cro::Camera&);
+
+    void createIsland();
+    void createHeightmap();
+    void updateIslandVerts(cro::Mesh::Data&);
+
+    float getPlayerHeight(glm::vec3);
 };

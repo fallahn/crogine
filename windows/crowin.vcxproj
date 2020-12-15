@@ -115,6 +115,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\CircleMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Colour.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\CubeBuilder.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\DepthTexture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\DynamicMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\EnvironmentMap.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Font.hpp" />
@@ -267,6 +268,7 @@
     <ClCompile Include="..\crogine\src\graphics\BoundingBox.cpp" />
     <ClCompile Include="..\crogine\src\graphics\CircleMeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Colour.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\DepthTexture.cpp" />
     <ClCompile Include="..\crogine\src\graphics\DynamicMeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\EnvironmentMap.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Font.cpp" />

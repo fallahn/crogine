@@ -47,7 +47,7 @@ source distribution.
 
 using namespace cro;
 
-ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
+ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb, glm::uvec2 size)
     : System(mb, typeid(ShadowMapRenderer))
 {
     requireComponent<cro::Model>();
@@ -55,8 +55,7 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
     requireComponent<cro::ShadowCaster>();
 
 #ifdef PLATFORM_DESKTOP
-    //TODO make this variable
-    m_target.create(2048, 2048);
+    m_target.create(size.x, size.y);
 #else
     m_target.create(512, 512);
 #endif
@@ -67,10 +66,29 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
 //public
 void ShadowMapRenderer::process(float)
 {
+#ifdef PLATFORM_DESKTOP
+    getScene()->getSunlight().getComponent<Sunlight>().m_textureID = m_target.getTexture().textureID;
+#else
     getScene()->getSunlight().getComponent<Sunlight>().m_textureID = m_target.getTexture().getGLHandle();
+#endif
+
+    //do this here so we know it gets updated just once per frame
+    //during multi-pass rendering.
+    updateDrawList();
+    render();
 }
 
-void ShadowMapRenderer::updateDrawList(Entity)
+TextureID ShadowMapRenderer::getDepthMapTexture() const
+{
+#ifdef PLATFORM_DESKTOP
+    return m_target.getTexture();
+#else
+    return TextureID(m_target.getTexture().getGLHandle());
+#endif
+}
+
+//private
+void ShadowMapRenderer::updateDrawList()
 {
     auto& sunlight = getScene()->getSunlight().getComponent<Sunlight>();
     const auto& sunTx = getScene()->getSunlight().getComponent<Transform>();
@@ -103,7 +121,6 @@ void ShadowMapRenderer::updateDrawList(Entity)
         auto scale = tx.getScale();
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
-
         model.m_visible = true;
         std::size_t i = 0;
         while (model.m_visible && i < sunlight.m_frustum.size())
@@ -126,18 +143,22 @@ void ShadowMapRenderer::updateDrawList(Entity)
         });
 }
 
-void ShadowMapRenderer::render(Entity, const RenderTarget&)
+void ShadowMapRenderer::render()
 {
     const auto& sunlight = getScene()->getSunlight().getComponent<Sunlight>();
 
     //enable face culling and render rear faces
     glCheck(glEnable(GL_CULL_FACE));
-    glCheck(glCullFace(GL_FRONT));
+    glCheck(glCullFace(GL_BACK));
+    //glCheck(glCullFace(GL_FRONT));
     glCheck(glEnable(GL_DEPTH_TEST));
 
+#ifdef PLATFORM_DESKTOP
+    m_target.clear();
+#else
     m_target.clear(cro::Colour::White());
+#endif
 
-    
     for (const auto& [e,f] : m_visibleEntities)
     {
         //calc entity transform
@@ -147,6 +168,11 @@ void ShadowMapRenderer::render(Entity, const RenderTarget&)
 
         //foreach submesh / material:
         const auto& model = e.getComponent<Model>();
+
+        //TODO we ought to test model flags for visibility
+        //but this is done per camera rather than pre shadow source.
+        //this is another reason to switch to depthmaps per-camera.
+
 #ifndef PLATFORM_DESKTOP
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
 #endif
@@ -169,6 +195,25 @@ void ShadowMapRenderer::render(Entity, const RenderTarget&)
                     break;
                 }
             }
+
+            //check material proprties for alpha clipping
+            std::uint32_t currentTextureUnit = 0;
+            for (const auto& prop : mat.properties)
+            {
+                switch (prop.second.second.type)
+                {
+                default: break;
+                case Material::Property::Texture:
+                    glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+                    glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
+                    glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
+                    break;
+                case Material::Property::Number:
+                    glCheck(glUniform1f(prop.second.first, prop.second.second.numberValue));
+                    break;
+                }
+            }
+
             glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
             glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(sunlight.m_projectionMatrix)));
 
@@ -218,9 +263,4 @@ void ShadowMapRenderer::render(Entity, const RenderTarget&)
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glCullFace(GL_BACK));
     m_target.display();
-}
-
-const Texture& ShadowMapRenderer::getDepthMapTexture() const
-{
-    return m_target.getTexture();
 }

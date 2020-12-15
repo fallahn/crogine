@@ -8,4 +8,5 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/MenuState.cpp
   ${PROJECT_DIR}/MyApp.cpp
   ${PROJECT_DIR}/Patch.cpp
-  ${PROJECT_DIR}/Q3BspSystem.cpp)
+  ${PROJECT_DIR}/Q3BspSystem.cpp
+  ${PROJECT_DIR}/SeaSystem.cpp)
