@@ -516,9 +516,9 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             if (flags & ShaderResource::AlphaClip
                 && diffuseTex != nullptr)
             {
-                auto& mat = rc.materials.get(matID);
-                mat.setProperty("u_diffuseMap", *diffuseTex);
-                mat.setProperty("u_alphaClip", alphaClip);
+                auto& m = rc.materials.get(matID);
+                m.setProperty("u_diffuseMap", *diffuseTex);
+                m.setProperty("u_alphaClip", alphaClip);
             }
         }
 

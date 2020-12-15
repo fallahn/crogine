@@ -99,9 +99,9 @@ static const std::string SeaFragment = R"(
     VARYING_IN LOW vec4 v_lightWorldPosition;
 
     const vec2 TextureScale = vec2(8.0);
-    const vec3 colour = vec3(0.137, 0.267, 0.53);
+    const vec3 WaterColour = vec3(0.137, 0.267, 0.53);
 
-    vec3 diffuseColour = colour;
+    vec3 diffuseColour = WaterColour;
     vec3 eyeDirection = vec3(0.0);
 
     vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
@@ -156,6 +156,9 @@ static const std::string SeaFragment = R"(
         return 1.0 - (shadow / 9.0);
     }
 
+    const float DepthMultiplier = 4.0; //const IslandHeight
+    const float DepthOffset = -2.02; //const IslandWorldHeight
+
     void main()
     {
         eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
@@ -174,11 +177,11 @@ static const std::string SeaFragment = R"(
         refractColour.rgb *= u_lightColour.rgb * refractColour.a;
 
         float depth = TEXTURE(u_depthMap, v_texCoord + u_textureOffset).r;
-        refractColour.rgb = mix(vec3(0.2), refractColour.rgb, depth * 4.0);
+        refractColour.rgb = mix(WaterColour, refractColour.rgb, depth * DepthMultiplier);
 
         float fresnel = dot(eyeDirection, normal);
 
-        vec3 blendedColour = colour * 0.2; //ambience
+        vec3 blendedColour = WaterColour * 0.2; //ambience
         blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, u_lightColour.rgb, 1.0);
         blendedColour += mix(reflectColour.rgb, refractColour.rgb, fresnel);      
 

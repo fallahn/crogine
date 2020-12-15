@@ -43,5 +43,5 @@ static constexpr std::size_t IslandBorder = 9; //Tile count
 static constexpr float IslandLevels = 16.f; //snap height vals to this many levels
 static constexpr std::uint32_t IslandFadeSize = 13u;
 static constexpr float EdgeVariation = 3.f;
-static constexpr float IslandHeight = 4.f;
+static constexpr float IslandHeight = 4.f; //these must be replicated in the sea water shader
 static constexpr float IslandWorldHeight = -2.02f;
