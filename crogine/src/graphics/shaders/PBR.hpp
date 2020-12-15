@@ -49,6 +49,10 @@ namespace cro::Shaders::PBR
 
         VARYING_IN vec3 v_worldPosition;
 
+        #if defined (VERTEX_COLOUR)
+        VARYING_IN vec4 v_colour;
+        #endif
+
         #if defined(BUMP)
         VARYING_IN vec3 v_tbn[3];
         #else
@@ -216,6 +220,11 @@ namespace cro::Shaders::PBR
         #else
             matProp.albedo = u_colour.rgb;
         #endif
+
+        #if defined(VERTEX_COLOUR)
+            matProp.albedo *= v_colour.rgb;
+        #endif
+
             matProp.albedo = pow(matProp.albedo, vec3(2.2));
 
         #if defined(MASK_MAP)

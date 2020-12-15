@@ -33,10 +33,11 @@ source distribution.
 
 using namespace cro;
 
-GridMeshBuilder::GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions, glm::vec2 multiplier)
+GridMeshBuilder::GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions, glm::vec2 multiplier, bool colouredVerts)
     : m_size        (size),
     m_subDivisions  (subDivisions),
-    m_uvMultiplier  (multiplier)
+    m_uvMultiplier  (multiplier),
+    m_colouredVerts (colouredVerts)
 {
     CRO_ASSERT(subDivisions > 0, "Must be non-zero");
     CRO_ASSERT(multiplier.x > 0 && multiplier.y > 0, "Must be greater than zero");
@@ -60,6 +61,14 @@ Mesh::Data GridMeshBuilder::build() const
             verts.push_back(x * stride.x);
             verts.push_back(y * stride.y);
             verts.push_back(0.f);
+
+            if (m_colouredVerts)
+            {
+                verts.push_back(1.f);
+                verts.push_back(1.f);
+                verts.push_back(1.f);
+                verts.push_back(1.f);
+            }
 
             verts.push_back(0.f);
             verts.push_back(0.f);
@@ -102,12 +111,18 @@ Mesh::Data GridMeshBuilder::build() const
 
     Mesh::Data meshData;
     meshData.attributes[Mesh::Position] = 3;
+
+    if (m_colouredVerts)
+    {
+        meshData.attributes[Mesh::Colour] = 4;
+    }
+
     meshData.attributes[Mesh::Normal] = 3;
     meshData.attributes[Mesh::Tangent] = 3;
     meshData.attributes[Mesh::Bitangent] = 3;
     meshData.attributes[Mesh::UV0] = 2;
     meshData.primitiveType = GL_TRIANGLE_STRIP;
-    meshData.vertexCount = verts.size() / 14;
+    meshData.vertexCount = verts.size() / getAttributeSize(meshData.attributes);
     meshData.vertexSize = getVertexSize(meshData.attributes);
     createVBO(meshData, verts);
 

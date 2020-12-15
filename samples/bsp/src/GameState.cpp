@@ -491,10 +491,11 @@ void GameState::createIsland()
     entity.getComponent<cro::Transform>().move({ 0.f, IslandWorldHeight, 0.f }); //small extra amount to stop z-fighting
     entity.getComponent<cro::Transform>().setOrigin({ IslandSize / 2.f, IslandSize / 2.f, 0.f });
 
-    auto meshID = m_resources.meshes.loadMesh(cro::GridMeshBuilder({ IslandSize, IslandSize }, IslandTileCount - 1)); //this accounts for extra row of vertices
+    auto meshID = m_resources.meshes.loadMesh(cro::GridMeshBuilder({ IslandSize, IslandSize }, IslandTileCount - 1, glm::vec2(1.f), true)); //this accounts for extra row of vertices
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, cro::ShaderResource::DiffuseMap |
                                                                                 cro::ShaderResource::NormalMap | 
                                                                                 cro::ShaderResource::MaskMap |
+                                                                                cro::ShaderResource::VertexColour |
                                                                                 cro::ShaderResource::RxShadows);
 
     m_materialIDs[MaterialID::Island] = m_resources.materials.add(m_resources.shaders.get(shaderID));
@@ -745,9 +746,12 @@ void GameState::createHeightmap()
 
 void GameState::updateIslandVerts(cro::Mesh::Data& meshData)
 {
+    const glm::vec4 WetSand = { 0.44f, 0.29f, 0.11f, 1.f };
+
     struct Vertex final
     {
         glm::vec3 pos = glm::vec3(0.f);
+        glm::vec4 colour = glm::vec4(1.f);
         glm::vec3 normal = glm::vec3(0.f);
         glm::vec3 tan = glm::vec3(0.f);
         glm::vec3 bitan = glm::vec3(0.f);
@@ -769,6 +773,13 @@ void GameState::updateIslandVerts(cro::Mesh::Data& meshData)
         std::int32_t y = i / IslandTileCount;
 
         verts[i].pos = { x * TileSize, y * TileSize, m_heightmap[i] * IslandHeight };
+
+        if (verts[i].pos.z < /*IslandHeight + IslandWorldHeight*/2.2f)
+        {
+            //wet should be wet
+            verts[i].colour = WetSand;
+        }
+
         verts[i].uv = { verts[i].pos.x / IslandSize, verts[i].pos.y / IslandSize };
 
         verts[i].uv *= 8.f;

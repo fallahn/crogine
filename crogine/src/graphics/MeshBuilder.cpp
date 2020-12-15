@@ -33,14 +33,19 @@ source distribution.
 
 using namespace cro;
 
-std::size_t MeshBuilder::getVertexSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib)
+std::size_t MeshBuilder::getAttributeSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib)
 {
     std::size_t size = 0;
     for (const auto& a : attrib)
     {
         size += a;
     }
-    return size * sizeof(float);
+    return size;
+}
+
+std::size_t MeshBuilder::getVertexSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib)
+{
+    return getAttributeSize(attrib) * sizeof(float);
 }
 
 void MeshBuilder::createVBO(Mesh::Data& meshData, const std::vector<float>& vertexData)
