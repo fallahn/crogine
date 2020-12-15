@@ -105,7 +105,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
     m_cameras       (localPlayerCount),
-    m_heightmap     (IslandTileCount * IslandTileCount, 0.f)
+    m_heightmap     (IslandTileCount * IslandTileCount, 0.f),
+    m_foamEffect    (m_resources)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -120,8 +121,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
         {
             if (ImGui::Begin("Buns"))
             {
-                ImGui::Image(m_islandTexture,
-                    { IslandTileCount * 3.f, IslandTileCount * 3.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::Image(m_foamEffect.getTexture(),
+                    { 256.f, 256.f }, { 0.f, 2.f }, { 2.f, 0.f });
 
                 if (ImGui::SliderFloat("Shadow Map Projection", &ShadowmapProjection, 10.f, 200.f))
                 {
@@ -145,6 +146,12 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
                     m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, LightRotation.x);
                     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, LightRotation.y);
                     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, LightRotation.z);
+                }
+
+                if (ImGui::CollapsingHeader("Height Map"))
+                {
+                    ImGui::Image(m_islandTexture,
+                        { IslandTileCount * 3.f, IslandTileCount * 3.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 }
 
                 if (ImGui::CollapsingHeader("ShadowMap"))
@@ -236,6 +243,7 @@ bool GameState::simulate(float dt)
 void GameState::render()
 {
     //m_gameScene.setPostEnabled(false);
+    m_foamEffect.update();
 
     for(auto i = 0u; i < m_cameras.size(); ++i)
     {
@@ -291,6 +299,7 @@ void GameState::loadAssets()
 
     m_materialIDs[MaterialID::Sea] = m_gameScene.getSystem<SeaSystem>().loadResources(m_resources);
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_depthMap", m_islandTexture);
+    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_foamMap", m_foamEffect.getTexture());
 
     m_environmentMap.loadFromFile("assets/images/cubemap/beach02.hdr");
 
@@ -397,11 +406,11 @@ void GameState::createScene()
     entity.getComponent<cro::Model>().setRenderFlags(~NoPlanes);
     m_gameScene.getSunlight().getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::Callback>().active = true;
-entity.getComponent<cro::Callback>().function =
-[](cro::Entity e, float)
-{
-    e.getComponent<cro::Transform>().setScale({ ShadowmapProjection, ShadowmapProjection, ShadowmapClipPlane });
-};
+    entity.getComponent<cro::Callback>().function =
+    [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setScale({ ShadowmapProjection, ShadowmapProjection, ShadowmapClipPlane });
+    };
 
     createIsland();
 }

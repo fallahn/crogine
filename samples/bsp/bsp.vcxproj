@@ -178,6 +178,7 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</WholeProgramOptimization>
     </ClCompile>
+    <ClCompile Include="src\FoamEffect.cpp" />
     <ClCompile Include="src\FpsCameraSystem.cpp" />
     <ClCompile Include="src\GameState.cpp" />
     <ClCompile Include="src\InputParser.cpp" />
@@ -191,6 +192,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp" />
+    <ClInclude Include="src\FoamEffect.hpp" />
     <ClInclude Include="src\FpsCameraSystem.hpp" />
     <ClInclude Include="src\GameConsts.hpp" />
     <ClInclude Include="src\GameState.hpp" />

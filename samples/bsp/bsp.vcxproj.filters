@@ -52,6 +52,9 @@
     <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse41.cpp">
       <Filter>Source Files\fastnoise</Filter>
     </ClCompile>
+    <ClCompile Include="src\FoamEffect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -100,6 +103,9 @@
       <Filter>Header Files\systems</Filter>
     </ClInclude>
     <ClInclude Include="src\GameConsts.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FoamEffect.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -40,6 +40,7 @@ source distribution.
 
 #include "StateIDs.hpp"
 #include "ResourceIDs.hpp"
+#include "FoamEffect.hpp"
 
 #include <array>
 
@@ -74,6 +75,8 @@ private:
 
     cro::Texture m_islandTexture;
     std::vector<float> m_heightmap;
+
+    FoamEffect m_foamEffect;
 
     void addSystems();
     void loadAssets();
