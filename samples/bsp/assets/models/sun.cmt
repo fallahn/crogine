@@ -1,7 +1,7 @@
 model Sun
 {
     mesh = "sphere"
-    radius = 1.800000
+    radius = 12.800000
     cast_shadows = false
 
     material Unlit

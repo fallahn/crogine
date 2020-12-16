@@ -82,6 +82,7 @@ private:
     void loadAssets();
     void createScene();
     void createUI();
+    void createDayCycle();
 
     void updateView(cro::Camera&);
 

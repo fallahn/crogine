@@ -1,7 +1,7 @@
 model Moon
 {
     mesh = "sphere"
-    radius = 1.500000
+    radius = 6.500000
     cast_shadows = false
 
     material Unlit

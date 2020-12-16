@@ -29,21 +29,43 @@ source distribution.
 
 #pragma once
 
-#include <cstdint>
+#include <crogine/ecs/Director.hpp>
+#include <crogine/core/ConsoleClient.hpp>
 
-static constexpr float SeaRadius = 50.f;
-static constexpr float CameraHeight = 3.2f;
-static constexpr float CameraDistance = 10.f;
-static constexpr std::uint32_t ReflectionMapSize = 512u;
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/gtc/quaternion.hpp>
 
-static constexpr float IslandSize = SeaRadius * 2.f; //this saves scaling the depth map in the sea shader.
-static constexpr float TileSize = 0.8f;// 1.f;
-static constexpr std::size_t IslandTileCount = static_cast<std::size_t>(IslandSize / TileSize);
-static constexpr std::size_t IslandBorder = 9; //Tile count
-static constexpr float IslandLevels = 16.f; //snap height vals to this many levels
-static constexpr std::uint32_t IslandFadeSize = 13u;
-static constexpr float EdgeVariation = 3.f;
-static constexpr float IslandHeight = 4.2f; //these must be replicated in the sea water shader
-static constexpr float IslandWorldHeight = -2.02f;
+struct TargetTransform final
+{
+    glm::vec3 endPosition = glm::vec3(0.f);
+    glm::quat endRotation = glm::quat(1.f, 0.f, 0.f, 0.f);
+    
+    glm::vec3 startPosition = glm::vec3(0.f);
+    glm::quat startRotation = glm::quat(1.f, 0.f, 0.f, 0.f);
 
-static constexpr float SunOffset = IslandSize * 1.35f;
+    bool active = false;
+    float interpolation = 0.f;
+};
+
+class DayNightDirector final : public cro::Director, public cro::ConsoleClient
+{
+public:
+    DayNightDirector();
+
+    void handleMessage(const cro::Message&) override;
+
+    void process(float) override;
+
+    void setTimeOfDay(std::uint32_t minutes);
+
+    void setCycleSpeed(float);
+
+private:
+
+    float m_timeOfDay; //normalised.
+    float m_targetTime; //so we can interpolate time changes from the server without jumping too much
+    float m_cycleSpeed;
+
+    std::size_t m_currentSkyIndex;
+    std::size_t m_nextSkyIndex;
+};

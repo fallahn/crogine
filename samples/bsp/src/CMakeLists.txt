@@ -1,5 +1,6 @@
 
 set(PROJECT_SRC
+  ${PROJECT_DIR}/DayNightDirector.cpp
   ${PROJECT_DIR}/FoamEffect.cpp
   ${PROJECT_DIR}/FpsCameraSystem.cpp
   ${PROJECT_DIR}/GameState.cpp

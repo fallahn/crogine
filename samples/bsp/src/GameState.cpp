@@ -30,6 +30,8 @@ source distribution.
 #include "GameState.hpp"
 #include "SeaSystem.hpp"
 #include "GameConsts.hpp"
+#include "DayNightDirector.hpp"
+#include "CommandIDs.hpp"
 #include "fastnoise/FastNoiseSIMD.h"
 
 #include <crogine/gui/Gui.hpp>
@@ -40,6 +42,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/Sunlight.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
@@ -63,9 +66,6 @@ source distribution.
 namespace
 {
     //debug gui stuffs
-    glm::vec3 LightColour = glm::vec3(1.0);
-    glm::vec3 LightRotation = glm::vec3(-cro::Util::Const::PI * 0.9f, 0.f, 0.f);
-
     float ShadowmapProjection = 80.f;
     float ShadowmapClipPlane = 100.f;
 
@@ -131,18 +131,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
                 {
                     auto half = ShadowmapProjection / 2.f;
                     m_gameScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-half, half, -half, half, 0.1f, ShadowmapClipPlane));
-                }
-
-                if (ImGui::ColorEdit3("Light Colour", &LightColour[0]))
-                {
-                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour(LightColour.r, LightColour.g, LightColour.b, 1.f));
-                }
-
-                if (ImGui::SliderFloat3("Light Rotation", &LightRotation[0], -cro::Util::Const::PI, cro::Util::Const::PI))
-                {
-                    m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, LightRotation.x);
-                    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, LightRotation.y);
-                    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, LightRotation.z);
                 }
 
                 if (ImGui::CollapsingHeader("Waves"))
@@ -294,6 +282,8 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb, glm::uvec2(4096));
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
+
+    m_gameScene.addDirector<DayNightDirector>();
 }
 
 void GameState::loadAssets()
@@ -388,39 +378,67 @@ void GameState::createScene()
     updateView(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&GameState::updateView, this, std::placeholders::_1);
 
-    //add the light source to the camera so shadow map follows
-    //TODO this should be independent and cover the whole map so each camera can see correct shadowing?
-    //otherwise each camera requires its own shadow map...
-    camEnt.getComponent<cro::Transform>().addChild(m_gameScene.getSunlight().getComponent<cro::Transform>());
-    m_gameScene.getSunlight().getComponent<cro::Transform>().setPosition({ 0.f, 10.f, -16.f });
-    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-40.f, 40.f, -40.f, 40.f, 0.1f, 100.f));
-
     //TODO place listener on cam if single player, else place in centre of map.
 
     //light direction dealy
-    md.loadFromFile("assets/models/arrow.cmt", m_resources);
-    md.createModel(m_gameScene.getSunlight(), m_resources);
+    //md.loadFromFile("assets/models/arrow.cmt", m_resources);
+    //md.createModel(m_gameScene.getSunlight(), m_resources);
 
-    //box to display shadow frustum
-    md.loadFromFile("assets/models/frustum.cmt", m_resources);
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.5f });
-    md.createModel(entity, m_resources);
-    entity.getComponent<cro::Model>().setRenderFlags(~NoPlanes);
-    m_gameScene.getSunlight().getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-    [](cro::Entity e, float)
-    {
-        e.getComponent<cro::Transform>().setScale({ ShadowmapProjection, ShadowmapProjection, ShadowmapClipPlane });
-    };
+    ////box to display shadow frustum
+    //md.loadFromFile("assets/models/frustum.cmt", m_resources);
+    //auto entity = m_gameScene.createEntity();
+    //entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.5f });
+    //md.createModel(entity, m_resources);
+    //entity.getComponent<cro::Model>().setRenderFlags(~NoPlanes);
+    //m_gameScene.getSunlight().getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function =
+    //[](cro::Entity e, float)
+    //{
+    //    e.getComponent<cro::Transform>().setScale({ ShadowmapProjection, ShadowmapProjection, ShadowmapClipPlane });
+    //};
 
     createIsland();
+    createDayCycle();
 }
 
 void GameState::createUI()
 {
 
+}
+
+void GameState::createDayCycle()
+{
+    auto rootNode = m_gameScene.createEntity();
+    rootNode.addComponent<cro::Transform>();
+    rootNode.addComponent<cro::CommandTarget>().ID = CommandID::Game::SunMoonNode;
+
+    //moon
+    auto entity = m_gameScene.createEntity();
+    //we want to always be beyond the 'horizon', but we're fixed relative to the centre of the island
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -SunOffset });
+
+    cro::ModelDefinition definition;
+    definition.loadFromFile("assets/models/moon.cmt", m_resources);
+    definition.createModel(entity, m_resources);
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //sun
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, SunOffset });
+
+    definition.loadFromFile("assets/models/sun.cmt", m_resources);
+    definition.createModel(entity, m_resources);
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //add the shadow caster node to the day night cycle
+    auto sunNode = m_gameScene.getSunlight();
+    sunNode.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, SeaRadius });
+    sunNode.getComponent<cro::Transform>().setRotation(glm::mat4(1.f)); //set this to none (not sure where its initial val is coming from...)
+    sunNode.getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-IslandSize / 2.f, IslandSize / 2.f, -IslandSize / 2.f, IslandSize / 2.f, 0.1f, IslandSize));
+    sunNode.addComponent<TargetTransform>();
+    rootNode.getComponent<cro::Transform>().addChild(sunNode.getComponent<cro::Transform>());
 }
 
 void GameState::updateView(cro::Camera&)
@@ -429,7 +447,7 @@ void GameState::updateView(cro::Camera&)
 
     const float fov = 42.f * cro::Util::Const::degToRad;
     const float nearPlane = 0.1f;
-    const float farPlane = 140.f;
+    const float farPlane = IslandSize * 1.8f;// 140.f;
     float aspect = 16.f / 9.f;
 
     glm::vec2 size(cro::App::getWindow().getSize());
@@ -837,6 +855,8 @@ float GameState::getPlayerHeight(glm::vec3 position)
     const auto getHeightAt = [&](std::int32_t x, std::int32_t y)
     {
         //heightmap is flipped relative to the world innit
+        x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
+        y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
         return m_heightmap[(IslandTileCount - y) * IslandTileCount + x];
     };
 

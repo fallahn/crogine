@@ -71,12 +71,12 @@ namespace cro
         /*!
         \brief Implement to handle Events
         */
-        virtual void handleEvent(const Event&) = 0;
+        virtual void handleEvent(const Event&) {};
 
         /*!
         \brief Implement to process time based data
         */
-        virtual void process(float) = 0;
+        virtual void process(float) {};
 
         /*
         \brief Places a message on the system wide MessageBus

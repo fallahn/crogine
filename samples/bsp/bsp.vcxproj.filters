@@ -55,6 +55,9 @@
     <ClCompile Include="src\FoamEffect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\DayNightDirector.cpp">
+      <Filter>Source Files\directors</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -108,6 +111,12 @@
     <ClInclude Include="src\FoamEffect.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\DayNightDirector.hpp">
+      <Filter>Header Files\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CommandIDs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -133,6 +142,12 @@
     </Filter>
     <Filter Include="Source Files\fastnoise">
       <UniqueIdentifier>{151b211a-4727-49ce-a487-27ba8537d4c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\directors">
+      <UniqueIdentifier>{2754ac68-330f-4071-a69a-e3bb5cf418b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\directors">
+      <UniqueIdentifier>{6dc3fa7b-ca4a-4832-8b3c-ab51ed13652a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

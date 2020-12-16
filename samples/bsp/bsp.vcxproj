@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DayNightDirector.cpp" />
     <ClCompile Include="src\fastnoise\FastNoiseSIMD.cpp" />
     <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx2.cpp">
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</WholeProgramOptimization>
@@ -191,6 +192,8 @@
     <ClCompile Include="src\SeaSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\CommandIDs.hpp" />
+    <ClInclude Include="src\DayNightDirector.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\FoamEffect.hpp" />
     <ClInclude Include="src\FpsCameraSystem.hpp" />
