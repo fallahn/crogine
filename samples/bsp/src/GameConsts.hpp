@@ -37,11 +37,11 @@ static constexpr float CameraDistance = 10.f;
 static constexpr std::uint32_t ReflectionMapSize = 512u;
 
 static constexpr float IslandSize = SeaRadius * 2.f;// 98.f; //this saves scaling the depth map in the sea shader.
-static constexpr float TileSize = 1.f;
+static constexpr float TileSize = 0.8f;// 1.f;
 static constexpr std::size_t IslandTileCount = static_cast<std::size_t>(IslandSize / TileSize);
 static constexpr std::size_t IslandBorder = 9; //Tile count
 static constexpr float IslandLevels = 16.f; //snap height vals to this many levels
 static constexpr std::uint32_t IslandFadeSize = 13u;
 static constexpr float EdgeVariation = 3.f;
-static constexpr float IslandHeight = 4.f; //these must be replicated in the sea water shader
+static constexpr float IslandHeight = 4.2f; //these must be replicated in the sea water shader
 static constexpr float IslandWorldHeight = -2.02f;

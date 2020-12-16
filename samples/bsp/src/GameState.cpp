@@ -121,9 +121,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
         {
             if (ImGui::Begin("Buns"))
             {
-                ImGui::Image(m_foamEffect.getTexture(),
-                    { 256.f, 256.f }, { 0.f, 2.f }, { 2.f, 0.f });
-
                 if (ImGui::SliderFloat("Shadow Map Projection", &ShadowmapProjection, 10.f, 200.f))
                 {
                     auto half = ShadowmapProjection / 2.f;
@@ -146,6 +143,12 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
                     m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, LightRotation.x);
                     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, LightRotation.y);
                     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, LightRotation.z);
+                }
+
+                if (ImGui::CollapsingHeader("Waves"))
+                {
+                    ImGui::Image(m_foamEffect.getTexture(),
+                        { 256.f, 256.f }, { 0.f, 2.f }, { 2.f, 0.f });
                 }
 
                 if (ImGui::CollapsingHeader("Height Map"))
@@ -620,8 +623,7 @@ void GameState::createHeightmap()
     myNoise->SetFrequency(0.05f);
     float* noiseSet = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount * 4, 1, 1);
 
-
-    //using a 1D noise push the edges of the mask in/out by +/-1
+    //use a 1D noise push the edges of the mask in/out by +/-1
     std::uint32_t i = 0;
     for (auto x = Offset; x < IslandTileCount - Offset; ++x)
     {
@@ -702,8 +704,12 @@ void GameState::createHeightmap()
     }
     FastNoiseSIMD::FreeNoiseSet(noiseSet);
 
+    //main island noise
     myNoise->SetFrequency(0.01f);
     noiseSet = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount, IslandTileCount, 1);
+
+    myNoise->SetFrequency(0.1f);
+    auto* noiseSet2 = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount, IslandTileCount, 1);
 
     for (auto y = 0u; y < IslandTileCount; ++y)
     {
@@ -721,9 +727,16 @@ void GameState::createHeightmap()
             val += minAmount;
             val /= IslandLevels;
 
-            m_heightmap[y * IslandTileCount + x] *= val;
+            float valMod = noiseSet2[y * IslandTileCount + x];
+            valMod += 1.f;
+            valMod /= 2.f;
+            valMod = 0.8f + valMod * 0.2f;
+
+            m_heightmap[y * IslandTileCount + x] *= val * valMod;
         }
     }
+
+    FastNoiseSIMD::FreeNoiseSet(noiseSet2);
     FastNoiseSIMD::FreeNoiseSet(noiseSet);
 
     //preview texture / height map
@@ -747,6 +760,7 @@ void GameState::createHeightmap()
 void GameState::updateIslandVerts(cro::Mesh::Data& meshData)
 {
     const glm::vec4 WetSand = { 0.44f, 0.29f, 0.11f, 1.f };
+    const glm::vec4 Grass = { 0.184f, 0.29f, 0.03f, 1.f };
 
     struct Vertex final
     {
@@ -776,9 +790,13 @@ void GameState::updateIslandVerts(cro::Mesh::Data& meshData)
 
         if (verts[i].pos.z < /*IslandHeight + IslandWorldHeight*/2.2f)
         {
-            //wet should be wet
+            //sand should be wet
             verts[i].colour = WetSand;
         }
+        /*else if (verts[i].pos.z > 3.2f)
+        {
+            verts[i].colour = Grass;
+        }*/
 
         verts[i].uv = { verts[i].pos.x / IslandSize, verts[i].pos.y / IslandSize };
 

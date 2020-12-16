@@ -40,6 +40,7 @@ static const std::string SeaVertex = R"(
 
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewProjectionMatrix;
+    uniform float u_time;
 
     uniform mat4 u_reflectionMatrix;
     uniform mat4 u_lightViewProjectionMatrix;
@@ -55,6 +56,7 @@ static const std::string SeaVertex = R"(
     void main()
     {
         vec4 position = u_worldMatrix * a_position;
+        position.y += sin(u_time * 0.9) * 0.08;
         gl_Position = u_viewProjectionMatrix * position;
 
         v_tbn[0] = normalize(u_worldMatrix * vec4(a_tangent, 0.0)).xyz;
@@ -157,7 +159,7 @@ static const std::string SeaFragment = R"(
         return 1.0 - (shadow / 9.0);
     }
 
-    const float DepthMultiplier = 4.0; //const IslandHeight
+    const float DepthMultiplier = 4.2; //const IslandHeight
     const float DepthOffset = -2.02; //const IslandWorldHeight
 
     void main()
@@ -177,7 +179,7 @@ static const std::string SeaFragment = R"(
         vec4 refractColour = TEXTURE(u_refractionMap, refractCoords + (normal.rg * 0.005));
         refractColour.rgb *= u_lightColour.rgb * refractColour.a;
 
-        float depth = TEXTURE(u_depthMap, v_texCoord + u_textureOffset).r;
+        float depth = TEXTURE(u_depthMap, v_texCoord + u_textureOffset + vec2(0.005)).r;
 
         refractColour.rgb = mix(WaterColour, refractColour.rgb, depth * DepthMultiplier);
 
@@ -187,14 +189,14 @@ static const std::string SeaFragment = R"(
         blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, u_lightColour.rgb, 1.0);
         blendedColour += mix(reflectColour.rgb, refractColour.rgb, fresnel);      
 
-        depth = clamp((depth * DepthMultiplier) / -DepthOffset, 0.0, 1.0);
+        depth = clamp((depth * DepthMultiplier) / (v_worldPosition.y - DepthOffset), 0.0, 1.0);
         float falloff = 1.0 - pow(depth, 4.0);
         //blendedColour = mix(vec3(1.0, 0.0, 0.0), blendedColour, falloff);
 
         blendedColour = mix(TEXTURE(u_foamMap, coord * 2.0).rgb + blendedColour, blendedColour, falloff);
 
         falloff = 1.0 - pow(depth, 10.0);
-        blendedColour = mix(vec3(1.0, 1.0, 1.0), blendedColour, falloff);
+        blendedColour = mix(vec3(1.0, 1.0, 1.0), blendedColour, 0.2 + (falloff * 0.8));
 
         //vec3 skyColour = TEXTURE_CUBE(u_skybox, reflect(eyeDirection, normal)).rgb * 0.25;
         //blendedColour += mix(skyColour, vec3(0.0), fresnel);
