@@ -64,25 +64,33 @@ namespace
 
     struct SkyColour final
     {
-        SkyColour(float i, float v) : interpPosition(i), value(v) {}
+        SkyColour(float i, glm::vec4 v) : interpPosition(i), value(v) {}
         float interpPosition = 0.f;
-        float value = 0.f;
+        glm::vec4 value = glm::vec4(1.f);
     };
 
-    //these are in HSV space
+    //these are in HSV space - note S and V are normalised
     std::array SkyColours =
     {
-        SkyColour(0.f, 0.f),
-        SkyColour(0.05f, 0.25f),
-        SkyColour(0.08f, 1.f),
-        SkyColour(0.42f, 1.f),
-        SkyColour(0.45f, 0.25f),
-        SkyColour(0.5f, 0.f),
-        SkyColour(0.55f, 0.25f),
-        SkyColour(0.75f, 0.4f),
-        SkyColour(0.95f, 0.25f),
-        SkyColour(1.f, 0.f) //repeat first val for wrapping
+        SkyColour(0.f, glm::vec4(217.f, 0.91f, 0.18f, 1.f)), //
+        //SkyColour(0.05f, glm::vec4(415.f, 1.f, 0.78f, 1.f)), //
+        SkyColour(0.08f, glm::vec4(217.f, 0.f, 1.f, 1.f)), //
+        SkyColour(0.42f, glm::vec4(217.f, 0.f, 1.f, 1.f)), //
+        //SkyColour(0.45f, glm::vec4(23.f, 1.f, 1.f, 1.f)),
+        SkyColour(0.55f, glm::vec4(217.f, 0.91f, 0.18f, 1.f)), //
+        SkyColour(0.65f, glm::vec4(217.f, 0.78f, 0.4f, 1.f)), // blue
+        SkyColour(0.75f, glm::vec4(234.f, 0.81f, 0.37f, 1.f)), // lightblur
+        SkyColour(0.85f, glm::vec4(217.f, 0.78f, 0.4f, 1.f)), //blue
+        SkyColour(1.f, glm::vec4(217.f, 0.91f, 0.18f, 1.f)) //repeat first val for wrapping
     };
+
+    glm::vec4 lerp(glm::vec4 a, glm::vec4 b, float t)
+    {
+        return { a.x * (1.f - t) + b.x * t,
+                a.y * (1.f - t) + b.y * t,
+                a.z * (1.f - t) + b.z * t,
+                1.f };
+    }
 
     glm::vec4 HSVtoRGB(glm::vec4 input)
     {
@@ -182,16 +190,19 @@ void DayNightDirector::process(float dt)
     }
 
     //interpolate from colour range - do this before incrementing time
-    auto current = SkyColours[m_currentSkyIndex];
-    auto next = SkyColours[m_nextSkyIndex];
+    const auto& current = SkyColours[m_currentSkyIndex];
+    const auto& next = SkyColours[m_nextSkyIndex];
     
     const float position = (m_timeOfDay - current.interpPosition);
     const float span = (next.interpPosition - current.interpPosition);
     const float interpAmount = std::min(1.f, std::max(0.f, position / span));
 
     //TODO use proper colour interpolation
-    float val = std::min(1.f, std::max(0.f, current.value + ((next.value - current.value) * interpAmount)));
-    getScene().getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour(val, val, val));
+    //float val = std::min(1.f, std::max(0.f, current.value + ((next.value - current.value) * interpAmount)));
+
+    auto val = lerp(current.value, next.value, interpAmount);
+    auto col = HSVtoRGB(val);
+    getScene().getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour(col));
     DPRINT("Colour", std::to_string(m_nextSkyIndex) + ", " + std::to_string(span));
     
 
@@ -231,7 +242,7 @@ void DayNightDirector::process(float dt)
         {
             //switch to day
             target.startPosition = { 0.f, 0.f, -SeaRadius };
-            target.startRotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), cro::Util::Const::PI - 0.001f, cro::Transform::X_AXIS);
+            target.startRotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), cro::Util::Const::PI + 0.001f, cro::Transform::X_AXIS);
 
             target.endPosition = { 0.f, 0.f, SeaRadius };
             target.endRotation = glm::quat(1.f, 0.f, 0.f, 0.f);
