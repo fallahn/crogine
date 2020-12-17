@@ -412,11 +412,13 @@ void GameState::createDayCycle()
     auto rootNode = m_gameScene.createEntity();
     rootNode.addComponent<cro::Transform>();
     rootNode.addComponent<cro::CommandTarget>().ID = CommandID::Game::SunMoonNode;
+    auto& children = rootNode.addComponent<ChildNode>();
 
     //moon
     auto entity = m_gameScene.createEntity();
     //we want to always be beyond the 'horizon', but we're fixed relative to the centre of the island
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -SunOffset });
+    children.moonNode = entity;
 
     cro::ModelDefinition definition;
     definition.loadFromFile("assets/models/moon.cmt", m_resources);
@@ -426,6 +428,7 @@ void GameState::createDayCycle()
     //sun
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, SunOffset });
+    children.sunNode = entity;
 
     definition.loadFromFile("assets/models/sun.cmt", m_resources);
     definition.createModel(entity, m_resources);

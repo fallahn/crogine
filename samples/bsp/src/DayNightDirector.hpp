@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/Director.hpp>
+#include <crogine/ecs/Entity.hpp>
 #include <crogine/core/ConsoleClient.hpp>
 
 #include <crogine/detail/glm/vec3.hpp>
@@ -45,6 +46,12 @@ struct TargetTransform final
 
     bool active = false;
     float interpolation = 0.f;
+};
+
+struct ChildNode final
+{
+    cro::Entity sunNode;
+    cro::Entity moonNode;
 };
 
 class DayNightDirector final : public cro::Director, public cro::ConsoleClient

@@ -82,8 +82,6 @@ static const std::string SeaFragment = R"(
     uniform sampler2D u_shadowMap;
     uniform sampler2D u_foamMap;
 
-    //uniform samplerCube u_skybox;
-
     uniform vec3 u_lightDirection;
     uniform vec4 u_lightColour;
 
@@ -106,6 +104,7 @@ static const std::string SeaFragment = R"(
     //const vec3 WaterColour = vec3(0.137, 0.267, 0.53);
     const float DepthMultiplier = 4.2; //const IslandHeight
     const float DepthOffset = -2.02; //const IslandWorldHeight
+    const float Distortion = 0.01;
 
     vec3 diffuseColour = WaterColour;
     vec3 eyeDirection = vec3(0.0);
@@ -162,7 +161,6 @@ static const std::string SeaFragment = R"(
         return 1.0 - (shadow / 9.0);
     }
 
-    const float Distortion = 0.01;
     void main()
     {
         eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
@@ -194,7 +192,7 @@ static const std::string SeaFragment = R"(
    
 
         //foam
-        float falloff = 1.0 - pow(depth, 4.0);
+        float falloff = 1.0 - pow(depth, 6.0);
         blendedColour = mix(TEXTURE(u_foamMap, coord * 2.0).rgb + blendedColour, blendedColour, falloff);
 
         falloff = 1.0 - pow(depth, 10.0);

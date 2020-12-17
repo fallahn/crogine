@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/core/Console.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Model.hpp>
 
 #include <crogine/ecs/systems/CommandSystem.hpp>
 
@@ -45,22 +46,20 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Matrix.hpp>
 
 
 namespace
 {
-    //sky colours
-    /*
-    0.f    Dark Blue
-    0.05f  Orange/Yellow (sunrise)
-    0.08f  White (full day)
-    0.42f  White (full day)
-    0.45f  Orange/Red (sunset)
-    0.5f   Dark Blue
-    0.55f  Blue
-    0.75f  LightBlue (midnight)
-    0.95f  Blue
-    */
+    const glm::vec4 SunLight = glm::vec4(57.f, 0.19f, 1.f, 1.f);
+    const glm::vec4 SunDark = glm::vec4(28.f, 0.95f, 1.f, 1.f);
+
+    //sky colours (normalised HSV)
+    const glm::vec4 DarkBlue = glm::vec4(217.f, 0.61f, 0.55f, 1.f);
+    const glm::vec4 White = glm::vec4(340.f, 0.f, 1.f, 1.f);
+    const glm::vec4 Orange = glm::vec4(388.f, 0.32f, 1.f, 1.f);
+    const glm::vec4 Blue = glm::vec4(217.f, 0.58f, 0.6f, 1.f);
+    const glm::vec4 LightBlue = glm::vec4(224.f, 0.61f, 0.8f, 1.f);
 
     struct SkyColour final
     {
@@ -72,16 +71,15 @@ namespace
     //these are in HSV space - note S and V are normalised
     std::array SkyColours =
     {
-        SkyColour(0.f, glm::vec4(217.f, 0.91f, 0.18f, 1.f)), //
-        //SkyColour(0.05f, glm::vec4(415.f, 1.f, 0.78f, 1.f)), //
-        SkyColour(0.08f, glm::vec4(217.f, 0.f, 1.f, 1.f)), //
-        SkyColour(0.42f, glm::vec4(217.f, 0.f, 1.f, 1.f)), //
-        //SkyColour(0.45f, glm::vec4(23.f, 1.f, 1.f, 1.f)),
-        SkyColour(0.55f, glm::vec4(217.f, 0.91f, 0.18f, 1.f)), //
-        SkyColour(0.65f, glm::vec4(217.f, 0.78f, 0.4f, 1.f)), // blue
-        SkyColour(0.75f, glm::vec4(234.f, 0.81f, 0.37f, 1.f)), // lightblur
-        SkyColour(0.85f, glm::vec4(217.f, 0.78f, 0.4f, 1.f)), //blue
-        SkyColour(1.f, glm::vec4(217.f, 0.91f, 0.18f, 1.f)) //repeat first val for wrapping
+        SkyColour(0.f, DarkBlue), //6am
+        SkyColour(0.08f, White), //day tie
+        SkyColour(0.47f, White),
+        SkyColour(0.49f, Orange), //sunset
+        SkyColour(0.55f, DarkBlue),
+        SkyColour(0.65f, Blue),
+        SkyColour(0.75f, LightBlue), //midnight
+        SkyColour(0.85f, Blue),
+        SkyColour(1.f, DarkBlue) //repeat first val for wrapping
     };
 
     glm::vec4 lerp(glm::vec4 a, glm::vec4 b, float t)
@@ -296,6 +294,13 @@ void DayNightDirector::process(float dt)
         auto& tx = e.getComponent<cro::Transform>();
         tx.setRotation(-cro::Transform::X_AXIS, cro::Util::Const::TAU * m_timeOfDay);
         tx.rotate(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 8.f);
+
+        //set the sun geometry colout
+        auto& children = e.getComponent<ChildNode>();
+        auto forwardVec = cro::Util::Matrix::getForwardVector(children.sunNode.getComponent<cro::Transform>().getWorldTransform());
+        float mix = std::min(1.f, std::max(0.f,(glm::dot(-forwardVec, cro::Transform::Y_AXIS))));
+        auto sunColour = HSVtoRGB(lerp(SunDark, SunLight, mix));
+        children.sunNode.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", sunColour);
     };
     sendCommand(cmd);
 }
