@@ -56,7 +56,9 @@ namespace Sv
         cro::Clock m_serverTime; //used in timestamping
 
         cro::Scene m_scene;
-        std::array<cro::Entity, ConstVal::MaxClients> m_playerEntities;
+        //up to 4 entities per connection - although in practice
+        //we should never have more than one on any except the first
+        std::array<std::array<cro::Entity, ConstVal::MaxClients>, ConstVal::MaxClients> m_playerEntities;
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);

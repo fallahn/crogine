@@ -82,14 +82,13 @@ namespace
     };
 }
 
-GameState::GameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, std::size_t localPlayers)
+GameState::GameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_foamEffect        (m_resources),
-    m_heightmap         (IslandTileCount * IslandTileCount, 1.f),
-    m_localPlayerCount  (localPlayers)
+    m_heightmap         (IslandTileCount * IslandTileCount, 1.f)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -133,20 +132,22 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     //debug output
     registerWindow([&]()
         {
-            if (playerEntity.isValid())
+            ImGui::SetNextWindowSize({ 300.f, 320.f });
+            if (ImGui::Begin("Info"))
             {
-                ImGui::SetNextWindowSize({ 300.f, 320.f });
-                ImGui::Begin("Info");
 
-                ImGui::Text("Player ID: %d", m_sharedData.clientConnection.playerID);
+                if (playerEntity.isValid())
+                {
+                    ImGui::Text("Player ID: %d", m_sharedData.clientConnection.playerID);
 
-                ImGui::NewLine();
-                ImGui::Separator();
-                ImGui::NewLine();
+                    ImGui::NewLine();
+                    ImGui::Separator();
+                    ImGui::NewLine();
+                }
+
                 ImGui::Text("Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
-
-                ImGui::End();
             }
+            ImGui::End();
         });
 }
 
@@ -503,6 +504,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             auto root = createActor();
             
             root.addComponent<Player>().id = info.playerID;
+            root.getComponent<Player>().connectionID = info.connectionID;
             root.getComponent<Player>().spawnPosition = info.spawnPosition;
 
             m_inputParsers.insert(std::make_pair(info.playerID, InputParser(m_sharedData.clientConnection.netClient)));

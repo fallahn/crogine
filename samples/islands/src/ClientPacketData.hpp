@@ -35,6 +35,7 @@ struct InputUpdate final
 {
     Input input;
     std::uint8_t playerID = 4;
+    std::uint8_t connectionID = 4;
 };
 
 //client is requesting a command (see CommandPacket enum)

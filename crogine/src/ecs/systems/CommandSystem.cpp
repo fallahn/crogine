@@ -35,7 +35,7 @@ using namespace cro;
 
 namespace
 {
-    const std::size_t MaxCommands = 128; //this can be made larger if necessary, is only used to prevent continual reallocation of heap memory
+    const std::size_t MaxCommands = 256; //this can be made larger if necessary, is only used to prevent continual reallocation of heap memory
 }
 
 CommandSystem::CommandSystem(MessageBus& mb)

@@ -55,7 +55,7 @@ struct SharedStateData;
 class GameState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
-    GameState(cro::StateStack&, cro::State::Context, SharedStateData&, std::size_t localPlayers = 1);
+    GameState(cro::StateStack&, cro::State::Context, SharedStateData&);
     ~GameState() = default;
 
     cro::StateID getStateID() const override { return States::Game; }
@@ -80,7 +80,6 @@ private:
 
     std::vector<float> m_heightmap;
 
-    std::size_t m_localPlayerCount;
     std::unordered_map<std::uint8_t, InputParser> m_inputParsers;
     std::vector<cro::Entity> m_cameras;
 

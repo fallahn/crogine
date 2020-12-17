@@ -48,6 +48,7 @@ struct Player final
     std::size_t lastUpdatedInput = HistorySize - 1; //index of the last parsed input
 
     std::uint8_t id = 4; //this should be the same as the ActorID for this entity
+    std::uint8_t connectionID = 4;
     glm::vec3 spawnPosition = glm::vec3(0.f);
 
     bool flyMode = true;

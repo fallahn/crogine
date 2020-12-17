@@ -161,6 +161,7 @@ void InputParser::update()
         InputUpdate update;
         update.input = input;
         update.playerID = player.id;
+        update.connectionID = player.connectionID;
 
         m_netClient.sendPacket(PacketID::InputUpdate, update, cro::NetFlag::Unreliable);
     }

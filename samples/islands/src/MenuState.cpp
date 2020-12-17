@@ -360,6 +360,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                 //switch to lobby view
+                //TODO switch to local local if that's what was requested
                 m_currentMenu = Lobby;
 
                 cro::Command cmd;

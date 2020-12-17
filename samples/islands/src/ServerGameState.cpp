@@ -73,10 +73,16 @@ void GameState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<ConnectionEvent>();
         if (data.type == ConnectionEvent::Disconnected)
         {
-            auto entityID = m_playerEntities[data.playerID].getIndex();
-            m_scene.destroyEntity(m_playerEntities[data.playerID]);
+            for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+            {
+                if (m_playerEntities[data.playerID][i].isValid())
+                {
+                    auto entityID = m_playerEntities[data.playerID][i].getIndex();
+                    m_scene.destroyEntity(m_playerEntities[data.playerID][i]);
 
-            m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+            }
         }
     }
 
@@ -111,22 +117,28 @@ void GameState::netBroadcast()
     //send reconciliation for each player
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
-        if (m_sharedData.clients[i].connected
-            && m_playerEntities[i].isValid())
+        if (m_sharedData.clients[i].connected)
         {
-            const auto& player = m_playerEntities[i].getComponent<Player>();
+            for (auto j = 0u; j < m_sharedData.clients[i].playerCount; ++j)
+            {
+                if (m_playerEntities[i][j].isValid())
+                {
+                    const auto& player = m_playerEntities[i][j].getComponent<Player>();
 
-            PlayerUpdate update;
-            update.position = m_playerEntities[i].getComponent<cro::Transform>().getPosition();
-            update.rotation = Util::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotation());
-            update.timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
-            update.playerID = player.id;
+                    PlayerUpdate update;
+                    update.position = m_playerEntities[i][j].getComponent<cro::Transform>().getPosition();
+                    update.rotation = Util::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
+                    update.timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
+                    update.playerID = player.id;
 
-            m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::PlayerUpdate, update, cro::NetFlag::Unreliable);
+                    m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::PlayerUpdate, update, cro::NetFlag::Unreliable);
+                }
+            }
         }
     }
 
     //broadcast other actor transforms
+    //TODO - remind me how we're filtering out reconcilable entities from this?
     auto timestamp = m_serverTime.elapsed().asMilliseconds();
     const auto& actors = m_scene.getSystem<ActorSystem>().getEntities1();
     for (auto e : actors)
@@ -159,14 +171,18 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
         {
             //TODO name/skin info is sent on lobby join
 
-            PlayerInfo info;
-            info.playerID = i;
-            info.spawnPosition = m_playerEntities[i].getComponent<cro::Transform>().getPosition();
-            info.rotation = Util::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotation());
-            info.serverID = m_playerEntities[i].getIndex();
-            info.timestamp = m_serverTime.elapsed().asMilliseconds();
+            for (auto j = 0u; j < m_sharedData.clients[i].playerCount; ++j)
+            {
+                PlayerInfo info;
+                info.playerID = j;
+                info.spawnPosition = m_playerEntities[i][j].getComponent<cro::Transform>().getPosition();
+                info.rotation = Util::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
+                info.serverID = m_playerEntities[i][j].getIndex();
+                info.timestamp = m_serverTime.elapsed().asMilliseconds();
+                info.connectionID = i;
 
-            m_sharedData.host.sendPacket(m_sharedData.clients[playerID].peer, PacketID::PlayerSpawn, info, cro::NetFlag::Reliable);
+                m_sharedData.host.sendPacket(m_sharedData.clients[playerID].peer, PacketID::PlayerSpawn, info, cro::NetFlag::Reliable);
+            }
         }
     }
 
@@ -180,8 +196,8 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
 void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
 {
     auto input = packet.as<InputUpdate>();
-    CRO_ASSERT(m_playerEntities[input.playerID].isValid(), "Not a valid player!");
-    auto& player = m_playerEntities[input.playerID].getComponent<Player>();
+    CRO_ASSERT(m_playerEntities[input.connectionID][input.playerID].isValid(), "Not a valid player!");
+    auto& player = m_playerEntities[input.connectionID][input.playerID].getComponent<Player>();
 
     //only add new inputs
     auto lastIndex = (player.nextFreeInput + (Player::HistorySize - 1) ) % Player::HistorySize;
@@ -196,30 +212,31 @@ void GameState::doServerCommand(const cro::NetEvent& evt)
 {
     //TODO validate this sender has permission to request commands
     //by checking evt peer against client data
+    //TODO packet data needs to include connection ID
 
-    auto data = evt.packet.as<ServerCommand>();
-    if (data.target < m_sharedData.clients.size()
-        && m_sharedData.clients[data.target].connected)
-    {
-        switch (data.commandID)
-        {
-        default: break;
-        case CommandPacket::SetModeFly:
-            if (m_playerEntities[data.target].isValid())
-            {
-                m_playerEntities[data.target].getComponent<Player>().flyMode = true;
-                m_sharedData.host.sendPacket(m_sharedData.clients[data.target].peer, PacketID::ServerCommand, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-            }
-            break;
-        case CommandPacket::SetModeWalk:
-            if (m_playerEntities[data.target].isValid())
-            {
-                m_playerEntities[data.target].getComponent<Player>().flyMode = false;
-                m_sharedData.host.sendPacket(m_sharedData.clients[data.target].peer, PacketID::ServerCommand, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-            }
-            break;
-        }
-    }
+    //auto data = evt.packet.as<ServerCommand>();
+    //if (data.target < m_sharedData.clients.size()
+    //    && m_sharedData.clients[data.target].connected)
+    //{
+    //    switch (data.commandID)
+    //    {
+    //    default: break;
+    //    case CommandPacket::SetModeFly:
+    //        if (m_playerEntities[data.target].isValid())
+    //        {
+    //            m_playerEntities[data.target].getComponent<Player>().flyMode = true;
+    //            m_sharedData.host.sendPacket(m_sharedData.clients[data.target].peer, PacketID::ServerCommand, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    //        }
+    //        break;
+    //    case CommandPacket::SetModeWalk:
+    //        if (m_playerEntities[data.target].isValid())
+    //        {
+    //            m_playerEntities[data.target].getComponent<Player>().flyMode = false;
+    //            m_sharedData.host.sendPacket(m_sharedData.clients[data.target].peer, PacketID::ServerCommand, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    //        }
+    //        break;
+    //    }
+    //}
 
 }
 
@@ -235,18 +252,25 @@ void GameState::initScene()
 
 void GameState::buildWorld()
 {
+    std::size_t playerCount = 0;
+
+    //create a network game as usual
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
         if (m_sharedData.clients[i].connected)
         {
-            //insert a player in this slot
-            m_playerEntities[i] = m_scene.createEntity();
-            m_playerEntities[i].addComponent<cro::Transform>().setPosition(PlayerSpawns[i]);
-            m_playerEntities[i].addComponent<Player>().id = i;
-            m_playerEntities[i].getComponent<Player>().spawnPosition = PlayerSpawns[i];
+            //insert requested players in this slot
+            for (auto j = 0u; j < m_sharedData.clients[i].playerCount && playerCount < ConstVal::MaxClients; ++j)
+            {
+                m_playerEntities[i][j] = m_scene.createEntity();
+                m_playerEntities[i][j].addComponent<cro::Transform>().setPosition(PlayerSpawns[playerCount]);
+                m_playerEntities[i][j].addComponent<Player>().id = j;
+                m_playerEntities[i][j].getComponent<Player>().spawnPosition = PlayerSpawns[playerCount++];
+                m_playerEntities[i][j].getComponent<Player>().connectionID = i;
 
-            m_playerEntities[i].addComponent<Actor>().id = i;
-            m_playerEntities[i].getComponent<Actor>().serverEntityId = m_playerEntities[i].getIndex();
+                m_playerEntities[i][j].addComponent<Actor>().id = j;
+                m_playerEntities[i][j].getComponent<Actor>().serverEntityId = m_playerEntities[i][j].getIndex();
+            }
         }
     }
 }

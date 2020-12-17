@@ -43,6 +43,7 @@ namespace Sv
 {
     struct ClientConnection final
     {
+        std::size_t playerCount = 4; //< number of players to create in a local game
         bool ready = false; //< player is ready to recieve game data, not lobby readiness (see GameState)
         bool connected = false;
         cro::NetPeer peer;

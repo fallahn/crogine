@@ -50,6 +50,7 @@ struct PlayerInfo final
     std::uint32_t serverID = 0;
     std::int32_t timestamp = 0;
     std::uint8_t playerID = ConstVal::MaxClients;
+    std::uint8_t connectionID = ConstVal::MaxClients;
 };
 
 struct PlayerUpdate final
