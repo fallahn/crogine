@@ -64,7 +64,7 @@ ErrorState::ErrorState(cro::StateStack& ss, cro::State::Context ctx, SharedState
                     sd.serverInstance.stop();
                     sd.clientConnection.connected = false;
                     sd.clientConnection.netClient.disconnect();
-                    sd.clientConnection.playerID = 4;
+                    sd.clientConnection.connectionID = 4;
                     sd.clientConnection.ready = false;
 
                     requestStackClear();

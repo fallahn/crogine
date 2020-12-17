@@ -573,8 +573,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     else
                     {
                         //toggle readyness
-                        std::uint8_t ready = m_readyState[m_sharedData.clientConnection.playerID] ? 0 : 1;
-                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.playerID << 8 | ready),
+                        std::uint8_t ready = m_readyState[m_sharedData.clientConnection.connectionID] ? 0 : 1;
+                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
                             cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     }
                 }

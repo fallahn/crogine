@@ -137,7 +137,7 @@ namespace
     }
 
     constexpr std::uint32_t DayMinutes = 24 * 60;
-    constexpr float RadsPerMinute = cro::Util::Const::TAU;// / 6.f; //6 minutes per cycle
+    constexpr float RadsPerMinute = cro::Util::Const::TAU / 6.f; //6 minutes per cycle
     constexpr float RadsPerSecond = RadsPerMinute / 60.f;
 
     constexpr float CorrectionSpeed = 50.f;

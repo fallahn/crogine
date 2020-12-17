@@ -51,7 +51,7 @@ struct SharedStateData final
         cro::NetClient netClient;
         bool connected = false;
         bool ready = false;
-        std::uint8_t playerID = 4;
+        std::uint8_t connectionID = 4;
     }clientConnection;
 
     //data of all players rx'd from server

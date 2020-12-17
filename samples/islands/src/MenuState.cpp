@@ -349,8 +349,8 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
         case PacketID::ConnectionAccepted:
             {
                 //update local player data
-                m_sharedData.clientConnection.playerID = evt.packet.as<std::uint8_t>();
-                m_sharedData.playerData[m_sharedData.clientConnection.playerID] = m_sharedData.localPlayer;
+                m_sharedData.clientConnection.connectionID = evt.packet.as<std::uint8_t>();
+                m_sharedData.playerData[m_sharedData.clientConnection.connectionID] = m_sharedData.localPlayer;
 
                 //send player details to server (name, skin)
                 std::uint8_t size = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, m_sharedData.localPlayer.name.size() * sizeof(std::uint32_t)));
@@ -376,7 +376,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 {
                     //auto ready up if host
                     m_sharedData.clientConnection.netClient.sendPacket(
-                        PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.playerID << 8 | std::uint8_t(1)),
+                        PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
                         cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
 

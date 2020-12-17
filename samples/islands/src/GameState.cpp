@@ -138,7 +138,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 if (playerEntity.isValid())
                 {
-                    ImGui::Text("Player ID: %d", m_sharedData.clientConnection.playerID);
+                    ImGui::Text("Player ID: %d", m_sharedData.clientConnection.connectionID);
 
                     ImGui::NewLine();
                     ImGui::Separator();
@@ -245,7 +245,7 @@ bool GameState::simulate(float dt)
         && m_sceneRequestClock.elapsed().asMilliseconds() > 1000)
     {
         m_sceneRequestClock.restart();
-        m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.playerID, cro::NetFlag::Unreliable);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.connectionID, cro::NetFlag::Unreliable);
     }
 
 
@@ -495,7 +495,7 @@ void GameState::spawnPlayer(PlayerInfo info)
     };
 
 
-    if (info.playerID == m_sharedData.clientConnection.playerID)
+    if (info.connectionID == m_sharedData.clientConnection.connectionID)
     {
         if (m_inputParsers.count(info.playerID) == 0)
         {
@@ -509,9 +509,6 @@ void GameState::spawnPlayer(PlayerInfo info)
 
             m_inputParsers.insert(std::make_pair(info.playerID, InputParser(m_sharedData.clientConnection.netClient)));
             m_inputParsers.at(info.playerID).setEntity(root);
-
-
-
 
 
             m_cameras.emplace_back();
@@ -556,11 +553,6 @@ void GameState::spawnPlayer(PlayerInfo info)
             };
 
 
-
-
-
-
-
             root.getComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());
             root.getComponent<cro::Transform>().addChild(waterEnt.getComponent<cro::Transform>());
             root.getComponent<cro::Transform>().addChild(playerEnt.getComponent<cro::Transform>());
@@ -588,6 +580,11 @@ void GameState::spawnPlayer(PlayerInfo info)
         //spawn an avatar
         //TODO check this avatar doesn't already exist
         auto entity = createActor();
+        md.createModel(entity, m_resources);
+
+        auto rotation = entity.getComponent<cro::Transform>().getRotation();
+        entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
+        entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
     }
 }
 
