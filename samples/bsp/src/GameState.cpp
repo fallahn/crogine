@@ -305,7 +305,7 @@ void GameState::loadAssets()
 
     //m_gameScene.setCubemap(m_environmentMap);
     m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
-    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI * 0.9f);
+    //m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI * 0.9f);
     //m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_skybox", m_gameScene.getCubemap());
 }
 
