@@ -64,6 +64,7 @@ private:
 
     float m_timeOfDay; //normalised.
     float m_targetTime; //so we can interpolate time changes from the server without jumping too much
+    bool m_correctTime; //time target was changed so we're expecting correction
     float m_cycleSpeed;
 
     std::size_t m_currentSkyIndex;

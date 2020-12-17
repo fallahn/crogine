@@ -86,21 +86,22 @@ namespace
 
     glm::vec4 lerp(glm::vec4 a, glm::vec4 b, float t)
     {
-        return { a.x * (1.f - t) + b.x * t,
-                a.y * (1.f - t) + b.y * t,
-                a.z * (1.f - t) + b.z * t,
+        return { a.r * (1.f - t) + b.r * t,
+                a.g * (1.f - t) + b.g * t,
+                a.b * (1.f - t) + b.b * t,
                 1.f };
     }
 
+    //note that this expect the S and V values to be normalised.
     glm::vec4 HSVtoRGB(glm::vec4 input)
     {
-        if (input.y <= 0)
+        if (input.g <= 0)
         {
             //no saturation, ie black and white
-            return { input.z, input.z, input.z, 1.f };
+            return { input.b, input.b, input.b, 1.f };
         }
 
-        float hh = input.x;
+        float hh = input.r;
         if (hh >= 360.f)
         {
             hh -= 360.f;
@@ -114,25 +115,25 @@ namespace
         int i = static_cast<int>(hh);
         float ff = hh - i;
 
-        float p = input.z * (1.f - input.y);
-        float q = input.z * (1.f - (input.y * ff));
-        float t = input.z * (1.f - (input.y * (1.f - ff)));
+        float p = input.b * (1.f - input.g);
+        float q = input.b * (1.f - (input.g * ff));
+        float t = input.b * (1.f - (input.g * (1.f - ff)));
 
         switch (i)
         {
         case 0:
-            return { input.z, t, p , 1.f };
+            return { input.b, t, p , 1.f };
         case 1:
-            return { q, input.z, p, 1.f };
+            return { q, input.b, p, 1.f };
         case 2:
-            return { p, input.z, t, 1.f };
+            return { p, input.b, t, 1.f };
         case 3:
-            return { p, q, input.z, 1.f };
+            return { p, q, input.b, 1.f };
         case 4:
-            return { t, p , input.z, 1.f };
+            return { t, p , input.b, 1.f };
         case 5:
         default:
-            return { input.z, p, q, 1.f };
+            return { input.b, p, q, 1.f };
         }
         return {};
     }
@@ -140,11 +141,14 @@ namespace
     constexpr std::uint32_t DayMinutes = 24 * 60;
     constexpr float RadsPerMinute = cro::Util::Const::TAU;// / 6.f; //6 minutes per cycle
     constexpr float RadsPerSecond = RadsPerMinute / 60.f;
+
+    constexpr float CorrectionSpeed = 50.f;
 }
 
 DayNightDirector::DayNightDirector()
     : m_timeOfDay       (0.f),
     m_targetTime        (0.f),
+    m_correctTime       (false),
     m_cycleSpeed        (1.f),
     m_currentSkyIndex   (0),
     m_nextSkyIndex      (1)
@@ -197,23 +201,27 @@ void DayNightDirector::process(float dt)
     const float span = (next.interpPosition - current.interpPosition);
     const float interpAmount = std::min(1.f, std::max(0.f, position / span));
 
-    //TODO use proper colour interpolation
-    //float val = std::min(1.f, std::max(0.f, current.value + ((next.value - current.value) * interpAmount)));
-
     auto val = lerp(current.value, next.value, interpAmount);
     auto col = HSVtoRGB(val);
     getScene().getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour(col));
-    DPRINT("Colour", std::to_string(m_nextSkyIndex) + ", " + std::to_string(span));
-    
 
 
     //used to check if we switched from day/night
     bool dayTime = (m_timeOfDay < 0.5f);
 
     //now increment the time
-    //TODO should probably slow down if we're ahead and the server wants us to move back in time?
-    //that is, not go backwards, just let the expected time catch up
-    float multiplier = m_timeOfDay < m_targetTime ? (10.f * (m_targetTime - m_timeOfDay)) : 1.f;
+    float multiplier = 1.f;
+    if (m_correctTime)
+    {
+        float diff = m_targetTime - m_timeOfDay;
+
+        multiplier = diff * CorrectionSpeed;
+
+        if (std::abs(diff) < 0.01f)
+        {
+            m_correctTime = false;
+        }
+    }
     multiplier *= m_cycleSpeed;
 
     m_timeOfDay = std::fmod(m_timeOfDay + ((RadsPerSecond * dt * multiplier) / cro::Util::Const::TAU), 1.f);
@@ -294,8 +302,14 @@ void DayNightDirector::process(float dt)
 
 void DayNightDirector::setTimeOfDay(std::uint32_t minutes)
 {
+    //entering 0 you would expect midnight but in our case
+    //you get 6am so we need to add 18 hours
+    const std::uint32_t offset = 18 * 60;
+    minutes += offset;
+
     minutes = minutes % DayMinutes;
     m_targetTime = static_cast<float>(minutes) / DayMinutes;
+    m_correctTime = true;
 }
 
 void DayNightDirector::setCycleSpeed(float speed)
