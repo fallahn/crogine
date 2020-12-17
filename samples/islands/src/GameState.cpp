@@ -37,6 +37,7 @@ source distribution.
 #include "ClientPacketData.hpp"
 #include "GameConsts.hpp"
 #include "SeaSystem.hpp"
+#include "DayNightDirector.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -49,6 +50,7 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/graphics/CircleMeshBuilder.hpp>
@@ -85,6 +87,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData        (sd),
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
+    m_foamEffect        (m_resources),
     m_heightmap         (IslandTileCount * IslandTileCount, 1.f),
     m_localPlayerCount  (localPlayers)
 {
@@ -250,6 +253,10 @@ bool GameState::simulate(float dt)
         parser.update();
     }
 
+    static float timeAccum = 0.f;
+    timeAccum += dt;
+    m_gameScene.setWaterLevel(std::sin(timeAccum * 0.9) * 0.08);
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -257,6 +264,8 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
+    m_foamEffect.update();
+
     if (m_cameras.empty())
     {
         return;
@@ -303,8 +312,11 @@ void GameState::addSystems()
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<SeaSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+
+    m_gameScene.addDirector<DayNightDirector>();
 }
 
 void GameState::loadAssets()
@@ -317,18 +329,57 @@ void GameState::loadAssets()
 
     m_materialIDs[MaterialID::Sea] = m_gameScene.getSystem<SeaSystem>().loadResources(m_resources);
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_depthMap", m_islandTexture);
-    //m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_foamMap", m_foamEffect.getTexture());
+    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_foamMap", m_foamEffect.getTexture());
 
 }
 
 void GameState::createScene()
 {
-
+    createDayCycle();
 }
 
 void GameState::createUI()
 {
 
+}
+
+void GameState::createDayCycle()
+{
+    auto rootNode = m_gameScene.createEntity();
+    rootNode.addComponent<cro::Transform>();
+    rootNode.addComponent<cro::CommandTarget>().ID = Client::CommandID::SunMoonNode;
+    auto& children = rootNode.addComponent<ChildNode>();
+
+    //moon
+    auto entity = m_gameScene.createEntity();
+    //we want to always be beyond the 'horizon', but we're fixed relative to the centre of the island
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -SunOffset });
+    children.moonNode = entity;
+
+    cro::ModelDefinition definition;
+    definition.loadFromFile("assets/models/moon.cmt", m_resources);
+    definition.createModel(entity, m_resources);
+    entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //sun
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, SunOffset });
+    children.sunNode = entity;
+
+    definition.loadFromFile("assets/models/sun.cmt", m_resources);
+    definition.createModel(entity, m_resources);
+    entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //add the shadow caster node to the day night cycle
+    auto sunNode = m_gameScene.getSunlight();
+    sunNode.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, SeaRadius });
+    sunNode.getComponent<cro::Transform>().setRotation(glm::mat4(1.f)); //set this to none (not sure where its initial val is coming from...)
+    sunNode.getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-IslandSize / 2.f, IslandSize / 2.f, -IslandSize / 2.f, IslandSize / 2.f, 0.1f, IslandSize));
+    sunNode.addComponent<TargetTransform>();
+    rootNode.getComponent<cro::Transform>().addChild(sunNode.getComponent<cro::Transform>());
 }
 
 void GameState::handlePacket(const cro::NetEvent::Packet& packet)

@@ -29,11 +29,37 @@ source distribution.
 
 #pragma once
 
-namespace Client::CommandID
+#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/Shader.hpp>
+
+#include <crogine/ecs/components/Model.hpp>
+
+#include <crogine/core/Clock.hpp>
+
+namespace cro
 {
-    enum
-    {
-        Interpolated = 0x1,
-        SunMoonNode  = 0x2
-    };
+    struct ResourceCollection;
 }
+
+class FoamEffect final
+{
+public:
+    explicit FoamEffect(cro::ResourceCollection&);
+
+    void update();
+
+    const cro::Texture& getTexture() const { return m_texture.getTexture(); }
+
+private:
+
+    cro::Model m_model;
+    cro::Shader m_shader;
+
+    std::uint32_t m_textureUniform;
+    std::uint32_t m_timeUniform;
+
+    cro::Clock m_timer;
+
+    cro::RenderTexture m_texture;
+    cro::Texture m_noiseTexture;
+};

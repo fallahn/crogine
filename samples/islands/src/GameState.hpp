@@ -33,6 +33,7 @@ source distribution.
 #include "ResourceIDs.hpp"
 #include "InputParser.hpp"
 #include "ServerPacketData.hpp"
+#include "FoamEffect.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConsoleClient.hpp>
@@ -74,6 +75,7 @@ private:
     std::array<std::size_t, MeshID::Count> m_meshIDs = {};
     std::array<std::size_t, MaterialID::Count> m_materialIDs = {};
     cro::Texture m_islandTexture;
+    FoamEffect m_foamEffect;
     cro::EnvironmentMap m_environmentMap;
 
     std::vector<float> m_heightmap;
@@ -89,6 +91,7 @@ private:
     void loadAssets();
     void createScene();
     void createUI();
+    void createDayCycle();
 
     void handlePacket(const cro::NetEvent::Packet&);
     void spawnPlayer(PlayerInfo);

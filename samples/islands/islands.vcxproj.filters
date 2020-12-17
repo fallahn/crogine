@@ -114,6 +114,12 @@
     <ClCompile Include="src\SeaSystem.cpp">
       <Filter>Source Files\Client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\FoamEffect.cpp">
+      <Filter>Source Files\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DayNightDirector.cpp">
+      <Filter>Source Files\Client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -205,6 +211,12 @@
     </ClInclude>
     <ClInclude Include="src\SeaSystem.hpp">
       <Filter>Header Files\Client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FoamEffect.hpp">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DayNightDirector.hpp">
+      <Filter>Header Files\Client</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

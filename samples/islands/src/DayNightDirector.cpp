@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "DayNightDirector.hpp"
-#include "CommandIDs.hpp"
+#include "ClientCommandIDs.hpp"
 #include "GameConsts.hpp"
 
 #include <crogine/detail/glm/gtx/norm.hpp>
@@ -137,7 +137,7 @@ namespace
     }
 
     constexpr std::uint32_t DayMinutes = 24 * 60;
-    constexpr float RadsPerMinute = cro::Util::Const::TAU / 6.f; //6 minutes per cycle
+    constexpr float RadsPerMinute = cro::Util::Const::TAU;// / 6.f; //6 minutes per cycle
     constexpr float RadsPerSecond = RadsPerMinute / 60.f;
 
     constexpr float CorrectionSpeed = 50.f;
@@ -288,7 +288,7 @@ void DayNightDirector::process(float dt)
 
     //set sun/moon rotation
     cro::Command cmd;
-    cmd.targetFlags = CommandID::Game::SunMoonNode;
+    cmd.targetFlags = Client::CommandID::SunMoonNode;
     cmd.action = [&](cro::Entity e, float)
     {
         auto& tx = e.getComponent<cro::Transform>();
