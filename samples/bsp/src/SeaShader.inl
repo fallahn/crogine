@@ -56,7 +56,7 @@ static const std::string SeaVertex = R"(
     void main()
     {
         vec4 position = u_worldMatrix * a_position;
-        position.y += sin(u_time * 0.9) * 0.08;
+        //position.y += sin(u_time * 0.9) * 0.08;
         gl_Position = u_viewProjectionMatrix * position;
 
         v_tbn[0] = normalize(u_worldMatrix * vec4(a_tangent, 0.0)).xyz;

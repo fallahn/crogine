@@ -78,11 +78,13 @@ namespace
     };
 
     //render flags for reflection passes
-    const std::uint64_t NoPlanes = 0xFFFFFFFFFFFFFFF0;
+    const std::uint64_t NoPlanes = 0xFFFFFFFFFFFFFF00;
     const std::array<std::uint64_t, 4u> PlayerPlanes =
     {
         0x1, 0x2,0x4,0x8
     };
+    const std::uint64_t NoReflect = 0x10;
+    const std::uint64_t NoRefract = 0x20;
 
     const std::array Colours =
     {
@@ -145,7 +147,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
                         { IslandTileCount * 3.f, IslandTileCount * 3.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 }
 
-                if (ImGui::CollapsingHeader("ShadowMap"))
+                if (ImGui::CollapsingHeader("Shadow Map"))
                 {
                     ImGui::Image(m_gameScene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture(),
                         { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
@@ -226,6 +228,10 @@ bool GameState::simulate(float dt)
     const float Speed = 10.f;
     moveEnts[0].getComponent<cro::Transform>().move(movement * Speed * dt);
 
+    static float timeAccum = 0.f;
+    timeAccum += dt;
+    m_gameScene.setWaterLevel(std::sin(timeAccum * 0.9) * 0.08);
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -242,7 +248,7 @@ void GameState::render()
         m_gameScene.setActiveCamera(ent);
 
         auto& cam = ent.getComponent<cro::Camera>();
-        cam.renderFlags = NoPlanes;
+        cam.renderFlags = NoPlanes | NoRefract;
         auto oldVP = cam.viewport;
 
         cam.viewport = { 0.f,0.f,1.f,1.f };
@@ -252,12 +258,13 @@ void GameState::render()
         m_gameScene.render(cam.reflectionBuffer);
         cam.reflectionBuffer.display();
 
+        cam.renderFlags = NoPlanes | NoReflect;
         cam.setActivePass(cro::Camera::Pass::Refraction);
         cam.refractionBuffer.clear(cro::Colour::Blue());
         m_gameScene.render(cam.refractionBuffer);
         cam.refractionBuffer.display();
 
-        cam.renderFlags = NoPlanes | PlayerPlanes[i];
+        cam.renderFlags = NoPlanes | PlayerPlanes[i] | NoReflect | NoRefract;
         cam.setActivePass(cro::Camera::Pass::Final);
         cam.viewport = oldVP;
     }
@@ -339,8 +346,13 @@ void GameState::createScene()
         cam.refractionBuffer.setSmooth(true);
 
         auto waterEnt = addSeaplane();
-        waterEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, -(SeaRadius - CameraDistance) });
         waterEnt.getComponent<cro::Model>().setRenderFlags(PlayerPlanes[i]);
+        waterEnt.addComponent<cro::Callback>().active = true;
+        waterEnt.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Transform>().setPosition({ 0.f, m_gameScene.getWaterLevel(), -(SeaRadius - CameraDistance) });
+        };
 
         //placeholder for player model
         auto playerEnt = m_gameScene.createEntity();
@@ -423,6 +435,7 @@ void GameState::createDayCycle()
     cro::ModelDefinition definition;
     definition.loadFromFile("assets/models/moon.cmt", m_resources);
     definition.createModel(entity, m_resources);
+    entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //sun
@@ -432,6 +445,7 @@ void GameState::createDayCycle()
 
     definition.loadFromFile("assets/models/sun.cmt", m_resources);
     definition.createModel(entity, m_resources);
+    entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
