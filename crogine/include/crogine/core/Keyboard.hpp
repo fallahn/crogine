@@ -30,10 +30,12 @@ source distribution.
 #pragma once
 
 #include <crogine/detail/Assert.hpp>
+#include <crogine/core/App.hpp>
 
 #include <SDL.h>
 
 #include <cstdint>
+#include <string>
 
 namespace cro::Keyboard
 {
@@ -45,7 +47,17 @@ namespace cro::Keyboard
     static inline bool isKeyPressed(std::int32_t scancode)
     {
         CRO_ASSERT(scancode > -1 && scancode < SDL_NUM_SCANCODES, "scancode out of range!");
+        //CRO_ASSERT(cro::App::isValid(), "No app instance is running");
         auto* state = SDL_GetKeyboardState(nullptr);
         return state[scancode] != 0;
+    }
+
+    /*!
+    \brief Returns the string representation of the given SDLK_ enum
+    */
+    static inline std::string keyString(std::int32_t SDLkey)
+    {
+        //CRO_ASSERT(cro::App::isValid(), "No app instance is running");
+        return SDL_GetKeyName(SDLkey);
     }
 }
