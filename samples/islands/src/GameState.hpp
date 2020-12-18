@@ -73,7 +73,7 @@ private:
 
     cro::ResourceCollection m_resources;
     std::array<std::size_t, MeshID::Count> m_meshIDs = {};
-    std::array<std::size_t, MaterialID::Count> m_materialIDs = {};
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
     cro::Texture m_islandTexture;
     FoamEffect m_foamEffect;
     cro::EnvironmentMap m_environmentMap;

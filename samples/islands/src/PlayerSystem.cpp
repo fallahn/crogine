@@ -131,42 +131,25 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
     auto rightVector = tx.getRightVector();
 
     //walking speed in metres per second (1 world unit == 1 metre)
-    float moveSpeed = 1.6f * ConstVal::FixedGameUpdate;
+    float moveSpeed = 10.f * ConstVal::FixedGameUpdate;
 
-    if (player.flyMode)
-    {
-        moveSpeed *= 5.f;
-    }
-
-    if (input.buttonFlags & Input::Forward)
+    if (input.buttonFlags & InputFlag::Up)
     {
         tx.move(forwardVector * moveSpeed);
     }
-    if (input.buttonFlags & Input::Backward)
+    if (input.buttonFlags & InputFlag::Down)
     {
         tx.move(-forwardVector * moveSpeed);
     }
 
-    if (input.buttonFlags & Input::Left)
+    if (input.buttonFlags & InputFlag::Left)
     {
         tx.move(-rightVector * moveSpeed);
     }
-    if (input.buttonFlags & Input::Right)
+    if (input.buttonFlags & InputFlag::Right)
     {
         tx.move(rightVector * moveSpeed);
     }
-
-    //if (player.flyMode)
-    //{
-    //    if (input.buttonFlags & Input::Jump)
-    //    {
-    //        tx.move(glm::vec3(0.f, 1.f, 0.f) * moveSpeed);
-    //    }
-    //    if (input.buttonFlags & Input::Crouch)
-    //    {
-    //        tx.move(glm::vec3(0.f, -1.f, 0.f) * moveSpeed);
-    //    }
-    //}
 }
 
 void PlayerSystem::processCollision(cro::Entity)

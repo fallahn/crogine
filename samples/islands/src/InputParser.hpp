@@ -34,29 +34,15 @@ Input parser. In charge of reading input events and applying
 them to both the local player controller and sending to the server.
 */
 
+#include "InputBinding.hpp"
+
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/Entity.hpp>
 
-#include <SDL_events.h>
-
 struct Input final
 {
-    enum Flags
-    {
-        Forward = 0x1,
-        Backward = 0x2,
-        Left = 0x4,
-        Right = 0x8,
-        LeftMouse = 0x10,
-        RightMouse = 0x20,
-        Crouch = 0x40,
-        Jump = 0x80
-    };
-
     std::uint32_t timeStamp = 0;
     std::uint16_t buttonFlags = 0;
-    //std::int8_t xMove = 0;
-    //std::int8_t yMove = 0;
 };
 
 namespace cro
@@ -67,7 +53,7 @@ namespace cro
 class InputParser final
 {
 public:
-    explicit InputParser(cro::NetClient&);
+    InputParser(cro::NetClient&, InputBinding);
 
     void handleEvent(const SDL_Event&);
 
@@ -82,8 +68,8 @@ private:
     
     std::uint16_t m_inputFlags;
     cro::Entity m_entity;
-    std::int32_t m_mouseMoveX;
-    std::int32_t m_mouseMoveY;
 
     cro::Clock m_timestampClock;
+
+    InputBinding m_inputBinding;
 };

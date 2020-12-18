@@ -140,13 +140,13 @@ namespace
     constexpr float RadsPerMinute = cro::Util::Const::TAU / 6.f; //6 minutes per cycle
     constexpr float RadsPerSecond = RadsPerMinute / 60.f;
 
-    constexpr float CorrectionSpeed = 50.f;
+    constexpr float CorrectionSpeed = 100.f;
 }
 
 DayNightDirector::DayNightDirector()
     : m_timeOfDay       (0.f),
-    m_targetTime        (0.f),
-    m_correctTime       (false),
+    m_targetTime        (0.2f),
+    m_correctTime       (true),
     m_cycleSpeed        (1.f),
     m_currentSkyIndex   (0),
     m_nextSkyIndex      (1)

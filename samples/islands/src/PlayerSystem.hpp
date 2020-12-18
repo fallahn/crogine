@@ -51,7 +51,6 @@ struct Player final
     std::uint8_t connectionID = 4;
     glm::vec3 spawnPosition = glm::vec3(0.f);
 
-    bool flyMode = true;
     bool waitResync = false; //waiting to resync player with server
 };
 

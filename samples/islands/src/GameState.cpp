@@ -62,8 +62,8 @@ namespace
 {
     //for debug output
     cro::Entity playerEntity;
-    std::int32_t bitrate = 0;
-    std::int32_t bitrateCounter = 0;
+    std::size_t bitrate = 0;
+    std::size_t bitrateCounter = 0;
 
     //render flags for reflection passes
     std::size_t NextPlayerPlane = 0; //index into this array when creating new player
@@ -155,8 +155,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
 bool GameState::handleEvent(const cro::Event& evt)
 {
     if (cro::ui::wantsMouse() 
-        || cro::ui::wantsKeyboard()
-        || cro::Console::isVisible())
+        || cro::ui::wantsKeyboard())
     {
         return true;
     }
@@ -256,7 +255,7 @@ bool GameState::simulate(float dt)
 
     static float timeAccum = 0.f;
     timeAccum += dt;
-    m_gameScene.setWaterLevel(std::sin(timeAccum * 0.9) * 0.08);
+    m_gameScene.setWaterLevel(std::sin(timeAccum * 0.9f) * 0.08f);
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -447,14 +446,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 switch (data.commandID)
                 {
                 default: break;
-                case CommandPacket::SetModeFly:
-                    playerEnt.getComponent<Player>().flyMode = true;
-                    cro::Logger::log("Server set mode to fly", cro::Logger::Type::Info);
-                    break;
-                case CommandPacket::SetModeWalk:
-                    playerEnt.getComponent<Player>().flyMode = false;
-                    cro::Logger::log("Server set mode to walk", cro::Logger::Type::Info);
-                    break;
+
                 }
             }
         }
@@ -507,7 +499,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             root.getComponent<Player>().connectionID = info.connectionID;
             root.getComponent<Player>().spawnPosition = info.spawnPosition;
 
-            m_inputParsers.insert(std::make_pair(info.playerID, InputParser(m_sharedData.clientConnection.netClient)));
+            m_inputParsers.insert(std::make_pair(info.playerID, InputParser(m_sharedData.clientConnection.netClient, m_sharedData.inputBindings[info.playerID])));
             m_inputParsers.at(info.playerID).setEntity(root);
 
 

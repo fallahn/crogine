@@ -95,7 +95,7 @@ void MyApp::render()
 bool MyApp::initialise()
 {
     getWindow().setLoadingScreen<LoadingScreen>();
-    getWindow().setTitle("Crogine Application");
+    getWindow().setTitle("Desert Island Duel");
 
     m_stateStack.pushState(States::MainMenu);
 
@@ -128,7 +128,7 @@ void MyApp::loadSettings()
         }
         else
         {
-            m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0, playernames.size() - 1)];
+            m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0u, playernames.size() - 1)];
         }
 
         if (auto* ip = cfg.findProperty("target_ip"); ip)
@@ -139,12 +139,67 @@ void MyApp::loadSettings()
         {
             m_sharedData.targetIP = "127.0.0.1";
         }
+
+        //TODO read controller/keyboard settings
+        m_sharedData.inputBindings[1].keys =
+        {
+            SDLK_HOME,
+            SDLK_PAGEUP,
+            SDLK_KP_0,
+            SDLK_RSHIFT,
+            SDLK_DELETE,
+            SDLK_END,
+            SDLK_RCTRL,
+            SDLK_LEFT,
+            SDLK_RIGHT,
+            SDLK_UP,
+            SDLK_DOWN
+        };
+
+        m_sharedData.inputBindings[2].controllerID = 0;
+        m_sharedData.inputBindings[2].keys =
+        {
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+        };
+
+        m_sharedData.inputBindings[3].controllerID = 1;
+        m_sharedData.inputBindings[3].keys =
+        {
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+        };
     }
     else
     {
         //fill in some defaults
-        m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0, playernames.size() - 1)];
+        m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0u, playernames.size() - 1)];
         m_sharedData.targetIP = "127.0.0.1";
+
+        m_sharedData.inputBindings[1].keys =
+        {
+            SDLK_HOME,
+            SDLK_PAGEUP,
+            SDLK_KP_0,
+            SDLK_RSHIFT,
+            SDLK_DELETE,
+            SDLK_END,
+            SDLK_RCTRL,
+            SDLK_LEFT,
+            SDLK_RIGHT,
+            SDLK_UP,
+            SDLK_DOWN
+        };
+
+        m_sharedData.inputBindings[2].controllerID = 0;
+        m_sharedData.inputBindings[2].keys =
+        {
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+        };
+
+        m_sharedData.inputBindings[3].controllerID = 1;
+        m_sharedData.inputBindings[3].keys =
+        {
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+        };
     }
 }
 
@@ -153,6 +208,8 @@ void MyApp::saveSettings()
     cro::ConfigFile cfg;
     cfg.addProperty("player_name", m_sharedData.localPlayer.name.toAnsiString());
     cfg.addProperty("target_ip", m_sharedData.targetIP.toAnsiString());
+
+    //TODO write key/controller bindings
 
     cfg.save(configPath);
 }

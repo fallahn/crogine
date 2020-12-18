@@ -188,6 +188,7 @@
     <ClInclude Include="src\ErrorState.hpp" />
     <ClInclude Include="src\FoamEffect.hpp" />
     <ClInclude Include="src\GameState.hpp" />
+    <ClInclude Include="src\InputBinding.hpp" />
     <ClInclude Include="src\InputParser.hpp" />
     <ClInclude Include="src\InterpolationSystem.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />

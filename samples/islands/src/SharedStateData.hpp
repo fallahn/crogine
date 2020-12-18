@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "Server.hpp"
+#include "InputBinding.hpp"
 
 #include <crogine/network/NetClient.hpp>
 #include <crogine/core/String.hpp>
@@ -53,6 +54,9 @@ struct SharedStateData final
         bool ready = false;
         std::uint8_t connectionID = 4;
     }clientConnection;
+
+    //keybindings for all local players
+    std::array<InputBinding, 4u> inputBindings = {};
 
     //data of all players rx'd from server
     std::array<PlayerData, 4u> playerData = {};

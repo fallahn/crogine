@@ -257,18 +257,19 @@ void GameState::buildWorld()
     //create a network game as usual
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
-        if (m_sharedData.clients[i].connected)
+        if (m_sharedData.clients[i].connected
+            && playerCount < ConstVal::MaxClients)
         {
             //insert requested players in this slot
             for (auto j = 0u; j < m_sharedData.clients[i].playerCount && playerCount < ConstVal::MaxClients; ++j)
             {
                 m_playerEntities[i][j] = m_scene.createEntity();
                 m_playerEntities[i][j].addComponent<cro::Transform>().setPosition(PlayerSpawns[playerCount]);
-                m_playerEntities[i][j].addComponent<Player>().id = j;
+                m_playerEntities[i][j].addComponent<Player>().id = i+j;
                 m_playerEntities[i][j].getComponent<Player>().spawnPosition = PlayerSpawns[playerCount++];
                 m_playerEntities[i][j].getComponent<Player>().connectionID = i;
 
-                m_playerEntities[i][j].addComponent<Actor>().id = j;
+                m_playerEntities[i][j].addComponent<Actor>().id = i+j;
                 m_playerEntities[i][j].getComponent<Actor>().serverEntityId = m_playerEntities[i][j].getIndex();
             }
         }

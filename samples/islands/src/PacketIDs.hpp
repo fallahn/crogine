@@ -52,10 +52,10 @@ namespace PacketID
     enum
     {
         //from server
-        ClientConnected, //< uint8 player ID
-        ClientDisconnected, //< uint8 player ID
+        ClientConnected, //< uint8 connection ID
+        ClientDisconnected, //< uint8 connection ID
         ConnectionRefused, //< uint8 MessageType
-        ConnectionAccepted, //< uint8 assigned player ID (0-3)
+        ConnectionAccepted, //< uint8 assigned connection ID (0-3)
         StateChange, //< uint8 state ID
         LobbyUpdate, //< LobbyData struct, name string bytes
 
@@ -67,7 +67,7 @@ namespace PacketID
 
         //from client
         RequestGameStart,
-        ClientReady, //< uint8 playerID - requests game data from server. Sent repeatedly until ack'd
+        ClientReady, //< uint8 connectionID - requests game data from server. Sent repeatedly until ack'd
         InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput)
         PlayerInfo, //< uint8 name length in bytes followed by uint32 array string
 

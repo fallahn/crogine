@@ -218,5 +218,8 @@
     <ClInclude Include="src\DayNightDirector.hpp">
       <Filter>Header Files\Client</Filter>
     </ClInclude>
+    <ClInclude Include="src\InputBinding.hpp">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

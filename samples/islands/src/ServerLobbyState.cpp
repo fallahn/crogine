@@ -131,7 +131,7 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
             LobbyData data;
             data.playerID = static_cast<std::uint8_t>(i);
             data.skinFlags = 0;
-            data.stringSize = c.name.size() * sizeof(std::uint32_t); //we're not checking valid size here because we assume it was validated on arrival
+            data.stringSize = static_cast<std::uint8_t>(c.name.size() * sizeof(std::uint32_t)); //we're not checking valid size here because we assume it was validated on arrival
 
             std::vector<std::uint8_t> buffer(data.stringSize + sizeof(LobbyData));
             std::memcpy(buffer.data(), &data, sizeof(data));

@@ -35,11 +35,10 @@ source distribution.
 #include <crogine/core/Console.hpp>
 #include <crogine/network/NetClient.hpp>
 
-InputParser::InputParser(cro::NetClient& nc)
+InputParser::InputParser(cro::NetClient& nc, InputBinding binding)
     : m_netClient   (nc),
     m_inputFlags    (0),
-    m_mouseMoveX    (0),
-    m_mouseMoveY    (0)
+    m_inputBinding  (binding)
 {
 
 }
@@ -47,94 +46,138 @@ InputParser::InputParser(cro::NetClient& nc)
 //public
 void InputParser::handleEvent(const SDL_Event& evt)
 {
-    //TODO worry about keybinds at some point
-    switch (evt.type)
+    //apply to input mask
+    if (evt.type == SDL_KEYDOWN)
     {
-    default: break;
-    case SDL_KEYDOWN:
-        switch (evt.key.keysym.sym)
+        if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
         {
-        default:break;
-        case SDLK_w:
-            m_inputFlags |= Input::Forward;
-            break;
-        case SDLK_s:
-            m_inputFlags |= Input::Backward;
-            break;
-        case SDLK_a:
-            m_inputFlags |= Input::Left;
-            break;
-        case SDLK_d:
-            m_inputFlags |= Input::Right;
-            break;
-        case SDLK_SPACE:
-            m_inputFlags |= Input::Jump;
-            break;
-        case SDLK_LCTRL:
-            m_inputFlags |= Input::Crouch;
-            break;
+            m_inputFlags |= InputFlag::Up;
         }
-        break;
-    case SDL_KEYUP:
-        switch (evt.key.keysym.sym)
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
         {
-        default:break;
-        case SDLK_w:
-            m_inputFlags &= ~Input::Forward;
-            break;
-        case SDLK_s:
-            m_inputFlags &= ~Input::Backward;
-            break;
-        case SDLK_a:
-            m_inputFlags &= ~Input::Left;
-            break;
-        case SDLK_d:
-            m_inputFlags &= ~Input::Right;
-            break;
-        case SDLK_SPACE:
-            m_inputFlags &= ~Input::Jump;
-            break;
-        case SDLK_LCTRL:
-            m_inputFlags &= ~Input::Crouch;
-            break;
+            m_inputFlags |= InputFlag::Left;
         }
-        break;
-    case SDL_MOUSEBUTTONDOWN:
-        switch (evt.button.button)
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
         {
-        default: break;
-        case 0:
-            m_inputFlags |= Input::LeftMouse;
-            break;
-        case 1:
-            m_inputFlags |= Input::RightMouse;
-            break;
+            m_inputFlags |= InputFlag::Right;
         }
-        break;
-    case SDL_MOUSEBUTTONUP:
-        switch (evt.button.button)
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
         {
-        default: break;
-        case 0:
-            m_inputFlags &= ~Input::LeftMouse;
-            break;
-        case 1:
-            m_inputFlags &= ~Input::RightMouse;
-            break;
+            m_inputFlags |= InputFlag::Down;
         }
-        break;
-    case SDL_MOUSEMOTION:
-        //if (evt.motion.xrel != 0)
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::CarryDrop])
         {
-            m_mouseMoveX += evt.motion.xrel;
+            m_inputFlags |= InputFlag::CarryDrop;
         }
-        //if (evt.motion.yrel != 0)
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
         {
-            m_mouseMoveY += evt.motion.yrel;
+            m_inputFlags |= InputFlag::Action;
         }
-        break;
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponPrev])
+        {
+            m_inputFlags |= InputFlag::WeaponPrev;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponNext])
+        {
+            m_inputFlags |= InputFlag::WeaponNext;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Strafe])
+        {
+            m_inputFlags |= InputFlag::Strafe;
+        }
     }
+    else if (evt.type == SDL_KEYUP)
+    {
+        if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
+        {
+            m_inputFlags &= ~InputFlag::Up;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
+        {
+            m_inputFlags &= ~InputFlag::Left;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
+        {
+            m_inputFlags &= ~InputFlag::Right;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
+        {
+            m_inputFlags &= ~InputFlag::Down;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::CarryDrop])
+        {
+            m_inputFlags &= ~InputFlag::CarryDrop;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        {
+            m_inputFlags &= ~InputFlag::Action;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponNext])
+        {
+            m_inputFlags &= ~InputFlag::WeaponNext;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponPrev])
+        {
+            m_inputFlags &= ~InputFlag::WeaponPrev;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Strafe])
+        {
+            m_inputFlags &= ~InputFlag::Strafe;
+        }
 
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    {
+        if (evt.cbutton.which == m_inputBinding.controllerID)
+        {
+            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
+            {
+                m_inputFlags |= InputFlag::Action;
+            }
+            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CarryDrop])
+            {
+                m_inputFlags |= InputFlag::CarryDrop;
+            }
+            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponNext])
+            {
+                m_inputFlags |= InputFlag::WeaponNext;
+            }
+            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
+            {
+                m_inputFlags |= InputFlag::WeaponPrev;
+            }
+            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Strafe])
+            {
+                m_inputFlags |= InputFlag::Strafe;
+            }
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        if (evt.cbutton.which == m_inputBinding.controllerID)
+        {
+            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
+            {
+                m_inputFlags &= ~InputFlag::Action;
+            }
+            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CarryDrop])
+            {
+                m_inputFlags &= ~InputFlag::CarryDrop;
+            }
+            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponNext])
+            {
+                m_inputFlags &= ~InputFlag::WeaponNext;
+            }
+            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
+            {
+                m_inputFlags &= ~InputFlag::WeaponPrev;
+            }
+            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Strafe])
+            {
+                m_inputFlags &= ~InputFlag::Strafe;
+            }
+        }
+    }
 }
 
 void InputParser::update()
@@ -147,15 +190,13 @@ void InputParser::update()
         if (!player.waitResync)
         {
             input.buttonFlags = m_inputFlags;
-            //input.xMove = static_cast<std::uint8_t>(m_mouseMoveX);
-            //input.yMove = static_cast<std::uint8_t>(m_mouseMoveY);
         }
         input.timeStamp = m_timestampClock.elapsed().asMilliseconds();
 
         //apply to local entity
         player.inputStack[player.nextFreeInput] = input;
         player.nextFreeInput = (player.nextFreeInput + 1) % Player::HistorySize;
-
+        cro::Console::printStat("Flags", std::to_string(m_inputFlags));
 
         //broadcast packet
         InputUpdate update;
@@ -165,7 +206,6 @@ void InputParser::update()
 
         m_netClient.sendPacket(PacketID::InputUpdate, update, cro::NetFlag::Unreliable);
     }
-    m_mouseMoveX = m_mouseMoveY = 0;
 }
 
 void InputParser::setEntity(cro::Entity e)
