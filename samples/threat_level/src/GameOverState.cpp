@@ -347,7 +347,7 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
 
     auto inputEnt = m_uiScene.createEntity();
     inputEnt.addComponent<cro::Drawable2D>();
-    inputEnt.addComponent<cro::Text>(font).setString(names[cro::Util::Random::value(0, names.size()-1)]);
+    inputEnt.addComponent<cro::Text>(font).setString(names[cro::Util::Random::value(0u, names.size()-1)]);
     inputEnt.getComponent<cro::Text>().setCharacterSize(TextLarge);
     inputEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
     parentEnt.getComponent<cro::Transform>().addChild(inputEnt.addComponent<cro::Transform>());

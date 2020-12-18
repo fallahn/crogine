@@ -185,7 +185,7 @@ void MenuState::createScene()
 
     if (spawnPoints.size() > 1)
     {
-        const auto& spawn = spawnPoints[cro::Util::Random::value(0, spawnPoints.size() - 1)];
+        const auto& spawn = spawnPoints[cro::Util::Random::value(0u, spawnPoints.size() - 1)];
         camEnt.getComponent<cro::Transform>().setPosition(spawn.position);
         camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -(cro::Util::Const::degToRad * spawn.rotation));
     }

@@ -429,7 +429,7 @@ void ModelState::loadAssets()
     m_resources.materials.get(materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
 
     //for receiving shadows on the ground plane
-    std::size_t texID = 10000;
+    std::uint32_t texID = 10000;
     m_resources.textures.load(texID, "assets/images/grid.png");
     m_resources.textures.get(texID).setSmooth(true);
 
@@ -1548,7 +1548,7 @@ void ModelState::importModel()
 
                 for (auto i = 0u; i < meshData.submeshCount; ++i)
                 {
-                    meshData.indexData[i].indexCount = m_importedIndexArrays[i].size();
+                    meshData.indexData[i].indexCount = static_cast<std::uint32_t>(m_importedIndexArrays[i].size());
                     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
                     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].indexCount * sizeof(std::uint32_t), m_importedIndexArrays[i].data(), GL_STATIC_DRAW));
                 }
@@ -2081,7 +2081,7 @@ void ModelState::updateGridMesh(cro::Mesh::Data& meshData, std::optional<cro::Sp
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     auto& submesh = meshData.indexData[0];
-    submesh.indexCount = indices.size();
+    submesh.indexCount = static_cast<std::uint32_t>(indices.size());
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
@@ -3916,8 +3916,8 @@ void ModelState::bakeLightmap()
     glm::mat4 view = glm::mat4(1.f);
     glm::mat4 proj = glm::mat4(1.f);
     
-    std::int32_t normalOffset = 0;
-    std::int32_t uvOffset = 0;
+    std::size_t normalOffset = 0;
+    std::size_t uvOffset = 0;
 
     for (auto i = 0u; i < meshData.attributes.size(); ++i)
     {

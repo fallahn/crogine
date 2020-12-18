@@ -230,7 +230,7 @@ bool GameState::simulate(float dt)
 
     static float timeAccum = 0.f;
     timeAccum += dt;
-    m_gameScene.setWaterLevel(std::sin(timeAccum * 0.9) * 0.08);
+    m_gameScene.setWaterLevel(std::sin(timeAccum * 0.9f) * 0.08f);
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);

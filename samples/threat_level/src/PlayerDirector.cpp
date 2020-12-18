@@ -351,8 +351,8 @@ void PlayerDirector::process(float)
 {
     //controller analogue
     glm::vec3 joyVec = {
-        static_cast<float>(cro::GameController::getAxis(0, cro::GameController::AxisLeftX)),
-        static_cast<float>(cro::GameController::getAxis(0, cro::GameController::AxisLeftY)), 0.f };
+        static_cast<float>(cro::GameController::getAxisPosition(0, cro::GameController::AxisLeftX)),
+        static_cast<float>(cro::GameController::getAxisPosition(0, cro::GameController::AxisLeftY)), 0.f };
     joyVec.y = -joyVec.y;
     float joystickAmount = glm::length2(joyVec) / JoyMaxSqr;
     if (joystickAmount < JoySpeedMin) joystickAmount = 0.f;

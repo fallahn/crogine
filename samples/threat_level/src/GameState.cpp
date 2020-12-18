@@ -1026,7 +1026,7 @@ void GameState::loadModels()
         entity.getComponent<cro::Transform>().rotate({ 0.f, 1.f, 0.f }, cro::Util::Const::PI / 2.f);
         m_modelDefs[modelID].createModel(entity, m_resources);
         entity.addComponent<Npc>().type = Npc::Weaver;
-        entity.getComponent<Npc>().weaver.ident = WeaverNavigator::count - i;
+        entity.getComponent<Npc>().weaver.ident = static_cast<std::uint8_t>(WeaverNavigator::count - i);
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Weaver;
         auto& rot = entity.addComponent<Rotator>();
         rot.axis.z = 1.f;

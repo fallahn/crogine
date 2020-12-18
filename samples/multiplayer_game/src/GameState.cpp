@@ -56,8 +56,8 @@ namespace
 {
     //for debug output
     cro::Entity playerEntity;
-    std::int32_t bitrate = 0;
-    std::int32_t bitrateCounter = 0;
+    std::size_t bitrate = 0;
+    std::size_t bitrateCounter = 0;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
