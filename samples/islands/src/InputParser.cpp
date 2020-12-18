@@ -31,14 +31,23 @@ source distribution.
 #include "PlayerSystem.hpp"
 #include "ClientPacketData.hpp"
 #include "PacketIDs.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/core/Console.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/network/NetClient.hpp>
+
+namespace
+{
+    const std::int16_t DeadZone = 13000;
+}
 
 InputParser::InputParser(cro::NetClient& nc, InputBinding binding)
     : m_netClient   (nc),
     m_inputFlags    (0),
-    m_inputBinding  (binding)
+    m_inputBinding  (binding),
+    m_prevStick     (0),
+    m_analogueAmount(1.f)
 {
 
 }
@@ -150,6 +159,23 @@ void InputParser::handleEvent(const SDL_Event& evt)
             {
                 m_inputFlags |= InputFlag::Strafe;
             }
+
+            else if (evt.cbutton.button == cro::GameController::DPadLeft)
+            {
+                m_inputFlags |= InputFlag::Left;
+            }
+            else if (evt.cbutton.button == cro::GameController::DPadRight)
+            {
+                m_inputFlags |= InputFlag::Right;
+            }
+            else if (evt.cbutton.button == cro::GameController::DPadUp)
+            {
+                m_inputFlags |= InputFlag::Up;
+            }
+            else if (evt.cbutton.button == cro::GameController::DPadDown)
+            {
+                m_inputFlags |= InputFlag::Down;
+            }
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -176,6 +202,23 @@ void InputParser::handleEvent(const SDL_Event& evt)
             {
                 m_inputFlags &= ~InputFlag::Strafe;
             }
+
+            else if (evt.cbutton.button == cro::GameController::DPadLeft)
+            {
+                m_inputFlags &= ~InputFlag::Left;
+            }
+            else if (evt.cbutton.button == cro::GameController::DPadRight)
+            {
+                m_inputFlags &= ~InputFlag::Right;
+            }
+            else if (evt.cbutton.button == cro::GameController::DPadUp)
+            {
+                m_inputFlags &= ~InputFlag::Up;
+            }
+            else if (evt.cbutton.button == cro::GameController::DPadDown)
+            {
+                m_inputFlags &= ~InputFlag::Down;
+            }
         }
     }
 }
@@ -190,6 +233,7 @@ void InputParser::update()
         if (!player.waitResync)
         {
             input.buttonFlags = m_inputFlags;
+            input.analogueMultiplier = Util::compressFloat(m_analogueAmount);
         }
         input.timeStamp = m_timestampClock.elapsed().asMilliseconds();
 
@@ -214,3 +258,73 @@ void InputParser::setEntity(cro::Entity e)
     m_entity = e;
 }
 
+//private
+void InputParser::checkControllerInput()
+{
+    m_analogueAmount = 1.f;
+
+    if (m_inputBinding.controllerID >= SDL_NumJoysticks())
+    {
+        return;
+    }
+    if (!cro::GameController::isConnected(m_inputBinding.controllerID))
+    {
+        return;
+    }
+
+
+    //left stick (xInput controller)
+    auto startInput = m_inputFlags;
+    float xPos = cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::AxisLeftX);
+    if (xPos < -DeadZone)
+    {
+        m_inputFlags |= InputFlag::Left;
+    }
+    else if (m_prevStick & InputFlag::Left)
+    {
+        m_inputFlags &= ~InputFlag::Left;
+    }
+
+    if (xPos > DeadZone)
+    {
+        m_inputFlags |= InputFlag::Right;
+    }
+    else if (m_prevStick & InputFlag::Right)
+    {
+        m_inputFlags &= ~InputFlag::Right;
+    }
+
+    float yPos = cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::AxisLeftY);
+    if (yPos > (DeadZone))
+    {
+        m_inputFlags |= InputFlag::Down;
+        m_inputFlags &= ~InputFlag::Up;
+    }
+    else if (m_prevStick & InputFlag::Down)
+    {
+        m_inputFlags &= ~InputFlag::Down;
+    }
+
+    if (yPos < (-DeadZone))
+    {
+        m_inputFlags |= InputFlag::Up;
+        m_inputFlags &= ~InputFlag::Down;
+    }
+    else if (m_prevStick & InputFlag::Up)
+    {
+        m_inputFlags &= ~InputFlag::Up;
+    }
+
+    float len2 = (xPos * xPos) + (yPos * yPos);
+    static const float MinLen2 = (DeadZone * DeadZone);
+    if (len2 > MinLen2)
+    {
+        m_analogueAmount = std::sqrt(len2) / cro::GameController::AxisMax;
+    }
+
+
+    if (startInput ^ m_inputFlags)
+    {
+        m_prevStick = m_inputFlags;
+    }
+}

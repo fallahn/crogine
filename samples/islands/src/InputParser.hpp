@@ -43,6 +43,7 @@ struct Input final
 {
     std::uint32_t timeStamp = 0;
     std::uint16_t buttonFlags = 0;
+    std::uint16_t analogueMultiplier = 1;
 };
 
 namespace cro
@@ -72,4 +73,8 @@ private:
     cro::Clock m_timestampClock;
 
     InputBinding m_inputBinding;
+
+    std::uint16_t m_prevStick;
+    float m_analogueAmount;
+    void checkControllerInput();
 };

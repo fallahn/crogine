@@ -33,7 +33,7 @@ source distribution.
 
 using namespace cro;
 
-int16 GameController::getAxis(int32 controllerIndex, int32 axis)
+int16 GameController::getAxisPosition(std::int32_t controllerIndex, std::int32_t axis)
 {
     CRO_ASSERT(App::m_instance, "No app running");
     //CRO_ASSERT(App::m_instance->m_controllers.find(controllerIndex) != App::m_instance->m_controllers.end(), "Controller not connected");
@@ -41,10 +41,16 @@ int16 GameController::getAxis(int32 controllerIndex, int32 axis)
     return SDL_GameControllerGetAxis(App::m_instance->m_controllers[controllerIndex], static_cast<SDL_GameControllerAxis>(axis));
 }
 
-bool GameController::isButtonPressed(int32 controllerIndex, int32 button)
+bool GameController::isButtonPressed(std::int32_t controllerIndex, std::int32_t button)
 {
     CRO_ASSERT(App::m_instance, "No app running");
     //CRO_ASSERT(App::m_instance->m_controllers.find(controllerIndex) != App::m_instance->m_controllers.end(), "Controller not connected");
     if (App::m_instance->m_controllers.count(controllerIndex) == 0) return false;
     return (SDL_GameControllerGetButton(App::m_instance->m_controllers[controllerIndex], static_cast<SDL_GameControllerButton>(button)) == 1);
+}
+
+bool GameController::isConnected(std::int32_t controllerIndex)
+{
+    CRO_ASSERT(App::m_instance, "No app running");
+    return App::m_instance->m_controllers.count(controllerIndex) != 0;
 }

@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
@@ -131,25 +132,33 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
     auto rightVector = tx.getRightVector();
 
     //walking speed in metres per second (1 world unit == 1 metre)
-    float moveSpeed = 10.f * ConstVal::FixedGameUpdate;
+    const float moveSpeed = 10.f * Util::decompressFloat(input.analogueMultiplier) * ConstVal::FixedGameUpdate;
+
+    glm::vec3 movement = glm::vec3(0.f);
 
     if (input.buttonFlags & InputFlag::Up)
     {
-        tx.move(forwardVector * moveSpeed);
+        movement.z = -1.f;
     }
     if (input.buttonFlags & InputFlag::Down)
     {
-        tx.move(-forwardVector * moveSpeed);
+        movement.z += 1.f;
     }
 
     if (input.buttonFlags & InputFlag::Left)
     {
-        tx.move(-rightVector * moveSpeed);
+        movement.x = -1.f;
     }
     if (input.buttonFlags & InputFlag::Right)
     {
-        tx.move(rightVector * moveSpeed);
+        movement.x += 1.f;
     }
+
+    if (glm::length2(movement) > 1)
+    {
+        movement = glm::normalize(movement);
+    }
+    tx.move(movement * moveSpeed);
 }
 
 void PlayerSystem::processCollision(cro::Entity)
