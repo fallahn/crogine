@@ -124,11 +124,11 @@ void MyApp::loadSettings()
     {
         if (auto* name = cfg.findProperty("player_name"); name)
         {
-            m_sharedData.localPlayer.name = name->getValue<std::string>().substr(0, ConstVal::MaxStringChars);
+            m_sharedData.localPlayer.name = name->getValue<std::string>().substr(0u, ConstVal::MaxStringChars);
         }
         else
         {
-            m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0, playernames.size() - 1)];
+            m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0u, playernames.size() - 1)];
         }
 
         if (auto* ip = cfg.findProperty("target_ip"); ip)
@@ -143,7 +143,7 @@ void MyApp::loadSettings()
     else
     {
         //fill in some defaults
-        m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0, playernames.size() - 1)];
+        m_sharedData.localPlayer.name = playernames[cro::Util::Random::value(0u, playernames.size() - 1)];
         m_sharedData.targetIP = "127.0.0.1";
     }
 }

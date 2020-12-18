@@ -383,7 +383,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                 //switch to lobby view (if not playing split screen)
-                if (m_currentMenu == Join)
+                if (m_scene.getSystem<cro::UISystem>().getActiveGroup() != GroupID::LocalPlay)
                 {
                     m_currentMenu = Lobby;
 

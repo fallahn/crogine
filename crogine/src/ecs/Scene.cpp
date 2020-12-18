@@ -484,7 +484,7 @@ Entity Scene::setActiveCamera(Entity entity)
     auto oldCam = m_activeCamera;
     m_activeCamera = entity;
 
-    auto& cam = entity.getComponent<cro::Camera>();
+    //auto& cam = entity.getComponent<cro::Camera>();
     //we don't want to call this if we've explicitly
     //set the view elsewhere first...
     /*if (cam.resizeCallback)
