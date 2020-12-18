@@ -112,22 +112,44 @@ bool MenuState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+    auto& uiSystem = m_scene.getSystem<cro::UISystem>();
+
+    auto setPlayerCount = [&](std::uint8_t count)
+    {
+        if (uiSystem.getActiveGroup() == GroupID::LocalPlay)
+        {
+            cro::Command cmd;
+            cmd.targetFlags = MenuCommandID::PlayerIndicator;
+            cmd.action = [count](cro::Entity e, float)
+            {
+                e.getComponent<cro::Text>().setString(std::to_string(count) + " Player");
+            };
+            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+            if (m_sharedData.clientConnection.connected)
+            {
+                std::uint16_t data = m_sharedData.clientConnection.connectionID << 8 | count;
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerCount, data, cro::NetFlag::Reliable);
+            }
+        }
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
         {
         default: break;
         case SDLK_1:
-
+            setPlayerCount(1);
             break;
         case SDLK_2:
-            
+            setPlayerCount(2);
             break;
         case SDLK_3:
-            
+            setPlayerCount(3);
             break;
         case SDLK_4:
-
+            setPlayerCount(4);
             break;
         case SDLK_RETURN:
         case SDLK_RETURN2:
@@ -154,7 +176,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         handleTextEdit(evt);
     }
 
-    m_scene.getSystem<cro::UISystem>().handleEvent(evt);
+    uiSystem.handleEvent(evt);
 
     m_scene.forwardEvent(evt);
     return true;
@@ -321,6 +343,7 @@ void MenuState::createScene()
     createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
     createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
     createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
+    createLocalMenu(entity, mouseEnterCallback, mouseExitCallback);
 
 
     //set a custom camera so the scene doesn't overwrite the viewport
@@ -359,27 +382,28 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 std::memcpy(&buffer[1], m_sharedData.localPlayer.name.data(), size);
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
-                //switch to lobby view
-                //TODO switch to local local if that's what was requested
-                m_currentMenu = Lobby;
-
-                cro::Command cmd;
-                cmd.targetFlags = MenuCommandID::RootNode;
-                cmd.action = [&](cro::Entity e, float)
+                //switch to lobby view (if not playing split screen)
+                if (m_currentMenu == Join)
                 {
-                    e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
-                    m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
-                };
-                m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    m_currentMenu = Lobby;
 
-                if (m_sharedData.serverInstance.running())
-                {
-                    //auto ready up if host
-                    m_sharedData.clientConnection.netClient.sendPacket(
-                        PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
-                        cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    cro::Command cmd;
+                    cmd.targetFlags = MenuCommandID::RootNode;
+                    cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
+                        m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
+                    };
+                    m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                    if (m_sharedData.serverInstance.running())
+                    {
+                        //auto ready up if host
+                        m_sharedData.clientConnection.netClient.sendPacket(
+                            PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
+                            cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    }
                 }
-
                 LOG("Successfully connected to server", cro::Logger::Type::Info);
             }
             break;

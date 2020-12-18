@@ -70,6 +70,7 @@ namespace PacketID
         ClientReady, //< uint8 connectionID - requests game data from server. Sent repeatedly until ack'd
         InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput)
         PlayerInfo, //< uint8 name length in bytes followed by uint32 array string
+        PlayerCount, //< uint16 (connectionID << 8) | playerCount number of local players
 
         //both directions
         ServerCommand, //< ServerCommand struct - requests server perform some action (may be ignored by server), forwarded to target client if successful

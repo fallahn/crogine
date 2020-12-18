@@ -48,9 +48,10 @@ namespace MenuCommandID
 {
     enum
     {
-        RootNode = 0x1,
-        ReadyButton = 0x2,
-        LobbyList = 0x4
+        RootNode        = 0x1,
+        ReadyButton     = 0x2,
+        LobbyList       = 0x4,
+        PlayerIndicator = 0x8
     };
 }
 
@@ -62,7 +63,8 @@ namespace GroupID
         Avatar,
         Join,
         Lobby,
-        Options
+        Options,
+        LocalPlay
     };
 }
 
@@ -102,7 +104,7 @@ private:
 
     enum MenuID
     {
-        Main, Avatar, Join, Lobby, Options, Count
+        Main, Avatar, Join, Lobby, Options, LocalPlay, Count
     }m_currentMenu = Main;
 
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
@@ -122,6 +124,7 @@ private:
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createOptionsMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createLocalMenu(cro::Entity, std::uint32_t, std::uint32_t);
 
     void handleTextEdit(const cro::Event&);
     void applyTextEdit();

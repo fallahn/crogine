@@ -80,9 +80,15 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
             m_sharedData.host.broadcastPacket(PacketID::LobbyReady, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
             break;
-            //TODO allow the client to set the local player count
-            //probably want to make sure this is coming from a local
-            //connection only
+        case PacketID::PlayerCount:
+        {
+            auto data = evt.packet.as<std::uint16_t>();
+            std::uint8_t connection = (data & 0xff00) >> 8;
+            std::uint8_t count = (data & 0x00ff);
+            //TODO make sure the sender is local
+            m_sharedData.clients.at(connection).playerCount = count;
+        }
+            break;
         }
     }
 }
