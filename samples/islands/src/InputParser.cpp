@@ -39,7 +39,7 @@ source distribution.
 
 namespace
 {
-    const std::int16_t DeadZone = 13000;
+    const std::int16_t DeadZone = 5000;
 }
 
 InputParser::InputParser(cro::NetClient& nc, InputBinding binding)
@@ -227,6 +227,8 @@ void InputParser::update()
 {
     if (m_entity.isValid())
     {
+        checkControllerInput();
+
         auto& player = m_entity.getComponent<Player>();
 
         Input input;
@@ -319,7 +321,7 @@ void InputParser::checkControllerInput()
     static const float MinLen2 = (DeadZone * DeadZone);
     if (len2 > MinLen2)
     {
-        m_analogueAmount = std::sqrt(len2) / cro::GameController::AxisMax;
+        m_analogueAmount = std::sqrt(len2) / (cro::GameController::AxisMax - DeadZone);
     }
 
 

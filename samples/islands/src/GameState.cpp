@@ -526,10 +526,12 @@ void GameState::spawnPlayer(PlayerInfo info)
             };
 
             //placeholder for player model
+            //don't worry about mis-matching colour IDs... well be setting avatars differently
+
             auto playerEnt = m_gameScene.createEntity();
             playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
             md.createModel(playerEnt, m_resources);
-            playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[NextPlayerPlane - 1]);
+            playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
 
             playerEnt.addComponent<cro::Callback>().active = true;
             playerEnt.getComponent<cro::Callback>().function =
@@ -575,6 +577,9 @@ void GameState::spawnPlayer(PlayerInfo info)
         md.createModel(entity, m_resources);
 
         auto rotation = entity.getComponent<cro::Transform>().getRotation();
+        entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
+
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
     }

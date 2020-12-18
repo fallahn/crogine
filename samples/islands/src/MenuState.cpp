@@ -86,19 +86,21 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         b = false;
     }
     
-    //we returned from a previous  game
+    //we returned from a previous game
+    //TODO this should depend if we're playing split screen
     if (sd.clientConnection.connected)
     {
         updateLobbyStrings();
 
         //switch to lobby view
-        m_currentMenu = Lobby;
+        m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
 
         cro::Command cmd;
         cmd.targetFlags = MenuCommandID::RootNode;
-        cmd.action = [](cro::Entity e, float)
+        cmd.action = [&](cro::Entity e, float)
         {
             e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
+            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
         };
         m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
@@ -237,7 +239,7 @@ void MenuState::createScene()
             ImGui::SetNextWindowSize({ 400.f, 400.f });
             if (ImGui::Begin("Main Menu"))
             {
-                if (m_currentMenu == Main)
+                if (m_scene.getSystem<cro::UISystem>().getActiveGroup() == GroupID::Main)
                 {
                     if (ImGui::Button("Host"))
                     {
@@ -264,11 +266,18 @@ void MenuState::createScene()
                         if (!m_sharedData.clientConnection.connected
                             && !m_sharedData.serverInstance.running())
                         {
-                            m_currentMenu = Join;
+                            cro::Command cmd;
+                            cmd.targetFlags = MenuCommandID::RootNode;
+                            cmd.action = [&](cro::Entity e, float)
+                            {
+                                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Join]);
+                                m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Join);
+                            };
+                            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                         }
                     }
                 }
-                else if (m_currentMenu == Join)
+                else if (m_scene.getSystem<cro::UISystem>().getActiveGroup() == GroupID::Join)
                 {
                     static char buffer[20] = "127.0.0.1";
                     ImGui::InputText("Address", buffer, 20);
@@ -289,7 +298,15 @@ void MenuState::createScene()
                         m_sharedData.clientConnection.netClient.disconnect();
                         m_sharedData.serverInstance.stop();
                         m_sharedData.clientConnection.connected = false;
-                        m_currentMenu = Main;
+                        
+                        cro::Command cmd;
+                        cmd.targetFlags = MenuCommandID::RootNode;
+                        cmd.action = [&](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
+                            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
+                        };
+                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                     }
                 }
                 else
@@ -309,7 +326,15 @@ void MenuState::createScene()
                         m_sharedData.clientConnection.netClient.disconnect();
                         m_sharedData.serverInstance.stop();
                         m_sharedData.clientConnection.connected = false;
-                        m_currentMenu = Main;
+                        
+                        cro::Command cmd;
+                        cmd.targetFlags = MenuCommandID::RootNode;
+                        cmd.action = [&](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
+                            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
+                        };
+                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                     }
                 }
 
@@ -385,8 +410,6 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 //switch to lobby view (if not playing split screen)
                 if (m_scene.getSystem<cro::UISystem>().getActiveGroup() != GroupID::LocalPlay)
                 {
-                    m_currentMenu = Lobby;
-
                     cro::Command cmd;
                     cmd.targetFlags = MenuCommandID::RootNode;
                     cmd.action = [&](cro::Entity e, float)

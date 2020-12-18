@@ -103,7 +103,7 @@ private:
     enum MenuID
     {
         Main, Avatar, Join, Lobby, Options, Count
-    }m_currentMenu = Main;
+    };
 
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
 
