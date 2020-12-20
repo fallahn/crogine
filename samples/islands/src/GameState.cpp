@@ -54,9 +54,12 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/graphics/CircleMeshBuilder.hpp>
+#include <crogine/graphics/Image.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+
+#include <cstring>
 
 namespace
 {
@@ -135,7 +138,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
             ImGui::SetNextWindowSize({ 300.f, 320.f });
             if (ImGui::Begin("Info"))
             {
-
                 if (playerEntity.isValid())
                 {
                     ImGui::Text("Player ID: %d", m_sharedData.clientConnection.connectionID);
@@ -146,6 +148,15 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
                 }
 
                 ImGui::Text("Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
+            }
+            ImGui::End();
+
+            if (ImGui::Begin("Textures"))
+            {
+                if (ImGui::CollapsingHeader("Height Map"))
+                {
+                    ImGui::Image(m_islandTexture, { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                }
             }
             ImGui::End();
         });
@@ -387,6 +398,9 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     switch (packet.getID())
     {
     default: break;
+    case PacketID::Heightmap:
+        updateHeightmap(packet);
+        break;
     case PacketID::EntityRemoved:
     {
         auto entityID = packet.as<std::uint32_t>();
@@ -646,6 +660,37 @@ void GameState::updateView(cro::Camera&)
     for (auto cam : m_cameras)
     {
         cam.getComponent<cro::Camera>().projectionMatrix = glm::perspective(fov, aspect, nearPlane, farPlane);
+    }
+}
+
+void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
+{
+    auto size = packet.getSize();
+    if (size % sizeof(float) != 0)
+    {
+        //something is wrong, we should request again
+    }
+    else
+    {
+        m_heightmap.resize(size / sizeof(float));
+        std::memcpy(m_heightmap.data(), packet.getData(), size);
+
+        //preview texture / height map
+        cro::Image img;
+        img.create(IslandTileCount, IslandTileCount, cro::Colour::Black());
+        for (auto i = 0u; i < m_heightmap.size(); ++i)
+        {
+            auto level = m_heightmap[i] * 255.f;
+            auto channel = static_cast<std::uint8_t>(level);
+            cro::Colour c(channel, channel, channel);
+
+            auto x = i % IslandTileCount;
+            auto y = i / IslandTileCount;
+            img.setPixel(x, y, c);
+        }
+
+        m_islandTexture.update(img.getPixelData());
+        m_islandTexture.setSmooth(true);
     }
 }
 

@@ -61,6 +61,9 @@
     <Filter Include="Source Files\Client\components">
       <UniqueIdentifier>{fd2c8667-53fa-4313-ba76-5a51b1a31fac}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\fastnoise">
+      <UniqueIdentifier>{cf9f01d9-dd08-4033-bf9c-c57e99de4b1a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -119,6 +122,27 @@
     </ClCompile>
     <ClCompile Include="src\DayNightDirector.cpp">
       <Filter>Source Files\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx2.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx512.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_internal.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_neon.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse2.cpp">
+      <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse41.cpp">
+      <Filter>Source Files\fastnoise</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

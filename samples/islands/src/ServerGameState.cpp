@@ -35,6 +35,9 @@ source distribution.
 #include "PlayerSystem.hpp"
 #include "ActorSystem.hpp"
 #include "ServerMessages.hpp"
+#include "GameConsts.hpp"
+
+#include "fastnoise/FastNoiseSIMD.h"
 
 #include <crogine/core/Log.hpp>
 
@@ -59,7 +62,8 @@ namespace
 GameState::GameState(SharedData& sd)
     : m_returnValue (StateID::Game),
     m_sharedData    (sd),
-    m_scene         (sd.messageBus)
+    m_scene         (sd.messageBus),
+    m_heightmap     (IslandTileCount* IslandTileCount, 0.f)
 {
     initScene();
     buildWorld();
@@ -187,9 +191,11 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
     }
 
 
-    //TODO send map data to start building the world
+    //send map data to start building the world
+    m_sharedData.host.sendPacket(m_sharedData.clients[playerID].peer, PacketID::Heightmap, m_heightmap.data(), m_heightmap.size() * sizeof(float), cro::NetFlag::Reliable);
 
     //client said it was ready, so mark as ready
+    //TODO flag each part of this so we know when a client has player/world etc ready
     m_sharedData.clients[playerID].ready = true;
 }
 
@@ -274,4 +280,207 @@ void GameState::buildWorld()
             }
         }
     }
+
+    //create the world data
+    createHeightmap();
+}
+
+void GameState::createHeightmap()
+{
+    //height mask
+    const float MaxLength = TileSize * IslandFadeSize;
+    const std::uint32_t Offset = IslandBorder + IslandFadeSize;
+
+    for (auto y = IslandBorder; y < IslandTileCount - IslandBorder; ++y)
+    {
+        for (auto x = IslandBorder; x < IslandTileCount - IslandBorder; ++x)
+        {
+            float val = 0.f;
+            float pos = 0.f;
+
+            if (x < IslandTileCount / 2)
+            {
+                pos = (x - IslandBorder) * TileSize;
+
+            }
+            else
+            {
+                pos = (IslandTileCount - IslandBorder - x) * TileSize;
+            }
+
+            val = pos / MaxLength;
+            val = std::min(1.f, std::max(0.f, val));
+
+            if (y > Offset && y < IslandTileCount - Offset)
+            {
+                m_heightmap[y * IslandTileCount + x] = val;
+            }
+
+            if (y < IslandTileCount / 2)
+            {
+                pos = (y - IslandBorder) * TileSize;
+
+            }
+            else
+            {
+                pos = (IslandTileCount - IslandBorder - y) * TileSize;
+            }
+
+            val = pos / MaxLength;
+            val = std::min(1.f, std::max(0.f, val));
+
+            if (x > Offset && x < IslandTileCount - Offset)
+            {
+                m_heightmap[y * IslandTileCount + x] = val;
+            }
+        }
+    }
+
+    //mask corners
+    auto corner = [&, MaxLength](glm::uvec2 start, glm::uvec2 end, glm::vec2 centre)
+    {
+        for (auto y = start.t; y < end.t + 1; ++y)
+        {
+            for (auto x = start.s; x < end.s + 1; ++x)
+            {
+                glm::vec2 pos = glm::vec2(x, y) * TileSize;
+                float val = 1.f - (glm::length(pos - centre) / MaxLength);
+                val = std::max(0.f, std::min(1.f, val));
+                m_heightmap[y * IslandTileCount + x] = val;
+            }
+        }
+    };
+    glm::vec2 centre = glm::vec2(Offset, Offset) * TileSize;
+    corner({ IslandBorder, IslandBorder }, { Offset, Offset }, centre);
+
+    centre.x = (IslandTileCount - Offset) * TileSize;
+    corner({ IslandTileCount - Offset - 1, IslandBorder }, { IslandTileCount - IslandBorder, Offset }, centre);
+
+    centre.y = (IslandTileCount - Offset) * TileSize;
+    corner({ IslandTileCount - Offset - 1, IslandTileCount - Offset - 1 }, { IslandTileCount - IslandBorder, IslandTileCount - IslandBorder }, centre);
+
+    centre.x = Offset * TileSize;
+    corner({ IslandBorder, IslandTileCount - Offset - 1 }, { Offset, IslandTileCount - IslandBorder }, centre);
+
+
+    //fastnoise
+    FastNoiseSIMD* myNoise = FastNoiseSIMD::NewFastNoiseSIMD();
+    myNoise->SetFrequency(0.05f);
+    float* noiseSet = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount * 4, 1, 1);
+
+    //use a 1D noise push the edges of the mask in/out by +/-1
+    std::uint32_t i = 0;
+    for (auto x = Offset; x < IslandTileCount - Offset; ++x)
+    {
+        auto val = std::round(noiseSet[i++] * EdgeVariation);
+        if (val < 0) //move gradient tiles up one
+        {
+            for (auto j = 0; j < std::abs(val); ++j)
+            {
+                //top row
+                for (auto y = IslandBorder; y < Offset + 1; ++y)
+                {
+                    m_heightmap[(y - 1) * IslandTileCount + x] = m_heightmap[y * IslandTileCount + x];
+                }
+
+                //bottom row
+                for (auto y = IslandTileCount - Offset - 1; y < IslandTileCount - IslandBorder; ++y)
+                {
+                    m_heightmap[(y - 1) * IslandTileCount + x] = m_heightmap[y * IslandTileCount + x];
+                }
+            }
+        }
+        else if (val > 0) //move gradient tiles down one
+        {
+            for (auto j = 0; j < val; ++j)
+            {
+                //top row
+                for (auto y = Offset; y > IslandBorder; --y)
+                {
+                    m_heightmap[y * IslandTileCount + x] = m_heightmap[(y - 1) * IslandTileCount + x];
+                }
+
+                //bottom row
+                for (auto y = IslandTileCount - IslandBorder; y > IslandTileCount - Offset - 1; --y)
+                {
+                    m_heightmap[y * IslandTileCount + x] = m_heightmap[(y - 1) * IslandTileCount + x];
+                }
+            }
+        }
+    }
+
+    for (auto y = Offset; y < IslandTileCount - Offset; ++y)
+    {
+        auto val = std::round(noiseSet[i++] * EdgeVariation);
+        if (val < 0) //move gradient tiles left one
+        {
+            for (auto j = 0; j < std::abs(val); ++j)
+            {
+                //left col
+                for (auto x = IslandBorder; x < Offset + 1; ++x)
+                {
+                    m_heightmap[y * IslandTileCount + x] = m_heightmap[y * IslandTileCount + (x + 1)];
+                }
+
+                //right col
+                for (auto x = IslandTileCount - Offset - 1; x < IslandTileCount - IslandBorder; ++x)
+                {
+                    m_heightmap[y * IslandTileCount + x] = m_heightmap[y * IslandTileCount + (x + 1)];
+                }
+            }
+        }
+        else if (val > 0) //move gradient tiles right one
+        {
+            for (auto j = 0; j < val; ++j)
+            {
+                //left col
+                for (auto x = Offset; x > IslandBorder; --x)
+                {
+                    m_heightmap[y * IslandTileCount + (x + 1)] = m_heightmap[y * IslandTileCount + x];
+                }
+
+                //right col
+                for (auto x = IslandTileCount - IslandBorder; x > IslandTileCount - Offset - 1; --x)
+                {
+                    m_heightmap[y * IslandTileCount + (x + 1)] = m_heightmap[y * IslandTileCount + x];
+                }
+            }
+        }
+    }
+    FastNoiseSIMD::FreeNoiseSet(noiseSet);
+
+    //main island noise
+    myNoise->SetFrequency(0.01f);
+    noiseSet = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount, IslandTileCount, 1);
+
+    myNoise->SetFrequency(0.1f);
+    auto* noiseSet2 = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount, IslandTileCount, 1);
+
+    for (auto y = 0u; y < IslandTileCount; ++y)
+    {
+        for (auto x = 0u; x < IslandTileCount; ++x)
+        {
+            float val = noiseSet[y * IslandTileCount + x];
+            val += 1.f;
+            val /= 2.f;
+
+            const float minAmount = IslandLevels / 2.f;
+            float multiplier = IslandLevels - minAmount;
+
+            val *= multiplier;
+            val = std::floor(val);
+            val += minAmount;
+            val /= IslandLevels;
+
+            float valMod = noiseSet2[y * IslandTileCount + x];
+            valMod += 1.f;
+            valMod /= 2.f;
+            valMod = 0.8f + valMod * 0.2f;
+
+            m_heightmap[y * IslandTileCount + x] *= val * valMod;
+        }
+    }
+
+    FastNoiseSIMD::FreeNoiseSet(noiseSet2);
+    FastNoiseSIMD::FreeNoiseSet(noiseSet);
 }

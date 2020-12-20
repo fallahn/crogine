@@ -60,11 +60,15 @@ namespace Sv
         //we should never have more than one on any except the first
         std::array<std::array<cro::Entity, ConstVal::MaxClients>, ConstVal::MaxClients> m_playerEntities;
 
+        std::vector<float> m_heightmap;
+
+
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);
         void doServerCommand(const cro::NetEvent&);
 
         void initScene();
         void buildWorld();
+        void createHeightmap();
     };
 }

@@ -1,0 +1,17 @@
+
+Visual Studio - MSVC
+
+Change the enhanced instruction set (File Properties -> C/C++ -> Code Generation -> Enable Enhanced Instruction Set) for the following files:
+
+    FastNoiseSIMD_sse2.cpp: /arch:SSE2
+    FastNoiseSIMD_sse41.cpp: /arch:SSE2
+    FastNoiseSIMD_avx2.cpp: /arch:AVX2 or /arch:AVX
+
+For the above files disable whole program optimization (File Properties -> C/C++ -> Optimization -> Whole Program Optimization) since this can lead to the compiler inlining unsupported intrinsics into unmanaged locations.
+G++ & Clang
+
+Use compiler setting -std=c++11, and the following for individual files:
+
+    FastNoiseSIMD_sse2.cpp: -msse2
+    FastNoiseSIMD_sse41.cpp: -msse4.1
+    FastNoiseSIMD_avx2.cpp: -march=core-avx2

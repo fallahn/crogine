@@ -158,6 +158,25 @@
   <ItemGroup>
     <ClCompile Include="src\DayNightDirector.cpp" />
     <ClCompile Include="src\ErrorState.cpp" />
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD.cpp" />
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx2.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx512.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_internal.cpp" />
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_neon.cpp" />
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse2.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse41.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="src\FoamEffect.cpp" />
     <ClCompile Include="src\GameState.cpp" />
     <ClCompile Include="src\InputParser.cpp" />

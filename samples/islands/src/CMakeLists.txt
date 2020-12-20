@@ -18,4 +18,12 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/Server.cpp
   ${PROJECT_DIR}/ServerGameState.cpp
   ${PROJECT_DIR}/ServerLobbyState.cpp
-  ${PROJECT_DIR}/SliderSystem.cpp)
+  ${PROJECT_DIR}/SliderSystem.cpp
+
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD.cpp
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD_avx2.cpp
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD_avx512.cpp
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD_internal.cpp
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD_neon.cpp
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD_sse2.cpp
+  ${PROJECT_DIR}/fastnoise/FastNoiseSIMD_sse41.cpp)

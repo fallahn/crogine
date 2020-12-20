@@ -74,17 +74,18 @@ private:
     cro::ResourceCollection m_resources;
     std::array<std::size_t, MeshID::Count> m_meshIDs = {};
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
-    cro::Texture m_islandTexture;
+
     FoamEffect m_foamEffect;
     cro::EnvironmentMap m_environmentMap;
-
-    std::vector<float> m_heightmap;
 
     std::unordered_map<std::uint8_t, InputParser> m_inputParsers;
     std::vector<cro::Entity> m_cameras;
 
     cro::Clock m_bitrateClock; //< updates the bitrate display in the debug window
     cro::Clock m_sceneRequestClock; //< spaces the request for initial scene data
+
+    std::vector<float> m_heightmap;
+    cro::Texture m_islandTexture;
 
     void addSystems();
     void loadAssets();
@@ -95,6 +96,8 @@ private:
     void handlePacket(const cro::NetEvent::Packet&);
     void spawnPlayer(PlayerInfo);
     void updateView(cro::Camera&);
+
+    void updateHeightmap(const cro::NetEvent::Packet&);
 
     //TODO move this to player system
     float getPlayerHeight(glm::vec3 position);
