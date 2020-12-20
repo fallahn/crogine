@@ -77,12 +77,7 @@ void DynamicTreeSystem::process(float)
             auto worldPosition = tx.getWorldPosition();
             auto worldBounds = bpc.m_bounds;
 
-            /*worldBounds.left += tx.getOrigin().x * tx.getScale().x;
-            worldBounds.top += tx.getOrigin().y * tx.getScale().y;
-
-            worldBounds = tx.getWorldTransform().transformRect(worldBounds);*/
-
-            worldBounds += tx.getOrigin() * tx.getScale();
+            worldBounds += tx.getOrigin();
             worldBounds = tx.getWorldTransform() * worldBounds;
 
             moveNode(bpc.m_treeID, worldBounds, worldPosition - bpc.m_lastWorldPosition);
@@ -145,21 +140,14 @@ std::int32_t DynamicTreeSystem::addToTree(Entity entity)
 
     const auto& tx = entity.getComponent<Transform>();
     auto bounds = entity.getComponent<DynamicTreeComponent>().m_bounds;
-    /*bounds.left += tx.getOrigin().x * tx.getScale().x;
-    bounds.top += tx.getOrigin().y * tx.getScale().y;
-    bounds = tx.getWorldTransform().transformRect(bounds);*/
 
-    bounds += tx.getOrigin() * tx.getScale();
+    bounds += tx.getOrigin();
     bounds = tx.getWorldTransform() * bounds;
 
     //fatten AABB
     bounds[0] -= FattenAmount;
     bounds[1] += FattenAmount;
 
-    /*bounds.left -= FattenAmount;
-    bounds.top -= FattenAmount;
-    bounds.width += (FattenAmount * 2.f);
-    bounds.height += (FattenAmount * 2.f);*/
 
     m_nodes[treeID].fatBounds = bounds;
     m_nodes[treeID].entity = entity;
