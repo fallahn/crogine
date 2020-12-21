@@ -31,6 +31,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "ServerPacketData.hpp"
 #include "Messages.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -41,7 +42,8 @@ source distribution.
 
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(PlayerSystem))
+    : cro::System   (mb, typeid(PlayerSystem)),
+    m_heightmap     (IslandTileCount * IslandTileCount, 1.f)
 {
     requireComponent<Player>();
     requireComponent<cro::Transform>();
@@ -118,6 +120,7 @@ void PlayerSystem::processInput(cro::Entity entity)
     {
         processMovement(entity, player.inputStack[player.lastUpdatedInput]);
         processCollision(entity);
+        processAvatar(player.avatar);
 
         player.lastUpdatedInput = (player.lastUpdatedInput + 1) % Player::HistorySize;
     }
@@ -165,3 +168,43 @@ void PlayerSystem::processCollision(cro::Entity)
 {
 
 }
+
+void PlayerSystem::processAvatar(cro::Entity entity)
+{
+    auto position = entity.getComponent<cro::Transform>().getWorldPosition();
+    position.x += (IslandSize / 2.f); //puts the position relative to the grid - this should be the origin coords
+    position.z += (IslandSize / 2.f);
+
+    auto height = getPlayerHeight(position);
+    entity.getComponent<cro::Transform>().setPosition({ 0.f, height + IslandWorldHeight, 0.f });
+}
+
+float PlayerSystem::getPlayerHeight(glm::vec3 position)
+{
+    auto lerp = [](float a, float b, float t) constexpr
+    {
+        return a + t * (b - a);
+    };
+
+    const auto getHeightAt = [&](std::int32_t x, std::int32_t y)
+    {
+        //heightmap is flipped relative to the world innit
+        x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
+        y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
+        return m_heightmap[(IslandTileCount - y) * IslandTileCount + x];
+    };
+
+    float posX = position.x / TileSize;
+    float posY = position.z / TileSize;
+
+    float intpart = 0.f;
+    auto modX = std::modf(posX, &intpart) / TileSize;
+    auto modY = std::modf(posY, &intpart) / TileSize; //normalise this for lerpitude
+
+    std::int32_t x = static_cast<std::int32_t>(posX);
+    std::int32_t y = static_cast<std::int32_t>(posY);
+
+    float topLine = lerp(getHeightAt(x, y), getHeightAt(x + 1, y), modX);
+    float botLine = lerp(getHeightAt(x, y + 1), getHeightAt(x + 1, y + 1), modX);
+    return lerp(topLine, botLine, modY) * IslandHeight;
+};

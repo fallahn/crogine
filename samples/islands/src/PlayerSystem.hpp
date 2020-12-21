@@ -52,6 +52,8 @@ struct Player final
     glm::vec3 spawnPosition = glm::vec3(0.f);
 
     bool waitResync = false; //waiting to resync player with server
+
+    cro::Entity avatar;
 };
 
 class PlayerSystem final : public cro::System
@@ -65,9 +67,16 @@ public:
 
     void reconcile(cro::Entity, const PlayerUpdate&);
 
+    void setHeightmap(const std::vector<float>& h) { m_heightmap = h; }
+
 private:
+
+    std::vector<float> m_heightmap;
 
     void processInput(cro::Entity);
     void processMovement(cro::Entity, Input);
     void processCollision(cro::Entity);
+    void processAvatar(cro::Entity);
+
+    float getPlayerHeight(glm::vec3);
 };

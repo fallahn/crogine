@@ -90,8 +90,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData        (sd),
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
-    m_foamEffect        (m_resources),
-    m_heightmap         (IslandTileCount * IslandTileCount, 1.f)
+    m_foamEffect        (m_resources)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -550,20 +549,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             md.createModel(playerEnt, m_resources);
             playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
 
-            playerEnt.addComponent<cro::Callback>().active = true;
-            playerEnt.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float)
-            {
-                //TODO move this to player system so it's properly sync'd with server
-                auto position = e.getComponent<cro::Transform>().getWorldPosition();
-                position.x += (IslandSize / 2.f); //puts the position relative to the grid - this should be the origin coords
-                position.z += (IslandSize / 2.f);
-
-                auto height = getPlayerHeight(position);
-                e.getComponent<cro::Transform>().setPosition({ 0.f, height + IslandWorldHeight, 0.f });
-            };
-
-
+            root.getComponent<Player>().avatar = playerEnt;
             root.getComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());
             root.getComponent<cro::Transform>().addChild(waterEnt.getComponent<cro::Transform>());
             root.getComponent<cro::Transform>().addChild(playerEnt.getComponent<cro::Transform>());
@@ -675,15 +661,17 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
     }
     else
     {
-        m_heightmap.resize(size / sizeof(float));
-        std::memcpy(m_heightmap.data(), packet.getData(), size);
+        std::vector<float> heightmap(IslandTileCount * IslandTileCount);
+        std::memcpy(heightmap.data(), packet.getData(), size);
+
+        m_gameScene.getSystem<PlayerSystem>().setHeightmap(heightmap);
 
         //preview texture / height map
         cro::Image img;
         img.create(IslandTileCount, IslandTileCount, cro::Colour::Black());
-        for (auto i = 0u; i < m_heightmap.size(); ++i)
+        for (auto i = 0u; i < heightmap.size(); ++i)
         {
-            auto level = m_heightmap[i] * 255.f;
+            auto level = heightmap[i] * 255.f;
             auto channel = static_cast<std::uint8_t>(level);
             cro::Colour c(channel, channel, channel);
 
@@ -696,33 +684,3 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
         m_islandTexture.setSmooth(true);
     }
 }
-
-float GameState::getPlayerHeight(glm::vec3 position)
-{
-    auto lerp = [](float a, float b, float t) constexpr
-    {
-        return a + t * (b - a);
-    };
-
-    const auto getHeightAt = [&](std::int32_t x, std::int32_t y)
-    {
-        //heightmap is flipped relative to the world innit
-        x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
-        y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
-        return m_heightmap[(IslandTileCount - y) * IslandTileCount + x];
-    };
-
-    float posX = position.x / TileSize;
-    float posY = position.z / TileSize;
-
-    float intpart = 0.f;
-    auto modX = std::modf(posX, &intpart) / TileSize;
-    auto modY = std::modf(posY, &intpart) / TileSize; //normalise this for lerpitude
-
-    std::int32_t x = static_cast<std::int32_t>(posX);
-    std::int32_t y = static_cast<std::int32_t>(posY);
-
-    float topLine = lerp(getHeightAt(x, y), getHeightAt(x + 1, y), modX);
-    float botLine = lerp(getHeightAt(x, y + 1), getHeightAt(x + 1, y + 1), modX);
-    return lerp(topLine, botLine, modY) * IslandHeight;
-};

@@ -42,7 +42,11 @@ source distribution.
 
 #include <crogine/core/Log.hpp>
 
-#include<crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
+
+#include <crogine/ecs/systems/CallbackSystem.hpp>
+
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
@@ -154,7 +158,7 @@ void GameState::netBroadcast()
         ActorUpdate update;
         update.actorID = actor.id;
         update.serverID = actor.serverEntityId;
-        update.position = tx.getPosition();
+        update.position = tx.getWorldPosition();
         update.rotation = Util::compressQuat(tx.getRotation());
         update.timestamp = timestamp;
         m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, update, cro::NetFlag::Unreliable);
@@ -251,6 +255,7 @@ void GameState::initScene()
 {
     auto& mb = m_sharedData.messageBus;
 
+    m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<ActorSystem>(mb);
     m_scene.addSystem<PlayerSystem>(mb);
 
@@ -276,8 +281,18 @@ void GameState::buildWorld()
                 m_playerEntities[i][j].getComponent<Player>().spawnPosition = PlayerSpawns[playerCount++];
                 m_playerEntities[i][j].getComponent<Player>().connectionID = i;
 
-                m_playerEntities[i][j].addComponent<Actor>().id = i+j;
-                m_playerEntities[i][j].getComponent<Actor>().serverEntityId = m_playerEntities[i][j].getIndex();
+                //this controls the server side appearance
+                //such as height and animation which needs
+                //to be sync'd with clients. Adding the actor
+                //to this means clients only need get the appearance
+                //of other players
+                auto avatar = m_scene.createEntity();
+                avatar.addComponent<cro::Transform>();
+                avatar.addComponent<Actor>().id = i + j;
+                avatar.getComponent<Actor>().serverEntityId = m_playerEntities[i][j].getIndex();
+
+                m_playerEntities[i][j].getComponent<Player>().avatar = avatar;
+                m_playerEntities[i][j].getComponent<cro::Transform>().addChild(avatar.getComponent<cro::Transform>());
             }
         }
     }
@@ -484,4 +499,6 @@ void GameState::createHeightmap()
 
     FastNoiseSIMD::FreeNoiseSet(noiseSet2);
     FastNoiseSIMD::FreeNoiseSet(noiseSet);
+
+    m_scene.getSystem<PlayerSystem>().setHeightmap(m_heightmap);
 }

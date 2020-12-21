@@ -84,7 +84,6 @@ private:
     cro::Clock m_bitrateClock; //< updates the bitrate display in the debug window
     cro::Clock m_sceneRequestClock; //< spaces the request for initial scene data
 
-    std::vector<float> m_heightmap;
     cro::Texture m_islandTexture;
 
     void addSystems();
@@ -98,7 +97,4 @@ private:
     void updateView(cro::Camera&);
 
     void updateHeightmap(const cro::NetEvent::Packet&);
-
-    //TODO move this to player system
-    float getPlayerHeight(glm::vec3 position);
 };
