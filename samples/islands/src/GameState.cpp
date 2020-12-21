@@ -35,7 +35,6 @@ source distribution.
 #include "ClientCommandIDs.hpp"
 #include "InterpolationSystem.hpp"
 #include "ClientPacketData.hpp"
-#include "GameConsts.hpp"
 #include "SeaSystem.hpp"
 #include "DayNightDirector.hpp"
 
@@ -90,6 +89,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData        (sd),
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
+    m_requestFlags      (0),
+    m_dataRequestCount  (0),
     m_foamEffect        (m_resources)
 {
     context.mainWindow.loadResources([this]() {
@@ -249,14 +250,40 @@ bool GameState::simulate(float dt)
         //we've been disconnected somewhere - push error state
     }
 
-    //if we haven't had the server reply yet, tell it we're ready
-    if (!m_sharedData.clientConnection.ready
-        && m_sceneRequestClock.elapsed().asMilliseconds() > 1000)
+    if (m_dataRequestCount == MaxDataRequests)
     {
-        m_sceneRequestClock.restart();
-        m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.connectionID, cro::NetFlag::Unreliable);
+        m_sharedData.errorMessage = "Failed to download\ndata from the server";
+        requestStackPush(States::Error);
+
+        return false;
     }
 
+    //if we haven't had all the data yet ask for it
+    if (m_requestFlags != ClientRequestFlags::All)
+    {
+        if (m_sceneRequestClock.elapsed().asMilliseconds() > 1000)
+        {
+            m_sceneRequestClock.restart();
+            m_dataRequestCount++;
+
+            if ((m_requestFlags & ClientRequestFlags::Heightmap) == 0)
+            {
+                std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | ClientRequestFlags::Heightmap;
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestData, data, cro::NetFlag::Reliable);
+            }
+
+            if ((m_requestFlags & ClientRequestFlags::TreeMap) == 0)
+            {
+                //just flag this for now else we'll never complete
+                m_requestFlags |= ClientRequestFlags::TreeMap;
+            }
+        }
+    }
+    else if (!m_sharedData.clientConnection.ready)
+    {
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable);
+        m_sharedData.clientConnection.ready = true;
+    }
 
     for (auto& [id, parser] : m_inputParsers)
     {
@@ -657,7 +684,9 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
     auto size = packet.getSize();
     if (size % sizeof(float) != 0)
     {
-        //something is wrong, we should request again
+        //something is wrong, but we'll automatically request again
+        //so we should count the number of times failed as an exit strat
+        m_dataRequestCount++;
     }
     else
     {
@@ -682,5 +711,7 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
 
         m_islandTexture.update(img.getPixelData());
         m_islandTexture.setSmooth(true);
+
+        m_requestFlags |= ClientRequestFlags::Heightmap;
     }
 }

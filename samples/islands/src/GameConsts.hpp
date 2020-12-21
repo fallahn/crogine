@@ -53,6 +53,19 @@ static constexpr float IslandWorldHeight = -2.02f;
 
 static constexpr float SunOffset = IslandSize * 1.35f;
 
+struct ClientRequestFlags
+{
+    enum
+    {
+        Heightmap = 0x1,
+        TreeMap   = 0x2,
+
+
+        All = 0x1 | 0x2
+    };
+};
+static constexpr std::uint32_t MaxDataRequests = 10;
+
 //day night stuff
 static constexpr std::uint32_t DayMinutes = 24 * 60;
 static constexpr float RadsPerMinute = cro::Util::Const::TAU / 6.f; //6 minutes per cycle

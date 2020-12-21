@@ -105,6 +105,25 @@ void GameState::netEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::RequestData:
+        {
+            std::uint16_t data = evt.packet.as<std::uint16_t>();
+            std::uint8_t connectionID = (data & 0xff00) >> 8;
+            std::uint8_t flags = (data & 0x00ff);
+
+            switch (flags)
+            {
+            default: break;
+            case ClientRequestFlags::Heightmap:
+                //send map data to start building the world
+                m_sharedData.host.sendPacket(m_sharedData.clients[connectionID].peer, PacketID::Heightmap, m_heightmap.data(), m_heightmap.size() * sizeof(float), cro::NetFlag::Reliable);
+                break;
+            case ClientRequestFlags::TreeMap:
+
+                break;
+            }
+        }
+            break;
         case PacketID::ClientReady:
             if (!m_sharedData.clients[evt.packet.as<std::uint8_t>()].ready)
             {
@@ -195,13 +214,10 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
         }
     }
 
-
-    //send map data to start building the world
-    m_sharedData.host.sendPacket(m_sharedData.clients[playerID].peer, PacketID::Heightmap, m_heightmap.data(), m_heightmap.size() * sizeof(float), cro::NetFlag::Reliable);
-
     //client said it was ready, so mark as ready
-    //TODO flag each part of this so we know when a client has player/world etc ready
     m_sharedData.clients[playerID].ready = true;
+
+    //TODO check all clients are ready and begin the game
 }
 
 void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)

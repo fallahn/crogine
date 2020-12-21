@@ -71,7 +71,8 @@ namespace PacketID
 
         //from client
         RequestGameStart,
-        ClientReady, //< uint8 connectionID - requests game data from server. Sent repeatedly until ack'd
+        RequestData, //< uint16 (connectionID << 8) | ClientRequestFlag - requests game data from server. Sent repeatedly until ack'd
+        ClientReady, //< uint8 connectionID - everything has loaded.
         InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput)
         PlayerInfo, //< uint8 name length in bytes followed by uint32 array string
         PlayerCount, //< uint16 (connectionID << 8) | playerCount number of local players

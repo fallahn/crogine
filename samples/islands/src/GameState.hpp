@@ -34,6 +34,7 @@ source distribution.
 #include "InputParser.hpp"
 #include "ServerPacketData.hpp"
 #include "FoamEffect.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConsoleClient.hpp>
@@ -70,6 +71,9 @@ private:
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
+
+    std::uint32_t m_requestFlags;
+    std::uint32_t m_dataRequestCount;
 
     cro::ResourceCollection m_resources;
     std::array<std::size_t, MeshID::Count> m_meshIDs = {};
