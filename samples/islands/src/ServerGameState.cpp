@@ -36,6 +36,7 @@ source distribution.
 #include "ActorSystem.hpp"
 #include "ServerMessages.hpp"
 #include "GameConsts.hpp"
+#include "WeatherDirector.hpp"
 
 #include "fastnoise/FastNoiseSIMD.h"
 
@@ -253,7 +254,7 @@ void GameState::initScene()
     m_scene.addSystem<ActorSystem>(mb);
     m_scene.addSystem<PlayerSystem>(mb);
 
-
+    m_scene.addDirector<WeatherDirector>(m_sharedData.host);
 }
 
 void GameState::buildWorld()

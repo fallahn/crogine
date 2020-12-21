@@ -29,14 +29,18 @@ source distribution.
 
 #pragma once
 
+#include <crogine/util/Constants.hpp>
+
 #include <cstdint>
 #include <array>
 
+//player view
 static constexpr float SeaRadius = 50.f;
 static constexpr float CameraHeight = 3.2f;
 static constexpr float CameraDistance = 10.f;
 static constexpr std::uint32_t ReflectionMapSize = 512u;
 
+//island generation
 static constexpr float IslandSize = SeaRadius * 2.f; //this saves scaling the depth map in the sea shader.
 static constexpr float TileSize = 0.8f;// 1.f;
 static constexpr std::size_t IslandTileCount = static_cast<std::size_t>(IslandSize / TileSize);
@@ -48,3 +52,8 @@ static constexpr float IslandHeight = 4.2f; //these must be replicated in the se
 static constexpr float IslandWorldHeight = -2.02f;
 
 static constexpr float SunOffset = IslandSize * 1.35f;
+
+//day night stuff
+static constexpr std::uint32_t DayMinutes = 24 * 60;
+static constexpr float RadsPerMinute = cro::Util::Const::TAU / 6.f; //6 minutes per cycle
+static constexpr float RadsPerSecond = RadsPerMinute / 60.f;

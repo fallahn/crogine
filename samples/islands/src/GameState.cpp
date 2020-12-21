@@ -398,6 +398,9 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     switch (packet.getID())
     {
     default: break;
+    case PacketID::DayNightUpdate:
+        m_gameScene.getDirector<DayNightDirector>().setTimeOfDay(Util::decompressFloat(packet.as<std::int16_t>()));
+        break;
     case PacketID::Heightmap:
         updateHeightmap(packet);
         break;

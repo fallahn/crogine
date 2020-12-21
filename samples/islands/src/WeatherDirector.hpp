@@ -30,52 +30,25 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/Director.hpp>
-#include <crogine/ecs/Entity.hpp>
-#include <crogine/core/ConsoleClient.hpp>
+#include <crogine/core/Clock.hpp>
 
-#include <crogine/detail/glm/vec3.hpp>
-#include <crogine/detail/glm/gtc/quaternion.hpp>
-
-struct TargetTransform final
+namespace cro
 {
-    glm::vec3 endPosition = glm::vec3(0.f);
-    glm::quat endRotation = glm::quat(1.f, 0.f, 0.f, 0.f);
-    
-    glm::vec3 startPosition = glm::vec3(0.f);
-    glm::quat startRotation = glm::quat(1.f, 0.f, 0.f, 0.f);
+    class NetHost;
+}
 
-    bool active = false;
-    float interpolation = 0.f;
-};
-
-struct ChildNode final
-{
-    cro::Entity sunNode;
-    cro::Entity moonNode;
-};
-
-class DayNightDirector final : public cro::Director, public cro::ConsoleClient
+class WeatherDirector final : public cro::Director
 {
 public:
-    DayNightDirector();
+    explicit WeatherDirector(cro::NetHost&);
 
     void handleMessage(const cro::Message&) override;
 
     void process(float) override;
 
-    void setTimeOfDay(std::uint32_t minutes);
-
-    void setTimeOfDay(float normalised);
-
-    void setCycleSpeed(float);
-
 private:
+    cro::NetHost& m_netHost;
 
-    float m_timeOfDay; //normalised.
-    float m_targetTime; //so we can interpolate time changes from the server without jumping too much
-    bool m_correctTime; //time target was changed so we're expecting correction
-    float m_cycleSpeed;
-
-    std::size_t m_currentSkyIndex;
-    std::size_t m_nextSkyIndex;
+    cro::Clock m_dayNightClock;
+    float m_dayNightTime;
 };

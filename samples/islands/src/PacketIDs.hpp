@@ -67,6 +67,8 @@ namespace PacketID
 
         Heightmap, //< array of floats
 
+        DayNightUpdate, //< compressed float with the current day/night time
+
         //from client
         RequestGameStart,
         ClientReady, //< uint8 connectionID - requests game data from server. Sent repeatedly until ack'd

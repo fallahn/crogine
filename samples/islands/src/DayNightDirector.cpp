@@ -136,16 +136,12 @@ namespace
         return {};
     }
 
-    constexpr std::uint32_t DayMinutes = 24 * 60;
-    constexpr float RadsPerMinute = cro::Util::Const::TAU / 6.f; //6 minutes per cycle
-    constexpr float RadsPerSecond = RadsPerMinute / 60.f;
-
     constexpr float CorrectionSpeed = 100.f;
 }
 
 DayNightDirector::DayNightDirector()
     : m_timeOfDay       (0.f),
-    m_targetTime        (0.2f),
+    m_targetTime        (0.f),
     m_correctTime       (true),
     m_cycleSpeed        (1.f),
     m_currentSkyIndex   (0),
@@ -156,7 +152,7 @@ DayNightDirector::DayNightDirector()
         {
             try
             {
-                auto minutes = std::stoi(param);
+                std::uint32_t minutes = std::stoi(param);
                 setTimeOfDay(minutes);
 
                 cro::Console::print("Set time of day to " + param);
@@ -313,7 +309,12 @@ void DayNightDirector::setTimeOfDay(std::uint32_t minutes)
     minutes += offset;
 
     minutes = minutes % DayMinutes;
-    m_targetTime = static_cast<float>(minutes) / DayMinutes;
+    setTimeOfDay(static_cast<float>(minutes) / DayMinutes);
+}
+
+void DayNightDirector::setTimeOfDay(float normalised)
+{
+    m_targetTime = normalised;
     m_correctTime = true;
 }
 

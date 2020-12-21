@@ -64,6 +64,18 @@
     <Filter Include="Source Files\fastnoise">
       <UniqueIdentifier>{cf9f01d9-dd08-4033-bf9c-c57e99de4b1a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Server\directors">
+      <UniqueIdentifier>{7610dbc1-0cdf-474c-ab6e-6db72e9843a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Server\Directors">
+      <UniqueIdentifier>{55b3d155-6fca-4c1f-8823-404b6275dc5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Client\directors">
+      <UniqueIdentifier>{120d6654-38ea-4800-8408-bf2bf06f34cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Client\directors">
+      <UniqueIdentifier>{0f1646cd-806a-4af1-8f7f-3982bc5b1b68}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -120,9 +132,6 @@
     <ClCompile Include="src\FoamEffect.cpp">
       <Filter>Source Files\Client</Filter>
     </ClCompile>
-    <ClCompile Include="src\DayNightDirector.cpp">
-      <Filter>Source Files\Client</Filter>
-    </ClCompile>
     <ClCompile Include="src\fastnoise\FastNoiseSIMD.cpp">
       <Filter>Source Files\fastnoise</Filter>
     </ClCompile>
@@ -143,6 +152,12 @@
     </ClCompile>
     <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse41.cpp">
       <Filter>Source Files\fastnoise</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WeatherDirector.cpp">
+      <Filter>Source Files\Server\Directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DayNightDirector.cpp">
+      <Filter>Source Files\Client\directors</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -239,11 +254,17 @@
     <ClInclude Include="src\FoamEffect.hpp">
       <Filter>Header Files\Client</Filter>
     </ClInclude>
-    <ClInclude Include="src\DayNightDirector.hpp">
-      <Filter>Header Files\Client</Filter>
-    </ClInclude>
     <ClInclude Include="src\InputBinding.hpp">
       <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WeatherDirector.hpp">
+      <Filter>Header Files\Server\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DayNightDirector.hpp">
+      <Filter>Header Files\Client\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameConsts.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

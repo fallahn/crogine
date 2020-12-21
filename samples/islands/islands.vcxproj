@@ -194,6 +194,7 @@
     <ClCompile Include="src\Server.cpp" />
     <ClCompile Include="src\ServerGameState.cpp" />
     <ClCompile Include="src\SliderSystem.cpp" />
+    <ClCompile Include="src\WeatherDirector.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ActorIDs.hpp" />
@@ -206,6 +207,7 @@
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\ErrorState.hpp" />
     <ClInclude Include="src\FoamEffect.hpp" />
+    <ClInclude Include="src\GameConsts.hpp" />
     <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\InputBinding.hpp" />
     <ClInclude Include="src\InputParser.hpp" />
@@ -229,6 +231,7 @@
     <ClInclude Include="src\SharedStateData.hpp" />
     <ClInclude Include="src\Slider.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
+    <ClInclude Include="src\WeatherDirector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
