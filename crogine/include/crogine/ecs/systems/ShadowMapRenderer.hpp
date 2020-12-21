@@ -76,5 +76,7 @@ namespace cro
 
         void updateDrawList();
         void render();
+
+        void onEntityAdded(cro::Entity) override;
     };
 }

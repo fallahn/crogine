@@ -175,7 +175,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     const auto& camComponent = camera.getComponent<Camera>();
     const auto& pass = camComponent.getActivePass();
 
-    glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.05f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
+    glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
 
     if (pass.drawList.count(getType()) == 0)
     {

@@ -89,6 +89,7 @@ private:
     cro::Clock m_sceneRequestClock; //< spaces the request for initial scene data
 
     cro::Texture m_islandTexture;
+    cro::Entity m_islandEntity;
 
     void addSystems();
     void loadAssets();
@@ -101,4 +102,6 @@ private:
     void updateView(cro::Camera&);
 
     void updateHeightmap(const cro::NetEvent::Packet&);
+    void updateIslandVerts(const std::vector<float>&);
+    void loadIslandAssets();
 };

@@ -45,6 +45,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -53,9 +54,12 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/graphics/CircleMeshBuilder.hpp>
+#include <crogine/graphics/GridMeshBuilder.hpp>
 #include <crogine/graphics/Image.hpp>
 
 #include <crogine/util/Constants.hpp>
+
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 #include <cstring>
@@ -368,6 +372,8 @@ void GameState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_depthMap", m_islandTexture);
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_foamMap", m_foamEffect.getTexture());
 
+
+    loadIslandAssets();
 }
 
 void GameState::createScene()
@@ -712,6 +718,125 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
         m_islandTexture.update(img.getPixelData());
         m_islandTexture.setSmooth(true);
 
+        updateIslandVerts(heightmap);
+
         m_requestFlags |= ClientRequestFlags::Heightmap;
     }
+}
+
+void GameState::updateIslandVerts(const std::vector<float>& heightmap)
+{
+    const glm::vec4 WetSand = { 0.44f, 0.29f, 0.11f, 1.f };
+    const glm::vec4 Grass = { 0.184f, 0.29f, 0.03f, 1.f };
+
+    struct Vertex final
+    {
+        glm::vec3 pos = glm::vec3(0.f);
+        glm::vec4 colour = glm::vec4(1.f);
+        glm::vec3 normal = glm::vec3(0.f);
+        glm::vec3 tan = glm::vec3(0.f);
+        glm::vec3 bitan = glm::vec3(0.f);
+        glm::vec2 uv = glm::vec2(0.f);
+    };
+    std::vector<Vertex> verts(IslandTileCount * IslandTileCount);
+
+    auto heightAt = [&](std::int32_t x, std::int32_t y)
+    {
+        x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
+        y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
+
+        return heightmap[y * IslandTileCount + x];
+    };
+
+    for (auto i = 0u; i < heightmap.size(); ++i)
+    {
+        std::int32_t x = i % IslandTileCount;
+        std::int32_t y = i / IslandTileCount;
+
+        verts[i].pos = { x * TileSize, y * TileSize, heightmap[i] * IslandHeight };
+
+        if (verts[i].pos.z < /*IslandHeight + IslandWorldHeight*/2.2f)
+        {
+            //sand should be wet
+            verts[i].colour = WetSand;
+        }
+        /*else if (verts[i].pos.z > 3.2f)
+        {
+            verts[i].colour = Grass;
+        }*/
+
+        verts[i].uv = { verts[i].pos.x / IslandSize, verts[i].pos.y / IslandSize };
+
+        verts[i].uv *= 8.f;
+
+        //normal calc
+        auto l = heightAt(x - 1, y);
+        auto r = heightAt(x + 1, y);
+        auto u = heightAt(x, y + 1);
+        auto d = heightAt(x, y - 1);
+
+        verts[i].normal = { l - r, d - u, 2.f };
+        verts[i].normal = glm::normalize(verts[i].normal);
+
+        //tan/bitan
+        //if we assume the UV go parallel with the grid we can just use
+        //a 90 deg rotation and the cross product of the result
+        verts[i].tan = { verts[i].normal.z, verts[i].normal.y, -verts[i].normal.x };
+        verts[i].bitan = glm::cross(verts[i].tan, verts[i].normal);
+    }
+
+    auto& meshData = m_islandEntity.getComponent<cro::Model>().getMeshData();
+
+    CRO_ASSERT(verts.size() == meshData.vertexCount, "Incorrect vertex count");
+    CRO_ASSERT(sizeof(Vertex) == meshData.vertexSize, "Incorrect vertex size");
+
+    glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+    glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(Vertex), verts.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void GameState::loadIslandAssets()
+{
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().rotate(-cro::Transform::X_AXIS, cro::Util::Const::PI / 2.f);
+    entity.getComponent<cro::Transform>().move({ 0.f, IslandWorldHeight, 0.f }); //small extra amount to stop z-fighting
+    entity.getComponent<cro::Transform>().setOrigin({ IslandSize / 2.f, IslandSize / 2.f, 0.f });
+
+    auto meshID = m_resources.meshes.loadMesh(cro::GridMeshBuilder({ IslandSize, IslandSize }, IslandTileCount - 1, glm::vec2(1.f), true)); //this accounts for extra row of vertices
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, cro::ShaderResource::DiffuseMap |
+        cro::ShaderResource::NormalMap |
+        cro::ShaderResource::MaskMap |
+        cro::ShaderResource::VertexColour |
+        cro::ShaderResource::RxShadows);
+
+    m_materialIDs[MaterialID::Island] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    //m_resources.materials.get(m_materialIDs[MaterialID::Island]).setProperty("u_diffuseMap", m_islandTexture);
+    //m_resources.materials.get(m_materialIDs[MaterialID::Island]).setProperty("u_colour", cro::Colour::Green());
+
+    m_resources.textures.load(TextureID::SandAlbedo, "assets/materials/sand01/albedo.png");
+    m_resources.textures.load(TextureID::SandNormal, "assets/materials/sand01/normal.png");
+    m_resources.textures.load(TextureID::SandMask, "assets/materials/sand01/mask.png");
+
+    auto& albedo = m_resources.textures.get(TextureID::SandAlbedo);
+    albedo.setSmooth(true);
+    albedo.setRepeated(true);
+    auto& normal = m_resources.textures.get(TextureID::SandNormal);
+    normal.setSmooth(true);
+    normal.setRepeated(true);
+    auto& mask = m_resources.textures.get(TextureID::SandMask);
+    mask.setSmooth(true);
+    mask.setRepeated(true);
+
+    auto& material = m_resources.materials.get(m_materialIDs[MaterialID::Island]);
+    material.setProperty("u_diffuseMap", albedo);
+    material.setProperty("u_normalMap", normal);
+    material.setProperty("u_maskMap", mask);
+    material.setProperty("u_colour", cro::Colour::White());
+
+    material.setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
+    material.setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
+    material.setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
+
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    m_islandEntity = entity;
 }

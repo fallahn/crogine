@@ -180,6 +180,7 @@ void ShadowMapRenderer::render()
         for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
         {
             const auto& mat = model.m_shadowMaterials[i];
+            CRO_ASSERT(mat.shader, "Missing Shadow Cast material.");
 
             //bind shader
             glCheck(glUseProgram(mat.shader));
@@ -263,4 +264,12 @@ void ShadowMapRenderer::render()
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glCullFace(GL_BACK));
     m_target.display();
+}
+
+void ShadowMapRenderer::onEntityAdded(cro::Entity entity)
+{
+    if (entity.getComponent<cro::Model>().m_shadowMaterials[0].shader == 0)
+    {
+        LogW << "Shadow caster added to model with no shadow material. This will not render." << std::endl;
+    }
 }
