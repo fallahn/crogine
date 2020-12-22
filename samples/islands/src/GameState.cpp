@@ -58,6 +58,7 @@ source distribution.
 #include <crogine/graphics/Image.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -276,11 +277,20 @@ bool GameState::simulate(float dt)
                 std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | ClientRequestFlags::Heightmap;
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestData, data, cro::NetFlag::Reliable);
             }
-
-            if ((m_requestFlags & ClientRequestFlags::TreeMap) == 0)
+            //these require the heightmap has already been received
+            else
             {
-                //just flag this for now else we'll never complete
-                m_requestFlags |= ClientRequestFlags::TreeMap;
+                if ((m_requestFlags & ClientRequestFlags::TreeMap) == 0)
+                {
+                    std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | ClientRequestFlags::TreeMap;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestData, data, cro::NetFlag::Reliable);
+                }
+
+                if ((m_requestFlags & ClientRequestFlags::BushMap) == 0)
+                {
+                    std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | ClientRequestFlags::BushMap;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestData, data, cro::NetFlag::Reliable);
+                }
             }
         }
     }
@@ -449,6 +459,12 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         break;
     case PacketID::Heightmap:
         updateHeightmap(packet);
+        break;
+    case PacketID::Bushmap:
+        updateBushmap(packet);
+        break;
+    case PacketID::Treemap:
+        updateTreemap(packet);
         break;
     case PacketID::EntityRemoved:
     {
@@ -746,13 +762,71 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
             testPoint.x += (IslandSize / 2.f); //puts the position relative to the grid - this should be the origin coords
             testPoint.z += (IslandSize / 2.f);
 
-            spawn.y = getPlayerHeight(testPoint, m_heightmap) + IslandWorldHeight;
+            spawn.y = readHeightmap(testPoint, m_heightmap) + IslandWorldHeight;
 
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(spawn);
             entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, ((cro::Util::Const::PI / 2.f) * i) - (cro::Util::Const::PI / 4.f));
             modelDef.createModel(entity, m_resources);
         }
+    }
+}
+
+void GameState::updateBushmap(const cro::NetEvent::Packet& packet)
+{
+    auto size = packet.getSize();
+    if (size % sizeof(glm::vec2) != 0)
+    {
+        //count the failure and wait for next try
+        m_dataRequestCount++;
+    }
+    else
+    {
+        std::vector<glm::vec2> positions(size / sizeof(glm::vec2));
+        std::memcpy(positions.data(), packet.getData(), size);
+
+        for (auto p : positions)
+        {
+            float y = readHeightmap({ p.x, 0.f, p.y  }, m_heightmap) + IslandWorldHeight;
+            
+            /*auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ p.x - (IslandSize / 2.f), y, p.y - (IslandSize / 2.f) });
+
+            m_modelDefs[GameModelID::Shrub01].createModel(entity, m_resources);*/
+            //TODO we need to batch these - fortunately they all share a texture!!
+        }
+
+        m_requestFlags |= ClientRequestFlags::BushMap;
+    }
+}
+
+void GameState::updateTreemap(const cro::NetEvent::Packet& packet)
+{
+    auto size = packet.getSize();
+    if (size % sizeof(glm::vec2) != 0)
+    {
+        //count the failure and wait for next try
+        m_dataRequestCount++;
+    }
+    else
+    {
+        std::vector<glm::vec2> positions(size / sizeof(glm::vec2));
+        std::memcpy(positions.data(), packet.getData(), size);
+
+        std::size_t i = 0;
+        for (auto p : positions)
+        {
+            float y = readHeightmap({ p.x, 0.f, p.y }, m_heightmap) + IslandWorldHeight;
+
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ p.x - (IslandSize / 2.f), y, p.y - (IslandSize / 2.f) });
+            entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::TAU / cro::Util::Random::value(1, 8));
+
+            m_modelDefs[GameModelID::Palm01 + i].createModel(entity, m_resources);
+            i = (i + 1) % 3;
+        }
+
+        m_requestFlags |= ClientRequestFlags::TreeMap;
     }
 }
 
@@ -792,7 +866,7 @@ void GameState::updateIslandVerts(const std::vector<float>& heightmap)
             //sand should be wet
             verts[i].colour = WetSand;
         }
-        else if (verts[i].pos.z > 3.2f)
+        else if (verts[i].pos.z > GrassHeight)
         {
             verts[i].colour = Grass;
         }

@@ -72,6 +72,8 @@ static constexpr float IslandHeight = 4.2f; //these must be replicated in the se
 static constexpr float IslandWorldHeight = -2.02f;
 
 static constexpr float SunOffset = IslandSize * 1.35f;
+static constexpr float GrassHeight = 3.1f;
+static constexpr float BushRadius = 0.8f;
 
 struct ClientRequestFlags
 {
@@ -79,9 +81,9 @@ struct ClientRequestFlags
     {
         Heightmap = 0x1,
         TreeMap   = 0x2,
+        BushMap   = 0x4,
 
-
-        All = 0x1 | 0x2
+        All = 0x1 | 0x2 | 0x4
     };
 };
 static constexpr std::uint32_t MaxDataRequests = 10;
@@ -91,7 +93,7 @@ static constexpr std::uint32_t DayMinutes = 24 * 60;
 static constexpr float RadsPerMinute = cro::Util::Const::TAU / 6.f; //6 minutes per cycle
 static constexpr float RadsPerSecond = RadsPerMinute / 60.f;
 
-static inline float getPlayerHeight(glm::vec3 position, const std::vector<float>& heightmap)
+static inline float readHeightmap(glm::vec3 position, const std::vector<float>& heightmap)
 {
     auto lerp = [](float a, float b, float t) constexpr
     {

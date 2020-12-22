@@ -172,6 +172,6 @@ void PlayerSystem::processAvatar(cro::Entity entity)
     position.x += (IslandSize / 2.f); //puts the position relative to the grid - this should be the origin coords
     position.z += (IslandSize / 2.f);
 
-    auto height = getPlayerHeight(position, m_heightmap);
+    auto height = readHeightmap(position, m_heightmap);
     entity.getComponent<cro::Transform>().setPosition({ 0.f, height + IslandWorldHeight, 0.f });
 }

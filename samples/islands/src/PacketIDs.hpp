@@ -66,6 +66,8 @@ namespace PacketID
         EntityRemoved, //< uint32 entity ID
 
         Heightmap, //< array of floats
+        Bushmap, //< array of vec2
+        Treemap, //< array of vec2
 
         DayNightUpdate, //< compressed float with the current day/night time
 

@@ -252,5 +252,24 @@ void IslandGenerator::createHeightmap(std::int32_t seed)
 
 void IslandGenerator::createFoliageMaps(std::int32_t seed)
 {
+    std::array minBounds = { IslandBorder * TileSize * 2.f, IslandBorder * TileSize * 2.f };
+    std::array maxBounds = { IslandSize - (IslandBorder * TileSize * 2.f), IslandSize - (IslandBorder * TileSize * 2.f) };
 
+    auto plantMap = thinks::PoissonDiskSampling(BushRadius, minBounds, maxBounds, 30u, seed);
+    for (auto [x, y] : plantMap)
+    {
+        if (readHeightmap({ x, 0.f, y }, m_heightmap) > GrassHeight)
+        {
+            m_bushmap.emplace_back(x, y);
+        }
+    }
+
+    plantMap = thinks::PoissonDiskSampling(BushRadius * 3.5f, minBounds, maxBounds, 30u, seed * 2);
+    for (auto [x, y] : plantMap)
+    {
+        if (readHeightmap({ x, 0.f, y }, m_heightmap) > GrassHeight)
+        {
+            m_treemap.emplace_back(x, y);
+        }
+    }
 }

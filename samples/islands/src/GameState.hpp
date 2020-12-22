@@ -105,6 +105,8 @@ private:
     void updateView(cro::Camera&);
 
     void updateHeightmap(const cro::NetEvent::Packet&);
+    void updateBushmap(const cro::NetEvent::Packet&);
+    void updateTreemap(const cro::NetEvent::Packet&);
     void updateIslandVerts(const std::vector<float>&);
     void loadIslandAssets();
 };

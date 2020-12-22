@@ -105,12 +105,16 @@ void GameState::netEvent(const cro::NetEvent& evt)
             {
             default: break;
             case ClientRequestFlags::Heightmap:
-                //send map data to start building the world
                 m_sharedData.host.sendPacket(m_sharedData.clients[connectionID].peer, PacketID::Heightmap,
                     m_islandGenerator.getHeightmap().data(), m_islandGenerator.getHeightmap().size() * sizeof(float), cro::NetFlag::Reliable);
                 break;
             case ClientRequestFlags::TreeMap:
-
+                m_sharedData.host.sendPacket(m_sharedData.clients[connectionID].peer, PacketID::Treemap,
+                    m_islandGenerator.getTreemap().data(), m_islandGenerator.getTreemap().size() * sizeof(glm::vec2), cro::NetFlag::Reliable);
+                break;
+            case ClientRequestFlags::BushMap:
+                m_sharedData.host.sendPacket(m_sharedData.clients[connectionID].peer, PacketID::Bushmap,
+                    m_islandGenerator.getBushmap().data(), m_islandGenerator.getBushmap().size() * sizeof(glm::vec2), cro::NetFlag::Reliable);
                 break;
             }
         }
