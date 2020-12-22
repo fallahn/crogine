@@ -202,7 +202,7 @@ bool NetClient::pollEvent(NetEvent& evt)
     return false;
 }
 
-void NetClient::sendPacket(uint8 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
+void NetClient::sendPacket(uint8 id, const void* data, std::size_t size, NetFlag flags, uint8 channel)
 {
     if (m_peer.m_peer)
     {

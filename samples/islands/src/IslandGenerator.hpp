@@ -29,88 +29,28 @@ source distribution.
 
 #pragma once
 
-namespace MaterialID
+#include <crogine/detail/glm/vec2.hpp>
+
+#include <vector>
+
+class IslandGenerator final
 {
-    enum
-    {
-        Sea,
-        Island,
+public:
+    IslandGenerator();
 
-        Count
-    };
-}
+    void generate(std::int32_t seed = 1234);
 
-namespace MeshID
-{
-    enum
-    {
-        SeaPlane,
+    const std::vector<float>& getHeightmap() const { return m_heightmap; }
 
+    const std::vector<glm::vec2>& getBushmap() const { return m_bushmap; }
 
-        Count
-    };
-}
+    const std::vector<glm::vec2>& getTreemap() const { return m_treemap; }
 
-namespace TextureID
-{
-    enum
-    {
-        SandAlbedo,
-        SandMask,
-        SandNormal
-    };
-}
+private:
+    std::vector<float> m_heightmap;
+    std::vector<glm::vec2> m_bushmap;
+    std::vector<glm::vec2> m_treemap;
 
-namespace GameModelID
-{
-    enum
-    {
-        Palm01,
-        Palm02,
-        Palm03,
-
-        Shrub01,
-        Shrub02,
-        Shrub03,
-        Shrub04,
-        Shrub05,
-        Shrub06,
-
-        GroundBush,
-
-
-
-        Count
-    };
-}
-
-namespace FontID
-{
-
-}
-
-namespace ShaderID
-{
-    enum
-    {
-        Sea,
-
-
-        Count
-    };
-}
-
-namespace CommandID
-{
-
-}
-
-namespace AnimationID
-{
-
-}
-
-namespace CollisionID
-{
-
-}
+    void createHeightmap(std::int32_t seed);
+    void createFoliageMaps(std::int32_t seed);
+};

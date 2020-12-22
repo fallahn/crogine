@@ -31,6 +31,7 @@ source distribution.
 
 
 #include "ServerState.hpp"
+#include "IslandGenerator.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
@@ -60,8 +61,7 @@ namespace Sv
         //we should never have more than one on any except the first
         std::array<std::array<cro::Entity, ConstVal::MaxClients>, ConstVal::MaxClients> m_playerEntities;
 
-        std::vector<float> m_heightmap;
-
+        IslandGenerator m_islandGenerator;
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);
@@ -69,6 +69,5 @@ namespace Sv
 
         void initScene();
         void buildWorld();
-        void createHeightmap();
     };
 }

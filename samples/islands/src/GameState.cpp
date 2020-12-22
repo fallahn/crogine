@@ -95,7 +95,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     m_uiScene           (context.appInstance.getMessageBus()),
     m_requestFlags      (0),
     m_dataRequestCount  (0),
-    m_foamEffect        (m_resources)
+    m_foamEffect        (m_resources),
+    m_heightmap         (IslandTileCount * IslandTileCount, 1.f)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -372,6 +373,19 @@ void GameState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_depthMap", m_islandTexture);
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_foamMap", m_foamEffect.getTexture());
 
+    m_modelDefs[GameModelID::GroundBush].loadFromFile("assets/models/ground_plant01.cmt", m_resources, &m_environmentMap);
+    
+    m_modelDefs[GameModelID::Palm01].loadFromFile("assets/models/palm01.cmt", m_resources, &m_environmentMap);
+    m_modelDefs[GameModelID::Palm02].loadFromFile("assets/models/palm02.cmt", m_resources, &m_environmentMap);
+    m_modelDefs[GameModelID::Palm03].loadFromFile("assets/models/palm03.cmt", m_resources, &m_environmentMap);
+
+    m_modelDefs[GameModelID::Shrub01].loadFromFile("assets/models/shrub01.cmt", m_resources, &m_environmentMap);
+    m_modelDefs[GameModelID::Shrub02].loadFromFile("assets/models/shrub02.cmt", m_resources, &m_environmentMap);
+    m_modelDefs[GameModelID::Shrub03].loadFromFile("assets/models/shrub03.cmt", m_resources, &m_environmentMap);
+    m_modelDefs[GameModelID::Shrub04].loadFromFile("assets/models/shrub04.cmt", m_resources, &m_environmentMap);
+    m_modelDefs[GameModelID::Shrub05].loadFromFile("assets/models/shrub05.cmt", m_resources, &m_environmentMap);
+    m_modelDefs[GameModelID::Shrub06].loadFromFile("assets/models/shrub06.cmt", m_resources, &m_environmentMap);
+    
 
     loadIslandAssets();
 }
@@ -556,7 +570,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             m_cameras.back() = m_gameScene.createEntity();
             m_cameras.back().addComponent<cro::Transform>().setPosition({ 0.f, CameraHeight, CameraDistance });
 
-            auto rotation = glm::lookAt(glm::vec3(0.f), glm::vec3(0.f, 0.f, -SeaRadius), cro::Transform::Y_AXIS);
+            auto rotation = glm::lookAt(m_cameras.back().getComponent<cro::Transform>().getPosition(), glm::vec3(0.f, 0.f, -SeaRadius), cro::Transform::Y_AXIS);
             m_cameras.back().getComponent<cro::Transform>().rotate(glm::inverse(rotation));
 
             auto& cam = m_cameras.back().addComponent<cro::Camera>();
@@ -625,7 +639,7 @@ void GameState::updateView(cro::Camera&)
 {
     CRO_ASSERT(!m_cameras.empty(), "Need at least one camera!");
 
-    const float fov = 42.f * cro::Util::Const::degToRad;
+    const float fov = 36.f * cro::Util::Const::degToRad;
     const float nearPlane = 0.1f;
     const float farPlane = IslandSize * 1.8f;
     float aspect = 16.f / 9.f;
@@ -696,17 +710,16 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
     }
     else
     {
-        std::vector<float> heightmap(IslandTileCount * IslandTileCount);
-        std::memcpy(heightmap.data(), packet.getData(), size);
+        std::memcpy(m_heightmap.data(), packet.getData(), size);
 
-        m_gameScene.getSystem<PlayerSystem>().setHeightmap(heightmap);
+        m_gameScene.getSystem<PlayerSystem>().setHeightmap(m_heightmap);
 
         //preview texture / height map
         cro::Image img;
         img.create(IslandTileCount, IslandTileCount, cro::Colour::Black());
-        for (auto i = 0u; i < heightmap.size(); ++i)
+        for (auto i = 0u; i < m_heightmap.size(); ++i)
         {
-            auto level = heightmap[i] * 255.f;
+            auto level = m_heightmap[i] * 255.f;
             auto channel = static_cast<std::uint8_t>(level);
             cro::Colour c(channel, channel, channel);
 
@@ -718,9 +731,28 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
         m_islandTexture.update(img.getPixelData());
         m_islandTexture.setSmooth(true);
 
-        updateIslandVerts(heightmap);
+        updateIslandVerts(m_heightmap);
 
         m_requestFlags |= ClientRequestFlags::Heightmap;
+
+        //spawn boats now that we have a heightmap
+        cro::ModelDefinition modelDef;
+        modelDef.loadFromFile("assets/models/boat.cmt", m_resources, &m_environmentMap);
+
+        for (auto i = 0u; i < BoatSpawns.size(); ++i)
+        {
+            auto spawn = BoatSpawns[i];
+            auto testPoint = spawn;
+            testPoint.x += (IslandSize / 2.f); //puts the position relative to the grid - this should be the origin coords
+            testPoint.z += (IslandSize / 2.f);
+
+            spawn.y = getPlayerHeight(testPoint, m_heightmap) + IslandWorldHeight;
+
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(spawn);
+            entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, ((cro::Util::Const::PI / 2.f) * i) - (cro::Util::Const::PI / 4.f));
+            modelDef.createModel(entity, m_resources);
+        }
     }
 }
 
@@ -760,10 +792,10 @@ void GameState::updateIslandVerts(const std::vector<float>& heightmap)
             //sand should be wet
             verts[i].colour = WetSand;
         }
-        /*else if (verts[i].pos.z > 3.2f)
+        else if (verts[i].pos.z > 3.2f)
         {
             verts[i].colour = Grass;
-        }*/
+        }
 
         verts[i].uv = { verts[i].pos.x / IslandSize, verts[i].pos.y / IslandSize };
 

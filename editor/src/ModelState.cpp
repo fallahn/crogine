@@ -857,10 +857,17 @@ void ModelState::buildUI()
                     auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/" + "ao_untitled", "png");
                     if (!path.empty())
                     {
-                        auto preString = path.substr(0, path.find_last_of('.'));
-                        for (auto i = 0u; i < meshData.submeshCount; ++i)
+                        if (meshData.submeshCount > 1)
                         {
-                            m_lightmapTextures[i]->saveToFile(preString + "0" + std::to_string(i) + ".png");
+                            auto preString = path.substr(0, path.find_last_of('.'));
+                            for (auto i = 0u; i < meshData.submeshCount; ++i)
+                            {
+                                m_lightmapTextures[i]->saveToFile(preString + "0" + std::to_string(i) + ".png");
+                            }
+                        }
+                        else
+                        {
+                            m_lightmapTextures[0]->saveToFile(path);
                         }
                     }
                 }

@@ -76,6 +76,9 @@
     <Filter Include="Source Files\Client\directors">
       <UniqueIdentifier>{0f1646cd-806a-4af1-8f7f-3982bc5b1b68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Client\shaders">
+      <UniqueIdentifier>{dd43717a-706e-42b6-840c-72be7ea3b3f7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -159,6 +162,9 @@
     <ClCompile Include="src\DayNightDirector.cpp">
       <Filter>Source Files\Client\directors</Filter>
     </ClCompile>
+    <ClCompile Include="src\IslandGenerator.cpp">
+      <Filter>Source Files\Server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -181,12 +187,6 @@
     </ClInclude>
     <ClInclude Include="src\Server.hpp">
       <Filter>Header Files\Server</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CommonConsts.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\PacketIDs.hpp">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\InputParser.hpp">
       <Filter>Header Files\Client</Filter>
@@ -263,8 +263,25 @@
     <ClInclude Include="src\DayNightDirector.hpp">
       <Filter>Header Files\Client\directors</Filter>
     </ClInclude>
+    <ClInclude Include="src\CommonConsts.hpp">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
     <ClInclude Include="src\GameConsts.hpp">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PacketIDs.hpp">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PoissonDisk.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\IslandGenerator.hpp">
+      <Filter>Header Files\Server</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\SeaShader.inl">
+      <Filter>Header Files\Client\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

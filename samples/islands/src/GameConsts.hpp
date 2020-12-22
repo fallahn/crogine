@@ -30,14 +30,34 @@ source distribution.
 #pragma once
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 #include <cstdint>
+#include <cmath>
 #include <array>
+
+static constexpr float SpawnOffset = 30.f;
+static const std::array PlayerSpawns =
+{
+    glm::vec3(-SpawnOffset, 0.f, -SpawnOffset),
+    glm::vec3(SpawnOffset, 0.f, -SpawnOffset),
+    glm::vec3(-SpawnOffset, 0.f, SpawnOffset),
+    glm::vec3(SpawnOffset, 0.f, SpawnOffset)
+};
+
+static constexpr float BoatOffset = 2.f;
+static const std::array BoatSpawns =
+{
+    PlayerSpawns[0] + glm::vec3(-BoatOffset, 0.f, -BoatOffset),
+    PlayerSpawns[1] + glm::vec3(BoatOffset, 0.f, -BoatOffset),
+    PlayerSpawns[2] + glm::vec3(-BoatOffset, 0.f, BoatOffset),
+    PlayerSpawns[3] + glm::vec3(BoatOffset, 0.f, BoatOffset)
+};
 
 //player view
 static constexpr float SeaRadius = 50.f;
-static constexpr float CameraHeight = 3.2f;
-static constexpr float CameraDistance = 10.f;
+static constexpr float CameraHeight = 4.5f;
+static constexpr float CameraDistance = 15.f;
 static constexpr std::uint32_t ReflectionMapSize = 512u;
 
 //island generation
@@ -70,3 +90,33 @@ static constexpr std::uint32_t MaxDataRequests = 10;
 static constexpr std::uint32_t DayMinutes = 24 * 60;
 static constexpr float RadsPerMinute = cro::Util::Const::TAU / 6.f; //6 minutes per cycle
 static constexpr float RadsPerSecond = RadsPerMinute / 60.f;
+
+static inline float getPlayerHeight(glm::vec3 position, const std::vector<float>& heightmap)
+{
+    auto lerp = [](float a, float b, float t) constexpr
+    {
+        return a + t * (b - a);
+    };
+
+    const auto getHeightAt = [&](std::int32_t x, std::int32_t y)
+    {
+        //heightmap is flipped relative to the world innit
+        x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
+        y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
+        return heightmap[(IslandTileCount - y) * IslandTileCount + x];
+    };
+
+    float posX = position.x / TileSize;
+    float posY = position.z / TileSize;
+
+    float intpart = 0.f;
+    auto modX = std::modf(posX, &intpart) / TileSize;
+    auto modY = std::modf(posY, &intpart) / TileSize; //normalise this for lerpitude
+
+    std::int32_t x = static_cast<std::int32_t>(posX);
+    std::int32_t y = static_cast<std::int32_t>(posY);
+
+    float topLine = lerp(getHeightAt(x, y), getHeightAt(x + 1, y), modX);
+    float botLine = lerp(getHeightAt(x, y + 1), getHeightAt(x + 1, y + 1), modX);
+    return lerp(topLine, botLine, modY) * IslandHeight;
+}

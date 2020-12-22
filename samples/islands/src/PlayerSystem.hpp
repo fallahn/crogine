@@ -77,6 +77,4 @@ private:
     void processMovement(cro::Entity, Input);
     void processCollision(cro::Entity);
     void processAvatar(cro::Entity);
-
-    float getPlayerHeight(glm::vec3);
 };

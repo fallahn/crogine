@@ -116,7 +116,7 @@ namespace cro
         \param channel Stream channel over which to send the data. Lower number
         channels have higher priority, with 0 being highest.
         */
-        void broadcastPacket(uint8 id, void* data, std::size_t size, NetFlag flags, uint8 channel = 0);
+        void broadcastPacket(uint8 id, const void* data, std::size_t size, NetFlag flags, uint8 channel = 0);
 
         /*!
         \brief Sends a packet to the given peer if a connection is
@@ -150,7 +150,7 @@ namespace cro
         \param channel Stream channel over which to send the data. Lower number
         channels have higher priority, with 0 being highest.
         */
-        void sendPacket(const NetPeer& peer, uint8 id, void* data, std::size_t size, NetFlag flags, uint8 channel = 0);
+        void sendPacket(const NetPeer& peer, uint8 id, const void* data, std::size_t size, NetFlag flags, uint8 channel = 0);
 
 
         /*!

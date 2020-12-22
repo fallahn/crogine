@@ -131,9 +131,6 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
     auto& player = entity.getComponent<Player>();
     auto& tx = entity.getComponent<cro::Transform>();
 
-    auto forwardVector = tx.getForwardVector();
-    auto rightVector = tx.getRightVector();
-
     //walking speed in metres per second (1 world unit == 1 metre)
     const float moveSpeed = 10.f * Util::decompressFloat(input.analogueMultiplier) * ConstVal::FixedGameUpdate;
 
@@ -175,36 +172,6 @@ void PlayerSystem::processAvatar(cro::Entity entity)
     position.x += (IslandSize / 2.f); //puts the position relative to the grid - this should be the origin coords
     position.z += (IslandSize / 2.f);
 
-    auto height = getPlayerHeight(position);
+    auto height = getPlayerHeight(position, m_heightmap);
     entity.getComponent<cro::Transform>().setPosition({ 0.f, height + IslandWorldHeight, 0.f });
 }
-
-float PlayerSystem::getPlayerHeight(glm::vec3 position)
-{
-    auto lerp = [](float a, float b, float t) constexpr
-    {
-        return a + t * (b - a);
-    };
-
-    const auto getHeightAt = [&](std::int32_t x, std::int32_t y)
-    {
-        //heightmap is flipped relative to the world innit
-        x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
-        y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
-        return m_heightmap[(IslandTileCount - y) * IslandTileCount + x];
-    };
-
-    float posX = position.x / TileSize;
-    float posY = position.z / TileSize;
-
-    float intpart = 0.f;
-    auto modX = std::modf(posX, &intpart) / TileSize;
-    auto modY = std::modf(posY, &intpart) / TileSize; //normalise this for lerpitude
-
-    std::int32_t x = static_cast<std::int32_t>(posX);
-    std::int32_t y = static_cast<std::int32_t>(posY);
-
-    float topLine = lerp(getHeightAt(x, y), getHeightAt(x + 1, y), modX);
-    float botLine = lerp(getHeightAt(x, y + 1), getHeightAt(x + 1, y + 1), modX);
-    return lerp(topLine, botLine, modY) * IslandHeight;
-};

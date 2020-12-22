@@ -39,6 +39,7 @@ static const std::string SeaVertex = R"(
     ATTRIBUTE vec2 a_texCoord0;
 
     uniform mat4 u_worldMatrix;
+    uniform mat4 u_viewMatrix;
     uniform mat4 u_viewProjectionMatrix;
     uniform float u_time;
 
@@ -56,7 +57,6 @@ static const std::string SeaVertex = R"(
     void main()
     {
         vec4 position = u_worldMatrix * a_position;
-        //position.y += sin(u_time * 0.9) * 0.08;
         gl_Position = u_viewProjectionMatrix * position;
 
         v_tbn[0] = normalize(u_worldMatrix * vec4(a_tangent, 0.0)).xyz;

@@ -79,6 +79,8 @@ private:
     std::array<std::size_t, MeshID::Count> m_meshIDs = {};
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
+    std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs = {};
+
     FoamEffect m_foamEffect;
     cro::EnvironmentMap m_environmentMap;
 
@@ -90,6 +92,7 @@ private:
 
     cro::Texture m_islandTexture;
     cro::Entity m_islandEntity;
+    std::vector<float> m_heightmap;
 
     void addSystems();
     void loadAssets();
