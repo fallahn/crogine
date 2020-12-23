@@ -192,18 +192,18 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     const auto& visibleEntities = std::any_cast<const MaterialList&>(pass.drawList.at(getType()));
     for (const auto& [entity, sortData] : visibleEntities)
     {
-        //calc entity transform
-        const auto& tx = entity.getComponent<Transform>();
-        glm::mat4 worldMat = tx.getWorldTransform();
-        glm::mat4 worldView = pass.viewMatrix * worldMat;
-
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
 
         if ((model.m_renderFlags & camComponent.renderFlags) == 0)
         {
             continue;
-        }
+        }        
+        
+        //calc entity transform
+        const auto& tx = entity.getComponent<Transform>();
+        glm::mat4 worldMat = tx.getWorldTransform();
+        glm::mat4 worldView = pass.viewMatrix * worldMat;
 
 #ifndef PLATFORM_DESKTOP
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
@@ -346,11 +346,11 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         }
             break;
         case Material::ShadowMapProjection:
-            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, glm::value_ptr(scene.getSunlight().getComponent<Sunlight>().getViewProjectionMatrix())));
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, &camera.depthViewProjection[0][0]));
             break;
         case Material::ShadowMapSampler:
             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
-            glCheck(glBindTexture(GL_TEXTURE_2D, scene.getSunlight().getComponent<Sunlight>().getMapID()));
+            glCheck(glBindTexture(GL_TEXTURE_2D, camera.depthBuffer.getTexture().textureID));
             glCheck(glUniform1i(material.uniforms[Material::ShadowMapSampler], currentTextureUnit++));
             break;
         case Material::SunlightColour:

@@ -6,12 +6,14 @@ model boat
     material PBR
     {
         mask = "assets/images/boat_mask.png"
+        normal = "assets/images/boat_normal.png"
         name = "Untitled"
-        colour = 0.212389,0.175222,0.109954,1.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
         rx_shadows = true
         blendmode = "none"
+        diffuse = "assets/images/boat_albedo.png"
 
     }
 }

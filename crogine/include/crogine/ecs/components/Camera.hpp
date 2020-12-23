@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/graphics/Spatial.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/DepthTexture.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
@@ -305,11 +306,52 @@ namespace cro
         */
         std::uint64_t renderFlags = RenderFlags::All;
 
+        /*
+        \brief Depth map buffer used for rendering directional shadow maps.
+        This must first be explicitly created at the desired resolution
+        before shadows will be rendered with this camera. Once the buffer
+        has been created a ShadowMapRenderer system must be active in the
+        Scene to which this component belongs. The ShadowMapSystem will
+        then automatically cull and render any entities with a Model and
+        ShadowCaster component (and valid shadow material) to this buffer.
+        The ModelRenderer will automatically bind and pass this buffer to
+        any relevant shaders when the Scene is rendered with this camera.
+        */
+#ifdef PLATFORM_DESKTOP
+        cro::DepthTexture depthBuffer;
+#else
+        cro::RenderTexture depthBuffer;
+#endif
+
+        /*!
+        \brief View-projection matrix used when rendering the depth buffer.
+        This contains the view-projection matrix used by the ShadowMapRenderer
+        to render the depth buffer for the Scene's directional light. This is
+        automatically bound to any materials used by the ModelRenderer when
+        shadow casting is enabled. When rendering shadows for this camera with
+        any custom materials or render system this should be used with the
+        camera's depthBuffer property.
+        */
+        glm::mat4 depthViewProjectionMatrix = glm::mat4(1.f);
+
+        /*!
+        \brief View matrix used to render the depthBuffer.
+        Automatically updated by the ShadowMapRenderer system
+        */
+        glm::mat4 depthViewMatrix = glm::mat4(1.f);
+
+        /*!
+        \brief Projection matrix used to render the depth buffer
+        Automatically updated by the ShadowMapRenderer system
+        */
+        glm::mat4 depthProjectionMatrix = glm::mat4(1.f);
+
     private:
 
         std::array<Pass, 2u> m_passes = {}; //final pass and refraction pass share the same data
         std::uint32_t m_passIndex = Pass::Final;
 
         friend class CameraSystem;
+
     };
 }
