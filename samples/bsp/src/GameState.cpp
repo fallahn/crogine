@@ -65,10 +65,6 @@ source distribution.
 
 namespace
 {
-    //debug gui stuffs
-    float ShadowmapProjection = 80.f;
-    float ShadowmapClipPlane = 100.f;
-
     std::array moveEnts =
     {
         cro::Entity(),
@@ -123,18 +119,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
         {
             if (ImGui::Begin("Buns"))
             {
-                if (ImGui::SliderFloat("Shadow Map Projection", &ShadowmapProjection, 10.f, 200.f))
-                {
-                    auto half = ShadowmapProjection / 2.f;
-                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-half, half, -half, half, 0.1f, ShadowmapClipPlane));
-                }
-
-                if (ImGui::SliderFloat("Shadow Map Far Plane", &ShadowmapClipPlane, 1.f, 500.f))
-                {
-                    auto half = ShadowmapProjection / 2.f;
-                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-half, half, -half, half, 0.1f, ShadowmapClipPlane));
-                }
-
                 if (ImGui::CollapsingHeader("Waves"))
                 {
                     ImGui::Image(m_foamEffect.getTexture(),
@@ -145,12 +129,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
                 {
                     ImGui::Image(m_islandTexture,
                         { IslandTileCount * 3.f, IslandTileCount * 3.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                }
-
-                if (ImGui::CollapsingHeader("Shadow Map"))
-                {
-                    ImGui::Image(m_gameScene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture(),
-                        { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
                 }
 
                 if (ImGui::CollapsingHeader("Reflection Map"/*, ImGuiTreeNodeFlags_DefaultOpen*/))
@@ -286,7 +264,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<SeaSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb, glm::uvec2(4096));
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
@@ -453,7 +431,6 @@ void GameState::createDayCycle()
     auto sunNode = m_gameScene.getSunlight();
     sunNode.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, SeaRadius });
     sunNode.getComponent<cro::Transform>().setRotation(glm::mat4(1.f)); //set this to none (not sure where its initial val is coming from...)
-    sunNode.getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-IslandSize / 2.f, IslandSize / 2.f, -IslandSize / 2.f, IslandSize / 2.f, 0.1f, IslandSize));
     sunNode.addComponent<TargetTransform>();
     rootNode.getComponent<cro::Transform>().addChild(sunNode.getComponent<cro::Transform>());
 }
@@ -518,7 +495,7 @@ void GameState::updateView(cro::Camera&)
     //set up projection
     for (auto cam : m_cameras)
     {
-        cam.getComponent<cro::Camera>().projectionMatrix = glm::perspective(fov, aspect, nearPlane, farPlane);
+        cam.getComponent<cro::Camera>().setPerspective(fov, aspect, nearPlane, farPlane);
     }
 }
 

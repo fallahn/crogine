@@ -68,16 +68,19 @@ void ShadowMapRenderer::process(float)
     m_activeCameras.clear();
 }
 
-void ShadowMapRenderer::updateDrawList(Entity entity)
+void ShadowMapRenderer::updateDrawList(Entity camEnt)
 {
+    glm::vec3 lightDir = getScene()->getSunlight().getComponent<Sunlight>().getDirection();
+    glm::quat lightRotation = getScene()->getSunlight().getComponent<Transform>().getRotation();
+    
     //this gets called once for each Camera in the CameraSystem
     //from CameraSystem::process() - so we'll check here if
     //the camera should actually be updated then render all the
     //cameras at once in process(), above
-    auto& camera = entity.getComponent<Camera>();
+    auto& camera = camEnt.getComponent<Camera>();
     if (camera.depthBuffer.available())
     {
-        m_activeCameras.push_back(entity);
+        m_activeCameras.push_back(camEnt);
 
         if (m_drawLists.size() < m_activeCameras.size())
         {
@@ -87,11 +90,67 @@ void ShadowMapRenderer::updateDrawList(Entity entity)
         auto& drawList = m_drawLists.back();
         drawList.clear();
 
+        //calc a position for the directional light
+        auto aabb = camera.getPass(Camera::Pass::Final).getAABB();
+        auto centre = aabb[0] + ((aabb[1] - aabb[0]) / 2.f);
+        auto lightPos = centre - (lightDir * (camera.m_farPlane - camera.m_nearPlane));
 
-        //create depth frustum and apply it to camera
+        camera.depthViewMatrix = glm::translate(glm::mat4(1.f), lightPos);
+        camera.depthViewMatrix *= glm::toMat4(lightRotation);
+        camera.depthViewMatrix = glm::inverse(camera.depthViewMatrix);
 
+        //frustum in camera coords
+        float tanHalfFOVY = std::tan(camera.m_verticalFOV / 2.f);
+        float tanHalfFOVX = std::tan((camera.m_verticalFOV * camera.m_aspectRatio) / 2.f);
 
+        float xNear = camera.m_nearPlane * tanHalfFOVX;
+        float xFar = camera.m_farPlane * tanHalfFOVX;
+        float yNear = camera.m_nearPlane * tanHalfFOVY;
+        float yFar = camera.m_farPlane * tanHalfFOVY;
 
+        std::array frustumCorners =
+        {
+            //near
+            glm::vec4(xNear, yNear, camera.m_nearPlane, 1.f),
+            glm::vec4(-xNear, yNear, camera.m_nearPlane, 1.f),
+            glm::vec4(xNear, -yNear, camera.m_nearPlane, 1.f),
+            glm::vec4(-xNear, -yNear, camera.m_nearPlane, 1.f),
+
+            //far
+            glm::vec4(xFar, yFar, camera.m_farPlane, 1.f),
+            glm::vec4(-xFar, yFar, camera.m_farPlane, 1.f),
+            glm::vec4(xFar, -yFar, camera.m_farPlane, 1.f),
+            glm::vec4(-xFar, -yFar, camera.m_farPlane, 1.f)
+        };
+
+        auto camTx = camEnt.getComponent<Transform>().getWorldTransform();
+        std::array<glm::vec4, 8u> lightCorners = {};
+        float minX = std::numeric_limits<float>::max();
+        float maxX = std::numeric_limits<float>::min();
+        float minY = minX;
+        float maxY = maxX;
+        float minZ = minY;
+        float maxZ = maxY;
+
+        for (auto i = 0u; i < frustumCorners.size(); ++i)
+        {
+            //convert frustum to world space
+            auto worldPoint = camTx * frustumCorners[i];
+
+            //convert to light space
+            lightCorners[i] = camera.depthViewMatrix * worldPoint;
+
+            minX = std::min(minX, lightCorners[i].x);
+            maxX = std::max(maxX, lightCorners[i].x);
+            minY = std::min(minY, lightCorners[i].y);
+            maxY = std::max(maxY, lightCorners[i].y);
+            minZ = std::min(minZ, lightCorners[i].z);
+            maxZ = std::max(maxZ, lightCorners[i].z);
+        }
+
+        //convert to ortho projection
+        camera.depthProjectionMatrix = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
+        camera.depthViewProjectionMatrix = camera.depthProjectionMatrix * camera.depthViewMatrix;
 
 
         //use depth frustum to cull entities
@@ -128,7 +187,7 @@ void ShadowMapRenderer::updateDrawList(Entity entity)
 
             if (model.m_visible)
             {
-                float depth = glm::dot(sunTx.getWorldPosition() - tx.getWorldPosition(), forwardVec);
+                float depth = glm::dot(lightPos - tx.getWorldPosition(), lightDir);
                 drawList.push_back(std::make_pair(entity, depth));
             }
         }
@@ -143,61 +202,6 @@ void ShadowMapRenderer::updateDrawList(Entity entity)
 }
 
 //private
-//void ShadowMapRenderer::updateDrawList()
-//{
-//    auto& sunlight = getScene()->getSunlight().getComponent<Sunlight>();
-//    const auto& sunTx = getScene()->getSunlight().getComponent<Transform>();
-//    sunlight.m_viewMatrix = glm::inverse(sunTx.getWorldTransform());
-//    sunlight.m_viewProjectionMatrix = sunlight.m_projectionMatrix * sunlight.m_viewMatrix;
-//
-//    sunlight.m_aabb = Spatial::updateFrustum(sunlight.m_frustum, sunlight.m_viewProjectionMatrix);
-//
-//    glm::vec3 forwardVec = glm::column(sunlight.m_viewMatrix, 2);
-//    m_visibleEntities.clear(); 
-//
-//    auto& entities = getEntities();
-//    for (auto& entity : entities)
-//    {
-//        if (!entity.getComponent<ShadowCaster>().active)
-//        {
-//            continue;
-//        }
-//
-//        auto& model = entity.getComponent<Model>();
-//        if (model.isHidden())
-//        {
-//            continue;
-//        }
-//
-//        auto sphere = model.m_meshData.boundingSphere;
-//        const auto& tx = entity.getComponent<Transform>();
-//
-//        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
-//        auto scale = tx.getScale();
-//        sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
-//
-//        model.m_visible = true;
-//        std::size_t i = 0;
-//        while (model.m_visible && i < sunlight.m_frustum.size())
-//        {
-//            model.m_visible = (Spatial::intersects(sunlight.m_frustum[i++], sphere) != Planar::Back);
-//        }
-//
-//        if (model.m_visible)
-//        {
-//            float depth = glm::dot(sunTx.getWorldPosition() - tx.getWorldPosition(), forwardVec);
-//            m_visibleEntities.push_back(std::make_pair(entity, depth));
-//        }
-//    }
-//
-//    //sort back to front
-//    std::sort(m_visibleEntities.begin(), m_visibleEntities.end(),
-//        [](const std::pair<Entity, float>& a, const std::pair<Entity, float>& b)
-//        {
-//            return a > b;
-//        });
-//}
-
 void ShadowMapRenderer::render()
 {
     for (auto c= 0u; c < m_activeCameras.size(); c++)

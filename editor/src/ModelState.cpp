@@ -127,7 +127,7 @@ namespace
         size.y -= (size.y * ui::BrowserHeight);
 
         auto& cam3D = entity.getComponent<cro::Camera>();
-        cam3D.projectionMatrix = glm::perspective(fov, size.x / size.y, 0.1f, farPlane);
+        cam3D.setPerspective(fov, size.x / size.y, 0.1f, farPlane);
         cam3D.viewport.left = ui::InspectorWidth;
         cam3D.viewport.width = 1.f - ui::InspectorWidth;
         cam3D.viewport.bottom = ui::BrowserHeight;
@@ -383,7 +383,7 @@ void ModelState::addSystems()
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::BillboardSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<cro::ShadowMapRenderer>(mb, glm::uvec2(4096));
+    m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
 
     m_previewScene.addSystem<cro::CameraSystem>(mb);
@@ -520,7 +520,6 @@ void ModelState::createScene()
     entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //set the default sunlight properties
-    m_scene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-2.f, 2.f, -2.f, 2.f, 0.1f, 4.f));
     m_scene.getSunlight().getComponent<cro::Transform>().setPosition({ -1.5f, 1.5f, 1.5f });
     m_scene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.79f);
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.79f);
@@ -552,7 +551,7 @@ void ModelState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
     entity.addComponent<cro::Camera>();
     auto& cam3D = entity.getComponent<cro::Camera>();
-    cam3D.projectionMatrix = glm::perspective(DefaultFOV, 1.f, 0.1f, 10.f);
+    cam3D.setPerspective(DefaultFOV, 1.f, 0.1f, 10.f);
 
     m_previewScene.setActiveCamera(entity);
 

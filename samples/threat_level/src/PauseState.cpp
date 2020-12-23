@@ -183,7 +183,7 @@ void PauseState::load()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     auto& cam2D = entity.addComponent<cro::Camera>();
-    cam2D.projectionMatrix = glm::ortho(0.f, sceneSize.x, 0.f, sceneSize.y, -10.f, 10.f);
+    cam2D.setOrthographic(0.f, sceneSize.x, 0.f, sceneSize.y, -10.f, 10.f);
     m_uiScene.setActiveCamera(entity);
 }
 

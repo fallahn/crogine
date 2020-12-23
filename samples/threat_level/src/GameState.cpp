@@ -662,7 +662,7 @@ void GameState::createHUD()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioListener>();
     auto& cam2D = entity.addComponent<cro::Camera>();
-    cam2D.projectionMatrix = glm::ortho(0.f, uiRes.x, 0.f, uiRes.y, -0.1f, 100.f);
+    cam2D.setOrthographic(0.f, uiRes.x, 0.f, uiRes.y, -0.1f, 100.f);
     m_uiScene.setActiveCamera(entity);
     m_uiScene.setActiveListener(entity);
 }
@@ -1229,7 +1229,7 @@ void GameState::updateView()
     size.x = 1.f;
 
     auto& cam3D = m_scene.getActiveCamera().getComponent<cro::Camera>();
-    cam3D.projectionMatrix = glm::perspective(0.6f, 16.f / 9.f, 0.1f, 100.f);
+    cam3D.setPerspective(0.6f, 16.f / 9.f, 0.1f, 100.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 

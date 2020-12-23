@@ -35,6 +35,7 @@ using namespace cro;
 
 DepthTexture::DepthTexture()
     : m_fboID   (0),
+    m_textureID (0),
     m_size      (0,0),
     m_viewport  (0,0,1,1),
     m_lastBuffer(0)
@@ -57,6 +58,7 @@ DepthTexture::~DepthTexture()
 
 DepthTexture::DepthTexture(DepthTexture&& other) noexcept
     : m_fboID   (0),
+    m_textureID (0),
     m_size      (0, 0),
     m_viewport  (0, 0, 1, 1),
     m_lastBuffer(0)
