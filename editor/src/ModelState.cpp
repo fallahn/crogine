@@ -114,7 +114,7 @@ namespace
     const float DefaultFOV = 35.f * cro::Util::Const::degToRad;
     const float MaxFOV = 120.f * cro::Util::Const::degToRad;
     const float MinFOV = 5.f * cro::Util::Const::degToRad;
-    const float DefaultFarPlane = 50.f;
+    const float DefaultFarPlane = 30.f;
 
     const std::uint32_t LightmapSize = 1024;
 
@@ -457,7 +457,7 @@ void ModelState::createScene()
     //create the camera - using a custom camera prevents the scene updating the projection on window resize
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition);
-    entity.addComponent<cro::Camera>();
+    entity.addComponent<cro::Camera>().depthBuffer.create(4096, 4096);
     m_viewportRatio = updateView(entity, DefaultFarPlane, DefaultFOV);
     m_scene.setActiveCamera(entity);
 

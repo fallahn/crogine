@@ -71,7 +71,7 @@ void ShadowMapRenderer::process(float)
 void ShadowMapRenderer::updateDrawList(Entity camEnt)
 {
     glm::vec3 lightDir = getScene()->getSunlight().getComponent<Sunlight>().getDirection();
-    glm::quat lightRotation = getScene()->getSunlight().getComponent<Transform>().getRotation();
+    glm::quat lightRotation = glm::quat_cast(getScene()->getSunlight().getComponent<Transform>().getWorldTransform());
     
     //this gets called once for each Camera in the CameraSystem
     //from CameraSystem::process() - so we'll check here if
@@ -165,9 +165,6 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         //convert to ortho projection
         camera.depthProjectionMatrix = glm::ortho(minX, maxX, minY, maxY, -maxZ, -minZ);
-        //camera.depthProjectionMatrix = glm::ortho(-22.f, 22.f, -22.f, 22.f, 0.1f, 100.f);
-        //camera.depthViewMatrix = camera.getPass(Camera::Pass::Final).viewMatrix;
-
         camera.depthViewProjectionMatrix = camera.depthProjectionMatrix * camera.depthViewMatrix;
 
 #ifdef CRO_DEBUG_
