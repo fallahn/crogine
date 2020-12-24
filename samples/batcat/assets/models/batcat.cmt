@@ -9,6 +9,7 @@ model BatCat
 		//mask = "assets/textures/batcat_mask.png"
 		skinned = true
 		repeat = true
-		rx_shadows = true	
+		rx_shadows = true
+		alpha_clip = 0
 	}
 }

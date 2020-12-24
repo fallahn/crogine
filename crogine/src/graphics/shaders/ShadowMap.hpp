@@ -70,10 +70,10 @@ namespace cro
 
                 #if defined (SKINNED)
                     mat4 skinMatrix = u_boneMatrices[int(a_boneIndices.x)] * a_boneWeights.x;
-                    skinMatrix += u_boneMatrices[int(a_boneIndices.y)] * a_boneWeights.y;
-                    skinMatrix += u_boneMatrices[int(a_boneIndices.z)] * a_boneWeights.z;
-                    skinMatrix += u_boneMatrices[int(a_boneIndices.w)] * a_boneWeights.w;
-                    position = skinMatrix * position;
+                	skinMatrix += u_boneMatrices[int(a_boneIndices.y)] * a_boneWeights.y;
+                	skinMatrix += u_boneMatrices[int(a_boneIndices.z)] * a_boneWeights.z;
+                	skinMatrix += u_boneMatrices[int(a_boneIndices.w)] * a_boneWeights.w;
+                	position = skinMatrix * position;
                 #endif                    
 
                     gl_Position = wvp * position;
@@ -124,6 +124,9 @@ namespace cro
                     FRAG_OUT = pack(distanceNorm);
                 })";
 
+
+            //TODO there's a weird bug where if this is empty (material doesn't use
+            //alpha clipping) that messes up the output of skinned models :S
             const static std::string FragmentDesktop = R"(
                 #if defined(ALPHA_CLIP)
 
@@ -137,11 +140,15 @@ namespace cro
                     if(texture(u_diffuseMap, v_texCoord0).a < u_alphaClip) discard;   
                 }
                 #else
+
+
+                OUTPUT             
                 void main()
                 {
-
+                    FRAG_OUT = vec4(0.0);
                 }
-                #endif)";
+                #endif
+                )";
         }
     }
 }

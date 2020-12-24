@@ -365,6 +365,12 @@ namespace cro
         */
         glm::mat4 depthProjectionMatrix = glm::mat4(1.f);
 
+#ifdef CRO_DEBUG_
+        //l,r,b,t,n,f
+        std::array<float, 6u> depthDebug = {};
+        glm::vec3 depthPosition = glm::vec3(0.f);
+#endif
+
     private:
 
         std::array<Pass, 2u> m_passes = {}; //final pass and refraction pass share the same data
