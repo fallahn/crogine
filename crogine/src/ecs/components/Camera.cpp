@@ -34,10 +34,15 @@ source distribution.
 using namespace cro;
 
 Camera::Camera() 
-    : viewport(0.f, 0.f, 1.f, 1.f)
+    : viewport      (0.f, 0.f, 1.f, 1.f),
+    m_verticalFOV   (0.6f),
+    m_aspectRatio   (1.f),
+    m_nearPlane     (0.1f),
+    m_farPlane      (150.f)
 {
     glm::vec2 windowSize(App::getWindow().getSize());
-    projectionMatrix = glm::perspective(0.6f, windowSize.x / windowSize.y, 0.1f, 150.f);
+    m_aspectRatio = windowSize.x / windowSize.y;
+    m_projectionMatrix = glm::perspective(m_verticalFOV, m_aspectRatio, m_nearPlane, m_farPlane);
 
     m_passes[Pass::Final].m_cullFace = GL_BACK;
     m_passes[Pass::Final].m_planeMultiplier = -1.f;
@@ -101,4 +106,22 @@ Camera::DrawList& Camera::getDrawList(std::uint32_t pass)
     case Camera::Pass::Reflection:
         return m_passes[Pass::Reflection].drawList;
     }
+}
+
+void Camera::setPerspective(float fov, float aspect, float nearPlane, float farPlane)
+{
+    m_projectionMatrix = glm::perspective(fov, aspect, nearPlane, farPlane);
+    m_verticalFOV = fov;
+    m_aspectRatio = aspect;
+    m_nearPlane = nearPlane;
+    m_farPlane = farPlane;
+}
+
+void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane)
+{
+    m_projectionMatrix = glm::ortho(left, right, bottom, top, nearPlane, farPlane);
+    m_verticalFOV = -1.f;
+    m_aspectRatio = (right - left) / (bottom - top);
+    m_nearPlane = nearPlane;
+    m_farPlane = farPlane;
 }

@@ -232,7 +232,7 @@ void RoundEndState::load()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     auto& cam2D = entity.addComponent<cro::Camera>();
-    cam2D.projectionMatrix = glm::ortho(0.f, uiRes.x, 0.f, uiRes.y, -10.1f, 10.f);
+    cam2D.setOrthographic(0.f, uiRes.x, 0.f, uiRes.y, -10.1f, 10.f);
     m_uiScene.setActiveCamera(entity);
 }
 

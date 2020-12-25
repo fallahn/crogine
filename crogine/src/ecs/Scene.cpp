@@ -125,7 +125,7 @@ namespace
         size.y = ((size.x / 16.f) * 9.f) / size.y;
         size.x = 1.f;
 
-        camera.projectionMatrix = glm::perspective(DefaultFOV, 16.f / 9.f, 0.1f, 280.f);
+        camera.setPerspective(DefaultFOV, 16.f / 9.f, 0.1f, 280.f);
         camera.viewport.bottom = (1.f - size.y) / 2.f;
         camera.viewport.height = size.y;
     }
@@ -612,7 +612,7 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
 
             glCheck(glUseProgram(m_skyboxShaders[m_shaderIndex].getGLHandle()));
             glCheck(glUniformMatrix4fv(m_skybox.viewUniform, 1, GL_FALSE, glm::value_ptr(view)));
-            glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projectionMatrix)));
+            glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
 
             //bind the texture if it exists
             if (m_activeSkyboxTexture)

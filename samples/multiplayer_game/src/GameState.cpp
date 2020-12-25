@@ -306,7 +306,7 @@ void GameState::updateView(cro::Camera& cam3D)
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
-    cam3D.projectionMatrix = glm::perspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 280.f);
+    cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 280.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 

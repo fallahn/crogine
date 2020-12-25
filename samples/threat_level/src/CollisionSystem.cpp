@@ -245,7 +245,7 @@ void CollisionSystem::render(Entity camera, const RenderTarget& rt)
     const auto& tx = camera.getComponent<Transform>();
     const auto& camComponent = camera.getComponent<Camera>();
 
-    auto viewProj = camComponent.projectionMatrix * glm::inverse(tx.getWorldTransform());
+    auto viewProj = camComponent.getProjectionMatrix() * glm::inverse(tx.getWorldTransform());
 
     applyViewport(camComponent.viewport, rt);
     m_debugDrawer.render(viewProj);

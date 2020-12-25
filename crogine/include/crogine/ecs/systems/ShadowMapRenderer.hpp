@@ -47,34 +47,41 @@ namespace cro
     render target. This system should be added to the scene
     before the ModelRenderer system (or any system which
     employs the depth map rendered by this system) in order
-    that the depth map data be up to date.
+    that the depth map data be up to date, and AFTER the 
+    CameraSystem so that camera transforms are up to date.
+
+    This system will render into each Camera component's
+    depthBuffer target, for each Camera in the current Scene.
+    The ShadowMapRenderer uses the Scene's active Sunlight
+    property to create a frustum centred to the Camera's
+    view frustum and stores it in the depthViewProjection
+    property of the camera as a matrix. This matrix, in
+    conjunction with the depthBuffer, is used to render a
+    directional shadow map for each camera in the Scene with
+    a valid depthBuffer.
+
+    Note that the Camera's depthBuffer must be explicitly created:
+    any camera without a valid depthBuffer will be skipped.
+    \see Camera
     */
-    class CRO_EXPORT_API ShadowMapRenderer final : public cro::System
+    class CRO_EXPORT_API ShadowMapRenderer final : public cro::System, public cro::Renderable
     {
     public:
         /*!
         \brief Constructor.
         \param mb Message bus instance
-        \param size Resolution of the depth buffer.
         */
-        ShadowMapRenderer(MessageBus& mb, glm::uvec2 size = glm::uvec2(2048, 2048));
+        explicit ShadowMapRenderer(MessageBus& mb);
 
         void process(float) override;
 
-        /*!
-        \brief Returns a reference to the texture used to render the depth map
-        */
-        TextureID getDepthMapTexture() const;
+        void updateDrawList(Entity) override;
+        void render(Entity, const RenderTarget&) override {};
 
     private:
-#ifdef PLATFORM_DESKTOP
-        DepthTexture m_target;
-#else
-        RenderTexture m_target;
-#endif
-        std::vector<std::pair<Entity, float>> m_visibleEntities;
+        std::vector<Entity> m_activeCameras;
+        std::vector<std::vector<std::pair<Entity, float>>> m_drawLists;
 
-        void updateDrawList();
         void render();
 
         void onEntityAdded(cro::Entity) override;

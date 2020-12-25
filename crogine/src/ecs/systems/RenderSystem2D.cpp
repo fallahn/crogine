@@ -220,7 +220,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
             glCheck(glUseProgram(drawable.m_shader->getGLHandle()));
             //glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, &(worldMat[0].x)));
             glCheck(glUniformMatrix4fv(drawable.m_worldViewUniform, 1, GL_FALSE, glm::value_ptr(worldView)));
-            glCheck(glUniformMatrix4fv(drawable.m_projectionUniform, 1, GL_FALSE, glm::value_ptr(camComponent.projectionMatrix)));
+            glCheck(glUniformMatrix4fv(drawable.m_projectionUniform, 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
 
             //apply texture if active
             if (drawable.m_texture)

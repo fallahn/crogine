@@ -364,8 +364,8 @@ void GameState::addSystems()
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<SeaSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_gameScene.addDirector<DayNightDirector>();
@@ -443,8 +443,7 @@ void GameState::createDayCycle()
     //add the shadow caster node to the day night cycle
     auto sunNode = m_gameScene.getSunlight();
     sunNode.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, SeaRadius });
-    sunNode.getComponent<cro::Transform>().setRotation(glm::mat4(1.f)); //set this to none (not sure where its initial val is coming from...)
-    sunNode.getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-IslandSize / 2.f, IslandSize / 2.f, -IslandSize / 2.f, IslandSize / 2.f, 0.1f, IslandSize));
+    //sunNode.getComponent<cro::Transform>().setRotation(glm::mat4(1.f)); //set this to none (not sure where its initial val is coming from...)
     sunNode.addComponent<TargetTransform>();
     rootNode.getComponent<cro::Transform>().addChild(sunNode.getComponent<cro::Transform>());
 }
@@ -594,6 +593,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             cam.reflectionBuffer.setSmooth(true);
             cam.refractionBuffer.create(ReflectionMapSize, ReflectionMapSize);
             cam.refractionBuffer.setSmooth(true);
+            cam.depthBuffer.create(4096, 4096);
 
             auto waterEnt = addSeaplane();
             waterEnt.getComponent<cro::Model>().setRenderFlags(PlayerPlanes[NextPlayerPlane++]);
@@ -657,7 +657,7 @@ void GameState::updateView(cro::Camera&)
 
     const float fov = 36.f * cro::Util::Const::degToRad;
     const float nearPlane = 0.1f;
-    const float farPlane = IslandSize * 1.8f;
+    const float farPlane = IslandSize * 1.7f;
     float aspect = 16.f / 9.f;
 
     glm::vec2 size(cro::App::getWindow().getSize());
@@ -711,7 +711,7 @@ void GameState::updateView(cro::Camera&)
     //set up projection
     for (auto cam : m_cameras)
     {
-        cam.getComponent<cro::Camera>().projectionMatrix = glm::perspective(fov, aspect, nearPlane, farPlane);
+        cam.getComponent<cro::Camera>().setPerspective(fov, aspect, nearPlane, farPlane);
     }
 }
 

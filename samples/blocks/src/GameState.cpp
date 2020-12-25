@@ -397,8 +397,7 @@ void GameState::createUI()
     //camera
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().projectionMatrix = 
-        glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -0.1f, 100.f);
+    entity.addComponent<cro::Camera>().setOrthographic(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -0.1f, 100.f);
 
     m_uiScene.setActiveCamera(entity);
 }
@@ -409,7 +408,7 @@ void GameState::updateView(cro::Camera& cam3D)
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
-    cam3D.projectionMatrix = glm::perspective(75.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 1024.f);
+    cam3D.setPerspective(75.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 1024.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 

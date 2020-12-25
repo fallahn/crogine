@@ -406,7 +406,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
 
     //set shader uniforms (texture/projection)
     glCheck(glUniform4f(m_clipPlaneUniform, clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
-    glCheck(glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projectionMatrix)));
+    glCheck(glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
     glCheck(glUniformMatrix4fv(m_viewProjUniform, 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
     glCheck(glUniform1f(m_viewportUniform, static_cast<float>(vp.height)));
     glCheck(glUniform1i(m_textureUniform, 0));
