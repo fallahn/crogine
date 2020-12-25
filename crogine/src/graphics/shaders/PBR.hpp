@@ -107,8 +107,10 @@ namespace cro::Shaders::PBR
 
             if(projectionCoords.z > 1.0) return 1.0;
 
-            float bias = max(0.01 * (1.0 - dot(surfProp.normalDir, surfProp.lightDir)), 0.005);
-            //float bias = 0.001;
+            float slope = dot(surfProp.normalDir, surfProp.lightDir);
+
+            float bias = max(0.008 * (1.0 - slope), 0.001);
+            //float bias = 0.004;
 
             float shadow = 0.0;
             vec2 texelSize = 1.0 / textureSize(u_shadowMap, 0).xy;
@@ -120,7 +122,7 @@ namespace cro::Shaders::PBR
                     shadow += (projectionCoords.z - bias) > pcfDepth ? 0.4 : 0.0;
                 }
             }
-            return 1.0 - (shadow / 9.0);
+            return 1.0 - ((shadow / 9.0));// * clamp(slope, 0.0, 1.0));
         }
         #endif
 

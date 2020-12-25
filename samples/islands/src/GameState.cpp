@@ -364,8 +364,8 @@ void GameState::addSystems()
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<SeaSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_gameScene.addDirector<DayNightDirector>();
@@ -657,7 +657,7 @@ void GameState::updateView(cro::Camera&)
 
     const float fov = 36.f * cro::Util::Const::degToRad;
     const float nearPlane = 0.1f;
-    const float farPlane = IslandSize * 1.6f;
+    const float farPlane = IslandSize * 1.7f;
     float aspect = 16.f / 9.f;
 
     glm::vec2 size(cro::App::getWindow().getSize());

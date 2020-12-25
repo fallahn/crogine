@@ -11,9 +11,10 @@ model palm03
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
+        rx_shadows = true
         blendmode = "none"
         diffuse = "assets/images/palm_tree/albedo.png"
-        alpha_clip = 0.144000
+        alpha_clip = 0.728000
 
     }
 }
