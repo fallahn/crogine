@@ -115,12 +115,15 @@ Mesh::Data GridMeshBuilder::build() const
     if (m_colouredVerts)
     {
         meshData.attributes[Mesh::Colour] = 4;
+        meshData.attributeFlags = VertexProperty::Colour;
     }
 
     meshData.attributes[Mesh::Normal] = 3;
     meshData.attributes[Mesh::Tangent] = 3;
     meshData.attributes[Mesh::Bitangent] = 3;
     meshData.attributes[Mesh::UV0] = 2;
+    meshData.attributeFlags |= (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
+
     meshData.primitiveType = GL_TRIANGLE_STRIP;
     meshData.vertexCount = verts.size() / getAttributeSize(meshData.attributes);
     meshData.vertexSize = getVertexSize(meshData.attributes);

@@ -558,6 +558,9 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\DepthTexture.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\MeshBatch.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -906,6 +909,9 @@
       <Filter>Source Files\ecs\components</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\DepthTexture.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\MeshBatch.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>

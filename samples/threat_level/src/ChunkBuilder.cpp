@@ -39,6 +39,7 @@ cro::Mesh::Data ChunkBuilder::build() const
 
     data.attributes[cro::Mesh::Position] = 2;
     data.attributes[cro::Mesh::Colour] = 3;
+    data.attributeFlags |= (cro::VertexProperty::Position | cro::VertexProperty::Colour);
 
     data.primitiveType = GL_TRIANGLE_STRIP;
     data.submeshCount = 2;

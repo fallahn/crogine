@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/String.hpp>
 
@@ -848,6 +849,7 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Colour] = 4;
         m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::Normal] = 3;
         m_meshes[MeshData::Brush].mesh.attributes[cro::Mesh::UV0] = 2;
+        m_meshes[MeshData::Brush].mesh.attributeFlags = (cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0);
 
         m_meshes[MeshData::Brush].mesh.primitiveType = GL_TRIANGLES;
         for (auto a : m_meshes[MeshData::Brush].mesh.attributes)
@@ -945,6 +947,7 @@ void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
         m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Colour] = 4;
         m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::Normal] = 3;
         m_meshes[MeshData::Patch].mesh.attributes[cro::Mesh::UV0] = 2;
+        m_meshes[MeshData::Patch].mesh.attributeFlags = (cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0);
 
         m_meshes[MeshData::Patch].mesh.primitiveType = GL_TRIANGLE_STRIP;
         for (auto a : m_meshes[MeshData::Patch].mesh.attributes)

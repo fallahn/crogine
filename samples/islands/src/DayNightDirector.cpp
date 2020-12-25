@@ -314,8 +314,15 @@ void DayNightDirector::setTimeOfDay(std::uint32_t minutes)
 
 void DayNightDirector::setTimeOfDay(float normalised)
 {
-    m_targetTime = normalised;
-    m_correctTime = true;
+    auto ahead = normalised > m_timeOfDay;
+
+    //this is a kludge to stop the cycle messing
+    //up when it wraps around to the beginning
+    if (ahead)
+    {
+        m_targetTime = normalised;
+        m_correctTime = true;
+    }
 }
 
 void DayNightDirector::setCycleSpeed(float speed)

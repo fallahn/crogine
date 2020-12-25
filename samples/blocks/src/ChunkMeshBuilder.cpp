@@ -44,6 +44,7 @@ cro::Mesh::Data ChunkMeshBuilder::build() const
     data.attributes[cro::Mesh::Colour] = 4;
     data.attributes[cro::Mesh::Normal] = 3;
     data.attributes[cro::Mesh::UV0] = 2;
+    data.attributeFlags = (cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0);
 
     m_componentCount = 12; //this is important! update this if modifying above
 

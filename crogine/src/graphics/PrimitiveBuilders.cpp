@@ -79,6 +79,7 @@ Mesh::Data QuadBuilder::build() const
     meshData.attributes[Mesh::Tangent] = 3;
     meshData.attributes[Mesh::Bitangent] = 3;
     meshData.attributes[Mesh::UV0] = 2;
+    meshData.attributeFlags = (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
     meshData.primitiveType = GL_TRIANGLE_STRIP;
     meshData.vertexCount = 4;
     meshData.vertexSize = getVertexSize(meshData.attributes);
@@ -162,6 +163,7 @@ Mesh::Data CubeBuilder::build() const
     meshData.attributes[Mesh::Tangent] = 3;
     meshData.attributes[Mesh::Bitangent] = 3;
     meshData.attributes[Mesh::UV0] = 2;
+    meshData.attributeFlags = (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
     meshData.primitiveType = GL_TRIANGLES;
     meshData.vertexCount = 24;
     meshData.vertexSize = getVertexSize(meshData.attributes);
@@ -320,6 +322,7 @@ Mesh::Data SphereBuilder::build() const
     meshData.attributes[Mesh::Tangent] = 3;
     meshData.attributes[Mesh::Bitangent] = 3;
     meshData.attributes[Mesh::UV0] = 2;
+    meshData.attributeFlags = (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
     meshData.primitiveType = GL_TRIANGLE_STRIP;
     
     meshData.vertexSize = getVertexSize(meshData.attributes);

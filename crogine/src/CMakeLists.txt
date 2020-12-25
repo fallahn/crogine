@@ -91,6 +91,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/IqmBuilder.cpp
   ${PROJECT_DIR}/graphics/MaterialData.cpp
   ${PROJECT_DIR}/graphics/MaterialResource.cpp
+  ${PROJECT_DIR}/graphics/MeshBatch.cpp
   ${PROJECT_DIR}/graphics/MeshBuilder.cpp
   ${PROJECT_DIR}/graphics/MeshResource.cpp
   ${PROJECT_DIR}/graphics/ModelDefinition.cpp

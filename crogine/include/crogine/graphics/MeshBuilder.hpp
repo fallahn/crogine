@@ -42,13 +42,15 @@ namespace cro::VertexProperty
 {
     enum
     {
-        Position  = (1 << 0),
-        Colour    = (1 << 1),
-        Normal    = (1 << 2),
-        Tangent   = (1 << 3),
-        Bitangent = (1 << 4),
-        UV0       = (1 << 5),
-        UV1       = (1 << 6)
+        Position     = (1 << 0),
+        Colour       = (1 << 1),
+        Normal       = (1 << 2),
+        Tangent      = (1 << 3),
+        Bitangent    = (1 << 4),
+        UV0          = (1 << 5),
+        UV1          = (1 << 6),
+        BlendIndices = (1 << 7),
+        BlendWeights = (1 << 8)
     };
 }
 

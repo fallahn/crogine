@@ -126,6 +126,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\LoadingScreen.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MaterialData.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MaterialResource.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\MeshBatch.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MeshData.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MeshResource.hpp" />
@@ -278,6 +279,7 @@
     <ClCompile Include="..\crogine\src\graphics\IqmBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MaterialData.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MaterialResource.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\MeshBatch.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MeshResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\postprocess\PostChromeAB.cpp" />

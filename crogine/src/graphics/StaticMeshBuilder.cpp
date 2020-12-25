@@ -96,29 +96,35 @@ Mesh::Data StaticMeshBuilder::build() const
 
         Mesh::Data meshData;
         meshData.attributes[Mesh::Position] = 3;
+        meshData.attributeFlags = VertexProperty::Position;
         if (flags & VertexProperty::Colour)
         {
             meshData.attributes[Mesh::Colour] = 3;
+            meshData.attributeFlags |= VertexProperty::Colour;
         }
 
         if (flags & VertexProperty::Normal)
         {
             meshData.attributes[Mesh::Normal] = 3;
+            meshData.attributeFlags |= VertexProperty::Normal;
         }
 
         if (flags & (VertexProperty::Tangent | VertexProperty::Bitangent))
         {
             meshData.attributes[Mesh::Tangent] = 3;
             meshData.attributes[Mesh::Bitangent] = 3;
+            meshData.attributeFlags |= VertexProperty::Tangent | VertexProperty::Bitangent;
         }
 
         if (flags & VertexProperty::UV0)
         {
             meshData.attributes[Mesh::UV0] = 2;
+            meshData.attributeFlags |= VertexProperty::UV0;
         }
         if (flags & VertexProperty::UV1)
         {
             meshData.attributes[Mesh::UV1] = 2;
+            meshData.attributeFlags |= VertexProperty::UV1;
         }
 
         meshData.primitiveType = GL_TRIANGLES;       
