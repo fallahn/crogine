@@ -72,7 +72,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 {
     glm::vec3 lightDir = getScene()->getSunlight().getComponent<Sunlight>().getDirection();
     glm::quat lightRotation = glm::quat_cast(getScene()->getSunlight().getComponent<Transform>().getWorldTransform());
-    
+
     //this gets called once for each Camera in the CameraSystem
     //from CameraSystem::process() - so we'll check here if
     //the camera should actually be updated then render all the
@@ -80,24 +80,24 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
     auto& camera = camEnt.getComponent<Camera>();
     if (camera.depthBuffer.available())
     {
-        m_activeCameras.push_back(camEnt);
-
-        if (m_drawLists.size() < m_activeCameras.size())
+        if (m_drawLists.size() <= m_activeCameras.size())
         {
             m_drawLists.emplace_back();
         }
 
-        auto& drawList = m_drawLists.back();
+        auto& drawList = m_drawLists[m_activeCameras.size()];
         drawList.clear();
 
+        m_activeCameras.push_back(camEnt);
+
+
         //calc a position for the directional light
+        //this is used for depth sorting the draw list
         auto aabb = camera.getPass(Camera::Pass::Final).getAABB();
         auto centre = aabb[0] + ((aabb[1] - aabb[0]) / 2.f);
         auto lightPos = centre - (lightDir * ((camera.m_farPlane - camera.m_nearPlane) / 2.f));
 
-        camera.depthViewMatrix = glm::translate(glm::mat4(1.f), lightPos);
-        camera.depthViewMatrix *= glm::toMat4(lightRotation);
-        camera.depthViewMatrix = glm::inverse(camera.depthViewMatrix);
+        camera.depthViewMatrix = glm::inverse(glm::toMat4(lightRotation));
 
         //frustum in camera coords
         float tanHalfFOVY = std::tan(camera.m_verticalFOV / 2.f);
@@ -224,7 +224,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 //private
 void ShadowMapRenderer::render()
 {
-    for (auto c= 0u; c < m_activeCameras.size(); c++)
+    for (auto c = 0u; c < m_activeCameras.size(); c++)
     {
         auto& camera = m_activeCameras[c].getComponent<Camera>();
 

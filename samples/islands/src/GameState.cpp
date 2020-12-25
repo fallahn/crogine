@@ -657,7 +657,7 @@ void GameState::updateView(cro::Camera&)
 
     const float fov = 36.f * cro::Util::Const::degToRad;
     const float nearPlane = 0.1f;
-    const float farPlane = IslandSize * 1.8f;
+    const float farPlane = IslandSize * 1.6f;
     float aspect = 16.f / 9.f;
 
     glm::vec2 size(cro::App::getWindow().getSize());

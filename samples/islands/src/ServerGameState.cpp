@@ -162,6 +162,8 @@ void GameState::netBroadcast()
 
     //broadcast other actor transforms
     //TODO - remind me how we're filtering out reconcilable entities from this?
+    //TODO don't send these until clients are all ready, a slow loading client
+    //will get backed up messages from this which pops the message buffer :(
     auto timestamp = m_serverTime.elapsed().asMilliseconds();
     const auto& actors = m_scene.getSystem<ActorSystem>().getEntities1();
     for (auto e : actors)
