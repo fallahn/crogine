@@ -55,6 +55,7 @@ source distribution.
 
 #include <crogine/graphics/CircleMeshBuilder.hpp>
 #include <crogine/graphics/GridMeshBuilder.hpp>
+#include <crogine/graphics/MeshBatch.hpp>
 #include <crogine/graphics/Image.hpp>
 
 #include <crogine/util/Constants.hpp>
@@ -782,19 +783,45 @@ void GameState::updateBushmap(const cro::NetEvent::Packet& packet)
     }
     else
     {
+        //entity to hold our batch
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+
+        //simpler to load from the model def because material and vertex
+        //properties are automagically configured for us
+        m_modelDefs[GameModelID::Shrub01].createModel(entity, m_resources);
+        
+        auto& meshData = entity.getComponent<cro::Model>().getMeshData();
+        cro::MeshBatch batch(meshData.attributeFlags);
+
+        std::vector<std::vector<glm::mat4>> transforms(6);
+
         std::vector<glm::vec2> positions(size / sizeof(glm::vec2));
         std::memcpy(positions.data(), packet.getData(), size);
 
-        for (auto p : positions)
+        for(auto i = 0u; i < positions.size(); ++i)
         {
+            auto p = positions[i];
             float y = readHeightmap({ p.x, 0.f, p.y  }, m_heightmap) + IslandWorldHeight;
-            
-            /*auto entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ p.x - (IslandSize / 2.f), y, p.y - (IslandSize / 2.f) });
+            p.x -= (IslandSize / 2.f); //offset from the centre
+            p.y -= (IslandSize / 2.f);
 
-            m_modelDefs[GameModelID::Shrub01].createModel(entity, m_resources);*/
-            //TODO we need to batch these - fortunately they all share a texture!!
+            glm::mat4 tx = glm::translate(glm::mat4(1.f), glm::vec3(p.x, y, p.y));
+            tx = glm::scale(tx, glm::vec3(2.f));
+            transforms[i%6].push_back(tx);
         }
+
+        batch.addMesh("assets/models/shrub01.cmf", transforms[0]);
+        batch.addMesh("assets/models/shrub02.cmf", transforms[1]);
+        batch.addMesh("assets/models/shrub03.cmf", transforms[2]);
+        batch.addMesh("assets/models/shrub04.cmf", transforms[3]);
+        batch.addMesh("assets/models/shrub05.cmf", transforms[4]);
+        batch.addMesh("assets/models/shrub06.cmf", transforms[5]);
+        batch.updateMeshData(meshData);
+
+        //TODO split into smaller batches?
+        //TODO create batch for ground plant
+        //TODO better balance the plant types
 
         m_requestFlags |= ClientRequestFlags::BushMap;
     }
@@ -810,6 +837,15 @@ void GameState::updateTreemap(const cro::NetEvent::Packet& packet)
     }
     else
     {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        m_modelDefs[GameModelID::Palm01].createModel(entity, m_resources);
+
+        auto& meshData = entity.getComponent<cro::Model>().getMeshData();
+
+        std::vector<std::vector<glm::mat4>> transforms(3);
+        cro::MeshBatch batch(meshData.attributeFlags);
+
         std::vector<glm::vec2> positions(size / sizeof(glm::vec2));
         std::memcpy(positions.data(), packet.getData(), size);
 
@@ -818,13 +854,20 @@ void GameState::updateTreemap(const cro::NetEvent::Packet& packet)
         {
             float y = readHeightmap({ p.x, 0.f, p.y }, m_heightmap) + IslandWorldHeight;
 
-            auto entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ p.x - (IslandSize / 2.f), y, p.y - (IslandSize / 2.f) });
-            entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::TAU / cro::Util::Random::value(1, 8));
+            p.x -= (IslandSize / 2.f); //offset from the centre
+            p.y -= (IslandSize / 2.f);
 
-            m_modelDefs[GameModelID::Palm01 + i].createModel(entity, m_resources);
-            i = (i + 1) % 3;
+            glm::mat4 tx = glm::translate(glm::mat4(1.f), glm::vec3(p.x, y, p.y));
+            tx = glm::rotate(tx, cro::Util::Const::TAU / cro::Util::Random::value(1, 8), cro::Transform::Y_AXIS);
+            tx = glm::scale(tx, glm::vec3(2.f + cro::Util::Random::value(-0.13f, 0.14f)));
+            transforms[i % 3].push_back(tx);
+
         }
+
+        batch.addMesh("assets/models/palm01.cmf", transforms[0]);
+        batch.addMesh("assets/models/palm02.cmf", transforms[1]);
+        batch.addMesh("assets/models/palm03.cmf", transforms[2]);
+        batch.updateMeshData(meshData);
 
         m_requestFlags |= ClientRequestFlags::TreeMap;
     }

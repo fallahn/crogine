@@ -75,8 +75,7 @@ namespace cro
         \param path A string containing the path to a *.cmf file to add to the batch
         \param transforms A vector of transforms to apply to the mesh. For each
         transform in the vector a new instance of the given mesh will be added,
-        scaled, rotated and translated by that transform. Note that non-even
-        scales will cause any normal data of the mesh to deform.
+        scaled, rotated and translated by that transform.
         \returns true on success, or false if something went wrong loading the mesh data.
         */
         bool addMesh(const std::string& path, const std::vector<glm::mat4>& transforms);
