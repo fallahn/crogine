@@ -561,6 +561,9 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\MeshBatch.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\StaticMeshFile.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -913,6 +916,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\MeshBatch.cpp">
       <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\StaticMeshFile.cpp">
+      <Filter>Source Files\detail</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

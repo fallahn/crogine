@@ -31,6 +31,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/detail/glad.c
   ${PROJECT_DIR}/detail/SDLImageRead.cpp
   ${PROJECT_DIR}/detail/SDLResource.cpp
+  ${PROJECT_DIR}/detail/StaticMeshFile.cpp
 
   ${PROJECT_DIR}/detail/enet/callbacks.c
   ${PROJECT_DIR}/detail/enet/compress.c
