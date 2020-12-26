@@ -122,7 +122,7 @@ namespace cro::Shaders::PBR
                     shadow += (projectionCoords.z - bias) > pcfDepth ? 0.4 : 0.0;
                 }
             }
-            return 1.0 - ((shadow / 9.0));// * clamp(slope, 0.0, 1.0));
+            return 1.0 - ((shadow / 9.0) * clamp(slope, 0.0, 1.0));
         }
         #endif
 

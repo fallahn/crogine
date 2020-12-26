@@ -385,18 +385,9 @@ void GameState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_foamMap", m_foamEffect.getTexture());
 
     m_modelDefs[GameModelID::GroundBush].loadFromFile("assets/models/ground_plant01.cmt", m_resources, &m_environmentMap);
-    
-    m_modelDefs[GameModelID::Palm01].loadFromFile("assets/models/palm01.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Palm02].loadFromFile("assets/models/palm02.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Palm03].loadFromFile("assets/models/palm03.cmt", m_resources, &m_environmentMap);
-
-    m_modelDefs[GameModelID::Shrub01].loadFromFile("assets/models/shrub01.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Shrub02].loadFromFile("assets/models/shrub02.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Shrub03].loadFromFile("assets/models/shrub03.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Shrub04].loadFromFile("assets/models/shrub04.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Shrub05].loadFromFile("assets/models/shrub05.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Shrub06].loadFromFile("assets/models/shrub06.cmt", m_resources, &m_environmentMap);
-    
+    m_modelDefs[GameModelID::Palm].loadFromFile("assets/models/palm01.cmt", m_resources, &m_environmentMap);
+    m_modelDefs[GameModelID::Shrub].loadFromFile("assets/models/shrub01.cmt", m_resources, &m_environmentMap);
+   
 
     loadIslandAssets();
 }
@@ -444,7 +435,6 @@ void GameState::createDayCycle()
     //add the shadow caster node to the day night cycle
     auto sunNode = m_gameScene.getSunlight();
     sunNode.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, SeaRadius });
-    //sunNode.getComponent<cro::Transform>().setRotation(glm::mat4(1.f)); //set this to none (not sure where its initial val is coming from...)
     sunNode.addComponent<TargetTransform>();
     rootNode.getComponent<cro::Transform>().addChild(sunNode.getComponent<cro::Transform>());
 }
@@ -764,6 +754,7 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
             testPoint.z += (IslandSize / 2.f);
 
             spawn.y = readHeightmap(testPoint, m_heightmap) + IslandWorldHeight;
+            spawn.y -= 0.2f;
 
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(spawn);
@@ -789,16 +780,18 @@ void GameState::updateBushmap(const cro::NetEvent::Packet& packet)
 
         //simpler to load from the model def because material and vertex
         //properties are automagically configured for us
-        m_modelDefs[GameModelID::Shrub01].createModel(entity, m_resources);
+        m_modelDefs[GameModelID::Shrub].createModel(entity, m_resources);
         
         auto& meshData = entity.getComponent<cro::Model>().getMeshData();
         cro::MeshBatch batch(meshData.attributeFlags);
 
         std::vector<std::vector<glm::mat4>> transforms(6);
+        std::vector<glm::mat4> shrubTransforms;
 
         std::vector<glm::vec2> positions(size / sizeof(glm::vec2));
         std::memcpy(positions.data(), packet.getData(), size);
 
+        bool shrub = false;
         for(auto i = 0u; i < positions.size(); ++i)
         {
             auto p = positions[i];
@@ -807,8 +800,23 @@ void GameState::updateBushmap(const cro::NetEvent::Packet& packet)
             p.y -= (IslandSize / 2.f);
 
             glm::mat4 tx = glm::translate(glm::mat4(1.f), glm::vec3(p.x, y, p.y));
-            tx = glm::scale(tx, glm::vec3(2.f));
-            transforms[i%6].push_back(tx);
+            tx = glm::rotate(tx, cro::Util::Const::TAU / cro::Util::Random::value(1, 8), cro::Transform::Y_AXIS);
+            tx = glm::scale(tx, glm::vec3(2.f + static_cast<float>(cro::Util::Random::value(-23, 24)) / 100.f));
+
+            if (!shrub)
+            {
+                transforms[i % 6].push_back(tx);
+            }
+            else
+            {
+                //ground shrub
+                shrubTransforms.push_back(tx);
+            }
+
+            if ((i % 6) == 5)
+            {
+                shrub = !shrub;
+            }
         }
 
         batch.addMesh("assets/models/shrub01.cmf", transforms[0]);
@@ -819,9 +827,14 @@ void GameState::updateBushmap(const cro::NetEvent::Packet& packet)
         batch.addMesh("assets/models/shrub06.cmf", transforms[5]);
         batch.updateMeshData(meshData);
 
-        //TODO split into smaller batches?
-        //TODO create batch for ground plant
-        //TODO better balance the plant types
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        m_modelDefs[GameModelID::GroundBush].createModel(entity, m_resources);
+        auto& bushData = entity.getComponent<cro::Model>().getMeshData();
+
+        cro::MeshBatch bushBatch(bushData.attributeFlags);
+        bushBatch.addMesh("assets/models/ground_plant01.cmf", shrubTransforms);
+        bushBatch.updateMeshData(bushData);
 
         m_requestFlags |= ClientRequestFlags::BushMap;
     }
@@ -839,7 +852,7 @@ void GameState::updateTreemap(const cro::NetEvent::Packet& packet)
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
-        m_modelDefs[GameModelID::Palm01].createModel(entity, m_resources);
+        m_modelDefs[GameModelID::Palm].createModel(entity, m_resources);
 
         auto& meshData = entity.getComponent<cro::Model>().getMeshData();
 
@@ -849,9 +862,9 @@ void GameState::updateTreemap(const cro::NetEvent::Packet& packet)
         std::vector<glm::vec2> positions(size / sizeof(glm::vec2));
         std::memcpy(positions.data(), packet.getData(), size);
 
-        std::size_t i = 0;
-        for (auto p : positions)
+        for (auto i = 0u; i < positions.size(); ++i)
         {
+            auto p = positions[i];
             float y = readHeightmap({ p.x, 0.f, p.y }, m_heightmap) + IslandWorldHeight;
 
             p.x -= (IslandSize / 2.f); //offset from the centre
@@ -859,9 +872,8 @@ void GameState::updateTreemap(const cro::NetEvent::Packet& packet)
 
             glm::mat4 tx = glm::translate(glm::mat4(1.f), glm::vec3(p.x, y, p.y));
             tx = glm::rotate(tx, cro::Util::Const::TAU / cro::Util::Random::value(1, 8), cro::Transform::Y_AXIS);
-            tx = glm::scale(tx, glm::vec3(2.f + cro::Util::Random::value(-0.13f, 0.14f)));
+            tx = glm::scale(tx, glm::vec3(2.f + static_cast<float>(cro::Util::Random::value(-23, 24)) / 100.f));
             transforms[i % 3].push_back(tx);
-
         }
 
         batch.addMesh("assets/models/palm01.cmf", transforms[0]);

@@ -141,7 +141,7 @@ static const std::string SeaFragment = R"(
         vec2(0.14383161, -0.14100790)
     );
     const int filterSize = 3;
-    float shadowAmount(vec4 lightWorldPos)
+    float shadowAmount(vec4 lightWorldPos, float intensity)
     {
         vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
         projectionCoords = projectionCoords * 0.5 + 0.5;
@@ -158,7 +158,7 @@ static const std::string SeaFragment = R"(
                 shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
             }
         }
-        return 1.0 - (shadow / 9.0);
+        return 1.0 - ((shadow / 9.0) *  clamp(intensity, 0.0, 1.0));
     }
 
     void main()
@@ -198,12 +198,13 @@ static const std::string SeaFragment = R"(
         falloff = 1.0 - pow(depth, 10.0);
         blendedColour = mix(vec3(1.0, 1.0, 1.0), blendedColour, 0.2 + (falloff * 0.8));
 
-        vec3 halfVec = normalize(eyeDirection + normalize(-u_lightDirection));
+        vec3 lightDir = normalize(-u_lightDirection);
+        vec3 halfVec = normalize(eyeDirection + lightDir);
         vec3 specular = vec3(pow(clamp(dot(halfVec, normal), 0.0, 1.0), 255.0));
 
         blendedColour += specular;
         blendedColour *= u_lightColour.rgb;
         
         FRAG_OUT = vec4(blendedColour, 1.0);
-        FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
+        FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition, dot(lightDir, normal));
     })";
