@@ -377,7 +377,8 @@ void GameState::loadAssets()
     m_meshIDs[MeshID::SeaPlane] = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(SeaRadius, 30));
 
     m_islandTexture.create(IslandTileCount, IslandTileCount);
-    m_environmentMap.loadFromFile("assets/images/cubemap/beach02.hdr");
+    m_environmentMap.loadFromFile("assets/images/cubemap/beach01.hdr");
+    //m_gameScene.setCubemap(m_environmentMap);
     m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
 
     m_materialIDs[MaterialID::Sea] = m_gameScene.getSystem<SeaSystem>().loadResources(m_resources);
