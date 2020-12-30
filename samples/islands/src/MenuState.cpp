@@ -65,7 +65,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     : cro::State    (stack, context),
     m_sharedData    (sd),
     m_scene         (context.appInstance.getMessageBus()),
-    m_hosting       (false)
+    m_hosting       (false),
+    m_cursor("assets/images/loading.png", 0,0)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -344,9 +345,10 @@ void MenuState::createScene()
 #endif //CRO_DEBUG_
 
     auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>().addCallback(
-        [](cro::Entity e)
+        [&](cro::Entity e)
         {
-            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);        
+            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+            getContext().mainWindow.setCursor(&m_cursor);
         });
     auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e)
@@ -369,7 +371,6 @@ void MenuState::createScene()
     createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
     createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
     createLocalMenu(entity, mouseEnterCallback, mouseExitCallback);
-
 
     //set a custom camera so the scene doesn't overwrite the viewport
     //with the default view when resizing the window

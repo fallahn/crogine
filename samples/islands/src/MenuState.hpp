@@ -42,6 +42,8 @@ source distribution.
 #include <crogine/graphics/TextureResource.hpp>
 #include <crogine/graphics/Font.hpp>
 
+#include <crogine/core/Cursor.hpp>
+
 #include <array>
 
 namespace MenuCommandID
@@ -114,6 +116,8 @@ private:
         cro::String* string = nullptr;
         cro::Entity entity;
     }m_textEdit;
+
+    cro::Cursor m_cursor;
 
     void addSystems();
     void loadAssets();

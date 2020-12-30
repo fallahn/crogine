@@ -46,6 +46,7 @@ source distribution.
 namespace cro
 {   
     class LoadingScreen;
+    class Cursor;
 
     /*!
     \brief Creates a window to which to draw.
@@ -183,6 +184,25 @@ namespace cro
         */
         bool getMouseCaptured() const;
 
+        /*!
+        \brief Sets the cursor icon of the window.
+        \param cursor A pointer to a valid cursor, or nullptr
+        As windows only keep a reference to the active cursor then
+        the cursor instance pointed to must be kept alive for as
+        long as it is used. It is possible to have multiple cursor
+        types and switch between them at run time. Setting this to
+        nullptr returns the cursor to the default icon.
+        Cursor icons vary by platform so in cases where a particular
+        cursor is unsupported this function will do nothing.
+        */
+        void setCursor(const Cursor* cursor);
+
+        /*!
+        \brief Returns a pointer to the active cursorm or nullptr
+        if no specific currsor has been set.
+        */
+        const Cursor* getCursor() const;
+
     private:
 
         SDL_Window* m_window;
@@ -195,6 +215,9 @@ namespace cro
 
         bool m_fullscreen;
         bool m_multisamplingEnabled;
+
+        const Cursor* m_cursor;
+        friend class Cursor;
 
         void destroy();
 

@@ -47,6 +47,7 @@
     <ClInclude Include="..\crogine\include\crogine\core\ConfigFile.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Console.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\ConsoleClient.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\core\Cursor.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\FileSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\GameController.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Keyboard.hpp" />
@@ -208,6 +209,7 @@
     <ClCompile Include="..\crogine\src\core\ConfigFile.cpp" />
     <ClCompile Include="..\crogine\src\core\Console.cpp" />
     <ClCompile Include="..\crogine\src\core\ConsoleClient.cpp" />
+    <ClCompile Include="..\crogine\src\core\Cursor.cpp" />
     <ClCompile Include="..\crogine\src\core\DefaultLoadingScreen.cpp" />
     <ClCompile Include="..\crogine\src\core\FileSystem.cpp" />
     <ClCompile Include="..\crogine\src\core\GameController.cpp" />

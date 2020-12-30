@@ -14,6 +14,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/core/ConfigFile.cpp
   ${PROJECT_DIR}/core/Console.cpp
   ${PROJECT_DIR}/core/ConsoleClient.cpp
+  ${PROJECT_DIR}/core/Cursor.cpp
   ${PROJECT_DIR}/core/DefaultLoadingScreen.cpp
   ${PROJECT_DIR}/core/FileSystem.cpp
   ${PROJECT_DIR}/core/GameController.cpp
