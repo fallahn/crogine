@@ -369,6 +369,11 @@ void Window::setCursor(const Cursor* cursor)
         return;
     }
 
+    if (cursor && cursor->m_cursor == nullptr)
+    {
+        return;
+    }
+
     if (m_cursor)
     {
         m_cursor->m_inUse = false;

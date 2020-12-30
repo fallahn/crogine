@@ -65,8 +65,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     : cro::State    (stack, context),
     m_sharedData    (sd),
     m_scene         (context.appInstance.getMessageBus()),
-    m_hosting       (false),
-    m_cursor("assets/images/loading.png", 0,0)
+    m_hosting       (false)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -348,7 +347,6 @@ void MenuState::createScene()
         [&](cro::Entity e)
         {
             e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-            getContext().mainWindow.setCursor(&m_cursor);
         });
     auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e)

@@ -379,8 +379,8 @@ namespace cro
         friend class CameraSystem;
 
         glm::mat4 m_projectionMatrix = glm::mat4(1.f);
-        float m_aspectRatio;
         float m_verticalFOV;
+        float m_aspectRatio;
         float m_nearPlane;
         float m_farPlane;
 
