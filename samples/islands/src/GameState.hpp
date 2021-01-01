@@ -83,6 +83,7 @@ private:
 
     FoamEffect m_foamEffect;
     cro::EnvironmentMap m_environmentMap;
+    cro::EnvironmentMap m_skyMap;
 
     std::unordered_map<std::uint8_t, InputParser> m_inputParsers;
     std::vector<cro::Entity> m_cameras;

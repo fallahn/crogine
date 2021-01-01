@@ -1,15 +1,15 @@
 model BatCat
 {
-	mesh = "assets/models/batcat.iqm"
-	cast_shadows = true
+    mesh = "assets/models/batcat.iqm"
+    cast_shadows = true
 
-	material Unlit
-	{
-		diffuse = "assets/textures/batcat_diffuse.png"
-		//mask = "assets/textures/batcat_mask.png"
-		skinned = true
-		repeat = true
-		rx_shadows = true
-		alpha_clip = 0
-	}
+    material Unlit
+    {
+        diffuse = "assets/textures/batcat_diffuse.png"
+        //mask = "assets/textures/batcat_mask.png"
+        skinned = true
+        repeat = true
+        rx_shadows = true
+        alpha_clip = 0
+    }
 }

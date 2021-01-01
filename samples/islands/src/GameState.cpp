@@ -378,8 +378,9 @@ void GameState::loadAssets()
 
     m_islandTexture.create(IslandTileCount, IslandTileCount);
     m_environmentMap.loadFromFile("assets/images/cubemap/beach01.hdr");
-    //m_gameScene.setCubemap(m_environmentMap);
-    m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
+    m_skyMap.loadFromFile("assets/images/cubemap/skybox.hdr");
+    m_gameScene.setCubemap(m_skyMap);
+    //m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
 
     m_materialIDs[MaterialID::Sea] = m_gameScene.getSystem<SeaSystem>().loadResources(m_resources);
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_depthMap", m_islandTexture);
@@ -879,7 +880,7 @@ void GameState::updateTreemap(const cro::NetEvent::Packet& packet)
 
         batch.addMesh("assets/models/palm01.cmf", transforms[0]);
         batch.addMesh("assets/models/palm02.cmf", transforms[1]);
-        batch.addMesh("assets/models/palm03.cmf", transforms[2]);
+        batch.addMesh("assets/models/palm01.cmf", transforms[2]);
         batch.updateMeshData(meshData);
 
         m_requestFlags |= ClientRequestFlags::TreeMap;

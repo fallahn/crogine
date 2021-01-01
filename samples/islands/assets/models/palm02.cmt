@@ -5,15 +5,14 @@ model palm02
 
     material PBR
     {
-        mask = "assets/images/palm_tree/mask.png"
-        normal = "assets/images/palm_tree/normal.png"
+        mask = "assets/images/trees/mask.png"
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
+        rx_shadows = true
         blendmode = "none"
-        diffuse = "assets/images/palm_tree/albedo.png"
-        alpha_clip = 0.144000
+        diffuse = "assets/images/trees/albedo.png"
 
     }
 }
