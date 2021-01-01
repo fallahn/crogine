@@ -7,7 +7,7 @@ HDRI pre-filter shaders from https://learnopengl.com/PBR
 #include <string>
 
 static const std::string PBRCubeVertex = R"(
-        attribute vec4 a_position;
+        ATTRIBUTE vec4 a_position;
 
         VARYING_OUT vec3 v_worldPosition;
 
