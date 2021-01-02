@@ -5,15 +5,14 @@ model ground_plant01
 
     material PBR
     {
-        mask_colour = 0.000000,0.956863,1.000000,1.000000
-        normal = "assets/images/ground_plant01/normal.png"
+        mask = "assets/images/ground_plant01/mask.png"
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
+        rx_shadows = true
         blendmode = "none"
         diffuse = "assets/images/ground_plant01/albedo.png"
-        alpha_clip = 0.493000
 
     }
 }
