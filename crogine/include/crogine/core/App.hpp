@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Console.hpp>
+#include <crogine/core/Keyboard.hpp>
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/graphics/Colour.hpp>
@@ -108,9 +109,14 @@ namespace cro
         void resetFrameTime();
 
         /*!
-        brief Returns a reference to the active App instance
+        \brief Returns a reference to the active App instance
         */
         static App& getInstance();
+
+        /*!
+        \brief Returns true if there is a valid instance of this class
+        */
+        static bool isValid();
 
     protected:
         

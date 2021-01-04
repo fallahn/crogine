@@ -84,8 +84,7 @@ namespace cro
         void setPosition(glm::vec3);
 
         /*!
-        \brief Sets a 2D position by automatically setting
-        the Z value to zero
+        \brief Sets a 2D position by leaving the z-coord in tact.
         */
         void setPosition(glm::vec2);
 

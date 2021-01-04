@@ -119,6 +119,7 @@ cro::Mesh::Data NormalVisMeshBuilder::build() const
     cro::Mesh::Data meshData;
     meshData.attributes[cro::Mesh::Position] = 3;
     meshData.attributes[cro::Mesh::Colour] = 3;
+    meshData.attributeFlags = cro::VertexProperty::Position | cro::VertexProperty::Colour;
     meshData.primitiveType = GL_LINES;
     meshData.vertexSize = getVertexSize(meshData.attributes);
     meshData.vertexCount = vboData.size() / (meshData.vertexSize / sizeof(float));

@@ -114,7 +114,7 @@ namespace
     const float DefaultFOV = 35.f * cro::Util::Const::degToRad;
     const float MaxFOV = 120.f * cro::Util::Const::degToRad;
     const float MinFOV = 5.f * cro::Util::Const::degToRad;
-    const float DefaultFarPlane = 50.f;
+    const float DefaultFarPlane = 30.f;
 
     const std::uint32_t LightmapSize = 1024;
 
@@ -127,7 +127,7 @@ namespace
         size.y -= (size.y * ui::BrowserHeight);
 
         auto& cam3D = entity.getComponent<cro::Camera>();
-        cam3D.projectionMatrix = glm::perspective(fov, size.x / size.y, 0.1f, farPlane);
+        cam3D.setPerspective(fov, size.x / size.y, 0.1f, farPlane);
         cam3D.viewport.left = ui::InspectorWidth;
         cam3D.viewport.width = 1.f - ui::InspectorWidth;
         cam3D.viewport.bottom = ui::BrowserHeight;
@@ -383,7 +383,7 @@ void ModelState::addSystems()
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::BillboardSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<cro::ShadowMapRenderer>(mb, glm::uvec2(4096));
+    m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
 
     m_previewScene.addSystem<cro::CameraSystem>(mb);
@@ -429,7 +429,7 @@ void ModelState::loadAssets()
     m_resources.materials.get(materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
 
     //for receiving shadows on the ground plane
-    std::size_t texID = 10000;
+    std::uint32_t texID = 10000;
     m_resources.textures.load(texID, "assets/images/grid.png");
     m_resources.textures.get(texID).setSmooth(true);
 
@@ -457,7 +457,7 @@ void ModelState::createScene()
     //create the camera - using a custom camera prevents the scene updating the projection on window resize
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition);
-    entity.addComponent<cro::Camera>();
+    entity.addComponent<cro::Camera>().depthBuffer.create(4096, 4096);
     m_viewportRatio = updateView(entity, DefaultFarPlane, DefaultFOV);
     m_scene.setActiveCamera(entity);
 
@@ -520,7 +520,6 @@ void ModelState::createScene()
     entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //set the default sunlight properties
-    m_scene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-2.f, 2.f, -2.f, 2.f, 0.1f, 4.f));
     m_scene.getSunlight().getComponent<cro::Transform>().setPosition({ -1.5f, 1.5f, 1.5f });
     m_scene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.79f);
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.79f);
@@ -552,7 +551,7 @@ void ModelState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
     entity.addComponent<cro::Camera>();
     auto& cam3D = entity.getComponent<cro::Camera>();
-    cam3D.projectionMatrix = glm::perspective(DefaultFOV, 1.f, 0.1f, 10.f);
+    cam3D.setPerspective(DefaultFOV, 1.f, 0.1f, 10.f);
 
     m_previewScene.setActiveCamera(entity);
 
@@ -857,10 +856,17 @@ void ModelState::buildUI()
                     auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/" + "ao_untitled", "png");
                     if (!path.empty())
                     {
-                        auto preString = path.substr(0, path.find_last_of('.'));
-                        for (auto i = 0u; i < meshData.submeshCount; ++i)
+                        if (meshData.submeshCount > 1)
                         {
-                            m_lightmapTextures[i]->saveToFile(preString + "0" + std::to_string(i) + ".png");
+                            auto preString = path.substr(0, path.find_last_of('.'));
+                            for (auto i = 0u; i < meshData.submeshCount; ++i)
+                            {
+                                m_lightmapTextures[i]->saveToFile(preString + "0" + std::to_string(i) + ".png");
+                            }
+                        }
+                        else
+                        {
+                            m_lightmapTextures[0]->saveToFile(path);
                         }
                     }
                 }
@@ -1548,7 +1554,7 @@ void ModelState::importModel()
 
                 for (auto i = 0u; i < meshData.submeshCount; ++i)
                 {
-                    meshData.indexData[i].indexCount = m_importedIndexArrays[i].size();
+                    meshData.indexData[i].indexCount = static_cast<std::uint32_t>(m_importedIndexArrays[i].size());
                     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
                     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].indexCount * sizeof(std::uint32_t), m_importedIndexArrays[i].data(), GL_STATIC_DRAW));
                 }
@@ -2081,7 +2087,7 @@ void ModelState::updateGridMesh(cro::Mesh::Data& meshData, std::optional<cro::Sp
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     auto& submesh = meshData.indexData[0];
-    submesh.indexCount = indices.size();
+    submesh.indexCount = static_cast<std::uint32_t>(indices.size());
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
@@ -3916,8 +3922,8 @@ void ModelState::bakeLightmap()
     glm::mat4 view = glm::mat4(1.f);
     glm::mat4 proj = glm::mat4(1.f);
     
-    std::int32_t normalOffset = 0;
-    std::int32_t uvOffset = 0;
+    std::size_t normalOffset = 0;
+    std::size_t uvOffset = 0;
 
     for (auto i = 0u; i < meshData.attributes.size(); ++i)
     {

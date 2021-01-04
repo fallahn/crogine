@@ -298,7 +298,7 @@ void NpcSystem::processElite(cro::Entity entity, float dt)
             {
                 status.elite.active = true;
                 status.elite.destination = (status.elite.movementCount)
-                    ? m_elitePositions[cro::Util::Random::value(0, m_elitePositions.size() - 1)]
+                    ? m_elitePositions[cro::Util::Random::value(0u, m_elitePositions.size() - 1)]
                     : glm::vec3(-7.f, tx.getWorldPosition().y, zDepth);
             }
 
@@ -457,14 +457,14 @@ void NpcSystem::onEntityAdded(cro::Entity entity)
         status.elite.destination = m_elitePositions[0];
         status.elite.movementCount = cro::Util::Random::value(4, 8);
         status.elite.pauseTime = cro::Util::Random::value(1.2f, 2.2f);
-        status.elite.idleIndex = cro::Util::Random::value(0, m_eliteIdlePositions.size());
+        status.elite.idleIndex = cro::Util::Random::value(0u, m_eliteIdlePositions.size());
         status.elite.maxEmitRate = entity.getComponent<cro::ParticleEmitter>().settings.emitRate;
         status.scoreValue = eliteScore;
         break;
     case Npc::Choppa:
         status.choppa.moveSpeed = cro::Util::Random::value(-8.3f, -7.8f);
         status.choppa.deathVelocity.x = status.choppa.moveSpeed;
-        status.choppa.tableIndex = cro::Util::Random::value(0, m_choppaTable.size() - 1);
+        status.choppa.tableIndex = cro::Util::Random::value(0u, m_choppaTable.size() - 1);
         status.scoreValue = choppaScore;
         break;
     case Npc::Turret:

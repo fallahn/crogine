@@ -185,7 +185,7 @@ void MenuState::createScene()
 
     if (spawnPoints.size() > 1)
     {
-        const auto& spawn = spawnPoints[cro::Util::Random::value(0, spawnPoints.size() - 1)];
+        const auto& spawn = spawnPoints[cro::Util::Random::value(0u, spawnPoints.size() - 1)];
         camEnt.getComponent<cro::Transform>().setPosition(spawn.position);
         camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -(cro::Util::Const::degToRad * spawn.rotation));
     }
@@ -202,7 +202,7 @@ void MenuState::updateView(cro::Camera& cam3D)
     size.x = 1.f;
 
     //90 deg in x (glm expects fov in y)
-    cam3D.projectionMatrix = glm::perspective(50.6f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 4024.f);
+    cam3D.setPerspective(50.6f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 4024.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 }

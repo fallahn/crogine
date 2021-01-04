@@ -198,7 +198,9 @@ void Transform::setPosition(glm::vec3 position)
 
 void Transform::setPosition(glm::vec2 position)
 {
-    setPosition(glm::vec3(position.x, position.y, 0.f));
+    m_position.x = position.x;
+    m_position.y = position.t;
+    m_dirtyFlags |= Tx;
 }
 
 void Transform::setRotation(glm::vec3 axis, float angle)

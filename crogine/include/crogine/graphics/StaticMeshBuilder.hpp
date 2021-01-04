@@ -86,8 +86,6 @@ namespace cro
         */
         explicit StaticMeshBuilder(const std::string& path);
 
-        ~StaticMeshBuilder();
-
         /*!
         \brief Implements the UID based on the path given to the ctor
         */
@@ -96,9 +94,6 @@ namespace cro
     private:
         std::string m_path;
         std::size_t m_uid;
-        mutable SDL_RWops* m_file;
         Mesh::Data build() const override;
-
-        bool checkError(std::size_t readCount) const;
     };
 }

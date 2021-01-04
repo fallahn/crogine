@@ -99,7 +99,7 @@ void PlayerSystem::handleMessage(const cro::Message& msg)
                         auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
                         msg->entityID = entity.getIndex();
                         msg->type = PlayerEvent::GotLife;
-                        msg->value = playerInfo.lives;
+                        msg->value = static_cast<float>(playerInfo.lives);
                     }
                 };
                 getScene()->getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -265,7 +265,7 @@ void PlayerSystem::updateAlive(cro::Entity entity, float dt)
                     auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
                     msg->entityID = entity.getIndex();
                     msg->type = PlayerEvent::GotLife;
-                    msg->value = playerInfo.lives;
+                    msg->value = static_cast<float>(playerInfo.lives);
                 }
                 break;
             }
@@ -297,7 +297,7 @@ void PlayerSystem::updateAlive(cro::Entity entity, float dt)
         auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
         msg->entityID = entity.getIndex();
         msg->type = PlayerEvent::Died;
-        msg->value = playerInfo.lives;
+        msg->value = static_cast<float>(playerInfo.lives);
     }
 }
 

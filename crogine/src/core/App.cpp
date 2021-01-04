@@ -330,6 +330,11 @@ App& App::getInstance()
     return *m_instance;
 }
 
+bool App::isValid()
+{
+    return m_instance != nullptr;
+}
+
 //protected
 void App::setApplicationStrings(const std::string& organisation, const std::string& appName)
 {

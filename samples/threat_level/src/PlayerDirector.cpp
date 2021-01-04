@@ -351,8 +351,8 @@ void PlayerDirector::process(float)
 {
     //controller analogue
     glm::vec3 joyVec = {
-        static_cast<float>(cro::GameController::getAxis(0, cro::GameController::AxisLeftX)),
-        static_cast<float>(cro::GameController::getAxis(0, cro::GameController::AxisLeftY)), 0.f };
+        static_cast<float>(cro::GameController::getAxisPosition(0, cro::GameController::AxisLeftX)),
+        static_cast<float>(cro::GameController::getAxisPosition(0, cro::GameController::AxisLeftY)), 0.f };
     joyVec.y = -joyVec.y;
     float joystickAmount = glm::length2(joyVec) / JoyMaxSqr;
     if (joystickAmount < JoySpeedMin) joystickAmount = 0.f;
@@ -521,7 +521,7 @@ glm::vec3 PlayerDirector::getWorldCoords()
     z *= 2.f; z -= 1.f;
 
     //and unproject - remember view matrix if we decide to move the camera!!
-    auto worldPos = glm::inverse(camera.projectionMatrix) * glm::vec4(x, y, z, 1.f);
+    auto worldPos = glm::inverse(camera.getProjectionMatrix()) * glm::vec4(x, y, z, 1.f);
     glm::vec3 retVal(worldPos);
     retVal *= worldPos.w; //sure this is supposed to be division, but what the fudge.
     return retVal;

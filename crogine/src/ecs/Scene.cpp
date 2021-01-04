@@ -125,7 +125,7 @@ namespace
         size.y = ((size.x / 16.f) * 9.f) / size.y;
         size.x = 1.f;
 
-        camera.projectionMatrix = glm::perspective(DefaultFOV, 16.f / 9.f, 0.1f, 280.f);
+        camera.setPerspective(DefaultFOV, 16.f / 9.f, 0.1f, 280.f);
         camera.viewport.bottom = (1.f - size.y) / 2.f;
         camera.viewport.height = size.y;
     }
@@ -484,7 +484,7 @@ Entity Scene::setActiveCamera(Entity entity)
     auto oldCam = m_activeCamera;
     m_activeCamera = entity;
 
-    auto& cam = entity.getComponent<cro::Camera>();
+    //auto& cam = entity.getComponent<cro::Camera>();
     //we don't want to call this if we've explicitly
     //set the view elsewhere first...
     /*if (cam.resizeCallback)
@@ -612,7 +612,7 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
 
             glCheck(glUseProgram(m_skyboxShaders[m_shaderIndex].getGLHandle()));
             glCheck(glUniformMatrix4fv(m_skybox.viewUniform, 1, GL_FALSE, glm::value_ptr(view)));
-            glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.projectionMatrix)));
+            glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
 
             //bind the texture if it exists
             if (m_activeSkyboxTexture)

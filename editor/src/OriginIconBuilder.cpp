@@ -49,6 +49,7 @@ cro::Mesh::Data OriginIconBuilder::build() const
     cro::Mesh::Data retVal;
     retVal.attributes[cro::Mesh::Position] = 3;
     retVal.attributes[cro::Mesh::Colour] = 3;
+    retVal.attributeFlags = cro::VertexProperty::Position | cro::VertexProperty::Colour;
 
     retVal.primitiveType = GL_LINES;
     retVal.vertexSize = getVertexSize(retVal.attributes);

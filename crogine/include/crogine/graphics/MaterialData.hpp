@@ -258,6 +258,10 @@ namespace cro
             //used internally, and not user-definable
             std::size_t optionalUniformCount = 0;
             std::array<int32, 10> optionalUniforms{};
+
+        private:
+            std::unordered_map<std::string, bool> m_warnings;
+            void exists(const std::string&);
         };
     }
 }

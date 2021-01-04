@@ -82,13 +82,13 @@ void CameraSystem::process(float)
             const auto& tx = entity.getComponent<Transform>();
 
             finalPass.viewMatrix = glm::inverse(tx.getWorldTransform());
-            finalPass.viewProjectionMatrix = camera.projectionMatrix * finalPass.viewMatrix;
+            finalPass.viewProjectionMatrix = camera.m_projectionMatrix * finalPass.viewMatrix;
             finalPass.m_aabb = Spatial::updateFrustum(finalPass.m_frustum, finalPass.viewProjectionMatrix);
 
 
             reflectionPass.viewMatrix = glm::scale(finalPass.viewMatrix, glm::vec3(1.f, -1.f, 1.f));
             reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, -getScene()->getWaterLevel() * 2.f, 0.f));
-            reflectionPass.viewProjectionMatrix = camera.projectionMatrix * reflectionPass.viewMatrix;
+            reflectionPass.viewProjectionMatrix = camera.m_projectionMatrix * reflectionPass.viewMatrix;
             reflectionPass.m_aabb = Spatial::updateFrustum(reflectionPass.m_frustum, reflectionPass.viewProjectionMatrix);
 
             //don't clear these then systems updating them can just do swaps

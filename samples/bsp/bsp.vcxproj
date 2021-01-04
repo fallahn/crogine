@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DayNightDirector.cpp" />
     <ClCompile Include="src\fastnoise\FastNoiseSIMD.cpp" />
     <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx2.cpp">
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</WholeProgramOptimization>
@@ -178,6 +179,7 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</WholeProgramOptimization>
     </ClCompile>
+    <ClCompile Include="src\FoamEffect.cpp" />
     <ClCompile Include="src\FpsCameraSystem.cpp" />
     <ClCompile Include="src\GameState.cpp" />
     <ClCompile Include="src\InputParser.cpp" />
@@ -190,7 +192,10 @@
     <ClCompile Include="src\SeaSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\CommandIDs.hpp" />
+    <ClInclude Include="src\DayNightDirector.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
+    <ClInclude Include="src\FoamEffect.hpp" />
     <ClInclude Include="src\FpsCameraSystem.hpp" />
     <ClInclude Include="src\GameConsts.hpp" />
     <ClInclude Include="src\GameState.hpp" />

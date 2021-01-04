@@ -64,6 +64,7 @@ cro::Mesh::Data BorderMeshBuilder::build() const
 
     data.attributes[cro::Mesh::Position] = 3;
     data.attributes[cro::Mesh::Colour] = 3;
+    data.attributeFlags |= (cro::VertexProperty::Position | cro::VertexProperty::Colour);
 
     data.primitiveType = GL_LINES;
     data.vertexSize = getVertexSize(data.attributes);

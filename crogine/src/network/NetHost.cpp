@@ -40,7 +40,7 @@ using namespace cro;
 
 namespace
 {
-    ENetPacket* createPacket(uint8 id, void* data, std::size_t size, NetFlag flags)
+    ENetPacket* createPacket(uint8 id, const void* data, std::size_t size, NetFlag flags)
     {
         int32 packetFlags = 0;
         if (flags == NetFlag::Reliable)
@@ -197,7 +197,7 @@ bool NetHost::pollEvent(NetEvent& evt)
     return false;
 }
 
-void NetHost::broadcastPacket(uint8 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
+void NetHost::broadcastPacket(uint8 id, const void* data, std::size_t size, NetFlag flags, uint8 channel)
 {
     if (m_host)
     {
@@ -205,7 +205,7 @@ void NetHost::broadcastPacket(uint8 id, void* data, std::size_t size, NetFlag fl
     }
 }
 
-void NetHost::sendPacket(const NetPeer& peer, uint8 id, void* data, std::size_t size, NetFlag flags, uint8 channel)
+void NetHost::sendPacket(const NetPeer& peer, uint8 id, const void* data, std::size_t size, NetFlag flags, uint8 channel)
 {
     if (peer.m_peer)
     {

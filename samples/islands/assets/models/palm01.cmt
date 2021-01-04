@@ -1,0 +1,18 @@
+model palm01
+{
+    mesh = "assets/models/palm01.cmf"
+    cast_shadows = true
+
+    material PBR
+    {
+        mask = "assets/images/trees/mask.png"
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        rx_shadows = true
+        blendmode = "none"
+        diffuse = "assets/images/trees/albedo.png"
+
+    }
+}

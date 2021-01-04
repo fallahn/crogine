@@ -175,7 +175,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     const auto& camComponent = camera.getComponent<Camera>();
     const auto& pass = camComponent.getActivePass();
 
-    glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.05f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
+    glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
 
     if (pass.drawList.count(getType()) == 0)
     {
@@ -192,18 +192,18 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     const auto& visibleEntities = std::any_cast<const MaterialList&>(pass.drawList.at(getType()));
     for (const auto& [entity, sortData] : visibleEntities)
     {
-        //calc entity transform
-        const auto& tx = entity.getComponent<Transform>();
-        glm::mat4 worldMat = tx.getWorldTransform();
-        glm::mat4 worldView = pass.viewMatrix * worldMat;
-
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
 
         if ((model.m_renderFlags & camComponent.renderFlags) == 0)
         {
             continue;
-        }
+        }        
+        
+        //calc entity transform
+        const auto& tx = entity.getComponent<Transform>();
+        glm::mat4 worldMat = tx.getWorldTransform();
+        glm::mat4 worldView = pass.viewMatrix * worldMat;
 
 #ifndef PLATFORM_DESKTOP
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
@@ -224,7 +224,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             glCheck(glUniform4f(model.m_materials[i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.projectionMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
             glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
             glCheck(glUniformMatrix3fv(model.m_materials[i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
 
@@ -346,11 +346,11 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         }
             break;
         case Material::ShadowMapProjection:
-            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, glm::value_ptr(scene.getSunlight().getComponent<Sunlight>().getViewProjectionMatrix())));
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, &camera.depthViewProjectionMatrix[0][0]));
             break;
         case Material::ShadowMapSampler:
             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
-            glCheck(glBindTexture(GL_TEXTURE_2D, scene.getSunlight().getComponent<Sunlight>().getMapID()));
+            glCheck(glBindTexture(GL_TEXTURE_2D, camera.depthBuffer.getTexture().textureID));
             glCheck(glUniform1i(material.uniforms[Material::ShadowMapSampler], currentTextureUnit++));
             break;
         case Material::SunlightColour:

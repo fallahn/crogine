@@ -47,6 +47,7 @@
     <ClInclude Include="..\crogine\include\crogine\core\ConfigFile.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Console.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\ConsoleClient.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\core\Cursor.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\FileSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\GameController.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Keyboard.hpp" />
@@ -126,6 +127,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\LoadingScreen.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MaterialData.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MaterialResource.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\MeshBatch.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MeshData.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MeshResource.hpp" />
@@ -173,6 +175,7 @@
     <ClInclude Include="..\crogine\src\detail\GLCheck.hpp" />
     <ClInclude Include="..\crogine\src\detail\HiResTimer.hpp" />
     <ClInclude Include="..\crogine\src\detail\SDLImageRead.hpp" />
+    <ClInclude Include="..\crogine\src\detail\StaticMeshFile.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Billboard.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Debug.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Default.hpp" />
@@ -206,6 +209,7 @@
     <ClCompile Include="..\crogine\src\core\ConfigFile.cpp" />
     <ClCompile Include="..\crogine\src\core\Console.cpp" />
     <ClCompile Include="..\crogine\src\core\ConsoleClient.cpp" />
+    <ClCompile Include="..\crogine\src\core\Cursor.cpp" />
     <ClCompile Include="..\crogine\src\core\DefaultLoadingScreen.cpp" />
     <ClCompile Include="..\crogine\src\core\FileSystem.cpp" />
     <ClCompile Include="..\crogine\src\core\GameController.cpp" />
@@ -230,6 +234,7 @@
     <ClCompile Include="..\crogine\src\detail\glad.c" />
     <ClCompile Include="..\crogine\src\detail\SDLImageRead.cpp" />
     <ClCompile Include="..\crogine\src\detail\SDLResource.cpp" />
+    <ClCompile Include="..\crogine\src\detail\StaticMeshFile.cpp" />
     <ClCompile Include="..\crogine\src\ecs\Component.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\AudioEmitter.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Camera.cpp" />
@@ -278,6 +283,7 @@
     <ClCompile Include="..\crogine\src\graphics\IqmBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MaterialData.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MaterialResource.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\MeshBatch.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MeshResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\postprocess\PostChromeAB.cpp" />

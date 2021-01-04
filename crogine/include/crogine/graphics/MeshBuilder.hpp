@@ -42,13 +42,15 @@ namespace cro::VertexProperty
 {
     enum
     {
-        Position  = (1 << 0),
-        Colour    = (1 << 1),
-        Normal    = (1 << 2),
-        Tangent   = (1 << 3),
-        Bitangent = (1 << 4),
-        UV0       = (1 << 5),
-        UV1       = (1 << 6)
+        Position     = (1 << 0),
+        Colour       = (1 << 1),
+        Normal       = (1 << 2),
+        Tangent      = (1 << 3),
+        Bitangent    = (1 << 4),
+        UV0          = (1 << 5),
+        UV1          = (1 << 6),
+        BlendIndices = (1 << 7),
+        BlendWeights = (1 << 8)
     };
 }
 
@@ -107,6 +109,7 @@ namespace cro
         */
         virtual Mesh::Data build() const = 0;
 
+        static std::size_t getAttributeSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib);
         static std::size_t getVertexSize(const std::array<std::size_t, Mesh::Attribute::Total>& attrib);
         static void createVBO(Mesh::Data& meshData, const std::vector<float>& vertexData);
         static void createIBO(Mesh::Data& meshData, const void* idxData, std::size_t idx, int32 dataSize);

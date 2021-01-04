@@ -36,23 +36,10 @@ using namespace cro;
 using namespace cro::Material;
 
 #ifdef CRO_DEBUG_
-#define  VERIFY(x, y) exists(x, y)
+#define  VERIFY(x) exists(x)
 #else
-#define VERIFY(x, y)
+#define VERIFY(x)
 #endif //CRO_DEBUG_
-
-namespace
-{
-#ifdef CRO_DEBUG_
-    void exists(const std::string& name, const Material::PropertyList& properties)
-    {
-        if (properties.count(name) == 0)
-        {
-            Logger::log("Property " + name + " doesn't exist in shader", Logger::Type::Warning);
-        }
-    }
-#endif //CRO_DEBUG_
-}
 
 Property::Property()
 {
@@ -64,7 +51,7 @@ Property::Property()
 
 void Data::setProperty(const std::string& name, float value)
 {
-    VERIFY(name, properties);
+    VERIFY(name);
     auto result = properties.find(name);
     if (result != properties.end())
     {
@@ -75,7 +62,7 @@ void Data::setProperty(const std::string& name, float value)
 
 void Data::setProperty(const std::string& name, glm::vec2 value)
 {
-    VERIFY(name, properties);
+    VERIFY(name);
     auto result = properties.find(name);
     if (result != properties.end())
     {
@@ -89,7 +76,7 @@ void Data::setProperty(const std::string& name, glm::vec2 value)
 
 void Data::setProperty(const std::string& name, glm::vec3 value)
 {
-    VERIFY(name, properties);
+    VERIFY(name);
     auto result = properties.find(name);
     if (result != properties.end())
     {
@@ -102,7 +89,7 @@ void Data::setProperty(const std::string& name, glm::vec3 value)
 
 void Data::setProperty(const std::string& name, glm::vec4 value)
 {
-    VERIFY(name, properties);
+    VERIFY(name);
     auto result = properties.find(name);
     if (result != properties.end())
     {
@@ -126,7 +113,7 @@ void Data::setProperty(const std::string& name, glm::mat4 value)
 
 void Data::setProperty(const std::string& name, Colour value)
 {
-    VERIFY(name, properties);
+    VERIFY(name);
     auto result = properties.find(name);
     if (result != properties.end())
     {
@@ -140,7 +127,7 @@ void Data::setProperty(const std::string& name, Colour value)
 
 void Data::setProperty(const std::string& name, const Texture& value)
 {
-    VERIFY(name, properties);
+    VERIFY(name);
     auto result = properties.find(name);
     if (result != properties.end())
     {
@@ -151,7 +138,7 @@ void Data::setProperty(const std::string& name, const Texture& value)
 
 void Data::setProperty(const std::string& name, TextureID value)
 {
-    VERIFY(name, properties);
+    VERIFY(name);
     auto result = properties.find(name);
     if (result != properties.end())
     {
@@ -162,7 +149,7 @@ void Data::setProperty(const std::string& name, TextureID value)
 
 void Data::setProperty(const std::string& name, CubemapID value)
 {
-    VERIFY(name, properties);
+    VERIFY(name);
     auto result = properties.find(name);
     if (result != properties.end())
     {
@@ -311,6 +298,19 @@ void Data::setShader(const Shader& s)
         if (result != properties.end())
         {
             result->second.second = prop.second;
+        }
+    }
+}
+
+//private
+void Material::Data::exists(const std::string& name)
+{
+    if (properties.count(name) == 0)
+    {
+        if (m_warnings.count(name) == 0)
+        {
+            Logger::log("Property " + name + " doesn't exist in shader", Logger::Type::Warning);
+            m_warnings[name] = true;
         }
     }
 }

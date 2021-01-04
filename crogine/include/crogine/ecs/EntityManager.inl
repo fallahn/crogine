@@ -36,7 +36,7 @@ void EntityManager::addComponent(Entity entity, T component)
     auto& pool = getPool<T>();
     if (entID >= pool.size())
     {
-        pool.resize(std::min(static_cast<std::int32_t>(Detail::MinFreeIDs), static_cast<std::int32_t>(pool.size()) + 128));
+        pool.resize(std::min(static_cast<std::uint32_t>(Detail::MinFreeIDs), entID + 128));
     }
 
     pool[entID] = std::move(component);

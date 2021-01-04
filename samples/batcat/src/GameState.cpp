@@ -43,6 +43,7 @@ source distribution.
 
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/graphics/IqmBuilder.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
@@ -84,6 +85,7 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 
 #include <crogine/detail/glm/gtx/norm.hpp>
+#include <crogine/detail/OpenGL.hpp>
 
 #include <crogine/gui/Gui.hpp>
 
@@ -117,6 +119,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
                 if (ImGui::Begin("Window of funnage"))
                 {
+                    ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().depthBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+
                     ImGui::DragFloat("Rate", &fireRate, 0.1f, 0.1f, 10.f);
                     ImGui::DragFloat("Position", &sourcePosition.x, 0.1f, -19.f, 19.f);
                     ImGui::DragFloat("Rotation", &sourceRotation, 0.02f, -cro::Util::Const::PI, cro::Util::Const::PI);
@@ -320,13 +324,89 @@ void GameState::createScene()
     auto ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 50.f });
     //projection is set in updateView()
-    ent.addComponent<cro::Camera>();// .projection = glm::perspective(45.f, 16.f / 9.f, 0.1f, 20.f);
+    ent.addComponent<cro::Camera>().depthBuffer.create(4096, 4096);
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
+
+
+#ifdef CRO_DEBUG_
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    auto materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINES));
+
+    m_resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
+    //m_resources.materials.get(materialID).enableDepthTest = false;
+
+    auto debugEnt = m_scene.createEntity();
+    debugEnt.addComponent<cro::Transform>();
+    debugEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialID));
+    debugEnt.addComponent<cro::Callback>().active = true;
+    debugEnt.getComponent<cro::Callback>().function =
+        [&,ent](cro::Entity e, float)
+    {
+        const auto& cam = ent.getComponent<cro::Camera>();
+        //e.getComponent<cro::Transform>().setPosition(ent.getComponent<cro::Transform>().getWorldPosition());
+        e.getComponent<cro::Transform>().setPosition(cam.depthPosition);
+        e.getComponent<cro::Transform>().setRotation(m_scene.getSunlight().getComponent<cro::Transform>().getRotation());
+
+        std::vector<float> verts =
+        {
+            cam.depthDebug[0], cam.depthDebug[2], cam.depthDebug[4],
+            1.f,0.f,1.f,1.f,
+
+            cam.depthDebug[1], cam.depthDebug[2], cam.depthDebug[4],
+            1.f,0.f,1.f,1.f,
+
+            cam.depthDebug[0], cam.depthDebug[3], cam.depthDebug[4],
+            1.f,0.f,1.f,1.f,
+
+            cam.depthDebug[1], cam.depthDebug[3], cam.depthDebug[4],
+            1.f,0.f,1.f,1.f,
+
+            cam.depthDebug[0], cam.depthDebug[2], -cam.depthDebug[5],
+            0.f,1.f,1.f,1.f,
+
+            cam.depthDebug[1], cam.depthDebug[2], -cam.depthDebug[5],
+            0.f,1.f,1.f,1.f,
+
+            cam.depthDebug[0], cam.depthDebug[3], -cam.depthDebug[5],
+            0.f,1.f,1.f,1.f,
+
+            cam.depthDebug[1], cam.depthDebug[3], -cam.depthDebug[5],
+            0.f,1.f,1.f,1.f,
+        };
+
+        std::vector<std::uint32_t> indices =
+        {
+            0,1, 1,3, 3,2, 2,0,
+            4,5, 5,7, 7,6, 6,4,
+            0,4, 1,5, 3,7, 2,6
+        };
+
+        auto& meshData = e.getComponent<cro::Model>().getMeshData();
+        glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+        glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        meshData.boundingBox[0] = { cam.depthDebug[0], cam.depthDebug[2], cam.depthDebug[4] };
+        meshData.boundingBox[1] = { cam.depthDebug[1], cam.depthDebug[3], -cam.depthDebug[5] };
+        meshData.boundingSphere.centre = meshData.boundingBox[0] + ((meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f);
+        meshData.boundingSphere.radius = glm::length(meshData.boundingSphere.centre);
+    };
+
+    auto& meshData = debugEnt.getComponent<cro::Model>().getMeshData();
+    meshData.vertexCount = 8;
+    meshData.vertexSize = 7 * meshData.vertexCount * sizeof(float);
+    meshData.indexData[0].indexCount = 24;
+#endif
 
     auto sunEnt = m_scene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setPosition({ -19.f, 11.f, 12.f });
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.797f);
-    sunEnt.getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-5.6f, 5.6f, -5.6f, 5.6f, 0.1f, 80.f));
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -(0.797f/* + (cro::Util::Const::PI / 2.f)*/));
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.72f);
 
     ent.addComponent<cro::AudioListener>();
     m_scene.setActiveCamera(ent);
@@ -404,7 +484,7 @@ void GameState::createUI()
     auto ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>();
     auto& cam2D = ent.addComponent<cro::Camera>();
-    cam2D.projectionMatrix = glm::ortho(0.f, /*static_cast<float>(cro::DefaultSceneSize.x)*/1280.f, 0.f, /*static_cast<float>(cro::DefaultSceneSize.y)*/720.f, -0.1f, 100.f);
+    cam2D.setOrthographic(0.f, /*static_cast<float>(cro::DefaultSceneSize.x)*/1280.f, 0.f, /*static_cast<float>(cro::DefaultSceneSize.y)*/720.f, -0.1f, 100.f);
     m_overlayScene.setActiveCamera(ent);
 
     //preview shadow map
@@ -541,7 +621,7 @@ void GameState::updateView()
     size.x = 1.f;
 
     auto& cam3D = m_scene.getActiveCamera().getComponent<cro::Camera>();
-    cam3D.projectionMatrix = glm::perspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 280.f);
+    cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 280.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 

@@ -93,13 +93,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         updateLobbyStrings();
 
         //switch to lobby view
-        m_currentMenu = Lobby;
-
         cro::Command cmd;
         cmd.targetFlags = MenuCommandID::RootNode;
-        cmd.action = [](cro::Entity e, float)
+        cmd.action = [&](cro::Entity e, float)
         {
             e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
+            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
         };
         m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
@@ -214,7 +213,7 @@ void MenuState::createScene()
             ImGui::SetNextWindowSize({ 400.f, 100.f });
             if (ImGui::Begin("Main Menu"))
             {
-                if (m_currentMenu == Main)
+                if (m_scene.getSystem<cro::UISystem>().getActiveGroup() == GroupID::Main)
                 {
                     if (ImGui::Button("Host"))
                     {
@@ -241,11 +240,18 @@ void MenuState::createScene()
                         if (!m_sharedData.clientConnection.connected
                             && !m_sharedData.serverInstance.running())
                         {
-                            m_currentMenu = Join;
+                            cro::Command cmd;
+                            cmd.targetFlags = MenuCommandID::RootNode;
+                            cmd.action = [&](cro::Entity e, float)
+                            {
+                                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Join]);
+                                m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Join);
+                            };
+                            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                         }
                     }
                 }
-                else if (m_currentMenu == Join)
+                else if (m_scene.getSystem<cro::UISystem>().getActiveGroup() == GroupID::Join)
                 {
                     static char buffer[20] = "127.0.0.1";
                     ImGui::InputText("Address", buffer, 20);
@@ -266,7 +272,15 @@ void MenuState::createScene()
                         m_sharedData.clientConnection.netClient.disconnect();
                         m_sharedData.serverInstance.stop();
                         m_sharedData.clientConnection.connected = false;
-                        m_currentMenu = Main;
+                        
+                        cro::Command cmd;
+                        cmd.targetFlags = MenuCommandID::RootNode;
+                        cmd.action = [&](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
+                            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
+                        };
+                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                     }
                 }
                 else
@@ -286,7 +300,15 @@ void MenuState::createScene()
                         m_sharedData.clientConnection.netClient.disconnect();
                         m_sharedData.serverInstance.stop();
                         m_sharedData.clientConnection.connected = false;
-                        m_currentMenu = Main;
+                        
+                        cro::Command cmd;
+                        cmd.targetFlags = MenuCommandID::RootNode;
+                        cmd.action = [&](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
+                            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
+                        };
+                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                     }
                 }
 
@@ -307,7 +329,7 @@ void MenuState::createScene()
         });
 
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -10.f });
     entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/images/menu_background.png"));
     entity.addComponent<cro::Drawable2D>();
 
@@ -360,8 +382,6 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                 //switch to lobby view
-                m_currentMenu = Lobby;
-
                 cro::Command cmd;
                 cmd.targetFlags = MenuCommandID::RootNode;
                 cmd.action = [&](cro::Entity e, float)
@@ -415,7 +435,7 @@ void MenuState::updateView(cro::Camera& cam)
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
-    cam.projectionMatrix = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
+    cam.setOrthographic(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
     cam.viewport.bottom = (1.f - size.y) / 2.f;
     cam.viewport.height = size.y;
 }

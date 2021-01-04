@@ -291,7 +291,7 @@ void GameOverState::load()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     auto& cam2D = entity.addComponent<cro::Camera>();
-    cam2D.projectionMatrix = glm::ortho(0.f, uiRes.x, 0.f, uiRes.y, -10.1f, 10.f);
+    cam2D.setOrthographic(0.f, uiRes.x, 0.f, uiRes.y, -10.1f, 10.f);
     m_uiScene.setActiveCamera(entity);
 }
 
@@ -347,7 +347,7 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
 
     auto inputEnt = m_uiScene.createEntity();
     inputEnt.addComponent<cro::Drawable2D>();
-    inputEnt.addComponent<cro::Text>(font).setString(names[cro::Util::Random::value(0, names.size()-1)]);
+    inputEnt.addComponent<cro::Text>(font).setString(names[cro::Util::Random::value(0u, names.size()-1)]);
     inputEnt.getComponent<cro::Text>().setCharacterSize(TextLarge);
     inputEnt.getComponent<cro::Text>().setFillColour(textColourSelected);
     parentEnt.getComponent<cro::Transform>().addChild(inputEnt.addComponent<cro::Transform>());

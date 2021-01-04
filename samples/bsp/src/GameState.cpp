@@ -30,6 +30,8 @@ source distribution.
 #include "GameState.hpp"
 #include "SeaSystem.hpp"
 #include "GameConsts.hpp"
+#include "DayNightDirector.hpp"
+#include "CommandIDs.hpp"
 #include "fastnoise/FastNoiseSIMD.h"
 
 #include <crogine/gui/Gui.hpp>
@@ -40,6 +42,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/Sunlight.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
@@ -62,13 +65,6 @@ source distribution.
 
 namespace
 {
-    //debug gui stuffs
-    glm::vec3 LightColour = glm::vec3(1.0);
-    glm::vec3 LightRotation = glm::vec3(-cro::Util::Const::PI * 0.9f, 0.f, 0.f);
-
-    float ShadowmapProjection = 80.f;
-    float ShadowmapClipPlane = 100.f;
-
     std::array moveEnts =
     {
         cro::Entity(),
@@ -78,11 +74,13 @@ namespace
     };
 
     //render flags for reflection passes
-    const std::uint64_t NoPlanes = 0xFFFFFFFFFFFFFFF0;
+    const std::uint64_t NoPlanes = 0xFFFFFFFFFFFFFF00;
     const std::array<std::uint64_t, 4u> PlayerPlanes =
     {
         0x1, 0x2,0x4,0x8
     };
+    const std::uint64_t NoReflect = 0x10;
+    const std::uint64_t NoRefract = 0x20;
 
     const std::array Colours =
     {
@@ -105,7 +103,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
     m_cameras       (localPlayerCount),
-    m_heightmap     (IslandTileCount * IslandTileCount, 0.f)
+    m_heightmap     (IslandTileCount * IslandTileCount, 0.f),
+    m_foamEffect    (m_resources)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -120,37 +119,16 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, std::s
         {
             if (ImGui::Begin("Buns"))
             {
-                ImGui::Image(m_islandTexture,
-                    { IslandTileCount * 3.f, IslandTileCount * 3.f }, { 0.f, 1.f }, { 1.f, 0.f });
-
-                if (ImGui::SliderFloat("Shadow Map Projection", &ShadowmapProjection, 10.f, 200.f))
+                if (ImGui::CollapsingHeader("Waves"))
                 {
-                    auto half = ShadowmapProjection / 2.f;
-                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-half, half, -half, half, 0.1f, ShadowmapClipPlane));
+                    ImGui::Image(m_foamEffect.getTexture(),
+                        { 256.f, 256.f }, { 0.f, 2.f }, { 2.f, 0.f });
                 }
 
-                if (ImGui::SliderFloat("Shadow Map Far Plane", &ShadowmapClipPlane, 1.f, 500.f))
+                if (ImGui::CollapsingHeader("Height Map"))
                 {
-                    auto half = ShadowmapProjection / 2.f;
-                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-half, half, -half, half, 0.1f, ShadowmapClipPlane));
-                }
-
-                if (ImGui::ColorEdit3("Light Colour", &LightColour[0]))
-                {
-                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour(LightColour.r, LightColour.g, LightColour.b, 1.f));
-                }
-
-                if (ImGui::SliderFloat3("Light Rotation", &LightRotation[0], -cro::Util::Const::PI, cro::Util::Const::PI))
-                {
-                    m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, LightRotation.x);
-                    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, LightRotation.y);
-                    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, LightRotation.z);
-                }
-
-                if (ImGui::CollapsingHeader("ShadowMap"))
-                {
-                    ImGui::Image(m_gameScene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture(),
-                        { 320.f, 320.f }, { 0.f, 0.f }, { 1.f, 1.f });
+                    ImGui::Image(m_islandTexture,
+                        { IslandTileCount * 3.f, IslandTileCount * 3.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 }
 
                 if (ImGui::CollapsingHeader("Reflection Map"/*, ImGuiTreeNodeFlags_DefaultOpen*/))
@@ -228,6 +206,10 @@ bool GameState::simulate(float dt)
     const float Speed = 10.f;
     moveEnts[0].getComponent<cro::Transform>().move(movement * Speed * dt);
 
+    static float timeAccum = 0.f;
+    timeAccum += dt;
+    m_gameScene.setWaterLevel(std::sin(timeAccum * 0.9f) * 0.08f);
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -236,6 +218,7 @@ bool GameState::simulate(float dt)
 void GameState::render()
 {
     //m_gameScene.setPostEnabled(false);
+    m_foamEffect.update();
 
     for(auto i = 0u; i < m_cameras.size(); ++i)
     {
@@ -243,7 +226,7 @@ void GameState::render()
         m_gameScene.setActiveCamera(ent);
 
         auto& cam = ent.getComponent<cro::Camera>();
-        cam.renderFlags = NoPlanes;
+        cam.renderFlags = NoPlanes | NoRefract;
         auto oldVP = cam.viewport;
 
         cam.viewport = { 0.f,0.f,1.f,1.f };
@@ -253,12 +236,13 @@ void GameState::render()
         m_gameScene.render(cam.reflectionBuffer);
         cam.reflectionBuffer.display();
 
+        cam.renderFlags = NoPlanes | NoReflect;
         cam.setActivePass(cro::Camera::Pass::Refraction);
         cam.refractionBuffer.clear(cro::Colour::Blue());
         m_gameScene.render(cam.refractionBuffer);
         cam.refractionBuffer.display();
 
-        cam.renderFlags = NoPlanes | PlayerPlanes[i];
+        cam.renderFlags = NoPlanes | PlayerPlanes[i] | NoReflect | NoRefract;
         cam.setActivePass(cro::Camera::Pass::Final);
         cam.viewport = oldVP;
     }
@@ -280,9 +264,11 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<SeaSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb, glm::uvec2(4096));
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
+
+    m_gameScene.addDirector<DayNightDirector>();
 }
 
 void GameState::loadAssets()
@@ -291,12 +277,13 @@ void GameState::loadAssets()
 
     m_materialIDs[MaterialID::Sea] = m_gameScene.getSystem<SeaSystem>().loadResources(m_resources);
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_depthMap", m_islandTexture);
+    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_foamMap", m_foamEffect.getTexture());
 
     m_environmentMap.loadFromFile("assets/images/cubemap/beach02.hdr");
 
     //m_gameScene.setCubemap(m_environmentMap);
     m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
-    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI * 0.9f);
+    //m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI * 0.9f);
     //m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_skybox", m_gameScene.getCubemap());
 }
 
@@ -337,8 +324,13 @@ void GameState::createScene()
         cam.refractionBuffer.setSmooth(true);
 
         auto waterEnt = addSeaplane();
-        waterEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, -(SeaRadius - CameraDistance) });
         waterEnt.getComponent<cro::Model>().setRenderFlags(PlayerPlanes[i]);
+        waterEnt.addComponent<cro::Callback>().active = true;
+        waterEnt.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Transform>().setPosition({ 0.f, m_gameScene.getWaterLevel(), -(SeaRadius - CameraDistance) });
+        };
 
         //placeholder for player model
         auto playerEnt = m_gameScene.createEntity();
@@ -376,39 +368,71 @@ void GameState::createScene()
     updateView(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&GameState::updateView, this, std::placeholders::_1);
 
-    //add the light source to the camera so shadow map follows
-    //TODO this should be independent and cover the whole map so each camera can see correct shadowing?
-    //otherwise each camera requires its own shadow map...
-    camEnt.getComponent<cro::Transform>().addChild(m_gameScene.getSunlight().getComponent<cro::Transform>());
-    m_gameScene.getSunlight().getComponent<cro::Transform>().setPosition({ 0.f, 10.f, -16.f });
-    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-40.f, 40.f, -40.f, 40.f, 0.1f, 100.f));
-
     //TODO place listener on cam if single player, else place in centre of map.
 
     //light direction dealy
-    md.loadFromFile("assets/models/arrow.cmt", m_resources);
-    md.createModel(m_gameScene.getSunlight(), m_resources);
+    //md.loadFromFile("assets/models/arrow.cmt", m_resources);
+    //md.createModel(m_gameScene.getSunlight(), m_resources);
 
-    //box to display shadow frustum
-    md.loadFromFile("assets/models/frustum.cmt", m_resources);
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.5f });
-    md.createModel(entity, m_resources);
-    entity.getComponent<cro::Model>().setRenderFlags(~NoPlanes);
-    m_gameScene.getSunlight().getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    entity.addComponent<cro::Callback>().active = true;
-entity.getComponent<cro::Callback>().function =
-[](cro::Entity e, float)
-{
-    e.getComponent<cro::Transform>().setScale({ ShadowmapProjection, ShadowmapProjection, ShadowmapClipPlane });
-};
+    ////box to display shadow frustum
+    //md.loadFromFile("assets/models/frustum.cmt", m_resources);
+    //auto entity = m_gameScene.createEntity();
+    //entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.5f });
+    //md.createModel(entity, m_resources);
+    //entity.getComponent<cro::Model>().setRenderFlags(~NoPlanes);
+    //m_gameScene.getSunlight().getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function =
+    //[](cro::Entity e, float)
+    //{
+    //    e.getComponent<cro::Transform>().setScale({ ShadowmapProjection, ShadowmapProjection, ShadowmapClipPlane });
+    //};
 
     createIsland();
+    createDayCycle();
 }
 
 void GameState::createUI()
 {
 
+}
+
+void GameState::createDayCycle()
+{
+    auto rootNode = m_gameScene.createEntity();
+    rootNode.addComponent<cro::Transform>();
+    rootNode.addComponent<cro::CommandTarget>().ID = CommandID::Game::SunMoonNode;
+    auto& children = rootNode.addComponent<ChildNode>();
+
+    //moon
+    auto entity = m_gameScene.createEntity();
+    //we want to always be beyond the 'horizon', but we're fixed relative to the centre of the island
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -SunOffset });
+    children.moonNode = entity;
+
+    cro::ModelDefinition definition;
+    definition.loadFromFile("assets/models/moon.cmt", m_resources);
+    definition.createModel(entity, m_resources);
+    entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //sun
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, SunOffset });
+    children.sunNode = entity;
+
+    definition.loadFromFile("assets/models/sun.cmt", m_resources);
+    definition.createModel(entity, m_resources);
+    entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //add the shadow caster node to the day night cycle
+    auto sunNode = m_gameScene.getSunlight();
+    sunNode.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, SeaRadius });
+    sunNode.getComponent<cro::Transform>().setRotation(glm::mat4(1.f)); //set this to none (not sure where its initial val is coming from...)
+    sunNode.addComponent<TargetTransform>();
+    rootNode.getComponent<cro::Transform>().addChild(sunNode.getComponent<cro::Transform>());
 }
 
 void GameState::updateView(cro::Camera&)
@@ -417,7 +441,7 @@ void GameState::updateView(cro::Camera&)
 
     const float fov = 42.f * cro::Util::Const::degToRad;
     const float nearPlane = 0.1f;
-    const float farPlane = 140.f;
+    const float farPlane = IslandSize * 1.8f;// 140.f;
     float aspect = 16.f / 9.f;
 
     glm::vec2 size(cro::App::getWindow().getSize());
@@ -471,7 +495,7 @@ void GameState::updateView(cro::Camera&)
     //set up projection
     for (auto cam : m_cameras)
     {
-        cam.getComponent<cro::Camera>().projectionMatrix = glm::perspective(fov, aspect, nearPlane, farPlane);
+        cam.getComponent<cro::Camera>().setPerspective(fov, aspect, nearPlane, farPlane);
     }
 }
 
@@ -482,10 +506,11 @@ void GameState::createIsland()
     entity.getComponent<cro::Transform>().move({ 0.f, IslandWorldHeight, 0.f }); //small extra amount to stop z-fighting
     entity.getComponent<cro::Transform>().setOrigin({ IslandSize / 2.f, IslandSize / 2.f, 0.f });
 
-    auto meshID = m_resources.meshes.loadMesh(cro::GridMeshBuilder({ IslandSize, IslandSize }, IslandTileCount - 1)); //this accounts for extra row of vertices
+    auto meshID = m_resources.meshes.loadMesh(cro::GridMeshBuilder({ IslandSize, IslandSize }, IslandTileCount - 1, glm::vec2(1.f), true)); //this accounts for extra row of vertices
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, cro::ShaderResource::DiffuseMap |
                                                                                 cro::ShaderResource::NormalMap | 
                                                                                 cro::ShaderResource::MaskMap |
+                                                                                cro::ShaderResource::VertexColour |
                                                                                 cro::ShaderResource::RxShadows);
 
     m_materialIDs[MaterialID::Island] = m_resources.materials.add(m_resources.shaders.get(shaderID));
@@ -610,8 +635,7 @@ void GameState::createHeightmap()
     myNoise->SetFrequency(0.05f);
     float* noiseSet = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount * 4, 1, 1);
 
-
-    //using a 1D noise push the edges of the mask in/out by +/-1
+    //use a 1D noise push the edges of the mask in/out by +/-1
     std::uint32_t i = 0;
     for (auto x = Offset; x < IslandTileCount - Offset; ++x)
     {
@@ -692,8 +716,12 @@ void GameState::createHeightmap()
     }
     FastNoiseSIMD::FreeNoiseSet(noiseSet);
 
+    //main island noise
     myNoise->SetFrequency(0.01f);
     noiseSet = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount, IslandTileCount, 1);
+
+    myNoise->SetFrequency(0.1f);
+    auto* noiseSet2 = myNoise->GetSimplexFractalSet(0, 0, 0, IslandTileCount, IslandTileCount, 1);
 
     for (auto y = 0u; y < IslandTileCount; ++y)
     {
@@ -711,9 +739,16 @@ void GameState::createHeightmap()
             val += minAmount;
             val /= IslandLevels;
 
-            m_heightmap[y * IslandTileCount + x] *= val;
+            float valMod = noiseSet2[y * IslandTileCount + x];
+            valMod += 1.f;
+            valMod /= 2.f;
+            valMod = 0.8f + valMod * 0.2f;
+
+            m_heightmap[y * IslandTileCount + x] *= val * valMod;
         }
     }
+
+    FastNoiseSIMD::FreeNoiseSet(noiseSet2);
     FastNoiseSIMD::FreeNoiseSet(noiseSet);
 
     //preview texture / height map
@@ -736,9 +771,13 @@ void GameState::createHeightmap()
 
 void GameState::updateIslandVerts(cro::Mesh::Data& meshData)
 {
+    const glm::vec4 WetSand = { 0.44f, 0.29f, 0.11f, 1.f };
+    const glm::vec4 Grass = { 0.184f, 0.29f, 0.03f, 1.f };
+
     struct Vertex final
     {
         glm::vec3 pos = glm::vec3(0.f);
+        glm::vec4 colour = glm::vec4(1.f);
         glm::vec3 normal = glm::vec3(0.f);
         glm::vec3 tan = glm::vec3(0.f);
         glm::vec3 bitan = glm::vec3(0.f);
@@ -760,6 +799,17 @@ void GameState::updateIslandVerts(cro::Mesh::Data& meshData)
         std::int32_t y = i / IslandTileCount;
 
         verts[i].pos = { x * TileSize, y * TileSize, m_heightmap[i] * IslandHeight };
+
+        if (verts[i].pos.z < /*IslandHeight + IslandWorldHeight*/2.2f)
+        {
+            //sand should be wet
+            verts[i].colour = WetSand;
+        }
+        /*else if (verts[i].pos.z > 3.2f)
+        {
+            verts[i].colour = Grass;
+        }*/
+
         verts[i].uv = { verts[i].pos.x / IslandSize, verts[i].pos.y / IslandSize };
 
         verts[i].uv *= 8.f;
@@ -799,6 +849,8 @@ float GameState::getPlayerHeight(glm::vec3 position)
     const auto getHeightAt = [&](std::int32_t x, std::int32_t y)
     {
         //heightmap is flipped relative to the world innit
+        x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
+        y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
         return m_heightmap[(IslandTileCount - y) * IslandTileCount + x];
     };
 

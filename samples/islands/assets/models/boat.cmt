@@ -1,0 +1,19 @@
+model boat
+{
+    mesh = "assets/models/boat.cmf"
+    cast_shadows = true
+
+    material PBR
+    {
+        mask = "assets/images/boat_mask.png"
+        normal = "assets/images/boat_normal.png"
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        rx_shadows = true
+        blendmode = "none"
+        diffuse = "assets/images/boat_albedo.png"
+
+    }
+}

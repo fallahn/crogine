@@ -72,15 +72,18 @@ namespace cro
             DPadRight = SDL_CONTROLLER_BUTTON_DPAD_RIGHT
         };
 
+        static constexpr std::int16_t AxisMax = 32767;
+        static constexpr std::int16_t AxisMin = -32768;
+
         /*!
-        \brief Returns the current value of the requested axis on the request
+        \brief Returns the current value of the requested axis on the requested
         controller index, if it exists, else returns zero.
         \param controllerIndex Index of the controller to query
         \param controllerAxis ID of the controller axis to query, for example 
         GameController::AxisLeftX or GameController::TriggerRight.
         \returns value in range -32768 to 32767 or 0 to 32767 for triggers
         */
-        static int16 getAxis(int32 controllerIndex, int32 controllerAxis);
+        static std::int16_t getAxisPosition(std::int32_t controllerIndex, std::int32_t controllerAxis);
 
         /*!
         \brief Returns whether or not given button at the given controller
@@ -91,7 +94,15 @@ namespace cro
         \returns true if the button is pressed or false if the button is not pressed
         or the given controllerIndex or button ID does not exist.
         */
-        static bool isButtonPressed(int32 controllerIndex, int32 button);
+        static bool isButtonPressed(std::int32_t controllerIndex, std::int32_t button);
+
+        /*!
+        \brief Returns whether or not the controller with the given ID is currently
+        connected
+        \param controllerIndex The controller ID to query
+        \returns bool True if connected else false
+        */
+        static bool isConnected(std::int32_t controllerIndex);
 
     private:
 

@@ -60,7 +60,12 @@ namespace cro
         visible entities are found (and potentially depth sorted) they
         should be appended to the camera's draw list. This list should
         then be used when rendering this system.
+
+        This is called during the Scene update once for each Camera in the
+        CameraSystem
+
         \see Camera::drawList
+        \see CameraSystem::process()
         */
         virtual void updateDrawList(Entity camera) = 0;
 

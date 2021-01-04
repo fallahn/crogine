@@ -297,8 +297,6 @@ void MainState::createScene()
     //m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour(0.48f, 0.48f, 0.48f));
     m_backgroundScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, cro::Util::Const::PI - 0.79f);
     m_backgroundScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.79f);
-    m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setProjectionMatrix(glm::ortho(-3.f, 3.f, -3.f, 3.f, 0.1f, 20.f));
-
 
     //2D and 3D cameras
     entity = m_backgroundScene.createEntity();
@@ -314,7 +312,7 @@ void MainState::createScene()
     entity = m_menuScene.createEntity();
     entity.addComponent<cro::Transform>();
     auto& cam2D = entity.addComponent<cro::Camera>();
-    cam2D.projectionMatrix = glm::ortho(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
+    cam2D.setOrthographic(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
     m_menuScene.setActiveCamera(entity);
 
     updateView();    
@@ -360,7 +358,7 @@ void MainState::updateView()
     //m_backgroundScene.getActiveCamera().getComponent<cro::Transform>().setScale({ -1.f, -1.f, 1.f });
 
     auto& cam3D = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
-    cam3D.projectionMatrix = glm::perspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 100.f);
+    cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 100.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 

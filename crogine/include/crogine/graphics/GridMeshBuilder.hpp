@@ -47,10 +47,11 @@ namespace cro
         \param size Dimensions of the quad created by this mesh builder
         \param subDivisions Number of sub-divisions along each side of the grid
         \param multiplier A vec2 containing U and V multipliers for texture coords.
+        \param vertexColoured If true vertex colour attributes are created. Defaults to false.
         By default this has a value of 1,1 but increasing this will tile any given
         textures across its surface. Must be greater than zero.
         */
-        GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions, glm::vec2 multiplier = glm::vec2(1.f));
+        GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions, glm::vec2 multiplier = glm::vec2(1.f), bool vertexColoured= false);
 
         std::size_t getUID() const override { return 0; }
 
@@ -58,6 +59,7 @@ namespace cro
         glm::vec2 m_size = glm::vec2(0.f);
         std::uint32_t m_subDivisions;
         glm::vec2 m_uvMultiplier;
+        bool m_colouredVerts;
         Mesh::Data build() const override;
     };
 }

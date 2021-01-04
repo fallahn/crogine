@@ -40,6 +40,7 @@ static const std::string SeaVertex = R"(
 
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewProjectionMatrix;
+    uniform float u_time;
 
     uniform mat4 u_reflectionMatrix;
     uniform mat4 u_lightViewProjectionMatrix;
@@ -55,6 +56,7 @@ static const std::string SeaVertex = R"(
     void main()
     {
         vec4 position = u_worldMatrix * a_position;
+        //position.y += sin(u_time * 0.9) * 0.08;
         gl_Position = u_viewProjectionMatrix * position;
 
         v_tbn[0] = normalize(u_worldMatrix * vec4(a_tangent, 0.0)).xyz;
@@ -78,8 +80,7 @@ static const std::string SeaFragment = R"(
     uniform sampler2D u_reflectionMap;
     uniform sampler2D u_refractionMap;
     uniform sampler2D u_shadowMap;
-
-    //uniform samplerCube u_skybox;
+    uniform sampler2D u_foamMap;
 
     uniform vec3 u_lightDirection;
     uniform vec4 u_lightColour;
@@ -99,9 +100,13 @@ static const std::string SeaFragment = R"(
     VARYING_IN LOW vec4 v_lightWorldPosition;
 
     const vec2 TextureScale = vec2(8.0);
-    const vec3 colour = vec3(0.137, 0.267, 0.53);
+    const vec3 WaterColour = vec3(0.2, 0.278, 0.278);
+    //const vec3 WaterColour = vec3(0.137, 0.267, 0.53);
+    const float DepthMultiplier = 4.2; //const IslandHeight
+    const float DepthOffset = -2.02; //const IslandWorldHeight
+    const float Distortion = 0.01;
 
-    vec3 diffuseColour = colour;
+    vec3 diffuseColour = WaterColour;
     vec3 eyeDirection = vec3(0.0);
 
     vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
@@ -165,38 +170,40 @@ static const std::string SeaFragment = R"(
         vec3 texNormal = TEXTURE(u_normalMap, coord + vec2(time, time * 0.5)).rgb * 2.0 - 1.0;
         vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
 
-        vec2 reflectCoords = v_reflectionPosition.xy / v_reflectionPosition.w / 2.0 + 0.5;
-        vec4 reflectColour = TEXTURE(u_reflectionMap, reflectCoords + (normal.rg * 0.005));
-        reflectColour.rgb *= u_lightColour.rgb * reflectColour.a * 0.25;
+        float depth = TEXTURE(u_depthMap, v_texCoord + u_textureOffset + vec2(0.005)).r;
+        depth = clamp((depth * DepthMultiplier) / (v_worldPosition.y - DepthOffset), 0.0, 1.0);
 
+        //refraction
         vec2 refractCoords = v_refractionPosition.xy / v_refractionPosition.w / 2.0 + 0.5;
-        vec4 refractColour = TEXTURE(u_refractionMap, refractCoords + (normal.rg * 0.005));
-        refractColour.rgb *= u_lightColour.rgb * refractColour.a;
-
-        float depth = TEXTURE(u_depthMap, v_texCoord + u_textureOffset).r;
-        refractColour.rgb = mix(vec3(0.2), refractColour.rgb, depth * 4.0);
-
-        float fresnel = dot(eyeDirection, normal);
-
-        vec3 blendedColour = colour * 0.2; //ambience
-        blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, u_lightColour.rgb, 1.0);
-        blendedColour += mix(reflectColour.rgb, refractColour.rgb, fresnel);      
+        vec4 refractColour = TEXTURE(u_refractionMap, refractCoords + (normal.rg * Distortion));
+        refractColour.rgb = mix(WaterColour, refractColour.rgb, depth);
 
 
-        //vec3 skyColour = TEXTURE_CUBE(u_skybox, reflect(eyeDirection, normal)).rgb * 0.25;
-        //blendedColour += mix(skyColour, vec3(0.0), fresnel);
-
-if(v_lightWorldPosition.w > 0.0)
-{
-    vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
-
-    if(coords.x>0 &&coords.x<1 &&coords.y>0 &&coords.y<1)
-    {
-        //blendedColour *= vec3(0.0,1.0,0.0);
-    }
-}
+        //reflection
+        vec2 reflectCoords = v_reflectionPosition.xy / v_reflectionPosition.w / 2.0 + 0.5;
+        vec4 reflectColour = TEXTURE(u_reflectionMap, reflectCoords + (normal.rg * Distortion));
 
 
+        float fresnel = dot(reflect(-eyeDirection, normal), normal);
+        const float bias = 0.6;
+        fresnel = bias + (fresnel * (1.0 - bias));
+
+        vec3 blendedColour = mix(reflectColour.rgb, refractColour.rgb, fresnel);
+   
+
+        //foam
+        float falloff = 1.0 - pow(depth, 6.0);
+        blendedColour = mix(TEXTURE(u_foamMap, coord * 2.0).rgb + blendedColour, blendedColour, falloff);
+
+        falloff = 1.0 - pow(depth, 10.0);
+        blendedColour = mix(vec3(1.0, 1.0, 1.0), blendedColour, 0.2 + (falloff * 0.8));
+
+        vec3 halfVec = normalize(eyeDirection + normalize(-u_lightDirection));
+        vec3 specular = vec3(pow(clamp(dot(halfVec, normal), 0.0, 1.0), 255.0));
+
+        blendedColour += specular;
+        blendedColour *= u_lightColour.rgb;
+        
         FRAG_OUT = vec4(blendedColour, 1.0);
         FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
     })";

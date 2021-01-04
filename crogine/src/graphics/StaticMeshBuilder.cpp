@@ -27,6 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../detail/StaticMeshFile.hpp"
+
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
@@ -38,135 +40,100 @@ using namespace cro;
 
 StaticMeshBuilder::StaticMeshBuilder(const std::string& path)
     : m_path    (path),
-    m_uid       (0),
-    m_file      (nullptr)
+    m_uid       (0)
 {
     std::hash<std::string> hashAttack;
     m_uid = hashAttack(path);
 }
 
-StaticMeshBuilder::~StaticMeshBuilder()
-{
-    if (m_file)
-    {
-        SDL_RWclose(m_file);
-    }
-}
 
 //private
 Mesh::Data StaticMeshBuilder::build() const
 {
-    m_file = SDL_RWFromFile(m_path.c_str(), "rb");
-    if (m_file)
+    Detail::MeshFile meshFile;
+    if (Detail::readCMF(m_path, meshFile))
     {
-        uint8 flags, arrayCount;
-        auto readCount = SDL_RWread(m_file,&flags, sizeof(uint8), 1);
-        if (checkError(readCount)) return {};
-        readCount = SDL_RWread(m_file, &arrayCount, sizeof(uint8), 1);
-        if (checkError(readCount)) return {};
-
-        std::int32_t indexArrayOffset = 0;
-        std::vector<int32> indexSizes(arrayCount);
-        readCount = SDL_RWread(m_file, &indexArrayOffset, sizeof(int32), 1);
-        if (checkError(readCount)) return {};
-        readCount = SDL_RWread(m_file, indexSizes.data(), sizeof(int32), arrayCount);
-        if (checkError(readCount)) return {};
-
-        std::size_t headerSize = sizeof(flags) + sizeof(arrayCount) +
-            sizeof(indexArrayOffset) + ((sizeof(int32) * arrayCount));
-
-        std::size_t vboSize = (indexArrayOffset - headerSize) / sizeof(float);
-        std::vector<float> vboData(vboSize);
-        readCount = SDL_RWread(m_file, vboData.data(), sizeof(float), vboSize);
-        if (checkError(readCount)) return {};
-
-        std::vector<std::vector<uint32>> indexArrays(arrayCount);
-        for (auto i = 0; i < arrayCount; ++i)
-        {
-            //if (indexSizes[i] == 0)continue;
-            indexArrays[i].resize(indexSizes[i] / sizeof(uint32));
-            readCount = SDL_RWread(m_file, indexArrays[i].data(), sizeof(uint32), indexSizes[i] / sizeof(uint32));
-            if (checkError(readCount)) return {};
-        }
-
-        SDL_RWclose(m_file);
-        m_file = nullptr;
-
-        CRO_ASSERT(flags && (flags & VertexProperty::Position), "Invalid flag value");
+        CRO_ASSERT(meshFile.flags && (meshFile.flags & VertexProperty::Position), "Invalid flag value");
 
         Mesh::Data meshData;
         meshData.attributes[Mesh::Position] = 3;
-        if (flags & VertexProperty::Colour)
+        meshData.attributeFlags = VertexProperty::Position;
+        if (meshFile.flags & VertexProperty::Colour)
         {
             meshData.attributes[Mesh::Colour] = 3;
+            meshData.attributeFlags |= VertexProperty::Colour;
         }
 
-        if (flags & VertexProperty::Normal)
+        if (meshFile.flags & VertexProperty::Normal)
         {
             meshData.attributes[Mesh::Normal] = 3;
+            meshData.attributeFlags |= VertexProperty::Normal;
         }
 
-        if (flags & (VertexProperty::Tangent | VertexProperty::Bitangent))
+        if (meshFile.flags & (VertexProperty::Tangent | VertexProperty::Bitangent))
         {
             meshData.attributes[Mesh::Tangent] = 3;
             meshData.attributes[Mesh::Bitangent] = 3;
+            meshData.attributeFlags |= VertexProperty::Tangent | VertexProperty::Bitangent;
         }
 
-        if (flags & VertexProperty::UV0)
+        if (meshFile.flags & VertexProperty::UV0)
         {
             meshData.attributes[Mesh::UV0] = 2;
+            meshData.attributeFlags |= VertexProperty::UV0;
         }
-        if (flags & VertexProperty::UV1)
+        if (meshFile.flags & VertexProperty::UV1)
         {
             meshData.attributes[Mesh::UV1] = 2;
+            meshData.attributeFlags |= VertexProperty::UV1;
         }
 
         meshData.primitiveType = GL_TRIANGLES;       
         meshData.vertexSize = getVertexSize(meshData.attributes);
-        meshData.vertexCount = vboData.size() / (meshData.vertexSize / sizeof(float));
-        createVBO(meshData, vboData);
+        meshData.vertexCount = meshFile.vboData.size() / (meshData.vertexSize / sizeof(float));
+        createVBO(meshData, meshFile.vboData);
 
-        meshData.submeshCount = arrayCount;
-        for (auto i = 0; i < arrayCount; ++i)
+        meshData.submeshCount = meshFile.arrayCount;
+        for (auto i = 0; i < meshFile.arrayCount; ++i)
         {
             meshData.indexData[i].format = GL_UNSIGNED_INT;
             meshData.indexData[i].primitiveType = meshData.primitiveType;
-            meshData.indexData[i].indexCount = static_cast<uint32>(indexArrays[i].size());
+            meshData.indexData[i].indexCount = static_cast<uint32>(meshFile.indexArrays[i].size());
 
-            createIBO(meshData, indexArrays[i].data(), i, sizeof(uint32));
+            createIBO(meshData, meshFile.indexArrays[i].data(), i, sizeof(uint32));
         }
 
         //boundingbox / sphere
         meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
         meshData.boundingBox[1] = glm::vec3(std::numeric_limits<float>::min());
-        for (std::size_t i = 0; i < vboData.size(); i += (meshData.vertexSize / sizeof(float)))
+        for (std::size_t i = 0; i < meshFile.vboData.size(); i += (meshData.vertexSize / sizeof(float)))
         {
             //min point
-            if (meshData.boundingBox[0].x > vboData[i])
+            if (meshData.boundingBox[0].x > meshFile.vboData[i])
             {
-                meshData.boundingBox[0].x = vboData[i];
+                meshData.boundingBox[0].x = meshFile.vboData[i];
             }
-            if (meshData.boundingBox[0].y > vboData[i+1])
+            if (meshData.boundingBox[0].y > meshFile.vboData[i+1])
             {
-                meshData.boundingBox[0].y = vboData[i+1];
+                meshData.boundingBox[0].y = meshFile.vboData[i+1];
             }
-            if (meshData.boundingBox[0].z > vboData[i+2])
+            if (meshData.boundingBox[0].z > meshFile.vboData[i+2])
             {
-                meshData.boundingBox[0].z = vboData[i+2];
+                meshData.boundingBox[0].z = meshFile.vboData[i+2];
             }
 
             //maxpoint
-            if (meshData.boundingBox[1].x < vboData[i])
+            if (meshData.boundingBox[1].x < meshFile.vboData[i])
             {
-                meshData.boundingBox[1].x = vboData[i];
+                meshData.boundingBox[1].x = meshFile.vboData[i];
             }
-            if (meshData.boundingBox[1].y < vboData[i + 1])
+            if (meshData.boundingBox[1].y < meshFile.vboData[i + 1])
             {
-                meshData.boundingBox[1].y = vboData[i + 1];
+                meshData.boundingBox[1].y = meshFile.vboData[i + 1];
             }
-            if (meshData.boundingBox[1].z < vboData[i + 2])
+            if (meshData.boundingBox[1].z < meshFile.vboData[i + 2])
             {
-                meshData.boundingBox[1].z = vboData[i + 2];
+                meshData.boundingBox[1].z = meshFile.vboData[i + 2];
             }
         }
         auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;
@@ -177,23 +144,4 @@ Mesh::Data StaticMeshBuilder::build() const
     }
    
     return {};
-}
-
-bool StaticMeshBuilder::checkError(std::size_t readCount) const
-{
-    if (readCount == 0)
-    {
-        Logger::log(m_path + ": Unexpected End of File", Logger::Type::Error);
-        SDL_RWclose(m_file);
-        m_file = nullptr;
-        return true;
-    }
-    //else if (ferror(m_file))
-    //{
-    //    Logger::log(m_path + ": Error Reading File", Logger::Type::Error);
-    //    fclose(m_file);
-    //    m_file = nullptr;
-    //    return true;
-    //}
-    return false;
 }

@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Log.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/core/Cursor.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
 #include <SDL.h>
@@ -52,7 +53,8 @@ Window::Window()
     m_threadContext         (nullptr),
     m_mainContext           (nullptr),
     m_fullscreen            (false),
-    m_multisamplingEnabled  (false)
+    m_multisamplingEnabled  (false),
+    m_cursor                (nullptr)
 {
 
 }
@@ -358,6 +360,41 @@ void Window::setMouseCaptured(bool captured)
 bool Window::getMouseCaptured() const
 {
     return (SDL_GetRelativeMouseMode() == SDL_TRUE);
+}
+
+void Window::setCursor(const Cursor* cursor)
+{
+    if (cursor == m_cursor)
+    {
+        return;
+    }
+
+    if (cursor && cursor->m_cursor == nullptr)
+    {
+        return;
+    }
+
+    if (m_cursor)
+    {
+        m_cursor->m_inUse = false;
+    }
+
+    m_cursor = cursor;
+
+    if (m_cursor)
+    {
+        m_cursor->m_inUse = true;
+        SDL_SetCursor(m_cursor->m_cursor);
+    }
+    else
+    {
+        SDL_SetCursor(nullptr);
+    }
+}
+
+const Cursor* Window::getCursor() const
+{
+    return m_cursor;
 }
 
 //private

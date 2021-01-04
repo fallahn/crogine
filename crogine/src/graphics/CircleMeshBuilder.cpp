@@ -103,6 +103,7 @@ Mesh::Data CircleMeshBuilder::build() const
     meshData.attributes[Mesh::Tangent] = 3;
     meshData.attributes[Mesh::Bitangent] = 3;
     meshData.attributes[Mesh::UV0] = 2;
+    meshData.attributeFlags = (VertexProperty::Position | VertexProperty::Normal | VertexProperty::Tangent | VertexProperty::Bitangent | VertexProperty::UV0);
     meshData.primitiveType = GL_TRIANGLE_STRIP;
     meshData.vertexCount = verts.size() / 14;
     meshData.vertexSize = getVertexSize(meshData.attributes);

@@ -14,6 +14,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/core/ConfigFile.cpp
   ${PROJECT_DIR}/core/Console.cpp
   ${PROJECT_DIR}/core/ConsoleClient.cpp
+  ${PROJECT_DIR}/core/Cursor.cpp
   ${PROJECT_DIR}/core/DefaultLoadingScreen.cpp
   ${PROJECT_DIR}/core/FileSystem.cpp
   ${PROJECT_DIR}/core/GameController.cpp
@@ -31,6 +32,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/detail/glad.c
   ${PROJECT_DIR}/detail/SDLImageRead.cpp
   ${PROJECT_DIR}/detail/SDLResource.cpp
+  ${PROJECT_DIR}/detail/StaticMeshFile.cpp
 
   ${PROJECT_DIR}/detail/enet/callbacks.c
   ${PROJECT_DIR}/detail/enet/compress.c
@@ -91,6 +93,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/IqmBuilder.cpp
   ${PROJECT_DIR}/graphics/MaterialData.cpp
   ${PROJECT_DIR}/graphics/MaterialResource.cpp
+  ${PROJECT_DIR}/graphics/MeshBatch.cpp
   ${PROJECT_DIR}/graphics/MeshBuilder.cpp
   ${PROJECT_DIR}/graphics/MeshResource.cpp
   ${PROJECT_DIR}/graphics/ModelDefinition.cpp
