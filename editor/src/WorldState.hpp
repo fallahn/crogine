@@ -35,10 +35,11 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
 
+struct SharedStateData;
 class WorldState final : public cro::State, public cro::GuiClient
 {
 public:
-    WorldState(cro::StateStack&, cro::State::Context);
+    WorldState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
     cro::StateID getStateID() const override { return States::WorldEditor; }
 
@@ -49,6 +50,7 @@ public:
 
 private:
 
+    SharedStateData& m_sharedData;
     cro::Scene m_scene;
 
     void loadAssets();

@@ -51,10 +51,11 @@ struct CMFHeader final
     std::vector<std::int32_t> arraySizes;
 };
 
+struct SharedStateData;
 class ModelState final : public cro::State, public cro::GuiClient
 {
 public:
-    ModelState(cro::StateStack&, cro::State::Context);
+    ModelState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
     cro::StateID getStateID() const override { return States::ModelViewer; }
 
@@ -65,6 +66,7 @@ public:
 
 private:
 
+    SharedStateData& m_sharedData;
     cro::EnvironmentMap m_environmentMap;
     cro::Scene m_scene;
     cro::Scene m_previewScene;

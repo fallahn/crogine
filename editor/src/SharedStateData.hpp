@@ -27,18 +27,10 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <SDL.h>
+#pragma once
 
-#include "MyApp.hpp"
-
-#ifndef PLATFORM_DESKTOP
-#error This project is Desktop compatible only.
-#endif
-
-int main(int argc, char** argsv)
+class Gizmo;
+struct SharedStateData final
 {
-    MyApp mapp;
-    mapp.run();
-
-    return 0;
-}
+    Gizmo* gizmo = nullptr;
+};

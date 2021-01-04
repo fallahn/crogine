@@ -33,6 +33,8 @@ source distribution.
 #include "NormalVisMeshBuilder.hpp"
 #include "GLCheck.hpp"
 #include "UIConsts.hpp"
+#include "SharedStateData.hpp"
+#include "Gizmo.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
@@ -260,8 +262,9 @@ namespace
     const std::int32_t LightmapShaderID = 1;
 }
 
-ModelState::ModelState(cro::StateStack& stack, cro::State::Context context)
+ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State            (stack, context),
+    m_sharedData            (sd),
     m_scene                 (context.appInstance.getMessageBus()),
     m_previewScene          (context.appInstance.getMessageBus()),
     m_fov                   (DefaultFOV),
@@ -357,6 +360,11 @@ bool ModelState::simulate(float dt)
 
     m_previewScene.simulate(dt);
     m_scene.simulate(dt);
+
+
+    m_sharedData.gizmo->newFrame(dt, m_scene.getActiveCamera());
+
+
     return false;
 }
 

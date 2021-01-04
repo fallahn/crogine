@@ -25,6 +25,9 @@
     <Filter Include="Source Files\world viewer">
       <UniqueIdentifier>{54486e91-4e69-4544-9072-ea0e9783de78}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\gizmo">
+      <UniqueIdentifier>{bfd7dcda-f24e-42e2-a369-ff8789aa4836}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -50,6 +53,12 @@
     </ClCompile>
     <ClCompile Include="src\WorldState.cpp">
       <Filter>Source Files\world viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\im3d.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gizmo.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -89,10 +98,34 @@
     <ClInclude Include="src\MaterialDefinition.hpp">
       <Filter>Header Files\model viewer</Filter>
     </ClInclude>
+    <ClInclude Include="src\im3d.h">
+      <Filter>Header Files\gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\im3d_config.h">
+      <Filter>Header Files\gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\im3d_math.h">
+      <Filter>Header Files\gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Gizmo.hpp">
+      <Filter>Header Files\gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SharedStateData.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\LightmapShader.inl">
       <Filter>Header Files\model viewer</Filter>
+    </None>
+    <None Include="src\GizmoLineShader.inl">
+      <Filter>Header Files\gizmo</Filter>
+    </None>
+    <None Include="src\GizmoPointShader.inl">
+      <Filter>Header Files\gizmo</Filter>
+    </None>
+    <None Include="src\GizmoTriangleShader.inl">
+      <Filter>Header Files\gizmo</Filter>
     </None>
   </ItemGroup>
 </Project>

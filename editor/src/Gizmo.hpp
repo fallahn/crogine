@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine model viewer/importer - Zlib license.
@@ -27,18 +27,48 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <SDL.h>
+#pragma once
 
-#include "MyApp.hpp"
+#include "im3d.h"
 
-#ifndef PLATFORM_DESKTOP
-#error This project is Desktop compatible only.
-#endif
+#include <crogine/ecs/Entity.hpp>
+#include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/Rectangle.hpp>
 
-int main(int argc, char** argsv)
+#include <cstdint>
+
+class Gizmo final
 {
-    MyApp mapp;
-    mapp.run();
+public:
+    Gizmo();
+    ~Gizmo();
 
-    return 0;
-}
+    Gizmo(const Gizmo&) = delete;
+    Gizmo(Gizmo&&) = delete;
+    Gizmo& operator = (const Gizmo&) = delete;
+    Gizmo& operator = (Gizmo&&) = delete;
+
+    void init();
+    void newFrame(float, cro::Entity);
+    void draw();
+    void unlock();
+    void finalise();
+
+private:
+
+    bool m_frameLocked; //prevents multiple states starting a new frame
+    bool m_frameEnded;
+    cro::IntRect m_viewport;
+
+    std::uint32_t m_vao;
+    std::uint32_t m_vbo;
+    std::uint32_t m_ubo;
+
+    std::int32_t m_uboBlocksize;
+
+    cro::Shader m_pointShader;
+    cro::Shader m_lineShader;
+    cro::Shader m_triangleShader;
+
+    void deleteBuffers();
+};

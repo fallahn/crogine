@@ -54,6 +54,7 @@
     <ClInclude Include="..\crogine\include\crogine\core\Log.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Message.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\MessageBus.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\core\Mouse.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\State.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\StateStack.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\String.hpp" />

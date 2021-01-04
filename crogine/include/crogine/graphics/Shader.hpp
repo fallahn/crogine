@@ -74,7 +74,7 @@ namespace cro
         \param fragment A string containing the source for the fragment shader
         \param defines Optional list of newline delimited defines for the GLSL preprocessor
         \returns true on success, else returns false.
-        NOTE to ensure correct version number for specific playforms (100 for ES2,
+        NOTE to ensure correct version number for specific platforms (100 for ES2,
         330 for desktop) these are automatically appended here. Therefore #version
         directives should be omitted from any source code.
         */

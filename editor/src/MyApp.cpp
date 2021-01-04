@@ -31,16 +31,23 @@ source distribution.
 #include "ModelState.hpp"
 #include "WorldState.hpp"
 #include "LoadingScreen.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/core/Clock.hpp>
+
+namespace
+{
+    SharedStateData sharedData;
+}
 
 MyApp::MyApp()
     : m_stateStack({*this, getWindow()})
 {
     setApplicationStrings("Trederia", "Crogine Editor");
 
-    m_stateStack.registerState<ModelState>(States::ID::ModelViewer);
-    m_stateStack.registerState<WorldState>(States::ID::WorldEditor);
+    sharedData.gizmo = &m_gizmo;
+    m_stateStack.registerState<ModelState>(States::ID::ModelViewer, sharedData);
+    m_stateStack.registerState<WorldState>(States::ID::WorldEditor, sharedData);
 }
 
 //public
@@ -71,17 +78,24 @@ void MyApp::handleMessage(const cro::Message& msg)
 void MyApp::simulate(float dt)
 {
     m_stateStack.simulate(dt);
+
+    //all states have updated so should be safe to unlock
+    m_gizmo.unlock();
 }
 
 void MyApp::render()
 {
     m_stateStack.render();
+
+    m_gizmo.draw();
 }
 
 bool MyApp::initialise()
 {
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Crogine Editor");
+
+    m_gizmo.init();
 
     //m_stateStack.pushState(States::WorldEditor);
     m_stateStack.pushState(States::ModelViewer);
@@ -93,4 +107,6 @@ void MyApp::finalise()
 {
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);
+
+    m_gizmo.finalise();
 }
