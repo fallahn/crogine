@@ -28,12 +28,12 @@
 
     #define VGM_NAMESPACE glm
 
-    #include <glm/glm.hpp>
-    #include <glm/gtx/vector_angle.hpp>
-    #include <glm/gtx/exterior_product.hpp>
-    #include <glm/gtc/type_ptr.hpp>
-    #include <glm/gtc/quaternion.hpp>
-    #include <glm/gtc/matrix_transform.hpp>
+    #include <crogine/detail/glm/glm.hpp>
+    #include <crogine/detail/glm/gtx/vector_angle.hpp>
+    #include <crogine/detail/glm/gtx/exterior_product.hpp>
+    #include <crogine/detail/glm/gtc/type_ptr.hpp>
+    #include <crogine/detail/glm/gtc/quaternion.hpp>
+    #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
     using tVec2 = glm::tvec2<VG_T_TYPE>;
     using tVec3 = glm::tvec3<VG_T_TYPE>;

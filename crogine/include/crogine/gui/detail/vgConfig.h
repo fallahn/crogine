@@ -56,7 +56,7 @@
 //      If you enable GLM use, automatically is enabled also VGM_USES_TEMPLATE
 //          if you can, I recommend to use GLM
 //------------------------------------------------------------------------------
-//#define VGIZMO_USES_GLM
+#define VGIZMO_USES_GLM
 
 //------------------------------------------------------------------------------
 // uncomment to use LeftHanded 

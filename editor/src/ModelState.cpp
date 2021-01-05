@@ -148,6 +148,7 @@ namespace
         Inspector,
         Browser,
         MaterialSlot,
+        ViewGizmo,
 
         Count
     };
@@ -311,7 +312,7 @@ bool ModelState::handleEvent(const cro::Event& evt)
         }
         break;
     case SDL_MOUSEMOTION:
-        updateMouseInput(evt);
+        //updateMouseInput(evt);
         break;
     case SDL_MOUSEWHEEL:
     {
@@ -900,11 +901,23 @@ void ModelState::buildUI()
 
             //ImGui::End();
 
-            ImGui::Begin("Test");
-            static quat testQ(1.f, 0.f, 0.f, 0.f);
-            ImGui::gizmo3D("Quat", testQ);
-            ImGui::Text("w: %3.3f, x: %3.3f, y: %3.3f, z: %3.3f", testQ.w, testQ.x, testQ.y, testQ.z);
-
+            auto [pos, size] = WindowLayouts[WindowID::ViewGizmo];
+            ImGui::SetNextWindowPos({ pos.x, pos.y });
+            ImGui::SetNextWindowSize({ size.x, size.y });
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32_BLACK_TRANS);
+            ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32_BLACK_TRANS);
+            ImGui::Begin("Camera", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+            static glm::quat camRot(1.f, 0.f, 0.f, 0.f);
+            if (ImGui::gizmo3D("Camera", camRot))
+            {
+                entities[EntityID::ArcBall].getComponent<cro::Transform>().setRotation(glm::inverse(camRot));
+            }
+            static glm::quat lightRot = m_scene.getSunlight().getComponent<cro::Transform>().getRotation();
+            if (ImGui::gizmo3D("Light", lightRot, IMGUIZMO_DEF_SIZE, imguiGizmo::modeDirection))
+            {
+                m_scene.getSunlight().getComponent<cro::Transform>().setRotation(lightRot);
+            }
+            ImGui::PopStyleColor(2);
             ImGui::End();
         });
 
@@ -2369,6 +2382,9 @@ void ModelState::updateLayout(std::int32_t w, std::int32_t h)
     float matSlotWidth = std::max(ui::MinMaterialSlotSize, ui::MinMaterialSlotSize * ratio);
     WindowLayouts[WindowID::MaterialSlot] =
         std::make_pair(glm::vec2(0.f), glm::vec2(matSlotWidth));
+
+    WindowLayouts[WindowID::ViewGizmo] =
+        std::make_pair(glm::vec2(width - 110.f, ui::TitleHeight), glm::vec2(108.f, 240.f));
 }
 
 void ModelState::drawInspector()
