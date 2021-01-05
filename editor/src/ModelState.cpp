@@ -346,23 +346,32 @@ void ModelState::handleMessage(const cro::Message& msg)
 
 bool ModelState::simulate(float dt)
 {
-    auto& tx = m_scene.getSunlight().getComponent<cro::Transform>();
-    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_W))
+    m_sharedData.gizmo->newFrame(dt, m_scene.getActiveCamera());
+
+    //auto& tx = m_scene.getSunlight().getComponent<cro::Transform>();
+    //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_W))
+    //{
+    //    tx.rotate(glm::vec3(1.f, 0.f, 0.f), -dt);
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_D))
+    //{
+    //    tx.rotate(glm::vec3(0.f, 1.f, 0.f), -dt);
+    //}
+    //auto rot = tx.getRotation();
+    //DPRINT("rot", std::to_string(rot.x) + ", " + std::to_string(rot.y) + ", " + std::to_string(rot.z));
+
+    /*auto& tx = entities[EntityID::GroundPlane].getComponent<cro::Transform>();
+    auto xForm = tx.getLocalTransform();
+    if (Im3d::Gizmo("light", &xForm[0][0]))
     {
-        tx.rotate(glm::vec3(1.f, 0.f, 0.f), -dt);
-    }
-    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_D))
-    {
-        tx.rotate(glm::vec3(0.f, 1.f, 0.f), -dt);
-    }
-    auto rot = tx.getRotation();
-    DPRINT("rot", std::to_string(rot.x) + ", " + std::to_string(rot.y) + ", " + std::to_string(rot.z));
+        tx.setLocalTransform(xForm);
+    }*/
 
     m_previewScene.simulate(dt);
     m_scene.simulate(dt);
 
 
-    m_sharedData.gizmo->newFrame(dt, m_scene.getActiveCamera());
+
 
 
     return false;

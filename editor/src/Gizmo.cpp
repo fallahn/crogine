@@ -129,7 +129,6 @@ void Gizmo::newFrame(float dt, cro::Entity camEnt)
     auto getViewport = [&]()
     {
         glm::vec2 windowSize(cro::App::getWindow().getSize());
-
         m_viewport =
         {
             static_cast<std::int32_t>(cam.viewport.left * windowSize.x),
@@ -155,6 +154,7 @@ void Gizmo::newFrame(float dt, cro::Entity camEnt)
 
     //ray picking
     auto cursorPos = cro::Mouse::getPosition();
+    cursorPos.x -= m_viewport.left;
     cursorPos.x /= appData.m_viewportSize.x;
     cursorPos.y /= appData.m_viewportSize.y;
     cursorPos = cursorPos * 2.f - 1.f;
@@ -174,7 +174,10 @@ void Gizmo::newFrame(float dt, cro::Entity camEnt)
 
     appData.m_keyDown[Im3d::Mouse_Left] = cro::Mouse::isButtonPressed(cro::Mouse::Button::Left);
 
-    //TODO keyboard shortcuts for gizmo type (TRS etc)
+    appData.m_keyDown[Im3d::Action_GizmoTranslation] = cro::Keyboard::isKeyPressed(SDL_SCANCODE_G);
+    appData.m_keyDown[Im3d::Action_GizmoRotation] = cro::Keyboard::isKeyPressed(SDL_SCANCODE_R);
+    appData.m_keyDown[Im3d::Action_GizmoScale] = cro::Keyboard::isKeyPressed(SDL_SCANCODE_S);
+    appData.m_keyDown[Im3d::Action_GizmoLocal] = cro::Keyboard::isKeyPressed(SDL_SCANCODE_L);
 
 
     Im3d::NewFrame();

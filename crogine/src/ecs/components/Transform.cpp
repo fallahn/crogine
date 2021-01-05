@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/detail/glm/gtx/euler_angles.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
+#include <crogine/detail/glm/gtx/matrix_decompose.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtc/matrix_access.hpp>
@@ -315,9 +316,42 @@ const glm::mat4& Transform::getLocalTransform() const
         m_transform *= glm::toMat4(m_rotation);
         m_transform = glm::scale(m_transform, m_scale);
         m_transform = glm::translate(m_transform, -m_origin);
+
+        m_dirtyFlags &= ~Tx;
     }
 
     return m_transform;
+}
+
+void Transform::setLocalTransform(glm::mat4 transform)
+{
+    m_position = transform[3];
+    m_rotation = glm::quat_cast(transform);
+    
+    //not simple when rotations involved. Based
+    //on glm::matrix_decompose()
+    std::array<glm::vec3, 3u> row = {};
+    for (auto i = 0u; i < 3u; ++i)
+    {
+        for (auto j = 0u; j < 3u; ++j)
+        {
+            row[i][j] = transform[i][j] / transform[3][3];
+        }
+    }
+    m_scale.x = glm::length(row[0]);
+    m_scale.y = glm::length(row[1]);
+    m_scale.z = glm::length(row[2]);
+    auto t = glm::cross(row[1], row[2]);
+    if (glm::dot(row[0], t) < 0)
+    {
+        for (auto i = 0u; i < 3; ++i)
+        {
+            m_scale[i] *= -1.f;
+        }
+    }
+    //m_dirtyFlags |= Tx;
+    m_transform = glm::translate(transform, -m_origin);
+    m_dirtyFlags &= ~Tx;
 }
 
 glm::mat4 Transform::getWorldTransform() const
