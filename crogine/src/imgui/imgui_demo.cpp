@@ -66,7 +66,7 @@ Index of this file:
 #endif
 
 //#include "imgui.h"
-#include <crogine/gui/imgui.h>
+#include <crogine/gui/detail/imgui.h>
 #ifndef IMGUI_DISABLE
 
 #include <ctype.h>          // toupper

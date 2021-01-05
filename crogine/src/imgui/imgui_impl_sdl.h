@@ -16,7 +16,7 @@
 
 #pragma once
 //#include "imgui.h"      // IMGUI_IMPL_API
-#include <crogine/gui/imgui.h>
+#include <crogine/gui/detail/imgui.h>
 
 struct SDL_Window;
 typedef union SDL_Event SDL_Event;

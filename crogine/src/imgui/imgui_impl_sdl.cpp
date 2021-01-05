@@ -45,7 +45,7 @@
 //  2016-10-15: Misc: Added a void* user_data parameter to Clipboard function handlers.
 
 //#include "imgui.h"
-#include <crogine/gui/imgui.h>
+#include <crogine/gui/detail/imgui.h>
 #include "imgui_impl_sdl.h"
 
 // SDL

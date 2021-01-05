@@ -41,8 +41,6 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/Keyboard.hpp>
 #include <crogine/gui/Gui.hpp>
-#include <crogine/gui/imgui.h>
-#include <crogine/gui/imgui_stdlib.h>
 
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -901,6 +899,13 @@ void ModelState::buildUI()
             //    { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });*/
 
             //ImGui::End();
+
+            ImGui::Begin("Test");
+            static quat testQ(1.f, 0.f, 0.f, 0.f);
+            ImGui::gizmo3D("Quat", testQ);
+            ImGui::Text("w: %3.3f, x: %3.3f, y: %3.3f, z: %3.3f", testQ.w, testQ.x, testQ.y, testQ.z);
+
+            ImGui::End();
         });
 
     auto size = getContext().mainWindow.getSize();

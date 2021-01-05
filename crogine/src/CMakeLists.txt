@@ -119,6 +119,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/imgui_impl_sdl.cpp
   ${PROJECT_DIR}/imgui/imgui_stdlib.cpp
   ${PROJECT_DIR}/imgui/imgui_widgets.cpp
+  ${PROJECT_DIR}/imgui/imGuIZMOquat.cpp
 
   ${PROJECT_DIR}/network/NetClient.cpp
   ${PROJECT_DIR}/network/NetConf.cpp

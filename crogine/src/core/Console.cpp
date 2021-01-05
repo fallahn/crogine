@@ -34,7 +34,7 @@ source distribution.
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/audio/AudioMixer.hpp>
-#include <crogine/gui/imgui.h>
+#include <crogine/gui/detail/imgui.h>
 
 #include <list>
 #include <unordered_map>
