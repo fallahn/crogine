@@ -570,19 +570,19 @@
     <ClInclude Include="..\crogine\include\crogine\core\Mouse.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\src\imgui\vgConfig.h">
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImCurveEdit.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\src\imgui\vGizmo.h">
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGradient.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\src\imgui\vGizmoMath.h">
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGuizmo.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\src\imgui\vgMath.h">
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImSequencer.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\gui\imGuIZMOquat.h">
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImZoomSlider.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
   </ItemGroup>
@@ -944,7 +944,16 @@
     <ClCompile Include="..\crogine\src\core\Cursor.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\imgui\imGuIZMOquat.cpp">
+    <ClCompile Include="..\crogine\src\imgui\ImCurveEdit.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\ImGradient.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\ImGuizmo.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\ImSequencer.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
   </ItemGroup>

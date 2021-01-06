@@ -148,10 +148,14 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\TextureResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Vertex2D.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImCurveEdit.h" />
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGradient.h" />
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGuizmo.h" />
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImSequencer.h" />
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\ImZoomSlider.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\Gui.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\GuiClient.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\imgui.h" />
-    <ClInclude Include="..\crogine\include\crogine\gui\imGuIZMOquat.h" />
     <ClInclude Include="..\crogine\include\crogine\network\NetClient.hpp" />
     <ClInclude Include="..\crogine\include\crogine\network\NetData.hpp" />
     <ClInclude Include="..\crogine\include\crogine\network\NetHost.hpp" />
@@ -193,10 +197,6 @@
     <ClInclude Include="..\crogine\src\imgui\imgui_impl_opengl3.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_impl_sdl.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_internal.h" />
-    <ClInclude Include="..\crogine\src\imgui\vgConfig.h" />
-    <ClInclude Include="..\crogine\src\imgui\vGizmo.h" />
-    <ClInclude Include="..\crogine\src\imgui\vGizmoMath.h" />
-    <ClInclude Include="..\crogine\src\imgui\vgMath.h" />
     <ClInclude Include="..\crogine\src\network\NetConf.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -306,14 +306,17 @@
     <ClCompile Include="..\crogine\src\graphics\TextureResource.cpp" />
     <ClCompile Include="..\crogine\src\imgui\Gui.cpp" />
     <ClCompile Include="..\crogine\src\imgui\GuiClient.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\ImCurveEdit.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\ImGradient.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui.cpp" />
-    <ClCompile Include="..\crogine\src\imgui\imGuIZMOquat.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\ImGuizmo.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_impl_sdl.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\ImSequencer.cpp" />
     <ClCompile Include="..\crogine\src\network\NetClient.cpp" />
     <ClCompile Include="..\crogine\src\network\NetConf.cpp" />
     <ClCompile Include="..\crogine\src\network\NetEvent.cpp" />
