@@ -34,6 +34,7 @@ source distribution.
 #include "GLCheck.hpp"
 #include "UIConsts.hpp"
 #include "SharedStateData.hpp"
+#include "Messages.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
@@ -135,7 +136,7 @@ namespace
         return size.x / size.y;
     }
 
-    const std::string prefPath = cro::FileSystem::getConfigDirectory("cro_model_viewer") + "prefs.cfg";
+    const std::string prefPath = cro::FileSystem::getConfigDirectory("crogine_editor") + "model_viewer.cfg";
 
     const glm::vec3 DefaultCameraPosition({ 0.f, 0.25f, 5.f });
 
@@ -420,7 +421,11 @@ void ModelState::loadAssets()
     m_magentaTexture.create(2, 2);
     m_magentaTexture.update(pixels.data());
 
-    m_environmentMap.loadFromFile("assets/images/brooklyn_bridge.hdr");
+    if (m_sharedData.skymapTexture.empty()
+        || !m_environmentMap.loadFromFile(m_sharedData.skymapTexture))
+    {
+        m_environmentMap.loadFromFile("assets/images/brooklyn_bridge.hdr");
+    }
 
     //create a default material to display models on import
     auto flags = cro::ShaderResource::DiffuseColour;// | cro::ShaderResource::MaskMap;
@@ -586,15 +591,15 @@ void ModelState::buildUI()
                 {
                     if (ImGui::MenuItem("Open Model", nullptr, nullptr))
                     {
-                        if (m_preferences.workingDirectory.empty())
+                        if (m_sharedData.workingDirectory.empty())
                         {
                             if (cro::FileSystem::showMessageBox("", "Working directory currently not set. Would you like to set one now?", cro::FileSystem::YesNo, cro::FileSystem::Question))
                             {
-                                auto path = cro::FileSystem::openFolderDialogue(m_preferences.workingDirectory);
+                                auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                                 if (!path.empty())
                                 {
-                                    m_preferences.workingDirectory = path;
-                                    std::replace(m_preferences.workingDirectory.begin(), m_preferences.workingDirectory.end(), '\\', '/');
+                                    m_sharedData.workingDirectory = path;
+                                    std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                                 }
                             }
                         }
@@ -609,7 +614,7 @@ void ModelState::buildUI()
                     if (ImGui::MenuItem("Save As...", nullptr, nullptr, !m_currentFilePath.empty()))
                     {
                         //if a model is open create a new model def with current materials
-                        auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/untitled", "cmt");
+                        auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/untitled", "cmt");
                         if (!path.empty())
                         {
                             saveModel(path);
@@ -693,10 +698,15 @@ void ModelState::buildUI()
                     }
                     if (ImGui::MenuItem("Choose Skybox", nullptr, nullptr))
                     {
-                        auto path = cro::FileSystem::openFileDialogue(m_preferences.workingDirectory + "/", "hdr");
+                        auto lastPath = m_sharedData.skymapTexture.empty() ? m_sharedData.workingDirectory + "/untitled.hdr"  : m_sharedData.skymapTexture;
+
+                        auto path = cro::FileSystem::openFileDialogue(lastPath, "hdr");
                         if (!path.empty())
                         {
-                            m_environmentMap.loadFromFile(path);
+                            if (m_environmentMap.loadFromFile(path))
+                            {
+                                m_sharedData.skymapTexture = path;
+                            }
                         }
                     }
                     if (ImGui::MenuItem("Show Skybox", nullptr, &m_showSkybox))
@@ -752,25 +762,25 @@ void ModelState::buildUI()
                 if (ImGui::Begin("Preferences", &m_showPreferences))
                 {
                     ImGui::Text("%s", "Working Directory:");
-                    if (m_preferences.workingDirectory.empty())
+                    if (m_sharedData.workingDirectory.empty())
                     {
                         ImGui::Text("%s", "Not Set");
                     }
                     else
                     {
-                        auto dir = m_preferences.workingDirectory.substr(0, 30) + "...";
+                        auto dir = m_sharedData.workingDirectory.substr(0, 30) + "...";
                         ImGui::Text("%s", dir.c_str());
                         ImGui::SameLine();
-                        helpMarker(m_preferences.workingDirectory.c_str());
+                        helpMarker(m_sharedData.workingDirectory.c_str());
                     }
                     ImGui::SameLine();
                     if (ImGui::Button("Browse"))
                     {
-                        auto path = cro::FileSystem::openFolderDialogue(m_preferences.workingDirectory);
+                        auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                         if (!path.empty())
                         {
-                            m_preferences.workingDirectory = path;
-                            std::replace(m_preferences.workingDirectory.begin(), m_preferences.workingDirectory.end(), '\\', '/');
+                            m_sharedData.workingDirectory = path;
+                            std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                         }
                     }
 
@@ -872,7 +882,7 @@ void ModelState::buildUI()
 
                 if (! m_lightmapTextures.empty() && ImGui::Button("Save All"))
                 {
-                    auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/" + "ao_untitled", "png");
+                    auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/" + "ao_untitled", "png");
                     if (!path.empty())
                     {
                         if (meshData.submeshCount > 1)
@@ -946,7 +956,7 @@ void ModelState::openModel()
         && cro::FileSystem::getFileExtension(path) == ".cmt")
     {
         std::replace(path.begin(), path.end(), '\\', '/');
-        if (path.find(m_preferences.workingDirectory) == std::string::npos)
+        if (path.find(m_sharedData.workingDirectory) == std::string::npos)
         {
             cro::FileSystem::showMessageBox("Warning", "This model was not opened from the current working directory.");
         }
@@ -970,7 +980,7 @@ void ModelState::openModelAtPath(const std::string& path)
     
     closeModel();
 
-    cro::ModelDefinition def(m_preferences.workingDirectory);
+    cro::ModelDefinition def(m_sharedData.workingDirectory);
     if (def.loadFromFile(path, m_resources, &m_environmentMap))
     {
         m_currentFilePath = path;
@@ -1373,7 +1383,7 @@ void ModelState::showSaveMessage()
         {
             if (m_importedVBO.empty())
             {
-                auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/untitled", "cmt");
+                auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/untitled", "cmt");
                 if (!path.empty())
                 {
                     saveModel(path);
@@ -1685,9 +1695,9 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
 
             //auto meshPath = path.substr(m_preferences.workingDirectory.length() + 1);
             std::string meshPath;
-            if (!m_preferences.workingDirectory.empty() && path.find(m_preferences.workingDirectory) != std::string::npos)
+            if (!m_sharedData.workingDirectory.empty() && path.find(m_sharedData.workingDirectory) != std::string::npos)
             {
-                meshPath = path.substr(m_preferences.workingDirectory.length() + 1);
+                meshPath = path.substr(m_sharedData.workingDirectory.length() + 1);
             }
             else
             {
@@ -1818,12 +1828,7 @@ void ModelState::loadPrefs()
         for (const auto& prop : props)
         {
             auto name = cro::Util::String::toLower(prop.getName());
-            if (name == "working_dir")
-            {
-                m_preferences.workingDirectory = prop.getValue<std::string>();
-                std::replace(m_preferences.workingDirectory.begin(), m_preferences.workingDirectory.end(), '\\', '/');
-            }
-            else if (name == "show_groundplane")
+            if (name == "show_groundplane")
             {
                 m_showGroundPlane = prop.getValue<bool>();
                 if (m_showGroundPlane)
@@ -1883,7 +1888,6 @@ void ModelState::savePrefs()
     };
 
     cro::ConfigFile prefsOut;
-    prefsOut.addProperty("working_dir", m_preferences.workingDirectory);
     prefsOut.addProperty("show_groundplane", m_showGroundPlane ? "true" : "false");
     prefsOut.addProperty("show_skybox", m_showSkybox ? "true" : "false");
     prefsOut.addProperty("sky_top", toString(m_preferences.skyTop));
@@ -1894,7 +1898,12 @@ void ModelState::savePrefs()
     prefsOut.addProperty("export_dir", m_preferences.lastExportDirectory);
     prefsOut.addProperty("model_dir", m_preferences.lastModelDirectory);
 
-    prefsOut.save(prefPath);
+    if (prefsOut.save(prefPath))
+    {
+        //notify so the global prefs are also written
+        auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);
+        msg->type = UIEvent::WrotePreferences;
+    }
 }
 
 void ModelState::updateWorldScale()
@@ -2150,7 +2159,7 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
     auto relPath = path;
     std::replace(relPath.begin(), relPath.end(), '\\', '/');
     relPath = cro::FileSystem::getFilePath(relPath);
-    relPath = cro::FileSystem::getRelativePath(relPath, m_preferences.workingDirectory);
+    relPath = cro::FileSystem::getRelativePath(relPath, m_sharedData.workingDirectory);
 
     std::uint32_t id = 0;
     for (auto& [i, t] : m_materialTextures)
@@ -3243,7 +3252,7 @@ void ModelState::drawBrowser()
             ImGui::SameLine();
             if (ImGui::Button("Open##01"))
             {
-                auto path = cro::FileSystem::openFileDialogue(m_preferences.workingDirectory + "/untitled", "mdf,cmt");
+                auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory + "/untitled", "mdf,cmt");
                 if (!path.empty())
                 {
                     importMaterial(path);
@@ -3437,7 +3446,7 @@ void ModelState::drawBrowser()
             {
                 if (m_selectedTexture != 0)
                 {
-                    auto path = m_preferences.workingDirectory + "/" + m_materialTextures.at(m_selectedTexture).relPath + m_materialTextures.at(m_selectedTexture).name;
+                    auto path = m_sharedData.workingDirectory + "/" + m_materialTextures.at(m_selectedTexture).relPath + m_materialTextures.at(m_selectedTexture).name;
                     if (cro::FileSystem::fileExists(path))
                     {
                         if (!m_materialTextures.at(m_selectedTexture).texture->loadFromFile(path))
@@ -3588,7 +3597,7 @@ void ModelState::exportMaterial() const
         std::replace(defaultName.begin(), defaultName.end(), ' ', '_');
         defaultName = cro::Util::String::toLower(defaultName);
     }
-    auto path = cro::FileSystem::saveFileDialogue(m_preferences.workingDirectory + "/" + defaultName, "mdf");
+    auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/" + defaultName, "mdf");
     if (!path.empty())
     {
         if (cro::FileSystem::getFileExtension(path) != ".mdf")
@@ -3708,7 +3717,7 @@ void ModelState::importMaterial(const std::string& path)
                 }
                 else if (name == "diffuse")
                 {
-                    def.textureIDs[MaterialDefinition::Diffuse] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                    def.textureIDs[MaterialDefinition::Diffuse] = addTextureToBrowser(m_sharedData.workingDirectory + "/" + prop.getValue<std::string>());
                     if (def.textureIDs[MaterialDefinition::Diffuse] == 0)
                     {
                         cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
@@ -3716,7 +3725,7 @@ void ModelState::importMaterial(const std::string& path)
                 }
                 else if (name == "mask")
                 {
-                    def.textureIDs[MaterialDefinition::Mask] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                    def.textureIDs[MaterialDefinition::Mask] = addTextureToBrowser(m_sharedData.workingDirectory + "/" + prop.getValue<std::string>());
                     if (def.textureIDs[MaterialDefinition::Mask] == 0)
                     {
                         cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
@@ -3724,7 +3733,7 @@ void ModelState::importMaterial(const std::string& path)
                 }
                 else if (name == "lightmap")
                 {
-                    def.textureIDs[MaterialDefinition::Lightmap] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                    def.textureIDs[MaterialDefinition::Lightmap] = addTextureToBrowser(m_sharedData.workingDirectory + "/" + prop.getValue<std::string>());
                     if (def.textureIDs[MaterialDefinition::Lightmap] == 0)
                     {
                         cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
@@ -3732,7 +3741,7 @@ void ModelState::importMaterial(const std::string& path)
                 }
                 else if (name == "normal")
                 {
-                    def.textureIDs[MaterialDefinition::Normal] = addTextureToBrowser(m_preferences.workingDirectory + "/" + prop.getValue<std::string>());
+                    def.textureIDs[MaterialDefinition::Normal] = addTextureToBrowser(m_sharedData.workingDirectory + "/" + prop.getValue<std::string>());
                     if (def.textureIDs[MaterialDefinition::Normal] == 0)
                     {
                         cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
@@ -3830,7 +3839,7 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
             || name == "normal"
             || name == "lightmap")
         {
-            auto path = m_preferences.workingDirectory + "/" + prop.getValue<std::string>();
+            auto path = m_sharedData.workingDirectory + "/" + prop.getValue<std::string>();
 
             if (name == "diffuse") matDef.textureIDs[MaterialDefinition::Diffuse] = addTextureToBrowser(path);
             if (name == "mask") matDef.textureIDs[MaterialDefinition::Mask] = addTextureToBrowser(path);

@@ -46,15 +46,7 @@ struct UIEvent final
 {
     enum
     {
-        ButtonPressed,
-        ButtonReleased
-    }type;
-
-    enum Button
-    {
-        Left,
-        Right,
-        Jump,
-        Fire
-    }button;
+        Invalid = -1,
+        WrotePreferences //< sub-mode sych as model viewer wrote preferences, so global prefs should be saved too.
+    }type = Invalid;
 };

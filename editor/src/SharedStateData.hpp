@@ -29,7 +29,10 @@ source distribution.
 
 #pragma once
 
+#include <string>
+
 struct SharedStateData final
 {
-
+    std::string workingDirectory;
+    std::string skymapTexture;
 };

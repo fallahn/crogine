@@ -32,12 +32,16 @@ source distribution.
 #include "WorldState.hpp"
 #include "LoadingScreen.hpp"
 #include "SharedStateData.hpp"
+#include "Messages.hpp"
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/ConfigFile.hpp>
+#include <crogine/util/String.hpp>
 
 namespace
 {
     SharedStateData sharedData;
+    const std::string prefPath = cro::FileSystem::getConfigDirectory("crogine_editor") + "global.cfg";
 }
 
 MyApp::MyApp()
@@ -71,6 +75,18 @@ void MyApp::handleEvent(const cro::Event& evt)
 
 void MyApp::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == MessageID::UIMessage)
+    {
+        const auto& data = msg.getData<UIEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case UIEvent::WrotePreferences:
+            savePrefs();
+            break;
+        }
+    }
+
     m_stateStack.handleMessage(msg);
 }
 
@@ -86,6 +102,8 @@ void MyApp::render()
 
 bool MyApp::initialise()
 {
+    loadPrefs();
+
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Crogine Editor");
 
@@ -99,4 +117,38 @@ void MyApp::finalise()
 {
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);
+
+    savePrefs();
+}
+
+void MyApp::loadPrefs()
+{
+    cro::ConfigFile prefs;
+    if (prefs.loadFromFile(prefPath))
+    {
+        const auto& props = prefs.getProperties();
+        for (const auto& prop : props)
+        {
+            auto name = cro::Util::String::toLower(prop.getName());
+            if (name == "working_dir")
+            {
+                sharedData.workingDirectory = prop.getValue<std::string>();
+                std::replace(sharedData.workingDirectory.begin(), sharedData.workingDirectory.end(), '\\', '/');
+            }
+            else if (name == "skybox")
+            {
+                sharedData.skymapTexture = prop.getValue<std::string>();
+                std::replace(sharedData.skymapTexture.begin(), sharedData.skymapTexture.end(), '\\', '/');
+            }
+        }
+    }
+}
+
+void MyApp::savePrefs()
+{
+    cro::ConfigFile prefsOut;
+    prefsOut.addProperty("working_dir", sharedData.workingDirectory);
+    prefsOut.addProperty("skybox", sharedData.skymapTexture);
+
+    prefsOut.save(prefPath);
 }
