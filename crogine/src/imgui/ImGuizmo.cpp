@@ -2541,6 +2541,7 @@ namespace ImGuizmo
             }
          }
       }
+
       if (interpolationFrames)
       {
          interpolationFrames--;

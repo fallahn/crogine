@@ -34,7 +34,6 @@ source distribution.
 #include "GLCheck.hpp"
 #include "UIConsts.hpp"
 #include "SharedStateData.hpp"
-#include "Gizmo.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
@@ -312,7 +311,7 @@ bool ModelState::handleEvent(const cro::Event& evt)
         }
         break;
     case SDL_MOUSEMOTION:
-        //updateMouseInput(evt);
+        updateMouseInput(evt);
         break;
     case SDL_MOUSEWHEEL:
     {
@@ -345,8 +344,6 @@ void ModelState::handleMessage(const cro::Message& msg)
 
 bool ModelState::simulate(float dt)
 {
-    m_sharedData.gizmo->newFrame(dt, m_scene.getActiveCamera());
-
     //auto& tx = m_scene.getSunlight().getComponent<cro::Transform>();
     //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_W))
     //{
@@ -736,6 +733,12 @@ void ModelState::buildUI()
                     {
                         
                     }
+                    if (ImGui::MenuItem("Reset Camera"))
+                    {
+                        entities[EntityID::ArcBall].getComponent<cro::Transform>().setLocalTransform(glm::mat4(1.f));
+                        m_fov = DefaultFOV;
+                        updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
+                    }
                     ImGui::EndMenu();
                 }
 
@@ -901,12 +904,35 @@ void ModelState::buildUI()
 
             //ImGui::End();
 
-            auto [pos, size] = WindowLayouts[WindowID::ViewGizmo];
-            auto tx = entities[EntityID::ArcBall].getComponent<cro::Transform>().getLocalTransform();
             ImGuiIO& io = ImGui::GetIO();
-            ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+            ImGuizmo::SetRect(io.DisplaySize. x * ui::InspectorWidth, 0, io.DisplaySize.x - (ui::InspectorWidth * io.DisplaySize.x),
+                io.DisplaySize.y - (ui::BrowserHeight * io.DisplaySize.y));
+
+
+            auto [pos, size] = WindowLayouts[WindowID::ViewGizmo];
+
+            auto tx = glm::inverse(entities[EntityID::ArcBall].getComponent<cro::Transform>().getLocalTransform());
             ImGuizmo::ViewManipulate(&tx[0][0], 10.f, ImVec2(pos.x, pos.y), ImVec2(size.x, size.y), 0/*x10101010*/);
-            entities[EntityID::ArcBall].getComponent<cro::Transform>().setRotation(tx);
+            entities[EntityID::ArcBall].getComponent<cro::Transform>().setRotation(glm::inverse(tx));
+
+            if (io.MousePos.x > pos.x && io.MousePos.x < pos.x + size.x
+                && io.MousePos.y > pos.y && io.MousePos.y < pos.y + size.y)
+            {
+                ImGui::PushStyleColor(ImGuiCol_PopupBg, 0);
+                ImGui::PushStyleColor(ImGuiCol_Border, 0);
+                ImGui::PushStyleColor(ImGuiCol_Text, 0xff000000);
+                ImGui::BeginTooltip();
+                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                ImGui::TextUnformatted("Left Click Rotate\nMiddle Mouse Pan\nScroll Zoom");
+                ImGui::PopTextWrapPos();
+                ImGui::EndTooltip();
+                ImGui::PopStyleColor(3);
+            }
+
+            /*const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+            tx = entities[EntityID::GroundPlane].getComponent<cro::Transform>().getLocalTransform();
+            ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], ImGuizmo::OPERATION::SCALE, ImGuizmo::MODE::LOCAL, &tx[0][0]);
+            entities[EntityID::GroundPlane].getComponent<cro::Transform>().setLocalTransform(tx);*/
         });
 
     auto size = getContext().mainWindow.getSize();
@@ -1923,25 +1949,26 @@ void ModelState::updateNormalVis()
 
 void ModelState::updateMouseInput(const cro::Event& evt)
 {
-    const float moveScale = 0.004f;
-    if (evt.motion.state & SDL_BUTTON_LMASK)
-    {
-        float pitchMove = static_cast<float>(evt.motion.yrel)* moveScale * m_viewportRatio;
-        float yawMove = static_cast<float>(evt.motion.xrel)* moveScale;
+    //const float moveScale = 0.004f;
+    //if (evt.motion.state & SDL_BUTTON_LMASK)
+    //{
+    //    float pitchMove = static_cast<float>(evt.motion.yrel)* moveScale * m_viewportRatio;
+    //    float yawMove = static_cast<float>(evt.motion.xrel)* moveScale;
 
-        auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
-        tx.rotate(cro::Transform::X_AXIS, -pitchMove);
-        tx.rotate(cro::Transform::Y_AXIS, -yawMove);
-    }
-    else if (evt.motion.state & SDL_BUTTON_RMASK)
-    {
-        //do roll
-        float rollMove = static_cast<float>(-evt.motion.xrel)* moveScale;
+    //    auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
+    //    tx.rotate(cro::Transform::X_AXIS, -pitchMove);
+    //    tx.rotate(cro::Transform::Y_AXIS, -yawMove);
+    //}
+    //else if (evt.motion.state & SDL_BUTTON_RMASK)
+    //{
+    //    //do roll
+    //    float rollMove = static_cast<float>(-evt.motion.xrel)* moveScale;
 
-        auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
-        tx.rotate(cro::Transform::Z_AXIS, -rollMove);
-    }
-    else if (evt.motion.state & SDL_BUTTON_MMASK)
+    //    auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
+    //    tx.rotate(cro::Transform::Z_AXIS, -rollMove);
+    //}
+    //else 
+    if (evt.motion.state & SDL_BUTTON_MMASK)
     {
         auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
         tx.move(tx.getRightVector() * -static_cast<float>(evt.motion.xrel) / 160.f);

@@ -154,8 +154,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Gizmo.cpp" />
-    <ClCompile Include="src\im3d.cpp" />
     <ClCompile Include="src\ImportIQM.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -167,10 +165,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp" />
-    <ClInclude Include="src\Gizmo.hpp" />
-    <ClInclude Include="src\im3d.h" />
-    <ClInclude Include="src\im3d_config.h" />
-    <ClInclude Include="src\im3d_math.h" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\MaterialDefinition.hpp" />
     <ClInclude Include="src\ModelState.hpp" />
@@ -185,9 +179,6 @@
     <ClInclude Include="src\WorldState.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\GizmoLineShader.inl" />
-    <None Include="src\GizmoPointShader.inl" />
-    <None Include="src\GizmoTriangleShader.inl" />
     <None Include="src\LightmapShader.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

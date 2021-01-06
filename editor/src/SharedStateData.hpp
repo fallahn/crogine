@@ -29,8 +29,7 @@ source distribution.
 
 #pragma once
 
-class Gizmo;
 struct SharedStateData final
 {
-    Gizmo* gizmo = nullptr;
+
 };

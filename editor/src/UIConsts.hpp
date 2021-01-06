@@ -44,7 +44,7 @@ namespace ui
     static const float TexturePreviewWidth = 0.65f;
     static const float TextBoxWidth = 0.915f;
     static const float MinMaterialSlotSize = 20.f;
-    static const float ViewManipSize = 128.f;
+    static const float ViewManipSize = 96.f;
 
     static const std::size_t MaxMaterials = 99;
 

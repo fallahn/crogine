@@ -29,8 +29,6 @@ source distribution.
 
 #pragma once
 
-#include "Gizmo.hpp"
-
 #include <crogine/core/App.hpp>
 #include <crogine/core/StateStack.hpp>
 
@@ -43,8 +41,6 @@ public:
 private:
     
     cro::StateStack m_stateStack;
-
-    Gizmo m_gizmo;
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;

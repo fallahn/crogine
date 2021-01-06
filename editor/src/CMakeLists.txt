@@ -1,7 +1,5 @@
 
 set(PROJECT_SRC
-  ${PROJECT_DIR}/Gizmo.cpp
-  ${PROJECT_DIR}/im3d.cpp
   ${PROJECT_DIR}/ImportIQM.cpp
   ${PROJECT_DIR}/LoadingScreen.cpp
   ${PROJECT_DIR}/main.cpp
