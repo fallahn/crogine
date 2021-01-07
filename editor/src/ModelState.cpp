@@ -1442,212 +1442,224 @@ void ModelState::importModel()
         return retVal;
     };
 
-    auto path = cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory + "/untitled", "obj,dae,fbx");
+    auto path = cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory + "/untitled", "obj,dae,fbx,glb");
     if (!path.empty())
     {
-        ai::Importer importer;
-        auto* scene = importer.ReadFile(path, 
-                            aiProcess_CalcTangentSpace
-                            | aiProcess_GenSmoothNormals
-                            | aiProcess_Triangulate
-                            | aiProcess_JoinIdenticalVertices
-                            | aiProcess_OptimizeMeshes
-                            | aiProcess_GenBoundingBoxes);
-
-        if(scene && scene->HasMeshes())
+        if (cro::FileSystem::getFileExtension(path) == ".glb")
         {
-            //sort the meshes by material ready for concatenation
-            std::vector<aiMesh*> meshes;
-            for (auto i = 0u; i < scene->mNumMeshes; ++i)
-            {
-                meshes.push_back(scene->mMeshes[i]);
-            }
-            std::sort(meshes.begin(), meshes.end(), 
-                [](const aiMesh* a, const aiMesh* b) 
-                {
-                    return a->mMaterialIndex > b->mMaterialIndex;
-                });
-
-            //prep the header
-            std::uint32_t vertexSize = 0;
-            CMFHeader header;
-            header.flags = calcFlags(meshes[0], vertexSize);
-
-            if (header.flags == 0)
-            {
-                cro::Logger::log("Invalid vertex data...", cro::Logger::Type::Error);
-                return;
-            }
-
-            std::vector<std::vector<std::uint32_t>> importedIndexArrays;
-            std::vector<float> importedVBO;
-
-            //concat sub meshes assuming they meet the same flags
-            for (const auto* mesh : meshes)
-            {
-                if (calcFlags(mesh, vertexSize) != header.flags)
-                {
-                    cro::Logger::log("sub mesh vertex data differs - skipping...", cro::Logger::Type::Warning);
-                    continue;
-                }
-
-                if (header.arrayCount < 32)
-                {
-                    std::uint32_t offset = static_cast<std::uint32_t>(importedVBO.size()) / vertexSize;
-                    for (auto i = 0u; i < mesh->mNumVertices; ++i)
-                    {
-                        auto pos = mesh->mVertices[i];
-                        importedVBO.push_back(pos.x);
-                        importedVBO.push_back(pos.y);
-                        importedVBO.push_back(pos.z);
-
-                        if (mesh->HasVertexColors(0))
-                        {
-                            auto colour = mesh->mColors[0][i];
-                            importedVBO.push_back(colour.r);
-                            importedVBO.push_back(colour.g);
-                            importedVBO.push_back(colour.b);
-                        }
-
-                        auto normal = mesh->mNormals[i];
-                        importedVBO.push_back(normal.x);
-                        importedVBO.push_back(normal.y);
-                        importedVBO.push_back(normal.z);
-
-                        if (mesh->HasTangentsAndBitangents())
-                        {
-                            auto tan = mesh->mTangents[i];
-                            importedVBO.push_back(tan.x);
-                            importedVBO.push_back(tan.y);
-                            importedVBO.push_back(tan.z);
-
-                            auto bitan = mesh->mBitangents[i];
-                            importedVBO.push_back(bitan.x);
-                            importedVBO.push_back(bitan.y);
-                            importedVBO.push_back(bitan.z);
-                        }
-
-                        if (mesh->HasTextureCoords(0))
-                        {
-                            auto coord = mesh->mTextureCoords[0][i];
-                            importedVBO.push_back(coord.x);
-                            importedVBO.push_back(coord.y);
-                        }
-
-                        if (mesh->HasTextureCoords(1))
-                        {
-                            auto coord = mesh->mTextureCoords[1][i];
-                            importedVBO.push_back(coord.x);
-                            importedVBO.push_back(coord.y);
-                        }
-                    }
-
-                    auto idx = mesh->mMaterialIndex;
-
-                    while (idx >= importedIndexArrays.size())
-                    {
-                        //create an index array
-                        importedIndexArrays.emplace_back();
-                    }
-
-                    for (auto i = 0u; i < mesh->mNumFaces; ++i)
-                    {
-                        importedIndexArrays[idx].push_back(mesh->mFaces[i].mIndices[0] + offset);
-                        importedIndexArrays[idx].push_back(mesh->mFaces[i].mIndices[1] + offset);
-                        importedIndexArrays[idx].push_back(mesh->mFaces[i].mIndices[2] + offset);
-                    }
-                }
-                else
-                {
-                    cro::Logger::log("Max materials have been reached - model may be incomplete", cro::Logger::Type::Warning);
-                }
-            }
-
-            //remove any empty arrays
-            importedIndexArrays.erase(std::remove_if(importedIndexArrays.begin(), importedIndexArrays.end(), 
-                [](const std::vector<std::uint32_t>& arr)
-                {
-                    return arr.empty();
-                }), importedIndexArrays.end());
-
-            //update header with array sizes
-            for (const auto& indices : importedIndexArrays)
-            {
-                header.arraySizes.push_back(static_cast<std::int32_t>(indices.size() * sizeof(std::uint32_t)));
-            }
-            header.arrayCount = static_cast<std::uint8_t>(importedIndexArrays.size());
-
-            auto indexOffset = sizeof(header.flags) + sizeof(header.arrayCount) + sizeof(header.arrayOffset) + (header.arraySizes.size() * sizeof(std::int32_t));
-            indexOffset += sizeof(float) * importedVBO.size();
-            header.arrayOffset = static_cast<std::int32_t>(indexOffset);
-
-            if (header.arrayCount > 0 && !importedVBO.empty() && !importedIndexArrays.empty())
-            {
-                closeModel();
-                
-                m_importedHeader = header;
-                m_importedIndexArrays.swap(importedIndexArrays);
-                m_importedVBO.swap(importedVBO);
-
-                //create a new VBO if it doesn't exist, else recycle it
-                if (m_importedMeshes.count(header.flags) == 0)
-                {
-                    m_importedMeshes.insert(std::make_pair(header.flags, m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(header.flags, MaxSubMeshes, GL_TRIANGLES))));
-                    LOG("Created new import mesh", cro::Logger::Type::Info);
-                }
-                else
-                {
-                    LOG("Recycled imported mesh VBO", cro::Logger::Type::Info);
-                }
-                auto meshID = m_importedMeshes.at(header.flags);
-                auto meshData = m_resources.meshes.getMesh(meshID);
-
-                //make sure we draw the correct number of sub-meshes
-                meshData.vertexCount = m_importedVBO.size() / (meshData.vertexSize / sizeof(float));
-                meshData.submeshCount = std::min(MaxSubMeshes, header.arrayCount);
-
-                //update the buffers
-                glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-                glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexCount * meshData.vertexSize, m_importedVBO.data(), GL_STATIC_DRAW));
-                glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-                for (auto i = 0u; i < meshData.submeshCount; ++i)
-                {
-                    meshData.indexData[i].indexCount = static_cast<std::uint32_t>(m_importedIndexArrays[i].size());
-                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
-                    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].indexCount * sizeof(std::uint32_t), m_importedIndexArrays[i].data(), GL_STATIC_DRAW));
-                }
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-                //TODO we ought to correctly calc the bounding geom
-                //but as it's only needed to tell the renderer this model is visible
-                //imported models don't have the bounds display option)
-                //this will work long enough to convert the model and calc the correct bounds
-                meshData.boundingBox[0] = glm::vec3(-0.5f);
-                meshData.boundingBox[1] = glm::vec3(0.5f);
-                meshData.boundingSphere.radius = 0.5f;
-
-                entities[EntityID::ActiveModel] = m_scene.createEntity();
-                entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
-                entities[EntityID::ActiveModel].addComponent<cro::Model>(meshData, m_resources.materials.get(materialIDs[MaterialID::Default]));
-                
-                for (auto i = 0; i < header.arrayCount; ++i)
-                {
-                    entities[EntityID::ActiveModel].getComponent<cro::Model>().setShadowMaterial(i, m_resources.materials.get(materialIDs[MaterialID::DefaultShadow]));
-                }
-                entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>();
-
-                m_importedTransform = {};
-            }
-            else
-            {
-                cro::Logger::log("Failed opening " + path, cro::Logger::Type::Error);
-                cro::Logger::log("Missing index or vertex data", cro::Logger::Type::Error);
-            }
+            importGLTF(path);
         }
+        else
+        {
+            ai::Importer importer;
+            auto* scene = importer.ReadFile(path,
+                aiProcess_CalcTangentSpace
+                | aiProcess_GenSmoothNormals
+                | aiProcess_Triangulate
+                | aiProcess_JoinIdenticalVertices
+                | aiProcess_OptimizeMeshes
+                | aiProcess_GenBoundingBoxes);
 
-        m_preferences.lastImportDirectory = cro::FileSystem::getFilePath(path);
-        savePrefs();
+            if (scene && scene->HasMeshes())
+            {
+                //sort the meshes by material ready for concatenation
+                std::vector<aiMesh*> meshes;
+                for (auto i = 0u; i < scene->mNumMeshes; ++i)
+                {
+                    meshes.push_back(scene->mMeshes[i]);
+                }
+                std::sort(meshes.begin(), meshes.end(),
+                    [](const aiMesh* a, const aiMesh* b)
+                    {
+                        return a->mMaterialIndex > b->mMaterialIndex;
+                    });
+
+                //prep the header
+                std::uint32_t vertexSize = 0;
+                CMFHeader header;
+                header.flags = calcFlags(meshes[0], vertexSize);
+
+                if (header.flags == 0)
+                {
+                    cro::Logger::log("Invalid vertex data...", cro::Logger::Type::Error);
+                    return;
+                }
+
+                std::vector<std::vector<std::uint32_t>> importedIndexArrays;
+                std::vector<float> importedVBO;
+
+                //concat sub meshes assuming they meet the same flags
+                for (const auto* mesh : meshes)
+                {
+                    if (calcFlags(mesh, vertexSize) != header.flags)
+                    {
+                        cro::Logger::log("sub mesh vertex data differs - skipping...", cro::Logger::Type::Warning);
+                        continue;
+                    }
+
+                    if (header.arrayCount < 32)
+                    {
+                        std::uint32_t offset = static_cast<std::uint32_t>(importedVBO.size()) / vertexSize;
+                        for (auto i = 0u; i < mesh->mNumVertices; ++i)
+                        {
+                            auto pos = mesh->mVertices[i];
+                            importedVBO.push_back(pos.x);
+                            importedVBO.push_back(pos.y);
+                            importedVBO.push_back(pos.z);
+
+                            if (mesh->HasVertexColors(0))
+                            {
+                                auto colour = mesh->mColors[0][i];
+                                importedVBO.push_back(colour.r);
+                                importedVBO.push_back(colour.g);
+                                importedVBO.push_back(colour.b);
+                            }
+
+                            auto normal = mesh->mNormals[i];
+                            importedVBO.push_back(normal.x);
+                            importedVBO.push_back(normal.y);
+                            importedVBO.push_back(normal.z);
+
+                            if (mesh->HasTangentsAndBitangents())
+                            {
+                                auto tan = mesh->mTangents[i];
+                                importedVBO.push_back(tan.x);
+                                importedVBO.push_back(tan.y);
+                                importedVBO.push_back(tan.z);
+
+                                auto bitan = mesh->mBitangents[i];
+                                importedVBO.push_back(bitan.x);
+                                importedVBO.push_back(bitan.y);
+                                importedVBO.push_back(bitan.z);
+                            }
+
+                            if (mesh->HasTextureCoords(0))
+                            {
+                                auto coord = mesh->mTextureCoords[0][i];
+                                importedVBO.push_back(coord.x);
+                                importedVBO.push_back(coord.y);
+                            }
+
+                            if (mesh->HasTextureCoords(1))
+                            {
+                                auto coord = mesh->mTextureCoords[1][i];
+                                importedVBO.push_back(coord.x);
+                                importedVBO.push_back(coord.y);
+                            }
+                        }
+
+                        auto idx = mesh->mMaterialIndex;
+
+                        while (idx >= importedIndexArrays.size())
+                        {
+                            //create an index array
+                            importedIndexArrays.emplace_back();
+                        }
+
+                        for (auto i = 0u; i < mesh->mNumFaces; ++i)
+                        {
+                            importedIndexArrays[idx].push_back(mesh->mFaces[i].mIndices[0] + offset);
+                            importedIndexArrays[idx].push_back(mesh->mFaces[i].mIndices[1] + offset);
+                            importedIndexArrays[idx].push_back(mesh->mFaces[i].mIndices[2] + offset);
+                        }
+                    }
+                    else
+                    {
+                        cro::Logger::log("Max materials have been reached - model may be incomplete", cro::Logger::Type::Warning);
+                    }
+                }
+
+                //remove any empty arrays
+                importedIndexArrays.erase(std::remove_if(importedIndexArrays.begin(), importedIndexArrays.end(),
+                    [](const std::vector<std::uint32_t>& arr)
+                    {
+                        return arr.empty();
+                    }), importedIndexArrays.end());
+
+                //updates header with array sizes
+                updateImportNode(header, importedVBO, importedIndexArrays);
+            }
+
+            m_preferences.lastImportDirectory = cro::FileSystem::getFilePath(path);
+            savePrefs();
+        }
+    }
+}
+
+void ModelState::updateImportNode(CMFHeader& header, std::vector<float>& importedVBO, std::vector<std::vector<std::uint32_t>>& importedIndexArrays)
+{
+    for (const auto& indices : importedIndexArrays)
+    {
+        header.arraySizes.push_back(static_cast<std::int32_t>(indices.size() * sizeof(std::uint32_t)));
+    }
+    header.arrayCount = static_cast<std::uint8_t>(importedIndexArrays.size());
+
+    auto indexOffset = sizeof(header.flags) + sizeof(header.arrayCount) + sizeof(header.arrayOffset) + (header.arraySizes.size() * sizeof(std::int32_t));
+    indexOffset += sizeof(float) * importedVBO.size();
+    header.arrayOffset = static_cast<std::int32_t>(indexOffset);
+
+    if (header.arrayCount > 0 && !importedVBO.empty() && !importedIndexArrays.empty())
+    {
+        closeModel();
+
+        m_importedHeader = header;
+        m_importedIndexArrays.swap(importedIndexArrays);
+        m_importedVBO.swap(importedVBO);
+
+        //create a new VBO if it doesn't exist, else recycle it
+        if (m_importedMeshes.count(header.flags) == 0)
+        {
+            m_importedMeshes.insert(std::make_pair(header.flags, m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(header.flags, MaxSubMeshes, GL_TRIANGLES))));
+            LOG("Created new import mesh", cro::Logger::Type::Info);
+        }
+        else
+        {
+            LOG("Recycled imported mesh VBO", cro::Logger::Type::Info);
+        }
+        auto meshID = m_importedMeshes.at(header.flags);
+        auto meshData = m_resources.meshes.getMesh(meshID);
+
+        //make sure we draw the correct number of sub-meshes
+        meshData.vertexCount = m_importedVBO.size() / (meshData.vertexSize / sizeof(float));
+        meshData.submeshCount = std::min(MaxSubMeshes, header.arrayCount);
+
+        //update the buffers
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexCount * meshData.vertexSize, m_importedVBO.data(), GL_STATIC_DRAW));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+        for (auto i = 0u; i < meshData.submeshCount; ++i)
+        {
+            meshData.indexData[i].indexCount = static_cast<std::uint32_t>(m_importedIndexArrays[i].size());
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].indexCount * sizeof(std::uint32_t), m_importedIndexArrays[i].data(), GL_STATIC_DRAW));
+        }
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+        //TODO we ought to correctly calc the bounding geom
+        //but as it's only needed to tell the renderer this model is visible
+        //(imported models don't have the bounds display option)
+        //this will work long enough to convert the model and calc the correct bounds
+        meshData.boundingBox[0] = glm::vec3(-0.5f);
+        meshData.boundingBox[1] = glm::vec3(0.5f);
+        meshData.boundingSphere.radius = 0.5f;
+
+        entities[EntityID::ActiveModel] = m_scene.createEntity();
+        entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
+        entities[EntityID::ActiveModel].addComponent<cro::Model>(meshData, m_resources.materials.get(materialIDs[MaterialID::Default]));
+
+        for (auto i = 0; i < header.arrayCount; ++i)
+        {
+            entities[EntityID::ActiveModel].getComponent<cro::Model>().setShadowMaterial(i, m_resources.materials.get(materialIDs[MaterialID::DefaultShadow]));
+        }
+        entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>();
+
+        m_importedTransform = {};
+    }
+    else
+    {
+        cro::Logger::log("Failed importing model", cro::Logger::Type::Error);
+        cro::Logger::log("Missing index or vertex data", cro::Logger::Type::Error);
     }
 }
 
@@ -1958,16 +1970,16 @@ void ModelState::updateNormalVis()
 
 void ModelState::updateMouseInput(const cro::Event& evt)
 {
-    //const float moveScale = 0.004f;
-    //if (evt.motion.state & SDL_BUTTON_LMASK)
-    //{
-    //    float pitchMove = static_cast<float>(evt.motion.yrel)* moveScale * m_viewportRatio;
-    //    float yawMove = static_cast<float>(evt.motion.xrel)* moveScale;
+    const float moveScale = 0.004f;
+    if (evt.motion.state & SDL_BUTTON_LMASK)
+    {
+        float pitchMove = static_cast<float>(evt.motion.yrel)* moveScale * m_viewportRatio;
+        float yawMove = static_cast<float>(evt.motion.xrel)* moveScale;
 
-    //    auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
-    //    tx.rotate(cro::Transform::X_AXIS, -pitchMove);
-    //    tx.rotate(cro::Transform::Y_AXIS, -yawMove);
-    //}
+        auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
+        tx.rotate(cro::Transform::X_AXIS, -pitchMove);
+        tx.rotate(cro::Transform::Y_AXIS, -yawMove);
+    }
     //else if (evt.motion.state & SDL_BUTTON_RMASK)
     //{
     //    //do roll

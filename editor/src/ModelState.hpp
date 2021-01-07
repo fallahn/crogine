@@ -141,6 +141,8 @@ private:
     void applyImportTransform();
 
     void importIQM(const std::string&); //used to apply modified transforms
+    void importGLTF(const std::string&);
+    void updateImportNode(CMFHeader&, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
 
     void loadPrefs();
     void savePrefs();

@@ -7,4 +7,6 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/MyApp.cpp
   ${PROJECT_DIR}/NormalVisMeshBuilder.cpp
   ${PROJECT_DIR}/OriginIconBuilder.cpp
-  ${PROJECT_DIR}/WorldState.cpp)
+  ${PROJECT_DIR}/WorldState.cpp
+
+  ${PROJECT_DIR}/gltf/gltf.cpp)
