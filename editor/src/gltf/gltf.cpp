@@ -206,15 +206,13 @@ void ModelState::importGLTF(const std::string& path)
 
                         for (auto j = 0u; j < accessor.count; ++j)
                         {
-                            //TODO apparently stride is optional for vertex proprties
-                            //in which case we need to handle when the value is 0...
-                            std::size_t index = view.byteOffset + accessor.byteOffset + (view.byteStride * j);
+                            std::size_t index = view.byteOffset + accessor.byteOffset + (std::max(componentCount, view.byteStride) * j * sizeof(float));
                             for (auto k = 0u; k < componentCount; ++k)
                             {
                                 float f = 0.f;
                                 std::memcpy(&f, &buffer.data[index], sizeof(float));
                                 tempData[i].first.push_back(f);
-                                index+=sizeof(float);
+                                index += sizeof(float);
                             }
                         }
                     }
@@ -231,11 +229,18 @@ void ModelState::importGLTF(const std::string& path)
                 for (auto j = 0u; j < tempData.size(); ++j)
                 {
                     const auto& [data, size] = tempData[j];
+
+                    if (data.empty())
+                    {
+                        continue;
+                    }
+
                     if (j == cro::Mesh::Tangent)
                     {
                         if (!data.empty())
                         {
                             //calc bitan and correct for sign
+                            //NOTE we flip the sign because we also flip the UV
                             auto idx = i * size;
                             const auto& normalData = tempData[cro::Mesh::Normal].first;
 
@@ -243,7 +248,7 @@ void ModelState::importGLTF(const std::string& path)
                             glm::vec3 tan(data[idx], data[idx + 1], data[idx + 2]);
                             float sign = data[idx + 3];
 
-                            glm::vec3 bitan = glm::cross(normal, tan) * sign;
+                            glm::vec3 bitan = glm::cross(normal, tan) * -sign;
 
                             vertices.push_back(tan.x);
                             vertices.push_back(tan.y);
@@ -253,6 +258,16 @@ void ModelState::importGLTF(const std::string& path)
                             vertices.push_back(bitan.y);
                             vertices.push_back(bitan.z);
                         }
+                    }
+                    else if (j == cro::Mesh::UV0
+                        || j == cro::Mesh::UV1)
+                    {
+                        //flip the V
+                        auto idx = i * size;
+                        glm::vec2 uv(data[idx], data[idx + 1]);
+                        uv.t = 1.f - uv.t;
+                        vertices.push_back(uv.s);
+                        vertices.push_back(uv.t);
                     }
                     else
                     {
