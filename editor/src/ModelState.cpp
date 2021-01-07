@@ -1631,6 +1631,7 @@ void ModelState::updateImportNode(CMFHeader& header, std::vector<float>& importe
         for (auto i = 0u; i < meshData.submeshCount; ++i)
         {
             meshData.indexData[i].indexCount = static_cast<std::uint32_t>(m_importedIndexArrays[i].size());
+            meshData.indexData[i].primitiveType = GL_TRIANGLES;
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
             glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].indexCount * sizeof(std::uint32_t), m_importedIndexArrays[i].data(), GL_STATIC_DRAW));
         }

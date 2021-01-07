@@ -167,7 +167,6 @@ void ModelState::importGLTF(const std::string& path)
             {
                 if (attribIndices[i] > -1)
                 {
-                    CRO_ASSERT(i < model.accessors.size(), "Out of range");
                     const auto& accessor = model.accessors[attribIndices[i]];
 
                     if (accessor.componentType == GL_FLOAT)
@@ -280,8 +279,6 @@ void ModelState::importGLTF(const std::string& path)
 
             for (auto j = 0u; j < accessor.count; ++j)
             {
-                std::size_t index = view.byteOffset + accessor.byteOffset + j;
-
                 switch (accessor.componentType)
                 {
                 default: 
@@ -290,6 +287,7 @@ void ModelState::importGLTF(const std::string& path)
                 case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
                 {
                     std::uint8_t v = 0;
+                    std::size_t index = view.byteOffset + accessor.byteOffset + j;
                     std::memcpy(&v, &buffer.data[index], sizeof(std::uint8_t));
                     indices.back().push_back(v);
                 }
@@ -297,6 +295,7 @@ void ModelState::importGLTF(const std::string& path)
                 case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
                 {
                     std::uint16_t v = 0;
+                    std::size_t index = view.byteOffset + accessor.byteOffset + (j * sizeof(std::uint16_t));
                     std::memcpy(&v, &buffer.data[index], sizeof(std::uint16_t));
                     indices.back().push_back(v);
                 }
@@ -304,6 +303,7 @@ void ModelState::importGLTF(const std::string& path)
                 case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
                 {
                     std::uint32_t v = 0;
+                    std::size_t index = view.byteOffset + accessor.byteOffset + (j * sizeof(std::uint32_t));
                     std::memcpy(&v, &buffer.data[index], sizeof(std::uint32_t));
                     indices.back().push_back(v);
                 }
