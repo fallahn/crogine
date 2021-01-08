@@ -36,6 +36,8 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "Messages.hpp"
 
+#include "gltf/tiny_gltf.h"
+
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -273,6 +275,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_showSkybox            (false),
     m_showMaterialWindow    (false),
     m_showBakingWindow      (false),
+    m_browseGLTF            (false),
     m_showAABB              (false),
     m_showSphere            (false),
     m_selectedTexture       (std::numeric_limits<std::uint32_t>::max()),
@@ -345,32 +348,8 @@ void ModelState::handleMessage(const cro::Message& msg)
 
 bool ModelState::simulate(float dt)
 {
-    //auto& tx = m_scene.getSunlight().getComponent<cro::Transform>();
-    //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_W))
-    //{
-    //    tx.rotate(glm::vec3(1.f, 0.f, 0.f), -dt);
-    //}
-    //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_D))
-    //{
-    //    tx.rotate(glm::vec3(0.f, 1.f, 0.f), -dt);
-    //}
-    //auto rot = tx.getRotation();
-    //DPRINT("rot", std::to_string(rot.x) + ", " + std::to_string(rot.y) + ", " + std::to_string(rot.z));
-
-    /*auto& tx = entities[EntityID::GroundPlane].getComponent<cro::Transform>();
-    auto xForm = tx.getLocalTransform();
-    if (Im3d::Gizmo("light", &xForm[0][0]))
-    {
-        tx.setLocalTransform(xForm);
-    }*/
-
     m_previewScene.simulate(dt);
     m_scene.simulate(dt);
-
-
-
-
-
     return false;
 }
 
@@ -943,6 +922,11 @@ void ModelState::buildUI()
             tx = entities[EntityID::GroundPlane].getComponent<cro::Transform>().getLocalTransform();
             ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], ImGuizmo::OPERATION::SCALE, ImGuizmo::MODE::LOCAL, &tx[0][0]);
             entities[EntityID::GroundPlane].getComponent<cro::Transform>().setLocalTransform(tx);*/
+
+            if (m_browseGLTF)
+            {
+                showGLTFBrowser();
+            }
         });
 
     auto size = getContext().mainWindow.getSize();
@@ -1447,7 +1431,27 @@ void ModelState::importModel()
     {
         if (cro::FileSystem::getFileExtension(path) == ".glb")
         {
-            importGLTF(path);
+            std::string warning;
+            std::string error;
+
+            m_GLTFLoader = std::make_unique<tf::TinyGLTF>();
+            m_browseGLTF = m_GLTFLoader->LoadBinaryFromFile(&m_GLTFScene, &error, &warning, path);
+
+            if (!warning.empty())
+            {
+                LogW << warning << std::endl;
+            }
+
+            if (!error.empty())
+            {
+                LogE << error << std::endl;
+            }
+
+            if (m_browseGLTF)
+            {
+                m_preferences.lastImportDirectory = cro::FileSystem::getFilePath(path);
+                savePrefs();
+            }
         }
         else
         {

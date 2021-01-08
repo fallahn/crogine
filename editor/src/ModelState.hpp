@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "gltf/tiny_gltf.h"
+
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -42,6 +44,8 @@ source distribution.
 #include <map>
 #include <memory>
 #include <optional>
+
+namespace tf = tinygltf;
 
 struct CMFHeader final
 {
@@ -141,8 +145,14 @@ private:
     void applyImportTransform();
 
     void importIQM(const std::string&); //used to apply modified transforms
-    void importGLTF(const std::string&);
+    void importGLTF(std::int32_t);
+    void parseGLTFNode(const tf::Node&, bool importAnims);
     void updateImportNode(CMFHeader&, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
+
+    bool m_browseGLTF;
+    std::unique_ptr<tf::TinyGLTF> m_GLTFLoader;
+    tf::Model m_GLTFScene;
+    void showGLTFBrowser();
 
     void loadPrefs();
     void savePrefs();
