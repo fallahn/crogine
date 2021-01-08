@@ -613,7 +613,8 @@ void ModelState::buildUI()
                     }
                     if (ImGui::MenuItem("Export Model", nullptr, nullptr, !m_importedVBO.empty()))
                     {
-                        exportModel();
+                        //TODO check for animations
+                        exportStaticModel();
                     }
                     
                     ImGui::Separator();
@@ -1376,7 +1377,8 @@ void ModelState::showSaveMessage()
             else
             {
                 //export the model
-                exportModel(false, false);
+                //TODO check for animated model
+                exportStaticModel(false, false);
             }
         }
         else
@@ -1590,7 +1592,7 @@ void ModelState::importModel()
     }
 }
 
-void ModelState::updateImportNode(CMFHeader& header, std::vector<float>& importedVBO, std::vector<std::vector<std::uint32_t>>& importedIndexArrays)
+void ModelState::updateImportNode(CMFHeader header, std::vector<float>& importedVBO, std::vector<std::vector<std::uint32_t>>& importedIndexArrays)
 {
     for (const auto& indices : importedIndexArrays)
     {
@@ -1644,9 +1646,9 @@ void ModelState::updateImportNode(CMFHeader& header, std::vector<float>& importe
         //but as it's only needed to tell the renderer this model is visible
         //(imported models don't have the bounds display option)
         //this will work long enough to convert the model and calc the correct bounds
-        meshData.boundingBox[0] = glm::vec3(-0.5f);
-        meshData.boundingBox[1] = glm::vec3(0.5f);
-        meshData.boundingSphere.radius = 0.5f;
+        meshData.boundingBox[0] = glm::vec3(-5.5f);
+        meshData.boundingBox[1] = glm::vec3(5.5f);
+        meshData.boundingSphere.radius = 5.5f;
 
         entities[EntityID::ActiveModel] = m_scene.createEntity();
         entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
@@ -1667,10 +1669,13 @@ void ModelState::updateImportNode(CMFHeader& header, std::vector<float>& importe
     }
 }
 
-void ModelState::exportModel(bool modelOnly, bool openOnSave)
+void ModelState::exportStaticModel(bool modelOnly, bool openOnSave)
 {
-    //TODO assert we at least have valid header data
-    //prevent accidentally writing a bad file
+    CRO_ASSERT(m_importedHeader.flags, "");
+    CRO_ASSERT(m_importedHeader.arrayCount, "");
+    CRO_ASSERT(m_importedHeader.arrayOffset, "");
+    CRO_ASSERT(!m_importedVBO.empty(), "");
+    CRO_ASSERT(!m_importedIndexArrays.empty(), "");
 
     if (!modelOnly
         && !cro::FileSystem::showMessageBox("Confirm", "This will overwrite any existing model definition with the default material. Are you sure?", cro::FileSystem::YesNo, cro::FileSystem::Warning))
@@ -1692,7 +1697,8 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
         file.file = SDL_RWFromFile(path.c_str(), "wb");
         if (file.file)
         {
-            SDL_RWwrite(file.file, &m_importedHeader.flags, sizeof(CMFHeader::flags), 1);
+            std::uint8_t flags = static_cast<std::uint8_t>(m_importedHeader.flags & 0xff);
+            SDL_RWwrite(file.file, &flags, sizeof(flags), 1);
             SDL_RWwrite(file.file, &m_importedHeader.arrayCount, sizeof(CMFHeader::arrayCount), 1);
             SDL_RWwrite(file.file, &m_importedHeader.arrayOffset, sizeof(CMFHeader::arrayOffset), 1);
             SDL_RWwrite(file.file, m_importedHeader.arraySizes.data(), sizeof(std::int32_t), m_importedHeader.arraySizes.size());
@@ -2514,12 +2520,25 @@ void ModelState::drawInspector()
 
                     ImGui::NewLine();
                     static bool modelOnly = false;
+                    static bool exportAnimation = true;
                     ImGui::Checkbox("Export Model Only", &modelOnly);
                     ImGui::SameLine();
                     helpMarker("If this is checked then only the model data will exported to the crogine file, leaving any existing material data in tact.");
+                    if (m_importedHeader.animated)
+                    {
+                        ImGui::Checkbox("Animations", &exportAnimation);
+                    }
                     if (ImGui::Button("Convert##01"))
                     {
-                        exportModel(modelOnly);
+                        if (m_importedHeader.animated
+                            && exportAnimation)
+                        {
+
+                        }
+                        else
+                        {
+                            exportStaticModel(modelOnly);
+                        }
                     }
                     ImGui::SameLine();
                     helpMarker("Export this model to Crogine format, and create a model definition file.\nThe model will then be automatically re-opened for material editing.");

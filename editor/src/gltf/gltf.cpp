@@ -46,14 +46,14 @@ void ModelState::showGLTFBrowser()
     const std::function<void(const tf::Node&, const std::vector<tf::Node>&)> drawNode
         = [&](const tf::Node& node, const std::vector<tf::Node>& nodes)
     {
-        std::string label = node.name + "##";
-        std::string IDString = std::to_string(ID++);
-        label += IDString;
-        if (ImGui::TreeNode(label.c_str()))
+        if (node.mesh > -1)
         {
-            if (node.mesh > -1)
+            std::string label = node.name + "##";
+            std::string IDString = std::to_string(ID++);
+            label += IDString;
+            if (ImGui::TreeNode(label.c_str()))
             {
-                bool importAnim = false;
+                static bool importAnim = false;
                 if (node.skin > -1)
                 {
                     auto boxLabel = "Import Animation##" + IDString;
@@ -68,13 +68,13 @@ void ModelState::showGLTFBrowser()
                     m_browseGLTF = false;
                     ImGui::CloseCurrentPopup();
                 }
-            }
 
-            for (const auto& child : node.children)
-            {
-                drawNode(nodes[child], nodes);
+                for (const auto& child : node.children)
+                {
+                    drawNode(nodes[child], nodes);
+                }
+                ImGui::TreePop();
             }
-            ImGui::TreePop();
         }
     };
 
@@ -100,12 +100,13 @@ void ModelState::showGLTFBrowser()
 
 void ModelState::parseGLTFNode(const tf::Node& node, bool loadAnims)
 {
-    importGLTF(node.mesh);
+    importGLTF(node.mesh, loadAnims);
 
     //TODO load animations if selected
+
 }
 
-void ModelState::importGLTF(std::int32_t meshIndex)
+void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
 {
     //NOTE the buffers below *can* be bound directly to OpenGL buffers
     //using the accessor information - but the goal of this importer is
@@ -370,7 +371,8 @@ void ModelState::importGLTF(std::int32_t meshIndex)
     }
 
     CMFHeader header;
-    header.flags = attribFlags; //TODO this won't work with animated data as there's not enough flags...
+    header.flags = attribFlags;
+    header.animated = loadAnims;
     //TODO make sure we don't have more than MaxMaterials sub meshes
     updateImportNode(header, vertices, indices);
 }

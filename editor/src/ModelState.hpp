@@ -49,10 +49,15 @@ namespace tf = tinygltf;
 
 struct CMFHeader final
 {
-    std::uint8_t flags = 0;
+    //note when writing to static meshes
+    //only the first 8 bits of the flags are written
+    //this is only expanded to 16 bit for animated
+    //meshes/models which require skeleton flags
+    std::uint16_t flags = 0;
     std::uint8_t arrayCount = 0;
     std::int32_t arrayOffset = 0;
     std::vector<std::int32_t> arraySizes;
+    bool animated = false;
 };
 
 struct SharedStateData;
@@ -141,13 +146,13 @@ private:
         float scale = 1.f;
     }m_importedTransform;
     void importModel();
-    void exportModel(bool = false, bool = true);
+    void exportStaticModel(bool = false, bool = true);
     void applyImportTransform();
 
     void importIQM(const std::string&); //used to apply modified transforms
-    void importGLTF(std::int32_t);
+    void importGLTF(std::int32_t, bool);
     void parseGLTFNode(const tf::Node&, bool importAnims);
-    void updateImportNode(CMFHeader&, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
+    void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
 
     bool m_browseGLTF;
     std::unique_ptr<tf::TinyGLTF> m_GLTFLoader;
