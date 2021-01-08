@@ -910,13 +910,22 @@ void ModelState::buildUI()
             {
                 ImGui::PushStyleColor(ImGuiCol_PopupBg, 0);
                 ImGui::PushStyleColor(ImGuiCol_Border, 0);
-                ImGui::PushStyleColor(ImGuiCol_Text, 0xff000000);
                 ImGui::BeginTooltip();
                 ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+
+                auto p = ImGui::GetCursorPos();
+                ImGui::PushStyleColor(ImGuiCol_Text, 0xff000000);
                 ImGui::TextUnformatted("Left Click Rotate\nMiddle Mouse Pan\nScroll Zoom");
+                ImGui::PopStyleColor();
+
+                p.x -= 1.f;
+                p.y -= 1.f;
+                ImGui::SetCursorPos(p);
+                ImGui::TextUnformatted("Left Click Rotate\nMiddle Mouse Pan\nScroll Zoom");
+
                 ImGui::PopTextWrapPos();
                 ImGui::EndTooltip();
-                ImGui::PopStyleColor(3);
+                ImGui::PopStyleColor(2);
             }
 
             /*const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
@@ -1589,6 +1598,7 @@ void ModelState::importModel()
             m_preferences.lastImportDirectory = cro::FileSystem::getFilePath(path);
             savePrefs();
         }
+        updateGridMesh(entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), {}, {});
     }
 }
 
@@ -1760,10 +1770,7 @@ void ModelState::exportStaticModel(bool modelOnly, bool openOnSave)
 
 void ModelState::applyImportTransform()
 {
-    //keep rotation separate as we don't apply scale to normal data
-    auto rotation = glm::toMat4(glm::toQuat(glm::orientate3(m_importedTransform.rotation * cro::Util::Const::degToRad)));
-    auto transform = rotation * glm::scale(glm::mat4(1.f), glm::vec3(m_importedTransform.scale));
-
+    const auto& transform = entities[EntityID::ActiveModel].getComponent<cro::Transform>().getLocalTransform();
     auto meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
     auto vertexSize = meshData.vertexSize / sizeof(float);
 
@@ -1797,10 +1804,16 @@ void ModelState::applyImportTransform()
         }
     }
 
-    auto applyTransform = [&](const glm::mat4& tx, std::size_t idx)
+    auto applyTransform = [&](const glm::mat4& tx, std::size_t idx, bool normalise = false)
     {
         glm::vec4 v(m_importedVBO[idx], m_importedVBO[idx + 1], m_importedVBO[idx + 2], 1.f);
         v = tx * v;
+
+        if (normalise)
+        {
+            v = glm::normalize(v);
+        }
+
         m_importedVBO[idx] = v.x;
         m_importedVBO[idx+1] = v.y;
         m_importedVBO[idx+2] = v.z;
@@ -1815,19 +1828,19 @@ void ModelState::applyImportTransform()
         if (normalOffset != 0)
         {
             auto idx = i + normalOffset;
-            applyTransform(rotation, idx);
+            applyTransform(transform, idx, true);
         }
 
         if (tanOffset != 0)
         {
             auto idx = i + tanOffset;
-            applyTransform(rotation, idx);
+            applyTransform(transform, idx, true);
         }
 
         if (bitanOffset != 0)
         {
             auto idx = i + bitanOffset;
-            applyTransform(rotation, idx);
+            applyTransform(transform, idx, true);
         }
     }
 

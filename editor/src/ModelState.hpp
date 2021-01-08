@@ -139,7 +139,7 @@ private:
     CMFHeader m_importedHeader;
     std::vector<float> m_importedVBO;
     std::vector<std::vector<std::uint32_t>> m_importedIndexArrays;
-    std::unordered_map<std::uint8_t, std::size_t> m_importedMeshes; //< maps created VBOs to vert flags - this recycles matching VBOs if they exist and only creates new when necessary
+    std::unordered_map<std::uint16_t, std::size_t> m_importedMeshes; //< maps created VBOs to vert flags - this recycles matching VBOs if they exist and only creates new when necessary
     struct ImportTransform final
     {
         glm::vec3 rotation = glm::vec3(0.f);
