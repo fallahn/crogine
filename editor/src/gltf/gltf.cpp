@@ -339,7 +339,7 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
                 std::uint8_t v = 0;
                 std::size_t index = view.byteOffset + accessor.byteOffset + j;
                 std::memcpy(&v, &buffer.data[index], sizeof(std::uint8_t));
-                indices.back().push_back(v);
+                indices.back().push_back(v + static_cast<std::uint8_t>(indexOffset & 0xff));
             }
                 break;
             case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
@@ -347,7 +347,7 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
                 std::uint16_t v = 0;
                 std::size_t index = view.byteOffset + accessor.byteOffset + (j * sizeof(std::uint16_t));
                 std::memcpy(&v, &buffer.data[index], sizeof(std::uint16_t));
-                indices.back().push_back(v);
+                indices.back().push_back(v + static_cast<std::uint16_t>(indexOffset & 0xffff));
             }
                 break;
             case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
@@ -355,7 +355,7 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
                 std::uint32_t v = 0;
                 std::size_t index = view.byteOffset + accessor.byteOffset + (j * sizeof(std::uint32_t));
                 std::memcpy(&v, &buffer.data[index], sizeof(std::uint32_t));
-                indices.back().push_back(v);
+                indices.back().push_back(v + static_cast<std::uint32_t>(indexOffset & 0xffffffff));
             }
                 break;
             }
@@ -363,9 +363,8 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
             
         primitiveTypes.push_back(prim.mode); //GL_TRIANGLES etc.
 
-        //TODO test with multiple sub meshes to see if we read from multiple
-        //vertex buffers - in which case when need to increment indeOffset by
-        //the current *vertex count* here.
+        //offset indices for submesh as we're concatting the vertex data
+        indexOffset += vertexCount;
 
         prim.material; //TODO parse this later
     }

@@ -141,6 +141,7 @@ namespace
     const std::string prefPath = cro::FileSystem::getConfigDirectory("crogine_editor") + "model_viewer.cfg";
 
     const glm::vec3 DefaultCameraPosition({ 0.f, 0.25f, 5.f });
+    const glm::vec3 DefaultArcballPosition({ 0.f, 0.75f, 0.f });
 
     std::array<std::int32_t, MaterialID::Count> materialIDs = {};
     std::array<cro::Entity, EntityID::Count> entities = {};
@@ -530,7 +531,7 @@ void ModelState::createScene()
 
 
     entities[EntityID::ArcBall] = m_scene.createEntity();
-    entities[EntityID::ArcBall].addComponent<cro::Transform>();
+    entities[EntityID::ArcBall].addComponent<cro::Transform>().setPosition(DefaultArcballPosition);
     entities[EntityID::ArcBall].getComponent<cro::Transform>().addChild(m_scene.getActiveCamera().getComponent<cro::Transform>());
 
 
@@ -726,6 +727,7 @@ void ModelState::buildUI()
                     if (ImGui::MenuItem("Reset Camera"))
                     {
                         entities[EntityID::ArcBall].getComponent<cro::Transform>().setLocalTransform(glm::mat4(1.f));
+                        entities[EntityID::ArcBall].getComponent<cro::Transform>().setPosition(DefaultArcballPosition);
                         m_fov = DefaultFOV;
                         updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
                     }
