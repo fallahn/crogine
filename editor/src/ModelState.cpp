@@ -903,10 +903,12 @@ void ModelState::buildUI()
 
             auto [pos, size] = WindowLayouts[WindowID::ViewGizmo];
 
+            //view cube doohickey
             auto tx = glm::inverse(entities[EntityID::ArcBall].getComponent<cro::Transform>().getLocalTransform());
             ImGuizmo::ViewManipulate(&tx[0][0], 10.f, ImVec2(pos.x, pos.y), ImVec2(size.x, size.y), 0/*x10101010*/);
             entities[EntityID::ArcBall].getComponent<cro::Transform>().setRotation(glm::inverse(tx));
 
+            //tooltip
             if (io.MousePos.x > pos.x && io.MousePos.x < pos.x + size.x
                 && io.MousePos.y > pos.y && io.MousePos.y < pos.y + size.y)
             {
@@ -929,11 +931,16 @@ void ModelState::buildUI()
                 ImGui::EndTooltip();
                 ImGui::PopStyleColor(2);
             }
+            //rotate the model if it's loaded
+            if (entities[EntityID::ActiveModel].isValid()
+                && m_importedVBO.empty())
+            {
+                const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+                tx = entities[EntityID::ActiveModel].getComponent<cro::Transform>().getLocalTransform();
+                ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], ImGuizmo::OPERATION::ROTATE, ImGuizmo::MODE::LOCAL, &tx[0][0]);
+                entities[EntityID::ActiveModel].getComponent<cro::Transform>().setLocalTransform(tx);
+            }
 
-            /*const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
-            tx = entities[EntityID::GroundPlane].getComponent<cro::Transform>().getLocalTransform();
-            ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], ImGuizmo::OPERATION::SCALE, ImGuizmo::MODE::LOCAL, &tx[0][0]);
-            entities[EntityID::GroundPlane].getComponent<cro::Transform>().setLocalTransform(tx);*/
 
             if (m_browseGLTF)
             {
