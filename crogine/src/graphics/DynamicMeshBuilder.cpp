@@ -75,6 +75,15 @@ Mesh::Data DynamicMeshBuilder::build() const
         meshData.attributes[Mesh::UV1] = 2;
     }
 
+    if (m_flags & VertexProperty::BlendIndices)
+    {
+        meshData.attributes[Mesh::BlendIndices] = 4;
+    }
+    if (m_flags & VertexProperty::BlendWeights)
+    {
+        meshData.attributes[Mesh::BlendWeights] = 4;
+    }
+
     meshData.primitiveType = m_primitiveType;
     meshData.vertexSize = getVertexSize(meshData.attributes);
     meshData.vertexCount = 0;

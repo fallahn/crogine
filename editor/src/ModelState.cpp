@@ -1442,7 +1442,6 @@ void ModelState::importModel()
             retVal |= cro::VertexProperty::UV1;
             vertexSize += 2;
         }
-
         return retVal;
     };
 
@@ -1693,6 +1692,7 @@ void ModelState::exportStaticModel(bool modelOnly, bool openOnSave)
     CRO_ASSERT(m_importedHeader.flags, "");
     CRO_ASSERT(m_importedHeader.arrayCount, "");
     CRO_ASSERT(m_importedHeader.arrayOffset, "");
+    CRO_ASSERT(!m_importedHeader.animated, ""); //animated meshes will have too much vertex data...
     CRO_ASSERT(!m_importedVBO.empty(), "");
     CRO_ASSERT(!m_importedIndexArrays.empty(), "");
 
@@ -2548,7 +2548,7 @@ void ModelState::drawInspector()
                     helpMarker("If this is checked then only the model data will exported to the crogine file, leaving any existing material data in tact.");
                     if (m_importedHeader.animated)
                     {
-                        ImGui::Checkbox("Animations", &exportAnimation);
+                        ImGui::Checkbox("Export Animations", &exportAnimation);
                     }
                     if (ImGui::Button("Convert##01"))
                     {
@@ -2559,6 +2559,8 @@ void ModelState::drawInspector()
                         }
                         else
                         {
+                            //TODO we can't do this if the vertex data
+                            //contains blend information.
                             exportStaticModel(modelOnly);
                         }
                     }

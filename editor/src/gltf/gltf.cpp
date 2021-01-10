@@ -51,6 +51,7 @@ void ModelState::showGLTFBrowser()
             std::string label = node.name + "##";
             std::string IDString = std::to_string(ID++);
             label += IDString;
+
             if (ImGui::TreeNode(label.c_str()))
             {
                 static bool importAnim = false;
@@ -104,6 +105,9 @@ void ModelState::parseGLTFNode(const tf::Node& node, bool loadAnims)
 
     //TODO load animations if selected
 
+
+    //load bindpose
+    //load morphtargets (?) aka keyframes
 }
 
 void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
@@ -171,15 +175,17 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
                 flags |= cro::VertexProperty::Colour;
                 attribIndices[cro::Mesh::Colour] = idx;
             }
-            else if (name == "JOINTS_0")
+            else if (name == "JOINTS_0"
+                && loadAnims)
             {
-                /*flags |= cro::VertexProperty::BlendIndices;
-                attribIndices[cro::Mesh::BlendIndices] = idx;*/
+                flags |= cro::VertexProperty::BlendIndices;
+                attribIndices[cro::Mesh::BlendIndices] = idx;
             }
-            else if (name == "WEIGHTS_0")
+            else if (name == "WEIGHTS_0"
+                && loadAnims)
             {
-                /*flags |= cro::VertexProperty::BlendWeights;
-                attribIndices[cro::Mesh::BlendWeights] = idx;*/
+                flags |= cro::VertexProperty::BlendWeights;
+                attribIndices[cro::Mesh::BlendWeights] = idx;
             }
         }
 
@@ -198,40 +204,38 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
         //TODO this might actually already be interleaved - and so would
         //be faster if we know this and do a straight copy...
         std::array<std::pair<std::vector<float>, std::size_t>, cro::Mesh::Attribute::Total> tempData; //float components, component size
+        auto getComponentCount = [](int type)
+        {
+            switch (type)
+            {
+            default: break;
+            case TINYGLTF_TYPE_SCALAR:
+                return 1;
+            case TINYGLTF_TYPE_VEC2:
+                return 2;
+            case TINYGLTF_TYPE_VEC3:
+                return 3;
+            case TINYGLTF_TYPE_VEC4:
+                return 4;
+            case TINYGLTF_TYPE_MAT2:
+                return 4;
+            case TINYGLTF_TYPE_MAT3:
+                return 9;
+            case TINYGLTF_TYPE_MAT4:
+                return 16;
+            }
+        };
         for (auto i = 0u; i < tempData.size(); ++i)
         {
             if (attribIndices[i] > -1)
             {
                 const auto& accessor = m_GLTFScene.accessors[attribIndices[i]];
 
-                if (accessor.componentType == GL_FLOAT)
+                switch (accessor.componentType)
                 {
-                    std::size_t componentCount = 0;
-                    switch (accessor.type)
-                    {
-                    default: break;
-                    case TINYGLTF_TYPE_SCALAR:
-                        componentCount = 1;
-                        break;
-                    case TINYGLTF_TYPE_VEC2:
-                        componentCount = 2;
-                        break;
-                    case TINYGLTF_TYPE_VEC3:
-                        componentCount = 3;
-                        break;
-                    case TINYGLTF_TYPE_VEC4:
-                        componentCount = 4;
-                        break;
-                    case TINYGLTF_TYPE_MAT2:
-                        componentCount = 4;
-                        break;
-                    case TINYGLTF_TYPE_MAT3:
-                        componentCount = 9;
-                        break;
-                    case TINYGLTF_TYPE_MAT4:
-                        componentCount = 16;
-                        break;
-                    }
+                case GL_FLOAT:
+                {
+                    std::size_t componentCount = getComponentCount(accessor.type);
                     tempData[i] = std::make_pair(std::vector<float>(), componentCount);
 
                     CRO_ASSERT(accessor.bufferView < m_GLTFScene.bufferViews.size(), "");
@@ -251,9 +255,43 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
                         }
                     }
                 }
-                //TODO UVs, and animation data may not be float and
-                //need to be converted - although this is actually
-                //a mistake in the case of bone indices...
+                    break;
+                case GL_UNSIGNED_BYTE:
+                {
+                    //TODO in the case of blend indices this is actually
+                    //wrong to convert to float, as well as it bloating
+                    //the vertex data with unneccessary bytes...
+                    //but some bright spark decided long ago that the
+                    //vertex data should always be interleaved...
+                    std::size_t componentCount = getComponentCount(accessor.type);
+                    tempData[i] = std::make_pair(std::vector<float>(), componentCount);
+
+                    CRO_ASSERT(accessor.bufferView < m_GLTFScene.bufferViews.size(), "");
+                    const auto& view = m_GLTFScene.bufferViews[accessor.bufferView];
+                    CRO_ASSERT(view.buffer < m_GLTFScene.buffers.size(), "");
+                    const auto& buffer = m_GLTFScene.buffers[view.buffer];
+
+                    for (auto j = 0u; j < accessor.count; ++j)
+                    {
+                        std::size_t index = view.byteOffset + accessor.byteOffset + (std::max(componentCount, view.byteStride) * j * sizeof(float));
+                        for (auto k = 0u; k < componentCount; ++k)
+                        {
+                            std::uint8_t v = 0;
+                            std::memcpy(&v, &buffer.data[index], sizeof(std::uint8_t));
+                            tempData[i].first.push_back(static_cast<float>(v));
+                            index += sizeof(std::uint8_t);
+                        }
+                    }
+                }
+                    break;
+                case GL_UNSIGNED_INT:
+                {
+                    //TODO UVs may not be normalised and will
+                    //have to be converted here
+                }
+                    break;
+                default: break;
+                }
             }
         }
 
