@@ -40,6 +40,11 @@ source distribution.
 #include <string>
 #include <cstring>
 
+namespace
+{
+
+}
+
 void ModelState::showGLTFBrowser()
 {
     std::int32_t ID = 2000;
@@ -103,19 +108,59 @@ void ModelState::parseGLTFNode(const tf::Node& node, bool loadAnims)
 {
     importGLTF(node.mesh, loadAnims);
 
-    //TODO load animations if selected
+    //load animations if selected
+    if (loadAnims)
+    {
+        //load bindpose
+        cro::Skeleton output;
+        parseGLTFBindPose(node, output);
 
+        //load morphtargets (?) aka keyframes
+    }
 
-    //load bindpose
-    //load morphtargets (?) aka keyframes
+}
+
+void ModelState::parseGLTFBindPose(const tf::Node& node, cro::Skeleton& dest)
+{
+    CRO_ASSERT(node.skin > -1 && node.skin < m_GLTFScene.skins.size(), "");
+    const auto& skin = m_GLTFScene.skins[node.skin];
+
+    std::vector<glm::mat4> bindPose(skin.joints.size());
+    std::vector<glm::mat4> inverseBindPose(skin.joints.size());
+    dest.jointIndices.resize(skin.joints.size());
+    dest.frameSize = skin.joints.size();
+    //dest.frameCount = fetch the frame count;
+
+    const auto& accessor = m_GLTFScene.accessors[skin.inverseBindMatrices];
+    const auto& bufferView = m_GLTFScene.bufferViews[accessor.bufferView];
+    const auto& buffer = m_GLTFScene.buffers[bufferView.buffer];
+    std::size_t index = accessor.byteOffset + bufferView.byteOffset;
+
+    for (auto i = 0u; i < dest.frameSize; ++i)
+    {
+        std::memcpy(&inverseBindPose[i], &buffer.data[index], sizeof(glm::mat4));
+        index += sizeof(glm::mat4);
+
+        bindPose[i] = glm::inverse(inverseBindPose[i]);
+    }
+    
+    for (auto i = 0u; i < dest.frameSize; ++i)
+    {
+        for (auto j = 0; j < m_GLTFScene.nodes[skin.joints[i]].children.size(); ++j)
+        {
+            auto childIdx = m_GLTFScene.nodes[skin.joints[i]].children[j];
+
+            //bindPose[childIdx] = bindPose[i] * bindPose[childIdx];
+            //inverseBindPose[childIdx] *= inverseBindPose[i]; //this is giving some dubious results (lifted from IQM parser)
+
+            //track the parent ID
+            dest.jointIndices[childIdx] = i;
+        }
+    }
 }
 
 void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
 {
-    //NOTE the buffers below *can* be bound directly to OpenGL buffers
-    //using the accessor information - but the goal of this importer is
-    //to convert the file to a crogine binary file.
-
     //start with mesh. This contains a Primitive for each sub-mesh
     //which in turn contains the indices into the accessor array.
 
@@ -208,7 +253,7 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
         {
             switch (type)
             {
-            default: break;
+            default: return 0;
             case TINYGLTF_TYPE_SCALAR:
                 return 1;
             case TINYGLTF_TYPE_VEC2:
@@ -260,7 +305,7 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
                 {
                     //TODO in the case of blend indices this is actually
                     //wrong to convert to float, as well as it bloating
-                    //the vertex data with unneccessary bytes...
+                    //the vertex data with unnecessary bytes...
                     //but some bright spark decided long ago that the
                     //vertex data should always be interleaved...
                     std::size_t componentCount = getComponentCount(accessor.type);
@@ -273,13 +318,54 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
 
                     for (auto j = 0u; j < accessor.count; ++j)
                     {
-                        std::size_t index = view.byteOffset + accessor.byteOffset + (std::max(componentCount, view.byteStride) * j * sizeof(float));
+                        std::size_t index = view.byteOffset + accessor.byteOffset + (std::max(componentCount, view.byteStride) * j * sizeof(std::uint8_t));
                         for (auto k = 0u; k < componentCount; ++k)
                         {
                             std::uint8_t v = 0;
                             std::memcpy(&v, &buffer.data[index], sizeof(std::uint8_t));
-                            tempData[i].first.push_back(static_cast<float>(v));
+                            if (i == cro::Mesh::Attribute::BlendIndices)
+                            {
+                                tempData[i].first.push_back(static_cast<float>(v));
+                            }
+                            else
+                            {
+                                //normalise (probably blendweight, could be UV though...)
+                                float f = static_cast<float>(v) / std::numeric_limits<std::uint8_t>::max();
+                                tempData[i].first.push_back(f);
+                            }
                             index += sizeof(std::uint8_t);
+                        }
+                    }
+                }
+                    break;
+                case GL_UNSIGNED_SHORT:
+                {
+                    std::size_t componentCount = getComponentCount(accessor.type);
+                    tempData[i] = std::make_pair(std::vector<float>(), componentCount);
+
+                    CRO_ASSERT(accessor.bufferView < m_GLTFScene.bufferViews.size(), "");
+                    const auto& view = m_GLTFScene.bufferViews[accessor.bufferView];
+                    CRO_ASSERT(view.buffer < m_GLTFScene.buffers.size(), "");
+                    const auto& buffer = m_GLTFScene.buffers[view.buffer];
+
+                    for (auto j = 0u; j < accessor.count; ++j)
+                    {
+                        std::size_t index = view.byteOffset + accessor.byteOffset + (std::max(componentCount, view.byteStride) * j * sizeof(std::uint16_t));
+                        for (auto k = 0u; k < componentCount; ++k)
+                        {
+                            std::uint16_t v = 0;
+                            std::memcpy(&v, &buffer.data[index], sizeof(std::uint16_t));
+                            if (i == cro::Mesh::Attribute::BlendIndices)
+                            {
+                                tempData[i].first.push_back(static_cast<float>(v));
+                            }
+                            else
+                            {
+                                //normalise (probably blendweight, could be UV though...)
+                                float f = static_cast<float>(v) / std::numeric_limits<std::uint16_t>::max();
+                                tempData[i].first.push_back(f);
+                            }
+                            index += sizeof(std::uint16_t);
                         }
                     }
                 }
@@ -287,7 +373,9 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
                 case GL_UNSIGNED_INT:
                 {
                     //TODO UVs may not be normalised and will
-                    //have to be converted here
+                    //have to be converted here. In the case of UVs
+                    //in pixels we'll need to have loaded the texture
+                    //data so we have an image size to normalise with
                 }
                     break;
                 default: break;
