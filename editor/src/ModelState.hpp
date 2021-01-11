@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "gltf/tiny_gltf.h"
+#include "ResourceIDs.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -101,6 +102,8 @@ private:
 
     cro::ConfigFile m_currentModelConfig;
     std::string m_currentFilePath;
+
+    std::array<cro::Entity, EntityID::Count> m_entities = {};
 
     void addSystems();
     void loadAssets();

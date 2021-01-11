@@ -49,7 +49,7 @@ namespace cro
     {
         std::string name;
         uint32 startFrame = 0;
-        uint32 frameCount = 0;
+        uint32 frameCount = 1;
         uint32 currentFrame = 0;
         float frameRate = 12.f;
         bool looped = false;
@@ -65,7 +65,7 @@ namespace cro
     {
     public:
         std::size_t frameSize = 0; //joints in a frame
-        std::size_t frameCount = 0;
+        std::size_t frameCount = 1;
         std::vector<glm::mat4> frames; //indexed by steps of frameSize
         std::vector<glm::mat4> currentFrame; //current interpolated output
 

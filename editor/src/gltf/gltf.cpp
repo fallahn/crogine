@@ -33,6 +33,9 @@ source distribution.
 
 #include "../ModelState.hpp" //includes tinygltf
 
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
+
 #include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -112,22 +115,79 @@ void ModelState::parseGLTFNode(const tf::Node& node, bool loadAnims)
     if (loadAnims)
     {
         //load bindpose
-        cro::Skeleton output;
-        parseGLTFBindPose(node, output);
+        //cro::Skeleton output;
+        parseGLTFBindPose(node, m_entities[EntityID::ActiveModel].addComponent<cro::Skeleton>());
 
         //load morphtargets (?) aka keyframes
     }
-
 }
 
 void ModelState::parseGLTFBindPose(const tf::Node& node, cro::Skeleton& dest)
 {
+    auto getLocalMatrix = [](const tf::Node& node)
+    {
+        glm::mat4 jointMat = glm::mat4(1.f);
+        glm::vec3 translation(0.f);
+        glm::quat rotation(1.f, 0.f, 0.f, 0.f);
+        glm::vec3 scale(1.f);
+
+        if(node.translation.size() == 3)
+        {
+            translation.x = static_cast<float>(node.translation[0]);
+            translation.y = static_cast<float>(node.translation[1]);
+            translation.z = static_cast<float>(node.translation[2]);
+        }
+        if (node.rotation.size() == 4)
+        {
+            rotation.w = static_cast<float>(node.rotation[3]);
+            rotation.x = static_cast<float>(node.rotation[0]);
+            rotation.y = static_cast<float>(node.rotation[1]);
+            rotation.z = static_cast<float>(node.rotation[2]);
+        }
+        if (node.scale.size() == 3)
+        {
+            scale.x = static_cast<float>(node.scale[0]);
+            scale.y = static_cast<float>(node.scale[1]);
+            scale.z = static_cast<float>(node.scale[2]);
+        }
+        jointMat = glm::translate(jointMat, translation);
+        jointMat *= glm::toMat4(rotation);
+        jointMat = glm::scale(jointMat, scale);
+        return jointMat;
+    };
+    
+
     CRO_ASSERT(node.skin > -1 && node.skin < m_GLTFScene.skins.size(), "");
     const auto& skin = m_GLTFScene.skins[node.skin];
 
-    std::vector<glm::mat4> bindPose(skin.joints.size());
+    std::vector<std::int32_t> parents(m_GLTFScene.nodes.size());
+    std::fill(parents.begin(), parents.end(), -1);
+    for (auto i = 0u; i < m_GLTFScene.nodes.size(); ++i)
+    {
+        const auto& node = m_GLTFScene.nodes[i];
+        for (auto j = 0u; j < node.children.size(); ++j)
+        {
+            parents[node.children[j]] = static_cast<std::int32_t>(i);
+        }
+    }
+
+    auto getMatrix = [&](std::int32_t jointIndex)
+    {
+        const auto& joint = m_GLTFScene.nodes[skin.joints[jointIndex]];
+        auto jointMat = getLocalMatrix(joint);
+
+        std::int32_t currentParent = parents[jointIndex];
+        while (currentParent > -1)
+        {
+            jointMat = getLocalMatrix(m_GLTFScene.nodes[currentParent]) * jointMat;
+            currentParent = parents[currentParent];
+        }
+        return jointMat;
+    };
+
     std::vector<glm::mat4> inverseBindPose(skin.joints.size());
     dest.jointIndices.resize(skin.joints.size());
+    std::fill(dest.jointIndices.begin(), dest.jointIndices.end(), -1);
     dest.frameSize = skin.joints.size();
     //dest.frameCount = fetch the frame count;
 
@@ -136,27 +196,34 @@ void ModelState::parseGLTFBindPose(const tf::Node& node, cro::Skeleton& dest)
     const auto& buffer = m_GLTFScene.buffers[bufferView.buffer];
     std::size_t index = accessor.byteOffset + bufferView.byteOffset;
 
-    for (auto i = 0u; i < dest.frameSize; ++i)
-    {
-        std::memcpy(&inverseBindPose[i], &buffer.data[index], sizeof(glm::mat4));
-        index += sizeof(glm::mat4);
+    dest.frames.resize(dest.frameSize);
 
-        bindPose[i] = glm::inverse(inverseBindPose[i]);
-    }
-    
-    for (auto i = 0u; i < dest.frameSize; ++i)
+    std::function<void(std::int32_t)> updateJoints =
+        [&](std::int32_t nodeIdx)
     {
-        for (auto j = 0; j < m_GLTFScene.nodes[skin.joints[i]].children.size(); ++j)
+        auto inverseTx = glm::inverse(getMatrix(nodeIdx));
+
+        for (auto i = 0u; i < dest.frameSize; ++i)
         {
-            auto childIdx = m_GLTFScene.nodes[skin.joints[i]].children[j];
+            std::memcpy(&inverseBindPose[i], &buffer.data[index], sizeof(glm::mat4));
+            index += sizeof(glm::mat4);
 
-            //bindPose[childIdx] = bindPose[i] * bindPose[childIdx];
-            //inverseBindPose[childIdx] *= inverseBindPose[i]; //this is giving some dubious results (lifted from IQM parser)
+            dest.frames[i] = getMatrix(skin.joints[i]) * inverseBindPose[i];
+            dest.frames[i] = inverseTx * dest.frames[i];
 
-            //track the parent ID
-            dest.jointIndices[childIdx] = i;
+            dest.jointIndices[i] = parents[skin.joints[i]];
         }
-    }
+        
+        for (auto i = 0u; i < m_GLTFScene.nodes[nodeIdx].children.size(); ++i)
+        {
+            updateJoints(m_GLTFScene.nodes[nodeIdx].children[i]);
+        }
+    };
+
+    dest.currentFrame = dest.frames;
+    dest.animations.emplace_back(); //TODO remove this when actually adding animations
+    dest.animations.back().looped = true;
+    dest.play(0);
 }
 
 void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
@@ -319,10 +386,11 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
                     for (auto j = 0u; j < accessor.count; ++j)
                     {
                         std::size_t index = view.byteOffset + accessor.byteOffset + (std::max(componentCount, view.byteStride) * j * sizeof(std::uint8_t));
+
                         for (auto k = 0u; k < componentCount; ++k)
                         {
                             std::uint8_t v = 0;
-                            std::memcpy(&v, &buffer.data[index], sizeof(std::uint8_t));
+                            std::memcpy(&v, &buffer.data[index + k], sizeof(std::uint8_t));
                             if (i == cro::Mesh::Attribute::BlendIndices)
                             {
                                 tempData[i].first.push_back(static_cast<float>(v));
@@ -333,9 +401,9 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
                                 float f = static_cast<float>(v) / std::numeric_limits<std::uint8_t>::max();
                                 tempData[i].first.push_back(f);
                             }
-                            index += sizeof(std::uint8_t);
                         }
                     }
+                    int buns = 0;
                 }
                     break;
                 case GL_UNSIGNED_SHORT:

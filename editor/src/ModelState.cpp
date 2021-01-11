@@ -29,7 +29,6 @@ source distribution.
 
 #include "ModelState.hpp"
 #include "OriginIconBuilder.hpp"
-#include "ResourceIDs.hpp"
 #include "NormalVisMeshBuilder.hpp"
 #include "GLCheck.hpp"
 #include "UIConsts.hpp"
@@ -144,7 +143,6 @@ namespace
     const glm::vec3 DefaultArcballPosition({ 0.f, 0.75f, 0.f });
 
     std::array<std::int32_t, MaterialID::Count> materialIDs = {};
-    std::array<cro::Entity, EntityID::Count> entities = {};
 
     enum WindowID
     {
@@ -310,7 +308,7 @@ bool ModelState::handleEvent(const cro::Event& evt)
     {
     default: break;
     case SDL_QUIT:
-        if (entities[EntityID::ActiveModel].isValid())
+        if (m_entities[EntityID::ActiveModel].isValid())
         {
             showSaveMessage();
         }
@@ -408,12 +406,18 @@ void ModelState::loadAssets()
     }
 
     //create a default material to display models on import
-    auto flags = cro::ShaderResource::DiffuseColour;// | cro::ShaderResource::MaskMap;
+    std::uint32_t flags = cro::ShaderResource::DiffuseColour;// | cro::ShaderResource::MaskMap;
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, flags);
     materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
     m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_maskColour", cro::Colour(1.f, 1.f, 0.f));
     //m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_diffuseMap", m_magentaTexture);
+
+    flags = cro::ShaderResource::DiffuseColour | cro::ShaderResource::Skinning;
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, flags);
+    materialIDs[MaterialID::DefaultSkinned] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_resources.materials.get(materialIDs[MaterialID::DefaultSkinned]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
+    m_resources.materials.get(materialIDs[MaterialID::DefaultSkinned]).setProperty("u_maskColour", cro::Colour(1.f, 1.f, 0.f));
 
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
     materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
@@ -450,7 +454,7 @@ void ModelState::createScene()
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto& meshData = entity.getComponent<cro::Model>().getMeshData();
     updateGridMesh(meshData, std::nullopt, std::nullopt);
-    entities[EntityID::GridMesh] = entity;
+    m_entities[EntityID::GridMesh] = entity;
 
     //create the camera - using a custom camera prevents the scene updating the projection on window resize
     entity = m_scene.createEntity();
@@ -459,10 +463,10 @@ void ModelState::createScene()
     m_viewportRatio = updateView(entity, DefaultFarPlane, DefaultFOV);
     m_scene.setActiveCamera(entity);
 
-    entities[EntityID::RootNode] = m_scene.createEntity();
-    entities[EntityID::RootNode].addComponent<cro::Transform>();
+    m_entities[EntityID::RootNode] = m_scene.createEntity();
+    m_entities[EntityID::RootNode].addComponent<cro::Transform>();
     //entities[EntityID::RootNode].addComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entities[EntityID::GridMesh].getComponent<cro::Transform>());
+    m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(m_entities[EntityID::GridMesh].getComponent<cro::Transform>());
 
     //axis icon
     meshID = m_resources.meshes.loadMesh(OriginIconBuilder());
@@ -478,7 +482,7 @@ void ModelState::createScene()
         float scale = m_fov / DefaultFOV;
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     };
-    entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //ground plane for receiving shadows
@@ -514,15 +518,15 @@ void ModelState::createScene()
     mesh.vertexCount = 4;
     mesh.indexData[0].indexCount = 4;
 
-    entities[EntityID::GroundPlane] = entity;
-    entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_entities[EntityID::GroundPlane] = entity;
+    m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //set the default sunlight properties
     m_scene.getSunlight().getComponent<cro::Transform>().setPosition({ -1.5f, 1.5f, 1.5f });
     m_scene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.79f);
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.79f);
 
-    entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(m_scene.getSunlight().getComponent<cro::Transform>());
+    m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(m_scene.getSunlight().getComponent<cro::Transform>());
 
     cro::ModelDefinition def;
     def.loadFromFile("assets/models/arrow.cmt", m_resources);
@@ -530,9 +534,9 @@ void ModelState::createScene()
     m_scene.getSunlight().getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", cro::Colour(1.f, 1.f, 0.f, 1.f));
 
 
-    entities[EntityID::ArcBall] = m_scene.createEntity();
-    entities[EntityID::ArcBall].addComponent<cro::Transform>().setPosition(DefaultArcballPosition);
-    entities[EntityID::ArcBall].getComponent<cro::Transform>().addChild(m_scene.getActiveCamera().getComponent<cro::Transform>());
+    m_entities[EntityID::ArcBall] = m_scene.createEntity();
+    m_entities[EntityID::ArcBall].addComponent<cro::Transform>().setPosition(DefaultArcballPosition);
+    m_entities[EntityID::ArcBall].getComponent<cro::Transform>().addChild(m_scene.getActiveCamera().getComponent<cro::Transform>());
 
 
 
@@ -601,7 +605,7 @@ void ModelState::buildUI()
                         }
                     }                    
                     
-                    if (ImGui::MenuItem("Close Model", nullptr, nullptr, entities[EntityID::ActiveModel].isValid()))
+                    if (ImGui::MenuItem("Close Model", nullptr, nullptr, m_entities[EntityID::ActiveModel].isValid()))
                     {
                         closeModel();
                     }
@@ -624,7 +628,7 @@ void ModelState::buildUI()
                     {
                         if (ImGui::MenuItem("Return To World Editor"))
                         {
-                            if (entities[EntityID::ActiveModel].isValid())
+                            if (m_entities[EntityID::ActiveModel].isValid())
                             {
                                 showSaveMessage();
                             }
@@ -636,7 +640,7 @@ void ModelState::buildUI()
                     
                     if (ImGui::MenuItem("Quit", nullptr, nullptr))
                     {
-                        if (entities[EntityID::ActiveModel].isValid())
+                        if (m_entities[EntityID::ActiveModel].isValid())
                         {
                             showSaveMessage();
                         }
@@ -708,11 +712,11 @@ void ModelState::buildUI()
                         {
                             //set this to whichever world scale we're currently using
                             //updateWorldScale();
-                            entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                            m_entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
                         }
                         else
                         {
-                            entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                            m_entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
                         }
                         savePrefs();
                     }
@@ -720,14 +724,14 @@ void ModelState::buildUI()
                     {
                         savePrefs();
                     }
-                    if (ImGui::MenuItem("AO Baker", nullptr, &m_showBakingWindow, entities[EntityID::ActiveModel].isValid() && m_importedVBO.empty()))
+                    if (ImGui::MenuItem("AO Baker", nullptr, &m_showBakingWindow, m_entities[EntityID::ActiveModel].isValid() && m_importedVBO.empty()))
                     {
                         
                     }
                     if (ImGui::MenuItem("Reset Camera"))
                     {
-                        entities[EntityID::ArcBall].getComponent<cro::Transform>().setLocalTransform(glm::mat4(1.f));
-                        entities[EntityID::ArcBall].getComponent<cro::Transform>().setPosition(DefaultArcballPosition);
+                        m_entities[EntityID::ArcBall].getComponent<cro::Transform>().setLocalTransform(glm::mat4(1.f));
+                        m_entities[EntityID::ArcBall].getComponent<cro::Transform>().setPosition(DefaultArcballPosition);
                         m_fov = DefaultFOV;
                         updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
                     }
@@ -834,12 +838,12 @@ void ModelState::buildUI()
                 }
             }
 
-            if (m_showBakingWindow && entities[EntityID::ActiveModel].isValid() && m_importedVBO.empty())
+            if (m_showBakingWindow && m_entities[EntityID::ActiveModel].isValid() && m_importedVBO.empty())
             {
                 ImGui::SetNextWindowSize({ 528.f, 554.f });
                 ImGui::Begin("AO Baker##0", &m_showBakingWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
-                const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+                const auto& meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
                 if (meshData.attributes[cro::Mesh::UV1] > 0)
                 {
                     //TODO show combo to select which UV coords to use
@@ -904,9 +908,9 @@ void ModelState::buildUI()
             auto [pos, size] = WindowLayouts[WindowID::ViewGizmo];
 
             //view cube doohickey
-            auto tx = glm::inverse(entities[EntityID::ArcBall].getComponent<cro::Transform>().getLocalTransform());
+            auto tx = glm::inverse(m_entities[EntityID::ArcBall].getComponent<cro::Transform>().getLocalTransform());
             ImGuizmo::ViewManipulate(&tx[0][0], 10.f, ImVec2(pos.x, pos.y), ImVec2(size.x, size.y), 0/*x10101010*/);
-            entities[EntityID::ArcBall].getComponent<cro::Transform>().setRotation(glm::inverse(tx));
+            m_entities[EntityID::ArcBall].getComponent<cro::Transform>().setRotation(glm::inverse(tx));
 
             //tooltip
             if (io.MousePos.x > pos.x && io.MousePos.x < pos.x + size.x
@@ -932,13 +936,13 @@ void ModelState::buildUI()
                 ImGui::PopStyleColor(2);
             }
             //rotate the model if it's loaded
-            if (entities[EntityID::ActiveModel].isValid()
+            if (m_entities[EntityID::ActiveModel].isValid()
                 && m_importedVBO.empty())
             {
                 const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
-                tx = entities[EntityID::ActiveModel].getComponent<cro::Transform>().getLocalTransform();
+                tx = m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().getLocalTransform();
                 ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], ImGuizmo::OPERATION::ROTATE, ImGuizmo::MODE::LOCAL, &tx[0][0]);
-                entities[EntityID::ActiveModel].getComponent<cro::Transform>().setLocalTransform(tx);
+                m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setLocalTransform(tx);
             }
 
 
@@ -976,7 +980,7 @@ void ModelState::openModel()
 
 void ModelState::openModelAtPath(const std::string& path)
 {
-    if (entities[EntityID::ActiveModel].isValid())
+    if (m_entities[EntityID::ActiveModel].isValid())
     {
         showSaveMessage();
     }
@@ -988,18 +992,18 @@ void ModelState::openModelAtPath(const std::string& path)
     {
         m_currentFilePath = path;
 
-        entities[EntityID::ActiveModel] = m_scene.createEntity();
-        entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
+        m_entities[EntityID::ActiveModel] = m_scene.createEntity();
+        m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(m_entities[EntityID::ActiveModel].addComponent<cro::Transform>());
 
-        def.createModel(entities[EntityID::ActiveModel], m_resources);
+        def.createModel(m_entities[EntityID::ActiveModel], m_resources);
 
         //always have the option to cast shadows
-        if (!entities[EntityID::ActiveModel].hasComponent<cro::ShadowCaster>())
+        if (!m_entities[EntityID::ActiveModel].hasComponent<cro::ShadowCaster>())
         {
-            entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>().active = false;
+            m_entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>().active = false;
 
             const cro::Material::Data* matData = nullptr;
-            if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+            if (m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
             {
                 matData = &m_resources.materials.get(materialIDs[MaterialID::DefaultShadowSkinned]);
             }
@@ -1008,15 +1012,15 @@ void ModelState::openModelAtPath(const std::string& path)
                 matData = &m_resources.materials.get(materialIDs[MaterialID::DefaultShadow]);
             }
 
-            for (auto i = 0u; i < entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+            for (auto i = 0u; i < m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData().submeshCount; ++i)
             {
-                entities[EntityID::ActiveModel].getComponent<cro::Model>().setShadowMaterial(i, *matData);
+                m_entities[EntityID::ActiveModel].getComponent<cro::Model>().setShadowMaterial(i, *matData);
             }
         }
 
         m_currentModelConfig.loadFromFile(path);
 
-        const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+        const auto& meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
 
         //read all the model properties
         m_modelProperties.name = m_currentModelConfig.getId();
@@ -1054,7 +1058,7 @@ void ModelState::openModelAtPath(const std::string& path)
                     {
                         m_modelProperties.type = ModelProperties::Billboard;
 
-                        entities[EntityID::ActiveModel].getComponent<cro::BillboardCollection>().addBillboard({});
+                        m_entities[EntityID::ActiveModel].getComponent<cro::BillboardCollection>().addBillboard({});
                     }
                     else if (val == "cube")
                     {
@@ -1085,7 +1089,7 @@ void ModelState::openModelAtPath(const std::string& path)
             else if (name == "cast_shadows")
             {
                 m_modelProperties.castShadows = prop.getValue<bool>();
-                entities[EntityID::ActiveModel].getComponent<cro::ShadowCaster>().active = m_modelProperties.castShadows;
+                m_entities[EntityID::ActiveModel].getComponent<cro::ShadowCaster>().active = m_modelProperties.castShadows;
             }
         }
 
@@ -1118,7 +1122,7 @@ void ModelState::openModelAtPath(const std::string& path)
             for (auto i = m_activeMaterials.size(); i < meshData.submeshCount; ++i)
             {
                 m_activeMaterials.push_back(-1);
-                entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(i, defMat);
+                m_entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(i, defMat);
             }
         }
 
@@ -1128,7 +1132,7 @@ void ModelState::openModelAtPath(const std::string& path)
 
         std::optional<cro::Box> box;
         if (m_showAABB) box = meshData.boundingBox;
-        updateGridMesh(entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), sphere, box);
+        updateGridMesh(m_entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), sphere, box);
 
 
         //read back the buffer data into the imported buffer so we can do things like normal vis and lightmap baking
@@ -1327,7 +1331,7 @@ void ModelState::saveModel(const std::string& path)
             obj->addProperty("lightmap").setValue(textureName(mat.textureIDs[MaterialDefinition::Lightmap]));
         }
 
-        if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+        if (m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
         {
             obj->addProperty("skinned").setValue(true);
         }
@@ -1346,19 +1350,19 @@ void ModelState::saveModel(const std::string& path)
 
 void ModelState::closeModel()
 {
-    if (entities[EntityID::ActiveModel].isValid())
+    if (m_entities[EntityID::ActiveModel].isValid())
     {
-        m_scene.destroyEntity(entities[EntityID::ActiveModel]);
-        entities[EntityID::ActiveModel] = {};
+        m_scene.destroyEntity(m_entities[EntityID::ActiveModel]);
+        m_entities[EntityID::ActiveModel] = {};
 
         m_importedIndexArrays.clear();
         m_importedVBO.clear();
     }
 
-    if (entities[EntityID::NormalVis].isValid())
+    if (m_entities[EntityID::NormalVis].isValid())
     {
-        m_scene.destroyEntity(entities[EntityID::NormalVis]);
-        entities[EntityID::NormalVis] = {};
+        m_scene.destroyEntity(m_entities[EntityID::NormalVis]);
+        m_entities[EntityID::NormalVis] = {};
     }
 
     m_currentModelConfig = {};
@@ -1477,6 +1481,9 @@ void ModelState::importModel()
             ai::Importer importer;
             auto* scene = importer.ReadFile(path,
                 aiProcess_CalcTangentSpace
+
+                //| aiProcess_PopulateArmatureData
+
                 | aiProcess_GenSmoothNormals
                 | aiProcess_Triangulate
                 | aiProcess_JoinIdenticalVertices
@@ -1606,7 +1613,7 @@ void ModelState::importModel()
             m_preferences.lastImportDirectory = cro::FileSystem::getFilePath(path);
             savePrefs();
         }
-        updateGridMesh(entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), {}, {});
+        updateGridMesh(m_entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), {}, {});
     }
 }
 
@@ -1668,15 +1675,15 @@ void ModelState::updateImportNode(CMFHeader header, std::vector<float>& imported
         meshData.boundingBox[1] = glm::vec3(5.5f);
         meshData.boundingSphere.radius = 5.5f;
 
-        entities[EntityID::ActiveModel] = m_scene.createEntity();
-        entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entities[EntityID::ActiveModel].addComponent<cro::Transform>());
-        entities[EntityID::ActiveModel].addComponent<cro::Model>(meshData, m_resources.materials.get(materialIDs[MaterialID::Default]));
+        m_entities[EntityID::ActiveModel] = m_scene.createEntity();
+        m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(m_entities[EntityID::ActiveModel].addComponent<cro::Transform>());
+        m_entities[EntityID::ActiveModel].addComponent<cro::Model>(meshData, m_resources.materials.get(materialIDs[(header.flags & cro::VertexProperty::BlendIndices) ? MaterialID::DefaultSkinned : MaterialID::Default]));
 
         for (auto i = 0; i < header.arrayCount; ++i)
         {
-            entities[EntityID::ActiveModel].getComponent<cro::Model>().setShadowMaterial(i, m_resources.materials.get(materialIDs[MaterialID::DefaultShadow]));
+            m_entities[EntityID::ActiveModel].getComponent<cro::Model>().setShadowMaterial(i, m_resources.materials.get(materialIDs[(header.flags & cro::VertexProperty::BlendIndices) ? MaterialID::DefaultShadowSkinned : MaterialID::DefaultShadow]));
         }
-        entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>();
+        m_entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>();
 
         m_importedTransform = {};
     }
@@ -1779,8 +1786,8 @@ void ModelState::exportStaticModel(bool modelOnly, bool openOnSave)
 
 void ModelState::applyImportTransform()
 {
-    const auto& transform = entities[EntityID::ActiveModel].getComponent<cro::Transform>().getLocalTransform();
-    auto meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+    const auto& transform = m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().getLocalTransform();
+    auto meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
     auto vertexSize = meshData.vertexSize / sizeof(float);
 
     std::size_t normalOffset = 0;
@@ -1859,8 +1866,8 @@ void ModelState::applyImportTransform()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     m_importedTransform = {};
-    entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
-    entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTY);
+    m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+    m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTY);
 }
 
 void ModelState::loadPrefs()
@@ -1877,11 +1884,11 @@ void ModelState::loadPrefs()
                 m_showGroundPlane = prop.getValue<bool>();
                 if (m_showGroundPlane)
                 {
-                    entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                    m_entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
                 }
                 else
                 {
-                    entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                    m_entities[EntityID::GroundPlane].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
                 }
             }
             else if (name == "show_skybox")
@@ -1980,7 +1987,7 @@ void ModelState::updateNormalVis()
     */
 
 
-    if (entities[EntityID::ActiveModel].isValid())
+    if (m_entities[EntityID::ActiveModel].isValid())
     {
         //if (entities[EntityID::NormalVis].isValid())
         //{
@@ -2008,7 +2015,7 @@ void ModelState::updateMouseInput(const cro::Event& evt)
         float pitchMove = static_cast<float>(evt.motion.yrel)* moveScale * m_viewportRatio;
         float yawMove = static_cast<float>(evt.motion.xrel)* moveScale;
 
-        auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
+        auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
         tx.rotate(cro::Transform::X_AXIS, -pitchMove);
         tx.rotate(cro::Transform::Y_AXIS, -yawMove);
     }
@@ -2023,7 +2030,7 @@ void ModelState::updateMouseInput(const cro::Event& evt)
     //else 
     if (evt.motion.state & SDL_BUTTON_MMASK)
     {
-        auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
+        auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
         tx.move(tx.getRightVector() * -static_cast<float>(evt.motion.xrel) / 160.f);
         tx.move(tx.getUpVector() * static_cast<float>(evt.motion.yrel) / 160.f);
     }
@@ -2471,7 +2478,7 @@ void ModelState::drawInspector()
         if (ImGui::BeginTabItem("Model", nullptr, flags))
         {
             //model details
-            if (entities[EntityID::ActiveModel].isValid())
+            if (m_entities[EntityID::ActiveModel].isValid())
             {
                 if (!m_importedVBO.empty())
                 {
@@ -2503,6 +2510,14 @@ void ModelState::drawInspector()
                     {
                         flags += "  Shadowmap Coords\n";
                     }
+                    if (m_importedHeader.flags & cro::VertexProperty::BlendIndices)
+                    {
+                        flags += "  Blend Indices\n";
+                    }
+                    if (m_importedHeader.flags & cro::VertexProperty::BlendWeights)
+                    {
+                        flags += "  Blend Weights\n";
+                    }
                     ImGui::Text("%s", flags.c_str());
                     
                     ImGui::NewLine();
@@ -2512,26 +2527,26 @@ void ModelState::drawInspector()
                     ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");
                     if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], 1.f, -180.f, 180.f))
                     {
-                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, m_importedTransform.rotation.z * cro::Util::Const::degToRad);
-                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, m_importedTransform.rotation.y * cro::Util::Const::degToRad);
-                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, m_importedTransform.rotation.x * cro::Util::Const::degToRad);
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, m_importedTransform.rotation.z * cro::Util::Const::degToRad);
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, m_importedTransform.rotation.y * cro::Util::Const::degToRad);
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, m_importedTransform.rotation.x * cro::Util::Const::degToRad);
                     }
                     if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.01f, 0.1f, 10.f))
                     {
                         //scale needs to be uniform, else we'd have to recalc all the normal data
                         m_importedTransform.scale = std::min(10.f, std::max(0.1f, m_importedTransform.scale));
-                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
                     }
                     ImGui::Text("Quick Scale:"); ImGui::SameLine();
                     if (ImGui::Button("0.5"))
                     {
                         m_importedTransform.scale = std::max(0.1f, m_importedTransform.scale / 2.f);
-                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
                     }ImGui::SameLine();
                     if (ImGui::Button("2.0"))
                     {
                         m_importedTransform.scale = std::min(10.f, m_importedTransform.scale * 2.f);
-                        entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
                     }
                     if (ImGui::Button("Apply Transform"))
                     {
@@ -2620,14 +2635,14 @@ void ModelState::drawInspector()
 
                     if (ImGui::Checkbox("Cast Shadow", &m_modelProperties.castShadows))
                     {
-                        entities[EntityID::ActiveModel].getComponent<cro::ShadowCaster>().active = m_modelProperties.castShadows;
+                        m_entities[EntityID::ActiveModel].getComponent<cro::ShadowCaster>().active = m_modelProperties.castShadows;
                     }
 
                     ImGui::NewLine();
                     ImGui::Separator();
                     ImGui::NewLine();
 
-                    const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+                    const auto& meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
                     ImGui::Text("Materials:");
                     CRO_ASSERT(meshData.submeshCount <= m_activeMaterials.size(), "");
                     for (auto i = 0u; i < meshData.submeshCount; ++i)
@@ -2660,12 +2675,12 @@ void ModelState::drawInspector()
                                 m_materialDefs[m_activeMaterials[i]].submeshIDs.push_back(i);
 
                                 //and update the actual model
-                                entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(i, m_materialDefs[m_activeMaterials[i]].materialData);
+                                m_entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(i, m_materialDefs[m_activeMaterials[i]].materialData);
                             }
                             else
                             {
                                 //apply default material
-                                entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(i, m_resources.materials.get(materialIDs[MaterialID::Default]));
+                                m_entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(i, m_resources.materials.get(materialIDs[MaterialID::Default]));
                             }
                         }
                     }
@@ -2706,12 +2721,12 @@ void ModelState::drawInspector()
                         std::optional<cro::Box> box;
                         if (m_showAABB) box = meshData.boundingBox;
 
-                        updateGridMesh(entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), sphere, box);
+                        updateGridMesh(m_entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), sphere, box);
                     }
 
-                    if (entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+                    if (m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
                     {
-                        auto& skeleton = entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+                        auto& skeleton = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
 
                         ImGui::NewLine();
                         ImGui::Separator();
@@ -2921,9 +2936,9 @@ void ModelState::drawInspector()
                     }
 
                     //warn if model has no lightmap coords
-                    if (entities[EntityID::ActiveModel].isValid())
+                    if (m_entities[EntityID::ActiveModel].isValid())
                     {
-                        const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+                        const auto& meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
                         if (meshData.attributes[cro::Mesh::UV1] == 0)
                         {
                             ImGui::SameLine();
@@ -3147,8 +3162,8 @@ void ModelState::drawInspector()
                 ImGui::SameLine();
                 helpMarker("Export this material to a Material Definition file which can be loaded by the Material Browser");
 
-                if (entities[EntityID::ActiveModel].isValid()
-                    && entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+                if (m_entities[EntityID::ActiveModel].isValid()
+                    && m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
                 {
                     shaderFlags |= cro::ShaderResource::Skinning;
                 }
@@ -3206,7 +3221,7 @@ void ModelState::drawInspector()
                     //destination model.
                     for (auto idx : matDef.submeshIDs)
                     {
-                        entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(idx, matDef.materialData);
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(idx, matDef.materialData);
                     }
                 }
             }
@@ -3330,7 +3345,7 @@ void ModelState::drawBrowser()
                         for (auto i : m_materialDefs[m_selectedMaterial].submeshIDs)
                         {
                             m_activeMaterials[i] = -1;
-                            entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(i, defMat);
+                            m_entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(i, defMat);
                         }
                     }
 
@@ -3495,7 +3510,7 @@ void ModelState::drawBrowser()
                         //destination model.
                         for (auto idx : def.submeshIDs)
                         {
-                            entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(idx, def.materialData);
+                            m_entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(idx, def.materialData);
                         }
                     }
                 }
@@ -3992,7 +4007,7 @@ void ModelState::bakeLightmap()
 {
     const auto drawScene = [&](glm::mat4 viewMat, glm::mat4 projMat, const cro::Mesh::Data& meshData)
     {
-        CRO_ASSERT(entities[EntityID::ActiveModel].isValid(), "");
+        CRO_ASSERT(m_entities[EntityID::ActiveModel].isValid(), "");
 
         glCheck(glEnable(GL_DEPTH_TEST));
 
@@ -4026,7 +4041,7 @@ void ModelState::bakeLightmap()
     }
 
 
-    const auto& meshData = entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+    const auto& meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
 
     //make sure we have enough buffers / output textures
     if (m_lightmapBuffers.size() < meshData.submeshCount)

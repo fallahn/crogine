@@ -33,7 +33,7 @@ namespace MaterialID
 {
     enum
     {
-        Default, 
+        Default, DefaultSkinned,
         DefaultShadow, DefaultShadowSkinned,
         DebugDraw,
         GroundPlane,
