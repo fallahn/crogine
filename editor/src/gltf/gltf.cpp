@@ -45,7 +45,32 @@ source distribution.
 
 namespace
 {
+    struct AnimSampler final
+    {
+        std::string interpType;
+        std::vector<float> inputs;
+        std::vector<glm::vec4> outputs;
+    };
 
+    struct AnimChannel final
+    {
+        std::string path;
+        std::int32_t samplerIndex = -1;
+        std::int32_t node = -1;
+    };
+
+    struct Anim final
+    {
+        std::string name;
+        std::vector<AnimSampler> samplers;
+        std::vector<AnimChannel> channels;
+        float start = std::numeric_limits<float>::max();
+        float end = std::numeric_limits<float>::min();
+        float currentTime = 0.f;
+    };
+
+    //TODO this should be a member really
+    std::vector<Anim> animations;
 }
 
 void ModelState::showGLTFBrowser()
@@ -115,11 +140,106 @@ void ModelState::parseGLTFNode(std::int32_t idx, bool loadAnims)
     //load animations if selected
     if (loadAnims)
     {
-        parseGLTFAnimations(idx, m_entities[EntityID::ActiveModel].addComponent<cro::Skeleton>());
+        parseGLTFAnimations(idx);
+        parseGLTFSkin(idx, m_entities[EntityID::ActiveModel].addComponent<cro::Skeleton>());
     }
 }
 
-void ModelState::parseGLTFAnimations(std::int32_t idx, cro::Skeleton& dest)
+void ModelState::parseGLTFAnimations(std::int32_t idx)
+{
+    //pre-processes the animation data for skinning
+
+    //TODO can we load only those necessary for the current skin, or is this required for propr indexing?
+    animations.resize(m_GLTFScene.animations.size());
+
+    for (auto i = 0u; i < animations.size(); ++i)
+    {
+        const auto& glAnim = m_GLTFScene.animations[i];
+        animations[i].name = glAnim.name;
+
+        //process samplers...
+        animations[i].samplers.resize(glAnim.samplers.size());
+        for (auto j = 0u; j < animations[i].samplers.size(); ++j)
+        {
+            const auto& glSampler = glAnim.samplers[j];
+            auto& sampler = animations[i].samplers[j];
+            sampler.interpType = glSampler.interpolation;
+
+            //read input values from buffer
+            {
+                const auto& accessor = m_GLTFScene.accessors[glSampler.input];
+                const auto& view = m_GLTFScene.bufferViews[accessor.bufferView];
+                const auto& buffer = m_GLTFScene.buffers[view.buffer];
+                auto index = accessor.byteOffset + view.byteOffset;
+
+                for (auto k = 0u; k < accessor.count; ++k)
+                {
+                    float v = 0.f;
+                    std::memcpy(&v, &buffer.data[index], sizeof(float));
+                    sampler.inputs.push_back(v);
+                    index += sizeof(float);
+                }
+
+                for (auto f : sampler.inputs)
+                {
+                    if (f < animations[i].start)
+                    {
+                        animations[i].start = f;
+                    }
+
+                    if (f > animations[i].end)
+                    {
+                        animations[i].end = f;
+                    }
+                }
+            }
+
+            //read output values from buffer
+            {
+                const auto& accessor = m_GLTFScene.accessors[glSampler.output];
+                const auto& view = m_GLTFScene.bufferViews[accessor.bufferView];
+                const auto& buffer = m_GLTFScene.buffers[view.buffer];
+                auto index = accessor.byteOffset + view.byteOffset;
+
+                switch (accessor.type)
+                {
+                    case TINYGLTF_TYPE_VEC3:
+                    {
+                        glm::vec3 v = glm::vec3(0.f);
+                        std::memcpy(&v, &buffer.data[index], sizeof(glm::vec3));
+                        sampler.outputs.push_back(glm::vec4(v, 0.f));
+                    }
+                        break;
+                    case TINYGLTF_TYPE_VEC4:
+                    {
+                        glm::vec4 v = glm::vec4(0.f);
+                        std::memcpy(&v, &buffer.data[index], sizeof(glm::vec4));
+                        sampler.outputs.push_back(v);
+                    }
+                        break;
+                    default:
+                        CRO_ASSERT(false, "");
+                        LogW << "Unknown accessor type found in animation sampler for " << animations[i].name << std::endl;
+                        break;
+                }
+            }
+        }
+
+
+        //process channels
+        animations[i].channels.resize(glAnim.channels.size());
+        for (auto j = 0u; j < animations[i].channels.size(); ++j)
+        {
+            const auto& glChannel = glAnim.channels[j];
+            auto& channel = animations[i].channels[j];
+            channel.path = glChannel.target_path;
+            channel.node = glChannel.target_node;
+            channel.samplerIndex = glChannel.sampler;
+        }
+    }
+}
+
+void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
 {
     //TODO model might have multple skins (ie for multiple meshes)
     //so we need to traverse the tree and parse all of them.
@@ -138,7 +258,6 @@ void ModelState::parseGLTFAnimations(std::int32_t idx, cro::Skeleton& dest)
     const auto& bufferView = m_GLTFScene.bufferViews[accessor.bufferView];
     const auto& buffer = m_GLTFScene.buffers[bufferView.buffer];
     std::size_t index = accessor.byteOffset + bufferView.byteOffset;
-    dest.frames.resize(dest.frameSize);
 
     //create a vector of parent IDs as nodes only track children
     std::vector<std::int32_t> parents(m_GLTFScene.nodes.size());
@@ -162,8 +281,6 @@ void ModelState::parseGLTFAnimations(std::int32_t idx, cro::Skeleton& dest)
         //built so not needed at run-time
         //dest.jointIndices[i] = parents[skin.joints[i]];
     }
-
-
 
     //copy the nodes as we'll modify the transforms for each key frame
     auto sceneNodes = m_GLTFScene.nodes;
@@ -220,24 +337,110 @@ void ModelState::parseGLTFAnimations(std::int32_t idx, cro::Skeleton& dest)
     {
         //applying this undoes the scale/rot applied to the armature with
         //blender and, in general, makes the model huge and lying on its back..
+        //however this will need to be applied if we're updating child nodes
+        //so that they take on their parent's transform correctly
         //auto inverseTx = glm::inverse(getMatrix(nodeIdx));
         for (auto i = 0u; i < dest.frameSize; ++i)
         {
-            dest.frames[i] = /*inverseTx **/ getMatrix(skin.joints[i]) * inverseBindPose[i];
+            dest.frames.push_back(/*inverseTx * */getMatrix(skin.joints[i]) * inverseBindPose[i]);
         }
     };
 
+    //base frame
     updateJoints(idx);
 
-    
     //update the output so we have something to look at.
     for (auto i = 0u; i < dest.frameSize; ++i)
     {
         dest.currentFrame.push_back(dest.frames[i]);
     }
+    dest.animations.emplace_back(); //empty 1 frame anim
 
-    dest.animations.emplace_back(); //TODO remove this when actually adding animations
-    dest.animations.back().looped = true;
+
+    for (auto& anim : animations)
+    {
+        auto& skelAnim = dest.animations.emplace_back();
+        skelAnim.name = anim.name;
+        skelAnim.startFrame = dest.frames.size() / dest.frameSize;
+        skelAnim.currentFrame = skelAnim.startFrame;
+
+        //glTF doesn't use a fixed frame rate, rather it
+        //supports poses at certain times. Ideally we should
+        //adapt cro to this method, but for now we'll assume
+        //a fixed frame rate and create series of samples
+        //from which keyframes can be built.
+
+        //the main problem with this approach is that, especially
+        //at low sample rates, we may miss the actual keyframes
+        //stored in the file. Higher samples rates, however,
+        //cost significantly more memory.
+
+        static constexpr float SampleRate = 12.f;
+        static constexpr float FixedStep = 1.f / SampleRate;
+        skelAnim.frameRate = SampleRate;
+
+        while (anim.currentTime < anim.end)
+        {
+            //for each channel
+            for (const auto& channel : anim.channels)
+            {
+                //get channel sampler
+                const auto& sampler = anim.samplers[channel.samplerIndex];
+                //TODO skip interpolation if type is 'STEP'
+                //TODO stop ignoring cubic spline and parse properly instead of interpolating
+
+                for (auto i = 0u; i < sampler.inputs.size(); ++i)
+                {
+                    //if current time lies between this sampler and next sampler
+                    if ((anim.currentTime >= sampler.inputs[i])
+                        && (anim.currentTime <= sampler.inputs[i + 1]))
+                    {
+                        //calculate and interpolated time and render results into
+                        //node's transforms.
+                        float t = (anim.currentTime - sampler.inputs[i]) / (sampler.inputs[i + 1] - sampler.inputs[i]);
+                        if (channel.path == "translation")
+                        {
+                            glm::vec4 translation = glm::mix(sampler.outputs[i], sampler.outputs[i + 1], t);
+                            sceneNodes[channel.node].translation = { translation.x, translation.y, translation.z };
+                        }
+                        else if(channel.path == "rotation")
+                        {
+                            glm::quat a = glm::quat(1.f, 0.f, 0.f, 0.f);
+                            a.x = sampler.outputs[i].x;
+                            a.y = sampler.outputs[i].y;
+                            a.z = sampler.outputs[i].z;
+                            a.w = sampler.outputs[i].w;
+
+                            glm::quat b = glm::quat(1.f, 0.f, 0.f, 0.f);
+                            b.x = sampler.outputs[i + 1].x;
+                            b.y = sampler.outputs[i + 1].y;
+                            b.z = sampler.outputs[i + 1].z;
+                            b.w = sampler.outputs[i + 1].w;
+
+                            glm::quat rot = glm::normalize(glm::slerp(a, b, t));
+                            sceneNodes[channel.node].rotation = { rot.x, rot.y, rot.z, rot.w };
+                        }
+                        else if (channel.path == "scale")
+                        {
+                            glm::vec4 scale = glm::mix(sampler.outputs[i], sampler.outputs[i + 1], t);
+                            sceneNodes[channel.node].scale = { scale.x, scale.y, scale.z };
+                        }
+                    }
+                }
+            }
+
+            updateJoints(idx);
+            anim.currentTime += FixedStep;
+            skelAnim.frameCount++;
+        }
+
+        skelAnim.looped = true; //glTF doesn't have this property... 
+        //TODO use the extras property to tag message triggers, looping etc?
+        //or shall we make this part of the editor?
+
+        dest.frameCount += skelAnim.frameCount;
+    }
+
     dest.play(0);
 }
 
