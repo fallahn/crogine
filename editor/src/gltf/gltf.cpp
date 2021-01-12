@@ -51,9 +51,10 @@ namespace
 void ModelState::showGLTFBrowser()
 {
     std::int32_t ID = 2000;
-    const std::function<void(const tf::Node&, const std::vector<tf::Node>&)> drawNode
-        = [&](const tf::Node& node, const std::vector<tf::Node>& nodes)
+    const std::function<void(std::int32_t, const std::vector<tf::Node>&)> drawNode
+        = [&](std::int32_t idx, const std::vector<tf::Node>& nodes)
     {
+        const auto& node = nodes[idx];
         if (node.mesh > -1)
         {
             std::string label = node.name + "##";
@@ -72,7 +73,7 @@ void ModelState::showGLTFBrowser()
                 if (ImGui::Button(buttonLabel.c_str()))
                 {
                     //import the node
-                    parseGLTFNode(node, importAnim);
+                    parseGLTFNode(idx, importAnim);
                     m_GLTFLoader.reset();
                     m_browseGLTF = false;
                     ImGui::CloseCurrentPopup();
@@ -80,7 +81,7 @@ void ModelState::showGLTFBrowser()
 
                 for (const auto& child : node.children)
                 {
-                    drawNode(nodes[child], nodes);
+                    drawNode(child, nodes);
                 }
                 ImGui::TreePop();
             }
@@ -92,9 +93,9 @@ void ModelState::showGLTFBrowser()
     if (ImGui::BeginPopupModal("Scene Browser", &m_browseGLTF, ImGuiWindowFlags_AlwaysAutoResize))
     {
         const auto& nodes = m_GLTFScene.nodes;
-        for (const auto& node : nodes)
+        for (auto i = 0u; i < nodes.size(); ++i)
         {
-            drawNode(node, nodes);
+            drawNode(static_cast<std::int32_t>(i), nodes);
         }
 
         if (ImGui::Button("Cancel", ImVec2(120, 0)))
@@ -107,23 +108,67 @@ void ModelState::showGLTFBrowser()
     }
 }
 
-void ModelState::parseGLTFNode(const tf::Node& node, bool loadAnims)
+void ModelState::parseGLTFNode(std::int32_t idx, bool loadAnims)
 {
-    importGLTF(node.mesh, loadAnims);
+    importGLTF(m_GLTFScene.nodes[idx].mesh, loadAnims);
 
     //load animations if selected
     if (loadAnims)
     {
-        //load bindpose
-        //cro::Skeleton output;
-        parseGLTFBindPose(node, m_entities[EntityID::ActiveModel].addComponent<cro::Skeleton>());
-
-        //load morphtargets (?) aka keyframes
+        parseGLTFAnimations(idx, m_entities[EntityID::ActiveModel].addComponent<cro::Skeleton>());
     }
 }
 
-void ModelState::parseGLTFBindPose(const tf::Node& node, cro::Skeleton& dest)
+void ModelState::parseGLTFAnimations(std::int32_t idx, cro::Skeleton& dest)
 {
+    //TODO model might have multple skins (ie for multiple meshes)
+    //so we need to traverse the tree and parse all of them.
+
+    //fetch the skin details
+    const auto& node = m_GLTFScene.nodes[idx];
+    CRO_ASSERT(node.skin > -1 && node.skin < m_GLTFScene.skins.size(), "");
+    const auto& skin = m_GLTFScene.skins[node.skin];
+
+    std::vector<glm::mat4> inverseBindPose(skin.joints.size());
+    dest.frameSize = skin.joints.size();
+    dest.jointIndices.resize(skin.joints.size()); //not used for this format, but still needs to be correct size.
+    std::fill(dest.jointIndices.begin(), dest.jointIndices.end(), -1);
+
+    const auto& accessor = m_GLTFScene.accessors[skin.inverseBindMatrices];
+    const auto& bufferView = m_GLTFScene.bufferViews[accessor.bufferView];
+    const auto& buffer = m_GLTFScene.buffers[bufferView.buffer];
+    std::size_t index = accessor.byteOffset + bufferView.byteOffset;
+    dest.frames.resize(dest.frameSize);
+
+    //create a vector of parent IDs as nodes only track children
+    std::vector<std::int32_t> parents(m_GLTFScene.nodes.size());
+    std::fill(parents.begin(), parents.end(), -1);
+    for (auto i = 0u; i < m_GLTFScene.nodes.size(); ++i)
+    {
+        const auto& node = m_GLTFScene.nodes[i];
+        for (auto j = 0u; j < node.children.size(); ++j)
+        {
+            parents[node.children[j]] = static_cast<std::int32_t>(i);
+        }
+    }
+
+    //read the inv bindpose
+    for (auto i = 0u; i < dest.frameSize; ++i)
+    {
+        std::memcpy(&inverseBindPose[i], &buffer.data[index], sizeof(glm::mat4));
+        index += sizeof(glm::mat4);
+
+        //this is pre-calculated when the matrices are
+        //built so not needed at run-time
+        //dest.jointIndices[i] = parents[skin.joints[i]];
+    }
+
+
+
+    //copy the nodes as we'll modify the transforms for each key frame
+    auto sceneNodes = m_GLTFScene.nodes;
+
+    //functions to process a frame
     auto getLocalMatrix = [](const tf::Node& node)
     {
         glm::mat4 jointMat = glm::mat4(1.f);
@@ -131,7 +176,7 @@ void ModelState::parseGLTFBindPose(const tf::Node& node, cro::Skeleton& dest)
         glm::quat rotation(1.f, 0.f, 0.f, 0.f);
         glm::vec3 scale(1.f);
 
-        if(node.translation.size() == 3)
+        if (node.translation.size() == 3)
         {
             translation.x = static_cast<float>(node.translation[0]);
             translation.y = static_cast<float>(node.translation[1]);
@@ -156,71 +201,41 @@ void ModelState::parseGLTFBindPose(const tf::Node& node, cro::Skeleton& dest)
         return jointMat;
     };
     
-
-    CRO_ASSERT(node.skin > -1 && node.skin < m_GLTFScene.skins.size(), "");
-    const auto& skin = m_GLTFScene.skins[node.skin];
-
-    std::vector<std::int32_t> parents(m_GLTFScene.nodes.size());
-    std::fill(parents.begin(), parents.end(), -1);
-    for (auto i = 0u; i < m_GLTFScene.nodes.size(); ++i)
+    auto getMatrix = [&](std::int32_t i)
     {
-        const auto& node = m_GLTFScene.nodes[i];
-        for (auto j = 0u; j < node.children.size(); ++j)
-        {
-            parents[node.children[j]] = static_cast<std::int32_t>(i);
-        }
-    }
-
-    auto getMatrix = [&](std::int32_t jointIndex)
-    {
-        const auto& joint = m_GLTFScene.nodes[skin.joints[jointIndex]];
+        const auto& joint = sceneNodes[i];
         auto jointMat = getLocalMatrix(joint);
 
-        std::int32_t currentParent = parents[jointIndex];
+        std::int32_t currentParent = parents[i];
         while (currentParent > -1)
         {
-            jointMat = getLocalMatrix(m_GLTFScene.nodes[currentParent]) * jointMat;
+            jointMat = getLocalMatrix(sceneNodes[currentParent]) * jointMat;
             currentParent = parents[currentParent];
         }
         return jointMat;
     };
 
-    std::vector<glm::mat4> inverseBindPose(skin.joints.size());
-    dest.jointIndices.resize(skin.joints.size());
-    std::fill(dest.jointIndices.begin(), dest.jointIndices.end(), -1);
-    dest.frameSize = skin.joints.size();
-    //dest.frameCount = fetch the frame count;
-
-    const auto& accessor = m_GLTFScene.accessors[skin.inverseBindMatrices];
-    const auto& bufferView = m_GLTFScene.bufferViews[accessor.bufferView];
-    const auto& buffer = m_GLTFScene.buffers[bufferView.buffer];
-    std::size_t index = accessor.byteOffset + bufferView.byteOffset;
-
-    dest.frames.resize(dest.frameSize);
-
     std::function<void(std::int32_t)> updateJoints =
         [&](std::int32_t nodeIdx)
     {
-        auto inverseTx = glm::inverse(getMatrix(nodeIdx));
-
+        //applying this undoes the scale/rot applied to the armature with
+        //blender and, in general, makes the model huge and lying on its back..
+        //auto inverseTx = glm::inverse(getMatrix(nodeIdx));
         for (auto i = 0u; i < dest.frameSize; ++i)
         {
-            std::memcpy(&inverseBindPose[i], &buffer.data[index], sizeof(glm::mat4));
-            index += sizeof(glm::mat4);
-
-            dest.frames[i] = getMatrix(skin.joints[i]) * inverseBindPose[i];
-            dest.frames[i] = inverseTx * dest.frames[i];
-
-            dest.jointIndices[i] = parents[skin.joints[i]];
-        }
-        
-        for (auto i = 0u; i < m_GLTFScene.nodes[nodeIdx].children.size(); ++i)
-        {
-            updateJoints(m_GLTFScene.nodes[nodeIdx].children[i]);
+            dest.frames[i] = /*inverseTx **/ getMatrix(skin.joints[i]) * inverseBindPose[i];
         }
     };
 
-    dest.currentFrame = dest.frames;
+    updateJoints(idx);
+
+    
+    //update the output so we have something to look at.
+    for (auto i = 0u; i < dest.frameSize; ++i)
+    {
+        dest.currentFrame.push_back(dest.frames[i]);
+    }
+
     dest.animations.emplace_back(); //TODO remove this when actually adding animations
     dest.animations.back().looped = true;
     dest.play(0);

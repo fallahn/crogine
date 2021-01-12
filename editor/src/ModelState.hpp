@@ -154,8 +154,8 @@ private:
 
     void importIQM(const std::string&); //used to apply modified transforms
     void importGLTF(std::int32_t, bool);
-    void parseGLTFNode(const tf::Node&, bool importAnims);
-    void parseGLTFBindPose(const tf::Node&, cro::Skeleton&);
+    void parseGLTFNode(std::int32_t, bool importAnims);
+    void parseGLTFAnimations(std::int32_t, cro::Skeleton&);
     void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
 
     bool m_browseGLTF;
