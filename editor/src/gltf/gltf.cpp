@@ -148,8 +148,7 @@ void ModelState::parseGLTFNode(std::int32_t idx, bool loadAnims)
 void ModelState::parseGLTFAnimations(std::int32_t idx)
 {
     //pre-processes the animation data for skinning
-
-    //TODO can we load only those necessary for the current skin, or is this required for propr indexing?
+    animations.clear();
     animations.resize(m_GLTFScene.animations.size());
 
     for (auto i = 0u; i < animations.size(); ++i)
@@ -158,6 +157,9 @@ void ModelState::parseGLTFAnimations(std::int32_t idx)
         animations[i].name = glAnim.name;
 
         //process samplers...
+        //inputs are the current global time in seconds
+        //at which this key frame occurs. Outputs are the
+        //channel values (TRS) at this point in time.
         animations[i].samplers.resize(glAnim.samplers.size());
         for (auto j = 0u; j < animations[i].samplers.size(); ++j)
         {
@@ -205,16 +207,22 @@ void ModelState::parseGLTFAnimations(std::int32_t idx)
                 {
                     case TINYGLTF_TYPE_VEC3:
                     {
-                        glm::vec3 v = glm::vec3(0.f);
-                        std::memcpy(&v, &buffer.data[index], sizeof(glm::vec3));
-                        sampler.outputs.push_back(glm::vec4(v, 0.f));
+                        for (auto k = 0; k < accessor.count; ++k)
+                        {
+                            glm::vec3 v = glm::vec3(0.f);
+                            std::memcpy(&v, &buffer.data[index + (k * sizeof(glm::vec3))], sizeof(glm::vec3));
+                            sampler.outputs.push_back(glm::vec4(v, 0.f));
+                        }
                     }
                         break;
                     case TINYGLTF_TYPE_VEC4:
                     {
-                        glm::vec4 v = glm::vec4(0.f);
-                        std::memcpy(&v, &buffer.data[index], sizeof(glm::vec4));
-                        sampler.outputs.push_back(v);
+                        for (auto k = 0; k < accessor.count; ++k)
+                        {
+                            glm::vec4 v = glm::vec4(0.f);
+                            std::memcpy(&v, &buffer.data[index + (k * sizeof(glm::vec4))], sizeof(glm::vec4));
+                            sampler.outputs.push_back(v);
+                        }
                     }
                         break;
                     default:
@@ -342,7 +350,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         //auto inverseTx = glm::inverse(getMatrix(nodeIdx));
         for (auto i = 0u; i < dest.frameSize; ++i)
         {
-            dest.frames.push_back(/*inverseTx * */getMatrix(skin.joints[i]) * inverseBindPose[i]);
+            dest.frames.push_back(/*inverseTx **/ getMatrix(skin.joints[i]) * inverseBindPose[i]);
         }
     };
 
@@ -379,9 +387,10 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         static constexpr float FixedStep = 1.f / SampleRate;
         skelAnim.frameRate = SampleRate;
 
-        while (anim.currentTime < anim.end)
+        while(anim.currentTime < anim.end)
         {
             //for each channel
+            bool addFrame = false;
             for (const auto& channel : anim.channels)
             {
                 //get channel sampler
@@ -389,7 +398,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
                 //TODO skip interpolation if type is 'STEP'
                 //TODO stop ignoring cubic spline and parse properly instead of interpolating
 
-                for (auto i = 0u; i < sampler.inputs.size(); ++i)
+                for (auto i = 0u; i < sampler.inputs.size() - 1; ++i)
                 {
                     //if current time lies between this sampler and next sampler
                     if ((anim.currentTime >= sampler.inputs[i])
@@ -425,13 +434,19 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
                             glm::vec4 scale = glm::mix(sampler.outputs[i], sampler.outputs[i + 1], t);
                             sceneNodes[channel.node].scale = { scale.x, scale.y, scale.z };
                         }
+
+                        addFrame = true;
                     }
                 }
             }
 
-            updateJoints(idx);
+            
+            if (addFrame)
+            {
+                updateJoints(idx);
+                skelAnim.frameCount++;
+            }
             anim.currentTime += FixedStep;
-            skelAnim.frameCount++;
         }
 
         skelAnim.looped = true; //glTF doesn't have this property... 
@@ -441,7 +456,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         dest.frameCount += skelAnim.frameCount;
     }
 
-    dest.play(0);
+    dest.play(1);
 }
 
 void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
@@ -630,7 +645,6 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
                             }
                         }
                     }
-                    int buns = 0;
                 }
                     break;
                 case GL_UNSIGNED_SHORT:

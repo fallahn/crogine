@@ -1458,6 +1458,7 @@ void ModelState::importModel()
             std::string error;
 
             m_GLTFLoader = std::make_unique<tf::TinyGLTF>();
+            m_GLTFScene = {};
             m_browseGLTF = m_GLTFLoader->LoadBinaryFromFile(&m_GLTFScene, &error, &warning, path);
 
             if (!warning.empty())
