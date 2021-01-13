@@ -247,6 +247,7 @@
     <ClCompile Include="..\crogine\src\ecs\components\Drawable2D.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Model.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\ParticleEmitter.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\components\Skeleton.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Sprite.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Text.cpp" />
     <ClCompile Include="..\crogine\src\ecs\components\Transform.cpp" />

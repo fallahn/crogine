@@ -355,15 +355,17 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     };
 
     //base frame
-    updateJoints(idx);
-
-    //update the output so we have something to look at.
-    for (auto i = 0u; i < dest.frameSize; ++i)
+    if (animations.empty())
     {
-        dest.currentFrame.push_back(dest.frames[i]);
-    }
-    dest.animations.emplace_back(); //empty 1 frame anim
+        updateJoints(idx);
 
+        //update the output so we have something to look at.
+        for (auto i = 0u; i < dest.frameSize; ++i)
+        {
+            dest.currentFrame.push_back(dest.frames[i]);
+        }
+        dest.animations.emplace_back(); //empty 1 frame anim
+    }
 
     for (auto& anim : animations)
     {
@@ -407,6 +409,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
                         //calculate and interpolated time and render results into
                         //node's transforms.
                         float t = (anim.currentTime - sampler.inputs[i]) / (sampler.inputs[i + 1] - sampler.inputs[i]);
+
                         if (channel.path == "translation")
                         {
                             glm::vec4 translation = glm::mix(sampler.outputs[i], sampler.outputs[i + 1], t);
@@ -433,6 +436,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
                         {
                             glm::vec4 scale = glm::mix(sampler.outputs[i], sampler.outputs[i + 1], t);
                             sceneNodes[channel.node].scale = { scale.x, scale.y, scale.z };
+                            //LogI << scale << ", node " << channel.node << ", frame " << skelAnim.frameCount << std::endl;
                         }
 
                         addFrame = true;
@@ -456,7 +460,8 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         dest.frameCount += skelAnim.frameCount;
     }
 
-    dest.play(1);
+    
+    //dest.play(0);
 }
 
 void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)

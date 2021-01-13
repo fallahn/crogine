@@ -58,39 +58,31 @@ void SkeletalAnimator::process(float dt)
         {
             //update current animation
             auto& anim = skel.animations[skel.currentAnimation];
+
+            auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
+            nextFrame += anim.startFrame;
+
             if (anim.playing)
             {
-                auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
-                nextFrame += anim.startFrame;
-
                 skel.currentFrameTime += dt;
-                              
-                if (entity.getComponent<Model>().isVisible())
-                {
-                    float interpTime = std::min(1.f, skel.currentFrameTime / skel.frameTime);
-                    interpolate(anim.currentFrame, nextFrame, interpTime, skel);
-                }
-
-                if (skel.currentFrameTime > skel.frameTime)
-                {
-                    //frame is done, move to next
-                    if (nextFrame < anim.currentFrame && !anim.looped)
-                    {
-                        anim.playing = false;
-                    }
-
-                    anim.currentFrame = nextFrame;
-                    skel.currentFrameTime = 0.f;                  
-                }
-                //DPRINT("Current Frame", std::to_string(anim.currentFrame));
             }
-            else
+                              
+            if (entity.getComponent<Model>().isVisible())
             {
-                //show the current frame
-                if (entity.getComponent<Model>().isVisible())
+                float interpTime = std::min(1.f, skel.currentFrameTime / skel.frameTime);
+                interpolate(anim.currentFrame, nextFrame, interpTime, skel);
+            }
+
+            if (skel.currentFrameTime > skel.frameTime)
+            {
+                //frame is done, move to next
+                if (nextFrame < anim.currentFrame && !anim.looped)
                 {
-                    interpolate(anim.currentFrame, anim.currentFrame, 0.f, skel);
+                    anim.playing = false;
                 }
+
+                anim.currentFrame = nextFrame;
+                skel.currentFrameTime = 0.f;                  
             }
         }
         else
@@ -124,6 +116,12 @@ void SkeletalAnimator::process(float dt)
 void SkeletalAnimator::onEntityAdded(Entity entity)
 {
     auto& skeleton = entity.getComponent<Skeleton>();
+
+    if (skeleton.currentFrame.size(), skeleton.frameSize)
+    {
+        skeleton.currentFrame.resize(skeleton.frameSize);
+    }
+
     entity.getComponent<Model>().setSkeleton(&skeleton.currentFrame[0], skeleton.frameSize);
     skeleton.frameTime = 1.f / skeleton.animations[0].frameRate;
 }
@@ -134,6 +132,7 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
 
     //interp tx and rot separately
     //TODO convert to 4x3 to free up some uniform space
+    //TODO store frames as components and combine only for output
     auto mix = [](const glm::mat4& a, const glm::mat4& b, float time) -> glm::mat4
     {
         glm::vec3 scaleA(1.f);

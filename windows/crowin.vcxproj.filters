@@ -956,6 +956,9 @@
     <ClCompile Include="..\crogine\src\imgui\ImSequencer.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\Skeleton.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\ecs\Entity.inl">

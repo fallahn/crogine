@@ -173,6 +173,18 @@ namespace
         }
     }
 
+    void toolTip(const char* desc)
+    {
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+            ImGui::TextUnformatted(desc);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
+
     //returns true if texture was changed
     bool drawTextureSlot(const std::string label, std::uint32_t& dest, std::uint32_t thumbnail)
     {
@@ -422,7 +434,7 @@ void ModelState::loadAssets()
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
     materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
 
-    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::Skinning | cro::ShaderResource::DepthMap);
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::Skinning | cro::ShaderResource::DepthMap | cro::ShaderResource::AlphaClip);
     materialIDs[MaterialID::DefaultShadowSkinned] = m_resources.materials.add(m_resources.shaders.get(shaderID));
 
     //used for drawing debug lines
@@ -2523,6 +2535,66 @@ void ModelState::drawInspector()
                     
                     ImGui::NewLine();
                     ImGui::Separator();
+
+                    if (m_importedHeader.animated)
+                    {
+                        auto& skel = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+                        ImGui::Text("%lu Animation(s)", skel.animations.size());
+                        int buns = 232131;
+                        int animID = 0;
+                        for (const auto& anim : skel.animations)
+                        {
+                            auto name = anim.name.substr(0,16);
+                            ImGui::Text("%s\n Frames: %lu", name.c_str(), anim.frameCount);
+                            
+                            ImGui::SameLine();
+                            std::string label = "<##" + std::to_string(buns++);
+                            if (ImGui::Button(label.c_str())
+                                && animID == skel.currentAnimation
+                                && !skel.animations[skel.currentAnimation].playing)
+                            {
+                                skel.prevFrame();
+                            }
+                            toolTip("Previous Frame");
+                            ImGui::SameLine();
+
+                            if (skel.animations[skel.currentAnimation].playing)
+                            {
+                                //pause button
+                                label = "Pause##" + std::to_string(buns++);
+                                if (ImGui::Button(label.c_str(), ImVec2(50.f, 22.f)))
+                                {
+                                    skel.stop();
+                                }
+                            }
+                            else
+                            {
+                                //play button
+                                label = "Play##" + std::to_string(buns++);
+                                if (ImGui::Button(label.c_str(), ImVec2(50.f, 22.f)))
+                                {
+                                    skel.play(animID);
+                                }
+                            }
+
+                            ImGui::SameLine();
+                            label = ">##" + std::to_string(buns++);
+                            if (ImGui::Button(label.c_str())
+                                && animID == skel.currentAnimation
+                                && !skel.animations[skel.currentAnimation].playing)
+                            {
+                                skel.nextFrame();
+                            }
+                            toolTip("Next Frame");
+                            animID++;
+
+                        }
+                        ImGui::Text("Current Frame: %lu", skel.animations[skel.currentAnimation].currentFrame - skel.animations[skel.currentAnimation].startFrame);
+
+                        ImGui::NewLine();
+                        ImGui::Separator();
+                    }
+
 
                     ImGui::NewLine();
                     ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");

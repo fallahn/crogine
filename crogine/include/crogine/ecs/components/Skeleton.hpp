@@ -34,7 +34,7 @@ source distribution.
 
 #include <crogine/detail/glm/mat4x4.hpp>
 
-#include <vector> //TODO if performance requires switch to fixed size arrays
+#include <vector>
 #include <string>
 
 namespace cro
@@ -74,6 +74,9 @@ namespace cro
             return (!frames.empty() && (frames.size() == frameSize * frameCount));
         }
 
+        //lists the parent IDs if the parents should be included
+        //during interpolation
+        //TODO fix this disparity between glTF and iqm format meshes.
         std::vector<int32> jointIndices;
 
         std::vector<SkeletalAnim> animations;
@@ -92,18 +95,22 @@ namespace cro
         \param blendTime time in seconds to blend / overlap the new animation
         with any previously playing animation
         */
-        void play(std::size_t idx, float blendingTime = 0.1f)
-        {
-            CRO_ASSERT(idx < animations.size(), "Index out of range");
-            nextAnimation = static_cast<cro::int32>(idx);
-            blendTime = blendingTime;
-            currentBlendTime = 0.f;
-        }
+        void play(std::size_t idx, float blendingTime = 0.1f);
+
+        /*!
+        \brief Steps the current animation to the previous frame if it is not playing
+        */
+        void prevFrame();
+
+        /*!
+        \brief Steps the current animation to the next frame if it not playing
+        */
+        void nextFrame();
 
         /*!
         \brief Stops any active animations
         */
-        //void stop();
+        void stop();
 
     private:
     };
