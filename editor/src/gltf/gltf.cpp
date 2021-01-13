@@ -285,6 +285,13 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         std::memcpy(&inverseBindPose[i], &buffer.data[index], sizeof(glm::mat4));
         index += sizeof(glm::mat4);
 
+        const auto& node = m_GLTFScene.nodes[skin.joints[i]];
+        auto& joint = dest.bindPose.emplace_back();
+        if(!node.translation.empty()) joint.translation = glm::make_vec3(node.translation.data());
+        if(!node.rotation.empty()) joint.rotation = glm::make_quat(node.rotation.data());
+        if(!node.scale.empty()) joint.scale = glm::make_vec3(node.scale.data());
+        joint.parent = parents[skin.joints[i]];
+
         //this is pre-calculated when the matrices are
         //built so not needed at run-time
         //dest.jointIndices[i] = parents[skin.joints[i]];
@@ -459,9 +466,6 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
 
         dest.frameCount += skelAnim.frameCount;
     }
-
-    
-    //dest.play(0);
 }
 
 void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)

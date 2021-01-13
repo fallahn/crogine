@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/detail/glm/mat4x4.hpp>
+#include <crogine/detail/glm/gtc/quaternion.hpp>
 
 #include <vector>
 #include <string>
@@ -54,6 +55,20 @@ namespace cro
         float frameRate = 12.f;
         bool looped = false;
         bool playing = false;
+    };
+
+    /*!
+    \brief Represents a Joint in the skeleton
+    An array of these are store in the skeleton representing
+    the resting positions for the joints. Useful for debug
+    rendering.
+    */
+    struct CRO_EXPORT_API Joint final
+    {
+        glm::vec3 translation = glm::vec3(0.f);
+        glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
+        glm::vec3 scale = glm::vec3(1.f);
+        std::int32_t parent = -1;
     };
 
     /*!
@@ -88,6 +103,13 @@ namespace cro
 
         float frameTime = 1.f;
         float currentFrameTime = 0.f;
+
+        /*!
+        \brief Joints which make up the bind pose, in local coords
+        To convert to world coords walk each joints tree and multiply
+        by its parent transform
+        */
+        std::vector<Joint> bindPose;
 
         /*!
         \brief Plays the animation at the given index
