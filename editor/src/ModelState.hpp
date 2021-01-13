@@ -59,6 +59,7 @@ struct CMFHeader final
     std::int32_t arrayOffset = 0;
     std::vector<std::int32_t> arraySizes;
     bool animated = false;
+    std::int32_t primitiveType = 4;
 };
 
 struct SharedStateData;

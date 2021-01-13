@@ -575,7 +575,16 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
 
                     for (auto j = 0u; j < accessor.count; ++j)
                     {
-                        std::size_t index = view.byteOffset + accessor.byteOffset + (std::max(componentCount, view.byteStride) * j * sizeof(float));
+                        std::size_t index = view.byteOffset + accessor.byteOffset;
+                        if (view.byteStride)
+                        {
+                            index += view.byteStride * j;
+                        }
+                        else
+                        {
+                            index += componentCount * sizeof(float) * j;
+                        }
+                        
                         for (auto k = 0u; k < componentCount; ++k)
                         {
                             float f = 0.f;
@@ -603,7 +612,7 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
 
                     for (auto j = 0u; j < accessor.count; ++j)
                     {
-                        std::size_t index = view.byteOffset + accessor.byteOffset + (std::max(componentCount, view.byteStride) * j * sizeof(std::uint8_t));
+                        std::size_t index = view.byteOffset + accessor.byteOffset + (std::max(componentCount, view.byteStride) * j);
 
                         for (auto k = 0u; k < componentCount; ++k)
                         {
@@ -636,7 +645,16 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
 
                     for (auto j = 0u; j < accessor.count; ++j)
                     {
-                        std::size_t index = view.byteOffset + accessor.byteOffset + (std::max(componentCount, view.byteStride) * j * sizeof(std::uint16_t));
+                        std::size_t index = view.byteOffset + accessor.byteOffset;
+                        if (view.byteStride)
+                        {
+                            index += view.byteStride * j;
+                        }
+                        else
+                        {
+                            index += componentCount * sizeof(std::uint16_t) * j;
+                        }
+                        
                         for (auto k = 0u; k < componentCount; ++k)
                         {
                             std::uint16_t v = 0;
