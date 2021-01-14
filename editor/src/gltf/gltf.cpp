@@ -41,6 +41,8 @@ source distribution.
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/gui/Gui.hpp>
 
+#include <crogine/graphics/MeshData.hpp>
+
 #include <string>
 #include <cstring>
 
@@ -136,10 +138,10 @@ void ModelState::showGLTFBrowser()
 
 void ModelState::parseGLTFNode(std::int32_t idx, bool loadAnims)
 {
-    importGLTF(m_GLTFScene.nodes[idx].mesh, loadAnims);
+    auto success = importGLTF(m_GLTFScene.nodes[idx].mesh, loadAnims);
 
     //load animations if selected
-    if (loadAnims)
+    if (success && loadAnims)
     {
         parseGLTFAnimations(idx);
         parseGLTFSkin(idx, m_entities[EntityID::ActiveModel].addComponent<cro::Skeleton>());
@@ -404,7 +406,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         }
         dest.animations.emplace_back(); //empty 1 frame anim
     }
-
+    
     for (auto& anim : animations)
     {
         auto& skelAnim = dest.animations.emplace_back();
@@ -499,7 +501,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     }
 }
 
-void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
+bool ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
 {
     //start with mesh. This contains a Primitive for each sub-mesh
     //which in turn contains the indices into the accessor array.
@@ -522,6 +524,13 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
 
     CRO_ASSERT(meshIndex < m_GLTFScene.meshes.size(), "");
     const auto& mesh = m_GLTFScene.meshes[meshIndex];
+
+    if (mesh.primitives.size() > cro::Mesh::IndexData::MaxBuffers)
+    {
+        LogE << "Model has " << mesh.primitives.size() << " sub-meshes. Maximum is 32. Model not loaded" << std::endl;
+        return false;
+    }
+
     for (const auto& prim : mesh.primitives)
     {
         std::uint16_t flags = 0;
@@ -572,6 +581,12 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
                 flags |= cro::VertexProperty::BlendWeights;
                 attribIndices[cro::Mesh::BlendWeights] = idx;
             }
+        }
+
+        if ((flags & cro::VertexProperty::Position) == 0)
+        {
+            LogE << "No vertex positions found. Model not loaded." << std::endl;
+            return false;
         }
 
         if (attribFlags != 0
@@ -802,49 +817,59 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
         }
 
         //copy the index data
-        CRO_ASSERT(prim.indices < m_GLTFScene.accessors.size(), "");
-        const auto& accessor = m_GLTFScene.accessors[prim.indices];
-        CRO_ASSERT(accessor.bufferView < m_GLTFScene.bufferViews.size(), "");
-        const auto& view = m_GLTFScene.bufferViews[accessor.bufferView];
-        CRO_ASSERT(view.buffer < m_GLTFScene.buffers.size(), "");
-        const auto& buffer = m_GLTFScene.buffers[view.buffer];
-
         indices.emplace_back();
-
-        for (auto j = 0u; j < accessor.count; ++j)
+        if (prim.indices > -1)
         {
-            switch (accessor.componentType)
+            CRO_ASSERT(prim.indices < m_GLTFScene.accessors.size(), "");
+            const auto& accessor = m_GLTFScene.accessors[prim.indices];
+            CRO_ASSERT(accessor.bufferView < m_GLTFScene.bufferViews.size(), "");
+            const auto& view = m_GLTFScene.bufferViews[accessor.bufferView];
+            CRO_ASSERT(view.buffer < m_GLTFScene.buffers.size(), "");
+            const auto& buffer = m_GLTFScene.buffers[view.buffer];
+
+            for (auto j = 0u; j < accessor.count; ++j)
             {
-            default: 
-                LogW << "Unknown index type " << accessor.componentType << std::endl;
+                switch (accessor.componentType)
+                {
+                default:
+                    LogW << "Unknown index type " << accessor.componentType << std::endl;
+                    break;
+                case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+                {
+                    std::uint8_t v = 0;
+                    std::size_t index = view.byteOffset + accessor.byteOffset + j;
+                    std::memcpy(&v, &buffer.data[index], sizeof(std::uint8_t));
+                    indices.back().push_back(v + static_cast<std::uint8_t>(indexOffset & 0xff));
+                }
                 break;
-            case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
-            {
-                std::uint8_t v = 0;
-                std::size_t index = view.byteOffset + accessor.byteOffset + j;
-                std::memcpy(&v, &buffer.data[index], sizeof(std::uint8_t));
-                indices.back().push_back(v + static_cast<std::uint8_t>(indexOffset & 0xff));
-            }
+                case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+                {
+                    std::uint16_t v = 0;
+                    std::size_t index = view.byteOffset + accessor.byteOffset + (j * sizeof(std::uint16_t));
+                    std::memcpy(&v, &buffer.data[index], sizeof(std::uint16_t));
+                    indices.back().push_back(v + static_cast<std::uint16_t>(indexOffset & 0xffff));
+                }
                 break;
-            case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
-            {
-                std::uint16_t v = 0;
-                std::size_t index = view.byteOffset + accessor.byteOffset + (j * sizeof(std::uint16_t));
-                std::memcpy(&v, &buffer.data[index], sizeof(std::uint16_t));
-                indices.back().push_back(v + static_cast<std::uint16_t>(indexOffset & 0xffff));
-            }
+                case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+                {
+                    std::uint32_t v = 0;
+                    std::size_t index = view.byteOffset + accessor.byteOffset + (j * sizeof(std::uint32_t));
+                    std::memcpy(&v, &buffer.data[index], sizeof(std::uint32_t));
+                    indices.back().push_back(v + static_cast<std::uint32_t>(indexOffset & 0xffffffff));
+                }
                 break;
-            case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
-            {
-                std::uint32_t v = 0;
-                std::size_t index = view.byteOffset + accessor.byteOffset + (j * sizeof(std::uint32_t));
-                std::memcpy(&v, &buffer.data[index], sizeof(std::uint32_t));
-                indices.back().push_back(v + static_cast<std::uint32_t>(indexOffset & 0xffffffff));
-            }
-                break;
+                }
             }
         }
-            
+        else
+        {
+            auto vertCount = tempData[0].first.size() / tempData[0].second;
+            for (auto j = 0u; j < vertCount; ++j)
+            {
+                indices.back().push_back(static_cast<std::uint32_t>(j + indexOffset));
+            }
+        }
+
         primitiveTypes.push_back(prim.mode); //GL_TRIANGLES etc.
 
         //offset indices for submesh as we're concatting the vertex data
@@ -856,6 +881,7 @@ void ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
     CMFHeader header;
     header.flags = attribFlags;
     header.animated = loadAnims;
-    //TODO make sure we don't have more than MaxMaterials sub meshes
     updateImportNode(header, vertices, indices);
+
+    return true;
 }

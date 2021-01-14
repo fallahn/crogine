@@ -117,7 +117,7 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
 {
     auto& skeleton = entity.getComponent<Skeleton>();
 
-    if (skeleton.currentFrame.size() <  skeleton.frameSize)
+    if (skeleton.currentFrame.size() < skeleton.frameSize)
     {
         skeleton.currentFrame.resize(skeleton.frameSize);
     }

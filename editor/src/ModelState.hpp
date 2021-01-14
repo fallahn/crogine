@@ -166,7 +166,7 @@ private:
     void parseGLTFNode(std::int32_t, bool importAnims);
     void parseGLTFAnimations(std::int32_t);
     void parseGLTFSkin(std::int32_t, cro::Skeleton&);
-    void importGLTF(std::int32_t, bool);
+    bool importGLTF(std::int32_t, bool);
     //----------------------------//
 
     void loadPrefs();
