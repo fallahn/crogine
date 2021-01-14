@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <crogine/Config.hpp>
+
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
 
@@ -38,20 +40,38 @@ namespace cro
     {
         namespace Matrix
         {
+            /*!
+            \brief Returns the forward vector of the given matrix
+            */
             static inline glm::vec3 getForwardVector(const glm::mat4& mat)
             {
                 return glm::vec3(-mat[2][0], -mat[2][1], -mat[2][2]);
             }
 
+            /*!
+            \brief Returns the up vector of the given matrix
+            */
             static inline glm::vec3 getUpVector(const glm::mat4& mat)
             {
                 return glm::vec3(mat[1][0], mat[1][1], mat[1][2]);
             }
 
+            /*!
+            \brief Returns the right vector of the given matrix
+            */
             static inline glm::vec3 getRightVector(const glm::mat4& mat)
             {
                 return glm::vec3(mat[0][0], mat[0][1], mat[0][2]);
             }
+
+            /*!
+            \brief Decomposes the given matrix into translation, rotation and scale components
+            \param in Matrix to decompose
+            \param outTranslation A reference to a vec 3 which will receive the translation values
+            \param outRotation A reference to a quaternion which will receive the orientation values
+            \param outScale A reference to a vec 3 which will receive the scale values
+            */
+            CRO_EXPORT_API bool decompose(const glm::mat4& in, glm::vec3& outTranslation, glm::quat& outRotation, glm::vec3& outScale);
         }
     }
 }

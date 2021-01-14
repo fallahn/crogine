@@ -959,6 +959,9 @@
     <ClCompile Include="..\crogine\src\ecs\components\Skeleton.cpp">
       <Filter>Source Files\ecs\components</Filter>
     </ClCompile>
+    <ClCompile Include="..\crogine\src\util\Matrix.cpp">
+      <Filter>Source Files\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\ecs\Entity.inl">

@@ -323,6 +323,7 @@
     <ClCompile Include="..\crogine\src\network\NetEvent.cpp" />
     <ClCompile Include="..\crogine\src\network\NetHost.cpp" />
     <ClCompile Include="..\crogine\src\network\NetPeer.cpp" />
+    <ClCompile Include="..\crogine\src\util\Matrix.cpp" />
     <ClCompile Include="..\crogine\src\util\Random.cpp" />
   </ItemGroup>
   <ItemGroup>

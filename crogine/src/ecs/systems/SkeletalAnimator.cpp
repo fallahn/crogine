@@ -129,31 +129,15 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
 
     //interp tx and rot separately
     //TODO convert to 4x3 to free up some uniform space
-    //TODO store frames as components and combine only for output
-    auto mix = [](const glm::mat4& a, const glm::mat4& b, float time) -> glm::mat4
+    auto mix = [](const Joint& a, const Joint& b, float time) -> glm::mat4
     {
-        glm::vec3 scaleA(1.f);
-        glm::vec3 scaleB(1.f);
-        glm::quat rotA(1.f, 0.f, 0.f, 0.f);
-        glm::quat rotB(1.f, 0.f, 0.f, 0.f);
-        glm::vec3 transA(0.f);
-        glm::vec3 transB(0.f);
-        glm::vec3 skewA(0.f);
-        glm::vec3 skewB(0.f);
-        glm::vec4 perspA(0.f);
-        glm::vec4 perspB(0.f);
-        glm::decompose(a, scaleA, rotA, transA, skewA, perspA);
-        glm::decompose(b, scaleB, rotB, transB, skewB, perspB);
-
-        glm::vec3 scale = glm::mix(scaleA, scaleB, time);
-        glm::quat rot = glm::slerp(glm::conjugate(rotA), glm::conjugate(rotB), time);
-        glm::vec3 trans = glm::mix(transA, transB, time);
+        glm::vec3 trans = glm::mix(a.translation, b.translation, time);
+        glm::quat rot = glm::slerp(a.rotation, b.rotation, time);
+        glm::vec3 scale = glm::mix(a.scale, b.scale, time);
 
         glm::mat4 result = glm::translate(glm::mat4(1.f), trans);
         result *= glm::transpose(glm::toMat4(rot));
         return glm::scale(result, scale);
-
-        //return glm::mix(a, b, time);
     };
 
     //NOTE a and b are FRAME INDICES not indices directly into the frame array

@@ -43,6 +43,8 @@ source distribution.
 
 #include <crogine/graphics/MeshData.hpp>
 
+#include <crogine/util/Matrix.hpp>
+
 #include <string>
 #include <cstring>
 
@@ -350,13 +352,11 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         auto tx = getMatrix(skin.joints[i]);
         glm::vec3 translation, scale;
         glm::quat rot;
-        glm::vec3 skew;
-        glm::vec4 persp;
 
-        glm::decompose(tx, scale, rot, translation, skew, persp);
+        cro::Util::Matrix::decompose(tx, translation, rot, scale);
         auto& joint = dest.bindPose.emplace_back();
         joint.translation = translation;
-        joint.rotation = glm::conjugate(rot);
+        joint.rotation = rot;
         joint.scale = scale;
 
         //as the joints list is smaller than the overall nodes list we have
@@ -377,7 +377,12 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         /*auto inverseTx = glm::inverse(getMatrix(nodeIdx));*/
         for (auto i = 0u; i < dest.frameSize; ++i)
         {
-            dest.frames.push_back(/*inverseTx **/ getMatrix(skin.joints[i]) * inverseBindPose[i]);
+            auto mat = /*inverseTx **/ getMatrix(skin.joints[i]) * inverseBindPose[i];
+            glm::vec3 t, s;
+            glm::quat r;
+            cro::Util::Matrix::decompose(mat, t, r, s);
+            
+            dest.frames.emplace_back(t, r, s);
         }
     };
 
@@ -389,7 +394,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         //update the output so we have something to look at.
         for (auto i = 0u; i < dest.frameSize; ++i)
         {
-            dest.currentFrame.push_back(dest.frames[i]);
+            dest.currentFrame.push_back(cro::Joint::combine(dest.frames[i]));
         }
         dest.animations.emplace_back(); //empty 1 frame anim
     }

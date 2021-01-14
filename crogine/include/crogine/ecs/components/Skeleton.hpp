@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/detail/glm/mat4x4.hpp>
-#include <crogine/detail/glm/gtc/quaternion.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
 
 #include <vector>
 #include <string>
@@ -65,10 +65,23 @@ namespace cro
     */
     struct CRO_EXPORT_API Joint final
     {
+        Joint() = default;
+        Joint(glm::vec3 t, glm::quat r, glm::vec3 s)
+            : translation(t), rotation(r), scale(s) {}
+
         glm::vec3 translation = glm::vec3(0.f);
         glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
         glm::vec3 scale = glm::vec3(1.f);
         std::int32_t parent = -1;
+
+        static glm::mat4 combine(const Joint& j)
+        {
+            glm::mat4 m(1.f);
+            m = glm::translate(m, j.translation);
+            m *= glm::toMat4(j.rotation);
+            m = glm::scale(m, j.scale);
+            return m;
+        }
     };
 
     /*!
@@ -81,7 +94,8 @@ namespace cro
     public:
         std::size_t frameSize = 0; //joints in a frame
         std::size_t frameCount = 1;
-        std::vector<glm::mat4> frames; //indexed by steps of frameSize
+        //std::vector<glm::mat4> frames; //indexed by steps of frameSize
+        std::vector<Joint> frames; //indexed by steps of frameSize
         std::vector<glm::mat4> currentFrame; //current interpolated output
 
         operator bool() const

@@ -594,11 +594,11 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     glm::mat4 mat = Iqm::createBoneMatrix(rotation, translation, scale);
                     if (pose.parent >= 0)
                     {
-                        out.frames[frameIndex + poseIndex] =  bindPose[pose.parent] * mat * inverseBindPose[poseIndex];
+                        //out.frames[frameIndex + poseIndex] = bindPose[pose.parent] * mat * inverseBindPose[poseIndex];
                     }
                     else
                     {
-                        out.frames[frameIndex + poseIndex] = mat * inverseBindPose[poseIndex];
+                        //out.frames[frameIndex + poseIndex] = mat * inverseBindPose[poseIndex];
                     }
                 }
             }
