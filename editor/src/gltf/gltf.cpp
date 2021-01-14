@@ -138,7 +138,7 @@ void ModelState::showGLTFBrowser()
 
 void ModelState::parseGLTFNode(std::int32_t idx, bool loadAnims)
 {
-    auto success = importGLTF(m_GLTFScene.nodes[idx].mesh, loadAnims);
+    auto success = importGLTF(idx, loadAnims);
 
     //load animations if selected
     if (success && loadAnims)
@@ -290,19 +290,6 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         std::memcpy(&inverseBindPose[i], &buffer.data[index], sizeof(glm::mat4));
         index += sizeof(glm::mat4);
 
-        //const auto& node = m_GLTFScene.nodes[skin.joints[i]];
-        //auto& joint = dest.bindPose.emplace_back();
-        //if(!node.translation.empty()) joint.translation = glm::make_vec3(node.translation.data());
-        //if(!node.rotation.empty()) joint.rotation = glm::make_quat(node.rotation.data());
-        //if(!node.scale.empty()) joint.scale = glm::make_vec3(node.scale.data());
-
-        ////as the joints list is smaller than the overall nodes list we have
-        ////to find the poisition the parent appears in the joints list.
-        //if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result != skin.joints.end())
-        //{
-        //    joint.parent = std::distance(skin.joints.begin(), result);
-        //}
-
         //this is pre-calculated when the matrices are
         //built so not needed at run-time
         //dest.jointIndices[i] = joint.parent;
@@ -387,7 +374,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         //blender and, in general, makes the model huge and lying on its back..
         //however this will need to be applied if we're updating child nodes
         //so that they take on their parent's transform correctly
-        //auto inverseTx = glm::inverse(getMatrix(nodeIdx));
+        /*auto inverseTx = glm::inverse(getMatrix(nodeIdx));*/
         for (auto i = 0u; i < dest.frameSize; ++i)
         {
             dest.frames.push_back(/*inverseTx **/ getMatrix(skin.joints[i]) * inverseBindPose[i]);
@@ -501,7 +488,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     }
 }
 
-bool ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
+bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
 {
     //start with mesh. This contains a Primitive for each sub-mesh
     //which in turn contains the indices into the accessor array.
@@ -522,8 +509,8 @@ bool ModelState::importGLTF(std::int32_t meshIndex, bool loadAnims)
     std::vector<std::int32_t> primitiveTypes;
     std::size_t indexOffset = 0;
 
-    CRO_ASSERT(meshIndex < m_GLTFScene.meshes.size(), "");
-    const auto& mesh = m_GLTFScene.meshes[meshIndex];
+    CRO_ASSERT(m_GLTFScene.nodes[idx].mesh < m_GLTFScene.meshes.size(), "");
+    const auto& mesh = m_GLTFScene.meshes[m_GLTFScene.nodes[idx].mesh];
 
     if (mesh.primitives.size() > cro::Mesh::IndexData::MaxBuffers)
     {

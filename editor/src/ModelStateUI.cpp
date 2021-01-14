@@ -707,15 +707,15 @@ void ModelState::drawInspector()
                             ImGui::SameLine();
                             std::string label = "<##" + std::to_string(buns++);
                             if (ImGui::Button(label.c_str())
-                                && animID == skel.currentAnimation
-                                && !skel.animations[skel.currentAnimation].playing)
+                                && animID == skel.getCurrentAnimation()
+                                && skel.animations[skel.getCurrentAnimation()].playbackRate == 0)
                             {
                                 skel.prevFrame();
                             }
                             toolTip("Previous Frame");
                             ImGui::SameLine();
 
-                            if (skel.animations[skel.currentAnimation].playing)
+                            if (skel.animations[skel.getCurrentAnimation()].playbackRate != 0)
                             {
                                 //pause button
                                 label = "Pause##" + std::to_string(buns++);
@@ -737,8 +737,8 @@ void ModelState::drawInspector()
                             ImGui::SameLine();
                             label = ">##" + std::to_string(buns++);
                             if (ImGui::Button(label.c_str())
-                                && animID == skel.currentAnimation
-                                && !skel.animations[skel.currentAnimation].playing)
+                                && animID == skel.getCurrentAnimation()
+                                && skel.animations[skel.getCurrentAnimation()].playbackRate == 0)
                             {
                                 skel.nextFrame();
                             }
@@ -746,7 +746,7 @@ void ModelState::drawInspector()
                             animID++;
 
                         }
-                        ImGui::Text("Current Frame: %lu", skel.animations[skel.currentAnimation].currentFrame - skel.animations[skel.currentAnimation].startFrame);
+                        ImGui::Text("Current Frame: %lu", skel.animations[skel.getCurrentAnimation()].currentFrame - skel.animations[skel.getCurrentAnimation()].startFrame);
 
                         ImGui::NewLine();
                         ImGui::Separator();
@@ -980,7 +980,7 @@ void ModelState::drawInspector()
                             auto prevAnim = currentAnim;
 
                             if (ImGui::InputInt("Anim", &currentAnim, 1, 1)
-                                && !skeleton.animations[currentAnim].playing)
+                                && skeleton.animations[currentAnim].playbackRate != 0)
                             {
                                 currentAnim = std::min(currentAnim, static_cast<int>(skeleton.animations.size()) - 1);
                             }
@@ -990,11 +990,11 @@ void ModelState::drawInspector()
                             }
 
                             ImGui::SameLine();
-                            if (skeleton.animations[currentAnim].playing)
+                            if (skeleton.animations[currentAnim].playbackRate != 0)
                             {
                                 if (ImGui::Button("Stop"))
                                 {
-                                    skeleton.animations[currentAnim].playing = false;
+                                    skeleton.stop();
                                     label = "Stopped";
                                 }
                             }

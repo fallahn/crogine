@@ -32,18 +32,20 @@ source distribution.
 
 using namespace cro;
 
-void Skeleton::play(std::size_t idx, float blendingTime)
+void Skeleton::play(std::size_t idx, float rate, float blendingTime)
 {
     CRO_ASSERT(idx < animations.size(), "Index out of range");
-    if (idx != currentAnimation)
+    CRO_ASSERT(rate > 0, "");
+    m_playbackRate = rate;
+    if (idx != m_currentAnimation)
     {
-        nextAnimation = static_cast<cro::int32>(idx);
-        blendTime = blendingTime;
-        currentBlendTime = 0.f;
+        m_nextAnimation = static_cast<cro::int32>(idx);
+        m_blendTime = blendingTime;
+        m_currentBlendTime = 0.f;
     }
     else
     {
-        animations[idx].playing = true;
+        animations[idx].playbackRate = rate;
     }
 }
 
@@ -51,13 +53,13 @@ void Skeleton::prevFrame()
 
 {
     CRO_ASSERT(!animations.empty(), "No animations loaded");
-    if (currentFrameTime > 0)
+    if (m_currentFrameTime > 0)
     {
-        currentFrameTime = 0.f;
+        m_currentFrameTime = 0.f;
     }
     else
     {
-        auto& anim = animations[currentAnimation];
+        auto& anim = animations[m_currentAnimation];
         auto frame = anim.currentFrame - anim.startFrame;
         frame = (frame + (anim.frameCount - 1)) % anim.frameCount;
         anim.currentFrame = frame + anim.startFrame;
@@ -67,15 +69,15 @@ void Skeleton::prevFrame()
 void Skeleton::nextFrame()
 {
     CRO_ASSERT(!animations.empty(), "No animations loaded");
-    auto& anim = animations[currentAnimation];
+    auto& anim = animations[m_currentAnimation];
     auto frame = anim.currentFrame - anim.startFrame;
     frame = (frame + 1) % anim.frameCount;
     anim.currentFrame = frame + anim.startFrame;
-    currentFrameTime = 0.f;
+    m_currentFrameTime = 0.f;
 }
 
 void Skeleton::stop()
 {
     CRO_ASSERT(!animations.empty(), "");
-    animations[currentAnimation].playing = false;
+    animations[m_currentAnimation].playbackRate = 0.f;
 }

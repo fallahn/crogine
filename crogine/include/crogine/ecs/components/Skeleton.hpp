@@ -54,7 +54,7 @@ namespace cro
         uint32 currentFrame = 0;
         float frameRate = 12.f;
         bool looped = false;
-        bool playing = false;
+        float playbackRate = 0.f;
     };
 
     /*!
@@ -93,16 +93,7 @@ namespace cro
         //during interpolation
         //TODO fix this disparity between glTF and iqm format meshes.
         std::vector<int32> jointIndices;
-
         std::vector<SkeletalAnim> animations;
-        int32 currentAnimation = 0;
-        int32 nextAnimation = -1;
-
-        float blendTime = 1.f;
-        float currentBlendTime = 0.f;
-
-        float frameTime = 1.f;
-        float currentFrameTime = 0.f;
 
         /*!
         \brief Joints which make up the bind pose, in model coords
@@ -116,7 +107,7 @@ namespace cro
         \param blendTime time in seconds to blend / overlap the new animation
         with any previously playing animation
         */
-        void play(std::size_t idx, float blendingTime = 0.1f);
+        void play(std::size_t idx, float rate = 1.f, float blendingTime = 0.1f);
 
         /*!
         \brief Steps the current animation to the previous frame if it is not playing
@@ -133,6 +124,24 @@ namespace cro
         */
         void stop();
 
+        /*!
+        \brief Returns the index of the current animation
+        */
+        std::int32_t getCurrentAnimation() const { return m_currentAnimation; }
+
     private:
+
+        float m_playbackRate = 1.f;
+
+        int32 m_currentAnimation = 0;
+        int32 m_nextAnimation = -1;
+
+        float m_blendTime = 1.f;
+        float m_currentBlendTime = 0.f;
+
+        float m_frameTime = 1.f;
+        float m_currentFrameTime = 0.f;
+
+        friend class SkeletalAnimator;
     };
 }

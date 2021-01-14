@@ -54,35 +54,32 @@ void SkeletalAnimator::process(float dt)
         auto& skel = entity.getComponent<Skeleton>();
 
         //update current frame if running
-        if (skel.nextAnimation < 0)
+        if (skel.m_nextAnimation < 0)
         {
             //update current animation
-            auto& anim = skel.animations[skel.currentAnimation];
+            auto& anim = skel.animations[skel.m_currentAnimation];
 
             auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
             nextFrame += anim.startFrame;
 
-            if (anim.playing)
-            {
-                skel.currentFrameTime += dt;
-            }
+            skel.m_currentFrameTime += dt * anim.playbackRate;
                               
             if (entity.getComponent<Model>().isVisible())
             {
-                float interpTime = std::min(1.f, skel.currentFrameTime / skel.frameTime);
+                float interpTime = std::min(1.f, skel.m_currentFrameTime / skel.m_frameTime);
                 interpolate(anim.currentFrame, nextFrame, interpTime, skel);
             }
 
-            if (skel.currentFrameTime > skel.frameTime)
+            if (skel.m_currentFrameTime > skel.m_frameTime)
             {
                 //frame is done, move to next
                 if (nextFrame < anim.currentFrame && !anim.looped)
                 {
-                    anim.playing = false;
+                    anim.playbackRate = 0.f;
                 }
 
                 anim.currentFrame = nextFrame;
-                skel.currentFrameTime = 0.f;                  
+                skel.m_currentFrameTime = 0.f;                  
             }
         }
         else
@@ -92,21 +89,21 @@ void SkeletalAnimator::process(float dt)
             //first frame of the next anim. Really we should interpolate the current
             //position of both animations, and then blend the results according to
             //the current blend time.
-            skel.currentBlendTime += dt;
+            skel.m_currentBlendTime += dt;
             if (entity.getComponent<Model>().isVisible())
             {
-                float interpTime = std::min(1.f, skel.currentBlendTime / skel.blendTime);
-                interpolate(skel.animations[skel.currentAnimation].currentFrame, skel.animations[skel.nextAnimation].startFrame, interpTime, skel);
+                float interpTime = std::min(1.f, skel.m_currentBlendTime / skel.m_blendTime);
+                interpolate(skel.animations[skel.m_currentAnimation].currentFrame, skel.animations[skel.m_nextAnimation].startFrame, interpTime, skel);
             }
 
-            if (skel.currentBlendTime > skel.blendTime)
+            if (skel.m_currentBlendTime > skel.m_blendTime)
             {
-                skel.animations[skel.currentAnimation].playing = false;
-                skel.currentAnimation = skel.nextAnimation;
-                skel.nextAnimation = -1;
-                skel.frameTime = 1.f / skel.animations[skel.currentAnimation].frameRate;
-                skel.currentFrameTime = 0.f;
-                skel.animations[skel.currentAnimation].playing = true;
+                skel.animations[skel.m_currentAnimation].playbackRate = 0.f;
+                skel.m_currentAnimation = skel.m_nextAnimation;
+                skel.m_nextAnimation = -1;
+                skel.m_frameTime = 1.f / skel.animations[skel.m_currentAnimation].frameRate;
+                skel.m_currentFrameTime = 0.f;
+                skel.animations[skel.m_currentAnimation].playbackRate = skel.m_playbackRate;
             }
         }
     }
@@ -123,7 +120,7 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
     }
 
     entity.getComponent<Model>().setSkeleton(&skeleton.currentFrame[0], skeleton.frameSize);
-    skeleton.frameTime = 1.f / skeleton.animations[0].frameRate;
+    skeleton.m_frameTime = 1.f / skeleton.animations[0].frameRate;
 }
 
 void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Skeleton& skeleton)
