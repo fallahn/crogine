@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/ecs/components/BillboardCollection.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
 
 #include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -762,11 +763,6 @@ void ModelState::updateImportNode(CMFHeader header, std::vector<float>& imported
         m_entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>();
 
         m_importedTransform = {};
-
-        if (header.animated)
-        {
-            buildSkeleton();
-        }
     }
     else
     {
@@ -777,7 +773,95 @@ void ModelState::updateImportNode(CMFHeader header, std::vector<float>& imported
 
 void ModelState::buildSkeleton()
 {
+    return;
 
+    if (m_entities[EntityID::ActiveModel].isValid()
+        && m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+    {
+        if (!m_entities[EntityID::ActiveSkeleton].isValid())
+        {
+            auto entity = m_scene.createEntity();
+            entity.addComponent<cro::Transform>();
+
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::SkeletonDraw]);
+            material.enableDepthTest = false;
+            entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_skeletonMeshID), material);
+            entity.addComponent<cro::Skeleton>();
+
+            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            m_entities[EntityID::ActiveSkeleton] = entity;
+        }
+
+        const auto& skeleton = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+        m_entities[EntityID::ActiveSkeleton].getComponent<cro::Skeleton>() = skeleton;
+
+        auto getTransform = [](const cro::Joint& j)
+        {
+            glm::mat4 ret = glm::translate(glm::mat4(1.f), j.translation);
+            ret *= glm::toMat4(j.rotation);
+            ret = glm::scale(ret, j.scale);
+            return ret;
+        };
+
+        std::vector<float> verts;
+        for(auto i = 0u; i < skeleton.bindPose.size(); ++i)
+        {
+            auto tx = getTransform(skeleton.bindPose[i]);
+            glm::vec4 position = tx * glm::vec4(0.f, 0.f, 0.f, 1.f);
+
+            verts.push_back(position.x);
+            verts.push_back(position.y);
+            verts.push_back(position.z);
+
+            verts.push_back(1.f);
+            verts.push_back(0.f);
+            verts.push_back(1.f);
+            verts.push_back(1.f);
+
+            verts.push_back(static_cast<float>(i));
+            verts.push_back(0.f);
+            verts.push_back(0.f);
+            verts.push_back(0.f);
+
+            verts.push_back(1.f);
+            verts.push_back(0.f);
+            verts.push_back(0.f);
+            verts.push_back(0.f);
+        }
+
+        auto vertStride = 15u;
+
+        auto& meshData = m_entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().getMeshData();
+        meshData.boundingBox = { glm::vec3(-2.f), glm::vec3(2.f) };
+        meshData.boundingSphere.radius = 2.f;
+        meshData.boundingSphere.centre = { 0.f, 2.f, 0.f };
+        meshData.vertexSize = vertStride * sizeof(float);
+        meshData.vertexCount = verts.size() / vertStride;
+
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_STATIC_DRAW));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+        std::vector<std::uint32_t> indices;
+        for (auto i = 0u; i < skeleton.bindPose.size(); ++i)
+        {
+            if (skeleton.bindPose[i].parent > -1)
+            {
+                indices.push_back(i);
+                indices.push_back(skeleton.bindPose[i].parent);
+            }
+        }
+
+        auto& submesh = meshData.indexData[0];
+        submesh.indexCount = static_cast<std::uint32_t>(indices.size());
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+        //m_entities[EntityID::ActiveModel].getComponent<cro::Model>().setHidden(true);
+        m_entities[EntityID::ActiveSkeleton].getComponent<cro::Skeleton>().play(0);
+        //TODO apply source skel anims to entity
+    }
 }
 
 void ModelState::exportStaticModel(bool modelOnly, bool openOnSave)

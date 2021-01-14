@@ -105,9 +105,8 @@ namespace cro
         float currentFrameTime = 0.f;
 
         /*!
-        \brief Joints which make up the bind pose, in local coords
-        To convert to world coords walk each joints tree and multiply
-        by its parent transform
+        \brief Joints which make up the bind pose, in model coords
+        ie already pre-transformed by any parent joints
         */
         std::vector<Joint> bindPose;
 

@@ -35,6 +35,7 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
+#include <crogine/detail/glm/gtx/matrix_decompose.hpp>
 
 #include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -142,6 +143,8 @@ void ModelState::parseGLTFNode(std::int32_t idx, bool loadAnims)
     {
         parseGLTFAnimations(idx);
         parseGLTFSkin(idx, m_entities[EntityID::ActiveModel].addComponent<cro::Skeleton>());
+
+        buildSkeleton(); //for display
     }
 }
 
@@ -285,16 +288,22 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         std::memcpy(&inverseBindPose[i], &buffer.data[index], sizeof(glm::mat4));
         index += sizeof(glm::mat4);
 
-        const auto& node = m_GLTFScene.nodes[skin.joints[i]];
-        auto& joint = dest.bindPose.emplace_back();
-        if(!node.translation.empty()) joint.translation = glm::make_vec3(node.translation.data());
-        if(!node.rotation.empty()) joint.rotation = glm::make_quat(node.rotation.data());
-        if(!node.scale.empty()) joint.scale = glm::make_vec3(node.scale.data());
-        joint.parent = parents[skin.joints[i]];
+        //const auto& node = m_GLTFScene.nodes[skin.joints[i]];
+        //auto& joint = dest.bindPose.emplace_back();
+        //if(!node.translation.empty()) joint.translation = glm::make_vec3(node.translation.data());
+        //if(!node.rotation.empty()) joint.rotation = glm::make_quat(node.rotation.data());
+        //if(!node.scale.empty()) joint.scale = glm::make_vec3(node.scale.data());
+
+        ////as the joints list is smaller than the overall nodes list we have
+        ////to find the poisition the parent appears in the joints list.
+        //if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result != skin.joints.end())
+        //{
+        //    joint.parent = std::distance(skin.joints.begin(), result);
+        //}
 
         //this is pre-calculated when the matrices are
         //built so not needed at run-time
-        //dest.jointIndices[i] = parents[skin.joints[i]];
+        //dest.jointIndices[i] = joint.parent;
     }
 
     //copy the nodes as we'll modify the transforms for each key frame
@@ -347,6 +356,28 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         return jointMat;
     };
 
+    for (auto i = 0u; i < dest.frameSize; ++i)
+    {
+        auto tx = getMatrix(skin.joints[i]);
+        glm::vec3 translation, scale;
+        glm::quat rot;
+        glm::vec3 skew;
+        glm::vec4 persp;
+
+        glm::decompose(tx, scale, rot, translation, skew, persp);
+        auto& joint = dest.bindPose.emplace_back();
+        joint.translation = translation;
+        joint.rotation = glm::conjugate(rot);
+        joint.scale = scale;
+
+        //as the joints list is smaller than the overall nodes list we have
+        //to find the position the parent appears in the joints list.
+        if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result != skin.joints.end())
+        {
+            joint.parent = std::distance(skin.joints.begin(), result);
+        }
+    }
+
     std::function<void(std::int32_t)> updateJoints =
         [&](std::int32_t nodeIdx)
     {
@@ -378,7 +409,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     {
         auto& skelAnim = dest.animations.emplace_back();
         skelAnim.name = anim.name;
-        skelAnim.startFrame = dest.frames.size() / dest.frameSize;
+        skelAnim.startFrame = static_cast<std::uint32_t>(dest.frames.size() / dest.frameSize);
         skelAnim.currentFrame = skelAnim.startFrame;
 
         //glTF doesn't use a fixed frame rate, rather it

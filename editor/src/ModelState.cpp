@@ -36,8 +36,6 @@ source distribution.
 #include "Messages.hpp"
 #include "ModelViewerConsts.inl"
 
-#include "gltf/tiny_gltf.h"
-
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -45,18 +43,12 @@ source distribution.
 
 #include <crogine/gui/Gui.hpp>
 
-#include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
-#include <crogine/graphics/SphereBuilder.hpp>
-#include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/Image.hpp>
-#include <crogine/detail/Types.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/Skeleton.hpp>
 #include <crogine/ecs/components/Camera.hpp>
-#include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 
@@ -67,13 +59,7 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
 
-#include <crogine/util/Constants.hpp>
-#include <crogine/util/Maths.hpp>
 #include <crogine/util/String.hpp>
-
-#include <crogine/detail/glm/gtx/euler_angles.hpp>
-#include <crogine/detail/glm/gtx/quaternion.hpp>
-#include <crogine/detail/OpenGL.hpp>
 
 #include <string_view>
 
@@ -101,6 +87,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_showSkybox            (false),
     m_showMaterialWindow    (false),
     m_showBakingWindow      (false),
+    m_skeletonMeshID        (0),
     m_browseGLTF            (false),
     m_showAABB              (false),
     m_showSphere            (false),
@@ -256,6 +243,13 @@ void ModelState::loadAssets()
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     m_materialIDs[MaterialID::DebugDraw] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
+
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour | cro::ShaderResource::Skinning);
+    m_materialIDs[MaterialID::SkeletonDraw] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_skeletonMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position 
+                                                                        | cro::VertexProperty::Colour 
+                                                                        | cro::VertexProperty::BlendIndices 
+                                                                        | cro::VertexProperty::BlendWeights, 1, GL_LINES));
 
     //for receiving shadows on the ground plane
     std::uint32_t texID = 10000;

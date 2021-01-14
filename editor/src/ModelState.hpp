@@ -148,6 +148,8 @@ private:
         glm::vec3 rotation = glm::vec3(0.f);
         float scale = 1.f;
     }m_importedTransform;
+    std::size_t m_skeletonMeshID;
+
     void importModel();
     void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
     void buildSkeleton();

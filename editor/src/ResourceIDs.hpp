@@ -35,7 +35,7 @@ namespace MaterialID
     {
         Default, DefaultSkinned,
         DefaultShadow, DefaultShadowSkinned,
-        DebugDraw,
+        DebugDraw, SkeletonDraw,
         GroundPlane,
         Count
     };
