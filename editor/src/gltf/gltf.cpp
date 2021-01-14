@@ -99,6 +99,10 @@ void ModelState::showGLTFBrowser()
                     auto boxLabel = "Import Animation##" + IDString;
                     ImGui::Checkbox(boxLabel.c_str(), &importAnim);
                 }
+                else
+                {
+                    importAnim = false;
+                }
                 auto buttonLabel = "Import##" + IDString;
                 if (ImGui::Button(buttonLabel.c_str()))
                 {
@@ -378,11 +382,8 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         for (auto i = 0u; i < dest.frameSize; ++i)
         {
             auto mat = /*inverseTx **/ getMatrix(skin.joints[i]) * inverseBindPose[i];
-            glm::vec3 t, s;
-            glm::quat r;
-            cro::Util::Matrix::decompose(mat, t, r, s);
-            
-            dest.frames.emplace_back(t, r, s);
+            auto& joint = dest.frames.emplace_back();
+            cro::Util::Matrix::decompose(mat, joint.translation, joint.rotation, joint.scale);
         }
     };
 
@@ -396,7 +397,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         {
             dest.currentFrame.push_back(cro::Joint::combine(dest.frames[i]));
         }
-        dest.animations.emplace_back(); //empty 1 frame anim
+        dest.animations.emplace_back().frameCount = 1; //empty 1 frame anim
     }
     
     for (auto& anim : animations)
@@ -468,7 +469,6 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
                         {
                             glm::vec4 scale = glm::mix(sampler.outputs[i], sampler.outputs[i + 1], t);
                             sceneNodes[channel.node].scale = { scale.x, scale.y, scale.z };
-                            //LogI << scale << ", node " << channel.node << ", frame " << skelAnim.frameCount << std::endl;
                         }
 
                         addFrame = true;

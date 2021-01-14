@@ -101,6 +101,9 @@ void Console::print(const std::string& line)
     {
         buffer.pop_front();
     }
+
+    auto* msg = App::getInstance().getMessageBus().post<Message::ConsoleEvent>(Message::ConsoleMessage);
+    msg->type = Message::ConsoleEvent::LinePrinted;
 }
 
 void Console::show()
@@ -186,6 +189,11 @@ void Console::printStat(const std::string& name, const std::string& value)
 bool Console::isVisible()
 {
     return visible;
+}
+
+const std::string& Console::getLastOutput()
+{
+    return buffer.back().first;
 }
 
 //private

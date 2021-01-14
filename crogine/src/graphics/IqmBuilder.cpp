@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
+#include <crogine/util/Matrix.hpp>
+
 #include <cstring>
 #include <array>
 #include <limits>
@@ -533,8 +535,6 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         bindPose[i] = Iqm::createBoneMatrix(rotation, translation, scale);
         inverseBindPose[i] = glm::inverse(bindPose[i]);
 
-        //TODO will this be better to store components separately in a joint
-        //so that they are easier to interpolate separately?
         if (joint.parent >= 0)
         {
             //multiply by parent's transform
@@ -594,11 +594,15 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     glm::mat4 mat = Iqm::createBoneMatrix(rotation, translation, scale);
                     if (pose.parent >= 0)
                     {
-                        //out.frames[frameIndex + poseIndex] = bindPose[pose.parent] * mat * inverseBindPose[poseIndex];
+                        auto result = bindPose[pose.parent] * mat * inverseBindPose[poseIndex];
+                        auto& joint = out.frames[frameIndex + poseIndex];
+                        cro::Util::Matrix::decompose(result, joint.translation, joint.rotation, joint.scale);
                     }
                     else
                     {
-                        //out.frames[frameIndex + poseIndex] = mat * inverseBindPose[poseIndex];
+                        auto result = mat * inverseBindPose[poseIndex];
+                        auto& joint = out.frames[frameIndex + poseIndex];
+                        cro::Util::Matrix::decompose(result, joint.translation, joint.rotation, joint.scale);
                     }
                 }
             }

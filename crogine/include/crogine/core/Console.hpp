@@ -87,8 +87,8 @@ namespace cro
         /*!
         \brief Attempts to retrieve the current value of the given console variable
         */
-        template <typename T>
-        static T getConvarValue(const std::string& convar);
+        //template <typename T>
+        //static T getConvarValue(const std::string& convar);
 
         /*!
         \brief Prints the given stat and value to the Stats tab in the console window
@@ -99,6 +99,11 @@ namespace cro
         \brief Returns true if the console is currently being displayed
         */
         static bool isVisible();
+
+        /*!
+        \brief Returns the last line printed to the console output
+        */
+        static const std::string& getLastOutput();
 
     private:
         friend class App;
