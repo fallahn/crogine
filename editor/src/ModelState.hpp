@@ -108,8 +108,9 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
-    void buildUI();
 
+
+    //------------ModelStateModels.cpp----------//
     struct ModelProperties final
     {
         std::string name = "Untitled";
@@ -137,7 +138,6 @@ private:
     void openModelAtPath(const std::string&);
     void saveModel(const std::string&);
     void closeModel();
-    void showSaveMessage();
 
     CMFHeader m_importedHeader;
     std::vector<float> m_importedVBO;
@@ -149,32 +149,37 @@ private:
         float scale = 1.f;
     }m_importedTransform;
     void importModel();
+    void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
+    void buildSkeleton();
     void exportStaticModel(bool = false, bool = true);
     void applyImportTransform();
+    //-------------------------------------------//
 
-    void importIQM(const std::string&); //used to apply modified transforms
-    void importGLTF(std::int32_t, bool);
-    void parseGLTFNode(std::int32_t, bool importAnims);
-    void parseGLTFSkin(std::int32_t, cro::Skeleton&);
-    void parseGLTFAnimations(std::int32_t);
-    void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
 
+    //--------gltf/gltf.cpp--------//
     bool m_browseGLTF;
     std::unique_ptr<tf::TinyGLTF> m_GLTFLoader;
     tf::Model m_GLTFScene;
     void showGLTFBrowser();
+    void parseGLTFNode(std::int32_t, bool importAnims);
+    void parseGLTFAnimations(std::int32_t);
+    void parseGLTFSkin(std::int32_t, cro::Skeleton&);
+    void importGLTF(std::int32_t, bool);
+    //----------------------------//
 
     void loadPrefs();
     void savePrefs();
 
     bool m_showAABB;
     bool m_showSphere;
-    void updateWorldScale();
     void updateNormalVis();
     void updateGridMesh(cro::Mesh::Data&, std::optional<cro::Sphere>, std::optional<cro::Box>);
 
     void updateMouseInput(const cro::Event&);
 
+
+    //--------ModelStateMaterials.cpp------//
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
     struct MaterialTexture final
     {
@@ -196,13 +201,20 @@ private:
     void refreshMaterialThumbnail(MaterialDefinition&);
 
     std::vector<std::int32_t> m_activeMaterials; //indices into the materials array of materials used on the currently open model. -1 means default material is applied
-
-    void updateLayout(std::int32_t, std::int32_t);
-    void drawInspector();
-    void drawBrowser();
     void exportMaterial() const;
     void importMaterial(const std::string&);
     void readMaterialDefinition(MaterialDefinition&, const cro::ConfigObject&);
+    //-------------------------------------//
+
+
+
+    //---------ModelStateUI.cpp--------//
+    void buildUI();
+    void showSaveMessage();
+    void drawInspector();
+    void drawBrowser();
+    void updateLayout(std::int32_t, std::int32_t);
+    //---------------------------------//
 
     std::vector<std::unique_ptr<cro::Texture>> m_lightmapTextures;
     std::vector<std::vector<float>> m_lightmapBuffers;

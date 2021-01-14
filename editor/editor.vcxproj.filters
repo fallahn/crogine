@@ -39,9 +39,6 @@
     <ClCompile Include="src\MyApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ImportIQM.cpp">
-      <Filter>Source Files\model viewer</Filter>
-    </ClCompile>
     <ClCompile Include="src\LoadingScreen.cpp">
       <Filter>Source Files\model viewer</Filter>
     </ClCompile>
@@ -59,6 +56,15 @@
     </ClCompile>
     <ClCompile Include="src\gltf\gltf.cpp">
       <Filter>Source Files\model viewer\gltf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ModelStateMaterials.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ModelStateModels.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ModelStateUI.cpp">
+      <Filter>Source Files\model viewer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -116,6 +122,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\LightmapShader.inl">
+      <Filter>Header Files\model viewer</Filter>
+    </None>
+    <None Include="src\ModelViewerConsts.inl">
       <Filter>Header Files\model viewer</Filter>
     </None>
   </ItemGroup>
