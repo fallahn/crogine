@@ -152,10 +152,12 @@ private:
     std::size_t m_skeletonMeshID;
 
     void importModel();
+    void importIQM(const std::string&);
     void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
     void buildSkeleton();
     void exportStaticModel(bool = false, bool = true);
     void applyImportTransform();
+    void readBackVertexData(cro::Mesh::Data, std::vector<float>&, std::vector<std::vector<std::uint32_t>>&);
     //-------------------------------------------//
 
 

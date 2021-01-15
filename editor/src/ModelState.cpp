@@ -385,14 +385,13 @@ void ModelState::createScene()
     m_entities[EntityID::ArcBall].addComponent<cro::Transform>().setPosition(DefaultArcballPosition);
     m_entities[EntityID::ArcBall].getComponent<cro::Transform>().addChild(m_scene.getActiveCamera().getComponent<cro::Transform>());
 
-
-
     //create the material preview scene
     cro::ModelDefinition modelDef;
     modelDef.loadFromFile("assets/models/preview.cmt", m_resources);
     entity = m_previewScene.createEntity();
     entity.addComponent<cro::Transform>();
     modelDef.createModel(entity, m_resources);
+
     m_previewEntity = entity;
 
     //camera

@@ -42,6 +42,7 @@ source distribution.
 
 #include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/IqmBuilder.hpp>
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
@@ -234,51 +235,8 @@ void ModelState::openModelAtPath(const std::string& path)
 
 
         //read back the buffer data into the imported buffer so we can do things like normal vis and lightmap baking
-        m_modelProperties.vertexData.clear();
-        m_modelProperties.vertexData.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-        glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, 0, meshData.vertexCount * meshData.vertexSize, m_modelProperties.vertexData.data()));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-        m_modelProperties.indexData.clear();
-        m_modelProperties.indexData.resize(meshData.submeshCount);
-
-        for (auto i = 0u; i < meshData.submeshCount; ++i)
-        {
-            m_modelProperties.indexData[i].resize(meshData.indexData[i].indexCount);
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
-
-            //fudgy kludge for different index types
-            switch (meshData.indexData[i].format)
-            {
-            default: break;
-            case GL_UNSIGNED_BYTE:
-            {
-                std::vector<std::uint8_t> temp(meshData.indexData[i].indexCount);
-                glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount, temp.data()));
-                for (auto j = 0u; j < meshData.indexData[i].indexCount; ++j)
-                {
-                    m_modelProperties.indexData[i][j] = temp[j];
-                }
-            }
-            break;
-            case GL_UNSIGNED_SHORT:
-            {
-                std::vector<std::uint16_t> temp(meshData.indexData[i].indexCount);
-                glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount * sizeof(std::uint16_t), temp.data()));
-                for (auto j = 0u; j < meshData.indexData[i].indexCount; ++j)
-                {
-                    m_modelProperties.indexData[i][j] = temp[j];
-                }
-            }
-            break;
-            case GL_UNSIGNED_INT:
-                glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount * sizeof(std::uint32_t), m_modelProperties.indexData[i].data()));
-                break;
-            }
-        }
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
+        readBackVertexData(meshData, m_modelProperties.vertexData, m_modelProperties.indexData);
+        
         updateNormalVis();
     }
     else
@@ -525,10 +483,11 @@ void ModelState::importModel()
         return retVal;
     };
 
-    auto path = cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory + "/untitled", "obj,dae,fbx,glb");
+    auto path = cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory + "/untitled", "obj,dae,fbx,glb,iqm");
     if (!path.empty())
     {
-        if (cro::FileSystem::getFileExtension(path) == ".glb")
+        auto extension = cro::FileSystem::getFileExtension(path);
+        if (extension == ".glb")
         {
             std::string warning;
             std::string error;
@@ -552,6 +511,10 @@ void ModelState::importModel()
                 m_preferences.lastImportDirectory = cro::FileSystem::getFilePath(path);
                 savePrefs();
             }
+        }
+        else if (extension == ".iqm")
+        {
+            importIQM(path);
         }
         else
         {
@@ -692,6 +655,51 @@ void ModelState::importModel()
         }
         updateGridMesh(m_entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), {}, {});
     }
+}
+
+void ModelState::importIQM(const std::string& path)
+{
+    //(ab)use mesh loader to parse file
+    cro::IqmBuilder builder(path);
+    auto meshData = builder.getData();
+
+    //download vert/index data to buffer from VBO (yes, I know...)
+    //and send to updateImportNode()
+    std::vector<float> verts;
+    std::vector<std::vector<std::uint32_t>> indices;
+
+    readBackVertexData(meshData, verts, indices);
+
+    CMFHeader header;
+    header.flags = meshData.attributeFlags;
+    header.animated = builder.getSkeleton();
+    updateImportNode(header, verts, indices);
+
+    //yoink the anim info if it exists and apply to preview skel
+    if (builder.getSkeleton())
+    {
+        m_entities[EntityID::ActiveModel].addComponent<cro::Skeleton>() = builder.getSkeleton();
+    }
+
+    //tidy up the temo VBO/VAO/IBO we used for loading
+    for (auto& sub : meshData.indexData)
+    {
+        if (sub.ibo)
+        {
+            glCheck(glDeleteBuffers(1, &sub.ibo));
+        }
+
+        if (sub.vao)
+        {
+            glCheck(glDeleteVertexArrays(1, &sub.vao));
+        }
+    }
+    if (meshData.vbo)
+    {
+        glCheck(glDeleteBuffers(1, &meshData.vbo));
+    }
+
+    savePrefs();
 }
 
 void ModelState::updateImportNode(CMFHeader header, std::vector<float>& importedVBO, std::vector<std::vector<std::uint32_t>>& importedIndexArrays)
@@ -1038,4 +1046,52 @@ void ModelState::applyImportTransform()
     m_importedTransform = {};
     m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
     m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTY);
+}
+
+void ModelState::readBackVertexData(cro::Mesh::Data meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices)
+{
+    destVerts.clear();
+    destVerts.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+    glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, 0, meshData.vertexCount * meshData.vertexSize, destVerts.data()));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    destIndices.clear();
+    destIndices.resize(meshData.submeshCount);
+
+    for (auto i = 0u; i < meshData.submeshCount; ++i)
+    {
+        destIndices[i].resize(meshData.indexData[i].indexCount);
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+
+        //fudgy kludge for different index types
+        switch (meshData.indexData[i].format)
+        {
+        default: break;
+        case GL_UNSIGNED_BYTE:
+        {
+            std::vector<std::uint8_t> temp(meshData.indexData[i].indexCount);
+            glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount, temp.data()));
+            for (auto j = 0u; j < meshData.indexData[i].indexCount; ++j)
+            {
+                destIndices[i][j] = temp[j];
+            }
+        }
+        break;
+        case GL_UNSIGNED_SHORT:
+        {
+            std::vector<std::uint16_t> temp(meshData.indexData[i].indexCount);
+            glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount * sizeof(std::uint16_t), temp.data()));
+            for (auto j = 0u; j < meshData.indexData[i].indexCount; ++j)
+            {
+                destIndices[i][j] = temp[j];
+            }
+        }
+        break;
+        case GL_UNSIGNED_INT:
+            glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount * sizeof(std::uint32_t), destIndices[i].data()));
+            break;
+        }
+    }
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
