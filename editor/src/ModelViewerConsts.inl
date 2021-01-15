@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-static const glm::vec3 DefaultCameraPosition({ 0.f, 0.25f, 5.f });
+static const glm::vec3 DefaultCameraPosition({ 0.f, 0.2f, 5.f });
 static const glm::vec3 DefaultArcballPosition({ 0.f, 0.75f, 0.f });
 
 static constexpr float DefaultFOV = 35.f * cro::Util::Const::degToRad;

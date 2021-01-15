@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/gui/detail/imgui.h>
 
 #include "StateIDs.hpp"
 #include "MaterialDefinition.hpp"
@@ -211,10 +212,13 @@ private:
 
 
     //---------ModelStateUI.cpp--------//
+    ImVec4 m_messageColour;
     void buildUI();
     void showSaveMessage();
     void drawInspector();
     void drawBrowser();
+    void drawInfo();
+    void drawGizmo();
     void updateLayout(std::int32_t, std::int32_t);
     //---------------------------------//
 

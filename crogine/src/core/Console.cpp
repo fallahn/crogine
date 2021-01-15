@@ -85,15 +85,18 @@ void Console::print(const std::string& line)
     if (line.empty()) return;
 
     std::string timestamp(/*"<" + */SysTime::timeString() + " ");
+    Message::ConsoleEvent::Level level = Message::ConsoleEvent::Info;
 
     auto colour = DefaultColour;
     if (line.find("ERROR") != std::string::npos)
     {
         colour = ErrorColour;
+        level = Message::ConsoleEvent::Error;
     }
     else if (line.find("WARNING") != std::string::npos)
     {
         colour = WarningColour;
+        level = Message::ConsoleEvent::Warning;
     }
 
     buffer.push_back(std::make_pair(timestamp + line, colour));
@@ -104,6 +107,7 @@ void Console::print(const std::string& line)
 
     auto* msg = App::getInstance().getMessageBus().post<Message::ConsoleEvent>(Message::ConsoleMessage);
     msg->type = Message::ConsoleEvent::LinePrinted;
+    msg->level = level;
 }
 
 void Console::show()

@@ -95,6 +95,7 @@ void ModelState::showGLTFBrowser()
             std::string IDString = std::to_string(ID++);
             label += IDString;
 
+            ImGui::SetNextItemOpen(ID == 2001, ImGuiCond_Once);
             if (ImGui::TreeNode(label.c_str()))
             {
                 static bool importAnim = false;
@@ -136,6 +137,7 @@ void ModelState::showGLTFBrowser()
             drawNode(static_cast<std::int32_t>(i), nodes);
         }
 
+        ImGui::NewLine();
         if (ImGui::Button("Cancel", ImVec2(120, 0)))
         {
             m_GLTFLoader.reset();

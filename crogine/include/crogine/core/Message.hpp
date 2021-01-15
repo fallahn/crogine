@@ -119,6 +119,11 @@ namespace cro
                 Closed,
                 LinePrinted
             }type = Opened;
+            
+            enum Level
+            {
+                Info, Warning, Error
+            }level = Info;
         };
 
         struct SkeletalAnimEvent final

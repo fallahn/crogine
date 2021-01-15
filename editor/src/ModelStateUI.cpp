@@ -73,6 +73,7 @@ namespace
         Browser,
         MaterialSlot,
         ViewGizmo,
+        Info,
 
         Count
     };
@@ -567,60 +568,8 @@ void ModelState::buildUI()
 
             drawInspector();
             drawBrowser();
-
-            //ImGui::SetNextWindowSize({ 528.f, 554.f });
-            //ImGui::Begin("Shadow Map", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-
-            ///*ImGui::Image(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture(),
-            //    { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });*/
-
-            //ImGui::End();
-
-            ImGuiIO& io = ImGui::GetIO();
-            ImGuizmo::SetRect(io.DisplaySize.x * ui::InspectorWidth, 0, io.DisplaySize.x - (ui::InspectorWidth * io.DisplaySize.x),
-                io.DisplaySize.y - (ui::BrowserHeight * io.DisplaySize.y));
-
-
-            auto [pos, size] = WindowLayouts[WindowID::ViewGizmo];
-
-            //view cube doohickey
-            auto tx = glm::inverse(m_entities[EntityID::ArcBall].getComponent<cro::Transform>().getLocalTransform());
-            ImGuizmo::ViewManipulate(&tx[0][0], 10.f, ImVec2(pos.x, pos.y), ImVec2(size.x, size.y), 0/*x10101010*/);
-            m_entities[EntityID::ArcBall].getComponent<cro::Transform>().setRotation(glm::inverse(tx));
-
-            //tooltip
-            if (io.MousePos.x > pos.x && io.MousePos.x < pos.x + size.x
-                && io.MousePos.y > pos.y && io.MousePos.y < pos.y + size.y)
-            {
-                ImGui::PushStyleColor(ImGuiCol_PopupBg, 0);
-                ImGui::PushStyleColor(ImGuiCol_Border, 0);
-                ImGui::BeginTooltip();
-                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-
-                auto p = ImGui::GetCursorPos();
-                ImGui::PushStyleColor(ImGuiCol_Text, 0xff000000);
-                ImGui::TextUnformatted("Left Click Rotate\nMiddle Mouse Pan\nScroll Zoom");
-                ImGui::PopStyleColor();
-
-                p.x -= 1.f;
-                p.y -= 1.f;
-                ImGui::SetCursorPos(p);
-                ImGui::TextUnformatted("Left Click Rotate\nMiddle Mouse Pan\nScroll Zoom");
-
-                ImGui::PopTextWrapPos();
-                ImGui::EndTooltip();
-                ImGui::PopStyleColor(2);
-            }
-            //rotate the model if it's loaded
-            if (m_entities[EntityID::ActiveModel].isValid()
-                && m_importedVBO.empty())
-            {
-                const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
-                tx = m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().getLocalTransform();
-                ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], ImGuizmo::OPERATION::ROTATE, ImGuizmo::MODE::LOCAL, &tx[0][0]);
-                m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setLocalTransform(tx);
-            }
-
+            drawInfo();
+            drawGizmo();
 
             if (m_browseGLTF)
             {
@@ -751,40 +700,40 @@ void ModelState::drawInspector()
                         ImGui::NewLine();
                         ImGui::Separator();
                     }
-
-
-                    ImGui::NewLine();
-                    ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");
-                    if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], 1.f, -180.f, 180.f))
+                    else //don't really want to do this but I can't work out how to apply the transform to the skeleton :3
                     {
-                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, m_importedTransform.rotation.z * cro::Util::Const::degToRad);
-                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, m_importedTransform.rotation.y * cro::Util::Const::degToRad);
-                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, m_importedTransform.rotation.x * cro::Util::Const::degToRad);
+                        ImGui::NewLine();
+                        ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");
+                        if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], 1.f, -180.f, 180.f))
+                        {
+                            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, m_importedTransform.rotation.z * cro::Util::Const::degToRad);
+                            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, m_importedTransform.rotation.y * cro::Util::Const::degToRad);
+                            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, m_importedTransform.rotation.x * cro::Util::Const::degToRad);
+                        }
+                        if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.01f, 0.1f, 10.f))
+                        {
+                            //scale needs to be uniform, else we'd have to recalc all the normal data
+                            m_importedTransform.scale = std::min(10.f, std::max(0.1f, m_importedTransform.scale));
+                            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                        }
+                        ImGui::Text("Quick Scale:"); ImGui::SameLine();
+                        if (ImGui::Button("0.5"))
+                        {
+                            m_importedTransform.scale = std::max(0.1f, m_importedTransform.scale / 2.f);
+                            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                        }ImGui::SameLine();
+                        if (ImGui::Button("2.0"))
+                        {
+                            m_importedTransform.scale = std::min(10.f, m_importedTransform.scale * 2.f);
+                            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                        }
+                        if (ImGui::Button("Apply Transform"))
+                        {
+                            applyImportTransform();
+                        }
+                        ImGui::SameLine();
+                        helpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.\nTIP: if a model doesn't scale enough in either direction try applying the current scale first before rescaling");
                     }
-                    if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.01f, 0.1f, 10.f))
-                    {
-                        //scale needs to be uniform, else we'd have to recalc all the normal data
-                        m_importedTransform.scale = std::min(10.f, std::max(0.1f, m_importedTransform.scale));
-                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
-                    }
-                    ImGui::Text("Quick Scale:"); ImGui::SameLine();
-                    if (ImGui::Button("0.5"))
-                    {
-                        m_importedTransform.scale = std::max(0.1f, m_importedTransform.scale / 2.f);
-                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
-                    }ImGui::SameLine();
-                    if (ImGui::Button("2.0"))
-                    {
-                        m_importedTransform.scale = std::min(10.f, m_importedTransform.scale * 2.f);
-                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
-                    }
-                    if (ImGui::Button("Apply Transform"))
-                    {
-                        applyImportTransform();
-                    }
-                    ImGui::SameLine();
-                    helpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.\nTIP: if a model doesn't scale enough in either direction try applying the current scale first before rescaling");
-
                     ImGui::NewLine();
                     static bool modelOnly = false;
                     static bool exportAnimation = true;
@@ -1889,6 +1838,78 @@ void ModelState::drawBrowser()
     ImGui::End();
 }
 
+void ModelState::drawInfo()
+{
+    auto [pos, size] = WindowLayouts[WindowID::Info];
+    ImGui::SetNextWindowPos({ pos.x, pos.y });
+    ImGui::SetNextWindowSize({ size.x, size.y });
+    if (ImGui::Begin("InfoBar", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar))
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, m_messageColour);
+        ImGui::Text("%s", cro::Console::getLastOutput().c_str());
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+        auto cursor = ImGui::GetCursorPos();
+        cursor.y -= 4.f;
+        ImGui::SetCursorPos(cursor);
+
+        if (ImGui::Button("More...", ImVec2(50.f, 20.f)))
+        {
+            cro::Console::show();
+        }
+    }
+    ImGui::End();
+}
+
+void ModelState::drawGizmo()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuizmo::SetRect(io.DisplaySize.x * ui::InspectorWidth, 0, io.DisplaySize.x - (ui::InspectorWidth * io.DisplaySize.x),
+        io.DisplaySize.y - (ui::BrowserHeight * io.DisplaySize.y));
+
+
+    auto [pos, size] = WindowLayouts[WindowID::ViewGizmo];
+
+    //view cube doohickey
+    auto tx = glm::inverse(m_entities[EntityID::ArcBall].getComponent<cro::Transform>().getLocalTransform());
+    ImGuizmo::ViewManipulate(&tx[0][0], 10.f, ImVec2(pos.x, pos.y), ImVec2(size.x, size.y), 0/*x10101010*/);
+    m_entities[EntityID::ArcBall].getComponent<cro::Transform>().setRotation(glm::inverse(tx));
+
+    //tooltip
+    if (io.MousePos.x > pos.x && io.MousePos.x < pos.x + size.x
+        && io.MousePos.y > pos.y && io.MousePos.y < pos.y + size.y)
+    {
+        ImGui::PushStyleColor(ImGuiCol_PopupBg, 0);
+        ImGui::PushStyleColor(ImGuiCol_Border, 0);
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+
+        auto p = ImGui::GetCursorPos();
+        ImGui::PushStyleColor(ImGuiCol_Text, 0xff000000);
+        ImGui::TextUnformatted("Left Click Rotate\nMiddle Mouse Pan\nScroll Zoom");
+        ImGui::PopStyleColor();
+
+        p.x -= 1.f;
+        p.y -= 1.f;
+        ImGui::SetCursorPos(p);
+        ImGui::TextUnformatted("Left Click Rotate\nMiddle Mouse Pan\nScroll Zoom");
+
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+        ImGui::PopStyleColor(2);
+    }
+    //rotate the model if it's loaded
+    if (m_entities[EntityID::ActiveModel].isValid()
+        && m_importedVBO.empty())
+    {
+        const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+        tx = m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().getLocalTransform();
+        ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], ImGuizmo::OPERATION::ROTATE, ImGuizmo::MODE::LOCAL, &tx[0][0]);
+        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setLocalTransform(tx);
+    }
+}
+
 void ModelState::updateLayout(std::int32_t w, std::int32_t h)
 {
     float width = static_cast<float>(w);
@@ -1896,11 +1917,14 @@ void ModelState::updateLayout(std::int32_t w, std::int32_t h)
 
     WindowLayouts[WindowID::Inspector] =
         std::make_pair(glm::vec2(0.f, ui::TitleHeight),
-            glm::vec2(width * ui::InspectorWidth, height - (ui::TitleHeight/* + (height * ui::BrowserHeight)*/)));
+            glm::vec2(width * ui::InspectorWidth, height - (ui::TitleHeight + ui::InfoBarHeight)));
 
     WindowLayouts[WindowID::Browser] =
-        std::make_pair(glm::vec2(width * ui::InspectorWidth, height - (height * ui::BrowserHeight)),
+        std::make_pair(glm::vec2(width * ui::InspectorWidth, height - (height * ui::BrowserHeight) - ui::InfoBarHeight),
             glm::vec2(width - (width * ui::InspectorWidth), height * ui::BrowserHeight));
+
+    WindowLayouts[WindowID::Info] =
+        std::make_pair(glm::vec2(0.f, height - ui::InfoBarHeight), glm::vec2(width, ui::InfoBarHeight));
 
     float ratio = width / 800.f;
     float matSlotWidth = std::max(ui::MinMaterialSlotSize, ui::MinMaterialSlotSize * ratio);

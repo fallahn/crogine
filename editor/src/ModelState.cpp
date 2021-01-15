@@ -154,6 +154,26 @@ void ModelState::handleMessage(const cro::Message& msg)
             m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
         }
     }
+    else if (msg.id == cro::Message::ConsoleMessage)
+    {
+        const auto& data = msg.getData<cro::Message::ConsoleEvent>();
+        if (data.type == cro::Message::ConsoleEvent::LinePrinted)
+        {
+            switch (data.level)
+            {
+            default:
+            case cro::Message::ConsoleEvent::Info:
+                m_messageColour = { 1.f,1.f,1.f,1.f };
+                break;
+            case cro::Message::ConsoleEvent::Warning:
+                m_messageColour = { 1.f,0.5f,0.f,1.f };
+                break;
+            case cro::Message::ConsoleEvent::Error:
+                m_messageColour = { 1.f,0.f,0.f,1.f };
+                break;
+            }
+        }
+    }
 
     m_previewScene.forwardMessage(msg);
     m_scene.forwardMessage(msg);
@@ -161,6 +181,12 @@ void ModelState::handleMessage(const cro::Message& msg)
 
 bool ModelState::simulate(float dt)
 {
+    const float colourIncrease = dt;// *0.5f;
+    m_messageColour.w = std::min(1.f, m_messageColour.w + colourIncrease);
+    m_messageColour.x = std::min(1.f, m_messageColour.x + colourIncrease);
+    m_messageColour.y = std::min(1.f, m_messageColour.y + colourIncrease);
+    m_messageColour.z = std::min(1.f, m_messageColour.z + colourIncrease);
+
     m_previewScene.simulate(dt);
     m_scene.simulate(dt);
     return false;
