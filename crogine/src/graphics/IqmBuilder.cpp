@@ -38,6 +38,7 @@ source distribution.
 #include <cstring>
 #include <array>
 #include <limits>
+#include <functional>
 
 using namespace cro;
 
@@ -508,9 +509,10 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
     char* jointIter = data + header.jointOffset;
     std::vector<glm::mat4> bindPose(header.jointCount);
     std::vector<glm::mat4> inverseBindPose(header.jointCount);
-    out.jointIndices.resize(header.jointCount);
+
     out.frameSize = header.jointCount;
     out.frameCount = header.frameCount;
+    out.bindPose.resize(header.jointCount);
 
     //warn if bone count > 64 as this is the limit on mobile devices (or even lower!)
     if (header.jointCount > 64)
@@ -541,10 +543,25 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
             bindPose[i] = bindPose[joint.parent] * bindPose[i];
             inverseBindPose[i] *= inverseBindPose[joint.parent];
 
+            out.bindPose[i].parent = joint.parent;
         }
-        out.jointIndices[i] = joint.parent; //we need to track these for blending frames during animation
     }
 
+    //update the output bindpose
+    for (auto i = 0u; i < out.bindPose.size(); ++i)
+    {
+        auto& joint = out.bindPose[i];
+        auto result = bindPose[i];
+        auto currentParent = joint.parent;
+
+        while (currentParent > -1)
+        {
+            result = bindPose[currentParent] * result;
+            currentParent = out.bindPose[currentParent].parent;
+        }
+        
+        cro::Util::Matrix::decompose(result, joint.translation, joint.rotation, joint.scale);
+    }
 
     //load keyframes - a 'pose' is a single posed joint, and a set of poses makes up one frame equivalent to a posed skeleton
     if (header.frameCount > 0)
@@ -553,8 +570,13 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         std::uint16_t* frameIter = (std::uint16_t*)(data + header.frameOffset);
         if (bindPose.size() > 0)
         {
+            std::vector<std::pair<std::int32_t, glm::mat4>> tempFrame;
+
             for (auto frameIndex = 0u; frameIndex < out.frames.size(); frameIndex += header.poseCount)
             {
+                tempFrame.clear();
+                tempFrame.resize(header.poseCount);
+
                 char* poseIter = data + header.poseOffset;
                 for (auto poseIndex = 0u; poseIndex < header.poseCount; ++poseIndex)
                 {
@@ -595,15 +617,34 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     if (pose.parent >= 0)
                     {
                         auto result = bindPose[pose.parent] * mat * inverseBindPose[poseIndex];
-                        auto& joint = out.frames[frameIndex + poseIndex];
-                        cro::Util::Matrix::decompose(result, joint.translation, joint.rotation, joint.scale);
+                        tempFrame[poseIndex] = std::make_pair(pose.parent, result);
+
                     }
                     else
                     {
                         auto result = mat * inverseBindPose[poseIndex];
-                        auto& joint = out.frames[frameIndex + poseIndex];
-                        cro::Util::Matrix::decompose(result, joint.translation, joint.rotation, joint.scale);
+                        tempFrame[poseIndex] = std::make_pair(-1, result);
                     }
+                }
+
+                //each joint pose is stored in a temp frame. For the final output
+                //we walk the node tree multiplying each joint by its parent, creating
+                //a fully transformed keyframe. This means that the only work the
+                //animation system has to do is interpolation.
+                for (auto i = 0u; i < tempFrame.size(); ++i)
+                {
+                    const auto& [parent, mat] = tempFrame[i];
+
+                    auto result = mat;
+                    auto currentParent = parent;
+                    while (currentParent > -1)
+                    {
+                        result = tempFrame[currentParent].second * result;
+                        currentParent = tempFrame[currentParent].first;
+                    }
+
+                    auto& joint = out.frames[frameIndex + i];
+                    cro::Util::Matrix::decompose(result, joint.translation, joint.rotation, joint.scale);
                 }
             }
         }

@@ -146,9 +146,14 @@ namespace cro
                     tangent = skinMatrix * tangent;
                     bitangent = skinMatrix * bitangent;
                 #endif
-                    v_tbn[0] = normalize(u_worldMatrix * tangent).xyz;
-                    v_tbn[1] = normalize(u_worldMatrix * bitangent).xyz;
-                    v_tbn[2] = normalize(u_worldMatrix * vec4(normal, 0.0)).xyz;
+                    //v_tbn[0] = normalize(u_worldMatrix * tangent).xyz;
+                    //v_tbn[1] = normalize(u_worldMatrix * bitangent).xyz;
+                    //v_tbn[2] = normalize(u_worldMatrix * vec4(normal, 0.0)).xyz;
+
+                    v_tbn[0] = normalize(u_normalMatrix * tangent.xyz);
+                    v_tbn[1] = normalize(u_normalMatrix * bitangent.xyz);
+                    v_tbn[2] = normalize(u_normalMatrix * normal);
+
                 #else
                     v_normalVector = u_normalMatrix * normal;
                 #endif

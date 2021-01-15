@@ -145,15 +145,21 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
     std::size_t startB = b * skeleton.frameSize;
     for (auto i = 0u; i < skeleton.frameSize; ++i)
     {
-        if (skeleton.jointIndices[i] < 0)
-        {
+        /*
+        NOTE for this to work the animation importer must make sure
+        all keyframes have their joints fully pre-multiplied by their
+        parents.
+        */
+
+        /*if (skeleton.frames[i].parent < 0)
+        {*/
             //root bone
             skeleton.currentFrame[i] = mix(skeleton.frames[startA + i], skeleton.frames[startB + i], time);
-        }
-        else
-        {
-            //multiply by our parent
-            skeleton.currentFrame[i] = skeleton.currentFrame[skeleton.jointIndices[i]] * mix(skeleton.frames[startA + i], skeleton.frames[startB + i], time);
-        }
+        //}
+        //else
+        //{
+        //    //multiply by our parent
+        //    skeleton.currentFrame[i] = skeleton.currentFrame[skeleton.frames[i].parent] * mix(skeleton.frames[startA + i], skeleton.frames[startB + i], time);
+        //}
     }
 }

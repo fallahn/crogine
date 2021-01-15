@@ -59,9 +59,12 @@ namespace cro
 
     /*!
     \brief Represents a Joint in the skeleton
-    An array of these are store in the skeleton representing
+    An array of these is stored in the skeleton representing
     the resting positions for the joints. Useful for debug
-    rendering.
+    rendering. These are also used to make up the joints
+    of a key frame. Each transform is assumed to *already*
+    be transformed by its parents - done by the model loader
+    when the key frames were created.
     */
     struct CRO_EXPORT_API Joint final
     {
@@ -96,16 +99,7 @@ namespace cro
         std::size_t frameCount = 0;
         std::vector<Joint> frames; //indexed by steps of frameSize
         std::vector<glm::mat4> currentFrame; //current interpolated output
-
-        operator bool() const
-        {
-            return (!frames.empty() && (frames.size() == frameSize * frameCount));
-        }
-
-        //lists the parent IDs if the parents should be included
-        //during interpolation
-        //TODO fix this disparity between glTF and iqm format meshes.
-        std::vector<int32> jointIndices;
+        
         std::vector<SkeletalAnim> animations;
 
         /*!
@@ -141,6 +135,11 @@ namespace cro
         \brief Returns the index of the current animation
         */
         std::int32_t getCurrentAnimation() const { return m_currentAnimation; }
+
+        operator bool() const
+        {
+            return (!frames.empty() && (frames.size() == frameSize * frameCount));
+        }
 
     private:
 

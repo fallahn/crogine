@@ -34,6 +34,7 @@ source distribution.
 #include "../ModelState.hpp" //includes tinygltf
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 #include <crogine/detail/glm/gtx/matrix_decompose.hpp>
 
@@ -76,6 +77,9 @@ namespace
 
     //TODO this should be a member really
     std::vector<Anim> animations;
+
+
+    glm::mat4 rootTransform = glm::mat4(1.f);
 }
 
 void ModelState::showGLTFBrowser()
@@ -144,6 +148,7 @@ void ModelState::showGLTFBrowser()
 
 void ModelState::parseGLTFNode(std::int32_t idx, bool loadAnims)
 {
+    rootTransform = glm::mat4(1.f);
     auto success = importGLTF(idx, loadAnims);
 
     //load animations if selected
@@ -270,8 +275,6 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
 
     std::vector<glm::mat4> inverseBindPose(skin.joints.size());
     dest.frameSize = skin.joints.size();
-    dest.jointIndices.resize(skin.joints.size()); //not used for this format, but still needs to be correct size.
-    std::fill(dest.jointIndices.begin(), dest.jointIndices.end(), -1);
 
     const auto& accessor = m_GLTFScene.accessors[skin.inverseBindMatrices];
     const auto& bufferView = m_GLTFScene.bufferViews[accessor.bufferView];
@@ -295,10 +298,6 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     {
         std::memcpy(&inverseBindPose[i], &buffer.data[index], sizeof(glm::mat4));
         index += sizeof(glm::mat4);
-
-        //this is pre-calculated when the matrices are
-        //built so not needed at run-time
-        //dest.jointIndices[i] = joint.parent;
     }
 
     //copy the nodes as we'll modify the transforms for each key frame
@@ -351,18 +350,14 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         return jointMat;
     };
 
+    //store the resting position of the joints.
     for (auto i = 0u; i < dest.frameSize; ++i)
     {
         auto tx = getMatrix(skin.joints[i]);
-        glm::vec3 translation, scale;
-        glm::quat rot;
 
-        cro::Util::Matrix::decompose(tx, translation, rot, scale);
         auto& joint = dest.bindPose.emplace_back();
-        joint.translation = translation;
-        joint.rotation = rot;
-        joint.scale = scale;
-
+        cro::Util::Matrix::decompose(tx, joint.translation, joint.rotation, joint.scale);
+        
         //as the joints list is smaller than the overall nodes list we have
         //to find the position the parent appears in the joints list.
         if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result != skin.joints.end())
@@ -379,9 +374,10 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         //however this will need to be applied if we're updating child nodes
         //so that they take on their parent's transform correctly
         /*auto inverseTx = glm::inverse(getMatrix(nodeIdx));*/
+        /*auto inverseTx = glm::inverse(rootTransform);*/
         for (auto i = 0u; i < dest.frameSize; ++i)
         {
-            auto mat = /*inverseTx **/ getMatrix(skin.joints[i]) * inverseBindPose[i];
+            auto mat = /*inverseTx **/getMatrix(skin.joints[i]) * inverseBindPose[i];
             auto& joint = dest.frames.emplace_back();
             cro::Util::Matrix::decompose(mat, joint.translation, joint.rotation, joint.scale);
         }
@@ -476,7 +472,6 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
                 }
             }
 
-            
             if (addFrame)
             {
                 updateJoints(idx);
@@ -495,6 +490,10 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
 
 bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
 {
+    //traverse the node and acumulate any previous transforms in the tree
+    rootTransform = glm::rotate(rootTransform, 1.4f, glm::vec3(0.f, 0.f, 1.f));
+    rootTransform = glm::scale(rootTransform, glm::vec3(0.5f));
+
     //start with mesh. This contains a Primitive for each sub-mesh
     //which in turn contains the indices into the accessor array.
 
@@ -749,6 +748,30 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
         }
 
         CRO_ASSERT(!tempData[0].first.empty(), "Position data missing");
+
+        //apply the root transform to geometry
+        //this works for static meshes but I'll be buggered if I can
+        //figure out how to apply it to the skeleton.
+        /*auto normalMat = glm::inverseTranspose(glm::mat3(rootTransform));
+        auto& positions = tempData[cro::Mesh::Attribute::Position].first;
+        for (auto i = 0u; i < positions.size(); i += 3)
+        {
+            glm::vec3 pos = glm::make_vec3(&positions[i]);
+            glm::vec4 newPos = rootTransform * glm::vec4(pos, 1.f);
+            positions[i] = newPos.x;
+            positions[i+1] = newPos.y;
+            positions[i+2] = newPos.z;
+        }
+        auto& normals = tempData[cro::Mesh::Attribute::Normal].first;
+        for (auto i = 0u; i < normals.size(); i += 3)
+        {
+            glm::vec3 normal = glm::make_vec3(&normals[i]);
+            normal = normalMat * normal;
+            normals[i] = normal.x;
+            normals[i+1] = normal.y;
+            normals[i+2] = normal.z;
+        }*/
+
         auto vertexCount = tempData[0].first.size() / tempData[0].second;
         for (auto i = 0u; i < vertexCount; ++i)
         {
@@ -772,6 +795,7 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
 
                         glm::vec3 normal(normalData[idx], normalData[idx + 1], normalData[idx + 2]);
                         glm::vec3 tan(data[idx], data[idx + 1], data[idx + 2]);
+                        //tan = normalMat * tan;
                         float sign = data[idx + 3];
 
                         glm::vec3 bitan = glm::cross(normal, tan) * -sign;
