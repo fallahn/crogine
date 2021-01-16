@@ -32,9 +32,23 @@ source distribution.
 
 using namespace cro;
 
+Skeleton::Skeleton()
+    : m_playbackRate    (1.f),
+    m_currentAnimation  (0),
+    m_nextAnimation     (-1),
+    m_blendTime         (1.f),
+    m_currentBlendTime  (0.f),
+    m_frameTime         (1.f),
+    m_currentFrameTime  (0.f),
+    m_frameSize         (0),
+    m_frameCount        (0)
+{
+
+}
+
 void Skeleton::play(std::size_t idx, float rate, float blendingTime)
 {
-    CRO_ASSERT(idx < animations.size(), "Index out of range");
+    CRO_ASSERT(idx < m_animations.size(), "Index out of range");
     CRO_ASSERT(rate > 0, "");
     m_playbackRate = rate;
     if (idx != m_currentAnimation)
@@ -45,21 +59,21 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
     }
     else
     {
-        animations[idx].playbackRate = rate;
+        m_animations[idx].playbackRate = rate;
     }
 }
 
 void Skeleton::prevFrame()
 
 {
-    CRO_ASSERT(!animations.empty(), "No animations loaded");
+    CRO_ASSERT(!m_animations.empty(), "No animations loaded");
     if (m_currentFrameTime > 0)
     {
         m_currentFrameTime = 0.f;
     }
     else
     {
-        auto& anim = animations[m_currentAnimation];
+        auto& anim = m_animations[m_currentAnimation];
         auto frame = anim.currentFrame - anim.startFrame;
         frame = (frame + (anim.frameCount - 1)) % anim.frameCount;
         anim.currentFrame = frame + anim.startFrame;
@@ -68,8 +82,8 @@ void Skeleton::prevFrame()
 
 void Skeleton::nextFrame()
 {
-    CRO_ASSERT(!animations.empty(), "No animations loaded");
-    auto& anim = animations[m_currentAnimation];
+    CRO_ASSERT(!m_animations.empty(), "No animations loaded");
+    auto& anim = m_animations[m_currentAnimation];
     auto frame = anim.currentFrame - anim.startFrame;
     frame = (frame + 1) % anim.frameCount;
     anim.currentFrame = frame + anim.startFrame;
@@ -78,6 +92,25 @@ void Skeleton::nextFrame()
 
 void Skeleton::stop()
 {
-    CRO_ASSERT(!animations.empty(), "");
-    animations[m_currentAnimation].playbackRate = 0.f;
+    CRO_ASSERT(!m_animations.empty(), "");
+    m_animations[m_currentAnimation].playbackRate = 0.f;
+}
+
+void Skeleton::addAnimation(const SkeletalAnim& anim)
+{
+    CRO_ASSERT(m_frameCount >= (anim.startFrame + anim.frameCount), "animation is out of frame range");
+    m_animations.push_back(anim);
+}
+
+void Skeleton::addFrame(const std::vector<Joint>& frame)
+{
+    if (m_frameSize == 0)
+    {
+        m_frameSize = frame.size();
+        m_currentFrame.resize(m_frameSize);
+    }
+
+    CRO_ASSERT(frame.size() == m_frameSize, "Incorrect frame size");
+    m_frames.insert(m_frames.end(), frame.begin(), frame.end());
+    m_frameCount++;
 }

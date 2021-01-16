@@ -781,7 +781,7 @@ void ModelState::updateImportNode(CMFHeader header, std::vector<float>& imported
 
 void ModelState::buildSkeleton()
 {
-    return;
+    //return;
 
     if (m_entities[EntityID::ActiveModel].isValid()
         && m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
@@ -793,6 +793,7 @@ void ModelState::buildSkeleton()
 
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::SkeletonDraw]);
             material.enableDepthTest = false;
+            material.blendMode = cro::Material::BlendMode::Alpha;
             entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_skeletonMeshID), material);
             entity.addComponent<cro::Skeleton>();
 
@@ -867,7 +868,7 @@ void ModelState::buildSkeleton()
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
         //m_entities[EntityID::ActiveModel].getComponent<cro::Model>().setHidden(true);
-        m_entities[EntityID::ActiveSkeleton].getComponent<cro::Skeleton>().play(0);
+        //m_entities[EntityID::ActiveSkeleton].getComponent<cro::Skeleton>().play(0);
         //TODO apply source skel anims to entity
     }
 }

@@ -645,26 +645,29 @@ void ModelState::drawInspector()
                     if (m_importedHeader.animated)
                     {
                         auto& skel = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
-                        ImGui::Text("%lu Animation(s)", skel.animations.size());
+                        auto& animations = skel.getAnimations();
+                        ImGui::Text("%lu Animation(s)", animations.size());
                         int buns = 232131;
                         int animID = 0;
-                        for (const auto& anim : skel.animations)
+                        for (auto& anim : animations)
                         {
                             auto name = anim.name.substr(0, 16);
                             ImGui::Text("%s\n Frames: %lu", name.c_str(), anim.frameCount);
 
+                            auto ID = std::to_string(buns++);
+
                             ImGui::SameLine();
-                            std::string label = "<##" + std::to_string(buns++);
+                            std::string label = "<##" + ID;
                             if (ImGui::Button(label.c_str())
                                 && animID == skel.getCurrentAnimation()
-                                && skel.animations[skel.getCurrentAnimation()].playbackRate == 0)
+                                && animations[skel.getCurrentAnimation()].playbackRate == 0)
                             {
                                 skel.prevFrame();
                             }
                             toolTip("Previous Frame");
                             ImGui::SameLine();
 
-                            if (skel.animations[skel.getCurrentAnimation()].playbackRate != 0)
+                            if (animations[skel.getCurrentAnimation()].playbackRate != 0)
                             {
                                 //pause button
                                 label = "Pause##" + std::to_string(buns++);
@@ -684,18 +687,21 @@ void ModelState::drawInspector()
                             }
 
                             ImGui::SameLine();
-                            label = ">##" + std::to_string(buns++);
+                            label = ">##" + ID;
                             if (ImGui::Button(label.c_str())
                                 && animID == skel.getCurrentAnimation()
-                                && skel.animations[skel.getCurrentAnimation()].playbackRate == 0)
+                                && animations[skel.getCurrentAnimation()].playbackRate == 0)
                             {
                                 skel.nextFrame();
                             }
                             toolTip("Next Frame");
+                            
+                            ImGui::SameLine();
+                            label = "Loop##" + ID;
+                            ImGui::Checkbox(label.c_str(), &anim.looped);
                             animID++;
-
                         }
-                        ImGui::Text("Current Frame: %lu", skel.animations[skel.getCurrentAnimation()].currentFrame - skel.animations[skel.getCurrentAnimation()].startFrame);
+                        ImGui::Text("Current Frame: %lu", animations[skel.getCurrentAnimation()].currentFrame - animations[skel.getCurrentAnimation()].startFrame);
 
                         ImGui::NewLine();
                         ImGui::Separator();
@@ -906,6 +912,7 @@ void ModelState::drawInspector()
                     if (m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
                     {
                         auto& skeleton = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+                        const auto& animations = skeleton.getAnimations();
 
                         ImGui::NewLine();
                         ImGui::Separator();
@@ -917,9 +924,9 @@ void ModelState::drawInspector()
                             //TODO toggle skeleton display
                         }
 
-                        ImGui::Text("Animations: %ld", skeleton.animations.size());
+                        ImGui::Text("Animations: %ld", animations.size());
                         static std::string label("Stopped");
-                        if (skeleton.animations.empty())
+                        if (animations.empty())
                         {
                             label = "No Animations Found.";
                         }
@@ -929,9 +936,9 @@ void ModelState::drawInspector()
                             auto prevAnim = currentAnim;
 
                             if (ImGui::InputInt("Anim", &currentAnim, 1, 1)
-                                && skeleton.animations[currentAnim].playbackRate != 0)
+                                && animations[currentAnim].playbackRate != 0)
                             {
-                                currentAnim = std::min(currentAnim, static_cast<int>(skeleton.animations.size()) - 1);
+                                currentAnim = std::min(currentAnim, static_cast<int>(animations.size()) - 1);
                             }
                             else
                             {
@@ -939,7 +946,7 @@ void ModelState::drawInspector()
                             }
 
                             ImGui::SameLine();
-                            if (skeleton.animations[currentAnim].playbackRate != 0)
+                            if (animations[currentAnim].playbackRate != 0)
                             {
                                 if (ImGui::Button("Stop"))
                                 {
@@ -952,7 +959,7 @@ void ModelState::drawInspector()
                                 if (ImGui::Button("Play"))
                                 {
                                     skeleton.play(currentAnim);
-                                    label = "Playing " + skeleton.animations[currentAnim].name;
+                                    label = "Playing " + animations[currentAnim].name;
                                 }
                                 else
                                 {
@@ -1854,7 +1861,7 @@ void ModelState::drawInfo()
         cursor.y -= 4.f;
         ImGui::SetCursorPos(cursor);
 
-        if (ImGui::Button("More...", ImVec2(50.f, 20.f)))
+        if (ImGui::Button("More...", ImVec2(56.f, 20.f)))
         {
             cro::Console::show();
         }

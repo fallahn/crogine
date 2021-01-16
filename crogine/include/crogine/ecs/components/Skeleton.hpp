@@ -95,18 +95,17 @@ namespace cro
     class CRO_EXPORT_API Skeleton final
     {
     public:
-        std::size_t frameSize = 0; //joints in a frame
-        std::size_t frameCount = 0;
-        std::vector<Joint> frames; //indexed by steps of frameSize
-        std::vector<glm::mat4> currentFrame; //current interpolated output
-        
-        std::vector<SkeletalAnim> animations;
 
         /*!
         \brief Joints which make up the bind pose, in model coords
         ie already pre-transformed by any parent joints
         */
         std::vector<Joint> bindPose;
+
+        /*!
+        \brief Default Constructor
+        */
+        Skeleton();
 
         /*!
         \brief Plays the animation at the given index
@@ -136,23 +135,60 @@ namespace cro
         */
         std::int32_t getCurrentAnimation() const { return m_currentAnimation; }
 
+        /*!
+        \brief Returns a reference to the array of animations for this skeleton
+        */
+        std::vector<SkeletalAnim>& getAnimations() { return m_animations; }
+        const std::vector<SkeletalAnim>& getAnimations() const { return m_animations; }
+
+        /*!
+        \brief Adds an animation to the skeleton.
+        The required frames must have already been added to the skeleton
+        */
+        void addAnimation(const SkeletalAnim&);
+
+        /*!
+        \brief Adds a frame of animation.
+        If this is the first frame then this will set the frame size (aka joint count)
+        of a single frame. Subsequent frames must match this number of joints.
+        */
+        void addFrame(const std::vector<Joint>&);
+
+        /*!
+        \brief Returns the number of joints in a single frame, or zero if no animations are added
+        */
+        std::size_t getFrameSize() const { return m_frameSize; }
+
+        /*!
+        \brief Return the total number of frames of animation
+        */
+        std::size_t getFrameCount() const { return m_frameCount; }
+
         operator bool() const
         {
-            return (!frames.empty() && (frames.size() == frameSize * frameCount));
+            return (!m_frames.empty() && (m_frames.size() == m_frameSize * m_frameCount));
         }
 
     private:
 
-        float m_playbackRate = 1.f;
+        float m_playbackRate;
 
-        int32 m_currentAnimation = 0;
-        int32 m_nextAnimation = -1;
+        int32 m_currentAnimation;
+        int32 m_nextAnimation;
 
-        float m_blendTime = 1.f;
-        float m_currentBlendTime = 0.f;
+        float m_blendTime;
+        float m_currentBlendTime;
 
-        float m_frameTime = 1.f;
-        float m_currentFrameTime = 0.f;
+        float m_frameTime;
+        float m_currentFrameTime;
+
+
+        std::size_t m_frameSize; //joints in a frame
+        std::size_t m_frameCount;
+        std::vector<Joint> m_frames; //indexed by steps of frameSize
+        std::vector<glm::mat4> m_currentFrame; //current interpolated output
+
+        std::vector<SkeletalAnim> m_animations;
 
         friend class SkeletalAnimator;
     };

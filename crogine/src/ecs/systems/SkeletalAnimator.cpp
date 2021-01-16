@@ -57,7 +57,7 @@ void SkeletalAnimator::process(float dt)
         if (skel.m_nextAnimation < 0)
         {
             //update current animation
-            auto& anim = skel.animations[skel.m_currentAnimation];
+            auto& anim = skel.m_animations[skel.m_currentAnimation];
 
             auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
             nextFrame += anim.startFrame;
@@ -93,17 +93,17 @@ void SkeletalAnimator::process(float dt)
             if (entity.getComponent<Model>().isVisible())
             {
                 float interpTime = std::min(1.f, skel.m_currentBlendTime / skel.m_blendTime);
-                interpolate(skel.animations[skel.m_currentAnimation].currentFrame, skel.animations[skel.m_nextAnimation].startFrame, interpTime, skel);
+                interpolate(skel.m_animations[skel.m_currentAnimation].currentFrame, skel.m_animations[skel.m_nextAnimation].startFrame, interpTime, skel);
             }
 
             if (skel.m_currentBlendTime > skel.m_blendTime)
             {
-                skel.animations[skel.m_currentAnimation].playbackRate = 0.f;
+                skel.m_animations[skel.m_currentAnimation].playbackRate = 0.f;
                 skel.m_currentAnimation = skel.m_nextAnimation;
                 skel.m_nextAnimation = -1;
-                skel.m_frameTime = 1.f / skel.animations[skel.m_currentAnimation].frameRate;
+                skel.m_frameTime = 1.f / skel.m_animations[skel.m_currentAnimation].frameRate;
                 skel.m_currentFrameTime = 0.f;
-                skel.animations[skel.m_currentAnimation].playbackRate = skel.m_playbackRate;
+                skel.m_animations[skel.m_currentAnimation].playbackRate = skel.m_playbackRate;
             }
         }
     }
@@ -114,13 +114,13 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
 {
     auto& skeleton = entity.getComponent<Skeleton>();
 
-    if (skeleton.currentFrame.size() < skeleton.frameSize)
+    if (skeleton.m_currentFrame.size() < skeleton.m_frameSize)
     {
-        skeleton.currentFrame.resize(skeleton.frameSize);
+        skeleton.m_currentFrame.resize(skeleton.m_frameSize);
     }
 
-    entity.getComponent<Model>().setSkeleton(&skeleton.currentFrame[0], skeleton.frameSize);
-    skeleton.m_frameTime = 1.f / skeleton.animations[0].frameRate;
+    entity.getComponent<Model>().setSkeleton(&skeleton.m_currentFrame[0], skeleton.m_frameSize);
+    skeleton.m_frameTime = 1.f / skeleton.m_animations[0].frameRate;
 }
 
 void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Skeleton& skeleton)
@@ -141,9 +141,9 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
     };
 
     //NOTE a and b are FRAME INDICES not indices directly into the frame array
-    std::size_t startA = a * skeleton.frameSize;
-    std::size_t startB = b * skeleton.frameSize;
-    for (auto i = 0u; i < skeleton.frameSize; ++i)
+    std::size_t startA = a * skeleton.m_frameSize;
+    std::size_t startB = b * skeleton.m_frameSize;
+    for (auto i = 0u; i < skeleton.m_frameSize; ++i)
     {
         /*
         NOTE for this to work the animation importer must make sure
@@ -154,7 +154,7 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
         /*if (skeleton.frames[i].parent < 0)
         {*/
             //root bone
-            skeleton.currentFrame[i] = mix(skeleton.frames[startA + i], skeleton.frames[startB + i], time);
+            skeleton.m_currentFrame[i] = mix(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time);
         //}
         //else
         //{

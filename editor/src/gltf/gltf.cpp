@@ -276,7 +276,6 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     const auto& skin = m_GLTFScene.skins[node.skin];
 
     std::vector<glm::mat4> inverseBindPose(skin.joints.size());
-    dest.frameSize = skin.joints.size();
 
     const auto& accessor = m_GLTFScene.accessors[skin.inverseBindMatrices];
     const auto& bufferView = m_GLTFScene.bufferViews[accessor.bufferView];
@@ -296,7 +295,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     }
 
     //read the inv bindpose
-    for (auto i = 0u; i < dest.frameSize; ++i)
+    for (auto i = 0u; i < inverseBindPose.size(); ++i)
     {
         std::memcpy(&inverseBindPose[i], &buffer.data[index], sizeof(glm::mat4));
         index += sizeof(glm::mat4);
@@ -353,7 +352,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     };
 
     //store the resting position of the joints.
-    for (auto i = 0u; i < dest.frameSize; ++i)
+    for (auto i = 0u; i < inverseBindPose.size(); ++i)
     {
         auto tx = getMatrix(skin.joints[i]);
 
@@ -368,7 +367,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         }
     }
 
-    std::function<void(std::int32_t)> updateJoints =
+    std::function<void(std::int32_t)> createFrame =
         [&](std::int32_t nodeIdx)
     {
         //applying this undoes the scale/rot applied to the armature with
@@ -377,32 +376,32 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         //so that they take on their parent's transform correctly
         /*auto inverseTx = glm::inverse(getMatrix(nodeIdx));*/
         /*auto inverseTx = glm::inverse(rootTransform);*/
-        for (auto i = 0u; i < dest.frameSize; ++i)
+        std::vector<cro::Joint> frame;
+        for (auto i = 0u; i < inverseBindPose.size(); ++i)
         {
             auto mat = /*inverseTx **/getMatrix(skin.joints[i]) * inverseBindPose[i];
-            auto& joint = dest.frames.emplace_back();
+            auto& joint = frame.emplace_back();
             cro::Util::Matrix::decompose(mat, joint.translation, joint.rotation, joint.scale);
         }
+        dest.addFrame(frame);
     };
 
     //base frame
     if (animations.empty())
     {
-        updateJoints(idx);
+        createFrame(idx);
 
         //update the output so we have something to look at.
-        for (auto i = 0u; i < dest.frameSize; ++i)
-        {
-            dest.currentFrame.push_back(cro::Joint::combine(dest.frames[i]));
-        }
-        dest.animations.emplace_back().frameCount = 1; //empty 1 frame anim
+        cro::SkeletalAnim anim;
+        anim.frameCount = 1;
+        dest.addAnimation(anim); //empty 1 frame anim
     }
     
     for (auto& anim : animations)
     {
-        auto& skelAnim = dest.animations.emplace_back();
+        cro::SkeletalAnim skelAnim;
         skelAnim.name = anim.name;
-        skelAnim.startFrame = static_cast<std::uint32_t>(dest.frames.size() / dest.frameSize);
+        skelAnim.startFrame = static_cast<std::uint32_t>(dest.getFrameCount());
         skelAnim.currentFrame = skelAnim.startFrame;
 
         //glTF doesn't use a fixed frame rate, rather it
@@ -476,7 +475,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
 
             if (addFrame)
             {
-                updateJoints(idx);
+                createFrame(idx);
                 skelAnim.frameCount++;
             }
             anim.currentTime += FixedStep;
@@ -486,7 +485,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         //TODO use the extras property to tag message triggers, looping etc?
         //or shall we make this part of the editor?
 
-        dest.frameCount += skelAnim.frameCount;
+        dest.addAnimation(skelAnim);
     }
 }
 
