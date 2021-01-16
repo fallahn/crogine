@@ -700,6 +700,7 @@ void ModelState::importIQM(const std::string& path)
     }
 
     savePrefs();
+    buildSkeleton();
 }
 
 void ModelState::updateImportNode(CMFHeader header, std::vector<float>& importedVBO, std::vector<std::vector<std::uint32_t>>& importedIndexArrays)
@@ -795,14 +796,12 @@ void ModelState::buildSkeleton()
             material.enableDepthTest = false;
             material.blendMode = cro::Material::BlendMode::Alpha;
             entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_skeletonMeshID), material);
-            entity.addComponent<cro::Skeleton>();
 
             m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             m_entities[EntityID::ActiveSkeleton] = entity;
         }
 
         const auto& skeleton = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
-        m_entities[EntityID::ActiveSkeleton].getComponent<cro::Skeleton>() = skeleton;
 
         auto getTransform = [](const cro::Joint& j)
         {
@@ -813,10 +812,10 @@ void ModelState::buildSkeleton()
         };
 
         std::vector<float> verts;
-        for(auto i = 0u; i < skeleton.bindPose.size(); ++i)
+        for(auto i = 0u; i < skeleton.getFrameSize(); ++i)
         {
-            auto tx = getTransform(skeleton.bindPose[i]);
-            glm::vec4 position = tx * glm::vec4(0.f, 0.f, 0.f, 1.f);
+            const auto& joint = skeleton.getFrames()[i];
+            const auto& position = joint.worldMatrix * glm::vec4(glm::vec3(0.f), 1.f);
 
             verts.push_back(position.x);
             verts.push_back(position.y);
@@ -827,7 +826,7 @@ void ModelState::buildSkeleton()
             verts.push_back(1.f);
             verts.push_back(1.f);
 
-            verts.push_back(static_cast<float>(i));
+            /*verts.push_back(static_cast<float>(i));
             verts.push_back(0.f);
             verts.push_back(0.f);
             verts.push_back(0.f);
@@ -835,7 +834,7 @@ void ModelState::buildSkeleton()
             verts.push_back(1.f);
             verts.push_back(0.f);
             verts.push_back(0.f);
-            verts.push_back(0.f);
+            verts.push_back(0.f);*/
         }
 
         auto vertStride = 15u;
@@ -852,12 +851,12 @@ void ModelState::buildSkeleton()
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
         std::vector<std::uint32_t> indices;
-        for (auto i = 0u; i < skeleton.bindPose.size(); ++i)
+        for (auto i = 0u; i < skeleton.getFrameSize(); ++i)
         {
-            if (skeleton.bindPose[i].parent > -1)
+            if (skeleton.getFrames()[i].parent > -1)
             {
                 indices.push_back(i);
-                indices.push_back(skeleton.bindPose[i].parent);
+                indices.push_back(skeleton.getFrames()[i].parent);
             }
         }
 
@@ -866,10 +865,6 @@ void ModelState::buildSkeleton()
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-        //m_entities[EntityID::ActiveModel].getComponent<cro::Model>().setHidden(true);
-        //m_entities[EntityID::ActiveSkeleton].getComponent<cro::Skeleton>().play(0);
-        //TODO apply source skel anims to entity
     }
 }
 

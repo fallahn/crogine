@@ -510,8 +510,6 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
     std::vector<glm::mat4> bindPose(header.jointCount);
     std::vector<glm::mat4> inverseBindPose(header.jointCount);
 
-    out.bindPose.resize(header.jointCount);
-
     //warn if bone count > 64 as this is the limit on mobile devices (or even lower!)
     if (header.jointCount > 64)
     {
@@ -540,25 +538,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
             //multiply by parent's transform
             bindPose[i] = bindPose[joint.parent] * bindPose[i];
             inverseBindPose[i] *= inverseBindPose[joint.parent];
-
-            out.bindPose[i].parent = joint.parent;
         }
-    }
-
-    //update the output bindpose
-    for (auto i = 0u; i < out.bindPose.size(); ++i)
-    {
-        auto& joint = out.bindPose[i];
-        auto result = bindPose[i];
-        auto currentParent = joint.parent;
-
-        while (currentParent > -1)
-        {
-            result = bindPose[currentParent] * result;
-            currentParent = out.bindPose[currentParent].parent;
-        }
-        
-        cro::Util::Matrix::decompose(result, joint.translation, joint.rotation, joint.scale);
     }
 
     //load keyframes - a 'pose' is a single posed joint, and a set of poses makes up one frame equivalent to a posed skeleton
@@ -568,7 +548,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         std::uint16_t* frameIter = (std::uint16_t*)(data + header.frameOffset);
         if (bindPose.size() > 0)
         {
-            std::vector<std::pair<std::int32_t, glm::mat4>> tempFrame;
+            std::vector<std::tuple<std::int32_t, glm::mat4>> tempFrame;
 
             for (auto frameIndex = 0u; frameIndex < frameSize; frameIndex += header.poseCount)
             {
@@ -612,23 +592,14 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     if (pose.mask & 0x200) scale.z += *frameIter++ * pose.channelScale[8];
 
                     glm::mat4 mat = Iqm::createBoneMatrix(rotation, translation, scale);
-                    if (pose.parent >= 0)
-                    {
-                        auto result = bindPose[pose.parent] * mat * inverseBindPose[poseIndex];
-                        tempFrame[poseIndex] = std::make_pair(pose.parent, result);
-
-                    }
-                    else
-                    {
-                        auto result = mat * inverseBindPose[poseIndex];
-                        tempFrame[poseIndex] = std::make_pair(-1, result);
-                    }
+                    tempFrame[poseIndex] = std::make_tuple(pose.parent, mat);
                 }
 
                 //each joint pose is stored in a temp frame. For the final output
                 //we walk the node tree multiplying each joint by its parent, creating
                 //a fully transformed keyframe. This means that the only work the
                 //animation system has to do is interpolation.
+
                 std::vector<cro::Joint> frame;
                 for (auto i = 0u; i < tempFrame.size(); ++i)
                 {
@@ -636,14 +607,19 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 
                     auto result = mat;
                     auto currentParent = parent;
+
                     while (currentParent > -1)
                     {
-                        result = tempFrame[currentParent].second * result;
-                        currentParent = tempFrame[currentParent].first;
+                        const auto& [p, m] = tempFrame[currentParent];
+
+                        result = m * result;
+                        currentParent = p;
                     }
 
                     auto& joint = frame.emplace_back();
-                    cro::Util::Matrix::decompose(result, joint.translation, joint.rotation, joint.scale);
+                    joint.parent = parent;
+                    joint.worldMatrix = result;
+                    cro::Util::Matrix::decompose(result * inverseBindPose[i], joint.translation, joint.rotation, joint.scale);
                 }
                 out.addFrame(frame);
             }

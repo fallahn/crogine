@@ -351,22 +351,6 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         return jointMat;
     };
 
-    //store the resting position of the joints.
-    for (auto i = 0u; i < inverseBindPose.size(); ++i)
-    {
-        auto tx = getMatrix(skin.joints[i]);
-
-        auto& joint = dest.bindPose.emplace_back();
-        cro::Util::Matrix::decompose(tx, joint.translation, joint.rotation, joint.scale);
-        
-        //as the joints list is smaller than the overall nodes list we have
-        //to find the position the parent appears in the joints list.
-        if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result != skin.joints.end())
-        {
-            joint.parent = std::distance(skin.joints.begin(), result);
-        }
-    }
-
     std::function<void(std::int32_t)> createFrame =
         [&](std::int32_t nodeIdx)
     {
@@ -379,9 +363,18 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         std::vector<cro::Joint> frame;
         for (auto i = 0u; i < inverseBindPose.size(); ++i)
         {
-            auto mat = /*inverseTx **/getMatrix(skin.joints[i]) * inverseBindPose[i];
             auto& joint = frame.emplace_back();
+            joint.worldMatrix = getMatrix(skin.joints[i]);
+            auto mat = /*inverseTx **/joint.worldMatrix * inverseBindPose[i];
             cro::Util::Matrix::decompose(mat, joint.translation, joint.rotation, joint.scale);
+
+
+            //as the joints list is smaller than the overall nodes list we have
+            //to find the position the parent appears in the joints list.
+            if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result != skin.joints.end())
+            {
+                joint.parent = std::distance(skin.joints.begin(), result);
+            }
         }
         dest.addFrame(frame);
     };

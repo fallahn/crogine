@@ -85,6 +85,8 @@ namespace cro
             m = glm::scale(m, j.scale);
             return m;
         }
+
+        glm::mat4 worldMatrix = glm::mat4(1.f);
     };
 
     /*!
@@ -95,13 +97,6 @@ namespace cro
     class CRO_EXPORT_API Skeleton final
     {
     public:
-
-        /*!
-        \brief Joints which make up the bind pose, in model coords
-        ie already pre-transformed by any parent joints
-        */
-        std::vector<Joint> bindPose;
-
         /*!
         \brief Default Constructor
         */
@@ -168,6 +163,13 @@ namespace cro
         {
             return (!m_frames.empty() && (m_frames.size() == m_frameSize * m_frameCount));
         }
+
+        /*!
+        \brief Returns a reference to the vector of joints which make up the key frames
+        Note that the stride of each frame is equal the the  number of joints in a frame
+        aka FrameSize
+        */
+        const std::vector<Joint>& getFrames() const { return m_frames; }
 
     private:
 
