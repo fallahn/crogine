@@ -96,6 +96,13 @@ void Skeleton::stop()
     m_animations[m_currentAnimation].playbackRate = 0.f;
 }
 
+
+Skeleton::State Skeleton::getState() const
+{
+    CRO_ASSERT(!m_animations.empty(), "");
+    return m_animations[m_currentAnimation].playbackRate == 0 ? Stopped : Playing;
+}
+
 void Skeleton::addAnimation(const SkeletalAnim& anim)
 {
     CRO_ASSERT(m_frameCount >= (anim.startFrame + anim.frameCount), "animation is out of frame range");
@@ -114,6 +121,12 @@ void Skeleton::addFrame(const std::vector<Joint>& frame)
     m_frames.insert(m_frames.end(), frame.begin(), frame.end());
     m_notifications.emplace_back();
     m_frameCount++;
+}
+
+std::size_t Skeleton::getCurrentFrame() const
+{
+    CRO_ASSERT(!m_animations.empty(), "");
+    return m_animations[m_currentAnimation].currentFrame;
 }
 
 void Skeleton::addNotification(std::size_t frameID, std::int32_t jointID, std::int32_t userID)

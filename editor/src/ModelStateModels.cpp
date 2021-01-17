@@ -36,9 +36,11 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/BillboardCollection.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
+#include <crogine/detail/glm/gtx/matrix_interpolation.hpp>
 
 #include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -792,79 +794,87 @@ void ModelState::buildSkeleton()
             auto entity = m_scene.createEntity();
             entity.addComponent<cro::Transform>();
 
-            auto material = m_resources.materials.get(m_materialIDs[MaterialID::SkeletonDraw]);
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::DebugDraw]);
             material.enableDepthTest = false;
             material.blendMode = cro::Material::BlendMode::Alpha;
             entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_skeletonMeshID), material);
+            entity.addComponent<cro::Callback>();
 
             m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             m_entities[EntityID::ActiveSkeleton] = entity;
         }
 
-        const auto& skeleton = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
-
-        auto getTransform = [](const cro::Joint& j)
+        m_entities[EntityID::ActiveSkeleton].getComponent<cro::Callback>().active = true;
+        m_entities[EntityID::ActiveSkeleton].getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
         {
-            glm::mat4 ret = glm::translate(glm::mat4(1.f), j.translation);
-            ret *= glm::toMat4(j.rotation);
-            ret = glm::scale(ret, j.scale);
-            return ret;
-        };
-
-        std::vector<float> verts;
-        for(auto i = 0u; i < skeleton.getFrameSize(); ++i)
-        {
-            const auto& joint = skeleton.getFrames()[i];
-            const auto& position = joint.worldMatrix * glm::vec4(glm::vec3(0.f), 1.f);
-
-            verts.push_back(position.x);
-            verts.push_back(position.y);
-            verts.push_back(position.z);
-
-            verts.push_back(1.f);
-            verts.push_back(0.f);
-            verts.push_back(1.f);
-            verts.push_back(1.f);
-
-            /*verts.push_back(static_cast<float>(i));
-            verts.push_back(0.f);
-            verts.push_back(0.f);
-            verts.push_back(0.f);
-
-            verts.push_back(1.f);
-            verts.push_back(0.f);
-            verts.push_back(0.f);
-            verts.push_back(0.f);*/
-        }
-
-        auto vertStride = 15u;
-
-        auto& meshData = m_entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().getMeshData();
-        meshData.boundingBox = { glm::vec3(-2.f), glm::vec3(2.f) };
-        meshData.boundingSphere.radius = 2.f;
-        meshData.boundingSphere.centre = { 0.f, 2.f, 0.f };
-        meshData.vertexSize = vertStride * sizeof(float);
-        meshData.vertexCount = verts.size() / vertStride;
-
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-        glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_STATIC_DRAW));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-        std::vector<std::uint32_t> indices;
-        for (auto i = 0u; i < skeleton.getFrameSize(); ++i)
-        {
-            if (skeleton.getFrames()[i].parent > -1)
+            if (!e.getComponent<cro::Model>().isHidden())
             {
-                indices.push_back(i);
-                indices.push_back(skeleton.getFrames()[i].parent);
-            }
-        }
+                const auto& skeleton = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
 
-        auto& submesh = meshData.indexData[0];
-        submesh.indexCount = static_cast<std::uint32_t>(indices.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
-        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+                //TODO we could optimise this a bit by recycling the vectors here
+                //but we'll worry about it if it actually becomes a problem
+                static std::vector<float> verts;
+                verts.clear();
+
+                const auto& currentAnim = skeleton.getAnimations()[skeleton.getCurrentAnimation()];
+                auto nextFrame = ((currentAnim.currentFrame - currentAnim.startFrame) + 1) % currentAnim.frameCount;
+                nextFrame += currentAnim.startFrame;
+
+                auto frameOffsetA = skeleton.getFrameSize() * skeleton.getCurrentFrame();
+                auto frameOffsetB = skeleton.getFrameSize() * nextFrame;
+
+
+                for (auto i = 0u; i < skeleton.getFrameSize(); ++i)
+                {
+                    const auto& jointA = skeleton.getFrames()[frameOffsetA + i];
+                    const auto& jointB = skeleton.getFrames()[frameOffsetB + i];
+                    const auto& position = glm::interpolate(jointA.worldMatrix, jointB.worldMatrix, skeleton.getCurrentFrameTime()) * glm::vec4(glm::vec3(0.f), 1.f);
+
+                    verts.push_back(position.x);
+                    verts.push_back(position.y);
+                    verts.push_back(position.z);
+
+                    verts.push_back(1.f);
+                    verts.push_back(0.f);
+                    verts.push_back(1.f);
+                    verts.push_back(1.f);
+                }
+
+                auto vertStride = 7u;
+
+                auto& meshData = e.getComponent<cro::Model>().getMeshData();
+                meshData.boundingBox = { glm::vec3(-2.f), glm::vec3(2.f) };
+                meshData.boundingSphere.radius = 2.f;
+                meshData.boundingSphere.centre = { 0.f, 2.f, 0.f };
+                meshData.vertexSize = vertStride * sizeof(float);
+                meshData.vertexCount = verts.size() / vertStride;
+
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+                glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_DYNAMIC_DRAW));
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+                static std::vector<std::uint32_t> indices;
+                indices.clear();
+
+                for (auto i = 0u; i < skeleton.getFrameSize(); ++i)
+                {
+                    if (skeleton.getFrames()[frameOffsetA + i].parent > -1)
+                    {
+                        indices.push_back(i);
+                        indices.push_back(skeleton.getFrames()[i].parent);
+                    }
+                }
+
+                auto& submesh = meshData.indexData[0];
+                submesh.indexCount = static_cast<std::uint32_t>(indices.size());
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+                glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+                //TODO we could use a second submesh with GL_POINTS / glPointSize() to highlight a selected joint in the editor.
+            }
+        };
     }
 }
 

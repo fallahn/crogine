@@ -644,6 +644,13 @@ void ModelState::drawInspector()
 
                     if (m_importedHeader.animated)
                     {
+                        bool showSkel = !m_entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().isHidden();
+                        if (ImGui::Checkbox("Show Skeleton##234897", &showSkel))
+                        {
+                            m_entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().setHidden(!showSkel);
+                        }
+                        ImGui::NewLine();
+
                         auto& skel = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
                         auto& animations = skel.getAnimations();
                         ImGui::Text("%lu Animation(s)", animations.size());
@@ -653,6 +660,7 @@ void ModelState::drawInspector()
                         {
                             auto name = anim.name.substr(0, 16);
                             ImGui::Text("%s\n Frames: %lu", name.c_str(), anim.frameCount);
+                            toolTip(anim.name.c_str());
 
                             auto ID = std::to_string(buns++);
 

@@ -275,12 +275,8 @@ void ModelState::loadAssets()
     m_materialIDs[MaterialID::DebugDraw] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
 
-    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour /*| cro::ShaderResource::Skinning*/);
-    m_materialIDs[MaterialID::SkeletonDraw] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_skeletonMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position 
-                                                                        | cro::VertexProperty::Colour 
-                                                                        /*| cro::VertexProperty::BlendIndices 
-                                                                        | cro::VertexProperty::BlendWeights*/, 1, GL_LINES));
+                                                                        | cro::VertexProperty::Colour, 1, GL_LINES));
 
     //for receiving shadows on the ground plane
     std::uint32_t texID = 10000;

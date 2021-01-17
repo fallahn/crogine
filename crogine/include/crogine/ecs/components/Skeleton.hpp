@@ -126,16 +126,25 @@ namespace cro
         */
         void stop();
 
+        enum State
+        {
+            Playing, Stopped
+        };
         /*!
-        \brief Returns the index of the current animation
+        \brief Return the current animation state of the Skeleton
         */
-        std::int32_t getCurrentAnimation() const { return m_currentAnimation; }
+        State getState() const;
 
         /*!
         \brief Returns a reference to the array of animations for this skeleton
         */
         std::vector<SkeletalAnim>& getAnimations() { return m_animations; }
         const std::vector<SkeletalAnim>& getAnimations() const { return m_animations; }
+
+        /*!
+        \brief Returns the index of the current animation
+        */
+        std::int32_t getCurrentAnimation() const { return m_currentAnimation; }
 
         /*!
         \brief Adds an animation to the skeleton.
@@ -151,6 +160,12 @@ namespace cro
         void addFrame(const std::vector<Joint>&);
 
         /*!
+        \brief Returns the index of the current frame from the beginning of
+        the frames array, not the beginning of the current animation.
+        */
+        std::size_t getCurrentFrame() const;
+
+        /*!
         \brief Returns the number of joints in a single frame, or zero if no animations are added
         */
         std::size_t getFrameSize() const { return m_frameSize; }
@@ -159,6 +174,11 @@ namespace cro
         \brief Return the total number of frames of animation
         */
         std::size_t getFrameCount() const { return m_frameCount; }
+
+        /*!
+        \brief Returns the current, normalised, time between frames
+        */
+        float getCurrentFrameTime() const { return m_currentFrameTime / m_frameTime; }
 
         operator bool() const
         {
