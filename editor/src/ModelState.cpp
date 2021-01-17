@@ -163,7 +163,7 @@ void ModelState::handleMessage(const cro::Message& msg)
             {
             default:
             case cro::Message::ConsoleEvent::Info:
-                m_messageColour = { 1.f,1.f,1.f,1.f };
+                m_messageColour = { 0.f,1.f,0.f,1.f };
                 break;
             case cro::Message::ConsoleEvent::Warning:
                 m_messageColour = { 1.f,0.5f,0.f,1.f };
@@ -173,6 +173,11 @@ void ModelState::handleMessage(const cro::Message& msg)
                 break;
             }
         }
+    }
+    else if (msg.id == cro::Message::SkeletalAnimationMessage)
+    {
+        const auto& data = msg.getData<cro::Message::SkeletalAnimEvent>();
+        LogI << data.userType << " - " << data.position << std::endl;
     }
 
     m_previewScene.forwardMessage(msg);

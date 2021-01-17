@@ -112,5 +112,13 @@ void Skeleton::addFrame(const std::vector<Joint>& frame)
 
     CRO_ASSERT(frame.size() == m_frameSize, "Incorrect frame size");
     m_frames.insert(m_frames.end(), frame.begin(), frame.end());
+    m_notifications.emplace_back();
     m_frameCount++;
+}
+
+void Skeleton::addNotification(std::size_t frameID, std::int32_t jointID, std::int32_t userID)
+{
+    CRO_ASSERT(frameID < m_frameCount, "Out of range");
+    CRO_ASSERT(jointID < m_frameSize, "Out of range");
+    m_notifications[frameID].push_back(std::make_pair(jointID, userID));
 }

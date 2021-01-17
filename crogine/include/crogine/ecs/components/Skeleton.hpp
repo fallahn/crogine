@@ -86,6 +86,7 @@ namespace cro
             return m;
         }
 
+        //contains the object space transform of the joint
         glm::mat4 worldMatrix = glm::mat4(1.f);
     };
 
@@ -171,6 +172,20 @@ namespace cro
         */
         const std::vector<Joint>& getFrames() const { return m_frames; }
 
+        /*!
+        \brief Adds a notification raised by animation events.
+        Notifications allow events to be raised when a certain frame is
+        displayed, containing a user definable event ID, and the world
+        position of the joint which raised the event. The event is relayed
+        via the MessageBus and appears in a SkeletalAnimEvent. This is
+        useful for example when a character places a foot on the ground
+        for triggering audio and/or particle effects.
+        \param frameID The index of the frame which triggers this event
+        \param jointID The index of the joint in the frame which triggers the event
+        \param userID A user designated ID that can be used to identify the event
+        */
+        void addNotification(std::size_t frameID, std::int32_t jointID, std::int32_t userID);
+
     private:
 
         float m_playbackRate;
@@ -191,6 +206,8 @@ namespace cro
         std::vector<glm::mat4> m_currentFrame; //current interpolated output
 
         std::vector<SkeletalAnim> m_animations;
+
+        std::vector<std::vector<std::pair<std::int32_t, std::int32_t>>> m_notifications; //for each frame a pair of jointID and message ID
 
         friend class SkeletalAnimator;
     };
