@@ -235,11 +235,25 @@ void ModelState::openModelAtPath(const std::string& path)
         if (m_showAABB) box = meshData.boundingBox;
         updateGridMesh(m_entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), sphere, box);
 
-
         //read back the buffer data into the imported buffer so we can do things like normal vis and lightmap baking
         readBackVertexData(meshData, m_modelProperties.vertexData, m_modelProperties.indexData);
         
+        if (def.hasSkeleton())
+        {
+            buildSkeleton();
+        }
+
         updateNormalVis();
+
+
+        //make sure the material preview is up to date
+        applyPreviewSettings(m_materialDefs[m_selectedMaterial]);
+        m_previewEntity.getComponent<cro::Model>().setMaterial(0, m_materialDefs[m_selectedMaterial].materialData);
+        for (auto idx : m_materialDefs[m_selectedMaterial].submeshIDs)
+        {
+            m_entities[EntityID::ActiveModel].getComponent<cro::Model>().setMaterial(idx, m_materialDefs[m_selectedMaterial].materialData);
+        }
+
     }
     else
     {
@@ -872,9 +886,21 @@ void ModelState::buildSkeleton()
                 glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
                 glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-                //TODO we could use a second submesh with GL_POINTS / glPointSize() to highlight a selected joint in the editor.
+                //use a second submesh with GL_POINTS / glPointSize() to highlight a selected joint in the editor.
+                indices.clear();
+                for (auto i = 0u; i < skeleton.getFrameSize(); ++i)
+                {
+                    indices.push_back(i);
+                }
+                auto& submesh2 = meshData.indexData[1];
+                submesh2.indexCount = static_cast<std::uint32_t>(indices.size());
+                submesh2.primitiveType = GL_POINTS;
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh2.ibo));
+                glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh2.indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
             }
         };
+        glPointSize(6.f);
     }
 }
 

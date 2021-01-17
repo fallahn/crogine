@@ -926,10 +926,10 @@ void ModelState::drawInspector()
                         ImGui::Separator();
                         ImGui::NewLine();
 
-                        static bool showSkeleton = false;
+                        bool showSkeleton = !m_entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().isHidden();
                         if (ImGui::Checkbox("Show Skeleton", &showSkeleton))
                         {
-                            //TODO toggle skeleton display
+                            m_entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().setHidden(!showSkeleton);
                         }
 
                         ImGui::Text("Animations: %ld", animations.size());
@@ -1846,6 +1846,17 @@ void ModelState::drawBrowser()
             ImGui::EndChild();
 
             ImGui::EndTabItem();
+        }
+
+        if (m_entities[EntityID::ActiveModel].isValid()
+            && m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+        {
+            if (ImGui::BeginTabItem("Animation"))
+            {
+                ImGui::Text("Select an animation to edit from the Model tab of the Inspector pane");
+
+                ImGui::EndTabItem();
+            }
         }
 
         ImGui::EndTabBar();

@@ -392,6 +392,9 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
 
     glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.05f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
 
+    float pointSize = 0.f;
+    glCheck(glGetFloatv(GL_POINT_SIZE, &pointSize));
+
     glCheck(glEnable(GL_CULL_FACE));
     glCheck(glCullFace(pass.getCullFace()));
     glCheck(glEnable(GL_BLEND));
@@ -477,6 +480,8 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDepthMask(GL_TRUE));
     DISABLE_POINT_SPRITES;
+
+    glCheck(glPointSize(pointSize));
 }
 
 //private

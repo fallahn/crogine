@@ -276,7 +276,7 @@ void ModelState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
 
     m_skeletonMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position 
-                                                                        | cro::VertexProperty::Colour, 1, GL_LINES));
+                                                                        | cro::VertexProperty::Colour, 2, GL_LINES));
 
     //for receiving shadows on the ground plane
     std::uint32_t texID = 10000;
