@@ -59,12 +59,10 @@ namespace cro
 
     /*!
     \brief Represents a Joint in the skeleton
-    An array of these is stored in the skeleton representing
-    the resting positions for the joints. Useful for debug
-    rendering. These are also used to make up the joints
-    of a key frame. Each transform is assumed to *already*
-    be transformed by its parents - done by the model loader
-    when the key frames were created.
+    These are used to make up the jointsof a key frame.
+    Each transform is assumed to *already* be transformed
+    by its parents - done by the model loader when the 
+    key frames were created.
     */
     struct CRO_EXPORT_API Joint final
     {
@@ -87,7 +85,40 @@ namespace cro
         }
 
         //contains the object space transform of the joint
+        //used for calculating joint world positions when
+        //raising notifications or calculating attachments
         glm::mat4 worldMatrix = glm::mat4(1.f);
+    };
+
+    /*!
+    \brief Represents and attachment point on a skeleton.
+    Attachment points are used for attaching other models,
+    for example weapons or items, to a skinned mesh.
+    Attachment points contain the ID of the joint to which
+    they are associated, as well as a relative translation
+    and rotation. Once an attachment is added its position
+    is fixed relative to its parent joint.
+    */
+    struct AttachmentPoint final
+    {
+    public:
+        AttachmentPoint(std::int32_t parent, glm::vec3 translation, glm::quat rotation)
+            : m_parent(parent), m_translation(translation), m_rotation(rotation)
+        {
+            CRO_ASSERT(parent > -1, "");
+            m_transform = glm::translate(glm::mat4(1.f), translation);
+            m_transform *= glm::toMat4(rotation);
+        }
+        glm::mat4 getLocalTransform() const { return m_transform; }
+
+    private:
+        std::int32_t m_parent;
+        glm::vec3 m_translation;
+        glm::quat m_rotation;
+        glm::mat4 m_transform;
+
+        friend class Skeleton;
+        friend class SkeletalAnimator;
     };
 
     /*!
@@ -206,6 +237,23 @@ namespace cro
         */
         void addNotification(std::size_t frameID, std::int32_t jointID, std::int32_t userID);
 
+        /*!
+        \brief Adds an attachment point to the skeleton.
+        The attachment point's translation should be relative to
+        the Skeleton's joint to which it is attached.
+        \returns ID of the created attament point.
+        */
+        std::int32_t addAttachmentPoint(const AttachmentPoint&);
+
+        /*!
+        \brief Returns the requested attachment transform in object local space.
+        That is, the transform relative to the skinned mesh. Multiply it with
+        the parent entity's world transform to get the attachment point in world space.
+        \param id The id of the attachment point to retrieve. This is the ID returned
+        by addAttachment()
+        */
+        glm::mat4 getAttachmentPoint(std::int32_t id) const;
+
     private:
 
         float m_playbackRate;
@@ -228,6 +276,8 @@ namespace cro
         std::vector<SkeletalAnim> m_animations;
 
         std::vector<std::vector<std::pair<std::int32_t, std::int32_t>>> m_notifications; //for each frame a pair of jointID and message ID
+
+        std::vector<AttachmentPoint> m_attachmentPoints;
 
         friend class SkeletalAnimator;
     };

@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/detail/Assert.hpp>
+#include <crogine/detail/glm/gtx/matrix_interpolation.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
 
 using namespace cro;
@@ -134,4 +135,30 @@ void Skeleton::addNotification(std::size_t frameID, std::int32_t jointID, std::i
     CRO_ASSERT(frameID < m_frameCount, "Out of range");
     CRO_ASSERT(jointID < m_frameSize, "Out of range");
     m_notifications[frameID].push_back(std::make_pair(jointID, userID));
+}
+
+std::int32_t Skeleton::addAttachmentPoint(const AttachmentPoint& ap)
+{
+    CRO_ASSERT(ap.m_parent < m_frameSize, "");
+    m_attachmentPoints.push_back(ap);
+    return static_cast<std::int32_t>(m_attachmentPoints.size() - 1);
+}
+
+glm::mat4 Skeleton::getAttachmentPoint(std::int32_t id) const
+{
+    CRO_ASSERT(id > -1 && id < m_attachmentPoints.size(), "");
+
+    const auto& currentAnim = m_animations[m_currentAnimation];
+    auto nextFrame = ((currentAnim.currentFrame - currentAnim.startFrame) + 1) % currentAnim.frameCount;
+    nextFrame += currentAnim.startFrame;
+
+    auto frameOffsetA = m_frameSize * currentAnim.currentFrame;
+    auto frameOffsetB = m_frameSize * nextFrame;
+
+    const auto& ap = m_attachmentPoints[id];
+
+    const auto& jointA = m_frames[frameOffsetA + ap.m_parent];
+    const auto& jointB = m_frames[frameOffsetB + ap.m_parent];
+
+    return glm::interpolate(jointA.worldMatrix, jointB.worldMatrix, m_currentFrameTime / m_frameTime) * ap.m_transform;
 }

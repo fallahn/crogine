@@ -798,8 +798,6 @@ void ModelState::updateImportNode(CMFHeader header, std::vector<float>& imported
 
 void ModelState::buildSkeleton()
 {
-    //return;
-
     if (m_entities[EntityID::ActiveModel].isValid()
         && m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
     {
