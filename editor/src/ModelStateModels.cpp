@@ -42,6 +42,8 @@ source distribution.
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 #include <crogine/detail/glm/gtx/matrix_interpolation.hpp>
 
+#include <crogine/detail/ModelBinary.hpp>
+
 #include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/graphics/IqmBuilder.hpp>
@@ -788,6 +790,9 @@ void ModelState::updateImportNode(CMFHeader header, std::vector<float>& imported
         m_entities[EntityID::ActiveModel].addComponent<cro::ShadowCaster>();
 
         m_importedTransform = {};
+
+        cro::Detail::ModelBinary::write(m_entities[EntityID::ActiveModel], "buns.cmb");
+
     }
     else
     {

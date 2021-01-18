@@ -65,6 +65,7 @@
     <ClInclude Include="..\crogine\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\GlobalConsts.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\HashCombine.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\ModelBinary.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\NoResize.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Types.hpp" />
@@ -238,6 +239,7 @@
     <ClCompile Include="..\crogine\src\detail\enet\protocol.c" />
     <ClCompile Include="..\crogine\src\detail\enet\win32.c" />
     <ClCompile Include="..\crogine\src\detail\glad.c" />
+    <ClCompile Include="..\crogine\src\detail\ModelBinary.cpp" />
     <ClCompile Include="..\crogine\src\detail\SDLImageRead.cpp" />
     <ClCompile Include="..\crogine\src\detail\SDLResource.cpp" />
     <ClCompile Include="..\crogine\src\detail\StaticMeshFile.cpp" />
