@@ -30,10 +30,15 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+
 #include <crogine/ecs/Entity.hpp>
-#include <crogine/detail/SDLResource.hpp>
+#include <crogine/ecs/components/Skeleton.hpp>
+
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/detail/glm/gtc/quaternion.hpp>
 
 #include <string>
+#include <cstring>
 
 namespace cro::Detail::ModelBinary
 {
@@ -108,7 +113,101 @@ namespace cro::Detail::ModelBinary
     //and always after the mesh data, if the mesh data exists
     struct SkeletonHeader final
     {
+        std::size_t frameSize = 0; //number of joints in a frame
+        std::size_t frameCount = 0;
 
+        std::uint32_t animationCount = 0;
+        std::uint32_t notificationFrameCount = 0; //array of frame IDs that have notifications
+        std::uint32_t attachmentCount = 0; //number of attachment points
+
+        std::uint32_t reserved0 = 0;
+
+        SkeletonHeader() = default;
+
+        SkeletonHeader& operator = (const cro::Skeleton& skel)
+        {
+            frameSize = skel.m_frameSize;
+            frameCount = skel.m_frameCount;
+            animationCount = static_cast<std::uint32_t>(skel.m_animations.size());
+            notificationFrameCount = static_cast<std::uint32_t>(skel.m_notifications.size());
+            attachmentCount = static_cast<std::uint32_t>(skel.m_attachmentPoints.size());
+
+            return *this;
+        }
+    };
+
+    /*
+    Array of joints [frameSize * frameCount]
+    Array of animations [animationCount]
+    Array of std::uint32_t which index frames that contain notifications [notificationFrameCount]
+    Array of std::uint32_t which contain the number of notifications per frame addressed by previous array
+    Array of int32 pairs of notification data, split by above array
+    Array of attachments [attachmentCount]
+
+    Joints are stored as Joint struct
+    Animations are stored as SerialAnimation struct
+    Attachments are stored as SerialAttachment struct
+
+    */
+
+    struct SerialAnimation final
+    {
+        static constexpr std::size_t MaxChar = 64;
+        char name[MaxChar] = {}; //empty space packed with zero
+
+        std::uint32_t startFrame = 0;
+        std::uint32_t frameCount = 0;
+        std::uint32_t looped = false;
+        float frameRate = 12.f;
+
+        SerialAnimation()
+        {
+            std::fill(std::begin(name), std::end(name), 0);
+        }
+
+        explicit SerialAnimation(const cro::SkeletalAnim& anim)
+            : startFrame(anim.startFrame),
+            frameCount  (anim.frameCount),
+            looped      (anim.looped ? 1 : 0),
+            frameRate   (anim.frameRate)
+        {
+            std::fill(std::begin(name), std::end(name), 0);
+            strcpy(name, anim.name.substr(0, MaxChar - 1).c_str());
+        }
+
+        SerialAnimation& operator = (const SkeletalAnim& anim)
+        {
+            std::strcpy(name, anim.name.substr(0, MaxChar - 1).c_str());
+
+            startFrame = anim.startFrame;
+            frameCount = anim.frameCount;
+            looped = anim.looped ? 1 : 0;
+            frameRate = anim.frameRate;
+            return *this;
+        }
+    };
+
+    struct SerialAttachment final
+    {
+        glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
+        glm::vec3 translation = glm::vec3(0.f);
+        std::int32_t parent = -1;
+
+        SerialAttachment() = default;
+        explicit SerialAttachment(const cro::AttachmentPoint& ap)
+            : rotation  (ap.m_rotation),
+            translation (ap.m_translation),
+            parent      (ap.m_parent)
+        {
+
+        }
+        SerialAttachment& operator = (const cro::AttachmentPoint& ap)
+        {
+            rotation = ap.m_rotation;
+            translation = ap.m_translation;
+            parent = ap.m_parent;
+            return *this;
+        }
     };
 
     CRO_EXPORT_API bool write(cro::Entity, const std::string&);

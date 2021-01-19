@@ -50,9 +50,6 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
     std::vector<float> outVertexData;
     std::vector<std::uint32_t> outIndexData;
 
-    //TODO buffers for skeleton output
-    Detail::ModelBinary::SkeletonHeader skelHeader;
-
     if (entity.hasComponent<Model>())
     {
         header.meshOffset = sizeof(header);
@@ -249,13 +246,26 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
         retVal = true;
     }
 
+    //skeleton output
+    Detail::ModelBinary::SkeletonHeader skelHeader;
+    std::vector<Detail::ModelBinary::SerialAnimation> animations;
+    std::vector<std::uint32_t> notificationFrames;
+    std::vector<std::uint32_t> notificationCounts;
+    struct Notification final
+    {
+        std::int32_t joint = 0;
+        std::int32_t userID = 0;
+    };
+    std::vector<Notification> notifications;
+    std::vector<Detail::ModelBinary::SerialAttachment> attachments;
+
     if (entity.hasComponent<Skeleton>())
     {
         //update the main header with the beginning of the skel data
         header.skeletonOffset = skelOffset;
 
-
-
+        const auto& skeleton = entity.getComponent<Skeleton>();
+        skelHeader = skeleton;
 
         //retVal = true;
     }

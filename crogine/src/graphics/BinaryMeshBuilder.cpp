@@ -31,7 +31,7 @@ source distribution.
 #include <crogine/detail/ModelBinary.hpp>
 #include <crogine/core/FileSystem.hpp>
 
-#include "../detail/glCheck.hpp"
+#include "../detail/GLCheck.hpp"
 
 using namespace cro;
 

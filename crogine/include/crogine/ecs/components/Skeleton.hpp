@@ -40,6 +40,12 @@ source distribution.
 
 namespace cro
 {
+    namespace Detail::ModelBinary
+    {
+        struct SkeletonHeader;
+        struct SerialAttachment;
+    }
+
     /*!
     \brief Describes an animation made up from a series of
     frames within a skeleton.
@@ -119,6 +125,7 @@ namespace cro
 
         friend class Skeleton;
         friend class SkeletalAnimator;
+        friend struct cro::Detail::ModelBinary::SerialAttachment;
     };
 
     /*!
@@ -280,5 +287,6 @@ namespace cro
         std::vector<AttachmentPoint> m_attachmentPoints;
 
         friend class SkeletalAnimator;
+        friend struct Detail::ModelBinary::SkeletonHeader;
     };
 }
