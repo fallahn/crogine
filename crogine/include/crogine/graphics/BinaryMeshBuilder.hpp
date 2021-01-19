@@ -46,6 +46,7 @@ namespace cro
 
     private:
         std::string m_path;
+        std::size_t m_uid;
         mutable Skeleton m_skeleton;
         Mesh::Data build() const override;
     };

@@ -38,10 +38,11 @@ source distribution.
 namespace cro::Detail::ModelBinary
 {
     //appears at the beginning of the file
+    static constexpr std::uint32_t MAGIC = 0x736e7542;
     struct Header final
     {
         //magic
-        std::uint32_t magic = 0x736e7542;
+        std::uint32_t magic = MAGIC;
         //version. Indicates which of these members are used
         std::uint32_t version = 1;
         //offset from the beginning of the file to the beginning

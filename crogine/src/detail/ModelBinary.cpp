@@ -279,6 +279,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
         if (header.meshOffset)
         {
             //write mesh data
+            SDL_RWwrite(file.file, &meshHeader, sizeof(meshHeader), 1);
             SDL_RWwrite(file.file, outIndexSizes.data(), sizeof(std::uint32_t) * outIndexSizes.size(), 1);
             SDL_RWwrite(file.file, outVertexData.data(), sizeof(float) * outVertexData.size(), 1);
             SDL_RWwrite(file.file, outIndexData.data(), sizeof(std::uint32_t) * outIndexData.size(), 1);

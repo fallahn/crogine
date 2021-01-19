@@ -46,6 +46,7 @@ source distribution.
 
 #include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/BinaryMeshBuilder.hpp>
 #include <crogine/graphics/IqmBuilder.hpp>
 
 #include <assimp/Importer.hpp>
@@ -792,7 +793,11 @@ void ModelState::updateImportNode(CMFHeader header, std::vector<float>& imported
         m_importedTransform = {};
 
         cro::Detail::ModelBinary::write(m_entities[EntityID::ActiveModel], "buns.cmb");
+        auto id = m_resources.meshes.loadMesh(cro::BinaryMeshBuilder("buns.cmb"));
 
+        auto tempEnt = m_scene.createEntity();
+        tempEnt.addComponent<cro::Transform>().setPosition({ 1.5f, 0.f, 1.5f });
+        tempEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(id), m_resources.materials.get(m_materialIDs[MaterialID::Default]));
     }
     else
     {
