@@ -231,6 +231,15 @@ namespace cro
         const std::vector<Joint>& getFrames() const { return m_frames; }
 
         /*!
+        \brief Represents a notification to be raised on animation events
+        */
+        struct Notification final
+        {
+            std::int32_t jointID = -1; //!< The joint which should raise this notification
+            std::int32_t userID = -1; //!< The user defined ID to include in the notification message
+        };
+
+        /*!
         \brief Adds a notification raised by animation events.
         Notifications allow events to be raised when a certain frame is
         displayed, containing a user definable event ID, and the world
@@ -239,10 +248,15 @@ namespace cro
         useful for example when a character places a foot on the ground
         for triggering audio and/or particle effects.
         \param frameID The index of the frame which triggers this event
-        \param jointID The index of the joint in the frame which triggers the event
-        \param userID A user designated ID that can be used to identify the event
+        \param notification A notification struct
+        \see Notification
         */
-        void addNotification(std::size_t frameID, std::int32_t jointID, std::int32_t userID);
+        void addNotification(std::size_t frameID, Notification notification);
+
+        /*!
+        \brief Returns a reference to the vector of notifications associated with the skeleton
+        */
+        const std::vector<std::vector<Notification>>& getNotifications() const { return m_notifications; }
 
         /*!
         \brief Adds an attachment point to the skeleton.
@@ -260,6 +274,11 @@ namespace cro
         by addAttachment()
         */
         glm::mat4 getAttachmentPoint(std::int32_t id) const;
+
+        /*!
+        \brief Return a reference to the vector of attachments
+        */
+        const std::vector<AttachmentPoint>& getAttachmentPoints() const { return m_attachmentPoints; }
 
     private:
 
@@ -282,7 +301,7 @@ namespace cro
 
         std::vector<SkeletalAnim> m_animations;
 
-        std::vector<std::vector<std::pair<std::int32_t, std::int32_t>>> m_notifications; //for each frame a pair of jointID and message ID
+        std::vector<std::vector<Notification>> m_notifications; //for each frame a pair of jointID and message ID
 
         std::vector<AttachmentPoint> m_attachmentPoints;
 

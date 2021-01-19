@@ -540,16 +540,15 @@ void ModelState::updateMouseInput(const cro::Event& evt)
         tx.rotate(cro::Transform::X_AXIS, -pitchMove);
         tx.rotate(cro::Transform::Y_AXIS, -yawMove);
     }
-    //else if (evt.motion.state & SDL_BUTTON_RMASK)
-    //{
-    //    //do roll
-    //    float rollMove = static_cast<float>(-evt.motion.xrel)* moveScale;
+    else if (evt.motion.state & SDL_BUTTON_RMASK)
+    {
+        //do roll
+        float rollMove = static_cast<float>(-evt.motion.xrel)* moveScale;
 
-    //    auto& tx = entities[EntityID::ArcBall].getComponent<cro::Transform>();
-    //    tx.rotate(cro::Transform::Z_AXIS, -rollMove);
-    //}
-    //else 
-    if (evt.motion.state & SDL_BUTTON_MMASK)
+        auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
+        tx.rotate(cro::Transform::Z_AXIS, -rollMove);
+    }
+    else if (evt.motion.state & SDL_BUTTON_MMASK)
     {
         auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
         tx.move(tx.getRightVector() * -static_cast<float>(evt.motion.xrel) / 160.f);

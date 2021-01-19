@@ -248,16 +248,11 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
 
     //skeleton output
     Detail::ModelBinary::SkeletonHeader skelHeader;
-    std::vector<Detail::ModelBinary::SerialAnimation> animations;
+    std::vector<Detail::ModelBinary::SerialAnimation> outAnimations;
     std::vector<std::uint32_t> notificationFrames;
     std::vector<std::uint32_t> notificationCounts;
-    struct Notification final
-    {
-        std::int32_t joint = 0;
-        std::int32_t userID = 0;
-    };
-    std::vector<Notification> notifications;
-    std::vector<Detail::ModelBinary::SerialAttachment> attachments;
+    std::vector<Skeleton::Notification> outNotifications;
+    std::vector<Detail::ModelBinary::SerialAttachment> outAttachments;
 
     if (entity.hasComponent<Skeleton>())
     {
@@ -267,7 +262,32 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
         const auto& skeleton = entity.getComponent<Skeleton>();
         skelHeader = skeleton;
 
-        //retVal = true;
+        for (const auto& anim : skeleton.getAnimations())
+        {
+            outAnimations.emplace_back(anim);
+        }
+
+        const auto& notifications = skeleton.getNotifications();
+        for (auto i = 0u; i < notifications.size(); ++i)
+        {
+            if (!notifications[i].empty())
+            {
+                notificationFrames.push_back(i);
+                notificationCounts.push_back(static_cast<std::uint32_t>(notifications[i].size()));
+
+                for (auto j = 0u; j < notifications[i].size(); ++j)
+                {
+                    outNotifications.push_back(notifications[i][j]);
+                }
+            }
+        }
+
+        for (const auto& attachment : skeleton.getAttachmentPoints())
+        {
+            outAttachments.emplace_back(attachment);
+        }
+
+        retVal = true;
     }
 
     //should only be true if one or both component types
@@ -297,7 +317,16 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
 
         if (header.skeletonOffset)
         {
+            const auto& frames = entity.getComponent<cro::Skeleton>().getFrames();
+
             //write skel data
+            SDL_RWwrite(file.file, &skelHeader, sizeof(skelHeader), 1);
+            SDL_RWwrite(file.file, frames.data(), frames.size() * sizeof(Joint), 1);
+            SDL_RWwrite(file.file, outAnimations.data(), outAnimations.size() * sizeof(SerialAnimation), 1);
+            SDL_RWwrite(file.file, notificationFrames.data(), notificationFrames.size()* sizeof(std::uint32_t), 1);
+            SDL_RWwrite(file.file, notificationCounts.data(), notificationCounts.size() * sizeof(std::uint32_t), 1);
+            SDL_RWwrite(file.file, outNotifications.data(), outNotifications.size() * sizeof(Skeleton::Notification), 1);
+            SDL_RWwrite(file.file, outAttachments.data(), outAttachments.size() * sizeof(SerialAttachment), 1);
         }
         SDL_RWclose(file.file);
     }

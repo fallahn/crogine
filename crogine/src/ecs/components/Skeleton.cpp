@@ -130,11 +130,11 @@ std::size_t Skeleton::getCurrentFrame() const
     return m_animations[m_currentAnimation].currentFrame;
 }
 
-void Skeleton::addNotification(std::size_t frameID, std::int32_t jointID, std::int32_t userID)
+void Skeleton::addNotification(std::size_t frameID, Notification n)
 {
     CRO_ASSERT(frameID < m_frameCount, "Out of range");
-    CRO_ASSERT(jointID < m_frameSize, "Out of range");
-    m_notifications[frameID].push_back(std::make_pair(jointID, userID));
+    CRO_ASSERT(n.jointID > -1 && n.jointID < m_frameSize, "Out of range");
+    m_notifications[frameID].push_back(n);
 }
 
 std::int32_t Skeleton::addAttachmentPoint(const AttachmentPoint& ap)
