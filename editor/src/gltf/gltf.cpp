@@ -49,13 +49,6 @@ source distribution.
 #include <string>
 #include <cstring>
 
-
-#include <crogine/detail/ModelBinary.hpp>
-#include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/Model.hpp>
-#include <crogine/ecs/components/Skeleton.hpp>
-#include <crogine/graphics/BinaryMeshBuilder.hpp>
-
 namespace
 {
     struct AnimSampler final
@@ -167,20 +160,6 @@ void ModelState::parseGLTFNode(std::int32_t idx, bool loadAnims)
         parseGLTFSkin(idx, m_entities[EntityID::ActiveModel].addComponent<cro::Skeleton>());
 
         buildSkeleton(); //for display
-    }
-
-    cro::Detail::ModelBinary::write(m_entities[EntityID::ActiveModel], "buns.cmb");
-    auto id = m_resources.meshes.loadMesh(cro::BinaryMeshBuilder("buns.cmb"));
-    auto skel = m_resources.meshes.getSkeltalAnimation(id);
-
-    auto tempEnt = m_scene.createEntity();
-    tempEnt.addComponent<cro::Transform>().setPosition({ 1.5f, 0.f, 1.5f });
-    tempEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(id), m_resources.materials.get(m_materialIDs[MaterialID::Default]));
-
-    if (skel)
-    {
-        tempEnt.addComponent<cro::Skeleton>() = skel;
-        tempEnt.getComponent<cro::Skeleton>().play(0);
     }
 }
 

@@ -322,7 +322,7 @@ Mesh::Data BinaryMeshBuilder::build() const
                 for (auto i = 0u; i < skelHeader.frameCount; ++i)
                 {
                     std::vector<Joint> frame;
-                    for (auto j = i; j < i + skelHeader.frameSize; ++j)
+                    for (auto j = i * skelHeader.frameSize; j < (i * skelHeader.frameSize) + skelHeader.frameSize; ++j)
                     {
                         frame.push_back(inFrames[j]);
                     }
