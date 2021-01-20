@@ -253,17 +253,23 @@ void ModelState::loadAssets()
 
     //create a default material to display models on import
     std::uint32_t flags = cro::ShaderResource::DiffuseColour;// | cro::ShaderResource::MaskMap;
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, flags);
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, flags);
     m_materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
-    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_maskColour", cro::Colour(1.f, 1.f, 0.f));
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_maskColour", cro::Colour(0.f, 1.f, 1.f));
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
     //m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_diffuseMap", m_magentaTexture);
 
     flags = cro::ShaderResource::DiffuseColour | cro::ShaderResource::Skinning;
-    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, flags);
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, flags);
     m_materialIDs[MaterialID::DefaultSkinned] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
-    m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_maskColour", cro::Colour(1.f, 1.f, 0.f));
+    m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_maskColour", cro::Colour(0.f, 1.f, 1.f));
+    m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
+    m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
+    m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
 
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
     m_materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));

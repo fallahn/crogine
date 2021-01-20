@@ -955,9 +955,10 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
             //material placeholder for each sub mesh
             for (auto i = 0u; i < m_importedHeader.arrayCount; ++i)
             {
-                auto material = cfg.addObject("material", "VertexLit");
+                auto material = cfg.addObject("material", "PBR");
                 material->addProperty("colour", "1,0,1,1");
                 material->addProperty("skinned", animated ? "true" : "false");
+                material->addProperty("mask_colour", "0,1,1,1");
             }
 
             path.back() = 't';
