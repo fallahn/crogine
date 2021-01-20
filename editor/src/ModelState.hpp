@@ -149,13 +149,14 @@ private:
         glm::vec3 rotation = glm::vec3(0.f);
         float scale = 1.f;
     }m_importedTransform;
+    bool m_exportAnimation;
     std::size_t m_skeletonMeshID;
 
     void importModel();
     void importIQM(const std::string&);
     void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
     void buildSkeleton();
-    void exportStaticModel(bool = false, bool = true);
+    void exportModel(bool = false, bool = true);
     void applyImportTransform();
     void readBackVertexData(cro::Mesh::Data, std::vector<float>&, std::vector<std::vector<std::uint32_t>>&);
     //-------------------------------------------//

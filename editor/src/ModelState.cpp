@@ -87,6 +87,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_showSkybox            (false),
     m_showMaterialWindow    (false),
     m_showBakingWindow      (false),
+    m_exportAnimation       (true),
     m_skeletonMeshID        (0),
     m_browseGLTF            (false),
     m_showAABB              (false),

@@ -13,6 +13,8 @@ Models in crogine are described in a text format that can be loaded via the `Mod
         //or
         mesh = "path/to/skinned_model.iqm"
         //or
+        mesh = "path/to/skinned_model.cmb"
+        //or
         mesh = billboard
         //or
         mesh = sphere
@@ -20,6 +22,9 @@ Models in crogine are described in a text format that can be loaded via the `Mod
         //*.cmf extension mesh files are static mesh in the Crogine Mesh Format. These can be created by loading
         //*.obj, *.dae or *.fbx files into the editor application and exporting them in the *.cmf format. *.iqm meshes are
         //Inter Quake Models - more about authoring those can be founde at http://sauerbraten.org/iqm/
+
+        //NOTE since the addition of the *.cmb (cro model binary) format that this is the preferred file type, as this can contain
+        //both static and animated models. This is now the default output for the editor application.
 
         //billboards are quad primitives which always face the camera no matter the orientation. Billboards have two
         //optional proprties.

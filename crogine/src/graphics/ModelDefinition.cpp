@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/graphics/IqmBuilder.hpp>
+#include <crogine/graphics/BinaryMeshBuilder.hpp>
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
@@ -101,6 +102,11 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     {
         //we have a static mesh
         meshBuilder = std::make_unique<StaticMeshBuilder>(m_workingDir + meshValue);
+    }
+    else if (ext == ".cmb")
+    {
+        //binary model
+        meshBuilder = std::make_unique<BinaryMeshBuilder>(m_workingDir + meshValue);
     }
     else if (ext == ".iqm")
     {

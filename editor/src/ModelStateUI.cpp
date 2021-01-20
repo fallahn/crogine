@@ -228,9 +228,9 @@ void ModelState::showSaveMessage()
             }
             else
             {
+                cro::FileSystem::showMessageBox("TODO", "Show options here.");
                 //export the model
-                //TODO check for animated model
-                exportStaticModel(false, false);
+                exportModel(false, false);
             }
         }
         else
@@ -295,8 +295,10 @@ void ModelState::buildUI()
                     }
                     if (ImGui::MenuItem("Export Model", nullptr, nullptr, !m_importedVBO.empty()))
                     {
-                        //TODO check for animations
-                        exportStaticModel();
+                        //TODO show modal asking if we want to export animation
+                        //and overwrite existing material
+                        cro::FileSystem::showMessageBox("TODO", "Show options here");
+                        exportModel();
                     }
 
                     ImGui::Separator();
@@ -750,27 +752,16 @@ void ModelState::drawInspector()
                     }
                     ImGui::NewLine();
                     static bool modelOnly = false;
-                    static bool exportAnimation = true;
                     ImGui::Checkbox("Export Model Only", &modelOnly);
                     ImGui::SameLine();
                     helpMarker("If this is checked then only the model data will exported to the crogine file, leaving any existing material data in tact.");
                     if (m_importedHeader.animated)
                     {
-                        ImGui::Checkbox("Export Animations", &exportAnimation);
+                        ImGui::Checkbox("Export Animations", &m_exportAnimation);
                     }
                     if (ImGui::Button("Convert##01"))
                     {
-                        if (m_importedHeader.animated
-                            && exportAnimation)
-                        {
-
-                        }
-                        else
-                        {
-                            //TODO we can't do this if the vertex data
-                            //contains blend information.
-                            exportStaticModel(modelOnly);
-                        }
+                        exportModel(modelOnly);
                     }
                     ImGui::SameLine();
                     helpMarker("Export this model to Crogine format, and create a model definition file.\nThe model will then be automatically re-opened for material editing.");
@@ -1926,14 +1917,14 @@ void ModelState::drawGizmo()
         ImGui::PopStyleColor(2);
     }
     //rotate the model if it's loaded
-    if (m_entities[EntityID::ActiveModel].isValid()
+    /*if (m_entities[EntityID::ActiveModel].isValid()
         && m_importedVBO.empty())
     {
         const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
         tx = m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().getLocalTransform();
         ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], ImGuizmo::OPERATION::ROTATE, ImGuizmo::MODE::LOCAL, &tx[0][0]);
         m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setLocalTransform(tx);
-    }
+    }*/
 }
 
 void ModelState::updateLayout(std::int32_t w, std::int32_t h)

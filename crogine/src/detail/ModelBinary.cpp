@@ -122,6 +122,11 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
         CRO_ASSERT(vertexData.size() % vertStride == 0, "");
         //reset the bitan flag because setting it is misleading
         meshHeader.flags &= ~VertexProperty::Bitangent;
+        //skip blending data if not animated
+        if (!includeSkeleton)
+        {
+            meshHeader.flags &= ~(VertexProperty::BlendIndices | VertexProperty::BlendWeights);
+        }
 
         for (auto i = 0u; i < vertexData.size(); i += vertStride)
         {
@@ -207,7 +212,8 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
                     break;
                 case Mesh::Attribute::BlendIndices:
                 case Mesh::Attribute::BlendWeights:
-                    if (meshHeader.flags & (1 << j))
+                    if (meshHeader.flags & (1 << j)
+                        && includeSkeleton)
                     {
                         outVertexData.push_back(vertexData[i + offsets[j]]);
                         outVertexData.push_back(vertexData[i + offsets[j] + 1]);

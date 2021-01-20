@@ -905,12 +905,11 @@ void ModelState::buildSkeleton()
     }
 }
 
-void ModelState::exportStaticModel(bool modelOnly, bool openOnSave)
+void ModelState::exportModel(bool modelOnly, bool openOnSave)
 {
     CRO_ASSERT(m_importedHeader.flags, "");
     CRO_ASSERT(m_importedHeader.arrayCount, "");
     CRO_ASSERT(m_importedHeader.arrayOffset, "");
-    CRO_ASSERT(!m_importedHeader.animated, ""); //animated meshes will have too much vertex data...
     CRO_ASSERT(!m_importedVBO.empty(), "");
     CRO_ASSERT(!m_importedIndexArrays.empty(), "");
 
@@ -920,34 +919,19 @@ void ModelState::exportStaticModel(bool modelOnly, bool openOnSave)
         return;
     }
 
-    auto path = cro::FileSystem::saveFileDialogue(m_preferences.lastExportDirectory + "/untitled", "cmf");
+    auto path = cro::FileSystem::saveFileDialogue(m_preferences.lastExportDirectory + "/untitled", "cmb");
     std::replace(path.begin(), path.end(), '\\', '/');
     if (!path.empty())
     {
-        if (cro::FileSystem::getFileExtension(path) != ".cmf")
+        if (cro::FileSystem::getFileExtension(path) != ".cmb")
         {
-            path += ".cmf";
+            path += ".cmb";
         }
 
         //write binary file
-        cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "wb");
-        if (file.file)
+        bool animated = m_exportAnimation && m_importedHeader.animated;
+        if (cro::Detail::ModelBinary::write(m_entities[EntityID::ActiveModel], path, animated))
         {
-            std::uint8_t flags = static_cast<std::uint8_t>(m_importedHeader.flags & 0xff);
-            SDL_RWwrite(file.file, &flags, sizeof(flags), 1);
-            SDL_RWwrite(file.file, &m_importedHeader.arrayCount, sizeof(CMFHeader::arrayCount), 1);
-            SDL_RWwrite(file.file, &m_importedHeader.arrayOffset, sizeof(CMFHeader::arrayOffset), 1);
-            SDL_RWwrite(file.file, m_importedHeader.arraySizes.data(), sizeof(std::int32_t), m_importedHeader.arraySizes.size());
-            SDL_RWwrite(file.file, m_importedVBO.data(), sizeof(float), m_importedVBO.size());
-            for (const auto& indices : m_importedIndexArrays)
-            {
-                SDL_RWwrite(file.file, indices.data(), sizeof(std::uint32_t), indices.size());
-            }
-
-            SDL_RWclose(file.file);
-            file.file = nullptr;
-
             //create config file and save as cmt
             auto modelName = cro::FileSystem::getFileName(path);
             modelName = modelName.substr(0, modelName.find_last_of('.'));
@@ -973,8 +957,8 @@ void ModelState::exportStaticModel(bool modelOnly, bool openOnSave)
             {
                 auto material = cfg.addObject("material", "VertexLit");
                 material->addProperty("colour", "1,0,1,1");
+                material->addProperty("skinned", animated ? "true" : "false");
             }
-
 
             path.back() = 't';
 
