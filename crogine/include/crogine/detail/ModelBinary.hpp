@@ -117,7 +117,7 @@ namespace cro::Detail::ModelBinary
         std::size_t frameCount = 0;
 
         std::uint32_t animationCount = 0;
-        std::uint32_t notificationFrameCount = 0; //array of frame IDs that have notifications
+        std::uint32_t notificationCount = 0; //array of frame IDs that have notifications
         std::uint32_t attachmentCount = 0; //number of attachment points
 
         std::uint32_t reserved0 = 0;
@@ -129,8 +129,13 @@ namespace cro::Detail::ModelBinary
             frameSize = skel.m_frameSize;
             frameCount = skel.m_frameCount;
             animationCount = static_cast<std::uint32_t>(skel.m_animations.size());
-            notificationFrameCount = static_cast<std::uint32_t>(skel.m_notifications.size());
             attachmentCount = static_cast<std::uint32_t>(skel.m_attachmentPoints.size());
+
+            for (const auto& nFrame : skel.m_notifications)
+            {
+                notificationCount += static_cast<std::uint32_t>(nFrame.size());
+            }
+
 
             return *this;
         }
@@ -139,13 +144,12 @@ namespace cro::Detail::ModelBinary
     /*
     Array of joints [frameSize * frameCount]
     Array of animations [animationCount]
-    Array of std::uint32_t which index frames that contain notifications [notificationFrameCount]
-    Array of std::uint32_t which contain the number of notifications per frame addressed by previous array
-    Array of int32 pairs of notification data, split by above array
+    Array of notifications [notificationCount]
     Array of attachments [attachmentCount]
 
     Joints are stored as Joint struct
     Animations are stored as SerialAnimation struct
+    Notifications are stored as SerialNotification struct
     Attachments are stored as SerialAttachment struct
 
     */
@@ -187,6 +191,18 @@ namespace cro::Detail::ModelBinary
         }
     };
 
+    struct SerialNotification final
+    {
+        std::uint32_t frameID = 0;
+        std::int32_t jointID = -1;
+        std::int32_t userID = -1;
+
+        SerialNotification() = default;
+        SerialNotification(std::uint32_t f, std::int32_t j, std::int32_t u)
+            : frameID(f), jointID(j), userID(u)
+        {}
+    };
+
     struct SerialAttachment final
     {
         glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
@@ -210,5 +226,5 @@ namespace cro::Detail::ModelBinary
         }
     };
 
-    CRO_EXPORT_API bool write(cro::Entity, const std::string&);
+    CRO_EXPORT_API bool write(cro::Entity, const std::string&, bool includeSkeleton = true);
 }

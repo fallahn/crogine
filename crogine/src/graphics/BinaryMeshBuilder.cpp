@@ -302,7 +302,57 @@ Mesh::Data BinaryMeshBuilder::build() const
 
         if (header.skeletonOffset)
         {
+            if (SDL_RWseek(file.file, header.skeletonOffset, RW_SEEK_SET) > -1)
+            {
+                Detail::ModelBinary::SkeletonHeader skelHeader;
+                SDL_RWread(file.file, &skelHeader, sizeof(skelHeader), 1);
 
+                std::vector<Joint> inFrames(skelHeader.frameCount * skelHeader.frameSize);
+                std::vector<Detail::ModelBinary::SerialAnimation> inAnims(skelHeader.animationCount);
+                std::vector<Detail::ModelBinary::SerialNotification> inNotifications(skelHeader.notificationCount);
+                std::vector<Detail::ModelBinary::SerialAttachment> inAttachments(skelHeader.attachmentCount);
+
+                SDL_RWread(file.file, inFrames.data(), sizeof(Joint), inFrames.size());
+                SDL_RWread(file.file, inAnims.data(), sizeof(Detail::ModelBinary::SerialAnimation), inAnims.size());
+                SDL_RWread(file.file, inNotifications.data(), sizeof(Detail::ModelBinary::SerialNotification), inNotifications.size());
+                SDL_RWread(file.file, inAttachments.data(), sizeof(Detail::ModelBinary::SerialAttachment), inAttachments.size());
+
+                m_skeleton = {};
+                CRO_ASSERT(inFrames.size() % skelHeader.frameSize == 0, "");
+                for (auto i = 0u; i < skelHeader.frameCount; ++i)
+                {
+                    std::vector<Joint> frame;
+                    for (auto j = i; j < i + skelHeader.frameSize; ++j)
+                    {
+                        frame.push_back(inFrames[j]);
+                    }
+
+                    m_skeleton.addFrame(frame);
+                }
+                for (const auto& inAnim : inAnims)
+                {
+                    SkeletalAnim anim;
+                    anim.frameCount = inAnim.frameCount;
+                    anim.frameRate = inAnim.frameRate;
+                    anim.startFrame = inAnim.startFrame;
+                    anim.name = inAnim.name;
+                    anim.looped = inAnim.looped != 0;
+
+                    m_skeleton.addAnimation(anim);
+                }
+                for (auto [frameID, jointID, userID] : inNotifications)
+                {
+                    m_skeleton.addNotification(frameID, { jointID, userID });
+                }
+                for (const auto& [rotation, translation, parent] : inAttachments)
+                {
+                    m_skeleton.addAttachmentPoint({ parent, translation, rotation });
+                }
+            }
+            else
+            {
+                LogE << "Failed to seek to skeleton offset, incorrect value provided" << std::endl;
+            }
         }
     }
 

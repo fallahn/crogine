@@ -36,7 +36,7 @@ source distribution.
 
 using namespace cro;
 
-bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path)
+bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path, bool includeSkeleton)
 {
     bool retVal = false;
 
@@ -249,12 +249,11 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
     //skeleton output
     Detail::ModelBinary::SkeletonHeader skelHeader;
     std::vector<Detail::ModelBinary::SerialAnimation> outAnimations;
-    std::vector<std::uint32_t> notificationFrames;
-    std::vector<std::uint32_t> notificationCounts;
-    std::vector<Skeleton::Notification> outNotifications;
+    std::vector<Detail::ModelBinary::SerialNotification> outNotifications;
     std::vector<Detail::ModelBinary::SerialAttachment> outAttachments;
 
-    if (entity.hasComponent<Skeleton>())
+    if (includeSkeleton &&
+        entity.hasComponent<Skeleton>())
     {
         //update the main header with the beginning of the skel data
         header.skeletonOffset = skelOffset;
@@ -272,12 +271,9 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
         {
             if (!notifications[i].empty())
             {
-                notificationFrames.push_back(i);
-                notificationCounts.push_back(static_cast<std::uint32_t>(notifications[i].size()));
-
                 for (auto j = 0u; j < notifications[i].size(); ++j)
                 {
-                    outNotifications.push_back(notifications[i][j]);
+                    outNotifications.emplace_back(i, notifications[i][j].jointID, notifications[i][j].userID);
                 }
             }
         }
@@ -310,9 +306,9 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
         {
             //write mesh data
             SDL_RWwrite(file.file, &meshHeader, sizeof(meshHeader), 1);
-            SDL_RWwrite(file.file, outIndexSizes.data(), sizeof(std::uint32_t) * outIndexSizes.size(), 1);
-            SDL_RWwrite(file.file, outVertexData.data(), sizeof(float) * outVertexData.size(), 1);
-            SDL_RWwrite(file.file, outIndexData.data(), sizeof(std::uint32_t) * outIndexData.size(), 1);
+            SDL_RWwrite(file.file, outIndexSizes.data(), sizeof(std::uint32_t), outIndexSizes.size());
+            SDL_RWwrite(file.file, outVertexData.data(), sizeof(float), outVertexData.size());
+            SDL_RWwrite(file.file, outIndexData.data(), sizeof(std::uint32_t), outIndexData.size());
         }
 
         if (header.skeletonOffset)
@@ -321,12 +317,10 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
 
             //write skel data
             SDL_RWwrite(file.file, &skelHeader, sizeof(skelHeader), 1);
-            SDL_RWwrite(file.file, frames.data(), frames.size() * sizeof(Joint), 1);
-            SDL_RWwrite(file.file, outAnimations.data(), outAnimations.size() * sizeof(SerialAnimation), 1);
-            SDL_RWwrite(file.file, notificationFrames.data(), notificationFrames.size()* sizeof(std::uint32_t), 1);
-            SDL_RWwrite(file.file, notificationCounts.data(), notificationCounts.size() * sizeof(std::uint32_t), 1);
-            SDL_RWwrite(file.file, outNotifications.data(), outNotifications.size() * sizeof(Skeleton::Notification), 1);
-            SDL_RWwrite(file.file, outAttachments.data(), outAttachments.size() * sizeof(SerialAttachment), 1);
+            SDL_RWwrite(file.file, frames.data(), sizeof(Joint), frames.size());
+            SDL_RWwrite(file.file, outAnimations.data(), sizeof(SerialAnimation), outAnimations.size());
+            SDL_RWwrite(file.file, outNotifications.data(), sizeof(SerialNotification), outNotifications.size());
+            SDL_RWwrite(file.file, outAttachments.data(), sizeof(SerialAttachment), outAttachments.size());
         }
         SDL_RWclose(file.file);
     }
