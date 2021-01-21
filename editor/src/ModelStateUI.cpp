@@ -578,12 +578,12 @@ void ModelState::buildUI()
                 showGLTFBrowser();
             }
 
-            if (ImGui::Begin("Buns"))
+            /*if (ImGui::Begin("Buns"))
             {
                 auto tex = m_scene.getActiveCamera().getComponent<cro::Camera>().depthBuffer.getTexture();
                 ImGui::Image(tex, { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
-            ImGui::End();
+            ImGui::End();*/
         });
 
     auto size = getContext().mainWindow.getSize();
@@ -1266,17 +1266,18 @@ void ModelState::drawInspector()
                     shaderFlags |= cro::ShaderResource::RxShadows;
                 }
 
+
+                ImGui::NewLine();
+                ImGui::Checkbox("Use Vertex Colours", &matDef.vertexColoured);
+                ImGui::SameLine();
+                helpMarker("Any colour information stored in the model's vertex data will be multiplied with the diffuse colour of the material");
+                if (matDef.vertexColoured)
+                {
+                    shaderFlags |= cro::ShaderResource::VertexColour;
+                }
+
                 if (type != MaterialDefinition::PBR)
                 {
-                    ImGui::NewLine();
-                    ImGui::Checkbox("Use Vertex Colours", &matDef.vertexColoured);
-                    ImGui::SameLine();
-                    helpMarker("Any colour information stored in the model's vertex data will be multiplied with the diffuse colour of the material");
-                    if (matDef.vertexColoured)
-                    {
-                        shaderFlags |= cro::ShaderResource::VertexColour;
-                    }
-
                     ImGui::NewLine();
                     ImGui::Checkbox("Use Rimlighting", &matDef.useRimlighing);
                     ImGui::SameLine();

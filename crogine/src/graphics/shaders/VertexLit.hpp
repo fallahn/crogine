@@ -358,7 +358,7 @@ namespace cro
                     diffuseColour *= u_colour;
                 #endif
                 
-                #if defined(VERTEX_COLOURED)
+                #if defined(VERTEX_COLOUR)
                     diffuseColour *= v_colour;
                 #endif
                     //diffuseColour = vec3(0.0, 0.0, 1.0);//diffuse.rgb;
