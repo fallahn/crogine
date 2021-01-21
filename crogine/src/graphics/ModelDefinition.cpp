@@ -57,7 +57,7 @@ namespace
     };
 }
 
-bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& rc, EnvironmentMap* envMap)
+bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& rc, EnvironmentMap* envMap, bool forceReload)
 {
     if (m_modelLoaded)
     {
@@ -210,7 +210,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 
     //do all the resource loading last when we know properties are valid,
     //to prevent partially loading a model and wasting resources.
-    m_meshID = rc.meshes.loadMesh(*meshBuilder.get());
+    m_meshID = rc.meshes.loadMesh(*meshBuilder.get(), forceReload);
     if (m_meshID == 0)
     {
         Logger::log(path + ": preloading mesh failed", Logger::Type::Error);

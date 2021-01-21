@@ -127,10 +127,12 @@ namespace cro
         \param envMap A pointer to a valid EnvironmentMap instance. This will
         automatically assign any required lighting parameters to PBR materials.
         This can be omitted if no PBR materials are being loaded.
+        \param forceReload Forces the ResourceCollection to reload any mesh data from
+        file, rather than recycling any existing VBO. Generally should be false.
         \returns true if the configuration file was parsed without error.
         \see ConfigFile, EnvironmentMap
         */
-        bool loadFromFile(const std::string& path, ResourceCollection& resources, EnvironmentMap* envMap = nullptr);
+        bool loadFromFile(const std::string& path, ResourceCollection& resources, EnvironmentMap* envMap = nullptr, bool forceReload = false);
 
         /*!
         \brief Creates a Model component from the loaded config on the given entity.

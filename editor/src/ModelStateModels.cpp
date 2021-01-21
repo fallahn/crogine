@@ -92,7 +92,7 @@ void ModelState::openModelAtPath(const std::string& path)
     closeModel();
 
     cro::ModelDefinition def(m_sharedData.workingDirectory);
-    if (def.loadFromFile(path, m_resources, &m_environmentMap))
+    if (def.loadFromFile(path, m_resources, &m_environmentMap, true))
     {
         m_currentFilePath = path;
 

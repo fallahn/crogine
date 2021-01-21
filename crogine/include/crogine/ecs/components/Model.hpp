@@ -121,7 +121,6 @@ namespace cro
 
         Mesh::Data m_meshData;
         std::array<std::array<Material::Data, Mesh::IndexData::MaxBuffers>, Mesh::IndexData::Count> m_materials{};       
-        //std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_shadowMaterials{};
 
         void bindMaterial(Material::Data&);
         
