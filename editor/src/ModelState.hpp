@@ -192,6 +192,7 @@ private:
         std::unique_ptr<cro::Texture> texture;
         std::string name;
         std::string relPath; //inc trailing '/'
+        std::size_t uid = 0;
     };
     std::map<std::uint32_t, MaterialTexture> m_materialTextures;
     std::uint32_t m_selectedTexture;

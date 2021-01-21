@@ -34,19 +34,26 @@ source distribution.
 
 #include <crogine/util/String.hpp>
 
+#include <functional>
+
 std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
 {
     auto fileName = cro::FileSystem::getFileName(path);
 
     auto relPath = path;
     std::replace(relPath.begin(), relPath.end(), '\\', '/');
+
+    std::hash<std::string> hashAttack;
+    auto uid = hashAttack(path);
+
     relPath = cro::FileSystem::getFilePath(relPath);
     relPath = cro::FileSystem::getRelativePath(relPath, m_sharedData.workingDirectory);
 
+    //replace if exists
     std::uint32_t id = 0;
     for (auto& [i, t] : m_materialTextures)
     {
-        if (t.name == fileName)
+        if (t.uid == uid)
         {
             id = i;
             break;
@@ -74,6 +81,7 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
         m_selectedTexture = tex.texture->getGLHandle();
         tex.name = fileName;
         tex.relPath = relPath;
+        tex.uid = uid;
         m_materialTextures.insert(std::make_pair(tex.texture->getGLHandle(), std::move(tex)));
         retVal = m_selectedTexture;
     }
