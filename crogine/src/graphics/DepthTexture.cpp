@@ -153,7 +153,7 @@ void DepthTexture::clear()
     m_lastBuffer = RenderTarget::ActiveTarget;
 
     //set buffer active
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
+    glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fboID));
     RenderTarget::ActiveTarget = m_fboID;
 
     glCheck(glColorMask(false, false, false, false));

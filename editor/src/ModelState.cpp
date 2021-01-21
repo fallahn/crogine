@@ -260,7 +260,6 @@ void ModelState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
-    //m_resources.materials.get(materialIDs[MaterialID::Default]).setProperty("u_diffuseMap", m_magentaTexture);
 
     flags = cro::ShaderResource::DiffuseColour | cro::ShaderResource::Skinning;
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, flags);
@@ -274,7 +273,7 @@ void ModelState::loadAssets()
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
     m_materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
 
-    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::Skinning | cro::ShaderResource::DepthMap | cro::ShaderResource::AlphaClip);
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::Skinning | cro::ShaderResource::DepthMap);
     m_materialIDs[MaterialID::DefaultShadowSkinned] = m_resources.materials.add(m_resources.shaders.get(shaderID));
 
     //used for drawing debug lines
@@ -746,7 +745,7 @@ void ModelState::bakeLightmap()
         for (auto i = 0u; i < meshData.submeshCount; ++i)
         {
             const auto& indexData = meshData.indexData[i];
-            glCheck(glBindVertexArray(indexData.vao));
+            glCheck(glBindVertexArray(indexData.vao[cro::Mesh::IndexData::Final]));
             glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
         }
 

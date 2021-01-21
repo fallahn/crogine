@@ -121,7 +121,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
                 //add ent/index pair to alpha or opaque list
                 for (i = 0u; i < model.m_meshData.submeshCount; ++i)
                 {
-                    if (model.m_materials[i].blendMode != Material::BlendMode::None)
+                    if (model.m_materials[Mesh::IndexData::Final][i].blendMode != Material::BlendMode::None)
                     {
                         transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
                         transparent.second.flags = static_cast<int64>(-distance * 1000000.f); //suitably large number to shift decimal point
@@ -212,33 +212,33 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         for (auto i : sortData.matIDs)
         {
             //bind shader
-            glCheck(glUseProgram(model.m_materials[i].shader));
+            glCheck(glUseProgram(model.m_materials[Mesh::IndexData::Final][i].shader));
 
             //apply shader uniforms from material
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-            applyProperties(model.m_materials[i], model, *getScene(), camComponent);
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+            applyProperties(model.m_materials[Mesh::IndexData::Final][i], model, *getScene(), camComponent);
 
             //apply standard uniforms
-            glCheck(glUniform3f(model.m_materials[i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
-            glCheck(glUniform2f(model.m_materials[i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
-            glCheck(glUniform4f(model.m_materials[i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
-            glCheck(glUniformMatrix4fv(model.m_materials[i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-            glCheck(glUniformMatrix3fv(model.m_materials[i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
+            glCheck(glUniform3f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
+            glCheck(glUniform2f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
+            glCheck(glUniform4f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
+            glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
 
-            applyBlendMode(model.m_materials[i].blendMode);
+            applyBlendMode(model.m_materials[Mesh::IndexData::Final][i].blendMode);
 
             //check for depth test override
-            if (!model.m_materials[i].enableDepthTest)
+            if (!model.m_materials[Mesh::IndexData::Final][i].enableDepthTest)
             {
                 glCheck(glDisable(GL_DEPTH_TEST));
             }
 
 #ifdef PLATFORM_DESKTOP
             const auto& indexData = model.m_meshData.indexData[i];
-            glCheck(glBindVertexArray(indexData.vao));
+            glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Final]));
             glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
 
 #else //GLES 2 doesn't have VAO support without extensions

@@ -125,8 +125,6 @@ namespace cro
                 })";
 
 
-            //TODO there's a weird bug where if this is empty (material doesn't use
-            //alpha clipping) that messes up the output of skinned models :S
             const static std::string FragmentDesktop = R"(
                 #if defined(ALPHA_CLIP)
 
@@ -141,11 +139,9 @@ namespace cro
                 }
                 #else
 
-                //uniform float u_alphaClip;
                 OUTPUT             
                 void main()
                 {
-                    //if(u_alphaClip > 10.0) discard;
                     FRAG_OUT = vec4(1.0);
                 }
                 #endif

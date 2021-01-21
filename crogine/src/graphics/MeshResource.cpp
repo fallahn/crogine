@@ -130,9 +130,12 @@ void MeshResource::flush()
             }
 
 #ifdef PLATFORM_DESKTOP
-            if (id.vao)
+            for (auto& vao : id.vao)
             {
-                glCheck(glDeleteVertexArrays(1, &id.vao));
+                if (vao)
+                {
+                    glCheck(glDeleteVertexArrays(1, &vao));
+                }
             }
 #endif
         }

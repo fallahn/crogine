@@ -114,7 +114,6 @@ namespace cro
                 #endif
 
                 #if defined(SKINNED)
-                	//int idx = 0;//int(a_boneIndices.x);
                     mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
                 	skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
                 	skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];

@@ -54,27 +54,27 @@ Model::Model(Mesh::Data data, Material::Data material)
 {
     //sets all materials to given default
     bindMaterial(material);
-    for (auto& mat : m_materials)
+    for (auto& mat : m_materials[Mesh::IndexData::Final])
     {
         mat = material;
     }
 #ifdef PLATFORM_DESKTOP
     for (auto i = 0u; i < m_meshData.submeshCount; ++i)
     {
-        updateVAO(i);
+        updateVAO(i, Mesh::IndexData::Final);
     }
 #endif //DESKTOP
 }
 
 void Model::setMaterial(std::size_t idx, Material::Data data)
 {
-    CRO_ASSERT(idx < m_materials.size(), "Index out of range");
+    CRO_ASSERT(idx < m_materials[Mesh::IndexData::Final].size(), "Index out of range");
     CRO_ASSERT(m_meshData.vbo != 0, "Can't set a material until mesh has been added");
     bindMaterial(data);
-    m_materials[idx] = data;
+    m_materials[Mesh::IndexData::Final][idx] = data;
 
 #ifdef PLATFORM_DESKTOP
-    updateVAO(idx);
+    updateVAO(idx, Mesh::IndexData::Final);
 #endif //DESKTOP
 }
 
@@ -86,9 +86,13 @@ void Model::setSkeleton(glm::mat4* frame, std::size_t jointCount)
 
 void Model::setShadowMaterial(std::size_t idx, Material::Data material)
 {
-    CRO_ASSERT(idx < m_shadowMaterials.size(), "Index out of range");
+    CRO_ASSERT(idx < m_materials[Mesh::IndexData::Shadow].size(), "Index out of range");
     bindMaterial(material);
-    m_shadowMaterials[idx] = material;
+    m_materials[Mesh::IndexData::Shadow][idx] = material;
+
+#ifdef PLATFORM_DESKTOP
+    updateVAO(idx, Mesh::IndexData::Shadow);
+#endif //DESKTOP
 }
 
 //private
@@ -126,26 +130,26 @@ void Model::bindMaterial(Material::Data& material)
 }
     //if we're on desktop core opengl profile requires VAOs
 #ifdef PLATFORM_DESKTOP
-void Model::updateVAO(std::size_t idx)
+void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
 {
     auto& submesh = m_meshData.indexData[idx];
 
     //I guess we have to remove any old binding
     //if there's an existing material
-    if (submesh.vao != 0)
+    if (submesh.vao[passIndex] != 0)
     {
-        glCheck(glDeleteVertexArrays(1, &submesh.vao));
-        submesh.vao = 0;
+        glCheck(glDeleteVertexArrays(1, &submesh.vao[passIndex]));
+        submesh.vao[passIndex] = 0;
     }
 
-    glCheck(glGenVertexArrays(1, &submesh.vao));
+    glCheck(glGenVertexArrays(1, &submesh.vao[passIndex]));
 
-    glCheck(glBindVertexArray(submesh.vao));
+    glCheck(glBindVertexArray(submesh.vao[passIndex]));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vbo));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
 
-    const auto& attribs = m_materials[idx].attribs;
-    for (auto j = 0u; j < m_materials[idx].attribCount; ++j)
+    const auto& attribs = m_materials[passIndex][idx].attribs;
+    for (auto j = 0u; j < m_materials[passIndex][idx].attribCount; ++j)
     {
         glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
         glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],

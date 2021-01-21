@@ -577,6 +577,13 @@ void ModelState::buildUI()
             {
                 showGLTFBrowser();
             }
+
+            if (ImGui::Begin("Buns"))
+            {
+                auto tex = m_scene.getActiveCamera().getComponent<cro::Camera>().depthBuffer.getTexture();
+                ImGui::Image(tex, { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
         });
 
     auto size = getContext().mainWindow.getSize();

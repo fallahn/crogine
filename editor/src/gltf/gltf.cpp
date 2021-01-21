@@ -800,7 +800,7 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                         glm::vec3 normal(normalData[index], normalData[index + 1], normalData[index + 2]);
                         glm::vec3 tan(data[index], data[index + 1], data[index + 2]);
                         //tan = normalMat * tan;
-                        float sign = data[idx + 3];
+                        float sign = data[index + 3];
 
                         normal = glm::normalize(normal);
                         tan = glm::normalize(tan);

@@ -708,9 +708,12 @@ void ModelState::importIQM(const std::string& path)
             glCheck(glDeleteBuffers(1, &sub.ibo));
         }
 
-        if (sub.vao)
+        for (auto& vao : sub.vao)
         {
-            glCheck(glDeleteVertexArrays(1, &sub.vao));
+            if (vao)
+            {
+                glCheck(glDeleteVertexArrays(1, &vao));
+            }
         }
     }
     if (meshData.vbo)
