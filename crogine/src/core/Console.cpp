@@ -74,6 +74,8 @@ namespace
     const ImVec4 WarningColour(1.f, 0.6f, 0.f, 1.f);
     const ImVec4 ErrorColour(1.f, 0.f, 0.f, 1.f);
     const ImVec4 DefaultColour(1.f, 1.f, 1.f, 1.f);
+
+    bool isNewFrame = true;
 }
 int textEditCallback(ImGuiTextEditCallbackData* data);
 
@@ -105,9 +107,13 @@ void Console::print(const std::string& line)
         buffer.pop_front();
     }
 
-    auto* msg = App::getInstance().getMessageBus().post<Message::ConsoleEvent>(Message::ConsoleMessage);
-    msg->type = Message::ConsoleEvent::LinePrinted;
-    msg->level = level;
+    if (isNewFrame)
+    {
+        auto* msg = App::getInstance().getMessageBus().post<Message::ConsoleEvent>(Message::ConsoleMessage);
+        msg->type = Message::ConsoleEvent::LinePrinted;
+        msg->level = level;
+        isNewFrame = false;
+    }
 }
 
 void Console::show()
@@ -231,6 +237,11 @@ void Console::removeCommands(const ConsoleClient* client)
             ++i;
         }
     }
+}
+
+void Console::newFrame()
+{
+    isNewFrame = true;
 }
 
 void Console::draw()

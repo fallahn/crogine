@@ -778,21 +778,34 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                     continue;
                 }
 
-                if (j == cro::Mesh::Tangent)
+                if (j == cro::Mesh::Normal)
                 {
-                    if (!data.empty())
+                    auto index = i * size;
+                    glm::vec3 normal(data[index], data[index + 1], data[index + 2]);
+                    normal = glm::normalize(normal);
+
+                    vertices.push_back(normal.x);
+                    vertices.push_back(normal.y);
+                    vertices.push_back(normal.z);
+                }
+                else if (j == cro::Mesh::Tangent)
+                {
+                    //if (!data.empty())
                     {
                         //calc bitan and correct for sign
                         //NOTE we flip the sign because we also flip the UV
-                        auto idx = i * size;
+                        auto index = i * size;
                         const auto& normalData = tempData[cro::Mesh::Normal].first;
 
-                        glm::vec3 normal(normalData[idx], normalData[idx + 1], normalData[idx + 2]);
-                        glm::vec3 tan(data[idx], data[idx + 1], data[idx + 2]);
+                        glm::vec3 normal(normalData[index], normalData[index + 1], normalData[index + 2]);
+                        glm::vec3 tan(data[index], data[index + 1], data[index + 2]);
                         //tan = normalMat * tan;
                         float sign = data[idx + 3];
 
-                        glm::vec3 bitan = glm::cross(normal, tan) * -sign;
+                        normal = glm::normalize(normal);
+                        tan = glm::normalize(tan);
+
+                        glm::vec3 bitan = glm::normalize(glm::cross(normal, tan) * -sign);
 
                         vertices.push_back(tan.x);
                         vertices.push_back(tan.y);
@@ -807,15 +820,15 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                     || j == cro::Mesh::UV1)
                 {
                     //flip the V
-                    auto idx = i * size;
-                    glm::vec2 uv(data[idx], data[idx + 1]);
+                    auto index = i * size;
+                    glm::vec2 uv(data[index], data[index + 1]);
                     uv.t = 1.f - uv.t;
                     vertices.push_back(uv.s);
                     vertices.push_back(uv.t);
                 }
                 else
                 {
-                    if (!data.empty())
+                    //if (!data.empty())
                     {
                         for (auto k = i * size; k < (i * size) + size; ++k)
                         {

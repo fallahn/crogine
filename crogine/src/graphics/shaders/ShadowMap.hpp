@@ -141,11 +141,12 @@ namespace cro
                 }
                 #else
 
-
+                //uniform float u_alphaClip;
                 OUTPUT             
                 void main()
                 {
-                    FRAG_OUT = vec4(0.0);
+                    //if(u_alphaClip > 10.0) discard;
+                    FRAG_OUT = vec4(1.0);
                 }
                 #endif
                 )";

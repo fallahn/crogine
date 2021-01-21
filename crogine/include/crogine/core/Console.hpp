@@ -120,6 +120,7 @@ namespace cro
         static void addCommand(const std::string& name, const Command& cmd, const ConsoleClient* owner);
         static void removeCommands(const ConsoleClient*); //removes all commands belonging to the given client
 
+        static void newFrame();
         static void draw();
     };
 

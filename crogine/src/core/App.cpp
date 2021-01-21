@@ -260,6 +260,8 @@ void App::run()
         {
             timeSinceLastUpdate -= frameTime;
 
+            Console::newFrame();
+
             handleEvents();
             handleMessages();
 
