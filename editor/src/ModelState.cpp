@@ -224,6 +224,7 @@ void ModelState::addSystems()
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
 
+    m_previewScene.addSystem<cro::SkeletalAnimator>(mb);
     m_previewScene.addSystem<cro::CameraSystem>(mb);
     m_previewScene.addSystem<cro::ModelRenderer>(mb);
 }

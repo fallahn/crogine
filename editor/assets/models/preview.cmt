@@ -1,10 +1,17 @@
-model preview
+model material_preview
 {
-    mesh = "assets/models/preview.cmf"
+    mesh = "assets/models/preview.cmb"
+    cast_shadows = false
 
-    material VertexLit
+    material Unlit
     {
-        colour = "1,0,1,1"
+        mask_colour = 0.000000,1.000000,1.000000,1.000000
+        name = "Untitled"
+        colour = 1.000000,0.999990,1.000000,1.000000
+        smooth = true
+        repeat = true
+        blendmode = "none"
+        skinned = true
 
     }
 }
