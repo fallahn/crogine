@@ -36,7 +36,7 @@ source distribution.
 #include <crogine/core/HiResTimer.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/audio/AudioMixer.hpp>
-#include <crogine/gui/imgui.h>
+#include <crogine/gui/Gui.hpp>
 
 #include <SDL.h>
 #include <SDL_joystick.h>
@@ -260,6 +260,8 @@ void App::run()
         {
             timeSinceLastUpdate -= frameTime;
 
+            Console::newFrame();
+
             handleEvents();
             handleMessages();
 
@@ -442,6 +444,7 @@ void App::doImGui()
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame(m_window.m_window);
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
 
     //show other windows (console etc)
     Console::draw();

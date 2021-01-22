@@ -33,7 +33,7 @@ namespace MaterialID
 {
     enum
     {
-        Default, 
+        Default, DefaultSkinned,
         DefaultShadow, DefaultShadowSkinned,
         DebugDraw,
         GroundPlane,
@@ -55,6 +55,7 @@ namespace EntityID
     {
         GridMesh, //< also has AABB and Sphere attached
         ActiveModel, //< model being viewed
+        ActiveSkeleton,
         RootNode, //< has the ground plane / model attached to it
         NormalVis,
         GroundPlane,

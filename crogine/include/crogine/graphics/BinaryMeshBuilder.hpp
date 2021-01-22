@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
-crogine model viewer/importer - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -27,16 +27,27 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "ModelState.hpp"
+#pragma once
 
-void ModelState::importIQM(const std::string& path)
+#include <crogine/graphics/MeshBuilder.hpp>
+
+namespace cro
 {
-    //we're only interested in the VBO data
-    //so we'll copy that and the attribute flags
-    //into the import structures.
-    m_importedHeader = {};
-    m_importedTransform = {};
+    /*!
+    \brief Class for loading the CroModelBinary format aka *.cmb files
+    */
+    class CRO_EXPORT_API BinaryMeshBuilder final : public cro::MeshBuilder
+    {
+    public:
+        explicit BinaryMeshBuilder(const std::string&);
 
+        std::size_t getUID() const override;
+        Skeleton getSkeleton() const override;
 
-
+    private:
+        std::string m_path;
+        std::size_t m_uid;
+        mutable Skeleton m_skeleton;
+        Mesh::Data build() const override;
+    };
 }

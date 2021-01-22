@@ -81,7 +81,11 @@ namespace cro
         struct CRO_EXPORT_API IndexData final
         {
             uint32 ibo = 0;
-            uint32 vao = 0; //< required for core profile on desktop, ignored on mobile
+            enum Pass
+            {
+                Final, Shadow, Count
+            };
+            std::array<uint32, Pass::Count> vao = {0,0}; //< required for core profile on desktop, ignored on mobile (one for both regular and shadow map pass)
             uint32 primitiveType = 0;
             uint32 indexCount = 0;
             uint32 format = 0;

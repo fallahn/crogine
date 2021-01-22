@@ -225,9 +225,12 @@ void SpriteSystem3D::onEntityRemoved(Entity entity)
         }
 
 #ifdef PLATFORM_DESKTOP
-        if (id.vao)
+        for (auto& vao : id.vao)
         {
-            glCheck(glDeleteVertexArrays(1, &id.vao));
+            if (vao)
+            {
+                glCheck(glDeleteVertexArrays(1, &vao));
+            }
         }
 #endif
     }

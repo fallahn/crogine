@@ -31,6 +31,10 @@ source distribution.
 
 #include "MyApp.hpp"
 
+#ifndef PLATFORM_DESKTOP
+#error This project is Desktop compatible only.
+#endif
+
 int main(int argc, char** argsv)
 {
     MyApp mapp;

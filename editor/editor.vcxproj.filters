@@ -25,6 +25,12 @@
     <Filter Include="Source Files\world viewer">
       <UniqueIdentifier>{54486e91-4e69-4544-9072-ea0e9783de78}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\model viewer\gltf">
+      <UniqueIdentifier>{cdb9e394-6df6-4873-94aa-cc8e61f45f2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\model viewer\gltf">
+      <UniqueIdentifier>{a8c2f695-573e-4b4b-9376-8dd3350f1a2f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -32,9 +38,6 @@
     </ClCompile>
     <ClCompile Include="src\MyApp.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ImportIQM.cpp">
-      <Filter>Source Files\model viewer</Filter>
     </ClCompile>
     <ClCompile Include="src\LoadingScreen.cpp">
       <Filter>Source Files\model viewer</Filter>
@@ -50,6 +53,18 @@
     </ClCompile>
     <ClCompile Include="src\WorldState.cpp">
       <Filter>Source Files\world viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gltf\gltf.cpp">
+      <Filter>Source Files\model viewer\gltf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ModelStateMaterials.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ModelStateModels.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ModelStateUI.cpp">
+      <Filter>Source Files\model viewer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -89,9 +104,27 @@
     <ClInclude Include="src\MaterialDefinition.hpp">
       <Filter>Header Files\model viewer</Filter>
     </ClInclude>
+    <ClInclude Include="src\SharedStateData.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gltf\json.hpp">
+      <Filter>Header Files\model viewer\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gltf\stb_image.h">
+      <Filter>Header Files\model viewer\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gltf\stb_image_write.h">
+      <Filter>Header Files\model viewer\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gltf\tiny_gltf.h">
+      <Filter>Header Files\model viewer\gltf</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\LightmapShader.inl">
+      <Filter>Header Files\model viewer</Filter>
+    </None>
+    <None Include="src\ModelViewerConsts.inl">
       <Filter>Header Files\model viewer</Filter>
     </None>
   </ItemGroup>

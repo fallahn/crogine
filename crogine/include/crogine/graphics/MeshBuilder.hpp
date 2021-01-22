@@ -105,7 +105,8 @@ namespace cro
         friend class SpriteSystem3D;
         /*!
         \brief Implement this to create the appropriate VBO / IBO
-        and return a Mesh::Data struct.
+        and return a Mesh::Data struct. Automatically called by the
+        MeshResource class
         */
         virtual Mesh::Data build() const = 0;
 

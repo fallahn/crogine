@@ -110,6 +110,7 @@ Shader& Shader::operator=(Shader&& other) noexcept
         other.m_attribMap = {};
         other.m_uniformMap.clear();
     }
+
     return *this;
 }
 
@@ -335,8 +336,10 @@ bool Shader::fillAttribMap()
                 }
                 else
                 {
-                    Logger::log(name + ": unknown vertex attribute. Shader compilation failed.", Logger::Type::Error);
-                    return false;
+                    if (name.find("gl_") != 0)
+                    {
+                        LogW << name << ": Unmapped vertex attribute. Is this intentional?" << std::endl;
+                    }
                 }              
             }
             return true;

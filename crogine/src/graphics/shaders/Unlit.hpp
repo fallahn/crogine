@@ -119,10 +119,10 @@ namespace cro
                 #endif
 
                 #if defined(SKINNED)
-                	mat4 skinMatrix = u_boneMatrices[int(a_boneIndices.x)] * a_boneWeights.x;
-                	skinMatrix += u_boneMatrices[int(a_boneIndices.y)] * a_boneWeights.y;
-                	skinMatrix += u_boneMatrices[int(a_boneIndices.z)] * a_boneWeights.z;
-                	skinMatrix += u_boneMatrices[int(a_boneIndices.w)] * a_boneWeights.w;
+                	mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
+                	skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
+                	skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
+                	skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
                 	position = skinMatrix * position;
                 #if defined (RIMMING)
                     normal = (skinMatrix * vec4(normal, 0.0)).xyz;

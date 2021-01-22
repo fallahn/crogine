@@ -30,6 +30,7 @@ source distribution.
 #include "WorldState.hpp"
 #include "Messages.hpp"
 #include "UIConsts.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/glm/vec2.hpp>
@@ -51,9 +52,10 @@ namespace
     };
 }
 
-WorldState::WorldState(cro::StateStack& ss, cro::State::Context ctx)
+WorldState::WorldState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State(ss, ctx),
-    m_scene(ctx.appInstance.getMessageBus())
+    m_sharedData(sd),
+    m_scene     (ctx.appInstance.getMessageBus())
 {
     ctx.mainWindow.loadResources([this]() {
         addSystems();

@@ -1,6 +1,10 @@
 Crogine Mesh Format
 -------------------
 
+# DEPRECATED
+While this format is still supported by crogine, the Crogine Model Binary (*.cmb) format is preferred. See cro_model_binary.md for further details.
+
+
 The crogine mesh format (*.cmf) is a binary vertex data format used to store static meshes. Meshes are composed of a single vertex array with up to 32 index arrays. No material data is stored in the mesh file, rather it is described as part of the model defintion (*.cmt) file. See the model definition format markdown file for more information on materials.
 
 Vertices can store up to 7 properties, which are flagged in a description byte in the following order:

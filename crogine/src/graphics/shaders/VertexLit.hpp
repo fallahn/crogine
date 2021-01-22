@@ -114,11 +114,10 @@ namespace cro
                 #endif
 
                 #if defined(SKINNED)
-                	//int idx = 0;//int(a_boneIndices.x);
-                    mat4 skinMatrix = u_boneMatrices[int(a_boneIndices.x)] * a_boneWeights.x;
-                	skinMatrix += u_boneMatrices[int(a_boneIndices.y)] * a_boneWeights.y;
-                	skinMatrix += u_boneMatrices[int(a_boneIndices.z)] * a_boneWeights.z;
-                	skinMatrix += u_boneMatrices[int(a_boneIndices.w)] * a_boneWeights.w;
+                    mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
+                	skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
+                	skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
+                	skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
                 	position = skinMatrix * position;
                 #endif
 
@@ -146,9 +145,14 @@ namespace cro
                     tangent = skinMatrix * tangent;
                     bitangent = skinMatrix * bitangent;
                 #endif
-                    v_tbn[0] = normalize(u_worldMatrix * tangent).xyz;
-                    v_tbn[1] = normalize(u_worldMatrix * bitangent).xyz;
-                    v_tbn[2] = normalize(u_worldMatrix * vec4(normal, 0.0)).xyz;
+                    //v_tbn[0] = normalize(u_worldMatrix * tangent).xyz;
+                    //v_tbn[1] = normalize(u_worldMatrix * bitangent).xyz;
+                    //v_tbn[2] = normalize(u_worldMatrix * vec4(normal, 0.0)).xyz;
+
+                    v_tbn[0] = normalize(u_normalMatrix * tangent.xyz);
+                    v_tbn[1] = normalize(u_normalMatrix * bitangent.xyz);
+                    v_tbn[2] = normalize(u_normalMatrix * normal);
+
                 #else
                     v_normalVector = u_normalMatrix * normal;
                 #endif
@@ -354,7 +358,7 @@ namespace cro
                     diffuseColour *= u_colour;
                 #endif
                 
-                #if defined(VERTEX_COLOURED)
+                #if defined(VERTEX_COLOUR)
                     diffuseColour *= v_colour;
                 #endif
                     //diffuseColour = vec3(0.0, 0.0, 1.0);//diffuse.rgb;

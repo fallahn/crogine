@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
 #include <crogine/graphics/IqmBuilder.hpp>
+#include <crogine/graphics/BinaryMeshBuilder.hpp>
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
@@ -56,7 +57,7 @@ namespace
     };
 }
 
-bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& rc, EnvironmentMap* envMap)
+bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& rc, EnvironmentMap* envMap, bool forceReload)
 {
     if (m_modelLoaded)
     {
@@ -101,6 +102,11 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     {
         //we have a static mesh
         meshBuilder = std::make_unique<StaticMeshBuilder>(m_workingDir + meshValue);
+    }
+    else if (ext == ".cmb")
+    {
+        //binary model
+        meshBuilder = std::make_unique<BinaryMeshBuilder>(m_workingDir + meshValue);
     }
     else if (ext == ".iqm")
     {
@@ -204,7 +210,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 
     //do all the resource loading last when we know properties are valid,
     //to prevent partially loading a model and wasting resources.
-    m_meshID = rc.meshes.loadMesh(*meshBuilder.get());
+    m_meshID = rc.meshes.loadMesh(*meshBuilder.get(), forceReload);
     if (m_meshID == 0)
     {
         Logger::log(path + ": preloading mesh failed", Logger::Type::Error);

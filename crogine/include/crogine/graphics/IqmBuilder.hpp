@@ -70,6 +70,12 @@ namespace cro
         */
         std::size_t getUID() const override;
 
+        /*!
+        \brief This is a naughty hack to get mesh data into the Model Editor.
+        Don't use this. Seriously.
+        */
+        Mesh::Data getData() const { return build(); }
+
     private:
         std::string m_path;
         std::size_t m_uid;

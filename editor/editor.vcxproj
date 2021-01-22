@@ -154,10 +154,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\ImportIQM.cpp" />
+    <ClCompile Include="src\gltf\gltf.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ModelState.cpp" />
+    <ClCompile Include="src\ModelStateMaterials.cpp" />
+    <ClCompile Include="src\ModelStateModels.cpp" />
+    <ClCompile Include="src\ModelStateUI.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\NormalVisMeshBuilder.cpp" />
     <ClCompile Include="src\OriginIconBuilder.cpp" />
@@ -165,6 +168,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp" />
+    <ClInclude Include="src\gltf\json.hpp" />
+    <ClInclude Include="src\gltf\stb_image.h" />
+    <ClInclude Include="src\gltf\stb_image_write.h" />
+    <ClInclude Include="src\gltf\tiny_gltf.h" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\MaterialDefinition.hpp" />
     <ClInclude Include="src\ModelState.hpp" />
@@ -173,12 +180,14 @@
     <ClInclude Include="src\NormalVisMeshBuilder.hpp" />
     <ClInclude Include="src\OriginIconBuilder.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
+    <ClInclude Include="src\SharedStateData.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\UIConsts.hpp" />
     <ClInclude Include="src\WorldState.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\LightmapShader.inl" />
+    <None Include="src\ModelViewerConsts.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

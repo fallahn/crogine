@@ -545,7 +545,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
     //placeholder for player scale
     cro::ModelDefinition md;
-    md.loadFromFile("assets/models/player_box.cmt", m_resources, &m_environmentMap);
+    md.loadFromFile("assets/models/pirate.cmt", m_resources, &m_environmentMap);
 
     auto addSeaplane = [&]()
     {
@@ -601,9 +601,9 @@ void GameState::spawnPlayer(PlayerInfo info)
             //don't worry about mis-matching colour IDs... well be setting avatars differently
 
             auto playerEnt = m_gameScene.createEntity();
-            playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
+            playerEnt.addComponent<cro::Transform>().setScale({ 2.f, 2.f, 2.f });// .setOrigin({ 0.f, -0.8f, 0.f });
             md.createModel(playerEnt, m_resources);
-            playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
+            //playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
 
             root.getComponent<Player>().avatar = playerEnt;
             root.getComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());
@@ -637,7 +637,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
         auto rotation = entity.getComponent<cro::Transform>().getRotation();
         entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
+        //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
@@ -760,6 +760,7 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
 
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(spawn);
+            entity.getComponent<cro::Transform>().setScale({ 1.6f,1.6f,1.6f });
             entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, ((cro::Util::Const::PI / 2.f) * i) - (cro::Util::Const::PI / 4.f));
             modelDef.createModel(entity, m_resources);
         }

@@ -28,7 +28,6 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/gui/Gui.hpp>
-#include <crogine/gui/imgui.h>
 
 using namespace cro;
 

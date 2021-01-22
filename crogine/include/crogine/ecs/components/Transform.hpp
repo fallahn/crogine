@@ -213,6 +213,11 @@ namespace cro
         */
         const glm::mat4& getLocalTransform() const;
         /*!
+        \brief Sets the local transform from the given matrix
+        */
+        void setLocalTransform(glm::mat4 transform);
+
+        /*!
         \brief Returns a matrix representing the world space Transform.
         This is the local transform multiplied by all parenting transforms
         */

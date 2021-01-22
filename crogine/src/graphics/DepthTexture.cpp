@@ -153,8 +153,10 @@ void DepthTexture::clear()
     m_lastBuffer = RenderTarget::ActiveTarget;
 
     //set buffer active
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
+    glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fboID));
     RenderTarget::ActiveTarget = m_fboID;
+
+    glCheck(glColorMask(false, false, false, false));
 
     //clear buffer - UH OH this will clear the main buffer if FBO is null
     glCheck(glClear(GL_DEPTH_BUFFER_BIT));
@@ -164,6 +166,8 @@ void DepthTexture::clear()
 void DepthTexture::display()
 {
 #ifdef PLATFORM_DESKTOP
+    glCheck(glColorMask(true, true, true, true));
+
     //restore viewport
     glCheck(glViewport(m_lastViewport[0], m_lastViewport[1], m_lastViewport[2], m_lastViewport[3]));
 

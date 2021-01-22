@@ -33,9 +33,12 @@ source distribution.
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
+#include <crogine/util/Matrix.hpp>
+
 #include <cstring>
 #include <array>
 #include <limits>
+#include <functional>
 
 using namespace cro;
 
@@ -506,9 +509,6 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
     char* jointIter = data + header.jointOffset;
     std::vector<glm::mat4> bindPose(header.jointCount);
     std::vector<glm::mat4> inverseBindPose(header.jointCount);
-    out.jointIndices.resize(header.jointCount);
-    out.frameSize = header.jointCount;
-    out.frameCount = header.frameCount;
 
     //warn if bone count > 64 as this is the limit on mobile devices (or even lower!)
     if (header.jointCount > 64)
@@ -533,28 +533,28 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         bindPose[i] = Iqm::createBoneMatrix(rotation, translation, scale);
         inverseBindPose[i] = glm::inverse(bindPose[i]);
 
-        //TODO will this be better to store components separately in a joint
-        //so that they are easier to interpolate separately?
         if (joint.parent >= 0)
         {
             //multiply by parent's transform
             bindPose[i] = bindPose[joint.parent] * bindPose[i];
             inverseBindPose[i] *= inverseBindPose[joint.parent];
-
         }
-        out.jointIndices[i] = joint.parent; //we need to track these for blending frames during animation
     }
-
 
     //load keyframes - a 'pose' is a single posed joint, and a set of poses makes up one frame equivalent to a posed skeleton
     if (header.frameCount > 0)
     {
-        out.frames.resize(header.frameCount * header.jointCount);
+        std::uint32_t frameSize = header.frameCount * header.jointCount;
         std::uint16_t* frameIter = (std::uint16_t*)(data + header.frameOffset);
         if (bindPose.size() > 0)
         {
-            for (auto frameIndex = 0u; frameIndex < out.frames.size(); frameIndex += header.poseCount)
+            std::vector<std::tuple<std::int32_t, glm::mat4>> tempFrame;
+
+            for (auto frameIndex = 0u; frameIndex < frameSize; frameIndex += header.poseCount)
             {
+                tempFrame.clear();
+                tempFrame.resize(header.poseCount);
+
                 char* poseIter = data + header.poseOffset;
                 for (auto poseIndex = 0u; poseIndex < header.poseCount; ++poseIndex)
                 {
@@ -592,23 +592,44 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     if (pose.mask & 0x200) scale.z += *frameIter++ * pose.channelScale[8];
 
                     glm::mat4 mat = Iqm::createBoneMatrix(rotation, translation, scale);
-                    if (pose.parent >= 0)
-                    {
-                        out.frames[frameIndex + poseIndex] =  bindPose[pose.parent] * mat * inverseBindPose[poseIndex];
-                    }
-                    else
-                    {
-                        out.frames[frameIndex + poseIndex] = mat * inverseBindPose[poseIndex];
-                    }
+                    tempFrame[poseIndex] = std::make_tuple(pose.parent, mat);
                 }
+
+                //each joint pose is stored in a temp frame. For the final output
+                //we walk the node tree multiplying each joint by its parent, creating
+                //a fully transformed keyframe. This means that the only work the
+                //animation system has to do is interpolation.
+
+                std::vector<cro::Joint> frame;
+                for (auto i = 0u; i < tempFrame.size(); ++i)
+                {
+                    const auto& [parent, mat] = tempFrame[i];
+
+                    auto result = mat;
+                    auto currentParent = parent;
+
+                    while (currentParent > -1)
+                    {
+                        const auto& [p, m] = tempFrame[currentParent];
+
+                        result = m * result;
+                        currentParent = p;
+                    }
+
+                    auto& joint = frame.emplace_back();
+                    joint.parent = parent;
+                    joint.worldMatrix = result;
+                    cro::Util::Matrix::decompose(result * inverseBindPose[i], joint.translation, joint.rotation, joint.scale);
+                }
+                out.addFrame(frame);
             }
         }
     }
     else
     {
-        out.frames.resize(bindPose.size()); //use an empty frame in case we haven't loaded any animations
+        std::vector<cro::Joint> frame(bindPose.size());
+        out.addFrame(frame); //use an empty frame in case we haven't loaded any animations
     }
-    out.currentFrame.resize(bindPose.size());
 
 
     //parse animations
@@ -618,12 +639,12 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         Iqm::Anim anim;
         animIter = readAnim(animIter, anim);
 
-        out.animations.emplace_back();
-        SkeletalAnim& skAnim = out.animations.back();
+        SkeletalAnim skAnim;
         skAnim.frameCount = anim.frameCount;
         skAnim.frameRate = anim.framerate;
         skAnim.looped = ((anim.flags & Iqm::IQM_LOOP) != 0);
         skAnim.name =  &strings[anim.name];
-        skAnim.startFrame = anim.firstFrame;       
+        skAnim.startFrame = anim.firstFrame;   
+        out.addAnimation(skAnim);
     }
 }

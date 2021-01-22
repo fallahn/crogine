@@ -126,7 +126,7 @@ lm_bool lmImageSaveTGAf(const char *filename, const float *image, int w, int h, 
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
 static inline lm_bool lm_finite(float a) { return _finite(a); }
 #else
-static inline lm_bool lm_finite(float a) { return isfinite(a); }
+static inline lm_bool lm_finite(float a) { return std::isfinite(a); }
 #endif
 
 static inline int      lm_mini      (int     a, int     b) { return a < b ? a : b; }

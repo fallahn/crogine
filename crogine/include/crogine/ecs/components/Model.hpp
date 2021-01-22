@@ -56,7 +56,7 @@ namespace cro
         void setMaterialProperty(std::size_t idx, const std::string& str, T val)
         {
             CRO_ASSERT(idx < m_materials.size(), "Index out of range");
-            m_materials[idx].setProperty(str, val);
+            m_materials[Mesh::IndexData::Final][idx].setProperty(str, val);
         }
 
         /*!
@@ -120,13 +120,12 @@ namespace cro
         std::uint64_t m_renderFlags;
 
         Mesh::Data m_meshData;
-        std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_materials{};       
-        std::array<Material::Data, Mesh::IndexData::MaxBuffers> m_shadowMaterials{};
+        std::array<std::array<Material::Data, Mesh::IndexData::MaxBuffers>, Mesh::IndexData::Count> m_materials{};       
 
         void bindMaterial(Material::Data&);
         
 #ifdef PLATFORM_DESKTOP
-        void updateVAO(std::size_t);
+        void updateVAO(std::size_t materialIndex, std::int32_t passIndex);
 #endif //DESKTOP
 
         glm::mat4* m_skeleton = nullptr;

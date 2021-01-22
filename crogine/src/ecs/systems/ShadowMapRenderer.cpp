@@ -262,7 +262,7 @@ void ShadowMapRenderer::render()
 
             for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
             {
-                const auto& mat = model.m_shadowMaterials[i];
+                const auto& mat = model.m_materials[Mesh::IndexData::Shadow][i];
                 CRO_ASSERT(mat.shader, "Missing Shadow Cast material.");
 
                 //bind shader
@@ -275,7 +275,7 @@ void ShadowMapRenderer::render()
                     {
                     default: break;
                     case Material::Skinning:
-                        glCheck(glUniformMatrix4fv(mat.uniforms[Material::Skinning], static_cast<GLsizei>(model.m_jointCount), GL_FALSE, &model.m_skeleton[0][0].x));
+                        glCheck(glUniformMatrix4fv(mat.uniforms[Material::Skinning], static_cast<GLsizei>(model.m_jointCount), GL_FALSE, &model.m_skeleton[0][0].r));
                         break;
                     }
                 }
@@ -303,7 +303,7 @@ void ShadowMapRenderer::render()
 
 #ifdef PLATFORM_DESKTOP
                 const auto& indexData = model.m_meshData.indexData[i];
-                glCheck(glBindVertexArray(indexData.vao));
+                glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Shadow]));
                 glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
 #else
                 //bind attribs
@@ -352,7 +352,7 @@ void ShadowMapRenderer::render()
 
 void ShadowMapRenderer::onEntityAdded(cro::Entity entity)
 {
-    if (entity.getComponent<cro::Model>().m_shadowMaterials[0].shader == 0)
+    if (entity.getComponent<cro::Model>().m_materials[Mesh::IndexData::Shadow][0].shader == 0)
     {
         LogW << "Shadow caster added to model with no shadow material. This will not render." << std::endl;
     }

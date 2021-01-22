@@ -8,8 +8,8 @@
 // Changelog:
 // - v0.10: Initial version. Added InputText() / InputTextMultiline() calls with std::string
 
-#include <crogine/gui/imgui.h>
-#include <crogine/gui/imgui_stdlib.h>
+#include <crogine/gui/detail/imgui.h>
+#include <crogine/gui/detail/imgui_stdlib.h>
 
 struct InputTextCallback_UserData
 {

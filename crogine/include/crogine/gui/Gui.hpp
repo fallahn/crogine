@@ -29,7 +29,9 @@ source distribution.
 
 #pragma once
 
-#include "imgui.h"
+#include "detail/imgui.h"
+#include "detail/imgui_stdlib.h"
+#include "detail/ImGuizmo.h"
 
 #include <crogine/Config.hpp>
 #include <crogine/graphics/MaterialData.hpp>

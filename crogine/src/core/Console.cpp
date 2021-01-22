@@ -34,7 +34,7 @@ source distribution.
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/audio/AudioMixer.hpp>
-#include <crogine/gui/imgui.h>
+#include <crogine/gui/detail/imgui.h>
 
 #include <list>
 #include <unordered_map>
@@ -74,6 +74,8 @@ namespace
     const ImVec4 WarningColour(1.f, 0.6f, 0.f, 1.f);
     const ImVec4 ErrorColour(1.f, 0.f, 0.f, 1.f);
     const ImVec4 DefaultColour(1.f, 1.f, 1.f, 1.f);
+
+    bool isNewFrame = true;
 }
 int textEditCallback(ImGuiTextEditCallbackData* data);
 
@@ -85,21 +87,32 @@ void Console::print(const std::string& line)
     if (line.empty()) return;
 
     std::string timestamp(/*"<" + */SysTime::timeString() + " ");
+    Message::ConsoleEvent::Level level = Message::ConsoleEvent::Info;
 
     auto colour = DefaultColour;
     if (line.find("ERROR") != std::string::npos)
     {
         colour = ErrorColour;
+        level = Message::ConsoleEvent::Error;
     }
     else if (line.find("WARNING") != std::string::npos)
     {
         colour = WarningColour;
+        level = Message::ConsoleEvent::Warning;
     }
 
     buffer.push_back(std::make_pair(timestamp + line, colour));
     if (buffer.size() > MAX_BUFFER)
     {
         buffer.pop_front();
+    }
+
+    if (isNewFrame)
+    {
+        auto* msg = App::getInstance().getMessageBus().post<Message::ConsoleEvent>(Message::ConsoleMessage);
+        msg->type = Message::ConsoleEvent::LinePrinted;
+        msg->level = level;
+        isNewFrame = false;
     }
 }
 
@@ -188,6 +201,11 @@ bool Console::isVisible()
     return visible;
 }
 
+const std::string& Console::getLastOutput()
+{
+    return buffer.back().first;
+}
+
 //private
 void Console::addCommand(const std::string& name, const Command& command, const ConsoleClient* client = nullptr)
 {
@@ -219,6 +237,11 @@ void Console::removeCommands(const ConsoleClient* client)
             ++i;
         }
     }
+}
+
+void Console::newFrame()
+{
+    isNewFrame = true;
 }
 
 void Console::draw()

@@ -79,7 +79,7 @@ bool MeshResource::loadMesh(std::size_t ID, const MeshBuilder& mb)
     return false;
 }
 
-std::size_t MeshResource::loadMesh(const MeshBuilder& mb)
+std::size_t MeshResource::loadMesh(const MeshBuilder& mb, bool forceReload)
 {
     std::size_t nextID = mb.getUID();
     if (nextID == 0)
@@ -89,7 +89,18 @@ std::size_t MeshResource::loadMesh(const MeshBuilder& mb)
 
     if (m_meshData.count(nextID) != 0)
     {
-        //LOG(std::to_string(nextID) + ": ID already assigned to mesh", Logger::Type::Info);
+        if (forceReload)
+        {
+            deleteMesh(m_meshData.at(nextID));
+            m_meshData.erase(nextID);
+            m_skeletalData.erase(nextID);
+
+            if (!loadMesh(nextID, mb))
+            {
+                return 0;
+            }
+        }
+
         return nextID;
     }
 
@@ -121,28 +132,37 @@ void MeshResource::flush()
     //make sure all the meshes are deaded
     for (auto& md : m_meshData)
     {
-        //delete index buffers
-        for (auto& id : md.second.indexData)
-        {
-            if (id.ibo)
-            {
-                glCheck(glDeleteBuffers(1, &id.ibo));
-            }
-
-#ifdef PLATFORM_DESKTOP
-            if (id.vao)
-            {
-                glCheck(glDeleteVertexArrays(1, &id.vao));
-            }
-#endif
-        }
-        //delete vertex buffer
-        if (md.second.vbo)
-        {
-            glCheck(glDeleteBuffers(1, &md.second.vbo));
-        }
+        deleteMesh(md.second);
     }
     m_meshData.clear();
     m_skeletalData.clear();
     autoID = std::numeric_limits<std::size_t>::max();
+}
+
+//private
+void MeshResource::deleteMesh(Mesh::Data md)
+{
+    //delete index buffers
+    for (auto& id : md.indexData)
+    {
+        if (id.ibo)
+        {
+            glCheck(glDeleteBuffers(1, &id.ibo));
+        }
+
+#ifdef PLATFORM_DESKTOP
+        for (auto& vao : id.vao)
+        {
+            if (vao)
+            {
+                glCheck(glDeleteVertexArrays(1, &vao));
+            }
+        }
+#endif
+    }
+    //delete vertex buffer
+    if (md.vbo)
+    {
+        glCheck(glDeleteBuffers(1, &md.vbo));
+    }
 }

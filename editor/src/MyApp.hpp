@@ -48,4 +48,7 @@ private:
     void render() override;
     bool initialise() override;
     void finalise() override;
+
+    void loadPrefs();
+    void savePrefs();
 };

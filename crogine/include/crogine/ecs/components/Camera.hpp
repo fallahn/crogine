@@ -365,6 +365,13 @@ namespace cro
         */
         glm::mat4 depthProjectionMatrix = glm::mat4(1.f);
 
+        /*!
+        \brief Returns the vertical FOV in radians if the
+        projection matrix is a perspective projection, else
+        returns -1
+        */
+        float getFOV() const { return m_verticalFOV; }
+
 #ifdef CRO_DEBUG_
         //l,r,b,t,n,f
         std::array<float, 6u> depthDebug = {};

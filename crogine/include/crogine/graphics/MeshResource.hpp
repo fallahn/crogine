@@ -75,9 +75,13 @@ namespace cro
         /*!
         \brief Preloads a mesh and automatically assigns an ID.
         \param mb Reference to the MeshBuilder instance containing the data to preload.
+        \param forceReload If a mesh has already been loaded then this will forcefully
+        delete its resources and reload the file. You MUST make sure any existing references
+        to the mesh are not active in the scene, for instance by destroying any entities
+        which have model using the mesh. Defaults to false.
         \returns Automatically generated ID, or 0 if loading failed.
         */
-        std::size_t loadMesh(const MeshBuilder& mb);
+        std::size_t loadMesh(const MeshBuilder& mb, bool forceReload = false);
 
         /*!
         \brief Returns the mesh data for the given ID.
@@ -103,5 +107,7 @@ namespace cro
     private:
         std::unordered_map<std::size_t, Mesh::Data> m_meshData;
         std::unordered_map<std::size_t, Skeleton> m_skeletalData;
+
+        void deleteMesh(Mesh::Data);
     };
 }

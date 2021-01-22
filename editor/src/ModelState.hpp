@@ -29,12 +29,16 @@ source distribution.
 
 #pragma once
 
+#include "gltf/tiny_gltf.h"
+#include "ResourceIDs.hpp"
+
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/gui/detail/imgui.h>
 
 #include "StateIDs.hpp"
 #include "MaterialDefinition.hpp"
@@ -43,18 +47,26 @@ source distribution.
 #include <memory>
 #include <optional>
 
+namespace tf = tinygltf;
+
 struct CMFHeader final
 {
-    std::uint8_t flags = 0;
+    //note when writing to static meshes
+    //only the first 8 bits of the flags are written
+    //this is only expanded to 16 bit for animated
+    //meshes/models which require skeleton flags
+    std::uint16_t flags = 0;
     std::uint8_t arrayCount = 0;
     std::int32_t arrayOffset = 0;
     std::vector<std::int32_t> arraySizes;
+    bool animated = false;
 };
 
+struct SharedStateData;
 class ModelState final : public cro::State, public cro::GuiClient
 {
 public:
-    ModelState(cro::StateStack&, cro::State::Context);
+    ModelState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
     cro::StateID getStateID() const override { return States::ModelViewer; }
 
@@ -65,6 +77,7 @@ public:
 
 private:
 
+    SharedStateData& m_sharedData;
     cro::EnvironmentMap m_environmentMap;
     cro::Scene m_scene;
     cro::Scene m_previewScene;
@@ -75,7 +88,6 @@ private:
 
     struct Preferences final
     {
-        std::string workingDirectory;
         cro::Colour skyBottom = cro::Colour(0.82f, 0.98f, 0.99f);
         cro::Colour skyTop = cro::Colour(0.21f, 0.5f, 0.96f);
 
@@ -92,11 +104,14 @@ private:
     cro::ConfigFile m_currentModelConfig;
     std::string m_currentFilePath;
 
+    std::array<cro::Entity, EntityID::Count> m_entities = {};
+
     void addSystems();
     void loadAssets();
     void createScene();
-    void buildUI();
 
+
+    //------------ModelStateModels.cpp----------//
     struct ModelProperties final
     {
         std::string name = "Untitled";
@@ -124,40 +139,60 @@ private:
     void openModelAtPath(const std::string&);
     void saveModel(const std::string&);
     void closeModel();
-    void showSaveMessage();
 
     CMFHeader m_importedHeader;
     std::vector<float> m_importedVBO;
     std::vector<std::vector<std::uint32_t>> m_importedIndexArrays;
-    std::unordered_map<std::uint8_t, std::size_t> m_importedMeshes; //< maps created VBOs to vert flags - this recycles matching VBOs if they exist and only creates new when necessary
+    std::unordered_map<std::uint16_t, std::size_t> m_importedMeshes; //< maps created VBOs to vert flags - this recycles matching VBOs if they exist and only creates new when necessary
     struct ImportTransform final
     {
         glm::vec3 rotation = glm::vec3(0.f);
         float scale = 1.f;
     }m_importedTransform;
+    bool m_exportAnimation;
+    std::size_t m_skeletonMeshID;
+
     void importModel();
+    void importIQM(const std::string&);
+    void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
+    void buildSkeleton();
     void exportModel(bool = false, bool = true);
     void applyImportTransform();
+    void readBackVertexData(cro::Mesh::Data, std::vector<float>&, std::vector<std::vector<std::uint32_t>>&);
+    //-------------------------------------------//
 
-    void importIQM(const std::string&); //used to apply modified transforms
+
+    //--------gltf/gltf.cpp--------//
+    bool m_browseGLTF;
+    std::unique_ptr<tf::TinyGLTF> m_GLTFLoader;
+    tf::Model m_GLTFScene;
+    void showGLTFBrowser();
+    void parseGLTFNode(std::int32_t, bool importAnims);
+    void parseGLTFAnimations(std::int32_t);
+    void parseGLTFSkin(std::int32_t, cro::Skeleton&);
+    bool importGLTF(std::int32_t, bool);
+    //----------------------------//
 
     void loadPrefs();
     void savePrefs();
 
     bool m_showAABB;
     bool m_showSphere;
-    void updateWorldScale();
     void updateNormalVis();
     void updateGridMesh(cro::Mesh::Data&, std::optional<cro::Sphere>, std::optional<cro::Box>);
 
     void updateMouseInput(const cro::Event&);
 
 
+    //--------ModelStateMaterials.cpp------//
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
+
     struct MaterialTexture final
     {
         std::unique_ptr<cro::Texture> texture;
         std::string name;
         std::string relPath; //inc trailing '/'
+        std::size_t uid = 0;
     };
     std::map<std::uint32_t, MaterialTexture> m_materialTextures;
     std::uint32_t m_selectedTexture;
@@ -173,13 +208,23 @@ private:
     void refreshMaterialThumbnail(MaterialDefinition&);
 
     std::vector<std::int32_t> m_activeMaterials; //indices into the materials array of materials used on the currently open model. -1 means default material is applied
-
-    void updateLayout(std::int32_t, std::int32_t);
-    void drawInspector();
-    void drawBrowser();
     void exportMaterial() const;
     void importMaterial(const std::string&);
     void readMaterialDefinition(MaterialDefinition&, const cro::ConfigObject&);
+    //-------------------------------------//
+
+
+
+    //---------ModelStateUI.cpp--------//
+    ImVec4 m_messageColour;
+    void buildUI();
+    void showSaveMessage();
+    void drawInspector();
+    void drawBrowser();
+    void drawInfo();
+    void drawGizmo();
+    void updateLayout(std::int32_t, std::int32_t);
+    //---------------------------------//
 
     std::vector<std::unique_ptr<cro::Texture>> m_lightmapTextures;
     std::vector<std::vector<float>> m_lightmapBuffers;

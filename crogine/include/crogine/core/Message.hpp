@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/Assert.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/ecs/Entity.hpp>
 
 namespace cro
 {
@@ -58,6 +60,7 @@ namespace cro
             SceneMessage,
             StateMessage,
             ConsoleMessage,
+            SkeletalAnimationMessage,
             Count
         };
 
@@ -114,8 +117,21 @@ namespace cro
             enum
             {
                 Opened,
-                Closed
+                Closed,
+                LinePrinted
             }type = Opened;
+            
+            enum Level
+            {
+                Info, Warning, Error
+            }level = Info;
+        };
+
+        struct SkeletalAnimEvent final
+        {
+            std::int32_t userType = -1;
+            glm::vec3 position = glm::vec3(0.f); //local position of the joint which raised this event
+            Entity entity;
         };
 
         ID id = -1;

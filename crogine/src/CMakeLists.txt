@@ -30,6 +30,7 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/detail/DistanceField.cpp
   ${PROJECT_DIR}/detail/glad.c
+  ${PROJECT_DIR}/detail/ModelBinary.cpp
   ${PROJECT_DIR}/detail/SDLImageRead.cpp
   ${PROJECT_DIR}/detail/SDLResource.cpp
   ${PROJECT_DIR}/detail/StaticMeshFile.cpp
@@ -57,6 +58,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/components/Drawable2D.cpp
   ${PROJECT_DIR}/ecs/components/Model.cpp
   ${PROJECT_DIR}/ecs/components/ParticleEmitter.cpp
+  ${PROJECT_DIR}/ecs/components/Skeleton.cpp
   ${PROJECT_DIR}/ecs/components/Sprite.cpp
   ${PROJECT_DIR}/ecs/components/Text.cpp
   ${PROJECT_DIR}/ecs/components/Transform.cpp
@@ -80,6 +82,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/TextSystem.cpp
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 
+  ${PROJECT_DIR}/graphics/BinaryMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/BoundingBox.cpp
   ${PROJECT_DIR}/graphics/CircleMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/Colour.cpp
@@ -112,6 +115,8 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/imgui/Gui.cpp
   ${PROJECT_DIR}/imgui/GuiClient.cpp
+  ${PROJECT_DIR}/imgui/ImCurveEdit.cpp
+  ${PROJECT_DIR}/imgui/ImGradient.cpp
   ${PROJECT_DIR}/imgui/imgui.cpp
   ${PROJECT_DIR}/imgui/imgui_demo.cpp
   ${PROJECT_DIR}/imgui/imgui_draw.cpp
@@ -119,6 +124,8 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/imgui_impl_sdl.cpp
   ${PROJECT_DIR}/imgui/imgui_stdlib.cpp
   ${PROJECT_DIR}/imgui/imgui_widgets.cpp
+  ${PROJECT_DIR}/imgui/ImGuizmo.cpp
+  ${PROJECT_DIR}/imgui/ImSequencer.cpp
 
   ${PROJECT_DIR}/network/NetClient.cpp
   ${PROJECT_DIR}/network/NetConf.cpp
@@ -126,6 +133,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/network/NetHost.cpp
   ${PROJECT_DIR}/network/NetPeer.cpp
 
+  ${PROJECT_DIR}/util/Matrix.cpp
   ${PROJECT_DIR}/util/Random.cpp)
 
 SET(project_src_openal
