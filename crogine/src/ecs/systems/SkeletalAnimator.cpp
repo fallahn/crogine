@@ -83,13 +83,13 @@ void SkeletalAnimator::process(float dt)
                 skel.m_currentFrameTime = 0.f;
 
                 //raise notification events
-                const auto& modelMat = entity.getComponent<cro::Transform>().getWorldTransform();
                 for (auto [joint, uid] : skel.m_notifications[anim.currentFrame])
                 {
-                    glm::vec4 position = modelMat * skel.m_frames[(anim.currentFrame * skel.m_frameSize) + joint].worldMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
+                    glm::vec4 position = skel.m_frames[(anim.currentFrame * skel.m_frameSize) + joint].worldMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
                     auto* msg = postMessage<cro::Message::SkeletalAnimEvent>(cro::Message::SkeletalAnimationMessage);
                     msg->position = position;
                     msg->userType = uid;
+                    msg->entity = entity;
                 }
             }
         }

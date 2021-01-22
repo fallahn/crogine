@@ -821,6 +821,7 @@ void ModelState::buildSkeleton()
             m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             m_entities[EntityID::ActiveSkeleton] = entity;
         }
+        m_entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().setHidden(true);
 
         m_entities[EntityID::ActiveSkeleton].getComponent<cro::Callback>().active = true;
         m_entities[EntityID::ActiveSkeleton].getComponent<cro::Callback>().function =
