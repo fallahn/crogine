@@ -45,14 +45,17 @@ namespace cro
     This is passed to any ButtonCallbacks so that the user may
     handle the event based on its type as they wish.
     */
-    union ButtonEvent
+    struct ButtonEvent
     {
-        uint32 type = 0;                   //!< SDL_Event type
-        SDL_KeyboardEvent key;             //!< SDL_KeyboardEvent data if this is a keyboard event
-        SDL_MouseButtonEvent button;       //!< SDL_MouseButtonEvent data if this is a mouse button event
-        SDL_JoyButtonEvent jbutton;        //!< SDL_JoyButtonEvent data if this is a joystick button event
-        SDL_ControllerButtonEvent cbutton; //!< SDL_ControllerButtonEvent data if this is a controller button event
-        SDL_TouchFingerEvent tfinger;      //!< SDL_TouchFingerEvent data if this is a touch event
+        uint32 type = 0;                       //!< SDL_Event type
+        union
+        {
+            SDL_KeyboardEvent key;             //!< SDL_KeyboardEvent data if this is a keyboard event
+            SDL_MouseButtonEvent button;       //!< SDL_MouseButtonEvent data if this is a mouse button event
+            SDL_JoyButtonEvent jbutton;        //!< SDL_JoyButtonEvent data if this is a joystick button event
+            SDL_ControllerButtonEvent cbutton; //!< SDL_ControllerButtonEvent data if this is a controller button event
+            SDL_TouchFingerEvent tfinger;      //!< SDL_TouchFingerEvent data if this is a touch event
+        };
     };
 
     /*!
@@ -62,16 +65,19 @@ namespace cro
     This is passed to any MovementCallbacks so that the user may
     handle the event based on its type as they wish.
     */
-    union MotionEvent
+    struct MotionEvent
     {
-        uint32 type = 0;                //!< SDL_Event type
-        SDL_MouseMotionEvent motion;    //!< Mouse motion event data
-        SDL_JoyAxisEvent jaxis;         //!< Joystick axis event data
-        SDL_JoyBallEvent jball;         //!< Joystick ball event data
-        SDL_JoyHatEvent jhat;           //!< Joystick hat event data
-        SDL_ControllerAxisEvent caxis;  //!< Game Controller axis event data
-        SDL_MultiGestureEvent mgesture; //!< Gesture event data
-        SDL_DollarGestureEvent dgesture;//!< Gesture event data
+        uint32 type = 0;                    //!< SDL_Event type
+        union
+        {
+            SDL_MouseMotionEvent motion;    //!< Mouse motion event data
+            SDL_JoyAxisEvent jaxis;         //!< Joystick axis event data
+            SDL_JoyBallEvent jball;         //!< Joystick ball event data
+            SDL_JoyHatEvent jhat;           //!< Joystick hat event data
+            SDL_ControllerAxisEvent caxis;  //!< Game Controller axis event data
+            SDL_MultiGestureEvent mgesture; //!< Gesture event data
+            SDL_DollarGestureEvent dgesture;//!< Gesture event data
+        };
 
         static constexpr uint32 CursorEnter = std::numeric_limits<uint32>::max(); //!< event type when cursor deactivates an input
         static constexpr uint32 CursorExit = CursorEnter - 1; //!< event type when cursor deactivates an input
