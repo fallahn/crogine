@@ -66,6 +66,7 @@ Entity EntityManager::createEntity()
         if (idx >= m_componentMasks.size())
         {
             m_componentMasks.resize(m_componentMasks.size() + MinComponentMasks);
+            m_labels.resize(m_componentMasks.size());
         }
     }
 
@@ -90,6 +91,7 @@ void EntityManager::destroyEntity(Entity entity)
         ++m_generations[index];
         m_freeIDs.push_back(index);
         m_componentMasks[index].reset();
+        m_labels[index].clear();
 
         m_entityCount--;
 
@@ -137,4 +139,19 @@ const ComponentMask& EntityManager::getComponentMask(Entity entity) const
 bool EntityManager::owns(Entity entity) const
 {
     return (entity.m_entityManager == this);
+}
+
+void EntityManager::setLabel(Entity entity, const std::string& label)
+{
+    auto idx = entity.getIndex();
+    CRO_ASSERT(idx < m_labels.size(), "");
+    m_labels[idx] = label;
+}
+
+const std::string& EntityManager::getLabel(Entity entity) const
+{
+    auto idx = entity.getIndex();
+    CRO_ASSERT(idx < m_labels.size(), "");
+
+    return m_labels[idx];
 }

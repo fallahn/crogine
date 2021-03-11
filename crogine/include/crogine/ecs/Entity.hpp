@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -124,7 +124,17 @@ namespace cro
         */
         bool isValid() const;
 
-        
+        /*!
+        \brief Applies the given label to this entity
+        \param label String containing the label to apply
+        */
+        void setLabel(const std::string& label);
+
+        /*!
+        \brief Returns the current label string of this entity
+        */
+        const std::string& getLabel() const;
+
         bool operator == (Entity r)
         {
             return getIndex() == r.getIndex();
@@ -244,6 +254,19 @@ namespace cro
         */
         bool owns(Entity) const;
 
+        /*!
+        \brief Sets the given label on the given entity
+        */
+        void setLabel(Entity entity, const std::string& label);
+
+        /*!
+        \brief Returns the current label of the given entity
+        */
+        const std::string& getLabel(Entity entity) const;
+
+        /*!
+        \brief Returns the number of currently active entities
+        */
         std::size_t getEntityCount() const { return m_entityCount; }
 
     private:
@@ -255,6 +278,7 @@ namespace cro
         std::vector<ComponentMask> m_componentMasks;
 
         std::size_t m_entityCount;
+        std::vector<std::string> m_labels;
 
         ComponentManager& m_componentManager;
 

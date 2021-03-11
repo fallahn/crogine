@@ -81,6 +81,8 @@ namespace
     {
         std::make_pair(glm::vec2(0.f), glm::vec2(0.f)),
         std::make_pair(glm::vec2(0.f), glm::vec2(0.f)),
+        std::make_pair(glm::vec2(0.f), glm::vec2(0.f)),
+        std::make_pair(glm::vec2(0.f), glm::vec2(0.f)),
         std::make_pair(glm::vec2(0.f), glm::vec2(0.f))
     };
 
