@@ -59,9 +59,11 @@ WorldState::WorldState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     : cro::State    (ss, ctx),
     m_sharedData    (sd),
     m_scene         (ctx.appInstance.getMessageBus()),
+    m_previewScene  (ctx.appInstance.getMessageBus()),
     m_viewportRatio (1.f),
     m_fov           (DefaultFOV),
-    m_gizmoMode     (ImGuizmo::TRANSLATE)
+    m_gizmoMode     (ImGuizmo::TRANSLATE),
+    m_selectedModel (0)
 {
     ctx.mainWindow.loadResources([this]() {
         addSystems();
@@ -235,6 +237,9 @@ void WorldState::addSystems()
 
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
+
+    m_previewScene.addSystem<cro::CameraSystem>(mb);
+    m_previewScene.addSystem<cro::ModelRenderer>(mb);
 }
 
 void WorldState::setupScene()
@@ -258,6 +263,20 @@ void WorldState::setupScene()
     m_scene.getSunlight().setLabel("Sunlight");
 
     m_selectedEntity = m_scene.getSunlight();
+
+
+
+    //preview scene to render model thumbs
+    entity = m_previewScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
+    entity.addComponent<cro::Camera>();
+    auto& cam3D = entity.getComponent<cro::Camera>();
+    cam3D.setPerspective(DefaultFOV, 1.f, 0.1f, 10.f);
+
+    m_previewScene.setActiveCamera(entity);
+
+    //not rendering shadows on here, but we still want a light direction
+    m_previewScene.getSunlight().getComponent<cro::Sunlight>().setDirection({ 0.5f, -0.5f, -0.5f });
 }
 
 void WorldState::loadPrefs()

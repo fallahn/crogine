@@ -1,6 +1,8 @@
 #include "WorldState.hpp"
 #include "UIConsts.hpp"
+#include "SharedStateData.hpp"
 
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 
@@ -110,7 +112,7 @@ void WorldState::drawInspector()
         {
             if (ImGui::BeginTabItem("Navigator"))
             {
-                
+                //imgui demo 706
 
                 ImGui::EndTabItem();
             }
@@ -194,7 +196,13 @@ void WorldState::drawBrowser()
         {
             if (ImGui::Button("Add Model"))
             {
-                //TODO browse model files
+                //browse model files
+                auto path = cro::FileSystem::openFileDialogue("", "cmt");
+                if (!path.empty())
+                {
+                    //TODO pre-process path correctly
+                    openModel(path);
+                }
             }
 
             ImGui::SameLine();
@@ -215,6 +223,14 @@ void WorldState::drawBrowser()
 
             ImGui::BeginChild("##modelChild");
             //TODO layout the thumb nails / drag n drop
+
+            for (const auto& m : m_models)
+            {
+                ImGui::Image(m.thumbnail.getTexture(), { 128.f, 128.f }, { 0.f, 0.f }, { 1.f, 1.f });
+                ImGui::SameLine();
+            }
+
+
             ImGui::EndChild();
 
             ImGui::EndTabItem();
@@ -350,5 +366,37 @@ void WorldState::updateMouseInput(const cro::Event& evt)
         auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
         tx.move(cro::Util::Matrix::getRightVector(camTx) * -static_cast<float>(evt.motion.xrel) / 160.f);
         tx.move(cro::Util::Matrix::getUpVector(camTx) * static_cast<float>(evt.motion.yrel) / 160.f);
+    }
+}
+
+void WorldState::openModel(const std::string& path)
+{
+    cro::ModelDefinition modelDef;
+    if (modelDef.loadFromFile(m_sharedData.workingDirectory + path, m_resources, &m_environmentMap))
+    {
+        auto& mdl = m_models.emplace_back();
+        mdl.modelDef = modelDef;
+        mdl.modelID = 0; 
+        //TODO we need to assign existing IDs if loading a scene and adjust the
+        //free pool as necessary? Or does it matter as long as all existing IDs are correctly reassigned
+
+
+        m_previewEntity = m_previewScene.createEntity();
+        m_previewEntity.addComponent<cro::Transform>();
+        modelDef.createModel(m_previewEntity, m_resources);
+
+        m_previewScene.simulate(0.f);
+
+        mdl.thumbnail.create(128, 128);
+        mdl.thumbnail.clear();
+        //draw the thumbnail
+        m_previewScene.render(mdl.thumbnail);
+        mdl.thumbnail.display();
+
+        //TODO can we store thumbnails as images with scene?
+        //TODO can we create thumbnails in the model importer?
+
+
+        m_previewScene.destroyEntity(m_previewEntity);
     }
 }

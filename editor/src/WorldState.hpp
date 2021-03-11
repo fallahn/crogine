@@ -56,6 +56,7 @@ private:
 
     SharedStateData& m_sharedData;
     cro::Scene m_scene;
+    cro::Scene m_previewScene; //used to draw model thumbnails
     cro::EnvironmentMap m_environmentMap;
     cro::ResourceCollection m_resources;
 
@@ -92,4 +93,18 @@ private:
     void drawGizmo();
     void updateLayout(std::int32_t, std::int32_t);
     void updateMouseInput(const cro::Event&);
+
+
+
+    struct ReferenceModel final
+    {
+        std::size_t modelID = 0;
+        cro::ModelDefinition modelDef;
+        cro::RenderTexture thumbnail;
+    };
+    std::vector<ReferenceModel> m_models;
+    std::size_t m_selectedModel;
+    cro::Entity m_previewEntity;
+
+    void openModel(const std::string&);
 };

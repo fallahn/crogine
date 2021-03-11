@@ -37,7 +37,13 @@ namespace cro::Detail
 {
     bool readCMF(const std::string& path, MeshFile& output)
     {
-         auto* file = SDL_RWFromFile(path.c_str(), "rb");
+        auto* file = SDL_RWFromFile(path.c_str(), "rb");
+
+        if (!file)
+        {
+            LogE << SDL_GetError() << std::endl;
+            return false;
+        }
 
         auto checkError = [&](std::size_t readCount)
         {
