@@ -41,7 +41,7 @@ namespace cro::Detail
 
         if (!file)
         {
-            LogE << SDL_GetError() << std::endl;
+            LogE << path << ": " << SDL_GetError() << std::endl;
             return false;
         }
 

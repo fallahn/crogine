@@ -355,6 +355,10 @@ Mesh::Data BinaryMeshBuilder::build() const
             }
         }
     }
+    else
+    {
+        LogE << m_path << ": " << SDL_GetError() << std::endl;
+    }
 
     return meshData;
 }

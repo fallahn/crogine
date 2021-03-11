@@ -277,6 +277,8 @@ void WorldState::setupScene()
 
     //not rendering shadows on here, but we still want a light direction
     m_previewScene.getSunlight().getComponent<cro::Sunlight>().setDirection({ 0.5f, -0.5f, -0.5f });
+
+    //m_previewScene.setCubemap(m_environmentMap);
 }
 
 void WorldState::loadPrefs()

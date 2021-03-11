@@ -5,8 +5,10 @@
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Model.hpp>
 
 #include <crogine/util/Matrix.hpp>
+#include <crogine/util/Constants.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
@@ -196,11 +198,29 @@ void WorldState::drawBrowser()
         {
             if (ImGui::Button("Add Model"))
             {
+                if (m_sharedData.workingDirectory.empty())
+                {
+                    if (cro::FileSystem::showMessageBox("", "Working directory currently not set. Would you like to set one now?", cro::FileSystem::YesNo, cro::FileSystem::Question))
+                    {
+                        auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
+                        if (!path.empty())
+                        {
+                            m_sharedData.workingDirectory = path;
+                            std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
+                        }
+                    }
+                }
+
                 //browse model files
                 auto path = cro::FileSystem::openFileDialogue("", "cmt");
                 if (!path.empty())
                 {
-                    //TODO pre-process path correctly
+                    std::replace(path.begin(), path.end(), '\\', '/');
+                    if (path.find(m_sharedData.workingDirectory) == std::string::npos)
+                    {
+                        cro::FileSystem::showMessageBox("Warning", "This model was not opened from the current working directory.");
+                    }
+
                     openModel(path);
                 }
             }
@@ -226,7 +246,7 @@ void WorldState::drawBrowser()
 
             for (const auto& m : m_models)
             {
-                ImGui::Image(m.thumbnail.getTexture(), { 128.f, 128.f }, { 0.f, 0.f }, { 1.f, 1.f });
+                ImGui::Image(m.thumbnail.getTexture(), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 ImGui::SameLine();
             }
 
@@ -371,8 +391,8 @@ void WorldState::updateMouseInput(const cro::Event& evt)
 
 void WorldState::openModel(const std::string& path)
 {
-    cro::ModelDefinition modelDef;
-    if (modelDef.loadFromFile(m_sharedData.workingDirectory + path, m_resources, &m_environmentMap))
+    cro::ModelDefinition modelDef(m_sharedData.workingDirectory);
+    if (modelDef.loadFromFile(path, m_resources, &m_environmentMap))
     {
         auto& mdl = m_models.emplace_back();
         mdl.modelDef = modelDef;
@@ -382,8 +402,14 @@ void WorldState::openModel(const std::string& path)
 
 
         m_previewEntity = m_previewScene.createEntity();
-        m_previewEntity.addComponent<cro::Transform>();
+        m_previewEntity.addComponent<cro::Transform>().rotate(glm::vec3(0.f, 1.f, 0.f), 45.f * cro::Util::Const::degToRad);
+        //m_previewEntity.getComponent<cro::Transform>().rotate(glm::vec3(0.f, 0.f, 1.f), 25.f * cro::Util::Const::degToRad);
         modelDef.createModel(m_previewEntity, m_resources);
+
+        auto bb = m_previewEntity.getComponent<cro::Model>().getMeshData().boundingSphere;
+
+        m_previewEntity.getComponent<cro::Transform>().move(-bb.centre);
+        m_previewEntity.getComponent<cro::Transform>().move({ 0.f, 0.f, -bb.radius }); //TODO move back until no longer intersecting fristum
 
         m_previewScene.simulate(0.f);
 

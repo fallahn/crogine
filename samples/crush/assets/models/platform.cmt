@@ -5,15 +5,15 @@ model platform
 
     material PBR
     {
-        mask = "assets/materials/wood floor/wood_mask.png"
-        normal = "assets/materials/wood floor/wood_normal.png"
+        mask = "assets/materials/wood_floor/wood_mask.png"
+        normal = "assets/materials/wood_floor/wood_normal.png"
         name = "Wood Floor"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
         rx_shadows = true
         blendmode = "none"
-        diffuse = "assets/materials/wood floor/wood_albedo.png"
+        diffuse = "assets/materials/wood_floor/wood_albedo.png"
 
     }
 }
