@@ -41,7 +41,7 @@ struct Player final
     {
         Idle, Running
     }state = State::Idle;
-    cro::int16 lives = 3;
+    std::int16_t lives = 3;
     float health = 100.f;
 };
 
@@ -52,8 +52,8 @@ public:
 
 private:
 
-    cro::uint16 m_flags;
-    cro::uint16 m_previousFlags;
+    std::uint16_t m_flags;
+    std::uint16_t m_previousFlags;
     float m_accumulator;
     float m_playerRotation;
 

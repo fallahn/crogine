@@ -187,7 +187,7 @@ void PauseState::load()
     m_uiScene.setActiveCamera(entity);
 }
 
-void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::SpriteSheet& iconSheet, cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback)
+void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::SpriteSheet& iconSheet, std::uint32_t mouseEnterCallback, std::uint32_t mouseExitCallback)
 {
     auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
     const auto buttonNormalArea = spriteSheet.getSprite("button_inactive").getTextureRect();
@@ -435,7 +435,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
 
 }
 
-void PauseState::createOptions(const cro::SpriteSheet& spriteSheet, const cro::SpriteSheet& iconSheet, cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback)
+void PauseState::createOptions(const cro::SpriteSheet& spriteSheet, const cro::SpriteSheet& iconSheet, std::uint32_t mouseEnterCallback, std::uint32_t mouseExitCallback)
 {
     auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
     const auto buttonNormalArea = spriteSheet.getSprite("button_inactive").getTextureRect();

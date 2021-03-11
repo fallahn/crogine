@@ -46,7 +46,7 @@ public:
 
 private:
 
-    cro::uint16 m_currentInput;
+    std::uint16_t m_currentInput;
 
     glm::vec2 m_touchCoords = glm::vec2(0.f);
     glm::vec3 m_touchVector = glm::vec3(0.f);

@@ -53,9 +53,9 @@ namespace
 
     const float shieldTime = 3.f;
 
-    const cro::int32 maxLives = 5;
+    const std::int32_t maxLives = 5;
 
-    const cro::int32 bonusScore = 250000;
+    const std::int32_t bonusScore = 250000;
 }
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
@@ -79,7 +79,7 @@ void PlayerSystem::handleMessage(const cro::Message& msg)
         {
             auto oldScore = m_score / bonusScore;
             
-            m_score += static_cast<cro::int32>(data.value);
+            m_score += static_cast<std::int32_t>(data.value);
 
             //check if we got a bonus extra life
             auto newScore = m_score / bonusScore;

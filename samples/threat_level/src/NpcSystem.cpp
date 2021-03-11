@@ -51,10 +51,10 @@ namespace
     const glm::vec3 gravity(0.f, -9.f, 0.f);
     const glm::vec3 chopperPulseOffset(-0.1f, -0.06f, 0.f);
 
-    const cro::int32 eliteScore = 1000;
-    const cro::int32 choppaScore = 250;
-    const cro::int32 speedrayScore = 50;
-    const cro::int32 weaverScore = 10;
+    const std::int32_t eliteScore = 1000;
+    const std::int32_t choppaScore = 250;
+    const std::int32_t speedrayScore = 50;
+    const std::int32_t weaverScore = 10;
 }
 
 

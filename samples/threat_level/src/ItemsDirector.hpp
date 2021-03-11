@@ -52,7 +52,7 @@ private:
     void process(float) override;
 
     float m_releaseTime;
-    std::array<cro::int32, 10u>  m_itemList;
+    std::array<std::int32_t, 10u>  m_itemList;
     std::size_t m_itemIndex;
 
     bool m_active;

@@ -118,7 +118,7 @@ void PlayerWeaponSystem::process(float dt)
             if (m_fireTime > pulseDoubleFireRate
                 && m_deadPulseCount > 0)
             {
-                static cro::int32 side = 0;
+                static std::int32_t side = 0;
                 glm::vec3 offset = glm::vec3(0.f);
                 offset.z = (side) ? -pulseOffset : pulseOffset;
 
@@ -133,7 +133,7 @@ void PlayerWeaponSystem::process(float dt)
             if (m_fireTime > pulseTripleFireRate
                 && m_deadPulseCount > 0)
             {
-                static cro::int32 side = 0;
+                static std::int32_t side = 0;
                 glm::vec3 offset = glm::vec3(0.f);
                 offset.z = -pulseOffset + (pulseOffset * side);
 

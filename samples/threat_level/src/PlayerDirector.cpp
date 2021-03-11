@@ -67,8 +67,8 @@ namespace
     const float playerMaxSpeeedSqr = 25.f;
     const float maxRotation = 1.f;
 
-    const cro::uint16 JoyThresh = 2500;
-    const cro::uint16 JoyMax = 32767;
+    const std::uint16_t JoyThresh = 2500;
+    const std::uint16_t JoyMax = 32767;
     const float JoyMaxSqr = static_cast<float>(JoyMax * JoyMax);
     const float JoySpeedMin = static_cast<float>(JoyThresh) / JoyMax;
 
@@ -486,7 +486,7 @@ void PlayerDirector::process(float)
     };
     sendCommand(cmd);
 
-    //static cro::uint16 lastInput = 0;
+    //static std::uint16_t lastInput = 0;
     //if (lastInput != m_currentInput)
     {
         auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);

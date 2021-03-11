@@ -184,7 +184,7 @@ void FoamEffect::update()
     
 
     const auto& indexData = m_model.getMeshData().indexData[0];
-    glBindVertexArray(indexData.vao);
+    glBindVertexArray(indexData.vao[0]);
     glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0);
 
     glBindVertexArray(0);

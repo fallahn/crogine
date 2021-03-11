@@ -71,14 +71,14 @@ private:
     float m_weaponDowngradeTime;
 
     glm::vec3 m_playerPosition = glm::vec3(0.f);
-    cro::uint32 m_playerID;
+    std::uint32_t m_playerID;
 
     std::size_t m_aliveCount;
-    std::vector<cro::int32> m_aliveList;
+    std::vector<std::int32_t> m_aliveList;
     std::size_t m_deadPulseCount;
-    std::vector<cro::int32> m_deadPulses;
+    std::vector<std::int32_t> m_deadPulses;
     std::size_t m_deadLaserCount;
-    std::vector<cro::int32> m_deadLasers;
+    std::vector<std::int32_t> m_deadLasers;
 };
 
 #endif //TL_PLAYER_WEAPONS_HPP_

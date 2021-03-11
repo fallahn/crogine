@@ -63,8 +63,8 @@ namespace
     const std::size_t vertexSize = 6; //3 pos, 3 colour
     const std::size_t maxVertices = 10000;
 
-    const uint32 vertexStride = vertexSize * sizeof(float);
-    const uint32 vertexColourOffset = 3 * sizeof(float);
+    const std::uint32_t vertexStride = vertexSize * sizeof(float);
+    const std::uint32_t vertexColourOffset = 3 * sizeof(float);
 }
 
 BulletDebug::BulletDebug()

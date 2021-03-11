@@ -71,7 +71,7 @@ namespace
 
 using Score = std::pair<std::string, std::string>;
 
-void MainState::createScoreMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback,
+void MainState::createScoreMenu(std::uint32_t mouseEnterCallback, std::uint32_t mouseExitCallback,
     const cro::SpriteSheet& spriteSheetButtons, const cro::SpriteSheet& spriteSheetIcons)
 {
     auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);

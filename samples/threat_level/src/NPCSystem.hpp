@@ -41,7 +41,7 @@ struct EliteNavigator final
     glm::vec3 destination = glm::vec3(0.f);
     bool active = false;
     float pauseTime = 1.f;
-    cro::uint16 movementCount = 5;
+    std::uint16_t movementCount = 5;
     float firetime = 4.f;
     std::size_t idleIndex = 0;
     float maxEmitRate = 0.f;
@@ -55,7 +55,7 @@ struct ChoppaNavigator final
     float moveSpeed = -0.8f;
     bool inCombat = true;
     glm::vec3 deathVelocity = glm::vec3(0.f);
-    cro::uint8 ident = 0;
+    std::uint8_t ident = 0;
     float shootTime = 0.f;
     static constexpr float nextShootTime = 0.08f;
     static constexpr float spacing = 1.4f;
@@ -65,7 +65,7 @@ struct SpeedrayNavigator final
 {
     std::size_t tableIndex = 0;
     float moveSpeed = -3.f;
-    cro::uint8 ident = 0;
+    std::uint8_t ident = 0;
     float shootTime = 0.f;
     static constexpr float nextShootTime = 0.8f;
     static constexpr std::size_t count = 5;
@@ -79,7 +79,7 @@ struct WeaverNavigator final
     float moveSpeed = -2.7f;
     float yPos = 0.5f;
     glm::vec3 velocity = glm::vec3(0.f);
-    cro::uint8 ident = 0;
+    std::uint8_t ident = 0;
     bool dying = false;
     float dyingTime = 0.f;
     float shootTime = 0.f;
@@ -103,7 +103,7 @@ struct Npc final
     bool wantsReset = false;
     float health = 0.f;
     float prevHealth = 0.f;
-    cro::int32 scoreValue = 0;
+    std::int32_t scoreValue = 0;
     bool hasDyingAnim = false;
 
     EliteNavigator elite;

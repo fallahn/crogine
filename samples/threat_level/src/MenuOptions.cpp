@@ -56,7 +56,7 @@ namespace
 #include "MenuConsts.inl"
 }
 
-void MainState::createOptionsMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback,
+void MainState::createOptionsMenu(std::uint32_t mouseEnterCallback, std::uint32_t mouseExitCallback,
     const cro::SpriteSheet& spriteSheetButtons, const cro::SpriteSheet& spriteSheetIcons)
 {
     auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
