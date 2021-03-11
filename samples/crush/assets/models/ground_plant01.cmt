@@ -1,0 +1,18 @@
+model ground_plant01
+{
+    mesh = "assets/models/ground_plant01.cmf"
+    cast_shadows = true
+
+    material PBR
+    {
+        mask = "assets/images/ground_plant01/mask.png"
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        rx_shadows = true
+        blendmode = "none"
+        diffuse = "assets/images/ground_plant01/albedo.png"
+
+    }
+}

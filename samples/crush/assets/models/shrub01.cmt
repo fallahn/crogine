@@ -1,0 +1,19 @@
+model shrub01
+{
+    mesh = "assets/models/shrub01.cmf"
+    cast_shadows = true
+
+    material PBR
+    {
+        mask_colour = 0.000000,0.843137,1.000000,1.000000
+        normal = "assets/images/shrubs/normal.png"
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        blendmode = "none"
+        diffuse = "assets/images/shrubs/albedo.png"
+        alpha_clip = 0.852000
+
+    }
+}
