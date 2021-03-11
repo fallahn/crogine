@@ -43,7 +43,7 @@ namespace cro
     class StateStack;
     class Time;
 
-    using StateID = cro::int32;
+    using StateID = std::int32_t;
 
     /*!
     \brief Abstract base class for states.

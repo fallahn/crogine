@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 template <typename T>
-void NetClient::sendPacket(uint8 id, const T& data, NetFlag flags, uint8 channel)
+void NetClient::sendPacket(std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel)
 {
     sendPacket(id, (void*)&data, sizeof(T), flags, channel);
 }

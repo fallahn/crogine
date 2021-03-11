@@ -42,7 +42,7 @@ float Time::asSeconds() const
     return static_cast<float>(m_value) / 1000.f;
 }
 
-cro::int32 Time::asMilliseconds() const
+std::int32_t Time::asMilliseconds() const
 {
     return m_value;
 }
@@ -72,11 +72,11 @@ Time Clock::restart()
 CRO_EXPORT_API Time cro::seconds(float seconds)
 {
     Time t;
-    t.m_value = static_cast<int32>(seconds * 1000.f);
+    t.m_value = static_cast<std::int32_t>(seconds * 1000.f);
     return t;
 }
 
-CRO_EXPORT_API Time cro::milliseconds(int32 millis)
+CRO_EXPORT_API Time cro::milliseconds(std::int32_t millis)
 {
     Time t;
     t.m_value = millis;
@@ -143,7 +143,7 @@ Time cro::operator * (Time l, float r)
     return seconds(l.asSeconds() * r);
 }
 
-Time cro::operator * (Time l, int32 r)
+Time cro::operator * (Time l, std::int32_t r)
 {
     return milliseconds(l.asMilliseconds() * r);
 }
@@ -153,7 +153,7 @@ Time cro::operator * (float l, Time r)
     return r * l;
 }
 
-Time cro::operator * (int32 l, Time r)
+Time cro::operator * (std::int32_t l, Time r)
 {
     return r * l;
 }
@@ -163,7 +163,7 @@ Time& cro::operator *= (Time& l, float r)
     return l = l * r;
 }
 
-Time& cro::operator *= (Time& l, int32 r)
+Time& cro::operator *= (Time& l, std::int32_t r)
 {
     return l = l * r;
 }
@@ -173,7 +173,7 @@ Time cro::operator / (Time l, float r)
     return seconds(l.asSeconds() / r);
 }
 
-Time cro::operator / (Time l, int32 r)
+Time cro::operator / (Time l, std::int32_t r)
 {
     return milliseconds(l.asMilliseconds() / r);
 }
@@ -183,7 +183,7 @@ Time& cro::operator /= (Time& l, float r)
     return l = l / r;
 }
 
-Time& cro::operator /= (Time& l, int32 r)
+Time& cro::operator /= (Time& l, std::int32_t r)
 {
     return l = l / r;
 }

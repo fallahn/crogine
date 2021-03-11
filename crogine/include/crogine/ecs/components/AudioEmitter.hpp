@@ -142,13 +142,13 @@ namespace cro
         are mapped to channel 0
         \see AudioMixer
         */
-        void setMixerChannel(uint8 channel);
+        void setMixerChannel(std::uint8_t channel);
 
         /*!
         \brief Returns the current ID of the mixer channel to which
         the AudioEmitter is assigned.
         */
-        uint8 getMixerChannel() const { return m_mixerChannel; }
+        std::uint8_t getMixerChannel() const { return m_mixerChannel; }
 
         enum class State{Playing = 0, Paused = 1, Stopped = 2};
         /*!
@@ -166,7 +166,7 @@ namespace cro
         float m_volume;
         float m_rolloff;
 
-        uint8 m_mixerChannel;
+        std::uint8_t m_mixerChannel;
 
         enum
         {
@@ -175,11 +175,11 @@ namespace cro
             Stop = 0x4,
             Looped = 0x8
         };
-        uint8 m_transportFlags;
+        std::uint8_t m_transportFlags;
 
         bool m_newDataSource;
-        int32 m_ID;
-        int32 m_dataSourceID;
+        std::int32_t m_ID;
+        std::int32_t m_dataSourceID;
         AudioSource::Type m_sourceType;
     };
 }

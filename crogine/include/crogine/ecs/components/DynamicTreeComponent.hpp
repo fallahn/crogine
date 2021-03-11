@@ -82,7 +82,7 @@ namespace cro
 
         /*!
         \brief Returns the current flags for this item. Defaults to
-        the max size of uint64 (all flags set)
+        the max size of std::uint64_t (all flags set)
         */
         std::uint64_t getFilterFlags() const { return m_filterFlags; }
 

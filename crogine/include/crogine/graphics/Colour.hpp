@@ -53,13 +53,13 @@ namespace cro
         /*!
         \brief Construct the colour from 3 or 4 8-bit values
         */
-        explicit Colour(uint8 red, uint8 green, uint8 blue, uint8 alpha = 255);
+        explicit Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha = 255);
             
         /*!
         \brief Constructs the colour from a 32bit bitmask of 4 8-bit values
         in RGBA order
         */
-        explicit Colour(uint32 mask);
+        explicit Colour(std::uint32_t mask);
 
         /*!
         \brief Constructs the colour from 3 or 4 normalised values
@@ -74,28 +74,28 @@ namespace cro
         /*!
         \brief sets the red channel value
         */
-        void setRed(uint8 red);
+        void setRed(std::uint8_t red);
 
         void setRed(float red);
 
         /*!
         \brief sets the green channel value
         */
-        void setGreen(uint8 green);
+        void setGreen(std::uint8_t green);
 
         void setGreen(float green);
 
         /*!
         \brief sets the blue channel value
         */
-        void setBlue(uint8 blue);
+        void setBlue(std::uint8_t blue);
 
         void setBlue(float blue);
 
         /*!
         \brief sets the alpha channel value
         */
-        void setAlpha(uint8 alpha);
+        void setAlpha(std::uint8_t alpha);
 
         void setAlpha(float alpha);
 
@@ -103,22 +103,22 @@ namespace cro
         /*!
         \brief Returns the red channel value as a byte
         */
-        uint8 getRedByte() const;
+        std::uint8_t getRedByte() const;
 
         /*!
         \brief Returns the green channel value as a byte
         */
-        uint8 getGreenByte() const;
+        std::uint8_t getGreenByte() const;
 
         /*!
         \brief Returns the blue channel value as a byte
         */
-        uint8 getBlueByte() const;
+        std::uint8_t getBlueByte() const;
 
         /*!
         \brief Returns the alpha channel value as a byte
         */
-        uint8 getAlphaByte() const;
+        std::uint8_t getAlphaByte() const;
 
         /*!
         \brief Returns the red channel as a normalised value
@@ -140,7 +140,7 @@ namespace cro
         /*!
         \brief Returns the colour as a RGBA packed 32bit integer
         */
-        int32 getPacked() const;
+        std::int32_t getPacked() const;
 
         /*!
         \brief Returns the colour as a RGBA vec4 float

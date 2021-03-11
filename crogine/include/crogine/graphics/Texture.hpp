@@ -70,7 +70,7 @@ namespace cro
         \param height Height of the texture to create. On mobile platforms this should be pow2
         \param format Graphics::Format type - valid values are RGB or RGBA
         */
-        void create(uint32 width, uint32 height, ImageFormat::Type format = ImageFormat::RGBA);
+        void create(std::uint32_t width, std::uint32_t height, ImageFormat::Type format = ImageFormat::RGBA);
 
         /*!
         \brief Attempts to load the file in the given file path.
@@ -98,7 +98,7 @@ namespace cro
         \param area InRect representing the area of the texture to update. If the size is zero
         the entire texture will be updated.
         */
-        bool update(const uint8* pixels, bool createMipMaps = false, URect area = {});
+        bool update(const std::uint8_t* pixels, bool createMipMaps = false, URect area = {});
 
         /*
         \brief Updates the texture with the information stored in the given texture
@@ -118,7 +118,7 @@ namespace cro
         /*!
         brief Returns the OpenGL handle used by this texture.
         */
-        uint32 getGLHandle() const;
+        std::uint32_t getGLHandle() const;
 
         /*!
         \brief Enables texture smoothing
@@ -143,7 +143,7 @@ namespace cro
         /*!
         \brief Returns the max texture size for the current platform
         */
-        static uint32 getMaxTextureSize();
+        static std::uint32_t getMaxTextureSize();
 
         /*!
         \brief Swaps this texture with the given texture
@@ -171,7 +171,7 @@ namespace cro
     private:
         glm::uvec2 m_size;
         ImageFormat::Type m_format;
-        uint32 m_handle;
+        std::uint32_t m_handle;
         bool m_smooth;
         bool m_repeated;
         bool m_hasMipMaps;

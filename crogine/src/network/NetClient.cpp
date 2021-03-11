@@ -63,7 +63,7 @@ NetClient::~NetClient()
 
 
 //public
-bool NetClient::create(std::size_t maxChannels, std::size_t maxClients, uint32 incoming, uint32 outgoing)
+bool NetClient::create(std::size_t maxChannels, std::size_t maxClients, std::uint32_t incoming, std::uint32_t outgoing)
 {
     if (m_client)
     {
@@ -93,7 +93,7 @@ bool NetClient::create(std::size_t maxChannels, std::size_t maxClients, uint32 i
     return true;
 }
 
-bool NetClient::connect(const std::string& address, uint16 port, uint32 timeout)
+bool NetClient::connect(const std::string& address, std::uint16_t port, std::uint32_t timeout)
 {
     CRO_ASSERT(timeout > 0, "Timeout should probably be at least 1000ms");
     CRO_ASSERT(port > 0, "Invalid port number");
@@ -202,11 +202,11 @@ bool NetClient::pollEvent(NetEvent& evt)
     return false;
 }
 
-void NetClient::sendPacket(uint8 id, const void* data, std::size_t size, NetFlag flags, uint8 channel)
+void NetClient::sendPacket(std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel)
 {
     if (m_peer.m_peer)
     {
-        int32 packetFlags = 0;
+        std::int32_t packetFlags = 0;
         if (flags == NetFlag::Reliable)
         {
             packetFlags |= ENET_PACKET_FLAG_RELIABLE;
@@ -220,9 +220,9 @@ void NetClient::sendPacket(uint8 id, const void* data, std::size_t size, NetFlag
             packetFlags |= ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT | ENET_PACKET_FLAG_UNSEQUENCED;
         }
         
-        ENetPacket* packet = enet_packet_create(&id, sizeof(uint8), packetFlags);
-        enet_packet_resize(packet, sizeof(uint8) + size);
-        std::memcpy(&packet->data[sizeof(uint8)], data, size);
+        ENetPacket* packet = enet_packet_create(&id, sizeof(std::uint8_t), packetFlags);
+        enet_packet_resize(packet, sizeof(std::uint8_t) + size);
+        std::memcpy(&packet->data[sizeof(std::uint8_t)], data, size);
 
         enet_peer_send(m_peer.m_peer, channel, packet);
     }

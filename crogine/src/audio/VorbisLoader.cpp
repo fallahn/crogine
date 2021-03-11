@@ -116,7 +116,7 @@ const PCMData& VorbisLoader::getData(std::size_t size) const
     
     //according to stb the Vorbis spec allows reading no more than 4096 samples per channel at once
     static const std::size_t readSize = 4096;
-    static const cro::int32 bytesPerSample = 2;
+    static const std::int32_t bytesPerSample = 2;
     
     
     //read entire file if size == 0

@@ -34,8 +34,8 @@ using namespace cro;
 
 namespace
 {
-    const uint32 IndexMask = (1 << Detail::IndexBits) - 1;
-    const uint32 GenerationMask = (1 << Detail::GenerationBits) - 1;
+    const std::uint32_t IndexMask = (1 << Detail::IndexBits) - 1;
+    const std::uint32_t GenerationMask = (1 << Detail::GenerationBits) - 1;
 }
 
 Entity::Entity()

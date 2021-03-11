@@ -40,15 +40,15 @@ namespace cro
     */
     struct CRO_EXPORT_API SpriteAnimation final
     {
-        int32 id = -1;
+        std::int32_t id = -1;
         bool playing = false;
         float currentFrameTime = 0.f;
-        uint32 frameID = 0;
+        std::uint32_t frameID = 0;
 
         /*!
         \brief Play the animation at the given index if it exists
         */
-        void play(int32 index) { id = index; playing = true; }
+        void play(std::int32_t index) { id = index; playing = true; }
 
         /*!
         \brief Pause the playing animation, if there is one

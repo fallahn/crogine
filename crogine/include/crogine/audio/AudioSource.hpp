@@ -58,7 +58,7 @@ namespace cro
         /*
         \brief Returns the resource ID as assigned by the active AudioRenderer
         */
-        int32 getID() const { return m_id; }
+        std::int32_t getID() const { return m_id; }
 
         /*!
         \brief Attempts to load the file at the given path.
@@ -66,9 +66,9 @@ namespace cro
         virtual bool loadFromFile(const std::string&) = 0;
 
     protected:
-        void setID(int32 id) { m_id = id; }
+        void setID(std::int32_t id) { m_id = id; }
 
     private:
-        int32 m_id;
+        std::int32_t m_id;
     };
 }

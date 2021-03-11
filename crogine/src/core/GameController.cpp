@@ -33,7 +33,7 @@ source distribution.
 
 using namespace cro;
 
-int16 GameController::getAxisPosition(std::int32_t controllerIndex, std::int32_t axis)
+std::int16_t GameController::getAxisPosition(std::int32_t controllerIndex, std::int32_t axis)
 {
     CRO_ASSERT(App::m_instance, "No app running");
     //CRO_ASSERT(App::m_instance->m_controllers.find(controllerIndex) != App::m_instance->m_controllers.end(), "Controller not connected");

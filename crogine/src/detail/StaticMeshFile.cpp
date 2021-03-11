@@ -52,32 +52,32 @@ namespace cro::Detail
         };
 
 
-        auto readCount = SDL_RWread(file, &output.flags, sizeof(uint8), 1);
+        auto readCount = SDL_RWread(file, &output.flags, sizeof(std::uint8_t), 1);
         if (checkError(readCount))
         {
             return false;
         }
-        readCount = SDL_RWread(file, &output.arrayCount, sizeof(uint8), 1);
+        readCount = SDL_RWread(file, &output.arrayCount, sizeof(std::uint8_t), 1);
         if (checkError(readCount))
         {
             return false;
         }
 
         std::int32_t indexArrayOffset = 0;
-        std::vector<int32> indexSizes(output.arrayCount);
-        readCount = SDL_RWread(file, &indexArrayOffset, sizeof(int32), 1);
+        std::vector<std::int32_t> indexSizes(output.arrayCount);
+        readCount = SDL_RWread(file, &indexArrayOffset, sizeof(std::int32_t), 1);
         if (checkError(readCount))
         {
             return false;
         }
-        readCount = SDL_RWread(file, indexSizes.data(), sizeof(int32), output.arrayCount);
+        readCount = SDL_RWread(file, indexSizes.data(), sizeof(std::int32_t), output.arrayCount);
         if (checkError(readCount))
         {
             return false;
         }
 
         std::size_t headerSize = sizeof(output.flags) + sizeof(output.arrayCount) +
-            sizeof(indexArrayOffset) + ((sizeof(int32) * output.arrayCount));
+            sizeof(indexArrayOffset) + ((sizeof(std::int32_t) * output.arrayCount));
 
         std::size_t vboSize = (indexArrayOffset - headerSize) / sizeof(float);
         output.vboData.resize(vboSize);
@@ -90,8 +90,8 @@ namespace cro::Detail
         output.indexArrays.resize(output.arrayCount);
         for (auto i = 0; i < output.arrayCount; ++i)
         {
-            output.indexArrays[i].resize(indexSizes[i] / sizeof(uint32));
-            readCount = SDL_RWread(file, output.indexArrays[i].data(), sizeof(uint32), indexSizes[i] / sizeof(uint32));
+            output.indexArrays[i].resize(indexSizes[i] / sizeof(std::uint32_t));
+            readCount = SDL_RWread(file, output.indexArrays[i].data(), sizeof(std::uint32_t), indexSizes[i] / sizeof(std::uint32_t));
             if (checkError(readCount))
             {
                 return false;

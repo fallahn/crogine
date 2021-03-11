@@ -66,8 +66,8 @@ namespace cro
     class CRO_EXPORT_API Entity final
     {
     public:
-        using ID = uint32;
-        using Generation = uint8;
+        using ID = std::uint32_t;
+        using Generation = std::uint8_t;
 
         Entity();
 

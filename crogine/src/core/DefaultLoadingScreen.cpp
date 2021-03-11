@@ -43,7 +43,7 @@ using namespace cro;
 namespace
 {
     const float rotation = -35.f;
-    constexpr uint32 vertexSize = 2 * sizeof(float);
+    constexpr std::uint32_t vertexSize = 2 * sizeof(float);
 
     const std::string vertex = R"(
         ATTRIBUTE vec4 a_position;
@@ -122,7 +122,7 @@ void DefaultLoadingScreen::update()
 
 void DefaultLoadingScreen::draw()
 {
-    int32 oldView[4];
+    std::int32_t oldView[4];
     glCheck(glGetIntegerv(GL_VIEWPORT, oldView));
 
     glCheck(glViewport(0, 0, m_viewport.x, m_viewport.y));

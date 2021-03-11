@@ -39,12 +39,12 @@ using namespace cro;
 AudioResource::AudioResource()
 {
     m_fallback = std::make_unique<AudioBuffer>();
-    std::vector<uint8> data(10);
+    std::vector<std::uint8_t> data(10);
     dynamic_cast<AudioBuffer*>(m_fallback.get())->loadFromMemory(data.data(), 8, 22500, false, 10);
 }
 
 //public
-bool AudioResource::load(int32 ID, const std::string& path, bool streaming)
+bool AudioResource::load(std::int32_t ID, const std::string& path, bool streaming)
 {
     if (m_sources.count(ID) > 0)
     {
@@ -71,7 +71,7 @@ bool AudioResource::load(int32 ID, const std::string& path, bool streaming)
     return result;
 }
 
-const AudioSource& AudioResource::get(int32 id) const
+const AudioSource& AudioResource::get(std::int32_t id) const
 {
     if (m_sources.count(id) == 0) return *m_fallback;
     return *m_sources.find(id)->second;

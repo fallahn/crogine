@@ -119,7 +119,7 @@ namespace cro
             {
                 float numberValue;
                 float vecValue[4];
-                uint32 textureID = 0;
+                std::uint32_t textureID = 0;
                 glm::mat4 matrixValue;
             };
 
@@ -134,7 +134,7 @@ namespace cro
         };
 
         //allows looking up uniform name when paired location/value
-        using PropertyList = std::unordered_map<std::string, std::pair<int32, Property>>;
+        using PropertyList = std::unordered_map<std::string, std::pair<std::int32_t, Property>>;
 
         /*!
         \brief Material data held by a model component and used for rendering.
@@ -247,17 +247,17 @@ namespace cro
             by the above function. These values should be considered read-only
             */
 
-            uint32 shader = 0;
+            std::uint32_t shader = 0;
             //maps attrib location to attrib size between shader and mesh - index, size, pointer offset
-            std::array<std::array<int32, 3u>, Mesh::Attribute::Total> attribs{};
+            std::array<std::array<std::int32_t, 3u>, Mesh::Attribute::Total> attribs{};
             std::size_t attribCount = 0; //< count of attributes successfully mapped
             //maps uniform locations by indexing via Uniform enum
-            std::array<int32, Uniform::Total> uniforms{-1,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+            std::array<std::int32_t, Uniform::Total> uniforms{-1,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
             //optional uniforms are added to this list if they exist
             //for example skinning and projection map data which is
             //used internally, and not user-definable
             std::size_t optionalUniformCount = 0;
-            std::array<int32, 10> optionalUniforms{};
+            std::array<std::int32_t, 10> optionalUniforms{};
 
         private:
             std::unordered_map<std::string, bool> m_warnings;

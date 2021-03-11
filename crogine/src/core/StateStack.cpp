@@ -114,7 +114,7 @@ std::size_t StateStack::getStackSize() const
 }
 
 //private
-bool StateStack::changeExists(Action action, int32 id)
+bool StateStack::changeExists(Action action, std::int32_t id)
 {
     return std::find_if(m_pendingChanges.begin(), m_pendingChanges.end(),
         [action, id](const PendingChange& pc)

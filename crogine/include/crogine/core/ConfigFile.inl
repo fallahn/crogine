@@ -34,9 +34,9 @@ inline std::string ConfigProperty::getValue<std::string>() const
 }
 
 template <>
-inline int32 ConfigProperty::getValue<int32>() const
+inline std::int32_t ConfigProperty::getValue<std::int32_t>() const
 {
-    int32 retVal;
+    std::int32_t retVal;
     std::istringstream is(m_value);
     if (is >> retVal) return retVal;
     return 0;

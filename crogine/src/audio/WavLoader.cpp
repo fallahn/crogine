@@ -38,12 +38,12 @@ using namespace cro::Detail;
 
 namespace
 {
-    const cro::uint32 riffID = 0x46464952;//"RIFF"
-    const cro::uint32 formatID = 0x45564157;//"WAVE" 
-    const cro::uint32 subchunk1ID = 0x20746D66;//"fmt " 
-    const cro::uint32 dataID = 0x61746164; //"DATA"
+    const std::uint32_t riffID = 0x46464952;//"RIFF"
+    const std::uint32_t formatID = 0x45564157;//"WAVE" 
+    const std::uint32_t subchunk1ID = 0x20746D66;//"fmt " 
+    const std::uint32_t dataID = 0x61746164; //"DATA"
 
-    cro::uint32 asUint(const std::array<cro::int8, 4>& data)
+    std::uint32_t asUint(const std::array<std::int8_t, 4>& data)
     {
         return data[3] << 24 | data[2] << 16 | data[1] << 8 | data[0];
     }
@@ -90,7 +90,7 @@ bool WavLoader::open(const std::string& path)
             return false;
         }
 
-        cro::uint32 ID = asUint(m_header.chunkID);
+        std::uint32_t ID = asUint(m_header.chunkID);
         if (ID != riffID)
         {
             SDL_RWclose(m_file.file);
@@ -210,7 +210,7 @@ const PCMData& WavLoader::getData(std::size_t size) const
 
     m_file.file->read(m_file.file, m_sampleBuffer.data(), byteCount, 1);
     
-    m_dataChunk.size = static_cast<cro::uint32>(byteCount);
+    m_dataChunk.size = static_cast<std::uint32_t>(byteCount);
     m_dataChunk.data = m_sampleBuffer.data();
     return m_dataChunk;
 }

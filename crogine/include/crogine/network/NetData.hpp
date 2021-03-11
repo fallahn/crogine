@@ -48,9 +48,9 @@ namespace cro
     struct CRO_EXPORT_API NetPeer final
     {
         std::string getAddress() const; //! <String containing the IPv4 address
-        uint16 getPort() const; //! <Port number
-        uint32 getID() const; //! <Unique ID
-        uint32 getRoundTripTime() const; //! <Mean round trip time in milliseconds of a reliable packet
+        std::uint16_t getPort() const; //! <Port number
+        std::uint32_t getID() const; //! <Unique ID
+        std::uint32_t getRoundTripTime() const; //! <Mean round trip time in milliseconds of a reliable packet
 
         enum class State
         {
@@ -86,7 +86,7 @@ namespace cro
     */
     struct CRO_EXPORT_API NetEvent final
     {
-        uint8 channel = 0; //! <channel event was received on
+        std::uint8_t channel = 0; //! <channel event was received on
         enum
         {
             None,

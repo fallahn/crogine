@@ -83,25 +83,25 @@ namespace cro
         /*!
         \brief Returns the opengl handle for the shader program
         */
-        uint32 getGLHandle() const;
+        std::uint32_t getGLHandle() const;
 
         /*!
         \brief Returns the shader's available vertex attributes mapped
         to the Mesh::Attribute layout
         */
-        const std::array<int32, Mesh::Attribute::Total>& getAttribMap() const;
+        const std::array<std::int32_t, Mesh::Attribute::Total>& getAttribMap() const;
 
         /*!
         \brief Returns a list of active uniforms mapped to their locations
         */
-        const std::unordered_map<std::string, int32>& getUniformMap() const;
+        const std::unordered_map<std::string, std::int32_t>& getUniformMap() const;
 
     private:
-        uint32 m_handle;
-        std::array<int32, Mesh::Attribute::Total> m_attribMap;
+        std::uint32_t m_handle;
+        std::array<std::int32_t, Mesh::Attribute::Total> m_attribMap;
         bool fillAttribMap();
         void resetAttribMap();
-        std::unordered_map<std::string, int32> m_uniformMap;
+        std::unordered_map<std::string, std::int32_t> m_uniformMap;
         void fillUniformMap();
         void resetUniformMap();
         std::string parseFile(const std::string&);

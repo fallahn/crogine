@@ -86,45 +86,45 @@ void AudioRenderer::setListenerVolume(float volume)
     m_impl->setListenerVolume(std::max(0.f, volume));
 }
 
-cro::int32 AudioRenderer::requestNewBuffer(const std::string& path)
+std::int32_t AudioRenderer::requestNewBuffer(const std::string& path)
 {
     return m_impl->requestNewBuffer(path);
 }
 
-cro::int32 AudioRenderer::requestNewBuffer(const Detail::PCMData& data)
+std::int32_t AudioRenderer::requestNewBuffer(const Detail::PCMData& data)
 {
     return m_impl->requestNewBuffer(data);
 }
 
-void AudioRenderer::deleteBuffer(cro::int32 buffer)
+void AudioRenderer::deleteBuffer(std::int32_t buffer)
 {
     m_impl->deleteBuffer(buffer);
 }
 
-int32 AudioRenderer::requestNewStream(const std::string& path)
+std::int32_t AudioRenderer::requestNewStream(const std::string& path)
 {
     return m_impl->requestNewStream(path);
 }
 
-void AudioRenderer::updateStream(int32 id)
+void AudioRenderer::updateStream(std::int32_t id)
 {
     CRO_ASSERT(id > -1, "Must be a valid ID");
     m_impl->updateStream(id);
 }
 
-void AudioRenderer::deleteStream(int32 id)
+void AudioRenderer::deleteStream(std::int32_t id)
 {
     CRO_ASSERT(id > 0, "Must be a valid ID");
     m_impl->deleteStream(id);
 }
 
-cro::int32 AudioRenderer::requestAudioSource(cro::int32 buffer, bool streaming)
+std::int32_t AudioRenderer::requestAudioSource(std::int32_t buffer, bool streaming)
 {
     if (buffer < 0) return -1; //streams are 0 based
     return m_impl->requestAudioSource(buffer, streaming);
 }
 
-void AudioRenderer::updateAudioSource(cro::int32 sourceID, cro::int32 bufferID, bool streaming)
+void AudioRenderer::updateAudioSource(std::int32_t sourceID, std::int32_t bufferID, bool streaming)
 {
     if (sourceID > 0 && bufferID > 0)
     {
@@ -132,7 +132,7 @@ void AudioRenderer::updateAudioSource(cro::int32 sourceID, cro::int32 bufferID, 
     }
 }
 
-void AudioRenderer::deleteAudioSource(cro::int32 source)
+void AudioRenderer::deleteAudioSource(std::int32_t source)
 {
     if (source > 0)
     {
@@ -140,25 +140,25 @@ void AudioRenderer::deleteAudioSource(cro::int32 source)
     }
 }
 
-void AudioRenderer::playSource(int32 src, bool loop)
+void AudioRenderer::playSource(std::int32_t src, bool loop)
 {
     CRO_ASSERT(src > 0, "Not a valid src ID");
     m_impl->playSource(src, loop);
 }
 
-void AudioRenderer::pauseSource(int32 src)
+void AudioRenderer::pauseSource(std::int32_t src)
 {
     CRO_ASSERT(src > 0, "Not a valid src ID");
     m_impl->pauseSource(src);
 }
 
-void AudioRenderer::stopSource(int32 src)
+void AudioRenderer::stopSource(std::int32_t src)
 {
     CRO_ASSERT(src > 0, "Not a valid src ID");
     m_impl->stopSource(src);
 }
 
-int32 AudioRenderer::getSourceState(int32 src)
+std::int32_t AudioRenderer::getSourceState(std::int32_t src)
 {
     if (src < 1)
     {
@@ -168,25 +168,25 @@ int32 AudioRenderer::getSourceState(int32 src)
     return m_impl->getSourceState(src);
 }
 
-void AudioRenderer::setSourcePosition(int32 src, glm::vec3 position)
+void AudioRenderer::setSourcePosition(std::int32_t src, glm::vec3 position)
 {
     CRO_ASSERT(src > 0, "Not a valid src ID");
     m_impl->setSourcePosition(src, position);
 }
 
-void AudioRenderer::setSourcePitch(int32 src, float pitch)
+void AudioRenderer::setSourcePitch(std::int32_t src, float pitch)
 {
     CRO_ASSERT(src > 0, "Not a valid src ID");
     m_impl->setSourcePitch(src, pitch);
 }
 
-void AudioRenderer::setSourceVolume(int32 src, float vol)
+void AudioRenderer::setSourceVolume(std::int32_t src, float vol)
 {
     CRO_ASSERT(src > 0, "Not a valid src ID");
     m_impl->setSourceVolume(src, vol);
 }
 
-void AudioRenderer::setSourceRolloff(int32 src, float rolloff)
+void AudioRenderer::setSourceRolloff(std::int32_t src, float rolloff)
 {
     CRO_ASSERT(src > 0, "Not a valid src ID");
     m_impl->setSourceRolloff(src, rolloff);

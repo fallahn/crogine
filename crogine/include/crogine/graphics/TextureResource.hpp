@@ -76,14 +76,14 @@ namespace cro
         \param createMipMaps Attempts to create the default MipMap levels 
         when loading the texture.
         */
-        bool load(uint32 id, const std::string& path, bool createMipMaps = false);
+        bool load(std::uint32_t id, const std::string& path, bool createMipMaps = false);
 
         /*!
         \brief Returns a reference to the texture currently assigned to the given ID
         If the ID doesn't correspond to a loaded texture then a reference to the fallback
         texture is returned
         */
-        Texture& get(uint32 id);
+        Texture& get(std::uint32_t id);
 
         /*!
         \brief Sets the current fallback colour.
@@ -106,7 +106,7 @@ namespace cro
 
 
     private:
-        std::unordered_map<uint32, std::pair<std::string, std::unique_ptr<Texture>>> m_textures;
+        std::unordered_map<std::uint32_t, std::pair<std::string, std::unique_ptr<Texture>>> m_textures;
         std::unordered_map<Colour, std::unique_ptr<Texture>> m_fallbackTextures;
         Colour m_fallbackColour;
     };

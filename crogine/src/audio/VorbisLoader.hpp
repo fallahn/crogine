@@ -58,10 +58,10 @@ namespace cro
         private:
             RaiiRWops m_file;
             stb_vorbis* m_vorbisFile;
-            int32 m_channelCount;
+            std::int32_t m_channelCount;
 
             mutable PCMData m_dataChunk;
-            mutable std::vector<int16> m_buffer;
+            mutable std::vector<std::int16_t> m_buffer;
         };
     }
 }

@@ -86,7 +86,7 @@ namespace cro
 
         /*!
         \brief Attempts to retrieve the value as the requested type.
-        Valid types are : std::string, int32, float, bool, glm::vec2,
+        Valid types are : std::string, std::int32_t, float, bool, glm::vec2,
         glm::vec3, glm::vec4, cro::FloatRect, cro::Colour
         */
         template <typename T>
@@ -94,7 +94,7 @@ namespace cro
 
         //sets the property's value
         void setValue(const std::string& v);
-        void setValue(int32 v);
+        void setValue(std::int32_t v);
         void setValue(float v);
         void setValue(bool v);
         void setValue(const glm::vec2& v);
@@ -223,7 +223,7 @@ namespace cro
         static bool isProperty(const std::string& line);
         static void removeComment(std::string& line);
 
-        std::size_t write(SDL_RWops* file, uint16 depth = 0u);
+        std::size_t write(SDL_RWops* file, std::uint16_t depth = 0u);
     };
 
     using ConfigFile = cro::ConfigObject;

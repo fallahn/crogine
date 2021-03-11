@@ -80,7 +80,7 @@ bool AudioBuffer::loadFromFile(const std::string& path)
     return getID() != -1;
 }
 
-bool AudioBuffer::loadFromMemory(void* data, uint8 bitDepth, uint32 sampleRate, bool stereo, std::size_t size)
+bool AudioBuffer::loadFromMemory(void* data, std::uint8_t bitDepth, std::uint32_t sampleRate, bool stereo, std::size_t size)
 {
     CRO_ASSERT(bitDepth == 8 || bitDepth == 16, "Invalid bitdepth value, must be 8 or 16");
 
@@ -95,7 +95,7 @@ bool AudioBuffer::loadFromMemory(void* data, uint8 bitDepth, uint32 sampleRate, 
         pcmData.format = (bitDepth == 8) ? Detail::PCMData::Format::MONO8 : Detail::PCMData::Format::MONO16;
     }
     pcmData.frequency = sampleRate;
-    pcmData.size = static_cast<cro::uint32>(size);
+    pcmData.size = static_cast<std::uint32_t>(size);
         
     setID(AudioRenderer::requestNewBuffer(pcmData));
     return getID() != -1;

@@ -80,15 +80,15 @@ namespace cro
         */
         struct CRO_EXPORT_API IndexData final
         {
-            uint32 ibo = 0;
+            std::uint32_t ibo = 0;
             enum Pass
             {
                 Final, Shadow, Count
             };
-            std::array<uint32, Pass::Count> vao = {0,0}; //< required for core profile on desktop, ignored on mobile (one for both regular and shadow map pass)
-            uint32 primitiveType = 0;
-            uint32 indexCount = 0;
-            uint32 format = 0;
+            std::array<std::uint32_t, Pass::Count> vao = {0,0}; //< required for core profile on desktop, ignored on mobile (one for both regular and shadow map pass)
+            std::uint32_t primitiveType = 0;
+            std::uint32_t indexCount = 0;
+            std::uint32_t format = 0;
             static const std::size_t MaxBuffers = 32;
         };
 
@@ -99,8 +99,8 @@ namespace cro
         {
             std::size_t vertexCount = 0;
             std::size_t vertexSize = 0; //!< size of a single vertex *in bytes*
-            uint32 vbo = 0;
-            uint32 primitiveType = 0;
+            std::uint32_t vbo = 0;
+            std::uint32_t primitiveType = 0;
             std::array<std::size_t, Mesh::Attribute::Total> attributes{}; //!< size of attribute if it exists
             std::uint32_t attributeFlags = 0; //!< bitmask of VertexProperty flags indicating the current properties of the vertex data.
 
