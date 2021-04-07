@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/fallahn/crogine.svg?branch=master)](https://travis-ci.org/fallahn/crogine)
+[![Github Actions](https://github.com/fallahn/crogine/actions/workflows/cmake.yml/badge.svg)](https://github.com/fallahn/crogine/actions) 
 [![Documentation](https://codedocs.xyz/fallahn/crogine.svg)](https://codedocs.xyz/fallahn/crogine/)
 
 CROGINE
@@ -6,7 +6,7 @@ CROGINE
 
 CROssplatform enGINE.
 
-SDL2 Based game engine which runs on Windows, linux and Android. Compatibility with macOS is pretty good despite Apple's efforts to kill off OpenGL. Hardware availability has prevented testing on iOS. Presumably consoles supported by SDL2 (such as Nintendo switch) are also compatible, possibly with a bit of work.
+SDL2 Based game engine which runs on Windows, linux, macOS and Android. Compatibility with macOS is pretty good despite Apple's efforts to kill off OpenGL. Hardware availability has prevented testing on iOS. Presumably consoles supported by SDL2 (such as Nintendo switch) are also compatible, possibly with a bit of work.
 
 
 #### Building
@@ -31,7 +31,7 @@ Portions of this software are copyright (c) 2019 SFML (www.sfml-dev.org). All ri
 
 -----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020  
+Matt Marchant 2017 - 2021  
 http://trederia.blogspot.com  
 
 crogine - Zlib license.  
