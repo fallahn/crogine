@@ -163,7 +163,7 @@ namespace cro
 
         /*!
         \brief Returns true if the loaded model has a skeleton.
-        If this is true models created with createModel(() will have a skeleton
+        If this is true models created with createModel() will have a skeleton
         component added
         */
         bool hasSkeleton() const { return m_skeleton; }

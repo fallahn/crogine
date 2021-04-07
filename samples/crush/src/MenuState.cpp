@@ -56,6 +56,8 @@ source distribution.
 
 #include <cstring>
 
+#include <crogine/graphics/SceneData.hpp>
+
 namespace
 {
 
@@ -104,6 +106,13 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         };
         m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
+
+    cro::SceneData sceneData;
+    sceneData.loadFromFile("assets/maps/test.cmp");
+
+    const auto& a = sceneData.getComponentData<cro::SceneData::Model>();
+    const auto& b = sceneData.getComponentData<cro::SceneData::Rect>();
+    int buns = 0;
 }
 
 //public
