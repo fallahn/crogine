@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -104,18 +104,7 @@ void GameState::netEvent(const cro::NetEvent& evt)
             switch (flags)
             {
             default: break;
-            case ClientRequestFlags::Heightmap:
-                m_sharedData.host.sendPacket(m_sharedData.clients[connectionID].peer, PacketID::Heightmap,
-                    m_islandGenerator.getHeightmap().data(), m_islandGenerator.getHeightmap().size() * sizeof(float), cro::NetFlag::Reliable);
-                break;
-            case ClientRequestFlags::TreeMap:
-                m_sharedData.host.sendPacket(m_sharedData.clients[connectionID].peer, PacketID::Treemap,
-                    m_islandGenerator.getTreemap().data(), m_islandGenerator.getTreemap().size() * sizeof(glm::vec2), cro::NetFlag::Reliable);
-                break;
-            case ClientRequestFlags::BushMap:
-                m_sharedData.host.sendPacket(m_sharedData.clients[connectionID].peer, PacketID::Bushmap,
-                    m_islandGenerator.getBushmap().data(), m_islandGenerator.getBushmap().size() * sizeof(glm::vec2), cro::NetFlag::Reliable);
-                break;
+
             }
         }
             break;
@@ -309,9 +298,4 @@ void GameState::buildWorld()
             }
         }
     }
-
-    //create the world data
-    m_islandGenerator.generate();
-
-    m_scene.getSystem<PlayerSystem>().setHeightmap(m_islandGenerator.getHeightmap());
 }

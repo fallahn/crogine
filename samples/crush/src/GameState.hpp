@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -33,7 +33,6 @@ source distribution.
 #include "ResourceIDs.hpp"
 #include "InputParser.hpp"
 #include "ServerPacketData.hpp"
-#include "FoamEffect.hpp"
 #include "GameConsts.hpp"
 
 #include <crogine/core/State.hpp>
@@ -81,7 +80,6 @@ private:
 
     std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs = {};
 
-    FoamEffect m_foamEffect;
     cro::EnvironmentMap m_environmentMap;
     cro::EnvironmentMap m_skyMap;
 
@@ -91,9 +89,6 @@ private:
     cro::Clock m_bitrateClock; //< updates the bitrate display in the debug window
     cro::Clock m_sceneRequestClock; //< spaces the request for initial scene data
 
-    cro::Texture m_islandTexture;
-    cro::Entity m_islandEntity;
-    std::vector<float> m_heightmap;
 
     void addSystems();
     void loadAssets();
@@ -104,10 +99,4 @@ private:
     void handlePacket(const cro::NetEvent::Packet&);
     void spawnPlayer(PlayerInfo);
     void updateView(cro::Camera&);
-
-    void updateHeightmap(const cro::NetEvent::Packet&);
-    void updateBushmap(const cro::NetEvent::Packet&);
-    void updateTreemap(const cro::NetEvent::Packet&);
-    void updateIslandVerts(const std::vector<float>&);
-    void loadIslandAssets();
 };

@@ -160,36 +160,14 @@
   <ItemGroup>
     <ClCompile Include="src\DayNightDirector.cpp" />
     <ClCompile Include="src\ErrorState.cpp" />
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD.cpp" />
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx2.cpp">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx512.cpp">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD_internal.cpp" />
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD_neon.cpp" />
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse2.cpp">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse41.cpp">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="src\FoamEffect.cpp" />
     <ClCompile Include="src\GameState.cpp" />
     <ClCompile Include="src\InputParser.cpp" />
     <ClCompile Include="src\InterpolationComponent.cpp" />
     <ClCompile Include="src\InterpolationSystem.cpp" />
-    <ClCompile Include="src\IslandGenerator.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\MenuCreation.cpp" />
     <ClCompile Include="src\PauseState.cpp" />
     <ClCompile Include="src\PlayerSystem.cpp" />
-    <ClCompile Include="src\SeaSystem.cpp" />
     <ClCompile Include="src\ServerLobbyState.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
@@ -209,13 +187,11 @@
     <ClInclude Include="src\DayNightDirector.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\ErrorState.hpp" />
-    <ClInclude Include="src\FoamEffect.hpp" />
     <ClInclude Include="src\GameConsts.hpp" />
     <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\InputBinding.hpp" />
     <ClInclude Include="src\InputParser.hpp" />
     <ClInclude Include="src\InterpolationSystem.hpp" />
-    <ClInclude Include="src\IslandGenerator.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\MenuConsts.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
@@ -226,7 +202,6 @@
     <ClInclude Include="src\PlayerSystem.hpp" />
     <ClInclude Include="src\PoissonDisk.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
-    <ClInclude Include="src\SeaSystem.hpp" />
     <ClInclude Include="src\Server.hpp" />
     <ClInclude Include="src\ServerGameState.hpp" />
     <ClInclude Include="src\ServerLobbyState.hpp" />
@@ -237,9 +212,6 @@
     <ClInclude Include="src\Slider.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\WeatherDirector.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\SeaShader.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

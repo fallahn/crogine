@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -31,7 +31,6 @@ source distribution.
 
 
 #include "ServerState.hpp"
-#include "IslandGenerator.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
@@ -60,8 +59,6 @@ namespace Sv
         //up to 4 entities per connection - although in practice
         //we should never have more than one on any except the first
         std::array<std::array<cro::Entity, ConstVal::MaxClients>, ConstVal::MaxClients> m_playerEntities;
-
-        IslandGenerator m_islandGenerator;
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);

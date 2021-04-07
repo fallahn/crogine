@@ -67,11 +67,7 @@ public:
 
     void reconcile(cro::Entity, const PlayerUpdate&);
 
-    void setHeightmap(const std::vector<float>& h) { m_heightmap = h; }
-
 private:
-
-    std::vector<float> m_heightmap;
 
     void processInput(cro::Entity);
     void processMovement(cro::Entity, Input);

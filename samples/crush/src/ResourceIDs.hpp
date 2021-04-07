@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -33,9 +33,6 @@ namespace MaterialID
 {
     enum
     {
-        Sea,
-        Island,
-
         Count
     };
 }
@@ -44,9 +41,6 @@ namespace MeshID
 {
     enum
     {
-        SeaPlane,
-
-
         Count
     };
 }
@@ -55,9 +49,7 @@ namespace TextureID
 {
     enum
     {
-        SandAlbedo,
-        SandMask,
-        SandNormal
+
     };
 }
 
@@ -65,14 +57,6 @@ namespace GameModelID
 {
     enum
     {
-        Palm,
-
-        Shrub,
-
-        GroundBush,
-
-
-
         Count
     };
 }
@@ -86,9 +70,6 @@ namespace ShaderID
 {
     enum
     {
-        Sea,
-
-
         Count
     };
 }

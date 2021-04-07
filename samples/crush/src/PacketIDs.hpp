@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -64,10 +64,6 @@ namespace PacketID
         ActorUpdate, //< uint8 ID pos, rotation - used for interpolation of other players and NPCs
 
         EntityRemoved, //< uint32 entity ID
-
-        Heightmap, //< array of floats
-        Bushmap, //< array of vec2
-        Treemap, //< array of vec2
 
         DayNightUpdate, //< compressed float with the current day/night time
 

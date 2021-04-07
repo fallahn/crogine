@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -42,8 +42,7 @@ source distribution.
 
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
-    : cro::System   (mb, typeid(PlayerSystem)),
-    m_heightmap     (IslandTileCount * IslandTileCount, 1.f)
+    : cro::System   (mb, typeid(PlayerSystem))
 {
     requireComponent<Player>();
     requireComponent<cro::Transform>();
@@ -168,10 +167,10 @@ void PlayerSystem::processCollision(cro::Entity)
 
 void PlayerSystem::processAvatar(cro::Entity entity)
 {
+    //TODO remove this
     auto position = entity.getComponent<cro::Transform>().getWorldPosition();
-    position.x += (IslandSize / 2.f); //puts the position relative to the grid - this should be the origin coords
-    position.z += (IslandSize / 2.f);
+    position.x += (50.f); //puts the position relative to the grid - this should be the origin coords
+    position.z += (50.f);
 
-    auto height = readHeightmap(position, m_heightmap);
-    entity.getComponent<cro::Transform>().setPosition({ 0.f, height + IslandWorldHeight, 0.f });
+    entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
 }

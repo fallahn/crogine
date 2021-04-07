@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -35,7 +35,6 @@ source distribution.
 #include "ClientCommandIDs.hpp"
 #include "InterpolationSystem.hpp"
 #include "ClientPacketData.hpp"
-#include "SeaSystem.hpp"
 #include "DayNightDirector.hpp"
 
 #include <crogine/gui/Gui.hpp>
@@ -53,8 +52,6 @@ source distribution.
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
-#include <crogine/graphics/CircleMeshBuilder.hpp>
-#include <crogine/graphics/GridMeshBuilder.hpp>
 #include <crogine/graphics/MeshBatch.hpp>
 #include <crogine/graphics/Image.hpp>
 
@@ -95,10 +92,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData        (sd),
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
-    m_requestFlags      (0),
-    m_dataRequestCount  (0),
-    m_foamEffect        (m_resources),
-    m_heightmap         (IslandTileCount * IslandTileCount, 1.f)
+    m_requestFlags      (ClientRequestFlags::All), //TODO remember to update this once we actually have stuff to request
+    m_dataRequestCount  (0)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -163,10 +158,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
 
             if (ImGui::Begin("Textures"))
             {
-                if (ImGui::CollapsingHeader("Height Map"))
-                {
-                    ImGui::Image(m_islandTexture, { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                }
+
             }
             ImGui::End();
         });
@@ -320,8 +312,6 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
-    m_foamEffect.update();
-
     if (m_cameras.empty())
     {
         return;
@@ -367,7 +357,6 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
-    m_gameScene.addSystem<SeaSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
@@ -377,24 +366,10 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
-    m_meshIDs[MeshID::SeaPlane] = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(SeaRadius, 30));
-
-    m_islandTexture.create(IslandTileCount, IslandTileCount);
     m_environmentMap.loadFromFile("assets/images/cubemap/beach01.hdr");
     m_skyMap.loadFromFile("assets/images/cubemap/skybox.hdr");
     m_gameScene.setCubemap(m_skyMap);
     //m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
-
-    m_materialIDs[MaterialID::Sea] = m_gameScene.getSystem<SeaSystem>().loadResources(m_resources);
-    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_depthMap", m_islandTexture);
-    m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_foamMap", m_foamEffect.getTexture());
-
-    m_modelDefs[GameModelID::GroundBush].loadFromFile("assets/models/ground_plant01.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Palm].loadFromFile("assets/models/palm01.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Shrub].loadFromFile("assets/models/shrub01.cmt", m_resources, &m_environmentMap);
-   
-
-    loadIslandAssets();
 }
 
 void GameState::createScene()
@@ -439,7 +414,7 @@ void GameState::createDayCycle()
 
     //add the shadow caster node to the day night cycle
     auto sunNode = m_gameScene.getSunlight();
-    sunNode.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, SeaRadius });
+    sunNode.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 50.f });
     sunNode.addComponent<TargetTransform>();
     rootNode.getComponent<cro::Transform>().addChild(sunNode.getComponent<cro::Transform>());
 }
@@ -451,15 +426,6 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     default: break;
     case PacketID::DayNightUpdate:
         m_gameScene.getDirector<DayNightDirector>().setTimeOfDay(Util::decompressFloat(packet.as<std::int16_t>()));
-        break;
-    case PacketID::Heightmap:
-        updateHeightmap(packet);
-        break;
-    case PacketID::Bushmap:
-        updateBushmap(packet);
-        break;
-    case PacketID::Treemap:
-        updateTreemap(packet);
         break;
     case PacketID::EntityRemoved:
     {
@@ -550,16 +516,6 @@ void GameState::spawnPlayer(PlayerInfo info)
     cro::ModelDefinition md;
     md.loadFromFile("assets/models/player_box.cmt", m_resources, &m_environmentMap);
 
-    auto addSeaplane = [&]()
-    {
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
-        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::SeaPlane]), m_resources.materials.get(m_materialIDs[MaterialID::Sea]));
-        entity.addComponent<SeaComponent>();
-
-        return entity;
-    };
-
 
     if (info.connectionID == m_sharedData.clientConnection.connectionID)
     {
@@ -581,7 +537,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             m_cameras.back() = m_gameScene.createEntity();
             m_cameras.back().addComponent<cro::Transform>().setPosition({ 0.f, CameraHeight, CameraDistance });
 
-            auto rotation = glm::lookAt(m_cameras.back().getComponent<cro::Transform>().getPosition(), glm::vec3(0.f, 0.f, -SeaRadius), cro::Transform::Y_AXIS);
+            auto rotation = glm::lookAt(m_cameras.back().getComponent<cro::Transform>().getPosition(), glm::vec3(0.f, 0.f, -50.f), cro::Transform::Y_AXIS);
             m_cameras.back().getComponent<cro::Transform>().rotate(glm::inverse(rotation));
 
             auto& cam = m_cameras.back().addComponent<cro::Camera>();
@@ -591,14 +547,6 @@ void GameState::spawnPlayer(PlayerInfo info)
             cam.refractionBuffer.setSmooth(true);
             cam.depthBuffer.create(4096, 4096);
 
-            auto waterEnt = addSeaplane();
-            waterEnt.getComponent<cro::Model>().setRenderFlags(PlayerPlanes[NextPlayerPlane++]);
-            waterEnt.addComponent<cro::Callback>().active = true;
-            waterEnt.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float)
-            {
-                e.getComponent<cro::Transform>().setPosition({ 0.f, m_gameScene.getWaterLevel(), -(SeaRadius - CameraDistance) });
-            };
 
             //placeholder for player model
             //don't worry about mis-matching colour IDs... well be setting avatars differently
@@ -610,7 +558,6 @@ void GameState::spawnPlayer(PlayerInfo info)
 
             root.getComponent<Player>().avatar = playerEnt;
             root.getComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());
-            root.getComponent<cro::Transform>().addChild(waterEnt.getComponent<cro::Transform>());
             root.getComponent<cro::Transform>().addChild(playerEnt.getComponent<cro::Transform>());
         }
 
@@ -653,7 +600,7 @@ void GameState::updateView(cro::Camera&)
 
     const float fov = 36.f * cro::Util::Const::degToRad;
     const float nearPlane = 0.1f;
-    const float farPlane = IslandSize * 1.7f;
+    const float farPlane = 170.f;
     float aspect = 16.f / 9.f;
 
     glm::vec2 size(cro::App::getWindow().getSize());
@@ -709,280 +656,4 @@ void GameState::updateView(cro::Camera&)
     {
         cam.getComponent<cro::Camera>().setPerspective(fov, aspect, nearPlane, farPlane);
     }
-}
-
-void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
-{
-    auto size = packet.getSize();
-    if (size % sizeof(float) != 0)
-    {
-        //something is wrong, but we'll automatically request again
-        //so we should count the number of times failed as an exit strat
-        m_dataRequestCount++;
-    }
-    else
-    {
-        std::memcpy(m_heightmap.data(), packet.getData(), size);
-
-        m_gameScene.getSystem<PlayerSystem>().setHeightmap(m_heightmap);
-
-        //preview texture / height map
-        cro::Image img;
-        img.create(IslandTileCount, IslandTileCount, cro::Colour::Black());
-        for (auto i = 0u; i < m_heightmap.size(); ++i)
-        {
-            auto level = m_heightmap[i] * 255.f;
-            auto channel = static_cast<std::uint8_t>(level);
-            cro::Colour c(channel, channel, channel);
-
-            auto x = i % IslandTileCount;
-            auto y = i / IslandTileCount;
-            img.setPixel(x, y, c);
-        }
-
-        m_islandTexture.update(img.getPixelData());
-        m_islandTexture.setSmooth(true);
-
-        updateIslandVerts(m_heightmap);
-
-        m_requestFlags |= ClientRequestFlags::Heightmap;
-    }
-}
-
-void GameState::updateBushmap(const cro::NetEvent::Packet& packet)
-{
-    auto size = packet.getSize();
-    if (size % sizeof(glm::vec2) != 0)
-    {
-        //count the failure and wait for next try
-        m_dataRequestCount++;
-    }
-    else
-    {
-        //entity to hold our batch
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>();
-
-        //simpler to load from the model def because material and vertex
-        //properties are automagically configured for us
-        m_modelDefs[GameModelID::Shrub].createModel(entity, m_resources);
-        
-        auto& meshData = entity.getComponent<cro::Model>().getMeshData();
-        cro::MeshBatch batch(meshData.attributeFlags);
-
-        std::vector<std::vector<glm::mat4>> transforms(6);
-        std::vector<glm::mat4> shrubTransforms;
-
-        std::vector<glm::vec2> positions(size / sizeof(glm::vec2));
-        std::memcpy(positions.data(), packet.getData(), size);
-
-        bool shrub = false;
-        for(auto i = 0u; i < positions.size(); ++i)
-        {
-            auto p = positions[i];
-            float y = readHeightmap({ p.x, 0.f, p.y  }, m_heightmap) + IslandWorldHeight;
-            p.x -= (IslandSize / 2.f); //offset from the centre
-            p.y -= (IslandSize / 2.f);
-
-            glm::mat4 tx = glm::translate(glm::mat4(1.f), glm::vec3(p.x, y, p.y));
-            tx = glm::rotate(tx, cro::Util::Const::TAU / cro::Util::Random::value(1, 8), cro::Transform::Y_AXIS);
-            tx = glm::scale(tx, glm::vec3(2.f + static_cast<float>(cro::Util::Random::value(-23, 24)) / 100.f));
-
-            if (!shrub)
-            {
-                transforms[i % 6].push_back(tx);
-            }
-            else
-            {
-                //ground shrub
-                shrubTransforms.push_back(tx);
-            }
-
-            if ((i % 6) == 5)
-            {
-                shrub = !shrub;
-            }
-        }
-
-        batch.addMesh("assets/models/shrub01.cmf", transforms[0]);
-        batch.addMesh("assets/models/shrub02.cmf", transforms[1]);
-        batch.addMesh("assets/models/shrub03.cmf", transforms[2]);
-        batch.addMesh("assets/models/shrub04.cmf", transforms[3]);
-        batch.addMesh("assets/models/shrub05.cmf", transforms[4]);
-        batch.addMesh("assets/models/shrub06.cmf", transforms[5]);
-        batch.updateMeshData(meshData);
-
-        entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        m_modelDefs[GameModelID::GroundBush].createModel(entity, m_resources);
-        auto& bushData = entity.getComponent<cro::Model>().getMeshData();
-
-        cro::MeshBatch bushBatch(bushData.attributeFlags);
-        bushBatch.addMesh("assets/models/ground_plant01.cmf", shrubTransforms);
-        bushBatch.updateMeshData(bushData);
-
-        m_requestFlags |= ClientRequestFlags::BushMap;
-    }
-}
-
-void GameState::updateTreemap(const cro::NetEvent::Packet& packet)
-{
-    auto size = packet.getSize();
-    if (size % sizeof(glm::vec2) != 0)
-    {
-        //count the failure and wait for next try
-        m_dataRequestCount++;
-    }
-    else
-    {
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        m_modelDefs[GameModelID::Palm].createModel(entity, m_resources);
-
-        auto& meshData = entity.getComponent<cro::Model>().getMeshData();
-
-        std::vector<std::vector<glm::mat4>> transforms(3);
-        cro::MeshBatch batch(meshData.attributeFlags);
-
-        std::vector<glm::vec2> positions(size / sizeof(glm::vec2));
-        std::memcpy(positions.data(), packet.getData(), size);
-
-        for (auto i = 0u; i < positions.size(); ++i)
-        {
-            auto p = positions[i];
-            float y = readHeightmap({ p.x, 0.f, p.y }, m_heightmap) + IslandWorldHeight;
-
-            p.x -= (IslandSize / 2.f); //offset from the centre
-            p.y -= (IslandSize / 2.f);
-
-            glm::mat4 tx = glm::translate(glm::mat4(1.f), glm::vec3(p.x, y, p.y));
-            tx = glm::rotate(tx, cro::Util::Const::TAU / cro::Util::Random::value(1, 8), cro::Transform::Y_AXIS);
-            tx = glm::scale(tx, glm::vec3(2.f + static_cast<float>(cro::Util::Random::value(-23, 24)) / 100.f));
-            transforms[i % 3].push_back(tx);
-        }
-
-        batch.addMesh("assets/models/palm01.cmf", transforms[0]);
-        batch.addMesh("assets/models/palm02.cmf", transforms[1]);
-        batch.addMesh("assets/models/palm01.cmf", transforms[2]);
-        batch.updateMeshData(meshData);
-
-        m_requestFlags |= ClientRequestFlags::TreeMap;
-    }
-}
-
-void GameState::updateIslandVerts(const std::vector<float>& heightmap)
-{
-    const glm::vec4 WetSand = { 0.44f, 0.29f, 0.11f, 1.f };
-    const glm::vec4 Grass = { 0.184f, 0.29f, 0.03f, 1.f };
-
-    struct Vertex final
-    {
-        glm::vec3 pos = glm::vec3(0.f);
-        glm::vec4 colour = glm::vec4(1.f);
-        glm::vec3 normal = glm::vec3(0.f);
-        glm::vec3 tan = glm::vec3(0.f);
-        glm::vec3 bitan = glm::vec3(0.f);
-        glm::vec2 uv = glm::vec2(0.f);
-    };
-    std::vector<Vertex> verts(IslandTileCount * IslandTileCount);
-
-    auto heightAt = [&](std::int32_t x, std::int32_t y)
-    {
-        x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
-        y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
-
-        return heightmap[y * IslandTileCount + x];
-    };
-
-    for (auto i = 0u; i < heightmap.size(); ++i)
-    {
-        std::int32_t x = i % IslandTileCount;
-        std::int32_t y = i / IslandTileCount;
-
-        verts[i].pos = { x * TileSize, y * TileSize, heightmap[i] * IslandHeight };
-
-        if (verts[i].pos.z < /*IslandHeight + IslandWorldHeight*/2.2f)
-        {
-            //sand should be wet
-            verts[i].colour = WetSand;
-        }
-        else if (verts[i].pos.z > GrassHeight)
-        {
-            verts[i].colour = Grass;
-        }
-
-        verts[i].uv = { verts[i].pos.x / IslandSize, verts[i].pos.y / IslandSize };
-
-        verts[i].uv *= 8.f;
-
-        //normal calc
-        auto l = heightAt(x - 1, y);
-        auto r = heightAt(x + 1, y);
-        auto u = heightAt(x, y + 1);
-        auto d = heightAt(x, y - 1);
-
-        verts[i].normal = { l - r, d - u, 2.f };
-        verts[i].normal = glm::normalize(verts[i].normal);
-
-        //tan/bitan
-        //if we assume the UV go parallel with the grid we can just use
-        //a 90 deg rotation and the cross product of the result
-        verts[i].tan = { verts[i].normal.z, verts[i].normal.y, -verts[i].normal.x };
-        verts[i].bitan = glm::cross(verts[i].tan, verts[i].normal);
-    }
-
-    auto& meshData = m_islandEntity.getComponent<cro::Model>().getMeshData();
-
-    CRO_ASSERT(verts.size() == meshData.vertexCount, "Incorrect vertex count");
-    CRO_ASSERT(sizeof(Vertex) == meshData.vertexSize, "Incorrect vertex size");
-
-    glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
-    glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(Vertex), verts.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void GameState::loadIslandAssets()
-{
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().rotate(-cro::Transform::X_AXIS, cro::Util::Const::PI / 2.f);
-    entity.getComponent<cro::Transform>().move({ 0.f, IslandWorldHeight, 0.f }); //small extra amount to stop z-fighting
-    entity.getComponent<cro::Transform>().setOrigin({ IslandSize / 2.f, IslandSize / 2.f, 0.f });
-
-    auto meshID = m_resources.meshes.loadMesh(cro::GridMeshBuilder({ IslandSize, IslandSize }, IslandTileCount - 1, glm::vec2(1.f), true)); //this accounts for extra row of vertices
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, cro::ShaderResource::DiffuseMap |
-        cro::ShaderResource::NormalMap |
-        cro::ShaderResource::MaskMap |
-        cro::ShaderResource::VertexColour |
-        cro::ShaderResource::RxShadows);
-
-    m_materialIDs[MaterialID::Island] = m_resources.materials.add(m_resources.shaders.get(shaderID));
-    //m_resources.materials.get(m_materialIDs[MaterialID::Island]).setProperty("u_diffuseMap", m_islandTexture);
-    //m_resources.materials.get(m_materialIDs[MaterialID::Island]).setProperty("u_colour", cro::Colour::Green());
-
-    m_resources.textures.load(TextureID::SandAlbedo, "assets/materials/sand01/albedo.png");
-    m_resources.textures.load(TextureID::SandNormal, "assets/materials/sand01/normal.png");
-    m_resources.textures.load(TextureID::SandMask, "assets/materials/sand01/mask.png");
-
-    auto& albedo = m_resources.textures.get(TextureID::SandAlbedo);
-    albedo.setSmooth(true);
-    albedo.setRepeated(true);
-    auto& normal = m_resources.textures.get(TextureID::SandNormal);
-    normal.setSmooth(true);
-    normal.setRepeated(true);
-    auto& mask = m_resources.textures.get(TextureID::SandMask);
-    mask.setSmooth(true);
-    mask.setRepeated(true);
-
-    auto& material = m_resources.materials.get(m_materialIDs[MaterialID::Island]);
-    material.setProperty("u_diffuseMap", albedo);
-    material.setProperty("u_normalMap", normal);
-    material.setProperty("u_maskMap", mask);
-    material.setProperty("u_colour", cro::Colour::White());
-
-    material.setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
-    material.setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
-    material.setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
-
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    m_islandEntity = entity;
 }

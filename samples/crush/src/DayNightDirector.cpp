@@ -137,6 +137,7 @@ namespace
     }
 
     constexpr float CorrectionSpeed = 100.f;
+    constexpr float MaxRadius = 50.f;
 }
 
 DayNightDirector::DayNightDirector()
@@ -228,10 +229,10 @@ void DayNightDirector::process(float dt)
         if (m_timeOfDay >= 0.5f)
         {
             //switch to night
-            target.startPosition = { 0.f, 0.f, SeaRadius };
+            target.startPosition = { 0.f, 0.f, MaxRadius };
             target.startRotation = glm::quat(1.f, 0.f, 0.f, 0.f);
 
-            target.endPosition = { 0.f, 0.f, -SeaRadius };
+            target.endPosition = { 0.f, 0.f, -MaxRadius };
             target.endRotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), cro::Util::Const::PI - 0.001f, cro::Transform::X_AXIS);
 
             target.interpolation = 0.f;
@@ -243,10 +244,10 @@ void DayNightDirector::process(float dt)
         if (m_timeOfDay < 0.5f)
         {
             //switch to day
-            target.startPosition = { 0.f, 0.f, -SeaRadius };
+            target.startPosition = { 0.f, 0.f, -MaxRadius };
             target.startRotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), cro::Util::Const::PI + 0.001f, cro::Transform::X_AXIS);
 
-            target.endPosition = { 0.f, 0.f, SeaRadius };
+            target.endPosition = { 0.f, 0.f, MaxRadius };
             target.endRotation = glm::quat(1.f, 0.f, 0.f, 0.f);
 
             target.interpolation = 0.f;

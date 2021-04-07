@@ -61,9 +61,6 @@
     <Filter Include="Source Files\Client\components">
       <UniqueIdentifier>{fd2c8667-53fa-4313-ba76-5a51b1a31fac}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\fastnoise">
-      <UniqueIdentifier>{cf9f01d9-dd08-4033-bf9c-c57e99de4b1a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Server\directors">
       <UniqueIdentifier>{7610dbc1-0cdf-474c-ab6e-6db72e9843a7}</UniqueIdentifier>
     </Filter>
@@ -129,41 +126,11 @@
     <ClCompile Include="src\PauseState.cpp">
       <Filter>Source Files\Client\states</Filter>
     </ClCompile>
-    <ClCompile Include="src\SeaSystem.cpp">
-      <Filter>Source Files\Client\systems</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FoamEffect.cpp">
-      <Filter>Source Files\Client</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD.cpp">
-      <Filter>Source Files\fastnoise</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx2.cpp">
-      <Filter>Source Files\fastnoise</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD_avx512.cpp">
-      <Filter>Source Files\fastnoise</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD_internal.cpp">
-      <Filter>Source Files\fastnoise</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD_neon.cpp">
-      <Filter>Source Files\fastnoise</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse2.cpp">
-      <Filter>Source Files\fastnoise</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fastnoise\FastNoiseSIMD_sse41.cpp">
-      <Filter>Source Files\fastnoise</Filter>
-    </ClCompile>
     <ClCompile Include="src\WeatherDirector.cpp">
       <Filter>Source Files\Server\Directors</Filter>
     </ClCompile>
     <ClCompile Include="src\DayNightDirector.cpp">
       <Filter>Source Files\Client\directors</Filter>
-    </ClCompile>
-    <ClCompile Include="src\IslandGenerator.cpp">
-      <Filter>Source Files\Server</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -248,12 +215,6 @@
     <ClInclude Include="src\MenuConsts.hpp">
       <Filter>Header Files\Client\states</Filter>
     </ClInclude>
-    <ClInclude Include="src\SeaSystem.hpp">
-      <Filter>Header Files\Client\systems</Filter>
-    </ClInclude>
-    <ClInclude Include="src\FoamEffect.hpp">
-      <Filter>Header Files\Client</Filter>
-    </ClInclude>
     <ClInclude Include="src\InputBinding.hpp">
       <Filter>Header Files\Client</Filter>
     </ClInclude>
@@ -275,13 +236,5 @@
     <ClInclude Include="src\PoissonDisk.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\IslandGenerator.hpp">
-      <Filter>Header Files\Server</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\SeaShader.inl">
-      <Filter>Header Files\Client\shaders</Filter>
-    </None>
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -95,13 +95,13 @@ void MyApp::render()
 bool MyApp::initialise()
 {
     getWindow().setLoadingScreen<LoadingScreen>();
-    getWindow().setTitle("Desert Island Duel");
+    getWindow().setTitle("CRUSH!");
 
     m_stateStack.pushState(States::MainMenu);
 
     m_sharedData.clientConnection.netClient.create(4);
 
-    configPath = cro::FileSystem::getConfigDirectory("mp_game") + "settings.cfg";
+    configPath = cro::FileSystem::getConfigDirectory("crush") + "settings.cfg";
     loadSettings();
 
     return true;
