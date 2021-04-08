@@ -94,7 +94,7 @@ namespace cro
         float rotationSpeed = 0.f;
         float spawnRadius = 0.f;
 
-        uint32 textureID = 0;
+        std::uint32_t textureID = 0;
 
         bool randomInitialRotation = true;
         bool inheritRotation = true;
@@ -119,12 +119,12 @@ namespace cro
 
         const bool stopped() const { return (!m_running && m_nextFreeParticle == 0); }
 
-        static const uint32 MaxParticles = 1000u;
+        static const std::uint32_t MaxParticles = 1000u;
         EmitterSettings settings;
 
     private:
-        uint32 m_vbo;
-        uint32 m_vao; //< used on desktop
+        std::uint32_t m_vbo;
+        std::uint32_t m_vao; //< used on desktop
         
         std::array<Particle, MaxParticles> m_particles;
         std::size_t m_nextFreeParticle;

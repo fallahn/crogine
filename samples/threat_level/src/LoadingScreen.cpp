@@ -43,7 +43,7 @@ source distribution.
 
 namespace
 {
-    constexpr cro::uint32 vertexSize = 2 * sizeof(float);
+    constexpr std::uint32_t vertexSize = 2 * sizeof(float);
     constexpr float timestep = 1.f / 60.f;
 
     const std::string vertex = R"(
@@ -146,7 +146,7 @@ void LoadingScreen::update()
 
 void LoadingScreen::draw()
 {
-    cro::int32 oldView[4];
+    std::int32_t oldView[4];
     glCheck(glGetIntegerv(GL_VIEWPORT, oldView));
     glCheck(glEnable(GL_BLEND));
     glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));

@@ -108,8 +108,8 @@ namespace cro
     };
 
     /*Some short cuts for concrete types*/
-    using IntRect = Rectangle<int32>;
-    using URect = Rectangle<uint32>;
+    using IntRect = Rectangle<std::int32_t>;
+    using URect = Rectangle<std::uint32_t>;
     using FloatRect = Rectangle<float>;
 
     template <>

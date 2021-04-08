@@ -41,9 +41,9 @@ using namespace cro;
 
 namespace
 {
-    uint32 ensurePOW2(uint32 size)
+    std::uint32_t ensurePOW2(std::uint32_t size)
     {
-        /*uint32 pow2 = 1;
+        /*std::uint32_t pow2 = 1;
         while (pow2 < size)
         {
             pow2 *= 2;
@@ -113,7 +113,7 @@ Texture::~Texture()
 }
 
 //public
-void Texture::create(uint32 width, uint32 height, ImageFormat::Type format)
+void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Type format)
 {
     CRO_ASSERT(width > 0 && height > 0, "Invalid texture size");
     CRO_ASSERT(format != ImageFormat::None, "Invalid image format");
@@ -185,7 +185,7 @@ bool Texture::loadFromImage(const Image& image, bool createMipMaps)
     return update(image.getPixelData(), createMipMaps);
 }
 
-bool Texture::update(const uint8* pixels, bool createMipMaps, URect area)
+bool Texture::update(const std::uint8_t* pixels, bool createMipMaps, URect area)
 {
     if (area.left + area.width > m_size.x)
     {
@@ -313,7 +313,7 @@ ImageFormat::Type Texture::getFormat() const
     return m_format;
 }
 
-uint32 Texture::getGLHandle() const
+std::uint32_t Texture::getGLHandle() const
 {
     return m_handle;
 }
@@ -368,7 +368,7 @@ bool Texture::isRepeated() const
     return m_repeated;
 }
 
-uint32 Texture::getMaxTextureSize()
+std::uint32_t Texture::getMaxTextureSize()
 {
     if (Detail::SDLResource::valid())
     {

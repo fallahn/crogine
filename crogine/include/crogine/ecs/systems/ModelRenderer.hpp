@@ -47,8 +47,8 @@ namespace cro
     //don't export this, used internally.
     struct SortData final
     {
-        int64 flags = 0;
-        std::vector<int32> matIDs;
+        std::int64_t flags = 0;
+        std::vector<std::int32_t> matIDs;
     };
 
     using MaterialPair = std::pair<Entity, SortData>;

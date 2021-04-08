@@ -65,9 +65,9 @@ namespace cro
         is returned. This can be then loaded directly using Font::loadFromFile()
         \see FontResource::load()
         */
-        Font& get(uint32 id);
+        Font& get(std::uint32_t id);
 
     private:
-        std::map<uint32, std::unique_ptr<Font>> m_fonts;
+        std::map<std::uint32_t, std::unique_ptr<Font>> m_fonts;
     };
 }

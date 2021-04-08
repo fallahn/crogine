@@ -42,7 +42,7 @@ namespace cro
     */
     struct CRO_EXPORT_API UIDraggable final
     {
-        uint64 flags = 0; //! <button flags - see UISystem
+        std::uint64_t flags = 0; //! <button flags - see UISystem
         glm::vec2 velocity = glm::vec2(0.f);
     };
 }

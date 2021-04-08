@@ -54,7 +54,7 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
     m_playbackRate = rate;
     if (idx != m_currentAnimation)
     {
-        m_nextAnimation = static_cast<cro::int32>(idx);
+        m_nextAnimation = static_cast<std::int32_t>(idx);
         m_blendTime = blendingTime;
         m_currentBlendTime = 0.f;
     }

@@ -66,7 +66,7 @@ namespace cro
         \param colour Colour to fill image with
         \param format Image Format. Can be RGB or RGBA, defaults to RGBA
         */
-        void create(uint32 width, uint32 height, Colour colour, ImageFormat::Type format = ImageFormat::RGBA);
+        void create(std::uint32_t width, std::uint32_t height, Colour colour, ImageFormat::Type format = ImageFormat::RGBA);
 
         /*!
         \brief Attempts to load an image from a file on disk.
@@ -83,7 +83,7 @@ namespace cro
         \param height Height of image to create. On mobile platforms this should be pow2
         \param format Image Format. Can be RGB or RGBA
         */
-        bool loadFromMemory(const uint8* px, uint32 width, uint32 height, ImageFormat::Type format);
+        bool loadFromMemory(const std::uint8_t* px, std::uint32_t width, std::uint32_t height, ImageFormat::Type format);
 
         /*!
         \brief Sets pixels of a particular colour to transparent.
@@ -105,7 +105,7 @@ namespace cro
         /*!
         \brief Returns a pointer to the underlying pixel data
         */
-        const uint8* getPixelData() const;
+        const std::uint8_t* getPixelData() const;
 
         /*!
         \brief Saves this image to the given path
@@ -124,7 +124,7 @@ namespace cro
     private:
         glm::uvec2 m_size = glm::uvec2(0);
         ImageFormat::Type m_format;
-        std::vector<uint8> m_data;
+        std::vector<std::uint8_t> m_data;
         bool m_flipped;
 
         bool m_flipOnLoad;

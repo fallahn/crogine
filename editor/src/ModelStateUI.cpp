@@ -81,6 +81,8 @@ namespace
     {
         std::make_pair(glm::vec2(0.f), glm::vec2(0.f)),
         std::make_pair(glm::vec2(0.f), glm::vec2(0.f)),
+        std::make_pair(glm::vec2(0.f), glm::vec2(0.f)),
+        std::make_pair(glm::vec2(0.f), glm::vec2(0.f)),
         std::make_pair(glm::vec2(0.f), glm::vec2(0.f))
     };
 
@@ -1572,7 +1574,7 @@ void ModelState::drawBrowser()
                 if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
                 {
                     //set payload to carry the index of the material
-                    ImGui::SetDragDropPayload("MATERIAL_SRC", &count, sizeof(cro::int32));
+                    ImGui::SetDragDropPayload("MATERIAL_SRC", &count, sizeof(std::int32_t));
 
                     //display preview
                     ImGui::Image((void*)(std::size_t)material.previewTexture.getTexture().getGLHandle(), { thumbSize.x, thumbSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
@@ -1720,7 +1722,7 @@ void ModelState::drawBrowser()
                 if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
                 {
                     //set payload to carry the GL id of the texture
-                    ImGui::SetDragDropPayload("TEXTURE_SRC", &id, sizeof(cro::uint32));
+                    ImGui::SetDragDropPayload("TEXTURE_SRC", &id, sizeof(std::uint32_t));
 
                     //display preview (could be anything, e.g. when dragging an image we could decide to display
                     //the filename and a small preview of the image, etc.)

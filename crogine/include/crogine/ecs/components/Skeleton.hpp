@@ -55,9 +55,9 @@ namespace cro
     struct CRO_EXPORT_API SkeletalAnim final
     {
         std::string name;
-        uint32 startFrame = 0;
-        uint32 frameCount = 0;
-        uint32 currentFrame = 0;
+        std::uint32_t startFrame = 0;
+        std::uint32_t frameCount = 0;
+        std::uint32_t currentFrame = 0;
         float frameRate = 12.f;
         bool looped = false;
         float playbackRate = 0.f;
@@ -284,8 +284,8 @@ namespace cro
 
         float m_playbackRate;
 
-        int32 m_currentAnimation;
-        int32 m_nextAnimation;
+        std::int32_t m_currentAnimation;
+        std::int32_t m_nextAnimation;
 
         float m_blendTime;
         float m_currentBlendTime;

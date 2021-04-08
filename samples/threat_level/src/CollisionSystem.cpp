@@ -75,7 +75,7 @@ struct StructHash<PhysicsShape>
     {
         std::size_t res = 0;
 
-        hash_combine(res, static_cast<int32>(s.type));
+        hash_combine(res, static_cast<std::int32_t>(s.type));
         hash_combine(res, s.position.x);
         hash_combine(res, s.position.y);
         hash_combine(res, s.position.z);
@@ -95,18 +95,18 @@ struct StructHash<PhysicsShape>
         case PhysicsShape::Type::Capsule:
             hash_combine(res, s.radius);
             hash_combine(res, s.length);
-            hash_combine(res, static_cast<int32>(s.orientation));
+            hash_combine(res, static_cast<std::int32_t>(s.orientation));
             break;
         case PhysicsShape::Type::Cone:
             hash_combine(res, s.radius);
             hash_combine(res, s.length);
-            hash_combine(res, static_cast<int32>(s.orientation));
+            hash_combine(res, static_cast<std::int32_t>(s.orientation));
             break;
         case PhysicsShape::Type::Cylinder:
             hash_combine(res, s.extent.x);
             hash_combine(res, s.extent.y);
             hash_combine(res, s.extent.z);
-            hash_combine(res, static_cast<int32>(s.orientation));
+            hash_combine(res, static_cast<std::int32_t>(s.orientation));
             break;
         case PhysicsShape::Type::Sphere:
             hash_combine(res, s.radius);

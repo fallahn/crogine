@@ -34,7 +34,7 @@ using namespace cro;
 
 namespace
 {
-    uint32 fallbackID = std::numeric_limits<uint32>::max();
+    std::uint32_t fallbackID = std::numeric_limits<std::uint32_t>::max();
 }
 
 TextureResource::TextureResource()
@@ -44,7 +44,7 @@ TextureResource::TextureResource()
 }
 
 //public
-bool TextureResource::load(uint32 id, const std::string& path, bool createMipMaps)
+bool TextureResource::load(std::uint32_t id, const std::string& path, bool createMipMaps)
 {
     if (m_textures.count(id) == 0)
     {
@@ -68,7 +68,7 @@ bool TextureResource::load(uint32 id, const std::string& path, bool createMipMap
     return false;
 }
 
-Texture& TextureResource::get(uint32 id)
+Texture& TextureResource::get(std::uint32_t id)
 {
     if (m_textures.count(id) == 0)
     {

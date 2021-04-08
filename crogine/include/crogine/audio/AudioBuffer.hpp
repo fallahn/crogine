@@ -83,7 +83,7 @@ namespace cro
         \param size The size of the data pointed to by data, in bytes.
         \returns true on success, else false
         */
-        bool loadFromMemory(void* data, uint8 bitDepth, uint32 sampleRate, bool stereo, std::size_t size);
+        bool loadFromMemory(void* data, std::uint8_t bitDepth, std::uint32_t sampleRate, bool stereo, std::size_t size);
 
         /*!
         \brief Identifies this as an AudioBuffer

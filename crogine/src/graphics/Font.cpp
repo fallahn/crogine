@@ -120,7 +120,7 @@ bool Font::loadFromFile(const std::string& filePath)
     return true;
 }
 
-Glyph Font::getGlyph(uint32 codepoint, uint32 charSize) const
+Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize) const
 {
     auto& currentGlyphs = m_pages[charSize].glyphs;
 
@@ -143,7 +143,7 @@ Glyph Font::getGlyph(uint32 codepoint, uint32 charSize) const
     return {};
 }
 
-const Texture& Font::getTexture(uint32 charSize) const
+const Texture& Font::getTexture(std::uint32_t charSize) const
 {
     //TODO this may return an invalid texture if the
     //current charSize is not inserted in the page map
@@ -151,7 +151,7 @@ const Texture& Font::getTexture(uint32 charSize) const
     return m_pages[charSize].texture;
 }
 
-float Font::getLineHeight(uint32 charSize) const
+float Font::getLineHeight(std::uint32_t charSize) const
 {
     if (m_face.has_value())
     {

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,8 +34,8 @@ using namespace cro;
 
 namespace
 {
-    const uint32 IndexMask = (1 << Detail::IndexBits) - 1;
-    const uint32 GenerationMask = (1 << Detail::GenerationBits) - 1;
+    const std::uint32_t IndexMask = (1 << Detail::IndexBits) - 1;
+    const std::uint32_t GenerationMask = (1 << Detail::GenerationBits) - 1;
 }
 
 Entity::Entity()
@@ -80,4 +80,16 @@ const ComponentMask& Entity::getComponentMask() const
 bool Entity::isValid() const
 {
     return (m_entityManager != nullptr && !destroyed());
+}
+
+void Entity::setLabel(const std::string& label)
+{
+    CRO_ASSERT(isValid(), "Not a valid entity");
+    m_entityManager->setLabel(*this, label);
+}
+
+const std::string& Entity::getLabel() const
+{
+    CRO_ASSERT(isValid(), "Not a valid entity");
+    return m_entityManager->getLabel(*this);
 }

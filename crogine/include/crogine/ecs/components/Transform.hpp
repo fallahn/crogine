@@ -276,7 +276,7 @@ namespace cro
             Tx = 0x4,
             All = Parent | Child | Tx
         };
-        mutable uint8 m_dirtyFlags;
+        mutable std::uint8_t m_dirtyFlags;
 
         void reset();
     };

@@ -250,7 +250,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 
         //enable shader attribs based on what the material requests
         //TODO this doesn't check valid combinations
-        int32 flags = 0;
+        std::int32_t flags = 0;
         bool smoothTextures = false;
         bool repeatTextures = false;
         const auto& properties = mat.getProperties();

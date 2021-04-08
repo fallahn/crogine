@@ -33,13 +33,17 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/gui/Gui.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 
 struct SharedStateData;
 class WorldState final : public cro::State, public cro::GuiClient
 {
 public:
     WorldState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    ~WorldState();
 
     cro::StateID getStateID() const override { return States::WorldEditor; }
 
@@ -52,9 +56,55 @@ private:
 
     SharedStateData& m_sharedData;
     cro::Scene m_scene;
+    cro::Scene m_previewScene; //used to draw model thumbnails
+    cro::EnvironmentMap m_environmentMap;
+    cro::ResourceCollection m_resources;
+
+    float m_viewportRatio;
+    float m_fov;
+    ImVec4 m_messageColour;
 
     void loadAssets();
     void addSystems();
+    void setupScene();
+
+    void loadPrefs();
+    void savePrefs();
+
+    struct EntityID final
+    {
+        enum
+        {
+            ArcBall,
+
+            Count
+        };
+    };
+
+    std::array<cro::Entity, EntityID::Count> m_entities = {};
+    cro::Entity m_selectedEntity;
+    std::int32_t m_gizmoMode;
+
     void initUI();
+    void drawMenuBar();
+    void drawInspector();
+    void drawBrowser();
+    void drawInfo();
+    void drawGizmo();
     void updateLayout(std::int32_t, std::int32_t);
+    void updateMouseInput(const cro::Event&);
+
+
+
+    struct ReferenceModel final
+    {
+        std::size_t modelID = 0;
+        cro::ModelDefinition modelDef;
+        cro::RenderTexture thumbnail;
+    };
+    std::vector<ReferenceModel> m_models;
+    std::size_t m_selectedModel;
+    cro::Entity m_previewEntity;
+
+    void openModel(const std::string&);
 };

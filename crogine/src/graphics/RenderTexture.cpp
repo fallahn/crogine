@@ -95,7 +95,7 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
 }
 
 //public
-bool RenderTexture::create(uint32 width, uint32 height, bool depthBuffer, bool stencilBuffer)
+bool RenderTexture::create(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer)
 {
     if (m_fboID)
     {
@@ -123,8 +123,8 @@ bool RenderTexture::create(uint32 width, uint32 height, bool depthBuffer, bool s
         {
             m_clearBits |= GL_DEPTH_BUFFER_BIT;
             
-            int32 format = GL_DEPTH_COMPONENT24;
-            int32 attachment = GL_DEPTH_ATTACHMENT;
+            std::int32_t format = GL_DEPTH_COMPONENT24;
+            std::int32_t attachment = GL_DEPTH_ATTACHMENT;
             if (stencilBuffer)
             {
                 format = GL_DEPTH24_STENCIL8;

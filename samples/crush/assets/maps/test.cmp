@@ -1,0 +1,54 @@
+scene test01
+{
+    sky_colour = 1,1,1,1
+    sky_direction = 0,-1,0
+    cubemap = "assets/images/cubemap/beach01.hdr"
+
+    rects
+    {
+        rect
+        {
+            id = 1
+            size = 0,0,10,5
+            depth = 0
+            depth_axis = 2
+        }
+    }
+
+    models
+    {
+        model player
+        {
+            src = "assets/models/player_box.cmt"
+            id = 1
+        }
+
+        model platform
+        {
+            src = "assets/models/platform.cmt"
+            id = 2
+        }
+    }
+
+    nodes
+    {
+        node platform
+        {
+            position = 0,0,0
+            model = 2
+
+            node buns
+            {
+                model = 3
+                rect = 6
+            }
+        }
+
+        node
+        {
+            position = 0,0,0
+            rect = 1
+        }
+    }
+
+}

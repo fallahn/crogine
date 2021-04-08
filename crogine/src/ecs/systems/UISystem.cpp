@@ -348,22 +348,22 @@ void UISystem::handleMessage(const Message& msg)
     }
 }
 
-uint32 UISystem::addCallback(const ButtonCallback& cb)
+std::uint32_t UISystem::addCallback(const ButtonCallback& cb)
 {
     m_buttonCallbacks.push_back(cb);
-    return static_cast<uint32>(m_buttonCallbacks.size() - 1);
+    return static_cast<std::uint32_t>(m_buttonCallbacks.size() - 1);
 }
 
-uint32 UISystem::addCallback(const MovementCallback& cb)
+std::uint32_t UISystem::addCallback(const MovementCallback& cb)
 {
     m_movementCallbacks.push_back(cb);
-    return static_cast<uint32>(m_movementCallbacks.size() - 1);
+    return static_cast<std::uint32_t>(m_movementCallbacks.size() - 1);
 }
 
-uint32 UISystem::addCallback(const SelectionChangedCallback& cb)
+std::uint32_t UISystem::addCallback(const SelectionChangedCallback& cb)
 {
     m_selectionCallbacks.push_back(cb);
-    return static_cast<uint32>(m_selectionCallbacks.size() - 1);
+    return static_cast<std::uint32_t>(m_selectionCallbacks.size() - 1);
 }
 
 void UISystem::setActiveGroup(std::size_t group)
@@ -387,7 +387,7 @@ void UISystem::setColumnCount(std::size_t count)
 }
 
 //private
-glm::vec2 UISystem::toWorldCoords(int32 x, int32 y)
+glm::vec2 UISystem::toWorldCoords(std::int32_t x, std::int32_t y)
 {
     auto vpX = static_cast<float>(x) / m_windowSize.x;
     auto vpY = static_cast<float>(y) / m_windowSize.y;

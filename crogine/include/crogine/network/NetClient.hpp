@@ -68,7 +68,7 @@ namespace cro
         \returns true if successful or false if something went wrong
         Calling this 2 or more times with different parameters will attempt to recreate the host.
         */
-        bool create(std::size_t maxChannels, std::size_t maxClients = 1, uint32 incoming = 0, uint32 outgoing = 0);
+        bool create(std::size_t maxChannels, std::size_t maxClients = 1, std::uint32_t incoming = 0, std::uint32_t outgoing = 0);
 
         /*!
         \brief Attempts to connect to a server on the given IPv4 address or host name.
@@ -82,7 +82,7 @@ namespace cro
         attempt will not wait for a response from the server.
         \returns true on success or false if the attempt timed out.
         */
-        bool connect(const std::string& address, Uint16 port, uint32 timeout = 5000);
+        bool connect(const std::string& address, Uint16 port, std::uint32_t timeout = 5000);
 
         /*!
         \brief Closes any active connections.
@@ -118,7 +118,7 @@ namespace cro
         channels have higher priority, with 0 being highest.
         */
         template <typename T>
-        void sendPacket(uint8 id, const T& data, NetFlag flags, uint8 channel = 0);
+        void sendPacket(std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel = 0);
 
         /*!
         \brief Sends the given array of bytes out over the connection if it
@@ -132,7 +132,7 @@ namespace cro
         \param channel Stream channel over which to send the data. Lower number
         channels have higher priority, with 0 being highest.
         */
-        void sendPacket(uint8 id, const void* data, std::size_t size, NetFlag flags, uint8 channel = 0);
+        void sendPacket(std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel = 0);
 
         /*!
         \brief Returns a reference to the client's peer.

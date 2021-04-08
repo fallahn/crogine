@@ -87,13 +87,13 @@ Mesh::Data QuadBuilder::build() const
 
 
     //index arrays
-    std::array<uint8, 4u> idxData = { { 0, 1, 2, 3 } };
+    std::array<std::uint8_t, 4u> idxData = { { 0, 1, 2, 3 } };
     meshData.submeshCount = 1;
     meshData.indexData[0].format = GL_UNSIGNED_BYTE;
     meshData.indexData[0].primitiveType = meshData.primitiveType;
-    meshData.indexData[0].indexCount = static_cast<uint32>(idxData.size());
+    meshData.indexData[0].indexCount = static_cast<std::uint32_t>(idxData.size());
 
-    createIBO(meshData, idxData.data(), 0, sizeof(uint8));
+    createIBO(meshData, idxData.data(), 0, sizeof(std::uint8_t));
 
     //spatial bounds
     meshData.boundingBox[0] = { -halfSizeX, -halfSizeY, -0.01f };
@@ -171,7 +171,7 @@ Mesh::Data CubeBuilder::build() const
 
 
     //index arrays
-    std::array<uint16, 36u> idxData =
+    std::array<std::uint16_t, 36u> idxData =
     { {
             0, 1, 2, 1, 3, 2,
             4, 5, 6, 5, 7, 6,
@@ -183,9 +183,9 @@ Mesh::Data CubeBuilder::build() const
     meshData.submeshCount = 1;
     meshData.indexData[0].format = GL_UNSIGNED_SHORT;
     meshData.indexData[0].primitiveType = meshData.primitiveType;
-    meshData.indexData[0].indexCount = static_cast<uint32>(idxData.size());
+    meshData.indexData[0].indexCount = static_cast<std::uint32_t>(idxData.size());
 
-    createIBO(meshData, idxData.data(), 0, sizeof(uint16));
+    createIBO(meshData, idxData.data(), 0, sizeof(std::uint16_t));
     
     meshData.boundingBox[0] = -dim;
     meshData.boundingBox[1] = dim;
@@ -212,7 +212,7 @@ Mesh::Data SphereBuilder::build() const
 {
     Mesh::Data meshData;
     std::vector<float> vertexData;
-    std::vector<uint16> indices;
+    std::vector<std::uint16_t> indices;
 
     //generate vertex layout
     std::size_t offset = 0; //offset into index array as we add faces
@@ -332,9 +332,9 @@ Mesh::Data SphereBuilder::build() const
     meshData.submeshCount = 1;
     meshData.indexData[0].format = GL_UNSIGNED_SHORT;
     meshData.indexData[0].primitiveType = meshData.primitiveType;
-    meshData.indexData[0].indexCount = static_cast<uint32>(indices.size());
+    meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
 
-    createIBO(meshData, indices.data(), 0, sizeof(uint16));
+    createIBO(meshData, indices.data(), 0, sizeof(std::uint16_t));
 
     meshData.boundingBox[0] = { -m_radius, -m_radius, -m_radius };
     meshData.boundingBox[1] = { m_radius, m_radius, m_radius };

@@ -51,7 +51,7 @@ namespace cro
     {
         friend class MessageBus;
     public:
-        using ID = int32;
+        using ID = std::int32_t;
         enum Type
         {
             AudioMessage = 0,
@@ -86,10 +86,10 @@ namespace cro
         */
         struct WindowEvent final
         {
-            uint32 windowID = 0;
-            uint8 event = 0;
-            int32 data0 = 0;
-            int32 data1 = 0;
+            std::uint32_t windowID = 0;
+            std::uint8_t event = 0;
+            std::int32_t data0 = 0;
+            std::int32_t data1 = 0;
         };
 
         struct SceneEvent final
@@ -98,7 +98,7 @@ namespace cro
             {
                 EntityDestroyed
             }event = EntityDestroyed;
-            int32 entityID = -1;
+            std::int32_t entityID = -1;
         };
 
         struct StateEvent final
@@ -109,7 +109,7 @@ namespace cro
                 Popped,
                 Cleared
             }action = Pushed;
-            int32 id = -1;
+            std::int32_t id = -1;
         };
 
         struct ConsoleEvent final

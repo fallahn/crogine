@@ -75,12 +75,12 @@ namespace cro
         \param channel ID (0 - 15) of the channel whose
         volume should be set.
         */
-        static void setVolume(float vol, uint8 channel);
+        static void setVolume(float vol, std::uint8_t channel);
 
         /*!
         \brief Returns the current volume of the requested channel
         */
-        static float getVolume(uint8);
+        static float getVolume(std::uint8_t);
 
         /*!
         \brief Sets the pre-fade volume.
@@ -93,12 +93,12 @@ namespace cro
         \param channel ID of the channel whose volume should be set.
         Valid values are 0 - 15.
         */
-        static void setPrefadeVolume(float vol,uint8 channel);
+        static void setPrefadeVolume(float vol,std::uint8_t channel);
 
         /*!
         \brief Returns the pre-fade volume of the requested channel
         */
-        static float getPrefadeVolume(uint8 channel);
+        static float getPrefadeVolume(std::uint8_t channel);
 
         /*!
         \brief Sets a label for a channel.

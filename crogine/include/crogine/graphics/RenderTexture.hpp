@@ -73,7 +73,7 @@ namespace cro
         buffer will be created.
         \returns true on success, else returns false
         */
-        bool create(uint32 width, uint32 height, bool depthBuffer = true, bool stencilBuffer = false);
+        bool create(std::uint32_t width, std::uint32_t height, bool depthBuffer = true, bool stencilBuffer = false);
 
         /*!
         \brief Returns the current size in pixels of the render texture (zero if not yet created)
@@ -146,13 +146,13 @@ namespace cro
         bool available() const { return m_fboID != 0; }
 
     private:
-        uint32 m_fboID;
-        uint32 m_rboID;
-        uint32 m_clearBits;
+        std::uint32_t m_fboID;
+        std::uint32_t m_rboID;
+        std::uint32_t m_clearBits;
         Texture m_texture;
         URect m_viewport;
-        std::array<int32, 4u> m_lastViewport = {};
+        std::array<std::int32_t, 4u> m_lastViewport = {};
         std::array<float, 4u> m_lastClearColour = {};
-        int32 m_lastBuffer;
+        std::int32_t m_lastBuffer;
     };
 }

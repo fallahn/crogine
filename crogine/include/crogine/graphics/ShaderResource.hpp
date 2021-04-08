@@ -90,7 +90,7 @@ namespace cro
         the fragment shader.
         \returns true if successful, else false.
         */
-        bool loadFromFile(int32 id, const std::string& vertex, const std::string& fragment);
+        bool loadFromFile(std::int32_t id, const std::string& vertex, const std::string& fragment);
 
         /*!
         \brief Preloads a shader and maps it to the given ID from source code in memory
@@ -103,26 +103,26 @@ namespace cro
         \param defines Optional list of newline delimited defines used with given shader source
         \returns true if successful, else returns false
         */
-        bool loadFromString(int32 id, const std::string& vertex, const std::string& fragment, const std::string& defines = "");
+        bool loadFromString(std::int32_t id, const std::string& vertex, const std::string& fragment, const std::string& defines = "");
 
         /*!
         \brief Preloads one of the built in shaders.
         \param type BuiltIn type for shader. Vertex lit supports normal mapping, mask mapping and skinning
         and is lit by in-scene entities which posess lights.
         \param flags A combination of BuiltInFlags bitwise ORd together indicating which shader features are requested
-        \returns int32 representing the ID of the preloaded shader if it succeeds, else returns -1. The returned ID
+        \returns std::int32_t representing the ID of the preloaded shader if it succeeds, else returns -1. The returned ID
         can be used with get() to return an instance of the shader.
         */
-        int32 loadBuiltIn(BuiltIn type, int32 flags);
+        std::int32_t loadBuiltIn(BuiltIn type, std::int32_t flags);
 
         /*!
         \brief Returns the shader with the given ID if it exists, else the default system shader.
         */
-        Shader& get(int32 ID);
+        Shader& get(std::int32_t ID);
 
     private:
 
         Shader m_defaultShader;
-        std::unordered_map<int32, Shader> m_shaders;
+        std::unordered_map<std::int32_t, Shader> m_shaders;
     };
 }

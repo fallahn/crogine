@@ -68,7 +68,7 @@ namespace cro
         \param height Height of the texture.
         \returns true on success, else returns false
         */
-        bool create(uint32 width, uint32 height);
+        bool create(std::uint32_t width, std::uint32_t height);
 
         /*!
         \brief Returns the current size in pixels of the depth texture (zero if not yet created)
@@ -121,11 +121,11 @@ namespace cro
         TextureID getTexture() const;
 
     private:
-        uint32 m_fboID;
-        uint32 m_textureID;
+        std::uint32_t m_fboID;
+        std::uint32_t m_textureID;
         glm::uvec2 m_size;
         URect m_viewport;
-        std::array<int32, 4u> m_lastViewport = {};
-        int32 m_lastBuffer;
+        std::array<std::int32_t, 4u> m_lastViewport = {};
+        std::int32_t m_lastBuffer;
     };
 }

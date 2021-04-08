@@ -57,8 +57,8 @@ namespace cro
 
         FloatRect area;
         bool active;
-        std::array<uint32, CallbackID::Count> callbacks{};
-        int32 ID = -1;
+        std::array<std::uint32_t, CallbackID::Count> callbacks{};
+        std::int32_t ID = -1;
 
         /*!
         \brief Sets the group of UIInput controls to which

@@ -42,7 +42,7 @@ public:
     void process(float)override;
 
 private:
-    cro::int32 m_fireMode;
+    std::int32_t m_fireMode;
 };
 
 #endif //TL_HUD_DIRECTOR_HPP_

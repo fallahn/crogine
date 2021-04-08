@@ -87,7 +87,7 @@ cro::Mesh::Data IqmBuilder::build() const
     {
         //do some file checks
         auto fileSize = SDL_RWsize(m_file);
-        if (fileSize < static_cast<int32>(sizeof(Iqm::Header)))
+        if (fileSize < static_cast<std::int32_t>(sizeof(Iqm::Header)))
         {
             Logger::log(m_path + ": Invalid file size", Logger::Type::Error);
             SDL_RWclose(m_file);
@@ -163,9 +163,9 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
     std::vector<float> normals;
     std::vector<float> tangents; //tans are 4 component - the w contains the sign of the cross product for the bitan
     std::vector<float> texCoords;
-    std::vector<uint8> blendIndices;
-    std::vector<uint8> blendWeights;
-    std::vector<uint8> colours;
+    std::vector<std::uint8_t> blendIndices;
+    std::vector<std::uint8_t> blendWeights;
+    std::vector<std::uint8_t> colours;
     std::size_t vertexSize = 0;
 
     for (auto i = 0u; i < header.varrayCount; ++i)
@@ -244,7 +244,7 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
 
         Iqm::Triangle triangle;
         char* triangleData = dataStart + header.triangleOffset + (mesh.firstTriangle * sizeof(triangle.vertex));
-        std::vector<uint16> indices;
+        std::vector<std::uint16_t> indices;
 
         for (auto j = 0u; j < mesh.triangleCount; ++j)
         {
@@ -264,12 +264,12 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
 
         out.indexData[i].format = GL_UNSIGNED_SHORT;
         out.indexData[i].primitiveType = out.primitiveType;
-        out.indexData[i].indexCount = static_cast<uint32>(indices.size());
+        out.indexData[i].indexCount = static_cast<std::uint32_t>(indices.size());
         out.submeshCount++;
 
         glCheck(glGenBuffers(1, &out.indexData[i].ibo));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, out.indexData[i].ibo));
-        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, out.indexData[i].indexCount * sizeof(uint16), indices.data(), GL_STATIC_DRAW));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, out.indexData[i].indexCount * sizeof(std::uint16_t), indices.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
     }
 

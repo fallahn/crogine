@@ -84,31 +84,31 @@ namespace cro
 
             struct WavHeader final
             {
-                std::array<cro::int8, 4u> chunkID{};
-                cro::uint32 chunkSize = 0;
-                std::array<cro::int8, 4u> format{};
-                std::array<cro::int8, 4u> subchunk1ID{};
-                cro::uint32 subchunk1Size = 0;
-                cro::uint16 audioFormat = 0; 
-                cro::uint16 channelCount = 0;
-                cro::uint32 sampleRate = 0;
-                cro::uint32 byteRate = 0;
-                cro::uint16 blockAlign = 0;
-                cro::uint16 bitsPerSample = 0;
+                std::array<std::int8_t, 4u> chunkID{};
+                std::uint32_t chunkSize = 0;
+                std::array<std::int8_t, 4u> format{};
+                std::array<std::int8_t, 4u> subchunk1ID{};
+                std::uint32_t subchunk1Size = 0;
+                std::uint16_t audioFormat = 0; 
+                std::uint16_t channelCount = 0;
+                std::uint32_t sampleRate = 0;
+                std::uint32_t byteRate = 0;
+                std::uint16_t blockAlign = 0;
+                std::uint16_t bitsPerSample = 0;
             }m_header;
 
             struct WavChunk final
             {
-                std::array<cro::int8, 4u> ID{};
-                cro::uint32 size = 0;
+                std::array<std::int8_t, 4u> ID{};
+                std::uint32_t size = 0;
             };
 
-            cro::int64 m_dataStart;
-            cro::uint32 m_dataSize;
-            cro::uint64 m_bytesPerSecond;
+            std::int64_t m_dataStart;
+            std::uint32_t m_dataSize;
+            std::uint64_t m_bytesPerSecond;
 
             mutable PCMData m_dataChunk;
-            mutable std::vector<cro::uint8> m_sampleBuffer;
+            mutable std::vector<std::uint8_t> m_sampleBuffer;
         };
     }
 }

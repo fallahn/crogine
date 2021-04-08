@@ -88,7 +88,7 @@ namespace cro
             /*!
             \brief Emulates the C function fgets with an SDL rwops file
             */
-            static inline char* rwgets(char* dest, int32 size, SDL_RWops* file, cro::int64* bytesRead)
+            static inline char* rwgets(char* dest, std::int32_t size, SDL_RWops* file, std::int64_t* bytesRead)
             {
                 std::size_t count = 0;
                 char* compareStr = dest;
@@ -135,7 +135,7 @@ namespace cro
             }
 
             /*!
-            \brief Decode a UTF8 encoded string to a vector of uint32 codepoints.
+            \brief Decode a UTF8 encoded string to a vector of std::uint32_t codepoints.
             Donated by therocode https://github.com/therocode
             */
             static inline std::vector<uint32_t> getCodepoints(const std::string& str)

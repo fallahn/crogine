@@ -58,7 +58,7 @@ namespace cro
             std::atomic<bool> updating{ false };
             ALint processed = 0;
             SDL_Thread* thread = nullptr;
-            int32 sourceID = -1;
+            std::int32_t sourceID = -1;
             std::atomic<bool> looped{ false };
             ALenum state = AL_STOPPED;
         };
@@ -75,35 +75,35 @@ namespace cro
             void setListenerOrientation(glm::vec3, glm::vec3) override;
             void setListenerVolume(float) override;
 
-            cro::int32 requestNewBuffer(const std::string& path) override;
-            cro::int32 requestNewBuffer(const PCMData&) override;
-            void deleteBuffer(cro::int32) override;
+            std::int32_t requestNewBuffer(const std::string& path) override;
+            std::int32_t requestNewBuffer(const PCMData&) override;
+            void deleteBuffer(std::int32_t) override;
 
-            cro::int32 requestNewStream(const std::string&) override;
-            void updateStream(cro::int32) override;
-            void deleteStream(cro::int32) override;
+            std::int32_t requestNewStream(const std::string&) override;
+            void updateStream(std::int32_t) override;
+            void deleteStream(std::int32_t) override;
 
-            cro::int32 requestAudioSource(cro::int32, bool) override;
-            void updateAudioSource(cro::int32, cro::int32, bool) override;
-            void deleteAudioSource(cro::int32) override;
+            std::int32_t requestAudioSource(std::int32_t, bool) override;
+            void updateAudioSource(std::int32_t, std::int32_t, bool) override;
+            void deleteAudioSource(std::int32_t) override;
 
-            void playSource(cro::int32, bool) override;
-            void pauseSource(cro::int32) override;
-            void stopSource(cro::int32) override;
+            void playSource(std::int32_t, bool) override;
+            void pauseSource(std::int32_t) override;
+            void stopSource(std::int32_t) override;
 
-            int32 getSourceState(int32 src) const override;
+            std::int32_t getSourceState(std::int32_t src) const override;
 
-            void setSourcePosition(int32, glm::vec3) override;
-            void setSourcePitch(int32, float) override;
-            void setSourceVolume(int32, float) override;
-            void setSourceRolloff(int32, float) override;
+            void setSourcePosition(std::int32_t, glm::vec3) override;
+            void setSourcePitch(std::int32_t, float) override;
+            void setSourceVolume(std::int32_t, float) override;
+            void setSourceRolloff(std::int32_t, float) override;
 
         private:
             ALCdevice* m_device;
             ALCcontext* m_context;
 
             std::array<OpenALStream, 64> m_streams = {};
-            int32 m_nextStream;
+            std::int32_t m_nextStream;
         };
     }
 }

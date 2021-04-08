@@ -42,7 +42,7 @@ namespace cro
     as a *.cmf file using the Model converter program. The format
     is as follows:
 
-    uint8 Flags. A single byte containing the following flags
+    std::uint8_t Flags. A single byte containing the following flags
     marking the vertex attributes interleaved in the VBO data:
     
     Position
@@ -53,24 +53,24 @@ namespace cro
     UV0 - for diffuse mapping
     UV1 - for light mapping
 
-    uint8 index array count. The number of index arrays in this mesh
+    std::uint8_t index array count. The number of index arrays in this mesh
 
-    int32 the offset, in bytes, from the beginning of the file to the
+    std::int32_t the offset, in bytes, from the beginning of the file to the
     beginning of the index array.
 
-    int32[indexArrayCount] an array of array sizes. Each value
+    std::int32_t[indexArrayCount] an array of array sizes. Each value
     corresponds to the size of each array in the offset array, in bytes.
 
     float[] vbo data. Interleaved vbo data containing each attribute
     marked in the flags byte. Starts at sizeof header, ends at
     indec array offset - 1. Header size is calculated as:
 
-    sizeof(uint8) flags +
+    sizeof(std::uint8_t) flags +
     sizeof(unit8) array count + 
-    sizeof(int32) array offset +
-    (sizeof(int32) * array count)
+    sizeof(std::int32_t) array offset +
+    (sizeof(std::int32_t) * array count)
 
-    uint32[fileSize - arrayOffset] array of concatenated index
+    std::uint32_t[fileSize - arrayOffset] array of concatenated index
     arrays, the sizes of which are stored in array size array
 
     Be Aware: binary files are little endian (intel) by default.

@@ -163,7 +163,7 @@ namespace cro
 
         /*!
         \brief Returns true if the loaded model has a skeleton.
-        If this is true models created with createModel(() will have a skeleton
+        If this is true models created with createModel() will have a skeleton
         component added
         */
         bool hasSkeleton() const { return m_skeleton; }
@@ -172,8 +172,8 @@ namespace cro
         std::string m_workingDir;
 
         std::size_t m_meshID = 0; //!< ID of the mesh in the mesh resource
-        std::array<int32, Mesh::IndexData::MaxBuffers> m_materialIDs{}; //!< list of material IDs in the order in which they appear on the model
-        std::array<int32, Mesh::IndexData::MaxBuffers> m_shadowIDs{}; //!< IDs of shadow map materials if this model casts shadows
+        std::array<std::int32_t, Mesh::IndexData::MaxBuffers> m_materialIDs{}; //!< list of material IDs in the order in which they appear on the model
+        std::array<std::int32_t, Mesh::IndexData::MaxBuffers> m_shadowIDs{}; //!< IDs of shadow map materials if this model casts shadows
         std::size_t m_materialCount = 0; //!< number of active materials
         Skeleton m_skeleton; //!< overloaded operator bool indicates if currently valid
         bool m_castShadows = false; //!< if this is true the model entity also requires a shadow cast component

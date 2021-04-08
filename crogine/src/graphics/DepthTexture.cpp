@@ -90,7 +90,7 @@ DepthTexture& DepthTexture::operator=(DepthTexture&& other) noexcept
 }
 
 //public
-bool DepthTexture::create(uint32 width, uint32 height)
+bool DepthTexture::create(std::uint32_t width, std::uint32_t height)
 {
 #ifdef PLATFORM_MOBILE
     LogE << "Depth Textures are not available on mobile platforms" << std::endl;

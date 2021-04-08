@@ -98,9 +98,9 @@ Mesh::Data StaticMeshBuilder::build() const
         {
             meshData.indexData[i].format = GL_UNSIGNED_INT;
             meshData.indexData[i].primitiveType = meshData.primitiveType;
-            meshData.indexData[i].indexCount = static_cast<uint32>(meshFile.indexArrays[i].size());
+            meshData.indexData[i].indexCount = static_cast<std::uint32_t>(meshFile.indexArrays[i].size());
 
-            createIBO(meshData, meshFile.indexArrays[i].data(), i, sizeof(uint32));
+            createIBO(meshData, meshFile.indexArrays[i].data(), i, sizeof(std::uint32_t));
         }
 
         //boundingbox / sphere

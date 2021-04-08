@@ -94,7 +94,7 @@ namespace cro
         void restorePreviousViewport();
 
     private:
-        std::array<int32, 4> m_previousViewport{};
+        std::array<std::int32_t, 4> m_previousViewport{};
 
     };
 }

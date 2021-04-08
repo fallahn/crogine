@@ -38,9 +38,9 @@ source distribution.
 struct STBIMG_stbio_RWops;
 namespace cro
 {
-    int32 STBIMG__io_read(void* user, char* data, int32 size);
-    void STBIMG__io_skip(void* user, int32 n);
-    int32 STBIMG__io_eof(void* user);
+    std::int32_t STBIMG__io_read(void* user, char* data, std::int32_t size);
+    void STBIMG__io_skip(void* user, std::int32_t n);
+    std::int32_t STBIMG__io_eof(void* user);
     void stbi_callback_from_RW(SDL_RWops* src, STBIMG_stbio_RWops* out);
 
     void image_write_func(void* context, void* data, int size);    

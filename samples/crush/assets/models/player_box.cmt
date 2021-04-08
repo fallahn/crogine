@@ -1,0 +1,17 @@
+model placeholder
+{
+    mesh = "cube"
+    size = 0.600000,0.800000,0.6
+    cast_shadows = true
+
+    material PBR
+    {
+        mask_colour = 1.000000,0.100000,1.000000,1.000000
+        name = "placeholder"
+        colour = 1.0,0.494218,0.161947,1.000000
+        smooth = true
+        repeat = true
+        blendmode = "none"
+
+    }
+}

@@ -43,7 +43,7 @@ using namespace cro;
 
 namespace
 {
-    constexpr uint32 vertexSize = 2 * sizeof(float);
+    constexpr std::uint32_t vertexSize = 2 * sizeof(float);
 }
 
 PostProcess::PostProcess()
@@ -72,7 +72,7 @@ PostProcess::~PostProcess()
 }
 
 //public
-void PostProcess::resizeBuffer(int32 w, int32 h)
+void PostProcess::resizeBuffer(std::int32_t w, std::int32_t h)
 {
     m_currentBufferSize = { w, h };
     bufferResized();
@@ -96,7 +96,7 @@ void PostProcess::drawQuad(std::size_t passIndex, FloatRect size)
 
     //bind any textures / apply misc uniforms
     const auto& params = m_uniforms[shader.getGLHandle()];
-    uint32 currentTexUnit = 0;
+    std::uint32_t currentTexUnit = 0;
     for (const auto& u : params)
     {
         switch (u.second.type)

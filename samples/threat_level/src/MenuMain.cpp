@@ -60,7 +60,7 @@ namespace
 #include "MenuConsts.inl"
 }
 
-void MainState::createMainMenu(cro::uint32 mouseEnterCallback, cro::uint32 mouseExitCallback, 
+void MainState::createMainMenu(std::uint32_t mouseEnterCallback, std::uint32_t mouseExitCallback, 
     const cro::SpriteSheet& spriteSheetButtons, const cro::SpriteSheet& spriteSheetIcons)
 {
     const auto buttonNormalArea = spriteSheetButtons.getSprite("button_inactive").getTextureRect();

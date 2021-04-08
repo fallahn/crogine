@@ -43,12 +43,12 @@ namespace cro
         class DistanceField final
         {
         public:
-            static std::vector<uint8> toDF(const SDL_Surface* input);
+            static std::vector<std::uint8_t> toDF(const SDL_Surface* input);
 
         private:
-            static void twoD(std::vector<float>&, int32, int32);
+            static void twoD(std::vector<float>&, std::int32_t, std::int32_t);
             static std::vector<float> oneD(const std::vector<float>&, std::size_t);
-            static std::vector<uint8> toBytes(const std::vector<float>&);
+            static std::vector<std::uint8_t> toBytes(const std::vector<float>&);
         };
     }
 }

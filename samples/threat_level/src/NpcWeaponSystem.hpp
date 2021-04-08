@@ -68,16 +68,16 @@ private:
     void processMissile(cro::Entity);
 
     std::size_t m_orbCount;
-    std::vector<cro::int32> m_aliveOrbs;
+    std::vector<std::int32_t> m_aliveOrbs;
     std::size_t m_deadOrbCount;
-    std::vector<cro::int32> m_deadOrbs;
+    std::vector<std::int32_t> m_deadOrbs;
 
-    std::vector<cro::int32> m_activeLasers;
+    std::vector<std::int32_t> m_activeLasers;
 
     std::size_t m_alivePulseCount;
-    std::vector<cro::int32> m_alivePulses;
+    std::vector<std::int32_t> m_alivePulses;
     std::size_t m_deadPulseCount;
-    std::vector<cro::int32> m_deadPulses;
+    std::vector<std::int32_t> m_deadPulses;
 };
 
 #endif //TL_NPC_WEAPONS_SYSTEM_HPP_

@@ -68,8 +68,8 @@ private:
     cro::Texture m_backgroundTexture;
 
     void load();
-    void createMenu(const cro::SpriteSheet&, const cro::SpriteSheet&, cro::uint32, cro::uint32);
-    void createOptions(const cro::SpriteSheet&, const cro::SpriteSheet&, cro::uint32, cro::uint32);
+    void createMenu(const cro::SpriteSheet&, const cro::SpriteSheet&, std::uint32_t, std::uint32_t);
+    void createOptions(const cro::SpriteSheet&, const cro::SpriteSheet&, std::uint32_t, std::uint32_t);
     void updateView();
 };
 

@@ -141,6 +141,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\RenderTarget.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\RenderTexture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\ModelDefinition.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\SceneData.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Shader.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\ShaderResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Spatial.hpp" />
@@ -302,6 +303,7 @@
     <ClCompile Include="..\crogine\src\graphics\PrimitiveBuilders.cpp" />
     <ClCompile Include="..\crogine\src\graphics\RenderTexture.cpp" />
     <ClCompile Include="..\crogine\src\graphics\ModelDefinition.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\SceneData.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Shader.cpp" />
     <ClCompile Include="..\crogine\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Spatial.cpp" />
@@ -384,6 +386,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
+    <EnableASAN>false</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -446,6 +449,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>$(SolutionName)-d</TargetName>
     <IncludePath>$(IncludePath)</IncludePath>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ToolsDebug|x64'">
     <TargetName>$(SolutionName)-d</TargetName>
@@ -506,6 +510,7 @@
       <AdditionalOptions>/w34457 /w34456 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\debug;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

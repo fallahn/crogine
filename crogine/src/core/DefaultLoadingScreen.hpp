@@ -48,8 +48,8 @@ namespace cro
         void draw() override;
 
     private:
-        uint32 m_vbo;
-        uint32 m_transformIndex;
+        std::uint32_t m_vbo;
+        std::uint32_t m_transformIndex;
 
         Shader m_shader;
         glm::mat4 m_transform;

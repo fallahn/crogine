@@ -46,7 +46,7 @@ source distribution.
 namespace cro
 {
 
-    int32 STBIMG__io_read(void* user, char* data, int32 size)
+    std::int32_t STBIMG__io_read(void* user, char* data, std::int32_t size)
     {
         STBIMG_stbio_RWops* io = (STBIMG_stbio_RWops*)user;
 
@@ -59,7 +59,7 @@ namespace cro
         return ret * sizeof(char);
     }
 
-    void STBIMG__io_skip(void* user, int32 n)
+    void STBIMG__io_skip(void* user, std::int32_t n)
     {
         STBIMG_stbio_RWops* io = (STBIMG_stbio_RWops*)user;
 
@@ -70,7 +70,7 @@ namespace cro
         }
     }
 
-    int32 STBIMG__io_eof(void* user)
+    std::int32_t STBIMG__io_eof(void* user)
     {
         STBIMG_stbio_RWops* io = (STBIMG_stbio_RWops*)user;
         return io->atEOF;

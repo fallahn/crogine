@@ -88,8 +88,8 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
 
 void PlayerDirector::process(float dt)
 {  
-    static cro::int32 animID = -1;    
-    cro::uint16 changed = m_flags ^ m_previousFlags;
+    static std::int32_t animID = -1;    
+    std::uint16_t changed = m_flags ^ m_previousFlags;
 
     cro::Command cmd;
     cmd.targetFlags = CommandID::Player;

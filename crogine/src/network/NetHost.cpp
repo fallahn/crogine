@@ -40,9 +40,9 @@ using namespace cro;
 
 namespace
 {
-    ENetPacket* createPacket(uint8 id, const void* data, std::size_t size, NetFlag flags)
+    ENetPacket* createPacket(std::uint8_t id, const void* data, std::size_t size, NetFlag flags)
     {
-        int32 packetFlags = 0;
+        std::int32_t packetFlags = 0;
         if (flags == NetFlag::Reliable)
         {
             packetFlags |= ENET_PACKET_FLAG_RELIABLE;
@@ -56,9 +56,9 @@ namespace
             packetFlags |= ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT | ENET_PACKET_FLAG_UNSEQUENCED;
         }
 
-        ENetPacket* packet = enet_packet_create(&id, sizeof(uint8), packetFlags);
-        enet_packet_resize(packet, sizeof(uint8) + size);
-        std::memcpy(&packet->data[sizeof(uint8)], data, size);
+        ENetPacket* packet = enet_packet_create(&id, sizeof(std::uint8_t), packetFlags);
+        enet_packet_resize(packet, sizeof(std::uint8_t) + size);
+        std::memcpy(&packet->data[sizeof(std::uint8_t)], data, size);
 
         return packet;
     }
@@ -79,7 +79,7 @@ NetHost::~NetHost()
 }
 
 //public
-bool NetHost::start(const std::string& address, uint16 port, std::size_t maxClients, std::size_t maxChannels, uint32 incoming, uint32 outgoing)
+bool NetHost::start(const std::string& address, std::uint16_t port, std::size_t maxClients, std::size_t maxChannels, std::uint32_t incoming, std::uint32_t outgoing)
 {
     if (m_host)
     {
@@ -197,7 +197,7 @@ bool NetHost::pollEvent(NetEvent& evt)
     return false;
 }
 
-void NetHost::broadcastPacket(uint8 id, const void* data, std::size_t size, NetFlag flags, uint8 channel)
+void NetHost::broadcastPacket(std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel)
 {
     if (m_host)
     {
@@ -205,7 +205,7 @@ void NetHost::broadcastPacket(uint8 id, const void* data, std::size_t size, NetF
     }
 }
 
-void NetHost::sendPacket(const NetPeer& peer, uint8 id, const void* data, std::size_t size, NetFlag flags, uint8 channel)
+void NetHost::sendPacket(const NetPeer& peer, std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel)
 {
     if (peer.m_peer)
     {

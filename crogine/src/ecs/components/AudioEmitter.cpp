@@ -183,7 +183,7 @@ void AudioEmitter::setRolloff(float rolloff)
     m_rolloff = std::max(0.f, rolloff);
 }
 
-void AudioEmitter::setMixerChannel(uint8 channel)
+void AudioEmitter::setMixerChannel(std::uint8_t channel)
 {
     CRO_ASSERT(channel < AudioMixer::MaxChannels, "Channel value out of range");
     m_mixerChannel = channel; 

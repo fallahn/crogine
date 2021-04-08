@@ -35,6 +35,8 @@ source distribution.
 #include <SDL_events.h>
 #include <SDL_rwops.h>
 
+#include <cstdint>
+
 /*
 Aliases for SDL types
 Not strictly necessary as they all boil down to stdint types
@@ -42,14 +44,14 @@ Not strictly necessary as they all boil down to stdint types
 
 namespace cro
 {
-    using uint8 = Uint8;
-    using int8 = Sint8;
-    using uint16 = Uint16;
-    using int16 = Sint16;
-    using uint32 = Uint32;
-    using int32 = Sint32;
-    using uint64 = Uint64;
-    using int64 = Sint64;
+    //using std::uint8_t = Uint8;
+    //using std::int8_t = Sint8;
+    //using std::uint16_t = Uint16;
+    //using std::int16_t = Sint16;
+    //using std::uint32_t = Uint32;
+    //using std::int32_t = Sint32;
+    //using std::uint64_t = Uint64;
+    //using std::int64_t = Sint64;
 
     using Event = SDL_Event;
 

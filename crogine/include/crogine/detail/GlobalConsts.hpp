@@ -44,5 +44,5 @@ namespace cro
     //shader compiled with the ShaderResource::ReceiveShadowMaps flag
     //this is only a preferred amount and is dependent on MAX_VARYING_VECTORS
     //available on the current hardware
-    static const int32 MAX_PROJECTION_MAPS = 4;
+    static const std::int32_t MAX_PROJECTION_MAPS = 4;
 }
