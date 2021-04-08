@@ -32,6 +32,7 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "Slider.hpp"
 #include "MenuConsts.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -343,36 +344,58 @@ void MenuState::createScene()
         });
 #endif //CRO_DEBUG_
 
-    auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>().addCallback(
-        [&](cro::Entity e)
+    //check the maps directory. if it's empty then there's no point carrying on
+    auto mapList = cro::FileSystem::listFiles("assets/maps");
+    mapList.erase(std::remove_if(mapList.begin(), mapList.end(),
+        [](const std::string& p)
         {
-            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-        });
-    auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
-        [](cro::Entity e)
-        {
-            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        });
+            return cro::FileSystem::getFileExtension(p) != ".tmx";
+        }), mapList.end());
 
-    auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f,0.f,-10.f });
-    entity.addComponent<cro::Sprite>(m_textureResource.get("assets/images/menu_background.png"));
-    entity.addComponent<cro::Drawable2D>();
+    if (mapList.empty())
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(m_font).setString("No Maps Found!");
+        entity.getComponent<cro::Text>().setCharacterSize(LargeTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    }
+    else
+    {
+        m_sharedData.mapName = mapList[0];
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::RootNode;
+        auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>().addCallback(
+            [&](cro::Entity e)
+            {
+                e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+            });
+        auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
+            [](cro::Entity e)
+            {
+                e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            });
 
-    createMainMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createAvatarMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createLocalMenu(entity, mouseEnterCallback, mouseExitCallback);
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f,0.f,-10.f });
+        entity.addComponent<cro::Sprite>(m_textureResource.get("assets/images/menu_background.png"));
+        entity.addComponent<cro::Drawable2D>();
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::RootNode;
+
+        createMainMenu(entity, mouseEnterCallback, mouseExitCallback);
+        createAvatarMenu(entity, mouseEnterCallback, mouseExitCallback);
+        createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
+        createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
+        createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
+        createLocalMenu(entity, mouseEnterCallback, mouseExitCallback);
+    }
 
     //set a custom camera so the scene doesn't overwrite the viewport
     //with the default view when resizing the window
-    entity = m_scene.createEntity();
+    auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Camera>().resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
     m_scene.setActiveCamera(entity);
@@ -401,10 +424,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 m_readyState[m_sharedData.clientConnection.connectionID] = false;
 
                 //send player details to server (name, skin)
-                std::uint8_t size = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, m_sharedData.localPlayer.name.size() * sizeof(std::uint32_t)));
-                std::vector<std::uint8_t> buffer(size + 1);
-                buffer[0] = size;
-                std::memcpy(&buffer[1], m_sharedData.localPlayer.name.data(), size);
+                auto buffer = Util::createStringPacket(m_sharedData.localPlayer.name);
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                 //switch to lobby view (if not playing split screen)
@@ -425,6 +445,10 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                         m_sharedData.clientConnection.netClient.sendPacket(
                             PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
                             cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                        //and send the map name
+                        auto buffer = Util::createStringPacket(m_sharedData.mapName);
+                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapName, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
                     }
                 }
                 //else default to two players
@@ -432,6 +456,9 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 {
                     std::uint16_t data = m_sharedData.clientConnection.connectionID << 8 | 2;
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerCount, data, cro::NetFlag::Reliable);
+
+                    auto buffer = Util::createStringPacket(m_sharedData.mapName);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapName, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
                 }
                 LOG("Successfully connected to server", cro::Logger::Type::Info);
             }
@@ -462,6 +489,9 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             m_readyState[((data & 0xff00) >> 8)] = (data & 0x00ff) ? true : false;
             updateReadyDisplay();
         }
+            break;
+        case PacketID::MapName:
+            m_sharedData.mapName = Util::readStringPacket(evt.packet);
             break;
         }
     }

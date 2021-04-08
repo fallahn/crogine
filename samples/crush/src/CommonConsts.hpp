@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -31,8 +31,12 @@ source distribution.
 
 #include <cstdint>
 #include <cstddef>
+#include <cstring>
 #include <array>
+#include <vector>
 
+#include <crogine/core/String.hpp>
+#include <crogine/network/NetData.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
 namespace ConstVal
@@ -84,5 +88,34 @@ namespace Util
     static inline float decompressFloat(std::int16_t i)
     {
         return static_cast<float>(i) / 10000.f;
+    }
+
+    static inline std::vector<std::uint8_t> createStringPacket(const cro::String& str)
+    {
+        std::uint8_t size = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, str.size() * sizeof(std::uint32_t)));
+        std::vector<std::uint8_t> buffer(size + 1);
+        buffer[0] = size;
+        std::memcpy(&buffer[1], str.data(), size);
+
+        return buffer;
+    }
+
+    static inline cro::String readStringPacket(const cro::NetEvent::Packet& packet)
+    {
+        if (packet.getSize() > 0)
+        {
+            std::uint8_t size = static_cast<const std::uint8_t*>(packet.getData())[0];
+            size = std::min(size, static_cast<std::uint8_t>(ConstVal::MaxStringDataSize));
+
+            if (size % sizeof(std::uint32_t) == 0)
+            {
+                std::vector<std::uint32_t> buffer(size / sizeof(std::uint32_t));
+                std::memcpy(buffer.data(), static_cast<const std::uint8_t*>(packet.getData()) + 1, size);
+
+                return cro::String::fromUtf32(buffer.begin(), buffer.end());
+            }
+        }
+
+        return "Bad packet data";
     }
 }

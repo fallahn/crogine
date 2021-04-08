@@ -268,13 +268,15 @@ bool GameState::simulate(float dt)
             m_sceneRequestClock.restart();
             m_dataRequestCount++;
 
-            if ((m_requestFlags & ClientRequestFlags::Heightmap) == 0)
+
+            //TODO this should have alrady been done in the lobby
+            if ((m_requestFlags & ClientRequestFlags::MapName) == 0)
             {
-                std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | ClientRequestFlags::Heightmap;
+                std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | ClientRequestFlags::MapName;
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestData, data, cro::NetFlag::Reliable);
             }
             //these require the heightmap has already been received
-            else
+            /*else
             {
                 if ((m_requestFlags & ClientRequestFlags::TreeMap) == 0)
                 {
@@ -287,7 +289,7 @@ bool GameState::simulate(float dt)
                     std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | ClientRequestFlags::BushMap;
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestData, data, cro::NetFlag::Reliable);
                 }
-            }
+            }*/
         }
     }
     else if (!m_sharedData.clientConnection.ready)

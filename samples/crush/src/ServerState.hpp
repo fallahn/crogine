@@ -55,6 +55,7 @@ namespace Sv
         cro::NetHost host;
         std::array<Sv::ClientConnection, ConstVal::MaxClients> clients;
         cro::MessageBus messageBus;
+        cro::String mapName;
     };
 
     namespace StateID

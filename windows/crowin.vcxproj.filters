@@ -591,9 +591,6 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\BinaryMeshBuilder.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\graphics\SceneData.hpp">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -975,9 +972,6 @@
       <Filter>Source Files\detail</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\BinaryMeshBuilder.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\graphics\SceneData.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>

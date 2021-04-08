@@ -132,6 +132,9 @@
     <ClCompile Include="src\DayNightDirector.cpp">
       <Filter>Source Files\Client\directors</Filter>
     </ClCompile>
+    <ClCompile Include="src\MapData.cpp">
+      <Filter>Source Files\shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -235,6 +238,9 @@
     </ClInclude>
     <ClInclude Include="src\PoissonDisk.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MapData.hpp">
+      <Filter>Header Files\shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -36,6 +36,8 @@ source distribution.
 #include <cmath>
 #include <array>
 
+static const glm::vec3 PlayerSize = glm::vec3(0.6f, 0.8f, 0.6f);
+
 static constexpr float SpawnOffset = 30.f;
 static const std::array PlayerSpawns =
 {
@@ -56,7 +58,7 @@ struct ClientRequestFlags
 {
     enum
     {
-        Heightmap = 0x1,
+        MapName = 0x1,
         TreeMap   = 0x2,
         BushMap   = 0x4,
 

@@ -65,5 +65,7 @@ struct SharedStateData final
     PlayerData localPlayer;
     cro::String targetIP;
 
+    cro::String mapName;
+
     std::string errorMessage;
 };

@@ -53,5 +53,6 @@ namespace Sv
         std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
         void insertPlayerInfo(const cro::NetEvent&);
+        void updateMapName(const cro::NetEvent&);
     };
 }

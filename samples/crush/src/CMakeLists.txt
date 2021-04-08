@@ -8,6 +8,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/InterpolationSystem.cpp
   ${PROJECT_DIR}/LoadingScreen.cpp
   ${PROJECT_DIR}/main.cpp
+  ${PROJECT_DIR}/MapData.cpp
   ${PROJECT_DIR}/MenuCreation.cpp
   ${PROJECT_DIR}/MenuState.cpp
   ${PROJECT_DIR}/MyApp.cpp

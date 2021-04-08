@@ -89,6 +89,9 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
             m_sharedData.clients.at(connection).playerCount = count;
         }
             break;
+        case PacketID::MapName:
+            updateMapName(evt);
+            break;
         }
     }
 }
@@ -113,19 +116,7 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
 
     if (playerID < ConstVal::MaxClients)
     {
-        if (evt.packet.getSize() > 0)
-        {
-            std::uint8_t size = static_cast<const std::uint8_t*>(evt.packet.getData())[0];
-            size = std::min(size, static_cast<std::uint8_t>(ConstVal::MaxStringDataSize));
-
-            if (size % sizeof(std::uint32_t) == 0)
-            {
-                std::vector<std::uint32_t> buffer(size / sizeof(std::uint32_t));
-                std::memcpy(buffer.data(), static_cast<const std::uint8_t*>(evt.packet.getData()) + 1, size);
-
-                m_sharedData.clients[playerID].name = cro::String::fromUtf32(buffer.begin(), buffer.end());
-            }
-        }
+        m_sharedData.clients[playerID].name = Util::readStringPacket(evt.packet);
     }
 
     //broadcast all player info (we need to send all clients to the new one, so might as well update everyone)
@@ -144,9 +135,22 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
             std::memcpy(buffer.data() + sizeof(data), c.name.data(), data.stringSize);
 
             m_sharedData.host.broadcastPacket(PacketID::LobbyUpdate, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+            //broadcast current map name
+            auto mapBuffer = Util::createStringPacket(m_sharedData.mapName);
+            m_sharedData.host.broadcastPacket(PacketID::MapName, mapBuffer.data(), mapBuffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
         }
 
         std::uint8_t ready = m_readyState[i] ? 1 : 0;
         m_sharedData.host.broadcastPacket(PacketID::LobbyReady, std::uint16_t(std::uint8_t(i) << 8 | ready), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
+}
+
+void LobbyState::updateMapName(const cro::NetEvent& evt)
+{
+    m_sharedData.mapName = Util::readStringPacket(evt.packet);
+
+    m_sharedData.host.broadcastPacket(PacketID::MapName, evt.packet.getData(), evt.packet.getSize(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+    LogI << "Server set map to " << m_sharedData.mapName.toAnsiString() << std::endl;
 }

@@ -78,5 +78,6 @@ namespace PacketID
         //both directions
         ServerCommand, //< ServerCommand struct - requests server perform some action (may be ignored by server), forwarded to target client if successful
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
+        MapName, //< uint8 name length in bytes followed by uint32 array string
     };
 }

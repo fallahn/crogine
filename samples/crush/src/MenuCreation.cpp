@@ -512,6 +512,9 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                             e.getComponent<cro::Text>().setString("Ready");
                         };
                         m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                        //reset the map name and wait for the name from the server
+                        m_sharedData.mapName = "Has cheeze";
                     }
                 }
             });
@@ -571,6 +574,22 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
         menuTransform.addChild(entity.getComponent<cro::Transform>());
     }
+
+
+    //display the map name - TODO make this selectable if hosting
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ cro::DefaultSceneSize.x / 2.f, 100.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_font).setCharacterSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Text>().setString(m_sharedData.mapName);
+    };
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     //back
     entity = m_scene.createEntity();
@@ -689,6 +708,22 @@ void MenuState::createLocalMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::PlayerIndicator;
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+
+    //display the map name - TODO make this selectable
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ cro::DefaultSceneSize.x / 2.f, 100.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_font).setCharacterSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Text>().setString(m_sharedData.mapName);
+    };
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
