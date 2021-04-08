@@ -188,7 +188,7 @@ Q3BspSystem::~Q3BspSystem()
         for (auto& [ibo, mat] : m_meshes[MeshData::Brush].submeshes)
         {
 #ifdef PLATFORM_DESKTOP
-            glCheck(glDeleteVertexArrays(1, &ibo.vao));
+            glCheck(glDeleteVertexArrays(1, &ibo.vao[0]));
 #endif
             glCheck(glDeleteBuffers(1, &ibo.ibo));
         }
@@ -426,7 +426,7 @@ void Q3BspSystem::render(cro::Entity camera, const cro::RenderTarget&)
             m_activeMatData = matData;
 
 #ifdef PLATFORM_DESKTOP
-            glCheck(glBindVertexArray(submesh.vao));
+            glCheck(glBindVertexArray(submesh.vao[0]));
             glCheck(glDrawElements(static_cast<GLenum>(submesh.primitiveType), submesh.indexCount, static_cast<GLenum>(submesh.format), 0));
 
 #else //GLES 2 doesn't have VAO support without extensions
@@ -817,9 +817,9 @@ void Q3BspSystem::createMesh(const std::vector<Q3::Vertex>& vertices, std::size_
         glCheck(glGenBuffers(1, &submesh.ibo));
 
 #ifdef PLATFORM_DESKTOP
-        glCheck(glGenVertexArrays(1, &submesh.vao));
+        glCheck(glGenVertexArrays(1, &submesh.vao[0]));
 
-        glCheck(glBindVertexArray(submesh.vao));
+        glCheck(glBindVertexArray(submesh.vao[0]));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Brush].mesh.vbo));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
 
@@ -915,9 +915,9 @@ void Q3BspSystem::createPatchMesh(const std::vector<float>& vertices)
         glCheck(glGenBuffers(1, &submesh.ibo));
 
 #ifdef PLATFORM_DESKTOP
-        glCheck(glGenVertexArrays(1, &submesh.vao));
+        glCheck(glGenVertexArrays(1, &submesh.vao[0]));
 
-        glCheck(glBindVertexArray(submesh.vao));
+        glCheck(glBindVertexArray(submesh.vao[0]));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshes[MeshData::Patch].mesh.vbo));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
 

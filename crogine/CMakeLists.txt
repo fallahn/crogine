@@ -55,6 +55,9 @@ include_directories(
   ${FREETYPE_INCLUDE_DIRS} 
   ${CMAKE_SOURCE_DIR}/crogine/include)
   
+if(MSVC)
+  include_directories(${CMAKE_SOURCE_DIR}/extlibs/openal/include)
+endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
@@ -100,6 +103,10 @@ target_link_libraries(${PROJECT_NAME}
   ${FREETYPE_LIBRARIES}
   ${OPENGL_LIBRARIES}
   ${SDL2_MIXER_LIBRARY})
+endif()
+
+if(WIN32)
+  target_link_libraries(${PROJECT_NAME} winmm ws2_32)
 endif()
 
 

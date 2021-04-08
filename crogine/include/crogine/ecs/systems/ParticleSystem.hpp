@@ -67,26 +67,26 @@ namespace cro
         void onEntityRemoved(Entity) override;
 
         std::vector<float> m_dataBuffer;
-        std::vector<uint32> m_vboIDs;
-        std::vector<uint32> m_vaoIDs; //< used on desktop
+        std::vector<std::uint32_t> m_vboIDs;
+        std::vector<std::uint32_t> m_vaoIDs; //< used on desktop
         std::size_t m_nextBuffer;
         std::size_t m_bufferCount;
 
         void allocateBuffer();
 
         Shader m_shader;
-        int32 m_clipPlaneUniform;
-        int32 m_projectionUniform;
-        int32 m_textureUniform;
-        int32 m_viewProjUniform;
-        int32 m_viewportUniform;
-        int32 m_sizeUniform;
+        std::int32_t m_clipPlaneUniform;
+        std::int32_t m_projectionUniform;
+        std::int32_t m_textureUniform;
+        std::int32_t m_viewProjUniform;
+        std::int32_t m_viewportUniform;
+        std::int32_t m_sizeUniform;
 
         struct AttribData final
         {
-            int32 index = 0;
-            int32 attribSize = 0;
-            int32 offset = 0;
+            std::int32_t index = 0;
+            std::int32_t attribSize = 0;
+            std::int32_t offset = 0;
         };
         std::array<AttribData, 3u> m_attribData;
     };

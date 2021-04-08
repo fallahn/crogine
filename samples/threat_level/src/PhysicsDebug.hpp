@@ -68,13 +68,13 @@ namespace cro
             void render(glm::mat4);
 
         private:
-            uint32 m_vboID;
-            std::array<int32, 2u> m_attribIndices{};
+            std::uint32_t m_vboID;
+            std::array<std::int32_t, 2u> m_attribIndices{};
             std::vector<float> m_vertexData;
             std::size_t m_vertexCount;
             Shader m_shader;
-            int32 m_uniformIndex;
-            int32 m_debugFlags;
+            std::int32_t m_uniformIndex;
+            std::int32_t m_debugFlags;
         };
     }
 }

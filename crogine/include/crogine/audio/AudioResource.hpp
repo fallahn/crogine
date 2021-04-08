@@ -63,17 +63,17 @@ namespace cro
         \param streaming If set to true the requested file should be streamed from storage
         rather than loaded entirely into RAM
         */
-        bool load(int32 id, const std::string& path, bool streaming = false);
+        bool load(std::int32_t id, const std::string& path, bool streaming = false);
 
         /*!
         \brief Attempts to return the loaded data mapped to the given ID
         If the requested ID is not found an empty buffer will be returned
         */
-        const AudioSource& get(int32 id) const;
+        const AudioSource& get(std::int32_t id) const;
 
     private:
 
         std::unique_ptr<AudioSource> m_fallback;
-        std::unordered_map<int32, std::unique_ptr<AudioSource>> m_sources;
+        std::unordered_map<std::int32_t, std::unique_ptr<AudioSource>> m_sources;
     };
 }

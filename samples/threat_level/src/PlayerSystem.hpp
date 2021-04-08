@@ -38,12 +38,12 @@ struct PlayerInfo final
     {
         Spawning, Alive, Dying, Dead, EndingRound
     }state = State::Spawning;
-    cro::uint32 shieldEntity = 0;
+    std::uint32_t shieldEntity = 0;
     float health = 100.f;
     float maxParticleRate = 0.f;
     bool hasBombs = false;
     bool hasEmp = false;
-    cro::int32 lives = 3;
+    std::int32_t lives = 3;
     bool pendingRoundEnd = false;
 };
 
@@ -58,7 +58,7 @@ public:
 private:
     float m_respawnTime;
     float m_shieldTime;
-    cro::int32 m_score;
+    std::int32_t m_score;
 
     void updateSpawning(cro::Entity, float);
     void updateAlive(cro::Entity, float);

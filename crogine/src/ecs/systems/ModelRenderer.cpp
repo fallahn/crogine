@@ -124,13 +124,13 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
                     if (model.m_materials[Mesh::IndexData::Final][i].blendMode != Material::BlendMode::None)
                     {
                         transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                        transparent.second.flags = static_cast<int64>(-distance * 1000000.f); //suitably large number to shift decimal point
+                        transparent.second.flags = static_cast<std::int64_t>(-distance * 1000000.f); //suitably large number to shift decimal point
                         transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
                     }
                     else
                     {
                         opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                        opaque.second.flags = static_cast<int64>(distance * 1000000.f);
+                        opaque.second.flags = static_cast<std::int64_t>(distance * 1000000.f);
                     }
                 }
 

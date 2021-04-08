@@ -42,8 +42,8 @@ namespace cro
             {
                 MONO8, MONO16, STEREO8, STEREO16
             }format = Format::MONO16;
-            cro::uint32 size = 0;
-            cro::uint32 frequency = 0;
+            std::uint32_t size = 0;
+            std::uint32_t frequency = 0;
             void* data = nullptr;
         };
     }

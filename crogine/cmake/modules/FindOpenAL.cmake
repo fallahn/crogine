@@ -62,8 +62,7 @@ find_path(OPENAL_INCLUDE_DIR al.h
     ~/Library/Frameworks
     /Library/Frameworks
     /opt
-    ../extlibs/openal/include
-    ../extlibs/openal/msvc/x64
+    ../extlibs/openal/include/AL
     [HKEY_LOCAL_MACHINE\\SOFTWARE\\Creative\ Labs\\OpenAL\ 1.1\ Software\ Development\ Kit\\1.00.0000;InstallDir]
   PATH_SUFFIXES include/AL include/OpenAL include AL OpenAL
   )
@@ -82,6 +81,8 @@ find_library(OPENAL_LIBRARY
     ~/Library/Frameworks
     /Library/Frameworks
     /opt
+    ../extlibs/openal/msvc/x64
+    ../extlibs/openal/msvc/x86
     [HKEY_LOCAL_MACHINE\\SOFTWARE\\Creative\ Labs\\OpenAL\ 1.1\ Software\ Development\ Kit\\1.00.0000;InstallDir]
   PATH_SUFFIXES libx32 lib64 lib libs64 libs ${_OpenAL_ARCH_DIR}
   )

@@ -95,15 +95,10 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_selectedTexture       (std::numeric_limits<std::uint32_t>::max()),
     m_selectedMaterial      (std::numeric_limits<std::uint32_t>::max())
 {
-    //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
-        //add systems to scene
         addSystems();
-        //load assets (textures, shaders, models etc)
         loadAssets();
-        //create some entities
         createScene();
-        //windowing
         buildUI();
     });
 
@@ -386,7 +381,7 @@ void ModelState::createScene()
     cro::ModelDefinition def;
     def.loadFromFile("assets/models/arrow.cmt", m_resources);
     def.createModel(m_scene.getSunlight(), m_resources);
-    m_scene.getSunlight().getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", cro::Colour(1.f, 1.f, 0.f, 1.f));
+    //m_scene.getSunlight().getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", cro::Colour(1.f, 1.f, 0.f, 1.f));
 
 
     m_entities[EntityID::ArcBall] = m_scene.createEntity();

@@ -1017,7 +1017,7 @@ void GameState::loadModels()
     weaverShape.type = cro::PhysicsShape::Type::Box;
     for (auto i = 0u; i < WeaverNavigator::count; ++i)
     {
-        cro::int32 modelID = (i == 0) ? GameModelID::WeaverHead : GameModelID::WeaverBody;
+        std::int32_t modelID = (i == 0) ? GameModelID::WeaverHead : GameModelID::WeaverBody;
 
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ (static_cast<float>(i) * (WeaverNavigator::spacing * weaverScale.x)) + 10.f, 0.f, -9.3f });

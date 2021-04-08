@@ -62,7 +62,7 @@ namespace cro
         \param shader A reference to the shader to use when drawing this material
         \returns Reference of the new material data
         */
-        Material::Data& add(int32 ID, const Shader& shader);
+        Material::Data& add(std::int32_t ID, const Shader& shader);
 
         /*!
         \brief Adds a material to the resource.
@@ -71,16 +71,16 @@ namespace cro
         for storing IDs of materials generated on the fly.
         \param shader Reference to the shader to use for this material.
         */
-        int32 add(const Shader& shader);
+        std::int32_t add(const Shader& shader);
 
         /*!
         \brief Returns a copy of the material data for the given ID
         if it has been found to have been added to the MaterialResource.
         \param ID Integer value previously mapped to a material.
         */
-        Material::Data& get(int32 ID);
+        Material::Data& get(std::int32_t ID);
 
     private:
-        std::unordered_map<int32, Material::Data> m_materials;
+        std::unordered_map<std::int32_t, Material::Data> m_materials;
     };
 }

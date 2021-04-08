@@ -68,7 +68,7 @@ private:
 
     float m_playerHealth;
     float m_weaponTime;
-    cro::int32 m_score;
+    std::int32_t m_score;
 
     void onEntityAdded(cro::Entity entity) override;
 };

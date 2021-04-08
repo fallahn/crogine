@@ -70,7 +70,7 @@ namespace cro
         \param borderless If set to true the window is rendered borderless when not fullscreen
         \returns true on success, else false
         */
-        bool create(uint32 width, uint32 height, const std::string& title, bool fullscreen = false, bool borderless = false);
+        bool create(std::uint32_t width, std::uint32_t height, const std::string& title, bool fullscreen = false, bool borderless = false);
         /*!
         \brief Enables or disables vsync
         */
@@ -136,14 +136,14 @@ namespace cro
         \param y Vertical position to place the window. A negative number
         will centre the window vertically
         */
-        void setPosition(int32 x, int32 y);
+        void setPosition(std::int32_t x, std::int32_t y);
         /*!
         \brief Sets the window icon from an array of RGBA pixels.
         The image size is assumed to be 16x16 pixels in 8-bit format.
         To use an image from disk load it first with cro::Image then pass
         the pixel pointer to this function.
         */
-        void setIcon(const uint8*);
+        void setIcon(const std::uint8_t*);
         /*!
         \brief Returns a reference to a vector containing a list of available
         display resolutions of the first monitor.

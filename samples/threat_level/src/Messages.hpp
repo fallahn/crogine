@@ -61,7 +61,7 @@ struct BackgroundEvent final
     } type;
     float value = 0.f;
     glm::vec2 position = glm::vec2(0.f);
-    cro::uint32 entityID = 0;
+    std::uint32_t entityID = 0;
 };
 
 struct GameEvent final
@@ -83,7 +83,7 @@ struct StatsEvent final
     {
         Score
     }type;
-    cro::int32 value;
+    std::int32_t value;
 };
 
 struct PlayerEvent final
@@ -101,12 +101,12 @@ struct PlayerEvent final
         FiredLaser
     }type;
     glm::vec3 position = glm::vec3(0.f);
-    cro::uint32 entityID = 0;
+    std::uint32_t entityID = 0;
     union
     {
         bool weaponActivated;
         float value;
-        cro::int32 itemID;
+        std::int32_t itemID;
     };
 };
 
@@ -119,11 +119,11 @@ struct NpcEvent final
         HealthChanged,
         ExitScreen
     }type;
-    cro::int32 npcType = -1;
+    std::int32_t npcType = -1;
     glm::vec3 position = glm::vec3(0.f);
     glm::vec3 velocity = glm::vec3(0.f);
     float value = 0.f;
-    cro::uint32 entityID = 0;
+    std::uint32_t entityID = 0;
 };
 
 struct BuddyEvent final
@@ -140,7 +140,7 @@ struct BuddyEvent final
 struct WeaponEvent final
 {
     float downgradeTime = 0.f;
-    cro::int32 fireMode = 0;
+    std::int32_t fireMode = 0;
 };
 
 struct UIEvent final

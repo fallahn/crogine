@@ -44,13 +44,13 @@ namespace cro
         Time();
 
         float asSeconds() const;
-        int32 asMilliseconds() const;
+        std::int32_t asMilliseconds() const;
 
     private:
         friend CRO_EXPORT_API Time seconds(float);
-        friend CRO_EXPORT_API Time milliseconds(int32);
+        friend CRO_EXPORT_API Time milliseconds(std::int32_t);
 
-        int32 m_value;
+        std::int32_t m_value;
     };
 
     /*!
@@ -60,7 +60,7 @@ namespace cro
     /*!
     \brief Constructs a Time object from a duration of milliseconds
     */
-    CRO_EXPORT_API Time milliseconds(int32);
+    CRO_EXPORT_API Time milliseconds(std::int32_t);
 
     /*!
     \brief Overload of == operator for two Time objects
@@ -115,7 +115,7 @@ namespace cro
     \brief Overload of * operator for multiplying a Time object by 
     a number of milliseconds
     */
-    CRO_EXPORT_API Time operator * (Time, int32);
+    CRO_EXPORT_API Time operator * (Time, std::int32_t);
     /*
     \brief Overload of * operator to multiply a floating point
     value in seconds by a Time object
@@ -125,7 +125,7 @@ namespace cro
     \brief Overload of * operator to multiply a number of milliseconds
     by a Time object
     */
-    CRO_EXPORT_API Time operator * (int32, Time);
+    CRO_EXPORT_API Time operator * (std::int32_t, Time);
     /*!
     \brief Overload of *= operator to scale a Time object by a number of seconds
     */
@@ -133,7 +133,7 @@ namespace cro
     /*!
     \brief Overload of *= operator to scale a Time object by a number of milliseconds
     */
-    CRO_EXPORT_API Time& operator *= (Time&, int32);
+    CRO_EXPORT_API Time& operator *= (Time&, std::int32_t);
     /*!
     \brief Overload of / operator to scale a Time object by a number of seconds
     */
@@ -141,7 +141,7 @@ namespace cro
     /*!
     \brief Overload of / operator to scale a Time object by a number of milliseconds
     */
-    CRO_EXPORT_API Time operator / (Time, int32);
+    CRO_EXPORT_API Time operator / (Time, std::int32_t);
     /*!
     \brief Overload of / operator to scale a Time object by a number of seconds
     */
@@ -149,7 +149,7 @@ namespace cro
     /*!
     \brief Overload of / operator to scale a Time object by a number of milliseconds
     */
-    CRO_EXPORT_API Time& operator /= (Time&, int32);
+    CRO_EXPORT_API Time& operator /= (Time&, std::int32_t);
     /*!
     \brief OVerload of / operator to divide one Time object by another
     */

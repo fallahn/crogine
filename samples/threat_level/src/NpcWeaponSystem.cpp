@@ -146,7 +146,7 @@ void NpcWeaponSystem::handleMessage(const cro::Message& msg)
             {
                 //kill any firing weapons
                 //auto laser = std::find_if(std::begin(m_activeLasers), std::end(m_activeLasers),
-                //    [&, data](cro::int32 id)
+                //    [&, data](std::int32_t id)
                 //{
                 //    return getScene()->getEntity(id).getComponent<cro::Transform>().getParentID() == data.entityID;
                 //});

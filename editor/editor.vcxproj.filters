@@ -66,6 +66,9 @@
     <ClCompile Include="src\ModelStateUI.cpp">
       <Filter>Source Files\model viewer</Filter>
     </ClCompile>
+    <ClCompile Include="src\WorldStateUI.cpp">
+      <Filter>Source Files\world viewer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">

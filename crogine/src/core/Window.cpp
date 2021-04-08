@@ -65,7 +65,7 @@ Window::~Window()
 }
 
 //public
-bool Window::create(uint32 width, uint32 height, const std::string& title, bool fullscreen, bool borderless)
+bool Window::create(std::uint32_t width, std::uint32_t height, const std::string& title, bool fullscreen, bool borderless)
 {
     if (!Detail::SDLResource::valid()) return false;
     
@@ -193,7 +193,7 @@ void Window::close()
 glm::uvec2 Window::getSize() const
 {
     CRO_ASSERT(m_window, "window not created");
-    int32 x, y;
+    std::int32_t x, y;
 #ifdef PLATFORM_MOBILE
     SDL_GL_GetDrawableSize(m_window, &x, &y);
 #else
@@ -222,7 +222,7 @@ void Window::setFullScreen(bool fullscreen)
     }
 }
 
-void Window::setPosition(int32 x, int32 y)
+void Window::setPosition(std::int32_t x, std::int32_t y)
 {
     CRO_ASSERT(m_window, "window not created");
     if (x < 0) x = SDL_WINDOWPOS_CENTERED;
@@ -230,7 +230,7 @@ void Window::setPosition(int32 x, int32 y)
     SDL_SetWindowPosition(m_window, x, y);
 }
 
-void Window::setIcon(const uint8* data)
+void Window::setIcon(const std::uint8_t* data)
 {
     CRO_ASSERT(m_window, "window not created");
     SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*)(data), 16, 16, 32, 16 * 4, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
@@ -331,7 +331,7 @@ void Window::loadResources(const std::function<void()>& loader)
 
     SDL_AtomicIncRef(&data.threadFlag);
 
-    int32 result = 0;
+    std::int32_t result = 0;
     SDL_WaitThread(thread, &result);
 
     //SDL_GL_MakeCurrent(m_window, m_mainContext);

@@ -49,8 +49,8 @@ public:
     void draw() override;
 
 private:
-    cro::uint32 m_vbo;
-    cro::uint32 m_transformIndex;
+    std::uint32_t m_vbo;
+    std::uint32_t m_transformIndex;
 
     cro::Shader m_shader;
     glm::mat4 m_transform;

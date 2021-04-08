@@ -171,8 +171,8 @@ namespace cro
 
         static App* m_instance;
 
-        std::map<int32, SDL_GameController*> m_controllers;
-        std::map<int32, SDL_Joystick*> m_joysticks;
+        std::map<std::int32_t, SDL_GameController*> m_controllers;
+        std::map<std::int32_t, SDL_Joystick*> m_joysticks;
         friend class GameController;
 
         std::vector<std::pair<std::function<void()>, const GuiClient*>> m_statusControls;

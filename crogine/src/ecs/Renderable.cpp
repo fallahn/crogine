@@ -39,8 +39,8 @@ IntRect Renderable::applyViewport(FloatRect vp, const RenderTarget& rt)
     glm::vec2 size(rt.getSize());
 
     glCheck(glGetIntegerv(GL_VIEWPORT, m_previousViewport.data()));
-    IntRect rect(static_cast<int32>(size.x * vp.left), static_cast<int32>(size.y * vp.bottom),
-                static_cast<int32>(size.x * vp.width), static_cast<int32>(size.y * vp.height));
+    IntRect rect(static_cast<std::int32_t>(size.x * vp.left), static_cast<std::int32_t>(size.y * vp.bottom),
+                static_cast<std::int32_t>(size.x * vp.width), static_cast<std::int32_t>(size.y * vp.height));
     glViewport(rect.left, rect.bottom, rect.width, rect.height);
 
     return rect;

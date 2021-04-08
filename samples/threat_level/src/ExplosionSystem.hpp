@@ -38,7 +38,7 @@ source distribution.
 
 struct Explosion final
 {
-    cro::int32 ident = -1;
+    std::int32_t ident = -1;
 };
 
 class ExplosionSystem final : public cro::System
@@ -53,8 +53,8 @@ public:
 private:
     std::size_t m_aliveCount;
     std::size_t m_deadCount;
-    std::vector<cro::int32> m_aliveExplosions;
-    std::vector<cro::int32> m_deadExplosions;
+    std::vector<std::int32_t> m_aliveExplosions;
+    std::vector<std::int32_t> m_deadExplosions;
 
     float m_backgroundSpeed;
 

@@ -112,8 +112,8 @@ Mesh::Data CircleMeshBuilder::build() const
     meshData.submeshCount = 1;
     meshData.indexData[0].format = GL_UNSIGNED_INT;
     meshData.indexData[0].primitiveType = meshData.primitiveType;
-    meshData.indexData[0].indexCount = static_cast<uint32>(indices.size());
-    createIBO(meshData, indices.data(), 0, sizeof(uint32));
+    meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
+    createIBO(meshData, indices.data(), 0, sizeof(std::uint32_t));
 
     //spatial bounds
     meshData.boundingBox[0] = { -m_radius, -m_radius, -0.01f };

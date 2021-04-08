@@ -157,7 +157,7 @@ namespace cro
         std::map<StateID, std::function<State::Ptr()>> m_factories;
         MessageBus& m_messageBus;
         
-        bool changeExists(Action, int32 = -1);
+        bool changeExists(Action, std::int32_t = -1);
 
         State::Ptr createState(StateID);
         void applyPendingChanges();

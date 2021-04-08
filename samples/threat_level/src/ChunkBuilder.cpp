@@ -59,14 +59,14 @@ cro::Mesh::Data ChunkBuilder::build() const
     data.indexData[0].indexCount = indexCount;
     data.indexData[0].primitiveType = data.primitiveType;
 
-    std::array<cro::uint16, indexCount> indices;
+    std::array<std::uint16_t, indexCount> indices;
     for (auto i = 0u; i < indexCount; ++i)
     {
         indices[i] = i;
     }
     glCheck(glGenBuffers(1, &data.indexData[0].ibo));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[0].ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(cro::uint16), indices.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(std::uint16_t), indices.data(), GL_DYNAMIC_DRAW));
     
     data.indexData[1].format = GL_UNSIGNED_SHORT;
     data.indexData[1].indexCount = indexCount;
@@ -78,7 +78,7 @@ cro::Mesh::Data ChunkBuilder::build() const
     }
     glCheck(glGenBuffers(1, &data.indexData[1].ibo));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[1].ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(cro::uint16), indices.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(std::uint16_t), indices.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     return data;

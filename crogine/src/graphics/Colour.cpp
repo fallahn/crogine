@@ -45,13 +45,13 @@ cro::Colour cro::Colour::Transparent() { return cro::Colour(0.f, 0.f, 0.f, 0.f);
 cro::Colour::Colour()
     : r(0.f), g(0.f), b(0.f), a(1.f) {}
 
-cro::Colour::Colour(cro::uint8 red, cro::uint8 green, cro::uint8 blue, cro::uint8 alpha)
+cro::Colour::Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha)
     : r(static_cast<float>(red) / 255.f),
     g(static_cast<float>(green) / 255.f),
     b(static_cast<float>(blue) / 255.f),
     a(static_cast<float>(alpha) / 255.f) {}
 
-cro::Colour::Colour(cro::uint32 mask)
+cro::Colour::Colour(std::uint32_t mask)
     : r(static_cast<float>((mask >> 24) & 0xFF) / 255.f),
     g(static_cast<float>((mask >> 16) & 0xFF) / 255.f),
     b(static_cast<float>((mask >> 8) & 0xFF) / 255.f),
@@ -73,7 +73,7 @@ cro::Colour::Colour(glm::vec4 vector)
 }
 
 //public
-void cro::Colour::setRed(cro::uint8 red)
+void cro::Colour::setRed(std::uint8_t red)
 {
     r = static_cast<float>(red) / 255.f;
 }
@@ -84,7 +84,7 @@ void cro::Colour::setRed(float red)
     r = red;
 }
 
-void cro::Colour::setGreen(cro::uint8 green)
+void cro::Colour::setGreen(std::uint8_t green)
 {
     g = static_cast<float>(green) / 255.f;
 }
@@ -95,7 +95,7 @@ void cro::Colour::setGreen(float green)
     g = green;
 }
 
-void cro::Colour::setBlue(cro::uint8 blue)
+void cro::Colour::setBlue(std::uint8_t blue)
 {
     b = static_cast<float>(blue) / 255.f;
 }
@@ -106,7 +106,7 @@ void cro::Colour::setBlue(float blue)
     b = blue;
 }
 
-void cro::Colour::setAlpha(cro::uint8 alpha)
+void cro::Colour::setAlpha(std::uint8_t alpha)
 {
     a = static_cast<float>(alpha) / 255.f;
 }
@@ -117,24 +117,24 @@ void cro::Colour::setAlpha(float alpha)
     a = alpha;
 }
 
-cro::uint8 cro::Colour::getRedByte() const
+std::uint8_t cro::Colour::getRedByte() const
 {
-    return static_cast<uint8>(255.f * r);
+    return static_cast<std::uint8_t>(255.f * r);
 }
 
-cro::uint8 cro::Colour::getGreenByte() const
+std::uint8_t cro::Colour::getGreenByte() const
 {
-    return static_cast<uint8>(255.f * g);
+    return static_cast<std::uint8_t>(255.f * g);
 }
 
-cro::uint8 cro::Colour::getBlueByte() const
+std::uint8_t cro::Colour::getBlueByte() const
 {
-    return static_cast<uint8>(255.f * b);
+    return static_cast<std::uint8_t>(255.f * b);
 }
 
-cro::uint8 cro::Colour::getAlphaByte() const
+std::uint8_t cro::Colour::getAlphaByte() const
 {
-    return static_cast<uint8>(255.f * a);
+    return static_cast<std::uint8_t>(255.f * a);
 }
 
 float cro::Colour::getRed() const
@@ -157,7 +157,7 @@ float cro::Colour::getAlpha() const
     return a;
 }
 
-cro::int32 cro::Colour::getPacked() const
+std::int32_t cro::Colour::getPacked() const
 {
     return (getRedByte() << 24 | getGreenByte() << 16 | getBlueByte() << 8 | getAlphaByte());
 }

@@ -57,7 +57,7 @@ void ConfigProperty::setValue(const std::string& value)
     m_isStringValue = true;
 }
 
-void ConfigProperty::setValue(int32 value)
+void ConfigProperty::setValue(std::int32_t value)
 {
     m_value = std::to_string(value);
     m_isStringValue = false;
@@ -154,8 +154,8 @@ bool ConfigObject::loadFromFile(const std::string& filePath)
     {
         //remove any opening comments
         std::string data;
-        int64 readTotal = 0;
-        static const int32 DEST_SIZE = 256;
+        std::int64_t readTotal = 0;
+        static const std::int32_t DEST_SIZE = 256;
         char dest[DEST_SIZE];
         while (data.empty() && readTotal < fileSize)
         {
@@ -526,7 +526,7 @@ bool ConfigObject::save(const std::string& path)
     return false;
 }
 
-std::size_t ConfigObject::write(SDL_RWops* file, uint16 depth)
+std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
 {
     //add the correct amount of indenting based on this objects's depth
     std::string indent;

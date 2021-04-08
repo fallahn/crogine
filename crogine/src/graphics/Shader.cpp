@@ -260,17 +260,17 @@ bool Shader::loadFromString(const std::string& vertex, const std::string& fragme
     return false;
 }
 
-uint32 Shader::getGLHandle() const
+std::uint32_t Shader::getGLHandle() const
 {
     return m_handle;
 }
 
-const std::array<int32, Mesh::Attribute::Total>& Shader::getAttribMap() const
+const std::array<std::int32_t, Mesh::Attribute::Total>& Shader::getAttribMap() const
 {
     return m_attribMap;
 }
 
-const std::unordered_map<std::string, int32>& Shader::getUniformMap() const
+const std::unordered_map<std::string, std::int32_t>& Shader::getUniformMap() const
 {
     return m_uniformMap;
 }
@@ -353,20 +353,20 @@ bool Shader::fillAttribMap()
 
 void Shader::resetAttribMap()
 {
-    std::memset(m_attribMap.data(), -1, m_attribMap.size() * sizeof(int32));
+    std::memset(m_attribMap.data(), -1, m_attribMap.size() * sizeof(std::int32_t));
 }
 
 void Shader::fillUniformMap()
 {
-    int32 uniformCount;
+    std::int32_t uniformCount;
     glCheck(glGetProgramiv(m_handle, GL_ACTIVE_UNIFORMS, &uniformCount));
 
     for (auto i = 0; i < uniformCount; ++i)
     {
-        int32 nameLength;
-        int32 size;
+        std::int32_t nameLength;
+        std::int32_t size;
         GLenum type;
-        static const int32 maxChar = 100;
+        static const std::int32_t maxChar = 100;
         char str[maxChar];
         glCheck(glGetActiveUniform(m_handle, i, maxChar -1, &nameLength, &size, &type, str));
         str[nameLength] = 0;

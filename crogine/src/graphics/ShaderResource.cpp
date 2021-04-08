@@ -40,7 +40,7 @@ using namespace cro;
 
 namespace
 {
-    int32 MAX_BONES = 0;
+    std::int32_t MAX_BONES = 0;
 }
 
 ShaderResource::ShaderResource()
@@ -52,7 +52,7 @@ ShaderResource::ShaderResource()
 }
 
 //public
-bool ShaderResource::loadFromFile(int32 ID, const std::string& vertex, const std::string& fragment)
+bool ShaderResource::loadFromFile(std::int32_t ID, const std::string& vertex, const std::string& fragment)
 {
     if (m_shaders.count(ID) > 0)
     {
@@ -69,7 +69,7 @@ bool ShaderResource::loadFromFile(int32 ID, const std::string& vertex, const std
     return true;
 }
 
-bool ShaderResource::loadFromString(int32 ID, const std::string& vertex, const std::string& fragment, const std::string& defines)
+bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, const std::string& fragment, const std::string& defines)
 {
     if (m_shaders.count(ID) > 0)
     {
@@ -86,10 +86,10 @@ bool ShaderResource::loadFromString(int32 ID, const std::string& vertex, const s
     return true;
 }
 
-int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
+std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
 {
     CRO_ASSERT(type >= BuiltIn::Unlit && flags > 0, "Invalid type of flags value");
-    int32 id = type | flags;
+    std::int32_t id = type | flags;
 
     //check not already loaded
     if (m_shaders.count(id) > 0)
@@ -215,7 +215,7 @@ int32 ShaderResource::loadBuiltIn(BuiltIn type, int32 flags)
     return -1;
 }
 
-cro::Shader& ShaderResource::get(int32 ID)
+cro::Shader& ShaderResource::get(std::int32_t ID)
 {
     if (m_shaders.count(ID) == 0)
     {

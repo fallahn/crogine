@@ -78,17 +78,17 @@ namespace cro
         \brief Attempts to return a float rect representing the sub rectangle of the atlas
         for the given codepoint.
         */
-        Glyph getGlyph(uint32 codepoint, uint32 charSize) const;
+        Glyph getGlyph(std::uint32_t codepoint, std::uint32_t charSize) const;
 
         /*!
         \brief Returns a reference to the texture used by the font
         */
-        const Texture& getTexture(uint32 charSize) const;
+        const Texture& getTexture(std::uint32_t charSize) const;
 
         /*!
         \brief Returns the lineheight 
         */
-        float getLineHeight(uint32 charSize) const;
+        float getLineHeight(std::uint32_t charSize) const;
 
         /*!
         \brief Returns the kerning between two characters
@@ -116,12 +116,12 @@ namespace cro
         {
             Page();
             Texture texture;
-            std::map<uint32, Glyph> glyphs;
+            std::map<std::uint32_t, Glyph> glyphs;
             std::uint32_t nextRow = 0;
             std::vector<Row> rows;
         };
 
-        mutable std::unordered_map<uint32, Page> m_pages;
+        mutable std::unordered_map<std::uint32_t, Page> m_pages;
         mutable std::vector<std::uint8_t> m_pixelBuffer;
 
         mutable bool m_pageUpdated; //if a page has been updated we want to trigger an update on any text components

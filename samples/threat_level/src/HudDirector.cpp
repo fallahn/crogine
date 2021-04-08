@@ -105,7 +105,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
         //yes, this is meant to fall through.
         case PlayerEvent::GotLife:
         {
-            cro::int32 lives = static_cast<cro::int32>(data.value);
+            std::int32_t lives = static_cast<std::int32_t>(data.value);
             cro::Command cmd;
             cmd.targetFlags = CommandID::HudElement;
             cmd.action = [lives](cro::Entity entity, float)

@@ -46,21 +46,21 @@ std::string NetPeer::getAddress() const
     return ret;
 }
 
-uint16 NetPeer::getPort() const
+std::uint16_t NetPeer::getPort() const
 {
     CRO_ASSERT(m_peer, "Not a valid peer");
 
     return m_peer->address.port;
 }
 
-uint32 NetPeer::getID() const
+std::uint32_t NetPeer::getID() const
 {
     CRO_ASSERT(m_peer, "Not a valid peer");
 
     return m_peer->connectID;
 }
 
-uint32 NetPeer::getRoundTripTime()const
+std::uint32_t NetPeer::getRoundTripTime()const
 {
     CRO_ASSERT(m_peer, "Not a valid peer");
 

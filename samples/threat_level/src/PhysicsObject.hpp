@@ -138,7 +138,7 @@ namespace cro
         to a Physics or Collision system changing this value
         has no effect.
         */
-        void setCollisionGroups(int32 groups) { m_collisionGroups = groups; }
+        void setCollisionGroups(std::int32_t groups) { m_collisionGroups = groups; }
 
         /*!
         \brief A bitmask of collision flags.
@@ -150,12 +150,12 @@ namespace cro
         to a Physics or Collision system changing this value has
         no effect
         */
-        void setCollisionFlags(int32 flags) { m_collisionFlags = flags; }
+        void setCollisionFlags(std::int32_t flags) { m_collisionFlags = flags; }
 
         /*!
         \brief Returns the collision group mask for this component
         */
-        int32 getCollisionGroups() const { return m_collisionGroups; }
+        std::int32_t getCollisionGroups() const { return m_collisionGroups; }
 
         /*!
         \brief Returns the number of objects colliding with this one.
@@ -197,8 +197,8 @@ namespace cro
         float m_mass;
         float m_density;
 
-        int32 m_collisionGroups;
-        int32 m_collisionFlags;
+        std::int32_t m_collisionGroups;
+        std::int32_t m_collisionFlags;
 
         std::array<PhysicsShape, 10u> m_shapes;
         std::size_t m_shapeCount;

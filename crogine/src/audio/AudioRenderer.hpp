@@ -69,29 +69,29 @@ namespace cro
         virtual void setListenerOrientation(glm::vec3, glm::vec3) = 0;
         virtual void setListenerVolume(float) = 0;
 
-        virtual cro::int32 requestNewBuffer(const std::string&) = 0;
-        virtual cro::int32 requestNewBuffer(const Detail::PCMData&) = 0;
-        virtual void deleteBuffer(cro::int32) = 0;
+        virtual std::int32_t requestNewBuffer(const std::string&) = 0;
+        virtual std::int32_t requestNewBuffer(const Detail::PCMData&) = 0;
+        virtual void deleteBuffer(std::int32_t) = 0;
 
-        virtual cro::int32 requestNewStream(const std::string&) = 0;
-        virtual void updateStream(int32) = 0;
-        virtual void deleteStream(cro::int32) = 0;
+        virtual std::int32_t requestNewStream(const std::string&) = 0;
+        virtual void updateStream(std::int32_t) = 0;
+        virtual void deleteStream(std::int32_t) = 0;
 
         //note that this is the openAL source, not the buffer or stream behind it
-        virtual cro::int32 requestAudioSource(cro::int32, bool) = 0;
-        virtual void updateAudioSource(cro::int32, cro::int32, bool) = 0;
-        virtual void deleteAudioSource(cro::int32) = 0;
+        virtual std::int32_t requestAudioSource(std::int32_t, bool) = 0;
+        virtual void updateAudioSource(std::int32_t, std::int32_t, bool) = 0;
+        virtual void deleteAudioSource(std::int32_t) = 0;
 
-        virtual void playSource(cro::int32, bool) = 0;
-        virtual void pauseSource(cro::int32) = 0;
-        virtual void stopSource(cro::int32) = 0;
+        virtual void playSource(std::int32_t, bool) = 0;
+        virtual void pauseSource(std::int32_t) = 0;
+        virtual void stopSource(std::int32_t) = 0;
 
-        virtual int32 getSourceState(cro::int32) const = 0;
+        virtual std::int32_t getSourceState(std::int32_t) const = 0;
 
-        virtual void setSourcePosition(int32, glm::vec3) = 0;
-        virtual void setSourcePitch(int32, float) = 0;
-        virtual void setSourceVolume(int32, float) = 0;
-        virtual void setSourceRolloff(int32, float) = 0;
+        virtual void setSourcePosition(std::int32_t, glm::vec3) = 0;
+        virtual void setSourcePitch(std::int32_t, float) = 0;
+        virtual void setSourceVolume(std::int32_t, float) = 0;
+        virtual void setSourceRolloff(std::int32_t, float) = 0;
     };
 
 
@@ -153,36 +153,36 @@ namespace cro
         file requested to be loaded already exists, and it is up to the requester to make
         sure buffers are properly released with deleteBuffer()
         */
-        static cro::int32 requestNewBuffer(const std::string& path);
+        static std::int32_t requestNewBuffer(const std::string& path);
 
         /*!
         \brief Requests a new buffer from the given PCMData struct.
         The data pointer may be null
         */
-        static cro::int32 requestNewBuffer(const Detail::PCMData&);
+        static std::int32_t requestNewBuffer(const Detail::PCMData&);
 
         /*!
         \brief Deletes a buffer with the given ID, freeing it from memory.
         All buffers retrieved via requestNewBuffer() must be deleted via this function.
         */
-        static void deleteBuffer(cro::int32 buffer);
+        static void deleteBuffer(std::int32_t buffer);
 
         /*!
         \brief Requests a new audio stram from a file on disk.
         \param path Path to file to stream.
         \returns ID of stream, or -1 if opening the file failed
         */
-        static int32 requestNewStream(const std::string& path);
+        static std::int32_t requestNewStream(const std::string& path);
 
         /*!
         \brief Updates the stream belonging to the given ID
         */
-        static void updateStream(int32);
+        static void updateStream(std::int32_t);
 
         /*!
         \brief Deletes the stream with the given ID, if it exists
         */
-        static void deleteStream(int32);
+        static void deleteStream(std::int32_t);
 
         /*!
         \brief Requests a new audio source bound to the given buffer.
@@ -194,7 +194,7 @@ namespace cro
         entirely to the caller to make sure that the audio source is properly
         deleted with deleteAudioSource() when it needs to be disposed
         */
-        static cro::int32 requestAudioSource(cro::int32 buffer, bool streaming);
+        static std::int32_t requestAudioSource(std::int32_t buffer, bool streaming);
 
         /*!
         \brief Updates the given audio source with a new buffer.
@@ -203,61 +203,61 @@ namespace cro
         \param streaming Should be true if the buffer ID is associated with a
         an AudioStream data source, else false for an AudioBuffer.
         */
-        static void updateAudioSource(cro::int32 sourceID, cro::int32 bufferID, bool streaming);
+        static void updateAudioSource(std::int32_t sourceID, std::int32_t bufferID, bool streaming);
 
         /*!
         \brief Attempts to delete the audio source with the given ID.
         \param source ID of the audio source to delete.
         This MUST be called for all audio sources allocated with requestSourceEmitter()
         */
-        static void deleteAudioSource(cro::int32 source);
+        static void deleteAudioSource(std::int32_t source);
 
         /*!
         \brief Attempts to play the given source.
         \param src ID of the audio source to play
         \param looped true to loop this source, else false
         */
-        static void playSource(int32 src, bool looped);
+        static void playSource(std::int32_t src, bool looped);
 
         /*!
         \brief Pauses the given source if it is playing.
         \param src ID of the source to pause
         */
-        static void pauseSource(int32 src);
+        static void pauseSource(std::int32_t src);
 
         /*!
         \brief Stops the source if it is playing
         \param src ID of the source to stop
         */
-        static void stopSource(int32 src);
+        static void stopSource(std::int32_t src);
 
         /*!
         \brief Returns the current state of the give source
         \returns 0 - Playing, 1 - Paused, 2 - Stopped
         */
-        static int32 getSourceState(int32 src);
+        static std::int32_t getSourceState(std::int32_t src);
 
         /*!
         \brief Sets the position of the given source
         \param source Source ID of which to set the position
         \param position Vector3 containing the world position of the source
         */
-        static void setSourcePosition(int32 source, glm::vec3 position);
+        static void setSourcePosition(std::int32_t source, glm::vec3 position);
 
         /*!
         \brief Sets the given source pitch
         */
-        static void setSourcePitch(int32 src, float pitch);
+        static void setSourcePitch(std::int32_t src, float pitch);
 
         /*!
         \brief Sets the given source volume
         */
-        static void setSourceVolume(int32 src, float vol);
+        static void setSourceVolume(std::int32_t src, float vol);
 
         /*!
         \brief Sets the give source rolloff
         */
-        static void setSourceRolloff(int32 src, float rolloff);
+        static void setSourceRolloff(std::int32_t src, float rolloff);
 
     private:
         static std::unique_ptr<AudioRendererImpl> m_impl;

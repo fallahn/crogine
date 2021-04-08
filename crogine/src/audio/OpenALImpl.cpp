@@ -51,7 +51,7 @@ using namespace cro::Detail;
 
 namespace
 {
-    constexpr std::size_t STREAM_CHUNK_SIZE = 48000u * sizeof(uint16) * 30; //30 sec of stereo @ highest quality (mono)
+    constexpr std::size_t STREAM_CHUNK_SIZE = 48000u * sizeof(std::uint16_t) * 30; //30 sec of stereo @ highest quality (mono)
 
     ALenum getFormatFromData(const PCMData& data)
     {
@@ -169,7 +169,7 @@ void OpenALImpl::setListenerVolume(float volume)
     alCheck(alListenerf(AL_GAIN, volume));
 }
 
-cro::int32 OpenALImpl::requestNewBuffer(const std::string& filePath)
+std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
 {
     auto path = FileSystem::getResourcePath() + filePath;
 
@@ -206,7 +206,7 @@ cro::int32 OpenALImpl::requestNewBuffer(const std::string& filePath)
     return -1;
 }
 
-cro::int32 OpenALImpl::requestNewBuffer(const PCMData& data)
+std::int32_t OpenALImpl::requestNewBuffer(const PCMData& data)
 {
     ALuint buff;
     alCheck(alGenBuffers(1, &buff));
@@ -217,7 +217,7 @@ cro::int32 OpenALImpl::requestNewBuffer(const PCMData& data)
     return buff;
 }
 
-void OpenALImpl::deleteBuffer(cro::int32 buffer)
+void OpenALImpl::deleteBuffer(std::int32_t buffer)
 {
     if (buffer > 0)
     {
@@ -227,7 +227,7 @@ void OpenALImpl::deleteBuffer(cro::int32 buffer)
     }
 }
 
-cro::int32 OpenALImpl::requestNewStream(const std::string& path)
+std::int32_t OpenALImpl::requestNewStream(const std::string& path)
 {
     //check we have available streams
     if (m_nextStream >= m_streams.size())
@@ -285,7 +285,7 @@ cro::int32 OpenALImpl::requestNewStream(const std::string& path)
     return streamID;
 }
 
-void OpenALImpl::updateStream(int32 streamID)
+void OpenALImpl::updateStream(std::int32_t streamID)
 {
     auto& stream = m_streams[streamID];
     if (!stream.updating)
@@ -314,7 +314,7 @@ void OpenALImpl::updateStream(int32 streamID)
     }
 }
 
-void OpenALImpl::deleteStream(cro::int32 id)
+void OpenALImpl::deleteStream(std::int32_t id)
 {
     auto& stream = m_streams[id];
     
@@ -342,7 +342,7 @@ void OpenALImpl::deleteStream(cro::int32 id)
     }
 }
 
-cro::int32 OpenALImpl::requestAudioSource(cro::int32 buffer, bool streaming)
+std::int32_t OpenALImpl::requestAudioSource(std::int32_t buffer, bool streaming)
 {
     CRO_ASSERT(buffer > -1, "Invalid audio buffer");
     ALuint source;
@@ -364,7 +364,7 @@ cro::int32 OpenALImpl::requestAudioSource(cro::int32 buffer, bool streaming)
     return -1;
 }
 
-void OpenALImpl::updateAudioSource(cro::int32 sourceID, cro::int32 bufferID, bool streaming)
+void OpenALImpl::updateAudioSource(std::int32_t sourceID, std::int32_t bufferID, bool streaming)
 {
     CRO_ASSERT(sourceID > 0, "Invalid source ID");
     CRO_ASSERT(bufferID > 0, "Invalid buffer ID");
@@ -392,7 +392,7 @@ void OpenALImpl::updateAudioSource(cro::int32 sourceID, cro::int32 bufferID, boo
     }
 }
 
-void OpenALImpl::deleteAudioSource(cro::int32 source)
+void OpenALImpl::deleteAudioSource(std::int32_t source)
 {
     CRO_ASSERT(source > 0, "Invalid source ID");
 
@@ -427,7 +427,7 @@ void OpenALImpl::deleteAudioSource(cro::int32 source)
     //LOG("Deleted audio source", Logger::Type::Info);
 }
 
-void OpenALImpl::playSource(int32 source, bool looped)
+void OpenALImpl::playSource(std::int32_t source, bool looped)
 {
     ALuint src = static_cast<ALuint>(source);
 
@@ -448,19 +448,19 @@ void OpenALImpl::playSource(int32 source, bool looped)
     alCheck(alSourcePlay(src));
 }
 
-void OpenALImpl::pauseSource(int32 source)
+void OpenALImpl::pauseSource(std::int32_t source)
 {
     ALuint src = static_cast<ALuint>(source);
     alCheck(alSourcePause(src));
 }
 
-void OpenALImpl::stopSource(int32 source)
+void OpenALImpl::stopSource(std::int32_t source)
 {
     ALuint src = static_cast<ALuint>(source);
     alCheck(alSourceStop(src));
 }
 
-int32 OpenALImpl::getSourceState(int32 source) const
+std::int32_t OpenALImpl::getSourceState(std::int32_t source) const
 {
     ALuint src = static_cast<ALuint>(source);
     ALenum state;
@@ -479,23 +479,23 @@ int32 OpenALImpl::getSourceState(int32 source) const
     return 2;
 }
 
-void OpenALImpl::setSourcePosition(int32 source, glm::vec3 position)
+void OpenALImpl::setSourcePosition(std::int32_t source, glm::vec3 position)
 {
     alCheck(alSource3f(source, AL_POSITION, position.x, position.y, position.z));
     //DPRINT("source Pos", std::to_string(position.x) + ", " + std::to_string(position.y) + ", " + std::to_string(position.z));
 }
 
-void OpenALImpl::setSourcePitch(int32 src, float pitch)
+void OpenALImpl::setSourcePitch(std::int32_t src, float pitch)
 {
     alCheck(alSourcef(src, AL_PITCH, pitch));
 }
 
-void OpenALImpl::setSourceVolume(int32 src, float volume)
+void OpenALImpl::setSourceVolume(std::int32_t src, float volume)
 {
     alCheck(alSourcef(src, AL_GAIN, volume));
 }
 
-void OpenALImpl::setSourceRolloff(int32 src, float rolloff)
+void OpenALImpl::setSourceRolloff(std::int32_t src, float rolloff)
 {
     alCheck(alSourcef(src, AL_ROLLOFF_FACTOR, rolloff));
 }

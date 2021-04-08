@@ -37,8 +37,8 @@ source distribution.
 
 struct BackgroundComponent final
 {
-    cro::uint32 shaderID = 0;
-    cro::uint32 uniformLocation = 0;
+    std::uint32_t shaderID = 0;
+    std::uint32_t uniformLocation = 0;
 };
 
 class BackgroundSystem final : public cro::System, public cro::GuiClient

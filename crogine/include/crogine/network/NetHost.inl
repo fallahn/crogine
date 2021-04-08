@@ -28,13 +28,13 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 template <typename T>
-void NetHost::broadcastPacket(uint8 id, const T& data, NetFlag flags, uint8 channel)
+void NetHost::broadcastPacket(std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel)
 {
     broadcastPacket(id, (void*)&data, sizeof(T), flags, channel);
 }
 
 template <typename T>
-void NetHost::sendPacket(const NetPeer& peer, uint8 id, const T& data, NetFlag flags, uint8 channel)
+void NetHost::sendPacket(const NetPeer& peer, std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel)
 {
     sendPacket(peer, id, (void*)&data, sizeof(T), flags, channel);
 }

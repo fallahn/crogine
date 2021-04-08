@@ -47,7 +47,7 @@ namespace cro
     */
     struct ButtonEvent
     {
-        uint32 type = 0;                       //!< SDL_Event type
+        std::uint32_t type = 0;                       //!< SDL_Event type
         union
         {
             SDL_KeyboardEvent key;             //!< SDL_KeyboardEvent data if this is a keyboard event
@@ -67,7 +67,7 @@ namespace cro
     */
     struct MotionEvent
     {
-        uint32 type = 0;                    //!< SDL_Event type
+        std::uint32_t type = 0;                    //!< SDL_Event type
         union
         {
             SDL_MouseMotionEvent motion;    //!< Mouse motion event data
@@ -79,8 +79,8 @@ namespace cro
             SDL_DollarGestureEvent dgesture;//!< Gesture event data
         };
 
-        static constexpr uint32 CursorEnter = std::numeric_limits<uint32>::max(); //!< event type when cursor deactivates an input
-        static constexpr uint32 CursorExit = CursorEnter - 1; //!< event type when cursor deactivates an input
+        static constexpr std::uint32_t CursorEnter = std::numeric_limits<std::uint32_t>::max(); //!< event type when cursor deactivates an input
+        static constexpr std::uint32_t CursorExit = CursorEnter - 1; //!< event type when cursor deactivates an input
     };
 
     class CRO_EXPORT_API UISystem final : public System
@@ -119,7 +119,7 @@ namespace cro
         component.callbacks[UIInput::ButtonDown] = id;
         \endcode
         */
-        uint32 addCallback(const ButtonCallback&);
+        std::uint32_t addCallback(const ButtonCallback&);
 
         /*!
         \brief Adds a mouse or touch input movement callback.
@@ -127,7 +127,7 @@ namespace cro
         passed in as a parameter instead of a button ID. These are also used for
         mouse enter/exit events
         */
-        uint32 addCallback(const MovementCallback&);
+        std::uint32_t addCallback(const MovementCallback&);
 
         /*!
         \brief Adds a selection changed callback.
@@ -136,7 +136,7 @@ namespace cro
         to component.callbacks[UIInout::Selected] and component.callbacks[UIInput::Unselected]
         accordingly.
         */
-        uint32 addCallback(const SelectionChangedCallback&);
+        std::uint32_t addCallback(const SelectionChangedCallback&);
 
         /*!
         \brief Sets the active group of UIInput components.
@@ -190,8 +190,8 @@ namespace cro
 
         glm::uvec2 m_windowSize;
 
-        //void setViewPort(int32, int32);
-        glm::vec2 toWorldCoords(int32 x, int32 y); //converts screen coords
+        //void setViewPort(std::int32_t, std::int32_t);
+        glm::vec2 toWorldCoords(std::int32_t x, std::int32_t y); //converts screen coords
         glm::vec2 toWorldCoords(float, float); //converts normalised coords
 
         std::uint8_t m_controllerMask;

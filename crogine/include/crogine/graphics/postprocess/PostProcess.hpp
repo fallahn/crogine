@@ -87,7 +87,7 @@ namespace cro
         \brief Used by crogine to update the post process should the buffer be resized.
         This should not be called by the user.
         */
-        void resizeBuffer(int32 w, int32 h);
+        void resizeBuffer(std::int32_t w, std::int32_t h);
 
     protected:
         /*!
@@ -133,7 +133,7 @@ namespace cro
     private:
         glm::uvec2 m_currentBufferSize;
         
-        uint32 m_vbo;
+        std::uint32_t m_vbo;
         glm::mat4 m_projection;
         glm::mat4 m_transform;
 
@@ -154,11 +154,11 @@ namespace cro
             union
             {
                 float numberValue[4];
-                uint32 textureID = 0;
+                std::uint32_t textureID = 0;
             };
         };
 
-        std::map<uint32, std::map<uint32, UniformData>> m_uniforms;
+        std::map<std::uint32_t, std::map<std::uint32_t, UniformData>> m_uniforms;
 
         void createVBO();
     };

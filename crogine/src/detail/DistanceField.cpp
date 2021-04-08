@@ -40,17 +40,17 @@ using namespace cro::Detail;
 namespace
 {
     const float INF = std::numeric_limits<float>::infinity();
-    inline int32 square(int32 x)
+    inline std::int32_t square(std::int32_t x)
     {
         return x * x;
     }
 }
 
-std::vector<uint8> DistanceField::toDF(const SDL_Surface* input)
+std::vector<std::uint8_t> DistanceField::toDF(const SDL_Surface* input)
 {
     std::size_t size = input->pitch * input->h;
     std::vector<float> floatData(size);
-    uint8* pixels = static_cast<uint8*>(input->pixels);
+    std::uint8_t* pixels = static_cast<std::uint8_t*>(input->pixels);
     for (auto i = 0u; i < size; ++i)
     {
         floatData[i] = (pixels[i] > 240) ? 0.f : INF;
@@ -67,7 +67,7 @@ std::vector<uint8> DistanceField::toDF(const SDL_Surface* input)
 }
 
 //private
-void DistanceField::twoD(std::vector<float>& floatData, int32 width, int32 height)
+void DistanceField::twoD(std::vector<float>& floatData, std::int32_t width, std::int32_t height)
 {
     std::vector<float> f(std::max(width, height));
 
@@ -103,10 +103,10 @@ void DistanceField::twoD(std::vector<float>& floatData, int32 width, int32 heigh
 std::vector<float> DistanceField::oneD(const std::vector<float>& floatData, std::size_t size)
 {
     std::vector<float> d(size);
-    std::vector<int32> v(size);
+    std::vector<std::int32_t> v(size);
     std::vector<float> z(size + 1);
 
-    int32 k = 0;
+    std::int32_t k = 0;
     v[0] = 0;
     z[0] = -INF;
     z[1] = INF;
@@ -136,7 +136,7 @@ std::vector<float> DistanceField::oneD(const std::vector<float>& floatData, std:
     return d;
 }
 
-std::vector<uint8> DistanceField::toBytes(const std::vector<float>& floatData)
+std::vector<std::uint8_t> DistanceField::toBytes(const std::vector<float>& floatData)
 {
     float min, max;
     min = max = floatData[0];
@@ -146,7 +146,7 @@ std::vector<uint8> DistanceField::toBytes(const std::vector<float>& floatData)
         if (f > max) max = f;
     }
 
-    std::vector<uint8> retVal(floatData.size());
+    std::vector<std::uint8_t> retVal(floatData.size());
     std::memset(retVal.data(), 0, retVal.size());
     if (min == max)
     {
@@ -156,7 +156,7 @@ std::vector<uint8> DistanceField::toBytes(const std::vector<float>& floatData)
     float scale = UCHAR_MAX / (max - min);
     for (auto i = 0u; i < retVal.size(); ++i)
     {
-        uint8 val = static_cast<uint8>(255.f - ((floatData[i] - min) * scale));
+        std::uint8_t val = static_cast<std::uint8_t>(255.f - ((floatData[i] - min) * scale));
         retVal[i] = val;
     }
 

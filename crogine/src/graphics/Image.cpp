@@ -52,7 +52,7 @@ Image::Image(bool flipOnLoad)
 }
 
 //public
-void Image::create(uint32 width, uint32 height, Colour colour, ImageFormat::Type format)
+void Image::create(std::uint32_t width, std::uint32_t height, Colour colour, ImageFormat::Type format)
 {
     CRO_ASSERT(width > 0 && height > 0, "Invalid image dimension");
     CRO_ASSERT(format == ImageFormat::RGB || format == ImageFormat::RGBA, "Invalid format");
@@ -62,7 +62,7 @@ void Image::create(uint32 width, uint32 height, Colour colour, ImageFormat::Type
 
     m_data.resize(size);
 
-    std::array<uint8, 4u> comp = 
+    std::array<std::uint8_t, 4u> comp = 
     {{
         colour.getRedByte(),
         colour.getGreenByte(),
@@ -70,7 +70,7 @@ void Image::create(uint32 width, uint32 height, Colour colour, ImageFormat::Type
         colour.getAlphaByte()
     }};
 
-    uint32 step = (format == ImageFormat::RGB) ? 3 : 4;
+    std::uint32_t step = (format == ImageFormat::RGB) ? 3 : 4;
     for (auto i = 0u; i < m_data.size(); i += step)
     {
         m_data[i] = comp[0];
@@ -102,14 +102,14 @@ bool Image::loadFromFile(const std::string& filePath)
     STBIMG_stbio_RWops io;
     stbi_callback_from_RW(file, &io);
 
-    int32 w, h, fmt;
+    std::int32_t w, h, fmt;
     auto* img = stbi_load_from_callbacks(&io.stb_cbs, &io, &w, &h, &fmt, 0);
     if (img)
     {
         m_flipped = true;
 
         ImageFormat::Type format = (fmt == 4) ? ImageFormat::RGBA : ImageFormat::RGB;
-        auto result = loadFromMemory(static_cast<uint8*>(img), w, h, format);
+        auto result = loadFromMemory(static_cast<std::uint8_t*>(img), w, h, format);
         
         stbi_image_free(img);
         SDL_RWclose(file);
@@ -129,7 +129,7 @@ bool Image::loadFromFile(const std::string& filePath)
     }
 }
 
-bool Image::loadFromMemory(const uint8* px, uint32 width, uint32 height, ImageFormat::Type format)
+bool Image::loadFromMemory(const std::uint8_t* px, std::uint32_t width, std::uint32_t height, ImageFormat::Type format)
 {
     CRO_ASSERT(width > 0 && height > 0, "Invalid image dimension");
 
@@ -174,7 +174,7 @@ void Image::setTransparencyColour(Colour colour)
     CRO_ASSERT(m_format == ImageFormat::RGBA, "RGBA format required");
     CRO_ASSERT(!m_data.empty(), "Image not yet created");
 
-    std::array<uint8, 3u> comp = { {colour.getRedByte(), colour.getGreenByte(), colour.getBlueByte()} };
+    std::array<std::uint8_t, 3u> comp = { {colour.getRedByte(), colour.getGreenByte(), colour.getBlueByte()} };
     for (auto i = 0u; i < m_data.size(); i += 4)
     {
         if (m_data[i] == comp[0] &&
@@ -196,7 +196,7 @@ ImageFormat::Type Image::getFormat() const
     return m_format;
 }
 
-const uint8* Image::getPixelData() const
+const std::uint8_t* Image::getPixelData() const
 {
     return m_data.empty() ? nullptr : m_data.data();
 }
