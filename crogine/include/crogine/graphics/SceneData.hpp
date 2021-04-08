@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 #include <crogine/graphics/Colour.hpp>
 
+#include <crogine/detail/glm/gtc/quaternion.hpp>
+
 #include <string>
 #include <unordered_map>
 #include <functional>
@@ -77,7 +79,7 @@ namespace cro
     If either properties are missing the object will be skipped. If an object has already been
     loaded with the given id then the object will be skipped.
 
-    An objects named rects, containing one or more 2D rectangles, which are axis-aligned.
+    An object named rects, containing one or more 2D rectangles, which are axis-aligned.
     
     rects
     {
@@ -92,30 +94,31 @@ namespace cro
 
 
     Once all assets have been listed the scene graph describes the layout of the scene's entities.
-    The scene graph is made up of at least one root node objects. Objects contained within that
-    node are parented to it, which mean that any nested node objects have their transform
-    multiplied by their parents. In other words the transform properties of a node object should
-    be described in local space.
+    The scene graph is contained within the nodes object, similarly to asset objects. However,
+    Objects contained within another object are parented to it, which mean that any nested node objects
+    have their transform multiplied by their parents. In other words the transform properties of a node 
+    object should be described in local space.
 
-    Each node must have at least a position described as a 3 component vector. They may also have
-    a rotation in euler angles (in degrees), and a scale, both or which are alse 3 component vectors.
-    If a node has no position property then it is skipped, and should be noted that all children
-    will then also be skipped for that node too. In other words if the root node has no position
-    then your scene will have no nodes at all!
+    Each node should have at least a position described as a 3 component vector. They may also have
+    a rotation in euler angles (in degrees), and a scale, both or which are also 3 component vectors.
 
     For a node to have any real meaning they should also have at least one property describing one
     of the assets described by the asset objects:
 
 
-    node root
+    nodes
     {
-        position = 0,0,0
-
         node player
         {
             position = 10, 0 ,10
             rotation = 0, 90, 0
             model = 1
+
+            node gun
+            {
+                position = 0.5, 0, 0.1
+                model = 2
+            }
         }
 
         node wall
@@ -158,6 +161,28 @@ namespace cro
             std::int32_t id = -1;
         };
 
+        /*!
+        \brief Struct representing a Node object in a SceneData file
+        */
+        struct Node final
+        {
+            glm::quat orientation = glm::quat(1.f, 0.f, 0.f,0.f);
+            glm::vec3 position = glm::vec3(0.f);
+            glm::vec3 scale = glm::vec3(1.f);
+
+            std::vector<Node> children;
+
+            /*!
+            \brief Lists the types and IDs of components attached to this node.
+            Use it to look up the attachments with getComponent()
+            //TODO why does type_index cause this to get mangled?
+            */
+            std::vector<std::pair<std::type_index, std::int32_t>> components;
+        };
+
+        /*!
+        \brief Default Constructor
+        */
         SceneData();
 
         /*!
@@ -227,6 +252,14 @@ namespace cro
             CRO_ASSERT(m_components.count(index) != 0, "This type has not been registered");
             return std::any_cast<const std::vector<T>&>(m_components.at(index));
         }
+
+
+        /*!
+        \brief Returns a copy of the component data if it exists
+        \param type Type index of the component read from a node's component list
+        \param id ID of the component to retrieve
+        */
+
 
     private:
 

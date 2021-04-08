@@ -30,15 +30,18 @@ scene test01
         }
     }
 
-    node root
+    nodes
     {
-        position = 0,0,0
-
-
         node platform
         {
             position = 0,0,0
             model = 2
+
+            node buns
+            {
+                model = 3
+                rect = 6
+            }
         }
 
         node
