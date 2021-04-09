@@ -29,12 +29,10 @@ source distribution.
 
 #pragma once
 
-#include <string>
+#include <crogine/graphics/Rectangle.hpp>
 
-namespace cro
-{
-    class Scene;
-}
+#include <string>
+#include <vector>
 
 class MapData final
 {
@@ -43,9 +41,10 @@ public:
 
     bool loadFromFile(const std::string&, bool binary = false);
 
-    void createGeometry(cro::Scene&);
-
+    const std::vector<cro::FloatRect>& getCollisionRects(std::size_t layer) const { return m_collisionRects[layer]; }
+    const std::vector<glm::vec2>& getSpawnPositions() const { return m_playerSpawns; }
 
 private:
-
+    std::array<std::vector<cro::FloatRect>, 2u> m_collisionRects;
+    std::vector<glm::vec2> m_playerSpawns;
 };

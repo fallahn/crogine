@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/network/NetData.hpp>
 
 #include <unordered_map>
@@ -90,11 +91,21 @@ private:
     cro::Clock m_sceneRequestClock; //< spaces the request for initial scene data
 
 
+    cro::Entity m_splitScreenNode; //< draws the lines between screen via the UI scene
+
+
+#ifdef CRO_DEBUG_
+    cro::RenderTexture m_debugViewTexture;
+    cro::Entity m_debugCam;
+#endif
+
+
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
     void createDayCycle();
+    void loadMap();
 
     void handlePacket(const cro::NetEvent::Packet&);
     void spawnPlayer(PlayerInfo);

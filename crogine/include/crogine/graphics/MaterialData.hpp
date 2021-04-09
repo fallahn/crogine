@@ -153,7 +153,7 @@ namespace cro
             /*!
             \brief Blend mode.
             This affects how the material is rendered (and when).
-            By default a belnd mode of None will render the geometry
+            By default a blend mode of None will render the geometry
             with this material first, with depth testing enabled.
             Additive, multiplicative and alpha blended materials are
             rendered afterwards, with alpha blended materials rendered

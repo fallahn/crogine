@@ -34,6 +34,9 @@ source distribution.
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+
+#include <array>
 
 namespace Sv
 {
@@ -59,6 +62,10 @@ namespace Sv
         //up to 4 entities per connection - although in practice
         //we should never have more than one on any except the first
         std::array<std::array<cro::Entity, ConstVal::MaxClients>, ConstVal::MaxClients> m_playerEntities;
+
+
+        std::array<glm::vec3, 4u> m_playerSpawns = {};
+
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);

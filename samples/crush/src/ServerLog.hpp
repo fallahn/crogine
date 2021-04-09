@@ -29,68 +29,24 @@ source distribution.
 
 #pragma once
 
-namespace MaterialID
+#include <string>
+#include <array>
+
+namespace sv
 {
-    enum
+    struct LogID
     {
-        Default,
-        DefaultShadow,
+        enum
+        {
+            MapLoadFailure,
 
-        Count
+
+            Count
+        };
     };
-}
 
-namespace MeshID
-{
-    enum
+    static const std::array<std::string, LogID::Count> LogStrings =
     {
-        PlatformNear,
-        PlatformFar,
-
-        Count
+        "Failed to load the map file"
     };
-}
-
-namespace TextureID
-{
-    enum
-    {
-
-    };
-}
-
-namespace GameModelID
-{
-    enum
-    {
-        Count
-    };
-}
-
-namespace FontID
-{
-
-}
-
-namespace ShaderID
-{
-    enum
-    {
-        Count
-    };
-}
-
-namespace CommandID
-{
-
-}
-
-namespace AnimationID
-{
-
-}
-
-namespace CollisionID
-{
-
 }

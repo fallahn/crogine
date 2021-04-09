@@ -21,3 +21,5 @@
 16:04:47 - 17/12/2020: ERROR: Assertion failed in D:\Users\Matt\Documents\Visual Studio 2019\Projects\crogine\crogine\src\ecs\systems\CommandSystem.cpp, function `cro::CommandSystem::sendCommand`, line 56: Exceeded max commands!
 16:40:44 - 17/12/2020: ERROR: Assertion failed in D:\Users\Matt\Documents\Visual Studio 2019\Projects\crogine\crogine\include\crogine\ecs\Entity.inl, function `cro::Entity::addComponent`, line 42: Already has this component
 10:16:28 - 11/03/2021: ERROR: Assertion failed in D:\Users\Matt\Documents\Visual Studio 2019\Projects\crogine\crogine\src\ecs\systems\CommandSystem.cpp, function `cro::CommandSystem::sendCommand`, line 56: Exceeded max commands!
+14:56:39 - 09/04/2021: ERROR: Assertion failed in D:\repos\crogine\crogine\include\crogine\ecs\Entity.inl, function `cro::Entity::addComponent`, line 42: Already has this component
+16:44:39 - 09/04/2021: ERROR: Assertion failed in D:\repos\crogine\crogine\include\crogine\ecs\Entity.inl, function `cro::Entity::addComponent`, line 42: Already has this component

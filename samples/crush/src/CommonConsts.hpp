@@ -56,6 +56,10 @@ namespace ConstVal
     //is the delta between updates (as the engine is
     //fixed for this anyway)
     static constexpr float FixedGameUpdate = 1.f / 60.f;
+
+    //cos we use Tiled to make the maps we have to rescale pixels into
+    //something a bit more sensible - this is Tiled units per metre
+    static constexpr float MapUnits = 128.f;
 }
 
 namespace Util

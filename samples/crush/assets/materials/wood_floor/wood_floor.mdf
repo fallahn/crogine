@@ -14,7 +14,7 @@ material_definition Wood_Floor
     subrect = 0.000000,0.000000,1.000000,1.000000
     texture_smooth = true
     texture_repeat = true
-    diffuse = "assets/materials/wood floor/wood_albedo.png"
-    mask = "assets/materials/wood floor/wood_mask.png"
-    normal = "assets/materials/wood floor/wood_normal.png"
+    diffuse = "assets/materials/wood_floor/wood_albedo.png"
+    mask = "assets/materials/wood_floor/wood_mask.png"
+    normal = "assets/materials/wood_floor/wood_normal.png"
 }

@@ -52,6 +52,7 @@ namespace PacketID
     enum
     {
         //from server
+        LogMessage, //< int32 message ID
         ClientConnected, //< uint8 connection ID
         ClientDisconnected, //< uint8 connection ID
         ConnectionRefused, //< uint8 MessageType

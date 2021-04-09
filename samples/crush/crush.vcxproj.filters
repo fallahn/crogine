@@ -242,5 +242,8 @@
     <ClInclude Include="src\MapData.hpp">
       <Filter>Header Files\shared</Filter>
     </ClInclude>
+    <ClInclude Include="src\ServerLog.hpp">
+      <Filter>Header Files\Server</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

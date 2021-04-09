@@ -37,6 +37,8 @@ source distribution.
 #include "ServerMessages.hpp"
 #include "GameConsts.hpp"
 #include "WeatherDirector.hpp"
+#include "MapData.hpp"
+#include "ServerLog.hpp"
 
 #include <crogine/core/Log.hpp>
 
@@ -58,7 +60,8 @@ namespace
 GameState::GameState(SharedData& sd)
     : m_returnValue (StateID::Game),
     m_sharedData    (sd),
-    m_scene         (sd.messageBus)
+    m_scene         (sd.messageBus),
+    m_playerSpawns  (PlayerSpawns)
 {
     initScene();
     buildWorld();
@@ -129,7 +132,7 @@ void GameState::netBroadcast()
     //send reconciliation for each player
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
-        if (m_sharedData.clients[i].connected)
+        if (m_sharedData.clients[i].ready/*.connected*/)
         {
             for (auto j = 0u; j < m_sharedData.clients[i].playerCount; ++j)
             {
@@ -151,7 +154,7 @@ void GameState::netBroadcast()
 
     //broadcast other actor transforms
     //TODO - remind me how we're filtering out reconcilable entities from this?
-    //TODO don't send these until clients are all ready, a slow loading client
+    //don't send these until clients are all ready, a slow loading client
     //will get backed up messages from this which pops the message buffer :(
     auto timestamp = m_serverTime.elapsed().asMilliseconds();
     const auto& actors = m_scene.getSystem<ActorSystem>().getEntities1();
@@ -166,7 +169,14 @@ void GameState::netBroadcast()
         update.position = tx.getWorldPosition();
         update.rotation = Util::compressQuat(tx.getRotation());
         update.timestamp = timestamp;
-        m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, update, cro::NetFlag::Unreliable);
+
+        for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+        {
+            if (m_sharedData.clients[i].ready)
+            {
+                m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::ActorUpdate, update, cro::NetFlag::Unreliable);
+            }
+        }
     }
 }
 
@@ -266,36 +276,57 @@ void GameState::initScene()
 
 void GameState::buildWorld()
 {
-    std::size_t playerCount = 0;
-
-    //create a network game as usual
-    for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+    MapData mapData;
+    if (mapData.loadFromFile("assets/maps/" + m_sharedData.mapName))
     {
-        if (m_sharedData.clients[i].connected
-            && playerCount < ConstVal::MaxClients)
+        //set spawn points
+        for (auto i = 0u; i < mapData.getSpawnPositions().size(); ++i)
         {
-            //insert requested players in this slot
-            for (auto j = 0u; j < m_sharedData.clients[i].playerCount && playerCount < ConstVal::MaxClients; ++j)
+            auto spawn = mapData.getSpawnPositions()[i];
+            m_playerSpawns[i].x = spawn.x;
+            m_playerSpawns[i].y = spawn.y;
+        }
+
+        std::size_t playerCount = 0;
+
+        //create a network game as usual
+        for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+        {
+            if (m_sharedData.clients[i].connected
+                && playerCount < ConstVal::MaxClients)
             {
-                m_playerEntities[i][j] = m_scene.createEntity();
-                m_playerEntities[i][j].addComponent<cro::Transform>().setPosition(PlayerSpawns[playerCount]);
-                m_playerEntities[i][j].addComponent<Player>().id = i+j;
-                m_playerEntities[i][j].getComponent<Player>().spawnPosition = PlayerSpawns[playerCount++];
-                m_playerEntities[i][j].getComponent<Player>().connectionID = i;
+                //insert requested players in this slot
+                for (auto j = 0u; j < m_sharedData.clients[i].playerCount && playerCount < ConstVal::MaxClients; ++j)
+                {
+                    m_playerEntities[i][j] = m_scene.createEntity();
+                    m_playerEntities[i][j].addComponent<cro::Transform>().setPosition(m_playerSpawns[playerCount]);
+                    m_playerEntities[i][j].addComponent<Player>().id = i + j;
+                    m_playerEntities[i][j].getComponent<Player>().spawnPosition = m_playerSpawns[playerCount++];
+                    m_playerEntities[i][j].getComponent<Player>().connectionID = i;
 
-                //this controls the server side appearance
-                //such as height and animation which needs
-                //to be sync'd with clients. Adding the actor
-                //to this means clients only need get the appearance
-                //of other players
-                auto avatar = m_scene.createEntity();
-                avatar.addComponent<cro::Transform>();
-                avatar.addComponent<Actor>().id = i + j;
-                avatar.getComponent<Actor>().serverEntityId = m_playerEntities[i][j].getIndex();
+                    //this controls the server side appearance
+                    //such as height and animation which needs
+                    //to be sync'd with clients. Adding the actor
+                    //to this means clients only need get the appearance
+                    //of other players
+                    auto avatar = m_scene.createEntity();
+                    avatar.addComponent<cro::Transform>();
+                    avatar.addComponent<Actor>().id = i + j;
+                    avatar.getComponent<Actor>().serverEntityId = m_playerEntities[i][j].getIndex();
 
-                m_playerEntities[i][j].getComponent<Player>().avatar = avatar;
-                m_playerEntities[i][j].getComponent<cro::Transform>().addChild(avatar.getComponent<cro::Transform>());
+                    m_playerEntities[i][j].getComponent<Player>().avatar = avatar;
+                    m_playerEntities[i][j].getComponent<cro::Transform>().addChild(avatar.getComponent<cro::Transform>());
+                }
             }
         }
+
+
+        //TODO parse collision data
+    }
+    else
+    {
+        m_sharedData.host.broadcastPacket(PacketID::LogMessage, sv::LogID::MapLoadFailure, cro::NetFlag::Reliable);
+
+        //TODO quit this state cleanly
     }
 }

@@ -28,6 +28,10 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MapData.hpp"
+#include "CommonConsts.hpp"
+
+#include <tmxlite/Map.hpp>
+#include <tmxlite/ObjectGroup.hpp>
 
 MapData::MapData()
 {
@@ -38,12 +42,79 @@ MapData::MapData()
 
 bool MapData::loadFromFile(const std::string& path, bool binary)
 {
+    m_collisionRects[0].clear();
+    m_collisionRects[1].clear();
+
+    m_playerSpawns.clear();
+
+    if (!binary)
+    {
+        tmx::Map map;
+        if (map.load(path))
+        {
+            const float mapWidth = static_cast<float>(map.getTileCount().x * map.getTileSize().x);
+            const float mapHeight = static_cast<float>(map.getTileCount().y * map.getTileSize().y);
+
+            const auto& layers = map.getLayers();
+            for (const auto& layer : layers)
+            {
+                if (layer->getType() == tmx::Layer::Type::Object)
+                {
+                    const auto& name = layer->getName();
+
+                    if (name == "collision"
+                        && m_collisionRects[0].empty())
+                    {
+                        const auto& rects = layer->getLayerAs<tmx::ObjectGroup>().getObjects();
+                        for (const auto& rect : rects)
+                        {
+                            if (rect.getShape() == tmx::Object::Shape::Rectangle)
+                            {
+                                auto bounds = rect.getAABB();
+                                auto& collisionBounds = m_collisionRects[0].emplace_back(bounds.left, mapHeight - (bounds.top + bounds.height), bounds.width, bounds.height);
+                                collisionBounds.left -= mapWidth / 2.f;
+                                collisionBounds.left /= ConstVal::MapUnits;
+                                collisionBounds.bottom /= ConstVal::MapUnits;
+                                collisionBounds.width /= ConstVal::MapUnits;
+                                collisionBounds.height /= ConstVal::MapUnits;
+                            }
+                        }
+                    }
+                    else if (name == "players"
+                        && m_playerSpawns.empty())
+                    {
+                        const auto& spawns = layer->getLayerAs<tmx::ObjectGroup>().getObjects();
+                        for (const auto& spawn : spawns)
+                        {
+                            auto bounds = spawn.getAABB();
+                            bounds.left -= mapWidth / 2.f;
+
+                            auto& position = m_playerSpawns.emplace_back(bounds.left + (bounds.width / 2.f), mapHeight - (bounds.top + bounds.height));
+                            position /= ConstVal::MapUnits;
+                        }
+                    }
+                }
+            }
+
+#ifdef CRO_DEBUG_
+            if (m_collisionRects[0].empty())
+            {
+                LogE << "No collision data was loaded from the map file" << std::endl;
+            }
+            if (m_playerSpawns.size() != 4)
+            {
+                LogE << "Player spawn points was " << m_playerSpawns.size() << std::endl;
+            }
+#endif
+
+            return (!m_collisionRects[0].empty() && m_playerSpawns.size() == 4);
+        }
+    }
+    else
+    {
+        //TODO
+    }
 
 
     return false;
-}
-
-void MapData::createGeometry(cro::Scene& scene)
-{
-
 }

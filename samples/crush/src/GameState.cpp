@@ -36,6 +36,9 @@ source distribution.
 #include "InterpolationSystem.hpp"
 #include "ClientPacketData.hpp"
 #include "DayNightDirector.hpp"
+#include "MapData.hpp"
+#include "ServerLog.hpp"
+#include "GLCheck.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -46,19 +49,25 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
 
+#include <crogine/ecs/components/Drawable2D.hpp>
+
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
-#include <crogine/graphics/MeshBatch.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
+
+#include <crogine/graphics/MeshData.hpp>
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/graphics/Image.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 #include <cstring>
@@ -137,6 +146,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
+#ifdef CRO_DEBUG_
     //debug output
     registerWindow([&]()
         {
@@ -158,10 +168,41 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
 
             if (ImGui::Begin("Textures"))
             {
+                ImGui::Image(m_debugViewTexture.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                if (ImGui::Button("Perspective"))
+                {
+                    m_debugCam.getComponent<cro::Camera>().setPerspective(45.f * cro::Util::Const::degToRad, 1.f, 10.f, 60.f);
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Ortho"))
+                {
+                    m_debugCam.getComponent<cro::Camera>().setOrthographic(-10.f, 10.f, -10.f, 10.f, 10.f, 60.f);
+                }
+
+                ImGui::SameLine();
+                if (ImGui::Button("Front"))
+                {
+                    m_debugCam.getComponent<cro::Transform>().setRotation(glm::vec3(1.f, 0.f, 0.f), 0.f);
+                    m_debugCam.getComponent<cro::Transform>().setPosition(glm::vec3(0.f, 6.f, 30.f));
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Top"))
+                {
+                    m_debugCam.getComponent<cro::Transform>().setRotation(glm::vec3(1.f, 0.f, 0.f), -90.f * cro::Util::Const::degToRad);
+                    m_debugCam.getComponent<cro::Transform>().setPosition(glm::vec3(0.f, 30.f, 0.f));
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Rear"))
+                {
+                    m_debugCam.getComponent<cro::Transform>().setRotation(glm::vec3(0.f, 1.f, 0.f), 180.f * cro::Util::Const::degToRad);
+                    m_debugCam.getComponent<cro::Transform>().setPosition(glm::vec3(0.f, 6.f, -30.f));
+                }
 
             }
             ImGui::End();
         });
+#endif
 }
 
 //public
@@ -270,11 +311,11 @@ bool GameState::simulate(float dt)
 
 
             //TODO this should have alrady been done in the lobby
-            if ((m_requestFlags & ClientRequestFlags::MapName) == 0)
+            /*if ((m_requestFlags & ClientRequestFlags::MapName) == 0)
             {
                 std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | ClientRequestFlags::MapName;
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestData, data, cro::NetFlag::Reliable);
-            }
+            }*/
             //these require the heightmap has already been received
             /*else
             {
@@ -303,13 +344,13 @@ bool GameState::simulate(float dt)
         parser.update();
     }
 
-    static float timeAccum = 0.f;
-    timeAccum += dt;
-    m_gameScene.setWaterLevel(std::sin(timeAccum * 0.9f) * 0.08f);
+static float timeAccum = 0.f;
+timeAccum += dt;
+m_gameScene.setWaterLevel(std::sin(timeAccum * 0.9f) * 0.08f);
 
-    m_gameScene.simulate(dt);
-    m_uiScene.simulate(dt);
-    return true;
+m_gameScene.simulate(dt);
+m_uiScene.simulate(dt);
+return true;
 }
 
 void GameState::render()
@@ -349,6 +390,16 @@ void GameState::render()
     auto& rt = cro::App::getWindow();
     m_gameScene.render(rt, m_cameras);
     m_uiScene.render(rt);
+
+
+#ifdef CRO_DEBUG_
+    //render a far view of the scene in debug to a render texture
+    auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
+    m_debugViewTexture.clear();
+    m_gameScene.render(m_debugViewTexture);
+    m_debugViewTexture.display();
+    m_gameScene.setActiveCamera(oldCam);
+#endif
 }
 
 //private
@@ -364,24 +415,71 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_gameScene.addDirector<DayNightDirector>();
+
+
+    m_uiScene.addSystem<cro::CameraSystem>(mb);
+    m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 }
 
 void GameState::loadAssets()
 {
-    m_environmentMap.loadFromFile("assets/images/cubemap/beach01.hdr");
+    m_environmentMap.loadFromFile("assets/images/cubemap/beach02.hdr");
     m_skyMap.loadFromFile("assets/images/cubemap/skybox.hdr");
-    m_gameScene.setCubemap(m_skyMap);
+    m_gameScene.setCubemap(m_environmentMap);
     //m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
+
+
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, cro::ShaderResource::DiffuseColour | cro::ShaderResource::RxShadows);
+    m_materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_maskColour", cro::Colour(0.f, 1.f, 1.f));
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
+    //m_resources.materials.get(m_materialIDs[MaterialID::Default]).blendMode = cro::Material::BlendMode::Alpha;
+
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
+    m_materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+
+#ifdef CRO_DEBUG_
+    m_debugViewTexture.create(512, 512);
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 6.f, 30.f));
+    entity.addComponent<cro::Camera>().setOrthographic(-10.f, 10.f, -10.f, 10.f, 10.f, 60.f);
+    entity.getComponent<cro::Camera>().depthBuffer.create(1024, 1024);
+
+    m_debugCam = entity;
+#endif
 }
 
 void GameState::createScene()
 {
     createDayCycle();
+
+    loadMap();
+
+    //ground plane
+    cro::ModelDefinition modelDef;
+    modelDef.loadFromFile("assets/models/ground_plane.cmt", m_resources, &m_environmentMap);
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    modelDef.createModel(entity, m_resources);
 }
 
 void GameState::createUI()
 {
+    cro::Entity entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
 
+    m_splitScreenNode = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Camera>(); //the game scene camera callback will also update this
+    m_uiScene.setActiveCamera(entity);
 }
 
 void GameState::createDayCycle()
@@ -421,11 +519,119 @@ void GameState::createDayCycle()
     rootNode.getComponent<cro::Transform>().addChild(sunNode.getComponent<cro::Transform>());
 }
 
+void GameState::loadMap()
+{
+    MapData mapData;
+    if (mapData.loadFromFile("assets/maps/" + m_sharedData.mapName.toAnsiString()))
+    {
+        //build the platform geometry
+        for (auto i = 0u; i < 2u; ++i)
+        {
+            auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Normal/* | cro::VertexProperty::UV0*/, 1, GL_TRIANGLES));
+
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Default]));
+            entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::DefaultShadow]));
+            entity.addComponent<cro::ShadowCaster>();
+
+            std::vector<float> verts;
+            std::vector<std::uint32_t> indices; //u16 should be fine but the mesh builder expects 32...
+
+            //0------1
+            //     /
+            //    /
+            //   /
+            //  /
+            //2------3
+
+            const std::size_t vertComponentCount = 6; //MUST UPDATE THIS WITH VERT COMPONENT COUNT!
+            const auto& rects = mapData.getCollisionRects(i);
+            for (auto rect : rects)
+            {
+                auto indexOffset = static_cast<std::uint32_t>(verts.size() / vertComponentCount);
+
+                //front face
+                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth + LayerThickness); //position
+                verts.push_back(0.f); verts.push_back(0.f); verts.push_back(1.f); //normal
+
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(0.f); verts.push_back(0.f); verts.push_back(1.f);
+
+                verts.push_back(rect.left); verts.push_back(rect.bottom); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(0.f); verts.push_back(0.f); verts.push_back(1.f);
+
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(0.f); verts.push_back(0.f); verts.push_back(1.f);
+
+
+                indices.push_back(indexOffset + 0);
+                indices.push_back(indexOffset + 2);
+                indices.push_back(indexOffset + 1);
+
+                indices.push_back(indexOffset + 2);
+                indices.push_back(indexOffset + 3);
+                indices.push_back(indexOffset + 1);
+
+
+                //rear face
+                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth - LayerThickness); //position
+                verts.push_back(0.f); verts.push_back(0.f); verts.push_back(-1.f); //normal
+
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(0.f); verts.push_back(0.f); verts.push_back(-1.f);
+
+                verts.push_back(rect.left); verts.push_back(rect.bottom); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(0.f); verts.push_back(0.f); verts.push_back(-1.f);
+
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(0.f); verts.push_back(0.f); verts.push_back(-1.f);
+
+
+                indices.push_back(indexOffset + 5);
+                indices.push_back(indexOffset + 6);
+                indices.push_back(indexOffset + 4);
+
+                indices.push_back(indexOffset + 5);
+                indices.push_back(indexOffset + 7);
+                indices.push_back(indexOffset + 6);
+
+
+                //TODO we need to properly calculate the outline of combined shapes
+            }
+
+            auto& mesh = entity.getComponent<cro::Model>().getMeshData();
+
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexData[0].ibo));
+            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+            mesh.boundingBox[0] = { -10.5f, 0.f, 7.f };
+            mesh.boundingBox[1] = { 10.5f, 12.f, 10.5f };
+            mesh.boundingSphere.radius = 10.5f;
+            mesh.vertexCount = static_cast<std::uint32_t>(verts.size() / vertComponentCount);
+            mesh.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
+        }
+    }
+    else
+    {
+        m_sharedData.errorMessage = "Failed to load map " + m_sharedData.mapName.toAnsiString();
+        requestStackPush(States::Error);
+    }
+}
+
 void GameState::handlePacket(const cro::NetEvent::Packet& packet)
 {
     switch (packet.getID())
     {
     default: break;
+    case PacketID::LogMessage:
+        LogW << "Server: " << sv::LogStrings[packet.as<std::int32_t>()] << std::endl;
+        break;
     case PacketID::DayNightUpdate:
         m_gameScene.getDirector<DayNightDirector>().setTimeOfDay(Util::decompressFloat(packet.as<std::int16_t>()));
         break;
@@ -626,6 +832,19 @@ void GameState::updateView(cro::Camera&)
         m_cameras[0].getComponent<cro::Camera>().viewport = viewport;
         viewport.left = viewport.width;
         m_cameras[1].getComponent<cro::Camera>().viewport = viewport;
+
+        //add the screen split
+        {
+            auto& verts = m_splitScreenNode.getComponent<cro::Drawable2D>().getVertexData();
+            verts =
+            {
+                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, 0.f), cro::Colour::Black()),
+                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y), cro::Colour::Black()),
+            };
+            m_splitScreenNode.getComponent<cro::Drawable2D>().updateLocalBounds();
+        }
+
+
         break;
 
     case 3:
@@ -647,6 +866,25 @@ void GameState::updateView(cro::Camera&)
             viewport.left = viewport.width;
             m_cameras[3].getComponent<cro::Camera>().viewport = viewport;
         }
+
+        //add the screen split
+        {
+            auto& verts = m_splitScreenNode.getComponent<cro::Drawable2D>().getVertexData();
+            verts =
+            {
+                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, 0.f), cro::Colour::Black()),
+                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y), cro::Colour::Black()),
+
+                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y), cro::Colour::Transparent()),
+                cro::Vertex2D(glm::vec2(0.f, cro::DefaultSceneSize.y / 2.f), cro::Colour::Transparent()),
+
+                cro::Vertex2D(glm::vec2(0.f, cro::DefaultSceneSize.y / 2.f), cro::Colour::Black()),
+                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x, cro::DefaultSceneSize.y / 2.f), cro::Colour::Black()),
+            };
+            m_splitScreenNode.getComponent<cro::Drawable2D>().updateLocalBounds();
+        }
+
+
         break;
 
     default:
@@ -658,4 +896,14 @@ void GameState::updateView(cro::Camera&)
     {
         cam.getComponent<cro::Camera>().setPerspective(fov, aspect, nearPlane, farPlane);
     }
+
+
+
+    //update the UI camera
+    auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
+
+    cam.setOrthographic(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
+    cam.viewport.bottom = (1.f - size.y) / 2.f;
+    cam.viewport.height = size.y;
+
 }

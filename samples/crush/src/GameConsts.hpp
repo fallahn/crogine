@@ -38,13 +38,15 @@ source distribution.
 
 static const glm::vec3 PlayerSize = glm::vec3(0.6f, 0.8f, 0.6f);
 
-static constexpr float SpawnOffset = 30.f;
+static constexpr float LayerDepth = 7.5f;
+static constexpr float LayerThickness = 0.35f;
+static constexpr float SpawnOffset = 10.f;
 static const std::array PlayerSpawns =
 {
-    glm::vec3(-SpawnOffset, 0.f, -SpawnOffset),
-    glm::vec3(SpawnOffset, 0.f, -SpawnOffset),
-    glm::vec3(-SpawnOffset, 0.f, SpawnOffset),
-    glm::vec3(SpawnOffset, 0.f, SpawnOffset)
+    glm::vec3(-SpawnOffset, 0.f, LayerDepth),
+    glm::vec3(SpawnOffset, 0.f, LayerDepth),
+    glm::vec3(-SpawnOffset, 0.f, -LayerDepth),
+    glm::vec3(SpawnOffset, 0.f, -LayerDepth)
 };
 
 //player view
