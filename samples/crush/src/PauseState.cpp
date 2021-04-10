@@ -42,12 +42,14 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
@@ -97,7 +99,6 @@ bool PauseState::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
         case SDLK_PAUSE:
             requestStackPop();
-            cro::App::getWindow().setMouseCaptured(true);
             break;
         }
     }
@@ -244,6 +245,7 @@ void PauseState::buildScene()
     entity.addComponent<cro::Camera>().resizeCallback = std::bind(&PauseState::updateView, this, std::placeholders::_1);
 
     m_scene.setActiveCamera(entity);
+    updateView(entity.getComponent<cro::Camera>());
 }
 
 void PauseState::updateView(cro::Camera& cam)
