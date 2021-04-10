@@ -64,8 +64,16 @@ struct SharedStateData final
     //our local player data
     PlayerData localPlayer;
     cro::String targetIP;
+    std::uint8_t localPlayerCount = 1;
 
+    //so we know what to try loading
     cro::String mapName;
 
+    //set before pushing error state to display
     std::string errorMessage;
+
+    enum class HostState
+    {
+        None, Local, Network
+    }hostState = HostState::None;
 };

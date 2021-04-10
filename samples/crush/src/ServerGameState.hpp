@@ -38,7 +38,7 @@ source distribution.
 
 #include <array>
 
-namespace Sv
+namespace sv
 {
     class GameState final : public State
     {
@@ -73,5 +73,7 @@ namespace Sv
 
         void initScene();
         void buildWorld();
+
+        void endGame();
     };
 }

@@ -99,7 +99,6 @@ private:
     cro::TextureResource m_textureResource;
 
     cro::Font m_font;
-    bool m_hosting;
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
     enum MenuID

@@ -588,16 +588,85 @@ void GameState::loadMap()
                 verts.push_back(0.f); verts.push_back(0.f); verts.push_back(-1.f);
 
 
-                indices.push_back(indexOffset + 5);
-                indices.push_back(indexOffset + 6);
-                indices.push_back(indexOffset + 4);
+                indexOffset += 4;
+                indices.push_back(indexOffset + 1);
+                indices.push_back(indexOffset + 2);
+                indices.push_back(indexOffset + 0);
 
-                indices.push_back(indexOffset + 5);
-                indices.push_back(indexOffset + 7);
-                indices.push_back(indexOffset + 6);
+                indices.push_back(indexOffset + 1);
+                indices.push_back(indexOffset + 3);
+                indices.push_back(indexOffset + 2);
 
 
-                //TODO we need to properly calculate the outline of combined shapes
+                //TODO we could properly calculate the outline of combined shapes
+                //although this probably only saves us some small amount of overdraw
+
+                //north face
+                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth - LayerThickness); //position
+                verts.push_back(0.f); verts.push_back(1.f); verts.push_back(0.f); //normal
+
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(0.f); verts.push_back(1.f); verts.push_back(0.f);
+
+                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(0.f); verts.push_back(1.f); verts.push_back(0.f);
+
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(0.f); verts.push_back(1.f); verts.push_back(0.f);
+
+                indexOffset += 4;
+                indices.push_back(indexOffset + 0);
+                indices.push_back(indexOffset + 2);
+                indices.push_back(indexOffset + 1);
+
+                indices.push_back(indexOffset + 2);
+                indices.push_back(indexOffset + 3);
+                indices.push_back(indexOffset + 1);
+
+                //east face
+                verts.push_back(rect.left+ rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth + LayerThickness); //position
+                verts.push_back(1.f); verts.push_back(0.f); verts.push_back(0.f); //normal
+
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(1.f); verts.push_back(0.f); verts.push_back(0.f);
+
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(1.f); verts.push_back(0.f); verts.push_back(0.f);
+
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(1.f); verts.push_back(0.f); verts.push_back(0.f);
+
+                indexOffset += 4;
+                indices.push_back(indexOffset + 0);
+                indices.push_back(indexOffset + 2);
+                indices.push_back(indexOffset + 1);
+
+                indices.push_back(indexOffset + 2);
+                indices.push_back(indexOffset + 3);
+                indices.push_back(indexOffset + 1);
+
+
+                //west face
+                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth - LayerThickness); //position
+                verts.push_back(-1.f); verts.push_back(0.f); verts.push_back(0.f); //normal
+
+                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(-1.f); verts.push_back(0.f); verts.push_back(0.f);
+
+                verts.push_back(rect.left); verts.push_back(rect.bottom); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(-1.f); verts.push_back(0.f); verts.push_back(0.f);
+
+                verts.push_back(rect.left); verts.push_back(rect.bottom); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(-1.f); verts.push_back(0.f); verts.push_back(0.f);
+
+                indexOffset += 4;
+                indices.push_back(indexOffset + 0);
+                indices.push_back(indexOffset + 2);
+                indices.push_back(indexOffset + 1);
+
+                indices.push_back(indexOffset + 2);
+                indices.push_back(indexOffset + 3);
+                indices.push_back(indexOffset + 1);
             }
 
             auto& mesh = entity.getComponent<cro::Model>().getMeshData();
@@ -629,6 +698,15 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     switch (packet.getID())
     {
     default: break;
+    case PacketID::StateChange:
+        if (packet.as<std::uint8_t>() == sv::StateID::Lobby)
+        {
+            //TODO push some sort of round summary state
+
+            requestStackPop();
+            requestStackPush(States::MainMenu);
+        }
+        break;
     case PacketID::LogMessage:
         LogW << "Server: " << sv::LogStrings[packet.as<std::int32_t>()] << std::endl;
         break;
@@ -806,7 +884,7 @@ void GameState::updateView(cro::Camera&)
 {
     CRO_ASSERT(!m_cameras.empty(), "Need at least one camera!");
 
-    const float fov = 36.f * cro::Util::Const::degToRad;
+    const float fov = 56.f * cro::Util::Const::degToRad;
     const float nearPlane = 0.1f;
     const float farPlane = 170.f;
     float aspect = 16.f / 9.f;

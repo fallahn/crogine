@@ -39,6 +39,7 @@ source distribution.
 #include "WeatherDirector.hpp"
 #include "MapData.hpp"
 #include "ServerLog.hpp"
+#include "ServerState.hpp"
 
 #include <crogine/core/Log.hpp>
 
@@ -50,7 +51,7 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
-using namespace Sv;
+using namespace sv;
 
 namespace
 {
@@ -70,7 +71,7 @@ GameState::GameState(SharedData& sd)
 
 void GameState::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == Sv::MessageID::ConnectionMessage)
+    if (msg.id == sv::MessageID::ConnectionMessage)
     {
         const auto& data = msg.getData<ConnectionEvent>();
         if (data.type == ConnectionEvent::Disconnected)
@@ -329,4 +330,10 @@ void GameState::buildWorld()
 
         //TODO quit this state cleanly
     }
+}
+
+void GameState::endGame()
+{
+    m_sharedData.host.broadcastPacket(PacketID::StateChange, std::uint8_t(sv::StateID::Lobby), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_returnValue = sv::StateID::Lobby;
 }

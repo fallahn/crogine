@@ -113,7 +113,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
             {
                 if (activated(evt))
                 {
-                    m_hosting = true;
+                    m_sharedData.hostState = SharedStateData::HostState::Network;
                     parent.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Avatar]);
                     m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Avatar);
                 }
@@ -136,7 +136,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
             {
                 if (activated(evt))
                 {
-                    m_hosting = false;
+                    m_sharedData.hostState = SharedStateData::HostState::None;
                     parent.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Avatar]);
                     m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Avatar);
                 }
@@ -178,9 +178,19 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                         }
                         else
                         {
-                            m_hosting = true;
+                            m_sharedData.hostState = SharedStateData::HostState::Local;
                             parent.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::LocalPlay]);
                             m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::LocalPlay);
+
+                            //this is a hack when starting a split screen after quitting a lobby
+                            //ideally we'll get rid if this once the UI is built for real (assuming we get that far)
+                            cro::Command cmd;
+                            cmd.targetFlags = MenuCommandID::ReadyButton;
+                            cmd.action = [](cro::Entity e, float)
+                            {
+                                e.getComponent<cro::Text>().setString("Start");
+                            };
+                            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                         }
                     }
                 }
@@ -344,7 +354,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                 {
                     applyTextEdit();
 
-                    if (m_hosting)
+                    if (m_sharedData.hostState == SharedStateData::HostState::Network)
                     {
                         if (!m_sharedData.clientConnection.connected)
                         {
@@ -612,9 +622,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
                     parent.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
                     m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
-                    if (m_hosting)
+                    if (m_sharedData.hostState == SharedStateData::HostState::Network)
                     {
                         m_sharedData.serverInstance.stop();
+                        m_sharedData.hostState = SharedStateData::HostState::None;
                     }
                 }
             });
@@ -638,7 +649,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             {
                 if (activated(evt))
                 {
-                    if (m_hosting)
+                    if (m_sharedData.hostState == SharedStateData::HostState::Network)
                     {
                         //check all members ready
                         bool ready = true;
@@ -748,9 +759,10 @@ void MenuState::createLocalMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
                     parent.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
                     m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
-                    if (m_hosting)
+                    if (m_sharedData.hostState == SharedStateData::HostState::Local)
                     {
                         m_sharedData.serverInstance.stop();
+                        m_sharedData.hostState = SharedStateData::HostState::None;
                     }
                 }
             });
@@ -774,7 +786,7 @@ void MenuState::createLocalMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             {
                 if (activated(evt))
                 {
-                    if (m_hosting)
+                    if (m_sharedData.hostState == SharedStateData::HostState::Local)
                     {
                         if (m_sharedData.clientConnection.connected
                             && m_sharedData.serverInstance.running()) //not running if we're not hosting :)

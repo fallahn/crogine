@@ -65,8 +65,7 @@ namespace
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
     m_sharedData    (sd),
-    m_scene         (context.appInstance.getMessageBus()),
-    m_hosting       (false)
+    m_scene         (context.appInstance.getMessageBus())
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -88,22 +87,67 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     }
     
     //we returned from a previous game
-    //TODO this should depend if we're playing split screen
     if (sd.clientConnection.connected)
     {
-        updateLobbyStrings();
-
-        //switch to lobby view
-        m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
-
-        cro::Command cmd;
-        cmd.targetFlags = MenuCommandID::RootNode;
-        cmd.action = [&](cro::Entity e, float)
+        if (m_sharedData.hostState == SharedStateData::HostState::Local)
         {
-            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
-            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
-        };
-        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            //switch to local view
+            cro::Command cmd;
+            cmd.targetFlags = MenuCommandID::RootNode;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::LocalPlay]);
+                m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::LocalPlay);
+            };
+            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+            cmd.targetFlags = MenuCommandID::PlayerIndicator;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Text>().setString(std::to_string(m_sharedData.localPlayerCount) + " Player");
+            };
+            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+            std::uint16_t data = m_sharedData.clientConnection.connectionID << 8 | m_sharedData.localPlayerCount;
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerCount, data, cro::NetFlag::Reliable);
+        }
+        else
+        {
+            //switch back to lobby
+            updateLobbyStrings();
+
+            //switch to lobby view
+            cro::Command cmd;
+            cmd.targetFlags = MenuCommandID::RootNode;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
+                m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
+            };
+            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+            //and ready up if we're hosting
+            if (m_sharedData.hostState == SharedStateData::HostState::Network)
+            {
+                m_sharedData.clientConnection.netClient.sendPacket(
+                    PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
+                    cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            else
+            {
+                //update the UI
+                cmd.targetFlags = MenuCommandID::ReadyButton;
+                cmd.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString("Ready");
+                };
+                m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            }
+        }
+    }
+    else
+    {
+        m_sharedData.localPlayerCount = 1;
     }
 }
 
@@ -131,6 +175,8 @@ bool MenuState::handleEvent(const cro::Event& evt)
 
             if (m_sharedData.clientConnection.connected)
             {
+                m_sharedData.localPlayerCount = count;
+
                 std::uint16_t data = m_sharedData.clientConnection.connectionID << 8 | count;
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerCount, data, cro::NetFlag::Reliable);
             }
@@ -410,7 +456,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
         {
         default: break;
         case PacketID::StateChange:
-            if (evt.packet.as<std::uint8_t>() == Sv::StateID::Game)
+            if (evt.packet.as<std::uint8_t>() == sv::StateID::Game)
             {
                 requestStackClear();
                 requestStackPush(States::Game);
@@ -454,6 +500,8 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 //else default to two players
                 else
                 {
+                    m_sharedData.localPlayerCount = 2;
+
                     std::uint16_t data = m_sharedData.clientConnection.connectionID << 8 | 2;
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerCount, data, cro::NetFlag::Reliable);
 
