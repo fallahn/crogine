@@ -698,6 +698,13 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     switch (packet.getID())
     {
     default: break;
+    case PacketID::ConnectionRefused:
+        if (packet.as<std::uint8_t>() == MessageType::ServerQuit)
+        {
+            m_sharedData.errorMessage = "Server Closed The Connection";
+            requestStackPush(States::Error);
+        }
+        break;
     case PacketID::StateChange:
         if (packet.as<std::uint8_t>() == sv::StateID::Lobby)
         {

@@ -65,6 +65,9 @@ void Server::launch()
         m_sharedData.messageBus.poll();
     }
 
+    //reset any client data
+    m_sharedData.clients = {};
+
     m_running = true;
     m_thread = std::make_unique<std::thread>(&Server::run, this);
 }
@@ -146,23 +149,17 @@ void Server::run()
                 //remove from client list
                 removeClient(evt);
             }
-            else if (evt.type == cro::NetEvent::PacketReceived)
-            {
-                switch (evt.packet.getID())
-                {
-                default: break;
-                case PacketID::RequestGameStart:
-                    if (m_currentState->stateID() == sv::StateID::Lobby)
-                    {
-                        //TODO assert sender is host
-                        m_currentState = std::make_unique<sv::GameState>(m_sharedData);
-                        nextState = sv::StateID::Game;
+            //else if (evt.type == cro::NetEvent::PacketReceived)
+            //{
+            //    switch (evt.packet.getID())
+            //    {
+            //    default: break;
+            //    //handle this directly in the lobby
+            //    //case PacketID::RequestGame:
 
-                        m_sharedData.host.broadcastPacket(PacketID::StateChange, std::uint8_t(nextState), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    }
-                    break;
-                }
-            }
+            //    //    break;
+            //    }
+            //}
         }
 
         //network broadcasts
@@ -201,8 +198,18 @@ void Server::run()
     }
 
     m_currentState.reset();
-    //TODO clear all client data
     
+    //tell everyone we're quitting
+    m_sharedData.host.broadcastPacket(PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerQuit), cro::NetFlag::Reliable);
+    cro::Clock clock;
+    while (clock.elapsed() < cro::seconds(4.f))
+    {
+        //make sure to pump out the packets with our dying breath...
+        cro::NetEvent evt;
+        while (m_sharedData.host.pollEvent(evt));
+    }
+
+
     for (auto& c : m_sharedData.clients)
     {
         m_sharedData.host.disconnect(c.peer);

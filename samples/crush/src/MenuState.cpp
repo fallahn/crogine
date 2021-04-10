@@ -148,6 +148,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     else
     {
         m_sharedData.localPlayerCount = 1;
+        m_sharedData.playerData = {};
+        updateLobbyStrings();
     }
 }
 
@@ -364,7 +366,7 @@ void MenuState::createScene()
                         if (m_sharedData.clientConnection.connected
                             && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
                         {
-                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGame, std::uint8_t(1), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                         }
                     }
 
@@ -513,11 +515,24 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             break;
         case PacketID::ConnectionRefused:
         {
-            std::string err = evt.packet.as<std::uint8_t>() == 0 ? "Server full" : "Game in progress";
-            cro::Logger::log("Connection refused: " + err, cro::Logger::Type::Error);
+            auto type = evt.packet.as<std::uint8_t>();
 
-            m_sharedData.clientConnection.netClient.disconnect();
-            m_sharedData.clientConnection.connected = false;
+            if(type == MessageType::ServerQuit)
+            {
+                m_sharedData.errorMessage = "Server Closed The Connection";
+                requestStackPush(States::Error);
+            }
+            else
+            {
+                std::string err = type == 0 ? "Server full" : "Game in progress";
+                cro::Logger::log("Connection refused: " + err, cro::Logger::Type::Error);
+
+                m_sharedData.clientConnection.netClient.disconnect();
+                m_sharedData.clientConnection.connected = false;
+
+                m_sharedData.errorMessage = err;
+                requestStackPush(States::Error);
+            }
         }
             break;
         case PacketID::LobbyUpdate:

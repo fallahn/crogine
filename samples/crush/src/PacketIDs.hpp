@@ -35,6 +35,7 @@ namespace MessageType
     {
         ServerFull,
         NotInLobby,
+        ServerQuit
     };
 }
 
@@ -69,7 +70,7 @@ namespace PacketID
         DayNightUpdate, //< compressed float with the current day/night time
 
         //from client
-        RequestGameStart,
+        RequestGame, //< uint8 0 end game, 1 start game, can only be sent by host
         RequestData, //< uint16 (connectionID << 8) | ClientRequestFlag - requests game data from server. Sent repeatedly until ack'd
         ClientReady, //< uint8 connectionID - everything has loaded.
         InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput)

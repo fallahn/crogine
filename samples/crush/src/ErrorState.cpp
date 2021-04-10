@@ -67,6 +67,8 @@ ErrorState::ErrorState(cro::StateStack& ss, cro::State::Context ctx, SharedState
                     sd.clientConnection.connectionID = 4;
                     sd.clientConnection.ready = false;
 
+                    sd.hostState = SharedStateData::HostState::None;
+
                     requestStackClear();
                     requestStackPush(States::MainMenu);
                 }

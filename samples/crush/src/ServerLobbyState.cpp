@@ -92,6 +92,17 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
         case PacketID::MapName:
             updateMapName(evt);
             break;
+        case PacketID::RequestGame:
+            if (evt.packet.as<std::uint8_t>() == 1)
+            {
+                //assert sender is host - this assumes the host is always first to connect
+                if (evt.peer == m_sharedData.clients[0].peer)
+                {
+                    m_returnValue = sv::StateID::Game;
+                    m_sharedData.host.broadcastPacket(PacketID::StateChange, std::uint8_t(sv::StateID::Game), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+            }
+            break;
         }
     }
 }
