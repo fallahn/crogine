@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,44 +29,46 @@ source distribution.
 
 #pragma once
 
-#include "CommonConsts.hpp"
+#include "InputParser.hpp"
 
-#include <crogine/detail/glm/vec3.hpp>
-#include <array>
+#include <crogine/ecs/Entity.hpp>
 
-using CompressedQuat = std::array<std::int16_t, 4u>;
-
-struct LobbyData final
+namespace cro
 {
-    std::uint8_t playerID = 4;
-    std::uint8_t skinFlags = 0;
-    std::uint8_t stringSize = 0;
+    class Scene;
+}
+
+class PlayerState
+{
+public:
+    PlayerState() = default;
+    virtual ~PlayerState() = default;
+
+    virtual void processMovement(cro::Entity, Input) = 0;
+    virtual void processCollision(cro::Entity, cro::Scene&) = 0;
+    virtual void processAvatar(cro::Entity) = 0;
 };
 
-struct PlayerInfo final
+class PlayerStateFalling final : public PlayerState
 {
-    CompressedQuat rotation{};
-    glm::vec3 spawnPosition = glm::vec3(0.f);
-    std::uint32_t serverID = 0;
-    std::int32_t timestamp = 0;
-    std::uint8_t playerID = ConstVal::MaxClients;
-    std::uint8_t connectionID = ConstVal::MaxClients;
+public:
+    PlayerStateFalling();
+
+    void processMovement(cro::Entity, Input) override;
+    void processCollision(cro::Entity, cro::Scene&) override;
+    void processAvatar(cro::Entity) override;
+
+private:
 };
 
-struct PlayerUpdate final
+class PlayerStateWalking final : public PlayerState
 {
-    CompressedQuat rotation{};
-    std::uint32_t timestamp = 0;
-    glm::vec3 position = glm::vec3(0.f); //TODO make this 3 compressed floats?
-    std::uint8_t playerID = 0;
-    std::uint8_t state = 0;
-};
+public:
+    PlayerStateWalking();
 
-struct ActorUpdate final
-{
-    CompressedQuat rotation{};
-    glm::vec3 position = glm::vec3(0.f);
-    std::uint32_t serverID = 0;
-    std::int32_t timestamp = 0;
-    std::int8_t actorID = -1;
+    void processMovement(cro::Entity, Input) override;
+    void processCollision(cro::Entity, cro::Scene&) override;
+    void processAvatar(cro::Entity) override;
+
+private:
 };

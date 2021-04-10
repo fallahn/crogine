@@ -94,6 +94,10 @@ void MyApp::render()
 
 bool MyApp::initialise()
 {
+    //preload shared resoureces
+    m_sharedData.fonts.load(m_sharedData.defaultFontID, "assets/fonts/VeraMono.ttf");
+
+
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("CRUSH!");
 
@@ -115,6 +119,8 @@ void MyApp::finalise()
     m_stateStack.simulate(0.f);
 
     m_sharedData.serverInstance.stop();
+
+    m_sharedData.fonts.flush();
 }
 
 void MyApp::loadSettings()

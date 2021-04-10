@@ -67,6 +67,13 @@ namespace cro
         */
         Font& get(std::uint32_t id);
 
+
+        /*!
+        \brief Unloads all currently loaded fonts.
+        Use with caution!
+        */
+        void flush();
+
     private:
         std::map<std::uint32_t, std::unique_ptr<Font>> m_fonts;
     };

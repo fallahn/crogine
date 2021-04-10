@@ -277,7 +277,6 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
-    m_font.loadFromFile("assets/fonts/VeraMono.ttf");
 }
 
 void MenuState::createScene()
@@ -402,10 +401,12 @@ void MenuState::createScene()
 
     if (mapList.empty())
     {
+        auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
+
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(m_font).setString("No Maps Found!");
+        entity.addComponent<cro::Text>(font).setString("No Maps Found!");
         entity.getComponent<cro::Text>().setCharacterSize(LargeTextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     }

@@ -135,6 +135,12 @@
     <ClCompile Include="src\MapData.cpp">
       <Filter>Source Files\shared</Filter>
     </ClCompile>
+    <ClCompile Include="src\PlayerStateFalling.cpp">
+      <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlayerStateWalking.cpp">
+      <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -244,6 +250,9 @@
     </ClInclude>
     <ClInclude Include="src\ServerLog.hpp">
       <Filter>Header Files\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlayerState.hpp">
+      <Filter>Header Files\shared\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

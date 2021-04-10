@@ -33,19 +33,16 @@ source distribution.
 #include "Messages.hpp"
 #include "GameConsts.hpp"
 
-#include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/util/Constants.hpp>
-#include <crogine/util/Maths.hpp>
-#include <crogine/detail/glm/gtc/matrix_transform.hpp>
-#include <crogine/detail/glm/gtx/norm.hpp>
-
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
-    : cro::System   (mb, typeid(PlayerSystem))
+    : cro::System       (mb, typeid(PlayerSystem))
 {
     requireComponent<Player>();
     requireComponent<cro::Transform>();
+
+    m_playerStates[Player::State::Falling] = std::make_unique<PlayerStateFalling>();
+    m_playerStates[Player::State::Walking] = std::make_unique<PlayerStateWalking>();
 }
 
 //public
@@ -73,6 +70,9 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
         //apply position/rotation from server
         tx.setPosition(update.position);
         tx.setRotation(Util::decompressQuat(update.rotation));
+
+        //set the state
+        player.state = update.state;
 
         //rewind player's last input to timestamp and
         //re-process all succeeding events
@@ -117,60 +117,10 @@ void PlayerSystem::processInput(cro::Entity entity)
     auto lastIdx = (player.nextFreeInput + (Player::HistorySize - 1)) % Player::HistorySize;
     while (player.lastUpdatedInput != lastIdx)
     {
-        processMovement(entity, player.inputStack[player.lastUpdatedInput]);
-        processCollision(entity);
-        processAvatar(player.avatar);
+        m_playerStates[player.state]->processMovement(entity, player.inputStack[player.lastUpdatedInput]);
+        m_playerStates[player.state]->processCollision(entity, *getScene());
+        m_playerStates[player.state]->processAvatar(player.avatar);
 
         player.lastUpdatedInput = (player.lastUpdatedInput + 1) % Player::HistorySize;
     }
-}
-
-void PlayerSystem::processMovement(cro::Entity entity, Input input)
-{ 
-    auto& player = entity.getComponent<Player>();
-    auto& tx = entity.getComponent<cro::Transform>();
-
-    //walking speed in metres per second (1 world unit == 1 metre)
-    const float moveSpeed = 10.f * Util::decompressFloat(input.analogueMultiplier) * ConstVal::FixedGameUpdate;
-
-    glm::vec3 movement = glm::vec3(0.f);
-
-    if (input.buttonFlags & InputFlag::Up)
-    {
-        movement.z = -1.f;
-    }
-    if (input.buttonFlags & InputFlag::Down)
-    {
-        movement.z += 1.f;
-    }
-
-    if (input.buttonFlags & InputFlag::Left)
-    {
-        movement.x = -1.f;
-    }
-    if (input.buttonFlags & InputFlag::Right)
-    {
-        movement.x += 1.f;
-    }
-
-    if (glm::length2(movement) > 1)
-    {
-        movement = glm::normalize(movement);
-    }
-    tx.move(movement * moveSpeed);
-}
-
-void PlayerSystem::processCollision(cro::Entity)
-{
-
-}
-
-void PlayerSystem::processAvatar(cro::Entity entity)
-{
-    //TODO remove this
-    auto position = entity.getComponent<cro::Transform>().getWorldPosition();
-    position.x += (50.f); //puts the position relative to the grid - this should be the origin coords
-    position.z += (50.f);
-
-    entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
 }

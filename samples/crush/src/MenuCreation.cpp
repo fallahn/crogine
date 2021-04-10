@@ -87,12 +87,13 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
+    auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
 
     //title
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("CRUSH!");
+    entity.addComponent<cro::Text>(font).setString("CRUSH!");
     entity.getComponent<cro::Text>().setCharacterSize(LargeTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -101,7 +102,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 540.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Host");
+    entity.addComponent<cro::Text>(font).setString("Host");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
@@ -124,7 +125,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 480.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Join");
+    entity.addComponent<cro::Text>(font).setString("Join");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
@@ -147,7 +148,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 420.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Split Screen");
+    entity.addComponent<cro::Text>(font).setString("Split Screen");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
@@ -201,7 +202,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 360.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Options");
+    entity.addComponent<cro::Text>(font).setString("Options");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
@@ -222,7 +223,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 200.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Quit");
+    entity.addComponent<cro::Text>(font).setString("Quit");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
@@ -249,11 +250,13 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
     menuTransform.setPosition({ 0.f, -static_cast<float>(cro::DefaultSceneSize.y) });
 
+    auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
+
     //title
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Player Details");
+    entity.addComponent<cro::Text>(font).setString("Player Details");
     entity.getComponent<cro::Text>().setCharacterSize(LargeTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -262,7 +265,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString(m_sharedData.localPlayer.name);
+    entity.addComponent<cro::Text>(font).setString(m_sharedData.localPlayer.name);
     entity.getComponent<cro::Text>().setCharacterSize(SmallTextSize);
     auto bounds = cro::Text::getLocalBounds(entity);
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
@@ -313,7 +316,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 80.f, 120.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Back");
+    entity.addComponent<cro::Text>(font).setString("Back");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
@@ -337,7 +340,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 1920.f - 80.f, 120.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Continue");
+    entity.addComponent<cro::Text>(font).setString("Continue");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
@@ -404,11 +407,13 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
     menuTransform.setPosition({ cro::DefaultSceneSize.x, -static_cast<float>(cro::DefaultSceneSize.y) });
 
+    auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
+
     //title
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Join Game");
+    entity.addComponent<cro::Text>(font).setString("Join Game");
     entity.getComponent<cro::Text>().setCharacterSize(LargeTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -417,7 +422,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString(m_sharedData.targetIP);
+    entity.addComponent<cro::Text>(font).setString(m_sharedData.targetIP);
     entity.getComponent<cro::Text>().setCharacterSize(SmallTextSize);
     auto bounds = cro::Text::getLocalBounds(entity);
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
@@ -468,7 +473,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 80.f, 120.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Back");
+    entity.addComponent<cro::Text>(font).setString("Back");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
@@ -492,7 +497,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 1920.f - 80.f, 120.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Join");
+    entity.addComponent<cro::Text>(font).setString("Join");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
@@ -542,11 +547,13 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
     menuTransform.setPosition({ cro::DefaultSceneSize.x, 0.f });
 
+    auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
+
     //title
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Lobby");
+    entity.addComponent<cro::Text>(font).setString("Lobby");
     entity.getComponent<cro::Text>().setCharacterSize(LargeTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -555,7 +562,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 400.f, 700.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("No Players...");
+    entity.addComponent<cro::Text>(font).setString("No Players...");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::LobbyList;
@@ -590,7 +597,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ cro::DefaultSceneSize.x / 2.f, 100.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setCharacterSize(MediumTextSize);
+    entity.addComponent<cro::Text>(font).setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::Callback>().active = true;
@@ -605,7 +612,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 80.f, 120.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Back");
+    entity.addComponent<cro::Text>(font).setString("Back");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
@@ -636,7 +643,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Transform>().setPosition({ 1920.f - 80.f, 120.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::ReadyButton;
-    entity.addComponent<cro::Text>(m_font).setString("Start");
+    entity.addComponent<cro::Text>(font).setString("Start");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     auto bounds = cro::Text::getLocalBounds(entity);
@@ -700,11 +707,13 @@ void MenuState::createLocalMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
     menuTransform.setPosition(-m_menuPositions[MenuID::LocalPlay]);
 
+    auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
+
     //title
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Local Play");
+    entity.addComponent<cro::Text>(font).setString("Local Play");
     entity.getComponent<cro::Text>().setCharacterSize(LargeTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -714,7 +723,7 @@ void MenuState::createLocalMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ cro::DefaultSceneSize.x / 2, cro::DefaultSceneSize.y / 2 });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("2 Player");
+    entity.addComponent<cro::Text>(font).setString("2 Player");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -726,7 +735,7 @@ void MenuState::createLocalMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ cro::DefaultSceneSize.x / 2.f, 100.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setCharacterSize(MediumTextSize);
+    entity.addComponent<cro::Text>(font).setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::Callback>().active = true;
@@ -742,7 +751,7 @@ void MenuState::createLocalMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 80.f, 120.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Back");
+    entity.addComponent<cro::Text>(font).setString("Back");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
@@ -773,7 +782,7 @@ void MenuState::createLocalMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Transform>().setPosition({ 1920.f - 80.f, 120.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::ReadyButton;
-    entity.addComponent<cro::Text>(m_font).setString("Start");
+    entity.addComponent<cro::Text>(font).setString("Start");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     auto bounds = cro::Text::getLocalBounds(entity);

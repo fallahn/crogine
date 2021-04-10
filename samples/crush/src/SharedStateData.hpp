@@ -34,8 +34,10 @@ source distribution.
 
 #include <crogine/network/NetClient.hpp>
 #include <crogine/core/String.hpp>
+#include <crogine/graphics/FontResource.hpp>
 
 #include <string>
+#include <limits>
 
 struct PlayerData final
 {
@@ -76,4 +78,10 @@ struct SharedStateData final
     {
         None, Local, Network
     }hostState = HostState::None;
+
+
+    //some shared resources so we don't have to reload
+    //them each time a new pause menu is pushed for example
+    cro::FontResource fonts;
+    std::uint32_t defaultFontID = std::numeric_limits<std::uint32_t>::max();
 };

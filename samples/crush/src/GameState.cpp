@@ -685,6 +685,8 @@ void GameState::loadMap()
             mesh.vertexCount = static_cast<std::uint32_t>(verts.size() / vertComponentCount);
             mesh.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
         }
+
+        //TODO add collision data to scene via filtered AABB tree
     }
     else
     {

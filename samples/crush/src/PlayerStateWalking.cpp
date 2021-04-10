@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -27,46 +27,25 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "PlayerState.hpp"
 
-#include "CommonConsts.hpp"
-
-#include <crogine/detail/glm/vec3.hpp>
-#include <array>
-
-using CompressedQuat = std::array<std::int16_t, 4u>;
-
-struct LobbyData final
+PlayerStateWalking::PlayerStateWalking()
 {
-    std::uint8_t playerID = 4;
-    std::uint8_t skinFlags = 0;
-    std::uint8_t stringSize = 0;
-};
 
-struct PlayerInfo final
-{
-    CompressedQuat rotation{};
-    glm::vec3 spawnPosition = glm::vec3(0.f);
-    std::uint32_t serverID = 0;
-    std::int32_t timestamp = 0;
-    std::uint8_t playerID = ConstVal::MaxClients;
-    std::uint8_t connectionID = ConstVal::MaxClients;
-};
+}
 
-struct PlayerUpdate final
+//public
+void PlayerStateWalking::processMovement(cro::Entity entity, Input)
 {
-    CompressedQuat rotation{};
-    std::uint32_t timestamp = 0;
-    glm::vec3 position = glm::vec3(0.f); //TODO make this 3 compressed floats?
-    std::uint8_t playerID = 0;
-    std::uint8_t state = 0;
-};
 
-struct ActorUpdate final
+}
+
+void PlayerStateWalking::processCollision(cro::Entity entity, cro::Scene& scene)
 {
-    CompressedQuat rotation{};
-    glm::vec3 position = glm::vec3(0.f);
-    std::uint32_t serverID = 0;
-    std::int32_t timestamp = 0;
-    std::int8_t actorID = -1;
-};
+
+}
+
+void PlayerStateWalking::processAvatar(cro::Entity)
+{
+
+}

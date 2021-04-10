@@ -146,6 +146,7 @@ void GameState::netBroadcast()
                     update.rotation = Util::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
                     update.timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
                     update.playerID = player.id;
+                    update.state = player.state;
 
                     m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::PlayerUpdate, update, cro::NetFlag::Unreliable);
                 }
@@ -322,13 +323,13 @@ void GameState::buildWorld()
         }
 
 
-        //TODO parse collision data
+        //TODO add collision data to scene via filtered AABB tree
     }
     else
     {
         m_sharedData.host.broadcastPacket(PacketID::LogMessage, sv::LogID::MapLoadFailure, cro::NetFlag::Reliable);
 
-        //TODO quit this state cleanly
+        endGame();
     }
 }
 

@@ -69,7 +69,6 @@ private:
 
     cro::Scene m_scene;
     cro::Texture m_backgroundTexture;
-    cro::Font m_font;
 
     SharedStateData& m_sharedData;
 

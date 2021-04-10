@@ -13,6 +13,8 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/MenuState.cpp
   ${PROJECT_DIR}/MyApp.cpp
   ${PROJECT_DIR}/PauseState.cpp
+  ${PROJECT_DIR}/PlayerStateFalling.cpp
+  ${PROJECT_DIR}/PlayerStateWalking.cpp
   ${PROJECT_DIR}/PlayerSystem.cpp
   ${PROJECT_DIR}/Server.cpp
   ${PROJECT_DIR}/ServerGameState.cpp

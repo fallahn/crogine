@@ -168,7 +168,9 @@
     <ClCompile Include="src\MapData.cpp" />
     <ClCompile Include="src\MenuCreation.cpp" />
     <ClCompile Include="src\PauseState.cpp" />
+    <ClCompile Include="src\PlayerStateFalling.cpp" />
     <ClCompile Include="src\PlayerSystem.cpp" />
+    <ClCompile Include="src\PlayerStateWalking.cpp" />
     <ClCompile Include="src\ServerLobbyState.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
@@ -201,6 +203,7 @@
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\PacketIDs.hpp" />
     <ClInclude Include="src\PauseState.hpp" />
+    <ClInclude Include="src\PlayerState.hpp" />
     <ClInclude Include="src\PlayerSystem.hpp" />
     <ClInclude Include="src\PoissonDisk.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />

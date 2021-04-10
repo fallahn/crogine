@@ -30,12 +30,14 @@ source distribution.
 #pragma once
 
 #include "InputParser.hpp"
+#include "PlayerState.hpp"
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 #include <array>
+#include <memory>
 
 struct PlayerUpdate;
 struct Player final
@@ -46,6 +48,19 @@ struct Player final
     std::array<Input, HistorySize> inputStack = {};
     std::size_t nextFreeInput = 0; //POST incremented after adding new input to history
     std::size_t lastUpdatedInput = HistorySize - 1; //index of the last parsed input
+
+
+    std::size_t collisionLayer = 0; //index into the collision data depending on which layer we're on
+    struct State final
+    {
+        enum
+        {
+            Walking, Falling,
+
+            Count
+        };
+    };
+    std::uint8_t state = State::Falling; //this is used to index into the update functions in the player system
 
     std::uint8_t id = 4; //this should be the same as the ActorID for this entity
     std::uint8_t connectionID = 4;
@@ -69,8 +84,6 @@ public:
 
 private:
 
+    std::array<std::unique_ptr<PlayerState>, Player::State::Count> m_playerStates;
     void processInput(cro::Entity);
-    void processMovement(cro::Entity, Input);
-    void processCollision(cro::Entity);
-    void processAvatar(cro::Entity);
 };
