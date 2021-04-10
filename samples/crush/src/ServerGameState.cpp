@@ -45,8 +45,10 @@ source distribution.
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/DynamicTreeComponent.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/vec3.hpp>
@@ -270,6 +272,7 @@ void GameState::initScene()
     auto& mb = m_sharedData.messageBus;
 
     m_scene.addSystem<cro::CallbackSystem>(mb);
+    m_scene.addSystem<cro::DynamicTreeSystem>(mb);
     m_scene.addSystem<ActorSystem>(mb);
     m_scene.addSystem<PlayerSystem>(mb);
 
@@ -323,7 +326,19 @@ void GameState::buildWorld()
         }
 
 
-        //TODO add collision data to scene via filtered AABB tree
+        //add collision data to scene via filtered AABB tree
+        for (auto i = 0u; i < 2; ++i)
+        {
+            const auto& rects = mapData.getCollisionRects(i);
+            for (const auto& rect : rects)
+            {
+                auto collisionEnt = m_scene.createEntity();
+                collisionEnt.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, LayerDepth });
+                collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, -LayerThickness), glm::vec3(rect.width, rect.height, LayerThickness) });
+                collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(i + 1);
+                //TODO add the raw rect to this so we can reduce collision down to 2D?
+            }
+        }
     }
     else
     {

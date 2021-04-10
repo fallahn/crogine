@@ -31,12 +31,14 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+#include <crogine/graphics/BoundingBox.hpp>
 
 #include <cstdint>
 #include <cmath>
 #include <array>
 
 static const glm::vec3 PlayerSize = glm::vec3(0.6f, 0.8f, 0.6f);
+static const cro::Box PlayerBounds = {glm::vec3(-PlayerSize.x / 2.f, 0.f, PlayerSize.z / 2.f), glm::vec3(PlayerSize.x / 2.f, PlayerSize.y, -PlayerSize.z / 2.f)};
 
 static constexpr float LayerDepth = 7.5f;
 static constexpr float LayerThickness = 0.55f;

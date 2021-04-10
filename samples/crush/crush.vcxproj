@@ -186,6 +186,7 @@
     <ClInclude Include="src\CircularBuffer.hpp" />
     <ClInclude Include="src\ClientCommandIDs.hpp" />
     <ClInclude Include="src\ClientPacketData.hpp" />
+    <ClInclude Include="src\Collision.hpp" />
     <ClInclude Include="src\CommonConsts.hpp" />
     <ClInclude Include="src\DayNightDirector.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />

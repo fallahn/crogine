@@ -254,5 +254,8 @@
     <ClInclude Include="src\PlayerState.hpp">
       <Filter>Header Files\shared\systems</Filter>
     </ClInclude>
+    <ClInclude Include="src\Collision.hpp">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

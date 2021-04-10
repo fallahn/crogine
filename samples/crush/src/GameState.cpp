@@ -39,6 +39,7 @@ source distribution.
 #include "MapData.hpp"
 #include "ServerLog.hpp"
 #include "GLCheck.hpp"
+#include "Collision.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -48,6 +49,7 @@ source distribution.
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
+#include <crogine/ecs/components/DynamicTreeComponent.hpp>
 
 #include <crogine/ecs/components/Drawable2D.hpp>
 
@@ -56,6 +58,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
@@ -408,6 +411,7 @@ void GameState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<cro::DynamicTreeSystem>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
@@ -667,6 +671,14 @@ void GameState::loadMap()
                 indices.push_back(indexOffset + 2);
                 indices.push_back(indexOffset + 3);
                 indices.push_back(indexOffset + 1);
+
+
+                //might as well add the dynamic tree components...
+                auto collisionEnt = m_gameScene.createEntity();
+                collisionEnt.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, LayerDepth });
+                collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, -LayerThickness), glm::vec3(rect.width, rect.height, LayerThickness) });
+                collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(i + 1);
+                //TODO add the raw rect to this so we can reduce collision down to 2D?
             }
 
             auto& mesh = entity.getComponent<cro::Model>().getMeshData();
@@ -685,8 +697,6 @@ void GameState::loadMap()
             mesh.vertexCount = static_cast<std::uint32_t>(verts.size() / vertComponentCount);
             mesh.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
         }
-
-        //TODO add collision data to scene via filtered AABB tree
     }
     else
     {

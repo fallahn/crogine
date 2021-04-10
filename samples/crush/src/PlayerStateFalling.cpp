@@ -34,6 +34,10 @@ source distribution.
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/DynamicTreeComponent.hpp>
+
+#include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 
 #include <crogine/detail/glm/gtx/vector_angle.hpp>
 
@@ -80,7 +84,13 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
 
 void PlayerStateFalling::processCollision(cro::Entity entity, cro::Scene& scene)
 {
+    auto& player = entity.getComponent<Player>();
 
+    auto bb = PlayerBounds;
+    bb[0] += entity.getComponent<cro::Transform>().getPosition();
+
+    auto entities = scene.getSystem<cro::DynamicTreeSystem>().query(bb, player.collisionLayer + 1);
+    cro::Console::printStat("Collision Ents", std::to_string(entities.size()));
 }
 
 void PlayerStateFalling::processAvatar(cro::Entity)

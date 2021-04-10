@@ -29,63 +29,14 @@ source distribution.
 
 #pragma once
 
-namespace MaterialID
+struct CollisionID final
 {
     enum
     {
-        Default,
-        DefaultShadow,
-
-        Count
+        //layers must always come first!!
+        LayerOne = 0x1,
+        LayerTwo = 0x2,
+        Player   = 0x4,
+        Crate    = 0x8
     };
-}
-
-namespace MeshID
-{
-    enum
-    {
-        PlatformNear,
-        PlatformFar,
-
-        Count
-    };
-}
-
-namespace TextureID
-{
-    enum
-    {
-
-    };
-}
-
-namespace GameModelID
-{
-    enum
-    {
-        Count
-    };
-}
-
-namespace FontID
-{
-
-}
-
-namespace ShaderID
-{
-    enum
-    {
-        Count
-    };
-}
-
-namespace CommandID
-{
-
-}
-
-namespace AnimationID
-{
-
-}
+};
