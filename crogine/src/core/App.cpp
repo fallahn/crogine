@@ -164,7 +164,19 @@ App::App()
             if (SDL_IsGameController(i))
             {
                 //add to game controllers
-                m_controllers.insert(std::make_pair(i, SDL_GameControllerOpen(i)));
+                ControllerInfo ci;
+                ci.controller = SDL_GameControllerOpen(i);
+                if (ci.controller)
+                {
+                    ci.haptic = SDL_HapticOpen(i);
+
+                    if (ci.haptic)
+                    {
+                        ci.rumble = (SDL_HapticRumbleInit(ci.haptic) == 0);
+                    }
+
+                    m_controllers.insert(std::make_pair(i, ci));
+                }
             }
             else
             {
@@ -193,9 +205,13 @@ App::~App()
         SDL_JoystickClose(js.second);
     }
 
-    for (auto ct : m_controllers)
+    for (auto [ct, info] : m_controllers)
     {
-        SDL_GameControllerClose(ct.second);
+        if (info.haptic)
+        {
+            SDL_HapticClose(info.haptic);
+        }
+        SDL_GameControllerClose(info.controller);
     }
     
     //SDL cleanup
@@ -392,7 +408,19 @@ void App::handleEvents()
             auto id = evt.cdevice.which;
             if (SDL_IsGameController(id))
             {
-                m_controllers.insert(std::make_pair(id, SDL_GameControllerOpen(id)));
+                ControllerInfo ci;
+                ci.controller = SDL_GameControllerOpen(id);
+                if (ci.controller)
+                {
+                    ci.haptic = SDL_HapticOpen(id);
+
+                    if (ci.haptic)
+                    {
+                        ci.rumble = (SDL_HapticRumbleInit(ci.haptic) == 0);
+                    }
+
+                    m_controllers.insert(std::make_pair(id, ci));
+                }
             }
             else
             {
@@ -406,7 +434,12 @@ void App::handleEvents()
 
             if (m_controllers.count(id) > 0)
             {
-                SDL_GameControllerClose(m_controllers[id]);
+                if (m_controllers[id].haptic)
+                {
+                    SDL_HapticClose(m_controllers[id].haptic);
+                }
+                
+                SDL_GameControllerClose(m_controllers[id].controller);
                 m_controllers.erase(id);
             }
 

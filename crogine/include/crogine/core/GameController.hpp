@@ -33,9 +33,42 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 
 #include <SDL_gamecontroller.h>
+#include <SDL_haptic.h>
 
 namespace cro
 {
+    /*!
+    \brief Utility function for creating SDL_HapticEffect initialised to safe values
+    \see SDL_HapticEffect
+    */
+    static inline SDL_HapticEffect createHapticEffect()
+    {
+        SDL_HapticEffect effect;
+        SDL_memset(&effect, 0, sizeof(SDL_HapticEffect));
+
+        effect.type = SDL_HAPTIC_SINE;
+        effect.periodic.direction.type = SDL_HAPTIC_POLAR; // Polar coordinates
+        effect.periodic.direction.dir[0] = 18000; // Force comes from south
+        effect.periodic.period = 1000; // 1000 ms
+        effect.periodic.magnitude = 20000; // 20000/32767 strength
+        effect.periodic.length = 5000; // 5 seconds long
+        effect.periodic.attack_length = 1000; // Takes 1 second to get max strength
+        effect.periodic.fade_length = 1000; // Takes 1 second to fade away
+
+        return effect;
+    }
+
+    /*!
+    \brief Contains a haptic effect ID and the controller index with which it was registered.
+    This struct is returned from registerHapticEffect() and can be used with startHapticEffect()
+    getHapticStatus() and stopHapticEffect()
+    */
+    struct HapticEffect final
+    {
+        std::int32_t controllerIndex = -1;
+        std::int32_t effectID = -1;
+    };
+
     /*!
     \brief Class for querying realtime status of connected controllers
     */
@@ -103,6 +136,61 @@ namespace cro
         \returns bool True if connected else false
         */
         static bool isConnected(std::int32_t controllerIndex);
+
+        /*!
+        \brief Returns true if the controller with the given ID supports haptic
+        or force feedback
+        \param controllerIndex The controller ID to query
+        \returns bool true if haptic supported, else false
+        */
+        static bool hasHapticSupport(std::int32_t controllerIndex);
+
+        /*!
+        \brief Registers an SDL_HapticEffect with the game controller at the given index
+        \param controllerIndex The ID of the controller to which to assign the effect
+        \param effect An SDL_HapticEffect struct populated with valid values. Use
+        createHapticEffect() to get an instance with reasonable defaults.
+        \returns A HapticEffect instance which contains the ID of the effect if successful
+        and the associated controller index. If haptics are not available or registering failed
+        for some reason then the effectID is -1.
+        The returned ID is only valid for the controller ID with which it was registered.
+        Register the SDL effect with each controller that the effect should be used with to
+        first determine if the controller at that index supports haptic effects.
+        */
+        static HapticEffect registerHapticEffect(std::int32_t controllerIndex, SDL_HapticEffect& effect);
+
+        /*!
+        \brief Starts a haptic effect on the given controller using the given effect ID
+        \param effect A HapticEffect instance returned by previously calling registerHapticEffect()
+        \param repeat The number of times to repeat the effect before stopping, or SDL_HAPTIC_INFINITY
+        */
+        static void startHapticEffect(HapticEffect effect, std::uint32_t repeat = 1);
+
+        /*!
+        \brief Stops a haptic effect if it is currently active.
+        \param effect The HapticEffect to stop, which had previously been used with startHapticEffect()
+        */
+        static void stopHapticEffect(HapticEffect effect);
+
+        /*!
+        \brief Returns true if the given effect is currently active, else returns false
+        \param effect HapticEffect to query
+        */
+        static bool isHapticActive(HapticEffect effect);
+
+        /*!
+        \brief Starts a rumble effect on the controller with the given index, if it is supported
+        \param controllerIndex The index of the controller to start rumbling
+        \param strength A float value 0-1 indicating the desired strength of the rumble
+        \param duration The duration in milliseconds to rumble.
+        */
+        static void rumbleStart(std::int32_t controllerIndex, float strength, std::uint32_t duration);
+
+        /*!
+        \brief Stops the rumble effect o nthe given controller, if it is active
+        \param controllerIndex The index of the controller to stop
+        */
+        static void rumbleStop(std::int32_t controllerIndex);
 
     private:
 
