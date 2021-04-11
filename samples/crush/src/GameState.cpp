@@ -229,6 +229,20 @@ bool GameState::handleEvent(const cro::Event& evt)
             requestStackPush(States::ID::Pause);
             break;
 #ifdef CRO_DEBUG_
+        case SDLK_F4:
+        {
+            auto flags = m_gameScene.getSystem<cro::RenderSystem2D>().getFilterFlags();
+            if (flags & TwoDeeFlags::Debug)
+            {
+                flags &= ~TwoDeeFlags::Debug;
+            }
+            else
+            {
+                flags |= TwoDeeFlags::Debug;
+            }
+            m_gameScene.getSystem<cro::RenderSystem2D>().setFilterFlags(flags);
+        }
+            break;
         /*case SDLK_1:
         {
             ServerCommand cmd;
@@ -364,7 +378,7 @@ void GameState::render()
         return;
     }
 
-    for (auto i = 0u; i < m_cameras.size(); ++i)
+    /*for (auto i = 0u; i < m_cameras.size(); ++i)
     {
         auto ent = m_cameras[i];
         m_gameScene.setActiveCamera(ent);
@@ -389,7 +403,7 @@ void GameState::render()
         cam.renderFlags = NoPlanes | PlayerPlanes[i] | NoReflect | NoRefract;
         cam.setActivePass(cro::Camera::Pass::Final);
         cam.viewport = oldVP;
-    }
+    }*/
 
     auto& rt = cro::App::getWindow();
     m_gameScene.render(rt, m_cameras);
@@ -686,7 +700,7 @@ void GameState::loadMap()
                 //TODO add the raw rect to this so we can reduce collision down to 2D?
 
 #ifdef CRO_DEBUG_
-                if (i == 0) addBoxDebug(collisionEnt, m_gameScene, cro::Colour::Yellow);
+                if (i == 0) addBoxDebug(collisionEnt, m_gameScene, cro::Colour::Blue);
 #endif
             }
 

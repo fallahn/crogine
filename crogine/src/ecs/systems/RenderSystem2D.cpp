@@ -58,8 +58,9 @@ namespace
 using namespace cro;
 
 RenderSystem2D::RenderSystem2D(MessageBus& mb)
-    : System    (mb, typeid(RenderSystem2D)),
-    m_sortOrder (DepthAxis::Z)
+    : System        (mb, typeid(RenderSystem2D)),
+    m_sortOrder     (DepthAxis::Z),
+    m_filterFlags   (std::numeric_limits<std::uint64_t>::max())
 {
     requireComponent<Drawable2D>();
     requireComponent<Transform>();
@@ -205,6 +206,8 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glEnable(GL_SCISSOR_TEST));
 
+    std::uint32_t lastProgram = 0;
+
     const auto& entities = std::any_cast<const std::vector<Entity>&>(pass.drawList.at(getType()));
     for (auto entity : entities)
     {
@@ -212,15 +215,21 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
         const auto& tx = entity.getComponent<cro::Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
 
-        if (drawable.m_shader && !drawable.m_updateBufferData)
+        if ((m_filterFlags & drawable.m_filterFlags) &&
+            drawable.m_shader && !drawable.m_updateBufferData)
         {
             //apply shader
             glm::mat4 worldView = pass.viewMatrix * worldMat;
 
-            glCheck(glUseProgram(drawable.m_shader->getGLHandle()));
+            auto program = drawable.m_shader->getGLHandle();
+            if (program != lastProgram)
+            {
+                glCheck(glUseProgram(program));
+                lastProgram = program;
+            }
             //glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, &(worldMat[0].x)));
-            glCheck(glUniformMatrix4fv(drawable.m_worldViewUniform, 1, GL_FALSE, glm::value_ptr(worldView)));
             glCheck(glUniformMatrix4fv(drawable.m_projectionUniform, 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
+            glCheck(glUniformMatrix4fv(drawable.m_worldViewUniform, 1, GL_FALSE, glm::value_ptr(worldView)));
 
             //apply texture if active
             if (drawable.m_texture)

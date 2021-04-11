@@ -106,6 +106,25 @@ namespace cro
         */
         void setSortOrder(DepthAxis order);
 
+        /*!
+        \brief Sets the filter flags which decide which drawables are rendered.
+        Setting this value to anything other than 0 will render all drawables
+        which have their matching flag set. Flags must be set on both drawable 
+        components and the RenderSystem for the filter to work. For example light 
+        emitting enitities can be rendered to a separate buffer by setting the 
+        component flag to 0x1 (first bit) then setting this filter to the same 
+        value. Returning it to uint64::max (all flags set) will once again render 
+        all drawable with a non-zero bitmask.
+        Generally this is not used unless you have a specific multipass effect in mind.
+        */
+        void setFilterFlags(std::uint64_t flags) { m_filterFlags = flags; }
+
+        /*!
+        \brief Returns the current filter flags.
+        \see setFilterFlags
+        */
+        std::uint64_t getFilterFlags() const { return m_filterFlags; }
+
     private:
 
         Shader m_colouredShader;
@@ -113,6 +132,8 @@ namespace cro
 
         DepthAxis m_sortOrder;
         std::vector<Entity> m_drawList;
+
+        std::uint64_t m_filterFlags;
 
         void applyBlendMode(Material::BlendMode);
         glm::ivec2 mapCoordsToPixel(glm::vec2, const glm::mat4& viewProjMat, IntRect) const;

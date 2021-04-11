@@ -40,6 +40,14 @@ source distribution.
 
 #include <crogine/graphics/Colour.hpp>
 
+namespace TwoDeeFlags
+{
+    enum
+    {
+        Debug = 0x1
+    };
+}
+
 static inline cro::Entity addBoxDebug(cro::Entity parent, cro::Scene& scene, cro::Colour colour = cro::Colour(0.f, 1.f, 0.f))
 {
     CRO_ASSERT(parent.hasComponent<cro::DynamicTreeComponent>(), "Requires AABB component");
@@ -58,6 +66,7 @@ static inline cro::Entity addBoxDebug(cro::Entity parent, cro::Scene& scene, cro
         cro::Vertex2D(glm::vec2(bb[0].x, bb[0].y), colour)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.getComponent<cro::Drawable2D>().setFilterFlags(TwoDeeFlags::Debug);
 
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
