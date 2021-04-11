@@ -529,8 +529,9 @@ void GameState::loadMap()
     if (mapData.loadFromFile("assets/maps/" + m_sharedData.mapName.toAnsiString()))
     {
         //build the platform geometry
-        for (auto i = 0u; i < 2u; ++i)
+        for (auto i = 0; i < 2; ++i)
         {
+            float layerDepth = LayerDepth * (1 + (i * -2));
             auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Normal/* | cro::VertexProperty::UV0*/, 1, GL_TRIANGLES));
 
             auto entity = m_gameScene.createEntity();
@@ -556,16 +557,16 @@ void GameState::loadMap()
                 auto indexOffset = static_cast<std::uint32_t>(verts.size() / vertComponentCount);
 
                 //front face
-                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth + LayerThickness); //position
+                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(layerDepth + LayerThickness); //position
                 verts.push_back(0.f); verts.push_back(0.f); verts.push_back(1.f); //normal
 
-                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(layerDepth + LayerThickness);
                 verts.push_back(0.f); verts.push_back(0.f); verts.push_back(1.f);
 
-                verts.push_back(rect.left); verts.push_back(rect.bottom); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(rect.left); verts.push_back(rect.bottom); verts.push_back(layerDepth + LayerThickness);
                 verts.push_back(0.f); verts.push_back(0.f); verts.push_back(1.f);
 
-                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom); verts.push_back(layerDepth + LayerThickness);
                 verts.push_back(0.f); verts.push_back(0.f); verts.push_back(1.f);
 
 
@@ -579,16 +580,16 @@ void GameState::loadMap()
 
 
                 //rear face
-                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth - LayerThickness); //position
+                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(layerDepth - LayerThickness); //position
                 verts.push_back(0.f); verts.push_back(0.f); verts.push_back(-1.f); //normal
 
-                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(layerDepth - LayerThickness);
                 verts.push_back(0.f); verts.push_back(0.f); verts.push_back(-1.f);
 
-                verts.push_back(rect.left); verts.push_back(rect.bottom); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(rect.left); verts.push_back(rect.bottom); verts.push_back(layerDepth - LayerThickness);
                 verts.push_back(0.f); verts.push_back(0.f); verts.push_back(-1.f);
 
-                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom); verts.push_back(layerDepth - LayerThickness);
                 verts.push_back(0.f); verts.push_back(0.f); verts.push_back(-1.f);
 
 
@@ -606,16 +607,16 @@ void GameState::loadMap()
                 //although this probably only saves us some small amount of overdraw
 
                 //north face
-                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth - LayerThickness); //position
+                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(layerDepth - LayerThickness); //position
                 verts.push_back(0.f); verts.push_back(1.f); verts.push_back(0.f); //normal
 
-                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(layerDepth - LayerThickness);
                 verts.push_back(0.f); verts.push_back(1.f); verts.push_back(0.f);
 
-                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(layerDepth + LayerThickness);
                 verts.push_back(0.f); verts.push_back(1.f); verts.push_back(0.f);
 
-                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(layerDepth + LayerThickness);
                 verts.push_back(0.f); verts.push_back(1.f); verts.push_back(0.f);
 
                 indexOffset += 4;
@@ -628,16 +629,16 @@ void GameState::loadMap()
                 indices.push_back(indexOffset + 1);
 
                 //east face
-                verts.push_back(rect.left+ rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth + LayerThickness); //position
+                verts.push_back(rect.left+ rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(layerDepth + LayerThickness); //position
                 verts.push_back(1.f); verts.push_back(0.f); verts.push_back(0.f); //normal
 
-                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom + rect.height); verts.push_back(layerDepth - LayerThickness);
                 verts.push_back(1.f); verts.push_back(0.f); verts.push_back(0.f);
 
-                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom); verts.push_back(layerDepth + LayerThickness);
                 verts.push_back(1.f); verts.push_back(0.f); verts.push_back(0.f);
 
-                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(rect.left + rect.width); verts.push_back(rect.bottom); verts.push_back(layerDepth - LayerThickness);
                 verts.push_back(1.f); verts.push_back(0.f); verts.push_back(0.f);
 
                 indexOffset += 4;
@@ -651,16 +652,16 @@ void GameState::loadMap()
 
 
                 //west face
-                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth - LayerThickness); //position
+                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(layerDepth - LayerThickness); //position
                 verts.push_back(-1.f); verts.push_back(0.f); verts.push_back(0.f); //normal
 
-                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(rect.left); verts.push_back(rect.bottom + rect.height); verts.push_back(layerDepth + LayerThickness);
                 verts.push_back(-1.f); verts.push_back(0.f); verts.push_back(0.f);
 
-                verts.push_back(rect.left); verts.push_back(rect.bottom); verts.push_back(LayerDepth - LayerThickness);
+                verts.push_back(rect.left); verts.push_back(rect.bottom); verts.push_back(layerDepth - LayerThickness);
                 verts.push_back(-1.f); verts.push_back(0.f); verts.push_back(0.f);
 
-                verts.push_back(rect.left); verts.push_back(rect.bottom); verts.push_back(LayerDepth + LayerThickness);
+                verts.push_back(rect.left); verts.push_back(rect.bottom); verts.push_back(layerDepth + LayerThickness);
                 verts.push_back(-1.f); verts.push_back(0.f); verts.push_back(0.f);
 
                 indexOffset += 4;
@@ -675,7 +676,7 @@ void GameState::loadMap()
 
                 //might as well add the dynamic tree components...
                 auto collisionEnt = m_gameScene.createEntity();
-                collisionEnt.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, LayerDepth });
+                collisionEnt.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
                 collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, -LayerThickness), glm::vec3(rect.width, rect.height, LayerThickness) });
                 collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(i + 1);
                 //TODO add the raw rect to this so we can reduce collision down to 2D?
@@ -692,7 +693,7 @@ void GameState::loadMap()
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
             mesh.boundingBox[0] = { -10.5f, 0.f, 7.f };
-            mesh.boundingBox[1] = { 10.5f, 12.f, 10.5f };
+            mesh.boundingBox[1] = { 10.5f, 12.f, 0.5f };
             mesh.boundingSphere.radius = 10.5f;
             mesh.vertexCount = static_cast<std::uint32_t>(verts.size() / vertComponentCount);
             mesh.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());

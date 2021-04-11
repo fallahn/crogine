@@ -327,13 +327,15 @@ void GameState::buildWorld()
 
 
         //add collision data to scene via filtered AABB tree
-        for (auto i = 0u; i < 2; ++i)
+        for (auto i = 0; i < 2; ++i)
         {
+            float layerDepth = LayerDepth * (1 - (i * -2));
+
             const auto& rects = mapData.getCollisionRects(i);
             for (const auto& rect : rects)
             {
                 auto collisionEnt = m_scene.createEntity();
-                collisionEnt.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, LayerDepth });
+                collisionEnt.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
                 collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, -LayerThickness), glm::vec3(rect.width, rect.height, LayerThickness) });
                 collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(i + 1);
                 //TODO add the raw rect to this so we can reduce collision down to 2D?

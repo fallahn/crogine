@@ -34,15 +34,12 @@ source distribution.
 
 namespace
 {
-    //TODO this ought to be scaled with world units - for instance when used in a
-    //2D scene this could be considerably larger than in a 3D scene.
-    const glm::vec3 FattenAmount = glm::vec3(10.f);
     const float DisplacementMultiplier = 2.f;
 }
 
 using namespace cro;
 
-DynamicTreeSystem::DynamicTreeSystem(MessageBus& mb)
+DynamicTreeSystem::DynamicTreeSystem(MessageBus& mb, float unitsPerMetre)
     : System        (mb, typeid(DynamicTreeSystem)),
     m_root          (TreeNode::Null),
     m_nodeCount     (0),
@@ -50,8 +47,11 @@ DynamicTreeSystem::DynamicTreeSystem(MessageBus& mb)
     m_nodes         (m_nodeCapacity),
     m_freeList      (0),
     m_path          (0),
-    m_insertionCount(0)
+    m_insertionCount(0),
+    m_fattenAmount  (unitsPerMetre)
 {
+    CRO_ASSERT(unitsPerMetre > 0, "Must be a positive value");
+
     requireComponent<DynamicTreeComponent>();
     requireComponent<Transform>();
 
@@ -145,8 +145,8 @@ std::int32_t DynamicTreeSystem::addToTree(Entity entity)
     bounds = tx.getWorldTransform() * bounds;
 
     //fatten AABB
-    bounds[0] -= FattenAmount;
-    bounds[1] += FattenAmount;
+    bounds[0] -= m_fattenAmount;
+    bounds[1] += m_fattenAmount;
 
 
     m_nodes[treeID].fatBounds = bounds;
@@ -180,13 +180,9 @@ bool DynamicTreeSystem::moveNode(std::int32_t treeID, Box worldArea, glm::vec3 d
     removeLeaf(treeID);
 
     //expand the new aabb and reinsert in tree
-    worldArea[0] -= FattenAmount;
-    worldArea[1] += FattenAmount;
+    worldArea[0] -= m_fattenAmount;
+    worldArea[1] += m_fattenAmount;
 
-    /*worldArea.left -= FattenAmount;
-    worldArea.top -= FattenAmount;
-    worldArea.width += (FattenAmount * 2.f);
-    worldArea.height += (FattenAmount * 2.f);*/
 
     //displacment prediction
     displacement *= DisplacementMultiplier;

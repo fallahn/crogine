@@ -76,7 +76,16 @@ namespace cro
     class CRO_EXPORT_API DynamicTreeSystem final : public System
     {
     public:
-        explicit DynamicTreeSystem(MessageBus&);
+        /*!
+        \brief Constructor
+        \param mb Areference to the active MessageBus
+        \param unitsPerMetre This should be set to reflect the world scale in which
+        this system is used. It affects the 'fatten' amount of the partitions, so
+        too large a value will return many unnecessary results, too small will
+        return too few. The default value sshould be fine for 3D scenes, but should
+        be adjusted accordingly for 2D scenes where the units are often in pixels.
+        */
+        explicit DynamicTreeSystem(MessageBus& mb, float unitsPerMetre = 1.f);
 
         void process(float) override;
         void onEntityAdded(Entity) override;
@@ -92,6 +101,19 @@ namespace cro
         std::vector<Entity> query(Box area, std::uint64_t filter = std::numeric_limits<std::uint64_t>::max()) const;
 
     private:
+        std::int32_t m_root;
+
+        std::size_t m_nodeCount;
+        std::size_t m_nodeCapacity;
+        std::vector<TreeNode> m_nodes;
+
+        std::int32_t m_freeList; //must be signed!
+
+        std::size_t m_path;
+
+        std::size_t m_insertionCount;
+
+        glm::vec3 m_fattenAmount;
 
         std::int32_t addToTree(Entity);
         void removeFromTree(std::int32_t);
@@ -116,18 +138,6 @@ namespace cro
 
         void validateStructure(std::int32_t) const;
         void validateMetrics(std::int32_t) const;
-
-        std::int32_t m_root;
-
-        std::size_t m_nodeCount;
-        std::size_t m_nodeCapacity;
-        std::vector<TreeNode> m_nodes;
-
-        std::int32_t m_freeList; //must be signed!
-
-        std::size_t m_path;
-
-        std::size_t m_insertionCount;
     };
 
     //growable stack using preallocated memory
@@ -158,7 +168,7 @@ namespace cro
             }
 
         private:
-            std::array<T, SIZE> m_data;
+            std::array<T, SIZE> m_data = {};
             std::size_t m_size = 0; //current size / next free index
         };
     }

@@ -105,6 +105,9 @@ bool MapData::loadFromFile(const std::string& path, bool binary)
             {
                 LogE << "Player spawn points was " << m_playerSpawns.size() << std::endl;
             }
+
+            //dupe the rects just to test other layer building
+            m_collisionRects[1] = m_collisionRects[0];
 #endif
 
             return (!m_collisionRects[0].empty() && m_playerSpawns.size() == 4);

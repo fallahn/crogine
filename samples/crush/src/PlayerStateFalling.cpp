@@ -86,11 +86,21 @@ void PlayerStateFalling::processCollision(cro::Entity entity, cro::Scene& scene)
 {
     auto& player = entity.getComponent<Player>();
 
+    auto position = entity.getComponent<cro::Transform>().getPosition();
     auto bb = PlayerBounds;
-    bb[0] += entity.getComponent<cro::Transform>().getPosition();
+    bb[0] += position;
+    bb[1] += position;
 
     auto entities = scene.getSystem<cro::DynamicTreeSystem>().query(bb, player.collisionLayer + 1);
-    cro::Console::printStat("Collision Ents", std::to_string(entities.size()));
+    //cro::Console::printStat("Collision Ents", std::to_string(entities.size()));
+
+    for (auto e : entities)
+    {
+        if (e.hasComponent<cro::Model>())
+        {
+            e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Red());
+        }
+    }
 }
 
 void PlayerStateFalling::processAvatar(cro::Entity)
