@@ -577,7 +577,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         entity.getComponent<cro::Callback>().function =
             [&, i](cro::Entity e, float) 
         {
-            cro::Colour c = m_readyState[i] ? cro::Colour::Green() : cro::Colour::Red();
+            cro::Colour c = m_readyState[i] ? cro::Colour::Green : cro::Colour::Red;
             auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
             verts = 
             {

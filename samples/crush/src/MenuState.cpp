@@ -615,7 +615,7 @@ void MenuState::applyTextEdit()
             *m_textEdit.string = "INVALID";
         }
 
-        m_textEdit.entity.getComponent<cro::Text>().setFillColour(cro::Colour::White());
+        m_textEdit.entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
         m_textEdit.entity.getComponent<cro::Text>().setString(*m_textEdit.string);
         auto bounds = cro::Text::getLocalBounds(m_textEdit.entity);
         m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });

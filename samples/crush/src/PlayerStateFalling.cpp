@@ -98,7 +98,7 @@ void PlayerStateFalling::processCollision(cro::Entity entity, cro::Scene& scene)
     {
         if (e.hasComponent<cro::Model>())
         {
-            e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Red());
+            e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Red);
         }
     }
 }

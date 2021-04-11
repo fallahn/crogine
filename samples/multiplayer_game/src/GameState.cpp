@@ -292,7 +292,7 @@ void GameState::createScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -7.f });
     modelDef.createModel(entity, m_resources);
-    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Green());
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Green);
 }
 
 void GameState::createUI()

@@ -268,7 +268,7 @@ void GameState::createScene()
     //billboard ent
     cro::Billboard board;
     board.size = { 2.f, 5.f };
-    board.colour = cro::Colour::Green();
+    board.colour = cro::Colour::Green;
 
     auto bbEnt = m_scene.createEntity();
     m_modelDefs[GameModelID::Billboards].createModel(bbEnt, m_resources);

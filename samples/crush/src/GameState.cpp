@@ -40,6 +40,7 @@ source distribution.
 #include "ServerLog.hpp"
 #include "GLCheck.hpp"
 #include "Collision.hpp"
+#include "DebugDraw.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -94,8 +95,8 @@ namespace
 
     const std::array Colours =
     {
-        cro::Colour::Red(), cro::Colour::Magenta(),
-        cro::Colour::Green(), cro::Colour::Yellow()
+        cro::Colour::Red, cro::Colour::Magenta,
+        cro::Colour::Green, cro::Colour::Yellow
     };
 }
 
@@ -375,13 +376,13 @@ void GameState::render()
         cam.viewport = { 0.f,0.f,1.f,1.f };
 
         cam.setActivePass(cro::Camera::Pass::Reflection);
-        cam.reflectionBuffer.clear(cro::Colour::Red());
+        cam.reflectionBuffer.clear(cro::Colour::Red);
         m_gameScene.render(cam.reflectionBuffer);
         cam.reflectionBuffer.display();
 
         cam.renderFlags = NoPlanes | NoReflect;
         cam.setActivePass(cro::Camera::Pass::Refraction);
-        cam.refractionBuffer.clear(cro::Colour::Blue());
+        cam.refractionBuffer.clear(cro::Colour::Blue);
         m_gameScene.render(cam.refractionBuffer);
         cam.refractionBuffer.display();
 
@@ -417,6 +418,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::RenderSystem2D>(mb);
 
     m_gameScene.addDirector<DayNightDirector>();
 
@@ -673,6 +675,8 @@ void GameState::loadMap()
                 indices.push_back(indexOffset + 3);
                 indices.push_back(indexOffset + 1);
 
+                //TODO only add the bottom face if the rect pos > half screen height (ie only when we can see the bottom, potentially)
+
 
                 //might as well add the dynamic tree components...
                 auto collisionEnt = m_gameScene.createEntity();
@@ -680,6 +684,10 @@ void GameState::loadMap()
                 collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, -LayerThickness), glm::vec3(rect.width, rect.height, LayerThickness) });
                 collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(i + 1);
                 //TODO add the raw rect to this so we can reduce collision down to 2D?
+
+#ifdef CRO_DEBUG_
+                if (i == 0) addBoxDebug(collisionEnt, m_gameScene, cro::Colour::Yellow);
+#endif
             }
 
             auto& mesh = entity.getComponent<cro::Model>().getMeshData();
@@ -861,10 +869,17 @@ void GameState::spawnPlayer(PlayerInfo info)
             playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
             md.createModel(playerEnt, m_resources);
             playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
+            playerEnt.addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
+            playerEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(CollisionID::Player);
 
             root.getComponent<Player>().avatar = playerEnt;
             root.getComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());
             root.getComponent<cro::Transform>().addChild(playerEnt.getComponent<cro::Transform>());
+
+
+#ifdef CRO_DEBUG_
+            addBoxDebug(playerEnt, m_gameScene);
+#endif
         }
 
 
@@ -936,8 +951,8 @@ void GameState::updateView(cro::Camera&)
             auto& verts = m_splitScreenNode.getComponent<cro::Drawable2D>().getVertexData();
             verts =
             {
-                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, 0.f), cro::Colour::Black()),
-                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y), cro::Colour::Black()),
+                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, 0.f), cro::Colour::Black),
+                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y), cro::Colour::Black),
             };
             m_splitScreenNode.getComponent<cro::Drawable2D>().updateLocalBounds();
         }
@@ -970,14 +985,14 @@ void GameState::updateView(cro::Camera&)
             auto& verts = m_splitScreenNode.getComponent<cro::Drawable2D>().getVertexData();
             verts =
             {
-                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, 0.f), cro::Colour::Black()),
-                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y), cro::Colour::Black()),
+                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, 0.f), cro::Colour::Black),
+                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y), cro::Colour::Black),
 
-                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y), cro::Colour::Transparent()),
-                cro::Vertex2D(glm::vec2(0.f, cro::DefaultSceneSize.y / 2.f), cro::Colour::Transparent()),
+                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y), cro::Colour::Transparent),
+                cro::Vertex2D(glm::vec2(0.f, cro::DefaultSceneSize.y / 2.f), cro::Colour::Transparent),
 
-                cro::Vertex2D(glm::vec2(0.f, cro::DefaultSceneSize.y / 2.f), cro::Colour::Black()),
-                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x, cro::DefaultSceneSize.y / 2.f), cro::Colour::Black()),
+                cro::Vertex2D(glm::vec2(0.f, cro::DefaultSceneSize.y / 2.f), cro::Colour::Black),
+                cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x, cro::DefaultSceneSize.y / 2.f), cro::Colour::Black),
             };
             m_splitScreenNode.getComponent<cro::Drawable2D>().updateLocalBounds();
         }

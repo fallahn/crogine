@@ -189,6 +189,7 @@
     <ClInclude Include="src\Collision.hpp" />
     <ClInclude Include="src\CommonConsts.hpp" />
     <ClInclude Include="src\DayNightDirector.hpp" />
+    <ClInclude Include="src\DebugDraw.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\ErrorState.hpp" />
     <ClInclude Include="src\GameConsts.hpp" />

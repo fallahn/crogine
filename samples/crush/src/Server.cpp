@@ -202,7 +202,7 @@ void Server::run()
     //tell everyone we're quitting
     m_sharedData.host.broadcastPacket(PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerQuit), cro::NetFlag::Reliable);
     cro::Clock clock;
-    while (clock.elapsed() < cro::seconds(4.f))
+    while (clock.elapsed() < cro::seconds(2.f))
     {
         //make sure to pump out the packets with our dying breath...
         cro::NetEvent evt;

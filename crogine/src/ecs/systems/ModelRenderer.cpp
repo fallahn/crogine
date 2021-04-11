@@ -50,7 +50,7 @@ namespace
 {
     const std::vector<cro::Colour> colours =
     {
-        cro::Colour::Red(), cro::Colour::Green(), cro::Colour::Cyan()
+        cro::Colour::Red, cro::Colour::Green, cro::Colour::Cyan
     };
 }
 

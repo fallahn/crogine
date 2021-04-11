@@ -1,4 +1,3 @@
-#rename your project here
 project(crogine)
 SET(PROJECT_NAME crogine)
 cmake_minimum_required(VERSION 3.2.2)
@@ -28,6 +27,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   else()
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSDL_AUDIO")
   endif()
+endif()
+
+if(NOT PROJECT_STATIC_RUNTIME)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCRO_BUILD")
 endif()
 
 SET (CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_ -DHAS_SOCKLEN_T")

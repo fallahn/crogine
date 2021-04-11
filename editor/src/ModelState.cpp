@@ -228,7 +228,7 @@ void ModelState::loadAssets()
 {
     //black texture for empty texture slots
     cro::Image img;
-    img.create(2, 2, cro::Colour::Black());
+    img.create(2, 2, cro::Colour::Black);
 
     m_blackTexture.loadFromImage(img);
 

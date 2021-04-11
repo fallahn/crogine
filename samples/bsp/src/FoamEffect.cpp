@@ -172,7 +172,7 @@ FoamEffect::FoamEffect(cro::ResourceCollection& rc)
 void FoamEffect::update()
 {
     //let's just assume we're not rendering on mobile in this case
-    m_texture.clear(cro::Colour::Green());
+    m_texture.clear(cro::Colour::Green);
 
     glEnable(GL_CULL_FACE);
     glUseProgram(m_shader.getGLHandle());

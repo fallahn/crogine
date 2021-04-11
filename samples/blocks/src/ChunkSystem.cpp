@@ -228,7 +228,7 @@ ChunkSystem::ChunkSystem(cro::MessageBus& mb, cro::ResourceCollection& rc, Chunk
     {
         auto& shader = rc.shaders.get(ShaderID::ChunkDebug);
         m_materialIDs[MaterialID::ChunkDebug] = rc.materials.add(shader);
-        rc.materials.get(m_materialIDs[MaterialID::ChunkDebug]).setProperty("u_colour", cro::Colour::Magenta());
+        rc.materials.get(m_materialIDs[MaterialID::ChunkDebug]).setProperty("u_colour", cro::Colour::Magenta);
 
         m_meshIDs[MeshID::Border] = rc.meshes.loadMesh(BorderMeshBuilder());
         

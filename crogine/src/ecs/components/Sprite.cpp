@@ -34,7 +34,7 @@ using namespace cro;
 
 Sprite::Sprite()
     : m_texture         (nullptr),
-    m_colour            (Colour::White()),
+    m_colour            (Colour::White),
     m_dirty             (true),
     m_overrideBlendMode (false),
     m_blendMode         (Material::BlendMode::Alpha)
@@ -44,7 +44,7 @@ Sprite::Sprite()
 
 Sprite::Sprite(const Texture& texture)
     : m_texture         (nullptr),
-    m_colour            (Colour::White()),
+    m_colour            (Colour::White),
     m_dirty             (true),
     m_overrideBlendMode (false),
     m_blendMode         (Material::BlendMode::Alpha)

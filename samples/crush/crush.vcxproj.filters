@@ -257,5 +257,8 @@
     <ClInclude Include="src\Collision.hpp">
       <Filter>Header Files\shared</Filter>
     </ClInclude>
+    <ClInclude Include="src\DebugDraw.hpp">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

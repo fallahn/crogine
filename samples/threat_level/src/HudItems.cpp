@@ -108,7 +108,7 @@ void HudSystem::process(float dt)
             hudItem.value -= (hudItem.value - m_playerHealth) * dt;
             float amount = cro::Util::Maths::clamp(hudItem.value / 100.f, 0.f, 1.f);
             entity.getComponent<cro::Transform>().setScale({ amount, 1.f, 1.f });
-            entity.getComponent<cro::Sprite>().setColour(interp(cro::Colour(1.f, 0.f, 0.f, 0.1f), cro::Colour::Cyan(), amount));
+            entity.getComponent<cro::Sprite>().setColour(interp(cro::Colour(1.f, 0.f, 0.f, 0.1f), cro::Colour::Cyan, amount));
         }
         break;
         case HudItem::Type::Timer:

@@ -49,7 +49,7 @@ namespace cro
     \brief Defines a 2D rectangle, starting at the bottom left position with width and height
     */
     template <class T>
-    class CRO_EXPORT_API Rectangle final
+    class Rectangle final
     {
     public:
         Rectangle(T l = 0, T b = 0, T w = 0, T h = 0)

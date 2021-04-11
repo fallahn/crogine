@@ -559,7 +559,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         entity.addComponent<cro::Transform>();// .setOrigin(-Player::aabb[0]);
         entity.getComponent<cro::Transform>().setScale(Player::aabb.getSize());
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
-        material.setProperty("u_colour", cro::Colour::White());
+        material.setProperty("u_colour", cro::Colour::White);
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), material);
         entity.getComponent<cro::Model>().setHidden(true);
         entity.addComponent<cro::Callback>().active = true;
@@ -626,7 +626,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
 
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
-            material.setProperty("u_colour", cro::Colour::Black());
+            material.setProperty("u_colour", cro::Colour::Black);
 
             entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), material);
             entity.addComponent<cro::Callback>().active = true;
