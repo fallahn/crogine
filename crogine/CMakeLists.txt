@@ -34,7 +34,7 @@ endif()
 if (NOT BUILD_SHARED_LIBS)
   add_definitions(-DCRO_STATIC)
 else()
-  add_definition(-DCRO_BUILD)
+  add_definitions(-DCRO_BUILD)
 endif()
 
 SET (CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_ -DHAS_SOCKLEN_T")
