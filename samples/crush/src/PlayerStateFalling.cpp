@@ -92,14 +92,11 @@ void PlayerStateFalling::processCollision(cro::Entity entity, cro::Scene& scene)
     bb[1] += position;
 
     auto entities = scene.getSystem<cro::DynamicTreeSystem>().query(bb, player.collisionLayer + 1);
-    //cro::Console::printStat("Collision Ents", std::to_string(entities.size()));
 
     for (auto e : entities)
     {
-        if (e.hasComponent<cro::Model>())
-        {
-            e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Red);
-        }
+        //TODO make sure we skip our own ent
+
     }
 }
 

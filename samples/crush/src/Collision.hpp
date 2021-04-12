@@ -29,14 +29,46 @@ source distribution.
 
 #pragma once
 
+#include <crogine/graphics/Rectangle.hpp>
+
+#include <array>
+#include <cstdint>
+
 struct CollisionID final
 {
+    //used as filters in the dynamic tree query
+    //so for instance items on both layers could
+    //be solid/water/crate
     enum
     {
         //layers must always come first!!
         LayerOne = 0x1,
-        LayerTwo = 0x2,
-        Player   = 0x4,
-        Crate    = 0x8
+        LayerTwo = 0x2
     };
+};
+
+struct CollisionMaterial final
+{
+    //used to decide how a collision should be resolved
+    enum
+    {
+        None = -1,
+        Solid,
+        Water,
+        Crate,
+        Body,
+        Foot
+    };
+};
+
+struct CollisionRect final
+{
+    cro::FloatRect bounds;
+    std::int32_t material = CollisionMaterial::None;
+};
+
+struct CollisionComponent final
+{
+    std::array<CollisionRect, 2u> rects;
+    std::size_t rectCount = 0;
 };

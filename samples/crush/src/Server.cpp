@@ -76,6 +76,8 @@ void Server::stop()
 {
     if (m_thread)
     {
+        LOG("Stopping Server...", cro::Logger::Type::Info);
+
         m_running = false;
         m_thread->join();
 
@@ -199,6 +201,8 @@ void Server::run()
 
     m_currentState.reset();
     
+    LOG("Server quitting, please wait..", cro::Logger::Type::Info);
+
     //tell everyone we're quitting
     m_sharedData.host.broadcastPacket(PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerQuit), cro::NetFlag::Reliable);
     cro::Clock clock;

@@ -407,7 +407,7 @@ void ParticleSystem::process(float dt)
             m_dataBuffer[idx++] = p.colour.getAlpha();
 
             //rotation/size/animation
-            m_dataBuffer[idx++] = p.rotation;
+            m_dataBuffer[idx++] = p.rotation * Util::Const::degToRad;
             m_dataBuffer[idx++] = p.scale;
             m_dataBuffer[idx++] = static_cast<float>(p.frameID);
         }

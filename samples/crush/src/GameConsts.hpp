@@ -38,6 +38,7 @@ source distribution.
 #include <array>
 
 static const glm::vec3 PlayerSize = glm::vec3(0.6f, 0.8f, 0.6f);
+static const cro::FloatRect FootBounds = cro::FloatRect(0.1f - (PlayerSize.x / 2.f), -0.1f, 0.4f, 0.1f);
 static const cro::Box PlayerBounds = {glm::vec3(-PlayerSize.x / 2.f, 0.f, PlayerSize.z / 2.f), glm::vec3(PlayerSize.x / 2.f, PlayerSize.y, -PlayerSize.z / 2.f)};
 
 static constexpr float LayerDepth = 7.5f;

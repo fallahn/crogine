@@ -697,7 +697,10 @@ void GameState::loadMap()
                 collisionEnt.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
                 collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, -LayerThickness), glm::vec3(rect.width, rect.height, LayerThickness) });
                 collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(i + 1);
-                //TODO add the raw rect to this so we can reduce collision down to 2D?
+                
+                collisionEnt.addComponent<CollisionComponent>().rectCount = 1;
+                collisionEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Solid;
+                collisionEnt.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
 
 #ifdef CRO_DEBUG_
                 if (i == 0) addBoxDebug(collisionEnt, m_gameScene, cro::Colour::Blue);
@@ -884,7 +887,13 @@ void GameState::spawnPlayer(PlayerInfo info)
             md.createModel(playerEnt, m_resources);
             playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
             playerEnt.addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
-            playerEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(CollisionID::Player);
+            playerEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(CollisionID::LayerOne); //TODO set this based on spawn layer
+
+            playerEnt.addComponent<CollisionComponent>().rectCount = 2;
+            playerEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
+            playerEnt.getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
+            playerEnt.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
+            playerEnt.getComponent<CollisionComponent>().rects[1].bounds = FootBounds;
 
             root.getComponent<Player>().avatar = playerEnt;
             root.getComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());

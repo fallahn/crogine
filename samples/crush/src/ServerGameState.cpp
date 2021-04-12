@@ -40,6 +40,7 @@ source distribution.
 #include "MapData.hpp"
 #include "ServerLog.hpp"
 #include "ServerState.hpp"
+#include "Collision.hpp"
 
 #include <crogine/core/Log.hpp>
 
@@ -321,6 +322,15 @@ void GameState::buildWorld()
 
                     m_playerEntities[i][j].getComponent<Player>().avatar = avatar;
                     m_playerEntities[i][j].getComponent<cro::Transform>().addChild(avatar.getComponent<cro::Transform>());
+
+                    m_playerEntities[i][j].addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
+                    m_playerEntities[i][j].getComponent<cro::DynamicTreeComponent>().setFilterFlags(CollisionID::LayerOne); //TODO set this based on spawn layer
+
+                    m_playerEntities[i][j].addComponent<CollisionComponent>().rectCount = 2;
+                    m_playerEntities[i][j].getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
+                    m_playerEntities[i][j].getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
+                    m_playerEntities[i][j].getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
+                    m_playerEntities[i][j].getComponent<CollisionComponent>().rects[1].bounds = FootBounds;
                 }
             }
         }
@@ -338,7 +348,10 @@ void GameState::buildWorld()
                 collisionEnt.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
                 collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, -LayerThickness), glm::vec3(rect.width, rect.height, LayerThickness) });
                 collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(i + 1);
-                //TODO add the raw rect to this so we can reduce collision down to 2D?
+
+                collisionEnt.addComponent<CollisionComponent>().rectCount = 1;
+                collisionEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Solid;
+                collisionEnt.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
             }
         }
     }
