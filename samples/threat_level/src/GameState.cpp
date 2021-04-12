@@ -772,7 +772,6 @@ void GameState::loadModels()
     cro::EmitterSettings smokeEmitter;
     smokeEmitter.loadFromFile("assets/particles/smoke.cps", m_resources.textures);
     entity.addComponent<cro::ParticleEmitter>().settings = smokeEmitter;
-    //entity.getComponent<cro::ParticleEmitter>().start();
     
     playerEntity = entity;
 

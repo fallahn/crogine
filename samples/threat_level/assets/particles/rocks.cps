@@ -6,7 +6,7 @@ particle_system rocks
 	velocity = 0,0,0
 	lifetime = 2
 	lifetime_variance = 0
-	colour = 1,1,1,1
+	colour = 255,255,255,255
 	rotation_speed = 8
 	scale_affector = 0
 	size = 0.06
