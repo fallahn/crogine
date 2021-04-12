@@ -145,7 +145,7 @@ Box Spatial::updateFrustum(std::array<Plane, 6u>& frustum, glm::mat4 viewProj)
         p.w *= factor;
     }
 
-    //calc th AABB
+    //calc the AABB
     auto invViewProjection = glm::inverse(viewProj);
     std::array points =
     {

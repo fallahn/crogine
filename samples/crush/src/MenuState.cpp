@@ -46,7 +46,6 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Callback.hpp>
-#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -55,7 +54,6 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
-#include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <cstring>
 
@@ -275,7 +273,6 @@ void MenuState::addSystems()
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
-    m_scene.addSystem<cro::ParticleSystem>(mb);
 }
 
 void MenuState::loadAssets()

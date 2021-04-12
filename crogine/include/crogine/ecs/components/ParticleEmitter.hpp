@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -110,7 +110,7 @@ namespace cro
         glm::vec2 textureSize = glm::vec2(0.f);
 
         bool loadFromFile(const std::string&, TextureResource&);
-        bool saveToFile(const std::string&); //! <saves the current settings to a config file
+        bool saveToFile(const std::string&); //!< saves the current settings to a config file
     };
 
     /*!

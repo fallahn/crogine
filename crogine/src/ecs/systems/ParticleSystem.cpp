@@ -248,30 +248,10 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
 
         for (auto i = 0u; i < m_visibleEntities.size(); ++i)
         {
-            if (cam.isOrthographic())
+            const auto& frustum = cam.getPass(i).getFrustum();
+            if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum))
             {
-                if (emitter.m_nextFreeParticle > 0)
-                {
-                    auto bb = cam.getPass(i).getAABB();
-                    auto halfBB = (bb[1] - bb[0]) / 2.f;
-
-                    auto bbCentre = bb[0] + halfBB;
-                    auto bbR2 = glm::length2(halfBB);
-                    auto emitterR2 = emitter.m_bounds.radius * emitter.m_bounds.radius;
-
-                    if ((bbR2 + emitterR2) > glm::length2(bbCentre - emitter.m_bounds.centre))
-                    {
-                        m_visibleEntities[i].push_back(entity);
-                    }
-                }
-            }
-            else
-            {
-                const auto& frustum = cam.getPass(i).getFrustum();
-                if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum))
-                {
-                    m_visibleEntities[i].push_back(entity);
-                }
+                m_visibleEntities[i].push_back(entity);
             }
         }
     }
