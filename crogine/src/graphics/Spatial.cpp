@@ -37,7 +37,7 @@ using namespace cro;
 namespace
 {
     //used to calculate the AABB for a frustum.
-    std::array ClipPoints =
+    const std::array ClipPoints =
     {
         //far
         glm::vec4(-1.f, -1.f, -1.f, 1.f),
@@ -145,7 +145,7 @@ Box Spatial::updateFrustum(std::array<Plane, 6u>& frustum, glm::mat4 viewProj)
         p.w *= factor;
     }
 
-    //calc th AABB
+    //calc the AABB
     auto invViewProjection = glm::inverse(viewProj);
     std::array points =
     {

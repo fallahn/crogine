@@ -426,7 +426,7 @@ void MenuState::createScene()
             });
 
         auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f,0.f,-10.f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f,0.f,-50.f });
         entity.addComponent<cro::Sprite>(m_textureResource.get("assets/images/menu_background.png"));
         entity.addComponent<cro::Drawable2D>();
 

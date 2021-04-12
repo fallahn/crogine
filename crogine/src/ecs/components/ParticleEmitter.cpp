@@ -92,6 +92,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
                     }
                     texturePath = texPath;
                     textureID = textures.get(texPath).getGLHandle();
+                    textureSize = textures.get(texPath).getSize();                    
                 }
             }
             else if (name == "blendmode")
@@ -136,7 +137,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             }
             else if (name == "colour")
             {
-                glm::vec4 c = p.getValue<glm::vec4>();
+                glm::vec4 c = p.getValue<glm::vec4>() / 255.f;
                 colour = cro::Colour(c.r, c.g, c.b, c.a);
             }
             else if (name == "random_initial_rotation")
@@ -178,6 +179,26 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             else if (name == "inherit_rotation")
             {
                 inheritRotation = p.getValue<bool>();
+            }
+            else if (name == "frame_count")
+            {
+                frameCount = std::max(1, p.getValue<std::int32_t>());
+            }
+            else if (name == "animate")
+            {
+                animate = p.getValue<bool>();
+            }
+            else if (name == "random_frame")
+            {
+                useRandomFrame = p.getValue<bool>();
+            }
+            else if (name == "framerate")
+            {
+                framerate = p.getValue<float>();
+                if (framerate <= 0)
+                {
+                    framerate = 1.f;
+                }
             }
         }
 
@@ -261,6 +282,10 @@ bool EmitterSettings::saveToFile(const std::string& path)
     cfg.addProperty("spawn_offset").setValue(spawnOffset);
     cfg.addProperty("release_count").setValue(releaseCount);
     cfg.addProperty("inherit_rotation").setValue(inheritRotation);
+    cfg.addProperty("frame_count").setValue(static_cast<std::int32_t>(frameCount));
+    cfg.addProperty("animate").setValue(animate);
+    cfg.addProperty("random_frame").setValue(useRandomFrame);
+    cfg.addProperty("framerate").setValue(framerate);
 
     auto forceObj = cfg.addObject("forces");
     for (const auto& f : forces)

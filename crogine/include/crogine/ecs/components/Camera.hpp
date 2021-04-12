@@ -272,6 +272,11 @@ namespace cro
         void setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane);
 
         /*!
+        \brief Returns true if set to an orthographic projection matrix
+        */
+        bool isOrthographic() const { return m_orthographic; }
+
+        /*!
         \brief Returns a reference to the projection matrix
         By default it is constructed to a perspective matrix to match
         the current window size.
@@ -390,6 +395,8 @@ namespace cro
         float m_aspectRatio;
         float m_nearPlane;
         float m_farPlane;
+
+        bool m_orthographic;
 
         friend class ShadowMapRenderer;
     };

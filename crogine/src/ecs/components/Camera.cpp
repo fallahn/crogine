@@ -38,7 +38,8 @@ Camera::Camera()
     m_verticalFOV   (0.6f),
     m_aspectRatio   (1.f),
     m_nearPlane     (0.1f),
-    m_farPlane      (150.f)
+    m_farPlane      (150.f),
+    m_orthographic  (false)
 {
     glm::vec2 windowSize(App::getWindow().getSize());
     m_aspectRatio = windowSize.x / windowSize.y;
@@ -115,6 +116,7 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
     m_aspectRatio = aspect;
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
+    m_orthographic = false;
 }
 
 void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane)
@@ -124,4 +126,5 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     m_aspectRatio = (right - left) / (bottom - top);
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
+    m_orthographic = true;
 }

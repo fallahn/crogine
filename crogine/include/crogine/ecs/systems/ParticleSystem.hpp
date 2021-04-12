@@ -75,12 +75,21 @@ namespace cro
         void allocateBuffer();
 
         Shader m_shader;
-        std::int32_t m_clipPlaneUniform;
-        std::int32_t m_projectionUniform;
-        std::int32_t m_textureUniform;
-        std::int32_t m_viewProjUniform;
-        std::int32_t m_viewportUniform;
-        std::int32_t m_sizeUniform;
+
+        enum UniformID
+        {
+            ClipPlane,
+            ViewProjection,
+            Projection,
+            Texture,
+            TextureSize,
+            Viewport,
+            ParticleSize,
+            FrameCount,
+
+            Count
+        };
+        std::array<std::int32_t, UniformID::Count> m_uniformIDs = {};
 
         struct AttribData final
         {
