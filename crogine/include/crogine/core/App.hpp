@@ -181,8 +181,9 @@ namespace cro
             SDL_Haptic* haptic = nullptr;
             bool rumble = false;
         };
+        static constexpr std::int32_t MaxControllers = 12;
 
-        std::map<std::int32_t, ControllerInfo> m_controllers;
+        std::array<ControllerInfo, MaxControllers> m_controllers = {};
         std::map<std::int32_t, SDL_Joystick*> m_joysticks;
         friend class GameController;
 

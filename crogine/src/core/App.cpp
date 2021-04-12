@@ -159,7 +159,8 @@ App::App()
     {
         m_instance = this;
 
-        for (auto i = 0; i < SDL_NumJoysticks(); ++i)
+        std::fill(m_controllers.begin(), m_controllers.end(), ControllerInfo());
+        for (auto i = 0; i < SDL_NumJoysticks() && i < MaxControllers; ++i)
         {
             if (SDL_IsGameController(i))
             {
@@ -175,7 +176,7 @@ App::App()
                         ci.rumble = (SDL_HapticRumbleInit(ci.haptic) == 0);
                     }
 
-                    m_controllers.insert(std::make_pair(i, ci));
+                    m_controllers[i] = ci;
                 }
             }
             else
@@ -205,7 +206,7 @@ App::~App()
         SDL_JoystickClose(js.second);
     }
 
-    for (auto [ct, info] : m_controllers)
+    for (auto info : m_controllers)
     {
         if (info.haptic)
         {
@@ -419,7 +420,7 @@ void App::handleEvents()
                         ci.rumble = (SDL_HapticRumbleInit(ci.haptic) == 0);
                     }
 
-                    m_controllers.insert(std::make_pair(id, ci));
+                    m_controllers[id] = ci;
                 }
             }
             else
@@ -432,7 +433,7 @@ void App::handleEvents()
         {
             auto id = evt.cdevice.which;
 
-            if (m_controllers.count(id) > 0)
+            if (m_controllers[id].controller)
             {
                 if (m_controllers[id].haptic)
                 {
@@ -440,7 +441,7 @@ void App::handleEvents()
                 }
                 
                 SDL_GameControllerClose(m_controllers[id].controller);
-                m_controllers.erase(id);
+                m_controllers[id] = {};
             }
 
             if (m_joysticks.count(id) > 0)
