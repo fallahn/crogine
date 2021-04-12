@@ -37,7 +37,7 @@ using namespace cro;
 namespace
 {
     //used to calculate the AABB for a frustum.
-    std::array ClipPoints =
+    const std::array ClipPoints =
     {
         //far
         glm::vec4(-1.f, -1.f, -1.f, 1.f),

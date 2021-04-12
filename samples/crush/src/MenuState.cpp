@@ -284,12 +284,6 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
-    auto ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition(glm::vec3(940.f, 800.f, -10.f));
-    ent.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/particles/animation_test.xyp", m_textureResource);
-    ent.getComponent<cro::ParticleEmitter>().start();
-
-
 #ifdef CRO_DEBUG_
     registerWindow([&]() 
         {

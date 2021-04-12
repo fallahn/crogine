@@ -92,6 +92,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
                     }
                     texturePath = texPath;
                     textureID = textures.get(texPath).getGLHandle();
+                    textureSize = textures.get(texPath).getSize();                    
                 }
             }
             else if (name == "blendmode")

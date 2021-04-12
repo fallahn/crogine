@@ -107,6 +107,8 @@ namespace cro
         bool animate = false; //!< If true the particle will attempt to play through all animation frames once.
         bool useRandomFrame = false; //!< If true the particle will pick a frame at random when spawning
 
+        glm::vec2 textureSize = glm::vec2(0.f);
+
         bool loadFromFile(const std::string&, TextureResource&);
         bool saveToFile(const std::string&); //! <saves the current settings to a config file
     };
@@ -118,9 +120,6 @@ namespace cro
     {
     public:
         ParticleEmitter();
-        /*~ParticleEmitter();*/
-
-        //void applySettings(const EmitterSettings&);
 
         void start();
         void stop();

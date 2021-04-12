@@ -64,7 +64,7 @@ namespace
     const std::string vertex = R"(
         ATTRIBUTE vec4 a_position;
         ATTRIBUTE LOW vec4 a_colour;
-        ATTRIBUTE MED vec3 a_normal; //this actually stores rotation and scale
+        ATTRIBUTE MED vec3 a_normal; //this actually stores rotation, scale and current frame if animated
 
         uniform mat4 u_projection;
         uniform mat4 u_viewProjection;
@@ -79,6 +79,7 @@ namespace
 
         VARYING_OUT LOW vec4 v_colour;
         VARYING_OUT MED mat2 v_rotation;
+        VARYING_OUT LOW float v_currentFrame;
 
         void main()
         {
@@ -87,6 +88,8 @@ namespace
             vec2 rot = vec2(sin(a_normal.x), cos(a_normal.x));
             v_rotation[0] = vec2(rot.y, -rot.x);
             v_rotation[1]= rot;
+
+            v_currentFrame = a_normal.z;
 
             gl_Position = u_viewProjection * a_position;
             gl_PointSize = u_viewportHeight * u_projection[1][1] / gl_Position.w * u_particleSize * a_normal.y;
@@ -102,15 +105,34 @@ namespace
 
     const std::string fragment = R"(
         uniform sampler2D u_texture;
+        uniform float u_frameCount;
+        uniform vec2 u_textureSize;
 
         VARYING_IN LOW vec4 v_colour;
         VARYING_IN MED mat2 v_rotation;
+        VARYING_IN LOW float v_currentFrame;
         OUTPUT
 
         void main()
         {
-            vec2 texCoord = v_rotation * (gl_PointCoord - vec2(0.5));
-            FRAG_OUT = v_colour * TEXTURE(u_texture, texCoord + vec2(0.5)) * v_colour.a;
+            float frameWidth = 1.0 / u_frameCount;
+            vec2 coord = gl_PointCoord;
+            coord.x *= frameWidth;
+            coord.x += v_currentFrame * frameWidth;
+            vec2 centreOffset = vec2((v_currentFrame * frameWidth) + (frameWidth / 2.f), 0.5);
+
+            //convert to texture space
+            coord *= u_textureSize;
+            centreOffset *= u_textureSize;
+
+            //rotate
+            coord = v_rotation * (coord - centreOffset);
+            coord += centreOffset;
+
+            //and back to UV space
+            coord /= u_textureSize;
+
+            FRAG_OUT = v_colour * TEXTURE(u_texture, coord);
         }
     )";
 
@@ -126,14 +148,10 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     m_vboIDs            (MaxParticleSystems),
     m_vaoIDs            (MaxParticleSystems),
     m_nextBuffer        (0),
-    m_bufferCount       (0),
-    m_clipPlaneUniform  (-1),
-    m_projectionUniform (-1),
-    m_textureUniform    (-1),
-    m_viewProjUniform   (-1),
-    m_viewportUniform   (-1),
-    m_sizeUniform       (-1)
+    m_bufferCount       (0)
 {
+    std::fill(m_uniformIDs.begin(), m_uniformIDs.end(), -1);
+
     for (auto& vbo : m_vboIDs)
     {
         vbo = 0;
@@ -157,13 +175,15 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
         //fetch uniforms.
         const auto& uniforms = m_shader.getUniformMap();
 #ifdef PLATFORM_DESKTOP
-        m_clipPlaneUniform = uniforms.find("u_clipPlane")->second;
+        m_uniformIDs[UniformID::ClipPlane] = uniforms.find("u_clipPlane")->second;
 #endif
-        m_projectionUniform = uniforms.find("u_projection")->second;
-        m_textureUniform = uniforms.find("u_texture")->second;
-        m_viewProjUniform = uniforms.find("u_viewProjection")->second;
-        m_viewportUniform = uniforms.find("u_viewportHeight")->second;
-        m_sizeUniform = uniforms.find("u_particleSize")->second;
+        m_uniformIDs[UniformID::Projection] = uniforms.find("u_projection")->second;
+        m_uniformIDs[UniformID::Texture] = uniforms.find("u_texture")->second;
+        m_uniformIDs[UniformID::ViewProjection] = uniforms.find("u_viewProjection")->second;
+        m_uniformIDs[UniformID::Viewport] = uniforms.find("u_viewportHeight")->second;
+        m_uniformIDs[UniformID::ParticleSize] = uniforms.find("u_particleSize")->second;
+        m_uniformIDs[UniformID::TextureSize] = uniforms.find("u_textureSize")->second;
+        m_uniformIDs[UniformID::FrameCount] = uniforms.find("u_frameCount")->second;
 
         //map attributes
         const auto& attribMap = m_shader.getAttribMap();
@@ -352,7 +372,6 @@ void ParticleSystem::process(float dt)
 
             p.rotation += emitter.settings.rotationSpeed * dt;
             p.scale += ((p.scale * emitter.settings.scaleModifier) * dt);
-            //LOG(std::to_string(emitter.settings.scaleModifier), Logger::Type::Info);
 
             if (emitter.settings.animate)
             {
@@ -407,10 +426,10 @@ void ParticleSystem::process(float dt)
             m_dataBuffer[idx++] = p.colour.getBlue();
             m_dataBuffer[idx++] = p.colour.getAlpha();
 
-            //rotation/size
+            //rotation/size/animation
             m_dataBuffer[idx++] = p.rotation;
             m_dataBuffer[idx++] = p.scale;
-            m_dataBuffer[idx++] = 0.f;
+            m_dataBuffer[idx++] = static_cast<float>(p.frameID);
         }
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
         glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, idx * sizeof(float), m_dataBuffer.data()));
@@ -448,12 +467,14 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glUseProgram(m_shader.getGLHandle()));
 
     //set shader uniforms (texture/projection)
-    glCheck(glUniform4f(m_clipPlaneUniform, clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
-    glCheck(glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
-    glCheck(glUniformMatrix4fv(m_viewProjUniform, 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
-    glCheck(glUniform1f(m_viewportUniform, static_cast<float>(vp.height)));
-    glCheck(glUniform1i(m_textureUniform, 0));
+    glCheck(glUniform4f(m_uniformIDs[UniformID::ClipPlane], clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
+    glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::Projection], 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
+    glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+    glCheck(glUniform1f(m_uniformIDs[UniformID::Viewport], static_cast<float>(vp.height)));
+    glCheck(glUniform1i(m_uniformIDs[UniformID::Texture], 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
+
+
     
     const auto& entities = std::any_cast<const std::vector<Entity>&>(pass.drawList.at(getType()));
     for(auto entity : entities)
@@ -461,7 +482,9 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
         const auto& emitter = entity.getComponent<ParticleEmitter>();
         //bind emitter texture
         glCheck(glBindTexture(GL_TEXTURE_2D, emitter.settings.textureID));
-        glCheck(glUniform1f(m_sizeUniform, emitter.settings.size));
+        glCheck(glUniform1f(m_uniformIDs[UniformID::ParticleSize], emitter.settings.size));
+        glCheck(glUniform1f(m_uniformIDs[UniformID::FrameCount], static_cast<float>(emitter.settings.frameCount)));
+        glCheck(glUniform2f(m_uniformIDs[UniformID::TextureSize], emitter.settings.textureSize.x, emitter.settings.textureSize.y));
         
         //apply blend mode
         switch (emitter.settings.blendmode)
