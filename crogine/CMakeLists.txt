@@ -30,6 +30,13 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   endif()
 endif()
 
+if (msvc)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
+
+if (APPLE)
+  add_definitions(-DGL_SILENCE_DEPRECATION)
+endif()
 
 if (NOT BUILD_SHARED_LIBS)
   add_definitions(-DCRO_STATIC)

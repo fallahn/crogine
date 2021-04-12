@@ -46,6 +46,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -54,6 +55,7 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <cstring>
 
@@ -273,6 +275,7 @@ void MenuState::addSystems()
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
+    m_scene.addSystem<cro::ParticleSystem>(mb);
 }
 
 void MenuState::loadAssets()
@@ -281,6 +284,12 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
+    auto ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>().setPosition(glm::vec3(940.f, 800.f, -10.f));
+    ent.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/particles/animation_test.xyp", m_textureResource);
+    ent.getComponent<cro::ParticleEmitter>().start();
+
+
 #ifdef CRO_DEBUG_
     registerWindow([&]() 
         {
@@ -426,7 +435,7 @@ void MenuState::createScene()
             });
 
         auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f,0.f,-10.f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f,0.f,-50.f });
         entity.addComponent<cro::Sprite>(m_textureResource.get("assets/images/menu_background.png"));
         entity.addComponent<cro::Drawable2D>();
 

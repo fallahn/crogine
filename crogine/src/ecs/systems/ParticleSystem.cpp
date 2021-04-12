@@ -42,6 +42,7 @@ source distribution.
 #include "../../detail/GLCheck.hpp"
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 //why do I have to hack this? there has to be a catch...
 #ifdef PLATFORM_DESKTOP
@@ -213,7 +214,7 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
     for (auto entity : entities)
     {
         const auto& emitter = entity.getComponent<ParticleEmitter>();
-        auto inView = [&emitter](const Frustum& frustum)->bool
+        auto inFrustum = [&emitter](const Frustum& frustum)->bool
         {
             bool visible = true;
             std::size_t i = 0;
@@ -221,15 +222,36 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
             {
                 visible = (Spatial::intersects(frustum[i++], emitter.m_bounds) != Planar::Back);
             }
+
             return visible;
         };
 
         for (auto i = 0u; i < m_visibleEntities.size(); ++i)
         {
-            const auto& frustum = cam.getPass(i).getFrustum();
-            if (emitter.m_nextFreeParticle > 0 && inView(frustum))
+            if (cam.isOrthographic())
             {
-                m_visibleEntities[i].push_back(entity);
+                if (emitter.m_nextFreeParticle > 0)
+                {
+                    auto bb = cam.getPass(i).getAABB();
+                    auto halfBB = (bb[1] - bb[0]) / 2.f;
+
+                    auto bbCentre = bb[0] + halfBB;
+                    auto bbR2 = glm::length2(halfBB);
+                    auto emitterR2 = emitter.m_bounds.radius * emitter.m_bounds.radius;
+
+                    if ((bbR2 + emitterR2) > glm::length2(bbCentre - emitter.m_bounds.centre))
+                    {
+                        m_visibleEntities[i].push_back(entity);
+                    }
+                }
+            }
+            else
+            {
+                const auto& frustum = cam.getPass(i).getFrustum();
+                if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum))
+                {
+                    m_visibleEntities[i].push_back(entity);
+                }
             }
         }
     }
@@ -273,10 +295,16 @@ void ParticleSystem::process(float dt)
                 p.gravity = settings.gravity;
                 p.lifetime = settings.lifetime + cro::Util::Random::value(-settings.lifetimeVariance, settings.lifetimeVariance + epsilon);
                 p.maxLifeTime = p.lifetime;
-                p.velocity = rotation * settings.initialVelocity;
+
+                auto randRot = glm::rotate(rotation, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::X_AXIS);
+                randRot = glm::rotate(randRot, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::Z_AXIS);
+
+                p.velocity = randRot * settings.initialVelocity;
                 p.rotation = Util::Random::value(-Util::Const::TAU, Util::Const::TAU);
                 p.scale = 1.f;
                 p.acceleration = settings.acceleration;
+                p.frameID = (settings.useRandomFrame && settings.frameCount > 1) ? cro::Util::Random::value(0, static_cast<std::int32_t>(settings.frameCount) - 1) : 0;
+                p.frameTime = 0.f;
 
                 //spawn particle in world position
                 p.position = tx.getWorldPosition();
@@ -306,6 +334,8 @@ void ParticleSystem::process(float dt)
         //update each particle
         glm::vec3 minBounds(std::numeric_limits<float>::max());
         glm::vec3 maxBounds(0.f);
+
+        float framerate = 1.f / emitter.settings.framerate;
         for (auto i = 0u; i < emitter.m_nextFreeParticle; ++i)
         {
             auto& p = emitter.m_particles[i];
@@ -323,6 +353,16 @@ void ParticleSystem::process(float dt)
             p.rotation += emitter.settings.rotationSpeed * dt;
             p.scale += ((p.scale * emitter.settings.scaleModifier) * dt);
             //LOG(std::to_string(emitter.settings.scaleModifier), Logger::Type::Info);
+
+            if (emitter.settings.animate)
+            {
+                p.frameTime += dt;
+                if (p.frameTime > framerate)
+                {
+                    p.frameID++;
+                    p.frameTime -= framerate;
+                }
+            }
 
             //update bounds for culling
             if (p.position.x < minBounds.x) minBounds.x = p.position.x;
