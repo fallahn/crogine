@@ -6,11 +6,11 @@ set(BUILD_BATCAT false CACHE BOOL "Build the batcat sample application")
 set(BUILD_TL false CACHE BOOL "Build the Threat Level sample application")
 
 add_subdirectory(crogine)
-add_subdirectory(editor)
+#add_subdirectory(editor)
 
 if(BUILD_TEMPLATES)
-  add_subdirectory(samples/multiplayer_game)
-  add_subdirectory(samples/project_template)
+  #add_subdirectory(samples/multiplayer_game)
+  #add_subdirectory(samples/project_template)
 endif()
 
 if(BUILD_BATCAT)
