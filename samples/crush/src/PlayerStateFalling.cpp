@@ -65,7 +65,7 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     glm::vec3 movement = glm::vec3(0.f);
 
     //do air movement if not touching a wall - TODO fix player getting stuck on the edge
-    /*if ((player.collisionFlags & (1 << CollisionMaterial::Solid)) == 0)
+    if ((player.collisionFlags & (1 << CollisionMaterial::Solid)) == 0)
     {
         if (input.buttonFlags & InputFlag::Left)
         {
@@ -81,7 +81,7 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
             movement = glm::normalize(movement);
         }
         movement *= moveSpeed;
-    }*/
+    }
 
     //apply gravity
     player.velocity.y = std::max(player.velocity.y + (Gravity * ConstVal::FixedGameUpdate), MaxGravity);

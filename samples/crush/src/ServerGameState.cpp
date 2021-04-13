@@ -152,6 +152,7 @@ void GameState::netBroadcast()
                     update.playerID = player.id;
                     update.state = player.state;
                     update.collisionFlags = player.collisionFlags;
+                    update.prevInputFlags = player.previousInputFlags;
 
                     m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::PlayerUpdate, update, cro::NetFlag::Unreliable);
                 }
@@ -309,6 +310,7 @@ void GameState::buildWorld()
                     m_playerEntities[i][j] = m_scene.createEntity();
                     m_playerEntities[i][j].addComponent<cro::Transform>().setPosition(m_playerSpawns[playerCount]);
                     m_playerEntities[i][j].addComponent<Player>().id = i + j;
+                    m_playerEntities[i][j].getComponent<Player>().collisionLayer = playerCount / 2;
                     m_playerEntities[i][j].getComponent<Player>().spawnPosition = m_playerSpawns[playerCount++];
                     m_playerEntities[i][j].getComponent<Player>().connectionID = i;
 

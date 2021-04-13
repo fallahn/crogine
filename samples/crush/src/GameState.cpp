@@ -854,12 +854,13 @@ void GameState::spawnPlayer(PlayerInfo info)
         if (m_inputParsers.count(info.playerID) == 0)
         {
             //this is us - the root is controlled by the player and the
-            //avatar and sea planes are connected as children
+            //avatar is connected as a child
             auto root = createActor();
             
             root.addComponent<Player>().id = info.playerID;
             root.getComponent<Player>().connectionID = info.connectionID;
             root.getComponent<Player>().spawnPosition = info.spawnPosition;
+            root.getComponent<Player>().collisionLayer = info.playerID / 2;
 
             root.addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
             root.getComponent<cro::DynamicTreeComponent>().setFilterFlags(CollisionID::LayerOne); //TODO set this based on spawn layer

@@ -80,6 +80,7 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
         //set the state
         player.state = update.state;
         player.collisionFlags = update.collisionFlags;
+        player.previousInputFlags = update.prevInputFlags;
 
         //rewind player's last input to timestamp and
         //re-process all succeeding events

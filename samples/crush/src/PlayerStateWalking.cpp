@@ -80,7 +80,6 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
         if ((input.buttonFlags & InputFlag::Action)
             && (player.previousInputFlags & InputFlag::Action) == 0)
         {
-            player.velocity.x += movement.x;
             player.velocity.y += 30.f;
         }
     }
@@ -135,14 +134,10 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
             //body collision
             if (bodyRect.intersects(otherRect, overlap))
             {
+                player.collisionFlags |= ((1 << otherCollision.rects[i].material) & ~(1 << CollisionMaterial::Foot));
+
                 auto manifold = calcManifold(direction, overlap);
                 entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
-
-                //if (otherCollision.rects[i].material == CollisionMaterial::Body)
-                //{
-                //    //we're touching another player so move back a bit
-                //    player.velocity += glm::vec3(-direction, 0.f);
-                //}
             }
         }
     }

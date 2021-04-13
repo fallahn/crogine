@@ -64,6 +64,7 @@ struct PlayerUpdate final
     std::uint8_t playerID = 0;
     std::uint8_t state = 0;
     std::uint8_t collisionFlags = 0; //TODO if there are few enough pack with one of the other fields?
+    std::uint16_t prevInputFlags = 0; //hmmmmmmmmm ought to be able to pull this from the history rather than send it
 };
 
 struct ActorUpdate final
