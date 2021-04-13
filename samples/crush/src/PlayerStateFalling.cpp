@@ -65,7 +65,7 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     glm::vec3 movement = glm::vec3(0.f);
 
     //do air movement if not touching a wall - TODO fix player getting stuck on the edge
-    if ((player.collisionFlags & (1 << CollisionMaterial::Solid)) == 0)
+    /*if ((player.collisionFlags & (1 << CollisionMaterial::Solid)) == 0)
     {
         if (input.buttonFlags & InputFlag::Left)
         {
@@ -81,7 +81,7 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
             movement = glm::normalize(movement);
         }
         movement *= moveSpeed;
-    }
+    }*/
 
     //apply gravity
     player.velocity.y = std::max(player.velocity.y + (Gravity * ConstVal::FixedGameUpdate), MaxGravity);
@@ -135,8 +135,8 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
             //body collision
             if (bodyRect.intersects(otherRect, overlap))
             {
-                //set the flag to what we're touching as long as it's not a foor
-                player.collisionFlags |= ((1 << otherCollision.rects[i].material) | ~(1 << CollisionMaterial::Foot));
+                //set the flag to what we're touching as long as it's not a floor
+                player.collisionFlags |= ((1 << otherCollision.rects[i].material) & ~(1 << CollisionMaterial::Foot));
 
                 auto manifold = calcManifold(direction, overlap);
                 entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);

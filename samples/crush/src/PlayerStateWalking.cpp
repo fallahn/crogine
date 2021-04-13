@@ -80,6 +80,7 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
         if ((input.buttonFlags & InputFlag::Action)
             && (player.previousInputFlags & InputFlag::Action) == 0)
         {
+            player.velocity.x += movement.x;
             player.velocity.y += 30.f;
         }
     }
