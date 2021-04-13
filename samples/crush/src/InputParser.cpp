@@ -235,7 +235,7 @@ void InputParser::update()
         if (!player.waitResync)
         {
             input.buttonFlags = m_inputFlags;
-            input.analogueMultiplier = Util::compressFloat(m_analogueAmount);
+            input.analogueMultiplier = Util::compressFloat(m_analogueAmount, 8);
         }
         input.timeStamp = m_timestampClock.elapsed().asMilliseconds();
 

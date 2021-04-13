@@ -85,11 +85,16 @@ namespace cro
 
         /*!
         \brief Returns true if the given rectangle intersects this one
+        */
+        bool intersects(Rectangle<T>) const;
+
+        /*!
+        \brief Returns true if the given rectangle intersects this one
         \param overlap If a rectangle instance is passed in as a second parameter
         then it will contain the overlapping area of the two rectangles, if they
         overlap
         */
-        bool intersects(Rectangle<T>, Rectangle<T>& overlap = Rectangle<T>()) const;
+        bool intersects(Rectangle<T>, Rectangle<T>& overlap) const;
 
         /*!
         \brief Returns true if this rectangle fully contains the given rectangle

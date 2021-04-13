@@ -701,6 +701,7 @@ void GameState::loadMap()
                 collisionEnt.addComponent<CollisionComponent>().rectCount = 1;
                 collisionEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Solid;
                 collisionEnt.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
+                collisionEnt.getComponent<CollisionComponent>().calcSum();
 
 #ifdef CRO_DEBUG_
                 if (i == 0) addBoxDebug(collisionEnt, m_gameScene, cro::Colour::Blue);
@@ -860,6 +861,16 @@ void GameState::spawnPlayer(PlayerInfo info)
             root.getComponent<Player>().connectionID = info.connectionID;
             root.getComponent<Player>().spawnPosition = info.spawnPosition;
 
+            root.addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
+            root.getComponent<cro::DynamicTreeComponent>().setFilterFlags(CollisionID::LayerOne); //TODO set this based on spawn layer
+
+            root.addComponent<CollisionComponent>().rectCount = 2;
+            root.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
+            root.getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
+            root.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
+            root.getComponent<CollisionComponent>().rects[1].bounds = FootBounds;
+            root.getComponent<CollisionComponent>().calcSum();
+
             m_inputParsers.insert(std::make_pair(info.playerID, InputParser(m_sharedData.clientConnection.netClient, m_sharedData.inputBindings[info.playerID])));
             m_inputParsers.at(info.playerID).setEntity(root);
 
@@ -886,14 +897,6 @@ void GameState::spawnPlayer(PlayerInfo info)
             playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
             md.createModel(playerEnt, m_resources);
             playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
-            playerEnt.addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
-            playerEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(CollisionID::LayerOne); //TODO set this based on spawn layer
-
-            playerEnt.addComponent<CollisionComponent>().rectCount = 2;
-            playerEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
-            playerEnt.getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
-            playerEnt.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
-            playerEnt.getComponent<CollisionComponent>().rects[1].bounds = FootBounds;
 
             root.getComponent<Player>().avatar = playerEnt;
             root.getComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());
@@ -901,7 +904,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
 
 #ifdef CRO_DEBUG_
-            addBoxDebug(playerEnt, m_gameScene);
+            addBoxDebug(root, m_gameScene);
 #endif
         }
 

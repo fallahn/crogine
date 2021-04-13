@@ -60,6 +60,9 @@ namespace ConstVal
     //cos we use Tiled to make the maps we have to rescale pixels into
     //something a bit more sensible - this is Tiled units per metre
     static constexpr float MapUnits = 128.f;
+
+    //player walking speed in units per metre
+    static constexpr float MoveSpeed = 10.f;
 }
 
 namespace Util

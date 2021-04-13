@@ -49,6 +49,7 @@ struct Player final
     std::size_t nextFreeInput = 0; //POST incremented after adding new input to history
     std::size_t lastUpdatedInput = HistorySize - 1; //index of the last parsed input
 
+    std::uint16_t previousInputFlags = 0;
 
     std::size_t collisionLayer = 0; //index into the collision data depending on which layer we're on
     struct State final
@@ -89,4 +90,6 @@ private:
 
     std::array<std::unique_ptr<PlayerState>, Player::State::Count> m_playerStates;
     void processInput(cro::Entity);
+
+    void processCollision(cro::Entity, std::uint32_t);
 };

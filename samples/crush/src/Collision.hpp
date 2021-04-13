@@ -71,4 +71,25 @@ struct CollisionComponent final
 {
     std::array<CollisionRect, 2u> rects;
     std::size_t rectCount = 0;
+
+    //merged rectagles to give a global
+    //bounds for broadphase testing
+    cro::FloatRect sumRect =
+    {
+        std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()
+    };
+    void calcSum()
+    {
+        for (auto i = 0u; i < rectCount; ++i)
+        {
+            const auto& rect = rects[i];
+
+            if (rect.bounds.left < sumRect.left) sumRect.left = rect.bounds.left;
+            if (rect.bounds.bottom < sumRect.bottom) sumRect.bottom = rect.bounds.bottom;
+
+            if (rect.bounds.width > sumRect.width) sumRect.width = rect.bounds.width;
+            if (rect.bounds.height > sumRect.height) sumRect.height = rect.bounds.height;
+        }
+    }
 };

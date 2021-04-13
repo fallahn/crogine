@@ -120,9 +120,18 @@ void PlayerSystem::processInput(cro::Entity entity)
     while (player.lastUpdatedInput != lastIdx)
     {
         m_playerStates[player.state]->processMovement(entity, player.inputStack[player.lastUpdatedInput]);
-        m_playerStates[player.state]->processCollision(entity, *getScene());
+        processCollision(entity, player.state);
         m_playerStates[player.state]->processAvatar(player.avatar);
 
         player.lastUpdatedInput = (player.lastUpdatedInput + 1) % Player::HistorySize;
     }
+}
+
+void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerState)
+{
+    //do broadphase pass then send results to specific state for processing
+
+
+
+    m_playerStates[playerState]->processCollision(entity, *getScene());
 }

@@ -34,6 +34,13 @@ Rectangle<T>::Rectangle(const Rectangle<U>& other)
     width(static_cast<T>(other.width)),
     height(static_cast<T>(other.height)) {}
 
+template <typename T>
+bool Rectangle<T>::intersects(Rectangle<T> other) const
+{
+    Rectangle<T> intersection;
+    return intersects(other, intersection);
+}
+
 template <class T>
 bool Rectangle<T>::intersects(Rectangle<T> other, Rectangle<T>& overlap) const
 {

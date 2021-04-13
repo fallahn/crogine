@@ -31,6 +31,7 @@ source distribution.
 #include "PlayerSystem.hpp"
 #include "GameConsts.hpp"
 #include "CommonConsts.hpp"
+#include "Collision.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -43,7 +44,8 @@ source distribution.
 
 namespace
 {
-    constexpr float Gravity = -9.f;
+    constexpr float Gravity = -96.f;
+    constexpr float MaxGravity = -30.f;
 }
 
 PlayerStateFalling::PlayerStateFalling()
@@ -58,18 +60,9 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     auto& tx = entity.getComponent<cro::Transform>();
 
     //walking speed in metres per second (1 world unit == 1 metre)
-    const float moveSpeed = 10.f * Util::decompressFloat(input.analogueMultiplier);
+    const float moveSpeed = ConstVal::MoveSpeed * Util::decompressFloat(input.analogueMultiplier, 8);
 
     glm::vec3 movement = glm::vec3(0.f);
-
-    /*if (input.buttonFlags & InputFlag::Up)
-    {
-        movement.z = -1.f;
-    }
-    if (input.buttonFlags & InputFlag::Down)
-    {
-        movement.z += 1.f;
-    }*/
 
     if (input.buttonFlags & InputFlag::Left)
     {
@@ -86,10 +79,13 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     }
     movement *= moveSpeed;
 
-    player.velocity.y += Gravity;
+    player.velocity.y = std::max(player.velocity.y + (Gravity * ConstVal::FixedGameUpdate), MaxGravity);
     movement += player.velocity;
 
     tx.move(movement * ConstVal::FixedGameUpdate);
+
+
+    player.previousInputFlags = input.buttonFlags;
 }
 
 void PlayerStateFalling::processCollision(cro::Entity entity, cro::Scene& scene)
@@ -97,16 +93,73 @@ void PlayerStateFalling::processCollision(cro::Entity entity, cro::Scene& scene)
     auto& player = entity.getComponent<Player>();
 
     auto position = entity.getComponent<cro::Transform>().getPosition();
+
     auto bb = PlayerBounds;
     bb[0] += position;
     bb[1] += position;
 
-    auto entities = scene.getSystem<cro::DynamicTreeSystem>().query(bb, player.collisionLayer + 1);
+    auto& collisionComponent = entity.getComponent<CollisionComponent>();
+    auto bounds2D = collisionComponent.sumRect;
+    bounds2D.left += position.x;
+    bounds2D.bottom += position.y;
 
+    std::vector<cro::Entity> collisions;
+
+    //broadphase
+    auto entities = scene.getSystem<cro::DynamicTreeSystem>().query(bb, player.collisionLayer + 1);
     for (auto e : entities)
     {
-        //TODO make sure we skip our own ent
+        //make sure we skip our own ent
+        if (e != entity)
+        {
+            auto otherPos = e.getComponent<cro::Transform>().getPosition();
+            auto otherBounds = e.getComponent<CollisionComponent>().sumRect;
+            otherBounds.left += otherPos.x;
+            otherBounds.bottom += otherPos.y;
 
+            if (otherBounds.intersects(bounds2D))
+            {
+                collisions.push_back(entity);
+            }
+        }
+    }
+
+    //narrow phase
+    auto footRect = collisionComponent.rects[1].bounds;
+    footRect.left += position.x;
+    footRect.bottom += position.y;
+
+    auto bodyRect = collisionComponent.rects[0].bounds;
+    bodyRect.left += position.x;
+    bodyRect.bottom += position.y;
+
+    player.collisionFlags = 0;
+
+    for (auto e : collisions)
+    {
+        auto otherPos = e.getComponent<cro::Transform>().getPosition();
+        const auto& otherCollision = e.getComponent<CollisionComponent>();
+        for (auto i = 0; i < otherCollision.rectCount; ++i)
+        {
+            auto otherRect = otherCollision.rects[i].bounds;
+            otherRect.left += otherPos.x;
+            otherRect.bottom += otherPos.y;
+
+            cro::FloatRect overlap;
+
+            //foot collision
+            if (footRect.intersects(otherRect, overlap))
+            {
+                player.collisionFlags |= (1 << CollisionMaterial::Foot);
+            }
+
+            //body collision
+            if (bodyRect.intersects(otherRect, overlap))
+            {
+                player.state = Player::State::Walking;
+                player.velocity.y = 0.f;
+            }
+        }
     }
 }
 
