@@ -60,25 +60,30 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     auto& tx = entity.getComponent<cro::Transform>();
 
     //walking speed in metres per second (1 world unit == 1 metre)
-    const float moveSpeed = ConstVal::MoveSpeed * Util::decompressFloat(input.analogueMultiplier, 8);
+    const float moveSpeed = ConstVal::MoveSpeed * Util::decompressFloat(input.analogueMultiplier, 8) * 0.5f;
 
     glm::vec3 movement = glm::vec3(0.f);
 
-    if (input.buttonFlags & InputFlag::Left)
+    //do air movement if not touching a wall - TODO fix player getting stuck on the edge
+    if ((player.collisionFlags & (1 << CollisionMaterial::Solid)) == 0)
     {
-        movement.x = -1.f;
-    }
-    if (input.buttonFlags & InputFlag::Right)
-    {
-        movement.x += 1.f;
+        if (input.buttonFlags & InputFlag::Left)
+        {
+            movement.x = -1.f;
+        }
+        if (input.buttonFlags & InputFlag::Right)
+        {
+            movement.x += 1.f;
+        }
+
+        if (glm::length2(movement) > 1)
+        {
+            movement = glm::normalize(movement);
+        }
+        movement *= moveSpeed;
     }
 
-    if (glm::length2(movement) > 1)
-    {
-        movement = glm::normalize(movement);
-    }
-    movement *= moveSpeed;
-
+    //apply gravity
     player.velocity.y = std::max(player.velocity.y + (Gravity * ConstVal::FixedGameUpdate), MaxGravity);
     movement += player.velocity;
 
@@ -88,43 +93,14 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     player.previousInputFlags = input.buttonFlags;
 }
 
-void PlayerStateFalling::processCollision(cro::Entity entity, cro::Scene& scene)
+void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<cro::Entity>& collisions)
 {
-    auto& player = entity.getComponent<Player>();
-
-    auto position = entity.getComponent<cro::Transform>().getPosition();
-
-    auto bb = PlayerBounds;
-    bb[0] += position;
-    bb[1] += position;
-
-    auto& collisionComponent = entity.getComponent<CollisionComponent>();
-    auto bounds2D = collisionComponent.sumRect;
-    bounds2D.left += position.x;
-    bounds2D.bottom += position.y;
-
-    std::vector<cro::Entity> collisions;
-
-    //broadphase
-    auto entities = scene.getSystem<cro::DynamicTreeSystem>().query(bb, player.collisionLayer + 1);
-    for (auto e : entities)
-    {
-        //make sure we skip our own ent
-        if (e != entity)
-        {
-            auto otherPos = e.getComponent<cro::Transform>().getPosition();
-            auto otherBounds = e.getComponent<CollisionComponent>().sumRect;
-            otherBounds.left += otherPos.x;
-            otherBounds.bottom += otherPos.y;
-
-            if (otherBounds.intersects(bounds2D))
-            {
-                collisions.push_back(entity);
-            }
-        }
-    }
-
     //narrow phase
+
+    auto& player = entity.getComponent<Player>();
+    auto position = entity.getComponent<cro::Transform>().getPosition();
+    const auto& collisionComponent = entity.getComponent<CollisionComponent>();
+
     auto footRect = collisionComponent.rects[1].bounds;
     footRect.left += position.x;
     footRect.bottom += position.y;
@@ -133,7 +109,7 @@ void PlayerStateFalling::processCollision(cro::Entity entity, cro::Scene& scene)
     bodyRect.left += position.x;
     bodyRect.bottom += position.y;
 
-    player.collisionFlags = 0;
+    glm::vec2 centre = { bodyRect.left + (bodyRect.width / 2.f), bodyRect.bottom + (bodyRect.height / 2.f) };
 
     for (auto e : collisions)
     {
@@ -145,6 +121,9 @@ void PlayerStateFalling::processCollision(cro::Entity entity, cro::Scene& scene)
             otherRect.left += otherPos.x;
             otherRect.bottom += otherPos.y;
 
+            glm::vec2 otherCentre = { otherRect.left + (otherRect.width / 2.f), otherRect.bottom + (otherRect.height / 2.f) };
+
+            glm::vec2 direction = otherCentre - centre;
             cro::FloatRect overlap;
 
             //foot collision
@@ -156,8 +135,28 @@ void PlayerStateFalling::processCollision(cro::Entity entity, cro::Scene& scene)
             //body collision
             if (bodyRect.intersects(otherRect, overlap))
             {
-                player.state = Player::State::Walking;
-                player.velocity.y = 0.f;
+                //set the flag to what we're touching as long as it's not a foor
+                player.collisionFlags |= ((1 << otherCollision.rects[i].material) | ~(1 << CollisionMaterial::Foot));
+
+                auto manifold = calcManifold(direction, overlap);
+                entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
+
+                if (player.collisionFlags & (1 << CollisionMaterial::Foot))
+                {
+                    player.state = Player::State::Walking;
+                    player.velocity.y = 0.f;
+                }
+                else
+                {
+                    //reflect velocity
+                    player.velocity = glm::reflect(player.velocity, glm::vec3(manifold.normal, 0.f));
+
+                    if (manifold.normal.y != 0)
+                    {
+                        //bonk head
+                        player.velocity *= 0.1f;
+                    }                    
+                }
             }
         }
     }

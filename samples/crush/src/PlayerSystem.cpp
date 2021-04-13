@@ -32,8 +32,13 @@ source distribution.
 #include "ServerPacketData.hpp"
 #include "Messages.hpp"
 #include "GameConsts.hpp"
+#include "Collision.hpp"
 
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/DynamicTreeComponent.hpp>
+
+#include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
     : cro::System       (mb, typeid(PlayerSystem))
@@ -116,6 +121,9 @@ void PlayerSystem::processInput(cro::Entity entity)
     //update all the inputs until 1 before next
     //free input. Remember to take into account
     //the wrap around of the indices
+    //auto lastIdx = (player.nextFreeInput + (Player::HistorySize - 2)) % Player::HistorySize;
+    //player.previousInputFlags = player.inputStack[lastIdx].buttonFlags; //adjust for correct value
+
     auto lastIdx = (player.nextFreeInput + (Player::HistorySize - 1)) % Player::HistorySize;
     while (player.lastUpdatedInput != lastIdx)
     {
@@ -130,8 +138,48 @@ void PlayerSystem::processInput(cro::Entity entity)
 void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerState)
 {
     //do broadphase pass then send results to specific state for processing
+    auto& player = entity.getComponent<Player>();
+    player.collisionFlags = 0;
 
+    auto position = entity.getComponent<cro::Transform>().getPosition();
 
+    auto bb = PlayerBounds;
+    bb[0] += position;
+    bb[1] += position;
 
-    m_playerStates[playerState]->processCollision(entity, *getScene());
+    auto& collisionComponent = entity.getComponent<CollisionComponent>();
+    auto bounds2D = collisionComponent.sumRect;
+    bounds2D.left += position.x;
+    bounds2D.bottom += position.y;
+
+    std::vector<cro::Entity> collisions;
+
+    //broadphase
+    auto entities = getScene()->getSystem<cro::DynamicTreeSystem>().query(bb, player.collisionLayer + 1);
+    for (auto e : entities)
+    {
+        //make sure we skip our own ent
+        if (e != entity)
+        {
+            auto otherPos = e.getComponent<cro::Transform>().getPosition();
+            auto otherBounds = e.getComponent<CollisionComponent>().sumRect;
+            otherBounds.left += otherPos.x;
+            otherBounds.bottom += otherPos.y;
+
+            if (otherBounds.intersects(bounds2D))
+            {
+                collisions.push_back(e);
+            }
+        }
+    }
+
+    m_playerStates[playerState]->processCollision(entity, collisions);
+
+    //if the collision changed the player state, update the collision
+    //again using the new result
+    if (player.state != playerState)
+    {
+        player.collisionFlags = 0;
+        m_playerStates[player.state]->processCollision(entity, collisions);
+    }
 }

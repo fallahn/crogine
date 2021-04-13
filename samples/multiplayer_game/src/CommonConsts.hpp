@@ -56,33 +56,57 @@ namespace ConstVal
 
 namespace Util
 {
+    /*
+note that 'range' should be the max (and min when negative) value expected to be compressed
+by this function. Exceeding the range will cause the value to overflow. However, the smaller
+the range value, the more precision that is preserved, so choose this value carefully. Using
+a value divisible by 8 bits will help the compiler optimise the conversion with bitshift division.
+*/
+    static constexpr std::int16_t compressionRange = std::numeric_limits<std::int16_t>::max();
+    static inline std::int16_t compressFloat(float input, std::int16_t range = 1024)
+    {
+        return static_cast<std::int16_t>(std::round(input * compressionRange / range));
+    }
+    static inline constexpr float decompressFloat(std::int16_t input, std::int16_t range = 1024)
+    {
+        return static_cast<float>(input) * range / compressionRange;
+    }
+
     static inline std::array<std::int16_t, 4u> compressQuat(glm::quat q)
     {
-        std::int16_t w = static_cast<std::int16_t>(q.w * 10000.f);
-        std::int16_t x = static_cast<std::int16_t>(q.x * 10000.f);
-        std::int16_t y = static_cast<std::int16_t>(q.y * 10000.f);
-        std::int16_t z = static_cast<std::int16_t>(q.z * 10000.f);
+        std::int16_t w = compressFloat(q.w, 8);
+        std::int16_t x = compressFloat(q.x, 8);
+        std::int16_t y = compressFloat(q.y, 8);
+        std::int16_t z = compressFloat(q.z, 8);
 
         return { w,x,y,z };
     }
 
-    static inline glm::quat decompressQuat(std::array<std::int16_t, 4u> q)
+    static inline constexpr glm::quat decompressQuat(std::array<std::int16_t, 4u> q)
     {
-        float w = static_cast<float>(q[0]) / 10000.f;
-        float x = static_cast<float>(q[1]) / 10000.f;
-        float y = static_cast<float>(q[2]) / 10000.f;
-        float z = static_cast<float>(q[3]) / 10000.f;
+        float w = decompressFloat(q[0], 8);
+        float x = decompressFloat(q[1], 8);
+        float y = decompressFloat(q[2], 8);
+        float z = decompressFloat(q[3], 8);
 
         return /*glm::normalize*/(glm::quat(w, x, y, z));
     }
 
-    static inline std::int16_t compressFloat(float f)
+    static inline std::array<std::int16_t, 3u> compressVec3(glm::vec3 v, std::int16_t range = 256)
     {
-        return static_cast<std::int16_t>(f * 10000.f);
+        std::int16_t x = compressFloat(v.x, range);
+        std::int16_t y = compressFloat(v.y, range);
+        std::int16_t z = compressFloat(v.z, range);
+
+        return { x,y,z };
     }
 
-    static inline float decompressFloat(std::int16_t i)
+    static inline glm::vec3 decompressVec3(std::array<std::int16_t, 3u> v, std::int16_t range = 256)
     {
-        return static_cast<float>(i) / 10000.f;
+        float x = decompressFloat(v[0], range);
+        float y = decompressFloat(v[1], range);
+        float z = decompressFloat(v[2], range);
+
+        return { x, y, z };
     }
 }

@@ -58,6 +58,7 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
 
     glm::vec3 movement = glm::vec3(0.f);
 
+    //movement
     if (input.buttonFlags & InputFlag::Left)
     {
         movement.x = -1.f;
@@ -73,58 +74,32 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
     }
     movement *= moveSpeed;
 
-    if ((input.buttonFlags & InputFlag::Action)
-        && (player.previousInputFlags & InputFlag::Action) == 0)
+    //jumpment - TODO need to prevent wall jumping
+    if (player.collisionFlags & (1 << CollisionMaterial::Foot))
     {
-        player.velocity.y += 30.f;
+        if ((input.buttonFlags & InputFlag::Action)
+            && (player.previousInputFlags & InputFlag::Action) == 0)
+        {
+            player.velocity.y += 30.f;
+        }
     }
 
     movement += player.velocity;
+    player.velocity *= 0.9f;
 
     tx.move(movement * ConstVal::FixedGameUpdate);
 
     player.previousInputFlags = input.buttonFlags;
 }
 
-void PlayerStateWalking::processCollision(cro::Entity entity, cro::Scene& scene)
+void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<cro::Entity>& collisions)
 {
-    //TODO reduce the replcication between this and other states
+    //narrow phase
 
     auto& player = entity.getComponent<Player>();
-
     auto position = entity.getComponent<cro::Transform>().getPosition();
-
-    auto bb = PlayerBounds;
-    bb[0] += position;
-    bb[1] += position;
-
-    auto& collisionComponent = entity.getComponent<CollisionComponent>();
-    auto bounds2D = collisionComponent.sumRect;
-    bounds2D.left += position.x;
-    bounds2D.bottom += position.y;
-
-    std::vector<cro::Entity> collisions;
-
-    //broadphase
-    auto entities = scene.getSystem<cro::DynamicTreeSystem>().query(bb, player.collisionLayer + 1);
-    for (auto e : entities)
-    {
-        //make sure we skip our own ent
-        if (e != entity)
-        {
-            auto otherPos = e.getComponent<cro::Transform>().getPosition();
-            auto otherBounds = e.getComponent<CollisionComponent>().sumRect;
-            otherBounds.left += otherPos.x;
-            otherBounds.bottom += otherPos.y;
-
-            if (otherBounds.intersects(bounds2D))
-            {
-                collisions.push_back(entity);
-            }
-        }
-    }
-
-    //narrow phase
+    const auto& collisionComponent = entity.getComponent<CollisionComponent>();
+    
     auto footRect = collisionComponent.rects[1].bounds;
     footRect.left += position.x;
     footRect.bottom += position.y;
@@ -133,7 +108,7 @@ void PlayerStateWalking::processCollision(cro::Entity entity, cro::Scene& scene)
     bodyRect.left += position.x;
     bodyRect.bottom += position.y;
 
-    player.collisionFlags = 0;
+    glm::vec2 centre = { bodyRect.left + (bodyRect.width / 2.f), bodyRect.bottom + (bodyRect.height / 2.f) };
 
     for (auto e : collisions)
     {
@@ -145,6 +120,9 @@ void PlayerStateWalking::processCollision(cro::Entity entity, cro::Scene& scene)
             otherRect.left += otherPos.x;
             otherRect.bottom += otherPos.y;
 
+            glm::vec2 otherCentre = { otherRect.left + (otherRect.width / 2.f), otherRect.bottom + (otherRect.height / 2.f) };
+
+            glm::vec2 direction = otherCentre - centre;
             cro::FloatRect overlap;
 
             //foot collision
@@ -156,11 +134,17 @@ void PlayerStateWalking::processCollision(cro::Entity entity, cro::Scene& scene)
             //body collision
             if (bodyRect.intersects(otherRect, overlap))
             {
-                
+                auto manifold = calcManifold(direction, overlap);
+                entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
+
+                //if (otherCollision.rects[i].material == CollisionMaterial::Body)
+                //{
+                //    //we're touching another player so move back a bit
+                //    player.velocity += glm::vec3(-direction, 0.f);
+                //}
             }
         }
     }
-
 
     if (player.collisionFlags == 0)
     {

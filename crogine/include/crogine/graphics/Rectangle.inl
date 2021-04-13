@@ -55,13 +55,13 @@ bool Rectangle<T>::intersects(Rectangle<T> other, Rectangle<T>& overlap) const
     T r2MaxY = std::max(other.bottom, static_cast<T>(other.bottom + other.height));
 
     T interLeft = std::max(r1MinX, r2MinX);
-    T interTop = std::max(r1MinY, r2MinY);
+    T interBottom = std::max(r1MinY, r2MinY);
     T interRight = std::min(r1MaxX, r2MaxX);
-    T interBottom = std::min(r1MaxY, r2MaxY);
+    T interTop = std::min(r1MaxY, r2MaxY);
 
-    if ((interLeft < interRight) && (interTop < interBottom))
+    if ((interLeft < interRight) && (interBottom < interTop))
     {
-        overlap = Rectangle<T>(interLeft, interTop, interRight - interLeft, interBottom - interTop);
+        overlap = Rectangle<T>(interLeft, interBottom, interRight - interLeft, interTop - interBottom);
         return true;
     }
     else

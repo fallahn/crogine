@@ -33,6 +33,8 @@ source distribution.
 
 #include <crogine/ecs/Entity.hpp>
 
+#include <vector>
+
 namespace cro
 {
     class Scene;
@@ -45,7 +47,7 @@ public:
     virtual ~PlayerState() = default;
 
     virtual void processMovement(cro::Entity, Input) = 0;
-    virtual void processCollision(cro::Entity, cro::Scene&) = 0;
+    virtual void processCollision(cro::Entity, const std::vector<cro::Entity>&) = 0;
     virtual void processAvatar(cro::Entity) = 0;
 };
 
@@ -55,7 +57,7 @@ public:
     PlayerStateFalling();
 
     void processMovement(cro::Entity, Input) override;
-    void processCollision(cro::Entity, cro::Scene&) override;
+    void processCollision(cro::Entity, const std::vector<cro::Entity>&) override;
     void processAvatar(cro::Entity) override;
 
 private:
@@ -67,7 +69,7 @@ public:
     PlayerStateWalking();
 
     void processMovement(cro::Entity, Input) override;
-    void processCollision(cro::Entity, cro::Scene&) override;
+    void processCollision(cro::Entity, const std::vector<cro::Entity>&) override;
     void processAvatar(cro::Entity) override;
 
 private:

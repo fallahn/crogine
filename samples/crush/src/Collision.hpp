@@ -93,3 +93,25 @@ struct CollisionComponent final
         }
     }
 };
+
+struct Manifold final
+{
+    glm::vec2 normal = glm::vec2(0.f);
+    float penetration = 0.f;
+};
+
+static inline Manifold calcManifold(glm::vec2 normal, cro::FloatRect overlap)
+{
+    Manifold manifold;
+    if (overlap.width < overlap.height)
+    {
+        manifold.normal.x = (normal.x < 0) ? 1.f : -1.f;
+        manifold.penetration = overlap.width;
+    }
+    else
+    {
+        manifold.normal.y = (normal.y < 0) ? 1.f : -1.f;
+        manifold.penetration = overlap.height;
+    }
+    return manifold;
+}
