@@ -41,6 +41,11 @@ source distribution.
 
 #include <crogine/detail/glm/gtx/vector_angle.hpp>
 
+namespace
+{
+    constexpr float Gravity = -9.f;
+}
+
 PlayerStateFalling::PlayerStateFalling()
 {
 
@@ -53,18 +58,18 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     auto& tx = entity.getComponent<cro::Transform>();
 
     //walking speed in metres per second (1 world unit == 1 metre)
-    const float moveSpeed = 10.f * Util::decompressFloat(input.analogueMultiplier) * ConstVal::FixedGameUpdate;
+    const float moveSpeed = 10.f * Util::decompressFloat(input.analogueMultiplier);
 
     glm::vec3 movement = glm::vec3(0.f);
 
-    if (input.buttonFlags & InputFlag::Up)
+    /*if (input.buttonFlags & InputFlag::Up)
     {
         movement.z = -1.f;
     }
     if (input.buttonFlags & InputFlag::Down)
     {
         movement.z += 1.f;
-    }
+    }*/
 
     if (input.buttonFlags & InputFlag::Left)
     {
@@ -79,7 +84,12 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     {
         movement = glm::normalize(movement);
     }
-    tx.move(movement * moveSpeed);
+    movement *= moveSpeed;
+
+    player.velocity.y += Gravity;
+    movement += player.velocity;
+
+    tx.move(movement * ConstVal::FixedGameUpdate);
 }
 
 void PlayerStateFalling::processCollision(cro::Entity entity, cro::Scene& scene)

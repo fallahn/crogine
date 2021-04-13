@@ -61,6 +61,9 @@ struct Player final
         };
     };
     std::uint8_t state = State::Falling; //this is used to index into the update functions in the player system
+    std::uint8_t collisionFlags = 0;
+
+    glm::vec3 velocity = glm::vec3(0.f);
 
     std::uint8_t id = 4; //this should be the same as the ActorID for this entity
     std::uint8_t connectionID = 4;

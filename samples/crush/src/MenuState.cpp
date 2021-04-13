@@ -59,7 +59,7 @@ source distribution.
 
 namespace
 {
-
+    float someFloat = 10.f;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)

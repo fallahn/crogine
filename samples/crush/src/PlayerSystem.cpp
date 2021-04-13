@@ -68,11 +68,13 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
         auto& player = entity.getComponent<Player>();
 
         //apply position/rotation from server
-        tx.setPosition(update.position);
+        tx.setPosition(Util::decompressVec3(update.position));
         tx.setRotation(Util::decompressQuat(update.rotation));
+        player.velocity = Util::decompressVec3(update.velocity);
 
         //set the state
         player.state = update.state;
+        player.collisionFlags = update.collisionFlags;
 
         //rewind player's last input to timestamp and
         //re-process all succeeding events

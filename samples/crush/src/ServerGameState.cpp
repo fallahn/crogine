@@ -145,11 +145,13 @@ void GameState::netBroadcast()
                     const auto& player = m_playerEntities[i][j].getComponent<Player>();
 
                     PlayerUpdate update;
-                    update.position = m_playerEntities[i][j].getComponent<cro::Transform>().getPosition();
+                    update.position = Util::compressVec3(m_playerEntities[i][j].getComponent<cro::Transform>().getPosition());
                     update.rotation = Util::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
+                    update.velocity = Util::compressVec3(player.velocity);
                     update.timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
                     update.playerID = player.id;
                     update.state = player.state;
+                    update.collisionFlags = player.collisionFlags;
 
                     m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::PlayerUpdate, update, cro::NetFlag::Unreliable);
                 }

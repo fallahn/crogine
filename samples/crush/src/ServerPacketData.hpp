@@ -35,6 +35,7 @@ source distribution.
 #include <array>
 
 using CompressedQuat = std::array<std::int16_t, 4u>;
+using CompressedVec3 = std::array<std::int16_t, 3u>;
 
 struct LobbyData final
 {
@@ -57,9 +58,12 @@ struct PlayerUpdate final
 {
     CompressedQuat rotation{};
     std::uint32_t timestamp = 0;
-    glm::vec3 position = glm::vec3(0.f); //TODO make this 3 compressed floats?
+    CompressedVec3 position = {};
+    CompressedVec3 velocity = {};
+
     std::uint8_t playerID = 0;
     std::uint8_t state = 0;
+    std::uint8_t collisionFlags = 0; //TODO if there are few enough pack with one of the other fields?
 };
 
 struct ActorUpdate final
