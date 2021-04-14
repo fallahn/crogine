@@ -44,8 +44,7 @@ source distribution.
 
 namespace
 {
-    constexpr float Gravity = -96.f;
-    constexpr float MaxGravity = -30.f;
+
 }
 
 PlayerStateFalling::PlayerStateFalling()
@@ -59,36 +58,31 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     auto& player = entity.getComponent<Player>();
     auto& tx = entity.getComponent<cro::Transform>();
 
-    //walking speed in metres per second (1 world unit == 1 metre)
-    const float moveSpeed = ConstVal::MoveSpeed * Util::decompressFloat(input.analogueMultiplier, 8) * 0.5f;
+    const float multiplier = Util::decompressFloat(input.analogueMultiplier, 8);
 
-    glm::vec3 movement = glm::vec3(0.f);
-
-    //do air movement if not touching a wall - TODO fix player getting stuck on the edge
+    //do air movement if not touching a wall
     if ((player.collisionFlags & (1 << CollisionMaterial::Solid)) == 0)
     {
         if (input.buttonFlags & InputFlag::Left)
         {
-            movement.x = -1.f;
+            player.velocity.x = std::max(-MaxVelocity, player.velocity.x - (AirAcceleration * multiplier));
         }
         if (input.buttonFlags & InputFlag::Right)
         {
-            movement.x += 1.f;
+            player.velocity.x = std::min(MaxVelocity, player.velocity.x + (AirAcceleration * multiplier));
         }
+    }
 
-        if (glm::length2(movement) > 1)
-        {
-            movement = glm::normalize(movement);
-        }
-        movement *= moveSpeed;
+    //cut jump short if button released
+    if ((input.buttonFlags & InputFlag::Action) == 0)
+    {
+        player.velocity.y = std::min(player.velocity.y, MinJump);
     }
 
     //apply gravity
     player.velocity.y = std::max(player.velocity.y + (Gravity * ConstVal::FixedGameUpdate), MaxGravity);
-    movement += player.velocity;
 
-    tx.move(movement * ConstVal::FixedGameUpdate);
-
+    tx.move(player.velocity * ConstVal::FixedGameUpdate);
 
     player.previousInputFlags = input.buttonFlags;
 }
@@ -126,12 +120,6 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
             glm::vec2 direction = otherCentre - centre;
             cro::FloatRect overlap;
 
-            //foot collision
-            if (footRect.intersects(otherRect, overlap))
-            {
-                player.collisionFlags |= (1 << CollisionMaterial::Foot);
-            }
-
             //body collision
             if (bodyRect.intersects(otherRect, overlap))
             {
@@ -141,21 +129,33 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
                 auto manifold = calcManifold(direction, overlap);
                 entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
 
-                if (player.collisionFlags & (1 << CollisionMaterial::Foot))
+                //foot collision
+                if (footRect.intersects(otherRect, overlap))
+                {
+                    player.collisionFlags |= (1 << CollisionMaterial::Foot);
+                }
+
+                if (player.collisionFlags & (1 << CollisionMaterial::Foot)
+                    && manifold.normal.y > 0
+                    && player.velocity.y <= 0) //don't land if jumped up near edge of a platform and still moving upwards
                 {
                     player.state = Player::State::Walking;
                     player.velocity.y = 0.f;
                 }
                 else
                 {
-                    //reflect velocity
-                    player.velocity = glm::reflect(player.velocity, glm::vec3(manifold.normal, 0.f));
-
-                    if (manifold.normal.y != 0)
+                    if (manifold.normal.y < 0)
                     {
                         //bonk head
-                        player.velocity *= 0.1f;
-                    }                    
+                        player.velocity = glm::reflect(player.velocity, glm::vec3(manifold.normal, 0.f));
+                        player.velocity.x *= 0.5f;
+                        player.velocity.y *= 0.1f;
+                    }
+
+                    else
+                    {
+                        player.velocity.x *= 0.1f;
+                    }
                 }
             }
         }

@@ -695,9 +695,9 @@ void GameState::loadMap()
                 //might as well add the dynamic tree components...
                 auto collisionEnt = m_gameScene.createEntity();
                 collisionEnt.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
-                collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, -LayerThickness), glm::vec3(rect.width, rect.height, LayerThickness) });
+                collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
                 collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(i + 1);
-                
+
                 collisionEnt.addComponent<CollisionComponent>().rectCount = 1;
                 collisionEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Solid;
                 collisionEnt.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
@@ -863,7 +863,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             root.getComponent<Player>().collisionLayer = info.playerID / 2;
 
             root.addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
-            root.getComponent<cro::DynamicTreeComponent>().setFilterFlags(CollisionID::LayerOne); //TODO set this based on spawn layer
+            root.getComponent<cro::DynamicTreeComponent>().setFilterFlags((info.playerID / 2) + 1);
 
             root.addComponent<CollisionComponent>().rectCount = 2;
             root.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
@@ -906,6 +906,38 @@ void GameState::spawnPlayer(PlayerInfo info)
 
 #ifdef CRO_DEBUG_
             addBoxDebug(root, m_gameScene);
+            root.addComponent<DebugInfo>();
+
+            registerWindow([root]()
+                {
+                    const auto& player = root.getComponent<Player>();
+                    std::string label = "Player " + std::to_string(player.id);
+                    if (ImGui::Begin(label.c_str()))
+                    {
+                        const auto& debug = root.getComponent<DebugInfo>();
+                        ImGui::Text("Nearby: %d", debug.nearbyEnts);
+                        ImGui::Text("Colliding: %d", debug.collidingEnts);
+                        /*ImGui::Text("Bounds: %3.3f, %3.3f, %3.3f, - %3.3f, %3.3f, %3.3f",
+                            debug.bounds[0].x, debug.bounds[0].y, debug.bounds[0].z,
+                            debug.bounds[1].x, debug.bounds[1].y, debug.bounds[1].z);*/
+
+                        switch (player.state)
+                        {
+                        default:
+                            ImGui::Text("State: unknown");
+                            break;
+                        case Player::State::Falling:
+                            ImGui::Text("State: Falling");
+                            break;
+                        case Player::State::Walking:
+                            ImGui::Text("State: Walking");
+                            break;
+                        }
+
+                        ImGui::Text("Vel X: %3.3f", player.velocity.x);
+                    }
+                    ImGui::End();
+                });
 #endif
         }
 

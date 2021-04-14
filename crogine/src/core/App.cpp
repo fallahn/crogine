@@ -361,6 +361,11 @@ void App::setApplicationStrings(const std::string& organisation, const std::stri
     CRO_ASSERT(!appName.empty(), "String cannot be empty");
     m_orgString = organisation;
     m_appString = appName;
+
+    //remember to update the pref path
+    char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
+    m_prefPath = std::string(pp);
+    SDL_free(pp);
 }
 
 //private

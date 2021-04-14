@@ -97,7 +97,7 @@ bool MyApp::initialise()
     //preload shared resoureces
     m_sharedData.fonts.load(m_sharedData.defaultFontID, "assets/fonts/VeraMono.ttf");
 
-
+    setApplicationStrings("Trederia", "crush");
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("CRUSH!");
 
@@ -105,7 +105,7 @@ bool MyApp::initialise()
 
     m_sharedData.clientConnection.netClient.create(4);
 
-    configPath = cro::FileSystem::getConfigDirectory("crush") + "settings.cfg";
+    configPath = getPreferencePath() + "settings.cfg";
     loadSettings();
 
     return true;

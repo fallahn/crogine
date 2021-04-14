@@ -61,6 +61,19 @@ namespace cro
                 else if (diff < -Const::PI) diff += Const::TAU;
                 return diff;
             }
+
+            /*!
+            \brief Returns the normlised sign of the given value
+            \param an int convertible value
+            \returns -1 if the given value is negative, 1 if it is positive or 0
+            if it has no value.
+            */
+            template <typename T>
+            static inline std::int32_t sgn(T val)
+            {
+                static_assert(std::is_convertible<T, std::int32_t>::value);
+                return (T(0) < val) - (val < T(0));
+            }
         }
     }
 }

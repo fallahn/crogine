@@ -49,6 +49,13 @@ namespace TwoDeeFlags
     };
 }
 
+struct DebugInfo final
+{
+    std::int32_t nearbyEnts = 0;
+    std::int32_t collidingEnts = 0;
+    cro::Box bounds;
+};
+
 static inline cro::Entity addBoxDebug(cro::Entity parent, cro::Scene& scene, cro::Colour colour = cro::Colour(0.f, 1.f, 0.f))
 {
     CRO_ASSERT(parent.hasComponent<CollisionComponent>(), "Requires AABB component");

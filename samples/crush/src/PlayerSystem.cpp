@@ -33,6 +33,7 @@ source distribution.
 #include "Messages.hpp"
 #include "GameConsts.hpp"
 #include "Collision.hpp"
+#include "DebugDraw.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -145,8 +146,7 @@ void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerStat
     auto position = entity.getComponent<cro::Transform>().getPosition();
 
     auto bb = PlayerBounds;
-    bb[0] += position;
-    bb[1] += position;
+    bb += position;
 
     auto& collisionComponent = entity.getComponent<CollisionComponent>();
     auto bounds2D = collisionComponent.sumRect;
@@ -156,7 +156,7 @@ void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerStat
     std::vector<cro::Entity> collisions;
 
     //broadphase
-    auto entities = getScene()->getSystem<cro::DynamicTreeSystem>().query(bb, player.collisionLayer + 1);
+    auto entities = getScene()->getSystem<cro::DynamicTreeSystem>().query(bb/*, player.collisionLayer + 1*/);
     for (auto e : entities)
     {
         //make sure we skip our own ent
@@ -173,6 +173,16 @@ void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerStat
             }
         }
     }
+
+#ifdef CRO_DEBUG_
+    if (entity.hasComponent<DebugInfo>())
+    {
+        auto& db = entity.getComponent<DebugInfo>();
+        db.nearbyEnts = static_cast<std::int32_t>(entities.size());
+        db.collidingEnts = static_cast<std::int32_t>(collisions.size());
+        db.bounds = bb;
+    }
+#endif
 
     m_playerStates[playerState]->processCollision(entity, collisions);
 

@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 
 #include <crogine/detail/glm/gtx/vector_angle.hpp>
+#include <crogine/util/Maths.hpp>
 
 PlayerStateWalking::PlayerStateWalking()
 {
@@ -53,41 +54,60 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
     auto& player = entity.getComponent<Player>();
     auto& tx = entity.getComponent<cro::Transform>();
 
-    //walking speed in metres per second (1 world unit == 1 metre)
-    const float moveSpeed = ConstVal::MoveSpeed * Util::decompressFloat(input.analogueMultiplier, 8);
+    const float multiplier = Util::decompressFloat(input.analogueMultiplier, 8);
 
-    glm::vec3 movement = glm::vec3(0.f);
-
-    //movement
     if (input.buttonFlags & InputFlag::Left)
     {
-        movement.x = -1.f;
+        //moving right, so slow down
+        if (player.velocity.x > 0)
+        {
+            player.velocity.x -= Deceleration * multiplier;
+            if (player.velocity.x <= 0)
+            {
+                player.velocity.x = -0.1f;
+            }
+        }
+        //moving left, so speed up to max vel
+        else if (player.velocity.x > -MaxVelocity)
+        {
+            player.velocity.x = std::max(-MaxVelocity, player.velocity.x - (Acceleration * multiplier));
+        }
     }
+
     if (input.buttonFlags & InputFlag::Right)
     {
-        movement.x += 1.f;
+        //moving left, so slow down
+        if (player.velocity.x < 0)
+        {
+            player.velocity.x += Deceleration * multiplier;
+            if (player.velocity.x >= 0)
+            {
+                player.velocity.x = 0.1f;
+            }
+        }
+        //moving right, so speed up to max vel
+        else if (player.velocity.x < MaxVelocity)
+        {
+            player.velocity.x = std::min(MaxVelocity, player.velocity.x + (Acceleration * multiplier));
+        }
     }
 
-    if (glm::length2(movement) > 1)
+    if ((input.buttonFlags & (InputFlag::Left | InputFlag::Right)) == 0)
     {
-        movement = glm::normalize(movement);
+        player.velocity.x -= std::min(std::abs(player.velocity.x), Friction) * cro::Util::Maths::sgn(player.velocity.x);
     }
-    movement *= moveSpeed;
 
-    //jumpment - TODO need to prevent wall jumping
+    //jumpment
     if (player.collisionFlags & (1 << CollisionMaterial::Foot))
     {
         if ((input.buttonFlags & InputFlag::Action)
             && (player.previousInputFlags & InputFlag::Action) == 0)
         {
-            player.velocity.y += 30.f;
+            player.velocity.y += JumpImpulse;
+            player.state = Player::State::Falling;
         }
     }
-
-    movement += player.velocity;
-    player.velocity *= 0.9f;
-
-    tx.move(movement * ConstVal::FixedGameUpdate);
+    tx.move(player.velocity * ConstVal::FixedGameUpdate);
 
     player.previousInputFlags = input.buttonFlags;
 }
@@ -138,6 +158,11 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
 
                 auto manifold = calcManifold(direction, overlap);
                 entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
+
+                if (manifold.normal.x != 0)
+                {
+                    player.velocity = glm::reflect(player.velocity, glm::vec3(manifold.normal, 0.f)) * 0.1f;
+                }
             }
         }
     }

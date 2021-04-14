@@ -43,6 +43,17 @@ namespace cro
 class PlayerState
 {
 public:
+    static constexpr float MaxVelocity = 12.f;
+    static constexpr float Acceleration = 1.2f;
+    static constexpr float Deceleration = 16.f;
+    static constexpr float Friction = Acceleration;
+    static constexpr float AirAcceleration = Acceleration * 2.f;
+
+    static constexpr float Gravity = -80.f;
+    static constexpr float MaxGravity = -32.f;
+    static constexpr float JumpImpulse = 24.f;
+    static constexpr float MinJump = JumpImpulse * 0.1f;
+
     PlayerState() = default;
     virtual ~PlayerState() = default;
 
