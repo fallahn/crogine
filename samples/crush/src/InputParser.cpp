@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/core/Console.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/network/NetClient.hpp>
+#include <crogine/util/Network.hpp>
 
 namespace
 {
@@ -235,7 +236,7 @@ void InputParser::update()
         if (!player.waitResync)
         {
             input.buttonFlags = m_inputFlags;
-            input.analogueMultiplier = Util::compressFloat(m_analogueAmount, 8);
+            input.analogueMultiplier = cro::Util::Net::compressFloat(m_analogueAmount, 8);
         }
         input.timeStamp = m_timestampClock.elapsed().asMilliseconds();
 

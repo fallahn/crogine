@@ -52,6 +52,7 @@ source distribution.
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Network.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 using namespace sv;
@@ -145,9 +146,9 @@ void GameState::netBroadcast()
                     const auto& player = m_playerEntities[i][j].getComponent<Player>();
 
                     PlayerUpdate update;
-                    update.position = Util::compressVec3(m_playerEntities[i][j].getComponent<cro::Transform>().getPosition());
-                    update.rotation = Util::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
-                    update.velocity = Util::compressVec3(player.velocity);
+                    update.position = cro::Util::Net::compressVec3(m_playerEntities[i][j].getComponent<cro::Transform>().getPosition());
+                    update.rotation = cro::Util::Net::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
+                    update.velocity = cro::Util::Net::compressVec3(player.velocity);
                     update.timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
                     update.playerID = player.id;
                     update.state = player.state;
@@ -175,7 +176,7 @@ void GameState::netBroadcast()
         update.actorID = actor.id;
         update.serverID = actor.serverEntityId;
         update.position = tx.getWorldPosition();
-        update.rotation = Util::compressQuat(tx.getRotation());
+        update.rotation = cro::Util::Net::compressQuat(tx.getRotation());
         update.timestamp = timestamp;
 
         for (auto i = 0u; i < ConstVal::MaxClients; ++i)
@@ -208,7 +209,7 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
                 PlayerInfo info;
                 info.playerID = j;
                 info.spawnPosition = m_playerEntities[i][j].getComponent<cro::Transform>().getPosition();
-                info.rotation = Util::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
+                info.rotation = cro::Util::Net::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
                 info.serverID = m_playerEntities[i][j].getIndex();
                 info.timestamp = m_serverTime.elapsed().asMilliseconds();
                 info.connectionID = i;

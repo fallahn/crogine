@@ -41,6 +41,8 @@ source distribution.
 
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 
+#include <crogine/util/Network.hpp>
+
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
     : cro::System       (mb, typeid(PlayerSystem))
 {
@@ -74,9 +76,9 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
         auto& player = entity.getComponent<Player>();
 
         //apply position/rotation from server
-        tx.setPosition(Util::decompressVec3(update.position));
-        tx.setRotation(Util::decompressQuat(update.rotation));
-        player.velocity = Util::decompressVec3(update.velocity);
+        tx.setPosition(cro::Util::Net::decompressVec3(update.position));
+        tx.setRotation(cro::Util::Net::decompressQuat(update.rotation));
+        player.velocity = cro::Util::Net::decompressVec3(update.velocity);
 
         //set the state
         player.state = update.state;

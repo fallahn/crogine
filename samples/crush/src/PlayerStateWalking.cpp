@@ -42,6 +42,7 @@ source distribution.
 
 #include <crogine/detail/glm/gtx/vector_angle.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Network.hpp>
 
 PlayerStateWalking::PlayerStateWalking()
 {
@@ -54,7 +55,7 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
     auto& player = entity.getComponent<Player>();
     auto& tx = entity.getComponent<cro::Transform>();
 
-    const float multiplier = Util::decompressFloat(input.analogueMultiplier, 8);
+    const float multiplier = cro::Util::Net::decompressFloat(input.analogueMultiplier, 8);
 
     if (input.buttonFlags & InputFlag::Left)
     {

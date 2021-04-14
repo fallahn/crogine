@@ -165,6 +165,7 @@
     <ClInclude Include="..\crogine\include\crogine\util\Easings.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Maths.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Matrix.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\util\Network.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Random.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Rectangle.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\String.hpp" />

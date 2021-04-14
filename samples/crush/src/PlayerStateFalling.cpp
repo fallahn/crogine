@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 
 #include <crogine/detail/glm/gtx/vector_angle.hpp>
+#include <crogine/util/Network.hpp>
 
 namespace
 {
@@ -58,7 +59,7 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     auto& player = entity.getComponent<Player>();
     auto& tx = entity.getComponent<cro::Transform>();
 
-    const float multiplier = Util::decompressFloat(input.analogueMultiplier, 8);
+    const float multiplier = cro::Util::Net::decompressFloat(input.analogueMultiplier, 8);
 
     //do air movement if not touching a wall
     if ((player.collisionFlags & (1 << CollisionMaterial::Solid)) == 0)
