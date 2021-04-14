@@ -60,6 +60,7 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Network.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -447,7 +448,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     {
     default: break;
     case PacketID::DayNightUpdate:
-        m_gameScene.getDirector<DayNightDirector>().setTimeOfDay(Util::decompressFloat(packet.as<std::int16_t>()));
+        m_gameScene.getDirector<DayNightDirector>().setTimeOfDay(cro::Util::Net::decompressFloat(packet.as<std::int16_t>(), 8));
         break;
     case PacketID::Heightmap:
         updateHeightmap(packet);
@@ -500,7 +501,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 e.getComponent<Actor>().serverEntityId == update.serverID)
             {
                 auto& interp = e.getComponent<InterpolationComponent>();
-                interp.setTarget({ update.position, Util::decompressQuat(update.rotation), update.timestamp });
+                interp.setTarget({ update.position, cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
             }
         };
         m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -536,7 +537,7 @@ void GameState::spawnPlayer(PlayerInfo info)
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
-        entity.getComponent<cro::Transform>().setRotation(Util::decompressQuat(info.rotation));
+        entity.getComponent<cro::Transform>().setRotation(cro::Util::Net::decompressQuat(info.rotation));
             
         entity.addComponent<Actor>().id = info.playerID;
         entity.getComponent<Actor>().serverEntityId = info.serverID;

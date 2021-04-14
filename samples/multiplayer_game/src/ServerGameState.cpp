@@ -40,6 +40,7 @@ source distribution.
 
 #include<crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Network.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 using namespace Sv;
@@ -118,9 +119,9 @@ void GameState::netBroadcast()
 
             PlayerUpdate update;
             update.position = m_playerEntities[i].getComponent<cro::Transform>().getPosition();
-            update.rotation = Util::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotation());
-            update.pitch = Util::compressFloat(player.cameraPitch);
-            update.yaw = Util::compressFloat(player.cameraYaw);
+            update.rotation = cro::Util::Net::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotation());
+            update.pitch = cro::Util::Net::compressFloat(player.cameraPitch, 16);
+            update.yaw = cro::Util::Net::compressFloat(player.cameraYaw, 16);
             update.timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
 
             m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::PlayerUpdate, update, cro::NetFlag::Unreliable);
@@ -139,7 +140,7 @@ void GameState::netBroadcast()
         update.actorID = actor.id;
         update.serverID = actor.serverEntityId;
         update.position = tx.getPosition();
-        update.rotation = Util::compressQuat(tx.getRotation());
+        update.rotation = cro::Util::Net::compressQuat(tx.getRotation());
         update.timestamp = timestamp;
         m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, update, cro::NetFlag::Unreliable);
     }
@@ -163,7 +164,7 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
             PlayerInfo info;
             info.playerID = i;
             info.spawnPosition = m_playerEntities[i].getComponent<cro::Transform>().getPosition();
-            info.rotation = Util::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotation());
+            info.rotation = cro::Util::Net::compressQuat(m_playerEntities[i].getComponent<cro::Transform>().getRotation());
             info.serverID = m_playerEntities[i].getIndex();
             info.timestamp = m_serverTime.elapsed().asMilliseconds();
 

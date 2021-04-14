@@ -46,6 +46,7 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Network.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 using namespace Sv;
@@ -150,7 +151,7 @@ void GameState::netBroadcast()
 
                     PlayerUpdate update;
                     update.position = m_playerEntities[i][j].getComponent<cro::Transform>().getPosition();
-                    update.rotation = Util::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
+                    update.rotation = cro::Util::Net::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
                     update.timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
                     update.playerID = player.id;
 
@@ -175,7 +176,7 @@ void GameState::netBroadcast()
         update.actorID = actor.id;
         update.serverID = actor.serverEntityId;
         update.position = tx.getWorldPosition();
-        update.rotation = Util::compressQuat(tx.getRotation());
+        update.rotation = cro::Util::Net::compressQuat(tx.getRotation());
         update.timestamp = timestamp;
         m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, update, cro::NetFlag::Unreliable);
     }
@@ -201,7 +202,7 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
                 PlayerInfo info;
                 info.playerID = j;
                 info.spawnPosition = m_playerEntities[i][j].getComponent<cro::Transform>().getPosition();
-                info.rotation = Util::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
+                info.rotation = cro::Util::Net::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
                 info.serverID = m_playerEntities[i][j].getIndex();
                 info.timestamp = m_serverTime.elapsed().asMilliseconds();
                 info.connectionID = i;
