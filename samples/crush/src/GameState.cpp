@@ -972,6 +972,20 @@ void GameState::spawnPlayer(PlayerInfo info)
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
+
+        entity.addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
+        entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((info.playerID / 2) + 1);
+
+        entity.addComponent<CollisionComponent>().rectCount = 1;// 2;
+        entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
+        entity.getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
+        /*entity.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
+        entity.getComponent<CollisionComponent>().rects[1].bounds = FootBounds;*/
+        entity.getComponent<CollisionComponent>().calcSum();
+
+#ifdef CRO_DEBUG_
+        addBoxDebug(entity, m_gameScene, cro::Colour::Magenta);
+#endif
     }
 }
 
