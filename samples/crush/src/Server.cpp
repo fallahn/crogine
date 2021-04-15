@@ -109,6 +109,10 @@ void Server::run()
     cro::HiResTimer updateClock;
     float updateAccumulator = 0.f;
 
+    static const cro::Time PingFrequency = cro::milliseconds(1000);
+    cro::Clock pingClock;
+    cro::Time pingTimeout;
+
     while (m_running)
     {
         while (!m_sharedData.messageBus.empty())
@@ -151,17 +155,26 @@ void Server::run()
                 //remove from client list
                 removeClient(evt);
             }
-            //else if (evt.type == cro::NetEvent::PacketReceived)
-            //{
-            //    switch (evt.packet.getID())
-            //    {
-            //    default: break;
-            //    //handle this directly in the lobby
-            //    //case PacketID::RequestGame:
-
-            //    //    break;
-            //    }
-            //}
+            else if (evt.type == cro::NetEvent::PacketReceived)
+            {
+                switch (evt.packet.getID())
+                {
+                default: break;
+                case PacketID::Ping:
+                {
+                    auto latency = pingClock.elapsed().asMilliseconds() - evt.packet.as<std::int32_t>();
+                    for (auto& c : m_sharedData.clients)
+                    {
+                        if (c.peer == evt.peer)
+                        {
+                            c.connected = latency;
+                            break;
+                        }
+                    }
+                }
+                    break;
+                }
+            }
         }
 
         //network broadcasts
@@ -170,6 +183,16 @@ void Server::run()
         {
             netAccumulatedTime -= netFrameTime;
             m_currentState->netBroadcast();
+
+            //broadcast ping to measure latency
+            pingTimeout += netFrameTime;
+            while (pingTimeout > PingFrequency)
+            {
+                pingTimeout -= PingFrequency;
+
+                auto timestamp = pingClock.elapsed().asMilliseconds();
+                m_sharedData.host.broadcastPacket(PacketID::Ping, timestamp, cro::NetFlag::Unreliable);
+            }
         }
 
         //logic updates

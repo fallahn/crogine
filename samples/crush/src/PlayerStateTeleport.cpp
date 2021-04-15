@@ -41,7 +41,6 @@ PlayerStateTeleport::PlayerStateTeleport()
 }
 
 //public
-#include <iostream>
 void PlayerStateTeleport::processMovement(cro::Entity entity, Input)
 {
     auto& player = entity.getComponent<Player>();

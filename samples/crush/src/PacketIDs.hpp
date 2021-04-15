@@ -62,7 +62,7 @@ namespace PacketID
         LobbyUpdate, //< LobbyData struct, name string bytes
 
         PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
-        PlayerUpdate, //< world pos, rotation, uint32 timestamp - used for reconciliation, send directly to targeted peer
+        PlayerUpdate, //< world pos, rotation, int32 timestamp - used for reconciliation, send directly to targeted peer
         ActorUpdate, //< uint8 ID pos, rotation - used for interpolation of other players and NPCs
 
         EntityRemoved, //< uint32 entity ID
@@ -78,6 +78,7 @@ namespace PacketID
         PlayerCount, //< uint16 (connectionID << 8) | playerCount number of local players
 
         //both directions
+        Ping, //< int32 timestamp. broadcast from server then read again when relayed from clients to calc rolling ping avg
         ServerCommand, //< ServerCommand struct - requests server perform some action (may be ignored by server), forwarded to target client if successful
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
         MapName, //< uint8 name length in bytes followed by uint32 array string

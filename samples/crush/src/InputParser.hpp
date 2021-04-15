@@ -41,7 +41,7 @@ them to both the local player controller and sending to the server.
 
 struct Input final
 {
-    std::uint32_t timeStamp = 0;
+    std::int32_t timeStamp = 0;
     std::uint16_t buttonFlags = 0;
     std::uint16_t analogueMultiplier = 1;
 };

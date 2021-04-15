@@ -48,6 +48,7 @@ namespace sv
         bool connected = false;
         cro::NetPeer peer;
         cro::String name;
+        std::int32_t latency = 0;
     };
 
     struct SharedData final

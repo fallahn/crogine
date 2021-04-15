@@ -57,7 +57,7 @@ struct PlayerInfo final
 struct PlayerUpdate final
 {
     CompressedQuat rotation{};
-    std::uint32_t timestamp = 0;
+    std::int32_t timestamp = 0;
     CompressedVec3 position = {};
     CompressedVec3 velocity = {};
 

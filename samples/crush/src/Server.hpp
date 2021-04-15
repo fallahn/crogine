@@ -31,6 +31,8 @@ source distribution.
 
 #include "ServerState.hpp"
 
+#include <crogine/core/Clock.hpp>
+
 #include <atomic>
 #include <memory>
 #include <thread>

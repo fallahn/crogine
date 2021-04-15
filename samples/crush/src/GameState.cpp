@@ -767,6 +767,9 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     switch (packet.getID())
     {
     default: break;
+    case PacketID::Ping:
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::Ping, packet.as<std::int32_t>(), cro::NetFlag::Unreliable);
+        break;
     case PacketID::ConnectionRefused:
         if (packet.as<std::uint8_t>() == MessageType::ServerQuit)
         {
