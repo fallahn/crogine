@@ -57,6 +57,7 @@ struct Player final
         enum
         {
             Walking, Falling,
+            Teleport,
 
             Count
         };

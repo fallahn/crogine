@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -30,7 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/core/Message.hpp>
-
+#include <crogine/ecs/Entity.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 namespace MessageID
@@ -38,6 +38,7 @@ namespace MessageID
     enum
     {
         UIMessage = cro::Message::Count,
+        PlayerMessage
     };
 }
 
@@ -57,4 +58,17 @@ struct UIEvent final
         Jump,
         Fire
     }button;
+};
+
+struct PlayerEvent final
+{
+    enum
+    {
+        None,
+        Teleported,
+        Landed,
+        Jumped
+    }type = None;
+
+    cro::Entity player;
 };

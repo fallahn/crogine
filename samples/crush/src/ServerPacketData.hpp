@@ -61,10 +61,12 @@ struct PlayerUpdate final
     CompressedVec3 position = {};
     CompressedVec3 velocity = {};
 
+    //TODO pack all these into as small a field as possible
     std::uint8_t playerID = 0;
     std::uint8_t state = 0;
-    std::uint8_t collisionFlags = 0; //TODO if there are few enough pack with one of the other fields?
+    std::uint8_t collisionFlags = 0;
     std::uint16_t prevInputFlags = 0; //hmmmmmmmmm ought to be able to pull this from the history rather than send it
+    std::uint8_t collisionLayer = 0;
 };
 
 struct ActorUpdate final

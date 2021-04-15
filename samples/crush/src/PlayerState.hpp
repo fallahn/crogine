@@ -54,6 +54,8 @@ public:
     static constexpr float JumpImpulse = 24.f;
     static constexpr float MinJump = JumpImpulse * 0.1f;
 
+    static constexpr float TeleportSpeed = 10.f;
+
     PlayerState() = default;
     virtual ~PlayerState() = default;
 
@@ -78,6 +80,18 @@ class PlayerStateWalking final : public PlayerState
 {
 public:
     PlayerStateWalking();
+
+    void processMovement(cro::Entity, Input) override;
+    void processCollision(cro::Entity, const std::vector<cro::Entity>&) override;
+    void processAvatar(cro::Entity) override;
+
+private:
+};
+
+class PlayerStateTeleport final : public PlayerState
+{
+public:
+    PlayerStateTeleport();
 
     void processMovement(cro::Entity, Input) override;
     void processCollision(cro::Entity, const std::vector<cro::Entity>&) override;

@@ -51,6 +51,7 @@ PlayerSystem::PlayerSystem(cro::MessageBus& mb)
 
     m_playerStates[Player::State::Falling] = std::make_unique<PlayerStateFalling>();
     m_playerStates[Player::State::Walking] = std::make_unique<PlayerStateWalking>();
+    m_playerStates[Player::State::Teleport] = std::make_unique<PlayerStateTeleport>();
 }
 
 //public
@@ -82,6 +83,7 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
 
         //set the state
         player.state = update.state;
+        player.collisionLayer = update.collisionLayer;
         player.collisionFlags = update.collisionFlags;
         player.previousInputFlags = update.prevInputFlags;
 
@@ -131,9 +133,35 @@ void PlayerSystem::processInput(cro::Entity entity)
     auto lastIdx = (player.nextFreeInput + (Player::HistorySize - 1)) % Player::HistorySize;
     while (player.lastUpdatedInput != lastIdx)
     {
+        auto lastState = player.state;
+
         m_playerStates[player.state]->processMovement(entity, player.inputStack[player.lastUpdatedInput]);
         processCollision(entity, player.state);
         m_playerStates[player.state]->processAvatar(player.avatar);
+
+        if (lastState != player.state)
+        {
+            //raise a message to say something happened
+            auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+            msg->player = entity;
+
+            switch (player.state)
+            {
+            default: break;
+            case Player::State::Teleport:
+                msg->type = PlayerEvent::Teleported;
+                break;
+            case Player::State::Walking:
+                msg->type = PlayerEvent::Landed;
+                break;
+            case Player::State::Falling:
+                if (player.velocity.y > 0)
+                {
+                    msg->type = PlayerEvent::Jumped;
+                }
+                break;
+            }
+        }
 
         player.lastUpdatedInput = (player.lastUpdatedInput + 1) % Player::HistorySize;
     }

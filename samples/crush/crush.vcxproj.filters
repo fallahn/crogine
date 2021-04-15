@@ -141,6 +141,9 @@
     <ClCompile Include="src\PlayerStateWalking.cpp">
       <Filter>Source Files\shared\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\PlayerStateTeleport.cpp">
+      <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">

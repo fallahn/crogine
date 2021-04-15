@@ -41,6 +41,7 @@ source distribution.
 #include "GLCheck.hpp"
 #include "Collision.hpp"
 #include "DebugDraw.hpp"
+#include "Messages.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -545,16 +546,23 @@ void GameState::loadMap()
     MapData mapData;
     if (mapData.loadFromFile("assets/maps/" + m_sharedData.mapName.toAnsiString()))
     {
+        std::array wallColours =
+        {
+            cro::Colour(0.6f, 1.f, 0.6f),
+            cro::Colour(1.f, 0.6f, 0.6f)
+        };
+
         //build the platform geometry
         for (auto i = 0; i < 2; ++i)
         {
-            float layerDepth = LayerDepth * (1 + (i * -2));
+            float layerDepth = LayerDepth * Util::direction(i);
             auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Normal/* | cro::VertexProperty::UV0*/, 1, GL_TRIANGLES));
 
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>();
             entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Default]));
             entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::DefaultShadow]));
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", wallColours[i]);
             entity.addComponent<cro::ShadowCaster>();
 
             std::vector<float> verts;
@@ -705,7 +713,7 @@ void GameState::loadMap()
                 collisionEnt.getComponent<CollisionComponent>().calcSum();
 
 #ifdef CRO_DEBUG_
-                if (i == 0) addBoxDebug(collisionEnt, m_gameScene, cro::Colour::Blue);
+                //if (i == 0) addBoxDebug(collisionEnt, m_gameScene, cro::Colour::Blue);
 #endif
             }
 
@@ -912,6 +920,20 @@ void GameState::spawnPlayer(PlayerInfo info)
             cam.refractionBuffer.setSmooth(true);
             cam.depthBuffer.create(4096, 4096);
 
+            auto camController = m_gameScene.createEntity();
+            camController.addComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());
+            camController.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI * root.getComponent<Player>().collisionLayer);
+            camController.addComponent<cro::Callback>().active = true;
+            camController.getComponent<cro::Callback>().function =
+                [root](cro::Entity e, float dt)
+            {
+                static const float TotalDistance = LayerDepth * 2.f;
+                auto position = root.getComponent<cro::Transform>().getPosition().z;
+                float currentDistance = LayerDepth - position;
+                currentDistance /= TotalDistance;
+
+                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI * currentDistance);
+            };
 
             //placeholder for player model
             //don't worry about mis-matching colour IDs... well be setting avatars differently
@@ -922,7 +944,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
 
             root.getComponent<Player>().avatar = playerEnt;
-            root.getComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());
+            root.getComponent<cro::Transform>().addChild(camController.getComponent<cro::Transform>());
             root.getComponent<cro::Transform>().addChild(playerEnt.getComponent<cro::Transform>());
 
 
@@ -953,6 +975,9 @@ void GameState::spawnPlayer(PlayerInfo info)
                             break;
                         case Player::State::Walking:
                             ImGui::Text("State: Walking");
+                            break;
+                        case Player::State::Teleport:
+                            ImGui::Text("Teleporting");
                             break;
                         }
 

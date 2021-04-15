@@ -83,7 +83,10 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     //apply gravity
     player.velocity.y = std::max(player.velocity.y + (Gravity * ConstVal::FixedGameUpdate), MaxGravity);
 
-    tx.move(player.velocity * ConstVal::FixedGameUpdate);
+    //adjust for the fact we're looking from behind on the second layer
+    auto movement = player.velocity;
+    movement.x *= Util::direction(player.collisionLayer);
+    tx.move(movement * ConstVal::FixedGameUpdate);
 
     player.previousInputFlags = input.buttonFlags;
 }

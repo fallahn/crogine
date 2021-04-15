@@ -67,6 +67,11 @@ namespace ConstVal
 
 namespace Util
 {
+    static inline std::int32_t direction(std::int32_t i)
+    {
+        return (1 + (i * -2));
+    }
+
     static inline std::vector<std::uint8_t> createStringPacket(const cro::String& str)
     {
         std::uint8_t size = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, str.size() * sizeof(std::uint32_t)));

@@ -153,6 +153,7 @@ void GameState::netBroadcast()
                     update.playerID = player.id;
                     update.state = player.state;
                     update.collisionFlags = player.collisionFlags;
+                    update.collisionLayer = player.collisionLayer;
                     update.prevInputFlags = player.previousInputFlags;
 
                     m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::PlayerUpdate, update, cro::NetFlag::Unreliable);
@@ -345,7 +346,7 @@ void GameState::buildWorld()
         //add collision data to scene via filtered AABB tree
         for (auto i = 0; i < 2; ++i)
         {
-            float layerDepth = LayerDepth * (1 + (i * -2));
+            float layerDepth = LayerDepth * Util::direction(i);
 
             const auto& rects = mapData.getCollisionRects(i);
             for (const auto& rect : rects)

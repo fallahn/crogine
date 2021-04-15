@@ -169,6 +169,7 @@
     <ClCompile Include="src\MenuCreation.cpp" />
     <ClCompile Include="src\PauseState.cpp" />
     <ClCompile Include="src\PlayerStateFalling.cpp" />
+    <ClCompile Include="src\PlayerStateTeleport.cpp" />
     <ClCompile Include="src\PlayerSystem.cpp" />
     <ClCompile Include="src\PlayerStateWalking.cpp" />
     <ClCompile Include="src\ServerLobbyState.cpp" />

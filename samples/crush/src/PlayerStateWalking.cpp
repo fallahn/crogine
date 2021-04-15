@@ -108,7 +108,23 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
             player.state = Player::State::Falling;
         }
     }
-    tx.move(player.velocity * ConstVal::FixedGameUpdate);
+    
+    //adjust for the fact we're looking from behind on the second layer
+    auto movement = player.velocity;
+    movement.x *= Util::direction(player.collisionLayer);
+    tx.move(movement * ConstVal::FixedGameUpdate);
+
+
+    //check if we're over a teleport
+    if (player.collisionFlags & (1 << CollisionMaterial::Teleport))
+    {
+        if ((input.buttonFlags & InputFlag::Up)
+            && (player.previousInputFlags & InputFlag::Up) == 0)
+        {
+            player.state = Player::State::Teleport;
+        }
+    }
+
 
     player.previousInputFlags = input.buttonFlags;
 }

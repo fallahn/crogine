@@ -33,7 +33,8 @@ namespace Client::CommandID
 {
     enum
     {
-        Interpolated = 0x1,
-        SunMoonNode  = 0x2
+        Interpolated     = 0x1,
+        SunMoonNode      = 0x2,
+        CameraController = 0x4
     };
 }
