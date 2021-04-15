@@ -1,0 +1,16 @@
+model portal
+{
+    mesh = "assets/models/portal.cmb"
+    cast_shadows = true
+
+    material PBR
+    {
+        mask = "assets/images/portal_mask.png"
+        name = "Untitled"
+        colour = 0.913443,0.951327,0.934229,1.000000
+        smooth = true
+        repeat = true
+        blendmode = "none"
+
+    }
+}
