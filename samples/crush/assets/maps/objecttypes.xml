@@ -2,4 +2,5 @@
 <objecttypes>
  <objecttype name="Collision" color="#0000ff"/>
  <objecttype name="Player Size" color="#ff0000"/>
+ <objecttype name="Teleport" color="#00aa00"/>
 </objecttypes>

@@ -70,8 +70,8 @@ struct PlayerUpdate final
 struct ActorUpdate final
 {
     CompressedQuat rotation{};
-    glm::vec3 position = glm::vec3(0.f);
-    std::uint32_t serverID = 0;
+    CompressedVec3 position{};
+    std::uint16_t serverID = 0;
     std::int32_t timestamp = 0;
     std::int8_t actorID = -1;
 };

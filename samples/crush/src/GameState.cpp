@@ -724,6 +724,27 @@ void GameState::loadMap()
             mesh.boundingSphere.radius = 10.5f;
             mesh.vertexCount = static_cast<std::uint32_t>(verts.size() / vertComponentCount);
             mesh.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
+
+            //add it the teleport points
+            const auto& teleports = mapData.getTeleportRects(i);
+            for (const auto& rect : teleports)
+            {
+                entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
+                entity.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
+                entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(i + 1);
+
+                entity.addComponent<CollisionComponent>().rectCount = 1;
+                entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Teleport;
+                entity.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
+                entity.getComponent<CollisionComponent>().calcSum();
+
+                //TODO add some fancy model or sth
+
+#ifdef CRO_DEBUG_
+                addBoxDebug(entity, m_gameScene, cro::Colour::Magenta);
+#endif
+            }
         }
     }
     else
@@ -802,7 +823,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 e.getComponent<Actor>().serverEntityId == update.serverID)
             {
                 auto& interp = e.getComponent<InterpolationComponent>();
-                interp.setTarget({ update.position, cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
+                interp.setTarget({ cro::Util::Net::decompressVec3(update.position), cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
             }
         };
         m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -936,9 +957,22 @@ void GameState::spawnPlayer(PlayerInfo info)
                         }
 
                         ImGui::Text("Vel X: %3.3f", player.velocity.x);
+                        auto pos = root.getComponent<cro::Transform>().getPosition();
+                        ImGui::Text("Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
                     }
                     ImGui::End();
                 });
+
+            //create a 'shadow' so we can see the networked version of the player
+            auto entity = createActor();
+            md.createModel(entity, m_resources);
+
+            auto rot = entity.getComponent<cro::Transform>().getRotation();
+            entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour(0.1f,0.1f,0.1f));
+
+            entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
+            entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rot, info.timestamp));
 #endif
         }
 

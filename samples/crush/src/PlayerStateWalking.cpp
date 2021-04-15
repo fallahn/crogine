@@ -155,14 +155,24 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
             //body collision
             if (bodyRect.intersects(otherRect, overlap))
             {
+                //track which objects we're touching
                 player.collisionFlags |= ((1 << otherCollision.rects[i].material) & ~(1 << CollisionMaterial::Foot));
 
                 auto manifold = calcManifold(direction, overlap);
-                entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
-
-                if (manifold.normal.x != 0)
+                switch (otherCollision.rects[i].material)
                 {
-                    player.velocity = glm::reflect(player.velocity, glm::vec3(manifold.normal, 0.f)) * 0.1f;
+                default: break;
+                case CollisionMaterial::Solid:
+                    entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
+
+                    if (manifold.normal.x != 0)
+                    {
+                        player.velocity = glm::reflect(player.velocity, glm::vec3(manifold.normal, 0.f)) * 0.1f;
+                    }
+                    break;
+                case CollisionMaterial::Teleport:
+
+                    break;
                 }
             }
         }

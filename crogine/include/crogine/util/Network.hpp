@@ -117,7 +117,7 @@ namespace cro
             /*!
             \brief Compresses a 3 component vector into an array of 3 16 bit integers
             \param v The vector to compress
-            \param range The expected positive/negative range within which the component values
+            \param range The positive/negative range within which the component values
             are expected to fall
             \returns Array of 3 16 bit integers
             \see decompressVec3() compressFloat()
@@ -150,7 +150,7 @@ namespace cro
             /*!
             \brief Compresses a 2 component vector into an array of 2 16 bit integers
             \param v The vector to compress
-            \param range The expected positive/negative range within which the component values
+            \param range The positive/negative range within which the component values
             are expected to fall
             \returns Array of 2 16 bit integers
             \see decompressVec2() compressFloat()

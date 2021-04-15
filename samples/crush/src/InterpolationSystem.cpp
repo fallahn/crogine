@@ -76,7 +76,8 @@ void InterpolationSystem::process(float dt)
             if (currTime < 1)
             {
                 tx.setRotation(glm::slerp(interp.m_previousPoint.rotation, interp.m_targetPoint.rotation, currTime));
-                tx.setPosition(interp.m_previousPoint.position + (diff * currTime));
+                //tx.setPosition(interp.m_previousPoint.position + (diff * currTime));
+                tx.setPosition(glm::mix(interp.m_previousPoint.position, interp.m_targetPoint.position, currTime));
             }
             else
             {

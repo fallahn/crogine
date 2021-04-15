@@ -175,7 +175,7 @@ void GameState::netBroadcast()
         ActorUpdate update;
         update.actorID = actor.id;
         update.serverID = actor.serverEntityId;
-        update.position = tx.getWorldPosition();
+        update.position = cro::Util::Net::compressVec3(tx.getWorldPosition());
         update.rotation = cro::Util::Net::compressQuat(tx.getRotation());
         update.timestamp = timestamp;
 
@@ -323,7 +323,7 @@ void GameState::buildWorld()
                     auto avatar = m_scene.createEntity();
                     avatar.addComponent<cro::Transform>();
                     avatar.addComponent<Actor>().id = i + j;
-                    avatar.getComponent<Actor>().serverEntityId = m_playerEntities[i][j].getIndex();
+                    avatar.getComponent<Actor>().serverEntityId = static_cast<std::uint16_t>(m_playerEntities[i][j].getIndex());
 
                     m_playerEntities[i][j].getComponent<Player>().avatar = avatar;
                     m_playerEntities[i][j].getComponent<cro::Transform>().addChild(avatar.getComponent<cro::Transform>());
@@ -359,6 +359,20 @@ void GameState::buildWorld()
                 collisionEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Solid;
                 collisionEnt.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
                 collisionEnt.getComponent<CollisionComponent>().calcSum();
+            }
+
+            const auto& teleports = mapData.getTeleportRects(i);
+            for (const auto& rect : teleports)
+            {
+                auto entity = m_scene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
+                entity.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
+                entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(i + 1);
+
+                entity.addComponent<CollisionComponent>().rectCount = 1;
+                entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Teleport;
+                entity.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
+                entity.getComponent<CollisionComponent>().calcSum();
             }
         }
     }

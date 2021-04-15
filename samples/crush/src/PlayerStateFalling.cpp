@@ -124,11 +124,10 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
             //body collision
             if (bodyRect.intersects(otherRect, overlap))
             {
-                //set the flag to what we're touching as long as it's not a floor
+                //set the flag to what we're touching as long as it's not a foot
                 player.collisionFlags |= ((1 << otherCollision.rects[i].material) & ~(1 << CollisionMaterial::Foot));
 
                 auto manifold = calcManifold(direction, overlap);
-                entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
 
                 //foot collision
                 if (footRect.intersects(otherRect, overlap))
@@ -136,27 +135,40 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
                     player.collisionFlags |= (1 << CollisionMaterial::Foot);
                 }
 
-                if (player.collisionFlags & (1 << CollisionMaterial::Foot)
-                    && manifold.normal.y > 0
-                    && player.velocity.y <= 0) //don't land if jumped up near edge of a platform and still moving upwards
-                {
-                    player.state = Player::State::Walking;
-                    player.velocity.y = 0.f;
-                }
-                else
-                {
-                    if (manifold.normal.y < 0)
-                    {
-                        //bonk head
-                        player.velocity = glm::reflect(player.velocity, glm::vec3(manifold.normal, 0.f));
-                        player.velocity.x *= 0.5f;
-                        player.velocity.y *= 0.1f;
-                    }
 
+                switch (otherCollision.rects[i].material)
+                {
+                default: break;
+                case CollisionMaterial::Solid:
+                    //correct for position
+                    entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
+
+                    if (player.collisionFlags & (1 << CollisionMaterial::Foot)
+                        && manifold.normal.y > 0
+                        && player.velocity.y <= 0) //don't land if jumped up near edge of a platform and still moving upwards
+                    {
+                        player.state = Player::State::Walking;
+                        player.velocity.y = 0.f;
+                    }
                     else
                     {
-                        player.velocity.x *= 0.1f;
+                        if (manifold.normal.y < 0)
+                        {
+                            //bonk head
+                            player.velocity = glm::reflect(player.velocity, glm::vec3(manifold.normal, 0.f));
+                            player.velocity.x *= 0.5f;
+                            player.velocity.y *= 0.1f;
+                        }
+
+                        else
+                        {
+                            player.velocity.x *= 0.1f;
+                        }
                     }
+                    break;
+                case CollisionMaterial::Teleport:
+
+                    break;
                 }
             }
         }

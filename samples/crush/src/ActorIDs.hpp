@@ -51,5 +51,5 @@ namespace ActorID
 struct Actor final
 {
     std::int32_t id = -1;
-    std::uint32_t serverEntityId = 0;
+    std::uint16_t serverEntityId = 0;
 };
