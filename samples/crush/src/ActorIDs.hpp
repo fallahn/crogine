@@ -31,6 +31,7 @@ source distribution.
 
 #include <cstddef>
 #include <cstdint>
+#include <array>
 
 //it is important that players 0 - 3 are listed first so that
 //they match the indices into data arrays pertinent to their client
@@ -43,13 +44,21 @@ namespace ActorID
         PlayerOne = 0,
         PlayerTwo,
         PlayerThree,
-        PlayerFour
+        PlayerFour,
+
+        Crate
     };
 }
 
 
-struct Actor final
+struct Actor
 {
     std::int32_t id = -1;
     std::uint16_t serverEntityId = 0;
+};
+
+struct ActorSpawn : public Actor
+{
+    std::array<std::int16_t, 3u> position{};
+    std::int32_t timestamp = 0;
 };

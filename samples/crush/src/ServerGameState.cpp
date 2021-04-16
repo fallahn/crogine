@@ -41,6 +41,7 @@ source distribution.
 #include "ServerLog.hpp"
 #include "ServerState.hpp"
 #include "Collision.hpp"
+#include "CrateSystem.hpp"
 
 #include <crogine/core/Log.hpp>
 
@@ -163,7 +164,7 @@ void GameState::netBroadcast()
     }
 
     //broadcast other actor transforms
-    //TODO - remind me how we're filtering out reconcilable entities from this?
+    //remember this includes the avatar entities attached to players
     //don't send these until clients are all ready, a slow loading client
     //will get backed up messages from this which pops the message buffer :(
     auto timestamp = m_serverTime.elapsed().asMilliseconds();
@@ -223,6 +224,12 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
     //client said it was ready, so mark as ready
     m_sharedData.clients[playerID].ready = true;
 
+    //TODO send all the crates / other actors
+    for (auto spawn : m_crateSpawns)
+    {
+        spawnActor(ActorID::Crate, spawn);
+    }
+
     //TODO check all clients are ready and begin the game
 }
 
@@ -281,6 +288,7 @@ void GameState::initScene()
     m_scene.addSystem<cro::DynamicTreeSystem>(mb);
     m_scene.addSystem<ActorSystem>(mb);
     m_scene.addSystem<PlayerSystem>(mb);
+    m_scene.addSystem<CrateSystem>(mb);
 
     m_scene.addDirector<WeatherDirector>(m_sharedData.host);
 }
@@ -375,6 +383,12 @@ void GameState::buildWorld()
                 entity.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
                 entity.getComponent<CollisionComponent>().calcSum();
             }
+
+            const auto& crateSpawns = mapData.getCratePositions(i);
+            for (auto spawn : crateSpawns)
+            {
+                m_crateSpawns.push_back(glm::vec3(spawn, layerDepth));
+            }
         }
     }
     else
@@ -383,6 +397,42 @@ void GameState::buildWorld()
 
         endGame();
     }
+}
+
+void GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
+{
+    if (actorID <= ActorID::PlayerFour)
+    {
+        return;
+    }
+
+    //add to our scene
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.addComponent<Actor>().id = actorID;
+    entity.getComponent<Actor>().serverEntityId = static_cast<std::uint16_t>(entity.getIndex());
+
+    switch (actorID)
+    {
+    default: break;
+    case ActorID::Crate:
+
+        break;
+    }
+
+    //notify clients
+    ActorSpawn as;
+    as.id = actorID;
+    as.position = cro::Util::Net::compressVec3(position);
+    as.serverEntityId = static_cast<std::uint16_t>(entity.getIndex());
+    as.timestamp = m_serverTime.elapsed().asMilliseconds();
+
+    m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, as, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void GameState::removeEntity(std::uint32_t entityIndex)
+{
+    m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, entityIndex, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 void GameState::endGame()

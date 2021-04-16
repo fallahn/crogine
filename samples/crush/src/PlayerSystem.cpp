@@ -43,9 +43,8 @@ source distribution.
 
 #include <crogine/util/Network.hpp>
 
-PlayerSystem::PlayerSystem(cro::MessageBus& mb, bool isServer)
-    : cro::System       (mb, typeid(PlayerSystem)),
-    m_isServer          (isServer)
+PlayerSystem::PlayerSystem(cro::MessageBus& mb)
+    : cro::System       (mb, typeid(PlayerSystem))
 {
     requireComponent<Player>();
     requireComponent<cro::Transform>();

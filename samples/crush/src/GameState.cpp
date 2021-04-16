@@ -31,7 +31,6 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "PlayerSystem.hpp"
 #include "PacketIDs.hpp"
-#include "ActorIDs.hpp"
 #include "ClientCommandIDs.hpp"
 #include "InterpolationSystem.hpp"
 #include "ClientPacketData.hpp"
@@ -481,6 +480,11 @@ void GameState::loadAssets()
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
     m_materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
 
+
+    m_modelDefs[GameModelID::Crate].loadFromFile("assets/models/crate.cmt", m_resources);
+
+
+
 #ifdef CRO_DEBUG_
     m_debugViewTexture.create(512, 512);
 
@@ -829,6 +833,9 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
         break;
+    case PacketID::ActorSpawn:
+        spawnActor(packet.as<ActorSpawn>());
+        break;
     case PacketID::PlayerSpawn:
         //TODO we want to flag all these + world data
         //so we know to stop requesting world data
@@ -1072,6 +1079,32 @@ void GameState::spawnPlayer(PlayerInfo info)
 #ifdef CRO_DEBUG_
         addBoxDebug(entity, m_gameScene, cro::Colour::Magenta);
 #endif
+    }
+}
+
+void GameState::spawnActor(ActorSpawn as)
+{
+    if (as.id <= ActorID::PlayerFour)
+    {
+        return;
+    }
+    
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(cro::Util::Net::decompressVec3(as.position));
+    entity.addComponent<Actor>().id = as.id;
+    entity.getComponent<Actor>().serverEntityId = as.serverEntityId;
+
+    entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
+    entity.addComponent<InterpolationComponent>(InterpolationPoint(entity.getComponent<cro::Transform>().getPosition(), glm::quat(1.f, 0.f, 0.f, 0.f), as.timestamp));
+
+    switch (as.id)
+    {
+    default: 
+        LogW << "Spawned actor with unrecognised id " << as.id << std::endl;
+        break;
+    case ActorID::Crate:
+        m_modelDefs[GameModelID::Crate].createModel(entity, m_resources);
+        break;
     }
 }
 

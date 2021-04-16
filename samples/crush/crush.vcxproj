@@ -158,6 +158,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\CrateSystem.cpp" />
     <ClCompile Include="src\DayNightDirector.cpp" />
     <ClCompile Include="src\ErrorState.cpp" />
     <ClCompile Include="src\GameState.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="src\ClientPacketData.hpp" />
     <ClInclude Include="src\Collision.hpp" />
     <ClInclude Include="src\CommonConsts.hpp" />
+    <ClInclude Include="src\CrateSystem.hpp" />
     <ClInclude Include="src\DayNightDirector.hpp" />
     <ClInclude Include="src\DebugDraw.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />

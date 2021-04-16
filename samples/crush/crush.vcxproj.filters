@@ -76,6 +76,9 @@
     <Filter Include="Header Files\Client\shaders">
       <UniqueIdentifier>{dd43717a-706e-42b6-840c-72be7ea3b3f7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Server\Systems">
+      <UniqueIdentifier>{d7cf7123-7081-491d-8ada-7096fc843079}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -143,6 +146,9 @@
     </ClCompile>
     <ClCompile Include="src\PlayerStateTeleport.cpp">
       <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CrateSystem.cpp">
+      <Filter>Source Files\Server\Systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -262,6 +268,9 @@
     </ClInclude>
     <ClInclude Include="src\DebugDraw.hpp">
       <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CrateSystem.hpp">
+      <Filter>Header Files\Server\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

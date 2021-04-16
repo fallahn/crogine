@@ -34,6 +34,7 @@ source distribution.
 #include "InputParser.hpp"
 #include "ServerPacketData.hpp"
 #include "GameConsts.hpp"
+#include "ActorIDs.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConsoleClient.hpp>
@@ -109,5 +110,6 @@ private:
 
     void handlePacket(const cro::NetEvent::Packet&);
     void spawnPlayer(PlayerInfo);
+    void spawnActor(ActorSpawn);
     void updateView(cro::Camera&);
 };

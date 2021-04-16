@@ -29,26 +29,35 @@ source distribution.
 
 #pragma once
 
-#include <crogine/graphics/Rectangle.hpp>
+#include <crogine/ecs/System.hpp>
 
-#include <string>
-#include <vector>
+#include <crogine/detail/glm/vec3.hpp>
 
-class MapData final
+struct Crate final
+{
+    enum State
+    {
+        Idle, Falling, Ballistic,
+
+        Carried //technically invisible, just disable collision
+    }state = Falling;
+
+    std::uint8_t collisionLayer = 0;
+    glm::vec3 velocity = glm::vec3(0.f);
+};
+
+class CrateSystem final : public cro::System
 {
 public:
-    MapData();
+    explicit CrateSystem(cro::MessageBus&);
 
-    bool loadFromFile(const std::string&, bool binary = false);
-
-    const std::vector<cro::FloatRect>& getCollisionRects(std::size_t layer) const { return m_collisionRects[layer]; }
-    const std::vector<cro::FloatRect>& getTeleportRects(std::size_t layer) const { return m_teleportRects[layer]; }
-    const std::vector<glm::vec2>& getCratePositions(std::size_t layer) const { return m_crateSpawns[layer]; }
-    const std::vector<glm::vec2>& getSpawnPositions() const { return m_playerSpawns; }
+    void process(float) override;
 
 private:
-    std::array<std::vector<cro::FloatRect>, 2u> m_collisionRects;
-    std::array<std::vector<cro::FloatRect>, 2u> m_teleportRects;
-    std::array<std::vector<glm::vec2>, 2u> m_crateSpawns;
-    std::vector<glm::vec2> m_playerSpawns;
+
+    void processIdle(cro::Entity);
+    void processFalling(cro::Entity);
+    void processBallistic(cro::Entity);
+
+    std::vector<cro::Entity> doBroadPhase(cro::Entity);
 };

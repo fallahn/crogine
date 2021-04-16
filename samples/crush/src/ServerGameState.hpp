@@ -65,7 +65,7 @@ namespace sv
 
 
         std::array<glm::vec3, 4u> m_playerSpawns = {};
-
+        std::vector<glm::vec3> m_crateSpawns;
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);
@@ -73,6 +73,9 @@ namespace sv
 
         void initScene();
         void buildWorld();
+
+        void spawnActor(std::int32_t, glm::vec3);
+        void removeEntity(std::uint32_t);
 
         void endGame();
     };

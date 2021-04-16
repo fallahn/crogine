@@ -48,6 +48,9 @@ bool MapData::loadFromFile(const std::string& path, bool binary)
     m_teleportRects[0].clear();
     m_teleportRects[1].clear();
 
+    m_crateSpawns[0].clear();
+    m_crateSpawns[1].clear();
+
     m_playerSpawns.clear();
 
     if (!binary)
@@ -90,6 +93,10 @@ bool MapData::loadFromFile(const std::string& path, bool binary)
                                 {
                                     m_teleportRects[0].push_back(collisionBounds);
                                 }
+                                else if (type == "Crate")
+                                {
+                                    m_crateSpawns[0].emplace_back(collisionBounds.left + (collisionBounds.width / 2.f), collisionBounds.bottom + (collisionBounds.height / 2.f));
+                                }
                             }
                         }
                     }
@@ -122,6 +129,7 @@ bool MapData::loadFromFile(const std::string& path, bool binary)
             //dupe the rects just to test other layer building
             m_collisionRects[1] = m_collisionRects[0];
             m_teleportRects[1] = m_teleportRects[0];
+            m_crateSpawns[1] = m_crateSpawns[0];
 #endif
 
             return (!m_collisionRects[0].empty() && !m_teleportRects.empty() && m_playerSpawns.size() == 4);

@@ -63,7 +63,7 @@ namespace GameModelID
 {
     enum
     {
-
+        Crate,
 
         Count
     };
