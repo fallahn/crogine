@@ -1104,6 +1104,19 @@ void GameState::spawnActor(ActorSpawn as)
         break;
     case ActorID::Crate:
         m_modelDefs[GameModelID::Crate].createModel(entity, m_resources);
+#ifdef CRO_DEBUG_
+        {
+            auto dbEnt = m_gameScene.createEntity();
+            entity.getComponent<cro::Transform>().addChild(dbEnt.addComponent<cro::Transform>());
+            dbEnt.addComponent<CollisionComponent>().rectCount = 2;
+            dbEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
+            dbEnt.getComponent<CollisionComponent>().rects[0].bounds = CrateArea;
+            dbEnt.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
+            dbEnt.getComponent<CollisionComponent>().rects[1].bounds = CrateFoot;
+            dbEnt.getComponent<CollisionComponent>().calcSum();
+            addBoxDebug(dbEnt, m_gameScene, cro::Colour::Red);
+        }
+#endif
         break;
     }
 }

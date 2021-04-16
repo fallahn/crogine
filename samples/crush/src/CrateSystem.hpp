@@ -43,6 +43,7 @@ struct Crate final
     }state = Falling;
 
     std::uint8_t collisionLayer = 0;
+    std::uint8_t collisionFlags = 0;
     glm::vec3 velocity = glm::vec3(0.f);
 };
 

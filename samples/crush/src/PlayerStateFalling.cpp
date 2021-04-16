@@ -32,6 +32,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "CommonConsts.hpp"
 #include "Collision.hpp"
+#include "CrateSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -142,6 +143,16 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
                 switch (otherCollision.rects[i].material)
                 {
                 default: break;
+                case CollisionMaterial::Crate:
+                    if (e.getComponent<Crate>().state != Crate::State::Idle)
+                    {
+
+
+                        //only break if we died from a crate
+                        break;
+                    }
+                    //otherwise treat as solid
+                    [[fallthrough]];
                 case CollisionMaterial::Solid:
                     //correct for position
                     entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);

@@ -32,6 +32,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "CommonConsts.hpp"
 #include "Collision.hpp"
+#include "CrateSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -65,7 +66,7 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
             player.velocity.x -= Deceleration * multiplier;
             if (player.velocity.x <= 0)
             {
-                player.velocity.x = -0.1f;
+                player.velocity.x = -HardStopAmount;
             }
         }
         //moving left, so speed up to max vel
@@ -83,7 +84,7 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
             player.velocity.x += Deceleration * multiplier;
             if (player.velocity.x >= 0)
             {
-                player.velocity.x = 0.1f;
+                player.velocity.x = HardStopAmount;
             }
         }
         //moving right, so speed up to max vel
@@ -149,6 +150,11 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
 
     for (auto e : collisions)
     {
+        if (!e.isValid())
+        {
+            continue;
+        }
+
         auto otherPos = e.getComponent<cro::Transform>().getPosition();
         const auto& otherCollision = e.getComponent<CollisionComponent>();
         for (auto i = 0; i < otherCollision.rectCount; ++i)
@@ -178,6 +184,16 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
                 switch (otherCollision.rects[i].material)
                 {
                 default: break;
+                case CollisionMaterial::Crate:
+                    if (e.getComponent<Crate>().state != Crate::State::Idle)
+                    {
+
+
+                        //only break if we died from a crate
+                        break;
+                    }
+                    //otherwise treat as solid
+                    [[fallthrough]];
                 case CollisionMaterial::Solid:
                     entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
 

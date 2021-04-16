@@ -58,9 +58,12 @@ struct CollisionMaterial final
         Teleport,
         Crate,
         Body,
-        Foot
+        Foot,
+
+        Count
     };
 };
+static_assert(CollisionMaterial::Count < 9, "Make player and crate collision flags bigger");
 
 struct CollisionRect final
 {

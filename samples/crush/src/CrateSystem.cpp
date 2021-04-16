@@ -30,6 +30,7 @@ source distribution.
 #include "CrateSystem.hpp"
 #include "Collision.hpp"
 #include "GameConsts.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 
@@ -75,18 +76,92 @@ void CrateSystem::process(float)
 //private
 void CrateSystem::processIdle(cro::Entity)
 {
-
+    //test if foot is free and switch to falling
 }
 
-void CrateSystem::processFalling(cro::Entity)
+void CrateSystem::processFalling(cro::Entity entity)
 {
+    auto& crate = entity.getComponent<Crate>();
+    
     //apply gravity
+    crate.velocity.y = std::max(crate.velocity.y + (Gravity * ConstVal::FixedGameUpdate), MaxGravity);
 
     //move
+    entity.getComponent<cro::Transform>().move(crate.velocity * ConstVal::FixedGameUpdate);
 
-    //check foot sensor for ground collision
 
-    //check body sensor for ground/player collision
+
+    //collision update
+
+    auto collisions = doBroadPhase(entity);
+
+    auto position = entity.getComponent<cro::Transform>().getPosition();
+    const auto& collisionComponent = entity.getComponent<CollisionComponent>();
+
+    auto footRect = collisionComponent.rects[1].bounds;
+    footRect.left += position.x;
+    footRect.bottom += position.y;
+
+    auto bodyRect = collisionComponent.rects[0].bounds;
+    bodyRect.left += position.x;
+    bodyRect.bottom += position.y;
+
+    glm::vec2 centre = { bodyRect.left + (bodyRect.width / 2.f), bodyRect.bottom + (bodyRect.height / 2.f) };
+
+    for (auto e : collisions)
+    {
+        auto otherPos = e.getComponent<cro::Transform>().getPosition();
+        const auto& otherCollision = e.getComponent<CollisionComponent>();
+        for (auto i = 0; i < otherCollision.rectCount; ++i)
+        {
+            auto otherRect = otherCollision.rects[i].bounds;
+            otherRect.left += otherPos.x;
+            otherRect.bottom += otherPos.y;
+
+            glm::vec2 otherCentre = { otherRect.left + (otherRect.width / 2.f), otherRect.bottom + (otherRect.height / 2.f) };
+
+            glm::vec2 direction = otherCentre - centre;
+            cro::FloatRect overlap;
+
+            //crate collision
+            if (bodyRect.intersects(otherRect, overlap))
+            {
+                //set the flag to what we're touching as long as it's not a foot
+                crate.collisionFlags |= ((1 << otherCollision.rects[i].material) & ~(1 << CollisionMaterial::Foot));
+
+                auto manifold = calcManifold(direction, overlap);
+
+                //foot collision
+                if (footRect.intersects(otherRect, overlap))
+                {
+                    crate.collisionFlags |= (1 << CollisionMaterial::Foot);
+                }
+
+
+                switch (otherCollision.rects[i].material)
+                {
+                default: break;
+                case CollisionMaterial::Solid:
+                    //correct for position
+                    entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
+
+                    if (crate.collisionFlags & (1 << CollisionMaterial::Foot)
+                        && manifold.normal.y > 0) //landed from above
+                    {
+                        crate.state = Crate::State::Idle;
+                        crate.velocity.y = 0.f;
+                    }
+                    break;
+                case CollisionMaterial::Teleport:
+                    //nothing?
+                    break;
+                case CollisionMaterial::Body:
+                    //hit a player
+                    break;
+                }
+            }
+        }
+    }
 }
 
 void CrateSystem::processBallistic(cro::Entity)
@@ -100,6 +175,7 @@ void CrateSystem::processBallistic(cro::Entity)
 
 std::vector<cro::Entity> CrateSystem::doBroadPhase(cro::Entity entity)
 {
+    entity.getComponent<Crate>().collisionFlags = 0;
     auto position = entity.getComponent<cro::Transform>().getPosition();
 
     auto bb = CrateBounds;
