@@ -72,5 +72,3 @@ void PlayerStateTeleport::processCollision(cro::Entity, const std::vector<cro::E
 {
 
 }
-
-void PlayerStateTeleport::processAvatar(cro::Entity) {}

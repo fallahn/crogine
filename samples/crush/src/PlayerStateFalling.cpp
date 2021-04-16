@@ -177,8 +177,3 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
         }
     }
 }
-
-void PlayerStateFalling::processAvatar(cro::Entity)
-{
-
-}

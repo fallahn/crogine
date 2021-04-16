@@ -83,7 +83,7 @@ struct Player final
 class PlayerSystem final : public cro::System
 {
 public:
-    explicit PlayerSystem(cro::MessageBus&);
+    explicit PlayerSystem(cro::MessageBus&, bool isServer = false);
 
     void handleMessage(const cro::Message&) override;
 
@@ -92,6 +92,8 @@ public:
     void reconcile(cro::Entity, const PlayerUpdate&);
 
 private:
+
+    const bool m_isServer;
 
     std::array<std::unique_ptr<PlayerState>, Player::State::Count> m_playerStates;
     void processInput(cro::Entity);

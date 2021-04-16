@@ -1,0 +1,33 @@
+particle_system portal
+{
+    src = "assets/images/teleport.png"
+    blendmode = alpha
+    acceleration = 0.959000
+    gravity = 0.000000,-0.1000000
+    velocity = 0.000000,0.396999
+    spread = 0.000000
+    lifetime = 4.101000
+    lifetime_variance = 0.000000
+    colour = 207,14,255,255
+    random_initial_rotation = false
+    rotation_speed = 0.000000
+    scale_affector = 0.000000
+    size = 0.055000
+    emit_rate = 16.000000
+    emit_count = 4
+    spawn_radius = 0.300000
+    spawn_offset = 0.000000,0.300000
+    release_count = 0
+    inherit_rotation = true
+    frame_count = 8
+    animate = true
+    random_frame = true
+    framerate = 12.000000
+    forces 
+    {
+        force = 0.000000,0.000000
+        force = 0.000000,0.000000
+        force = 0.000000,0.000000
+        force = 0.000000,0.000000
+    }
+}

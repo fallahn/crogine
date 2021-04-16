@@ -52,6 +52,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/DynamicTreeComponent.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/components/Drawable2D.hpp>
 
@@ -61,6 +62,7 @@ source distribution.
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
@@ -277,6 +279,21 @@ bool GameState::handleEvent(const cro::Event& evt)
 
 void GameState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == MessageID::PlayerMessage)
+    {
+        const auto& data = msg.getData<PlayerEvent>();
+        if (data.type == PlayerEvent::Teleported)
+        {
+            auto player = data.player;
+            player.getComponent<Player>().avatar.getComponent<cro::ParticleEmitter>().start();
+        }
+        else if(data.type == PlayerEvent::Landed)
+        {
+            auto player = data.player;
+            player.getComponent<Player>().avatar.getComponent<cro::ParticleEmitter>().stop();
+        }
+    }
+
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
@@ -435,6 +452,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::RenderSystem2D>(mb);
+    m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
     m_gameScene.addDirector<DayNightDirector>();
 
@@ -447,7 +465,7 @@ void GameState::loadAssets()
 {
     m_environmentMap.loadFromFile("assets/images/cubemap/beach02.hdr");
     m_skyMap.loadFromFile("assets/images/cubemap/skybox.hdr");
-    m_gameScene.setCubemap(m_environmentMap);
+    m_gameScene.setCubemap(m_skyMap);
     //m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
 
 
@@ -551,6 +569,9 @@ void GameState::loadMap()
             cro::Colour(0.6f, 1.f, 0.6f),
             cro::Colour(1.f, 0.6f, 0.6f)
         };
+
+        cro::ModelDefinition portalModel;
+        portalModel.loadFromFile("assets/models/portal.cmt", m_resources, &m_environmentMap);
 
         //build the platform geometry
         for (auto i = 0; i < 2; ++i)
@@ -733,7 +754,7 @@ void GameState::loadMap()
             mesh.vertexCount = static_cast<std::uint32_t>(verts.size() / vertComponentCount);
             mesh.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
 
-            //add it the teleport points
+            //add in the teleport points
             const auto& teleports = mapData.getTeleportRects(i);
             for (const auto& rect : teleports)
             {
@@ -746,12 +767,13 @@ void GameState::loadMap()
                 entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Teleport;
                 entity.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
                 entity.getComponent<CollisionComponent>().calcSum();
-
-                //TODO add some fancy model or sth
-
 #ifdef CRO_DEBUG_
                 addBoxDebug(entity, m_gameScene, cro::Colour::Magenta);
 #endif
+                //model
+                entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
+                portalModel.createModel(entity, m_resources);
             }
         }
     }
@@ -881,6 +903,8 @@ void GameState::spawnPlayer(PlayerInfo info)
     cro::ModelDefinition md;
     md.loadFromFile("assets/models/player_box.cmt", m_resources, &m_environmentMap);
 
+    cro::EmitterSettings particles;
+    particles.loadFromFile("assets/particles/portal.xyp", m_resources.textures);
 
     if (info.connectionID == m_sharedData.clientConnection.connectionID)
     {
@@ -945,6 +969,8 @@ void GameState::spawnPlayer(PlayerInfo info)
             playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
             md.createModel(playerEnt, m_resources);
             playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
+
+            playerEnt.addComponent<cro::ParticleEmitter>().settings = particles;
 
             root.getComponent<Player>().avatar = playerEnt;
             root.getComponent<cro::Transform>().addChild(camController.getComponent<cro::Transform>());
@@ -1038,11 +1064,9 @@ void GameState::spawnPlayer(PlayerInfo info)
         entity.addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
         entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((info.playerID / 2) + 1);
 
-        entity.addComponent<CollisionComponent>().rectCount = 1;// 2;
+        entity.addComponent<CollisionComponent>().rectCount = 1;
         entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
         entity.getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
-        /*entity.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
-        entity.getComponent<CollisionComponent>().rects[1].bounds = FootBounds;*/
         entity.getComponent<CollisionComponent>().calcSum();
 
 #ifdef CRO_DEBUG_

@@ -379,7 +379,8 @@ void ParticleSystem::process(float dt)
         //go over again and remove dead particles with pop/swap
         for (auto i = 0u; i < emitter.m_nextFreeParticle; ++i)
         {
-            if (emitter.m_particles[i].lifetime < 0)
+            if (emitter.m_particles[i].lifetime < 0
+                || emitter.m_particles[i].frameID == emitter.settings.frameCount)
             {
                 emitter.m_nextFreeParticle--;
                 std::swap(emitter.m_particles[i], emitter.m_particles[emitter.m_nextFreeParticle]);                

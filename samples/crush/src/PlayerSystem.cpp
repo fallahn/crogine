@@ -43,8 +43,9 @@ source distribution.
 
 #include <crogine/util/Network.hpp>
 
-PlayerSystem::PlayerSystem(cro::MessageBus& mb)
-    : cro::System       (mb, typeid(PlayerSystem))
+PlayerSystem::PlayerSystem(cro::MessageBus& mb, bool isServer)
+    : cro::System       (mb, typeid(PlayerSystem)),
+    m_isServer          (isServer)
 {
     requireComponent<Player>();
     requireComponent<cro::Transform>();
@@ -137,7 +138,6 @@ void PlayerSystem::processInput(cro::Entity entity)
 
         m_playerStates[player.state]->processMovement(entity, player.inputStack[player.lastUpdatedInput]);
         processCollision(entity, player.state);
-        m_playerStates[player.state]->processAvatar(player.avatar);
 
         if (lastState != player.state)
         {
@@ -186,7 +186,7 @@ void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerStat
     std::vector<cro::Entity> collisions;
 
     //broadphase
-    auto entities = getScene()->getSystem<cro::DynamicTreeSystem>().query(bb/*, player.collisionLayer + 1*/);
+    auto entities = getScene()->getSystem<cro::DynamicTreeSystem>().query(bb, player.collisionLayer + 1);
     for (auto e : entities)
     {
         //make sure we skip our own ent
