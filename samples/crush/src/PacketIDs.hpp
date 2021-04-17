@@ -61,6 +61,7 @@ namespace PacketID
         StateChange, //< uint8 state ID
         LobbyUpdate, //< LobbyData struct, name string bytes
         ActorSpawn, //< ActorSpawn struct
+        CrateUpdate, //< CrateState struct
 
         PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
         PlayerUpdate, //< world pos, rotation, int32 timestamp - used for reconciliation, send directly to targeted peer

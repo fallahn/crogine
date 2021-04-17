@@ -34,7 +34,7 @@ source distribution.
 #include "ClientPacketData.hpp"
 #include "PlayerSystem.hpp"
 #include "ActorSystem.hpp"
-#include "ServerMessages.hpp"
+#include "Messages.hpp"
 #include "GameConsts.hpp"
 #include "WeatherDirector.hpp"
 #include "MapData.hpp"
@@ -76,7 +76,7 @@ GameState::GameState(SharedData& sd)
 
 void GameState::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == sv::MessageID::ConnectionMessage)
+    if (msg.id == MessageID::ConnectionMessage)
     {
         const auto& data = msg.getData<ConnectionEvent>();
         if (data.type == ConnectionEvent::Disconnected)
@@ -90,6 +90,21 @@ void GameState::handleMessage(const cro::Message& msg)
 
                     m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
+            }
+        }
+    }
+    else if (msg.id == MessageID::CrateMessge)
+    {
+        const auto& data = msg.getData<CrateEvent>();
+        if (data.type == CrateEvent::StateChanged)
+        {
+            if (data.crate.isValid())
+            {
+                CrateState state;
+                state.crateState = data.crate.getComponent<Crate>().state;
+                state.serverEntityID = static_cast<std::uint16_t>(data.crate.getIndex());
+
+                m_sharedData.host.broadcastPacket(PacketID::CrateUpdate, state, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
         }
     }
@@ -224,7 +239,7 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
     //client said it was ready, so mark as ready
     m_sharedData.clients[playerID].ready = true;
 
-    //TODO send all the crates / other actors
+    //send all the crates / other actors
     for (auto spawn : m_crateSpawns)
     {
         spawnActor(ActorID::Crate, spawn);

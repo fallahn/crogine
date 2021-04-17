@@ -221,9 +221,6 @@
     <ClInclude Include="src\InterpolationSystem.hpp">
       <Filter>Header Files\Client\systems</Filter>
     </ClInclude>
-    <ClInclude Include="src\ServerMessages.hpp">
-      <Filter>Header Files\Server</Filter>
-    </ClInclude>
     <ClInclude Include="src\ErrorState.hpp">
       <Filter>Header Files\Client\states</Filter>
     </ClInclude>

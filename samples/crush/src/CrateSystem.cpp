@@ -31,6 +31,7 @@ source distribution.
 #include "Collision.hpp"
 #include "GameConsts.hpp"
 #include "CommonConsts.hpp"
+#include "Messages.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 
@@ -54,6 +55,7 @@ void CrateSystem::process(float)
     for (auto& entity : entities)
     {
         const auto& crate = entity.getComponent<Crate>();
+        auto oldState = crate.state;
         switch (crate.state)
         {
         default: break;
@@ -70,6 +72,13 @@ void CrateSystem::process(float)
             processIdle(entity);
             break;
         }
+
+        if (crate.state != oldState)
+        {
+            auto* msg = postMessage<CrateEvent>(MessageID::CrateMessge);
+            msg->crate = entity;
+            msg->type = CrateEvent::StateChanged;
+        }
     }
 }
 
@@ -77,6 +86,7 @@ void CrateSystem::process(float)
 void CrateSystem::processIdle(cro::Entity)
 {
     //test if foot is free and switch to falling
+    //ie if the crate underneath was punted out
 }
 #include <iostream>
 void CrateSystem::processFalling(cro::Entity entity)
@@ -136,6 +146,14 @@ void CrateSystem::processFalling(cro::Entity entity)
                 switch (otherCollision.rects[i].material)
                 {
                 default: break;
+                case CollisionMaterial::Crate:
+                    if (e.getComponent<Crate>().state != Crate::State::Idle)
+                    {
+                        //ignore non-idle crates
+                        break;
+                    }
+                    //otherwise treat as solid
+                    [[fallthrough]];
                 case CollisionMaterial::Solid:
                     //correct for position
                     entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);

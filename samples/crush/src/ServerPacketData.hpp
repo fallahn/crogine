@@ -77,3 +77,9 @@ struct ActorUpdate final
     std::int32_t timestamp = 0;
     std::int8_t actorID = -1;
 };
+
+struct CrateState final
+{
+    std::uint16_t serverEntityID = 0;
+    std::int16_t crateState = -1;
+};

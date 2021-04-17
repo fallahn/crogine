@@ -216,7 +216,6 @@
     <ClInclude Include="src\ServerGameState.hpp" />
     <ClInclude Include="src\ServerLobbyState.hpp" />
     <ClInclude Include="src\ServerLog.hpp" />
-    <ClInclude Include="src\ServerMessages.hpp" />
     <ClInclude Include="src\ServerPacketData.hpp" />
     <ClInclude Include="src\ServerState.hpp" />
     <ClInclude Include="src\SharedStateData.hpp" />

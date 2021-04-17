@@ -38,7 +38,9 @@ namespace MessageID
     enum
     {
         UIMessage = cro::Message::Count,
-        PlayerMessage
+        PlayerMessage,
+        CrateMessge,
+        ConnectionMessage
     };
 }
 
@@ -71,4 +73,23 @@ struct PlayerEvent final
     }type = None;
 
     cro::Entity player;
+};
+
+struct CrateEvent final
+{
+    enum
+    {
+        StateChanged
+    }type = StateChanged;
+
+    cro::Entity crate;
+};
+
+struct ConnectionEvent final
+{
+    std::uint8_t playerID = 4;
+    enum
+    {
+        Connected, Disconnected
+    }type = Connected;
 };

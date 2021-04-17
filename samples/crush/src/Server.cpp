@@ -30,7 +30,7 @@ source distribution.
 #include "Server.hpp"
 #include "ServerGameState.hpp"
 #include "ServerLobbyState.hpp"
-#include "ServerMessages.hpp"
+#include "Messages.hpp"
 #include "PacketIDs.hpp"
 
 #include <crogine/core/Log.hpp>
@@ -263,7 +263,7 @@ std::uint8_t Server::addClient(const cro::NetEvent& evt)
             //so they can update lobby view.
             m_sharedData.host.broadcastPacket(PacketID::ClientConnected, i, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-            auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
+            auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(MessageID::ConnectionMessage);
             msg->playerID = i;
             msg->type = ConnectionEvent::Connected;
 
@@ -287,7 +287,7 @@ void Server::removeClient(const cro::NetEvent& evt)
         *result = sv::ClientConnection();
 
         auto playerID = std::distance(m_sharedData.clients.begin(), result);
-        auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
+        auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(MessageID::ConnectionMessage);
         msg->playerID = static_cast<std::uint8_t>(playerID);
         msg->type = ConnectionEvent::Disconnected;
 

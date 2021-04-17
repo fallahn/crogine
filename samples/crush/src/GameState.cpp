@@ -41,6 +41,7 @@ source distribution.
 #include "Collision.hpp"
 #include "DebugDraw.hpp"
 #include "Messages.hpp"
+#include "CrateSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -869,6 +870,21 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
         break;
+    case PacketID::CrateUpdate:
+    {
+        auto data = packet.as<CrateState>();
+        cro::Command cmd;
+        cmd.targetFlags = Client::CommandID::Interpolated;
+        cmd.action = [data](cro::Entity e, float)
+        {
+            if (e.getComponent<Actor>().serverEntityId == data.serverEntityID)
+            {
+                e.getComponent<Crate>().state = static_cast<Crate::State>(data.crateState);
+            }
+        };
+        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    }
+        break;
     case PacketID::ServerCommand:
     {
         auto data = packet.as<ServerCommand>();
@@ -1089,13 +1105,15 @@ void GameState::spawnActor(ActorSpawn as)
         return;
     }
     
+    auto position = cro::Util::Net::decompressVec3(as.position);
+
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(cro::Util::Net::decompressVec3(as.position));
+    entity.addComponent<cro::Transform>().setPosition(position);
     entity.addComponent<Actor>().id = as.id;
     entity.getComponent<Actor>().serverEntityId = as.serverEntityId;
 
     entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
-    entity.addComponent<InterpolationComponent>(InterpolationPoint(entity.getComponent<cro::Transform>().getPosition(), glm::quat(1.f, 0.f, 0.f, 0.f), as.timestamp));
+    entity.addComponent<InterpolationComponent>(InterpolationPoint(position, glm::quat(1.f, 0.f, 0.f, 0.f), as.timestamp));
 
     switch (as.id)
     {
@@ -1104,18 +1122,24 @@ void GameState::spawnActor(ActorSpawn as)
         break;
     case ActorID::Crate:
         m_modelDefs[GameModelID::Crate].createModel(entity, m_resources);
+
+        //add some collision properties which are updated from the server
+        //rather than simulated locally, so the player gets proper collision
+        //when the crate is idle
+        entity.addComponent<CollisionComponent>().rectCount = 2;
+        entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Crate;
+        entity.getComponent<CollisionComponent>().rects[0].bounds = CrateArea;
+        entity.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
+        entity.getComponent<CollisionComponent>().rects[1].bounds = CrateFoot;
+        entity.getComponent<CollisionComponent>().calcSum();
+
+        entity.addComponent<cro::DynamicTreeComponent>().setArea(CrateBounds);
+        entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(position.z > 0 ? 1 : 2);
+
+        entity.addComponent<Crate>();
+
 #ifdef CRO_DEBUG_
-        {
-            auto dbEnt = m_gameScene.createEntity();
-            entity.getComponent<cro::Transform>().addChild(dbEnt.addComponent<cro::Transform>());
-            dbEnt.addComponent<CollisionComponent>().rectCount = 2;
-            dbEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
-            dbEnt.getComponent<CollisionComponent>().rects[0].bounds = CrateArea;
-            dbEnt.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
-            dbEnt.getComponent<CollisionComponent>().rects[1].bounds = CrateFoot;
-            dbEnt.getComponent<CollisionComponent>().calcSum();
-            addBoxDebug(dbEnt, m_gameScene, cro::Colour::Red);
-        }
+        addBoxDebug(entity, m_gameScene, cro::Colour::Red);        
 #endif
         break;
     }
