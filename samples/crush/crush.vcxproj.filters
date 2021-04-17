@@ -269,5 +269,8 @@
     <ClInclude Include="src\CrateSystem.hpp">
       <Filter>Header Files\Server\systems</Filter>
     </ClInclude>
+    <ClInclude Include="src\PortalShader.hpp">
+      <Filter>Header Files\Client\shaders</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

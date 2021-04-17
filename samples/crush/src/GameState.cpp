@@ -82,6 +82,11 @@ source distribution.
 
 namespace
 {
+#include "PortalShader.hpp"
+
+    GLuint portalShader = 0;
+    GLint portalUniform = -1;
+
     //for debug output
     cro::Entity playerEntity;
     std::size_t bitrate = 0;
@@ -381,13 +386,15 @@ bool GameState::simulate(float dt)
         parser.update();
     }
 
-static float timeAccum = 0.f;
-timeAccum += dt;
-m_gameScene.setWaterLevel(std::sin(timeAccum * 0.9f) * 0.08f);
+    static float timeAccum = 0.f;
+    timeAccum += dt;
+    glCheck(glUseProgram(portalShader));
+    glCheck(glUniform1f(portalUniform, timeAccum * 0.01f));
+    
 
-m_gameScene.simulate(dt);
-m_uiScene.simulate(dt);
-return true;
+    m_gameScene.simulate(dt);
+    m_uiScene.simulate(dt);
+    return true;
 }
 
 void GameState::render()
@@ -463,12 +470,13 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
+    //skyboxes / environment
     m_environmentMap.loadFromFile("assets/images/cubemap/beach02.hdr");
     m_skyMap.loadFromFile("assets/images/cubemap/skybox.hdr");
     m_gameScene.setCubemap(m_skyMap);
     //m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
 
-
+    //materials
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, cro::ShaderResource::DiffuseColour | cro::ShaderResource::RxShadows);
     m_materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
@@ -482,9 +490,56 @@ void GameState::loadAssets()
     m_materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
 
 
+    m_resources.textures.load(TextureID::Portal, "assets/images/portal.png");
+    m_resources.textures.get(TextureID::Portal).setRepeated(true);
+    if (m_resources.shaders.loadFromString(ShaderID::Portal, PortalVertex, PortalFragment))
+    {
+        m_materialIDs[MaterialID::Portal] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Portal));
+        m_resources.materials.get(m_materialIDs[MaterialID::Portal]).setProperty("u_diffuseMap", m_resources.textures.get(TextureID::Portal));
+        m_resources.materials.get(m_materialIDs[MaterialID::Portal]).blendMode = cro::Material::BlendMode::Alpha;
+        portalShader = m_resources.shaders.get(ShaderID::Portal).getGLHandle();
+        portalUniform = m_resources.shaders.get(ShaderID::Portal).getUniformMap().at("u_time");
+    }
+
+    //model defs - don't forget to pass the env map here!
     m_modelDefs[GameModelID::Crate].loadFromFile("assets/models/box.cmt", m_resources, &m_environmentMap);
 
 
+
+    //create model geometry for portal field
+    m_meshIDs[MeshID::Portal] = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::UV0, 1, GL_TRIANGLE_STRIP));
+    auto& mesh = m_resources.meshes.getMesh(m_meshIDs[MeshID::Portal]);
+
+    constexpr float portalWidth = 0.75f;
+    constexpr float portalHeight = 1.f;
+    constexpr float portalDepth = -0.5f;
+
+    std::vector<float> verts = 
+    {
+        0.f,0.f,portalDepth,                   0.f,0.f,
+        portalWidth,0.f,portalDepth,           1.f,0.f,
+        0.f,portalHeight,portalDepth,          0.f,1.f,
+        portalWidth,portalHeight,portalDepth,  1.f,1.f
+    };
+    std::vector<std::uint32_t> indices =
+    {
+        0,1,2,3
+    };
+    const std::size_t vertComponentCount = 5;
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexData[0].ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    mesh.boundingBox[0] = { 0.f, 0.f, 0.01f };
+    mesh.boundingBox[1] = { portalWidth, portalHeight, -0.01f };
+    mesh.boundingSphere.radius = std::sqrt((portalWidth * portalWidth) + (portalHeight * portalHeight));
+    mesh.vertexCount = static_cast<std::uint32_t>(verts.size() / vertComponentCount);
+    mesh.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
 
 #ifdef CRO_DEBUG_
     m_debugViewTexture.create(512, 512);
@@ -781,6 +836,13 @@ void GameState::loadMap()
                 entity.getComponent<cro::Transform>().move({ rect.width / 2.f, 0.f, 0.f });
                 entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI* i);
                 portalModel.createModel(entity, m_resources);
+
+                //force field
+                entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
+                entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Portal]), m_resources.materials.get(m_materialIDs[MaterialID::Portal]));
+                entity.getComponent<cro::Transform>().move({ rect.width * i, 0.f, 0.f });
+                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI* i);
             }
         }
     }

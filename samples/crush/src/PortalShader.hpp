@@ -29,70 +29,37 @@ source distribution.
 
 #pragma once
 
-namespace MaterialID
-{
-    enum
+#include <string>
+
+static const std::string PortalVertex = 
+R"(
+    ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec2 a_texCoord0;
+
+    uniform mat4 u_worldViewMatrix;
+    uniform mat4 u_projectionMatrix;
+
+    uniform float u_time;
+
+    VARYING_OUT vec2 v_texCoord0;
+
+    void main()
     {
-        Default,
-        DefaultShadow,
-        Portal,
+        gl_Position = u_projectionMatrix * u_worldViewMatrix * a_position;
 
-        Count
-    };
-}
+        v_texCoord0 = a_texCoord0;
+        v_texCoord0.y -= u_time;
+    })";
 
-namespace MeshID
-{
-    enum
+static const std::string PortalFragment =
+R"(
+    uniform sampler2D u_diffuseMap;
+
+    VARYING_IN vec2 v_texCoord0;
+
+    OUTPUT
+
+    void main()
     {
-        Portal,
-
-        Count
-    };
-}
-
-namespace TextureID
-{
-    enum
-    {
-        Portal,
-
-
-        Count
-    };
-}
-
-namespace GameModelID
-{
-    enum
-    {
-        Crate,
-
-        Count
-    };
-}
-
-namespace FontID
-{
-
-}
-
-namespace ShaderID
-{
-    enum
-    {
-        Portal,
-
-        Count
-    };
-}
-
-namespace CommandID
-{
-
-}
-
-namespace AnimationID
-{
-
-}
+        FRAG_OUT = TEXTURE(u_diffuseMap, v_texCoord0);
+    })";
