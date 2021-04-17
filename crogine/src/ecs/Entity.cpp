@@ -77,7 +77,7 @@ const ComponentMask& Entity::getComponentMask() const
 
 bool Entity::isValid() const
 {
-    return (m_entityManager != nullptr && !destroyed());
+    return (m_entityManager != nullptr && m_entityManager->entityValid(*this));
 }
 
 void Entity::setLabel(const std::string& label)

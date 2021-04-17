@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/util/String.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -57,9 +58,11 @@ source distribution.
 
 #include <cstring>
 
+#include "Collision.hpp"
+
 namespace
 {
-    float someFloat = 10.f;
+
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -277,6 +280,7 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
+
 }
 
 void MenuState::createScene()

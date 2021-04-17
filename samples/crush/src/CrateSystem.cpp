@@ -78,7 +78,7 @@ void CrateSystem::processIdle(cro::Entity)
 {
     //test if foot is free and switch to falling
 }
-
+#include <iostream>
 void CrateSystem::processFalling(cro::Entity entity)
 {
     auto& crate = entity.getComponent<Crate>();
@@ -92,8 +92,8 @@ void CrateSystem::processFalling(cro::Entity entity)
 
 
     //collision update
-
     auto collisions = doBroadPhase(entity);
+
 
     auto position = entity.getComponent<cro::Transform>().getPosition();
     const auto& collisionComponent = entity.getComponent<CollisionComponent>();
@@ -106,8 +106,6 @@ void CrateSystem::processFalling(cro::Entity entity)
     bodyRect.left += position.x;
     bodyRect.bottom += position.y;
 
-    glm::vec2 centre = { bodyRect.left + (bodyRect.width / 2.f), bodyRect.bottom + (bodyRect.height / 2.f) };
-
     for (auto e : collisions)
     {
         auto otherPos = e.getComponent<cro::Transform>().getPosition();
@@ -118,9 +116,6 @@ void CrateSystem::processFalling(cro::Entity entity)
             otherRect.left += otherPos.x;
             otherRect.bottom += otherPos.y;
 
-            glm::vec2 otherCentre = { otherRect.left + (otherRect.width / 2.f), otherRect.bottom + (otherRect.height / 2.f) };
-
-            glm::vec2 direction = otherCentre - centre;
             cro::FloatRect overlap;
 
             //crate collision
@@ -129,7 +124,7 @@ void CrateSystem::processFalling(cro::Entity entity)
                 //set the flag to what we're touching as long as it's not a foot
                 crate.collisionFlags |= ((1 << otherCollision.rects[i].material) & ~(1 << CollisionMaterial::Foot));
 
-                auto manifold = calcManifold(direction, overlap);
+                auto manifold = calcManifold(bodyRect, otherRect, overlap);
 
                 //foot collision
                 if (footRect.intersects(otherRect, overlap))

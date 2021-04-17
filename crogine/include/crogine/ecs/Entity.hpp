@@ -198,14 +198,22 @@ namespace cro
         \brief Creates a new Entity
         */
         Entity createEntity();
+
         /*!
         \brief Destroys the given Entity
         */
         void destroyEntity(Entity);
+
         /*!
         \brief Returns true if the entity is destroyed or marked for destruction
         */
         bool entityDestroyed(Entity) const;
+
+        /*!
+        \brief Returns true if the given entity is associated with a valid manager
+        */
+        bool entityValid(Entity) const;
+
         /*!
         \brief Returns the entity at the given index if it exists TODO what if it doesn't?
         */

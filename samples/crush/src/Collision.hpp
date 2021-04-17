@@ -104,18 +104,63 @@ struct Manifold final
     float penetration = 0.f;
 };
 
-static inline Manifold calcManifold(glm::vec2 normal, cro::FloatRect overlap)
+static inline Manifold calcManifold(cro::FloatRect a, cro::FloatRect b, cro::FloatRect overlap)
 {
+    glm::vec2 centre = { a.left + (a.width / 2.f), a.bottom + (a.height / 2.f) };
+    glm::vec2 otherCentre = { b.left + (b.width / 2.f), b.bottom + (b.height / 2.f) };
+    glm::vec2 direction = otherCentre - centre;
+
     Manifold manifold;
     if (overlap.width < overlap.height)
     {
-        manifold.normal.x = (normal.x < 0) ? 1.f : -1.f;
         manifold.penetration = overlap.width;
+
+        if (direction.x < 0)
+        {
+            manifold.normal.x = 1.f;
+            if (a.left < b.left)
+            {
+                manifold.penetration += b.left - a.left;
+            }
+        }
+        else
+        {
+            manifold.normal.x = -1.f;
+
+            auto aRight = a.left + a.width;
+            auto bRight = b.left + b.width;
+            if (aRight > bRight)
+            {
+                manifold.penetration += aRight - bRight;
+            }
+        }
     }
     else
     {
-        manifold.normal.y = (normal.y < 0) ? 1.f : -1.f;
         manifold.penetration = overlap.height;
+
+        if (direction.y < 0)
+        {
+            manifold.normal.y = 1.f;
+
+            if (a.bottom < b.bottom)
+            {
+                //B must be contained because its centre is lower than As
+                manifold.penetration += b.bottom - a.bottom;
+            }
+        }
+        else
+        {
+            manifold.normal.y = -1.f;
+
+            auto aTop = a.bottom + a.height;
+            auto bTop = b.bottom + b.height;
+            if (aTop > bTop)
+            {
+                //B must be contained because its centre is higher than As
+                manifold.penetration += aTop - bTop;
+            }
+        }
     }
     return manifold;
 }

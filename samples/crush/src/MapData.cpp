@@ -33,6 +33,11 @@ source distribution.
 #include <tmxlite/Map.hpp>
 #include <tmxlite/ObjectGroup.hpp>
 
+namespace
+{
+    constexpr float MinGroundThickness = 2.f;
+}
+
 MapData::MapData()
 {
 
@@ -87,6 +92,12 @@ bool MapData::loadFromFile(const std::string& path, bool binary)
                                 auto type = rect.getType();
                                 if (type == "Collision")
                                 {
+                                    if (collisionBounds.bottom <= 0)
+                                    {
+                                        collisionBounds.bottom -= MinGroundThickness;
+                                        collisionBounds.height += MinGroundThickness;
+                                    }
+
                                     m_collisionRects[0].push_back(collisionBounds);
                                 }
                                 else if (type == "Teleport")

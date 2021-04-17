@@ -416,7 +416,7 @@ void GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
     {
     default: break;
     case ActorID::Crate:
-        entity.addComponent<Crate>().collisionLayer = position.x > 0 ? 0 : 1;
+        entity.addComponent<Crate>().collisionLayer = position.z > 0 ? 0 : 1;
 
         entity.addComponent<cro::DynamicTreeComponent>().setArea(CrateBounds);
         entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(position.z > 0 ? 1 : 2);

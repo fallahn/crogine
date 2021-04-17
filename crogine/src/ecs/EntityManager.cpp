@@ -122,7 +122,14 @@ bool EntityManager::entityDestroyed(Entity entity) const
     CRO_ASSERT(id < m_generations.size(), "Generation index out of range");
     CRO_ASSERT(id < m_destructionFlags.size(), "Generation index out of range");
     
-    return (m_generations[id] != entity.getGeneration() || m_destructionFlags[id]);
+    return (m_destructionFlags[id]);
+}
+
+bool EntityManager::entityValid(Entity entity) const
+{
+    const auto id = entity.getIndex();
+    CRO_ASSERT(id < m_generations.size(), "Generation index out of range");
+    return (m_generations[id] == entity.getGeneration());
 }
 
 Entity EntityManager::getEntity(Entity::ID id) const
