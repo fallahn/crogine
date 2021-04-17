@@ -481,7 +481,7 @@ void GameState::loadAssets()
     m_materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
 
 
-    m_modelDefs[GameModelID::Crate].loadFromFile("assets/models/crate.cmt", m_resources);
+    m_modelDefs[GameModelID::Crate].loadFromFile("assets/models/box.cmt", m_resources, &m_environmentMap);
 
 
 

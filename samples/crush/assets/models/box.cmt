@@ -1,0 +1,18 @@
+model box
+{
+    mesh = "assets/models/box.cmb"
+    cast_shadows = true
+
+    material PBR
+    {
+        mask = "assets/images/box_mask.png"
+        normal = "assets/images/box_normal.png"
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        blendmode = "none"
+        diffuse = "assets/images/box_colour.png"
+
+    }
+}

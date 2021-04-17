@@ -175,7 +175,6 @@ namespace cro
 
         ID m_id;
         EntityManager* m_entityManager;
-        bool m_destroyed;
         friend class EntityManager;
         friend class Scene;
     };
@@ -225,12 +224,6 @@ namespace cro
         T& addComponent(Entity, Args&&... args);
 
         /*!
-        \brief Removes this component type for the given Entity
-        */
-        /*template <typename T>
-        void removeComponent(Entity);*/
-
-        /*!
         \brief Returns true if the given Entity has a component of this type
         */
         template <typename T>
@@ -269,6 +262,14 @@ namespace cro
         */
         std::size_t getEntityCount() const { return m_entityCount; }
 
+        /*!
+        \brief Marks this entity for destruction
+        This doesn't actually destroy an entity, rather it is used by a Scene
+        to mark an entity as pending destruction.
+        */
+        void markDestroyed(Entity entity);
+
+
     private:
         MessageBus& m_messageBus;
         std::size_t m_initialPoolSize;
@@ -279,6 +280,7 @@ namespace cro
 
         std::size_t m_entityCount;
         std::vector<std::string> m_labels;
+        std::vector<bool> m_destructionFlags;
 
         ComponentManager& m_componentManager;
 

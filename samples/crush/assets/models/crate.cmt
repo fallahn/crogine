@@ -1,16 +1,16 @@
-model placeholder
+model box
 {
     mesh = "cube"
-    size = 0.500000,0.500000,0.5
+    size = 0.500000,0.500000,0.500000
     cast_shadows = true
 
     material PBR
     {
-        mask_colour = 1.000000,0.100000,1.000000,1.000000
-        name = "placeholder"
-        colour = 0.35,0.18,0.04,1.000000
+        mask = "assets/image/box_mask.png"
+        name = "box"
         smooth = true
         repeat = true
         blendmode = "none"
+        colour = 1,1,1,1
     }
 }

@@ -211,7 +211,7 @@ Entity Scene::createEntity()
 void Scene::destroyEntity(Entity entity)
 {
     m_destroyedBuffer.push_back(entity);
-    entity.m_destroyed = true;
+    m_entityManager.markDestroyed(entity);
 }
 
 Entity Scene::getEntity(Entity::ID id) const

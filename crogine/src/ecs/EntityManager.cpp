@@ -67,12 +67,15 @@ Entity EntityManager::createEntity()
         {
             m_componentMasks.resize(m_componentMasks.size() + MinComponentMasks);
             m_labels.resize(m_componentMasks.size());
+            m_destructionFlags.resize(m_componentMasks.size());
         }
     }
 
     CRO_ASSERT(idx < m_generations.size(), "Index out of range");
     Entity e(idx, m_generations[idx]);
     e.m_entityManager = this;
+
+    m_destructionFlags[idx] = false;
 
     m_entityCount++;
 
@@ -83,6 +86,7 @@ void EntityManager::destroyEntity(Entity entity)
 {
     const auto index = entity.getIndex();
     CRO_ASSERT(index < m_generations.size(), "Index out of range");
+    CRO_ASSERT(m_destructionFlags[index], "Not marked for destruction!");
 
     //if the generation doesn't match this entity is
     //already deleted
@@ -110,15 +114,15 @@ void EntityManager::destroyEntity(Entity entity)
         msg->entityID = index;
         msg->event = Message::SceneEvent::EntityDestroyed;
     }
-
 }
 
 bool EntityManager::entityDestroyed(Entity entity) const
 {
     const auto id = entity.getIndex();
     CRO_ASSERT(id < m_generations.size(), "Generation index out of range");
+    CRO_ASSERT(id < m_destructionFlags.size(), "Generation index out of range");
     
-    return (m_generations[id] != entity.getGeneration());
+    return (m_generations[id] != entity.getGeneration() || m_destructionFlags[id]);
 }
 
 Entity EntityManager::getEntity(Entity::ID id) const
@@ -154,4 +158,13 @@ const std::string& EntityManager::getLabel(Entity entity) const
     CRO_ASSERT(idx < m_labels.size(), "");
 
     return m_labels[idx];
+}
+
+void EntityManager::markDestroyed(Entity entity)
+{
+    const auto id = entity.getIndex();
+    CRO_ASSERT(id < m_generations.size(), "Generation index out of range");
+    CRO_ASSERT(id < m_destructionFlags.size(), "Generation index out of range");
+
+    m_destructionFlags[id] = true;
 }

@@ -7,7 +7,7 @@ model portal
     {
         mask = "assets/images/portal_mask.png"
         name = "Untitled"
-        colour = 0.913443,0.951327,0.934229,1.000000
+        colour = 0.333033,0.398230,0.368805,1.000000
         smooth = true
         repeat = true
         blendmode = "none"
