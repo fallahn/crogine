@@ -64,15 +64,18 @@ public:
 
     cro::Entity getEntity() const { return m_entity; }
 
+    void setEnabled(bool enabled) { m_enabled = enabled; }
+
 private:
     cro::NetClient& m_netClient;
-    
+    InputBinding m_inputBinding;  
+
+    bool m_enabled;
+
     std::uint16_t m_inputFlags;
     cro::Entity m_entity;
 
     cro::Clock m_timestampClock;
-
-    InputBinding m_inputBinding;
 
     std::uint16_t m_prevStick;
     float m_analogueAmount;

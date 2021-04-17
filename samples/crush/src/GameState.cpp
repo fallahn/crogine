@@ -778,6 +778,8 @@ void GameState::loadMap()
                 //model
                 entity = m_gameScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
+                entity.getComponent<cro::Transform>().move({ rect.width / 2.f, 0.f, 0.f });
+                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI* i);
                 portalModel.createModel(entity, m_resources);
             }
         }
@@ -902,6 +904,15 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         }
     }
     break;
+    case PacketID::GameMessage:
+        switch (packet.as<std::uint8_t>())
+        {
+        default: break;
+        case GameEvent::GameBegin:
+            startGame();
+            break;
+        }
+        break;
     case PacketID::ClientDisconnected:
         m_sharedData.playerData[packet.as<std::uint8_t>()].name.clear();
         break;
@@ -953,8 +964,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             root.getComponent<CollisionComponent>().calcSum();
 
             m_inputParsers.insert(std::make_pair(info.playerID, InputParser(m_sharedData.clientConnection.netClient, m_sharedData.inputBindings[info.playerID])));
-            m_inputParsers.at(info.playerID).setEntity(root);
-
+            m_inputParsers.at(info.playerID).setEntity(root); //remember this is initially disabled!
 
             m_cameras.emplace_back();
             m_cameras.back() = m_gameScene.createEntity();
@@ -1074,12 +1084,13 @@ void GameState::spawnPlayer(PlayerInfo info)
     {
         //spawn an avatar
         //TODO check this avatar doesn't already exist
+        //TODO add particle effect for teleport - probably want to send state change packets like with crate
         auto entity = createActor();
         md.createModel(entity, m_resources);
 
         auto rotation = entity.getComponent<cro::Transform>().getRotation();
         entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]); //TODO this is always the same on remote games?
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
@@ -1249,4 +1260,12 @@ void GameState::updateView(cro::Camera&)
     cam.viewport.bottom = (1.f - size.y) / 2.f;
     cam.viewport.height = size.y;
 
+}
+
+void GameState::startGame()
+{
+    for (auto& ip : m_inputParsers)
+    {
+        ip.second.setEnabled(true);
+    }
 }

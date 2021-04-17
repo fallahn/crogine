@@ -40,7 +40,8 @@ namespace MessageID
         UIMessage = cro::Message::Count,
         PlayerMessage,
         CrateMessge,
-        ConnectionMessage
+        ConnectionMessage,
+        GameMessage
     };
 }
 
@@ -92,4 +93,12 @@ struct ConnectionEvent final
     {
         Connected, Disconnected
     }type = Connected;
+};
+
+struct GameEvent final
+{
+    enum
+    {
+        GameBegin
+    }type = GameBegin;
 };

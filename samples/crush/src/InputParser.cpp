@@ -45,8 +45,9 @@ namespace
 
 InputParser::InputParser(cro::NetClient& nc, InputBinding binding)
     : m_netClient   (nc),
-    m_inputFlags    (0),
     m_inputBinding  (binding),
+    m_enabled       (false),
+    m_inputFlags    (0),
     m_prevStick     (0),
     m_analogueAmount(1.f)
 {
@@ -233,7 +234,8 @@ void InputParser::update()
         auto& player = m_entity.getComponent<Player>();
 
         Input input;
-        if (!player.waitResync)
+        if (m_enabled &&
+            !player.waitResync)
         {
             input.buttonFlags = m_inputFlags;
             input.analogueMultiplier = cro::Util::Net::compressFloat(m_analogueAmount, 8);
@@ -243,7 +245,7 @@ void InputParser::update()
         //apply to local entity
         player.inputStack[player.nextFreeInput] = input;
         player.nextFreeInput = (player.nextFreeInput + 1) % Player::HistorySize;
-        cro::Console::printStat("Flags", std::to_string(m_inputFlags));
+        //cro::Console::printStat("Flags", std::to_string(m_inputFlags));
 
         //broadcast packet
         InputUpdate update;

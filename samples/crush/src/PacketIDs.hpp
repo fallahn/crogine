@@ -60,13 +60,13 @@ namespace PacketID
         ConnectionAccepted, //< uint8 assigned connection ID (0-3)
         StateChange, //< uint8 state ID
         LobbyUpdate, //< LobbyData struct, name string bytes
-        ActorSpawn, //< ActorSpawn struct
-        CrateUpdate, //< CrateState struct
 
         PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
         PlayerUpdate, //< world pos, rotation, int32 timestamp - used for reconciliation, send directly to targeted peer
+        ActorSpawn, //< ActorSpawn struct
         ActorUpdate, //< uint8 ID pos, rotation - used for interpolation of other players and NPCs
-
+        CrateUpdate, //< CrateState struct
+        GameMessage, //< uint8 GameEvent::Type
         EntityRemoved, //< uint32 entity ID
 
         DayNightUpdate, //< compressed float with the current day/night time

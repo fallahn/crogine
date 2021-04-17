@@ -61,7 +61,7 @@ static const std::array PlayerSpawns =
 };
 
 //player view
-static constexpr float CameraHeight = 0.5f;
+static constexpr float CameraHeight = 1.5f;
 static constexpr float CameraDistance = 12.f;
 static constexpr std::uint32_t ReflectionMapSize = 512u;
 

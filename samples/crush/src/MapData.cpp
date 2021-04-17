@@ -92,6 +92,7 @@ bool MapData::loadFromFile(const std::string& path, bool binary)
                                 auto type = rect.getType();
                                 if (type == "Collision")
                                 {
+                                    //make sure ground surface meets the minimum thickness
                                     if (collisionBounds.bottom <= 0)
                                     {
                                         collisionBounds.bottom -= MinGroundThickness;

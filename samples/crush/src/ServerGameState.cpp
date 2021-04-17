@@ -108,6 +108,25 @@ void GameState::handleMessage(const cro::Message& msg)
             }
         }
     }
+    else if (msg.id == MessageID::GameMessage)
+    {
+        const auto& data = msg.getData<GameEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case GameEvent::GameBegin:
+            //send all the crates / other actors
+            for (auto spawn : m_crateSpawns)
+            {
+                spawnActor(ActorID::Crate, spawn);
+            }
+
+            //send packet to tell clients to begin the game
+            m_sharedData.host.broadcastPacket(PacketID::GameMessage, std::uint8_t(GameEvent::GameBegin), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            break;
+        }
+    }
 
     m_scene.forwardMessage(msg);
 }
@@ -239,13 +258,22 @@ void GameState::sendInitialGameState(std::uint8_t playerID)
     //client said it was ready, so mark as ready
     m_sharedData.clients[playerID].ready = true;
 
-    //send all the crates / other actors
-    for (auto spawn : m_crateSpawns)
+
+    //check all clients are ready and begin the game
+    bool ready = true;
+    for (const auto& client : m_sharedData.clients)
     {
-        spawnActor(ActorID::Crate, spawn);
+        if (client.connected && !client.ready)
+        {
+            ready = false;
+        }
     }
 
-    //TODO check all clients are ready and begin the game
+    if (ready)
+    {
+        auto* msg = m_sharedData.messageBus.post<GameEvent>(MessageID::GameMessage);
+        msg->type = GameEvent::GameBegin;
+    }
 }
 
 void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)

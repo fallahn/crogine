@@ -112,4 +112,6 @@ private:
     void spawnPlayer(PlayerInfo);
     void spawnActor(ActorSpawn);
     void updateView(cro::Camera&);
+
+    void startGame();
 };
