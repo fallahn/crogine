@@ -180,6 +180,7 @@ namespace cro
             SDL_GameController* controller = nullptr;
             SDL_Haptic* haptic = nullptr;
             bool rumble = false;
+            std::int32_t joystickID = -1; //event IDs don't actually match the controllers
         };
         static constexpr std::int32_t MaxControllers = 12;
 

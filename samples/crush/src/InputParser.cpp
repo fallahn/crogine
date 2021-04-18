@@ -40,7 +40,7 @@ source distribution.
 
 namespace
 {
-    const std::int16_t DeadZone = 5000;
+    const std::int16_t DeadZone = 8000;
 }
 
 InputParser::InputParser(cro::NetClient& nc, InputBinding binding)
@@ -139,7 +139,7 @@ void InputParser::handleEvent(const SDL_Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        if (evt.cbutton.which == m_inputBinding.controllerID)
+        if (evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
         {
             if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
             {
@@ -182,7 +182,7 @@ void InputParser::handleEvent(const SDL_Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.which == m_inputBinding.controllerID)
+        if (evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
         {
             if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
             {

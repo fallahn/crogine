@@ -109,6 +109,24 @@ namespace cro
         static constexpr std::int16_t AxisMin = -32768;
 
         /*!
+        \brief Returns the event ID associated with the controlelr at the given index
+        Events such as SDL_CONTROLLERBUTTONDOWN do not contain the ControllerID in the
+        button.which field, rather the underlying ID of the device. This function returns
+        that ID currently mapped to the given controller index (which may be -1 if the
+        controller is currently disconnected) and can be compared the the event data
+        to see which controller raise it.
+        \begincode
+            if(evt.button.which == cro::GameController::deviceID(controllerID))
+            {
+                //handle the event
+            }
+        \endcode
+        \param controllerID The ID of the controller, usually  0 - 3
+        \returns deviceID The ID of the device which corresponds to the given controller
+        */
+        static std::int32_t deviceID(std::int32_t controllerID);
+
+        /*!
         \brief Returns the current value of the requested axis on the requested
         controller index, if it exists, else returns zero.
         \param controllerIndex Index of the controller to query

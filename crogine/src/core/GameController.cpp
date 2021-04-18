@@ -33,6 +33,14 @@ source distribution.
 
 using namespace cro;
 
+std::int32_t GameController::deviceID(std::int32_t controllerID)
+{
+    CRO_ASSERT(App::m_instance, "No app running");
+    CRO_ASSERT(controllerID < App::MaxControllers, "");
+
+    return controllerID < 0 ? -1 : App::m_instance->m_controllers[controllerID].joystickID;
+}
+
 std::int16_t GameController::getAxisPosition(std::int32_t controllerIndex, std::int32_t axis)
 {
     CRO_ASSERT(App::m_instance, "No app running");
