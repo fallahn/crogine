@@ -44,7 +44,7 @@ class PlayerState
 {
 public:
     static constexpr float MaxVelocity = 10.f;
-    static constexpr float Acceleration = 1.2f;
+    static constexpr float Acceleration = 0.9f;// 1.2f;
     static constexpr float Deceleration = 16.f;
     static constexpr float Friction = Acceleration;
     static constexpr float AirAcceleration = Acceleration * 2.f;

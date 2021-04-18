@@ -92,6 +92,10 @@ namespace
     std::size_t bitrate = 0;
     std::size_t bitrateCounter = 0;
 
+    constexpr float PortalWidth = 1.6f;
+    constexpr float PortalHeight = 1.f;
+    constexpr float PortalDepth = -0.5f;
+
     //render flags for reflection passes
     std::size_t NextPlayerPlane = 0; //index into this array when creating new player
     const std::uint64_t NoPlanes = 0xFFFFFFFFFFFFFF00;
@@ -510,16 +514,14 @@ void GameState::loadAssets()
     m_meshIDs[MeshID::Portal] = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::UV0, 1, GL_TRIANGLE_STRIP));
     auto& mesh = m_resources.meshes.getMesh(m_meshIDs[MeshID::Portal]);
 
-    constexpr float portalWidth = 0.75f;
-    constexpr float portalHeight = 1.f;
-    constexpr float portalDepth = -0.5f;
+
 
     std::vector<float> verts = 
     {
-        0.f,0.f,portalDepth,                   0.f,0.f,
-        portalWidth,0.f,portalDepth,           1.f,0.f,
-        0.f,portalHeight,portalDepth,          0.f,1.f,
-        portalWidth,portalHeight,portalDepth,  1.f,1.f
+        0.f,0.f,PortalDepth,                   0.f,0.f,
+        PortalWidth,0.f,PortalDepth,           1.f,0.f,
+        0.f,PortalHeight,PortalDepth,          0.f,1.f,
+        PortalWidth,PortalHeight,PortalDepth,  1.f,1.f
     };
     std::vector<std::uint32_t> indices =
     {
@@ -536,8 +538,8 @@ void GameState::loadAssets()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     mesh.boundingBox[0] = { 0.f, 0.f, 0.01f };
-    mesh.boundingBox[1] = { portalWidth, portalHeight, -0.01f };
-    mesh.boundingSphere.radius = std::sqrt((portalWidth * portalWidth) + (portalHeight * portalHeight));
+    mesh.boundingBox[1] = { PortalWidth, PortalHeight, -0.01f };
+    mesh.boundingSphere.radius = std::sqrt((PortalWidth * PortalWidth) + (PortalHeight * PortalHeight));
     mesh.vertexCount = static_cast<std::uint32_t>(verts.size() / vertComponentCount);
     mesh.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
 
@@ -839,9 +841,9 @@ void GameState::loadMap()
 
                 //force field
                 entity = m_gameScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
+                entity.addComponent<cro::Transform>().setPosition({ rect.left - ((PortalWidth - rect.width) / 2.f), rect.bottom, layerDepth });
                 entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Portal]), m_resources.materials.get(m_materialIDs[MaterialID::Portal]));
-                entity.getComponent<cro::Transform>().move({ rect.width * i, 0.f, 0.f });
+                entity.getComponent<cro::Transform>().move({ PortalWidth * i, 0.f, 0.f });
                 entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI* i);
             }
         }
@@ -1113,7 +1115,7 @@ void GameState::spawnPlayer(PlayerInfo info)
                 });
 
             //create a 'shadow' so we can see the networked version of the player
-            auto entity = createActor();
+            /*auto entity = createActor();
             md.createModel(entity, m_resources);
 
             auto rot = entity.getComponent<cro::Transform>().getRotation();
@@ -1121,7 +1123,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour(0.1f,0.1f,0.1f));
 
             entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
-            entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rot, info.timestamp));
+            entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rot, info.timestamp));*/
 #endif
         }
 

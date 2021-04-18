@@ -5,7 +5,7 @@ model portal
 
     material PBR
     {
-        mask = "assets/images/portal_mask.png"
+        mask = "assets/images/portalframe_mask.png"
         name = "Untitled"
         colour = 0.333033,0.398230,0.368805,1.000000
         smooth = true

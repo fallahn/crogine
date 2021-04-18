@@ -158,6 +158,7 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
                     {
                         player.state = Player::State::Walking;
                         player.velocity.y = 0.f;
+                        player.velocity.x *= 0.4f;
                     }
                     else
                     {
