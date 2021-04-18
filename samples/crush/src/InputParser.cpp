@@ -268,10 +268,6 @@ void InputParser::checkControllerInput()
 {
     m_analogueAmount = 1.f;
 
-    if (m_inputBinding.controllerID >= SDL_NumJoysticks())
-    {
-        return;
-    }
     if (!cro::GameController::isConnected(m_inputBinding.controllerID))
     {
         return;

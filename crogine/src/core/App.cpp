@@ -160,35 +160,38 @@ App::App()
         m_instance = this;
 
         std::fill(m_controllers.begin(), m_controllers.end(), ControllerInfo());
-        for (auto i = 0; i < SDL_NumJoysticks() && i < MaxControllers; ++i)
-        {
-            if (SDL_IsGameController(i))
-            {
-                //add to game controllers
-                ControllerInfo ci;
-                ci.controller = SDL_GameControllerOpen(i);
-                if (ci.controller)
-                {
-                    ci.haptic = SDL_HapticOpen(i);
+        //controllers are automatically connected as the connect events are raised
+        //on start up. Must test if this is true on other platforms
 
-                    if (ci.haptic)
-                    {
-                        ci.rumble = (SDL_HapticRumbleInit(ci.haptic) == 0);
-                    }
+        //for (auto i = 0; i < SDL_NumJoysticks() && i < MaxControllers; ++i)
+        //{
+        //    if (SDL_IsGameController(i))
+        //    {
+        //        //add to game controllers
+        //        ControllerInfo ci;
+        //        ci.controller = SDL_GameControllerOpen(i);
+        //        if (ci.controller)
+        //        {
+        //            ci.haptic = SDL_HapticOpen(i);
 
-                    //the actual index is different to the id of the event
-                    auto* j = SDL_GameControllerGetJoystick(ci.controller);
-                    ci.joystickID = SDL_JoystickInstanceID(j);
+        //            if (ci.haptic)
+        //            {
+        //                ci.rumble = (SDL_HapticRumbleInit(ci.haptic) == 0);
+        //            }
 
-                    m_controllers[i] = ci;
-                }
-            }
-            else
-            {
-                //add to joysticks
-                m_joysticks.insert(std::make_pair(i, SDL_JoystickOpen(i)));
-            }
-        }
+        //            //the actual index is different to the id of the event
+        //            auto* j = SDL_GameControllerGetJoystick(ci.controller);
+        //            ci.joystickID = SDL_JoystickInstanceID(j);
+
+        //            m_controllers[i] = ci;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        //add to joysticks
+        //        m_joysticks.insert(std::make_pair(i, SDL_JoystickOpen(i)));
+        //    }
+        //}
 
         if (!AudioRenderer::init())
         {
@@ -465,7 +468,7 @@ void App::handleEvents()
                 }
                 
                 SDL_GameControllerClose(m_controllers[controllerIndex].controller);
-                m_controllers[id] = {};
+                m_controllers[controllerIndex] = {};
             }
 
             if (m_joysticks.count(id) > 0)
