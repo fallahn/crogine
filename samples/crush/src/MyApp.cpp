@@ -149,8 +149,6 @@ void MyApp::loadSettings()
         //TODO read controller/keyboard settings
         m_sharedData.inputBindings[1].keys =
         {
-            SDLK_HOME,
-            SDLK_PAGEUP,
             SDLK_KP_0,
             SDLK_RSHIFT,
             SDLK_DELETE,
@@ -165,13 +163,13 @@ void MyApp::loadSettings()
         m_sharedData.inputBindings[2].controllerID = 0;
         m_sharedData.inputBindings[2].keys =
         {
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+            -1, -1, -1, -1, -1, -1, -1, -1, -1
         };
 
         m_sharedData.inputBindings[3].controllerID = 1;
         m_sharedData.inputBindings[3].keys =
         {
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+            -1, -1, -1, -1, -1, -1, -1, -1, -1
         };
     }
     else
@@ -182,8 +180,6 @@ void MyApp::loadSettings()
 
         m_sharedData.inputBindings[1].keys =
         {
-            SDLK_HOME,
-            SDLK_PAGEUP,
             SDLK_KP_0,
             SDLK_RSHIFT,
             SDLK_DELETE,
@@ -198,15 +194,17 @@ void MyApp::loadSettings()
         m_sharedData.inputBindings[2].controllerID = 0;
         m_sharedData.inputBindings[2].keys =
         {
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+            -1, -1, -1, -1, -1, -1, -1, -1, -1
         };
 
         m_sharedData.inputBindings[3].controllerID = 1;
         m_sharedData.inputBindings[3].keys =
         {
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+            -1, -1, -1, -1, -1, -1, -1, -1, -1
         };
     }
+    m_sharedData.inputBindings[0].controllerID = 0;
+    m_sharedData.inputBindings[1].controllerID = 1;
 }
 
 void MyApp::saveSettings()

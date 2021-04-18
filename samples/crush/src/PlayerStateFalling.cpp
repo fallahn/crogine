@@ -76,7 +76,7 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     }
 
     //cut jump short if button released
-    if ((input.buttonFlags & InputFlag::Action) == 0)
+    if ((input.buttonFlags & InputFlag::Jump) == 0)
     {
         player.velocity.y = std::min(player.velocity.y, MinJump);
     }

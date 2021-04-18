@@ -43,10 +43,10 @@ namespace InputFlag
         Left       = 0x4,
         Right      = 0x8,
         CarryDrop  = 0x10,
-        Action     = 0x20,
-        WeaponNext = 0x40,
-        WeaponPrev = 0x80,
-        Strafe     = 0x100
+        Jump       = 0x20,
+        Punt       = 0x40,
+        Unused0    = 0x80,
+        Unused1    = 0x100
     };
 }
 
@@ -56,31 +56,29 @@ struct InputBinding final
     //button array as well as the key array
     enum
     {
-        ShowMap, ZoomMap, Action, CarryDrop, WeaponNext, WeaponPrev, Strafe, Left, Right, Up, Down, Count
+        Jump, CarryDrop, Punt, Unused0, Unused1, Left, Right, Up, Down, Count
     };
+
     std::array<std::int32_t, Count> keys =
     {
-        SDLK_m,
-        SDLK_z,
         SDLK_SPACE,
-        SDLK_LCTRL,
-        SDLK_e,
         SDLK_q,
+        SDLK_e,
+        SDLK_LCTRL,
         SDLK_LSHIFT,
         SDLK_a,
         SDLK_d,
         SDLK_w,
         SDLK_s
     };
-    std::array<std::int32_t, 7u> buttons =
+
+    std::array<std::int32_t, 5u> buttons =
     {
-        SDL_CONTROLLER_BUTTON_BACK,
-        SDL_CONTROLLER_BUTTON_X,
         SDL_CONTROLLER_BUTTON_A,
+        SDL_CONTROLLER_BUTTON_X,
         SDL_CONTROLLER_BUTTON_B,
         SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
-        SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
-        SDL_CONTROLLER_BUTTON_Y
+        SDL_CONTROLLER_BUTTON_RIGHTSHOULDER
     };
     std::int32_t controllerID = -1;
 };

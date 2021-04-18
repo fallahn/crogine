@@ -102,8 +102,8 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
     //jumpment
     if (player.collisionFlags & (1 << CollisionMaterial::Foot))
     {
-        if ((input.buttonFlags & InputFlag::Action)
-            && (player.previousInputFlags & InputFlag::Action) == 0)
+        if ((input.buttonFlags & InputFlag::Jump)
+            && (player.previousInputFlags & InputFlag::Jump) == 0)
         {
             player.velocity.y += JumpImpulse;
             player.state = Player::State::Falling;

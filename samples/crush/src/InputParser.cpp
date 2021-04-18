@@ -80,22 +80,22 @@ void InputParser::handleEvent(const SDL_Event& evt)
         {
             m_inputFlags |= InputFlag::CarryDrop;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Jump])
         {
-            m_inputFlags |= InputFlag::Action;
+            m_inputFlags |= InputFlag::Jump;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponPrev])
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Punt])
         {
-            m_inputFlags |= InputFlag::WeaponPrev;
+            m_inputFlags |= InputFlag::Punt;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponNext])
+        /*else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponNext])
         {
             m_inputFlags |= InputFlag::WeaponNext;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Strafe])
         {
             m_inputFlags |= InputFlag::Strafe;
-        }
+        }*/
     }
     else if (evt.type == SDL_KEYUP)
     {
@@ -119,48 +119,48 @@ void InputParser::handleEvent(const SDL_Event& evt)
         {
             m_inputFlags &= ~InputFlag::CarryDrop;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Jump])
         {
-            m_inputFlags &= ~InputFlag::Action;
+            m_inputFlags &= ~InputFlag::Jump;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponNext])
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Punt])
         {
-            m_inputFlags &= ~InputFlag::WeaponNext;
+            m_inputFlags &= ~InputFlag::Punt;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponPrev])
+        /*else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponPrev])
         {
             m_inputFlags &= ~InputFlag::WeaponPrev;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Strafe])
         {
             m_inputFlags &= ~InputFlag::Strafe;
-        }
+        }*/
 
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
         if (evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
         {
-            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
+            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Jump])
             {
-                m_inputFlags |= InputFlag::Action;
+                m_inputFlags |= InputFlag::Jump;
             }
             else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CarryDrop])
             {
                 m_inputFlags |= InputFlag::CarryDrop;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponNext])
+            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Punt])
             {
-                m_inputFlags |= InputFlag::WeaponNext;
+                m_inputFlags |= InputFlag::Punt;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
+            /*else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
             {
                 m_inputFlags |= InputFlag::WeaponPrev;
             }
             else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Strafe])
             {
                 m_inputFlags |= InputFlag::Strafe;
-            }
+            }*/
 
             else if (evt.cbutton.button == cro::GameController::DPadLeft)
             {
@@ -184,26 +184,26 @@ void InputParser::handleEvent(const SDL_Event& evt)
     {
         if (evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
         {
-            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
+            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Jump])
             {
-                m_inputFlags &= ~InputFlag::Action;
+                m_inputFlags &= ~InputFlag::Jump;
             }
             else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CarryDrop])
             {
                 m_inputFlags &= ~InputFlag::CarryDrop;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponNext])
+            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Punt])
             {
-                m_inputFlags &= ~InputFlag::WeaponNext;
+                m_inputFlags &= ~InputFlag::Punt;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
+            /*else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
             {
                 m_inputFlags &= ~InputFlag::WeaponPrev;
             }
             else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Strafe])
             {
                 m_inputFlags &= ~InputFlag::Strafe;
-            }
+            }*/
 
             else if (evt.cbutton.button == cro::GameController::DPadLeft)
             {
