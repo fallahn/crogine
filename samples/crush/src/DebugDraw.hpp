@@ -38,6 +38,7 @@ source distribution.
 
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/graphics/Colour.hpp>
 
@@ -82,6 +83,16 @@ static inline cro::Entity addBoxDebug(cro::Entity parent, cro::Scene& scene, cro
 
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setFilterFlags(TwoDeeFlags::Debug);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&,parent](cro::Entity e, float)
+    {
+        if (parent.destroyed())
+        {
+            e.getComponent<cro::Callback>().active = false;
+            scene.destroyEntity(e);
+        }
+    };
 
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

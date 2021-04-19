@@ -119,7 +119,32 @@ void GameState::handleMessage(const cro::Message& msg)
             break;
         }
     }
+    else if (msg.id == cro::Message::SceneMessage)
+    {
+        const auto& data = msg.getData<cro::Message::SceneEvent>();
+        if (data.event == cro::Message::SceneEvent::EntityDestroyed)
+        {
+            m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, data.entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+    }
+    else if (msg.id == MessageID::PlayerMessage)
+    {
+        const auto& data = msg.getData<PlayerEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case PlayerEvent::DroppedCrate:
+        {
+            auto& player = data.player.getComponent<Player>();
+            auto pos = CrateCarryOffset;
+            pos.x *= player.direction * Util::direction(player.collisionLayer);
+            pos += data.player.getComponent<cro::Transform>().getPosition();
 
+            spawnActor(ActorID::Crate, pos).getComponent<Crate>().owner = player.id;
+        }
+            break;
+        }
+    }
     m_scene.forwardMessage(msg);
 }
 
@@ -164,7 +189,7 @@ void GameState::netBroadcast()
     //send reconciliation for each player
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
-        if (m_sharedData.clients[i].ready/*.connected*/)
+        if (m_sharedData.clients[i].ready)
         {
             for (auto j = 0u; j < m_sharedData.clients[i].playerCount; ++j)
             {
@@ -182,6 +207,7 @@ void GameState::netBroadcast()
                     update.collisionFlags = player.collisionFlags;
                     update.collisionLayer = player.collisionLayer;
                     update.prevInputFlags = player.previousInputFlags;
+                    update.carryingCrate = player.carrying ? 1 : 0;
 
                     m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::PlayerUpdate, update, cro::NetFlag::Unreliable);
                 }
@@ -352,12 +378,17 @@ void GameState::buildWorld()
                 //insert requested players in this slot
                 for (auto j = 0u; j < m_sharedData.clients[i].playerCount && playerCount < ConstVal::MaxClients; ++j)
                 {
+                    auto position = m_playerSpawns[playerCount];
+
                     m_playerEntities[i][j] = m_scene.createEntity();
-                    m_playerEntities[i][j].addComponent<cro::Transform>().setPosition(m_playerSpawns[playerCount]);
+                    m_playerEntities[i][j].addComponent<cro::Transform>().setPosition(position);
                     m_playerEntities[i][j].addComponent<Player>().id = i + j;
                     m_playerEntities[i][j].getComponent<Player>().collisionLayer = playerCount / 2;
-                    m_playerEntities[i][j].getComponent<Player>().spawnPosition = m_playerSpawns[playerCount++];
+                    m_playerEntities[i][j].getComponent<Player>().spawnPosition = position;
                     m_playerEntities[i][j].getComponent<Player>().connectionID = i;
+                    m_playerEntities[i][j].getComponent<Player>().direction = position.x > 0 ? Player::Left : Player::Right;
+
+                    playerCount++;
 
                     //this controls the server side appearance
                     //such as height and animation which needs
@@ -368,6 +399,7 @@ void GameState::buildWorld()
                     avatar.addComponent<cro::Transform>();
                     avatar.addComponent<Actor>().id = i + j;
                     avatar.getComponent<Actor>().serverEntityId = static_cast<std::uint16_t>(m_playerEntities[i][j].getIndex());
+                    avatar.addComponent<PlayerAvatar>();
 
                     m_playerEntities[i][j].getComponent<Player>().avatar = avatar;
                     m_playerEntities[i][j].getComponent<cro::Transform>().addChild(avatar.getComponent<cro::Transform>());
@@ -434,11 +466,11 @@ void GameState::buildWorld()
     }
 }
 
-void GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
+cro::Entity GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
 {
     if (actorID <= ActorID::PlayerFour)
     {
-        return;
+        return {};
     }
 
     //add to our scene
@@ -473,6 +505,8 @@ void GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
     as.timestamp = m_serverTime.elapsed().asMilliseconds();
 
     m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, as, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    return entity;
 }
 
 void GameState::removeEntity(std::uint32_t entityIndex)

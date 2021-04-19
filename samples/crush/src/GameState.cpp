@@ -994,6 +994,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             
         entity.addComponent<Actor>().id = info.playerID;
         entity.getComponent<Actor>().serverEntityId = info.serverID;
+
         return entity;
     };
 
@@ -1016,6 +1017,8 @@ void GameState::spawnPlayer(PlayerInfo info)
             root.getComponent<Player>().connectionID = info.connectionID;
             root.getComponent<Player>().spawnPosition = info.spawnPosition;
             root.getComponent<Player>().collisionLayer = info.playerID / 2;
+            root.getComponent<Player>().local = true;
+            root.getComponent<Player>().direction = info.spawnPosition.x > 0 ? Player::Left : Player::Right;
 
             root.addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
             root.getComponent<cro::DynamicTreeComponent>().setFilterFlags((info.playerID / 2) + 1);
@@ -1066,8 +1069,17 @@ void GameState::spawnPlayer(PlayerInfo info)
             playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
             md.createModel(playerEnt, m_resources);
             playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
+            playerEnt.addComponent<PlayerAvatar>();
 
             playerEnt.addComponent<cro::ParticleEmitter>().settings = particles;
+
+            auto crateEnt = m_gameScene.createEntity();
+            crateEnt.addComponent<cro::Transform>().setPosition(CrateCarryOffset);
+            crateEnt.getComponent<cro::Transform>().move(playerEnt.getComponent<cro::Transform>().getOrigin());
+            m_modelDefs[GameModelID::Crate].createModel(crateEnt, m_resources);
+            playerEnt.getComponent<cro::Transform>().addChild(crateEnt.getComponent<cro::Transform>());
+            playerEnt.getComponent<PlayerAvatar>().crateEnt = crateEnt;
+
 
             root.getComponent<Player>().avatar = playerEnt;
             root.getComponent<cro::Transform>().addChild(camController.getComponent<cro::Transform>());
@@ -1220,6 +1232,7 @@ void GameState::spawnActor(ActorSpawn as)
         entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((position.z > 0 ? 1 : 2) | CollisionID::Crate);
 
         entity.addComponent<Crate>();
+        entity.addComponent<cro::Callback>().function = CrateCallback();
 
 #ifdef CRO_DEBUG_
         addBoxDebug(entity, m_gameScene, cro::Colour::Red);        

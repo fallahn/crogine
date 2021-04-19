@@ -97,6 +97,19 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input, cro::S
     {
         punt(entity, scene);
     }
+    //don't pick up AND punt in the same frame
+    else if ((input.buttonFlags & InputFlag::CarryDrop)
+        && (player.previousInputFlags & InputFlag::CarryDrop) == 0)
+    {
+        if (player.carrying)
+        {
+            drop(entity, scene);
+        }
+        else
+        {
+            carry(entity, scene);
+        }
+    }
 
     player.previousInputFlags = input.buttonFlags;
 }

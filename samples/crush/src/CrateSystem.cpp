@@ -91,8 +91,11 @@ void CrateSystem::process(float)
 }
 
 //private
-void CrateSystem::processIdle(cro::Entity)
+void CrateSystem::processIdle(cro::Entity entity)
 {
+    auto& crate = entity.getComponent<Crate>();
+    crate.owner = -1; //set this here to just make sure it's not missed by any state switch
+
     //test if foot is free and switch to falling
     //ie if the crate underneath was punted out
 }

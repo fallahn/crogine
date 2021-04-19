@@ -115,3 +115,9 @@ T& Scene::addPostProcess(Args&&... args)
 
     return *dynamic_cast<T*>(m_postEffects.back().get());
 }
+
+template <typename T>
+T* Scene::postMessage(cro::Message::ID id)
+{
+    return m_messageBus.post<T>(id);
+}

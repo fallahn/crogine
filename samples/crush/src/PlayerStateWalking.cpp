@@ -136,6 +136,19 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input, cro::S
     {
         punt(entity, scene);
     }
+    //don't pick up AND punt in the same frame
+    else if ((input.buttonFlags & InputFlag::CarryDrop)
+        && (player.previousInputFlags & InputFlag::CarryDrop) == 0)
+    {
+        if (player.carrying)
+        {
+            drop(entity, scene);
+        }
+        else
+        {
+            carry(entity, scene);
+        }
+    }
 
     player.previousInputFlags = input.buttonFlags;
 }
@@ -192,9 +205,7 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
                 case CollisionMaterial::Crate:
                     if (e.getComponent<Crate>().state != Crate::State::Idle)
                     {
-
-
-                        //only break if we died from a crate
+                        //only break if crate is moving
                         break;
                     }
                     //otherwise treat as solid

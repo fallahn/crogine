@@ -30,6 +30,8 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/detail/glm/vec3.hpp>
 
@@ -41,6 +43,8 @@ struct Crate final
 
         Carried //technically invisible, just disable collision
     }state = Falling;
+
+    std::int32_t owner = -1;
 
     std::uint8_t collisionLayer = 0;
     std::uint8_t collisionFlags = 0;
@@ -61,4 +65,26 @@ private:
     void processBallistic(cro::Entity);
 
     std::vector<cro::Entity> doBroadPhase(cro::Entity);
+};
+
+//client side effect of hiding picked up crates and restoring
+//them if the server doesn't remove the entity
+class CrateCallback final
+{
+public:
+    void operator()(cro::Entity e, float dt)
+    {
+        e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+        m_timeout -= 0.4f;
+
+        if (m_timeout < 0)
+        {
+            m_timeout = 0.4f;
+            e.getComponent<cro::Callback>().active = false;
+            e.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+        }
+    };
+
+private:
+    float m_timeout = 0.4f;
 };

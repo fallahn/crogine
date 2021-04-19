@@ -74,7 +74,7 @@ namespace sv
         void initScene();
         void buildWorld();
 
-        void spawnActor(std::int32_t, glm::vec3);
+        cro::Entity spawnActor(std::int32_t, glm::vec3);
         void removeEntity(std::uint32_t);
 
         void startGame();

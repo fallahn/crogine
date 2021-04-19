@@ -70,7 +70,8 @@ struct PlayerEvent final
         None,
         Teleported,
         Landed,
-        Jumped
+        Jumped,
+        DroppedCrate
     }type = None;
 
     cro::Entity player;

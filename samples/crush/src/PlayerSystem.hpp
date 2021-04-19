@@ -51,7 +51,7 @@ struct Player final
 
     std::uint16_t previousInputFlags = 0;
 
-    std::size_t collisionLayer = 0; //index into the collision data depending on which layer we're on
+    std::uint8_t collisionLayer = 0; //index into the collision data depending on which layer we're on
     struct State final
     {
         enum
@@ -70,19 +70,27 @@ struct Player final
     std::uint8_t collisionFlags = 0;
 
     glm::vec3 velocity = glm::vec3(0.f);
-    //this is inferred from velocity. Will sync this if necessary
+    //this is inferred from input. Will sync this if necessary
     enum Direction
     {
-        Left, Right
+        Left = -1, Right = 1
     }direction = Right;
 
     std::uint8_t id = 4; //this should be the same as the ActorID for this entity
     std::uint8_t connectionID = 4;
     glm::vec3 spawnPosition = glm::vec3(0.f);
 
+    bool carrying = false; //carrying a crate
     bool waitResync = false; //waiting to resync player with server
+    bool local = false; //server instance or client
 
     cro::Entity avatar;
+};
+
+struct PlayerAvatar final
+{
+    float rotation = 0.f;
+    cro::Entity crateEnt;
 };
 
 class PlayerSystem final : public cro::System

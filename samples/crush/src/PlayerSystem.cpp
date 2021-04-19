@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 
 #include <crogine/util/Network.hpp>
+#include <crogine/util/Maths.hpp>
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
     : cro::System       (mb, typeid(PlayerSystem))
@@ -71,6 +72,11 @@ void PlayerSystem::process(float)
 
 void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
 {
+    //TODO store the current state first so we can compare it to the
+    //result of this. Then if the server overrides holding a crate for
+    //example, we can make sure to remove any client side representation
+    //or add it if it's needed
+
     if (entity.isValid())
     {
         auto& tx = entity.getComponent<cro::Transform>();
@@ -86,6 +92,7 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
         player.collisionLayer = update.collisionLayer;
         player.collisionFlags = update.collisionFlags;
         player.previousInputFlags = update.prevInputFlags;
+        player.carrying = (update.carryingCrate != 0);
 
         //rewind player's last input to timestamp and
         //re-process all succeeding events
@@ -117,6 +124,8 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
 
         processInput(entity);
     }
+
+    //TODO update the state of the avatar crate depending on the carry flag
 }
 
 //private
@@ -163,6 +172,23 @@ void PlayerSystem::processInput(cro::Entity entity)
         }
 
         player.lastUpdatedInput = (player.lastUpdatedInput + 1) % Player::HistorySize;
+    }
+
+
+    //update the avatar (which in turn is sent to client actors)
+    auto& avatar = player.avatar.getComponent<PlayerAvatar>();
+
+    auto targetRotation = cro::Util::Const::PI;
+    targetRotation *= 1 - ((player.direction + 1) / 2);
+    targetRotation += cro::Util::Const::PI * player.collisionLayer;
+
+    avatar.rotation += cro::Util::Maths::shortestRotation(avatar.rotation, targetRotation) * 20.f * ConstVal::FixedGameUpdate;
+    player.avatar.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, avatar.rotation);
+
+    if (player.local)
+    {
+        float scale = player.carrying ? 1.f : 0.f;
+        avatar.crateEnt.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     }
 }
 

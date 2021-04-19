@@ -66,6 +66,11 @@ public:
     virtual void processCollision(cro::Entity, const std::vector<cro::Entity>&) = 0;
 
     void punt(cro::Entity, cro::Scene&);
+    void carry(cro::Entity, cro::Scene&);
+    void drop(cro::Entity, cro::Scene&);
+
+private:
+    std::vector<cro::Entity> doBroadPhase(cro::Entity, cro::Scene&);
 };
 
 class PlayerStateFalling final : public PlayerState
