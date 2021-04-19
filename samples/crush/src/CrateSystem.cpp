@@ -98,6 +98,36 @@ void CrateSystem::processIdle(cro::Entity entity)
 
     //test if foot is free and switch to falling
     //ie if the crate underneath was punted out
+    auto collisions = doBroadPhase(entity);
+    auto position = entity.getComponent<cro::Transform>().getPosition();
+    const auto& collisionComponent = entity.getComponent<CollisionComponent>();
+
+    auto footRect = collisionComponent.rects[1].bounds;
+    footRect.left += position.x;
+    footRect.bottom += position.y;
+
+    for (auto e : collisions)
+    {
+        auto otherPos = e.getComponent<cro::Transform>().getPosition();
+        const auto& otherCollision = e.getComponent<CollisionComponent>();
+        for (auto i = 0; i < otherCollision.rectCount; ++i)
+        {
+            auto otherRect = otherCollision.rects[i].bounds;
+            otherRect.left += otherPos.x;
+            otherRect.bottom += otherPos.y;
+
+            //foot collision
+            if (footRect.intersects(otherRect))
+            {
+                crate.collisionFlags |= (1 << CollisionMaterial::Foot);
+            }
+        }
+    }
+
+    if (crate.collisionFlags == 0)
+    {
+        crate.state = Crate::State::Falling;
+    }
 }
 
 void CrateSystem::processFalling(cro::Entity entity)
@@ -171,7 +201,7 @@ void CrateSystem::processFalling(cro::Entity entity)
 
                         if (crate.collisionFlags & (1 << CollisionMaterial::Foot)
                             && manifold.normal.y > 0
-                            && crate.velocity.y < -1) //landed from above
+                            && crate.velocity.y < 0) //landed from above
                         {
                             crate.state = Crate::State::Idle;
                             crate.velocity.y = 0.f;

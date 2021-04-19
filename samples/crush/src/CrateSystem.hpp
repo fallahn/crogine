@@ -75,7 +75,7 @@ public:
     void operator()(cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-        m_timeout -= 0.4f;
+        m_timeout -= dt;
 
         if (m_timeout < 0)
         {

@@ -1063,7 +1063,6 @@ void GameState::spawnPlayer(PlayerInfo info)
             };
 
             //placeholder for player model
-            //don't worry about mis-matching colour IDs... well be setting avatars differently
 
             auto playerEnt = m_gameScene.createEntity();
             playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });

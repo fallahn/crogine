@@ -84,7 +84,6 @@ void PlayerState::carry(cro::Entity entity, cro::Scene& scene)
             if (!player.local)
             {
                 scene.destroyEntity(other);
-                player.carrying = true;
             }
             else
             {
@@ -93,6 +92,7 @@ void PlayerState::carry(cro::Entity entity, cro::Scene& scene)
                 //time if the server hasn't remotely deleted it.
                 other.getComponent<cro::Callback>().active = true;
             }
+            player.carrying = true;
             break;
         }
     }
@@ -122,13 +122,13 @@ std::vector<cro::Entity> PlayerState::doBroadPhase(cro::Entity entity, cro::Scen
     auto bb = PlayerBounds;
     bb += position;
 
-    float puntDir = PuntOffset * Util::direction(player.collisionLayer);
-    puntDir *= player.direction;
+    float searchDir = PuntOffset * Util::direction(player.collisionLayer);
+    searchDir *= player.direction;
 
-    auto puntArea = PuntArea;
-    puntArea.left += puntDir;
-    puntArea.left += position.x;
-    puntArea.bottom += position.y;
+    auto searchArea = PuntArea;
+    searchArea.left += searchDir;
+    searchArea.left += position.x;
+    searchArea.bottom += position.y;
 
     std::vector<cro::Entity> collisions;
 
@@ -144,7 +144,7 @@ std::vector<cro::Entity> PlayerState::doBroadPhase(cro::Entity entity, cro::Scen
         otherBounds.left += otherPos.x;
         otherBounds.bottom += otherPos.y;
 
-        if (puntArea.intersects(otherBounds))
+        if (searchArea.intersects(otherBounds))
         {
             collisions.push_back(other);
         }
