@@ -135,7 +135,7 @@ void PlayerSystem::processInput(cro::Entity entity)
     {
         auto lastState = player.state;
 
-        m_playerStates[player.state]->processMovement(entity, player.inputStack[player.lastUpdatedInput]);
+        m_playerStates[player.state]->processMovement(entity, player.inputStack[player.lastUpdatedInput], *getScene());
         processCollision(entity, player.state);
 
         if (lastState != player.state)

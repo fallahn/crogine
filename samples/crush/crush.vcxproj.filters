@@ -150,6 +150,9 @@
     <ClCompile Include="src\CrateSystem.cpp">
       <Filter>Source Files\Server\Systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\PlayerState.cpp">
+      <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">

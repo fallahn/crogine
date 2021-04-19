@@ -32,6 +32,7 @@ source distribution.
 #include "InputParser.hpp"
 
 #include <crogine/ecs/Entity.hpp>
+#include <crogine/graphics/Rectangle.hpp>
 
 #include <vector>
 
@@ -55,11 +56,16 @@ public:
 
     static constexpr float TeleportSpeed = 10.f;
 
+    static constexpr float PuntOffset = 0.4f;
+    static const cro::FloatRect PuntArea;
+
     PlayerState() = default;
     virtual ~PlayerState() = default;
 
-    virtual void processMovement(cro::Entity, Input) = 0;
+    virtual void processMovement(cro::Entity, Input, cro::Scene&) = 0;
     virtual void processCollision(cro::Entity, const std::vector<cro::Entity>&) = 0;
+
+    void punt(cro::Entity, cro::Scene&);
 };
 
 class PlayerStateFalling final : public PlayerState
@@ -67,7 +73,7 @@ class PlayerStateFalling final : public PlayerState
 public:
     PlayerStateFalling();
 
-    void processMovement(cro::Entity, Input) override;
+    void processMovement(cro::Entity, Input, cro::Scene&) override;
     void processCollision(cro::Entity, const std::vector<cro::Entity>&) override;
 
 private:
@@ -78,7 +84,7 @@ class PlayerStateWalking final : public PlayerState
 public:
     PlayerStateWalking();
 
-    void processMovement(cro::Entity, Input) override;
+    void processMovement(cro::Entity, Input, cro::Scene&) override;
     void processCollision(cro::Entity, const std::vector<cro::Entity>&) override;
 
 private:
@@ -89,7 +95,7 @@ class PlayerStateTeleport final : public PlayerState
 public:
     PlayerStateTeleport();
 
-    void processMovement(cro::Entity, Input) override;
+    void processMovement(cro::Entity, Input, cro::Scene&) override;
     void processCollision(cro::Entity, const std::vector<cro::Entity>&) override;
 
 private:

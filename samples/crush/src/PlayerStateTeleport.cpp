@@ -41,7 +41,7 @@ PlayerStateTeleport::PlayerStateTeleport()
 }
 
 //public
-void PlayerStateTeleport::processMovement(cro::Entity entity, Input)
+void PlayerStateTeleport::processMovement(cro::Entity entity, Input, cro::Scene&)
 {
     auto& player = entity.getComponent<Player>();
     std::int32_t targetLayer = static_cast<std::int32_t>((player.collisionLayer + 1) % 2);

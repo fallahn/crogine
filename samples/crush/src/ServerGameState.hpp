@@ -77,6 +77,7 @@ namespace sv
         void spawnActor(std::int32_t, glm::vec3);
         void removeEntity(std::uint32_t);
 
+        void startGame();
         void endGame();
     };
 }

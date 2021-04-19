@@ -55,7 +55,7 @@ PlayerStateFalling::PlayerStateFalling()
 }
 
 //public
-void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
+void PlayerStateFalling::processMovement(cro::Entity entity, Input input, cro::Scene& scene)
 {
     auto& player = entity.getComponent<Player>();
     auto& tx = entity.getComponent<cro::Transform>();
@@ -68,10 +68,12 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
         if (input.buttonFlags & InputFlag::Left)
         {
             player.velocity.x = std::max(-MaxVelocity, player.velocity.x - (AirAcceleration * multiplier));
+            player.direction = Player::Left;
         }
         if (input.buttonFlags & InputFlag::Right)
         {
             player.velocity.x = std::min(MaxVelocity, player.velocity.x + (AirAcceleration * multiplier));
+            player.direction = Player::Right;
         }
     }
 
@@ -88,6 +90,13 @@ void PlayerStateFalling::processMovement(cro::Entity entity, Input input)
     auto movement = player.velocity;
     movement.x *= Util::direction(player.collisionLayer);
     tx.move(movement * ConstVal::FixedGameUpdate);
+
+    //do punt
+    if ((input.buttonFlags & InputFlag::Punt)
+        && (player.previousInputFlags & InputFlag::Punt) == 0)
+    {
+        punt(entity, scene);
+    }
 
     player.previousInputFlags = input.buttonFlags;
 }

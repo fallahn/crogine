@@ -51,7 +51,7 @@ PlayerStateWalking::PlayerStateWalking()
 }
 
 //public
-void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
+void PlayerStateWalking::processMovement(cro::Entity entity, Input input, cro::Scene& scene)
 {
     auto& player = entity.getComponent<Player>();
     auto& tx = entity.getComponent<cro::Transform>();
@@ -67,12 +67,14 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
             if (player.velocity.x <= 0)
             {
                 player.velocity.x = -HardStopAmount;
+                player.direction = Player::Left;
             }
         }
         //moving left, so speed up to max vel
         else if (player.velocity.x > -MaxVelocity)
         {
             player.velocity.x = std::max(-MaxVelocity, player.velocity.x - (Acceleration * multiplier));
+            player.direction = Player::Left;
         }
     }
 
@@ -85,12 +87,14 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
             if (player.velocity.x >= 0)
             {
                 player.velocity.x = HardStopAmount;
+                player.direction = Player::Right;
             }
         }
         //moving right, so speed up to max vel
         else if (player.velocity.x < MaxVelocity)
         {
             player.velocity.x = std::min(MaxVelocity, player.velocity.x + (Acceleration * multiplier));
+            player.direction = Player::Right;
         }
     }
 
@@ -126,6 +130,12 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input)
         }
     }
 
+    //do punt
+    if ((input.buttonFlags & InputFlag::Punt)
+        && (player.previousInputFlags & InputFlag::Punt) == 0)
+    {
+        punt(entity, scene);
+    }
 
     player.previousInputFlags = input.buttonFlags;
 }

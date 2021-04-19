@@ -115,15 +115,7 @@ void GameState::handleMessage(const cro::Message& msg)
         {
         default: break;
         case GameEvent::GameBegin:
-            //send all the crates / other actors
-            for (auto spawn : m_crateSpawns)
-            {
-                spawnActor(ActorID::Crate, spawn);
-            }
-
-            //send packet to tell clients to begin the game
-            m_sharedData.host.broadcastPacket(PacketID::GameMessage, std::uint8_t(GameEvent::GameBegin), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
+            startGame();
             break;
         }
     }
@@ -462,7 +454,7 @@ void GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
         entity.addComponent<Crate>().collisionLayer = position.z > 0 ? 0 : 1;
 
         entity.addComponent<cro::DynamicTreeComponent>().setArea(CrateBounds);
-        entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(position.z > 0 ? 1 : 2);
+        entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((position.z > 0 ? 1 : 2) | CollisionID::Crate);
 
         entity.addComponent<CollisionComponent>().rectCount = 2;
         entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Crate;
@@ -486,6 +478,18 @@ void GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
 void GameState::removeEntity(std::uint32_t entityIndex)
 {
     m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, entityIndex, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void GameState::startGame()
+{
+    //send all the crates / other actors
+    for (auto spawn : m_crateSpawns)
+    {
+        spawnActor(ActorID::Crate, spawn);
+    }
+
+    //send packet to tell clients to begin the game
+    m_sharedData.host.broadcastPacket(PacketID::GameMessage, std::uint8_t(GameEvent::GameBegin), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 void GameState::endGame()

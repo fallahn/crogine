@@ -43,7 +43,9 @@ struct CollisionID final
     {
         //layers must always come first!!
         LayerOne = 0x1,
-        LayerTwo = 0x2
+        LayerTwo = 0x2,
+
+        Crate    = 0x4
     };
 };
 

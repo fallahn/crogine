@@ -1110,6 +1110,14 @@ void GameState::spawnPlayer(PlayerInfo info)
                         ImGui::Text("Vel X: %3.3f", player.velocity.x);
                         auto pos = root.getComponent<cro::Transform>().getPosition();
                         ImGui::Text("Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+                        if (player.direction == 0)
+                        {
+                            ImGui::Text("Direction : Left");
+                        }
+                        else
+                        {
+                            ImGui::Text("Direction : Right");
+                        }
                     }
                     ImGui::End();
                 });
@@ -1209,7 +1217,7 @@ void GameState::spawnActor(ActorSpawn as)
         entity.getComponent<CollisionComponent>().calcSum();
 
         entity.addComponent<cro::DynamicTreeComponent>().setArea(CrateBounds);
-        entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(position.z > 0 ? 1 : 2);
+        entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((position.z > 0 ? 1 : 2) | CollisionID::Crate);
 
         entity.addComponent<Crate>();
 

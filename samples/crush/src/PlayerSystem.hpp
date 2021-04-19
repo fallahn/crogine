@@ -70,6 +70,11 @@ struct Player final
     std::uint8_t collisionFlags = 0;
 
     glm::vec3 velocity = glm::vec3(0.f);
+    //this is inferred from velocity. Will sync this if necessary
+    enum Direction
+    {
+        Left, Right
+    }direction = Right;
 
     std::uint8_t id = 4; //this should be the same as the ActorID for this entity
     std::uint8_t connectionID = 4;
