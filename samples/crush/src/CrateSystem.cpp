@@ -297,6 +297,16 @@ void CrateSystem::processBallistic(cro::Entity entity)
                             //ignore crates which aren't idle
                             break;
                         }
+
+                        if (manifold.normal.x != 0)
+                        {
+                            //hitting from the side passes on intertia
+                            auto& otherCrate = e.getComponent<Crate>();
+                            otherCrate.velocity.x = crate.velocity.x * 0.5f;
+                            otherCrate.state = Crate::State::Ballistic;
+                            otherCrate.owner = crate.owner;
+                        }
+
                         //otherwise treat as solid
                         [[fallthrough]];
                     case CollisionMaterial::Solid:
