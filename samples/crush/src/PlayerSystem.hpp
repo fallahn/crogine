@@ -80,7 +80,7 @@ struct Player final
     std::uint8_t connectionID = 4;
     glm::vec3 spawnPosition = glm::vec3(0.f);
 
-    bool carrying = false; //carrying a crate
+    bool carrying = false;
     bool waitResync = false; //waiting to resync player with server
     bool local = false; //server instance or client
 

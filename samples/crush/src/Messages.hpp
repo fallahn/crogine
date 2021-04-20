@@ -39,7 +39,7 @@ namespace MessageID
     {
         UIMessage = cro::Message::Count,
         PlayerMessage,
-        CrateMessge,
+        CrateMessage,
         ConnectionMessage,
         GameMessage
     };

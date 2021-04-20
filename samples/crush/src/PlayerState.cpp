@@ -35,6 +35,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "ActorSystem.hpp"
 #include "Messages.hpp"
+#include "InterpolationSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
@@ -64,6 +65,10 @@ void PlayerState::punt(cro::Entity entity, cro::Scene& scene)
             crate.velocity.x *= Util::direction(player.collisionLayer);
             crate.owner = player.id;
 
+            auto* msg = scene.postMessage<CrateEvent>(MessageID::CrateMessage);
+            msg->crate = other;
+            msg->type = CrateEvent::StateChanged;
+
             break; //only punt one
         }
     }
@@ -80,19 +85,29 @@ void PlayerState::carry(cro::Entity entity, cro::Scene& scene)
         if (crate.state == Crate::State::Idle
             && crate.owner == -1) //no-one owns it
         {
-            crate.owner = player.id;
+            other.getComponent<cro::Transform>().setPosition(CrateCarryOffset);
+            player.avatar.getComponent<cro::Transform>().addChild(other.getComponent<cro::Transform>());
+            player.avatar.getComponent<PlayerAvatar>().crateEnt = other;
+            player.carrying = true;
+
             if (!player.local)
             {
-                scene.destroyEntity(other);
+                crate.state = Crate::State::Carried;
+                crate.owner = player.id;
+
+                auto* msg = scene.postMessage<CrateEvent>(MessageID::CrateMessage);
+                msg->crate = other;
+                msg->type = CrateEvent::StateChanged;
             }
             else
             {
-                //this hides the local entity so it looks like there's
-                //an immediate update, then redisplays it after a short
-                //time if the server hasn't remotely deleted it.
-                other.getComponent<cro::Callback>().active = true;
+                //pick up the local crate and attach it to the player
+                //activating the callback begins a timeout which drops
+                //the crate if the server doesn't confirm the crate was
+                //picked up
+                other.getComponent<cro::Transform>().move(player.avatar.getComponent<cro::Transform>().getOrigin());
+                other.getComponent<InterpolationComponent>().setEnabled(false);
             }
-            player.carrying = true;
             break;
         }
     }
@@ -102,15 +117,29 @@ void PlayerState::drop(cro::Entity entity, cro::Scene& scene)
 {
     auto& player = entity.getComponent<Player>();
 
-    CRO_ASSERT(player.carrying, "");
+    auto crateEnt = player.avatar.getComponent<PlayerAvatar>().crateEnt;
+    if (crateEnt.isValid())
+    {
+        crateEnt.getComponent<cro::Transform>().setPosition(crateEnt.getComponent<cro::Transform>().getWorldPosition());
+        player.avatar.getComponent<cro::Transform>().removeChild(crateEnt.getComponent<cro::Transform>());
 
-    if (player.local) {}
+        if (!player.local)
+        {
+            auto& crate = crateEnt.getComponent<Crate>();
+            crate.state = Crate::State::Falling;
 
-    auto* msg = scene.postMessage<PlayerEvent>(MessageID::PlayerMessage);
-    msg->type = PlayerEvent::DroppedCrate;
-    msg->player = entity;
+            auto* msg = scene.postMessage<CrateEvent>(MessageID::CrateMessage);
+            msg->crate = crateEnt;
+            msg->type = CrateEvent::StateChanged;
+        }
+        else
+        {
+            crateEnt.getComponent<InterpolationComponent>().setEnabled(true);
+        }
 
-    player.carrying = false;
+        player.avatar.getComponent<PlayerAvatar>().crateEnt = {};
+        player.carrying = false;
+    }
 }
 
 //private

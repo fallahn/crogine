@@ -92,7 +92,7 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
         player.collisionLayer = update.collisionLayer;
         player.collisionFlags = update.collisionFlags;
         player.previousInputFlags = update.prevInputFlags;
-        player.carrying = (update.carryingCrate != 0);
+        player.carrying = update.carrying;
 
         //rewind player's last input to timestamp and
         //re-process all succeeding events
@@ -124,8 +124,6 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
 
         processInput(entity);
     }
-
-    //TODO update the state of the avatar crate depending on the carry flag
 }
 
 //private
@@ -184,12 +182,6 @@ void PlayerSystem::processInput(cro::Entity entity)
 
     avatar.rotation += cro::Util::Maths::shortestRotation(avatar.rotation, targetRotation) * 20.f * ConstVal::FixedGameUpdate;
     player.avatar.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, avatar.rotation);
-
-    if (player.local)
-    {
-        float scale = player.carrying ? 1.f : 0.f;
-        avatar.crateEnt.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-    }
 }
 
 void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerState)

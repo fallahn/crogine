@@ -61,6 +61,7 @@ public:
 private:
 
     void processIdle(cro::Entity);
+    void processCarried(cro::Entity);
     void processFalling(cro::Entity);
     void processBallistic(cro::Entity);
 

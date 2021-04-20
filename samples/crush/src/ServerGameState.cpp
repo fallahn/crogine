@@ -93,7 +93,7 @@ void GameState::handleMessage(const cro::Message& msg)
             }
         }
     }
-    else if (msg.id == MessageID::CrateMessge)
+    else if (msg.id == MessageID::CrateMessage)
     {
         const auto& data = msg.getData<CrateEvent>();
         if (data.type == CrateEvent::StateChanged)
@@ -102,6 +102,7 @@ void GameState::handleMessage(const cro::Message& msg)
             {
                 CrateState state;
                 state.crateState = data.crate.getComponent<Crate>().state;
+                state.crateOwner = data.crate.getComponent<Crate>().owner;
                 state.serverEntityID = static_cast<std::uint16_t>(data.crate.getIndex());
 
                 m_sharedData.host.broadcastPacket(PacketID::CrateUpdate, state, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -127,24 +128,7 @@ void GameState::handleMessage(const cro::Message& msg)
             m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, data.entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
-    else if (msg.id == MessageID::PlayerMessage)
-    {
-        const auto& data = msg.getData<PlayerEvent>();
-        switch (data.type)
-        {
-        default: break;
-        case PlayerEvent::DroppedCrate:
-        {
-            auto& player = data.player.getComponent<Player>();
-            auto pos = CrateCarryOffset;
-            pos.x *= player.direction * Util::direction(player.collisionLayer);
-            pos += data.player.getComponent<cro::Transform>().getPosition();
 
-            spawnActor(ActorID::Crate, pos).getComponent<Crate>().owner = player.id;
-        }
-            break;
-        }
-    }
     m_scene.forwardMessage(msg);
 }
 
@@ -207,7 +191,7 @@ void GameState::netBroadcast()
                     update.collisionFlags = player.collisionFlags;
                     update.collisionLayer = player.collisionLayer;
                     update.prevInputFlags = player.previousInputFlags;
-                    update.carryingCrate = player.carrying ? 1 : 0;
+                    update.carrying = player.carrying;
 
                     m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::PlayerUpdate, update, cro::NetFlag::Unreliable);
                 }

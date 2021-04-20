@@ -71,7 +71,7 @@ void CrateSystem::process(float)
             processBallistic(entity);
             break;
         case Crate::Carried:
-            //processCarried(entity);
+            processCarried(entity);
             break;
         case Crate::Falling:
             processFalling(entity);
@@ -83,7 +83,7 @@ void CrateSystem::process(float)
 
         if (crate.state != oldState)
         {
-            auto* msg = postMessage<CrateEvent>(MessageID::CrateMessge);
+            auto* msg = postMessage<CrateEvent>(MessageID::CrateMessage);
             msg->crate = entity;
             msg->type = CrateEvent::StateChanged;
         }
@@ -128,6 +128,11 @@ void CrateSystem::processIdle(cro::Entity entity)
     {
         crate.state = Crate::State::Falling;
     }
+}
+
+void CrateSystem::processCarried(cro::Entity)
+{
+
 }
 
 void CrateSystem::processFalling(cro::Entity entity)
@@ -201,7 +206,7 @@ void CrateSystem::processFalling(cro::Entity entity)
 
                         if (crate.collisionFlags & (1 << CollisionMaterial::Foot)
                             && manifold.normal.y > 0
-                            && crate.velocity.y < 0) //landed from above
+                            && crate.velocity.y <= 0) //landed from above
                         {
                             crate.state = Crate::State::Idle;
                             crate.velocity.y = 0.f;

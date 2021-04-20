@@ -67,7 +67,7 @@ struct PlayerUpdate final
     std::uint8_t collisionFlags = 0;
     std::uint16_t prevInputFlags = 0; //hmmmmmmmmm ought to be able to pull this from the history rather than send it
     std::uint8_t collisionLayer = 0;
-    std::uint8_t carryingCrate = 0;
+    bool carrying = false; //unfortunately we do have to sync this
 };
 
 struct ActorUpdate final
@@ -82,5 +82,6 @@ struct ActorUpdate final
 struct CrateState final
 {
     std::uint16_t serverEntityID = 0;
-    std::int16_t crateState = -1;
+    std::int8_t crateState = -1;
+    std::int8_t crateOwner = -1;
 };

@@ -45,6 +45,7 @@ Transform::Transform()
     m_rotation          (1.f, 0.f, 0.f, 0.f),
     m_transform         (1.f),
     m_parent            (nullptr),
+    m_depth             (0),
     m_dirtyFlags        (0)
 {
 
@@ -57,6 +58,7 @@ Transform::Transform(Transform&& other) noexcept
     m_rotation          (1.f, 0.f, 0.f, 0.f),
     m_transform         (1.f),
     m_parent            (nullptr),
+    m_depth             (0),
     m_dirtyFlags        (0)
 {
     CRO_ASSERT(other.m_parent != this, "Invalid assignment");
@@ -71,6 +73,7 @@ Transform::Transform(Transform&& other) noexcept
 
         //and adopt new
         m_parent = other.m_parent;
+        m_depth = other.m_depth;
 
         other.m_parent = nullptr;
 
@@ -121,6 +124,7 @@ Transform& Transform::operator=(Transform&& other) noexcept
         }
 
         m_parent = other.m_parent;
+        m_depth = other.m_depth;
 
         other.m_parent = nullptr;
 
@@ -176,6 +180,10 @@ Transform::~Transform()
     for (auto c : m_children)
     {
         c->m_parent = nullptr;
+        while (c->m_depth > 0)
+        {
+            c->decreaseDepth();
+        }
     }
 }
 
@@ -404,6 +412,16 @@ bool Transform::addChild(Transform& child)
         }
         child.m_parent = this;
 
+        //correct the depth
+        while (child.m_depth < (m_depth + 1))
+        {
+            child.increaseDepth();
+        }
+        while (child.m_depth > (m_depth + 1))
+        {
+            child.decreaseDepth();
+        }
+
         m_children.push_back(&child);
 
         return true;
@@ -417,6 +435,11 @@ void Transform::removeChild(Transform& tx)
     if (tx.m_parent != this) return;
 
     tx.m_parent = nullptr;
+
+    while (tx.m_depth > 0)
+    {
+        tx.decreaseDepth();
+    }
 
     m_children.erase(std::remove_if(m_children.begin(), m_children.end(),
         [&tx](const Transform* ptr)
@@ -435,6 +458,25 @@ void Transform::reset()
     m_transform = glm::mat4(1.f);
     m_parent = nullptr;
     m_dirtyFlags = 0;
+    m_depth = 0;
 
     m_children.clear();
+}
+
+void Transform::increaseDepth()
+{
+    m_depth++;
+    for (auto& c : m_children)
+    {
+        c->increaseDepth();
+    }
+}
+
+void Transform::decreaseDepth()
+{
+    m_depth--;
+    for (auto& c : m_children)
+    {
+        c->decreaseDepth();
+    }
 }

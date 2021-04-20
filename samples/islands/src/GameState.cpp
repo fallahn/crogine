@@ -539,7 +539,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
         entity.getComponent<cro::Transform>().setRotation(cro::Util::Net::decompressQuat(info.rotation));
             
-        entity.addComponent<Actor>().id = info.playerID;
+        entity.addComponent<Actor>().id = info.playerID + info.connectionID;
         entity.getComponent<Actor>().serverEntityId = info.serverID;
         return entity;
     };
@@ -604,7 +604,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             auto playerEnt = m_gameScene.createEntity();
             playerEnt.addComponent<cro::Transform>().setScale({ 2.f, 2.f, 2.f });// .setOrigin({ 0.f, -0.8f, 0.f });
             md.createModel(playerEnt, m_resources);
-            //playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
+            //playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID + info.connectionID]);
 
             root.getComponent<Player>().avatar = playerEnt;
             root.getComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());
@@ -638,7 +638,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
         auto rotation = entity.getComponent<cro::Transform>().getRotation();
         entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
-        //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
+        //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID + info.connectionID]);
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
