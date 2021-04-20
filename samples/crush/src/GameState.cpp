@@ -945,16 +945,24 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         {
         default: break;
         case PlayerEvent::Jumped:
-            state = "landed";
+            state = "jumped";
             break;
         case PlayerEvent::Landed:
-            state = "jumped";
+            state = "landed";
+            if (m_avatars[data.playerID].isValid())
+            {
+                m_avatars[data.playerID].getComponent<cro::ParticleEmitter>().stop();
+            }
             break;
         case PlayerEvent::DroppedCrate:
             state = "dropped crate";
             break;
         case PlayerEvent::Teleported:
             state = "teleported";
+            if (m_avatars[data.playerID].isValid())
+            {
+                m_avatars[data.playerID].getComponent<cro::ParticleEmitter>().start();
+            }
             break;
         case PlayerEvent::None:
             state = "none";
@@ -1238,7 +1246,6 @@ void GameState::spawnPlayer(PlayerInfo info)
     {
         //spawn an avatar
         //TODO check this avatar doesn't already exist
-        //TODO add particle effect for teleport - probably want to send state change packets like with crate
         auto entity = createActor();
         md.createModel(entity, m_resources);
 
@@ -1256,6 +1263,8 @@ void GameState::spawnPlayer(PlayerInfo info)
         entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
         entity.getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
         entity.getComponent<CollisionComponent>().calcSum();
+
+        entity.addComponent<cro::ParticleEmitter>().settings = particles; //teleport effect
 
         entity.addComponent<PlayerAvatar>(); //to track joined crates
         m_avatars[entity.getComponent<Actor>().id] = entity;
