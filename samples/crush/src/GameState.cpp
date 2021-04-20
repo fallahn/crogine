@@ -275,6 +275,16 @@ bool GameState::handleEvent(const cro::Event& evt)
 #endif //CRO_DEBUG_
         }
     }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case SDL_CONTROLLER_BUTTON_START:
+            requestStackPush(States::ID::Pause);
+            break;
+        }
+    }
 
     for (auto& [id, parser] : m_inputParsers)
     {
@@ -904,8 +914,6 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         spawnActor(packet.as<ActorSpawn>());
         break;
     case PacketID::PlayerSpawn:
-        //TODO we want to flag all these + world data
-        //so we know to stop requesting world data
         m_sharedData.clientConnection.ready = true;
         spawnPlayer(packet.as<PlayerInfo>());
         break;

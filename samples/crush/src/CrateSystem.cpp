@@ -139,6 +139,8 @@ void CrateSystem::processFalling(cro::Entity entity)
 {
     auto& crate = entity.getComponent<Crate>();
     
+    crate.velocity.x *= CrateFriction; //slows down if we were just punted off the edge
+
     //smaller steps help reduce tunneling
     for (auto i = 0; i < StepCount; ++i)
     {
@@ -205,11 +207,22 @@ void CrateSystem::processFalling(cro::Entity entity)
                         entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
 
                         if (crate.collisionFlags & (1 << CollisionMaterial::Foot)
-                            && manifold.normal.y > 0
-                            && crate.velocity.y <= 0) //landed from above
+                            && manifold.normal.y > 0)
                         {
-                            crate.state = Crate::State::Idle;
-                            crate.velocity.y = 0.f;
+                            if (crate.velocity.y <= 0) //landed from above
+                            {
+                                //slow moving
+                                if (std::abs(crate.velocity.x) < (PuntVelocity * 0.2f))
+                                {
+                                    crate.state = Crate::State::Idle;
+                                    crate.velocity.y = 0.f;
+                                }
+                                else //fast horizontal movement
+                                {
+                                    crate.velocity *= 0.9f;
+                                    crate.velocity = glm::reflect(crate.velocity, glm::vec3(manifold.normal, 0.f));
+                                }
+                            }
                         }
                         else
                         {
@@ -242,7 +255,7 @@ void CrateSystem::processBallistic(cro::Entity entity)
     auto& crate = entity.getComponent<Crate>();
 
     //apply friction
-    crate.velocity *= 0.9f;
+    crate.velocity *= CrateFriction;
 
     for (auto i = 0; i < StepCount; ++i)
     {
