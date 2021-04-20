@@ -128,6 +128,16 @@ void GameState::handleMessage(const cro::Message& msg)
             m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, data.entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
+    else if (msg.id == MessageID::PlayerMessage)
+    {
+        const auto& data = msg.getData<PlayerEvent>();
+        PlayerStateChange psc;
+        psc.playerID = data.player.getComponent<Player>().avatar.getComponent<Actor>().id;
+        psc.playerState = data.type;
+        psc.serverEntityID = data.player.getIndex();
+
+        m_sharedData.host.broadcastPacket(PacketID::PlayerState, psc, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
 
     m_scene.forwardMessage(msg);
 }

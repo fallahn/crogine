@@ -936,6 +936,33 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
         break;
+    case PacketID::PlayerState:
+        //TODO use this for things like teleport effects
+    {
+        auto data = packet.as<PlayerStateChange>();
+        std::string state;
+        switch (data.playerState)
+        {
+        default: break;
+        case PlayerEvent::Jumped:
+            state = "landed";
+            break;
+        case PlayerEvent::Landed:
+            state = "jumped";
+            break;
+        case PlayerEvent::DroppedCrate:
+            state = "dropped crate";
+            break;
+        case PlayerEvent::Teleported:
+            state = "teleported";
+            break;
+        case PlayerEvent::None:
+            state = "none";
+            break;
+        }
+        LogI << "Player " << state << std::endl;
+    }
+        break;
     case PacketID::CrateUpdate:
     {
         auto data = packet.as<CrateState>();
@@ -1278,7 +1305,6 @@ void GameState::spawnActor(ActorSpawn as)
         entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((position.z > 0 ? 1 : 2) | CollisionID::Crate);
 
         entity.addComponent<Crate>();
-        //entity.addComponent<cro::Callback>().function = CrateCallback();
 
 #ifdef CRO_DEBUG_
         addBoxDebug(entity, m_gameScene, cro::Colour::Red);        

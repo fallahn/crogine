@@ -85,3 +85,10 @@ struct CrateState final
     std::int8_t crateState = -1;
     std::int8_t crateOwner = -1;
 };
+
+struct PlayerStateChange final
+{
+    std::uint16_t serverEntityID = 0;
+    std::int8_t playerState = -1;
+    std::int8_t playerID = -1;
+};

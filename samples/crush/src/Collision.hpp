@@ -96,6 +96,12 @@ struct CollisionComponent final
 
             if (rect.bounds.width > sumRect.width) sumRect.width = rect.bounds.width;
             if (rect.bounds.height > sumRect.height) sumRect.height = rect.bounds.height;
+
+            //padding gives better results from first collision pass
+            sumRect.left -= 0.01f;
+            sumRect.bottom -= 0.01f;
+            sumRect.width += 0.02f;
+            sumRect.height += 0.02f;
         }
     }
 };

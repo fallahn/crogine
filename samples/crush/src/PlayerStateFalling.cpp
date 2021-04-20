@@ -163,8 +163,6 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
                 case CollisionMaterial::Crate:
                     if (e.getComponent<Crate>().state != Crate::State::Idle)
                     {
-
-
                         //only break if we died from a crate
                         break;
                     }
@@ -176,7 +174,7 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
 
                     if (player.collisionFlags & (1 << CollisionMaterial::Foot)
                         && manifold.normal.y > 0
-                        && player.velocity.y <= 0) //don't land if jumped up near edge of a platform and still moving upwards
+                        && player.velocity.y <= 0.f) //don't land if jumped up near edge of a platform and still moving upwards
                     {
                         player.state = Player::State::Walking;
                         player.velocity.y = 0.f;
