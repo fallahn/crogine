@@ -391,10 +391,8 @@ void GameState::buildWorld()
                     playerCount++;
 
                     //this controls the server side appearance
-                    //such as height and animation which needs
-                    //to be sync'd with clients. Adding the actor
-                    //to this means clients only need get the appearance
-                    //of other players
+                    //such as rotation and animation which needs
+                    //to be sync'd with clients.
                     auto avatar = m_scene.createEntity();
                     avatar.addComponent<cro::Transform>();
                     avatar.addComponent<Actor>().id = i + j;

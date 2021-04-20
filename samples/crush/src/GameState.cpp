@@ -992,9 +992,11 @@ void GameState::spawnPlayer(PlayerInfo info)
         entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
         entity.getComponent<cro::Transform>().setRotation(cro::Util::Net::decompressQuat(info.rotation));
             
-        entity.addComponent<Actor>().id = info.playerID;
+        //player ID is relative to client, so will always be 0 on a net game
+        //adding the client ID aligns it correctly with what the server has
+        entity.addComponent<Actor>().id = info.playerID + info.connectionID; 
         entity.getComponent<Actor>().serverEntityId = info.serverID;
-
+        LogI << info.connectionID << std::endl;
         return entity;
     };
 
@@ -1067,7 +1069,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             auto playerEnt = m_gameScene.createEntity();
             playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
             md.createModel(playerEnt, m_resources);
-            playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
+            playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID + info.connectionID]);
             playerEnt.addComponent<PlayerAvatar>();
 
             playerEnt.addComponent<cro::ParticleEmitter>().settings = particles;
@@ -1173,7 +1175,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
         auto rotation = entity.getComponent<cro::Transform>().getRotation();
         entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]); //TODO this is always the same on remote games?
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[entity.getComponent<Actor>().id]);
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
