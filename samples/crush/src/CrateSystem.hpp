@@ -49,8 +49,6 @@ struct Crate final
     std::uint8_t collisionLayer = 0;
     std::uint8_t collisionFlags = 0;
     glm::vec3 velocity = glm::vec3(0.f);
-
-    bool local = false;
 };
 
 class CrateSystem final : public cro::System

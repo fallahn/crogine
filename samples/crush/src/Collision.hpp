@@ -61,6 +61,7 @@ struct CollisionMaterial final
         Crate,
         Body,
         Foot,
+        Sensor,
 
         Count
     };

@@ -81,8 +81,7 @@ void CrateSystem::process(float)
             break;
         }
 
-        if (!crate.local &&
-            crate.state != oldState)
+        if (crate.state != oldState)
         {
             auto* msg = postMessage<CrateEvent>(MessageID::CrateMessage);
             msg->crate = entity;
@@ -95,13 +94,6 @@ void CrateSystem::process(float)
 void CrateSystem::processIdle(cro::Entity entity)
 {
     auto& crate = entity.getComponent<Crate>();
-
-    if (crate.local)
-    {
-        //server side only
-        return;
-    }
-
     crate.owner = -1; //set this here to just make sure it's not missed by any state switch
 
     //test if foot is free and switch to falling
@@ -140,84 +132,12 @@ void CrateSystem::processIdle(cro::Entity entity)
 
 void CrateSystem::processCarried(cro::Entity entity)
 {
-    //collide with objects so crate can't be placed in walls
-    //auto collisions = doBroadPhase(entity);
 
-    //auto position = entity.getComponent<cro::Transform>().getWorldPosition();
-    //const auto& collisionComponent = entity.getComponent<CollisionComponent>();
-
-    //auto footRect = collisionComponent.rects[1].bounds;
-    //footRect.left += position.x;
-    //footRect.bottom += position.y;
-
-    //auto bodyRect = collisionComponent.rects[0].bounds;
-    //bodyRect.left += position.x;
-    //bodyRect.bottom += position.y;
-
-    //auto& crate = entity.getComponent<Crate>();
-
-    //for (auto e : collisions)
-    //{
-    //    //check for solid/player collision
-    //    if (!e.isValid())
-    //    {
-    //        continue;
-    //    }
-
-    //    auto otherPos = e.getComponent<cro::Transform>().getPosition();
-    //    const auto& otherCollision = e.getComponent<CollisionComponent>();
-    //    for (auto i = 0; i < otherCollision.rectCount; ++i)
-    //    {
-    //        auto otherRect = otherCollision.rects[i].bounds;
-    //        otherRect.left += otherPos.x;
-    //        otherRect.bottom += otherPos.y;
-
-    //        cro::FloatRect overlap;
-
-    //        //foot collision
-    //        if (footRect.intersects(otherRect, overlap))
-    //        {
-    //            crate.collisionFlags |= (1 << CollisionMaterial::Foot);
-    //        }
-
-    //        //body collision
-    //        if (bodyRect.intersects(otherRect, overlap))
-    //        {
-    //            //track which objects we're touching
-    //            crate.collisionFlags |= ((1 << otherCollision.rects[i].material) & ~(1 << CollisionMaterial::Foot));
-
-    //            auto manifold = calcManifold(bodyRect, otherRect, overlap);
-    //            switch (otherCollision.rects[i].material)
-    //            {
-    //            default: break;
-    //            case CollisionMaterial::Crate:
-    //                if (e.getComponent<Crate>().state != Crate::State::Idle)
-    //                {
-    //                    //ignore crates which aren't idle
-    //                    break;
-    //                }
-
-    //                //otherwise treat as solid
-    //                [[fallthrough]];
-    //            case CollisionMaterial::Solid:
-    //                entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
-    //                break;
-    //            }
-    //        }
-    //    }
-    //}
 }
 
 void CrateSystem::processFalling(cro::Entity entity)
 {
     auto& crate = entity.getComponent<Crate>();
-    
-    if (crate.local)
-    {
-        //server only
-        return;
-    }
-
     crate.velocity.x *= CrateFriction; //slows down if we were just punted off the edge
 
     //smaller steps help reduce tunneling
@@ -269,16 +189,15 @@ void CrateSystem::processFalling(cro::Entity entity)
                         crate.collisionFlags |= (1 << CollisionMaterial::Foot);
                     }
 
-
                     switch (otherCollision.rects[i].material)
                     {
                     default: break;
                     case CollisionMaterial::Crate:
-                        if (e.getComponent<Crate>().state != Crate::State::Idle)
-                        {
-                            //ignore non-idle crates
-                            break;
-                        }
+                        //if (e.getComponent<Crate>().state != Crate::State::Idle)
+                        //{
+                        //    //ignore non-idle crates
+                        //    break;
+                        //}
                         //otherwise treat as solid
                         [[fallthrough]];
                     case CollisionMaterial::Solid:
@@ -332,12 +251,6 @@ void CrateSystem::processFalling(cro::Entity entity)
 void CrateSystem::processBallistic(cro::Entity entity)
 {
     auto& crate = entity.getComponent<Crate>();
-
-    if (crate.local)
-    {
-        //server only
-        return;
-    }
 
     //apply friction
     crate.velocity *= CrateFriction;
@@ -395,22 +308,26 @@ void CrateSystem::processBallistic(cro::Entity entity)
                     {
                     default: break;
                     case CollisionMaterial::Crate:
-                        if (e.getComponent<Crate>().state != Crate::State::Idle)
+                        //if (e.getComponent<Crate>().state == Crate::State::Falling)
+                        //{
+                        //    //ignore
+                        //    break;
+                        //}
+
+                        //else 
+                        if (e.getComponent<Crate>().state != Crate::State::Ballistic)
                         {
-                            //ignore crates which aren't idle
-                            break;
+                            if (manifold.normal.x != 0)
+                            {
+                                //hitting from the side passes on intertia
+                                auto& otherCrate = e.getComponent<Crate>();
+                                otherCrate.velocity.x = crate.velocity.x * 0.5f;
+                                otherCrate.state = Crate::State::Ballistic;
+                                otherCrate.owner = crate.owner;
+                            }
                         }
 
-                        if (manifold.normal.x != 0)
-                        {
-                            //hitting from the side passes on intertia
-                            auto& otherCrate = e.getComponent<Crate>();
-                            otherCrate.velocity.x = crate.velocity.x * 0.5f;
-                            otherCrate.state = Crate::State::Ballistic;
-                            otherCrate.owner = crate.owner;
-                        }
-
-                        //otherwise treat as solid
+                        //otherwise treat as solid - other ballistic crates should also do this resulting in them bouncing off each other
                         [[fallthrough]];
                     case CollisionMaterial::Solid:
                         entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);

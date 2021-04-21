@@ -468,12 +468,11 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::DynamicTreeSystem>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
-    m_gameScene.addSystem<CrateSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
-    m_gameScene.addSystem<cro::RenderSystem2D>(mb);
+    m_gameScene.addSystem<cro::RenderSystem2D>(mb).setFilterFlags(~TwoDeeFlags::Debug);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
     m_gameScene.addDirector<DayNightDirector>();
@@ -1065,7 +1064,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             root.getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
             root.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
             root.getComponent<CollisionComponent>().rects[1].bounds = FootBounds;
-            root.getComponent<CollisionComponent>().rects[2].material = CollisionMaterial::Solid;
+            root.getComponent<CollisionComponent>().rects[2].material = CollisionMaterial::Sensor;
             auto crateArea = CrateArea;
             crateArea.left += CrateCarryOffset.x;
             crateArea.bottom += CrateCarryOffset.y;
@@ -1074,7 +1073,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
             //adjust the sum so it includes the crate whichever side it's on
             auto& sumRect = root.getComponent<CollisionComponent>().sumRect;
-            auto diff =((CrateCarryOffset.x + (CrateArea.width / 2.f)) + (PlayerBounds[0].x / 2.f));
+            auto diff =((CrateCarryOffset.x + (CrateArea.width / 2.f)) + (PlayerBounds[0].x / 2.f)) + 0.2f;
             sumRect.left -= diff;
             sumRect.width += diff;
 
@@ -1278,7 +1277,7 @@ void GameState::spawnActor(ActorSpawn as)
         entity.addComponent<cro::DynamicTreeComponent>().setArea(CrateBounds);
         entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((position.z > 0 ? 1 : 2) | CollisionID::Crate);
 
-        entity.addComponent<Crate>().local = true;
+        entity.addComponent<Crate>();
 
 #ifdef CRO_DEBUG_
         addBoxDebug(entity, m_gameScene, cro::Colour::Red);        
@@ -1452,7 +1451,8 @@ void GameState::crateUpdate(const CrateState& data)
 
                 //if not already attached (eg this is a remote avatar)
                 //attach the crate to the relevant player
-                if (e.getComponent<cro::Transform>().getDepth() == 0)
+                if (e.getComponent<cro::Transform>().getDepth() == 0
+                    && m_avatars[e.getComponent<Crate>().owner].isValid())
                 {
                     e.getComponent<cro::Transform>().setPosition(CrateCarryOffset);
                     e.getComponent<cro::Transform>().move(m_avatars[e.getComponent<Crate>().owner].getComponent<cro::Transform>().getOrigin());

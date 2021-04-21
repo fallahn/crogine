@@ -146,18 +146,23 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
 
             cro::FloatRect overlap;
 
+            //crate collision
             if (player.carrying
                 && crateRect.intersects(otherRect, overlap))
             {
-                auto manifold = calcManifold(crateRect, otherRect, overlap);
+                //TODO set a flag if this is colliding so we can tell if
+                //it's clear to drop a crate
+
+                /*auto manifold = calcManifold(crateRect, otherRect, overlap);
                 switch (otherCollision.rects[i].material)
                 {
                 default: break;
                 case CollisionMaterial::Solid:
-                    player.velocity = glm::vec3(0.f);
+                    player.velocity = glm::reflect(player.velocity, glm::vec3(manifold.normal, 0.f)) * 0.5f;
+
                     entity.getComponent<cro::Transform>().move(manifold.penetration * glm::vec3(manifold.normal, 0.f));
                     break;
-                }
+                }*/
             }
 
             //body collision

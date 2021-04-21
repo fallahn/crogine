@@ -398,7 +398,7 @@ void GameState::buildWorld()
                     m_playerEntities[i][j].getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
                     m_playerEntities[i][j].getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
                     m_playerEntities[i][j].getComponent<CollisionComponent>().rects[1].bounds = FootBounds;
-                    m_playerEntities[i][j].getComponent<CollisionComponent>().rects[2].material = CollisionMaterial::Solid;
+                    m_playerEntities[i][j].getComponent<CollisionComponent>().rects[2].material = CollisionMaterial::Sensor;
                     auto crateArea = CrateArea;
                     crateArea.left += CrateCarryOffset.x;
                     crateArea.bottom += CrateCarryOffset.y;
@@ -407,7 +407,7 @@ void GameState::buildWorld()
 
                     //adjust the sum so it includes the crate whichever side it's on
                     auto& sumRect = m_playerEntities[i][j].getComponent<CollisionComponent>().sumRect;
-                    auto diff = ((CrateCarryOffset.x + (CrateArea.width / 2.f)) + (PlayerBounds[0].x / 2.f));
+                    auto diff = ((CrateCarryOffset.x + (CrateArea.width / 2.f)) + (PlayerBounds[0].x / 2.f)) + 0.2f;
                     sumRect.left -= diff;
                     sumRect.width += diff;
                 }
