@@ -114,4 +114,6 @@ private:
     void updateView(cro::Camera&);
 
     void startGame();
+
+    void crateUpdate(const CrateState&);
 };

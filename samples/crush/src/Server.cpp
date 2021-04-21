@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -94,14 +94,15 @@ void Server::run()
         cro::Logger::log("Failed to start host service", cro::Logger::Type::Error);
         return;
     }    
-    
+
+
     LOG("Server launched", cro::Logger::Type::Info);
 
     m_currentState = std::make_unique<sv::LobbyState>(m_sharedData);
     std::int32_t nextState = m_currentState->stateID();
 
     //network broadcasts are called less regularly
-    //that logic updates to the scene
+    //than logic updates to the scene
     const cro::Time netFrameTime = cro::milliseconds(50);
     cro::Clock netFrameClock;
     cro::Time netAccumulatedTime;

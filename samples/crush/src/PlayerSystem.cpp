@@ -118,7 +118,7 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
 void PlayerSystem::processInput(cro::Entity entity)
 {
     auto& player = entity.getComponent<Player>();
-
+    player.collisionLayer;
     //update all the inputs until 1 before next
     //free input. Remember to take into account
     //the wrap around of the indices

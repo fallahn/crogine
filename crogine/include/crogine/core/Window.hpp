@@ -71,41 +71,50 @@ namespace cro
         \returns true on success, else false
         */
         bool create(std::uint32_t width, std::uint32_t height, const std::string& title, bool fullscreen = false, bool borderless = false);
+
         /*!
         \brief Enables or disables vsync
         */
         void setVsyncEnabled(bool);
+
         /*!
         \brief Returns whether or not vsync is enabled
         */
         bool getVsyncEnabled() const;
+
         /*!
         \brief Attempts to enable or disable MSAA if multisampling is available on the current platform
         */
         void setMultisamplingEnabled(bool);
+
         /*!
         \brief Returns whether or not multisampling is enabled if it is available on the current platform
         Note not all hardware supports multisampling so this may falsely return true if multisampling
         has attempted to be set but failed.
         */
         bool getMultisamplingEnabled() const;
+
         /*!
         \brief Clears the window for drawing with the given colour
         */
         void clear();
+
         /*!
         \brief Swaps the buffers and displays the result of drawing
         */
         void display();
+
         /*!
         \brief Fills the given event struct with the current event data
         \returns true while events remain on the event stack
         */
         bool pollEvent(Event&);
+
         /*!
         \brief Closes the window
         */
         void close();
+
         /*!
         \brief Returns true if window is open
         */
@@ -113,22 +122,27 @@ namespace cro
         {
             return m_window != nullptr;
         }
+
         /*!
         \brief Returns the current size of the window
         */
         glm::uvec2 getSize() const override;
+
         /*!
         \brief Attempts to set the window to the given size if it is valid
         */
         void setSize(glm::uvec2);
+
         /*!
         \brief Attempts to toggle full screen mode
         */
         void setFullScreen(bool);
+
         /*!
         \brief returns true if window is currently full screen
         */
         bool isFullscreen() const { return m_fullscreen; }
+
         /*!
         \brief Set the window position in desktop coordinates.
         \param x Horizontal position to place the window. A negative number
@@ -137,6 +151,7 @@ namespace cro
         will centre the window vertically
         */
         void setPosition(std::int32_t x, std::int32_t y);
+
         /*!
         \brief Sets the window icon from an array of RGBA pixels.
         The image size is assumed to be 16x16 pixels in 8-bit format.
@@ -144,11 +159,13 @@ namespace cro
         the pixel pointer to this function.
         */
         void setIcon(const std::uint8_t*);
+
         /*!
         \brief Returns a reference to a vector containing a list of available
         display resolutions of the first monitor.
         */
         const std::vector<glm::uvec2>& getAvailableResolutions() const;
+
         /*!
         \brief Sets the window's title
         */

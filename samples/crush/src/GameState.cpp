@@ -982,66 +982,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     case PacketID::CrateUpdate:
     {
         auto data = packet.as<CrateState>();
-        cro::Command cmd;
-        cmd.targetFlags = Client::CommandID::Interpolated;
-        cmd.action = [&,data](cro::Entity e, float)
-        {
-            if (e.getComponent<Actor>().serverEntityId == data.serverEntityID)
-            {
-                e.getComponent<Crate>().state = static_cast<Crate::State>(data.crateState);
-                e.getComponent<Crate>().owner = (data.crateState == Crate::Idle) ? -1 : data.crateOwner;
-
-                std::string state;
-                switch (data.crateState)
-                {
-                default: break;
-                case Crate::Ballistic:
-                    state = "Ballistic";
-                    e.getComponent<InterpolationComponent>().setEnabled(true);
-                    break;
-                case Crate::Falling:
-                    state = "falling";
-                    e.getComponent<InterpolationComponent>().setEnabled(true);
-
-                    //if this was an avatar dropping the crate, unparent it
-                    {
-                        auto owner = e.getComponent<Crate>().owner;
-                        if (owner > -1
-                            && m_avatars[owner].isValid())
-                        {
-                            if (m_avatars[owner].getComponent<PlayerAvatar>().crateEnt == e)
-                            {
-                                e.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getWorldPosition());
-                                m_avatars[owner].getComponent<cro::Transform>().removeChild(e.getComponent<cro::Transform>());
-                                m_avatars[owner].getComponent<PlayerAvatar>().crateEnt = {};
-                            }
-                        }
-                    }
-
-                    break;
-                case Crate::Idle:
-                    state = "idle";
-                    e.getComponent<InterpolationComponent>().setEnabled(true);
-                    break;
-                case Crate::Carried:
-                    state = "carried";
-                    e.getComponent<InterpolationComponent>().setEnabled(false);
-
-                    //if not already attached (eg this is a remote avatar)
-                    //attach the crate to the relevant player
-                    if (e.getComponent<cro::Transform>().getDepth() == 0)
-                    {
-                        e.getComponent<cro::Transform>().setPosition(CrateCarryOffset);
-                        e.getComponent<cro::Transform>().move(m_avatars[e.getComponent<Crate>().owner].getComponent<cro::Transform>().getOrigin());
-                        m_avatars[e.getComponent<Crate>().owner].getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
-                        m_avatars[e.getComponent<Crate>().owner].getComponent<PlayerAvatar>().crateEnt = e;
-                    }
-                    break;
-                }
-                LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << std::endl;
-            }
-        };
-        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        crateUpdate(data);
     }
         break;
     case PacketID::ServerCommand:
@@ -1442,4 +1383,70 @@ void GameState::startGame()
     {
         ip.second.setEnabled(true);
     }
+}
+
+void GameState::crateUpdate(const CrateState& data)
+{
+    cro::Command cmd;
+    cmd.targetFlags = Client::CommandID::Interpolated;
+    cmd.action = [&, data](cro::Entity e, float)
+    {
+        if (e.getComponent<Actor>().serverEntityId == data.serverEntityID)
+        {
+            e.getComponent<Crate>().state = static_cast<Crate::State>(data.state);
+            e.getComponent<Crate>().owner = (data.state == Crate::Idle) ? -1 : data.owner;
+            e.getComponent<Crate>().collisionLayer = data.collisionLayer;
+            e.getComponent<cro::DynamicTreeComponent>().setFilterFlags((data.collisionLayer + 1) | CollisionID::Crate);
+
+            std::string state;
+            switch (data.state)
+            {
+            default: break;
+            case Crate::Ballistic:
+                state = "Ballistic";
+                e.getComponent<InterpolationComponent>().setEnabled(true);
+                break;
+            case Crate::Falling:
+                state = "falling";
+                e.getComponent<InterpolationComponent>().setEnabled(true);
+
+                //if this was an avatar dropping the crate, unparent it
+                {
+                    auto owner = e.getComponent<Crate>().owner;
+                    if (owner > -1
+                        && m_avatars[owner].isValid())
+                    {
+                        if (m_avatars[owner].getComponent<PlayerAvatar>().crateEnt == e)
+                        {
+                            e.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getWorldPosition());
+                            m_avatars[owner].getComponent<cro::Transform>().removeChild(e.getComponent<cro::Transform>());
+                            m_avatars[owner].getComponent<PlayerAvatar>().crateEnt = {};
+                        }
+                    }
+                }
+
+                break;
+            case Crate::Idle:
+                state = "idle";
+                e.getComponent<InterpolationComponent>().setEnabled(true);
+                break;
+            case Crate::Carried:
+                state = "carried";
+                e.getComponent<InterpolationComponent>().setEnabled(false);
+
+                //if not already attached (eg this is a remote avatar)
+                //attach the crate to the relevant player
+                if (e.getComponent<cro::Transform>().getDepth() == 0)
+                {
+                    e.getComponent<cro::Transform>().setPosition(CrateCarryOffset);
+                    e.getComponent<cro::Transform>().move(m_avatars[e.getComponent<Crate>().owner].getComponent<cro::Transform>().getOrigin());
+                    m_avatars[e.getComponent<Crate>().owner].getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+                    m_avatars[e.getComponent<Crate>().owner].getComponent<PlayerAvatar>().crateEnt = e;
+                }
+                break;
+            }
+            LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << " and filter " << (int)data.collisionLayer << std::endl;
+        }
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }

@@ -101,8 +101,9 @@ void GameState::handleMessage(const cro::Message& msg)
             if (data.crate.isValid())
             {
                 CrateState state;
-                state.crateState = data.crate.getComponent<Crate>().state;
-                state.crateOwner = data.crate.getComponent<Crate>().owner;
+                state.state = data.crate.getComponent<Crate>().state;
+                state.owner = data.crate.getComponent<Crate>().owner;
+                state.collisionLayer = data.crate.getComponent<Crate>().collisionLayer;
                 state.serverEntityID = static_cast<std::uint16_t>(data.crate.getIndex());
 
                 m_sharedData.host.broadcastPacket(PacketID::CrateUpdate, state, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);

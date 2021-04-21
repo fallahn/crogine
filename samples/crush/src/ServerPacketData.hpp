@@ -87,8 +87,9 @@ struct ActorUpdate final
 struct CrateState final
 {
     std::uint16_t serverEntityID = 0;
-    std::int8_t crateState = -1;
-    std::int8_t crateOwner = -1;
+    std::int8_t state = -1;
+    std::int8_t owner = -1;
+    std::uint8_t collisionLayer = 0;
 };
 
 struct PlayerStateChange final
