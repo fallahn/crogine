@@ -72,11 +72,6 @@ void PlayerSystem::process(float)
 
 void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
 {
-    //TODO store the current state first so we can compare it to the
-    //result of this. Then if the server overrides holding a crate for
-    //example, we can make sure to remove any client side representation
-    //or add it if it's needed
-
     if (entity.isValid())
     {
         auto& tx = entity.getComponent<cro::Transform>();
@@ -85,14 +80,7 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
         //apply position/rotation from server
         tx.setPosition(cro::Util::Net::decompressVec3(update.position));
         tx.setRotation(cro::Util::Net::decompressQuat(update.rotation));
-        player.velocity = cro::Util::Net::decompressVec3(update.velocity);
-
-        //set the state
-        player.state = update.state;
-        player.collisionLayer = update.collisionLayer;
-        player.collisionFlags = update.collisionFlags;
-        player.previousInputFlags = update.prevInputFlags;
-        player.carrying = update.carrying;
+        update.unpack(player);
 
         //rewind player's last input to timestamp and
         //re-process all succeeding events
@@ -240,4 +228,31 @@ void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerStat
         player.collisionFlags = 0;
         m_playerStates[player.state]->processCollision(entity, collisions);
     }
+}
+
+//packs/unpacks player data in the the update struct
+void PlayerUpdate::pack(const Player& player) 
+{
+    velocity = cro::Util::Net::compressVec3(player.velocity);
+    timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
+    playerID = player.id;
+    state = player.state;
+    collisionFlags = player.collisionFlags;
+    collisionLayer = player.collisionLayer;
+    prevInputFlags = player.previousInputFlags;
+    direction = player.direction;
+    carrying = player.carrying;
+}
+
+void PlayerUpdate::unpack(Player& player) const
+{
+    player.velocity = cro::Util::Net::decompressVec3(velocity);
+
+    //set the state
+    player.state = state;
+    player.collisionLayer = collisionLayer;
+    player.collisionFlags = collisionFlags;
+    player.previousInputFlags = prevInputFlags;
+    player.carrying = carrying;
+    player.direction = direction == -1 ? Player::Left : Player::Right;
 }

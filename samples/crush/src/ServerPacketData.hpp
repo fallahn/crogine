@@ -54,6 +54,7 @@ struct PlayerInfo final
     std::uint8_t connectionID = ConstVal::MaxClients;
 };
 
+struct Player;
 struct PlayerUpdate final
 {
     CompressedQuat rotation{};
@@ -67,7 +68,11 @@ struct PlayerUpdate final
     std::uint8_t collisionFlags = 0;
     std::uint16_t prevInputFlags = 0; //hmmmmmmmmm ought to be able to pull this from the history rather than send it
     std::uint8_t collisionLayer = 0;
+    std::int8_t direction = -1;
     bool carrying = false; //unfortunately we do have to sync this
+
+    void pack(const Player&);
+    void unpack(Player&) const;
 };
 
 struct ActorUpdate final

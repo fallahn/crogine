@@ -70,7 +70,7 @@ struct Player final
     std::uint8_t collisionFlags = 0;
 
     glm::vec3 velocity = glm::vec3(0.f);
-    //this is inferred from input. Will sync this if necessary
+    
     enum Direction
     {
         Left = -1, Right = 1

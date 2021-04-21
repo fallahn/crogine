@@ -194,14 +194,7 @@ void GameState::netBroadcast()
                     PlayerUpdate update;
                     update.position = cro::Util::Net::compressVec3(m_playerEntities[i][j].getComponent<cro::Transform>().getPosition());
                     update.rotation = cro::Util::Net::compressQuat(m_playerEntities[i][j].getComponent<cro::Transform>().getRotation());
-                    update.velocity = cro::Util::Net::compressVec3(player.velocity);
-                    update.timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
-                    update.playerID = player.id;
-                    update.state = player.state;
-                    update.collisionFlags = player.collisionFlags;
-                    update.collisionLayer = player.collisionLayer;
-                    update.prevInputFlags = player.previousInputFlags;
-                    update.carrying = player.carrying;
+                    update.pack(player);
 
                     m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::PlayerUpdate, update, cro::NetFlag::Unreliable);
                 }
