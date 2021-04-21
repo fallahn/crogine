@@ -122,6 +122,10 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
     auto position = entity.getComponent<cro::Transform>().getPosition();
     const auto& collisionComponent = entity.getComponent<CollisionComponent>();
 
+    auto crateRect = collisionComponent.rects[2].bounds;
+    crateRect.left += position.x;
+    crateRect.bottom += position.y;
+
     auto footRect = collisionComponent.rects[1].bounds;
     footRect.left += position.x;
     footRect.bottom += position.y;
@@ -141,6 +145,20 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
             otherRect.bottom += otherPos.y;
 
             cro::FloatRect overlap;
+
+            if (player.carrying
+                && crateRect.intersects(otherRect, overlap))
+            {
+                auto manifold = calcManifold(crateRect, otherRect, overlap);
+                switch (otherCollision.rects[i].material)
+                {
+                default: break;
+                case CollisionMaterial::Solid:
+                    player.velocity = glm::vec3(0.f);
+                    entity.getComponent<cro::Transform>().move(manifold.penetration * glm::vec3(manifold.normal, 0.f));
+                    break;
+                }
+            }
 
             //body collision
             if (bodyRect.intersects(otherRect, overlap))

@@ -156,11 +156,14 @@ void PlayerStateWalking::processMovement(cro::Entity entity, Input input, cro::S
 void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<cro::Entity>& collisions)
 {
     //narrow phase
-
     auto& player = entity.getComponent<Player>();
     auto position = entity.getComponent<cro::Transform>().getPosition();
     const auto& collisionComponent = entity.getComponent<CollisionComponent>();
     
+    auto crateRect = collisionComponent.rects[2].bounds;
+    crateRect.left += position.x;
+    crateRect.bottom += position.y;
+
     auto footRect = collisionComponent.rects[1].bounds;
     footRect.left += position.x;
     footRect.bottom += position.y;
@@ -192,6 +195,21 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
                 player.collisionFlags |= (1 << CollisionMaterial::Foot);
             }
 
+            //crate collision if carrying
+            if (player.carrying
+                && crateRect.intersects(otherRect, overlap))
+            {
+                auto manifold = calcManifold(crateRect, otherRect, overlap);
+                switch (otherCollision.rects[i].material)
+                {
+                default: break;
+                case CollisionMaterial::Solid:
+                    player.velocity = glm::vec3(0.f);
+                    entity.getComponent<cro::Transform>().move(manifold.penetration * glm::vec3(manifold.normal, 0.f));
+                    break;
+                }
+            }
+
             //body collision
             if (bodyRect.intersects(otherRect, overlap))
             {
@@ -203,11 +221,14 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
                 {
                 default: break;
                 case CollisionMaterial::Crate:
-                    if (e.getComponent<Crate>().state != Crate::State::Idle)
+                {
+                    auto state = e.getComponent<Crate>().state;
+                    if (state != Crate::State::Idle)
                     {
                         //only break if crate is moving
                         break;
                     }
+                }
                     //otherwise treat as solid
                     [[fallthrough]];
                 case CollisionMaterial::Solid:

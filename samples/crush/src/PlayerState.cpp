@@ -85,7 +85,9 @@ void PlayerState::carry(cro::Entity entity, cro::Scene& scene)
         if (crate.state == Crate::State::Idle
             && crate.owner == -1) //no-one owns it
         {
+            other.getComponent<cro::DynamicTreeComponent>().setFilterFlags(0); //don't collide when carrying, player box takes care of that
             other.getComponent<cro::Transform>().setPosition(CrateCarryOffset);
+
             player.avatar.getComponent<cro::Transform>().addChild(other.getComponent<cro::Transform>());
             player.avatar.getComponent<PlayerAvatar>().crateEnt = other;
             player.carrying = true;
@@ -120,6 +122,8 @@ void PlayerState::drop(cro::Entity entity, cro::Scene& scene)
     auto crateEnt = player.avatar.getComponent<PlayerAvatar>().crateEnt;
     if (crateEnt.isValid())
     {
+        crateEnt.getComponent<Crate>().collisionLayer = player.collisionLayer;
+        crateEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags((player.collisionLayer + 1) | CollisionID::Crate);
         crateEnt.getComponent<cro::Transform>().setPosition(crateEnt.getComponent<cro::Transform>().getWorldPosition());
         player.avatar.getComponent<cro::Transform>().removeChild(crateEnt.getComponent<cro::Transform>());
 

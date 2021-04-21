@@ -184,6 +184,15 @@ void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerStat
     bb += position;
 
     auto& collisionComponent = entity.getComponent<CollisionComponent>();
+    
+    //adjust crate rect for direction
+    auto crateOffset = CrateCarryOffset;
+    crateOffset.x *= player.direction;
+    auto crateArea = CrateArea;
+    crateArea.left += crateOffset.x;
+    crateArea.bottom += crateOffset.y;
+    collisionComponent.rects[2].bounds = crateArea;
+
     auto bounds2D = collisionComponent.sumRect;
     bounds2D.left += position.x;
     bounds2D.bottom += position.y;

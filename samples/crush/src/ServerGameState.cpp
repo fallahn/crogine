@@ -393,12 +393,23 @@ void GameState::buildWorld()
                     m_playerEntities[i][j].addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
                     m_playerEntities[i][j].getComponent<cro::DynamicTreeComponent>().setFilterFlags((playerCount / 2) + 1);
 
-                    m_playerEntities[i][j].addComponent<CollisionComponent>().rectCount = 2;
+                    m_playerEntities[i][j].addComponent<CollisionComponent>().rectCount = 3;
                     m_playerEntities[i][j].getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
                     m_playerEntities[i][j].getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
                     m_playerEntities[i][j].getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
                     m_playerEntities[i][j].getComponent<CollisionComponent>().rects[1].bounds = FootBounds;
+                    m_playerEntities[i][j].getComponent<CollisionComponent>().rects[2].material = CollisionMaterial::Solid;
+                    auto crateArea = CrateArea;
+                    crateArea.left += CrateCarryOffset.x;
+                    crateArea.bottom += CrateCarryOffset.y;
+                    m_playerEntities[i][j].getComponent<CollisionComponent>().rects[2].bounds = crateArea;
                     m_playerEntities[i][j].getComponent<CollisionComponent>().calcSum();
+
+                    //adjust the sum so it includes the crate whichever side it's on
+                    auto& sumRect = m_playerEntities[i][j].getComponent<CollisionComponent>().sumRect;
+                    auto diff = ((CrateCarryOffset.x + (CrateArea.width / 2.f)) + (PlayerBounds[0].x / 2.f));
+                    sumRect.left -= diff;
+                    sumRect.width += diff;
                 }
             }
         }

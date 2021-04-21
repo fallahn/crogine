@@ -75,10 +75,11 @@ struct CollisionRect final
 
 struct CollisionComponent final
 {
-    std::array<CollisionRect, 2u> rects;
+    //body, foot for dynamic and solid for player carrying a crate
+    std::array<CollisionRect, 3u> rects;
     std::size_t rectCount = 0;
 
-    //merged rectagles to give a global
+    //merged rectangles to give a global
     //bounds for broadphase testing
     cro::FloatRect sumRect =
     {
@@ -87,22 +88,29 @@ struct CollisionComponent final
     };
     void calcSum()
     {
+        float minX = sumRect.left;
+        float maxX = sumRect.width;
+        float minY = sumRect.bottom;
+        float maxY = sumRect.height;
+
         for (auto i = 0u; i < rectCount; ++i)
         {
             const auto& rect = rects[i];
 
-            if (rect.bounds.left < sumRect.left) sumRect.left = rect.bounds.left;
-            if (rect.bounds.bottom < sumRect.bottom) sumRect.bottom = rect.bounds.bottom;
+            if (rect.bounds.left < minX) minX = rect.bounds.left;
+            if (rect.bounds.bottom < minY) minY = rect.bounds.bottom;
 
-            if (rect.bounds.width > sumRect.width) sumRect.width = rect.bounds.width;
-            if (rect.bounds.height > sumRect.height) sumRect.height = rect.bounds.height;
-
-            //padding gives better results from first collision pass
-            sumRect.left -= 0.01f;
-            sumRect.bottom -= 0.01f;
-            sumRect.width += 0.02f;
-            sumRect.height += 0.02f;
+            if (rect.bounds.left + rect.bounds.width > maxX) maxX = rect.bounds.left + rect.bounds.width;
+            if (rect.bounds.bottom + rect.bounds.height > maxY) maxY = rect.bounds.bottom + rect.bounds.height;
         }
+
+        sumRect = { minX, minY, maxX - minX, maxY - minY };
+
+        //padding gives better results from first collision pass
+        sumRect.left -= 0.01f;
+        sumRect.bottom -= 0.01f;
+        sumRect.width += 0.02f;
+        sumRect.height += 0.02f;
     }
 };
 

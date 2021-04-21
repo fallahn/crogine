@@ -62,7 +62,7 @@ static inline cro::Entity addBoxDebug(cro::Entity parent, cro::Scene& scene, cro
     CRO_ASSERT(parent.hasComponent<CollisionComponent>(), "Requires AABB component");
 
     const auto& collision = parent.getComponent<CollisionComponent>();
-    const std::array colours = { colour, cro::Colour::Black };
+    const std::array colours = { colour, cro::Colour::Black, cro::Colour::Yellow };
 
     auto entity = scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(parent.getComponent<cro::Transform>().getOrigin());
@@ -80,6 +80,14 @@ static inline cro::Entity addBoxDebug(cro::Entity parent, cro::Scene& scene, cro
         verts.emplace_back(glm::vec2(bb.left, bb.bottom), colours[i]);
         verts.emplace_back(glm::vec2(bb.left, bb.bottom), cro::Colour::Transparent);
     }
+    const auto& bb = collision.sumRect;
+    verts.emplace_back(glm::vec2(bb.left, bb.bottom), cro::Colour::Transparent);
+    verts.emplace_back(glm::vec2(bb.left, bb.bottom), cro::Colour::Blue);
+    verts.emplace_back(glm::vec2(bb.left + bb.width, bb.bottom), cro::Colour::Blue);
+    verts.emplace_back(glm::vec2(bb.left + bb.width, bb.bottom + bb.height), cro::Colour::Blue);
+    verts.emplace_back(glm::vec2(bb.left, bb.bottom + bb.height), cro::Colour::Blue);
+    verts.emplace_back(glm::vec2(bb.left, bb.bottom), cro::Colour::Blue);
+    verts.emplace_back(glm::vec2(bb.left, bb.bottom), cro::Colour::Transparent);
 
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setFilterFlags(TwoDeeFlags::Debug);

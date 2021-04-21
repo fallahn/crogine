@@ -67,14 +67,6 @@ void PlayerStateTeleport::processMovement(cro::Entity entity, Input, cro::Scene&
         player.state = Player::State::Falling;
 
         entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(targetLayer + 1);
-
-        //if we carried a crate over make sure it knows which layer it's on
-        auto crateEnt = player.avatar.getComponent<PlayerAvatar>().crateEnt;
-        if (crateEnt.isValid())
-        {
-            crateEnt.getComponent<Crate>().collisionLayer = targetLayer;
-            crateEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags((targetLayer + 1) | CollisionID::Crate);
-        }
     }
 }
 

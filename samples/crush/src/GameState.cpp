@@ -468,6 +468,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::DynamicTreeSystem>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
+    m_gameScene.addSystem<CrateSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
@@ -1059,12 +1060,25 @@ void GameState::spawnPlayer(PlayerInfo info)
             root.addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
             root.getComponent<cro::DynamicTreeComponent>().setFilterFlags((info.playerID / 2) + 1);
 
-            root.addComponent<CollisionComponent>().rectCount = 2;
+            root.addComponent<CollisionComponent>().rectCount = 3;
             root.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
             root.getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
             root.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
             root.getComponent<CollisionComponent>().rects[1].bounds = FootBounds;
+            root.getComponent<CollisionComponent>().rects[2].material = CollisionMaterial::Solid;
+            auto crateArea = CrateArea;
+            crateArea.left += CrateCarryOffset.x;
+            crateArea.bottom += CrateCarryOffset.y;
+            root.getComponent<CollisionComponent>().rects[2].bounds = crateArea;
             root.getComponent<CollisionComponent>().calcSum();
+
+            //adjust the sum so it includes the crate whichever side it's on
+            auto& sumRect = root.getComponent<CollisionComponent>().sumRect;
+            auto diff =((CrateCarryOffset.x + (CrateArea.width / 2.f)) + (PlayerBounds[0].x / 2.f));
+            sumRect.left -= diff;
+            sumRect.width += diff;
+
+
 
             m_inputParsers.insert(std::make_pair(info.playerID, InputParser(m_sharedData.clientConnection.netClient, m_sharedData.inputBindings[info.playerID])));
             m_inputParsers.at(info.playerID).setEntity(root); //remember this is initially disabled!
@@ -1213,6 +1227,8 @@ void GameState::spawnPlayer(PlayerInfo info)
         entity.getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
         entity.getComponent<CollisionComponent>().calcSum();
 
+        //TODO we probably want another rect to represent a carried crate
+
         entity.addComponent<cro::ParticleEmitter>().settings = particles; //teleport effect
 
         entity.addComponent<PlayerAvatar>(); //to track joined crates
@@ -1262,7 +1278,7 @@ void GameState::spawnActor(ActorSpawn as)
         entity.addComponent<cro::DynamicTreeComponent>().setArea(CrateBounds);
         entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((position.z > 0 ? 1 : 2) | CollisionID::Crate);
 
-        entity.addComponent<Crate>();
+        entity.addComponent<Crate>().local = true;
 
 #ifdef CRO_DEBUG_
         addBoxDebug(entity, m_gameScene, cro::Colour::Red);        
@@ -1445,7 +1461,7 @@ void GameState::crateUpdate(const CrateState& data)
                 }
                 break;
             }
-            LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << " and filter " << (int)data.collisionLayer << std::endl;
+            LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << std::endl;
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
