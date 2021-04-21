@@ -1,0 +1,17 @@
+model hologram
+{
+    mesh = "assets/models/hologram.cmb"
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 0.353982,0.000000,1.000000,0.262745
+        smooth = true
+        repeat = true
+        rim = 0.941115,0.960177,0.794483,1.000000
+        rim_falloff = 0.000000
+        blendmode = "alpha"
+
+    }
+}
