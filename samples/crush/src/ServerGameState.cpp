@@ -399,7 +399,7 @@ void GameState::buildWorld()
                     m_playerEntities[i][j].getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
                     m_playerEntities[i][j].getComponent<CollisionComponent>().rects[1].bounds = FootBounds;
                     m_playerEntities[i][j].getComponent<CollisionComponent>().rects[2].material = CollisionMaterial::Sensor;
-                    auto crateArea = CrateArea;
+                    auto crateArea = Util::expand(CrateArea, 0.1f);
                     crateArea.left += CrateCarryOffset.x;
                     crateArea.bottom += CrateCarryOffset.y;
                     m_playerEntities[i][j].getComponent<CollisionComponent>().rects[2].bounds = crateArea;

@@ -948,39 +948,8 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     }
         break;
     case PacketID::PlayerState:
-        //TODO use this for things like teleport effects
-    {
-        auto data = packet.as<PlayerStateChange>();
-        std::string state;
-        switch (data.playerState)
-        {
-        default: break;
-        case PlayerEvent::Jumped:
-            state = "jumped";
-            break;
-        case PlayerEvent::Landed:
-            state = "landed";
-            if (m_avatars[data.playerID].isValid())
-            {
-                m_avatars[data.playerID].getComponent<cro::ParticleEmitter>().stop();
-            }
-            break;
-        case PlayerEvent::DroppedCrate:
-            state = "dropped crate";
-            break;
-        case PlayerEvent::Teleported:
-            state = "teleported";
-            if (m_avatars[data.playerID].isValid())
-            {
-                m_avatars[data.playerID].getComponent<cro::ParticleEmitter>().start();
-            }
-            break;
-        case PlayerEvent::None:
-            state = "none";
-            break;
-        }
-        LogI << "Player " << state << std::endl;
-    }
+        //use this for things like teleport effects
+        avatarUpdate(packet.as<PlayerStateChange>());
         break;
     case PacketID::CrateUpdate:
     {
@@ -1068,7 +1037,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             root.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
             root.getComponent<CollisionComponent>().rects[1].bounds = FootBounds;
             root.getComponent<CollisionComponent>().rects[2].material = CollisionMaterial::Sensor;
-            auto crateArea = CrateArea;
+            auto crateArea = Util::expand(CrateArea, 0.1f);
             crateArea.left += CrateCarryOffset.x;
             crateArea.bottom += CrateCarryOffset.y;
             root.getComponent<CollisionComponent>().rects[2].bounds = crateArea;
@@ -1114,26 +1083,30 @@ void GameState::spawnPlayer(PlayerInfo info)
                 e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI * currentDistance);
             };
 
-            //placeholder for player model
-
-            auto playerEnt = m_gameScene.createEntity();
-            playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
-            md.createModel(playerEnt, m_resources);
-            playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID + info.connectionID]);
-            playerEnt.addComponent<PlayerAvatar>();
-            playerEnt.addComponent<cro::ParticleEmitter>().settings = particles;
 
             //displays above player when carrying a box
             auto holoEnt = m_gameScene.createEntity();
             holoEnt.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, PlayerBounds[1].y * 1.5f, 0.f));
+            holoEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
             m_modelDefs[GameModelID::Hologram].createModel(holoEnt, m_resources);
-            holoEnt.addComponent<AvatarScale>().active = true;
+            holoEnt.addComponent<AvatarScale>().rotationSpeed = HoloRotationSpeed;
+            
+
+            //placeholder for player model
+            auto playerEnt = m_gameScene.createEntity();
+            playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
+            md.createModel(playerEnt, m_resources);
+            playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID + info.connectionID]);
+            playerEnt.addComponent<PlayerAvatar>().holoEnt = holoEnt;
+            playerEnt.addComponent<cro::ParticleEmitter>().settings = particles;
+
 
             root.getComponent<Player>().avatar = playerEnt;
             root.getComponent<cro::Transform>().addChild(camController.getComponent<cro::Transform>());
             root.getComponent<cro::Transform>().addChild(playerEnt.getComponent<cro::Transform>());
             root.getComponent<cro::Transform>().addChild(holoEnt.getComponent<cro::Transform>());
 
+            m_avatars[root.getComponent<Actor>().id] = playerEnt;
 
 #ifdef CRO_DEBUG_
             addBoxDebug(root, m_gameScene);
@@ -1241,11 +1214,16 @@ void GameState::spawnPlayer(PlayerInfo info)
         entity.getComponent<CollisionComponent>().rects[0].bounds = { -PlayerSize.x / 2.f, 0.f, PlayerSize.x, PlayerSize.y };
         entity.getComponent<CollisionComponent>().calcSum();
 
-        //TODO we probably want another rect to represent a carried crate
-
         entity.addComponent<cro::ParticleEmitter>().settings = particles; //teleport effect
 
-        entity.addComponent<PlayerAvatar>(); //to track joined crates
+        //displays above player when carrying a box
+        auto holoEnt = m_gameScene.createEntity();
+        holoEnt.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, PlayerBounds[1].y * 1.5f, 0.f));
+        holoEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+        m_modelDefs[GameModelID::Hologram].createModel(holoEnt, m_resources);
+        holoEnt.addComponent<AvatarScale>().rotationSpeed = HoloRotationSpeed;
+
+        entity.addComponent<PlayerAvatar>().holoEnt = holoEnt; //to track joined crates
         m_avatars[entity.getComponent<Actor>().id] = entity;
 
 #ifdef CRO_DEBUG_
@@ -1293,6 +1271,8 @@ void GameState::spawnActor(ActorSpawn as)
         entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((position.z > 0 ? 1 : 2) | CollisionID::Crate);
 
         entity.addComponent<Crate>();
+
+        entity.addComponent<AvatarScale>();
 
 #ifdef CRO_DEBUG_
         addBoxDebug(entity, m_gameScene, cro::Colour::Red);        
@@ -1417,6 +1397,8 @@ void GameState::startGame()
 
 void GameState::crateUpdate(const CrateState& data)
 {
+    //TODO raise a message here for things like audio events
+
     cro::Command cmd;
     cmd.targetFlags = Client::CommandID::Interpolated;
     cmd.action = [&, data](cro::Entity e, float)
@@ -1437,16 +1419,73 @@ void GameState::crateUpdate(const CrateState& data)
                 break;
             case Crate::Falling:
                 state = "falling";
+                if (data.owner > -1)
+                {
+                    auto& as = m_avatars[data.owner].getComponent<PlayerAvatar>().holoEnt.getComponent<AvatarScale>();
+                    as.target = 0.f;
+                }
+                {
+                    auto& as = e.getComponent<AvatarScale>();
+                    as.target = 1.f;
+                }
                 break;
             case Crate::Idle:
                 state = "idle";
                 break;
             case Crate::Carried:
                 state = "carried";
+                {
+                    auto& as = m_avatars[data.owner].getComponent<PlayerAvatar>().holoEnt.getComponent<AvatarScale>();
+                    as.target = 1.f;
+                }
+                {
+                    auto& as = e.getComponent<AvatarScale>();
+                    as.target = 0.f;
+                }
                 break;
             }
+#ifdef CRO_DEBUG_
             LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << std::endl;
+#endif //DEBUG
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
+void GameState::avatarUpdate(const PlayerStateChange& data)
+{
+    //TODO raise a message for this for things like sound effects
+    //if not a local player
+
+    std::string state;
+    switch (data.playerState)
+    {
+    default: break;
+    case PlayerEvent::Jumped:
+        state = "jumped";
+        break;
+    case PlayerEvent::Landed:
+        state = "landed";
+        if (m_avatars[data.playerID].isValid())
+        {
+            m_avatars[data.playerID].getComponent<cro::ParticleEmitter>().stop();
+        }
+        break;
+    case PlayerEvent::DroppedCrate:
+        state = "dropped crate";
+        break;
+    case PlayerEvent::Teleported:
+        state = "teleported";
+        if (m_avatars[data.playerID].isValid())
+        {
+            m_avatars[data.playerID].getComponent<cro::ParticleEmitter>().start();
+        }
+        break;
+    case PlayerEvent::None:
+        state = "none";
+        break;
+    }
+#ifdef CRO_DEBUG_
+    LogI << "Player " << state << std::endl;
+#endif //DEBUG
 }

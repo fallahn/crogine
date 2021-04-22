@@ -34,6 +34,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "Collision.hpp"
 #include "DebugDraw.hpp"
+#include "AvatarScaleSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -171,12 +172,17 @@ void PlayerSystem::processInput(cro::Entity entity)
     avatar.rotation += cro::Util::Maths::shortestRotation(avatar.rotation, targetRotation) * 20.f * ConstVal::FixedGameUpdate;
     player.avatar.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, avatar.rotation);
 
-    if (player.avatar.getComponent<PlayerAvatar>().crateEnt.isValid())
+    if (avatar.holoEnt.isValid())
+    {
+        avatar.holoEnt.getComponent<AvatarScale>().target = player.carrying ? 1.f : 0.f;
+    }
+
+    if (avatar.crateEnt.isValid())
     {
         auto offset = CrateCarryOffset;
         offset.x *= player.direction;
         offset.x *= Util::direction(player.collisionLayer);
-        player.avatar.getComponent<PlayerAvatar>().crateEnt.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getPosition() + offset);
+        avatar.crateEnt.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getPosition() + offset);
     }
 }
 

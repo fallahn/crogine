@@ -47,24 +47,24 @@ void AvatarScaleSystem::process(float dt)
     for (auto entity : entities)
     {
         auto& as = entity.getComponent<AvatarScale>();
-        if (as.active)
+        if (as.current != as.target)
         {
+            as.target = std::min(1.f, std::max(as.target, 0.f));
+            float scale = 0.f;
+
             if (as.current < as.target)
             {
                 as.current = (std::min(as.target, as.current + (dt * as.speed)));
+                scale = cro::Util::Easing::easeOutQuint(as.current);
             }
             else
             {
                 as.current = std::max(as.target, as.current - (dt * as.speed));
+                scale = cro::Util::Easing::easeInQuint(as.current);
             }
-
-            float scale = cro::Util::Easing::easeInBounce(as.current / as.target);
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-
-            if (as.current == as.target)
-            {
-                as.active = false;
-            }
         }
+
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, cro::Util::Const::PI * as.rotationSpeed * dt);
     }
 }

@@ -35,8 +35,9 @@ struct AvatarScale final
 {
     float target = 1.f;
     float current = 0.f;
-    float speed = 1.f;
-    bool active = false;
+    float speed = 3.f;
+
+    float rotationSpeed = 0.f;
 };
 
 class AvatarScaleSystem final : public cro::System 

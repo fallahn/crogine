@@ -116,4 +116,5 @@ private:
     void startGame();
 
     void crateUpdate(const CrateState&);
+    void avatarUpdate(const PlayerStateChange&);
 };

@@ -67,6 +67,15 @@ namespace ConstVal
 
 namespace Util
 {
+    static inline cro::FloatRect expand(cro::FloatRect rect, float amount)
+    {
+        rect.left -= (amount / 2.f);
+        rect.bottom -= (amount / 2.f);
+        rect.width += amount;
+        rect.height += amount;
+        return rect;
+    }
+
     static inline std::int32_t direction(std::int32_t i)
     {
         return (1 + (i * -2));

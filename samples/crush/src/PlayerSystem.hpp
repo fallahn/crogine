@@ -91,6 +91,7 @@ struct PlayerAvatar final
 {
     float rotation = 0.f;
     cro::Entity crateEnt;
+    cro::Entity holoEnt;
 };
 
 class PlayerSystem final : public cro::System
