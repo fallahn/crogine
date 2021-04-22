@@ -107,12 +107,6 @@ namespace
     };
     const std::uint64_t NoReflect = 0x10;
     const std::uint64_t NoRefract = 0x20;
-
-    const std::array Colours =
-    {
-        cro::Colour::Red, cro::Colour::Magenta,
-        cro::Colour::Green, cro::Colour::Yellow
-    };
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -617,20 +611,6 @@ void GameState::createScene()
     modelDef.createModel(entity, m_resources);
 }
 
-void GameState::createUI()
-{
-    cro::Entity entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
-
-    m_splitScreenNode = entity;
-
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>(); //the game scene camera callback will also update this
-    m_uiScene.setActiveCamera(entity);
-}
-
 void GameState::createDayCycle()
 {
     auto rootNode = m_gameScene.createEntity();
@@ -1094,6 +1074,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
             auto rotation = glm::lookAt(m_cameras.back().getComponent<cro::Transform>().getPosition(), glm::vec3(0.f, 0.f, -50.f), cro::Transform::Y_AXIS);
             m_cameras.back().getComponent<cro::Transform>().rotate(glm::inverse(rotation));
+            m_cameras.back().addComponent<std::uint8_t>() = info.playerID; //so we can tell which player this cam follows
 
             auto& cam = m_cameras.back().addComponent<cro::Camera>();
             cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
@@ -1130,7 +1111,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             auto playerEnt = m_gameScene.createEntity();
             playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
             md.createModel(playerEnt, m_resources);
-            playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID + info.connectionID]);
+            playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", PlayerColours[info.playerID + info.connectionID]);
             playerEnt.addComponent<PlayerAvatar>().holoEnt = holoEnt;
             playerEnt.addComponent<cro::ParticleEmitter>().settings = particles;
 
@@ -1235,7 +1216,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
         auto rotation = entity.getComponent<cro::Transform>().getRotation();
         entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[entity.getComponent<Actor>().id]);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", PlayerColours[entity.getComponent<Actor>().id]);
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
@@ -1357,7 +1338,6 @@ void GameState::updateView(cro::Camera&)
             m_splitScreenNode.getComponent<cro::Drawable2D>().updateLocalBounds();
         }
 
-
         break;
 
     case 3:
@@ -1397,7 +1377,6 @@ void GameState::updateView(cro::Camera&)
             m_splitScreenNode.getComponent<cro::Drawable2D>().updateLocalBounds();
         }
 
-
         break;
 
     default:
@@ -1419,6 +1398,7 @@ void GameState::updateView(cro::Camera&)
     cam.viewport.bottom = (1.f - size.y) / 2.f;
     cam.viewport.height = size.y;
 
+    updatePlayerUI();
 }
 
 void GameState::startGame()

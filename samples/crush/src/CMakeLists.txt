@@ -5,6 +5,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/DayNightDirector.cpp
   ${PROJECT_DIR}/ErrorState.cpp
   ${PROJECT_DIR}/GameState.cpp
+  ${PROJECT_DIR}/GameStateUI.cpp
   ${PROJECT_DIR}/InputParser.cpp
   ${PROJECT_DIR}/InterpolationComponent.cpp
   ${PROJECT_DIR}/InterpolationSystem.cpp

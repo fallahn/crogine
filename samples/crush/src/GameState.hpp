@@ -104,7 +104,6 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
-    void createUI();
     void createDayCycle();
     void loadMap();
 
@@ -117,4 +116,15 @@ private:
 
     void crateUpdate(const CrateState&);
     void avatarUpdate(const PlayerStateChange&);
+
+
+    struct PlayerUI final
+    {
+        cro::Entity puntBar;
+        cro::Entity lives;
+    };
+    std::array<PlayerUI, 4u> m_playerUIs = {};
+
+    void createUI();
+    void updatePlayerUI();
 };

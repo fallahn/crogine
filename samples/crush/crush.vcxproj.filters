@@ -159,6 +159,9 @@
     <ClCompile Include="src\ParticleDirector.cpp">
       <Filter>Source Files\Client\directors</Filter>
     </ClCompile>
+    <ClCompile Include="src\GameStateUI.cpp">
+      <Filter>Source Files\Client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">

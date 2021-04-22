@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/graphics/BoundingBox.hpp>
+#include <crogine/graphics/Colour.hpp>
 
 #include <cstdint>
 #include <cmath>
@@ -65,6 +66,12 @@ static const std::array PlayerSpawns =
     glm::vec3(SpawnOffset, 0.f, LayerDepth),
     glm::vec3(-SpawnOffset, 0.f, -LayerDepth),
     glm::vec3(SpawnOffset, 0.f, -LayerDepth)
+};
+
+static const std::array PlayerColours =
+{
+    cro::Colour::Red, cro::Colour::Magenta,
+    cro::Colour::Green, cro::Colour::Yellow
 };
 
 //player view
