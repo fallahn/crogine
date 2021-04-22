@@ -169,6 +169,7 @@
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\MapData.cpp" />
     <ClCompile Include="src\MenuCreation.cpp" />
+    <ClCompile Include="src\ParticleDirector.cpp" />
     <ClCompile Include="src\PauseState.cpp" />
     <ClCompile Include="src\PlayerState.cpp" />
     <ClCompile Include="src\PlayerStateFalling.cpp" />
@@ -210,6 +211,7 @@
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\PacketIDs.hpp" />
+    <ClInclude Include="src\ParticleDirector.hpp" />
     <ClInclude Include="src\PauseState.hpp" />
     <ClInclude Include="src\PlayerState.hpp" />
     <ClInclude Include="src\PlayerSystem.hpp" />

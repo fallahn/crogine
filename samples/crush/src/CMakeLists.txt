@@ -14,6 +14,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/MenuCreation.cpp
   ${PROJECT_DIR}/MenuState.cpp
   ${PROJECT_DIR}/MyApp.cpp
+  ${PROJECT_DIR}/ParticleDirector.cpp
   ${PROJECT_DIR}/PauseState.cpp
   ${PROJECT_DIR}/PlayerState.cpp
   ${PROJECT_DIR}/PlayerStateFalling.cpp

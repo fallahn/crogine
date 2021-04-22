@@ -156,6 +156,9 @@
     <ClCompile Include="src\AvatarScaleSystem.cpp">
       <Filter>Source Files\Client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\ParticleDirector.cpp">
+      <Filter>Source Files\Client\directors</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -280,6 +283,9 @@
     </ClInclude>
     <ClInclude Include="src\AvatarScaleSystem.hpp">
       <Filter>Header Files\Client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleDirector.hpp">
+      <Filter>Header Files\Client\directors</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

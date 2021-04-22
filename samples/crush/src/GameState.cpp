@@ -43,6 +43,7 @@ source distribution.
 #include "Messages.hpp"
 #include "CrateSystem.hpp"
 #include "AvatarScaleSystem.hpp"
+#include "ParticleDirector.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -478,6 +479,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
     m_gameScene.addDirector<DayNightDirector>();
+    m_gameScene.addDirector<ParticleDirector>(m_resources.textures);
 
 
     m_uiScene.addSystem<cro::CameraSystem>(mb);
@@ -527,8 +529,6 @@ void GameState::loadAssets()
     m_meshIDs[MeshID::Portal] = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::UV0, 1, GL_TRIANGLE_STRIP));
     auto& mesh = m_resources.meshes.getMesh(m_meshIDs[MeshID::Portal]);
 
-
-
     std::vector<float> verts = 
     {
         0.f,0.f,PortalDepth,                   0.f,0.f,
@@ -566,6 +566,40 @@ void GameState::loadAssets()
 
     m_debugCam = entity;
 #endif
+
+    //set up the particle director
+    auto& particleDirector = m_gameScene.getDirector<ParticleDirector>();
+    enum ParticleID
+    {
+        Squish,
+
+        Count
+    };
+    std::array<std::size_t, ParticleID::Count> ids{};
+
+    ids[ParticleID::Squish] = particleDirector.loadSettings("assets/particles/squish.xyp");
+
+    auto particleHandler = [ids](const cro::Message& msg) -> std::optional<std::pair<std::size_t, glm::vec3>>
+    {
+        switch (msg.id)
+        {
+        default: break;
+        case MessageID::PlayerMessage:
+        {
+            const auto& data = msg.getData<PlayerEvent>();
+            switch (data.type)
+            {
+            default: break;
+            //case PlayerEvent::Landed:
+            //    return std::make_pair(ids[ParticleID::Squish], data.player.getComponent<cro::Transform>().getPosition());
+            }
+        }
+        break;
+        }
+
+        return std::nullopt;
+    };
+    particleDirector.setMessageHandler(particleHandler);
 }
 
 void GameState::createScene()

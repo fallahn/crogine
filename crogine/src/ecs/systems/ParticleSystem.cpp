@@ -282,46 +282,50 @@ void ParticleSystem::process(float dt)
         {
             emitter.m_emissionClock.restart();
             static const float epsilon = 0.0001f;
-            if (emitter.m_nextFreeParticle < emitter.m_particles.size() - 1)
+            auto emitCount = emitter.settings.emitCount;
+            while (emitCount--)
             {
-                auto& tx = e.getComponent<Transform>();
-                glm::quat rotation = glm::quat_cast(tx.getLocalTransform());
-
-                const auto& settings = emitter.settings;
-                CRO_ASSERT(settings.emitRate > 0, "Emit rate must be grater than 0");
-                CRO_ASSERT(settings.lifetime > 0, "Lifetime must be greater than 0");
-                auto& p = emitter.m_particles[emitter.m_nextFreeParticle];
-                p.colour = settings.colour;
-                p.gravity = settings.gravity;
-                p.lifetime = settings.lifetime + cro::Util::Random::value(-settings.lifetimeVariance, settings.lifetimeVariance + epsilon);
-                p.maxLifeTime = p.lifetime;
-
-                auto randRot = glm::rotate(rotation, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::X_AXIS);
-                randRot = glm::rotate(randRot, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::Z_AXIS);
-
-                p.velocity = randRot * settings.initialVelocity;
-                p.rotation = Util::Random::value(-Util::Const::TAU, Util::Const::TAU);
-                p.scale = 1.f;
-                p.acceleration = settings.acceleration;
-                p.frameID = (settings.useRandomFrame && settings.frameCount > 1) ? cro::Util::Random::value(0, static_cast<std::int32_t>(settings.frameCount) - 1) : 0;
-                p.frameTime = 0.f;
-
-                //spawn particle in world position
-                p.position = tx.getWorldPosition();
-                
-                //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
-                p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
-                p.position.y += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
-                p.position.z += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
-
-                auto offset = settings.spawnOffset;
-                offset *= tx.getScale();
-                p.position += offset;
-
-                emitter.m_nextFreeParticle++;
-                if (emitter.m_releaseCount > 0)
+                if (emitter.m_nextFreeParticle < emitter.m_particles.size() - 1)
                 {
-                    emitter.m_releaseCount--;
+                    auto& tx = e.getComponent<Transform>();
+                    glm::quat rotation = glm::quat_cast(tx.getLocalTransform());
+
+                    const auto& settings = emitter.settings;
+                    CRO_ASSERT(settings.emitRate > 0, "Emit rate must be grater than 0");
+                    CRO_ASSERT(settings.lifetime > 0, "Lifetime must be greater than 0");
+                    auto& p = emitter.m_particles[emitter.m_nextFreeParticle];
+                    p.colour = settings.colour;
+                    p.gravity = settings.gravity;
+                    p.lifetime = settings.lifetime + cro::Util::Random::value(-settings.lifetimeVariance, settings.lifetimeVariance + epsilon);
+                    p.maxLifeTime = p.lifetime;
+
+                    auto randRot = glm::rotate(rotation, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::X_AXIS);
+                    randRot = glm::rotate(randRot, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::Z_AXIS);
+
+                    p.velocity = randRot * settings.initialVelocity;
+                    p.rotation = Util::Random::value(-Util::Const::TAU, Util::Const::TAU);
+                    p.scale = 1.f;
+                    p.acceleration = settings.acceleration;
+                    p.frameID = (settings.useRandomFrame && settings.frameCount > 1) ? cro::Util::Random::value(0, static_cast<std::int32_t>(settings.frameCount) - 1) : 0;
+                    p.frameTime = 0.f;
+
+                    //spawn particle in world position
+                    p.position = tx.getWorldPosition();
+
+                    //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
+                    p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+                    p.position.y += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+                    p.position.z += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+
+                    auto offset = settings.spawnOffset;
+                    offset *= tx.getScale();
+                    p.position += offset;
+
+                    emitter.m_nextFreeParticle++;
+                    if (emitter.m_releaseCount > 0)
+                    {
+                        emitter.m_releaseCount--;
+                    }
                 }
             }
         }
