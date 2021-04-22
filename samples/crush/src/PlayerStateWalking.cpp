@@ -195,28 +195,19 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
                 player.collisionFlags |= (1 << CollisionMaterial::Foot);
             }
 
-            //crate collision if carrying
-            if (player.carrying
-                && crateRect.intersects(otherRect, overlap))
+            //crate collision if
+            if (crateRect.intersects(otherRect, overlap))
             {
-                //TODO set a flag to say if we're overlapping or not
-
-                /*auto manifold = calcManifold(crateRect, otherRect, overlap);
-                switch (otherCollision.rects[i].material)
-                {
-                default: break;
-                case CollisionMaterial::Solid:
-                    player.velocity = glm::reflect(player.velocity, glm::vec3(manifold.normal, 0.f)) * 0.1f;
-                    entity.getComponent<cro::Transform>().move(manifold.penetration * glm::vec3(manifold.normal, 0.f));
-                    break;
-                }*/
+                //set a flag to say if we're overlapping or not
+                //this prevents dropping crates inside sold objects
+                player.collisionFlags |= (1 << CollisionMaterial::Sensor);
             }
 
             //body collision
             if (bodyRect.intersects(otherRect, overlap))
             {
                 //track which objects we're touching
-                player.collisionFlags |= ((1 << otherCollision.rects[i].material) & ~(1 << CollisionMaterial::Foot));
+                player.collisionFlags |= ((1 << otherCollision.rects[i].material) & ~((1 << CollisionMaterial::Foot) | (1 << CollisionMaterial::Sensor)));
 
                 auto manifold = calcManifold(bodyRect, otherRect, overlap);
                 switch (otherCollision.rects[i].material)

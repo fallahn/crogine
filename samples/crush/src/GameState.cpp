@@ -1170,6 +1170,12 @@ void GameState::spawnPlayer(PlayerInfo info)
                         {
                             ImGui::Text("Direction : Right");
                         }
+
+                        auto foot = player.collisionFlags & (1 << CollisionMaterial::Foot);
+                        ImGui::Text("Foot: %d", foot);
+
+                        auto sensor = player.collisionFlags & (1 << CollisionMaterial::Sensor);
+                        ImGui::Text("Sensor: %d", sensor);
                     }
                     ImGui::End();
                 });
@@ -1419,46 +1425,15 @@ void GameState::crateUpdate(const CrateState& data)
             default: break;
             case Crate::Ballistic:
                 state = "Ballistic";
-                e.getComponent<InterpolationComponent>().setEnabled(true);
                 break;
             case Crate::Falling:
                 state = "falling";
-                e.getComponent<InterpolationComponent>().setEnabled(true);
-
-                //if this was an avatar dropping the crate, unparent it
-                {
-                    auto owner = e.getComponent<Crate>().owner;
-                    if (owner > -1
-                        && m_avatars[owner].isValid())
-                    {
-                        if (m_avatars[owner].getComponent<PlayerAvatar>().crateEnt == e)
-                        {
-                            e.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getWorldPosition());
-                            m_avatars[owner].getComponent<cro::Transform>().removeChild(e.getComponent<cro::Transform>());
-                            m_avatars[owner].getComponent<PlayerAvatar>().crateEnt = {};
-                        }
-                    }
-                }
-
                 break;
             case Crate::Idle:
                 state = "idle";
-                e.getComponent<InterpolationComponent>().setEnabled(true);
                 break;
             case Crate::Carried:
                 state = "carried";
-                e.getComponent<InterpolationComponent>().setEnabled(false);
-
-                //if not already attached (eg this is a remote avatar)
-                //attach the crate to the relevant player
-                if (e.getComponent<cro::Transform>().getDepth() == 0
-                    && m_avatars[e.getComponent<Crate>().owner].isValid())
-                {
-                    e.getComponent<cro::Transform>().setPosition(CrateCarryOffset);
-                    e.getComponent<cro::Transform>().move(m_avatars[e.getComponent<Crate>().owner].getComponent<cro::Transform>().getOrigin());
-                    m_avatars[e.getComponent<Crate>().owner].getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
-                    m_avatars[e.getComponent<Crate>().owner].getComponent<PlayerAvatar>().crateEnt = e;
-                }
                 break;
             }
             LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << std::endl;

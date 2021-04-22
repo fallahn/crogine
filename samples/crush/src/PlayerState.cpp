@@ -85,30 +85,20 @@ void PlayerState::carry(cro::Entity entity, cro::Scene& scene)
         if (crate.state == Crate::State::Idle
             && crate.owner == -1) //no-one owns it
         {
-            other.getComponent<cro::DynamicTreeComponent>().setFilterFlags(0); //don't collide when carrying, player box takes care of that
-            other.getComponent<cro::Transform>().setPosition(CrateCarryOffset);
-
-            player.avatar.getComponent<cro::Transform>().addChild(other.getComponent<cro::Transform>());
-            player.avatar.getComponent<PlayerAvatar>().crateEnt = other;
-            player.carrying = true;
-
             if (!player.local)
             {
+                //we'll let this replicate over the network
+                other.getComponent<cro::DynamicTreeComponent>().setFilterFlags(0); //don't collide when carrying, player box takes care of that
+
+                player.avatar.getComponent<PlayerAvatar>().crateEnt = other;
+                player.carrying = true;
+
                 crate.state = Crate::State::Carried;
                 crate.owner = player.id;
 
                 auto* msg = scene.postMessage<CrateEvent>(MessageID::CrateMessage);
                 msg->crate = other;
                 msg->type = CrateEvent::StateChanged;
-            }
-            else
-            {
-                //pick up the local crate and attach it to the player
-                //activating the callback begins a timeout which drops
-                //the crate if the server doesn't confirm the crate was
-                //picked up
-                other.getComponent<cro::Transform>().move(player.avatar.getComponent<cro::Transform>().getOrigin());
-                other.getComponent<InterpolationComponent>().setEnabled(false);
             }
             break;
         }
@@ -118,31 +108,30 @@ void PlayerState::carry(cro::Entity entity, cro::Scene& scene)
 void PlayerState::drop(cro::Entity entity, cro::Scene& scene)
 {
     auto& player = entity.getComponent<Player>();
-
-    auto crateEnt = player.avatar.getComponent<PlayerAvatar>().crateEnt;
-    if (crateEnt.isValid())
+    if ((player.collisionFlags & (1 << CollisionMaterial::Sensor)) == 0)
     {
-        crateEnt.getComponent<Crate>().collisionLayer = player.collisionLayer;
-        crateEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags((player.collisionLayer + 1) | CollisionID::Crate);
-        crateEnt.getComponent<cro::Transform>().setPosition(crateEnt.getComponent<cro::Transform>().getWorldPosition());
-        player.avatar.getComponent<cro::Transform>().removeChild(crateEnt.getComponent<cro::Transform>());
-
-        if (!player.local)
+        auto crateEnt = player.avatar.getComponent<PlayerAvatar>().crateEnt;
+        if (crateEnt.isValid())
         {
-            auto& crate = crateEnt.getComponent<Crate>();
-            crate.state = Crate::State::Falling;
+            if (!player.local)
+            {
+                auto offset = CrateCarryOffset;
+                offset.x *= player.direction;
+                crateEnt.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getPosition() + offset);
+                crateEnt.getComponent<Crate>().collisionLayer = player.collisionLayer;
+                crateEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags((player.collisionLayer + 1) | CollisionID::Crate);
 
-            auto* msg = scene.postMessage<CrateEvent>(MessageID::CrateMessage);
-            msg->crate = crateEnt;
-            msg->type = CrateEvent::StateChanged;
-        }
-        else
-        {
-            crateEnt.getComponent<InterpolationComponent>().setEnabled(true);
-        }
+                auto& crate = crateEnt.getComponent<Crate>();
+                crate.state = Crate::State::Falling;
 
-        player.avatar.getComponent<PlayerAvatar>().crateEnt = {};
-        player.carrying = false;
+                auto* msg = scene.postMessage<CrateEvent>(MessageID::CrateMessage);
+                msg->crate = crateEnt;
+                msg->type = CrateEvent::StateChanged;
+
+                player.avatar.getComponent<PlayerAvatar>().crateEnt = {};
+                player.carrying = false;
+            }
+        }
     }
 }
 

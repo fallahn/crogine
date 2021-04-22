@@ -170,6 +170,13 @@ void PlayerSystem::processInput(cro::Entity entity)
 
     avatar.rotation += cro::Util::Maths::shortestRotation(avatar.rotation, targetRotation) * 20.f * ConstVal::FixedGameUpdate;
     player.avatar.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, avatar.rotation);
+
+    if (player.avatar.getComponent<PlayerAvatar>().crateEnt.isValid())
+    {
+        auto offset = CrateCarryOffset;
+        offset.x *= player.direction;
+        player.avatar.getComponent<PlayerAvatar>().crateEnt.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getPosition() + offset);
+    }
 }
 
 void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerState)
