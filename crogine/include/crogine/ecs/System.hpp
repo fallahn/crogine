@@ -58,10 +58,9 @@ namespace cro
 
         /*!
         \brief Constructor.
-        Pass in a reference to the concrete implementation to generate
+        Pass in a type_index to the concrete implementation to generate
         a unique type ID for this system.
         */
-        //template <typename T>
         System(MessageBus& mb, UniqueType t) 
             : m_messageBus(mb), m_type(t), m_scene(nullptr){}
 
@@ -74,8 +73,6 @@ namespace cro
 
         /*!
         \brief Returns a list of entities that this system is currently interested in
-        TODO this is supposed to be a const overload but for some reason the compiler
-        keeps trying to pick the protected version...
         */
         const std::vector<Entity>& getEntities1() const;
 

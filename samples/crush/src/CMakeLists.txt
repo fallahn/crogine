@@ -1,5 +1,6 @@
 
 set(PROJECT_SRC
+  ${PROJECT_DIR}/AvatarScaleSystem.cpp
   ${PROJECT_DIR}/CrateSystem.cpp
   ${PROJECT_DIR}/DayNightDirector.cpp
   ${PROJECT_DIR}/ErrorState.cpp

@@ -158,6 +158,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\AvatarScaleSystem.cpp" />
     <ClCompile Include="src\CrateSystem.cpp" />
     <ClCompile Include="src\DayNightDirector.cpp" />
     <ClCompile Include="src\ErrorState.cpp" />
@@ -186,6 +187,7 @@
   <ItemGroup>
     <ClInclude Include="src\ActorIDs.hpp" />
     <ClInclude Include="src\ActorSystem.hpp" />
+    <ClInclude Include="src\AvatarScaleSystem.hpp" />
     <ClInclude Include="src\CircularBuffer.hpp" />
     <ClInclude Include="src\ClientCommandIDs.hpp" />
     <ClInclude Include="src\ClientPacketData.hpp" />

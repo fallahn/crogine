@@ -29,71 +29,20 @@ source distribution.
 
 #pragma once
 
-namespace MaterialID
+#include <crogine/ecs/System.hpp>
+
+struct AvatarScale final
 {
-    enum
-    {
-        Default,
-        DefaultShadow,
-        Portal,
+    float target = 1.f;
+    float current = 0.f;
+    float speed = 1.f;
+    bool active = false;
+};
 
-        Count
-    };
-}
-
-namespace MeshID
+class AvatarScaleSystem final : public cro::System 
 {
-    enum
-    {
-        Portal,
+public:
+    explicit AvatarScaleSystem(cro::MessageBus&);
 
-        Count
-    };
-}
-
-namespace TextureID
-{
-    enum
-    {
-        Portal,
-
-
-        Count
-    };
-}
-
-namespace GameModelID
-{
-    enum
-    {
-        Crate,
-        Hologram,
-
-        Count
-    };
-}
-
-namespace FontID
-{
-
-}
-
-namespace ShaderID
-{
-    enum
-    {
-        Portal,
-
-        Count
-    };
-}
-
-namespace CommandID
-{
-
-}
-
-namespace AnimationID
-{
-
-}
+    void process(float) override;
+};

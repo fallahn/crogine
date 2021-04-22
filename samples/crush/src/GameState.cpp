@@ -42,6 +42,7 @@ source distribution.
 #include "DebugDraw.hpp"
 #include "Messages.hpp"
 #include "CrateSystem.hpp"
+#include "AvatarScaleSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -468,6 +469,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::DynamicTreeSystem>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
+    m_gameScene.addSystem<AvatarScaleSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
@@ -517,6 +519,7 @@ void GameState::loadAssets()
 
     //model defs - don't forget to pass the env map here!
     m_modelDefs[GameModelID::Crate].loadFromFile("assets/models/box.cmt", m_resources, &m_environmentMap);
+    m_modelDefs[GameModelID::Hologram].loadFromFile("assets/models/hologram.cmt", m_resources/*, &m_environmentMap*/);
 
 
 
@@ -1118,12 +1121,18 @@ void GameState::spawnPlayer(PlayerInfo info)
             md.createModel(playerEnt, m_resources);
             playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID + info.connectionID]);
             playerEnt.addComponent<PlayerAvatar>();
-
             playerEnt.addComponent<cro::ParticleEmitter>().settings = particles;
+
+            //displays above player when carrying a box
+            auto holoEnt = m_gameScene.createEntity();
+            holoEnt.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, PlayerBounds[1].y * 1.5f, 0.f));
+            m_modelDefs[GameModelID::Hologram].createModel(holoEnt, m_resources);
+            holoEnt.addComponent<AvatarScale>().active = true;
 
             root.getComponent<Player>().avatar = playerEnt;
             root.getComponent<cro::Transform>().addChild(camController.getComponent<cro::Transform>());
             root.getComponent<cro::Transform>().addChild(playerEnt.getComponent<cro::Transform>());
+            root.getComponent<cro::Transform>().addChild(holoEnt.getComponent<cro::Transform>());
 
 
 #ifdef CRO_DEBUG_

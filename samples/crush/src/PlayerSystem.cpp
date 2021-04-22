@@ -175,6 +175,7 @@ void PlayerSystem::processInput(cro::Entity entity)
     {
         auto offset = CrateCarryOffset;
         offset.x *= player.direction;
+        offset.x *= Util::direction(player.collisionLayer);
         player.avatar.getComponent<PlayerAvatar>().crateEnt.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getPosition() + offset);
     }
 }

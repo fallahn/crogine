@@ -153,6 +153,9 @@
     <ClCompile Include="src\PlayerState.cpp">
       <Filter>Source Files\shared\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\AvatarScaleSystem.cpp">
+      <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -274,6 +277,9 @@
     </ClInclude>
     <ClInclude Include="src\PortalShader.hpp">
       <Filter>Header Files\Client\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AvatarScaleSystem.hpp">
+      <Filter>Header Files\Client\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

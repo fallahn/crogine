@@ -100,6 +100,11 @@ void PlayerState::carry(cro::Entity entity, cro::Scene& scene)
                 msg->crate = other;
                 msg->type = CrateEvent::StateChanged;
             }
+            else
+            {
+                //trigger the local hologram animation - syncing state should correct this if necessary
+                //just makes it look more responsive
+            }
             break;
         }
     }
@@ -117,6 +122,7 @@ void PlayerState::drop(cro::Entity entity, cro::Scene& scene)
             {
                 auto offset = CrateCarryOffset;
                 offset.x *= player.direction;
+                offset.x *= Util::direction(player.collisionLayer);
                 crateEnt.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getPosition() + offset);
                 crateEnt.getComponent<Crate>().collisionLayer = player.collisionLayer;
                 crateEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags((player.collisionLayer + 1) | CollisionID::Crate);
@@ -130,6 +136,11 @@ void PlayerState::drop(cro::Entity entity, cro::Scene& scene)
 
                 player.avatar.getComponent<PlayerAvatar>().crateEnt = {};
                 player.carrying = false;
+            }
+            else
+            {
+                //trigger the local hologram animation - syncing state should correct this if necessary
+                //just makes it look more responsive
             }
         }
     }
