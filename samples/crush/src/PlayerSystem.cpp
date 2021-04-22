@@ -184,6 +184,12 @@ void PlayerSystem::processInput(cro::Entity entity)
         offset.x *= Util::direction(player.collisionLayer);
         avatar.crateEnt.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getPosition() + offset);
     }
+
+    //recharge the punt if this is server side
+    if (!player.local)
+    {
+        player.puntLevel = std::min(Player::PuntCoolDown, player.puntLevel + ConstVal::FixedGameUpdate);
+    }
 }
 
 void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerState)
@@ -265,6 +271,7 @@ void PlayerUpdate::pack(const Player& player)
     prevInputFlags = player.previousInputFlags;
     direction = player.direction;
     carrying = player.carrying;
+    puntLevel = cro::Util::Net::compressFloat(player.puntLevel, 4);
 }
 
 void PlayerUpdate::unpack(Player& player) const
@@ -278,4 +285,5 @@ void PlayerUpdate::unpack(Player& player) const
     player.previousInputFlags = prevInputFlags;
     player.carrying = carrying;
     player.direction = direction == -1 ? Player::Left : Player::Right;
+    player.puntLevel = cro::Util::Net::decompressFloat(puntLevel, 4);
 }

@@ -70,6 +70,7 @@ struct PlayerUpdate final
     std::uint8_t collisionLayer = 0;
     std::int8_t direction = -1;
     bool carrying = false; //unfortunately we do have to sync this
+    std::int16_t puntLevel = 0;
 
     void pack(const Player&);
     void unpack(Player&) const;

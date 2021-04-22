@@ -48,7 +48,7 @@ const cro::FloatRect PlayerState::PuntArea = cro::FloatRect(-0.1f, 0.f, 0.2f, 0.
 
 void PlayerState::punt(cro::Entity entity, cro::Scene& scene)
 {
-    //TODO check punt meter is full
+    //TODO check punt meter is full?
 
     auto& player = entity.getComponent<Player>();
     auto collisions = doBroadPhase(entity, scene);
@@ -60,7 +60,7 @@ void PlayerState::punt(cro::Entity entity, cro::Scene& scene)
             && crate.owner == -1) //no-one else punted it yet
         {
             crate.state = Crate::State::Ballistic;
-            crate.velocity.x = PuntVelocity;
+            crate.velocity.x = PuntVelocity * (player.puntLevel / Player::PuntCoolDown);
             crate.velocity.x *= player.direction;
             crate.velocity.x *= Util::direction(player.collisionLayer);
             crate.owner = player.id;
@@ -68,6 +68,8 @@ void PlayerState::punt(cro::Entity entity, cro::Scene& scene)
             auto* msg = scene.postMessage<CrateEvent>(MessageID::CrateMessage);
             msg->crate = other;
             msg->type = CrateEvent::StateChanged;
+
+            player.puntLevel = 0.f;
 
             break; //only punt one
         }

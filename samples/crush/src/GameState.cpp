@@ -476,6 +476,7 @@ void GameState::addSystems()
     m_gameScene.addDirector<ParticleDirector>(m_resources.textures);
 
 
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 }
@@ -1173,6 +1174,8 @@ void GameState::spawnPlayer(PlayerInfo info)
 
                         auto sensor = player.collisionFlags & (1 << CollisionMaterial::Sensor);
                         ImGui::Text("Sensor: %d", sensor);
+
+                        ImGui::Text("Punt Level: %3.3f", player.puntLevel);
                     }
                     ImGui::End();
                 });

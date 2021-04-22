@@ -29,6 +29,7 @@ source distribution.
 
 #include "GameState.hpp"
 #include "GameConsts.hpp"
+#include "PlayerSystem.hpp"
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
@@ -36,6 +37,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 namespace
 {
@@ -63,16 +65,29 @@ void GameState::updatePlayerUI()
 {
     for (auto i = 0u; i < m_cameras.size(); ++i)
     {
+        auto playerIndex = m_cameras[i].getComponent<std::uint8_t>();
         if (!m_playerUIs[i].puntBar.isValid())
         {
             //create the entities
             m_playerUIs[i].puntBar = m_uiScene.createEntity();
             m_playerUIs[i].puntBar.addComponent<cro::Transform>();
             m_playerUIs[i].puntBar.addComponent<cro::Drawable2D>();
+
+            //temp until we know this is working
+            const auto& player = m_inputParsers.at(playerIndex).getEntity().getComponent<Player>();
+            m_playerUIs[i].puntBar.addComponent<cro::Callback>().active = true;
+            m_playerUIs[i].puntBar.getComponent<cro::Callback>().function =
+                [&player](cro::Entity e, float)
+            {
+                float percent = player.puntLevel / Player::PuntCoolDown;
+                auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+                verts[2].position.x = percent * PuntBarSize.x;
+                verts[3].position.x = percent * PuntBarSize.x;
+                e.getComponent<cro::Drawable2D>().updateLocalBounds();
+            };
         }
 
         //update the geometry
-        auto playerIndex = m_cameras[i].getComponent<std::uint8_t>();
         m_playerUIs[i].puntBar.getComponent<cro::Drawable2D>().getVertexData() =
         {
             cro::Vertex2D(glm::vec2(0.f, PuntBarSize.y), PlayerColours[playerIndex]),

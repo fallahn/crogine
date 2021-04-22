@@ -42,6 +42,8 @@ source distribution.
 struct PlayerUpdate;
 struct Player final
 {
+    cro::Entity avatar;
+
     //if we assume (and we should) 60 updates per second
     //this will buffer 2 seconds worth of input
     static constexpr std::size_t HistorySize = 120;
@@ -84,7 +86,8 @@ struct Player final
     bool waitResync = false; //waiting to resync player with server
     bool local = false; //server instance or client
 
-    cro::Entity avatar;
+    static constexpr float PuntCoolDown = 3.f; //seconds
+    float puntLevel = PuntCoolDown;
 };
 
 struct PlayerAvatar final
