@@ -199,8 +199,19 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
             if (crateRect.intersects(otherRect, overlap))
             {
                 //set a flag to say if we're overlapping or not
-                //this prevents dropping crates inside sold objects
-                player.collisionFlags |= (1 << CollisionMaterial::Sensor);
+                //this prevents dropping crates inside solid objects
+                switch (otherCollision.rects[i].material)
+                {
+                    //don't get blocked by these
+                case CollisionMaterial::Teleport:
+                case CollisionMaterial::Sensor:
+
+                    break;
+                    //TODO don't collide with carried crates
+                default:
+                    player.collisionFlags |= (1 << CollisionMaterial::Sensor);
+                    break;
+                }
             }
 
             //body collision

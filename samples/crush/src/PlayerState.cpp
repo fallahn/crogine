@@ -36,6 +36,7 @@ source distribution.
 #include "ActorSystem.hpp"
 #include "Messages.hpp"
 #include "InterpolationSystem.hpp"
+#include "AvatarScaleSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
@@ -44,7 +45,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 
-const cro::FloatRect PlayerState::PuntArea = cro::FloatRect(-0.1f, 0.f, 0.2f, 0.2f);
+const cro::FloatRect PlayerState::PuntArea = cro::FloatRect(-0.15f, 0.f, 0.3f, 0.3f);
 
 void PlayerState::punt(cro::Entity entity, cro::Scene& scene)
 {
@@ -56,7 +57,8 @@ void PlayerState::punt(cro::Entity entity, cro::Scene& scene)
     for (auto other : collisions)
     {
         auto& crate = other.getComponent<Crate>();
-        if (crate.state == Crate::State::Idle
+        if ((crate.state == Crate::State::Idle
+            || crate.state == Crate::State::Falling)
             && crate.owner == -1) //no-one else punted it yet
         {
             crate.state = Crate::State::Ballistic;
@@ -70,6 +72,7 @@ void PlayerState::punt(cro::Entity entity, cro::Scene& scene)
             msg->type = CrateEvent::StateChanged;
 
             player.puntLevel = 0.f;
+            player.puntLevelLinear = 0.f;
 
             break; //only punt one
         }
@@ -106,6 +109,7 @@ void PlayerState::carry(cro::Entity entity, cro::Scene& scene)
             {
                 //trigger the local hologram animation - syncing state should correct this if necessary
                 //just makes it look more responsive
+                player.avatar.getComponent<PlayerAvatar>().holoEnt.getComponent<AvatarScale>().target = 1.f;
             }
             break;
         }
@@ -143,6 +147,7 @@ void PlayerState::drop(cro::Entity entity, cro::Scene& scene)
             {
                 //trigger the local hologram animation - syncing state should correct this if necessary
                 //just makes it look more responsive
+                player.avatar.getComponent<PlayerAvatar>().holoEnt.getComponent<AvatarScale>().target = 0.f;
             }
         }
     }

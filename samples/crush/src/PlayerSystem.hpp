@@ -88,6 +88,7 @@ struct Player final
 
     static constexpr float PuntCoolDown = 3.f; //seconds
     float puntLevel = PuntCoolDown;
+    float puntLevelLinear = PuntCoolDown;
 };
 
 struct PlayerAvatar final

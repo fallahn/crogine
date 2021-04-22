@@ -44,6 +44,7 @@ source distribution.
 
 #include <crogine/util/Network.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Easings.hpp>
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
     : cro::System       (mb, typeid(PlayerSystem))
@@ -188,7 +189,8 @@ void PlayerSystem::processInput(cro::Entity entity)
     //recharge the punt if this is server side
     if (!player.local)
     {
-        player.puntLevel = std::min(Player::PuntCoolDown, player.puntLevel + ConstVal::FixedGameUpdate);
+        player.puntLevelLinear = std::min(Player::PuntCoolDown, player.puntLevelLinear + ConstVal::FixedGameUpdate);
+        player.puntLevel = cro::Util::Easing::easeInQuint(player.puntLevelLinear / Player::PuntCoolDown) * Player::PuntCoolDown;
     }
 }
 

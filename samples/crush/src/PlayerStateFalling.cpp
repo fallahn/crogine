@@ -149,7 +149,17 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
             //crate collision - prevents dropping inside objects
             if (crateRect.intersects(otherRect, overlap))
             {
-                player.collisionFlags |= (1 << CollisionMaterial::Sensor);
+                switch (otherCollision.rects[i].material)
+                {
+                //don't get blocked by these
+                case CollisionMaterial::Teleport:
+                case CollisionMaterial::Sensor:
+
+                    break;
+                default:
+                    player.collisionFlags |= (1 << CollisionMaterial::Sensor);
+                    break;
+                }
             }
 
             //body collision

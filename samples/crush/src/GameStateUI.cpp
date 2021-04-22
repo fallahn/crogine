@@ -88,12 +88,13 @@ void GameState::updatePlayerUI()
         }
 
         //update the geometry
+        auto colour = PlayerColours[playerIndex];
         m_playerUIs[i].puntBar.getComponent<cro::Drawable2D>().getVertexData() =
         {
-            cro::Vertex2D(glm::vec2(0.f, PuntBarSize.y), PlayerColours[playerIndex]),
-            cro::Vertex2D(glm::vec2(0.f), PlayerColours[playerIndex]),
-            cro::Vertex2D(PuntBarSize, PlayerColours[playerIndex]),
-            cro::Vertex2D(glm::vec2(PuntBarSize.x, 0.f), PlayerColours[playerIndex])
+            cro::Vertex2D(glm::vec2(0.f, PuntBarSize.y), colour),
+            cro::Vertex2D(glm::vec2(0.f), colour),
+            cro::Vertex2D(PuntBarSize, colour),
+            cro::Vertex2D(glm::vec2(PuntBarSize.x, 0.f), colour)
         };
         m_playerUIs[i].puntBar.getComponent<cro::Drawable2D>().updateLocalBounds();
         m_playerUIs[i].puntBar.getComponent<cro::Transform>().setPosition(

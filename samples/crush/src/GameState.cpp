@@ -1065,9 +1065,22 @@ void GameState::spawnPlayer(PlayerInfo info)
             sumRect.width += diff;
 
 
+            auto playerNumber = info.playerID + info.connectionID;
+            /*
+            Urrrgh so this is getting confusing. Each player should have a unique number regardless
+            if they are playing on the same machine or remotely - however input indexing is done
+            relative to the current connection
 
-            m_inputParsers.insert(std::make_pair(info.playerID, InputParser(m_sharedData.clientConnection.netClient, m_sharedData.inputBindings[info.playerID])));
-            m_inputParsers.at(info.playerID).setEntity(root); //remember this is initially disabled!
+            Ideally the playerID should be refactored so that it properly represents the player number
+            and the existing ID, as an offset from the connection ID, should be the input index.
+
+            This is actually most of the way there now so it's just a case of making the naming less confusing
+            SO DO THIS AND GET OFF YOUR LAZY 
+            
+            */
+
+            m_inputParsers.insert(std::make_pair(playerNumber, InputParser(m_sharedData.clientConnection.netClient, m_sharedData.inputBindings[info.playerID])));
+            m_inputParsers.at(playerNumber).setEntity(root); //remember this is initially disabled!
 
             m_cameras.emplace_back();
             m_cameras.back() = m_gameScene.createEntity();
@@ -1075,7 +1088,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
             auto rotation = glm::lookAt(m_cameras.back().getComponent<cro::Transform>().getPosition(), glm::vec3(0.f, 0.f, -50.f), cro::Transform::Y_AXIS);
             m_cameras.back().getComponent<cro::Transform>().rotate(glm::inverse(rotation));
-            m_cameras.back().addComponent<std::uint8_t>() = info.playerID; //so we can tell which player this cam follows
+            m_cameras.back().addComponent<std::uint8_t>() = playerNumber; //so we can tell which player this cam follows
 
             auto& cam = m_cameras.back().addComponent<cro::Camera>();
             cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
@@ -1128,10 +1141,10 @@ void GameState::spawnPlayer(PlayerInfo info)
             addBoxDebug(root, m_gameScene);
             root.addComponent<DebugInfo>();
 
-            registerWindow([root]()
+            registerWindow([root, playerNumber]()
                 {
                     const auto& player = root.getComponent<Player>();
-                    std::string label = "Player " + std::to_string(player.id);
+                    std::string label = "Player " + std::to_string(playerNumber);
                     if (ImGui::Begin(label.c_str()))
                     {
                         const auto& debug = root.getComponent<DebugInfo>();
@@ -1242,6 +1255,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         holoEnt.addComponent<AvatarScale>().rotationSpeed = HoloRotationSpeed;
 
         entity.addComponent<PlayerAvatar>().holoEnt = holoEnt; //to track joined crates
+        entity.getComponent<cro::Transform>().addChild(holoEnt.getComponent<cro::Transform>());
         m_avatars[entity.getComponent<Actor>().id] = entity;
 
 #ifdef CRO_DEBUG_
@@ -1290,7 +1304,8 @@ void GameState::spawnActor(ActorSpawn as)
 
         entity.addComponent<Crate>();
 
-        entity.addComponent<AvatarScale>();
+        entity.addComponent<AvatarScale>().current = 1.f;
+        entity.getComponent<AvatarScale>().target = 1.f;
 
 #ifdef CRO_DEBUG_
         addBoxDebug(entity, m_gameScene, cro::Colour::Red);        
@@ -1452,7 +1467,7 @@ void GameState::crateUpdate(const CrateState& data)
             case Crate::Carried:
                 state = "carried";
                 {
-                    auto& as = m_avatars[data.owner].getComponent<PlayerAvatar>().holoEnt.getComponent<AvatarScale>();
+                    auto& as = m_avatars[e.getComponent<Crate>().owner].getComponent<PlayerAvatar>().holoEnt.getComponent<AvatarScale>();
                     as.target = 1.f;
                 }
                 {

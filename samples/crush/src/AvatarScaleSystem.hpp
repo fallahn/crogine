@@ -33,7 +33,7 @@ source distribution.
 
 struct AvatarScale final
 {
-    float target = 1.f;
+    float target = 0.f;
     float current = 0.f;
     float speed = 3.f;
 
