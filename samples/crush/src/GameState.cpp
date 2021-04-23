@@ -44,6 +44,7 @@ source distribution.
 #include "CrateSystem.hpp"
 #include "AvatarScaleSystem.hpp"
 #include "ParticleDirector.hpp"
+#include "PuntBarSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -476,6 +477,7 @@ void GameState::addSystems()
     m_gameScene.addDirector<ParticleDirector>(m_resources.textures);
 
 
+    m_uiScene.addSystem<PuntBarSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);

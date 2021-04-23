@@ -22,6 +22,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/PlayerStateTeleport.cpp
   ${PROJECT_DIR}/PlayerStateWalking.cpp
   ${PROJECT_DIR}/PlayerSystem.cpp
+  ${PROJECT_DIR}/PuntBarSystem.cpp
   ${PROJECT_DIR}/Server.cpp
   ${PROJECT_DIR}/ServerGameState.cpp
   ${PROJECT_DIR}/ServerLobbyState.cpp

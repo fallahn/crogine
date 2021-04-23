@@ -162,6 +162,9 @@
     <ClCompile Include="src\GameStateUI.cpp">
       <Filter>Source Files\Client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\PuntBarSystem.cpp">
+      <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -289,6 +292,12 @@
     </ClInclude>
     <ClInclude Include="src\ParticleDirector.hpp">
       <Filter>Header Files\Client\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UIConsts.hpp">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PuntBarSystem.hpp">
+      <Filter>Header Files\Client\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

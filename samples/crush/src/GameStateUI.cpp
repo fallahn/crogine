@@ -29,7 +29,9 @@ source distribution.
 
 #include "GameState.hpp"
 #include "GameConsts.hpp"
+#include "UIConsts.hpp"
 #include "PlayerSystem.hpp"
+#include "PuntBarSystem.hpp"
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
@@ -41,8 +43,7 @@ source distribution.
 
 namespace
 {
-    const glm::vec2 PuntBarSize = { 250.f, 20.f };
-    const glm::vec2 PuntBarOffset = { 20.f, 20.f };
+
 }
 
 void GameState::createUI()
@@ -72,19 +73,7 @@ void GameState::updatePlayerUI()
             m_playerUIs[i].puntBar = m_uiScene.createEntity();
             m_playerUIs[i].puntBar.addComponent<cro::Transform>();
             m_playerUIs[i].puntBar.addComponent<cro::Drawable2D>();
-
-            //temp until we know this is working
-            const auto& player = m_inputParsers.at(playerIndex).getEntity().getComponent<Player>();
-            m_playerUIs[i].puntBar.addComponent<cro::Callback>().active = true;
-            m_playerUIs[i].puntBar.getComponent<cro::Callback>().function =
-                [&player](cro::Entity e, float)
-            {
-                float percent = player.puntLevel / Player::PuntCoolDown;
-                auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-                verts[2].position.x = percent * PuntBarSize.x;
-                verts[3].position.x = percent * PuntBarSize.x;
-                e.getComponent<cro::Drawable2D>().updateLocalBounds();
-            };
+            m_playerUIs[i].puntBar.addComponent<PuntBar>().player = &m_inputParsers.at(playerIndex).getEntity().getComponent<Player>();
         }
 
         //update the geometry

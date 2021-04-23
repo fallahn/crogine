@@ -177,6 +177,7 @@
     <ClCompile Include="src\PlayerStateTeleport.cpp" />
     <ClCompile Include="src\PlayerSystem.cpp" />
     <ClCompile Include="src\PlayerStateWalking.cpp" />
+    <ClCompile Include="src\PuntBarSystem.cpp" />
     <ClCompile Include="src\ServerLobbyState.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
@@ -218,6 +219,7 @@
     <ClInclude Include="src\PlayerSystem.hpp" />
     <ClInclude Include="src\PoissonDisk.hpp" />
     <ClInclude Include="src\PortalShader.hpp" />
+    <ClInclude Include="src\PuntBarSystem.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\Server.hpp" />
     <ClInclude Include="src\ServerGameState.hpp" />
@@ -228,6 +230,7 @@
     <ClInclude Include="src\SharedStateData.hpp" />
     <ClInclude Include="src\Slider.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
+    <ClInclude Include="src\UIConsts.hpp" />
     <ClInclude Include="src\WeatherDirector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
