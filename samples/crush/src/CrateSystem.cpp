@@ -355,9 +355,15 @@ void CrateSystem::processBallistic(cro::Entity entity)
                     case CollisionMaterial::Body:
                         //hit a player! TODO this is only going to register one body per collision...
                         //probably want an array of collision structs for each player up front.
-                        if (glm::length2(crate.velocity) > 9.f)
+                        if (e.getComponent<Player>().state == Player::State::Dead)
                         {
-                            //kill - don't overwrite previous data else we might tunnerl through players
+                            //ignore dead peeopelies.
+                            break;
+                        }
+
+                        if (glm::length2(crate.velocity) > 25.f)
+                        {
+                            //kill - don't overwrite previous data else we might tunnel through players
                             if (!playerCollision.player.isValid())
                             {
                                 playerCollision.owner = crate.owner;
@@ -368,12 +374,9 @@ void CrateSystem::processBallistic(cro::Entity entity)
                         {
                             //stop the crate and correct
                             crate.velocity = glm::vec3(0.f);
-                            crate.state = Crate::Idle;
                             entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
 
                             crate.collisionFlags &= ~(1 << CollisionMaterial::Body);
-
-                            i = StepCount; //quit testing because we changed state.
                         }
                         break;
                     }
@@ -397,7 +400,7 @@ void CrateSystem::processBallistic(cro::Entity entity)
     }
 
     //switch state if we stopped moving
-    else if (glm::length2(crate.velocity) < 0.1f)
+    if (glm::length2(crate.velocity) < 0.1f)
     {
         crate.velocity = glm::vec3(0.f);
         crate.state = Crate::State::Idle;

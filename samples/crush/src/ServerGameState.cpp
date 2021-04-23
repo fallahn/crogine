@@ -89,16 +89,7 @@ void GameState::handleMessage(const cro::Message& msg)
 
                     //if the player was carrying a crate when they left
                     //destroy it and spawn a new one.
-                    auto crateEnt = playerEnt.getComponent<Player>().avatar.getComponent<PlayerAvatar>().crateEnt;
-                    if (crateEnt.isValid())
-                    {
-                        auto pos = crateEnt.getComponent<Crate>().spawnPosition;
-                        auto crateID = crateEnt.getIndex();
-                        m_scene.destroyEntity(crateEnt);
-                        m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, crateID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-                        spawnActor(ActorID::Crate, pos);
-                    }
+                    resetCrate(playerEnt);
 
                     //then tidy up their entity
                     auto entityID = playerEnt.getIndex();
@@ -156,6 +147,12 @@ void GameState::handleMessage(const cro::Message& msg)
         psc.serverEntityID = data.player.getIndex();
 
         m_sharedData.host.broadcastPacket(PacketID::PlayerState, psc, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        //if the player died holding a crate kill it and spawn a new one
+        if (data.type == PlayerEvent::Died)
+        {
+            resetCrate(data.player);
+        }
     }
 
     m_scene.forwardMessage(msg);
@@ -528,6 +525,20 @@ cro::Entity GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
 void GameState::removeEntity(std::uint32_t entityIndex)
 {
     m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, entityIndex, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void GameState::resetCrate(cro::Entity owner)
+{
+    auto crateEnt = owner.getComponent<Player>().avatar.getComponent<PlayerAvatar>().crateEnt;
+    if (crateEnt.isValid())
+    {
+        auto pos = crateEnt.getComponent<Crate>().spawnPosition;
+        auto crateID = crateEnt.getIndex();
+        m_scene.destroyEntity(crateEnt);
+        m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, crateID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        spawnActor(ActorID::Crate, pos);
+    }
 }
 
 void GameState::startGame()

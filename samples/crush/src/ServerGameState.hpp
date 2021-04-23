@@ -77,6 +77,8 @@ namespace sv
         cro::Entity spawnActor(std::int32_t, glm::vec3);
         void removeEntity(std::uint32_t);
 
+        void resetCrate(cro::Entity owner);
+
         void startGame();
         void endGame();
     };

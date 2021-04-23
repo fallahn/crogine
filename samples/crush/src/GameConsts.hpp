@@ -52,7 +52,7 @@ static const cro::FloatRect CrateFoot = cro::FloatRect(-0.2f, -0.35f, 0.4f, 0.1f
 
 static const glm::vec3 CrateCarryOffset = glm::vec3((PlayerSize.x / 2.f) + (CrateArea.width / 2.f) + 0.05f, CrateArea.height * 1.7f, 0.f);
 
-static constexpr float PuntVelocity = 60.f;
+static constexpr float PuntVelocity = 40.f;
 static constexpr float CrateFriction = 0.9f; //this is a multiplier
 
 static constexpr float HoloRotationSpeed = 0.5f;

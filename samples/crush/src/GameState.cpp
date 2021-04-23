@@ -1506,6 +1506,11 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
 {
     //TODO raise a message for this for things like sound effects
     //if not a local player
+    if (m_avatars[data.playerID].isValid())
+    {
+        m_avatars[data.playerID].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+    }
+
 
     std::string state;
     switch (data.playerState)
@@ -1536,6 +1541,7 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         if (m_avatars[data.playerID].isValid())
         {
             m_avatars[data.playerID].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+            m_avatars[data.playerID].getComponent<PlayerAvatar>().holoEnt.getComponent<AvatarScale>().target = 0.f;
         }
         break;
     case PlayerEvent::None:

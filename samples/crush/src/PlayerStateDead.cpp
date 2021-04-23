@@ -32,6 +32,7 @@ source distribution.
 #include "CommonConsts.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/DynamicTreeComponent.hpp>
 
 namespace
 {
@@ -47,23 +48,30 @@ PlayerStateDead::PlayerStateDead()
 //public
 void PlayerStateDead::processMovement(cro::Entity entity, Input, cro::Scene&)
 {
-    //m_pauseTime -= ConstVal::FixedGameUpdate;
-    //if (m_pauseTime < 0)
-    //{
-    //    m_pauseTime = PauseTime;
+    auto& player = entity.getComponent<Player>();
 
-    //    auto& player = entity.getComponent<Player>();
-    //    entity.getComponent<cro::Transform>().setPosition(player.spawnPosition);
+    //server will delete any carried crates so make sure we
+    //reset these properties.
+    player.avatar.getComponent<PlayerAvatar>().crateEnt = {};
+    player.carrying = false;
 
-    //    //TODO we need to reset rotation, collision property etc.
+    //only do this on the server
+    //and wait for the client to sync
+    if (!player.local)
+    {
+        m_pauseTime -= ConstVal::FixedGameUpdate;
+        if (m_pauseTime < 0)
+        {
+            m_pauseTime = PauseTime;
 
-    //    //only do this on the server
-    //    //and wait for the client to sync
-    //    if (!player.local)
-    //    {
-    //        player.state = Player::State::Falling;
-    //    }
-    //}
+            //we need to reset rotation, collision layer property etc.
+            player.state = Player::State::Falling;
+            player.direction = player.spawnPosition.x > 0 ? Player::Left : Player::Right;
+            player.collisionLayer = player.spawnPosition.z > 0 ? 0 : 1;
+            entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(player.collisionLayer + 1);
+            entity.getComponent<cro::Transform>().setPosition(player.spawnPosition);
+        }
+    }
 }
 
 void PlayerStateDead::processCollision(cro::Entity, const std::vector<cro::Entity>&)
