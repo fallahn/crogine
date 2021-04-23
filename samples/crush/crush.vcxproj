@@ -173,6 +173,7 @@
     <ClCompile Include="src\ParticleDirector.cpp" />
     <ClCompile Include="src\PauseState.cpp" />
     <ClCompile Include="src\PlayerState.cpp" />
+    <ClCompile Include="src\PlayerStateDead.cpp" />
     <ClCompile Include="src\PlayerStateFalling.cpp" />
     <ClCompile Include="src\PlayerStateTeleport.cpp" />
     <ClCompile Include="src\PlayerSystem.cpp" />

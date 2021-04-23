@@ -32,6 +32,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "CommonConsts.hpp"
 #include "Messages.hpp"
+#include "PlayerSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 
@@ -140,6 +141,8 @@ void CrateSystem::processFalling(cro::Entity entity)
     auto& crate = entity.getComponent<Crate>();
     crate.velocity.x *= CrateFriction; //slows down if we were just punted off the edge
 
+    PlayerCollision playerCollision;
+
     //smaller steps help reduce tunneling
     for (auto i = 0; i < StepCount; ++i)
     {
@@ -210,7 +213,7 @@ void CrateSystem::processFalling(cro::Entity entity)
                             if (crate.velocity.y <= 0) //landed from above
                             {
                                 //slow moving
-                                if (std::abs(crate.velocity.x) < (PuntVelocity * 0.2f))
+                                if (std::abs(crate.velocity.x) < (PuntVelocity * 0.1f))
                                 {
                                     crate.state = Crate::State::Idle;
                                     crate.velocity.y = 0.f;
@@ -232,9 +235,16 @@ void CrateSystem::processFalling(cro::Entity entity)
                         //nothing?
                         break;
                     case CollisionMaterial::Body:
+                        //TODO this assumes it'll only be touching one player at a time...
+
                         //hit a player - we'll check the flags in the result at the end
                         //else this may be raised multiple times due to multiple iterations
                         //so we'll just track which player we hit then deal with it in the flag check below
+                        if (!playerCollision.player.isValid()) //don't overwrite data from previous iteration
+                        {
+                            playerCollision.owner = crate.owner;
+                            playerCollision.player = e;
+                        }
                         break;
                     }
                 }
@@ -244,7 +254,10 @@ void CrateSystem::processFalling(cro::Entity entity)
 
     if (crate.collisionFlags & (1 << CollisionMaterial::Body))
     {
-        //hitting a player - TODO track who this is
+        //hitting a player - this assumes crates are only simulated
+        //server side so the clients won't know they're dead until
+        //the server says so.
+        killPlayer(playerCollision);
     }
 }
 
@@ -254,6 +267,8 @@ void CrateSystem::processBallistic(cro::Entity entity)
 
     //apply friction
     crate.velocity *= CrateFriction;
+
+    PlayerCollision playerCollision;
 
     for (auto i = 0; i < StepCount; ++i)
     {
@@ -338,7 +353,28 @@ void CrateSystem::processBallistic(cro::Entity entity)
                         }
                         break;
                     case CollisionMaterial::Body:
-                        //hit a player! TODO track which and deal with them in flag check below
+                        //hit a player! TODO this is only going to register one body per collision...
+                        //probably want an array of collision structs for each player up front.
+                        if (glm::length2(crate.velocity) > 9.f)
+                        {
+                            //kill - don't overwrite previous data else we might tunnerl through players
+                            if (!playerCollision.player.isValid())
+                            {
+                                playerCollision.owner = crate.owner;
+                                playerCollision.player = e;
+                            }
+                        }
+                        else
+                        {
+                            //stop the crate and correct
+                            crate.velocity = glm::vec3(0.f);
+                            crate.state = Crate::Idle;
+                            entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
+
+                            crate.collisionFlags &= ~(1 << CollisionMaterial::Body);
+
+                            i = StepCount; //quit testing because we changed state.
+                        }
                         break;
                     }
                 }
@@ -355,7 +391,9 @@ void CrateSystem::processBallistic(cro::Entity entity)
 
     else if (crate.collisionFlags & (1 << CollisionMaterial::Body))
     {
-        //TODO deal with any player we hit
+        //deal with any player we hit
+        //this assumes crates are only simulated server side
+        killPlayer(playerCollision);
     }
 
     //switch state if we stopped moving
@@ -401,4 +439,23 @@ std::vector<cro::Entity> CrateSystem::doBroadPhase(cro::Entity entity)
     }
 
     return collisions;
+}
+
+void CrateSystem::killPlayer(PlayerCollision& collision)
+{
+    if (collision.player.isValid()
+        && collision.player.hasComponent<Player>())
+    {
+        auto& player = collision.player.getComponent<Player>();
+        if (player.state != Player::State::Dead
+            && player.state != Player::State::Teleport)
+        {
+            player.state = Player::State::Dead;
+
+            auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+            msg->data = collision.owner;
+            msg->type = PlayerEvent::Died;
+            msg->player = collision.player;
+        }
+    }
 }

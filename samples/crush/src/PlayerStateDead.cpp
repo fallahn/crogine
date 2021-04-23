@@ -27,52 +27,46 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "PlayerState.hpp"
+#include "PlayerSystem.hpp"
+#include "CommonConsts.hpp"
 
-#include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/Callback.hpp>
 
-#include <crogine/detail/glm/vec3.hpp>
-
-struct Crate final
+namespace
 {
-    enum State
-    {
-        Idle, Falling, Ballistic,
+    constexpr float PauseTime = 4.f;
+}
 
-        Carried //technically invisible, just disable collision
-    }state = Falling;
-
-    std::int32_t owner = -1;
-
-    std::uint8_t collisionLayer = 0;
-    std::uint8_t collisionFlags = 0;
-    glm::vec3 velocity = glm::vec3(0.f);
-
-    glm::vec3 spawnPosition = glm::vec3(0.f);
-};
-
-class CrateSystem final : public cro::System
+PlayerStateDead::PlayerStateDead()
+    : m_pauseTime(PauseTime)
 {
-public:
-    explicit CrateSystem(cro::MessageBus&);
 
-    void process(float) override;
+}
 
-private:
+//public
+void PlayerStateDead::processMovement(cro::Entity entity, Input, cro::Scene&)
+{
+    //m_pauseTime -= ConstVal::FixedGameUpdate;
+    //if (m_pauseTime < 0)
+    //{
+    //    m_pauseTime = PauseTime;
 
-    void processIdle(cro::Entity);
-    void processCarried(cro::Entity);
-    void processFalling(cro::Entity);
-    void processBallistic(cro::Entity);
+    //    auto& player = entity.getComponent<Player>();
+    //    entity.getComponent<cro::Transform>().setPosition(player.spawnPosition);
 
-    std::vector<cro::Entity> doBroadPhase(cro::Entity);
+    //    //TODO we need to reset rotation, collision property etc.
 
-    struct PlayerCollision final
-    {
-        std::int8_t owner = -1;
-        cro::Entity player;
-    };
-    void killPlayer(PlayerCollision&);
-};
+    //    //only do this on the server
+    //    //and wait for the client to sync
+    //    if (!player.local)
+    //    {
+    //        player.state = Player::State::Falling;
+    //    }
+    //}
+}
+
+void PlayerStateDead::processCollision(cro::Entity, const std::vector<cro::Entity>&)
+{
+
+}

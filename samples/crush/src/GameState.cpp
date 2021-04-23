@@ -1050,12 +1050,12 @@ void GameState::spawnPlayer(PlayerInfo info)
             root.addComponent<Player>().id = info.playerID;
             root.getComponent<Player>().connectionID = info.connectionID;
             root.getComponent<Player>().spawnPosition = info.spawnPosition;
-            root.getComponent<Player>().collisionLayer = info.playerID / 2;
+            root.getComponent<Player>().collisionLayer = info.spawnPosition.z > 0 ? 0 : 1;
             root.getComponent<Player>().local = true;
             root.getComponent<Player>().direction = info.spawnPosition.x > 0 ? Player::Left : Player::Right;
 
             root.addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
-            root.getComponent<cro::DynamicTreeComponent>().setFilterFlags((info.playerID / 2) + 1);
+            root.getComponent<cro::DynamicTreeComponent>().setFilterFlags(root.getComponent<Player>().collisionLayer + 1);
 
             root.addComponent<CollisionComponent>().rectCount = 3;
             root.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
@@ -1529,6 +1529,13 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         if (m_avatars[data.playerID].isValid())
         {
             m_avatars[data.playerID].getComponent<cro::ParticleEmitter>().start();
+        }
+        break;
+    case PlayerEvent::Died:
+        state = "died";
+        if (m_avatars[data.playerID].isValid())
+        {
+            m_avatars[data.playerID].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
         }
         break;
     case PlayerEvent::None:

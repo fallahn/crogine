@@ -71,9 +71,11 @@ struct PlayerEvent final
         Teleported,
         Landed,
         Jumped,
-        DroppedCrate
+        DroppedCrate,
+        Died
     }type = None;
 
+    std::int32_t data = -1;
     cro::Entity player;
 };
 

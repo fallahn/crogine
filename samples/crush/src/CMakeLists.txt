@@ -18,6 +18,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ParticleDirector.cpp
   ${PROJECT_DIR}/PauseState.cpp
   ${PROJECT_DIR}/PlayerState.cpp
+  ${PROJECT_DIR}/PlayerStateDead.cpp
   ${PROJECT_DIR}/PlayerStateFalling.cpp
   ${PROJECT_DIR}/PlayerStateTeleport.cpp
   ${PROJECT_DIR}/PlayerStateWalking.cpp

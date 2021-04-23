@@ -46,7 +46,7 @@ static const cro::FloatRect FootBounds = cro::FloatRect(0.05f - (PlayerSize.x / 
 static const cro::Box PlayerBounds = {glm::vec3(-((PlayerSize.x / 2.f) + 0.5f), 0.f, PlayerSize.z / 2.f), glm::vec3((PlayerSize.x / 2.f) + 0.5f, PlayerSize.y, -PlayerSize.z / 2.f)};
 
 //assumes crate origin is centre
-static const cro::Box CrateBounds = { glm::vec3(-0.25f, -0.25f, 0.25f), glm::vec3(0.25f, 0.25f, -0.25f) };
+static const cro::Box CrateBounds = { glm::vec3(-0.3f, -0.3f, 0.3f), glm::vec3(0.3f, 0.3f, -0.3f) };
 static const cro::FloatRect CrateArea = cro::FloatRect(-0.25f, -0.25f, 0.5f, 0.5f);
 static const cro::FloatRect CrateFoot = cro::FloatRect(-0.2f, -0.35f, 0.4f, 0.1f);
 

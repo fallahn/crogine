@@ -165,6 +165,9 @@
     <ClCompile Include="src\PuntBarSystem.cpp">
       <Filter>Source Files\Client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\PlayerStateDead.cpp">
+      <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">

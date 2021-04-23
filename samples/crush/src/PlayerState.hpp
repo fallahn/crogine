@@ -105,3 +105,15 @@ public:
 
 private:
 };
+
+class PlayerStateDead final : public PlayerState
+{
+public:
+    PlayerStateDead();
+
+    void processMovement(cro::Entity, Input, cro::Scene&) override;
+    void processCollision(cro::Entity, const std::vector<cro::Entity>&) override;
+
+private:
+    float m_pauseTime;
+};

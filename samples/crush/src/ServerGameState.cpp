@@ -87,9 +87,9 @@ void GameState::handleMessage(const cro::Message& msg)
                 {
                     auto playerEnt = m_playerEntities[data.playerID][i];
 
-                    //if the player was carrying a crate ehrn they left
+                    //if the player was carrying a crate when they left
                     //destroy it and spawn a new one.
-                    auto crateEnt = playerEnt.getComponent<PlayerAvatar>().crateEnt;
+                    auto crateEnt = playerEnt.getComponent<Player>().avatar.getComponent<PlayerAvatar>().crateEnt;
                     if (crateEnt.isValid())
                     {
                         auto pos = crateEnt.getComponent<Crate>().spawnPosition;
@@ -389,7 +389,7 @@ void GameState::buildWorld()
                     m_playerEntities[i][j] = m_scene.createEntity();
                     m_playerEntities[i][j].addComponent<cro::Transform>().setPosition(position);
                     m_playerEntities[i][j].addComponent<Player>().id = i + j;
-                    m_playerEntities[i][j].getComponent<Player>().collisionLayer = playerCount / 2;
+                    m_playerEntities[i][j].getComponent<Player>().collisionLayer = position.z > 0 ? 0 : 1;
                     m_playerEntities[i][j].getComponent<Player>().spawnPosition = position;
                     m_playerEntities[i][j].getComponent<Player>().connectionID = i;
                     m_playerEntities[i][j].getComponent<Player>().direction = position.x > 0 ? Player::Left : Player::Right;
@@ -409,7 +409,7 @@ void GameState::buildWorld()
                     m_playerEntities[i][j].getComponent<cro::Transform>().addChild(avatar.getComponent<cro::Transform>());
 
                     m_playerEntities[i][j].addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
-                    m_playerEntities[i][j].getComponent<cro::DynamicTreeComponent>().setFilterFlags((playerCount / 2) + 1);
+                    m_playerEntities[i][j].getComponent<cro::DynamicTreeComponent>().setFilterFlags(position.z > 0 ? 1 : 2);
 
                     m_playerEntities[i][j].addComponent<CollisionComponent>().rectCount = 3;
                     m_playerEntities[i][j].getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Body;
