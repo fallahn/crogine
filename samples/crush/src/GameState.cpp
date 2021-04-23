@@ -888,6 +888,9 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     switch (packet.getID())
     {
     default: break;
+    case PacketID::PlayerDisconnect:
+        removePlayer(packet.as<std::uint8_t>());
+        break;
     case PacketID::Ping:
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::Ping, packet.as<std::int32_t>(), cro::NetFlag::Unreliable);
         break;
@@ -922,6 +925,12 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         {
             if (e.getComponent<Actor>().serverEntityId == entityID)
             {
+                //check if this is a remote player and remove the
+                //box icon from their avatar first
+                if (e.hasComponent<PlayerAvatar>())
+                {
+                    m_gameScene.destroyEntity(e.getComponent<PlayerAvatar>().holoEnt);
+                }
                 m_gameScene.destroyEntity(e);
             }
         };
@@ -1017,7 +1026,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         //adding the client ID aligns it correctly with what the server has
         entity.addComponent<Actor>().id = info.playerID + info.connectionID; 
         entity.getComponent<Actor>().serverEntityId = info.serverID;
-        LogI << info.connectionID << std::endl;
+
         return entity;
     };
 
@@ -1206,7 +1215,6 @@ void GameState::spawnPlayer(PlayerInfo info)
 #endif
         }
 
-
         if (m_cameras.size() == 1)
         {
             //this is the first to join
@@ -1262,6 +1270,14 @@ void GameState::spawnPlayer(PlayerInfo info)
         addBoxDebug(entity, m_gameScene, cro::Colour::Magenta);
 #endif
     }
+}
+
+void GameState::removePlayer(std::uint8_t id)
+{
+    //player ents ought to have been removed by the server
+    //this is more for notification porpoises
+
+
 }
 
 void GameState::spawnActor(ActorSpawn as)

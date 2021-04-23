@@ -85,10 +85,28 @@ void GameState::handleMessage(const cro::Message& msg)
             {
                 if (m_playerEntities[data.playerID][i].isValid())
                 {
-                    auto entityID = m_playerEntities[data.playerID][i].getIndex();
-                    m_scene.destroyEntity(m_playerEntities[data.playerID][i]);
+                    auto playerEnt = m_playerEntities[data.playerID][i];
 
+                    //if the player was carrying a crate ehrn they left
+                    //destroy it and spawn a new one.
+                    auto crateEnt = playerEnt.getComponent<PlayerAvatar>().crateEnt;
+                    if (crateEnt.isValid())
+                    {
+                        auto pos = crateEnt.getComponent<Crate>().spawnPosition;
+                        auto crateID = crateEnt.getIndex();
+                        m_scene.destroyEntity(crateEnt);
+                        m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, crateID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                        spawnActor(ActorID::Crate, pos);
+                    }
+
+                    //then tidy up their entity
+                    auto entityID = playerEnt.getIndex();
+                    m_scene.destroyEntity(playerEnt);
                     m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    //and let clients know who it was
+                    m_sharedData.host.broadcastPacket(PacketID::PlayerDisconnect, data.playerID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
             }
         }
@@ -481,6 +499,7 @@ cro::Entity GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
     default: break;
     case ActorID::Crate:
         entity.addComponent<Crate>().collisionLayer = position.z > 0 ? 0 : 1;
+        entity.getComponent<Crate>().spawnPosition = position;
 
         entity.addComponent<cro::DynamicTreeComponent>().setArea(CrateBounds);
         entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((position.z > 0 ? 1 : 2) | CollisionID::Crate);

@@ -109,6 +109,7 @@ private:
 
     void handlePacket(const cro::NetEvent::Packet&);
     void spawnPlayer(PlayerInfo);
+    void removePlayer(std::uint8_t);
     void spawnActor(ActorSpawn);
     void updateView(cro::Camera&);
 

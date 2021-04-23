@@ -64,6 +64,7 @@ namespace PacketID
         PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
         PlayerUpdate, //< world pos, rotation, int32 timestamp - used for reconciliation, send directly to targeted peer
         PlayerState, //< PlayerStateChange struct - notifies a client when a player switches state
+        PlayerDisconnect, //< uint8 ID of player/connection
         ActorSpawn, //< ActorSpawn struct
         ActorUpdate, //< uint8 ID pos, rotation - used for interpolation of other players and NPCs
         CrateUpdate, //< CrateState struct
