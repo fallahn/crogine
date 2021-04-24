@@ -34,8 +34,8 @@ source distribution.
 
 namespace
 {
-    const float MaxDistSqr = 460.f * 460.f; //if we're bigger than this go straight to dest to hide flickering
-
+    constexpr float MaxDistSqr = 40.f * 40.f; //if we're bigger than this go straight to dest to hide flickering
+    constexpr float Latency = 1.f / 20.f; //approx latency from interpolation. Used to extrapolate from velocity
 }
 
 InterpolationSystem::InterpolationSystem(cro::MessageBus& mb)
@@ -63,6 +63,8 @@ void InterpolationSystem::process(float dt)
                 tx.setPosition(interp.m_targetPoint.position);
                 tx.setRotation(interp.m_targetPoint.rotation);
 
+                tx.move(interp.m_targetPoint.velocity * Latency);
+
                 interp.applyNextTarget();
             }
             continue;
@@ -75,15 +77,21 @@ void InterpolationSystem::process(float dt)
 
             if (currTime < 1)
             {
-                tx.setRotation(glm::slerp(interp.m_previousPoint.rotation, interp.m_targetPoint.rotation, currTime));
                 //tx.setPosition(interp.m_previousPoint.position + (diff * currTime));
                 tx.setPosition(glm::mix(interp.m_previousPoint.position, interp.m_targetPoint.position, currTime));
+                tx.setRotation(glm::slerp(interp.m_previousPoint.rotation, interp.m_targetPoint.rotation, currTime));
+
+                //float vel = interp.m_previousPoint.velocity + ((interp.m_targetPoint.velocity - interp.m_previousPoint.velocity) * currTime);
+                auto vel = glm::mix(interp.m_previousPoint.velocity, interp.m_targetPoint.velocity, currTime);
+                tx.move(vel * Latency); //TODO this should probably include the client's latency to the server
             }
             else
             {
                 //snap to target
                 tx.setPosition(interp.m_targetPoint.position);
                 tx.setRotation(interp.m_targetPoint.rotation);
+
+                tx.move(interp.m_targetPoint.velocity * Latency);
 
                 //shift interp target to next in buffer if available
                 interp.applyNextTarget();

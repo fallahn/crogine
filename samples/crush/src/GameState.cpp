@@ -972,7 +972,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 e.getComponent<Actor>().serverEntityId == update.serverID)
             {
                 auto& interp = e.getComponent<InterpolationComponent>();
-                interp.setTarget({ cro::Util::Net::decompressVec3(update.position), cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
+                interp.setTarget({ cro::Util::Net::decompressVec3(update.position), cro::Util::Net::decompressQuat(update.rotation), update.timestamp, cro::Util::Net::decompressVec2(update.velocity, 128) });
             }
         };
         m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);

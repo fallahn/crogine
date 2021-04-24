@@ -40,12 +40,14 @@ source distribution.
 */
 struct InterpolationPoint final
 {
-    InterpolationPoint(glm::vec3 pos = glm::vec3(0.f), glm::quat rot = glm::quat(1.f,0.f,0.f,0.f), std::int32_t ts = 0)
-        : position(pos), rotation(rot), timestamp(ts){}
+    InterpolationPoint(glm::vec3 pos = glm::vec3(0.f), glm::quat rot = glm::quat(1.f,0.f,0.f,0.f), std::int32_t ts = 0, glm::vec2 v = glm::vec2(0.f))
+        : position(pos), rotation(rot), timestamp(ts), velocity(v){}
 
     glm::vec3 position = glm::vec3(0.f);
     glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
     std::int32_t timestamp = 0;
+
+    glm::vec2 velocity = glm::vec2(0.f);
 };
 
 /*!

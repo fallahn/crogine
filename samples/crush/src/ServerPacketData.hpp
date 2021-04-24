@@ -36,6 +36,7 @@ source distribution.
 
 using CompressedQuat = std::array<std::int16_t, 4u>;
 using CompressedVec3 = std::array<std::int16_t, 3u>;
+using CompressedVec2 = std::array<std::int16_t, 2u>;
 
 struct LobbyData final
 {
@@ -80,6 +81,7 @@ struct ActorUpdate final
 {
     CompressedQuat rotation{};
     CompressedVec3 position{};
+    CompressedVec2 velocity{};
     std::uint16_t serverID = 0;
     std::int32_t timestamp = 0;
     std::int8_t actorID = -1;

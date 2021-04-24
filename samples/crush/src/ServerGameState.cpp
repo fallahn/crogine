@@ -236,6 +236,13 @@ void GameState::netBroadcast()
         update.rotation = cro::Util::Net::compressQuat(tx.getRotation());
         update.timestamp = timestamp;
 
+        //adds some extrapolation when fast moving
+        if (e.hasComponent<Crate>())
+        {
+            const auto& crate = e.getComponent<Crate>();
+            update.velocity = cro::Util::Net::compressVec2(crate.velocity, 128);
+        }
+
         for (auto i = 0u; i < ConstVal::MaxClients; ++i)
         {
             if (m_sharedData.clients[i].ready)
