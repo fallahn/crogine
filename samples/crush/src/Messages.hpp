@@ -41,7 +41,8 @@ namespace MessageID
         PlayerMessage,
         CrateMessage,
         ConnectionMessage,
-        GameMessage
+        GameMessage,
+        AvatarMessage
     };
 }
 
@@ -65,14 +66,16 @@ struct UIEvent final
 
 struct PlayerEvent final
 {
-    enum
+    enum Type
     {
         None,
         Teleported,
         Landed,
         Jumped,
         DroppedCrate,
-        Died
+        Died,
+        Reset,
+        Spawned
     }type = None;
 
     std::int32_t data = -1;
@@ -104,4 +107,21 @@ struct GameEvent final
     {
         GameBegin
     }type = GameBegin;
+};
+
+struct AvatarEvent final
+{
+    enum
+    {
+        None,
+        Died,
+        Jumped,
+        Landed,
+        Teleported,
+        DroppedCrate,
+        Reset,
+        Spawned
+    }type = None;
+    std::int8_t playerID = -1;
+    glm::vec3 position;
 };

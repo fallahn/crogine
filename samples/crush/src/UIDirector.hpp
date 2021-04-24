@@ -29,16 +29,23 @@ source distribution.
 
 #pragma once
 
-#include <crogine/detail/glm/vec2.hpp>
-#include <crogine/detail/GlobalConsts.hpp>
+#include <crogine/ecs/Director.hpp>
 
-static const glm::vec2 PuntBarSize = { 250.f, 20.f };
-static const glm::vec2 PuntBarOffset = { 20.f, 20.f };
+#include <array>
 
-static const glm::vec2 DiedMessageOffset = { 0.f, 100.f };
-
-static inline glm::vec2 getUICorner(std::size_t playerID, std::size_t playerCount)
+struct SharedStateData;
+class UIDirector final : public cro::Director 
 {
-    return glm::vec2(((cro::DefaultSceneSize.x / 2) * (playerID % 2)),
-        (((1 - (playerID / 2)) * (cro::DefaultSceneSize.y / 2)) * (playerCount / 3)));
-}
+public:
+    explicit UIDirector(SharedStateData&);
+
+    void handleMessage(const cro::Message&) override;
+
+
+private:
+    SharedStateData& m_sharedData;
+
+    std::array<cro::Entity, 4> m_resetMessages = {};
+
+    cro::Entity createTextMessage(glm::vec2, const std::string&);
+};

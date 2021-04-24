@@ -157,6 +157,13 @@ void PlayerSystem::processInput(cro::Entity entity)
                 {
                     msg->type = PlayerEvent::Jumped;
                 }
+                else if (lastState == Player::State::Reset)
+                {
+                    msg->type = PlayerEvent::Spawned;
+                }
+                break;
+            case Player::State::Reset:
+                msg->type = PlayerEvent::Reset;
                 break;
             }
         }

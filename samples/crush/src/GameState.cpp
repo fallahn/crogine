@@ -45,6 +45,7 @@ source distribution.
 #include "AvatarScaleSystem.hpp"
 #include "ParticleDirector.hpp"
 #include "PuntBarSystem.hpp"
+#include "UIDirector.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -66,6 +67,7 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
@@ -480,7 +482,10 @@ void GameState::addSystems()
     m_uiScene.addSystem<PuntBarSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
+    m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+
+    m_uiScene.addDirector<UIDirector>(m_sharedData);
 }
 
 void GameState::loadAssets()
@@ -1106,7 +1111,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             cam.reflectionBuffer.setSmooth(true);
             cam.refractionBuffer.create(ReflectionMapSize, ReflectionMapSize);
             cam.refractionBuffer.setSmooth(true);
-            cam.depthBuffer.create(4096, 4096);
+            cam.depthBuffer.create(2048, 2048);
 
             auto camController = m_gameScene.createEntity();
             camController.addComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());
@@ -1115,12 +1120,20 @@ void GameState::spawnPlayer(PlayerInfo info)
             camController.getComponent<cro::Callback>().function =
                 [root](cro::Entity e, float dt)
             {
+                auto targetPos = root.getComponent<cro::Transform>().getPosition();
+
+                //rotate the camera depending on the Z depth of the player
                 static const float TotalDistance = LayerDepth * 2.f;
-                auto position = root.getComponent<cro::Transform>().getPosition().z;
+                auto position = targetPos.z;
                 float currentDistance = LayerDepth - position;
                 currentDistance /= TotalDistance;
 
-                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI * currentDistance);
+                auto& tx = e.getComponent<cro::Transform>();
+                tx.setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI* currentDistance);
+
+                //and follow the root node
+                auto dir = targetPos - tx.getPosition();
+                tx.move(dir * 10.f * dt);
             };
 
 
@@ -1142,7 +1155,6 @@ void GameState::spawnPlayer(PlayerInfo info)
 
 
             root.getComponent<Player>().avatar = playerEnt;
-            root.getComponent<cro::Transform>().addChild(camController.getComponent<cro::Transform>());
             root.getComponent<cro::Transform>().addChild(playerEnt.getComponent<cro::Transform>());
             root.getComponent<cro::Transform>().addChild(holoEnt.getComponent<cro::Transform>());
 
@@ -1504,19 +1516,32 @@ void GameState::crateUpdate(const CrateState& data)
 
 void GameState::avatarUpdate(const PlayerStateChange& data)
 {
-    //TODO raise a message for this for things like sound effects
-    //if not a local player
+    //raise a message for this for things like sound effects
+    auto* msg = getContext().appInstance.getMessageBus().post<AvatarEvent>(MessageID::AvatarMessage);
+    msg->playerID = data.playerID;
 
+    if (m_avatars[data.playerID].isValid())
+    {
+        msg->position = m_avatars[data.playerID].getComponent<cro::Transform>().getWorldPosition();
+    }
 
     std::string state;
     switch (data.playerState)
     {
     default: break;
+    case PlayerEvent::Spawned:
+        msg->type = AvatarEvent::Spawned;
+        break;
+    case PlayerEvent::Reset:
+        msg->type = AvatarEvent::Reset;
+        break;
     case PlayerEvent::Jumped:
         state = "jumped";
+        msg->type = AvatarEvent::Jumped;
         break;
     case PlayerEvent::Landed:
         state = "landed";
+        msg->type = AvatarEvent::Landed;
         if (m_avatars[data.playerID].isValid())
         {
             m_avatars[data.playerID].getComponent<cro::ParticleEmitter>().stop();
@@ -1525,9 +1550,11 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         break;
     case PlayerEvent::DroppedCrate:
         state = "dropped crate";
+        msg->type = AvatarEvent::DroppedCrate;
         break;
     case PlayerEvent::Teleported:
         state = "teleported";
+        msg->type = AvatarEvent::Teleported;
         if (m_avatars[data.playerID].isValid())
         {
             m_avatars[data.playerID].getComponent<cro::ParticleEmitter>().start();
@@ -1535,6 +1562,7 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         break;
     case PlayerEvent::Died:
         state = "died";
+        msg->type = AvatarEvent::Died;
         if (m_avatars[data.playerID].isValid())
         {
             m_avatars[data.playerID].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
@@ -1543,6 +1571,7 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         break;
     case PlayerEvent::None:
         state = "none";
+        msg->type = AvatarEvent::None;
         if (m_avatars[data.playerID].isValid())
         {
             

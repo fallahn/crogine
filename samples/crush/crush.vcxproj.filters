@@ -168,6 +168,9 @@
     <ClCompile Include="src\PlayerStateDead.cpp">
       <Filter>Source Files\shared\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\UIDirector.cpp">
+      <Filter>Source Files\Client\directors</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -301,6 +304,9 @@
     </ClInclude>
     <ClInclude Include="src\PuntBarSystem.hpp">
       <Filter>Header Files\Client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UIDirector.hpp">
+      <Filter>Header Files\Client\directors</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

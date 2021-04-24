@@ -34,7 +34,6 @@ source distribution.
 #include "PuntBarSystem.hpp"
 
 #include <crogine/detail/OpenGL.hpp>
-#include <crogine/detail/GlobalConsts.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
@@ -86,8 +85,6 @@ void GameState::updatePlayerUI()
             cro::Vertex2D(glm::vec2(PuntBarSize.x, 0.f), colour)
         };
         m_playerUIs[i].puntBar.getComponent<cro::Drawable2D>().updateLocalBounds();
-        m_playerUIs[i].puntBar.getComponent<cro::Transform>().setPosition(
-            glm::vec2(PuntBarOffset.x + ((cro::DefaultSceneSize.x / 2) * (i % 2)),
-                (((1 - (i / 2)) * (cro::DefaultSceneSize.y / 2)) * (m_cameras.size() / 3)) + PuntBarOffset.y));
+        m_playerUIs[i].puntBar.getComponent<cro::Transform>().setPosition(getUICorner(i, m_cameras.size()) + PuntBarOffset);
     }
 }

@@ -186,6 +186,7 @@
     <ClCompile Include="src\Server.cpp" />
     <ClCompile Include="src\ServerGameState.cpp" />
     <ClCompile Include="src\SliderSystem.cpp" />
+    <ClCompile Include="src\UIDirector.cpp" />
     <ClCompile Include="src\WeatherDirector.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -232,6 +233,7 @@
     <ClInclude Include="src\Slider.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\UIConsts.hpp" />
+    <ClInclude Include="src\UIDirector.hpp" />
     <ClInclude Include="src\WeatherDirector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
