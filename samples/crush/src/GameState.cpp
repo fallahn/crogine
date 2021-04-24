@@ -94,7 +94,8 @@ namespace
 
     //for debug output
     cro::Entity playerEntity;
-    std::size_t bitrate = 0;
+    float bitrate = 40.f;
+    constexpr float BitrateAlpha = 0.9f;
     std::size_t bitrateCounter = 0;
 
     constexpr float PortalWidth = 1.6f;
@@ -166,7 +167,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     //debug output
     registerWindow([&]()
         {
-            ImGui::SetNextWindowSize({ 300.f, 320.f });
             if (ImGui::Begin("Info"))
             {
                 if (playerEntity.isValid())
@@ -337,15 +337,16 @@ bool GameState::simulate(float dt)
 
         if (m_bitrateClock.elapsed().asMilliseconds() > 1000)
         {
-            //TODO convert this to a moving average
             m_bitrateClock.restart();
-            bitrate = bitrateCounter;
+            bitrate = BitrateAlpha * bitrate + ((1.f - BitrateAlpha) * bitrateCounter);
             bitrateCounter = 0;
         }
     }
     else
     {
         //we've been disconnected somewhere - push error state
+        m_sharedData.errorMessage = "Lost connection to host.";
+        requestStackPush(States::Error);
     }
 
     if (m_dataRequestCount == MaxDataRequests)
@@ -467,6 +468,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::DynamicTreeSystem>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
+    m_gameScene.addSystem<CrateSystem>(mb); //local collision to smooth out interpolation
     m_gameScene.addSystem<AvatarScaleSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
@@ -1332,7 +1334,7 @@ void GameState::spawnActor(ActorSpawn as)
         entity.addComponent<cro::DynamicTreeComponent>().setArea(CrateBounds);
         entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((position.z > 0 ? 1 : 2) | CollisionID::Crate);
 
-        entity.addComponent<Crate>();
+        entity.addComponent<Crate>().local = true;
 
         entity.addComponent<AvatarScale>().current = 1.f;
         entity.getComponent<AvatarScale>().target = 1.f;

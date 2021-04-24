@@ -63,6 +63,8 @@ void UIDirector::handleMessage(const cro::Message& msg)
         {
             CRO_ASSERT(data.playerID > -1, "");
 
+            //TODO we want to check that the playerID actually belongs to this client
+
             if (!m_resetMessages[data.playerID].isValid())
             {
                 auto pos = getUICorner(data.playerID, m_sharedData.localPlayerCount);

@@ -39,6 +39,11 @@ static const glm::vec2 DiedMessageOffset = { 0.f, 100.f };
 
 static inline glm::vec2 getUICorner(std::size_t playerID, std::size_t playerCount)
 {
+    if (playerCount == 1)
+    {
+        return glm::vec2(0.f);
+    }
+
     return glm::vec2(((cro::DefaultSceneSize.x / 2) * (playerID % 2)),
         (((1 - (playerID / 2)) * (cro::DefaultSceneSize.y / 2)) * (playerCount / 3)));
 }

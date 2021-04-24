@@ -64,34 +64,93 @@ void CrateSystem::process(float)
     for (auto& entity : entities)
     {
         const auto& crate = entity.getComponent<Crate>();
-        auto oldState = crate.state;
-        switch (crate.state)
-        {
-        default: break;
-        case Crate::Ballistic:
-            processBallistic(entity);
-            break;
-        case Crate::Carried:
-            processCarried(entity);
-            break;
-        case Crate::Falling:
-            processFalling(entity);
-            break;
-        case Crate::Idle:
-            processIdle(entity);
-            break;
-        }
 
-        if (crate.state != oldState)
+        if (crate.local)
         {
-            auto* msg = postMessage<CrateEvent>(MessageID::CrateMessage);
-            msg->crate = entity;
-            msg->type = CrateEvent::StateChanged;
+            //do collision with solid client side
+            //to help smooth out extrapolation
+            processLocal(entity);
+        }
+        else
+        {
+            auto oldState = crate.state;
+            switch (crate.state)
+            {
+            default: break;
+            case Crate::Ballistic:
+                processBallistic(entity);
+                break;
+            case Crate::Carried:
+                processCarried(entity);
+                break;
+            case Crate::Falling:
+                processFalling(entity);
+                break;
+            case Crate::Idle:
+                processIdle(entity);
+                break;
+            }
+
+            if (crate.state != oldState)
+            {
+                auto* msg = postMessage<CrateEvent>(MessageID::CrateMessage);
+                msg->crate = entity;
+                msg->type = CrateEvent::StateChanged;
+            }
         }
     }
 }
 
 //private
+void CrateSystem::processLocal(cro::Entity entity)
+{
+    const auto& crate = entity.getComponent<Crate>();
+
+    for (auto i = 0; i < StepCount; ++i)
+    {
+        //collision update
+        auto collisions = doBroadPhase(entity);
+
+        auto position = entity.getComponent<cro::Transform>().getPosition();
+        const auto& collisionComponent = entity.getComponent<CollisionComponent>();
+
+        auto bodyRect = collisionComponent.rects[0].bounds;
+        bodyRect.left += position.x;
+        bodyRect.bottom += position.y;
+
+        for (auto e : collisions)
+        {
+            auto otherPos = e.getComponent<cro::Transform>().getPosition();
+            const auto& otherCollision = e.getComponent<CollisionComponent>();
+            for (auto i = 0; i < otherCollision.rectCount; ++i)
+            {
+                auto otherRect = otherCollision.rects[i].bounds;
+                otherRect.left += otherPos.x;
+                otherRect.bottom += otherPos.y;
+
+                cro::FloatRect overlap;
+
+                //crate collision
+                if (bodyRect.intersects(otherRect, overlap))
+                {
+                    auto manifold = calcManifold(bodyRect, otherRect, overlap);
+
+                    switch (otherCollision.rects[i].material)
+                    {
+                    default: break;
+                    /*case CollisionMaterial::Crate:
+                        [[fallthrough]];*/
+                    case CollisionMaterial::Solid:
+                        //correct for position
+                        entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void CrateSystem::processIdle(cro::Entity entity)
 {
     auto& crate = entity.getComponent<Crate>();

@@ -51,6 +51,8 @@ struct Crate final
     glm::vec3 velocity = glm::vec3(0.f);
 
     glm::vec3 spawnPosition = glm::vec3(0.f);
+
+    bool local = false;
 };
 
 class CrateSystem final : public cro::System
@@ -62,6 +64,8 @@ public:
 
 private:
 
+    void processLocal(cro::Entity);
+    
     void processIdle(cro::Entity);
     void processCarried(cro::Entity);
     void processFalling(cro::Entity);
