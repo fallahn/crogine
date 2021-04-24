@@ -56,6 +56,7 @@ PlayerSystem::PlayerSystem(cro::MessageBus& mb)
     m_playerStates[Player::State::Walking] = std::make_unique<PlayerStateWalking>();
     m_playerStates[Player::State::Teleport] = std::make_unique<PlayerStateTeleport>();
     m_playerStates[Player::State::Dead] = std::make_unique<PlayerStateDead>();
+    m_playerStates[Player::State::Reset] = std::make_unique<PlayerStateReset>();
 }
 
 //public

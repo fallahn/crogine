@@ -60,6 +60,7 @@ struct Player final
         {
             Walking, Falling,
             Teleport, Dead,
+            Reset,
 
             Count
         };
@@ -89,6 +90,8 @@ struct Player final
     static constexpr float PuntCoolDown = 3.f; //seconds
     float puntLevel = PuntCoolDown;
     float puntLevelLinear = PuntCoolDown;
+
+    float resetTime = 1.f;
 };
 
 struct PlayerAvatar final

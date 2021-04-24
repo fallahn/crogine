@@ -31,22 +31,23 @@ source distribution.
 #include "PlayerSystem.hpp"
 #include "CommonConsts.hpp"
 
+#include <crogine/detail/glm/gtx/norm.hpp>
+
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/DynamicTreeComponent.hpp>
 
 namespace
 {
-    constexpr float PauseTime = 4.f;
+
 }
 
 PlayerStateDead::PlayerStateDead()
-    : m_pauseTime(PauseTime)
 {
 
 }
 
 //public
-void PlayerStateDead::processMovement(cro::Entity entity, Input, cro::Scene&)
+void PlayerStateDead::processMovement(cro::Entity entity, Input input, cro::Scene&)
 {
     auto& player = entity.getComponent<Player>();
 
@@ -55,26 +56,84 @@ void PlayerStateDead::processMovement(cro::Entity entity, Input, cro::Scene&)
     player.avatar.getComponent<PlayerAvatar>().crateEnt = {};
     player.carrying = false;
 
+
+    player.resetTime -= ConstVal::FixedGameUpdate;
+    if (player.resetTime < 0)
+    {
+        if (input.buttonFlags & InputFlag::Jump)
+        {
+            player.resetTime = 1.f;
+            player.state = Player::State::Reset;
+        }
+    }
+
+
+
+
     //only do this on the server
     //and wait for the client to sync
-    if (!player.local)
-    {
-        m_pauseTime -= ConstVal::FixedGameUpdate;
-        if (m_pauseTime < 0)
-        {
-            m_pauseTime = PauseTime;
+    //if (!player.local)
+    //{
+    //    m_pauseTime -= ConstVal::FixedGameUpdate;
+    //    if (m_pauseTime < 0)
+    //    {
+    //        m_pauseTime = PauseTime;
 
-            //we need to reset rotation, collision layer property etc.
-            player.state = Player::State::Falling;
-            player.direction = player.spawnPosition.x > 0 ? Player::Left : Player::Right;
-            player.collisionLayer = player.spawnPosition.z > 0 ? 0 : 1;
-            entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(player.collisionLayer + 1);
-            entity.getComponent<cro::Transform>().setPosition(player.spawnPosition);
+    //        //we need to reset rotation, collision layer property etc.
+    //        player.state = Player::State::Falling;
+    //        player.direction = player.spawnPosition.x > 0 ? Player::Left : Player::Right;
+    //        player.collisionLayer = player.spawnPosition.z > 0 ? 0 : 1;
+    //        entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(player.collisionLayer + 1);
+    //        entity.getComponent<cro::Transform>().setPosition(player.spawnPosition);
+    //    }
+    //}
+}
+
+void PlayerStateDead::processCollision(cro::Entity, const std::vector<cro::Entity>&)
+{
+
+}
+
+//------------------------------------------
+
+PlayerStateReset::PlayerStateReset()
+{
+
+}
+
+//public
+void PlayerStateReset::processMovement(cro::Entity entity, Input, cro::Scene&)
+{
+    auto& tx = entity.getComponent<cro::Transform>();
+    auto& player = entity.getComponent<Player>();
+
+    auto dir = player.spawnPosition - tx.getPosition();
+    if (glm::length2(dir) > 0.5f)
+    {
+        tx.move(dir * 10.f * ConstVal::FixedGameUpdate);
+    }
+    else
+    {
+        tx.setPosition(player.spawnPosition);
+
+        //let the server decide when player can be active again
+        if (!player.local)
+        {
+            player.resetTime -= ConstVal::FixedGameUpdate;
+
+            if (player.resetTime < 0)
+            {
+                player.resetTime = 1.f;
+                player.state = Player::State::Falling;
+                player.direction = player.spawnPosition.x > 0 ? Player::Left : Player::Right;
+                player.collisionLayer = player.spawnPosition.z > 0 ? 0 : 1;
+                entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(player.collisionLayer + 1);
+            }
         }
     }
 }
 
-void PlayerStateDead::processCollision(cro::Entity, const std::vector<cro::Entity>&)
+void PlayerStateReset::processCollision(cro::Entity, const std::vector<cro::Entity>&)
 {
 
 }

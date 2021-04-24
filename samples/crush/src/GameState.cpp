@@ -1506,10 +1506,6 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
 {
     //TODO raise a message for this for things like sound effects
     //if not a local player
-    if (m_avatars[data.playerID].isValid())
-    {
-        m_avatars[data.playerID].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
-    }
 
 
     std::string state;
@@ -1524,6 +1520,7 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         if (m_avatars[data.playerID].isValid())
         {
             m_avatars[data.playerID].getComponent<cro::ParticleEmitter>().stop();
+            m_avatars[data.playerID].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
         }
         break;
     case PlayerEvent::DroppedCrate:
@@ -1546,6 +1543,10 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         break;
     case PlayerEvent::None:
         state = "none";
+        if (m_avatars[data.playerID].isValid())
+        {
+            
+        }
         break;
     }
 #ifdef CRO_DEBUG_

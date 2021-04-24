@@ -115,5 +115,15 @@ public:
     void processCollision(cro::Entity, const std::vector<cro::Entity>&) override;
 
 private:
-    float m_pauseTime;
+};
+
+class PlayerStateReset final : public PlayerState
+{
+public:
+    PlayerStateReset();
+
+    void processMovement(cro::Entity, Input, cro::Scene&) override;
+    void processCollision(cro::Entity, const std::vector<cro::Entity>&) override;
+
+private:
 };

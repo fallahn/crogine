@@ -450,8 +450,8 @@ void CrateSystem::killPlayer(PlayerCollision& collision)
         && collision.player.hasComponent<Player>())
     {
         auto& player = collision.player.getComponent<Player>();
-        if (player.state != Player::State::Dead
-            && player.state != Player::State::Teleport)
+        if (player.state == Player::State::Walking
+            || player.state == Player::State::Falling)
         {
             player.state = Player::State::Dead;
 
