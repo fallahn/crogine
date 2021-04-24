@@ -41,6 +41,7 @@ source distribution.
 
 struct PlayerData final
 {
+    std::int8_t playerID = -1;
     cro::String name;
     //TODO other stuff like skin data
 };
@@ -63,7 +64,7 @@ struct SharedStateData final
     //data of all players rx'd from server
     std::array<PlayerData, 4u> playerData = {};
 
-    //our local player data
+    //our local player data. Only meaningful if not split screen
     PlayerData localPlayer;
     cro::String targetIP;
     std::uint8_t localPlayerCount = 1;

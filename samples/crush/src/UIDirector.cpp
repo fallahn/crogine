@@ -63,59 +63,65 @@ void UIDirector::handleMessage(const cro::Message& msg)
         {
             CRO_ASSERT(data.playerID > -1, "");
 
-            //TODO we want to check that the playerID actually belongs to this client
-
-            if (!m_resetMessages[data.playerID].isValid())
+            //we want to check that the playerID actually belongs to this client
+            if (data.playerID == m_sharedData.localPlayer.playerID
+                || m_sharedData.localPlayerCount > 1)
             {
-                auto pos = getUICorner(data.playerID, m_sharedData.localPlayerCount);
-                auto ent = createTextMessage(pos + DiedMessageOffset, "Press Jump To Continue");
-                ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-
-                auto offset = m_sharedData.localPlayerCount > 1 ? cro::DefaultSceneSize.x / 4.f : cro::DefaultSceneSize.x / 2.f;
-                ent.getComponent<cro::Transform>().move(glm::vec2(offset, 0.f));
-                ent.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-
-                ent.addComponent<cro::Callback>().setUserData<std::tuple<float, float, float>>(0.f, 0.f, 1.f);
-                ent.getComponent<cro::Callback>().function =
-                    [](cro::Entity e, float dt)
+                if (!m_resetMessages[data.playerID].isValid())
                 {
-                    auto& [progress, target, delay] = e.getComponent<cro::Callback>().getUserData<std::tuple<float, float, float>>();
-                    
-                    delay -= dt;
-                    if (delay > 0)
-                    {
-                        return;
-                    }
-                    
-                    const auto rate = dt * 4.f;
-                    if (target > progress)
-                    {
-                        progress = std::min(1.f, progress + rate);
-                    }
-                    else
-                    {
-                        progress = std::max(0.f, progress - rate);
-                    }
+                    auto pos = getUICorner(data.playerID, m_sharedData.localPlayerCount);
+                    auto ent = createTextMessage(pos + DiedMessageOffset, "Press Jump To Continue");
+                    ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
 
-                    float scale = cro::Util::Easing::easeInBounce(progress);
-                    e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    auto offset = m_sharedData.localPlayerCount > 1 ? cro::DefaultSceneSize.x / 4.f : cro::DefaultSceneSize.x / 2.f;
+                    ent.getComponent<cro::Transform>().move(glm::vec2(offset, 0.f));
+                    ent.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
-                    if (progress == target)
+                    ent.addComponent<cro::Callback>().setUserData<std::tuple<float, float, float>>(0.f, 0.f, 1.f);
+                    ent.getComponent<cro::Callback>().function =
+                        [](cro::Entity e, float dt)
                     {
-                        e.getComponent<cro::Callback>().active = false;
-                        delay = 1.f - target;
-                    }
-                };
+                        auto& [progress, target, delay] = e.getComponent<cro::Callback>().getUserData<std::tuple<float, float, float>>();
 
-                m_resetMessages[data.playerID] = ent;
+                        delay -= dt;
+                        if (delay > 0)
+                        {
+                            return;
+                        }
+
+                        const auto rate = dt * 4.f;
+                        if (target > progress)
+                        {
+                            progress = std::min(1.f, progress + rate);
+                        }
+                        else
+                        {
+                            progress = std::max(0.f, progress - rate);
+                        }
+
+                        float scale = cro::Util::Easing::easeInElastic(progress);
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+                        if (progress == target)
+                        {
+                            e.getComponent<cro::Callback>().active = false;
+                            delay = 1.f - target;
+                        }
+                    };
+
+                    m_resetMessages[data.playerID] = ent;
+                }
+                std::get<1>(m_resetMessages[data.playerID].getComponent<cro::Callback>().getUserData<std::tuple<float, float, float>>()) = 1.f;
+                m_resetMessages[data.playerID].getComponent<cro::Callback>().active = true;
             }
-            std::get<1>(m_resetMessages[data.playerID].getComponent<cro::Callback>().getUserData<std::tuple<float, float, float>>()) = 1.f;
-            m_resetMessages[data.playerID].getComponent<cro::Callback>().active = true;
         }
             break;
         case AvatarEvent::Reset:
-            std::get<1>(m_resetMessages[data.playerID].getComponent<cro::Callback>().getUserData<std::tuple<float, float, float>>()) = 0.f;
-            m_resetMessages[data.playerID].getComponent<cro::Callback>().active = true;
+            if (m_resetMessages[data.playerID].isValid())
+            {
+                std::get<1>(m_resetMessages[data.playerID].getComponent<cro::Callback>().getUserData<std::tuple<float, float, float>>()) = 0.f;
+                m_resetMessages[data.playerID].getComponent<cro::Callback>().active = true;
+            }
             break;
         }
     }

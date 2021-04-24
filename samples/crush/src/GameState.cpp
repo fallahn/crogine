@@ -1048,7 +1048,8 @@ void GameState::spawnPlayer(PlayerInfo info)
 
     if (info.connectionID == m_sharedData.clientConnection.connectionID)
     {
-        if (m_inputParsers.count(info.playerID) == 0)
+        std::uint8_t playerNumber = info.playerID + info.connectionID;
+        if (m_inputParsers.count(playerNumber) == 0)
         {
             //this is us - the root is controlled by the player and the
             //avatar is connected as a child
@@ -1083,7 +1084,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             sumRect.width += diff;
 
 
-            auto playerNumber = info.playerID + info.connectionID;
+            m_sharedData.localPlayer.playerID = playerNumber; //this is irrelevant in split screen
             /*
             Urrrgh so this is getting confusing. Each player should have a unique number regardless
             if they are playing on the same machine or remotely - however input indexing is done
