@@ -53,13 +53,13 @@ FloatRect& FloatRect::operator=(const Box& box)
     return *this;
 }
 
-Box::Box()
+constexpr Box::Box()
     : m_points({ glm::vec3(0.f), glm::vec3(0.f) })
 {
 
 }
 
-Box::Box(glm::vec3 min, glm::vec3 max)
+constexpr Box::Box(glm::vec3 min, glm::vec3 max)
     : m_points({ min, max })
 {
 
@@ -68,6 +68,8 @@ Box::Box(glm::vec3 min, glm::vec3 max)
 Box::Box(FloatRect rect, float thickness)
     : m_points({ glm::vec3(rect.left, rect.bottom, -(thickness / 2.f)), glm::vec3(rect.left + rect.width, rect.bottom + rect.height, thickness / 2.f) })
 {
+    //hmmmm do we want a constexpr ctor or trade it for the ability to assert?
+
     CRO_ASSERT(thickness > 0, "");
 }
 

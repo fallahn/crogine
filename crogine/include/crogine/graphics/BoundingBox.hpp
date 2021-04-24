@@ -48,14 +48,14 @@ namespace cro
         /*!
         \brief Constructs a box with no size
         */
-        Box();
+        constexpr Box();
 
         /*!
         \brief Creates a box with the given min/max values
         \param min The minimum extent
         \param max The maximum extent
         */
-        Box(glm::vec3 min, glm::vec3 max);
+        constexpr Box(glm::vec3 min, glm::vec3 max);
 
         /*!
         \brief Constructs a Box from a 2D FloatRect with a given thickness
