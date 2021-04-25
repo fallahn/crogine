@@ -53,6 +53,8 @@ struct Crate final
     glm::vec3 spawnPosition = glm::vec3(0.f);
 
     bool local = false;
+    static constexpr std::int32_t DefaultHealth = 2;
+    std::int32_t health = DefaultHealth;
 };
 
 class CrateSystem final : public cro::System
@@ -62,7 +64,11 @@ public:
 
     void process(float) override;
 
+    const std::vector<cro::Entity>& getDeadCrates() const { return m_deadCrates; }
+
 private:
+
+    std::vector<cro::Entity> m_deadCrates;
 
     void processLocal(cro::Entity);
     

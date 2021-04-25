@@ -61,6 +61,8 @@ CrateSystem::CrateSystem(cro::MessageBus& mb)
 //public
 void CrateSystem::process(float)
 {
+    m_deadCrates.clear();
+
     auto& entities = getEntities();
     for (auto& entity : entities)
     {
@@ -97,6 +99,11 @@ void CrateSystem::process(float)
                 auto* msg = postMessage<CrateEvent>(MessageID::CrateMessage);
                 msg->crate = entity;
                 msg->type = CrateEvent::StateChanged;
+            }
+
+            if (crate.health == 0)
+            {
+                m_deadCrates.push_back(entity);
             }
         }
     }
@@ -295,6 +302,13 @@ void CrateSystem::processFalling(cro::Entity entity)
                         //nothing?
                         break;
                     case CollisionMaterial::Body:
+                        if (e.getComponent<Player>().state == Player::State::Dead)
+                        {
+                            //ignore dead peeopelies.
+                            crate.collisionFlags &= ~(1 << CollisionMaterial::Body);
+                            break;
+                        }
+
                         //TODO this assumes it'll only be touching one player at a time...
 
                         //hit a player - we'll check the flags in the result at the end
@@ -320,6 +334,7 @@ void CrateSystem::processFalling(cro::Entity entity)
 
         if (playerCollision.owner != playerCollision.player.getComponent<Player>().avatar.getComponent<Actor>().id)
         {
+            crate.health--;
             killPlayer(playerCollision);
         }
     }
@@ -429,6 +444,7 @@ void CrateSystem::processBallistic(cro::Entity entity)
                         if (e.getComponent<Player>().state == Player::State::Dead)
                         {
                             //ignore dead peeopelies.
+                            crate.collisionFlags &= ~(1 << CollisionMaterial::Body);
                             break;
                         }
 
@@ -467,6 +483,7 @@ void CrateSystem::processBallistic(cro::Entity entity)
     {
         //deal with any player we hit
         //this assumes crates are only simulated server side
+        crate.health--;
         killPlayer(playerCollision);
     }
 

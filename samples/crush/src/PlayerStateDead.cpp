@@ -30,6 +30,8 @@ source distribution.
 #include "PlayerState.hpp"
 #include "PlayerSystem.hpp"
 #include "CommonConsts.hpp"
+#include "Collision.hpp"
+#include "CrateSystem.hpp"
 
 #include <crogine/detail/glm/gtx/norm.hpp>
 
@@ -66,27 +68,6 @@ void PlayerStateDead::processMovement(cro::Entity entity, Input input, cro::Scen
             player.state = Player::State::Reset;
         }
     }
-
-
-
-
-    //only do this on the server
-    //and wait for the client to sync
-    //if (!player.local)
-    //{
-    //    m_pauseTime -= ConstVal::FixedGameUpdate;
-    //    if (m_pauseTime < 0)
-    //    {
-    //        m_pauseTime = PauseTime;
-
-    //        //we need to reset rotation, collision layer property etc.
-    //        player.state = Player::State::Falling;
-    //        player.direction = player.spawnPosition.x > 0 ? Player::Left : Player::Right;
-    //        player.collisionLayer = player.spawnPosition.z > 0 ? 0 : 1;
-    //        entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(player.collisionLayer + 1);
-    //        entity.getComponent<cro::Transform>().setPosition(player.spawnPosition);
-    //    }
-    //}
 }
 
 void PlayerStateDead::processCollision(cro::Entity, const std::vector<cro::Entity>&)
@@ -121,19 +102,72 @@ void PlayerStateReset::processMovement(cro::Entity entity, Input, cro::Scene&)
         {
             player.resetTime -= ConstVal::FixedGameUpdate;
 
+            //need to keep this updated so we collide with boxes blocking spawn
+            player.collisionLayer = player.spawnPosition.z > 0 ? 0 : 1;
+            entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(player.collisionLayer + 1);
+
             if (player.resetTime < 0)
             {
                 player.resetTime = 1.f;
                 player.state = Player::State::Falling;
                 player.direction = player.spawnPosition.x > 0 ? Player::Left : Player::Right;
-                player.collisionLayer = player.spawnPosition.z > 0 ? 0 : 1;
-                entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(player.collisionLayer + 1);
             }
         }
     }
 }
 
-void PlayerStateReset::processCollision(cro::Entity, const std::vector<cro::Entity>&)
+void PlayerStateReset::processCollision(cro::Entity entity, const std::vector<cro::Entity>& collisions)
 {
+    //narrow phase
+    auto& player = entity.getComponent<Player>();
 
+    if (player.local)
+    {
+        return;
+    }
+
+    auto position = entity.getComponent<cro::Transform>().getPosition();
+    const auto& collisionComponent = entity.getComponent<CollisionComponent>();
+
+    auto bodyRect = collisionComponent.rects[0].bounds;
+    bodyRect.left += position.x;
+    bodyRect.bottom += position.y;
+
+    for (auto e : collisions)
+    {
+        if (!e.isValid())
+        {
+            continue;
+        }
+
+        auto otherPos = e.getComponent<cro::Transform>().getPosition();
+        const auto& otherCollision = e.getComponent<CollisionComponent>();
+        for (auto i = 0; i < otherCollision.rectCount; ++i)
+        {
+            auto otherRect = otherCollision.rects[i].bounds;
+            otherRect.left += otherPos.x;
+            otherRect.bottom += otherPos.y;
+
+            cro::FloatRect overlap;
+
+            //body collision
+            if (bodyRect.intersects(otherRect, overlap))
+            {
+                //track which objects we're touching
+                player.collisionFlags |= ((1 << otherCollision.rects[i].material) & ~((1 << CollisionMaterial::Foot) | (1 << CollisionMaterial::Sensor)));
+
+                auto manifold = calcManifold(bodyRect, otherRect, overlap);
+                switch (otherCollision.rects[i].material)
+                {
+                default: break;
+                case CollisionMaterial::Crate:
+                {
+                    //this removes any crates colliding with the spawn position
+                    e.getComponent<Crate>().health = 0;
+                }
+                break;
+                }
+            }
+        }
+    }
 }

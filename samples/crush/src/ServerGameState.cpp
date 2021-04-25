@@ -255,6 +255,18 @@ void GameState::netBroadcast()
 
 std::int32_t GameState::process(float dt)
 {
+    //flush dead crates
+    const auto& crates = m_scene.getSystem<CrateSystem>().getDeadCrates();
+    for (auto crateEnt : crates)
+    {
+        auto pos = crateEnt.getComponent<Crate>().spawnPosition;
+        auto crateID = crateEnt.getIndex();
+        m_scene.destroyEntity(crateEnt);
+        m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, crateID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        spawnActor(ActorID::Crate, pos);
+    }
+
     m_scene.simulate(dt);
     return m_returnValue;
 }
@@ -545,6 +557,8 @@ void GameState::resetCrate(cro::Entity owner)
         m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, crateID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         spawnActor(ActorID::Crate, pos);
+
+        owner.getComponent<Player>().avatar.getComponent<PlayerAvatar>().crateEnt = {};
     }
 }
 
