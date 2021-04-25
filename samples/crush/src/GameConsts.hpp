@@ -50,7 +50,7 @@ static const cro::Box CrateBounds = { glm::vec3(-0.3f, -0.3f, 0.3f), glm::vec3(0
 static constexpr cro::FloatRect CrateArea = cro::FloatRect(-0.25f, -0.25f, 0.5f, 0.5f);
 static constexpr cro::FloatRect CrateFoot = cro::FloatRect(-0.2f, -0.35f, 0.4f, 0.1f);
 
-static constexpr glm::vec3 CrateCarryOffset = glm::vec3((PlayerSize.x / 2.f) + (CrateArea.width / 2.f) + 0.05f, CrateArea.height * 1.7f, 0.f);
+static constexpr glm::vec3 CrateCarryOffset = glm::vec3((PlayerSize.x / 2.f) + (CrateArea.width / 2.f) + 0.1f, CrateArea.height * 1.7f, 0.f);
 
 static constexpr float PuntVelocity = 30.f;
 static constexpr float CrateFriction = 0.91f; //this is a multiplier

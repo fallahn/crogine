@@ -240,7 +240,7 @@ void GameState::netBroadcast()
         if (e.hasComponent<Crate>())
         {
             const auto& crate = e.getComponent<Crate>();
-            update.velocity = cro::Util::Net::compressVec2(crate.velocity, 128);
+            update.velocity = cro::Util::Net::compressVec2(crate.velocity * 0.9f, 128);
         }
 
         for (auto i = 0u; i < ConstVal::MaxClients; ++i)

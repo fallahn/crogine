@@ -240,6 +240,13 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
 
                     if (manifold.normal.x != 0)
                     {
+                        if (manifold.penetration > (PlayerSize.x / 3.f))
+                        {
+                            //player was forced into a wall so squish
+                            player.state = Player::State::Dead;
+                            return; //prevent further state changes
+                        }
+
                         player.velocity = glm::reflect(player.velocity, glm::vec3(manifold.normal, 0.f)) * 0.1f;
                     }
                     break;

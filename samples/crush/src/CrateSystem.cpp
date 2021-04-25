@@ -33,6 +33,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "Messages.hpp"
 #include "PlayerSystem.hpp"
+#include "ActorIDs.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 
@@ -316,7 +317,18 @@ void CrateSystem::processFalling(cro::Entity entity)
         //hitting a player - this assumes crates are only simulated
         //server side so the clients won't know they're dead until
         //the server says so.
-        killPlayer(playerCollision);
+
+        if (playerCollision.owner != playerCollision.player.getComponent<Player>().avatar.getComponent<Actor>().id)
+        {
+            killPlayer(playerCollision);
+        }
+    }
+
+    //switch state if we stopped moving
+    if (glm::length2(crate.velocity) < 0.1f)
+    {
+        crate.velocity = glm::vec3(0.f);
+        crate.state = Crate::State::Idle;
     }
 }
 
@@ -509,11 +521,12 @@ void CrateSystem::killPlayer(PlayerCollision& collision)
         && collision.player.hasComponent<Player>())
     {
         auto& player = collision.player.getComponent<Player>();
-        if (player.state == Player::State::Walking
+        if ((player.state == Player::State::Walking
             || player.state == Player::State::Falling)
+            /*&& (collision.owner != player.avatar.getComponent<Actor>().id)*/)
         {
             player.state = Player::State::Dead;
-
+            LogI << (int)collision.owner << " squished " << player.avatar.getComponent<Actor>().id << std::endl;
             auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
             msg->data = collision.owner;
             msg->type = PlayerEvent::Died;

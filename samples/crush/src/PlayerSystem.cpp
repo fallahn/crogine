@@ -165,6 +165,9 @@ void PlayerSystem::processInput(cro::Entity entity)
             case Player::State::Reset:
                 msg->type = PlayerEvent::Reset;
                 break;
+            case Player::State::Dead:
+                msg->type = PlayerEvent::Died;
+                break;
             }
         }
 
