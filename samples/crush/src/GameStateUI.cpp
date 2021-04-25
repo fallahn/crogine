@@ -73,10 +73,16 @@ void GameState::updatePlayerUI()
             m_playerUIs[i].puntBar.addComponent<cro::Transform>();
             m_playerUIs[i].puntBar.addComponent<cro::Drawable2D>();
             m_playerUIs[i].puntBar.addComponent<PuntBar>().player = &m_inputParsers.at(playerIndex).getEntity().getComponent<Player>();
+
+            m_playerUIs[i].lives = m_uiScene.createEntity();
+            m_playerUIs[i].lives.addComponent<cro::Transform>();
+            m_playerUIs[i].lives.addComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get(TextureID::Life));
         }
 
         //update the geometry
         auto colour = PlayerColours[playerIndex];
+
+        //punt bar 
         m_playerUIs[i].puntBar.getComponent<cro::Drawable2D>().getVertexData() =
         {
             cro::Vertex2D(glm::vec2(0.f, PuntBarSize.y), colour),
@@ -86,5 +92,21 @@ void GameState::updatePlayerUI()
         };
         m_playerUIs[i].puntBar.getComponent<cro::Drawable2D>().updateLocalBounds();
         m_playerUIs[i].puntBar.getComponent<cro::Transform>().setPosition(getUICorner(i, m_cameras.size()) + PuntBarOffset);
+
+
+        //lives
+        const glm::vec2 lifeSize = glm::vec2(24.f);
+        auto& verts = m_playerUIs[i].lives.getComponent<cro::Drawable2D>().getVertexData();
+
+        for (auto j = 0; j < 3; ++j) //TODO tie this in with life count
+        {
+            verts.emplace_back(glm::vec2(0.f, j * lifeSize.y), glm::vec2(0.f), colour);
+            verts.emplace_back(glm::vec2(lifeSize.x, j * lifeSize.y), glm::vec2(1.f, 0.f), colour);
+            verts.emplace_back(glm::vec2(0.f, (j+1) * lifeSize.y), glm::vec2(0.f, 1.f), colour);
+            verts.emplace_back(glm::vec2(lifeSize.x, (j+1) * lifeSize.y), glm::vec2(1.f, 1.f), colour);
+        }
+
+        m_playerUIs[i].lives.getComponent<cro::Drawable2D>().updateLocalBounds();
+        m_playerUIs[i].lives.getComponent<cro::Transform>().setPosition(getUICorner(i, m_cameras.size()) + LivesOffset);
     }
 }

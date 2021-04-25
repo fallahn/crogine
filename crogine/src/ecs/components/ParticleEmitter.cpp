@@ -170,7 +170,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             }
             else if (name == "spawn_offset")
             {
-                spawnOffset = glm::vec3(p.getValue<glm::vec2>(), 1.f);
+                spawnOffset = glm::vec3(p.getValue<glm::vec2>(), 0.f);
             }
             else if (name == "release_count")
             {

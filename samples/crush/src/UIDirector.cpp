@@ -111,12 +111,18 @@ void UIDirector::handleMessage(const cro::Message& msg)
 
                     m_resetMessages[data.playerID] = ent;
                 }
+
+                if (data.lives == 1)
+                {
+                    m_resetMessages[data.playerID].getComponent<cro::Text>().setString("Game Over");
+                }
+
                 std::get<1>(m_resetMessages[data.playerID].getComponent<cro::Callback>().getUserData<std::tuple<float, float, float>>()) = 1.f;
                 m_resetMessages[data.playerID].getComponent<cro::Callback>().active = true;
             }
         }
             break;
-        case AvatarEvent::Reset:
+        case AvatarEvent::Reset:            
             if (m_resetMessages[data.playerID].isValid())
             {
                 std::get<1>(m_resetMessages[data.playerID].getComponent<cro::Callback>().getUserData<std::tuple<float, float, float>>()) = 0.f;

@@ -56,7 +56,7 @@ namespace TextureID
     enum
     {
         Portal,
-
+        Life,
 
         Count
     };
@@ -68,6 +68,7 @@ namespace GameModelID
     {
         Crate,
         Hologram,
+        Spawner,
 
         Count
     };

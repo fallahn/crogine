@@ -65,7 +65,8 @@ void PlayerStateDead::processMovement(cro::Entity entity, Input input, cro::Scen
         if (input.buttonFlags & InputFlag::Jump)
         {
             player.resetTime = 1.f;
-            player.state = Player::State::Reset;
+            player.lives--;
+            player.state = player.lives > 0 ? Player::State::Reset : Player::State::Spectate;
         }
     }
 }

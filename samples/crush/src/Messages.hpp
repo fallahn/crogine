@@ -123,5 +123,6 @@ struct AvatarEvent final
         Spawned
     }type = None;
     std::int8_t playerID = -1;
+    std::uint8_t lives = 0;
     glm::vec3 position;
 };

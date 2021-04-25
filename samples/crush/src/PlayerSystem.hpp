@@ -60,7 +60,7 @@ struct Player final
         {
             Walking, Falling,
             Teleport, Dead,
-            Reset,
+            Reset, Spectate,
 
             Count
         };
@@ -92,6 +92,8 @@ struct Player final
     float puntLevelLinear = PuntCoolDown;
 
     float resetTime = 1.f;
+
+    std::uint8_t lives = 3;
 };
 
 struct PlayerAvatar final

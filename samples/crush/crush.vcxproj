@@ -175,6 +175,7 @@
     <ClCompile Include="src\PlayerState.cpp" />
     <ClCompile Include="src\PlayerStateDead.cpp" />
     <ClCompile Include="src\PlayerStateFalling.cpp" />
+    <ClCompile Include="src\PlayerStateSpectate.cpp" />
     <ClCompile Include="src\PlayerStateTeleport.cpp" />
     <ClCompile Include="src\PlayerSystem.cpp" />
     <ClCompile Include="src\PlayerStateWalking.cpp" />
@@ -187,6 +188,7 @@
     <ClCompile Include="src\ServerGameState.cpp" />
     <ClCompile Include="src\SliderSystem.cpp" />
     <ClCompile Include="src\UIDirector.cpp" />
+    <ClCompile Include="src\WavetableAnimator.cpp" />
     <ClCompile Include="src\WeatherDirector.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -234,6 +236,7 @@
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\UIConsts.hpp" />
     <ClInclude Include="src\UIDirector.hpp" />
+    <ClInclude Include="src\WavetableAnimator.hpp" />
     <ClInclude Include="src\WeatherDirector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -20,6 +20,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/PlayerState.cpp
   ${PROJECT_DIR}/PlayerStateDead.cpp
   ${PROJECT_DIR}/PlayerStateFalling.cpp
+  ${PROJECT_DIR}/PlayerStateSpectate.cpp
   ${PROJECT_DIR}/PlayerStateTeleport.cpp
   ${PROJECT_DIR}/PlayerStateWalking.cpp
   ${PROJECT_DIR}/PlayerSystem.cpp
@@ -29,4 +30,5 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ServerLobbyState.cpp
   ${PROJECT_DIR}/SliderSystem.cpp
   ${PROJECT_DIR}/UIDirector.cpp
+  ${PROJECT_DIR}/WavetableAnimator.cpp
   ${PROJECT_DIR}/WeatherDirector.cpp)

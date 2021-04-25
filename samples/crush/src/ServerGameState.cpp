@@ -143,6 +143,7 @@ void GameState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<PlayerEvent>();
         PlayerStateChange psc;
         psc.playerID = data.player.getComponent<Player>().avatar.getComponent<Actor>().id;
+        psc.lives = data.player.getComponent<Player>().lives;
         psc.playerState = data.type;
         psc.serverEntityID = data.player.getIndex();
 

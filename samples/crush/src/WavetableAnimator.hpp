@@ -29,22 +29,27 @@ source distribution.
 
 #pragma once
 
-#include <crogine/detail/glm/vec2.hpp>
-#include <crogine/detail/GlobalConsts.hpp>
+#include <crogine/ecs/System.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
-static constexpr glm::vec2 PuntBarSize = { 250.f, 20.f };
-static constexpr glm::vec2 PuntBarOffset = { 20.f, 20.f };
-static constexpr glm::vec2 LivesOffset = { 20.f, 60.f };
+#include <vector>
 
-static constexpr glm::vec2 DiedMessageOffset = { 0.f, 100.f };
-
-static inline glm::vec2 getUICorner(std::size_t playerID, std::size_t playerCount)
+struct WavetableAnimator final
 {
-    if (playerCount == 1)
-    {
-        return glm::vec2(0.f);
-    }
+    glm::vec3 basePosition = glm::vec3(0.f);
+    std::size_t wavetableIndex = 0;
+};
 
-    return glm::vec2(((cro::DefaultSceneSize.x / 2) * (playerID % 2)),
-        (((1 - (playerID / 2)) * (cro::DefaultSceneSize.y / 2)) * (playerCount / 3)));
-}
+class WavetableAnimatorSystem final : public cro::System 
+{
+public:
+    explicit WavetableAnimatorSystem(cro::MessageBus&);
+
+    void process(float) override;
+
+private:
+
+    std::vector<float> m_wavetable;
+
+    void onEntityAdded(cro::Entity) override;
+};

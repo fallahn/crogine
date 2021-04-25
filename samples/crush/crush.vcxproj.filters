@@ -171,6 +171,12 @@
     <ClCompile Include="src\UIDirector.cpp">
       <Filter>Source Files\Client\directors</Filter>
     </ClCompile>
+    <ClCompile Include="src\PlayerStateSpectate.cpp">
+      <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WavetableAnimator.cpp">
+      <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -307,6 +313,9 @@
     </ClInclude>
     <ClInclude Include="src\UIDirector.hpp">
       <Filter>Header Files\Client\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WavetableAnimator.hpp">
+      <Filter>Header Files\Client\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

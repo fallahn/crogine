@@ -46,6 +46,7 @@ source distribution.
 #include "ParticleDirector.hpp"
 #include "PuntBarSystem.hpp"
 #include "UIDirector.hpp"
+#include "WavetableAnimator.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -468,6 +469,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::DynamicTreeSystem>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
+    m_gameScene.addSystem<WavetableAnimatorSystem>(mb);
     m_gameScene.addSystem<CrateSystem>(mb); //local collision to smooth out interpolation
     m_gameScene.addSystem<AvatarScaleSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
@@ -512,6 +514,8 @@ void GameState::loadAssets()
     m_materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
 
 
+    m_resources.textures.load(TextureID::Life, "assets/images/life.png");
+    m_resources.textures.get(TextureID::Life).setRepeated(true);
     m_resources.textures.load(TextureID::Portal, "assets/images/portal.png");
     m_resources.textures.get(TextureID::Portal).setRepeated(true);
     if (m_resources.shaders.loadFromString(ShaderID::Portal, PortalVertex, PortalFragment))
@@ -525,6 +529,7 @@ void GameState::loadAssets()
 
     //model defs - don't forget to pass the env map here!
     m_modelDefs[GameModelID::Crate].loadFromFile("assets/models/box.cmt", m_resources, &m_environmentMap);
+    m_modelDefs[GameModelID::Spawner].loadFromFile("assets/models/spawner.cmt", m_resources, &m_environmentMap);
     m_modelDefs[GameModelID::Hologram].loadFromFile("assets/models/hologram.cmt", m_resources/*, &m_environmentMap*/);
 
 
@@ -671,6 +676,9 @@ void GameState::loadMap()
 
         cro::ModelDefinition portalModel;
         portalModel.loadFromFile("assets/models/portal.cmt", m_resources, &m_environmentMap);
+
+        cro::EmitterSettings smokeParticles;
+        smokeParticles.loadFromFile("assets/particles/smoke.xyp", m_resources.textures);
 
         //build the platform geometry
         for (auto i = 0; i < 2; ++i)
@@ -882,6 +890,25 @@ void GameState::loadMap()
                 entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Portal]), m_resources.materials.get(m_materialIDs[MaterialID::Portal]));
                 entity.getComponent<cro::Transform>().move({ PortalWidth * i, 0.f, 0.f });
                 entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI* i);
+            }
+
+            const auto& cratePoints = mapData.getCratePositions(i);
+            for (auto p : cratePoints)
+            {
+                entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition(glm::vec3(p, layerDepth ));
+                entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, i* cro::Util::Const::PI);
+                entity.addComponent<WavetableAnimator>();
+                m_modelDefs[GameModelID::Spawner].createModel(entity, m_resources);
+
+                auto particleEnt = m_gameScene.createEntity();
+                particleEnt.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -0.5f));
+                particleEnt.addComponent<cro::ParticleEmitter>().settings = smokeParticles;
+                particleEnt.getComponent<cro::ParticleEmitter>().start();
+
+                entity.getComponent<cro::Transform>().addChild(particleEnt.getComponent<cro::Transform>());
+
+                //TODO attach electricity sprite
             }
         }
     }
@@ -1522,6 +1549,7 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
     //raise a message for this for things like sound effects
     auto* msg = getContext().appInstance.getMessageBus().post<AvatarEvent>(MessageID::AvatarMessage);
     msg->playerID = data.playerID;
+    msg->lives = data.lives;
 
     if (m_avatars[data.playerID].isValid())
     {
@@ -1534,6 +1562,7 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
     default: break;
     case PlayerEvent::Spawned:
         msg->type = AvatarEvent::Spawned;
+        state = "spawned";
         break;
     case PlayerEvent::Reset:
         msg->type = AvatarEvent::Reset;

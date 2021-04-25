@@ -27,24 +27,20 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "PlayerState.hpp"
 
-#include <crogine/detail/glm/vec2.hpp>
-#include <crogine/detail/GlobalConsts.hpp>
-
-static constexpr glm::vec2 PuntBarSize = { 250.f, 20.f };
-static constexpr glm::vec2 PuntBarOffset = { 20.f, 20.f };
-static constexpr glm::vec2 LivesOffset = { 20.f, 60.f };
-
-static constexpr glm::vec2 DiedMessageOffset = { 0.f, 100.f };
-
-static inline glm::vec2 getUICorner(std::size_t playerID, std::size_t playerCount)
+PlayerStateSpectate::PlayerStateSpectate()
 {
-    if (playerCount == 1)
-    {
-        return glm::vec2(0.f);
-    }
 
-    return glm::vec2(((cro::DefaultSceneSize.x / 2) * (playerID % 2)),
-        (((1 - (playerID / 2)) * (cro::DefaultSceneSize.y / 2)) * (playerCount / 3)));
+}
+
+void PlayerStateSpectate::processMovement(cro::Entity entity, Input input, cro::Scene&)
+{
+    //TODO if button pressed rotate through following other players
+    //and free look
+}
+
+void PlayerStateSpectate::processCollision(cro::Entity, const std::vector<cro::Entity>&)
+{
+
 }

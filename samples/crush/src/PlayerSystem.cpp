@@ -57,6 +57,7 @@ PlayerSystem::PlayerSystem(cro::MessageBus& mb)
     m_playerStates[Player::State::Teleport] = std::make_unique<PlayerStateTeleport>();
     m_playerStates[Player::State::Dead] = std::make_unique<PlayerStateDead>();
     m_playerStates[Player::State::Reset] = std::make_unique<PlayerStateReset>();
+    m_playerStates[Player::State::Spectate] = std::make_unique<PlayerStateSpectate>();
 }
 
 //public
@@ -164,6 +165,9 @@ void PlayerSystem::processInput(cro::Entity entity)
                 break;
             case Player::State::Reset:
                 msg->type = PlayerEvent::Reset;
+                break;
+            case Player::State::Spectate:
+                
                 break;
             case Player::State::Dead:
                 msg->type = PlayerEvent::Died;

@@ -127,3 +127,14 @@ public:
 
 private:
 };
+
+class PlayerStateSpectate final : public PlayerState
+{
+public:
+    PlayerStateSpectate();
+
+    void processMovement(cro::Entity, Input, cro::Scene&) override;
+    void processCollision(cro::Entity, const std::vector<cro::Entity>&) override;
+
+private:
+};

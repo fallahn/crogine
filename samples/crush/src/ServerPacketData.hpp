@@ -100,4 +100,5 @@ struct PlayerStateChange final
     std::uint16_t serverEntityID = 0;
     std::int8_t playerState = -1;
     std::int8_t playerID = -1;
+    std::uint8_t lives = 3;
 };

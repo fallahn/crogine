@@ -53,13 +53,13 @@ namespace cro
         /*!
         \brief Construct the colour from 3 or 4 8-bit values
         */
-        explicit Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha = 255);
+        explicit constexpr Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha = 255);
             
         /*!
         \brief Constructs the colour from a 32bit bitmask of 4 8-bit values
         in RGBA order
         */
-        explicit Colour(std::uint32_t mask);
+        explicit constexpr Colour(std::uint32_t mask);
 
         /*!
         \brief Constructs the colour from 3 or 4 normalised values
