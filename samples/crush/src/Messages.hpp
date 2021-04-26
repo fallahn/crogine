@@ -87,10 +87,12 @@ struct CrateEvent final
 {
     enum
     {
-        StateChanged
+        StateChanged,
+        Removed
     }type = StateChanged;
 
     cro::Entity crate;
+    glm::vec3 position = glm::vec3(0.f);
 };
 
 struct ConnectionEvent final

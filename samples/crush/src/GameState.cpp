@@ -581,12 +581,14 @@ void GameState::loadAssets()
     enum ParticleID
     {
         Squish,
+        Sprockets,
 
         Count
     };
     std::array<std::size_t, ParticleID::Count> ids{};
 
     ids[ParticleID::Squish] = particleDirector.loadSettings("assets/particles/squish.xyp");
+    ids[ParticleID::Sprockets] = particleDirector.loadSettings("assets/particles/box.xyp");
 
     auto particleHandler = [ids](const cro::Message& msg) -> std::optional<std::pair<std::size_t, glm::vec3>>
     {
@@ -604,8 +606,19 @@ void GameState::loadAssets()
             }
         }
         break;
+        case MessageID::CrateMessage:
+        {
+            const auto& data = msg.getData<CrateEvent>();
+            switch (data.type)
+            {
+            default: break;
+            case CrateEvent::Removed:
+                return std::make_pair(ids[ParticleID::Sprockets], data.position);
+            }
         }
-
+            break;
+        }
+        
         return std::nullopt;
     };
     particleDirector.setMessageHandler(particleHandler);
@@ -952,23 +965,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         break;
     case PacketID::EntityRemoved:
     {
-        auto entityID = packet.as<std::uint32_t>();
-        cro::Command cmd;
-        cmd.targetFlags = Client::CommandID::Interpolated;
-        cmd.action = [&,entityID](cro::Entity e, float)
-        {
-            if (e.getComponent<Actor>().serverEntityId == entityID)
-            {
-                //check if this is a remote player and remove the
-                //box icon from their avatar first
-                if (e.hasComponent<PlayerAvatar>())
-                {
-                    m_gameScene.destroyEntity(e.getComponent<PlayerAvatar>().holoEnt);
-                }
-                m_gameScene.destroyEntity(e);
-            }
-        };
-        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        removeEntity(packet.as<std::uint32_t>());
     }
         break;
     case PacketID::ActorSpawn:
@@ -1689,4 +1686,36 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
 #ifdef CRO_DEBUG_
     LogI << "Player " << state << std::endl;
 #endif //DEBUG
+}
+
+void GameState::removeEntity(std::uint32_t entityID)
+{
+    cro::Command cmd;
+    cmd.targetFlags = Client::CommandID::Interpolated;
+    cmd.action = [&, entityID](cro::Entity e, float)
+    {
+        if (e.getComponent<Actor>().serverEntityId == entityID)
+        {
+            switch (e.getComponent<Actor>().id)
+            {
+            default: break;
+            case ActorID::Crate:
+            {
+                auto* msg = m_uiScene.postMessage<CrateEvent>(MessageID::CrateMessage);
+                msg->type = CrateEvent::Removed;
+                msg->position = e.getComponent<cro::Transform>().getPosition();
+            }
+                break;
+            }
+
+            //check if this is a remote player and remove the
+            //box icon from their avatar first
+            if (e.hasComponent<PlayerAvatar>())
+            {
+                m_gameScene.destroyEntity(e.getComponent<PlayerAvatar>().holoEnt);
+            }
+            m_gameScene.destroyEntity(e);
+        }
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }

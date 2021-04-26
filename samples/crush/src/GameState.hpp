@@ -118,6 +118,7 @@ private:
 
     void crateUpdate(const CrateState&);
     void avatarUpdate(const PlayerStateChange&);
+    void removeEntity(std::uint32_t);
 
     std::array<PlayerUI, 4u> m_playerUIs = {};
 

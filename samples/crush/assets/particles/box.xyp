@@ -1,6 +1,6 @@
 particle_system squish
 {
-    src = ""
+    src = "assets/images/sprockets.png"
     blendmode = alpha
     acceleration = 1.000000
     gravity = 0.000000,-18.57533997
@@ -8,20 +8,20 @@ particle_system squish
     spread = 83.835999
     lifetime = 2.202000
     lifetime_variance = 0.548000
-    colour = 41,168,255,255
-    random_initial_rotation = false
-    rotation_speed = 0.000000
+    colour = 255,255,255,255
+    random_initial_rotation = true
+    rotation_speed = 12.000000
     scale_affector = 0.000000
-    size = 0.0500000
+    size = 0.12500000
     emit_rate = 10.000000
-    emit_count = 20
+    emit_count = 10
     spawn_radius = 0.400000
     spawn_offset = 0.000000,0.000000
-    release_count = 20
+    release_count = 10
     inherit_rotation = false
-    frame_count = 1
+    frame_count = 5
     animate = false
-    random_frame = false
+    random_frame = true
     framerate = 1.000000
     forces 
     {
