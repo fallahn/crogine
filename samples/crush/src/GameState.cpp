@@ -59,6 +59,7 @@ source distribution.
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/Text.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -592,14 +593,14 @@ void GameState::loadAssets()
         switch (msg.id)
         {
         default: break;
-        case MessageID::PlayerMessage:
+        case MessageID::AvatarMessage:
         {
-            const auto& data = msg.getData<PlayerEvent>();
+            const auto& data = msg.getData<AvatarEvent>();
             switch (data.type)
             {
             default: break;
-            //case PlayerEvent::Landed:
-            //    return std::make_pair(ids[ParticleID::Squish], data.player.getComponent<cro::Transform>().getPosition());
+            case AvatarEvent::Died:
+                return std::make_pair(ids[ParticleID::Squish], data.position);
             }
         }
         break;
@@ -939,8 +940,6 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     case PacketID::StateChange:
         if (packet.as<std::uint8_t>() == sv::StateID::Lobby)
         {
-            //TODO push some sort of round summary state
-
             requestStackPop();
             requestStackPush(States::MainMenu);
         }
@@ -1039,6 +1038,103 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         default: break;
         case GameEvent::GameBegin:
             startGame();
+            break;
+        case GameEvent::RoundWarn:
+        {
+            auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
+
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::DefaultSceneSize) / 2.f);
+            entity.getComponent<cro::Transform>().move(glm::vec2(cro::DefaultSceneSize.x, 0.f));
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setString("30 Seconds Left!");
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.getComponent<cro::Text>().setCharacterSize(120);
+            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().move(glm::vec2(-800.f * dt, 0.f));
+                if (e.getComponent<cro::Transform>().getPosition().x < -static_cast<float>(cro::DefaultSceneSize.x))
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+            };
+        }
+            break;
+        case GameEvent::SuddenDeath:
+        {
+            auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
+
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::DefaultSceneSize) / 2.f);
+            entity.getComponent<cro::Transform>().move(glm::vec2(cro::DefaultSceneSize.x, 0.f));
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setString("SUDDEN DEATH!");
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.getComponent<cro::Text>().setCharacterSize(120);
+            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().move(glm::vec2(-800.f * dt, 0.f));
+                if (e.getComponent<cro::Transform>().getPosition().x < -static_cast<float>(cro::DefaultSceneSize.x))
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+            };
+
+            //TODO set all active players lives display instead of waiting for next update
+        }
+            break;
+        case GameEvent::GameEnd:
+            //TODO display game summary/30 sec countdown
+        {
+            auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
+
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::DefaultSceneSize) / 2.f);
+            entity.getComponent<cro::Transform>().move(glm::vec2(0.f, 60.f));
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setString("GAME OVER");
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.getComponent<cro::Text>().setCharacterSize(120);
+            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::DefaultSceneSize) / 2.f);
+            entity.getComponent<cro::Transform>().move(glm::vec2(0.f, -40.f));
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setString("Return to Lobby in 15");
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.getComponent<cro::Text>().setCharacterSize(100);
+            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 15);
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+            {
+                auto& [currTime, secs] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+                currTime += dt;
+                if (currTime > 1)
+                {
+                    currTime -= 1;
+                    secs = std::max(0, secs - 1);
+
+                    auto str = "Return to Lobby in " + std::to_string(secs);
+                    e.getComponent<cro::Text>().setString(str);
+                }
+            };
+            //disable input - pushing a summary state should block this anyway.
+            for (auto& ip : m_inputParsers)
+            {
+                ip.second.setEnabled(false);
+            }
+        }
             break;
         }
         break;
@@ -1480,10 +1576,53 @@ void GameState::updateView(cro::Camera&)
 
 void GameState::startGame()
 {
+#ifdef CRO_DEBUG_
     for (auto& ip : m_inputParsers)
     {
         ip.second.setEnabled(true);
     }
+#else
+    auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
+    
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::DefaultSceneSize) / 2.f);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("READY");
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setCharacterSize(120);
+
+    entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::uint32_t>>(2.f, 0);
+    entity.getComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& [currTime, state] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::uint32_t>>();
+        currTime -= dt;
+        if (currTime < 0)
+        {
+            switch (state)
+            {
+            default:
+            case 0:
+                e.getComponent<cro::Text>().setString("GO!");
+                state++;
+
+                for (auto& ip : m_inputParsers)
+                {
+                    ip.second.setEnabled(true);
+                }
+                currTime = 1.f;
+
+                break;
+            case 1:
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
+                break;
+            }
+        }
+    };
+#endif
 }
 
 void GameState::crateUpdate(const CrateState& data)
@@ -1602,6 +1741,8 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         {
             m_avatars[data.playerID].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
             m_avatars[data.playerID].getComponent<PlayerAvatar>().holoEnt.getComponent<AvatarScale>().target = 0.f;
+
+            msg->position = m_avatars[data.playerID].getComponent<cro::Transform>().getWorldPosition();
         }
         break;
     case PlayerEvent::None:

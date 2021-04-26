@@ -106,7 +106,10 @@ struct GameEvent final
 {
     enum
     {
-        GameBegin
+        GameBegin,
+        RoundWarn,
+        SuddenDeath,
+        GameEnd
     }type = GameBegin;
 };
 
