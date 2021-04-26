@@ -177,6 +177,9 @@
     <ClCompile Include="src\WavetableAnimator.cpp">
       <Filter>Source Files\Client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\GameRuleDirector.cpp">
+      <Filter>Source Files\Server\Directors</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -316,6 +319,9 @@
     </ClInclude>
     <ClInclude Include="src\WavetableAnimator.hpp">
       <Filter>Header Files\Client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameRuleDirector.hpp">
+      <Filter>Header Files\Server\directors</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

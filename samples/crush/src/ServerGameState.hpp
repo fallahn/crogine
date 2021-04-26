@@ -57,9 +57,6 @@ namespace sv
         SharedData& m_sharedData;
 
         cro::Clock m_serverTime; //used in timestamping
-        cro::Clock m_roundTime; //TODO move this stuff to rules director
-        bool m_suddenDeathWarn;
-        bool m_suddenDeath;
 
         cro::Scene m_scene;
         //up to 4 entities per connection - although in practice

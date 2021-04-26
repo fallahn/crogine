@@ -162,6 +162,7 @@
     <ClCompile Include="src\CrateSystem.cpp" />
     <ClCompile Include="src\DayNightDirector.cpp" />
     <ClCompile Include="src\ErrorState.cpp" />
+    <ClCompile Include="src\GameRuleDirector.cpp" />
     <ClCompile Include="src\GameState.cpp" />
     <ClCompile Include="src\GameStateUI.cpp" />
     <ClCompile Include="src\InputParser.cpp" />
@@ -206,6 +207,7 @@
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\ErrorState.hpp" />
     <ClInclude Include="src\GameConsts.hpp" />
+    <ClInclude Include="src\GameRuleDirector.hpp" />
     <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\InputBinding.hpp" />
     <ClInclude Include="src\InputParser.hpp" />

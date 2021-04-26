@@ -4,6 +4,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/CrateSystem.cpp
   ${PROJECT_DIR}/DayNightDirector.cpp
   ${PROJECT_DIR}/ErrorState.cpp
+  ${PROJECT_DIR}/GameRuleDirector.cpp
   ${PROJECT_DIR}/GameState.cpp
   ${PROJECT_DIR}/GameStateUI.cpp
   ${PROJECT_DIR}/InputParser.cpp

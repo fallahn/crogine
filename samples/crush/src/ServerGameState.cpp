@@ -42,6 +42,7 @@ source distribution.
 #include "ServerState.hpp"
 #include "Collision.hpp"
 #include "CrateSystem.hpp"
+#include "GameRuleDirector.hpp"
 
 #include <crogine/core/Log.hpp>
 
@@ -58,17 +59,9 @@ source distribution.
 
 using namespace sv;
 
-namespace
-{
-    const cro::Time RoundTime = cro::seconds(3.f * 60.f);
-    const cro::Time SuddenDeathTime = cro::seconds(30.f);
-}
-
 GameState::GameState(SharedData& sd)
     : m_returnValue (StateID::Game),
     m_sharedData    (sd),
-    m_suddenDeathWarn   (false),
-    m_suddenDeath   (false),
     m_scene         (sd.messageBus),
     m_activePlayers (0),
     m_playerSpawns  (PlayerSpawns)
@@ -297,37 +290,6 @@ std::int32_t GameState::process(float dt)
         spawnActor(ActorID::Crate, pos);
     }
 
-    //this should also be put into a game director with the message handler
-    if (!m_suddenDeath)
-    {
-        if (!m_suddenDeathWarn)
-        {
-            if (m_roundTime.elapsed() > (RoundTime - SuddenDeathTime))
-            {
-                m_sharedData.host.broadcastPacket(PacketID::GameMessage, std::uint8_t(GameEvent::RoundWarn), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                m_suddenDeathWarn = true;
-            }
-        }
-
-        if (m_roundTime.elapsed() > RoundTime)
-        {
-            m_sharedData.host.broadcastPacket(PacketID::GameMessage, std::uint8_t(GameEvent::SuddenDeath), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-            m_suddenDeath = true;
-
-            for (auto player : m_indexedPlayerEntities)
-            {
-                if (player.isValid())
-                {
-                    auto& p = player.getComponent<Player>();
-                    if (p.lives > 1)
-                    {
-                        p.lives = p.state == Player::State::Dead ? 2 : 1; //if a player is mid-reset this might kill them
-                    }
-                }
-            }
-        }
-    }
-
     m_scene.simulate(dt);
     return m_returnValue;
 }
@@ -435,6 +397,7 @@ void GameState::initScene()
     m_scene.addSystem<CrateSystem>(mb);
 
     m_scene.addDirector<WeatherDirector>(m_sharedData.host);
+    m_scene.addDirector<GameRuleDirector>(m_sharedData.host, m_indexedPlayerEntities);
 }
 
 void GameState::buildWorld()
@@ -626,8 +589,7 @@ void GameState::resetCrate(cro::Entity owner)
 
 void GameState::startGame()
 {
-    //if this has timed out here already then we have bigger problems :)
-    m_roundTime.restart();
+    m_scene.getDirector<GameRuleDirector>().startGame();
 
     //send all the crates / other actors
     for (auto spawn : m_crateSpawns)
