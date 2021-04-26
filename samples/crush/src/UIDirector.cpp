@@ -135,6 +135,105 @@ void UIDirector::handleMessage(const cro::Message& msg)
         updateLives(data);
     }
         break;
+    case MessageID::GameMessage:
+    {
+        const auto& data = msg.getData<GameEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case GameEvent::RoundWarn:
+        {
+            auto entity = createTextMessage(glm::vec2(cro::DefaultSceneSize) / 2.f, "30 Seconds Left!");
+            entity.getComponent<cro::Transform>().move(glm::vec2(cro::DefaultSceneSize.x, 0.f));
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.getComponent<cro::Text>().setCharacterSize(120);
+            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().move(glm::vec2(-800.f * dt, 0.f));
+                if (e.getComponent<cro::Transform>().getPosition().x < -static_cast<float>(cro::DefaultSceneSize.x))
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    getScene().destroyEntity(e);
+                }
+            };
+        }
+            break;
+        case GameEvent::SuddenDeath:
+        {
+            auto entity = createTextMessage(glm::vec2(cro::DefaultSceneSize) / 2.f, "SUDDEN DEATH!");
+            entity.getComponent<cro::Transform>().move(glm::vec2(cro::DefaultSceneSize.x, 0.f));
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.getComponent<cro::Text>().setCharacterSize(120);
+            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().move(glm::vec2(-800.f * dt, 0.f));
+                if (e.getComponent<cro::Transform>().getPosition().x < -static_cast<float>(cro::DefaultSceneSize.x))
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    getScene().destroyEntity(e);
+                }
+            };
+
+            //set all active players lives display instead of waiting for next update
+            for (auto i = 0; i < 4; ++i)
+            {
+                if (m_playerUIs[i].lives.isValid())
+                {
+                    auto colour = PlayerColours[i];
+
+                    auto& verts = m_playerUIs[i].lives.getComponent<cro::Drawable2D>().getVertexData();
+                    verts.clear();
+
+                    verts.emplace_back(glm::vec2(0.f), glm::vec2(0.f), colour);
+                    verts.emplace_back(glm::vec2(lifeSize.x, 0.f), glm::vec2(1.f, 0.f), colour);
+                    verts.emplace_back(glm::vec2(0.f, lifeSize.y), glm::vec2(0.f, 1.f), colour);
+                    verts.emplace_back(glm::vec2(lifeSize.x, lifeSize.y), glm::vec2(1.f, 1.f), colour);
+
+                    m_playerUIs[i].lives.getComponent<cro::Drawable2D>().updateLocalBounds();
+                }
+            }
+        }
+            break;
+        case GameEvent::GameEnd:
+        {
+            auto entity = createTextMessage(glm::vec2(cro::DefaultSceneSize) / 2.f, "GAME OVER");
+            entity.getComponent<cro::Transform>().move(glm::vec2(0.f, 80.f));
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.getComponent<cro::Text>().setCharacterSize(120);
+            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+
+            entity = createTextMessage(glm::vec2(cro::DefaultSceneSize) / 2.f, "Return to Lobby in 15");
+            entity.getComponent<cro::Transform>().move(glm::vec2(0.f, -40.f));
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.getComponent<cro::Text>().setCharacterSize(100);
+            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 15);
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+            {
+                auto& [currTime, secs] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+                currTime += dt;
+                if (currTime > 1)
+                {
+                    currTime -= 1;
+                    secs = std::max(0, secs - 1);
+
+                    auto str = "Return to Lobby in " + std::to_string(secs);
+                    e.getComponent<cro::Text>().setString(str);
+                }
+            };
+        }
+            break;
+        }
+    }
+        break;
     }
 }
 

@@ -104,7 +104,7 @@ struct ConnectionEvent final
 
 struct GameEvent final
 {
-    enum
+    enum Type
     {
         GameBegin,
         RoundWarn,

@@ -1033,110 +1033,32 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     }
     break;
     case PacketID::GameMessage:
-        switch (packet.as<std::uint8_t>())
+    {
+        auto evt = packet.as<std::uint8_t>();
+        auto* msg = m_uiScene.postMessage<GameEvent>(MessageID::GameMessage);
+        msg->type = static_cast<GameEvent::Type>(evt);
+
+        switch (evt)
         {
         default: break;
         case GameEvent::GameBegin:
             startGame();
             break;
         case GameEvent::RoundWarn:
-        {
-            auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
-
-            auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::DefaultSceneSize) / 2.f);
-            entity.getComponent<cro::Transform>().move(glm::vec2(cro::DefaultSceneSize.x, 0.f));
-            entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(font).setString("30 Seconds Left!");
-            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-            entity.getComponent<cro::Text>().setCharacterSize(120);
-            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float dt)
-            {
-                e.getComponent<cro::Transform>().move(glm::vec2(-800.f * dt, 0.f));
-                if (e.getComponent<cro::Transform>().getPosition().x < -static_cast<float>(cro::DefaultSceneSize.x))
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                    m_uiScene.destroyEntity(e);
-                }
-            };
-        }
-            break;
+        
+        break;
         case GameEvent::SuddenDeath:
-        {
-            auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
 
-            auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::DefaultSceneSize) / 2.f);
-            entity.getComponent<cro::Transform>().move(glm::vec2(cro::DefaultSceneSize.x, 0.f));
-            entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(font).setString("SUDDEN DEATH!");
-            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-            entity.getComponent<cro::Text>().setCharacterSize(120);
-            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float dt)
-            {
-                e.getComponent<cro::Transform>().move(glm::vec2(-800.f * dt, 0.f));
-                if (e.getComponent<cro::Transform>().getPosition().x < -static_cast<float>(cro::DefaultSceneSize.x))
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                    m_uiScene.destroyEntity(e);
-                }
-            };
-
-            //TODO set all active players lives display instead of waiting for next update
-        }
-            break;
+        break;
         case GameEvent::GameEnd:
-            //TODO display game summary/30 sec countdown
+        //disable input - pushing a summary state should block this anyway.
+        for (auto& ip : m_inputParsers)
         {
-            auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
-
-            auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::DefaultSceneSize) / 2.f);
-            entity.getComponent<cro::Transform>().move(glm::vec2(0.f, 60.f));
-            entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(font).setString("GAME OVER");
-            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-            entity.getComponent<cro::Text>().setCharacterSize(120);
-            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
-
-            entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(glm::vec2(cro::DefaultSceneSize) / 2.f);
-            entity.getComponent<cro::Transform>().move(glm::vec2(0.f, -40.f));
-            entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(font).setString("Return to Lobby in 15");
-            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-            entity.getComponent<cro::Text>().setCharacterSize(100);
-            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 15);
-            entity.getComponent<cro::Callback>().function =
-                [](cro::Entity e, float dt)
-            {
-                auto& [currTime, secs] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
-                currTime += dt;
-                if (currTime > 1)
-                {
-                    currTime -= 1;
-                    secs = std::max(0, secs - 1);
-
-                    auto str = "Return to Lobby in " + std::to_string(secs);
-                    e.getComponent<cro::Text>().setString(str);
-                }
-            };
-            //disable input - pushing a summary state should block this anyway.
-            for (auto& ip : m_inputParsers)
-            {
-                ip.second.setEnabled(false);
-            }
+            ip.second.setEnabled(false);
         }
-            break;
+        break;
         }
+    }
         break;
     case PacketID::ClientDisconnected:
         m_sharedData.playerData[packet.as<std::uint8_t>()].name.clear();
@@ -1582,6 +1504,7 @@ void GameState::startGame()
         ip.second.setEnabled(true);
     }
 #else
+    //TODO wrangle this into the UI director
     auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
     
     auto entity = m_uiScene.createEntity();
