@@ -10,7 +10,7 @@ particle_system squish
     lifetime_variance = 0.548000
     colour = 255,255,255,255
     random_initial_rotation = true
-    rotation_speed = 12.000000
+    rotation_speed = 212.000000
     scale_affector = 0.000000
     size = 0.12500000
     emit_rate = 10.000000

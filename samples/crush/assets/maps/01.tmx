@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="left-up" width="20" height="12" tilewidth="128" tileheight="128" infinite="0" nextlayerid="4" nextobjectid="24">
+<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="left-up" width="20" height="12" tilewidth="128" tileheight="128" infinite="0" nextlayerid="5" nextobjectid="28">
  <layer id="1" name="Tile Layer 1" width="20" height="12">
   <data encoding="base64" compression="zlib">
    eJxjYBgFo2AUDFUAAAPAAAE=
@@ -21,12 +21,16 @@
   <object id="20" type="Collision" x="1504" y="480" width="768" height="64"/>
   <object id="21" type="Teleport" x="2080" y="352" width="52" height="128"/>
   <object id="22" type="Collision" x="864" y="544" width="352" height="64"/>
-  <object id="23" x="1191" y="832" width="205" height="102"/>
+  <object id="24" type="Spawn Base" x="352" y="679" width="141" height="25"/>
+  <object id="25" type="Spawn Base" x="1567" y="967" width="141" height="25"/>
+  <object id="26" type="Spawn Base" x="2271" y="1447" width="141" height="25"/>
+  <object id="27" type="Spawn Base" x="143" y="1447" width="141" height="25"/>
  </objectgroup>
+ <objectgroup id="4" name="ignored"/>
  <objectgroup id="3" name="players">
-  <object id="1" name="Player Size" type="Player Size" x="384" y="576" width="76" height="102"/>
-  <object id="13" name="Player Size" type="Player Size" x="2304" y="1344" width="76" height="102"/>
-  <object id="14" name="Player Size" type="Player Size" x="1600" y="832" width="76" height="102"/>
-  <object id="15" name="Player Size" type="Player Size" x="160" y="1344" width="76" height="102"/>
+  <object id="1" name="Player Size" type="Player Size" x="385" y="572" width="76" height="102"/>
+  <object id="13" name="Player Size" type="Player Size" x="2304" y="1336" width="76" height="102"/>
+  <object id="14" name="Player Size" type="Player Size" x="1599" y="861" width="76" height="102"/>
+  <object id="15" name="Player Size" type="Player Size" x="175" y="1337" width="76" height="102"/>
  </objectgroup>
 </map>
