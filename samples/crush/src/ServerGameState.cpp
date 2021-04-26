@@ -153,6 +153,18 @@ void GameState::handleMessage(const cro::Message& msg)
         if (data.type == PlayerEvent::Died)
         {
             resetCrate(data.player);
+
+            if (data.data > -1 && data.data != psc.playerID)
+            {
+                //crate owner gets some points
+                m_indexedPlayerEntities[data.data].getComponent<Player>().lives++;
+
+                psc.playerID = data.data;
+                psc.playerState = PlayerEvent::Scored;
+                psc.lives = m_indexedPlayerEntities[data.data].getComponent<Player>().lives;
+                psc.serverEntityID = m_indexedPlayerEntities[data.data].getIndex();
+                m_sharedData.host.broadcastPacket(PacketID::PlayerState, psc, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
         }
     }
 
@@ -410,6 +422,7 @@ void GameState::buildWorld()
                     m_playerEntities[i][j].getComponent<Player>().spawnPosition = position;
                     m_playerEntities[i][j].getComponent<Player>().connectionID = i;
                     m_playerEntities[i][j].getComponent<Player>().direction = position.x > 0 ? Player::Left : Player::Right;
+                    m_indexedPlayerEntities[i + j] = m_playerEntities[i][j];
 
                     playerCount++;
 

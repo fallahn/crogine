@@ -143,7 +143,6 @@ bool MapData::loadFromFile(const std::string& path, bool binary)
             m_teleportRects[1] = m_teleportRects[0];
             m_crateSpawns[1] = m_crateSpawns[0];
 #endif
-
             return (!m_collisionRects[0].empty() && !m_teleportRects.empty() && m_playerSpawns.size() == 4);
         }
     }

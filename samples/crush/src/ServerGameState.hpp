@@ -63,6 +63,8 @@ namespace sv
         //we should never have more than one on any except the first
         std::array<std::array<cro::Entity, ConstVal::MaxClients>, ConstVal::MaxClients> m_playerEntities;
 
+        //this is the same as above but indexable by player ID. I REALLY need to untangle this
+        std::array<cro::Entity, 4u> m_indexedPlayerEntities = {};
 
         std::array<glm::vec3, 4u> m_playerSpawns = {};
         std::vector<glm::vec3> m_crateSpawns;

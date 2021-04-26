@@ -35,6 +35,7 @@ source distribution.
 #include "ServerPacketData.hpp"
 #include "GameConsts.hpp"
 #include "ActorIDs.hpp"
+#include "UIDirector.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConsoleClient.hpp>
@@ -118,12 +119,6 @@ private:
     void crateUpdate(const CrateState&);
     void avatarUpdate(const PlayerStateChange&);
 
-
-    struct PlayerUI final
-    {
-        cro::Entity puntBar;
-        cro::Entity lives;
-    };
     std::array<PlayerUI, 4u> m_playerUIs = {};
 
     void createUI();

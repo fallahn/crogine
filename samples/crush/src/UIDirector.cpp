@@ -32,6 +32,7 @@ source distribution.
 #include "Messages.hpp"
 #include "SharedStateData.hpp"
 #include "ActorIDs.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -41,8 +42,9 @@ source distribution.
 
 #include <crogine/util/Easings.hpp>
 
-UIDirector::UIDirector(SharedStateData& sd)
-    : m_sharedData  (sd)
+UIDirector::UIDirector(SharedStateData& sd, std::array<PlayerUI, 4u>& pui)
+    : m_sharedData  (sd),
+    m_playerUIs     (pui)
 {
 
 }
@@ -130,12 +132,34 @@ void UIDirector::handleMessage(const cro::Message& msg)
             }
             break;
         }
+        updateLives(data);
     }
         break;
     }
 }
 
 //private
+void UIDirector::updateLives(const AvatarEvent& evt)
+{
+    if (m_playerUIs[evt.playerID].lives.isValid())
+    {
+        auto colour = PlayerColours[evt.playerID];
+
+        auto& verts = m_playerUIs[evt.playerID].lives.getComponent<cro::Drawable2D>().getVertexData();
+        verts.clear();
+
+        for (auto j = 0; j < evt.lives; ++j)
+        {
+            verts.emplace_back(glm::vec2(0.f, j * lifeSize.y), glm::vec2(0.f), colour);
+            verts.emplace_back(glm::vec2(lifeSize.x, j * lifeSize.y), glm::vec2(1.f, 0.f), colour);
+            verts.emplace_back(glm::vec2(0.f, (j + 1) * lifeSize.y), glm::vec2(0.f, 1.f), colour);
+            verts.emplace_back(glm::vec2(lifeSize.x, (j + 1) * lifeSize.y), glm::vec2(1.f, 1.f), colour);
+        }
+
+        m_playerUIs[evt.playerID].lives.getComponent<cro::Drawable2D>().updateLocalBounds();
+    }
+}
+
 cro::Entity UIDirector::createTextMessage(glm::vec2 position, const std::string& str)
 {
     auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);

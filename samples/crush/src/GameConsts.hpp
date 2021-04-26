@@ -63,8 +63,8 @@ static constexpr float SpawnOffset = 10.f;
 static constexpr std::array PlayerSpawns =
 {
     glm::vec3(-SpawnOffset, 0.f, LayerDepth),
-    glm::vec3(SpawnOffset, 0.f, LayerDepth),
-    glm::vec3(-SpawnOffset, 0.f, -LayerDepth),
+    glm::vec3(SpawnOffset, 0.f, -LayerDepth),
+    glm::vec3(-SpawnOffset, 0.f, LayerDepth),
     glm::vec3(SpawnOffset, 0.f, -LayerDepth)
 };
 

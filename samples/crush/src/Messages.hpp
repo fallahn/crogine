@@ -75,7 +75,8 @@ struct PlayerEvent final
         DroppedCrate,
         Died,
         Reset,
-        Spawned
+        Spawned,
+        Scored
     }type = None;
 
     std::int32_t data = -1;
@@ -120,7 +121,8 @@ struct AvatarEvent final
         Teleported,
         DroppedCrate,
         Reset,
-        Spawned
+        Spawned,
+        Scored
     }type = None;
     std::int8_t playerID = -1;
     std::uint8_t lives = 0;

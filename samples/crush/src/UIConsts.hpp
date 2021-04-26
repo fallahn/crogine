@@ -35,6 +35,7 @@ source distribution.
 static constexpr glm::vec2 PuntBarSize = { 250.f, 20.f };
 static constexpr glm::vec2 PuntBarOffset = { 20.f, 20.f };
 static constexpr glm::vec2 LivesOffset = { 20.f, 60.f };
+static constexpr glm::vec2 lifeSize = glm::vec2(24.f);
 
 static constexpr glm::vec2 DiedMessageOffset = { 0.f, 100.f };
 

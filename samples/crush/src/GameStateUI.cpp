@@ -95,7 +95,6 @@ void GameState::updatePlayerUI()
 
 
         //lives
-        const glm::vec2 lifeSize = glm::vec2(24.f);
         auto& verts = m_playerUIs[i].lives.getComponent<cro::Drawable2D>().getVertexData();
 
         for (auto j = 0; j < 3; ++j) //TODO tie this in with life count

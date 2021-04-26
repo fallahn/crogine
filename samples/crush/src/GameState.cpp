@@ -45,7 +45,6 @@ source distribution.
 #include "AvatarScaleSystem.hpp"
 #include "ParticleDirector.hpp"
 #include "PuntBarSystem.hpp"
-#include "UIDirector.hpp"
 #include "WavetableAnimator.hpp"
 
 #include <crogine/gui/Gui.hpp>
@@ -489,7 +488,7 @@ void GameState::addSystems()
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 
-    m_uiScene.addDirector<UIDirector>(m_sharedData);
+    m_uiScene.addDirector<UIDirector>(m_sharedData, m_playerUIs);
 }
 
 void GameState::loadAssets()
@@ -1560,6 +1559,10 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
     switch (data.playerState)
     {
     default: break;
+    case PlayerEvent::Scored:
+        msg->type = AvatarEvent::Scored;
+        state = "scored";
+        break;
     case PlayerEvent::Spawned:
         msg->type = AvatarEvent::Spawned;
         state = "spawned";

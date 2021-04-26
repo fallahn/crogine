@@ -33,19 +33,28 @@ source distribution.
 
 #include <array>
 
+struct PlayerUI final
+{
+    cro::Entity puntBar;
+    cro::Entity lives;
+};
+
 struct SharedStateData;
+struct AvatarEvent;
 class UIDirector final : public cro::Director 
 {
 public:
-    explicit UIDirector(SharedStateData&);
+    UIDirector(SharedStateData&, std::array<PlayerUI, 4u>&);
 
     void handleMessage(const cro::Message&) override;
 
 
 private:
     SharedStateData& m_sharedData;
+    std::array<PlayerUI, 4u>& m_playerUIs;
 
     std::array<cro::Entity, 4> m_resetMessages = {};
 
+    void updateLives(const AvatarEvent&);
     cro::Entity createTextMessage(glm::vec2, const std::string&);
 };
