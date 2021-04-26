@@ -32,6 +32,8 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "PlayerSystem.hpp"
 #include "CommonConsts.hpp"
+#include "ServerPacketData.hpp"
+#include "ActorIDs.hpp"
 
 #include <crogine/network/NetHost.hpp>
 
@@ -53,7 +55,34 @@ GameRuleDirector::GameRuleDirector(cro::NetHost& host, std::array<cro::Entity, 4
 //public
 void GameRuleDirector::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == MessageID::PlayerMessage)
+    {
+        const auto& data = msg.getData<PlayerEvent>();
 
+        PlayerStateChange psc;
+        psc.playerID = data.player.getComponent<Player>().avatar.getComponent<Actor>().id;
+        psc.lives = data.player.getComponent<Player>().lives;
+        psc.playerState = data.type;
+        psc.serverEntityID = data.player.getIndex();
+
+        m_netHost.broadcastPacket(PacketID::PlayerState, psc, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        if (data.type == PlayerEvent::Died)
+        {
+            if (data.data > -1
+                && data.data != psc.playerID)
+            {
+                //crate owner gets some points
+                m_indexedPlayerEntities[data.data].getComponent<Player>().lives++;
+
+                psc.playerID = data.data;
+                psc.playerState = PlayerEvent::Scored;
+                psc.lives = m_indexedPlayerEntities[data.data].getComponent<Player>().lives;
+                psc.serverEntityID = m_indexedPlayerEntities[data.data].getIndex();
+                m_netHost.broadcastPacket(PacketID::PlayerState, psc, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+        }
+    }
 }
 
 void GameRuleDirector::process(float)

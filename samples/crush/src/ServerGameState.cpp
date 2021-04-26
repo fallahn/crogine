@@ -125,6 +125,9 @@ void GameState::handleMessage(const cro::Message& msg)
         case GameEvent::GameBegin:
             startGame();
             break;
+        case GameEvent::GameEnd:
+            //endGame();
+            break;
         }
     }
     else if (msg.id == cro::Message::SceneMessage)
@@ -137,23 +140,14 @@ void GameState::handleMessage(const cro::Message& msg)
     }
     else if (msg.id == MessageID::PlayerMessage)
     {
-        //TODO should move this to a game rule director
         const auto& data = msg.getData<PlayerEvent>();
-        PlayerStateChange psc;
-        psc.playerID = data.player.getComponent<Player>().avatar.getComponent<Actor>().id;
-        psc.lives = data.player.getComponent<Player>().lives;
-        psc.playerState = data.type;
-        psc.serverEntityID = data.player.getIndex();
-
-        m_sharedData.host.broadcastPacket(PacketID::PlayerState, psc, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
         if (data.type == PlayerEvent::Died)
         {
             //if the player died holding a crate kill it and spawn a new one
             resetCrate(data.player);
 
             //eliminate player if down to one life
-            if (psc.lives == 1)
+            if (data.player.getComponent<Player>().lives == 1)
             {
                 m_activePlayers--;
 
@@ -162,18 +156,6 @@ void GameState::handleMessage(const cro::Message& msg)
                 {
                     endGame();
                 }
-            }
-
-            if (data.data > -1 && data.data != psc.playerID)
-            {
-                //crate owner gets some points
-                m_indexedPlayerEntities[data.data].getComponent<Player>().lives++;
-
-                psc.playerID = data.data;
-                psc.playerState = PlayerEvent::Scored;
-                psc.lives = m_indexedPlayerEntities[data.data].getComponent<Player>().lives;
-                psc.serverEntityID = m_indexedPlayerEntities[data.data].getIndex();
-                m_sharedData.host.broadcastPacket(PacketID::PlayerState, psc, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
         }
     }
