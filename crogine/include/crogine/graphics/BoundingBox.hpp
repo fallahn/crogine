@@ -169,6 +169,6 @@ namespace cro
             updateMinMax(point);
         }
 
-        return { newMin, newMax };
+        return Box(newMin, newMax);
     }
 }

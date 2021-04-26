@@ -334,8 +334,7 @@ void CrateSystem::processFalling(cro::Entity entity)
 
         if (playerCollision.owner != playerCollision.player.getComponent<Player>().avatar.getComponent<Actor>().id)
         {
-            crate.health--;
-            killPlayer(playerCollision);
+            killPlayer(playerCollision, crate);
         }
     }
 
@@ -483,8 +482,7 @@ void CrateSystem::processBallistic(cro::Entity entity)
     {
         //deal with any player we hit
         //this assumes crates are only simulated server side
-        crate.health--;
-        killPlayer(playerCollision);
+        killPlayer(playerCollision, crate);
     }
 
     //switch state if we stopped moving
@@ -532,7 +530,7 @@ std::vector<cro::Entity> CrateSystem::doBroadPhase(cro::Entity entity)
     return collisions;
 }
 
-void CrateSystem::killPlayer(PlayerCollision& collision)
+void CrateSystem::killPlayer(PlayerCollision& collision, Crate& crate)
 {
     if (collision.player.isValid()
         && collision.player.hasComponent<Player>())
@@ -543,11 +541,13 @@ void CrateSystem::killPlayer(PlayerCollision& collision)
             /*&& (collision.owner != player.avatar.getComponent<Actor>().id)*/)
         {
             player.state = Player::State::Dead;
-            LogI << (int)collision.owner << " squished " << player.avatar.getComponent<Actor>().id << std::endl;
+
             auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
             msg->data = collision.owner;
             msg->type = PlayerEvent::Died;
             msg->player = collision.player;
+
+            crate.health--;
         }
     }
 }

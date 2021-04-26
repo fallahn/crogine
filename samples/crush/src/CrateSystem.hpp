@@ -84,5 +84,5 @@ private:
         std::int8_t owner = -1;
         cro::Entity player;
     };
-    void killPlayer(PlayerCollision&);
+    void killPlayer(PlayerCollision&, Crate&);
 };
