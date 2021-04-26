@@ -94,6 +94,7 @@ struct Player final
     float resetTime = 1.f;
 
     std::uint8_t lives = 3;
+    std::uint8_t cameraTargetIndex = 0; //used to cycle cameras in spectator mode
 };
 
 struct PlayerAvatar final

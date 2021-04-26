@@ -1105,6 +1105,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             root.getComponent<Player>().collisionLayer = info.spawnPosition.z > 0 ? 0 : 1;
             root.getComponent<Player>().local = true;
             root.getComponent<Player>().direction = info.spawnPosition.x > 0 ? Player::Left : Player::Right;
+            root.getComponent<Player>().cameraTargetIndex = playerNumber;
 
             root.addComponent<cro::DynamicTreeComponent>().setArea(PlayerBounds);
             root.getComponent<cro::DynamicTreeComponent>().setFilterFlags(root.getComponent<Player>().collisionLayer + 1);
@@ -1145,13 +1146,12 @@ void GameState::spawnPlayer(PlayerInfo info)
             m_inputParsers.insert(std::make_pair(playerNumber, InputParser(m_sharedData.clientConnection.netClient, m_sharedData.inputBindings[info.playerID])));
             m_inputParsers.at(playerNumber).setEntity(root); //remember this is initially disabled!
 
-            m_cameras.emplace_back();
-            m_cameras.back() = m_gameScene.createEntity();
-            m_cameras.back().addComponent<cro::Transform>().setPosition({ 0.f, CameraHeight, CameraDistance });
+            auto camEnt = m_cameras.emplace_back(m_gameScene.createEntity());
+            camEnt.addComponent<cro::Transform>().setPosition({ 0.f, CameraHeight, CameraDistance });
 
-            auto rotation = glm::lookAt(m_cameras.back().getComponent<cro::Transform>().getPosition(), glm::vec3(0.f, 0.f, -50.f), cro::Transform::Y_AXIS);
-            m_cameras.back().getComponent<cro::Transform>().rotate(glm::inverse(rotation));
-            m_cameras.back().addComponent<std::uint8_t>() = playerNumber; //so we can tell which player this cam follows
+            auto rotation = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(0.f, 0.f, -50.f), cro::Transform::Y_AXIS);
+            camEnt.getComponent<cro::Transform>().rotate(glm::inverse(rotation));
+            camEnt.addComponent<std::uint8_t>() = playerNumber; //so we can tell which player this cam follows
 
             auto& cam = m_cameras.back().addComponent<cro::Camera>();
             cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
@@ -1161,13 +1161,22 @@ void GameState::spawnPlayer(PlayerInfo info)
             cam.depthBuffer.create(2048, 2048);
 
             auto camController = m_gameScene.createEntity();
-            camController.addComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());
+            camController.addComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
             camController.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI * root.getComponent<Player>().collisionLayer);
             camController.addComponent<cro::Callback>().active = true;
             camController.getComponent<cro::Callback>().function =
-                [root](cro::Entity e, float dt)
+                [&,root](cro::Entity e, float dt) mutable
             {
-                auto targetPos = root.getComponent<cro::Transform>().getPosition();
+                auto& player = root.getComponent<Player>();
+                if (!m_avatars[player.cameraTargetIndex].isValid())
+                {
+                    //skip to next valid index
+                    do
+                    {
+                        player.cameraTargetIndex = (player.cameraTargetIndex + 1) % 4;
+                    } while ((!m_avatars[player.cameraTargetIndex].isValid()));
+                }
+                auto targetPos = m_avatars[player.cameraTargetIndex].getComponent<cro::Transform>().getWorldPosition();
 
                 //rotate the camera depending on the Z depth of the player
                 static const float TotalDistance = LayerDepth * 2.f;

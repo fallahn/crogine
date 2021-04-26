@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "PlayerState.hpp"
+#include "PlayerSystem.hpp"
 
 PlayerStateSpectate::PlayerStateSpectate()
 {
@@ -36,8 +37,18 @@ PlayerStateSpectate::PlayerStateSpectate()
 
 void PlayerStateSpectate::processMovement(cro::Entity entity, Input input, cro::Scene&)
 {
-    //TODO if button pressed rotate through following other players
-    //and free look
+    auto& player = entity.getComponent<Player>();
+    
+    if (player.local)
+    {
+        //if button pressed rotate through following other players
+        if ((input.buttonFlags & InputFlag::Jump)
+            && (player.previousInputFlags & InputFlag::Jump) == 0)
+        {
+            player.cameraTargetIndex = (player.cameraTargetIndex + 1) % 4;
+        }
+    }
+    player.lastUpdatedInput = input.buttonFlags;
 }
 
 void PlayerStateSpectate::processCollision(cro::Entity, const std::vector<cro::Entity>&)

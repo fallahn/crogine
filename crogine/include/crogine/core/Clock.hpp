@@ -41,7 +41,7 @@ namespace cro
     class CRO_EXPORT_API Time final
     {
     public:
-        constexpr Time();
+        constexpr Time() : m_value(0) {}
 
         float asSeconds() const;
         std::int32_t asMilliseconds() const;

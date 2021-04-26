@@ -34,7 +34,7 @@ source distribution.
 using namespace cro;
 
 //---Time class---//
-constexpr Time::Time() : m_value(0) {}
+//constexpr Time::Time() : m_value(0) {}
 
 //public
 float Time::asSeconds() const
