@@ -109,10 +109,14 @@ bool MapData::loadFromFile(const std::string& path, bool binary)
                                 {
                                     m_crateSpawns[0].emplace_back(collisionBounds.left + (collisionBounds.width / 2.f), collisionBounds.bottom + (collisionBounds.height / 2.f));
                                 }
+                                else if (type == "Spawn Base")
+                                {
+                                    m_playerSpawns.emplace_back(collisionBounds.left + (collisionBounds.width / 2.f), collisionBounds.bottom);
+                                }
                             }
                         }
                     }
-                    else if (name == "players"
+                    /*else if (name == "players"
                         && m_playerSpawns.empty())
                     {
                         const auto& spawns = layer->getLayerAs<tmx::ObjectGroup>().getObjects();
@@ -124,7 +128,7 @@ bool MapData::loadFromFile(const std::string& path, bool binary)
                             auto& position = m_playerSpawns.emplace_back(bounds.left + (bounds.width / 2.f), mapHeight - (bounds.top + bounds.height));
                             position /= ConstVal::MapUnits;
                         }
-                    }
+                    }*/
                 }
             }
 

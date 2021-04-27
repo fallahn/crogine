@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/Texture.hpp>
 
 #include <vector>
 
@@ -71,6 +72,11 @@ namespace cro
         std::vector<std::uint32_t> m_vaoIDs; //< used on desktop
         std::size_t m_nextBuffer;
         std::size_t m_bufferCount;
+
+        //this is a fallback texture for untextured systems.
+        //probably not less optimal than switching between
+        //textured and untextured shaders.
+        cro::Texture m_fallbackTexture;
 
         void allocateBuffer();
 

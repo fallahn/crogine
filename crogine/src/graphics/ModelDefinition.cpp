@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/util/Maths.hpp>
 
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -537,6 +538,9 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 
 bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
 {
+    CRO_ASSERT(entity.isValid(), "Invalid Entity");
+    CRO_ASSERT(entity.hasComponent<cro::Transform>(), "Missing transform component");
+
     if (m_meshID != 0)
     {
         auto& model = entity.addComponent<cro::Model>(rc.meshes.getMesh(m_meshID), rc.materials.get(m_materialIDs[0]));

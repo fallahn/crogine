@@ -924,6 +924,50 @@ void GameState::loadMap()
                 //TODO attach electricity sprite
             }
         }
+
+
+        cro::ModelDefinition spawnModel;
+        spawnModel.loadFromFile("assets/models/player_spawn.cmt", m_resources, &m_environmentMap);
+
+        cro::ModelDefinition spinModel;
+        spinModel.loadFromFile("assets/models/player_spinner.cmt", m_resources, &m_environmentMap);
+
+        cro::EmitterSettings spawnParticles;
+        spawnParticles.loadFromFile("assets/particles/spawn.xyp", m_resources.textures);
+
+        const auto& spawnPoints = mapData.getSpawnPositions();
+        for (auto i = 0u; i < spawnPoints.size(); ++i)
+        {
+            auto layerDepth = LayerDepth - (2 * (LayerDepth * (i % 2)));
+            auto rect = SpawnBase;
+
+            auto collisionEnt = m_gameScene.createEntity();
+            collisionEnt.addComponent<cro::Transform>().setPosition({ spawnPoints[i].x, spawnPoints[i].y, layerDepth });
+            collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
+            collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(layerDepth > 0 ? 1 : 2);
+
+            collisionEnt.addComponent<CollisionComponent>().rectCount = 1;
+            collisionEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Solid;
+            collisionEnt.getComponent<CollisionComponent>().rects[0].bounds = rect;
+            collisionEnt.getComponent<CollisionComponent>().calcSum();
+
+            //TODO fix this so we don't need an extra entity
+            auto spawnEnt = m_gameScene.createEntity();
+            spawnEnt.addComponent<cro::Transform>().setScale(glm::vec3(0.5f, 1.f, 0.5f));
+            spawnEnt.getComponent<cro::Transform>().setPosition(glm::vec3(spawnPoints[i].x, spawnPoints[i].y, layerDepth));
+            spawnModel.createModel(spawnEnt, m_resources);
+
+            auto spinEnt = m_gameScene.createEntity();
+            spinEnt.addComponent<cro::Transform>().setScale(glm::vec3(1.f, 0.5f, 1.f));
+            spinEnt.addComponent<cro::ParticleEmitter>().settings = spawnParticles;
+            spinEnt.getComponent<cro::ParticleEmitter>().start();
+            spinModel.createModel(spinEnt, m_resources);
+            spawnEnt.getComponent<cro::Transform>().addChild(spinEnt.getComponent<cro::Transform>());
+#ifdef CRO_DEBUG_
+            addBoxDebug(collisionEnt, m_gameScene, cro::Colour::Blue);
+#endif
+        }
+
     }
     else
     {

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/MeshData.hpp>
+#include <crogine/graphics/Image.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
@@ -199,6 +200,10 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
         m_attribData[2].attribSize = 3;
         m_attribData[2].offset = (3 + 4) * sizeof(float);
     }
+
+    cro::Image img;
+    img.create(2, 2, cro::Colour::White);
+    m_fallbackTexture.loadFromImage(img);
 }
 
 ParticleSystem::~ParticleSystem()
@@ -280,6 +285,14 @@ void ParticleSystem::process(float dt)
         if (emitter.m_running &&
             emitter.m_emissionClock.elapsed().asSeconds() > (1.f / emitter.settings.emitRate))
         {
+            //apply fallback texture if one doesn't exist
+            //this would be speedier to do once when adding the emitter to the system
+            //but the texture may change at runtime.
+            if (emitter.settings.textureID == 0)
+            {
+                emitter.settings.textureID = m_fallbackTexture.getGLHandle();
+            }
+
             emitter.m_emissionClock.restart();
             static const float epsilon = 0.0001f;
             auto emitCount = emitter.settings.emitCount;
@@ -470,7 +483,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
         glCheck(glUniform1f(m_uniformIDs[UniformID::ParticleSize], emitter.settings.size));
         glCheck(glUniform1f(m_uniformIDs[UniformID::FrameCount], static_cast<float>(emitter.settings.frameCount)));
         glCheck(glUniform2f(m_uniformIDs[UniformID::TextureSize], emitter.settings.textureSize.x, emitter.settings.textureSize.y));
-        
+
         //apply blend mode
         switch (emitter.settings.blendmode)
         {
