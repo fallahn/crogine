@@ -62,10 +62,18 @@ void PlayerStateDead::processMovement(cro::Entity entity, Input input, cro::Scen
     player.resetTime -= ConstVal::FixedGameUpdate;
     if (player.resetTime < 0)
     {
-        if (input.buttonFlags & InputFlag::Jump)
+        if ((input.buttonFlags & InputFlag::Jump))
         {
             player.resetTime = 1.f;
-            player.lives--;
+            if(player.lives > 0) player.lives--;
+            player.state = player.lives > 0 ? Player::State::Reset : Player::State::Spectate;
+        }
+        else if (player.lives == 1
+            && player.resetTime < -1.f)
+        {
+            //automatically do this after some time else the player won't
+            //register as eliminated until controller button is pressed
+            if (player.lives > 0) player.lives--;
             player.state = player.lives > 0 ? Player::State::Reset : Player::State::Spectate;
         }
     }

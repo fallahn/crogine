@@ -117,6 +117,13 @@ void UIDirector::handleMessage(const cro::Message& msg)
                 if (data.lives == 1)
                 {
                     m_resetMessages[data.playerID].getComponent<cro::Text>().setString("Game Over");
+
+                    auto pos = getUICorner(data.playerID, m_sharedData.localPlayerCount);
+                    auto ent = createTextMessage(pos + DiedMessageOffset, "Press Jump To Switch Camera");
+                    ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+
+                    auto offset = m_sharedData.localPlayerCount > 1 ? cro::DefaultSceneSize.x / 4.f : cro::DefaultSceneSize.x / 2.f;
+                    ent.getComponent<cro::Transform>().move(glm::vec2(offset, -38.f));
                 }
 
                 std::get<1>(m_resetMessages[data.playerID].getComponent<cro::Callback>().getUserData<std::tuple<float, float, float>>()) = 1.f;

@@ -48,7 +48,7 @@ void PlayerStateSpectate::processMovement(cro::Entity entity, Input input, cro::
             player.cameraTargetIndex = (player.cameraTargetIndex + 1) % 4;
         }
     }
-    player.lastUpdatedInput = input.buttonFlags;
+    player.previousInputFlags = input.buttonFlags;
 }
 
 void PlayerStateSpectate::processCollision(cro::Entity, const std::vector<cro::Entity>&)

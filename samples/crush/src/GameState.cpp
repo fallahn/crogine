@@ -1269,6 +1269,15 @@ void GameState::spawnPlayer(PlayerInfo info)
                         case Player::State::Teleport:
                             ImGui::Text("Teleporting");
                             break;
+                        case Player::State::Dead:
+                            ImGui::Text("Dead");
+                            break;
+                        case Player::State::Reset:
+                            ImGui::Text("Resetting");
+                            break;
+                        case ::Player::State::Spectate:
+                            ImGui::Text("Spectating");
+                            break;
                         }
 
                         ImGui::Text("Vel X: %3.3f", player.velocity.x);
@@ -1290,6 +1299,7 @@ void GameState::spawnPlayer(PlayerInfo info)
                         ImGui::Text("Sensor: %d", sensor);
 
                         ImGui::Text("Punt Level: %3.3f", player.puntLevel);
+                        ImGui::Text("Lives: %d", player.lives);
                     }
                     ImGui::End();
                 });
@@ -1698,6 +1708,10 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         {
             
         }
+        break;
+    case PlayerEvent::Retired:
+        msg->type = AvatarEvent::Retired;
+        LogI << (int)data.playerID << " was eliminated" << std::endl;
         break;
     }
 }
