@@ -183,6 +183,9 @@
     <ClCompile Include="src\SpawnAreaSystem.cpp">
       <Filter>Source Files\Server\Systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\SpawnerAnimationSystem.cpp">
+      <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -328,6 +331,9 @@
     </ClInclude>
     <ClInclude Include="src\SpawnAreaSystem.hpp">
       <Filter>Header Files\Server\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SpawnerAnimationSystem.hpp">
+      <Filter>Header Files\Client\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

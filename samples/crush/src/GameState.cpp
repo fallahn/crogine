@@ -46,6 +46,7 @@ source distribution.
 #include "ParticleDirector.hpp"
 #include "PuntBarSystem.hpp"
 #include "WavetableAnimator.hpp"
+#include "SpawnerAnimationSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -470,6 +471,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::DynamicTreeSystem>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<WavetableAnimatorSystem>(mb);
+    m_gameScene.addSystem<SpawnerAnimationSystem>(mb);
     m_gameScene.addSystem<CrateSystem>(mb); //local collision to smooth out interpolation
     m_gameScene.addSystem<AvatarScaleSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
@@ -967,6 +969,9 @@ void GameState::loadMap()
 #ifdef CRO_DEBUG_
             addBoxDebug(collisionEnt, m_gameScene, cro::Colour::Red);
 #endif
+
+            spawnEnt.addComponent<SpawnerAnimation>().spinnerEnt = spinEnt;
+            m_spawnerEntities[i] = spawnEnt;
         }
 
     }
@@ -1679,6 +1684,7 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
     case PlayerEvent::Spawned:
         msg->type = AvatarEvent::Spawned;
         state = "spawned";
+        m_spawnerEntities[data.playerID].getComponent<SpawnerAnimation>().start();
         break;
     case PlayerEvent::Reset:
         msg->type = AvatarEvent::Reset;

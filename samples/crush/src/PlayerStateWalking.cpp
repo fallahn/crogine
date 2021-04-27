@@ -205,6 +205,7 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
                     //don't get blocked by these
                 case CollisionMaterial::Teleport:
                 case CollisionMaterial::Sensor:
+                case CollisionMaterial::Spawner:
 
                     break;
                     //TODO don't collide with carried crates
@@ -258,7 +259,7 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
         }
     }
 
-    if (player.collisionFlags == 0)
+    if ((player.collisionFlags & (1 << CollisionMaterial::Foot))== 0)
     {
         player.state = Player::State::Falling;
     }

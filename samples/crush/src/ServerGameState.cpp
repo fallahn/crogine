@@ -416,8 +416,7 @@ void GameState::buildWorld()
             rect.bottom += spawn.y;
             createSolid(rect, m_playerSpawns[i].z);
 
-            //TODO we want to be able to switch
-            //this on and off
+            //spawn safe area
             rect = SafeArea;
             auto entity = m_scene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(glm::vec3(spawn, m_playerSpawns[i].z));

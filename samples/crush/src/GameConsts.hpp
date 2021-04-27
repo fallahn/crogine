@@ -42,7 +42,7 @@ static constexpr float Gravity = -80.f;
 static constexpr float MaxGravity = -30.f;
 
 static constexpr glm::vec3 PlayerSize = glm::vec3(0.6f, 0.8f, 0.6f);
-static constexpr cro::FloatRect FootBounds = cro::FloatRect(0.05f - (PlayerSize.x / 2.f), -0.1f, 0.5f, 0.1f);
+static constexpr cro::FloatRect FootBounds = cro::FloatRect(0.05f - (PlayerSize.x / 2.f), -0.05f, 0.5f, 0.05f);
 static const cro::Box PlayerBounds = {glm::vec3(-((PlayerSize.x / 2.f) + 0.5f), 0.f, PlayerSize.z / 2.f), glm::vec3((PlayerSize.x / 2.f) + 0.5f, PlayerSize.y, -PlayerSize.z / 2.f)};
 
 //assumes crate origin is centre

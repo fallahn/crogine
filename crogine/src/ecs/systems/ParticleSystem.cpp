@@ -323,12 +323,20 @@ void ParticleSystem::process(float dt)
                     p.frameTime = 0.f;
 
                     //spawn particle in world position
-                    p.position = tx.getWorldPosition();
+                    auto basePosition = tx.getWorldPosition();
+                    p.position = basePosition;
 
                     //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
                     p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
                     p.position.y += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
                     p.position.z += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+
+                    /*if (emitter.settings.inheritRotation)
+                    {
+                        p.position -= basePosition;
+                        p.position = rotation * glm::vec4(p.position, 1.f);
+                        p.position += basePosition;
+                    }*/
 
                     auto offset = settings.spawnOffset;
                     offset *= tx.getScale();

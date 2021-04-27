@@ -18,7 +18,7 @@ particle_system spawn
     spawn_radius = 0.450000
     spawn_offset = 0.000000,0.000000
     release_count = 0
-    inherit_rotation = false
+    inherit_rotation = true
     frame_count = 1
     animate = false
     random_frame = false

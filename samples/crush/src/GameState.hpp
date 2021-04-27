@@ -95,6 +95,7 @@ private:
 
     cro::Entity m_splitScreenNode; //< draws the lines between screen via the UI scene
     std::array<cro::Entity, 4u> m_avatars = {};
+    std::array<cro::Entity, 4u> m_spawnerEntities = {};
 
 #ifdef CRO_DEBUG_
     cro::RenderTexture m_debugViewTexture;

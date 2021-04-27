@@ -31,23 +31,28 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 
-struct SpawnArea final
+#include <vector>
+
+struct SpawnerAnimation final
 {
-    std::uint8_t playerID = 4;
-    
-    static constexpr float ActiveTime = 3.f;
-    float currentTime = ActiveTime;
+    std::size_t tableIndex = 0;
+    std::size_t activeIndex = 0; //if the animation is retriggered before this is finished this waits for the index to catch up
+    bool active = true;
+
+    cro::Entity spinnerEnt;
+
+    void start();
 };
 
-class SpawnAreaSystem final : public cro::System
+class SpawnerAnimationSystem final : public cro::System 
 {
 public:
-    explicit SpawnAreaSystem(cro::MessageBus&);
-
-    void handleMessage(const cro::Message&) override;
+    explicit SpawnerAnimationSystem(cro::MessageBus&);
 
     void process(float) override;
 
 private:
+    std::vector<float> m_wavetable;
+
     void onEntityAdded(cro::Entity) override;
 };
