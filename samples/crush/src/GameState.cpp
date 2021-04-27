@@ -943,7 +943,7 @@ void GameState::loadMap()
 
             auto collisionEnt = m_gameScene.createEntity();
             collisionEnt.addComponent<cro::Transform>().setPosition({ spawnPoints[i].x, spawnPoints[i].y, layerDepth });
-            collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
+            collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(rect.left, rect.bottom, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
             collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(layerDepth > 0 ? 1 : 2);
 
             collisionEnt.addComponent<CollisionComponent>().rectCount = 1;
@@ -961,10 +961,11 @@ void GameState::loadMap()
             spinEnt.addComponent<cro::Transform>().setScale(glm::vec3(1.f, 0.5f, 1.f));
             spinEnt.addComponent<cro::ParticleEmitter>().settings = spawnParticles;
             spinEnt.getComponent<cro::ParticleEmitter>().start();
+
             spinModel.createModel(spinEnt, m_resources);
             spawnEnt.getComponent<cro::Transform>().addChild(spinEnt.getComponent<cro::Transform>());
 #ifdef CRO_DEBUG_
-            addBoxDebug(collisionEnt, m_gameScene, cro::Colour::Blue);
+            addBoxDebug(collisionEnt, m_gameScene, cro::Colour::Red);
 #endif
         }
 

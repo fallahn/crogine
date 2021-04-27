@@ -188,6 +188,7 @@
     <ClCompile Include="src\Server.cpp" />
     <ClCompile Include="src\ServerGameState.cpp" />
     <ClCompile Include="src\SliderSystem.cpp" />
+    <ClCompile Include="src\SpawnAreaSystem.cpp" />
     <ClCompile Include="src\UIDirector.cpp" />
     <ClCompile Include="src\WavetableAnimator.cpp" />
     <ClCompile Include="src\WeatherDirector.cpp" />
@@ -235,6 +236,7 @@
     <ClInclude Include="src\ServerState.hpp" />
     <ClInclude Include="src\SharedStateData.hpp" />
     <ClInclude Include="src\Slider.hpp" />
+    <ClInclude Include="src\SpawnAreaSystem.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\UIConsts.hpp" />
     <ClInclude Include="src\UIDirector.hpp" />

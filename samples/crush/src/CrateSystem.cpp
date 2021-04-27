@@ -34,6 +34,7 @@ source distribution.
 #include "Messages.hpp"
 #include "PlayerSystem.hpp"
 #include "ActorIDs.hpp"
+#include "SpawnAreaSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 
@@ -262,6 +263,20 @@ void CrateSystem::processFalling(cro::Entity entity)
                     switch (otherCollision.rects[i].material)
                     {
                     default: break;
+                    case CollisionMaterial::Spawner:
+                        if (!crate.local)
+                        {
+                            const auto& spawner = e.getComponent<SpawnArea>();
+                            if (spawner.currentTime > 0)
+                            {
+                                crate.health = 0;
+
+                                //we've killed the crate so do no more collision
+                                crate.collisionFlags &= ~(1 << CollisionMaterial::Body);
+                                return;
+                            }
+                        }
+                        break;
                     case CollisionMaterial::Crate:
                         //if (e.getComponent<Crate>().state != Crate::State::Idle)
                         //{
@@ -407,6 +422,20 @@ void CrateSystem::processBallistic(cro::Entity entity)
                     switch (otherCollision.rects[i].material)
                     {
                     default: break;
+                    case CollisionMaterial::Spawner:
+                        if (!crate.local)
+                        {
+                            const auto& spawner = e.getComponent<SpawnArea>();
+                            if (spawner.currentTime > 0)
+                            {
+                                crate.health = 0;
+
+                                //we've killed the crate so do no more collision
+                                crate.collisionFlags &= ~(1 << CollisionMaterial::Body);
+                                return;
+                            }
+                        }
+                        break;
                     case CollisionMaterial::Crate:
                         //if (e.getComponent<Crate>().state == Crate::State::Falling)
                         //{

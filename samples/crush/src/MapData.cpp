@@ -116,19 +116,6 @@ bool MapData::loadFromFile(const std::string& path, bool binary)
                             }
                         }
                     }
-                    /*else if (name == "players"
-                        && m_playerSpawns.empty())
-                    {
-                        const auto& spawns = layer->getLayerAs<tmx::ObjectGroup>().getObjects();
-                        for (const auto& spawn : spawns)
-                        {
-                            auto bounds = spawn.getAABB();
-                            bounds.left -= mapWidth / 2.f;
-
-                            auto& position = m_playerSpawns.emplace_back(bounds.left + (bounds.width / 2.f), mapHeight - (bounds.top + bounds.height));
-                            position /= ConstVal::MapUnits;
-                        }
-                    }*/
                 }
             }
 

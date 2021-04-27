@@ -62,6 +62,7 @@ struct CollisionMaterial final
         Body,
         Foot,
         Sensor,
+        Spawner,
 
         Count
     };

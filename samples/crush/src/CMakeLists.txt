@@ -30,6 +30,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ServerGameState.cpp
   ${PROJECT_DIR}/ServerLobbyState.cpp
   ${PROJECT_DIR}/SliderSystem.cpp
+  ${PROJECT_DIR}/SpawnAreaSystem.cpp
   ${PROJECT_DIR}/UIDirector.cpp
   ${PROJECT_DIR}/WavetableAnimator.cpp
   ${PROJECT_DIR}/WeatherDirector.cpp)

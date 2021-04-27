@@ -53,8 +53,8 @@ static constexpr cro::FloatRect CrateFoot = cro::FloatRect(-0.2f, -0.35f, 0.4f, 
 static constexpr glm::vec3 CrateCarryOffset = glm::vec3((PlayerSize.x / 2.f) + (CrateArea.width / 2.f) + 0.1f, CrateArea.height * 1.7f, 0.f);
 
 //assumes spawn is centre bottom
-static constexpr cro::FloatRect SafeArea = cro::FloatRect(-0.99f, 0.f, 1.98f, 2.2f);
-static constexpr cro::FloatRect SpawnBase = cro::FloatRect(-0.52f, 0.f, 1.1f, 0.2f);
+static constexpr cro::FloatRect SafeArea = cro::FloatRect(-0.4f, 0.f, 0.8f, 2.f);
+static constexpr cro::FloatRect SpawnBase = cro::FloatRect(-0.5f, 0.f, 1.f, 0.2f);
 
 static constexpr float PuntVelocity = 30.f;
 static constexpr float CrateFriction = 0.91f; //this is a multiplier

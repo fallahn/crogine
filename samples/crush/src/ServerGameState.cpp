@@ -43,6 +43,7 @@ source distribution.
 #include "Collision.hpp"
 #include "CrateSystem.hpp"
 #include "GameRuleDirector.hpp"
+#include "SpawnAreaSystem.hpp"
 
 #include <crogine/core/Log.hpp>
 
@@ -376,6 +377,7 @@ void GameState::initScene()
     m_scene.addSystem<cro::DynamicTreeSystem>(mb);
     m_scene.addSystem<ActorSystem>(mb);
     m_scene.addSystem<PlayerSystem>(mb);
+    m_scene.addSystem<SpawnAreaSystem>(mb);
     m_scene.addSystem<CrateSystem>(mb);
 
     m_scene.addDirector<WeatherDirector>(m_sharedData.host);
@@ -387,13 +389,79 @@ void GameState::buildWorld()
     MapData mapData;
     if (mapData.loadFromFile("assets/maps/" + m_sharedData.mapName))
     {
-        //set spawn points
+        //add collision data to scene via filtered AABB tree
+        auto createSolid = [&](cro::FloatRect rect, float layerDepth)
+        {
+            auto collisionEnt = m_scene.createEntity();
+            collisionEnt.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
+            collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
+            collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(layerDepth > 0 ? 1 : 2);
+
+            collisionEnt.addComponent<CollisionComponent>().rectCount = 1;
+            collisionEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Solid;
+            collisionEnt.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
+            collisionEnt.getComponent<CollisionComponent>().calcSum();
+        };
+
+        //player spawns and spawn collision
         for (auto i = 0u; i < mapData.getSpawnPositions().size(); ++i)
         {
             auto spawn = mapData.getSpawnPositions()[i];
             m_playerSpawns[i].x = spawn.x;
             m_playerSpawns[i].y = spawn.y + (SpawnBase.height * 1.05f);
+
+            //solid base on spawner model
+            auto rect = SpawnBase;
+            rect.left += spawn.x;
+            rect.bottom += spawn.y;
+            createSolid(rect, m_playerSpawns[i].z);
+
+            //TODO we want to be able to switch
+            //this on and off
+            rect = SafeArea;
+            auto entity = m_scene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec3(spawn, m_playerSpawns[i].z));
+            entity.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(rect.left, rect.bottom, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
+            entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(m_playerSpawns[i].z > 0 ? 1 : 2);
+            entity.addComponent<CollisionComponent>().rectCount = 1;
+            entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Spawner;
+            entity.getComponent<CollisionComponent>().rects[0].bounds = rect;
+            entity.getComponent<CollisionComponent>().calcSum();
+            entity.addComponent<SpawnArea>().playerID = static_cast<std::uint8_t>(i);
         }
+
+        //world collision data
+        for (auto i = 0; i < 2; ++i)
+        {
+            float layerDepth = LayerDepth * Util::direction(i);
+
+            const auto& rects = mapData.getCollisionRects(i);
+            for (const auto& rect : rects)
+            {
+                createSolid(rect, layerDepth);
+            }
+
+            const auto& teleports = mapData.getTeleportRects(i);
+            for (const auto& rect : teleports)
+            {
+                auto entity = m_scene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
+                entity.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
+                entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(i + 1);
+
+                entity.addComponent<CollisionComponent>().rectCount = 1;
+                entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Teleport;
+                entity.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
+                entity.getComponent<CollisionComponent>().calcSum();
+            }
+
+            const auto& crateSpawns = mapData.getCratePositions(i);
+            for (auto spawn : crateSpawns)
+            {
+                m_crateSpawns.push_back(glm::vec3(spawn, layerDepth));
+            }
+        }
+
 
         std::size_t playerCount = 0;
 
@@ -455,60 +523,6 @@ void GameState::buildWorld()
             }
         }
         m_activePlayers = playerCount;
-
-        //add collision data to scene via filtered AABB tree
-        auto createSolid = [&](cro::FloatRect rect, float layerDepth)
-        {
-            auto collisionEnt = m_scene.createEntity();
-            collisionEnt.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
-            collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
-            collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(layerDepth > 0 ? 1 : 2);
-
-            collisionEnt.addComponent<CollisionComponent>().rectCount = 1;
-            collisionEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Solid;
-            collisionEnt.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
-            collisionEnt.getComponent<CollisionComponent>().calcSum();
-        };
-
-        //solid base on spawner model
-        for (auto spawn : PlayerSpawns)
-        {
-            auto rect = SpawnBase;
-            rect.left += spawn.x;
-            rect.bottom += spawn.y;
-            createSolid(rect, spawn.z);
-        }
-
-        for (auto i = 0; i < 2; ++i)
-        {
-            float layerDepth = LayerDepth * Util::direction(i);
-
-            const auto& rects = mapData.getCollisionRects(i);
-            for (const auto& rect : rects)
-            {
-                createSolid(rect, layerDepth);
-            }
-
-            const auto& teleports = mapData.getTeleportRects(i);
-            for (const auto& rect : teleports)
-            {
-                auto entity = m_scene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
-                entity.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(0.f, 0.f, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
-                entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags(i + 1);
-
-                entity.addComponent<CollisionComponent>().rectCount = 1;
-                entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Teleport;
-                entity.getComponent<CollisionComponent>().rects[0].bounds = { 0.f, 0.f, rect.width, rect.height };
-                entity.getComponent<CollisionComponent>().calcSum();
-            }
-
-            const auto& crateSpawns = mapData.getCratePositions(i);
-            for (auto spawn : crateSpawns)
-            {
-                m_crateSpawns.push_back(glm::vec3(spawn, layerDepth));
-            }
-        }
     }
     else
     {
