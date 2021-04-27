@@ -957,12 +957,11 @@ void GameState::loadMap()
 
             //TODO fix this so we don't need an extra entity
             auto spawnEnt = m_gameScene.createEntity();
-            spawnEnt.addComponent<cro::Transform>().setScale(glm::vec3(0.5f, 1.f, 0.5f));
-            spawnEnt.getComponent<cro::Transform>().setPosition(glm::vec3(spawnPoints[i].x, spawnPoints[i].y, layerDepth));
+            spawnEnt.addComponent<cro::Transform>().setPosition(glm::vec3(spawnPoints[i].x, spawnPoints[i].y, layerDepth));
             spawnModel.createModel(spawnEnt, m_resources);
 
             auto spinEnt = m_gameScene.createEntity();
-            spinEnt.addComponent<cro::Transform>().setScale(glm::vec3(1.f, 0.5f, 1.f));
+            spinEnt.addComponent<cro::Transform>();
             spinEnt.addComponent<cro::ParticleEmitter>().settings = spawnParticles;
             spinEnt.getComponent<cro::ParticleEmitter>().start();
 

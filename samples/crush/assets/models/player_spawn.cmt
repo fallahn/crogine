@@ -17,10 +17,11 @@ model player_spawn
     material Unlit
     {
         name = "Untitled"
-        colour = 0.380531,0.000000,1.000000,0.141176
+        colour = 0.672488,0.000000,1.000000,0.298039
         smooth = true
         repeat = true
         blendmode = "alpha"
+        diffuse = "assets/images/spawn_column.png"
 
     }
 }
