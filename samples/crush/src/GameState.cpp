@@ -47,6 +47,7 @@ source distribution.
 #include "PuntBarSystem.hpp"
 #include "WavetableAnimator.hpp"
 #include "SpawnerAnimationSystem.hpp"
+#include "CameraControllerSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -475,6 +476,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<CrateSystem>(mb); //local collision to smooth out interpolation
     m_gameScene.addSystem<AvatarScaleSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
+    m_gameScene.addSystem<CameraControllerSystem>(mb, m_avatars);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
@@ -1210,34 +1212,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             auto camController = m_gameScene.createEntity();
             camController.addComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
             camController.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI * root.getComponent<Player>().collisionLayer);
-            camController.addComponent<cro::Callback>().active = true;
-            camController.getComponent<cro::Callback>().function =
-                [&,root](cro::Entity e, float dt) mutable
-            {
-                auto& player = root.getComponent<Player>();
-                if (!m_avatars[player.cameraTargetIndex].isValid())
-                {
-                    //skip to next valid index
-                    do
-                    {
-                        player.cameraTargetIndex = (player.cameraTargetIndex + 1) % 4;
-                    } while ((!m_avatars[player.cameraTargetIndex].isValid()));
-                }
-                auto targetPos = m_avatars[player.cameraTargetIndex].getComponent<cro::Transform>().getWorldPosition();
-
-                //rotate the camera depending on the Z depth of the player
-                static const float TotalDistance = LayerDepth * 2.f;
-                auto position = targetPos.z;
-                float currentDistance = LayerDepth - position;
-                currentDistance /= TotalDistance;
-
-                auto& tx = e.getComponent<cro::Transform>();
-                tx.setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI* currentDistance);
-
-                //and follow the root node
-                auto dir = targetPos - tx.getPosition();
-                tx.move(dir * 10.f * dt);
-            };
+            camController.addComponent<CameraController>().targetPlayer = root;
 
 
             //displays above player when carrying a box
@@ -1673,28 +1648,23 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         msg->position = m_avatars[data.playerID].getComponent<cro::Transform>().getWorldPosition();
     }
 
-    std::string state;
     switch (data.playerState)
     {
     default: break;
     case PlayerEvent::Scored:
         msg->type = AvatarEvent::Scored;
-        state = "scored";
         break;
     case PlayerEvent::Spawned:
         msg->type = AvatarEvent::Spawned;
-        state = "spawned";
         m_spawnerEntities[data.playerID].getComponent<SpawnerAnimation>().start();
         break;
     case PlayerEvent::Reset:
         msg->type = AvatarEvent::Reset;
         break;
     case PlayerEvent::Jumped:
-        state = "jumped";
         msg->type = AvatarEvent::Jumped;
         break;
     case PlayerEvent::Landed:
-        state = "landed";
         msg->type = AvatarEvent::Landed;
         if (m_avatars[data.playerID].isValid())
         {
@@ -1703,11 +1673,9 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         }
         break;
     case PlayerEvent::DroppedCrate:
-        state = "dropped crate";
         msg->type = AvatarEvent::DroppedCrate;
         break;
     case PlayerEvent::Teleported:
-        state = "teleported";
         msg->type = AvatarEvent::Teleported;
         if (m_avatars[data.playerID].isValid())
         {
@@ -1715,7 +1683,6 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         }
         break;
     case PlayerEvent::Died:
-        state = "died";
         msg->type = AvatarEvent::Died;
         if (m_avatars[data.playerID].isValid())
         {
@@ -1726,7 +1693,6 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         }
         break;
     case PlayerEvent::None:
-        state = "none";
         msg->type = AvatarEvent::None;
         if (m_avatars[data.playerID].isValid())
         {
@@ -1734,9 +1700,6 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
         }
         break;
     }
-#ifdef CRO_DEBUG_
-    LogI << "Player " << state << std::endl;
-#endif //DEBUG
 }
 
 void GameState::removeEntity(std::uint32_t entityID)

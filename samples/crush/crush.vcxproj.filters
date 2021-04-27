@@ -186,6 +186,9 @@
     <ClCompile Include="src\SpawnerAnimationSystem.cpp">
       <Filter>Source Files\Client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\CameraControllerSystem.cpp">
+      <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -333,6 +336,9 @@
       <Filter>Header Files\Server\systems</Filter>
     </ClInclude>
     <ClInclude Include="src\SpawnerAnimationSystem.hpp">
+      <Filter>Header Files\Client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CameraControllerSystem.hpp">
       <Filter>Header Files\Client\systems</Filter>
     </ClInclude>
   </ItemGroup>
