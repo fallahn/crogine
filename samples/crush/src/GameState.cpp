@@ -60,7 +60,6 @@ source distribution.
 #include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/DynamicTreeComponent.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
-#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
 
 #include <crogine/ecs/components/Drawable2D.hpp>
@@ -547,6 +546,11 @@ void GameState::loadAssets()
     m_modelDefs[GameModelID::Hologram].loadFromFile("assets/models/hologram.cmt", m_resources/*, &m_environmentMap*/);
 
 
+    //sprites
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/sprites/poopsnail.spt", m_resources.textures);
+    m_sprites[SpriteID::PoopSnail] = spriteSheet.getSprite("poopsnail");
+
 
     //create model geometry for portal field
     m_meshIDs[MeshID::Portal] = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::UV0, 1, GL_TRIANGLE_STRIP));
@@ -989,20 +993,18 @@ void GameState::loadMap()
             auto layerDepth = LayerDepth - (2 * (LayerDepth * (i % 2)));
             auto rect = SpawnBase;
 
-            auto collisionEnt = m_gameScene.createEntity();
-            collisionEnt.addComponent<cro::Transform>().setPosition({ spawnPoints[i].x, spawnPoints[i].y, layerDepth });
-            collisionEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(rect.left, rect.bottom, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
-            collisionEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(layerDepth > 0 ? 1 : 2);
-
-            collisionEnt.addComponent<CollisionComponent>().rectCount = 1;
-            collisionEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Solid;
-            collisionEnt.getComponent<CollisionComponent>().rects[0].bounds = rect;
-            collisionEnt.getComponent<CollisionComponent>().calcSum();
-
-            //TODO fix this so we don't need an extra entity
             auto spawnEnt = m_gameScene.createEntity();
             spawnEnt.addComponent<cro::Transform>().setPosition(glm::vec3(spawnPoints[i].x, spawnPoints[i].y, layerDepth));
             spawnModel.createModel(spawnEnt, m_resources);
+
+            spawnEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(rect.left, rect.bottom, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
+            spawnEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(layerDepth > 0 ? 1 : 2);
+
+            spawnEnt.addComponent<CollisionComponent>().rectCount = 1;
+            spawnEnt.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Solid;
+            spawnEnt.getComponent<CollisionComponent>().rects[0].bounds = rect;
+            spawnEnt.getComponent<CollisionComponent>().calcSum();
+
 
             auto spinEnt = m_gameScene.createEntity();
             spinEnt.addComponent<cro::Transform>();
@@ -1012,11 +1014,19 @@ void GameState::loadMap()
             spinModel.createModel(spinEnt, m_resources);
             spawnEnt.getComponent<cro::Transform>().addChild(spinEnt.getComponent<cro::Transform>());
 #ifdef CRO_DEBUG_
-            addBoxDebug(collisionEnt, m_gameScene, cro::Colour::Red);
+            addBoxDebug(spawnEnt, m_gameScene, cro::Colour::Red);
 #endif
-
             spawnEnt.addComponent<SpawnerAnimation>().spinnerEnt = spinEnt;
             m_spawnerEntities[i] = spawnEnt;
+
+
+
+            /*auto buns = m_gameScene.createEntity();
+            buns.addComponent<cro::Transform>().setPosition({ spawnPoints[i].x, spawnPoints[i].y + 1.f, layerDepth });
+            buns.getComponent<cro::Transform>().setScale(glm::vec3(1.f) / 32.f);
+            buns.addComponent<cro::Model>();
+            buns.addComponent<cro::Sprite>() = m_sprites[SpriteID::PoopSnail];
+            buns.addComponent<cro::SpriteAnimation>().play(0);*/
         }
 
     }

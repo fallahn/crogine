@@ -74,6 +74,16 @@ namespace GameModelID
     };
 }
 
+namespace SpriteID
+{
+    enum
+    {
+        PoopSnail,
+
+        Count
+    };
+}
+
 namespace FontID
 {
 

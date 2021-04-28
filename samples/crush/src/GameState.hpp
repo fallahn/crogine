@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/core/ConsoleClient.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
@@ -82,6 +83,7 @@ private:
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
     std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs = {};
+    std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
     cro::EnvironmentMap m_environmentMap;
     cro::EnvironmentMap m_skyMap;
