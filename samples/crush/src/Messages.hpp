@@ -42,7 +42,8 @@ namespace MessageID
         CrateMessage,
         ConnectionMessage,
         GameMessage,
-        AvatarMessage
+        AvatarMessage,
+        ActorMessage
     };
 }
 
@@ -88,8 +89,7 @@ struct CrateEvent final
 {
     enum
     {
-        StateChanged,
-        Removed
+        StateChanged
     }type = StateChanged;
 
     cro::Entity crate;
@@ -134,4 +134,15 @@ struct AvatarEvent final
     std::int8_t playerID = -1;
     std::uint8_t lives = 0;
     glm::vec3 position;
+};
+
+struct ActorEvent final
+{
+    enum
+    {
+        Added,
+        Removed
+    }type = Added;
+    glm::vec3 position = glm::vec3(0.f);
+    std::int32_t id = -1;
 };

@@ -596,6 +596,7 @@ void GameState::loadAssets()
     {
         Squish,
         Sprockets,
+        Spark,
 
         Count
     };
@@ -603,6 +604,7 @@ void GameState::loadAssets()
 
     ids[ParticleID::Squish] = particleDirector.loadSettings("assets/particles/squish.xyp");
     ids[ParticleID::Sprockets] = particleDirector.loadSettings("assets/particles/box.xyp");
+    ids[ParticleID::Spark] = particleDirector.loadSettings("assets/particles/spark.xyp");
 
     auto particleHandler = [ids](const cro::Message& msg) -> std::optional<std::pair<std::size_t, glm::vec3>>
     {
@@ -620,14 +622,28 @@ void GameState::loadAssets()
             }
         }
         break;
-        case MessageID::CrateMessage:
+        case MessageID::ActorMessage:
         {
-            const auto& data = msg.getData<CrateEvent>();
+            const auto& data = msg.getData<ActorEvent>();
             switch (data.type)
             {
             default: break;
-            case CrateEvent::Removed:
-                return std::make_pair(ids[ParticleID::Sprockets], data.position);
+            case ActorEvent::Added:
+                switch (data.id)
+                {
+                default: break;
+                case ActorID::Crate:
+                    return std::make_pair(ids[ParticleID::Spark], data.position);
+                }
+                break;
+            case ActorEvent::Removed:
+                switch (data.id)
+                {
+                default: break;
+                case ActorID::Crate:
+                    return std::make_pair(ids[ParticleID::Sprockets], data.position);
+                }
+                break;
             }
         }
             break;
@@ -1440,6 +1456,12 @@ void GameState::spawnActor(ActorSpawn as)
 #endif
         break;
     }
+
+    //let the world know
+    auto* msg = m_gameScene.postMessage<ActorEvent>(MessageID::ActorMessage);
+    msg->id = as.id;
+    msg->position = entity.getComponent<cro::Transform>().getPosition();
+    msg->type = ActorEvent::Added;
 }
 
 void GameState::updateActor(ActorUpdate update)
@@ -1770,17 +1792,12 @@ void GameState::removeEntity(std::uint32_t entityID)
     {
         if (e.getComponent<Actor>().serverEntityId == entityID)
         {
-            switch (e.getComponent<Actor>().id)
-            {
-            default: break;
-            case ActorID::Crate:
-            {
-                auto* msg = m_uiScene.postMessage<CrateEvent>(MessageID::CrateMessage);
-                msg->type = CrateEvent::Removed;
-                msg->position = e.getComponent<cro::Transform>().getPosition();
-            }
-                break;
-            }
+            auto id = e.getComponent<Actor>().id;
+
+            auto* msg = m_gameScene.postMessage<ActorEvent>(MessageID::ActorMessage);
+            msg->id = id;
+            msg->position = e.getComponent<cro::Transform>().getPosition();
+            msg->type = ActorEvent::Removed;
 
             //check if this is a remote player and remove the
             //box icon from their avatar first
