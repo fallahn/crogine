@@ -113,6 +113,8 @@ private:
     void spawnPlayer(PlayerInfo);
     void removePlayer(std::uint8_t);
     void spawnActor(ActorSpawn);
+    void updateActor(ActorUpdate);
+    void updateIdleActor(ActorIdleUpdate);
     void updateView(cro::Camera&);
 
     void startGame();

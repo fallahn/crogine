@@ -55,6 +55,7 @@ struct Actor
 {
     std::int32_t id = -1;
     std::uint16_t serverEntityId = 0;
+    bool sleeping = false;
 };
 
 struct ActorSpawn : public Actor

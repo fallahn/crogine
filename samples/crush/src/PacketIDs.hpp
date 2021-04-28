@@ -67,6 +67,7 @@ namespace PacketID
         PlayerDisconnect, //< uint8 ID of player/connection
         ActorSpawn, //< ActorSpawn struct
         ActorUpdate, //< uint8 ID pos, rotation - used for interpolation of other players and NPCs
+        ActorIdleUpdate, //< uint8 ID, timestamp - keeps idle actors in sync via smaller packets
         CrateUpdate, //< CrateState struct
         GameMessage, //< uint8 GameEvent::Type
         EntityRemoved, //< uint32 entity ID

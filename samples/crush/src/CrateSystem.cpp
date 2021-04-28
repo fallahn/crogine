@@ -55,6 +55,7 @@ CrateSystem::CrateSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(CrateSystem))
 {
     requireComponent<Crate>();
+    requireComponent<Actor>();
     requireComponent<cro::Transform>();
     requireComponent<cro::DynamicTreeComponent>();
 }
@@ -77,6 +78,8 @@ void CrateSystem::process(float)
         }
         else
         {
+            entity.getComponent<Actor>().sleeping = false;
+
             auto oldState = crate.state;
             switch (crate.state)
             {
@@ -196,6 +199,12 @@ void CrateSystem::processIdle(cro::Entity entity)
     if (crate.collisionFlags == 0)
     {
         crate.state = Crate::State::Falling;
+
+        entity.getComponent<Actor>().sleeping = false;
+    }
+    else
+    {
+        entity.getComponent<Actor>().sleeping = true;
     }
 }
 

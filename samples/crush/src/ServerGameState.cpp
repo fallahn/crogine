@@ -233,27 +233,47 @@ void GameState::netBroadcast()
     for (auto e : actors)
     {
         const auto& actor = e.getComponent<Actor>();
-        const auto& tx = e.getComponent<cro::Transform>();
 
-        ActorUpdate update;
-        update.actorID = actor.id;
-        update.serverID = actor.serverEntityId;
-        update.position = cro::Util::Net::compressVec3(tx.getWorldPosition());
-        update.rotation = cro::Util::Net::compressQuat(tx.getRotation());
-        update.timestamp = timestamp;
-
-        //adds some extrapolation when fast moving
-        if (e.hasComponent<Crate>())
+        if (!actor.sleeping)
         {
-            const auto& crate = e.getComponent<Crate>();
-            update.velocity = cro::Util::Net::compressVec2(crate.velocity * 0.9f, 128);
-        }
+            const auto& tx = e.getComponent<cro::Transform>();
 
-        for (auto i = 0u; i < ConstVal::MaxClients; ++i)
-        {
-            if (m_sharedData.clients[i].ready)
+            ActorUpdate update;
+            update.actorID = actor.id;
+            update.serverID = actor.serverEntityId;
+            update.position = cro::Util::Net::compressVec3(tx.getWorldPosition());
+            update.rotation = cro::Util::Net::compressQuat(tx.getRotation());
+            update.timestamp = timestamp;
+
+            //adds some extrapolation when fast moving
+            if (e.hasComponent<Crate>())
             {
-                m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::ActorUpdate, update, cro::NetFlag::Unreliable);
+                const auto& crate = e.getComponent<Crate>();
+                update.velocity = cro::Util::Net::compressVec2(crate.velocity * 0.9f, 128);
+            }
+
+            for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+            {
+                if (m_sharedData.clients[i].ready)
+                {
+                    m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::ActorUpdate, update, cro::NetFlag::Unreliable);
+                }
+            }
+        }
+        else
+        {
+            //we need to keep the client side actors up to date with timestamps, regardless
+            ActorIdleUpdate update;
+            update.actorID = actor.id;
+            update.serverID = actor.serverEntityId;
+            update.timestamp = timestamp;
+
+            for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+            {
+                if (m_sharedData.clients[i].ready)
+                {
+                    m_sharedData.host.sendPacket(m_sharedData.clients[i].peer, PacketID::ActorIdleUpdate, update, cro::NetFlag::Unreliable);
+                }
             }
         }
     }

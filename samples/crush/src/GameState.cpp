@@ -1059,21 +1059,10 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     }
         break;
     case PacketID::ActorUpdate:
-    {
-        auto update = packet.as<ActorUpdate>();
-        cro::Command cmd;
-        cmd.targetFlags = Client::CommandID::Interpolated;
-        cmd.action = [update](cro::Entity e, float)
-        {
-            if (e.isValid() &&
-                e.getComponent<Actor>().serverEntityId == update.serverID)
-            {
-                auto& interp = e.getComponent<InterpolationComponent>();
-                interp.setTarget({ cro::Util::Net::decompressVec3(update.position), cro::Util::Net::decompressQuat(update.rotation), update.timestamp, cro::Util::Net::decompressVec2(update.velocity, 128) });
-            }
-        };
-        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-    }
+        updateActor(packet.as<ActorUpdate>());
+        break;
+    case PacketID::ActorIdleUpdate:
+        updateIdleActor(packet.as<ActorIdleUpdate>());
         break;
     case PacketID::PlayerState:
         //use this for things like teleport effects
@@ -1451,6 +1440,42 @@ void GameState::spawnActor(ActorSpawn as)
 #endif
         break;
     }
+}
+
+void GameState::updateActor(ActorUpdate update)
+{
+    cro::Command cmd;
+    cmd.targetFlags = Client::CommandID::Interpolated;
+    cmd.action = [update](cro::Entity e, float)
+    {
+        if (e.isValid() &&
+            e.getComponent<Actor>().serverEntityId == update.serverID)
+        {
+            auto& interp = e.getComponent<InterpolationComponent>();
+            interp.setTarget({ cro::Util::Net::decompressVec3(update.position), 
+                cro::Util::Net::decompressQuat(update.rotation), 
+                update.timestamp, cro::Util::Net::decompressVec2(update.velocity, 128) });
+        }
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
+void GameState::updateIdleActor(ActorIdleUpdate update)
+{
+    cro::Command cmd;
+    cmd.targetFlags = Client::CommandID::Interpolated;
+    cmd.action = [update](cro::Entity e, float)
+    {
+        if (e.isValid() &&
+            e.getComponent<Actor>().serverEntityId == update.serverID)
+        {
+            const auto& tx = e.getComponent<cro::Transform>();
+
+            auto& interp = e.getComponent<InterpolationComponent>();
+            interp.setTarget({ tx.getPosition(), tx.getRotation(), update.timestamp, glm::vec2(0.f) });
+        }
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
 void GameState::updateView(cro::Camera&)
