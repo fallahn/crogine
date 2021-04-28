@@ -59,6 +59,9 @@ static constexpr cro::FloatRect SpawnBase = cro::FloatRect(-0.5f, 0.f, 1.f, 0.2f
 static constexpr float PuntVelocity = 30.f;
 static constexpr float CrateFriction = 0.91f; //this is a multiplier
 
+static const cro::Box ExplosionBounds = { glm::vec3(-1.5f), glm::vec3(1.5f) };
+static constexpr cro::FloatRect ExplosionArea = cro::FloatRect(-1.5f, -1.5f, 3.f, 3.f);
+
 static constexpr float HoloRotationSpeed = 0.5f;
 
 static constexpr float LayerDepth = 7.5f;

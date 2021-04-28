@@ -263,4 +263,9 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
     {
         player.state = Player::State::Falling;
     }
+
+    else if ((player.collisionFlags & (1 << CollisionMaterial::Fire)))
+    {
+        player.state = Player::State::Dead;
+    }
 }

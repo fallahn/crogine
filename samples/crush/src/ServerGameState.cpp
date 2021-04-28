@@ -56,6 +56,7 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Network.hpp>
+#include <crogine/util/Random.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 using namespace sv;
@@ -285,6 +286,12 @@ std::int32_t GameState::process(float dt)
     const auto& crates = m_scene.getSystem<CrateSystem>().getDeadCrates();
     for (auto crateEnt : crates)
     {
+        if (cro::Util::Random::value(0, 10) == 0)
+        {
+            spawnActor(ActorID::Explosion, crateEnt.getComponent<cro::Transform>().getPosition());
+        }
+
+
         auto pos = crateEnt.getComponent<Crate>().spawnPosition;
         auto crateID = crateEnt.getIndex();
         m_scene.destroyEntity(crateEnt);
@@ -580,6 +587,30 @@ cro::Entity GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
         entity.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
         entity.getComponent<CollisionComponent>().rects[1].bounds = CrateFoot;
         entity.getComponent<CollisionComponent>().calcSum();
+        break;
+    case ActorID::Explosion:
+        entity.addComponent<cro::DynamicTreeComponent>().setArea(CrateBounds);
+        entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((position.z > 0 ? 1 : 2));
+
+        entity.addComponent<CollisionComponent>().rectCount = 1;
+        entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Fire;
+        entity.getComponent<CollisionComponent>().rects[0].bounds = ExplosionArea;
+        entity.getComponent<CollisionComponent>().calcSum();
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(0.25f);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime -= dt;
+            if (currTime < 0)
+            {
+                auto id = e.getIndex();
+                m_scene.destroyEntity(e);
+                removeEntity(id);
+            }
+        };
         break;
     }
 

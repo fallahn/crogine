@@ -225,7 +225,7 @@ void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerStat
     
     //adjust crate rect for direction
     auto crateOffset = CrateCarryOffset;
-    crateOffset.x *= player.direction;
+    crateOffset.x *= player.direction * Util::direction(player.collisionLayer);
     auto crateArea = CrateArea;
     crateArea.left += crateOffset.x;
     crateArea.bottom += crateOffset.y;

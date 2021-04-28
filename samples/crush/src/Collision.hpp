@@ -56,13 +56,13 @@ struct CollisionMaterial final
     {
         None = -1,
         Solid,
-        Water,
         Teleport,
         Crate,
         Body,
         Foot,
         Sensor,
         Spawner,
+        Fire,
 
         Count
     };

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -46,7 +46,8 @@ namespace ActorID
         PlayerThree,
         PlayerFour,
 
-        Crate
+        Crate,
+        Explosion
     };
 }
 

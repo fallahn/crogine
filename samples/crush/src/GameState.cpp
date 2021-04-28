@@ -597,6 +597,7 @@ void GameState::loadAssets()
         Squish,
         Sprockets,
         Spark,
+        Fire,
 
         Count
     };
@@ -605,6 +606,7 @@ void GameState::loadAssets()
     ids[ParticleID::Squish] = particleDirector.loadSettings("assets/particles/squish.xyp");
     ids[ParticleID::Sprockets] = particleDirector.loadSettings("assets/particles/box.xyp");
     ids[ParticleID::Spark] = particleDirector.loadSettings("assets/particles/spark.xyp");
+    ids[ParticleID::Fire] = particleDirector.loadSettings("assets/particles/fire.xyp");
 
     auto particleHandler = [ids](const cro::Message& msg) -> std::optional<std::pair<std::size_t, glm::vec3>>
     {
@@ -632,6 +634,8 @@ void GameState::loadAssets()
                 switch (data.id)
                 {
                 default: break;
+                case ActorID::Explosion:
+                    return std::make_pair(ids[ParticleID::Fire], data.position);
                 case ActorID::Crate:
                     return std::make_pair(ids[ParticleID::Spark], data.position);
                 }
@@ -640,6 +644,8 @@ void GameState::loadAssets()
                 switch (data.id)
                 {
                 default: break;
+                case ActorID::Explosion:
+                    return std::make_pair(ids[ParticleID::Fire], data.position);
                 case ActorID::Crate:
                     return std::make_pair(ids[ParticleID::Sprockets], data.position);
                 }
@@ -1309,7 +1315,7 @@ void GameState::spawnPlayer(PlayerInfo info)
                         ImGui::Text("Vel X: %3.3f", player.velocity.x);
                         auto pos = root.getComponent<cro::Transform>().getPosition();
                         ImGui::Text("Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-                        if (player.direction == 0)
+                        if (player.direction == -1)
                         {
                             ImGui::Text("Direction : Left");
                         }
@@ -1317,6 +1323,7 @@ void GameState::spawnPlayer(PlayerInfo info)
                         {
                             ImGui::Text("Direction : Right");
                         }
+                        ImGui::Text("Layer: %d", player.collisionLayer);
 
                         auto foot = player.collisionFlags & (1 << CollisionMaterial::Foot);
                         ImGui::Text("Foot: %d", foot);
@@ -1326,6 +1333,8 @@ void GameState::spawnPlayer(PlayerInfo info)
 
                         ImGui::Text("Punt Level: %3.3f", player.puntLevel);
                         ImGui::Text("Lives: %d", player.lives);
+
+                        //ImGui::Text("Box %3.3f", root.getComponent<CollisionComponent>().rects[2].bounds.left);
                     }
                     ImGui::End();
                 });
@@ -1454,6 +1463,9 @@ void GameState::spawnActor(ActorSpawn as)
 #ifdef CRO_DEBUG_
         addBoxDebug(entity, m_gameScene, cro::Colour::Red);        
 #endif
+        break;
+    case ActorID::Explosion:
+
         break;
     }
 
