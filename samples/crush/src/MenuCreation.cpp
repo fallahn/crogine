@@ -730,6 +730,59 @@ void MenuState::createLocalMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::PlayerIndicator;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+    //increase button
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ cro::DefaultSceneSize.x / 2, cro::DefaultSceneSize.y / 2 });
+    entity.getComponent<cro::Transform>().move({ 200.f, -10.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString(">");
+    entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::LocalPlay);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    auto nextCount = std::min(4, m_sharedData.localPlayerCount + 1);
+                    if (nextCount != m_sharedData.localPlayerCount)
+                    {
+                        setPlayerCount(nextCount);
+                    }
+                }
+            });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    //decrease button
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ cro::DefaultSceneSize.x / 2, cro::DefaultSceneSize.y / 2 });
+    entity.getComponent<cro::Transform>().move({ -200.f, -10.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("<");
+    entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::LocalPlay);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    auto nextCount = std::max(2, m_sharedData.localPlayerCount - 1);
+                    if (nextCount != m_sharedData.localPlayerCount)
+                    {
+                        setPlayerCount(nextCount);
+                    }
+                }
+            });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     //display the map name - TODO make this selectable
     entity = m_scene.createEntity();

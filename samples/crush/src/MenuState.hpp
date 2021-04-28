@@ -130,6 +130,8 @@ private:
     void updateLobbyStrings();
     void updateReadyDisplay();
 
+    void setPlayerCount(std::uint8_t);
+
     void handleNetEvent(const cro::NetEvent&);
     void updateView(cro::Camera&);
 };

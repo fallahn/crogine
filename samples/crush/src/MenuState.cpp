@@ -166,28 +166,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
 
     auto& uiSystem = m_scene.getSystem<cro::UISystem>();
 
-    auto setPlayerCount = [&](std::uint8_t count)
-    {
-        if (uiSystem.getActiveGroup() == GroupID::LocalPlay)
-        {
-            cro::Command cmd;
-            cmd.targetFlags = MenuCommandID::PlayerIndicator;
-            cmd.action = [count](cro::Entity e, float)
-            {
-                e.getComponent<cro::Text>().setString(std::to_string(count) + " Player");
-            };
-            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-            if (m_sharedData.clientConnection.connected)
-            {
-                m_sharedData.localPlayerCount = count;
-
-                std::uint16_t data = m_sharedData.clientConnection.connectionID << 8 | count;
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerCount, data, cro::NetFlag::Reliable);
-            }
-        }
-    };
-
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
@@ -634,3 +612,25 @@ void MenuState::applyTextEdit()
     }
     m_textEdit = {};
 }
+
+void MenuState::setPlayerCount(std::uint8_t count)
+{
+    if (m_scene.getSystem<cro::UISystem>().getActiveGroup() == GroupID::LocalPlay)
+    {
+        cro::Command cmd;
+        cmd.targetFlags = MenuCommandID::PlayerIndicator;
+        cmd.action = [count](cro::Entity e, float)
+        {
+            e.getComponent<cro::Text>().setString(std::to_string(count) + " Player");
+        };
+        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+        if (m_sharedData.clientConnection.connected)
+        {
+            m_sharedData.localPlayerCount = count;
+
+            std::uint16_t data = m_sharedData.clientConnection.connectionID << 8 | count;
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerCount, data, cro::NetFlag::Reliable);
+        }
+    }
+};
