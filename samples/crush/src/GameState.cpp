@@ -48,6 +48,7 @@ source distribution.
 #include "WavetableAnimator.hpp"
 #include "SpawnerAnimationSystem.hpp"
 #include "CameraControllerSystem.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -59,6 +60,8 @@ source distribution.
 #include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/DynamicTreeComponent.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
@@ -71,12 +74,15 @@ source distribution.
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem3D.hpp>
+#include <crogine/ecs/systems/SpriteAnimator.hpp>
 
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
@@ -477,10 +483,14 @@ void GameState::addSystems()
     m_gameScene.addSystem<AvatarScaleSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<CameraControllerSystem>(mb, m_avatars);
+    m_gameScene.addSystem<cro::SpriteAnimator>(mb);
+    m_gameScene.addSystem<cro::SpriteSystem3D>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+#ifdef CRO_DEBUG_
     m_gameScene.addSystem<cro::RenderSystem2D>(mb).setFilterFlags(~TwoDeeFlags::Debug);
+#endif
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
     m_gameScene.addDirector<DayNightDirector>();
@@ -696,6 +706,9 @@ void GameState::loadMap()
 
         cro::EmitterSettings smokeParticles;
         smokeParticles.loadFromFile("assets/particles/smoke.xyp", m_resources.textures);
+
+        cro::SpriteSheet spriteSheet;
+        spriteSheet.loadFromFile("assets/sprites/electric.spt", m_resources.textures);
 
         //build the platform geometry
         for (auto i = 0; i < 2; ++i)
@@ -925,7 +938,16 @@ void GameState::loadMap()
 
                 entity.getComponent<cro::Transform>().addChild(particleEnt.getComponent<cro::Transform>());
 
-                //TODO attach electricity sprite
+                //attach electricity sprite
+                auto elecEnt = m_gameScene.createEntity();
+                elecEnt.addComponent<cro::Transform>().setScale(glm::vec3(1.f) / ConstVal::MapUnits);
+                elecEnt.addComponent<cro::Model>();
+                elecEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("electric");
+                auto bounds = elecEnt.getComponent<cro::Sprite>().getTextureBounds();
+                elecEnt.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+                elecEnt.addComponent<cro::SpriteAnimation>().play(0);
+
+                entity.getComponent<cro::Transform>().addChild(elecEnt.getComponent<cro::Transform>());
             }
         }
 
