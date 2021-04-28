@@ -1,36 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="left-up" width="20" height="12" tilewidth="128" tileheight="128" infinite="0" nextlayerid="5" nextobjectid="28">
- <layer id="1" name="Tile Layer 1" width="20" height="12">
+<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="left-up" width="36" height="18" tilewidth="128" tileheight="128" infinite="0" nextlayerid="5" nextobjectid="43">
+ <layer id="1" name="Tile Layer 1" width="36" height="18">
   <data encoding="base64" compression="zlib">
-   eJxjYBgFo2AUDFUAAAPAAAE=
+   eJztwTEBAAAAwqD1T+1pCaAAAOAGCiAAAQ==
   </data>
  </layer>
  <objectgroup id="2" name="collision">
-  <object id="5" type="Collision" x="0" y="1472" width="2560" height="64"/>
-  <object id="6" type="Collision" x="2432" y="0" width="128" height="1472"/>
-  <object id="7" type="Collision" x="0" y="0" width="128" height="1472"/>
-  <object id="8" type="Collision" x="896" y="1408" width="832" height="64"/>
-  <object id="9" type="Collision" x="1280" y="1184" width="96" height="224"/>
-  <object id="10" type="Collision" x="800" y="992" width="352" height="96"/>
-  <object id="11" type="Collision" x="1440" y="992" width="352" height="64"/>
-  <object id="12" type="Collision" x="288" y="704" width="288" height="544"/>
-  <object id="16" type="Teleport" x="972" y="864" width="52" height="128"/>
-  <object id="17" type="Crate" x="1984" y="1088" width="64" height="64"/>
-  <object id="18" type="Crate" x="1760" y="256" width="64" height="64"/>
-  <object id="19" type="Crate" x="672" y="192" width="64" height="64"/>
-  <object id="20" type="Collision" x="1504" y="480" width="768" height="64"/>
-  <object id="21" type="Teleport" x="2080" y="352" width="52" height="128"/>
-  <object id="22" type="Collision" x="864" y="544" width="352" height="64"/>
-  <object id="24" type="Spawn Base" x="352" y="679" width="141" height="25"/>
-  <object id="25" type="Spawn Base" x="1567" y="967" width="141" height="25"/>
-  <object id="26" type="Spawn Base" x="2271" y="1447" width="141" height="25"/>
-  <object id="27" type="Spawn Base" x="143" y="1447" width="141" height="25"/>
+  <object id="5" type="Collision" x="0" y="2240" width="4608" height="64"/>
+  <object id="6" type="Collision" x="4480" y="0" width="128" height="2240"/>
+  <object id="7" type="Collision" x="0" y="0" width="128" height="2240"/>
+  <object id="8" type="Collision" x="1856" y="1760" width="832" height="64"/>
+  <object id="9" type="Collision" x="2208" y="1536" width="128" height="224"/>
+  <object id="10" type="Collision" x="544" y="1344" width="352" height="96"/>
+  <object id="11" type="Collision" x="1280" y="1376" width="352" height="96"/>
+  <object id="12" type="Collision" x="2112" y="672" width="320" height="544"/>
+  <object id="16" type="Teleport" x="416" y="2112" width="52" height="128"/>
+  <object id="17" type="Crate" x="2752" y="160" width="64" height="64"/>
+  <object id="18" type="Crate" x="1728" y="160" width="64" height="64"/>
+  <object id="19" type="Crate" x="3488" y="1088" width="64" height="64"/>
+  <object id="20" type="Collision" x="3680" y="736" width="672" height="224"/>
+  <object id="21" type="Teleport" x="2240" y="544" width="52" height="128"/>
+  <object id="22" type="Collision" x="928" y="896" width="352" height="64"/>
+  <object id="24" type="Spawn Base" x="544" y="711" width="141" height="25"/>
+  <object id="25" type="Spawn Base" x="1386" y="1351" width="141" height="25"/>
+  <object id="26" type="Spawn Base" x="3916" y="711" width="141" height="25"/>
+  <object id="27" type="Spawn Base" x="3047" y="1383" width="141" height="25"/>
+  <object id="28" type="Collision" x="1600" y="960" width="352" height="64"/>
+  <object id="29" type="Collision" x="2592" y="960" width="352" height="64"/>
+  <object id="30" type="Collision" x="3328" y="896" width="352" height="64"/>
+  <object id="31" type="Collision" x="256" y="736" width="672" height="224"/>
+  <object id="32" type="Collision" x="2944" y="1408" width="352" height="96"/>
+  <object id="33" type="Collision" x="3712" y="1344" width="352" height="96"/>
+  <object id="34" type="Teleport" x="4160" y="2112" width="52" height="128"/>
+  <object id="35" type="Crate" x="1056" y="1120" width="64" height="64"/>
+  <object id="36" type="Collision" x="672" y="1440" width="96" height="384"/>
+  <object id="37" type="Collision" x="3840" y="1440" width="96" height="384"/>
+  <object id="38" type="Collision" x="128" y="1600" width="544" height="224"/>
+  <object id="39" type="Collision" x="3936" y="1600" width="544" height="224"/>
+  <object id="40" type="Collision" x="128" y="1824" width="1120" height="64"/>
+  <object id="41" type="Collision" x="3360" y="1824" width="1120" height="64"/>
+  <object id="42" type="Collision" x="1568" y="2016" width="1472" height="224"/>
  </objectgroup>
  <objectgroup id="4" name="ignored"/>
  <objectgroup id="3" name="players">
-  <object id="1" name="Player Size" type="Player Size" x="385" y="572" width="76" height="102"/>
-  <object id="13" name="Player Size" type="Player Size" x="2304" y="1336" width="76" height="102"/>
-  <object id="14" name="Player Size" type="Player Size" x="1599" y="861" width="76" height="102"/>
-  <object id="15" name="Player Size" type="Player Size" x="175" y="1337" width="76" height="102"/>
+  <object id="1" name="Player Size" type="Player Size" x="577" y="587" width="76" height="102"/>
+  <object id="13" name="Player Size" type="Player Size" x="3948" y="581" width="76" height="102"/>
+  <object id="14" name="Player Size" type="Player Size" x="1418" y="1226" width="76" height="102"/>
+  <object id="15" name="Player Size" type="Player Size" x="3077" y="1247" width="76" height="102"/>
  </objectgroup>
 </map>
