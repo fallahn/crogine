@@ -1052,9 +1052,9 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         //we assume we're receiving local
     {
         auto update = packet.as<PlayerUpdate>();
-        if (m_inputParsers.count(update.playerID))
+        if (m_inputParsers.count(update.getPlayerID()))
         {
-            m_gameScene.getSystem<PlayerSystem>().reconcile(m_inputParsers.at(update.playerID).getEntity(), update);
+            m_gameScene.getSystem<PlayerSystem>().reconcile(m_inputParsers.at(update.getPlayerID()).getEntity(), update);
         }
     }
         break;

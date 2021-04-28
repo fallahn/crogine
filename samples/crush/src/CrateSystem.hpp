@@ -55,6 +55,8 @@ struct Crate final
     bool local = false;
     static constexpr std::int32_t DefaultHealth = 2;
     std::int32_t health = DefaultHealth;
+
+    float sleepTimer = 0.f;
 };
 
 class CrateSystem final : public cro::System

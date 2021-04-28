@@ -155,6 +155,9 @@ void CrateSystem::processLocal(cro::Entity entity)
                     case CollisionMaterial::Solid:
                         //correct for position
                         entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
+
+                        //TODO should we update the interpolation target to the new resting point?
+
                         break;
                     }
                 }
@@ -167,6 +170,9 @@ void CrateSystem::processIdle(cro::Entity entity)
 {
     auto& crate = entity.getComponent<Crate>();
     crate.owner = -1; //set this here to just make sure it's not missed by any state switch
+
+    crate.sleepTimer += ConstVal::FixedGameUpdate;
+    entity.getComponent<Actor>().sleeping = crate.sleepTimer > 1.f;
 
     //test if foot is free and switch to falling
     //ie if the crate underneath was punted out
@@ -202,10 +208,6 @@ void CrateSystem::processIdle(cro::Entity entity)
 
         entity.getComponent<Actor>().sleeping = false;
     }
-    else
-    {
-        entity.getComponent<Actor>().sleeping = true;
-    }
 }
 
 void CrateSystem::processCarried(cro::Entity entity)
@@ -217,6 +219,7 @@ void CrateSystem::processFalling(cro::Entity entity)
 {
     auto& crate = entity.getComponent<Crate>();
     crate.velocity.x *= CrateFriction; //slows down if we were just punted off the edge
+    crate.sleepTimer = 0.f;
 
     PlayerCollision playerCollision;
 
@@ -304,7 +307,7 @@ void CrateSystem::processFalling(cro::Entity entity)
                             if (crate.velocity.y <= 0) //landed from above
                             {
                                 //slow moving
-                                if (std::abs(crate.velocity.x) < (PuntVelocity * 0.1f))
+                                if (std::abs(crate.velocity.x) < /*(PuntVelocity * 0.1f)*/std::abs(crate.velocity.y))
                                 {
                                     crate.state = Crate::State::Idle;
                                     crate.velocity.y = 0.f;
@@ -373,6 +376,7 @@ void CrateSystem::processFalling(cro::Entity entity)
 void CrateSystem::processBallistic(cro::Entity entity)
 {
     auto& crate = entity.getComponent<Crate>();
+    crate.sleepTimer = 0.f;
 
     //apply friction
     crate.velocity *= CrateFriction;

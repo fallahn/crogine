@@ -277,19 +277,35 @@ void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerStat
     }
 }
 
+
+std::uint8_t PlayerUpdate::getPlayerID() const
+{
+    return (bitfield & 0x03);
+}
+
 //packs/unpacks player data in the the update struct
 void PlayerUpdate::pack(const Player& player) 
 {
     velocity = cro::Util::Net::compressVec3(player.velocity);
     timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
-    playerID = player.id;
-    state = player.state;
-    collisionFlags = player.collisionFlags;
-    collisionLayer = player.collisionLayer;
     prevInputFlags = player.previousInputFlags;
-    direction = player.direction;
-    carrying = player.carrying;
-    puntLevel = cro::Util::Net::compressFloat(player.puntLevel, 4);
+    collisionFlags = player.collisionFlags;
+    puntLevel = static_cast<std::uint8_t>(255.f * (player.puntLevel / Player::PuntCoolDown));
+    state = player.state;    
+    
+
+    bitfield = player.id;
+    bitfield |= ((player.collisionLayer & 0x01) << 2);
+
+    if (player.direction == Player::Direction::Right)
+    {
+        bitfield |= DirectionBit;
+    }
+
+    if (player.carrying)
+    {
+        bitfield |= CarryBit;
+    }
 }
 
 void PlayerUpdate::unpack(Player& player) const
@@ -297,11 +313,12 @@ void PlayerUpdate::unpack(Player& player) const
     player.velocity = cro::Util::Net::decompressVec3(velocity);
 
     //set the state
-    player.state = state;
-    player.collisionLayer = collisionLayer;
-    player.collisionFlags = collisionFlags;
     player.previousInputFlags = prevInputFlags;
-    player.carrying = carrying;
-    player.direction = direction == -1 ? Player::Left : Player::Right;
-    player.puntLevel = cro::Util::Net::decompressFloat(puntLevel, 4);
+    player.collisionFlags = collisionFlags;
+    player.puntLevel = (static_cast<float>(puntLevel) / 255.f) * Player::PuntCoolDown;
+    player.state = state;
+
+    player.collisionLayer = (bitfield & LayerBit) >> 2;
+    player.direction = (bitfield & DirectionBit) ? Player::Right : Player::Left;
+    player.carrying = (bitfield & CarryBit) != 0;
 }

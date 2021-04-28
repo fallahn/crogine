@@ -63,16 +63,22 @@ struct PlayerUpdate final
     CompressedVec3 position = {};
     CompressedVec3 velocity = {};
 
-    //TODO pack all these into as small a field as possible
-    std::uint8_t playerID = 0;
-    std::uint8_t state = 0;
-    std::uint8_t collisionFlags = 0;
     std::uint16_t prevInputFlags = 0; //hmmmmmmmmm ought to be able to pull this from the history rather than send it
-    std::uint8_t collisionLayer = 0;
-    std::int8_t direction = -1;
-    bool carrying = false; //unfortunately we do have to sync this
-    std::int16_t puntLevel = 0; //if this wasn't float it could be uint8
+    std::uint8_t collisionFlags = 0;
+    std::uint8_t puntLevel; //normalised 255 range
+    std::uint8_t state = 0; //this depends on how many states we'll have in total
+    
 
+    /*
+    | unused | carry flag | direction | layer | ID
+    |  000         0            0         0     00
+    */
+    std::uint8_t bitfield = 0;
+    static constexpr std::uint8_t CarryBit     = (1 << 4);
+    static constexpr std::uint8_t DirectionBit = (1 << 3);
+    static constexpr std::uint8_t LayerBit     = (1 << 2);
+
+    std::uint8_t getPlayerID() const;
     void pack(const Player&);
     void unpack(Player&) const;
 };
