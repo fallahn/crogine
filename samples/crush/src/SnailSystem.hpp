@@ -29,62 +29,40 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/glm/vec2.hpp>
 #include <crogine/ecs/System.hpp>
-#include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/Callback.hpp>
 
-#include <crogine/detail/glm/vec3.hpp>
-
-struct Crate final
+struct Snail final
 {
-    enum State
+    enum
     {
-        Idle, Falling, Ballistic,
-
-        Carried //technically invisible, just disable collision
+        Falling, Idle, Walking, Dead
     }state = Falling;
 
-    std::int32_t owner = -1;
+    float sleepTimer = 0.f;
 
+    glm::vec2 velocity = glm::vec2(0.f);
     std::uint16_t collisionFlags = 0;
     std::uint8_t collisionLayer = 0;
-    glm::vec3 velocity = glm::vec3(0.f);
-
-    glm::vec3 spawnPosition = glm::vec3(0.f);
-
-    bool local = false;
-    static constexpr std::int32_t DefaultHealth = 2;
-    std::int32_t health = DefaultHealth;
-
-    float sleepTimer = 0.f;
 };
 
-class CrateSystem final : public cro::System
+class SnailSystem final : public cro::System
 {
 public:
-    explicit CrateSystem(cro::MessageBus&);
+    explicit SnailSystem(cro::MessageBus&);
 
     void process(float) override;
 
-    const std::vector<cro::Entity>& getDeadCrates() const { return m_deadCrates; }
+    const std::vector<cro::Entity>& getDeadSnails() const { return m_deadSnails; }
 
 private:
 
-    std::vector<cro::Entity> m_deadCrates;
+    std::vector<cro::Entity> m_deadSnails;
 
-    void processLocal(cro::Entity);
-    
-    void processIdle(cro::Entity);
-    void processCarried(cro::Entity);
     void processFalling(cro::Entity);
-    void processBallistic(cro::Entity);
+    void processIdle(cro::Entity);
+    void processWalking(cro::Entity);
 
     std::vector<cro::Entity> doBroadPhase(cro::Entity);
-
-    struct PlayerCollision final
-    {
-        std::int8_t owner = -1;
-        cro::Entity player;
-    };
-    void killPlayer(PlayerCollision&, Crate&);
+    void killPlayer(cro::Entity player, Snail&);
 };

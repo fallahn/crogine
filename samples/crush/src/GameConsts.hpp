@@ -55,12 +55,17 @@ static constexpr cro::FloatRect CrateFoot = cro::FloatRect(-0.2f, -0.35f, 0.4f, 
 
 static constexpr glm::vec3 CrateCarryOffset = glm::vec3((PlayerSize.x / 2.f) + (CrateArea.width / 2.f) + 0.1f, CrateArea.height * 1.7f, 0.f);
 
+static constexpr float PuntVelocity = 30.f;
+static constexpr float CrateFriction = 0.91f; //this is a multiplier
+
 //assumes spawn is centre bottom
 static constexpr cro::FloatRect SafeArea = cro::FloatRect(-0.4f, 0.f, 0.8f, 2.f);
 static constexpr cro::FloatRect SpawnBase = cro::FloatRect(-0.5f, 0.f, 1.f, 0.2f);
 
-static constexpr float PuntVelocity = 30.f;
-static constexpr float CrateFriction = 0.91f; //this is a multiplier
+//assumes snail is centre bottom
+static constexpr cro::FloatRect SnailArea = cro::FloatRect(-0.5f, 0.f, 1.f, 0.5f);
+static constexpr cro::FloatRect SnailFoot = cro::FloatRect(-0.45f, -0.1f, 0.9f, 0.1f);
+static const cro::Box SnailBounds = { glm::vec3(SnailArea.left, SnailArea.bottom, 0.3f), glm::vec3(SnailArea.width / 2.f, SnailArea.height, -0.3f) };
 
 static const cro::Box ExplosionBounds = { glm::vec3(-1.5f), glm::vec3(1.5f) };
 static constexpr cro::FloatRect ExplosionArea = cro::FloatRect(-1.5f, -1.5f, 3.f, 3.f);

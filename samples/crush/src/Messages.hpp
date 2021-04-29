@@ -40,6 +40,7 @@ namespace MessageID
         UIMessage = cro::Message::Count,
         PlayerMessage,
         CrateMessage,
+        SnailMessage,
         ConnectionMessage,
         GameMessage,
         AvatarMessage,
@@ -93,6 +94,18 @@ struct CrateEvent final
     }type = StateChanged;
 
     cro::Entity crate;
+    glm::vec3 position = glm::vec3(0.f);
+};
+
+//yes I know these are the same...
+struct SnailEvent final
+{
+    enum
+    {
+        StateChanged
+    }type = StateChanged;
+
+    cro::Entity snail;
     glm::vec3 position = glm::vec3(0.f);
 };
 

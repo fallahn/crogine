@@ -63,11 +63,12 @@ struct CollisionMaterial final
         Sensor,
         Spawner,
         Fire,
+        Snail,
 
         Count
     };
 };
-static_assert(CollisionMaterial::Count < 9, "Make player and crate collision flags bigger");
+static_assert(CollisionMaterial::Count < 17, "Make player and crate collision flags bigger");
 
 struct CollisionRect final
 {

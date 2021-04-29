@@ -49,6 +49,7 @@ source distribution.
 #include "SpawnerAnimationSystem.hpp"
 #include "CameraControllerSystem.hpp"
 #include "CommonConsts.hpp"
+#include "SnailSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -1099,6 +1100,9 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         crateUpdate(data);
     }
         break;
+    case PacketID::SnailUpdate:
+        snailUpdate(packet.as<SnailState>());
+        break;
     case PacketID::ServerCommand:
     {
         auto data = packet.as<ServerCommand>();
@@ -1474,12 +1478,26 @@ void GameState::spawnActor(ActorSpawn as)
         entity.addComponent<cro::Model>();
         entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Balloon];
         entity.getComponent<cro::Transform>().setScale(glm::vec3(1.f) / 32.f);
+        {
+            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
+        }
         break;
     case ActorID::PoopSnail:
         entity.addComponent<cro::Model>();
         entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PoopSnail];
         entity.getComponent<cro::Transform>().setScale(glm::vec3(1.f) / 32.f);
         entity.addComponent<cro::SpriteAnimation>().play(0);
+        {
+            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
+        }
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, cro::Util::Const::PI * dt);
+        };
         break;
     }
 
@@ -1499,10 +1517,20 @@ void GameState::updateActor(ActorUpdate update)
         if (e.isValid() &&
             e.getComponent<Actor>().serverEntityId == update.serverID)
         {
+            auto velocity = cro::Util::Net::decompressVec2(update.velocity, 128);
+
             auto& interp = e.getComponent<InterpolationComponent>();
             interp.setTarget({ cro::Util::Net::decompressVec3(update.position), 
                 cro::Util::Net::decompressQuat(update.rotation), 
-                update.timestamp, cro::Util::Net::decompressVec2(update.velocity, 128) });
+                update.timestamp, velocity });
+
+            //TODO we need a better way to do this. Can we rotate the
+            //sprite on the Y axis?
+            /*if (e.getComponent<Actor>().id == ActorID::PoopSnail)
+            {
+                float rotation = (velocity.x > 0) ? cro::Util::Const::PI : 0;
+                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+            }*/
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -1735,6 +1763,23 @@ void GameState::crateUpdate(const CrateState& data)
 #ifdef CRO_DEBUG_
             LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << std::endl;
 #endif //DEBUG
+        }
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
+void GameState::snailUpdate(const SnailState& data)
+{
+    cro::Command cmd;
+    cmd.targetFlags = Client::CommandID::Interpolated;
+    cmd.action = [data](cro::Entity e, float)
+    {
+        if (e.getComponent<Actor>().serverEntityId == data.serverEntityID)
+        {
+            if (data.state == Snail::Falling)
+            {
+                //TODO update animation based on state
+            }
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);

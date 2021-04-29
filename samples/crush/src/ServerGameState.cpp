@@ -45,6 +45,7 @@ source distribution.
 #include "GameRuleDirector.hpp"
 #include "SpawnAreaSystem.hpp"
 #include "BalloonSystem.hpp"
+#include "SnailSystem.hpp"
 
 #include <crogine/core/Log.hpp>
 
@@ -116,6 +117,20 @@ void GameState::handleMessage(const cro::Message& msg)
                 state.serverEntityID = static_cast<std::uint16_t>(data.crate.getIndex());
 
                 m_sharedData.host.broadcastPacket(PacketID::CrateUpdate, state, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+        }
+    }
+    else if (msg.id == MessageID::SnailMessage)
+    {
+        const auto& data = msg.getData<SnailEvent>();
+        if (data.type == SnailEvent::StateChanged)
+        {
+            if (data.snail.isValid())
+            {
+                SnailState state;
+                state.serverEntityID = data.snail.getIndex();
+                state.state = data.snail.getComponent<Snail>().state;
+                m_sharedData.host.broadcastPacket(PacketID::SnailUpdate, state, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
         }
     }
@@ -256,6 +271,11 @@ void GameState::netBroadcast()
                 const auto& crate = e.getComponent<Crate>();
                 update.velocity = cro::Util::Net::compressVec2(crate.velocity * 0.9f, 128);
             }
+            else if (e.hasComponent<Snail>())
+            {
+                auto& snail = e.getComponent<Snail>();
+                update.velocity = cro::Util::Net::compressVec2(snail.velocity * 0.9f, 128);
+            }
 
             for (auto i = 0u; i < ConstVal::MaxClients; ++i)
             {
@@ -302,6 +322,15 @@ std::int32_t GameState::process(float dt)
         m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, crateID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         spawnActor(ActorID::Crate, pos);
+    }
+
+    //and dead snails
+    const auto& snails = m_scene.getSystem<SnailSystem>().getDeadSnails();
+    for (auto snailEnt : snails)
+    {
+        auto crateID = snailEnt.getIndex();
+        m_scene.destroyEntity(snailEnt);
+        m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, crateID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 
     m_scene.simulate(dt);
@@ -411,6 +440,7 @@ void GameState::initScene()
     m_scene.addSystem<SpawnAreaSystem>(mb);
     m_scene.addSystem<CrateSystem>(mb);
     m_scene.addSystem<BalloonSystem>(mb);
+    m_scene.addSystem<SnailSystem>(mb);
 
     m_scene.addDirector<WeatherDirector>(m_sharedData.host);
     m_scene.addDirector<GameRuleDirector>(m_sharedData.host, m_indexedPlayerEntities);
@@ -625,7 +655,17 @@ cro::Entity GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
         }
         break;
     case ActorID::PoopSnail:
+        entity.addComponent<Snail>(). collisionLayer = position.z > 0 ? 0 : 1;
 
+        entity.addComponent<cro::DynamicTreeComponent>().setArea(SnailBounds);
+        entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((position.z > 0 ? 1 : 2));
+
+        entity.addComponent<CollisionComponent>().rectCount = 2;
+        entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Snail;
+        entity.getComponent<CollisionComponent>().rects[0].bounds = SnailArea;
+        entity.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
+        entity.getComponent<CollisionComponent>().rects[1].bounds = SnailFoot;
+        entity.getComponent<CollisionComponent>().calcSum();
         break;
     }
 

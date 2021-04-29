@@ -32,6 +32,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ServerGameState.cpp
   ${PROJECT_DIR}/ServerLobbyState.cpp
   ${PROJECT_DIR}/SliderSystem.cpp
+  ${PROJECT_DIR}/SnailSystem.cpp
   ${PROJECT_DIR}/SpawnAreaSystem.cpp
   ${PROJECT_DIR}/SpawnerAnimationSystem.cpp
   ${PROJECT_DIR}/UIDirector.cpp

@@ -122,6 +122,7 @@ private:
     void startGame();
 
     void crateUpdate(const CrateState&);
+    void snailUpdate(const SnailState&);
     void avatarUpdate(const PlayerStateChange&);
     void removeEntity(std::uint32_t);
 

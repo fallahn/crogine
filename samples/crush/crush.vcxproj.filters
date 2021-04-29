@@ -192,6 +192,9 @@
     <ClCompile Include="src\BalloonSystem.cpp">
       <Filter>Source Files\Server\Systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\SnailSystem.cpp">
+      <Filter>Source Files\Server\Systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -345,6 +348,9 @@
       <Filter>Header Files\Client\systems</Filter>
     </ClInclude>
     <ClInclude Include="src\BalloonSystem.hpp">
+      <Filter>Header Files\Server\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SnailSystem.hpp">
       <Filter>Header Files\Server\systems</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -59,12 +59,12 @@ struct Player;
 struct PlayerUpdate final
 {
     CompressedQuat rotation{};
-    std::int32_t timestamp = 0;
     CompressedVec3 position = {};
     CompressedVec3 velocity = {};
+    std::int32_t timestamp = 0;
 
     std::uint16_t prevInputFlags = 0; //hmmmmmmmmm ought to be able to pull this from the history rather than send it
-    std::uint8_t collisionFlags = 0;
+    std::uint16_t collisionFlags = 0;
     std::uint8_t puntLevel; //normalised 255 range
     std::uint8_t state = 0; //this depends on how many states we'll have in total
     
@@ -114,4 +114,10 @@ struct PlayerStateChange final
     std::int8_t playerState = -1;
     std::int8_t playerID = -1;
     std::uint8_t lives = 3;
+};
+
+struct SnailState final
+{
+    std::uint16_t serverEntityID = 0;
+    std::int8_t state = -1;
 };

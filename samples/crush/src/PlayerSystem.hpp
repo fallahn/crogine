@@ -70,7 +70,7 @@ struct Player final
     //these are a bit confusing: if the foot flag is set then
     //the player's foot has contact with someting. HOWEVER any
     //of the other flags indicated that the player body is touching this type.
-    std::uint8_t collisionFlags = 0;
+    std::uint16_t collisionFlags = 0;
 
     glm::vec3 velocity = glm::vec3(0.f);
     
