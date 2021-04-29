@@ -136,7 +136,8 @@ void PlayerState::drop(cro::Entity entity, cro::Scene& scene)
                 auto& crate = crateEnt.getComponent<Crate>();
                 crate.state = Crate::State::Falling;
 
-                crate.velocity.x = player.velocity.x * 2.f;
+                //crate.velocity.x = player.velocity.x * 2.f;
+                //crate.velocity.x *= Util::direction(player.collisionLayer);
 
                 auto* msg = scene.postMessage<CrateEvent>(MessageID::CrateMessage);
                 msg->crate = crateEnt;

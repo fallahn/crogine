@@ -208,6 +208,16 @@ void PlayerSystem::processInput(cro::Entity entity)
         player.puntLevelLinear = std::min(Player::PuntCoolDown, player.puntLevelLinear + ConstVal::FixedGameUpdate);
         player.puntLevel = cro::Util::Easing::easeInQuint(player.puntLevelLinear / Player::PuntCoolDown) * Player::PuntCoolDown;
     }
+
+    //do some basic bounds checking in case we escape the map
+    if (entity.getComponent<cro::Transform>().getPosition().y < -1)
+    {
+        player.state = Player::State::Dead;
+
+        auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+        msg->player = entity;
+        msg->type = PlayerEvent::Died;
+    }
 }
 
 void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerState)
