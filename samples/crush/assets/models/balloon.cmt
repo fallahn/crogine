@@ -1,0 +1,18 @@
+model balloon
+{
+    mesh = "assets/models/balloon.cmb"
+    cast_shadows = false
+
+    material PBR
+    {
+        mask_colour = 0.000000,1.000000,1.000000,1.000000
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        vertex_coloured = true
+        blendmode = "none"
+        diffuse = "assets/images/balloon_ao.png"
+
+    }
+}

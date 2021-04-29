@@ -69,6 +69,7 @@ namespace GameModelID
         Crate,
         Hologram,
         Spawner,
+        Balloon,
 
         Count
     };

@@ -544,6 +544,7 @@ void GameState::loadAssets()
     //model defs - don't forget to pass the env map here!
     m_modelDefs[GameModelID::Crate].loadFromFile("assets/models/box.cmt", m_resources, &m_environmentMap);
     m_modelDefs[GameModelID::Spawner].loadFromFile("assets/models/spawner.cmt", m_resources, &m_environmentMap);
+    m_modelDefs[GameModelID::Balloon].loadFromFile("assets/models/balloon.cmt", m_resources, &m_environmentMap);
     m_modelDefs[GameModelID::Hologram].loadFromFile("assets/models/hologram.cmt", m_resources/*, &m_environmentMap*/);
 
 
@@ -1475,13 +1476,7 @@ void GameState::spawnActor(ActorSpawn as)
 
         break;
     case ActorID::Balloon:
-        entity.addComponent<cro::Model>();
-        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Balloon];
-        entity.getComponent<cro::Transform>().setScale(glm::vec3(1.f) / 32.f);
-        {
-            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
-        }
+        m_modelDefs[GameModelID::Balloon].createModel(entity, m_resources);
         break;
     case ActorID::PoopSnail:
         entity.addComponent<cro::Model>();
