@@ -172,7 +172,11 @@ void PlayerStateReset::processCollision(cro::Entity entity, const std::vector<cr
                 case CollisionMaterial::Crate:
                 {
                     //this removes any crates colliding with the spawn position
-                    e.getComponent<Crate>().health = 0;
+                    auto dir = player.spawnPosition - entity.getComponent<cro::Transform>().getPosition();
+                    if (glm::length2(dir) < 1.f)
+                    {
+                        e.getComponent<Crate>().health = 0;
+                    }
                 }
                 break;
                 }

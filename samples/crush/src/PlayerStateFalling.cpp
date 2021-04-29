@@ -154,7 +154,14 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
                 //don't get blocked by these
                 case CollisionMaterial::Teleport:
                 case CollisionMaterial::Sensor:
-
+                case CollisionMaterial::Spawner:
+                    break;
+                    //don't get blocked by dead players
+                case CollisionMaterial::Body:
+                    if (e.getComponent<Player>().state != Player::State::Dead)
+                    {
+                        player.collisionFlags |= (1 << CollisionMaterial::Sensor);
+                    }
                     break;
                 default:
                     player.collisionFlags |= (1 << CollisionMaterial::Sensor);

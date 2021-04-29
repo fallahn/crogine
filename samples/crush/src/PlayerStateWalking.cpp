@@ -209,6 +209,12 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
 
                     break;
                     //TODO don't collide with carried crates
+                case CollisionMaterial::Body:
+                    if (e.getComponent<Player>().state != Player::State::Dead)
+                    {
+                        player.collisionFlags |= (1 << CollisionMaterial::Sensor);
+                    }
+                    break;
                 default:
                     player.collisionFlags |= (1 << CollisionMaterial::Sensor);
                     break;

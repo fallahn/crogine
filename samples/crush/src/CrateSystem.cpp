@@ -35,6 +35,7 @@ source distribution.
 #include "PlayerSystem.hpp"
 #include "ActorIDs.hpp"
 #include "SpawnAreaSystem.hpp"
+#include "InterpolationSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 
@@ -74,7 +75,11 @@ void CrateSystem::process(float)
         {
             //do collision with solid client side
             //to help smooth out extrapolation
-            processLocal(entity);
+            if ((crate.state != Crate::Carried)
+                && crate.state != Crate::Idle)
+            {
+                processLocal(entity);
+            }
         }
         else
         {
@@ -152,11 +157,14 @@ void CrateSystem::processLocal(cro::Entity entity)
                     default: break;
                     /*case CollisionMaterial::Crate:
                         [[fallthrough]];*/
+                    //case CollisionMaterial::Body:
+                        //[[fallthrough]];
                     case CollisionMaterial::Solid:
                         //correct for position
                         entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
 
-                        //TODO should we update the interpolation target to the new resting point?
+                        //killing the velocity helps stop the popping of extrapolation
+                        entity.getComponent<InterpolationComponent>().resetVelocity();
 
                         break;
                     }

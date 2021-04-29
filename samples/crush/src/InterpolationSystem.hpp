@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -109,6 +109,8 @@ public:
     \brief Overrides the rotation with the given rotation
     */
     void resetRotation(glm::quat);
+
+    void resetVelocity() { m_targetPoint.velocity = glm::vec2(0.f); }
 
 private:
     bool m_enabled;
