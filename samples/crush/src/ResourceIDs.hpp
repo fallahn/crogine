@@ -79,6 +79,7 @@ namespace SpriteID
     enum
     {
         PoopSnail,
+        Balloon,
 
         Count
     };

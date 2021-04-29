@@ -124,7 +124,7 @@ namespace
 GameState::GameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
-    m_gameScene         (context.appInstance.getMessageBus()),
+    m_gameScene         (context.appInstance.getMessageBus(), 512),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_requestFlags      (ClientRequestFlags::All), //TODO remember to update this once we actually have stuff to request
     m_dataRequestCount  (0)
@@ -551,6 +551,8 @@ void GameState::loadAssets()
     spriteSheet.loadFromFile("assets/sprites/poopsnail.spt", m_resources.textures);
     m_sprites[SpriteID::PoopSnail] = spriteSheet.getSprite("poopsnail");
 
+    spriteSheet.loadFromFile("assets/sprites/balloon.spt", m_resources.textures);
+    m_sprites[SpriteID::Balloon] = spriteSheet.getSprite("balloon");
 
     //create model geometry for portal field
     m_meshIDs[MeshID::Portal] = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::UV0, 1, GL_TRIANGLE_STRIP));
@@ -1018,15 +1020,6 @@ void GameState::loadMap()
 #endif
             spawnEnt.addComponent<SpawnerAnimation>().spinnerEnt = spinEnt;
             m_spawnerEntities[i] = spawnEnt;
-
-
-
-            /*auto buns = m_gameScene.createEntity();
-            buns.addComponent<cro::Transform>().setPosition({ spawnPoints[i].x, spawnPoints[i].y + 1.f, layerDepth });
-            buns.getComponent<cro::Transform>().setScale(glm::vec3(1.f) / 32.f);
-            buns.addComponent<cro::Model>();
-            buns.addComponent<cro::Sprite>() = m_sprites[SpriteID::PoopSnail];
-            buns.addComponent<cro::SpriteAnimation>().play(0);*/
         }
 
     }
@@ -1476,6 +1469,17 @@ void GameState::spawnActor(ActorSpawn as)
         break;
     case ActorID::Explosion:
 
+        break;
+    case ActorID::Balloon:
+        entity.addComponent<cro::Model>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Balloon];
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(1.f) / 32.f);
+        break;
+    case ActorID::PoopSnail:
+        entity.addComponent<cro::Model>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PoopSnail];
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(1.f) / 32.f);
+        entity.addComponent<cro::SpriteAnimation>().play(0);
         break;
     }
 

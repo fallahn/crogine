@@ -1,0 +1,10 @@
+spritesheet balloon
+{
+    src="assets/images/balloon.png"
+    scale = 64
+
+    sprite balloon
+    {
+        bounds = 0,0,128,128
+    }
+}

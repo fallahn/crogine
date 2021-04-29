@@ -29,40 +29,24 @@ source distribution.
 
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
-#include <array>
+#include <crogine/ecs/System.hpp>
 
-//it is important that players 0 - 3 are listed first so that
-//they match the indices into data arrays pertinent to their client
-namespace ActorID
+struct Balloon final
 {
-    //currently limited to 127, increase data size in update packet if more are needed
-    enum
-    {
-        None = -1,
-        PlayerOne = 0,
-        PlayerTwo,
-        PlayerThree,
-        PlayerFour,
+    static constexpr float SnailTime = 6.f;
+    float currentTime = SnailTime / 2.f; //start initially closer so spread is about the middle
 
-        Crate,
-        Explosion,
-        Balloon,
-        PoopSnail
-    };
-}
-
-
-struct Actor
-{
-    std::int32_t id = -1;
-    std::uint16_t serverEntityId = 0;
-    bool sleeping = false;
+    float direction = 1.f;
 };
 
-struct ActorSpawn : public Actor
+class BalloonSystem final : public cro::System
 {
-    std::array<std::int16_t, 3u> position{};
-    std::int32_t timestamp = 0;
+public:
+    explicit BalloonSystem(cro::MessageBus&);
+
+    void process(float) override;
+
+private:
+
+
 };

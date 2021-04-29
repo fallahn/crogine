@@ -34,6 +34,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "ServerPacketData.hpp"
 #include "ActorIDs.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/network/NetHost.hpp>
 
@@ -41,13 +42,17 @@ namespace
 {
     const cro::Time RoundTime = cro::seconds(3.f * 60.f);
     const cro::Time SuddenDeathTime = cro::seconds(30.f);
+
+    const cro::Time BalloonTime = cro::seconds(20.f);
 }
 
 GameRuleDirector::GameRuleDirector(cro::NetHost& host, std::array<cro::Entity, 4u>& e)
     : m_netHost             (host),
     m_indexedPlayerEntities (e),
     m_suddenDeathWarn       (false),
-    m_suddenDeath           (false)
+    m_suddenDeath           (false),
+    m_snailCountA           (0),
+    m_snailCountB           (0)
 {
 
 }
@@ -83,10 +88,56 @@ void GameRuleDirector::handleMessage(const cro::Message& msg)
             }
         }
     }
+    else if (msg.id == MessageID::GameMessage)
+    {
+        const auto& data = msg.getData<GameEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case GameEvent::RequestSpawn:
+            if (data.actorID == ActorID::PoopSnail)
+            {
+                //assume this was spawned succefully and count it
+                if (data.position.z > 0)
+                {
+                    m_snailCountA++;
+                }
+                else
+                {
+                    m_snailCountB++;
+                }
+            }
+            break;
+        }
+    }
 }
 
 void GameRuleDirector::process(float)
 {
+    //check for balloon spawning
+    if (m_balloonClock.elapsed() > BalloonTime)
+    {
+        m_balloonClock.restart();
+
+        if (m_snailCountA == 0)
+        {
+            auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
+            msg->type = GameEvent::RequestSpawn;
+            msg->position = { -MapWidth, MapHeight + 1.f, LayerDepth };
+            msg->actorID = ActorID::Balloon;
+        }
+
+        if (m_snailCountB == 0)
+        {
+            auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
+            msg->type = GameEvent::RequestSpawn;
+            msg->position = { MapWidth, MapHeight + 1.f, -LayerDepth };
+            msg->actorID = ActorID::Balloon;
+        }
+    }
+
+
+    //check round time
     if (!m_suddenDeath)
     {
         if (!m_suddenDeathWarn)
@@ -122,4 +173,15 @@ void GameRuleDirector::startGame()
 {
     //if this has timed out here already then we have bigger problems :)
     m_roundTime.restart();
+
+    //spawn initial balloons
+    auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
+    msg->type = GameEvent::RequestSpawn;
+    msg->position = { -MapWidth, MapHeight + 1.f, LayerDepth };
+    msg->actorID = ActorID::Balloon;
+
+    msg = postMessage<GameEvent>(MessageID::GameMessage);
+    msg->type = GameEvent::RequestSpawn;
+    msg->position = { MapWidth, MapHeight + 1.f, -LayerDepth };
+    msg->actorID = ActorID::Balloon;
 }

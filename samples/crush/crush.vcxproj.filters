@@ -189,6 +189,9 @@
     <ClCompile Include="src\CameraControllerSystem.cpp">
       <Filter>Source Files\Client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\BalloonSystem.cpp">
+      <Filter>Source Files\Server\Systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -340,6 +343,9 @@
     </ClInclude>
     <ClInclude Include="src\CameraControllerSystem.hpp">
       <Filter>Header Files\Client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BalloonSystem.hpp">
+      <Filter>Header Files\Server\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

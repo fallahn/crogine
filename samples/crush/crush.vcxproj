@@ -159,6 +159,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\AvatarScaleSystem.cpp" />
+    <ClCompile Include="src\BalloonSystem.cpp" />
     <ClCompile Include="src\CameraControllerSystem.cpp" />
     <ClCompile Include="src\CrateSystem.cpp" />
     <ClCompile Include="src\DayNightDirector.cpp" />
@@ -199,6 +200,7 @@
     <ClInclude Include="src\ActorIDs.hpp" />
     <ClInclude Include="src\ActorSystem.hpp" />
     <ClInclude Include="src\AvatarScaleSystem.hpp" />
+    <ClInclude Include="src\BalloonSystem.hpp" />
     <ClInclude Include="src\CameraControllerSystem.hpp" />
     <ClInclude Include="src\CircularBuffer.hpp" />
     <ClInclude Include="src\ClientCommandIDs.hpp" />

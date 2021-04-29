@@ -38,6 +38,9 @@ source distribution.
 #include <cmath>
 #include <array>
 
+static constexpr float MapWidth = 36.f;
+static constexpr float MapHeight = 18.f;
+
 static constexpr float Gravity = -80.f;
 static constexpr float MaxGravity = -30.f;
 

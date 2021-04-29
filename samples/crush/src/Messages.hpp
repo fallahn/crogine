@@ -112,8 +112,13 @@ struct GameEvent final
         GameBegin,
         RoundWarn,
         SuddenDeath,
-        GameEnd
+        GameEnd,
+
+        RequestSpawn
     }type = GameBegin;
+
+    std::uint32_t actorID = -1;
+    glm::vec3 position = glm::vec3(0.f);
 };
 
 struct AvatarEvent final
@@ -133,7 +138,7 @@ struct AvatarEvent final
     }type = None;
     std::int8_t playerID = -1;
     std::uint8_t lives = 0;
-    glm::vec3 position;
+    glm::vec3 position = glm::vec3(0.f);
 };
 
 struct ActorEvent final

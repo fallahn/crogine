@@ -44,6 +44,7 @@ source distribution.
 #include "CrateSystem.hpp"
 #include "GameRuleDirector.hpp"
 #include "SpawnAreaSystem.hpp"
+#include "BalloonSystem.hpp"
 
 #include <crogine/core/Log.hpp>
 
@@ -129,6 +130,9 @@ void GameState::handleMessage(const cro::Message& msg)
             break;
         case GameEvent::GameEnd:
             //endGame();
+            break;
+        case GameEvent::RequestSpawn:
+            spawnActor(data.actorID, data.position);
             break;
         }
     }
@@ -406,6 +410,7 @@ void GameState::initScene()
     m_scene.addSystem<PlayerSystem>(mb);
     m_scene.addSystem<SpawnAreaSystem>(mb);
     m_scene.addSystem<CrateSystem>(mb);
+    m_scene.addSystem<BalloonSystem>(mb);
 
     m_scene.addDirector<WeatherDirector>(m_sharedData.host);
     m_scene.addDirector<GameRuleDirector>(m_sharedData.host, m_indexedPlayerEntities);
@@ -611,6 +616,16 @@ cro::Entity GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
                 removeEntity(id);
             }
         };
+        break;
+    case ActorID::Balloon:
+        entity.addComponent<Balloon>();
+        if (position.z < 0)
+        {
+            entity.getComponent<Balloon>().direction = -1.f;
+        }
+        break;
+    case ActorID::PoopSnail:
+
         break;
     }
 

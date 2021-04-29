@@ -58,4 +58,8 @@ private:
     bool m_suddenDeathWarn;
     bool m_suddenDeath;
 
+    //TODO track the count of snails and release balloon when zero
+    cro::Clock m_balloonClock;
+    std::size_t m_snailCountA;
+    std::size_t m_snailCountB;
 };
