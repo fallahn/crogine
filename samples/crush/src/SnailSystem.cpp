@@ -45,6 +45,7 @@ source distribution.
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
 SnailSystem::SnailSystem(cro::MessageBus& mb)
@@ -154,7 +155,6 @@ void SnailSystem::processFalling(cro::Entity entity)
                 switch (otherCollision.rects[i].material)
                 {
                 default: break;
-                case CollisionMaterial::Spawner:
                 case CollisionMaterial::Crate:
                     //otherwise treat as solid
                     [[fallthrough]];
@@ -308,6 +308,10 @@ void SnailSystem::processWalking(cro::Entity entity)
     snail.sleepTimer = 0.f;
     entity.getComponent<cro::Transform>().move(snail.velocity * ConstVal::FixedGameUpdate);
 
+    float targetRotation = snail.velocity.x > 0 ? cro::Util::Const::PI : 0.f;
+    snail.currentRotation += cro::Util::Maths::shortestRotation(snail.currentRotation, targetRotation) * 20.f * ConstVal::FixedGameUpdate;
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, snail.currentRotation);
+
     cro::Entity playerCollision;
     std::int8_t crateCollision = -1;
 
@@ -380,8 +384,6 @@ void SnailSystem::processWalking(cro::Entity entity)
             }
         }
     }
-
-
 
 
     //check the result

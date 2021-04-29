@@ -44,6 +44,8 @@ struct Snail final
     glm::vec2 velocity = glm::vec2(0.f);
     std::uint16_t collisionFlags = 0;
     std::uint8_t collisionLayer = 0;
+
+    float currentRotation = 0.f;
 };
 
 class SnailSystem final : public cro::System

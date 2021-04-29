@@ -1492,12 +1492,6 @@ void GameState::spawnActor(ActorSpawn as)
             auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
             entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
         }
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [](cro::Entity e, float dt)
-        {
-            e.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, cro::Util::Const::PI * dt);
-        };
         break;
     }
 
