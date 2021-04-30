@@ -42,6 +42,11 @@ source distribution.
 
 #include <crogine/util/Easings.hpp>
 
+namespace
+{
+
+}
+
 UIDirector::UIDirector(SharedStateData& sd, std::array<PlayerUI, 4u>& pui)
     : m_sharedData  (sd),
     m_playerUIs     (pui)
@@ -76,7 +81,7 @@ void UIDirector::handleMessage(const cro::Message& msg)
                     ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
 
                     auto offset = m_sharedData.localPlayerCount > 1 ? cro::DefaultSceneSize.x / 4.f : cro::DefaultSceneSize.x / 2.f;
-                    ent.getComponent<cro::Transform>().move(glm::vec2(offset, 0.f));
+                    ent.getComponent<cro::Transform>().move(glm::vec3(offset, 0.f, UIDepth));
                     ent.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
                     ent.addComponent<cro::Callback>().setUserData<std::tuple<float, float, float>>(0.f, 0.f, 1.f);
@@ -123,7 +128,7 @@ void UIDirector::handleMessage(const cro::Message& msg)
                     ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
 
                     auto offset = m_sharedData.localPlayerCount > 1 ? cro::DefaultSceneSize.x / 4.f : cro::DefaultSceneSize.x / 2.f;
-                    ent.getComponent<cro::Transform>().move(glm::vec2(offset, -38.f));
+                    ent.getComponent<cro::Transform>().move(glm::vec3(offset, -38.f, UIDepth));
                 }
 
                 std::get<1>(m_resetMessages[data.playerID].getComponent<cro::Callback>().getUserData<std::tuple<float, float, float>>()) = 1.f;
@@ -209,33 +214,7 @@ void UIDirector::handleMessage(const cro::Message& msg)
             break;
         case GameEvent::GameEnd:
         {
-            auto entity = createTextMessage(glm::vec2(cro::DefaultSceneSize) / 2.f, "GAME OVER");
-            entity.getComponent<cro::Transform>().move(glm::vec2(0.f, 80.f));
-            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-            entity.getComponent<cro::Text>().setCharacterSize(120);
-            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
-
-            entity = createTextMessage(glm::vec2(cro::DefaultSceneSize) / 2.f, "Return to Lobby in 15");
-            entity.getComponent<cro::Transform>().move(glm::vec2(0.f, -40.f));
-            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-            entity.getComponent<cro::Text>().setCharacterSize(100);
-            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 15);
-            entity.getComponent<cro::Callback>().function =
-                [](cro::Entity e, float dt)
-            {
-                auto& [currTime, secs] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
-                currTime += dt;
-                if (currTime > 1)
-                {
-                    currTime -= 1;
-                    secs = std::max(0, secs - 1);
-
-                    auto str = "Return to Lobby in " + std::to_string(secs);
-                    e.getComponent<cro::Text>().setString(str);
-                }
-            };
+            showSummary();
         }
             break;
         }
@@ -275,4 +254,70 @@ cro::Entity UIDirector::createTextMessage(glm::vec2 position, const std::string&
     entity.addComponent<cro::Text>(font).setString(str);
 
     return entity;
+}
+
+void UIDirector::showSummary()
+{
+    auto entity = createTextMessage(glm::vec2(cro::DefaultSceneSize) / 2.f, "GAME OVER");
+    entity.getComponent<cro::Transform>().move(glm::vec2(0.f, 480.f));
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setCharacterSize(120);
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+
+    entity = createTextMessage(glm::vec2(cro::DefaultSceneSize) / 2.f, "Return to Lobby in 15");
+    entity.getComponent<cro::Transform>().move(glm::vec2(0.f, -440.f));
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setCharacterSize(100);
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 15);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& [currTime, secs] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+        currTime += dt;
+        if (currTime > 1)
+        {
+            currTime -= 1;
+            secs = std::max(0, secs - 1);
+
+            auto str = "Return to Lobby in " + std::to_string(secs);
+            e.getComponent<cro::Text>().setString(str);
+        }
+    };
+
+    //dark background
+    const cro::Colour bgColour = cro::Colour::Transparent;
+    entity = getScene().createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, SummaryDepth));
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, cro::DefaultSceneSize.y), bgColour),
+        cro::Vertex2D(glm::vec2(0.f), bgColour),
+        cro::Vertex2D(glm::vec2(cro::DefaultSceneSize), bgColour),
+        cro::Vertex2D(glm::vec2(cro::DefaultSceneSize.x, 0.f), bgColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(currTime + (dt * 2.f), 1.f);
+
+        std::uint8_t alpha = static_cast<std::uint8_t>(currTime * 190.f);
+        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+        for (auto& v : verts)
+        {
+            v.colour.setAlpha(alpha);
+        }
+        e.getComponent<cro::Drawable2D>().updateLocalBounds();
+
+        if (currTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
 }

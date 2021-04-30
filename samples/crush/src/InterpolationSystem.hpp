@@ -110,11 +110,23 @@ public:
     */
     void resetRotation(glm::quat);
 
+    /*
+    \brief Sets the velocity to zero
+    */
     void resetVelocity() { m_targetPoint.velocity = glm::vec2(0.f); }
+
+    /*!
+    \brief Returns the interpolation
+    Note that the timestamp isn't set.
+    */
+    InterpolationPoint getCurrentPoint() const { return m_currentPoint; }
+    InterpolationPoint getTargetPoint() const { return m_targetPoint; }
+
 
 private:
     bool m_enabled;
     InterpolationPoint m_targetPoint;
+    InterpolationPoint m_currentPoint;
     InterpolationPoint m_previousPoint;
 
     cro::Clock m_elapsedTimer;

@@ -12,12 +12,12 @@ particle_system squish
     random_initial_rotation = true
     rotation_speed = 212.000000
     scale_affector = 0.000000
-    size = 0.12500000
+    size = 0.1400000
     emit_rate = 10.000000
-    emit_count = 10
+    emit_count = 20
     spawn_radius = 0.400000
     spawn_offset = 0.000000,0.000000
-    release_count = 10
+    release_count = 20
     inherit_rotation = false
     frame_count = 5
     animate = false

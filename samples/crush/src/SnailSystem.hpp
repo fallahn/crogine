@@ -57,6 +57,8 @@ class SnailSystem final : public cro::System
 public:
     explicit SnailSystem(cro::MessageBus&);
 
+    void handleMessage(const cro::Message&) override;
+
     void process(float) override;
 
     const std::vector<cro::Entity>& getDeadSnails() const { return m_deadSnails; }

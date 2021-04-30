@@ -64,6 +64,22 @@ SnailSystem::SnailSystem(cro::MessageBus& mb)
 }
 
 //public
+void SnailSystem::handleMessage(const cro::Message& msg)
+{
+    if (msg.id == MessageID::GameMessage)
+    {
+        const auto& data = msg.getData<GameEvent>();
+        if (data.type == GameEvent::GameEnd)
+        {
+            auto& entities = getEntities();
+            for (auto entity : entities)
+            {
+                entity.getComponent<Snail>().state = Snail::Digging;
+            }
+        }
+    }
+}
+
 void SnailSystem::process(float)
 {
     m_deadSnails.clear();

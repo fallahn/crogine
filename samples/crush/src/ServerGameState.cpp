@@ -736,4 +736,7 @@ void GameState::endGame()
             m_returnValue = sv::StateID::Lobby;
         }
     };
+
+    auto* msg = m_scene.postMessage<GameEvent>(MessageID::GameMessage);
+    msg->type = GameEvent::GameEnd;
 }

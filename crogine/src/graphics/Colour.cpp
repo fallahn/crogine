@@ -45,13 +45,13 @@ const cro::Colour cro::Colour::Transparent = cro::Colour(0.f, 0.f, 0.f, 0.f);
 cro::Colour::Colour()
     : r(0.f), g(0.f), b(0.f), a(1.f) {}
 
-constexpr cro::Colour::Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha)
+cro::Colour::Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha)
     : r(static_cast<float>(red) / 255.f),
     g(static_cast<float>(green) / 255.f),
     b(static_cast<float>(blue) / 255.f),
     a(static_cast<float>(alpha) / 255.f) {}
 
-constexpr cro::Colour::Colour(std::uint32_t mask)
+cro::Colour::Colour(std::uint32_t mask)
     : r(static_cast<float>((mask >> 24) & 0xFF) / 255.f),
     g(static_cast<float>((mask >> 16) & 0xFF) / 255.f),
     b(static_cast<float>((mask >> 8) & 0xFF) / 255.f),

@@ -162,5 +162,6 @@ struct ActorEvent final
         Removed
     }type = Added;
     glm::vec3 position = glm::vec3(0.f);
+    glm::vec2 velocity = glm::vec2(0.f);
     std::int32_t id = -1;
 };

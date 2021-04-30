@@ -57,4 +57,6 @@ private:
 
     void updateLives(const AvatarEvent&);
     cro::Entity createTextMessage(glm::vec2, const std::string&);
+
+    void showSummary();
 };

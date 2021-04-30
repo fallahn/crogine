@@ -58,11 +58,12 @@ void ParticleDirector::handleMessage(const cro::Message& msg)
         auto result = m_messageHandler(msg);
         if (result)
         {
-            auto& [index, position] = *result;
+            auto& [index, position, velocity] = *result;
             CRO_ASSERT(index < m_emitterSettings.size(), "Index out of range");
             auto ent = getNextEntity();
             ent.getComponent<cro::Transform>().setPosition(position);
             ent.getComponent<cro::ParticleEmitter>().settings = m_emitterSettings[index];
+            ent.getComponent<cro::ParticleEmitter>().settings.initialVelocity += glm::vec3(velocity, 0.f);
             ent.getComponent<cro::ParticleEmitter>().start();
         }
     }

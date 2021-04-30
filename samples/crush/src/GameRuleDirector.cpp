@@ -42,8 +42,8 @@ source distribution.
 
 namespace
 {
-    const cro::Time RoundTime = cro::seconds(3.f * 60.f);
-    const cro::Time SuddenDeathTime = cro::seconds(30.f);
+    const cro::Time RoundTime = cro::seconds(20.f);// (3.f * 60.f);
+    const cro::Time SuddenDeathTime = cro::seconds(5.f);// (30.f);
 
     const cro::Time BalloonTime = cro::seconds(20.f);
 }
@@ -109,6 +109,13 @@ void GameRuleDirector::handleMessage(const cro::Message& msg)
                     m_snailCountB++;
                 }
             }
+            break;
+        case GameEvent::GameEnd:
+            //this is a kind of hacky way to stop spawning
+            //more snails by making sure this number doesn't
+            //go back down to zero
+            m_snailCountA = 10000;
+            m_snailCountB = 10000;
             break;
         }
     }
@@ -195,7 +202,7 @@ void GameRuleDirector::startGame()
     m_roundTime.restart();
 
     //spawn initial balloons
-    auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
+    /*auto* msg = postMessage<GameEvent>(MessageID::GameMessage);
     msg->type = GameEvent::RequestSpawn;
     msg->position = { -MapWidth, MapHeight + 1.f, LayerDepth };
     msg->actorID = ActorID::Balloon;
@@ -203,5 +210,5 @@ void GameRuleDirector::startGame()
     msg = postMessage<GameEvent>(MessageID::GameMessage);
     msg->type = GameEvent::RequestSpawn;
     msg->position = { MapWidth, MapHeight + 1.f, -LayerDepth };
-    msg->actorID = ActorID::Balloon;
+    msg->actorID = ActorID::Balloon;*/
 }

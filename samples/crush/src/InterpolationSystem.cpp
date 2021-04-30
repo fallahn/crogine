@@ -78,12 +78,19 @@ void InterpolationSystem::process(float dt)
             if (currTime < 1)
             {
                 //tx.setPosition(interp.m_previousPoint.position + (diff * currTime));
-                tx.setPosition(glm::mix(interp.m_previousPoint.position, interp.m_targetPoint.position, currTime));
-                tx.setRotation(glm::slerp(interp.m_previousPoint.rotation, interp.m_targetPoint.rotation, currTime));
+                
+                auto position = glm::mix(interp.m_previousPoint.position, interp.m_targetPoint.position, currTime);
+                tx.setPosition(position);
 
-                //float vel = interp.m_previousPoint.velocity + ((interp.m_targetPoint.velocity - interp.m_previousPoint.velocity) * currTime);
-                auto vel = glm::mix(interp.m_previousPoint.velocity, interp.m_targetPoint.velocity, currTime);
-                tx.move(vel * Latency); //TODO this should probably include the client's latency to the server
+                auto rotation = glm::slerp(interp.m_previousPoint.rotation, interp.m_targetPoint.rotation, currTime);
+                tx.setRotation(rotation);
+                
+                auto velocity = glm::mix(interp.m_previousPoint.velocity, interp.m_targetPoint.velocity, currTime);
+                tx.move(velocity * Latency); //TODO this should probably include the client's latency to the server
+
+                interp.m_currentPoint.position = position;
+                interp.m_currentPoint.rotation = rotation;
+                interp.m_currentPoint.velocity = velocity;
             }
             else
             {

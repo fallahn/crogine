@@ -39,6 +39,9 @@ static constexpr glm::vec2 lifeSize = glm::vec2(24.f);
 
 static constexpr glm::vec2 DiedMessageOffset = { 0.f, 100.f };
 
+static constexpr float UIDepth = -4.f;
+static constexpr float SummaryDepth = -1.f;
+
 static inline glm::vec2 getUICorner(std::size_t playerID, std::size_t playerCount)
 {
     if (playerCount == 1)

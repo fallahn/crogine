@@ -617,7 +617,7 @@ void GameState::loadAssets()
     ids[ParticleID::Spark] = particleDirector.loadSettings("assets/particles/spark.xyp");
     ids[ParticleID::Fire] = particleDirector.loadSettings("assets/particles/fire.xyp");
 
-    auto particleHandler = [ids](const cro::Message& msg) -> std::optional<std::pair<std::size_t, glm::vec3>>
+    auto particleHandler = [ids](const cro::Message& msg) -> std::optional<ParticleEvent>
     {
         switch (msg.id)
         {
@@ -625,17 +625,23 @@ void GameState::loadAssets()
         case MessageID::AvatarMessage:
         {
             const auto& data = msg.getData<AvatarEvent>();
+            ParticleEvent evt;
             switch (data.type)
             {
             default: break;
             case AvatarEvent::Died:
-                return std::make_pair(ids[ParticleID::Squish], data.position);
+                evt.id = ids[ParticleID::Squish];
+                evt.position = data.position;
+                return evt;
             }
         }
         break;
         case MessageID::ActorMessage:
         {
             const auto& data = msg.getData<ActorEvent>();
+            ParticleEvent evt;
+            evt.position = data.position;
+
             switch (data.type)
             {
             default: break;
@@ -644,9 +650,11 @@ void GameState::loadAssets()
                 {
                 default: break;
                 case ActorID::Explosion:
-                    return std::make_pair(ids[ParticleID::Fire], data.position);
+                    evt.id = ids[ParticleID::Fire];
+                    return evt;
                 case ActorID::Crate:
-                    return std::make_pair(ids[ParticleID::Spark], data.position);
+                    evt.id = ids[ParticleID::Spark];
+                    return evt;
                 }
                 break;
             case ActorEvent::Removed:
@@ -654,9 +662,13 @@ void GameState::loadAssets()
                 {
                 default: break;
                 case ActorID::Explosion:
-                    return std::make_pair(ids[ParticleID::Fire], data.position);
+                    evt.id = ids[ParticleID::Fire];
+                    return evt;
                 case ActorID::Crate:
-                    return std::make_pair(ids[ParticleID::Sprockets], data.position);
+                    evt.id = ids[ParticleID::Sprockets];
+                    evt.velocity = data.velocity;
+                    LogI << data.velocity << std::endl;
+                    return evt;
                 }
                 break;
             }
@@ -1141,7 +1153,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
 
         break;
         case GameEvent::GameEnd:
-        //disable input - pushing a summary state should block this anyway.
+        //block input this should time out from the server
         for (auto& ip : m_inputParsers)
         {
             ip.second.setEnabled(false);
@@ -1515,20 +1527,10 @@ void GameState::updateActor(ActorUpdate update)
         if (e.isValid() &&
             e.getComponent<Actor>().serverEntityId == update.serverID)
         {
-            auto velocity = cro::Util::Net::decompressVec2(update.velocity, 128);
-
             auto& interp = e.getComponent<InterpolationComponent>();
             interp.setTarget({ cro::Util::Net::decompressVec3(update.position), 
                 cro::Util::Net::decompressQuat(update.rotation), 
-                update.timestamp, velocity });
-
-            //TODO we need a better way to do this. Can we rotate the
-            //sprite on the Y axis?
-            /*if (e.getComponent<Actor>().id == ActorID::PoopSnail)
-            {
-                float rotation = (velocity.x > 0) ? cro::Util::Const::PI : 0;
-                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
-            }*/
+                update.timestamp, cro::Util::Net::decompressVec2(update.velocity, 128) });
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -1759,7 +1761,7 @@ void GameState::crateUpdate(const CrateState& data)
                 break;
             }
 #ifdef CRO_DEBUG_
-            LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << std::endl;
+            //LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << std::endl;
 #endif //DEBUG
         }
     };
@@ -1868,13 +1870,15 @@ void GameState::removeEntity(std::uint32_t entityID)
     cmd.targetFlags = Client::CommandID::Interpolated;
     cmd.action = [&, entityID](cro::Entity e, float)
     {
-        if (e.getComponent<Actor>().serverEntityId == entityID)
+        if (!e.destroyed() && //this might be raised multiple times in split screen
+            e.getComponent<Actor>().serverEntityId == entityID)
         {
             auto id = e.getComponent<Actor>().id;
 
             auto* msg = m_gameScene.postMessage<ActorEvent>(MessageID::ActorMessage);
             msg->id = id;
             msg->position = e.getComponent<cro::Transform>().getPosition();
+            msg->velocity = e.getComponent<InterpolationComponent>().getTargetPoint().velocity * 0.55f;
             msg->type = ActorEvent::Removed;
 
             //check if this is a remote player and remove the

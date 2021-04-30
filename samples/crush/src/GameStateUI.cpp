@@ -91,7 +91,7 @@ void GameState::updatePlayerUI()
             cro::Vertex2D(glm::vec2(PuntBarSize.x, 0.f), colour)
         };
         m_playerUIs[i].puntBar.getComponent<cro::Drawable2D>().updateLocalBounds();
-        m_playerUIs[i].puntBar.getComponent<cro::Transform>().setPosition(getUICorner(i, m_cameras.size()) + PuntBarOffset);
+        m_playerUIs[i].puntBar.getComponent<cro::Transform>().setPosition(glm::vec3(getUICorner(i, m_cameras.size()) + PuntBarOffset, UIDepth));
 
 
         //lives
@@ -106,6 +106,6 @@ void GameState::updatePlayerUI()
         }
 
         m_playerUIs[i].lives.getComponent<cro::Drawable2D>().updateLocalBounds();
-        m_playerUIs[i].lives.getComponent<cro::Transform>().setPosition(getUICorner(i, m_cameras.size()) + LivesOffset);
+        m_playerUIs[i].lives.getComponent<cro::Transform>().setPosition(glm::vec3(getUICorner(i, m_cameras.size()) + LivesOffset, UIDepth));
     }
 }

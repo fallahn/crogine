@@ -43,6 +43,13 @@ source distribution.
 \brief Fires a requested particle effect at a given position in the Scene.
 */
 
+struct ParticleEvent final
+{
+    std::size_t id = 0;
+    glm::vec3 position = glm::vec3(0.f);
+    glm::vec2 velocity = glm::vec2(0.f);
+};
+
 class ParticleDirector final : public cro::Director 
 {
 public:
@@ -87,7 +94,7 @@ public:
     \endcode
     */
 
-    using MessageHandler = std::function<std::optional<std::pair<std::size_t, glm::vec3>>(const cro::Message&)>;
+    using MessageHandler = std::function<std::optional<ParticleEvent>(const cro::Message&)>;
 
     explicit ParticleDirector(cro::TextureResource&);
 

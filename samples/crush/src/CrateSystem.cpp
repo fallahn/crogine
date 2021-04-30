@@ -533,6 +533,11 @@ void CrateSystem::processBallistic(cro::Entity entity)
         //deal with any player we hit
         //this assumes crates are only simulated server side
         killPlayer(playerCollision, crate);
+
+        if (std::abs(crate.velocity.x) > 20.f)
+        {
+            crate.health = 0;
+        }
     }
 
     //switch state if we stopped moving
