@@ -38,6 +38,22 @@ source distribution.
 #include <cmath>
 #include <array>
 
+static constexpr std::int32_t CrushScore = 100;
+static constexpr std::int32_t SnailScore = 40;
+static constexpr std::int32_t RoundScore = 500;
+static constexpr std::int32_t BonusScore = 20; //pickups etc
+static constexpr std::int32_t DeathPenalty = -20;
+
+struct RoundStats final
+{
+    bool winner = false;
+    std::uint8_t crushCount = 0;
+    std::uint8_t snailCount = 0;
+    std::uint8_t deathCount = 0;
+    std::uint8_t bonusCount = 0;
+    std::uint8_t playerID = 0;
+};
+
 static constexpr float MapWidth = 36.f;
 static constexpr float MapHeight = 18.f;
 

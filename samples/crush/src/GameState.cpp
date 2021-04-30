@@ -667,7 +667,6 @@ void GameState::loadAssets()
                 case ActorID::Crate:
                     evt.id = ids[ParticleID::Sprockets];
                     evt.velocity = data.velocity;
-                    LogI << data.velocity << std::endl;
                     return evt;
                 }
                 break;
@@ -1164,6 +1163,9 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         break;
     case PacketID::ClientDisconnected:
         m_sharedData.playerData[packet.as<std::uint8_t>()].name.clear();
+        break;
+    case PacketID::RoundStats:
+        updateRoundStats(packet.as<RoundStats>());
         break;
     }
 }
@@ -1761,7 +1763,7 @@ void GameState::crateUpdate(const CrateState& data)
                 break;
             }
 #ifdef CRO_DEBUG_
-            //LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << std::endl;
+            LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << std::endl;
 #endif //DEBUG
         }
     };

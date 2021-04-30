@@ -35,7 +35,6 @@ source distribution.
 #include "PlayerSystem.hpp"
 #include "ActorSystem.hpp"
 #include "Messages.hpp"
-#include "GameConsts.hpp"
 #include "WeatherDirector.hpp"
 #include "MapData.hpp"
 #include "ServerLog.hpp"
@@ -127,10 +126,19 @@ void GameState::handleMessage(const cro::Message& msg)
         {
             if (data.snail.isValid())
             {
+                const auto& snail = data.snail.getComponent<Snail>();
+
                 SnailState state;
                 state.serverEntityID = data.snail.getIndex();
-                state.state = data.snail.getComponent<Snail>().state;
+                state.state = snail.state;
                 m_sharedData.host.broadcastPacket(PacketID::SnailUpdate, state, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                if (state.state == Snail::Dead
+                    && snail.playerID > -1)
+                {
+                    m_roundStats[snail.playerID].snailCount++;
+                    //TODO do we raise a scoerd event here??
+                }
             }
         }
     }
@@ -164,6 +172,12 @@ void GameState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<PlayerEvent>();
         if (data.type == PlayerEvent::Died)
         {
+            if (data.data > -1)
+            {
+                m_roundStats[data.data].crushCount++;
+            }
+            m_roundStats[data.player.getComponent<Player>().avatar.getComponent<Actor>().id].deathCount++;
+
             //if the player died holding a crate kill it and spawn a new one
             resetCrate(data.player);
 
@@ -718,8 +732,22 @@ void GameState::startGame()
 
 void GameState::endGame()
 {
-    //TODO broadcast info
+    //broadcast info
     m_sharedData.host.broadcastPacket(PacketID::GameMessage, std::uint8_t(GameEvent::GameEnd), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    for (auto i = 0u; i < 4u; ++i)
+    {
+        if (m_indexedPlayerEntities[i].isValid())
+        {
+            if (m_indexedPlayerEntities[i].getComponent<Player>().lives > 0)
+            {
+                m_roundStats[i].winner = true;
+            }
+
+            m_roundStats[i].playerID = i;
+            m_sharedData.host.broadcastPacket(PacketID::RoundStats, m_roundStats[i], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+    }
 
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();

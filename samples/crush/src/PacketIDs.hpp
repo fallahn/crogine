@@ -71,6 +71,7 @@ namespace PacketID
         CrateUpdate, //< CrateState struct
         SnailUpdate, //SnailState struct
         GameMessage, //< uint8 GameEvent::Type
+        RoundStats, //< RoundStats struct
         EntityRemoved, //< uint32 entity ID
 
         DayNightUpdate, //< compressed float with the current day/night time

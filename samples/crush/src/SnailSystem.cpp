@@ -52,6 +52,12 @@ source distribution.
 namespace
 {
     constexpr float RotationSpeed = 20.f;
+
+    struct CrateCollision final
+    {
+        std::int8_t state = -1;
+        std::int8_t owner = -1;
+    };
 }
 
 SnailSystem::SnailSystem(cro::MessageBus& mb)
@@ -407,7 +413,7 @@ void SnailSystem::processWalking(cro::Entity entity)
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, snail.currentRotation);
 
     cro::Entity playerCollision;
-    std::int8_t crateCollision = -1;
+    CrateCollision crateCollision;
 
     //collision update
     auto collisions = doBroadPhase(entity);
@@ -453,7 +459,8 @@ void SnailSystem::processWalking(cro::Entity entity)
                 {
                 default: break;
                 case CollisionMaterial::Crate:
-                    crateCollision = e.getComponent<Crate>().state;
+                    crateCollision.state = e.getComponent<Crate>().state;
+                    crateCollision.owner = e.getComponent<Crate>().owner;
                     [[fallthrough]];
                 case CollisionMaterial::Spawner:
                     //otherwise treat as solid
@@ -499,10 +506,11 @@ void SnailSystem::processWalking(cro::Entity entity)
 
         if (snail.collisionFlags & (1 << CollisionMaterial::Crate))
         {
-            if (crateCollision == Crate::Ballistic
-                || crateCollision == Crate::Falling)
+            if (crateCollision.state == Crate::Ballistic
+                || crateCollision.state == Crate::Falling)
             {
                 snail.state = Snail::Dead;
+                snail.playerID = crateCollision.owner;
             }
             else
             {

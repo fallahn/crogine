@@ -109,3 +109,8 @@ void GameState::updatePlayerUI()
         m_playerUIs[i].lives.getComponent<cro::Transform>().setPosition(glm::vec3(getUICorner(i, m_cameras.size()) + LivesOffset, UIDepth));
     }
 }
+
+void GameState::updateRoundStats(const RoundStats& stats)
+{
+    LogI << (int)stats.crushCount << std::endl;
+}

@@ -50,6 +50,7 @@ struct Snail final
     float currentRotation = 0.f;
 
     bool local = false;
+    std::int8_t playerID = -1; //if it was squished
 };
 
 class SnailSystem final : public cro::System

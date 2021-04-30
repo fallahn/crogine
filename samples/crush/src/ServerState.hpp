@@ -57,6 +57,7 @@ namespace sv
         std::array<sv::ClientConnection, ConstVal::MaxClients> clients;
         cro::MessageBus messageBus;
         cro::String mapName;
+        std::array<std::int32_t, 4u> scores = {}; //in player ID order. TODO this could be running XP
     };
 
     namespace StateID

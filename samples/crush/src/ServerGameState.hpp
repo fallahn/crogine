@@ -31,6 +31,7 @@ source distribution.
 
 
 #include "ServerState.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
@@ -69,6 +70,8 @@ namespace sv
 
         std::array<glm::vec3, 4u> m_playerSpawns = {};
         std::vector<glm::vec3> m_crateSpawns;
+
+        std::array<RoundStats, 4u> m_roundStats = {};
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);

@@ -130,4 +130,5 @@ private:
 
     void createUI();
     void updatePlayerUI();
+    void updateRoundStats(const RoundStats&);
 };
