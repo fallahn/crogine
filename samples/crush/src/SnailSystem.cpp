@@ -36,6 +36,7 @@ source distribution.
 #include "PlayerSystem.hpp"
 #include "Messages.hpp"
 #include "CrateSystem.hpp"
+#include "InterpolationSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 
@@ -47,6 +48,11 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+
+namespace
+{
+    constexpr float RotationSpeed = 20.f;
+}
 
 SnailSystem::SnailSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(SnailSystem))
@@ -65,48 +71,106 @@ void SnailSystem::process(float)
     auto& entities = getEntities();
     for (auto entity : entities)
     {
-        entity.getComponent<Actor>().sleeping = false;
-        
         auto& snail = entity.getComponent<Snail>();
-        auto oldState = snail.state;
-
-        switch (snail.state)
+        if (snail.local)
         {
-        default: break;
-        case Snail::Falling:
-            processFalling(entity);
-            break;
-        case Snail::Idle:
-            processIdle(entity);
-            break;
-        case Snail::Walking: 
-            processWalking(entity);
-            break;
+            processLocal(entity);
         }
-
-        if (snail.state != oldState)
+        else
         {
-            //TODO this could share the equivalent crate message
-            auto* msg = postMessage<SnailEvent>(MessageID::SnailMessage);
-            msg->snail = entity;
-            msg->type = SnailEvent::StateChanged;
-        }
+            entity.getComponent<Actor>().sleeping = false;
 
-        if (snail.state == Snail::Dead)
-        {
-            m_deadSnails.push_back(entity);
+            auto oldState = snail.state;
+
+            switch (snail.state)
+            {
+            default: break;
+            case Snail::Falling:
+                processFalling(entity);
+                break;
+            case Snail::Idle:
+                processIdle(entity);
+                break;
+            case Snail::Walking:
+                processWalking(entity);
+                break;
+            case Snail::Digging:
+                processDigging(entity);
+                break;
+            }
+
+            if (snail.state != oldState)
+            {
+                //TODO this could share the equivalent crate message
+                auto* msg = postMessage<SnailEvent>(MessageID::SnailMessage);
+                msg->snail = entity;
+                msg->type = SnailEvent::StateChanged;
+            }
+
+            if (snail.state == Snail::Dead)
+            {
+                m_deadSnails.push_back(entity);
+            }
         }
     }
 }
 
 //private
+void SnailSystem::processLocal(cro::Entity entity)
+{
+    //attempt to correct for collision due to extrapolation
+    auto& snail = entity.getComponent<Snail>();
+
+    auto collisions = doBroadPhase(entity);
+
+    auto position = entity.getComponent<cro::Transform>().getPosition();
+    const auto& collisionComponent = entity.getComponent<CollisionComponent>();
+
+    auto bodyRect = collisionComponent.rects[0].bounds;
+    bodyRect.left += position.x;
+    bodyRect.bottom += position.y;
+
+    for (auto e : collisions)
+    {
+        auto otherPos = e.getComponent<cro::Transform>().getPosition();
+        const auto& otherCollision = e.getComponent<CollisionComponent>();
+        for (auto i = 0; i < otherCollision.rectCount; ++i)
+        {
+            auto otherRect = otherCollision.rects[i].bounds;
+            otherRect.left += otherPos.x;
+            otherRect.bottom += otherPos.y;
+
+            cro::FloatRect overlap;
+
+            //crate collision
+            if (bodyRect.intersects(otherRect, overlap))
+            {
+                auto manifold = calcManifold(bodyRect, otherRect, overlap);
+
+                switch (otherCollision.rects[i].material)
+                {
+                default: break;
+                case CollisionMaterial::Solid:
+                    //correct for position
+                    entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
+
+                    //killing the velocity helps stop the popping of extrapolation
+                    entity.getComponent<InterpolationComponent>().resetVelocity();
+
+                    break;
+                }
+            }
+        }
+    }
+}
+
 void SnailSystem::processFalling(cro::Entity entity)
 {
     auto& snail = entity.getComponent<Snail>();
     snail.sleepTimer = 0.f;
 
     //apply gravity
-    snail.velocity.y = std::max(snail.velocity.y + (Gravity * ConstVal::FixedGameUpdate), MaxGravity);
+    snail.velocity.y = std::max(snail.velocity.y + ((Gravity / 2.f) * ConstVal::FixedGameUpdate), MaxGravity);
 
     //move
     entity.getComponent<cro::Transform>().move(snail.velocity * ConstVal::FixedGameUpdate);
@@ -224,17 +288,31 @@ void SnailSystem::processIdle(cro::Entity entity)
 {
     //sleep/wake the actor
     auto& snail = entity.getComponent<Snail>();
+
+    float targetRotation = snail.velocity.x > 0 ? cro::Util::Const::PI : 0.f;
+    snail.currentRotation += cro::Util::Maths::shortestRotation(snail.currentRotation, targetRotation) * RotationSpeed * ConstVal::FixedGameUpdate;
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, snail.currentRotation);
+
     snail.sleepTimer += ConstVal::FixedGameUpdate;
     entity.getComponent<Actor>().sleeping = snail.sleepTimer > 0.5f;
 
     if (snail.sleepTimer > cro::Util::Random::value(2, 3))
     {
-        snail.state = Snail::Walking;
         snail.sleepTimer = 0.f;
-        snail.velocity.x = 2.f;
-        if ((cro::Util::Random::value(0, 1) % 2) == 0)
+        if (snail.idleCount < 4)
         {
-            snail.velocity *= -1.f;
+            snail.idleCount++;
+            snail.state = Snail::Walking;
+            snail.velocity.x = 2.f;
+            if ((cro::Util::Random::value(0, 1) % 2) == 0)
+            {
+                snail.velocity *= -1.f;
+            }
+        }
+        else
+        {
+            snail.state = Snail::Digging;
+            return; //don't do anything else now
         }
     }
 
@@ -305,11 +383,11 @@ void SnailSystem::processIdle(cro::Entity entity)
 void SnailSystem::processWalking(cro::Entity entity)
 {
     auto& snail = entity.getComponent<Snail>();
-    snail.sleepTimer = 0.f;
+    snail.sleepTimer += ConstVal::FixedGameUpdate;
     entity.getComponent<cro::Transform>().move(snail.velocity * ConstVal::FixedGameUpdate);
 
     float targetRotation = snail.velocity.x > 0 ? cro::Util::Const::PI : 0.f;
-    snail.currentRotation += cro::Util::Maths::shortestRotation(snail.currentRotation, targetRotation) * 20.f * ConstVal::FixedGameUpdate;
+    snail.currentRotation += cro::Util::Maths::shortestRotation(snail.currentRotation, targetRotation) * RotationSpeed * ConstVal::FixedGameUpdate;
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, snail.currentRotation);
 
     cro::Entity playerCollision;
@@ -418,9 +496,22 @@ void SnailSystem::processWalking(cro::Entity entity)
 
         if (snail.collisionFlags == (1 << CollisionMaterial::Foot))
         {
-            //TODO check time and idle count
-            //either idle or bury oneself
+            if (snail.sleepTimer > 3)
+            {
+                snail.sleepTimer = 0.f;
+                snail.state = Snail::Idle;
+            }
         }
+    }
+}
+
+void SnailSystem::processDigging(cro::Entity entity)
+{
+    auto& snail = entity.getComponent<Snail>();
+    snail.sleepTimer += ConstVal::FixedGameUpdate;
+    if (snail.sleepTimer > 1.f)
+    {
+        snail.state = Snail::Dead;
     }
 }
 

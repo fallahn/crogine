@@ -35,7 +35,9 @@ source distribution.
 #include "ServerPacketData.hpp"
 #include "ActorIDs.hpp"
 #include "GameConsts.hpp"
+#include "SnailSystem.hpp"
 
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/network/NetHost.hpp>
 
 namespace
@@ -108,6 +110,24 @@ void GameRuleDirector::handleMessage(const cro::Message& msg)
                 }
             }
             break;
+        }
+    }
+    else if (msg.id == MessageID::SnailMessage)
+    {
+        const auto& data = msg.getData<SnailEvent>();
+        if (data.snail.isValid())
+        {
+            if (data.snail.getComponent<Snail>().state == Snail::Dead)
+            {
+                if (data.snail.getComponent<cro::Transform>().getPosition().z > 0)
+                {
+                    m_snailCountA--;
+                }
+                else
+                {
+                    m_snailCountB--;
+                }
+            }
         }
     }
 }

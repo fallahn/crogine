@@ -480,6 +480,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<WavetableAnimatorSystem>(mb);
     m_gameScene.addSystem<SpawnerAnimationSystem>(mb);
     m_gameScene.addSystem<CrateSystem>(mb); //local collision to smooth out interpolation
+    m_gameScene.addSystem<SnailSystem>(mb); //local collision to smooth out interpolation
     m_gameScene.addSystem<AvatarScaleSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb);
     m_gameScene.addSystem<CameraControllerSystem>(mb, m_avatars);
@@ -1453,11 +1454,9 @@ void GameState::spawnActor(ActorSpawn as)
         //add some collision properties which are updated from the server
         //rather than simulated locally, so the player gets proper collision
         //when the crate is idle
-        entity.addComponent<CollisionComponent>().rectCount = 2;
+        entity.addComponent<CollisionComponent>().rectCount = 1;
         entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Crate;
         entity.getComponent<CollisionComponent>().rects[0].bounds = CrateArea;
-        entity.getComponent<CollisionComponent>().rects[1].material = CollisionMaterial::Foot;
-        entity.getComponent<CollisionComponent>().rects[1].bounds = CrateFoot;
         entity.getComponent<CollisionComponent>().calcSum();
 
         entity.addComponent<cro::DynamicTreeComponent>().setArea(CrateBounds);
@@ -1487,6 +1486,16 @@ void GameState::spawnActor(ActorSpawn as)
             auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
             entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
         }
+
+        entity.addComponent<CollisionComponent>().rectCount = 1;
+        entity.getComponent<CollisionComponent>().rects[0].material = CollisionMaterial::Snail;
+        entity.getComponent<CollisionComponent>().rects[0].bounds = SnailArea;
+        entity.getComponent<CollisionComponent>().calcSum();
+
+        entity.addComponent<cro::DynamicTreeComponent>().setArea(SnailBounds);
+        entity.getComponent<cro::DynamicTreeComponent>().setFilterFlags((position.z > 0 ? 1 : 2));
+
+        entity.addComponent<Snail>().local = true;
         break;
     }
 
@@ -1765,9 +1774,18 @@ void GameState::snailUpdate(const SnailState& data)
     {
         if (e.getComponent<Actor>().serverEntityId == data.serverEntityID)
         {
-            if (data.state == Snail::Falling)
+            switch (data.state)
             {
-                //TODO update animation based on state
+            default: break;
+            case Snail::Falling:
+
+                break;
+            case Snail::Walking:
+                e.getComponent<cro::SpriteAnimation>().play(0);
+                break;
+            case Snail::Digging:
+                e.getComponent<cro::SpriteAnimation>().play(1);
+                break;
             }
         }
     };

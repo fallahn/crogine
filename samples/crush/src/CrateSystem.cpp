@@ -123,7 +123,7 @@ void CrateSystem::processLocal(cro::Entity entity)
 {
     const auto& crate = entity.getComponent<Crate>();
 
-    for (auto i = 0; i < StepCount; ++i)
+    //for (auto i = 0; i < StepCount; ++i)
     {
         //collision update
         auto collisions = doBroadPhase(entity);

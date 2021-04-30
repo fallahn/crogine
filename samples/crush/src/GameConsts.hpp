@@ -63,8 +63,8 @@ static constexpr cro::FloatRect SafeArea = cro::FloatRect(-0.4f, 0.f, 0.8f, 2.f)
 static constexpr cro::FloatRect SpawnBase = cro::FloatRect(-0.5f, 0.f, 1.f, 0.2f);
 
 //assumes snail is centre bottom
-static constexpr cro::FloatRect SnailArea = cro::FloatRect(-0.5f, 0.f, 1.f, 0.5f);
-static constexpr cro::FloatRect SnailFoot = cro::FloatRect(-0.45f, -0.1f, 0.9f, 0.1f);
+static constexpr cro::FloatRect SnailArea = cro::FloatRect(-0.3f, 0.f, 0.6f, 0.5f);
+static constexpr cro::FloatRect SnailFoot = cro::FloatRect(-0.25f, -0.1f, 0.5f, 0.1f);
 static const cro::Box SnailBounds = { glm::vec3(SnailArea.left, SnailArea.bottom, 0.3f), glm::vec3(SnailArea.width / 2.f, SnailArea.height, -0.3f) };
 
 static const cro::Box ExplosionBounds = { glm::vec3(-1.5f), glm::vec3(1.5f) };

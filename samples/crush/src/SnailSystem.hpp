@@ -36,7 +36,8 @@ struct Snail final
 {
     enum
     {
-        Falling, Idle, Walking, Dead
+        Falling, Idle, Walking,
+        Digging, Dead
     }state = Falling;
 
     float sleepTimer = 0.f;
@@ -45,7 +46,10 @@ struct Snail final
     std::uint16_t collisionFlags = 0;
     std::uint8_t collisionLayer = 0;
 
+    std::uint8_t idleCount = 0;
     float currentRotation = 0.f;
+
+    bool local = false;
 };
 
 class SnailSystem final : public cro::System
@@ -61,9 +65,12 @@ private:
 
     std::vector<cro::Entity> m_deadSnails;
 
+    void processLocal(cro::Entity);
+
     void processFalling(cro::Entity);
     void processIdle(cro::Entity);
     void processWalking(cro::Entity);
+    void processDigging(cro::Entity);
 
     std::vector<cro::Entity> doBroadPhase(cro::Entity);
     void killPlayer(cro::Entity player, Snail&);
