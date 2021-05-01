@@ -137,7 +137,7 @@ void GameState::handleMessage(const cro::Message& msg)
                     && snail.playerID > -1)
                 {
                     m_roundStats[snail.playerID].snailCount++;
-                    //TODO do we raise a scoerd event here??
+                    //TODO do we raise a scored event here??
                 }
             }
         }
@@ -598,6 +598,11 @@ void GameState::buildWorld()
             }
         }
         m_activePlayers = playerCount;
+
+        for (auto i = 0u; i < m_activePlayers; ++i)
+        {
+            m_indexedPlayerEntities[i].getComponent<Player>().lives = static_cast<std::uint8_t>(12 / m_activePlayers);
+        }
     }
     else
     {

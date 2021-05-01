@@ -49,6 +49,24 @@ BalloonSystem::BalloonSystem(cro::MessageBus& mb)
 }
 
 //public
+void BalloonSystem::handleMessage(const cro::Message& msg)
+{
+    if (msg.id == MessageID::GameMessage)
+    {
+        const auto& data = msg.getData<GameEvent>();
+        if (data.type == GameEvent::GameEnd)
+        {
+            //this is a hacky way of stoping more snail spawns if balloons
+            //are active when the current round ends.
+            auto& entities = getEntities();
+            for (auto entity : entities)
+            {
+                entity.getComponent<Balloon>().currentTime = std::numeric_limits<float>::max();
+            }
+        }
+    }
+}
+
 void BalloonSystem::process(float)
 {
     constexpr float MaxDistance = MapWidth;

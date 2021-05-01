@@ -44,6 +44,8 @@ class BalloonSystem final : public cro::System
 public:
     explicit BalloonSystem(cro::MessageBus&);
 
+    void handleMessage(const cro::Message&) override;
+
     void process(float) override;
 
 private:

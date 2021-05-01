@@ -147,6 +147,7 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
             cro::FloatRect overlap;
 
             //crate collision - prevents dropping inside objects
+            //probably only needs doing server side?
             if (crateRect.intersects(otherRect, overlap))
             {
                 switch (otherCollision.rects[i].material)
@@ -158,7 +159,8 @@ void PlayerStateFalling::processCollision(cro::Entity entity, const std::vector<
                     break;
                     //don't get blocked by dead players
                 case CollisionMaterial::Body:
-                    if (e.getComponent<Player>().state != Player::State::Dead)
+                    if (e.hasComponent<Player>() &&
+                        e.getComponent<Player>().state != Player::State::Dead)
                     {
                         player.collisionFlags |= (1 << CollisionMaterial::Sensor);
                     }

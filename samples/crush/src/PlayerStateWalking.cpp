@@ -195,7 +195,7 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
                 player.collisionFlags |= (1 << CollisionMaterial::Foot);
             }
 
-            //crate collision if
+            //crate collision  - propbably only needsd doing server side?
             if (crateRect.intersects(otherRect, overlap))
             {
                 //set a flag to say if we're overlapping or not
@@ -210,7 +210,8 @@ void PlayerStateWalking::processCollision(cro::Entity entity, const std::vector<
                     break;
                     //TODO don't collide with carried crates
                 case CollisionMaterial::Body:
-                    if (e.getComponent<Player>().state != Player::State::Dead)
+                    if (e.hasComponent<Player>() && //TODO this doesn't work client side when an avatar has no player to read state from
+                        e.getComponent<Player>().state != Player::State::Dead)
                     {
                         player.collisionFlags |= (1 << CollisionMaterial::Sensor);
                     }

@@ -80,7 +80,10 @@ void GameRuleDirector::handleMessage(const cro::Message& msg)
                 && data.data != psc.playerID)
             {
                 //crate owner gets some points
-                m_indexedPlayerEntities[data.data].getComponent<Player>().lives++;
+                if (!m_suddenDeath)
+                {
+                    m_indexedPlayerEntities[data.data].getComponent<Player>().lives++;
+                }
 
                 psc.playerID = data.data;
                 psc.playerState = PlayerEvent::Scored;

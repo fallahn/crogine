@@ -504,7 +504,7 @@ void GameState::addSystems()
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 
-    m_uiScene.addDirector<UIDirector>(m_sharedData, m_playerUIs);
+    m_uiScene.addDirector<UIDirector>(m_sharedData, m_resources.textures, m_playerUIs);
 }
 
 void GameState::loadAssets()
@@ -692,6 +692,23 @@ void GameState::createScene()
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
+    modelDef.createModel(entity, m_resources);
+
+
+    //hedz
+    modelDef.loadFromFile("assets/models/head01.cmt", m_resources, &m_environmentMap);
+    
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 23.f, -20.f });
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, 0.154f);
+    modelDef.createModel(entity, m_resources);
+
+    modelDef.loadFromFile("assets/models/head02.cmt", m_resources, &m_environmentMap);
+
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 23.f, 20.f });
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.154f);
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, cro::Util::Const::PI);
     modelDef.createModel(entity, m_resources);
 }
 
@@ -1430,6 +1447,8 @@ void GameState::spawnPlayer(PlayerInfo info)
         addBoxDebug(entity, m_gameScene, cro::Colour::Magenta);
 #endif
     }
+
+    m_uiScene.getDirector<UIDirector>().addPlayer(); //just tracks the player count
 }
 
 void GameState::removePlayer(std::uint8_t id)

@@ -1,0 +1,16 @@
+model head01
+{
+    mesh = "assets/models/head01.cmb"
+    cast_shadows = false
+
+    material PBR
+    {
+        mask_colour = 0.000000,0.250980,1.000000,1.000000
+        name = "Untitled"
+        colour = 1.000000,0.815295,0.606195,1.000000
+        smooth = true
+        repeat = true
+        blendmode = "none"
+
+    }
+}

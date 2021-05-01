@@ -32,11 +32,13 @@ source distribution.
 #include "UIConsts.hpp"
 #include "PlayerSystem.hpp"
 #include "PuntBarSystem.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/detail/OpenGL.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 
@@ -74,9 +76,7 @@ void GameState::updatePlayerUI()
             m_playerUIs[i].puntBar.addComponent<cro::Drawable2D>();
             m_playerUIs[i].puntBar.addComponent<PuntBar>().player = &m_inputParsers.at(playerIndex).getEntity().getComponent<Player>();
 
-            m_playerUIs[i].lives = m_uiScene.createEntity();
-            m_playerUIs[i].lives.addComponent<cro::Transform>();
-            m_playerUIs[i].lives.addComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get(TextureID::Life));
+            //lives and stat entities are created by UI Director
         }
 
         //update the geometry
@@ -91,26 +91,60 @@ void GameState::updatePlayerUI()
             cro::Vertex2D(glm::vec2(PuntBarSize.x, 0.f), colour)
         };
         m_playerUIs[i].puntBar.getComponent<cro::Drawable2D>().updateLocalBounds();
-        m_playerUIs[i].puntBar.getComponent<cro::Transform>().setPosition(glm::vec3(getUICorner(i, m_cameras.size()) + PuntBarOffset, UIDepth));
 
-
-        //lives
-        auto& verts = m_playerUIs[i].lives.getComponent<cro::Drawable2D>().getVertexData();
-
-        for (auto j = 0; j < 3; ++j) //TODO tie this in with life count
-        {
-            verts.emplace_back(glm::vec2(0.f, j * lifeSize.y), glm::vec2(0.f), colour);
-            verts.emplace_back(glm::vec2(lifeSize.x, j * lifeSize.y), glm::vec2(1.f, 0.f), colour);
-            verts.emplace_back(glm::vec2(0.f, (j+1) * lifeSize.y), glm::vec2(0.f, 1.f), colour);
-            verts.emplace_back(glm::vec2(lifeSize.x, (j+1) * lifeSize.y), glm::vec2(1.f, 1.f), colour);
-        }
-
-        m_playerUIs[i].lives.getComponent<cro::Drawable2D>().updateLocalBounds();
-        m_playerUIs[i].lives.getComponent<cro::Transform>().setPosition(glm::vec3(getUICorner(i, m_cameras.size()) + LivesOffset, UIDepth));
+        auto offset = PuntBarOffset;
+        offset.x = (cro::DefaultSceneSize.x / (m_cameras.size() == 1 ? 2 : 4)) - (PuntBarSize.x / 2.f);
+        m_playerUIs[i].puntBar.getComponent<cro::Transform>().setPosition(glm::vec3(getUICorner(i, m_cameras.size()) + offset, UIDepth));
     }
 }
 
 void GameState::updateRoundStats(const RoundStats& stats)
 {
-    LogI << (int)stats.crushCount << std::endl;
+    //if this is not our stat, skip
+    if (m_inputParsers.count(stats.playerID) == 0)
+    {
+        return;
+    }
+
+
+    if (!m_playerUIs[stats.playerID].stats.isValid())
+    {
+        auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
+        glm::vec2 messageOffset = glm::vec2(cro::DefaultSceneSize) / 2.f;
+        if (m_cameras.size() > 1)
+        {
+            messageOffset.x /= 2;
+
+            if (m_cameras.size() > 2)
+            {
+                messageOffset.y /= 2;
+            }
+        }
+        messageOffset.y += 120.f;
+
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(getUICorner(stats.playerID, m_cameras.size()) + messageOffset);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font);
+        m_playerUIs[stats.playerID].stats = entity;
+    }
+
+    std::string str;
+    str += "Crush count: " + std::to_string(stats.crushCount) + " - " + std::to_string(stats.crushCount * CrushScore) + "\n";
+    str += "Snail count: " + std::to_string(stats.snailCount) + " - " + std::to_string(stats.snailCount * SnailScore) + "\n";
+    str += "Death count: " + std::to_string(stats.deathCount) + " - " + std::to_string(stats.deathCount * DeathPenalty) + "\n";
+    str += "Bonus count: " + std::to_string(stats.bonusCount) + " - " + std::to_string(stats.bonusCount * BonusScore) + "\n";
+
+    m_playerUIs[stats.playerID].stats.getComponent<cro::Text>().setString(str);
+    auto bounds = cro::Text::getLocalBounds(m_playerUIs[stats.playerID].stats);
+    m_playerUIs[stats.playerID].stats.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
+
+    //zoom on winner
+    if (stats.winner)
+    {
+        for (auto& ip : m_inputParsers)
+        {
+            ip.second.getEntity().getComponent<Player>().cameraTargetIndex = stats.playerID;
+        }
+    }
 }

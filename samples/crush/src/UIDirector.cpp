@@ -33,12 +33,15 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "ActorIDs.hpp"
 #include "GameConsts.hpp"
+#include "ResourceIDs.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+
+#include <crogine/graphics/TextureResource.hpp>
 
 #include <crogine/util/Easings.hpp>
 
@@ -47,9 +50,11 @@ namespace
 
 }
 
-UIDirector::UIDirector(SharedStateData& sd, std::array<PlayerUI, 4u>& pui)
+UIDirector::UIDirector(SharedStateData& sd, cro::TextureResource& tr, std::array<PlayerUI, 4u>& pui)
     : m_sharedData  (sd),
-    m_playerUIs     (pui)
+    m_textures      (tr),
+    m_playerUIs     (pui),
+    m_playerCount   (0)
 {
 
 }
@@ -203,9 +208,9 @@ void UIDirector::handleMessage(const cro::Message& msg)
                     verts.clear();
 
                     verts.emplace_back(glm::vec2(0.f), glm::vec2(0.f), colour);
-                    verts.emplace_back(glm::vec2(lifeSize.x, 0.f), glm::vec2(1.f, 0.f), colour);
-                    verts.emplace_back(glm::vec2(0.f, lifeSize.y), glm::vec2(0.f, 1.f), colour);
-                    verts.emplace_back(glm::vec2(lifeSize.x, lifeSize.y), glm::vec2(1.f, 1.f), colour);
+                    verts.emplace_back(glm::vec2(LifeSize.x, 0.f), glm::vec2(1.f, 0.f), colour);
+                    verts.emplace_back(glm::vec2(0.f, LifeSize.y), glm::vec2(0.f, 1.f), colour);
+                    verts.emplace_back(glm::vec2(LifeSize.x, LifeSize.y), glm::vec2(1.f, 1.f), colour);
 
                     m_playerUIs[i].lives.getComponent<cro::Drawable2D>().updateLocalBounds();
                 }
@@ -226,23 +231,36 @@ void UIDirector::handleMessage(const cro::Message& msg)
 //private
 void UIDirector::updateLives(const AvatarEvent& evt)
 {
-    if (m_playerUIs[evt.playerID].lives.isValid())
+    if (m_playerCount == 0)
     {
-        auto colour = PlayerColours[evt.playerID];
-
-        auto& verts = m_playerUIs[evt.playerID].lives.getComponent<cro::Drawable2D>().getVertexData();
-        verts.clear();
-
-        for (auto j = 0; j < evt.lives; ++j)
-        {
-            verts.emplace_back(glm::vec2(0.f, j * lifeSize.y), glm::vec2(0.f), colour);
-            verts.emplace_back(glm::vec2(lifeSize.x, j * lifeSize.y), glm::vec2(1.f, 0.f), colour);
-            verts.emplace_back(glm::vec2(0.f, (j + 1) * lifeSize.y), glm::vec2(0.f, 1.f), colour);
-            verts.emplace_back(glm::vec2(lifeSize.x, (j + 1) * lifeSize.y), glm::vec2(1.f, 1.f), colour);
-        }
-
-        m_playerUIs[evt.playerID].lives.getComponent<cro::Drawable2D>().updateLocalBounds();
+        return;
     }
+
+    if (!m_playerUIs[evt.playerID].lives.isValid())
+    {
+        m_playerUIs[evt.playerID].lives = getScene().createEntity();
+        m_playerUIs[evt.playerID].lives.addComponent<cro::Transform>();
+        m_playerUIs[evt.playerID].lives.addComponent<cro::Drawable2D>().setTexture(&m_textures.get(TextureID::Life));
+    }
+
+    auto colour = PlayerColours[evt.playerID];
+
+    auto& verts = m_playerUIs[evt.playerID].lives.getComponent<cro::Drawable2D>().getVertexData();
+    verts.clear();
+
+    for (auto j = 0; j < evt.lives; ++j)
+    {
+        verts.emplace_back(glm::vec2(0.f, j * LifeSize.y), glm::vec2(0.f), colour);
+        verts.emplace_back(glm::vec2(LifeSize.x, j * LifeSize.y), glm::vec2(1.f, 0.f), colour);
+        verts.emplace_back(glm::vec2(0.f, (j + 1) * LifeSize.y), glm::vec2(0.f, 1.f), colour);
+        verts.emplace_back(glm::vec2(LifeSize.x, (j + 1) * LifeSize.y), glm::vec2(1.f, 1.f), colour);
+    }
+
+    m_playerUIs[evt.playerID].lives.getComponent<cro::Drawable2D>().updateLocalBounds();
+    
+    auto offset = LivesOffset;
+    offset.x += (evt.playerID % 2) * (((cro::DefaultSceneSize.x / 2) - (LivesOffset.x * 2.f)) - LifeSize.x);
+    m_playerUIs[evt.playerID].lives.getComponent<cro::Transform>().setPosition(glm::vec3(getUICorner(evt.playerID, m_playerCount) + offset, UIDepth));
 }
 
 cro::Entity UIDirector::createTextMessage(glm::vec2 position, const std::string& str)

@@ -33,10 +33,16 @@ source distribution.
 
 #include <array>
 
+namespace cro
+{
+    class TextureResource;
+}
+
 struct PlayerUI final
 {
     cro::Entity puntBar;
     cro::Entity lives;
+    cro::Entity stats;
 };
 
 struct SharedStateData;
@@ -44,16 +50,19 @@ struct AvatarEvent;
 class UIDirector final : public cro::Director 
 {
 public:
-    UIDirector(SharedStateData&, std::array<PlayerUI, 4u>&);
+    UIDirector(SharedStateData&, cro::TextureResource&, std::array<PlayerUI, 4u>&);
 
     void handleMessage(const cro::Message&) override;
 
+    void addPlayer() { m_playerCount++; }
 
 private:
     SharedStateData& m_sharedData;
+    cro::TextureResource& m_textures;
     std::array<PlayerUI, 4u>& m_playerUIs;
 
     std::array<cro::Entity, 4> m_resetMessages = {};
+    std::size_t m_playerCount;
 
     void updateLives(const AvatarEvent&);
     cro::Entity createTextMessage(glm::vec2, const std::string&);
