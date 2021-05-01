@@ -1469,6 +1469,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         //displays above player when carrying a box
         auto holoEnt = m_gameScene.createEntity();
         holoEnt.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, PlayerBounds[1].y * 1.5f, 0.f));
+        holoEnt.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
         holoEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
         m_modelDefs[GameModelID::Hologram].createModel(holoEnt, m_resources);
         holoEnt.addComponent<AvatarScale>().rotationSpeed = HoloRotationSpeed;

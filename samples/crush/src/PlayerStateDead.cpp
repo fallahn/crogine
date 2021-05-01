@@ -60,7 +60,8 @@ void PlayerStateDead::processMovement(cro::Entity entity, Input input, cro::Scen
 
 
     player.resetTime -= ConstVal::FixedGameUpdate;
-    if (player.resetTime < 0)
+    if (player.resetTime < 0
+        && !player.local) //the lack of lives sync means local players might end up briefly in spectator mode
     {
         if ((input.buttonFlags & InputFlag::Jump))
         {

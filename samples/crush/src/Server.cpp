@@ -103,7 +103,7 @@ void Server::run()
 
     //network broadcasts are called less regularly
     //than logic updates to the scene
-    const cro::Time netFrameTime = cro::milliseconds(50);
+    const cro::Time netFrameTime = cro::milliseconds(30);
     cro::Clock netFrameClock;
     cro::Time netAccumulatedTime;
 

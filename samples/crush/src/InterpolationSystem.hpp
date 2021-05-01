@@ -132,7 +132,7 @@ private:
     cro::Clock m_elapsedTimer;
     std::int32_t m_timeDifference;
 
-    CircularBuffer<InterpolationPoint, 4u> m_buffer;
+    CircularBuffer<InterpolationPoint, 16u> m_buffer;
     bool m_started;
 
     friend class InterpolationSystem;

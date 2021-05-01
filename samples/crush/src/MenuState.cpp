@@ -176,18 +176,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_2:
             setPlayerCount(2);
-            m_sharedData.inputBindings[0].controllerID = 0;
-            m_sharedData.inputBindings[1].controllerID = 1;
             break;
         case SDLK_3:
             setPlayerCount(3);
-            m_sharedData.inputBindings[0].controllerID = -1;
-            m_sharedData.inputBindings[1].controllerID = -1;
             break;
         case SDLK_4:
             setPlayerCount(4);
-            m_sharedData.inputBindings[0].controllerID = -1;
-            m_sharedData.inputBindings[1].controllerID = -1;
             break;
         case SDLK_RETURN:
         case SDLK_RETURN2:
@@ -617,6 +611,20 @@ void MenuState::setPlayerCount(std::uint8_t count)
 {
     if (m_scene.getSystem<cro::UISystem>().getActiveGroup() == GroupID::LocalPlay)
     {
+        //TODO remove this once keybinds are in
+        if (count == 2)
+        {
+            m_sharedData.inputBindings[0].controllerID = 0;
+            m_sharedData.inputBindings[1].controllerID = 1;
+        }
+        else
+        {
+            m_sharedData.inputBindings[0].controllerID = -1;
+            m_sharedData.inputBindings[1].controllerID = -1;
+        }
+
+
+
         cro::Command cmd;
         cmd.targetFlags = MenuCommandID::PlayerIndicator;
         cmd.action = [count](cro::Entity e, float)

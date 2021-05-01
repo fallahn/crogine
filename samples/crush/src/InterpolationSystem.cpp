@@ -35,7 +35,7 @@ source distribution.
 namespace
 {
     constexpr float MaxDistSqr = 40.f * 40.f; //if we're bigger than this go straight to dest to hide flickering
-    constexpr float Latency = 1.f / 20.f; //approx latency from interpolation. Used to extrapolate from velocity
+    constexpr float Latency = 0.03f;// 1.f / 20.f; //approx latency from interpolation. Used to extrapolate from velocity
 }
 
 InterpolationSystem::InterpolationSystem(cro::MessageBus& mb)
@@ -63,7 +63,7 @@ void InterpolationSystem::process(float dt)
                 tx.setPosition(interp.m_targetPoint.position);
                 tx.setRotation(interp.m_targetPoint.rotation);
 
-                tx.move(interp.m_targetPoint.velocity * Latency);
+                //tx.move(interp.m_targetPoint.velocity * Latency);
 
                 interp.applyNextTarget();
             }
@@ -86,7 +86,7 @@ void InterpolationSystem::process(float dt)
                 tx.setRotation(rotation);
                 
                 auto velocity = glm::mix(interp.m_previousPoint.velocity, interp.m_targetPoint.velocity, currTime);
-                tx.move(velocity * Latency); //TODO this should probably include the client's latency to the server
+                //tx.move(velocity * Latency); //TODO this should probably include the client's latency to the server
 
                 interp.m_currentPoint.position = position;
                 interp.m_currentPoint.rotation = rotation;
@@ -98,7 +98,7 @@ void InterpolationSystem::process(float dt)
                 tx.setPosition(interp.m_targetPoint.position);
                 tx.setRotation(interp.m_targetPoint.rotation);
 
-                tx.move(interp.m_targetPoint.velocity * Latency);
+                //tx.move(interp.m_targetPoint.velocity * Latency);
 
                 //shift interp target to next in buffer if available
                 interp.applyNextTarget();
