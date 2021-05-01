@@ -37,7 +37,7 @@ static constexpr glm::vec2 PuntBarOffset = { 20.f, 20.f };
 static constexpr glm::vec2 LivesOffset = { 20.f, 60.f };
 static constexpr glm::vec2 LifeSize = glm::vec2(24.f);
 
-static constexpr glm::vec2 DiedMessageOffset = { 0.f, 100.f };
+static constexpr glm::vec2 DiedMessageOffset = { 0.f, 120.f };
 
 static constexpr float UIDepth = -4.f;
 static constexpr float SummaryDepth = -1.f;

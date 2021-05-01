@@ -700,15 +700,49 @@ void GameState::createScene()
     
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 23.f, -20.f });
-    entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, 0.154f);
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
     modelDef.createModel(entity, m_resources);
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        if (m_avatars[0].isValid())
+        {
+            auto target = glm::inverse(glm::lookAt(e.getComponent<cro::Transform>().getPosition(), m_avatars[0].getComponent<cro::Transform>().getWorldPosition(), cro::Transform::Y_AXIS));
+            auto current = e.getComponent<cro::Transform>().getRotation();
+            auto rot = glm::slerp(current, glm::quat_cast(target), dt);
+
+            e.getComponent<cro::Transform>().setRotation(rot);
+        }
+    };
+
 
     modelDef.loadFromFile("assets/models/head02.cmt", m_resources, &m_environmentMap);
 
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 23.f, 20.f });
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.154f);
-    entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    modelDef.createModel(entity, m_resources);
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        if (m_avatars[1].isValid())
+        {
+            auto target = glm::inverse(glm::lookAt(e.getComponent<cro::Transform>().getPosition(), m_avatars[1].getComponent<cro::Transform>().getWorldPosition(), cro::Transform::Y_AXIS));
+            auto current = e.getComponent<cro::Transform>().getRotation();
+            auto rot = glm::slerp(current, glm::quat_cast(target), dt);
+            e.getComponent<cro::Transform>().setRotation(rot);
+        }
+    };
+
+    //hillz
+    modelDef.loadFromFile("assets/models/hills.cmt", m_resources, &m_environmentMap);
+
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
     modelDef.createModel(entity, m_resources);
 }
 
@@ -756,8 +790,8 @@ void GameState::loadMap()
     {
         std::array wallColours =
         {
-            cro::Colour(0.6f, 1.f, 0.6f),
-            cro::Colour(1.f, 0.6f, 0.6f)
+            cro::Colour(0.6f, 0.6f, 1.f),
+            cro::Colour(0.8f, 0.8f, 1.f)
         };
 
         cro::ModelDefinition portalModel;
@@ -1443,10 +1477,18 @@ void GameState::spawnPlayer(PlayerInfo info)
         entity.getComponent<cro::Transform>().addChild(holoEnt.getComponent<cro::Transform>());
         m_avatars[entity.getComponent<Actor>().id] = entity;
 
+        if (m_sharedData.localPlayerCount == 1)
+        {
+            //display remote player names
+            //TODO - something with billboards?
+        }
+
 #ifdef CRO_DEBUG_
         addBoxDebug(entity, m_gameScene, cro::Colour::Magenta);
 #endif
     }
+
+    
 
     m_uiScene.getDirector<UIDirector>().addPlayer(); //just tracks the player count
 }

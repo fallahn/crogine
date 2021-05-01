@@ -42,8 +42,8 @@ source distribution.
 
 namespace
 {
-    const cro::Time RoundTime = cro::seconds(20.f);// (3.f * 60.f);
-    const cro::Time SuddenDeathTime = cro::seconds(5.f);// (30.f);
+    const cro::Time RoundTime = cro::seconds(3.f * 60.f);
+    const cro::Time SuddenDeathTime = cro::seconds(30.f);
 
     const cro::Time BalloonTime = cro::seconds(20.f);
 }
