@@ -94,7 +94,7 @@ void GameState::handleMessage(const cro::Message& msg)
                     //then tidy up their entity
                     auto entityID = playerEnt.getIndex();
                     m_scene.destroyEntity(playerEnt);
-                    m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    removeEntity(entityID);
 
                     //and let clients know who it was
                     m_sharedData.host.broadcastPacket(PacketID::PlayerDisconnect, data.playerID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -164,7 +164,7 @@ void GameState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::SceneEvent>();
         if (data.event == cro::Message::SceneEvent::EntityDestroyed)
         {
-            m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, data.entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            removeEntity(data.entityID);
         }
     }
     else if (msg.id == MessageID::PlayerMessage)
@@ -333,7 +333,7 @@ std::int32_t GameState::process(float dt)
         auto pos = crateEnt.getComponent<Crate>().spawnPosition;
         auto crateID = crateEnt.getIndex();
         m_scene.destroyEntity(crateEnt);
-        m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, crateID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        removeEntity(crateID);
 
         spawnActor(ActorID::Crate, pos);
     }
@@ -342,9 +342,9 @@ std::int32_t GameState::process(float dt)
     const auto& snails = m_scene.getSystem<SnailSystem>().getDeadSnails();
     for (auto snailEnt : snails)
     {
-        auto crateID = snailEnt.getIndex();
+        auto snailID = snailEnt.getIndex();
         m_scene.destroyEntity(snailEnt);
-        m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, crateID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        removeEntity(snailID);
     }
 
     m_scene.simulate(dt);
@@ -702,7 +702,11 @@ cro::Entity GameState::spawnActor(std::int32_t actorID, glm::vec3 position)
 
 void GameState::removeEntity(std::uint32_t entityIndex)
 {
-    m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, entityIndex, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    ActorRemoved packet;
+    packet.serverID = static_cast<std::uint16_t>(entityIndex);
+    packet.timestamp = m_serverTime.elapsed().asMilliseconds();
+
+    m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, packet, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 void GameState::resetCrate(cro::Entity owner)
@@ -713,7 +717,7 @@ void GameState::resetCrate(cro::Entity owner)
         auto pos = crateEnt.getComponent<Crate>().spawnPosition;
         auto crateID = crateEnt.getIndex();
         m_scene.destroyEntity(crateEnt);
-        m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, crateID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        removeEntity(crateID);
 
         spawnActor(ActorID::Crate, pos);
 

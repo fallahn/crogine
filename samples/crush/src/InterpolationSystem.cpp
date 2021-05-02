@@ -28,7 +28,10 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "InterpolationSystem.hpp"
+#include "Messages.hpp"
+#include "ActorSystem.hpp"
 
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
@@ -73,12 +76,11 @@ void InterpolationSystem::process(float dt)
         //previous position + diff * timePassed
         if (interp.m_enabled)
         {
-            float currTime = std::min(static_cast<float>(interp.m_elapsedTimer.elapsed().asMilliseconds()) / interp.m_timeDifference, 1.f);
+            std::int32_t elapsed = interp.m_elapsedTimer.elapsed().asMilliseconds();
+            float currTime = std::min(static_cast<float>(elapsed) / interp.m_timeDifference, 1.f);
 
             if (currTime < 1)
             {
-                //tx.setPosition(interp.m_previousPoint.position + (diff * currTime));
-                
                 auto position = glm::mix(interp.m_previousPoint.position, interp.m_targetPoint.position, currTime);
                 tx.setPosition(position);
 
@@ -102,6 +104,21 @@ void InterpolationSystem::process(float dt)
 
                 //shift interp target to next in buffer if available
                 interp.applyNextTarget();
+            }
+
+            //check if we passed the timestamp where we ought to have died
+            if (interp.m_previousPoint.timestamp + elapsed >= interp.m_removalTimestamp)
+            {
+                auto id = entity.getComponent<Actor>().id;
+
+                auto* msg = postMessage<ActorEvent>(MessageID::ActorMessage);
+                msg->id = id;
+                msg->position = entity.getComponent<cro::Transform>().getPosition();
+                //msg->velocity = interp.m_targetPoint.velocity * 0.55f;
+                msg->type = ActorEvent::Removed;
+
+
+                getScene()->destroyEntity(entity);
             }
         }
     }

@@ -34,6 +34,7 @@ InterpolationComponent::InterpolationComponent(InterpolationPoint initialPoint)
     m_targetPoint       (initialPoint),
     m_previousPoint     (initialPoint),
     m_timeDifference    (1),
+    m_removalTimestamp  (std::numeric_limits<std::int32_t>::max()),
     m_started           (false)
 {
 

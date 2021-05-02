@@ -72,7 +72,7 @@ namespace PacketID
         SnailUpdate, //SnailState struct
         GameMessage, //< uint8 GameEvent::Type
         RoundStats, //< RoundStats struct
-        EntityRemoved, //< uint32 entity ID
+        EntityRemoved, //< ActorRemoved packet
 
         DayNightUpdate, //< compressed float with the current day/night time
 

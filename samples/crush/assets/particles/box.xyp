@@ -17,7 +17,7 @@ particle_system box
     emit_count = 20
     spawn_radius = 0.400000
     spawn_offset = 0.000000,0.000000
-    release_count = 30
+    release_count = 20
     inherit_rotation = false
     frame_count = 5
     animate = false

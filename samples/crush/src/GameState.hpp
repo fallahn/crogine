@@ -124,7 +124,7 @@ private:
     void crateUpdate(const CrateState&);
     void snailUpdate(const SnailState&);
     void avatarUpdate(const PlayerStateChange&);
-    void removeEntity(std::uint32_t);
+    void removeEntity(ActorRemoved);
 
     std::array<PlayerUI, 4u> m_playerUIs = {};
 

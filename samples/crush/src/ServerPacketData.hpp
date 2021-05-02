@@ -100,6 +100,12 @@ struct ActorIdleUpdate final
     std::int8_t actorID = -1;
 };
 
+struct ActorRemoved final
+{
+    std::int32_t timestamp = std::numeric_limits<std::int32_t>::max();
+    std::uint16_t serverID = 0;
+};
+
 struct CrateState final
 {
     std::uint16_t serverEntityID = 0;

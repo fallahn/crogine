@@ -122,6 +122,10 @@ public:
     InterpolationPoint getCurrentPoint() const { return m_currentPoint; }
     InterpolationPoint getTargetPoint() const { return m_targetPoint; }
 
+    /*!
+    \brief Sets the timestamp at which this entity should be destroyed
+    */
+    void setRemoved(std::int32_t timestamp) { m_removalTimestamp = timestamp; }
 
 private:
     bool m_enabled;
@@ -131,6 +135,8 @@ private:
 
     cro::Clock m_elapsedTimer;
     std::int32_t m_timeDifference;
+
+    std::int32_t m_removalTimestamp;
 
     CircularBuffer<InterpolationPoint, 16u> m_buffer;
     bool m_started;

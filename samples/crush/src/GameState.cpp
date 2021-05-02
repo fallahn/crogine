@@ -1128,7 +1128,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         break;
     case PacketID::EntityRemoved:
     {
-        removeEntity(packet.as<std::uint32_t>());
+        removeEntity(packet.as<ActorRemoved>());
     }
         break;
     case PacketID::ActorSpawn:
@@ -1928,30 +1928,21 @@ void GameState::avatarUpdate(const PlayerStateChange& data)
     }
 }
 
-void GameState::removeEntity(std::uint32_t entityID)
+void GameState::removeEntity(ActorRemoved actor)
 {
     cro::Command cmd;
     cmd.targetFlags = Client::CommandID::Interpolated;
-    cmd.action = [&, entityID](cro::Entity e, float)
+    cmd.action = [&,actor](cro::Entity e, float)
     {
         if (!e.destroyed() && //this might be raised multiple times in split screen
-            e.getComponent<Actor>().serverEntityId == entityID)
+            e.getComponent<Actor>().serverEntityId == actor.serverID)
         {
-            auto id = e.getComponent<Actor>().id;
+            e.getComponent<InterpolationComponent>().setRemoved(actor.timestamp);
 
-            auto* msg = m_gameScene.postMessage<ActorEvent>(MessageID::ActorMessage);
-            msg->id = id;
-            msg->position = e.getComponent<cro::Transform>().getPosition();
-            msg->velocity = e.getComponent<InterpolationComponent>().getTargetPoint().velocity * 0.55f;
-            msg->type = ActorEvent::Removed;
-
-            //check if this is a remote player and remove the
-            //box icon from their avatar first
             if (e.hasComponent<PlayerAvatar>())
             {
                 m_gameScene.destroyEntity(e.getComponent<PlayerAvatar>().holoEnt);
             }
-            m_gameScene.destroyEntity(e);
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
