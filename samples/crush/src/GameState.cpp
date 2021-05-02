@@ -603,7 +603,10 @@ void GameState::loadAssets()
     auto& particleDirector = m_gameScene.getDirector<ParticleDirector>();
     enum ParticleID
     {
-        Squish,
+        Squish01,
+        Squish02,
+        Squish03,
+        Squish04,
         Sprockets,
         Spark,
         Fire,
@@ -612,7 +615,18 @@ void GameState::loadAssets()
     };
     std::array<std::size_t, ParticleID::Count> ids{};
 
-    ids[ParticleID::Squish] = particleDirector.loadSettings("assets/particles/squish.xyp");
+    ids[ParticleID::Squish01] = particleDirector.loadSettings("assets/particles/squish.xyp");
+    particleDirector.getSettings(ids[ParticleID::Squish01]).colour = PlayerColours[0];
+
+    ids[ParticleID::Squish02] = particleDirector.loadSettings("assets/particles/squish.xyp");
+    particleDirector.getSettings(ids[ParticleID::Squish02]).colour = PlayerColours[1];
+
+    ids[ParticleID::Squish03] = particleDirector.loadSettings("assets/particles/squish.xyp");
+    particleDirector.getSettings(ids[ParticleID::Squish03]).colour = PlayerColours[2];
+
+    ids[ParticleID::Squish04] = particleDirector.loadSettings("assets/particles/squish.xyp");
+    particleDirector.getSettings(ids[ParticleID::Squish04]).colour = PlayerColours[3];
+
     ids[ParticleID::Sprockets] = particleDirector.loadSettings("assets/particles/box.xyp");
     ids[ParticleID::Spark] = particleDirector.loadSettings("assets/particles/spark.xyp");
     ids[ParticleID::Fire] = particleDirector.loadSettings("assets/particles/fire.xyp");
@@ -630,7 +644,23 @@ void GameState::loadAssets()
             {
             default: break;
             case AvatarEvent::Died:
-                evt.id = ids[ParticleID::Squish];
+                switch (data.playerID)
+                {
+                default: break;
+                case 0:
+                    evt.id = ids[ParticleID::Squish01];
+                    break;
+                case 1:
+                    evt.id = ids[ParticleID::Squish02];
+                    break;
+                case 2:
+                    evt.id = ids[ParticleID::Squish03];
+                    break;
+                case 3:
+                    evt.id = ids[ParticleID::Squish04];
+                    break;
+                }
+
                 evt.position = data.position;
                 return evt;
             }

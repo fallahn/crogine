@@ -113,6 +113,8 @@ public:
     //registers a message handler
     void setMessageHandler(MessageHandler mh) { m_messageHandler = mh; }
 
+    cro::EmitterSettings& getSettings(std::size_t idx) { assert(idx < m_emitterSettings.size()); return m_emitterSettings[idx]; }
+
 private:
 
     cro::TextureResource& m_textures;

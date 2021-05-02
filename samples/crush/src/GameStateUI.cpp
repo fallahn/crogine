@@ -120,7 +120,7 @@ void GameState::updateRoundStats(const RoundStats& stats)
                 messageOffset.y /= 2;
             }
         }
-        messageOffset.y += 120.f;
+        messageOffset.y += 140.f;
 
         auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(getUICorner(stats.playerID, m_cameras.size()) + messageOffset);
@@ -129,11 +129,24 @@ void GameState::updateRoundStats(const RoundStats& stats)
         m_playerUIs[stats.playerID].stats = entity;
     }
 
+    std::int32_t total = 0;
+
     std::string str;
     str += "Crush count: " + std::to_string(stats.crushCount) + " - " + std::to_string(stats.crushCount * CrushScore) + "\n";
     str += "Snail count: " + std::to_string(stats.snailCount) + " - " + std::to_string(stats.snailCount * SnailScore) + "\n";
     str += "Death count: " + std::to_string(stats.deathCount) + " - " + std::to_string(stats.deathCount * DeathPenalty) + "\n";
     str += "Bonus count: " + std::to_string(stats.bonusCount) + " - " + std::to_string(stats.bonusCount * BonusScore) + "\n";
+    if (stats.winner)
+    {
+        str += "Survivor bonus: " + std::to_string(RoundScore) + "\n";
+        total += RoundScore;
+    }
+
+    total += (stats.crushCount * CrushScore)
+        + (stats.snailCount * SnailScore)
+        + (stats.deathCount * DeathPenalty)
+        + (stats.bonusCount * BonusScore);
+    str += "\nTotal:" + std::to_string(total);
 
     m_playerUIs[stats.playerID].stats.getComponent<cro::Text>().setString(str);
     auto bounds = cro::Text::getLocalBounds(m_playerUIs[stats.playerID].stats);

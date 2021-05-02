@@ -98,6 +98,12 @@ void GameState::handleMessage(const cro::Message& msg)
 
                     //and let clients know who it was
                     m_sharedData.host.broadcastPacket(PacketID::PlayerDisconnect, data.playerID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    m_activePlayers--;
+                    if (m_activePlayers == 1)
+                    {
+                        endGame();
+                    }
                 }
             }
         }
@@ -734,7 +740,8 @@ void GameState::endGame()
     {
         if (m_indexedPlayerEntities[i].isValid())
         {
-            if (m_indexedPlayerEntities[i].getComponent<Player>().lives > 0)
+            if (m_indexedPlayerEntities[i].getComponent<Player>().state == Player::State::Walking
+                || m_indexedPlayerEntities[i].getComponent<Player>().state == Player::State::Falling)
             {
                 m_roundStats[i].winner = true;
             }
