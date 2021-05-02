@@ -40,14 +40,12 @@ source distribution.
 */
 struct InterpolationPoint final
 {
-    InterpolationPoint(glm::vec3 pos = glm::vec3(0.f), glm::quat rot = glm::quat(1.f,0.f,0.f,0.f), std::int32_t ts = 0, glm::vec2 v = glm::vec2(0.f))
-        : position(pos), rotation(rot), timestamp(ts), velocity(v){}
+    InterpolationPoint(glm::vec3 pos = glm::vec3(0.f), glm::quat rot = glm::quat(1.f,0.f,0.f,0.f), std::int32_t ts = 0)
+        : position(pos), rotation(rot), timestamp(ts){}
 
     glm::vec3 position = glm::vec3(0.f);
     glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
     std::int32_t timestamp = 0;
-
-    glm::vec2 velocity = glm::vec2(0.f);
 };
 
 /*!
@@ -110,17 +108,6 @@ public:
     */
     void resetRotation(glm::quat);
 
-    /*
-    \brief Sets the velocity to zero
-    */
-    void resetVelocity() { m_targetPoint.velocity = glm::vec2(0.f); }
-
-    /*!
-    \brief Returns the interpolation
-    Note that the timestamp isn't set.
-    */
-    InterpolationPoint getCurrentPoint() const { return m_currentPoint; }
-    InterpolationPoint getTargetPoint() const { return m_targetPoint; }
 
     /*!
     \brief Sets the timestamp at which this entity should be destroyed
@@ -130,7 +117,6 @@ public:
 private:
     bool m_enabled;
     InterpolationPoint m_targetPoint;
-    InterpolationPoint m_currentPoint;
     InterpolationPoint m_previousPoint;
 
     cro::Clock m_elapsedTimer;

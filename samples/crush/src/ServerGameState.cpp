@@ -273,23 +273,10 @@ void GameState::netBroadcast()
             const auto& tx = e.getComponent<cro::Transform>();
 
             ActorUpdate update;
-            update.actorID = actor.id;
             update.serverID = actor.serverEntityId;
             update.position = cro::Util::Net::compressVec3(tx.getWorldPosition());
             update.rotation = cro::Util::Net::compressQuat(tx.getRotation());
             update.timestamp = timestamp;
-
-            //adds some extrapolation when fast moving
-            if (e.hasComponent<Crate>())
-            {
-                const auto& crate = e.getComponent<Crate>();
-                update.velocity = cro::Util::Net::compressVec2(crate.velocity * 0.9f, 128);
-            }
-            else if (e.hasComponent<Snail>())
-            {
-                auto& snail = e.getComponent<Snail>();
-                update.velocity = cro::Util::Net::compressVec2(snail.velocity * 0.9f, 128);
-            }
 
             for (auto i = 0u; i < ConstVal::MaxClients; ++i)
             {
@@ -303,7 +290,6 @@ void GameState::netBroadcast()
         {
             //we need to keep the client side actors up to date with timestamps, regardless
             ActorIdleUpdate update;
-            update.actorID = actor.id;
             update.serverID = actor.serverEntityId;
             update.timestamp = timestamp;
 

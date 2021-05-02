@@ -66,8 +66,6 @@ void InterpolationSystem::process(float dt)
                 tx.setPosition(interp.m_targetPoint.position);
                 tx.setRotation(interp.m_targetPoint.rotation);
 
-                //tx.move(interp.m_targetPoint.velocity * Latency);
-
                 interp.applyNextTarget();
             }
             continue;
@@ -86,21 +84,17 @@ void InterpolationSystem::process(float dt)
 
                 auto rotation = glm::slerp(interp.m_previousPoint.rotation, interp.m_targetPoint.rotation, currTime);
                 tx.setRotation(rotation);
-                
-                auto velocity = glm::mix(interp.m_previousPoint.velocity, interp.m_targetPoint.velocity, currTime);
-                //tx.move(velocity * Latency); //TODO this should probably include the client's latency to the server
 
-                interp.m_currentPoint.position = position;
+
+                /*interp.m_currentPoint.position = position;
                 interp.m_currentPoint.rotation = rotation;
-                interp.m_currentPoint.velocity = velocity;
+                interp.m_currentPoint.velocity = velocity;*/
             }
             else
             {
                 //snap to target
                 tx.setPosition(interp.m_targetPoint.position);
                 tx.setRotation(interp.m_targetPoint.rotation);
-
-                //tx.move(interp.m_targetPoint.velocity * Latency);
 
                 //shift interp target to next in buffer if available
                 interp.applyNextTarget();
@@ -114,7 +108,6 @@ void InterpolationSystem::process(float dt)
                 auto* msg = postMessage<ActorEvent>(MessageID::ActorMessage);
                 msg->id = id;
                 msg->position = entity.getComponent<cro::Transform>().getPosition();
-                //msg->velocity = interp.m_targetPoint.velocity * 0.55f;
                 msg->type = ActorEvent::Removed;
 
 

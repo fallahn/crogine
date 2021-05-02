@@ -87,17 +87,15 @@ struct ActorUpdate final
 {
     CompressedQuat rotation{};
     CompressedVec3 position{};
-    CompressedVec2 velocity{};
+
     std::int32_t timestamp = 0;
     std::uint16_t serverID = 0;
-    std::int8_t actorID = -1;
 };
 
 struct ActorIdleUpdate final
 {
     std::int32_t timestamp = 0;
     std::uint16_t serverID = 0;
-    std::int8_t actorID = -1;
 };
 
 struct ActorRemoved final

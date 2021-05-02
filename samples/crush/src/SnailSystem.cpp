@@ -164,7 +164,6 @@ void SnailSystem::processLocal(cro::Entity entity)
 
             cro::FloatRect overlap;
 
-            //crate collision
             if (bodyRect.intersects(otherRect, overlap))
             {
                 auto manifold = calcManifold(bodyRect, otherRect, overlap);
@@ -175,9 +174,6 @@ void SnailSystem::processLocal(cro::Entity entity)
                 case CollisionMaterial::Solid:
                     //correct for position
                     entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
-
-                    //killing the velocity helps stop the popping of extrapolation
-                    entity.getComponent<InterpolationComponent>().resetVelocity();
 
                     break;
                 }

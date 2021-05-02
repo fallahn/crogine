@@ -1594,7 +1594,7 @@ void GameState::updateActor(ActorUpdate update)
             auto& interp = e.getComponent<InterpolationComponent>();
             interp.setTarget({ cro::Util::Net::decompressVec3(update.position), 
                 cro::Util::Net::decompressQuat(update.rotation), 
-                update.timestamp, cro::Util::Net::decompressVec2(update.velocity, 128) });
+                update.timestamp });
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -1612,7 +1612,7 @@ void GameState::updateIdleActor(ActorIdleUpdate update)
             const auto& tx = e.getComponent<cro::Transform>();
 
             auto& interp = e.getComponent<InterpolationComponent>();
-            interp.setTarget({ tx.getPosition(), tx.getRotation(), update.timestamp, glm::vec2(0.f) });
+            interp.setTarget({ tx.getPosition(), tx.getRotation(), update.timestamp });
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);

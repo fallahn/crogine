@@ -163,9 +163,6 @@ void CrateSystem::processLocal(cro::Entity entity)
                         //correct for position
                         entity.getComponent<cro::Transform>().move(manifold.normal * manifold.penetration);
 
-                        //killing the velocity helps stop the popping of extrapolation
-                        entity.getComponent<InterpolationComponent>().resetVelocity();
-
                         break;
                     }
                 }
