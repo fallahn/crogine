@@ -164,6 +164,13 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             ImGui::NewLine();
             ImGui::Text("Controller:");
             ImGui::Text("DPad or LStick - Move\nX = Pickup / Drop\nB - Kick\nA - Jump");
+
+            ImGui::NewLine();
+            ImGui::Text("Press UP to move through the gates.");
+
+            ImGui::NewLine();
+            ImGui::Text("How To Play:");
+            ImGui::Text("Crush or be crushed! Pick up the crates scattered around the map and drop them again\nto crush players below you - or punt them across the floor for extra smushy goodness!\nBonus points are awarded for squishing snails, last player standing wins!");
         });
 }
 
