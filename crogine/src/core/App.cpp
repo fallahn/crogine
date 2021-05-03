@@ -450,7 +450,7 @@ void App::handleEvents()
             auto id = evt.cdevice.which;
 
             std::int32_t controllerIndex = -1;
-            for (auto i = 0; i < m_controllers.size(); ++i)
+            for (auto i = 0u; i < m_controllers.size(); ++i)
             {
                 if (m_controllers[i].joystickID == id)
                 {
