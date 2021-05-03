@@ -52,6 +52,7 @@ source distribution.
 #include "SnailSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
+#include <crogine/core/GameController.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -320,6 +321,21 @@ void GameState::handleMessage(const cro::Message& msg)
             player.getComponent<Player>().avatar.getComponent<cro::ParticleEmitter>().stop();
         }
     }
+    else if (msg.id == MessageID::AvatarMessage)
+    {
+        const auto& data = msg.getData<AvatarEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case AvatarEvent::Died:
+            cro::GameController::rumbleStart(m_sharedData.inputBindings[data.playerID].controllerID, 0.95f, 200);
+            break;
+        case AvatarEvent::Teleported:
+        case AvatarEvent::Spawned:
+            cro::GameController::rumbleStart(m_sharedData.inputBindings[data.playerID].controllerID, 0.8f, 100);
+            break;
+        }
+    }
 
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
@@ -554,8 +570,6 @@ void GameState::loadAssets()
     spriteSheet.loadFromFile("assets/sprites/poopsnail.spt", m_resources.textures);
     m_sprites[SpriteID::PoopSnail] = spriteSheet.getSprite("poopsnail");
 
-    spriteSheet.loadFromFile("assets/sprites/balloon.spt", m_resources.textures);
-    m_sprites[SpriteID::Balloon] = spriteSheet.getSprite("balloon");
 
     //create model geometry for portal field
     m_meshIDs[MeshID::Portal] = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::UV0, 1, GL_TRIANGLE_STRIP));
@@ -607,6 +621,7 @@ void GameState::loadAssets()
         Squish02,
         Squish03,
         Squish04,
+        Squish05,
         Sprockets,
         Spark,
         Fire,
@@ -626,6 +641,9 @@ void GameState::loadAssets()
 
     ids[ParticleID::Squish04] = particleDirector.loadSettings("assets/particles/squish.xyp");
     particleDirector.getSettings(ids[ParticleID::Squish04]).colour = PlayerColours[3];
+
+    ids[ParticleID::Squish05] = particleDirector.loadSettings("assets/particles/squish.xyp");
+    particleDirector.getSettings(ids[ParticleID::Squish05]).colour = cro::Colour(std::uint8_t(230), 188, 20);
 
     ids[ParticleID::Sprockets] = particleDirector.loadSettings("assets/particles/box.xyp");
     ids[ParticleID::Spark] = particleDirector.loadSettings("assets/particles/spark.xyp");
@@ -697,6 +715,9 @@ void GameState::loadAssets()
                 case ActorID::Crate:
                     evt.id = ids[ParticleID::Sprockets];
                     evt.velocity = data.velocity;
+                    return evt;
+                case ActorID::PoopSnail:
+                    evt.id = ids[ParticleID::Squish05];
                     return evt;
                 }
                 break;

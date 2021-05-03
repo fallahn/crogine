@@ -200,3 +200,15 @@ void GameController::rumbleStop(std::int32_t controllerIndex)
         }
     }
 }
+
+std::string GameController::getName(std::int32_t controllerIndex)
+{
+    CRO_ASSERT(App::m_instance, "No app running");
+    CRO_ASSERT(controllerIndex < App::MaxControllers, "");
+
+    if (App::m_instance->m_controllers[controllerIndex].controller)
+    {
+        return SDL_GameControllerName(App::m_instance->m_controllers[controllerIndex].controller);
+    }
+    return "Unknown Device";
+}

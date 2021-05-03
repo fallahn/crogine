@@ -210,6 +210,11 @@ namespace cro
         */
         static void rumbleStop(std::int32_t controllerIndex);
 
+        /*!
+        \brief Returns a string containing the identifier associated with the given controller ID
+        */
+        static std::string getName(std::int32_t controllerIndex);
+
     private:
 
     };

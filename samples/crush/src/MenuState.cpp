@@ -35,6 +35,7 @@ source distribution.
 #include "CommonConsts.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -57,8 +58,6 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <cstring>
-
-#include "Collision.hpp"
 
 namespace
 {
@@ -154,6 +153,18 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         m_sharedData.playerData = {};
         updateLobbyStrings();
     }
+
+    registerConsoleTab("Controls", []() 
+        {
+            ImGui::Text("Player One:");
+            ImGui::Text("w,a,s,d - Move\nq - Pickup / Drop\ne - Kick\nSpace - Jump");
+            ImGui::NewLine();
+            ImGui::Text("Player Two:");
+            ImGui::Text("arrow keys - Move\nRShift - Pickup / Drop\nDelete - Kick\nNumpad 0 - Jump");
+            ImGui::NewLine();
+            ImGui::Text("Controller:");
+            ImGui::Text("DPad or LStick - Move\nX = Pickup / Drop\nB - Kick\nA - Jump");
+        });
 }
 
 //public

@@ -687,6 +687,14 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             });
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f, 0.f });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+
+    //server info
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 80.f, 1000.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Hosting on port 16002");
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
 }
 
 void MenuState::createOptionsMenu(cro::Entity parent, std::uint32_t, std::uint32_t)
