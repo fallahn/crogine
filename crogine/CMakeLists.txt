@@ -97,34 +97,37 @@ if (APPLE)
   set(PROJECT_SRC ${PROJECT_SRC} src/detail/ResourcePath.mm)
 endif()
 
+# this might be built by a project using crogine
+# so skip this step in that case
+if(NOT TARGET crogine)
+  if(NOT BUILD_SHARED_LIBS)
+    add_library(${PROJECT_NAME} STATIC ${PROJECT_SRC})
+  else()
+    add_library(${PROJECT_NAME} SHARED ${PROJECT_SRC})
+  endif()
 
-if(NOT BUILD_SHARED_LIBS)
-  add_library(${PROJECT_NAME} STATIC ${PROJECT_SRC})
-else()
-  add_library(${PROJECT_NAME} SHARED ${PROJECT_SRC})
+
+  if(USE_OPENAL)
+  target_link_libraries(${PROJECT_NAME}
+    ${SDL2_LIBRARY} 
+    ${FREETYPE_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+    ${OPENAL_LIBRARY})
+  else()
+  target_link_libraries(${PROJECT_NAME}
+    ${SDL2_LIBRARY} 
+    ${FREETYPE_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+    ${SDL2_MIXER_LIBRARY})
+  endif()
+
+  if(WIN32)
+    target_link_libraries(${PROJECT_NAME} winmm ws2_32)
+  endif()
+
+  target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 endif()
 
-
-if(USE_OPENAL)
-target_link_libraries(${PROJECT_NAME}
-  ${SDL2_LIBRARY} 
-  ${FREETYPE_LIBRARIES}
-  ${OPENGL_LIBRARIES}
-  ${OPENAL_LIBRARY})
-else()
-target_link_libraries(${PROJECT_NAME}
-  ${SDL2_LIBRARY} 
-  ${FREETYPE_LIBRARIES}
-  ${OPENGL_LIBRARIES}
-  ${SDL2_MIXER_LIBRARY})
-endif()
-
-if(WIN32)
-  target_link_libraries(${PROJECT_NAME} winmm ws2_32)
-endif()
-
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/crogine DESTINATION include)
 
