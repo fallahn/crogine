@@ -34,11 +34,14 @@ source distribution.
 
 #include <crogine/network/NetClient.hpp>
 #include <crogine/core/String.hpp>
+#include <crogine/graphics/FontResource.hpp>
 
 #include <string>
+#include <limits>
 
 struct PlayerData final
 {
+    std::int8_t playerID = -1;
     cro::String name;
     //TODO other stuff like skin data
 };
@@ -61,9 +64,25 @@ struct SharedStateData final
     //data of all players rx'd from server
     std::array<PlayerData, 4u> playerData = {};
 
-    //our local player data
+    //our local player data. Only meaningful if not split screen
     PlayerData localPlayer;
     cro::String targetIP;
+    std::uint8_t localPlayerCount = 1;
 
+    //so we know what to try loading
+    cro::String mapName;
+
+    //set before pushing error state to display
     std::string errorMessage;
+
+    enum class HostState
+    {
+        None, Local, Network
+    }hostState = HostState::None;
+
+
+    //some shared resources so we don't have to reload
+    //them each time a new pause menu is pushed for example
+    cro::FontResource fonts;
+    std::uint32_t defaultFontID = std::numeric_limits<std::uint32_t>::max();
 };

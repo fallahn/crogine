@@ -141,7 +141,6 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\RenderTarget.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\RenderTexture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\ModelDefinition.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\graphics\SceneData.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Shader.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\ShaderResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Spatial.hpp" />
@@ -166,6 +165,7 @@
     <ClInclude Include="..\crogine\include\crogine\util\Easings.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Maths.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Matrix.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\util\Network.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Random.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Rectangle.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\String.hpp" />
@@ -303,7 +303,6 @@
     <ClCompile Include="..\crogine\src\graphics\PrimitiveBuilders.cpp" />
     <ClCompile Include="..\crogine\src\graphics\RenderTexture.cpp" />
     <ClCompile Include="..\crogine\src\graphics\ModelDefinition.cpp" />
-    <ClCompile Include="..\crogine\src\graphics\SceneData.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Shader.cpp" />
     <ClCompile Include="..\crogine\src\graphics\ShaderResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Spatial.cpp" />
@@ -506,7 +505,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;CRO_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CRO_BUILD;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;CRO_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/w34457 /w34456 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -574,7 +573,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>

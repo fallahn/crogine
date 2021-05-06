@@ -76,6 +76,9 @@
     <Filter Include="Header Files\Client\shaders">
       <UniqueIdentifier>{dd43717a-706e-42b6-840c-72be7ea3b3f7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Server\Systems">
+      <UniqueIdentifier>{d7cf7123-7081-491d-8ada-7096fc843079}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -131,6 +134,66 @@
     </ClCompile>
     <ClCompile Include="src\DayNightDirector.cpp">
       <Filter>Source Files\Client\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MapData.cpp">
+      <Filter>Source Files\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlayerStateFalling.cpp">
+      <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlayerStateWalking.cpp">
+      <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlayerStateTeleport.cpp">
+      <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CrateSystem.cpp">
+      <Filter>Source Files\Server\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlayerState.cpp">
+      <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AvatarScaleSystem.cpp">
+      <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParticleDirector.cpp">
+      <Filter>Source Files\Client\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameStateUI.cpp">
+      <Filter>Source Files\Client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PuntBarSystem.cpp">
+      <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlayerStateDead.cpp">
+      <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UIDirector.cpp">
+      <Filter>Source Files\Client\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlayerStateSpectate.cpp">
+      <Filter>Source Files\shared\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WavetableAnimator.cpp">
+      <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameRuleDirector.cpp">
+      <Filter>Source Files\Server\Directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SpawnAreaSystem.cpp">
+      <Filter>Source Files\Server\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SpawnerAnimationSystem.cpp">
+      <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CameraControllerSystem.cpp">
+      <Filter>Source Files\Client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BalloonSystem.cpp">
+      <Filter>Source Files\Server\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SnailSystem.cpp">
+      <Filter>Source Files\Server\Systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -203,9 +266,6 @@
     <ClInclude Include="src\InterpolationSystem.hpp">
       <Filter>Header Files\Client\systems</Filter>
     </ClInclude>
-    <ClInclude Include="src\ServerMessages.hpp">
-      <Filter>Header Files\Server</Filter>
-    </ClInclude>
     <ClInclude Include="src\ErrorState.hpp">
       <Filter>Header Files\Client\states</Filter>
     </ClInclude>
@@ -235,6 +295,63 @@
     </ClInclude>
     <ClInclude Include="src\PoissonDisk.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MapData.hpp">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ServerLog.hpp">
+      <Filter>Header Files\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlayerState.hpp">
+      <Filter>Header Files\shared\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Collision.hpp">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DebugDraw.hpp">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CrateSystem.hpp">
+      <Filter>Header Files\Server\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PortalShader.hpp">
+      <Filter>Header Files\Client\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AvatarScaleSystem.hpp">
+      <Filter>Header Files\Client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleDirector.hpp">
+      <Filter>Header Files\Client\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UIConsts.hpp">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PuntBarSystem.hpp">
+      <Filter>Header Files\Client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UIDirector.hpp">
+      <Filter>Header Files\Client\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WavetableAnimator.hpp">
+      <Filter>Header Files\Client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameRuleDirector.hpp">
+      <Filter>Header Files\Server\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SpawnAreaSystem.hpp">
+      <Filter>Header Files\Server\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SpawnerAnimationSystem.hpp">
+      <Filter>Header Files\Client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CameraControllerSystem.hpp">
+      <Filter>Header Files\Client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BalloonSystem.hpp">
+      <Filter>Header Files\Server\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SnailSystem.hpp">
+      <Filter>Header Files\Server\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

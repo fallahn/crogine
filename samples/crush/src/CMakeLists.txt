@@ -1,20 +1,40 @@
 
 set(PROJECT_SRC
+  ${PROJECT_DIR}/AvatarScaleSystem.cpp
+  ${PROJECT_DIR}/BalloonSystem.cpp
+  ${PROJECT_DIR}/CameraControllerSystem.cpp
+  ${PROJECT_DIR}/CrateSystem.cpp
   ${PROJECT_DIR}/DayNightDirector.cpp
   ${PROJECT_DIR}/ErrorState.cpp
+  ${PROJECT_DIR}/GameRuleDirector.cpp
   ${PROJECT_DIR}/GameState.cpp
+  ${PROJECT_DIR}/GameStateUI.cpp
   ${PROJECT_DIR}/InputParser.cpp
   ${PROJECT_DIR}/InterpolationComponent.cpp
   ${PROJECT_DIR}/InterpolationSystem.cpp
   ${PROJECT_DIR}/LoadingScreen.cpp
   ${PROJECT_DIR}/main.cpp
+  ${PROJECT_DIR}/MapData.cpp
   ${PROJECT_DIR}/MenuCreation.cpp
   ${PROJECT_DIR}/MenuState.cpp
   ${PROJECT_DIR}/MyApp.cpp
+  ${PROJECT_DIR}/ParticleDirector.cpp
   ${PROJECT_DIR}/PauseState.cpp
+  ${PROJECT_DIR}/PlayerState.cpp
+  ${PROJECT_DIR}/PlayerStateDead.cpp
+  ${PROJECT_DIR}/PlayerStateFalling.cpp
+  ${PROJECT_DIR}/PlayerStateSpectate.cpp
+  ${PROJECT_DIR}/PlayerStateTeleport.cpp
+  ${PROJECT_DIR}/PlayerStateWalking.cpp
   ${PROJECT_DIR}/PlayerSystem.cpp
+  ${PROJECT_DIR}/PuntBarSystem.cpp
   ${PROJECT_DIR}/Server.cpp
   ${PROJECT_DIR}/ServerGameState.cpp
   ${PROJECT_DIR}/ServerLobbyState.cpp
   ${PROJECT_DIR}/SliderSystem.cpp
+  ${PROJECT_DIR}/SnailSystem.cpp
+  ${PROJECT_DIR}/SpawnAreaSystem.cpp
+  ${PROJECT_DIR}/SpawnerAnimationSystem.cpp
+  ${PROJECT_DIR}/UIDirector.cpp
+  ${PROJECT_DIR}/WavetableAnimator.cpp
   ${PROJECT_DIR}/WeatherDirector.cpp)

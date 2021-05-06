@@ -1,0 +1,16 @@
+model box
+{
+    mesh = "cube"
+    size = 0.500000,0.500000,0.500000
+    cast_shadows = true
+
+    material PBR
+    {
+        mask = "assets/image/box_mask.png"
+        name = "box"
+        smooth = true
+        repeat = true
+        blendmode = "none"
+        colour = 1,1,1,1
+    }
+}

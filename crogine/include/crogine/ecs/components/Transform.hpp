@@ -253,6 +253,11 @@ namespace cro
         */
         void removeChild(Transform& tx);
 
+        /*!
+        \brief Returns the depth of this transform in the Scene hierarchy.
+        For example if this is a root node it returns 0, or 1 if it has a single parent
+        */
+        std::size_t getDepth() const { return m_depth; }
 
         static constexpr glm::vec3 X_AXIS = glm::vec3(1.f, 0.f, 0.f);
         static constexpr glm::vec3 Y_AXIS = glm::vec3(0.f, 1.f, 0.f);
@@ -268,6 +273,10 @@ namespace cro
 
         Transform* m_parent;
         std::vector<Transform*> m_children = {};
+
+        std::size_t m_depth;
+        void increaseDepth();
+        void decreaseDepth();
 
         enum Flags
         {

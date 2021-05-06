@@ -1,4 +1,3 @@
-#rename your project here
 project(crogine)
 SET(PROJECT_NAME crogine)
 cmake_minimum_required(VERSION 3.2.2)
@@ -6,6 +5,7 @@ cmake_minimum_required(VERSION 3.2.2)
 if(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 endif()
+option(BUILD_SHARED_LIBS "Whether to build shared libraries" ON)
 
 SET(USE_OPENAL TRUE CACHE BOOL "Choose whether to use OpenAL for audio or SDL_Mixer.")
 SET(TARGET_ANDROID FALSE CACHE BOOL "Build the library for Android devices")
@@ -30,6 +30,20 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   endif()
 endif()
 
+if (msvc)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
+
+if (APPLE)
+  add_definitions(-DGL_SILENCE_DEPRECATION)
+endif()
+
+if (NOT BUILD_SHARED_LIBS)
+  add_definitions(-DCRO_STATIC)
+else()
+  add_definitions(-DCRO_BUILD)
+endif()
+
 SET (CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_ -DHAS_SOCKLEN_T")
 SET (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DHAS_SOCKLEN_T")
 SET (CMAKE_DEBUG_POSTFIX -d)
@@ -45,9 +59,9 @@ find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
 
 if(USE_OPENAL)
-find_package(OpenAL REQUIRED)
+  find_package(OpenAL REQUIRED)
 else()
-find_package(SDL2_mixer REQUIRED)
+  find_package(SDL2_mixer REQUIRED)
 endif()
 
 include_directories(
@@ -84,7 +98,7 @@ if (APPLE)
 endif()
 
 
-if(PROJECT_STATIC_RUNTIME)
+if(NOT BUILD_SHARED_LIBS)
   add_library(${PROJECT_NAME} STATIC ${PROJECT_SRC})
 else()
   add_library(${PROJECT_NAME} SHARED ${PROJECT_SRC})
@@ -114,7 +128,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/in
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/crogine DESTINATION include)
 
-if(CROGINE_STATIC_LIB)
+if(NOT BUILD_SHARED_LIBS)
   install(TARGETS ${PROJECT_NAME} EXPORT crogine-targets DESTINATION lib)
 else()
   install(TARGETS ${PROJECT_NAME} EXPORT crogine-targets 

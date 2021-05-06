@@ -31,11 +31,15 @@ source distribution.
 
 
 #include "ServerState.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
-namespace Sv
+#include <array>
+
+namespace sv
 {
     class GameState final : public State
     {
@@ -60,11 +64,28 @@ namespace Sv
         //we should never have more than one on any except the first
         std::array<std::array<cro::Entity, ConstVal::MaxClients>, ConstVal::MaxClients> m_playerEntities;
 
+        //this is the same as above but indexable by player ID. I REALLY need to untangle this
+        std::array<cro::Entity, 4u> m_indexedPlayerEntities = {};
+        std::size_t m_activePlayers;
+
+        std::array<glm::vec3, 4u> m_playerSpawns = {};
+        std::vector<glm::vec3> m_crateSpawns;
+
+        std::array<RoundStats, 4u> m_roundStats = {};
+
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);
         void doServerCommand(const cro::NetEvent&);
 
         void initScene();
         void buildWorld();
+
+        cro::Entity spawnActor(std::int32_t, glm::vec3);
+        void removeEntity(std::uint32_t);
+
+        void resetCrate(cro::Entity owner);
+
+        void startGame();
+        void endGame();
     };
 }

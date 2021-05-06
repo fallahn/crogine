@@ -42,12 +42,14 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
@@ -97,7 +99,16 @@ bool PauseState::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
         case SDLK_PAUSE:
             requestStackPop();
-            cro::App::getWindow().setMouseCaptured(true);
+            break;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case SDL_CONTROLLER_BUTTON_START:
+            requestStackPop();
             break;
         }
     }
@@ -159,11 +170,12 @@ void PauseState::buildScene()
         });
 
     //menu items
-    m_font.loadFromFile("assets/fonts/VeraMono.ttf");
+    auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
+
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("PAUSED");
+    entity.addComponent<cro::Text>(font).setString("PAUSED");
     entity.getComponent<cro::Text>().setCharacterSize(120);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
 
@@ -171,7 +183,7 @@ void PauseState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 500.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Options");
+    entity.addComponent<cro::Text>(font).setString("Options");
     entity.getComponent<cro::Text>().setCharacterSize(50);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     auto bounds = cro::Text::getLocalBounds(entity);
@@ -192,7 +204,7 @@ void PauseState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 440.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Back");
+    entity.addComponent<cro::Text>(font).setString("Back");
     entity.getComponent<cro::Text>().setCharacterSize(50);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
@@ -214,7 +226,7 @@ void PauseState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 380.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Quit");
+    entity.addComponent<cro::Text>(font).setString("Quit");
     entity.getComponent<cro::Text>().setCharacterSize(50);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
@@ -244,6 +256,7 @@ void PauseState::buildScene()
     entity.addComponent<cro::Camera>().resizeCallback = std::bind(&PauseState::updateView, this, std::placeholders::_1);
 
     m_scene.setActiveCamera(entity);
+    updateView(entity.getComponent<cro::Camera>());
 }
 
 void PauseState::updateView(cro::Camera& cam)

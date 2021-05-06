@@ -211,7 +211,7 @@ Entity Scene::createEntity()
 void Scene::destroyEntity(Entity entity)
 {
     m_destroyedBuffer.push_back(entity);
-    entity.m_destroyed = true;
+    m_entityManager.markDestroyed(entity);
 }
 
 Entity Scene::getEntity(Entity::ID id) const
@@ -396,7 +396,7 @@ void Scene::setCubemap(const std::string& path)
 
     //load textures, filling in fallback where needed
     cro::Image fallback;
-    fallback.create(2, 2, cro::Colour::Magenta(), cro::ImageFormat::RGB);
+    fallback.create(2, 2, cro::Colour::Magenta, cro::ImageFormat::RGB);
 
     cro::Image side(true);
 
@@ -671,7 +671,7 @@ void Scene::postRenderPath(const RenderTarget&, const Entity* cameraList, std::s
 {
     //TODO this only needs to be cleared once per frame
     //currently it is cleared for every active camera we draw...
-    m_sceneBuffer.clear(Colour::Transparent());
+    m_sceneBuffer.clear(Colour::Transparent);
     defaultRenderPath(m_sceneBuffer, cameraList, cameraCount);
     m_sceneBuffer.display();
 

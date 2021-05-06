@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -35,6 +35,8 @@ source distribution.
 #include <array>
 
 using CompressedQuat = std::array<std::int16_t, 4u>;
+using CompressedVec3 = std::array<std::int16_t, 3u>;
+using CompressedVec2 = std::array<std::int16_t, 2u>;
 
 struct LobbyData final
 {
@@ -53,19 +55,73 @@ struct PlayerInfo final
     std::uint8_t connectionID = ConstVal::MaxClients;
 };
 
+struct Player;
 struct PlayerUpdate final
 {
     CompressedQuat rotation{};
-    std::uint32_t timestamp = 0;
-    glm::vec3 position = glm::vec3(0.f); //TODO make this 3 compressed floats?
-    std::uint8_t playerID = 0;
+    CompressedVec3 position = {};
+    CompressedVec3 velocity = {};
+    std::int32_t timestamp = 0;
+
+    std::uint16_t prevInputFlags = 0; //hmmmmmmmmm ought to be able to pull this from the history rather than send it
+    std::uint16_t collisionFlags = 0;
+    std::uint8_t puntLevel; //normalised 255 range
+    std::uint8_t state = 0; //this depends on how many states we'll have in total
+    
+
+    /*
+    | unused | carry flag | direction | layer | ID
+    |  000         0            0         0     00
+    */
+    std::uint8_t bitfield = 0;
+    static constexpr std::uint8_t CarryBit     = (1 << 4);
+    static constexpr std::uint8_t DirectionBit = (1 << 3);
+    static constexpr std::uint8_t LayerBit     = (1 << 2);
+
+    std::uint8_t getPlayerID() const;
+    void pack(const Player&);
+    void unpack(Player&) const;
 };
 
 struct ActorUpdate final
 {
     CompressedQuat rotation{};
-    glm::vec3 position = glm::vec3(0.f);
-    std::uint32_t serverID = 0;
+    CompressedVec3 position{};
+
     std::int32_t timestamp = 0;
-    std::int8_t actorID = -1;
+    std::uint16_t serverID = 0;
+};
+
+struct ActorIdleUpdate final
+{
+    std::int32_t timestamp = 0;
+    std::uint16_t serverID = 0;
+};
+
+struct ActorRemoved final
+{
+    std::int32_t timestamp = std::numeric_limits<std::int32_t>::max();
+    std::uint16_t serverID = 0;
+};
+
+struct CrateState final
+{
+    std::uint16_t serverEntityID = 0;
+    std::int8_t state = -1;
+    std::int8_t owner = -1;
+    std::uint8_t collisionLayer = 0;
+};
+
+struct PlayerStateChange final
+{
+    std::uint16_t serverEntityID = 0;
+    std::int8_t playerState = -1;
+    std::int8_t playerID = -1;
+    std::uint8_t lives = 3;
+};
+
+struct SnailState final
+{
+    std::uint16_t serverEntityID = 0;
+    std::int8_t state = -1;
 };

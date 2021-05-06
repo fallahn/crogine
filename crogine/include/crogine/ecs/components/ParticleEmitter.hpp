@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -49,12 +49,15 @@ namespace cro
     */
     struct CRO_EXPORT_API Particle final
     {
+        Colour colour;
+        std::uint32_t frameID = 0;
+        
         glm::vec3 position = glm::vec3(0.f);
         glm::vec3 velocity = glm::vec3(0.f);
         glm::vec3 gravity = glm::vec3(0.f);
         float lifetime = 0.f;
         float maxLifeTime = 1.f;
-        Colour colour;
+        float frameTime = 0.f;
         float rotation = 0.f;
         float scale = 1.f;
         float acceleration = 1.f;
@@ -79,28 +82,35 @@ namespace cro
         glm::vec3 spawnOffset = glm::vec3(0.f);
 
         std::array<glm::vec3, 4> forces{ glm::vec3(0.f) };
-        Colour colour;
+        Colour colour = Colour::White;
 
         std::uint32_t emitCount = 1; //!< amount released at once
         std::int32_t releaseCount = 1; //!< number of particles released before stopping (0 for infinite)
+        std::uint32_t frameCount = 1; //!< must be at least one. Texture width is divided by this
 
         float lifetime = 1.f;
         float lifetimeVariance = 0.f;
         float spread = 0.f;
         float scaleModifier = 0.f;
         float acceleration = 1.f;
-        float size = 1.f; //diameter of particle
-        float emitRate = 1.f; //< particles per second
+        float size = 10.f; //!< diameter of particle
+        float emitRate = 10.f; //!< particles per second
         float rotationSpeed = 0.f;
         float spawnRadius = 0.f;
+        float framerate = 1.f; //!< must be greater than zero
 
-        std::uint32_t textureID = 0;
+        std::uint32_t textureID = 0; //!< animated particles should have all frames in a row
 
         bool randomInitialRotation = true;
         bool inheritRotation = true;
 
+        bool animate = false; //!< If true the particle will attempt to play through all animation frames once.
+        bool useRandomFrame = false; //!< If true the particle will pick a frame at random when spawning
+
+        glm::vec2 textureSize = glm::vec2(0.f);
+
         bool loadFromFile(const std::string&, TextureResource&);
-        bool saveToFile(const std::string&); //! <saves the current settings to a config file
+        bool saveToFile(const std::string&); //!< saves the current settings to a config file
     };
 
     /*!
@@ -110,9 +120,6 @@ namespace cro
     {
     public:
         ParticleEmitter();
-        /*~ParticleEmitter();*/
-
-        //void applySettings(const EmitterSettings&);
 
         void start();
         void stop();

@@ -49,16 +49,16 @@ namespace cro
     \brief Defines a 2D rectangle, starting at the bottom left position with width and height
     */
     template <class T>
-    class CRO_EXPORT_API Rectangle final
+    class Rectangle final
     {
     public:
-        Rectangle(T l = 0, T b = 0, T w = 0, T h = 0)
+        constexpr Rectangle(T l = 0, T b = 0, T w = 0, T h = 0)
             : left(l), bottom(b), width(w), height(h) 
         {
             static_assert(std::is_pod<T>::value, "Only PODs allowed");
         }
 
-        Rectangle(glm::tvec2<T> position, glm::tvec2<T> size)
+        constexpr Rectangle(glm::tvec2<T> position, glm::tvec2<T> size)
             : left(position.x), bottom(position.y), width(size.x), height(size.y)
         {
             static_assert(std::is_pod<T>::value, "Only PODs allowed");
@@ -85,11 +85,16 @@ namespace cro
 
         /*!
         \brief Returns true if the given rectangle intersects this one
+        */
+        bool intersects(Rectangle<T>) const;
+
+        /*!
+        \brief Returns true if the given rectangle intersects this one
         \param overlap If a rectangle instance is passed in as a second parameter
         then it will contain the overlapping area of the two rectangles, if they
         overlap
         */
-        bool intersects(Rectangle<T>, Rectangle<T>& overlap = Rectangle<T>()) const;
+        bool intersects(Rectangle<T>, Rectangle<T>& overlap) const;
 
         /*!
         \brief Returns true if this rectangle fully contains the given rectangle

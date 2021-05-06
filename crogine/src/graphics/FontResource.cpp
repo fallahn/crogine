@@ -40,7 +40,7 @@ bool FontResource::load(std::uint32_t id, const std::string& path)
 {
     if (m_fonts.count(id) != 0)
     {
-        LogW << "Font wwith ID " << id << " already loaded." << std::endl;
+        LogW << "Font with ID " << id << " already loaded." << std::endl;
         return false;
     }
 
@@ -64,4 +64,9 @@ Font& FontResource::get(std::uint32_t id)
         LogW << "Font with id " << id << " not currently loaded. Returning empty font." << std::endl;
     }
     return *m_fonts.find(id)->second;
+}
+
+void FontResource::flush()
+{
+    m_fonts.clear();
 }

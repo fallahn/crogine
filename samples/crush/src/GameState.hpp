@@ -34,13 +34,17 @@ source distribution.
 #include "InputParser.hpp"
 #include "ServerPacketData.hpp"
 #include "GameConsts.hpp"
+#include "ActorIDs.hpp"
+#include "UIDirector.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConsoleClient.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/network/NetData.hpp>
 
 #include <unordered_map>
@@ -79,6 +83,7 @@ private:
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
     std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs = {};
+    std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
     cro::EnvironmentMap m_environmentMap;
     cro::EnvironmentMap m_skyMap;
@@ -90,13 +95,40 @@ private:
     cro::Clock m_sceneRequestClock; //< spaces the request for initial scene data
 
 
+    cro::Entity m_splitScreenNode; //< draws the lines between screen via the UI scene
+    std::array<cro::Entity, 4u> m_avatars = {};
+    std::array<cro::Entity, 4u> m_spawnerEntities = {};
+
+#ifdef CRO_DEBUG_
+    cro::RenderTexture m_debugViewTexture;
+    cro::Entity m_debugCam;
+#endif
+
+
     void addSystems();
     void loadAssets();
     void createScene();
-    void createUI();
     void createDayCycle();
+    void loadMap();
 
     void handlePacket(const cro::NetEvent::Packet&);
     void spawnPlayer(PlayerInfo);
+    void removePlayer(std::uint8_t);
+    void spawnActor(ActorSpawn);
+    void updateActor(ActorUpdate);
+    void updateIdleActor(ActorIdleUpdate);
     void updateView(cro::Camera&);
+
+    void startGame();
+
+    void crateUpdate(const CrateState&);
+    void snailUpdate(const SnailState&);
+    void avatarUpdate(const PlayerStateChange&);
+    void removeEntity(ActorRemoved);
+
+    std::array<PlayerUI, 4u> m_playerUIs = {};
+
+    void createUI();
+    void updatePlayerUI();
+    void updateRoundStats(const RoundStats&);
 };

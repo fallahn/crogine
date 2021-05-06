@@ -60,6 +60,7 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Network.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -85,8 +86,8 @@ namespace
 
     const std::array Colours =
     {
-        cro::Colour::Red(), cro::Colour::Magenta(),
-        cro::Colour::Green(), cro::Colour::Yellow()
+        cro::Colour::Red, cro::Colour::Magenta,
+        cro::Colour::Green, cro::Colour::Yellow
     };
 }
 
@@ -336,13 +337,13 @@ void GameState::render()
         cam.viewport = { 0.f,0.f,1.f,1.f };
 
         cam.setActivePass(cro::Camera::Pass::Reflection);
-        cam.reflectionBuffer.clear(cro::Colour::Red());
+        cam.reflectionBuffer.clear(cro::Colour::Red);
         m_gameScene.render(cam.reflectionBuffer);
         cam.reflectionBuffer.display();
 
         cam.renderFlags = NoPlanes | NoReflect;
         cam.setActivePass(cro::Camera::Pass::Refraction);
-        cam.refractionBuffer.clear(cro::Colour::Blue());
+        cam.refractionBuffer.clear(cro::Colour::Blue);
         m_gameScene.render(cam.refractionBuffer);
         cam.refractionBuffer.display();
 
@@ -447,7 +448,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
     {
     default: break;
     case PacketID::DayNightUpdate:
-        m_gameScene.getDirector<DayNightDirector>().setTimeOfDay(Util::decompressFloat(packet.as<std::int16_t>()));
+        m_gameScene.getDirector<DayNightDirector>().setTimeOfDay(cro::Util::Net::decompressFloat(packet.as<std::int16_t>(), 8));
         break;
     case PacketID::Heightmap:
         updateHeightmap(packet);
@@ -500,7 +501,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 e.getComponent<Actor>().serverEntityId == update.serverID)
             {
                 auto& interp = e.getComponent<InterpolationComponent>();
-                interp.setTarget({ update.position, Util::decompressQuat(update.rotation), update.timestamp });
+                interp.setTarget({ update.position, cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
             }
         };
         m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -536,9 +537,9 @@ void GameState::spawnPlayer(PlayerInfo info)
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
-        entity.getComponent<cro::Transform>().setRotation(Util::decompressQuat(info.rotation));
+        entity.getComponent<cro::Transform>().setRotation(cro::Util::Net::decompressQuat(info.rotation));
             
-        entity.addComponent<Actor>().id = info.playerID;
+        entity.addComponent<Actor>().id = info.playerID + info.connectionID;
         entity.getComponent<Actor>().serverEntityId = info.serverID;
         return entity;
     };
@@ -603,7 +604,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             auto playerEnt = m_gameScene.createEntity();
             playerEnt.addComponent<cro::Transform>().setScale({ 2.f, 2.f, 2.f });// .setOrigin({ 0.f, -0.8f, 0.f });
             md.createModel(playerEnt, m_resources);
-            //playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
+            //playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID + info.connectionID]);
 
             root.getComponent<Player>().avatar = playerEnt;
             root.getComponent<cro::Transform>().addChild(m_cameras.back().getComponent<cro::Transform>());
@@ -637,7 +638,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
         auto rotation = entity.getComponent<cro::Transform>().getRotation();
         entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
-        //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID]);
+        //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID + info.connectionID]);
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
@@ -725,7 +726,7 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
 
         //preview texture / height map
         cro::Image img;
-        img.create(IslandTileCount, IslandTileCount, cro::Colour::Black());
+        img.create(IslandTileCount, IslandTileCount, cro::Colour::Black);
         for (auto i = 0u; i < m_heightmap.size(); ++i)
         {
             auto level = m_heightmap[i] * 255.f;
@@ -995,7 +996,7 @@ void GameState::loadIslandAssets()
     material.setProperty("u_diffuseMap", albedo);
     material.setProperty("u_normalMap", normal);
     material.setProperty("u_maskMap", mask);
-    material.setProperty("u_colour", cro::Colour::White());
+    material.setProperty("u_colour", cro::Colour::White);
 
     material.setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
     material.setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());

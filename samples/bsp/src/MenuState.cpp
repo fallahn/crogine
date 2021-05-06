@@ -132,13 +132,13 @@ void MenuState::render()
     cam.viewport = { 0.f,0.f,1.f,1.f };
 
     cam.setActivePass(cro::Camera::Pass::Reflection);
-    cam.reflectionBuffer.clear(cro::Colour::Red());
+    cam.reflectionBuffer.clear(cro::Colour::Red);
     m_scene.render(cam.reflectionBuffer);
     cam.reflectionBuffer.display();
 
 
     cam.setActivePass(cro::Camera::Pass::Refraction);
-    cam.refractionBuffer.clear(cro::Colour::Blue());
+    cam.refractionBuffer.clear(cro::Colour::Blue);
     m_scene.render(cam.refractionBuffer);
     cam.refractionBuffer.display();
 

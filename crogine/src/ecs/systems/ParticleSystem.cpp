@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/MeshData.hpp>
+#include <crogine/graphics/Image.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
@@ -42,6 +43,7 @@ source distribution.
 #include "../../detail/GLCheck.hpp"
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 //why do I have to hack this? there has to be a catch...
 #ifdef PLATFORM_DESKTOP
@@ -63,7 +65,7 @@ namespace
     const std::string vertex = R"(
         ATTRIBUTE vec4 a_position;
         ATTRIBUTE LOW vec4 a_colour;
-        ATTRIBUTE MED vec3 a_normal; //this actually stores rotation and scale
+        ATTRIBUTE MED vec3 a_normal; //this actually stores rotation, scale and current frame if animated
 
         uniform mat4 u_projection;
         uniform mat4 u_viewProjection;
@@ -78,6 +80,7 @@ namespace
 
         VARYING_OUT LOW vec4 v_colour;
         VARYING_OUT MED mat2 v_rotation;
+        VARYING_OUT LOW float v_currentFrame;
 
         void main()
         {
@@ -86,6 +89,8 @@ namespace
             vec2 rot = vec2(sin(a_normal.x), cos(a_normal.x));
             v_rotation[0] = vec2(rot.y, -rot.x);
             v_rotation[1]= rot;
+
+            v_currentFrame = a_normal.z;
 
             gl_Position = u_viewProjection * a_position;
             gl_PointSize = u_viewportHeight * u_projection[1][1] / gl_Position.w * u_particleSize * a_normal.y;
@@ -101,15 +106,34 @@ namespace
 
     const std::string fragment = R"(
         uniform sampler2D u_texture;
+        uniform float u_frameCount;
+        uniform vec2 u_textureSize;
 
         VARYING_IN LOW vec4 v_colour;
         VARYING_IN MED mat2 v_rotation;
+        VARYING_IN LOW float v_currentFrame;
         OUTPUT
 
         void main()
         {
-            vec2 texCoord = v_rotation * (gl_PointCoord - vec2(0.5));
-            FRAG_OUT = v_colour * TEXTURE(u_texture, texCoord + vec2(0.5)) * v_colour.a;
+            float frameWidth = 1.0 / u_frameCount;
+            vec2 coord = gl_PointCoord;
+            coord.x *= frameWidth;
+            coord.x += v_currentFrame * frameWidth;
+            vec2 centreOffset = vec2((v_currentFrame * frameWidth) + (frameWidth / 2.f), 0.5);
+
+            //convert to texture space
+            coord *= u_textureSize;
+            centreOffset *= u_textureSize;
+
+            //rotate
+            coord = v_rotation * (coord - centreOffset);
+            coord += centreOffset;
+
+            //and back to UV space
+            coord /= u_textureSize;
+
+            FRAG_OUT = v_colour * TEXTURE(u_texture, coord);
         }
     )";
 
@@ -125,14 +149,10 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     m_vboIDs            (MaxParticleSystems),
     m_vaoIDs            (MaxParticleSystems),
     m_nextBuffer        (0),
-    m_bufferCount       (0),
-    m_clipPlaneUniform  (-1),
-    m_projectionUniform (-1),
-    m_textureUniform    (-1),
-    m_viewProjUniform   (-1),
-    m_viewportUniform   (-1),
-    m_sizeUniform       (-1)
+    m_bufferCount       (0)
 {
+    std::fill(m_uniformIDs.begin(), m_uniformIDs.end(), -1);
+
     for (auto& vbo : m_vboIDs)
     {
         vbo = 0;
@@ -156,13 +176,15 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
         //fetch uniforms.
         const auto& uniforms = m_shader.getUniformMap();
 #ifdef PLATFORM_DESKTOP
-        m_clipPlaneUniform = uniforms.find("u_clipPlane")->second;
+        m_uniformIDs[UniformID::ClipPlane] = uniforms.find("u_clipPlane")->second;
 #endif
-        m_projectionUniform = uniforms.find("u_projection")->second;
-        m_textureUniform = uniforms.find("u_texture")->second;
-        m_viewProjUniform = uniforms.find("u_viewProjection")->second;
-        m_viewportUniform = uniforms.find("u_viewportHeight")->second;
-        m_sizeUniform = uniforms.find("u_particleSize")->second;
+        m_uniformIDs[UniformID::Projection] = uniforms.find("u_projection")->second;
+        m_uniformIDs[UniformID::Texture] = uniforms.find("u_texture")->second;
+        m_uniformIDs[UniformID::ViewProjection] = uniforms.find("u_viewProjection")->second;
+        m_uniformIDs[UniformID::Viewport] = uniforms.find("u_viewportHeight")->second;
+        m_uniformIDs[UniformID::ParticleSize] = uniforms.find("u_particleSize")->second;
+        m_uniformIDs[UniformID::TextureSize] = uniforms.find("u_textureSize")->second;
+        m_uniformIDs[UniformID::FrameCount] = uniforms.find("u_frameCount")->second;
 
         //map attributes
         const auto& attribMap = m_shader.getAttribMap();
@@ -178,6 +200,10 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
         m_attribData[2].attribSize = 3;
         m_attribData[2].offset = (3 + 4) * sizeof(float);
     }
+
+    cro::Image img;
+    img.create(2, 2, cro::Colour::White);
+    m_fallbackTexture.loadFromImage(img);
 }
 
 ParticleSystem::~ParticleSystem()
@@ -213,7 +239,7 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
     for (auto entity : entities)
     {
         const auto& emitter = entity.getComponent<ParticleEmitter>();
-        auto inView = [&emitter](const Frustum& frustum)->bool
+        auto inFrustum = [&emitter](const Frustum& frustum)->bool
         {
             bool visible = true;
             std::size_t i = 0;
@@ -221,13 +247,14 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
             {
                 visible = (Spatial::intersects(frustum[i++], emitter.m_bounds) != Planar::Back);
             }
+
             return visible;
         };
 
         for (auto i = 0u; i < m_visibleEntities.size(); ++i)
         {
             const auto& frustum = cam.getPass(i).getFrustum();
-            if (emitter.m_nextFreeParticle > 0 && inView(frustum))
+            if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum))
             {
                 m_visibleEntities[i].push_back(entity);
             }
@@ -258,42 +285,68 @@ void ParticleSystem::process(float dt)
         if (emitter.m_running &&
             emitter.m_emissionClock.elapsed().asSeconds() > (1.f / emitter.settings.emitRate))
         {
+            //apply fallback texture if one doesn't exist
+            //this would be speedier to do once when adding the emitter to the system
+            //but the texture may change at runtime.
+            if (emitter.settings.textureID == 0)
+            {
+                emitter.settings.textureID = m_fallbackTexture.getGLHandle();
+            }
+
             emitter.m_emissionClock.restart();
             static const float epsilon = 0.0001f;
-            if (emitter.m_nextFreeParticle < emitter.m_particles.size() - 1)
+            auto emitCount = emitter.settings.emitCount;
+            while (emitCount--)
             {
-                auto& tx = e.getComponent<Transform>();
-                glm::quat rotation = glm::quat_cast(tx.getLocalTransform());
-
-                const auto& settings = emitter.settings;
-                CRO_ASSERT(settings.emitRate > 0, "Emit rate must be grater than 0");
-                CRO_ASSERT(settings.lifetime > 0, "Lifetime must be greater than 0");
-                auto& p = emitter.m_particles[emitter.m_nextFreeParticle];
-                p.colour = settings.colour;
-                p.gravity = settings.gravity;
-                p.lifetime = settings.lifetime + cro::Util::Random::value(-settings.lifetimeVariance, settings.lifetimeVariance + epsilon);
-                p.maxLifeTime = p.lifetime;
-                p.velocity = rotation * settings.initialVelocity;
-                p.rotation = Util::Random::value(-Util::Const::TAU, Util::Const::TAU);
-                p.scale = 1.f;
-                p.acceleration = settings.acceleration;
-
-                //spawn particle in world position
-                p.position = tx.getWorldPosition();
-                
-                //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
-                p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
-                p.position.y += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
-                p.position.z += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
-
-                auto offset = settings.spawnOffset;
-                offset *= tx.getScale();
-                p.position += offset;
-
-                emitter.m_nextFreeParticle++;
-                if (emitter.m_releaseCount > 0)
+                if (emitter.m_nextFreeParticle < emitter.m_particles.size() - 1)
                 {
-                    emitter.m_releaseCount--;
+                    auto& tx = e.getComponent<Transform>();
+                    glm::quat rotation = glm::quat_cast(tx.getLocalTransform());
+
+                    const auto& settings = emitter.settings;
+                    CRO_ASSERT(settings.emitRate > 0, "Emit rate must be grater than 0");
+                    CRO_ASSERT(settings.lifetime > 0, "Lifetime must be greater than 0");
+                    auto& p = emitter.m_particles[emitter.m_nextFreeParticle];
+                    p.colour = settings.colour;
+                    p.gravity = settings.gravity;
+                    p.lifetime = settings.lifetime + cro::Util::Random::value(-settings.lifetimeVariance, settings.lifetimeVariance + epsilon);
+                    p.maxLifeTime = p.lifetime;
+
+                    auto randRot = glm::rotate(rotation, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::X_AXIS);
+                    randRot = glm::rotate(randRot, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::Z_AXIS);
+
+                    p.velocity = randRot * settings.initialVelocity;
+                    p.rotation = Util::Random::value(-Util::Const::TAU, Util::Const::TAU);
+                    p.scale = 1.f;
+                    p.acceleration = settings.acceleration;
+                    p.frameID = (settings.useRandomFrame && settings.frameCount > 1) ? cro::Util::Random::value(0, static_cast<std::int32_t>(settings.frameCount) - 1) : 0;
+                    p.frameTime = 0.f;
+
+                    //spawn particle in world position
+                    auto basePosition = tx.getWorldPosition();
+                    p.position = basePosition;
+
+                    //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
+                    p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+                    p.position.y += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+                    p.position.z += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+
+                    /*if (emitter.settings.inheritRotation)
+                    {
+                        p.position -= basePosition;
+                        p.position = rotation * glm::vec4(p.position, 1.f);
+                        p.position += basePosition;
+                    }*/
+
+                    auto offset = settings.spawnOffset;
+                    offset *= tx.getScale();
+                    p.position += offset;
+
+                    emitter.m_nextFreeParticle++;
+                    if (emitter.m_releaseCount > 0)
+                    {
+                        emitter.m_releaseCount--;
+                    }
                 }
             }
         }
@@ -306,6 +359,8 @@ void ParticleSystem::process(float dt)
         //update each particle
         glm::vec3 minBounds(std::numeric_limits<float>::max());
         glm::vec3 maxBounds(0.f);
+
+        float framerate = 1.f / emitter.settings.framerate;
         for (auto i = 0u; i < emitter.m_nextFreeParticle; ++i)
         {
             auto& p = emitter.m_particles[i];
@@ -322,7 +377,16 @@ void ParticleSystem::process(float dt)
 
             p.rotation += emitter.settings.rotationSpeed * dt;
             p.scale += ((p.scale * emitter.settings.scaleModifier) * dt);
-            //LOG(std::to_string(emitter.settings.scaleModifier), Logger::Type::Info);
+
+            if (emitter.settings.animate)
+            {
+                p.frameTime += dt;
+                if (p.frameTime > framerate)
+                {
+                    p.frameID++;
+                    p.frameTime -= framerate;
+                }
+            }
 
             //update bounds for culling
             if (p.position.x < minBounds.x) minBounds.x = p.position.x;
@@ -340,7 +404,8 @@ void ParticleSystem::process(float dt)
         //go over again and remove dead particles with pop/swap
         for (auto i = 0u; i < emitter.m_nextFreeParticle; ++i)
         {
-            if (emitter.m_particles[i].lifetime < 0)
+            if (emitter.m_particles[i].lifetime < 0
+                || emitter.m_particles[i].frameID == emitter.settings.frameCount)
             {
                 emitter.m_nextFreeParticle--;
                 std::swap(emitter.m_particles[i], emitter.m_particles[emitter.m_nextFreeParticle]);                
@@ -367,10 +432,10 @@ void ParticleSystem::process(float dt)
             m_dataBuffer[idx++] = p.colour.getBlue();
             m_dataBuffer[idx++] = p.colour.getAlpha();
 
-            //rotation/size
-            m_dataBuffer[idx++] = p.rotation;
+            //rotation/size/animation
+            m_dataBuffer[idx++] = p.rotation * Util::Const::degToRad;
             m_dataBuffer[idx++] = p.scale;
-            m_dataBuffer[idx++] = 0.f;
+            m_dataBuffer[idx++] = static_cast<float>(p.frameID);
         }
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
         glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, idx * sizeof(float), m_dataBuffer.data()));
@@ -408,12 +473,14 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glUseProgram(m_shader.getGLHandle()));
 
     //set shader uniforms (texture/projection)
-    glCheck(glUniform4f(m_clipPlaneUniform, clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
-    glCheck(glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
-    glCheck(glUniformMatrix4fv(m_viewProjUniform, 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
-    glCheck(glUniform1f(m_viewportUniform, static_cast<float>(vp.height)));
-    glCheck(glUniform1i(m_textureUniform, 0));
+    glCheck(glUniform4f(m_uniformIDs[UniformID::ClipPlane], clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
+    glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::Projection], 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
+    glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+    glCheck(glUniform1f(m_uniformIDs[UniformID::Viewport], static_cast<float>(vp.height)));
+    glCheck(glUniform1i(m_uniformIDs[UniformID::Texture], 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
+
+
     
     const auto& entities = std::any_cast<const std::vector<Entity>&>(pass.drawList.at(getType()));
     for(auto entity : entities)
@@ -421,8 +488,10 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
         const auto& emitter = entity.getComponent<ParticleEmitter>();
         //bind emitter texture
         glCheck(glBindTexture(GL_TEXTURE_2D, emitter.settings.textureID));
-        glCheck(glUniform1f(m_sizeUniform, emitter.settings.size));
-        
+        glCheck(glUniform1f(m_uniformIDs[UniformID::ParticleSize], emitter.settings.size));
+        glCheck(glUniform1f(m_uniformIDs[UniformID::FrameCount], static_cast<float>(emitter.settings.frameCount)));
+        glCheck(glUniform2f(m_uniformIDs[UniformID::TextureSize], emitter.settings.textureSize.x, emitter.settings.textureSize.y));
+
         //apply blend mode
         switch (emitter.settings.blendmode)
         {

@@ -1,0 +1,27 @@
+model player_spawn
+{
+    mesh = "assets/models/player_spawn.cmb"
+    cast_shadows = false
+
+    material PBR
+    {
+        mask_colour = 1.000000,0.623529,1.000000,1.000000
+        name = "Untitled"
+        colour = 0.752212,0.756601,1.000000,1.000000
+        smooth = true
+        repeat = true
+        rx_shadows = true
+        blendmode = "none"
+
+    }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 0.672488,0.000000,1.000000,0.298039
+        smooth = true
+        repeat = true
+        blendmode = "alpha"
+        diffuse = "assets/images/spawn_column.png"
+
+    }
+}

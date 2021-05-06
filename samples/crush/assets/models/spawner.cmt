@@ -1,0 +1,18 @@
+model spawner
+{
+    mesh = "assets/models/spawner.cmb"
+    cast_shadows = true
+
+    material PBR
+    {
+        mask_colour = 1.000000,0.349020,1.000000,1.000000
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        vertex_coloured = true
+        blendmode = "none"
+        diffuse = "assets/images/widget_ao.png"
+
+    }
+}

@@ -52,9 +52,19 @@ source distribution.
 #define NOMINMAX
 #endif
 
+#ifdef CRO_BUILD
+
 //windows compilers need specific (and different) keywords for export
 #define CRO_EXPORT_API __declspec(dllexport)
-#define IMGUI_API __declspec(dllexport)
+#define IMGUI_API      __declspec(dllexport)
+
+#else
+
+#define CRO_EXPORT_API __declspec(dllimport)
+#define IMGUI_API      __declspec(dllimport)
+
+#endif //BUILD_CRO
+
 
 //for vc compilers we also need to turn off this annoying C4251 warning
 #ifdef _MSC_VER

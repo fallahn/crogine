@@ -314,6 +314,12 @@ namespace cro
         */
         void updateDrawLists(Entity);
 
+        /*!
+        \brief Posts a message on the system wide message bus
+        */
+        template <typename T>
+        T* postMessage(Message::ID id);
+
     private:
         MessageBus& m_messageBus;
 

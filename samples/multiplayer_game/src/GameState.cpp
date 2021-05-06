@@ -50,6 +50,7 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Network.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
@@ -292,7 +293,7 @@ void GameState::createScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -7.f });
     modelDef.createModel(entity, m_resources);
-    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Green());
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Green);
 }
 
 void GameState::createUI()
@@ -355,7 +356,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 e.getComponent<Actor>().serverEntityId == update.serverID)
             {
                 auto& interp = e.getComponent<InterpolationComponent>();
-                interp.setTarget({ update.position, Util::decompressQuat(update.rotation), update.timestamp });
+                interp.setTarget({ update.position, cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
             }
         };
         m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -394,7 +395,7 @@ void GameState::spawnPlayer(PlayerInfo info)
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
-        entity.getComponent<cro::Transform>().setRotation(Util::decompressQuat(info.rotation));
+        entity.getComponent<cro::Transform>().setRotation(cro::Util::Net::decompressQuat(info.rotation));
             
         entity.addComponent<Actor>().id = info.playerID;
         entity.getComponent<Actor>().serverEntityId = info.serverID;

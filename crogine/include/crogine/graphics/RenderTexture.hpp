@@ -114,7 +114,7 @@ namespace cro
         also attempts to save and restore any existing viewport, while also applying its
         own during rendering.
         */
-        void clear(Colour colour = Colour::Black());
+        void clear(Colour colour = Colour::Black);
 
         /*!
         \brief This must be called once for each call to clear to properly validate

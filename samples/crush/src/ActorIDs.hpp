@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -31,6 +31,7 @@ source distribution.
 
 #include <cstddef>
 #include <cstdint>
+#include <array>
 
 //it is important that players 0 - 3 are listed first so that
 //they match the indices into data arrays pertinent to their client
@@ -43,13 +44,25 @@ namespace ActorID
         PlayerOne = 0,
         PlayerTwo,
         PlayerThree,
-        PlayerFour
+        PlayerFour,
+
+        Crate,
+        Explosion,
+        Balloon,
+        PoopSnail
     };
 }
 
 
-struct Actor final
+struct Actor
 {
     std::int32_t id = -1;
-    std::uint32_t serverEntityId = 0;
+    std::uint16_t serverEntityId = 0;
+    bool sleeping = false;
+};
+
+struct ActorSpawn : public Actor
+{
+    std::array<std::int16_t, 3u> position{};
+    std::int32_t timestamp = 0;
 };

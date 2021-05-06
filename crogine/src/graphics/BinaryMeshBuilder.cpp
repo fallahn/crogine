@@ -253,7 +253,7 @@ Mesh::Data BinaryMeshBuilder::build() const
             createVBO(meshData, vertData);
 
             meshData.submeshCount = meshHeader.indexArrayCount;
-            for (auto i = 0; i < meshData.submeshCount; ++i)
+            for (auto i = 0u; i < meshData.submeshCount; ++i)
             {
                 meshData.indexData[i].format = GL_UNSIGNED_INT;
                 meshData.indexData[i].primitiveType = meshData.primitiveType;

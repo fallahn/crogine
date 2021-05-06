@@ -98,8 +98,6 @@ private:
     cro::MaterialResource m_materialResource;
     cro::TextureResource m_textureResource;
 
-    cro::Font m_font;
-    bool m_hosting;
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
     enum MenuID
@@ -131,6 +129,8 @@ private:
     void updateLobbyData(const cro::NetEvent&);
     void updateLobbyStrings();
     void updateReadyDisplay();
+
+    void setPlayerCount(std::uint8_t);
 
     void handleNetEvent(const cro::NetEvent&);
     void updateView(cro::Camera&);

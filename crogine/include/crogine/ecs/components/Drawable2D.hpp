@@ -204,7 +204,33 @@ namespace cro
         */
         void bindUniform(const std::string& name, const float* value);
 
-        //TODO filter flags
+        /*!
+        \brief Set filter flags for rendering.
+        Filter flags allow certain drawables to be omitted from a drawing
+        pass by the render system. This is useful for multipass effects which
+        require rendering different entities to different render buffers.
+        For example lighting objects may be flagged as such so that
+        when the lighting only flag is active on the render system only
+        illuminating objects are rendered to the output.
+        Flags are bitwise values so that drawables can be categorised in
+        multiple filters by setting the appropriate flags. The default value
+        of the RenderSystem2D is uint64_t::max - ie all flags set (so will 
+        always pass the render filter).
+        \param flags a bitmask of filter flags
+        */
+        void setFilterFlags(std::uint64_t flags) { m_filterFlags = flags; }
+
+        /*!
+        \brief Returns the current filter flags of this drawable.
+        \see setFilterFlags()
+        */
+        std::uint64_t getFilterFlags() const { return m_filterFlags; }
+
+        /*!
+        \brief default flag value for drawables
+        0b1000000000000000000000000000000000000000000000000000000000000000
+        */
+        static constexpr std::uint64_t DefaultFilterFlag = (1ull << 63);
 
     private:
 
@@ -233,6 +259,8 @@ namespace cro
         std::vector<AttribData> m_vertexAttributes;
 
         FloatRect m_localBounds;
+
+        std::uint64_t m_filterFlags;
 
         //used to crop drawables
         FloatRect m_croppingArea;

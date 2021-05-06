@@ -33,7 +33,7 @@ source distribution.
 
 #include <array>
 
-namespace Sv
+namespace sv
 {
     class LobbyState final : public State
     {
@@ -53,5 +53,6 @@ namespace Sv
         std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
         void insertPlayerInfo(const cro::NetEvent&);
+        void updateMapName(const cro::NetEvent&);
     };
 }

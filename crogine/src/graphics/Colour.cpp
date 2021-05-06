@@ -32,15 +32,15 @@ source distribution.
 #include <algorithm>
 
 
-cro::Colour cro::Colour::Red() { return cro::Colour(1.f, 0.f, 0.f ); }
-cro::Colour cro::Colour::Green() { return cro::Colour(0.f, 1.f, 0.f); }
-cro::Colour cro::Colour::Blue() { return cro::Colour(0.f, 0.f, 1.f); }
-cro::Colour cro::Colour::Cyan() { return cro::Colour(0.f, 1.f, 1.f); }
-cro::Colour cro::Colour::Magenta() { return cro::Colour(1.f, 0.f, 1.f); }
-cro::Colour cro::Colour::Yellow() { return cro::Colour(1.f, 1.f, 0.f); }
-cro::Colour cro::Colour::Black() { return cro::Colour(0.f, 0.f, 0.f); }
-cro::Colour cro::Colour::White() { return cro::Colour(1.f, 1.f, 1.f); }
-cro::Colour cro::Colour::Transparent() { return cro::Colour(0.f, 0.f, 0.f, 0.f); }
+const cro::Colour cro::Colour::Red = cro::Colour(1.f, 0.f, 0.f );
+const cro::Colour cro::Colour::Green = cro::Colour(0.f, 1.f, 0.f);
+const cro::Colour cro::Colour::Blue = cro::Colour(0.f, 0.f, 1.f);
+const cro::Colour cro::Colour::Cyan = cro::Colour(0.f, 1.f, 1.f);
+const cro::Colour cro::Colour::Magenta = cro::Colour(1.f, 0.f, 1.f);
+const cro::Colour cro::Colour::Yellow = cro::Colour(1.f, 1.f, 0.f);
+const cro::Colour cro::Colour::Black = cro::Colour(0.f, 0.f, 0.f);
+const cro::Colour cro::Colour::White = cro::Colour(1.f, 1.f, 1.f);
+const cro::Colour cro::Colour::Transparent = cro::Colour(0.f, 0.f, 0.f, 0.f);
 
 cro::Colour::Colour()
     : r(0.f), g(0.f), b(0.f), a(1.f) {}

@@ -8,7 +8,7 @@ particle_system explosion
     spread = 720.000000
     lifetime = 0.439000
     lifetime_variance = 0.000000
-    colour = 1,1,1,1
+    colour = 255,255,255,255
     random_initial_rotation = true
     rotation_speed = 0.000000
     scale_affector = 1.096000

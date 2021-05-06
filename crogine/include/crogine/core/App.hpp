@@ -171,7 +171,20 @@ namespace cro
 
         static App* m_instance;
 
-        std::map<std::int32_t, SDL_GameController*> m_controllers;
+        struct ControllerInfo final
+        {
+            ControllerInfo() = default;
+            ControllerInfo(SDL_GameController* gc, SDL_Haptic* h)
+                : controller(gc), haptic(h) {}
+
+            SDL_GameController* controller = nullptr;
+            SDL_Haptic* haptic = nullptr;
+            bool rumble = false;
+            std::int32_t joystickID = -1; //event IDs don't actually match the controllers
+        };
+        static constexpr std::int32_t MaxControllers = 12;
+
+        std::array<ControllerInfo, MaxControllers> m_controllers = {};
         std::map<std::int32_t, SDL_Joystick*> m_joysticks;
         friend class GameController;
 

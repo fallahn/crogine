@@ -47,7 +47,7 @@ namespace cro
         glm::vec2 size = glm::vec2(1.f); //!< the width and height of the quad
         glm::vec3 position = glm::vec3(0.f); //!< position of the quad relative to the entity's Transform
         glm::vec2 origin = glm::vec2(0.f); //!< the origin around which the quad geometry is centred
-        Colour colour = Colour::White(); //!< the colour of the billboard, multiplied by the material colour
+        Colour colour = Colour::White; //!< the colour of the billboard, multiplied by the material colour
         FloatRect textureRect = FloatRect(0.f,0.f,1.f,1.f); //!< subrect of the material texture to use, in texture coordinates
     };
 

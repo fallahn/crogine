@@ -39,7 +39,7 @@ source distribution.
 #include <cstdint>
 #include <array>
 
-namespace Sv
+namespace sv
 {
     struct ClientConnection final
     {
@@ -48,13 +48,16 @@ namespace Sv
         bool connected = false;
         cro::NetPeer peer;
         cro::String name;
+        std::int32_t latency = 0;
     };
 
     struct SharedData final
     {
         cro::NetHost host;
-        std::array<Sv::ClientConnection, ConstVal::MaxClients> clients;
+        std::array<sv::ClientConnection, ConstVal::MaxClients> clients;
         cro::MessageBus messageBus;
+        cro::String mapName;
+        std::array<std::int32_t, 4u> scores = {}; //in player ID order. TODO this could be running XP
     };
 
     namespace StateID

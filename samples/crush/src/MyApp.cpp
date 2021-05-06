@@ -94,6 +94,10 @@ void MyApp::render()
 
 bool MyApp::initialise()
 {
+    //preload shared resoureces
+    m_sharedData.fonts.load(m_sharedData.defaultFontID, "assets/fonts/VeraMono.ttf");
+
+    setApplicationStrings("Trederia", "crush");
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("CRUSH!");
 
@@ -101,7 +105,7 @@ bool MyApp::initialise()
 
     m_sharedData.clientConnection.netClient.create(4);
 
-    configPath = cro::FileSystem::getConfigDirectory("crush") + "settings.cfg";
+    configPath = getPreferencePath() + "settings.cfg";
     loadSettings();
 
     return true;
@@ -115,6 +119,8 @@ void MyApp::finalise()
     m_stateStack.simulate(0.f);
 
     m_sharedData.serverInstance.stop();
+
+    m_sharedData.fonts.flush();
 }
 
 void MyApp::loadSettings()
@@ -143,8 +149,6 @@ void MyApp::loadSettings()
         //TODO read controller/keyboard settings
         m_sharedData.inputBindings[1].keys =
         {
-            SDLK_HOME,
-            SDLK_PAGEUP,
             SDLK_KP_0,
             SDLK_RSHIFT,
             SDLK_DELETE,
@@ -159,13 +163,13 @@ void MyApp::loadSettings()
         m_sharedData.inputBindings[2].controllerID = 0;
         m_sharedData.inputBindings[2].keys =
         {
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+            -1, -1, -1, -1, -1, -1, -1, -1, -1
         };
 
         m_sharedData.inputBindings[3].controllerID = 1;
         m_sharedData.inputBindings[3].keys =
         {
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+            -1, -1, -1, -1, -1, -1, -1, -1, -1
         };
     }
     else
@@ -176,8 +180,6 @@ void MyApp::loadSettings()
 
         m_sharedData.inputBindings[1].keys =
         {
-            SDLK_HOME,
-            SDLK_PAGEUP,
             SDLK_KP_0,
             SDLK_RSHIFT,
             SDLK_DELETE,
@@ -192,15 +194,17 @@ void MyApp::loadSettings()
         m_sharedData.inputBindings[2].controllerID = 0;
         m_sharedData.inputBindings[2].keys =
         {
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+            -1, -1, -1, -1, -1, -1, -1, -1, -1
         };
 
         m_sharedData.inputBindings[3].controllerID = 1;
         m_sharedData.inputBindings[3].keys =
         {
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+            -1, -1, -1, -1, -1, -1, -1, -1, -1
         };
     }
+    m_sharedData.inputBindings[0].controllerID = 0;
+    m_sharedData.inputBindings[1].controllerID = 1;
 }
 
 void MyApp::saveSettings()

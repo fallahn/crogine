@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -28,14 +28,17 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "InterpolationSystem.hpp"
+#include "Messages.hpp"
+#include "ActorSystem.hpp"
 
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
 namespace
 {
-    const float MaxDistSqr = 460.f * 460.f; //if we're bigger than this go straight to dest to hide flickering
-
+    constexpr float MaxDistSqr = 40.f * 40.f; //if we're bigger than this go straight to dest to hide flickering
+    constexpr float Latency = 0.03f;// 1.f / 20.f; //approx latency from interpolation. Used to extrapolate from velocity
 }
 
 InterpolationSystem::InterpolationSystem(cro::MessageBus& mb)
@@ -71,12 +74,21 @@ void InterpolationSystem::process(float dt)
         //previous position + diff * timePassed
         if (interp.m_enabled)
         {
-            float currTime = std::min(static_cast<float>(interp.m_elapsedTimer.elapsed().asMilliseconds()) / interp.m_timeDifference, 1.f);
+            std::int32_t elapsed = interp.m_elapsedTimer.elapsed().asMilliseconds();
+            float currTime = std::min(static_cast<float>(elapsed) / interp.m_timeDifference, 1.f);
 
             if (currTime < 1)
             {
-                tx.setRotation(glm::slerp(interp.m_previousPoint.rotation, interp.m_targetPoint.rotation, currTime));
-                tx.setPosition(interp.m_previousPoint.position + (diff * currTime));
+                auto position = glm::mix(interp.m_previousPoint.position, interp.m_targetPoint.position, currTime);
+                tx.setPosition(position);
+
+                auto rotation = glm::slerp(interp.m_previousPoint.rotation, interp.m_targetPoint.rotation, currTime);
+                tx.setRotation(rotation);
+
+
+                /*interp.m_currentPoint.position = position;
+                interp.m_currentPoint.rotation = rotation;
+                interp.m_currentPoint.velocity = velocity;*/
             }
             else
             {
@@ -86,6 +98,20 @@ void InterpolationSystem::process(float dt)
 
                 //shift interp target to next in buffer if available
                 interp.applyNextTarget();
+            }
+
+            //check if we passed the timestamp where we ought to have died
+            if (interp.m_previousPoint.timestamp + elapsed >= interp.m_removalTimestamp)
+            {
+                auto id = entity.getComponent<Actor>().id;
+
+                auto* msg = postMessage<ActorEvent>(MessageID::ActorMessage);
+                msg->id = id;
+                msg->position = entity.getComponent<cro::Transform>().getPosition();
+                msg->type = ActorEvent::Removed;
+
+
+                getScene()->destroyEntity(entity);
             }
         }
     }

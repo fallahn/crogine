@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -49,7 +49,7 @@ struct InterpolationPoint final
 };
 
 /*!
-\brief Interpolates positionand rotation received from a server.
+\brief Interpolates position and rotation received from a server.
 When receiving infrequent (say 100ms or so) position updates from
 a remote server entities can have their position interpolated via
 this component. The component, when coupled with an InterpolationSystem
@@ -108,6 +108,12 @@ public:
     */
     void resetRotation(glm::quat);
 
+
+    /*!
+    \brief Sets the timestamp at which this entity should be destroyed
+    */
+    void setRemoved(std::int32_t timestamp) { m_removalTimestamp = timestamp; }
+
 private:
     bool m_enabled;
     InterpolationPoint m_targetPoint;
@@ -116,7 +122,9 @@ private:
     cro::Clock m_elapsedTimer;
     std::int32_t m_timeDifference;
 
-    CircularBuffer<InterpolationPoint, 4u> m_buffer;
+    std::int32_t m_removalTimestamp;
+
+    CircularBuffer<InterpolationPoint, 16u> m_buffer;
     bool m_started;
 
     friend class InterpolationSystem;

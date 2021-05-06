@@ -33,6 +33,10 @@ namespace MaterialID
 {
     enum
     {
+        Default,
+        DefaultShadow,
+        Portal,
+
         Count
     };
 }
@@ -41,6 +45,8 @@ namespace MeshID
 {
     enum
     {
+        Portal,
+
         Count
     };
 }
@@ -49,7 +55,10 @@ namespace TextureID
 {
     enum
     {
+        Portal,
+        Life,
 
+        Count
     };
 }
 
@@ -57,6 +66,22 @@ namespace GameModelID
 {
     enum
     {
+        Crate,
+        Hologram,
+        Spawner,
+        Balloon,
+
+        Count
+    };
+}
+
+namespace SpriteID
+{
+    enum
+    {
+        PoopSnail,
+        Balloon,
+
         Count
     };
 }
@@ -70,6 +95,8 @@ namespace ShaderID
 {
     enum
     {
+        Portal,
+
         Count
     };
 }
@@ -80,11 +107,6 @@ namespace CommandID
 }
 
 namespace AnimationID
-{
-
-}
-
-namespace CollisionID
 {
 
 }

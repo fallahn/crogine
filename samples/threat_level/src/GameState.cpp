@@ -465,7 +465,7 @@ void GameState::createHUD()
         entity.getComponent<HudItem>().value = static_cast<float>(i);
         if (i > 2)
         {
-            entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
+            entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
         }
         else
         {
@@ -581,7 +581,7 @@ void GameState::createHUD()
     entity.addComponent<cro::Text>(scoreFont);
     //entity.getComponent<cro::Text>().setString("0000000000");
     entity.getComponent<cro::Text>().setCharacterSize(50);
-    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Cyan());
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Cyan);
     entity.addComponent<cro::Transform>().setPosition({ UIPadding, UIPadding + entity.getComponent<cro::Text>().getVerticalSpacing() + 40.f, 0.f });
     entity.addComponent<HudItem>().type = HudItem::Type::Score;
     entity.getComponent<HudItem>().value = 0.f;
@@ -772,7 +772,6 @@ void GameState::loadModels()
     cro::EmitterSettings smokeEmitter;
     smokeEmitter.loadFromFile("assets/particles/smoke.cps", m_resources.textures);
     entity.addComponent<cro::ParticleEmitter>().settings = smokeEmitter;
-    //entity.getComponent<cro::ParticleEmitter>().start();
     
     playerEntity = entity;
 

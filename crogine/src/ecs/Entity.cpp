@@ -40,16 +40,14 @@ namespace
 
 Entity::Entity()
     : m_id          ((0 << Detail::IndexBits) | std::numeric_limits<ID>::max()),
-    m_entityManager (nullptr),
-    m_destroyed     (false)
+    m_entityManager (nullptr)
 {
 
 }
 
 Entity::Entity(Entity::ID index, Entity::Generation generation)
     : m_id          ((generation << Detail::IndexBits) | index),
-    m_entityManager (nullptr),
-    m_destroyed     (false)
+    m_entityManager (nullptr)
 {
 
 }
@@ -68,7 +66,7 @@ Entity::Generation Entity::getGeneration() const
 bool Entity::destroyed() const
 {
     CRO_ASSERT(m_entityManager, "Invalid Entity instance");
-    return m_destroyed || m_entityManager->entityDestroyed(*this);
+    return m_entityManager->entityDestroyed(*this);
 }
 
 const ComponentMask& Entity::getComponentMask() const
@@ -79,7 +77,7 @@ const ComponentMask& Entity::getComponentMask() const
 
 bool Entity::isValid() const
 {
-    return (m_entityManager != nullptr && !destroyed());
+    return (m_entityManager != nullptr && m_entityManager->entityValid(*this));
 }
 
 void Entity::setLabel(const std::string& label)

@@ -40,7 +40,7 @@ namespace cro
     \brief Data struct for making UI controls draggable.
     This would be used for elements such as sliders or scrolling items.
     */
-    struct CRO_EXPORT_API UIDraggable final
+    struct /*CRO_EXPORT_API*/ UIDraggable final
     {
         std::uint64_t flags = 0; //! <button flags - see UISystem
         glm::vec2 velocity = glm::vec2(0.f);

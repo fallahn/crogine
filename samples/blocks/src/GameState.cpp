@@ -64,6 +64,7 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Network.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -457,7 +458,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 e.getComponent<Actor>().serverEntityId == update.serverID)
             {
                 auto& interp = e.getComponent<InterpolationComponent>();
-                interp.setTarget({ update.position, Util::decompressQuat(update.rotation), update.timestamp });
+                interp.setTarget({ update.position, cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
             }
         };
         m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -499,7 +500,7 @@ void GameState::spawnPlayer(PlayerInfo info)
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(info.spawnPosition);
-        entity.getComponent<cro::Transform>().setRotation(Util::decompressQuat(info.rotation));
+        entity.getComponent<cro::Transform>().setRotation(cro::Util::Net::decompressQuat(info.rotation));
             
         entity.addComponent<Actor>().id = info.playerID;
         entity.getComponent<Actor>().serverEntityId = info.serverID;
@@ -559,7 +560,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         entity.addComponent<cro::Transform>();// .setOrigin(-Player::aabb[0]);
         entity.getComponent<cro::Transform>().setScale(Player::aabb.getSize());
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
-        material.setProperty("u_colour", cro::Colour::White());
+        material.setProperty("u_colour", cro::Colour::White);
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), material);
         entity.getComponent<cro::Model>().setHidden(true);
         entity.addComponent<cro::Callback>().active = true;
@@ -626,7 +627,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
 
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDebug]);
-            material.setProperty("u_colour", cro::Colour::Black());
+            material.setProperty("u_colour", cro::Colour::Black);
 
             entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Border]), material);
             entity.addComponent<cro::Callback>().active = true;

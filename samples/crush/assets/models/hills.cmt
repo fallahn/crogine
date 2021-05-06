@@ -1,0 +1,17 @@
+model hills
+{
+    mesh = "assets/models/hills.cmb"
+    cast_shadows = false
+
+    material PBR
+    {
+        mask_colour = 0.000000,1.000000,1.000000,1.000000
+        name = "Untitled"
+        colour = 0.610619,1.000000,0.710549,1.000000
+        smooth = true
+        repeat = true
+        rx_shadows = true
+        blendmode = "none"
+
+    }
+}

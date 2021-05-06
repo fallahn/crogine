@@ -39,7 +39,7 @@ Text::Text()
     : m_font            (nullptr),
     m_charSize          (30),
     m_verticalSpacing   (0.f),
-    m_fillColour        (Colour::White()),
+    m_fillColour        (Colour::White),
     //m_outlineThickness(0.f),
     m_dirty             (true),
     m_alignment         (Alignment::Left)
@@ -51,7 +51,7 @@ Text::Text(const Font& font)
     : m_font            (nullptr),
     m_charSize          (30),
     m_verticalSpacing   (0.f),
-    m_fillColour        (Colour::White()),
+    m_fillColour        (Colour::White),
     //m_outlineThickness(0.f),
     m_dirty             (true),
     m_alignment         (Alignment::Left)

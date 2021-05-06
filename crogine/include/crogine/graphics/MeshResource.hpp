@@ -87,6 +87,7 @@ namespace cro
         \brief Returns the mesh data for the given ID.
         */
         const Mesh::Data& getMesh(std::size_t ID) const;
+        Mesh::Data& getMesh(std::size_t ID);
 
         /*!
         \brief Returns the skeletal animation for the mesh with the given ID.

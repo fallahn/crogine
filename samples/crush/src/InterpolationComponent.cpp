@@ -34,6 +34,7 @@ InterpolationComponent::InterpolationComponent(InterpolationPoint initialPoint)
     m_targetPoint       (initialPoint),
     m_previousPoint     (initialPoint),
     m_timeDifference    (1),
+    m_removalTimestamp  (std::numeric_limits<std::int32_t>::max()),
     m_started           (false)
 {
 
@@ -89,7 +90,7 @@ void InterpolationComponent::applyNextTarget()
 
         //before this function is called the entity
         //is usually snapped to the target position/rotation
-        //anyway so we can assume the pervious point will be
+        //anyway so we can assume the previous point will be
         //assigned the current position/rotation
         m_previousPoint = m_targetPoint;
         m_elapsedTimer.restart();

@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Network.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
@@ -101,12 +102,12 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
             }
         }
 
-        player.cameraPitch = Util::decompressFloat(update.pitch);
-        player.cameraYaw = Util::decompressFloat(update.yaw);
+        player.cameraPitch = cro::Util::Net::decompressFloat(update.pitch, 16);
+        player.cameraYaw = cro::Util::Net::decompressFloat(update.yaw, 16);
 
         //apply position/rotation from server
         tx.setPosition(update.position);
-        tx.setRotation(Util::decompressQuat(update.rotation));
+        tx.setRotation(cro::Util::Net::decompressQuat(update.rotation));
 
         player.lastUpdatedInput = lastIndex;
 

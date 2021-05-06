@@ -118,6 +118,12 @@ const Mesh::Data& MeshResource::getMesh(std::size_t id) const
     return m_meshData.at(id);
 }
 
+Mesh::Data& MeshResource::getMesh(std::size_t id)
+{
+    CRO_ASSERT(m_meshData.count(id) != 0, "Mesh not found");
+    return m_meshData.at(id);
+}
+
 Skeleton MeshResource::getSkeltalAnimation(std::size_t ID) const
 {
     if (m_skeletalData.count(ID) != 0)

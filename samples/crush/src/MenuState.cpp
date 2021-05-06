@@ -32,10 +32,13 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "Slider.hpp"
 #include "MenuConsts.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/util/String.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -64,8 +67,7 @@ namespace
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
     m_sharedData    (sd),
-    m_scene         (context.appInstance.getMessageBus()),
-    m_hosting       (false)
+    m_scene         (context.appInstance.getMessageBus())
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -87,23 +89,89 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     }
     
     //we returned from a previous game
-    //TODO this should depend if we're playing split screen
     if (sd.clientConnection.connected)
     {
-        updateLobbyStrings();
-
-        //switch to lobby view
-        m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
-
-        cro::Command cmd;
-        cmd.targetFlags = MenuCommandID::RootNode;
-        cmd.action = [&](cro::Entity e, float)
+        if (m_sharedData.hostState == SharedStateData::HostState::Local)
         {
-            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
-            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
-        };
-        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            //switch to local view
+            cro::Command cmd;
+            cmd.targetFlags = MenuCommandID::RootNode;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::LocalPlay]);
+                m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::LocalPlay);
+            };
+            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+            cmd.targetFlags = MenuCommandID::PlayerIndicator;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Text>().setString(std::to_string(m_sharedData.localPlayerCount) + " Player");
+            };
+            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+            std::uint16_t data = m_sharedData.clientConnection.connectionID << 8 | m_sharedData.localPlayerCount;
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerCount, data, cro::NetFlag::Reliable);
+        }
+        else
+        {
+            //switch back to lobby
+            updateLobbyStrings();
+
+            //switch to lobby view
+            cro::Command cmd;
+            cmd.targetFlags = MenuCommandID::RootNode;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
+                m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
+            };
+            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+            //and ready up if we're hosting
+            if (m_sharedData.hostState == SharedStateData::HostState::Network)
+            {
+                m_sharedData.clientConnection.netClient.sendPacket(
+                    PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
+                    cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            else
+            {
+                //update the UI
+                cmd.targetFlags = MenuCommandID::ReadyButton;
+                cmd.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString("Ready");
+                };
+                m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            }
+        }
     }
+    else
+    {
+        m_sharedData.localPlayerCount = 1;
+        m_sharedData.playerData = {};
+        updateLobbyStrings();
+    }
+
+    registerConsoleTab("Controls", []() 
+        {
+            ImGui::Text("Player One:");
+            ImGui::Text("w,a,s,d - Move\nq - Pickup / Drop\ne - Kick\nSpace - Jump");
+            ImGui::NewLine();
+            ImGui::Text("Player Two:");
+            ImGui::Text("arrow keys - Move\nRShift - Pickup / Drop\nDelete - Kick\nNumpad 0 - Jump");
+            ImGui::NewLine();
+            ImGui::Text("Controller:");
+            ImGui::Text("DPad or LStick - Move\nX = Pickup / Drop\nB - Kick\nA - Jump");
+
+            ImGui::NewLine();
+            ImGui::Text("Press UP to move through the gates.");
+
+            ImGui::NewLine();
+            ImGui::Text("How To Play:");
+            ImGui::Text("Crush or be crushed! Pick up the crates scattered around the map and drop them again\nto crush players below you - or punt them across the floor for extra smushy goodness!\nBonus points are awarded for squishing snails, last player standing wins!");
+        });
 }
 
 //public
@@ -115,26 +183,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
 
     auto& uiSystem = m_scene.getSystem<cro::UISystem>();
-
-    auto setPlayerCount = [&](std::uint8_t count)
-    {
-        if (uiSystem.getActiveGroup() == GroupID::LocalPlay)
-        {
-            cro::Command cmd;
-            cmd.targetFlags = MenuCommandID::PlayerIndicator;
-            cmd.action = [count](cro::Entity e, float)
-            {
-                e.getComponent<cro::Text>().setString(std::to_string(count) + " Player");
-            };
-            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-            if (m_sharedData.clientConnection.connected)
-            {
-                std::uint16_t data = m_sharedData.clientConnection.connectionID << 8 | count;
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerCount, data, cro::NetFlag::Reliable);
-            }
-        }
-    };
 
     if (evt.type == SDL_KEYUP)
     {
@@ -228,7 +276,7 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
-    m_font.loadFromFile("assets/fonts/VeraMono.ttf");
+
 }
 
 void MenuState::createScene()
@@ -317,7 +365,7 @@ void MenuState::createScene()
                         if (m_sharedData.clientConnection.connected
                             && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
                         {
-                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGame, std::uint8_t(1), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                         }
                     }
 
@@ -343,36 +391,60 @@ void MenuState::createScene()
         });
 #endif //CRO_DEBUG_
 
-    auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>().addCallback(
-        [&](cro::Entity e)
+    //check the maps directory. if it's empty then there's no point carrying on
+    auto mapList = cro::FileSystem::listFiles("assets/maps");
+    mapList.erase(std::remove_if(mapList.begin(), mapList.end(),
+        [](const std::string& p)
         {
-            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-        });
-    auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
-        [](cro::Entity e)
-        {
-            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        });
+            return cro::FileSystem::getFileExtension(p) != ".tmx";
+        }), mapList.end());
 
-    auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f,0.f,-10.f });
-    entity.addComponent<cro::Sprite>(m_textureResource.get("assets/images/menu_background.png"));
-    entity.addComponent<cro::Drawable2D>();
+    if (mapList.empty())
+    {
+        auto& font = m_sharedData.fonts.get(m_sharedData.defaultFontID);
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::RootNode;
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("No Maps Found!");
+        entity.getComponent<cro::Text>().setCharacterSize(LargeTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    }
+    else
+    {
+        m_sharedData.mapName = mapList[0];
 
-    createMainMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createAvatarMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createLocalMenu(entity, mouseEnterCallback, mouseExitCallback);
+        auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>().addCallback(
+            [&](cro::Entity e)
+            {
+                e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+            });
+        auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
+            [](cro::Entity e)
+            {
+                e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            });
+
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f,0.f,-50.f });
+        entity.addComponent<cro::Sprite>(m_textureResource.get("assets/images/menu_background.png"));
+        entity.addComponent<cro::Drawable2D>();
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::RootNode;
+
+        createMainMenu(entity, mouseEnterCallback, mouseExitCallback);
+        createAvatarMenu(entity, mouseEnterCallback, mouseExitCallback);
+        createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
+        createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
+        createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
+        createLocalMenu(entity, mouseEnterCallback, mouseExitCallback);
+    }
 
     //set a custom camera so the scene doesn't overwrite the viewport
     //with the default view when resizing the window
-    entity = m_scene.createEntity();
+    auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Camera>().resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
     m_scene.setActiveCamera(entity);
@@ -387,7 +459,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
         {
         default: break;
         case PacketID::StateChange:
-            if (evt.packet.as<std::uint8_t>() == Sv::StateID::Game)
+            if (evt.packet.as<std::uint8_t>() == sv::StateID::Game)
             {
                 requestStackClear();
                 requestStackPush(States::Game);
@@ -401,10 +473,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 m_readyState[m_sharedData.clientConnection.connectionID] = false;
 
                 //send player details to server (name, skin)
-                std::uint8_t size = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, m_sharedData.localPlayer.name.size() * sizeof(std::uint32_t)));
-                std::vector<std::uint8_t> buffer(size + 1);
-                buffer[0] = size;
-                std::memcpy(&buffer[1], m_sharedData.localPlayer.name.data(), size);
+                auto buffer = Util::createStringPacket(m_sharedData.localPlayer.name);
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                 //switch to lobby view (if not playing split screen)
@@ -425,24 +494,46 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                         m_sharedData.clientConnection.netClient.sendPacket(
                             PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
                             cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                        //and send the map name
+                        auto buffer = Util::createStringPacket(m_sharedData.mapName);
+                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapName, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
                     }
                 }
                 //else default to two players
                 else
                 {
+                    m_sharedData.localPlayerCount = 2;
+
                     std::uint16_t data = m_sharedData.clientConnection.connectionID << 8 | 2;
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerCount, data, cro::NetFlag::Reliable);
+
+                    auto buffer = Util::createStringPacket(m_sharedData.mapName);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapName, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
                 }
                 LOG("Successfully connected to server", cro::Logger::Type::Info);
             }
             break;
         case PacketID::ConnectionRefused:
         {
-            std::string err = evt.packet.as<std::uint8_t>() == 0 ? "Server full" : "Game in progress";
-            cro::Logger::log("Connection refused: " + err, cro::Logger::Type::Error);
+            auto type = evt.packet.as<std::uint8_t>();
 
-            m_sharedData.clientConnection.netClient.disconnect();
-            m_sharedData.clientConnection.connected = false;
+            if(type == MessageType::ServerQuit)
+            {
+                m_sharedData.errorMessage = "Server Closed The Connection";
+                requestStackPush(States::Error);
+            }
+            else
+            {
+                std::string err = type == 0 ? "Server full" : "Game in progress";
+                cro::Logger::log("Connection refused: " + err, cro::Logger::Type::Error);
+
+                m_sharedData.clientConnection.netClient.disconnect();
+                m_sharedData.clientConnection.connected = false;
+
+                m_sharedData.errorMessage = err;
+                requestStackPush(States::Error);
+            }
         }
             break;
         case PacketID::LobbyUpdate:
@@ -462,6 +553,9 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             m_readyState[((data & 0xff00) >> 8)] = (data & 0x00ff) ? true : false;
             updateReadyDisplay();
         }
+            break;
+        case PacketID::MapName:
+            m_sharedData.mapName = Util::readStringPacket(evt.packet);
             break;
         }
     }
@@ -521,7 +615,7 @@ void MenuState::applyTextEdit()
             *m_textEdit.string = "INVALID";
         }
 
-        m_textEdit.entity.getComponent<cro::Text>().setFillColour(cro::Colour::White());
+        m_textEdit.entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
         m_textEdit.entity.getComponent<cro::Text>().setString(*m_textEdit.string);
         auto bounds = cro::Text::getLocalBounds(m_textEdit.entity);
         m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
@@ -530,3 +624,39 @@ void MenuState::applyTextEdit()
     }
     m_textEdit = {};
 }
+
+void MenuState::setPlayerCount(std::uint8_t count)
+{
+    if (m_scene.getSystem<cro::UISystem>().getActiveGroup() == GroupID::LocalPlay)
+    {
+        //TODO remove this once keybinds are in
+        if (count == 2)
+        {
+            m_sharedData.inputBindings[0].controllerID = 0;
+            m_sharedData.inputBindings[1].controllerID = 1;
+        }
+        else
+        {
+            m_sharedData.inputBindings[0].controllerID = -1;
+            m_sharedData.inputBindings[1].controllerID = -1;
+        }
+
+
+
+        cro::Command cmd;
+        cmd.targetFlags = MenuCommandID::PlayerIndicator;
+        cmd.action = [count](cro::Entity e, float)
+        {
+            e.getComponent<cro::Text>().setString(std::to_string(count) + " Player");
+        };
+        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+        if (m_sharedData.clientConnection.connected)
+        {
+            m_sharedData.localPlayerCount = count;
+
+            std::uint16_t data = m_sharedData.clientConnection.connectionID << 8 | count;
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerCount, data, cro::NetFlag::Reliable);
+        }
+    }
+};

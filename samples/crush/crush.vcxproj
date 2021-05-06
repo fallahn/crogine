@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -89,7 +89,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;CRO_DEBUG_;_CRT_SECURE_NO_WARNINGS;_MBCS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\tmxlite\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -97,8 +97,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine-d.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\tmxlite\bin\msvc;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libtmxlite-s-d.lib;crogine-d.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -145,7 +145,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\tmxlite\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -153,21 +153,36 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\tmxlite\bin\msvc;$(SolutionDir)extlibs\sdl2\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libtmxlite-s.lib;crogine.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\AvatarScaleSystem.cpp" />
+    <ClCompile Include="src\BalloonSystem.cpp" />
+    <ClCompile Include="src\CameraControllerSystem.cpp" />
+    <ClCompile Include="src\CrateSystem.cpp" />
     <ClCompile Include="src\DayNightDirector.cpp" />
     <ClCompile Include="src\ErrorState.cpp" />
+    <ClCompile Include="src\GameRuleDirector.cpp" />
     <ClCompile Include="src\GameState.cpp" />
+    <ClCompile Include="src\GameStateUI.cpp" />
     <ClCompile Include="src\InputParser.cpp" />
     <ClCompile Include="src\InterpolationComponent.cpp" />
     <ClCompile Include="src\InterpolationSystem.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
+    <ClCompile Include="src\MapData.cpp" />
     <ClCompile Include="src\MenuCreation.cpp" />
+    <ClCompile Include="src\ParticleDirector.cpp" />
     <ClCompile Include="src\PauseState.cpp" />
+    <ClCompile Include="src\PlayerState.cpp" />
+    <ClCompile Include="src\PlayerStateDead.cpp" />
+    <ClCompile Include="src\PlayerStateFalling.cpp" />
+    <ClCompile Include="src\PlayerStateSpectate.cpp" />
+    <ClCompile Include="src\PlayerStateTeleport.cpp" />
     <ClCompile Include="src\PlayerSystem.cpp" />
+    <ClCompile Include="src\PlayerStateWalking.cpp" />
+    <ClCompile Include="src\PuntBarSystem.cpp" />
     <ClCompile Include="src\ServerLobbyState.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
@@ -175,42 +190,65 @@
     <ClCompile Include="src\Server.cpp" />
     <ClCompile Include="src\ServerGameState.cpp" />
     <ClCompile Include="src\SliderSystem.cpp" />
+    <ClCompile Include="src\SnailSystem.cpp" />
+    <ClCompile Include="src\SpawnAreaSystem.cpp" />
+    <ClCompile Include="src\SpawnerAnimationSystem.cpp" />
+    <ClCompile Include="src\UIDirector.cpp" />
+    <ClCompile Include="src\WavetableAnimator.cpp" />
     <ClCompile Include="src\WeatherDirector.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ActorIDs.hpp" />
     <ClInclude Include="src\ActorSystem.hpp" />
+    <ClInclude Include="src\AvatarScaleSystem.hpp" />
+    <ClInclude Include="src\BalloonSystem.hpp" />
+    <ClInclude Include="src\CameraControllerSystem.hpp" />
     <ClInclude Include="src\CircularBuffer.hpp" />
     <ClInclude Include="src\ClientCommandIDs.hpp" />
     <ClInclude Include="src\ClientPacketData.hpp" />
+    <ClInclude Include="src\Collision.hpp" />
     <ClInclude Include="src\CommonConsts.hpp" />
+    <ClInclude Include="src\CrateSystem.hpp" />
     <ClInclude Include="src\DayNightDirector.hpp" />
+    <ClInclude Include="src\DebugDraw.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\ErrorState.hpp" />
     <ClInclude Include="src\GameConsts.hpp" />
+    <ClInclude Include="src\GameRuleDirector.hpp" />
     <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\InputBinding.hpp" />
     <ClInclude Include="src\InputParser.hpp" />
     <ClInclude Include="src\InterpolationSystem.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
+    <ClInclude Include="src\MapData.hpp" />
     <ClInclude Include="src\MenuConsts.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\PacketIDs.hpp" />
+    <ClInclude Include="src\ParticleDirector.hpp" />
     <ClInclude Include="src\PauseState.hpp" />
+    <ClInclude Include="src\PlayerState.hpp" />
     <ClInclude Include="src\PlayerSystem.hpp" />
     <ClInclude Include="src\PoissonDisk.hpp" />
+    <ClInclude Include="src\PortalShader.hpp" />
+    <ClInclude Include="src\PuntBarSystem.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\Server.hpp" />
     <ClInclude Include="src\ServerGameState.hpp" />
     <ClInclude Include="src\ServerLobbyState.hpp" />
-    <ClInclude Include="src\ServerMessages.hpp" />
+    <ClInclude Include="src\ServerLog.hpp" />
     <ClInclude Include="src\ServerPacketData.hpp" />
     <ClInclude Include="src\ServerState.hpp" />
     <ClInclude Include="src\SharedStateData.hpp" />
     <ClInclude Include="src\Slider.hpp" />
+    <ClInclude Include="src\SnailSystem.hpp" />
+    <ClInclude Include="src\SpawnAreaSystem.hpp" />
+    <ClInclude Include="src\SpawnerAnimationSystem.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
+    <ClInclude Include="src\UIConsts.hpp" />
+    <ClInclude Include="src\UIDirector.hpp" />
+    <ClInclude Include="src\WavetableAnimator.hpp" />
     <ClInclude Include="src\WeatherDirector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

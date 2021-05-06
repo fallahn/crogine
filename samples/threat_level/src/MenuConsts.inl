@@ -29,7 +29,7 @@ source distribution.
 
 //const values used when building the menus
 const cro::Colour textColourSelected(1.f, 0.77f, 0.f);
-const cro::Colour textColourNormal = cro::Colour::White();
+const cro::Colour textColourNormal = cro::Colour::White;
 const float buttonIconOffset = 156.f;
 
 const std::uint32_t TextXL = 80;

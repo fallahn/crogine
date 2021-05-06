@@ -147,15 +147,15 @@ namespace cro
         */
         glm::vec4 getVec4() const;
 
-        static Colour Red();
-        static Colour Green();
-        static Colour Blue();
-        static Colour Cyan();
-        static Colour Magenta();
-        static Colour Yellow();
-        static Colour Black();
-        static Colour White();
-        static Colour Transparent();
+        static const Colour Red;
+        static const Colour Green;
+        static const Colour Blue;
+        static const Colour Cyan;
+        static const Colour Magenta;
+        static const Colour Yellow;
+        static const Colour Black;
+        static const Colour White;
+        static const Colour Transparent;
 
         float* asArray() { return reinterpret_cast<float*>(this); }
 

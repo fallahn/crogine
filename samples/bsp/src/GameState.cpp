@@ -84,8 +84,8 @@ namespace
 
     const std::array Colours =
     {
-        cro::Colour::Red(), cro::Colour::Magenta(),
-        cro::Colour::Green(), cro::Colour::Yellow()
+        cro::Colour::Red, cro::Colour::Magenta,
+        cro::Colour::Green, cro::Colour::Yellow
     };
 
     const float SpawnOffset = 24.f;
@@ -232,13 +232,13 @@ void GameState::render()
         cam.viewport = { 0.f,0.f,1.f,1.f };
 
         cam.setActivePass(cro::Camera::Pass::Reflection);
-        cam.reflectionBuffer.clear(cro::Colour::Red());
+        cam.reflectionBuffer.clear(cro::Colour::Red);
         m_gameScene.render(cam.reflectionBuffer);
         cam.reflectionBuffer.display();
 
         cam.renderFlags = NoPlanes | NoReflect;
         cam.setActivePass(cro::Camera::Pass::Refraction);
-        cam.refractionBuffer.clear(cro::Colour::Blue());
+        cam.refractionBuffer.clear(cro::Colour::Blue);
         m_gameScene.render(cam.refractionBuffer);
         cam.refractionBuffer.display();
 
@@ -535,7 +535,7 @@ void GameState::createIsland()
     material.setProperty("u_diffuseMap", albedo);
     material.setProperty("u_normalMap", normal);
     material.setProperty("u_maskMap", mask);
-    material.setProperty("u_colour", cro::Colour::White());
+    material.setProperty("u_colour", cro::Colour::White);
 
     material.setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
     material.setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
@@ -753,7 +753,7 @@ void GameState::createHeightmap()
 
     //preview texture / height map
     cro::Image img;
-    img.create(IslandTileCount, IslandTileCount, cro::Colour::Black());
+    img.create(IslandTileCount, IslandTileCount, cro::Colour::Black);
     for (auto i = 0u; i < m_heightmap.size(); ++i)
     {
         auto level = m_heightmap[i] * 255.f;

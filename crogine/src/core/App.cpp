@@ -159,19 +159,39 @@ App::App()
     {
         m_instance = this;
 
-        for (auto i = 0; i < SDL_NumJoysticks(); ++i)
-        {
-            if (SDL_IsGameController(i))
-            {
-                //add to game controllers
-                m_controllers.insert(std::make_pair(i, SDL_GameControllerOpen(i)));
-            }
-            else
-            {
-                //add to joysticks
-                m_joysticks.insert(std::make_pair(i, SDL_JoystickOpen(i)));
-            }
-        }
+        std::fill(m_controllers.begin(), m_controllers.end(), ControllerInfo());
+        //controllers are automatically connected as the connect events are raised
+        //on start up. Must test if this is true on other platforms
+
+        //for (auto i = 0; i < SDL_NumJoysticks() && i < MaxControllers; ++i)
+        //{
+        //    if (SDL_IsGameController(i))
+        //    {
+        //        //add to game controllers
+        //        ControllerInfo ci;
+        //        ci.controller = SDL_GameControllerOpen(i);
+        //        if (ci.controller)
+        //        {
+        //            ci.haptic = SDL_HapticOpen(i);
+
+        //            if (ci.haptic)
+        //            {
+        //                ci.rumble = (SDL_HapticRumbleInit(ci.haptic) == 0);
+        //            }
+
+        //            //the actual index is different to the id of the event
+        //            auto* j = SDL_GameControllerGetJoystick(ci.controller);
+        //            ci.joystickID = SDL_JoystickInstanceID(j);
+
+        //            m_controllers[i] = ci;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        //add to joysticks
+        //        m_joysticks.insert(std::make_pair(i, SDL_JoystickOpen(i)));
+        //    }
+        //}
 
         if (!AudioRenderer::init())
         {
@@ -193,9 +213,13 @@ App::~App()
         SDL_JoystickClose(js.second);
     }
 
-    for (auto ct : m_controllers)
+    for (auto info : m_controllers)
     {
-        SDL_GameControllerClose(ct.second);
+        if (info.haptic)
+        {
+            SDL_HapticClose(info.haptic);
+        }
+        SDL_GameControllerClose(info.controller);
     }
     
     //SDL cleanup
@@ -344,6 +368,11 @@ void App::setApplicationStrings(const std::string& organisation, const std::stri
     CRO_ASSERT(!appName.empty(), "String cannot be empty");
     m_orgString = organisation;
     m_appString = appName;
+
+    //remember to update the pref path
+    char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
+    m_prefPath = std::string(pp);
+    SDL_free(pp);
 }
 
 //private
@@ -392,7 +421,23 @@ void App::handleEvents()
             auto id = evt.cdevice.which;
             if (SDL_IsGameController(id))
             {
-                m_controllers.insert(std::make_pair(id, SDL_GameControllerOpen(id)));
+                ControllerInfo ci;
+                ci.controller = SDL_GameControllerOpen(id);
+                if (ci.controller)
+                {
+                    ci.haptic = SDL_HapticOpen(id);
+
+                    if (ci.haptic)
+                    {
+                        ci.rumble = (SDL_HapticRumbleInit(ci.haptic) == 0);
+                    }
+
+                    //the actual index is different to the id of the event
+                    auto* j = SDL_GameControllerGetJoystick(ci.controller);
+                    ci.joystickID = SDL_JoystickInstanceID(j);
+
+                    m_controllers[id] = ci;
+                }
             }
             else
             {
@@ -404,10 +449,26 @@ void App::handleEvents()
         {
             auto id = evt.cdevice.which;
 
-            if (m_controllers.count(id) > 0)
+            std::int32_t controllerIndex = -1;
+            for (auto i = 0u; i < m_controllers.size(); ++i)
             {
-                SDL_GameControllerClose(m_controllers[id]);
-                m_controllers.erase(id);
+                if (m_controllers[i].joystickID == id)
+                {
+                    controllerIndex = i;
+                    break;
+                }
+            }
+
+            if (controllerIndex > -1 &&
+                m_controllers[controllerIndex].controller)
+            {
+                if (m_controllers[controllerIndex].haptic)
+                {
+                    SDL_HapticClose(m_controllers[controllerIndex].haptic);
+                }
+                
+                SDL_GameControllerClose(m_controllers[controllerIndex].controller);
+                m_controllers[controllerIndex] = {};
             }
 
             if (m_joysticks.count(id) > 0)

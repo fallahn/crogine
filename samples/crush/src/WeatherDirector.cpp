@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/network/NetHost.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Network.hpp>
 
 namespace
 {
@@ -62,6 +63,6 @@ void WeatherDirector::process(float dt)
     {
         m_dayNightClock.restart();
 
-        m_netHost.broadcastPacket(PacketID::DayNightUpdate, Util::compressFloat(m_dayNightTime), cro::NetFlag::Unreliable);
+        m_netHost.broadcastPacket(PacketID::DayNightUpdate, cro::Util::Net::compressFloat(m_dayNightTime, 8), cro::NetFlag::Unreliable);
     }
 }

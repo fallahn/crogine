@@ -36,16 +36,18 @@ source distribution.
 #include <crogine/core/Console.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/network/NetClient.hpp>
+#include <crogine/util/Network.hpp>
 
 namespace
 {
-    const std::int16_t DeadZone = 5000;
+    const std::int16_t DeadZone = 8000;
 }
 
 InputParser::InputParser(cro::NetClient& nc, InputBinding binding)
     : m_netClient   (nc),
-    m_inputFlags    (0),
     m_inputBinding  (binding),
+    m_enabled       (false),
+    m_inputFlags    (0),
     m_prevStick     (0),
     m_analogueAmount(1.f)
 {
@@ -78,22 +80,22 @@ void InputParser::handleEvent(const SDL_Event& evt)
         {
             m_inputFlags |= InputFlag::CarryDrop;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Jump])
         {
-            m_inputFlags |= InputFlag::Action;
+            m_inputFlags |= InputFlag::Jump;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponPrev])
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Punt])
         {
-            m_inputFlags |= InputFlag::WeaponPrev;
+            m_inputFlags |= InputFlag::Punt;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponNext])
+        /*else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponNext])
         {
             m_inputFlags |= InputFlag::WeaponNext;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Strafe])
         {
             m_inputFlags |= InputFlag::Strafe;
-        }
+        }*/
     }
     else if (evt.type == SDL_KEYUP)
     {
@@ -117,48 +119,48 @@ void InputParser::handleEvent(const SDL_Event& evt)
         {
             m_inputFlags &= ~InputFlag::CarryDrop;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Jump])
         {
-            m_inputFlags &= ~InputFlag::Action;
+            m_inputFlags &= ~InputFlag::Jump;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponNext])
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Punt])
         {
-            m_inputFlags &= ~InputFlag::WeaponNext;
+            m_inputFlags &= ~InputFlag::Punt;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponPrev])
+        /*else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponPrev])
         {
             m_inputFlags &= ~InputFlag::WeaponPrev;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Strafe])
         {
             m_inputFlags &= ~InputFlag::Strafe;
-        }
+        }*/
 
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        if (evt.cbutton.which == m_inputBinding.controllerID)
+        if (evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
         {
-            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
+            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Jump])
             {
-                m_inputFlags |= InputFlag::Action;
+                m_inputFlags |= InputFlag::Jump;
             }
             else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CarryDrop])
             {
                 m_inputFlags |= InputFlag::CarryDrop;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponNext])
+            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Punt])
             {
-                m_inputFlags |= InputFlag::WeaponNext;
+                m_inputFlags |= InputFlag::Punt;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
+            /*else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
             {
                 m_inputFlags |= InputFlag::WeaponPrev;
             }
             else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Strafe])
             {
                 m_inputFlags |= InputFlag::Strafe;
-            }
+            }*/
 
             else if (evt.cbutton.button == cro::GameController::DPadLeft)
             {
@@ -180,28 +182,28 @@ void InputParser::handleEvent(const SDL_Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.which == m_inputBinding.controllerID)
+        if (evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
         {
-            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
+            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Jump])
             {
-                m_inputFlags &= ~InputFlag::Action;
+                m_inputFlags &= ~InputFlag::Jump;
             }
             else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CarryDrop])
             {
                 m_inputFlags &= ~InputFlag::CarryDrop;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponNext])
+            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Punt])
             {
-                m_inputFlags &= ~InputFlag::WeaponNext;
+                m_inputFlags &= ~InputFlag::Punt;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
+            /*else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
             {
                 m_inputFlags &= ~InputFlag::WeaponPrev;
             }
             else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Strafe])
             {
                 m_inputFlags &= ~InputFlag::Strafe;
-            }
+            }*/
 
             else if (evt.cbutton.button == cro::GameController::DPadLeft)
             {
@@ -232,17 +234,18 @@ void InputParser::update()
         auto& player = m_entity.getComponent<Player>();
 
         Input input;
-        if (!player.waitResync)
+        if (m_enabled &&
+            !player.waitResync)
         {
             input.buttonFlags = m_inputFlags;
-            input.analogueMultiplier = Util::compressFloat(m_analogueAmount);
+            input.analogueMultiplier = cro::Util::Net::compressFloat(m_analogueAmount, 8);
         }
         input.timeStamp = m_timestampClock.elapsed().asMilliseconds();
 
         //apply to local entity
         player.inputStack[player.nextFreeInput] = input;
         player.nextFreeInput = (player.nextFreeInput + 1) % Player::HistorySize;
-        cro::Console::printStat("Flags", std::to_string(m_inputFlags));
+        //cro::Console::printStat("Flags", std::to_string(m_inputFlags));
 
         //broadcast packet
         InputUpdate update;
@@ -265,10 +268,6 @@ void InputParser::checkControllerInput()
 {
     m_analogueAmount = 1.f;
 
-    if (m_inputBinding.controllerID >= SDL_NumJoysticks())
-    {
-        return;
-    }
     if (!cro::GameController::isConnected(m_inputBinding.controllerID))
     {
         return;

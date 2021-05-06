@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -31,8 +31,12 @@ source distribution.
 
 #include <cstdint>
 #include <cstddef>
+#include <cstring>
 #include <array>
+#include <vector>
 
+#include <crogine/core/String.hpp>
+#include <crogine/network/NetData.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
 namespace ConstVal
@@ -52,37 +56,54 @@ namespace ConstVal
     //is the delta between updates (as the engine is
     //fixed for this anyway)
     static constexpr float FixedGameUpdate = 1.f / 60.f;
+
+    //cos we use Tiled to make the maps we have to rescale pixels into
+    //something a bit more sensible - this is Tiled units per metre
+    static constexpr float MapUnits = 128.f;
 }
 
 namespace Util
 {
-    static inline std::array<std::int16_t, 4u> compressQuat(glm::quat q)
+    static inline cro::FloatRect expand(cro::FloatRect rect, float amount)
     {
-        std::int16_t w = static_cast<std::int16_t>(q.w * 10000.f);
-        std::int16_t x = static_cast<std::int16_t>(q.x * 10000.f);
-        std::int16_t y = static_cast<std::int16_t>(q.y * 10000.f);
-        std::int16_t z = static_cast<std::int16_t>(q.z * 10000.f);
-
-        return { w,x,y,z };
+        rect.left -= (amount / 2.f);
+        rect.bottom -= (amount / 2.f);
+        rect.width += amount;
+        rect.height += amount;
+        return rect;
     }
 
-    static inline glm::quat decompressQuat(std::array<std::int16_t, 4u> q)
+    static inline std::int32_t direction(std::int32_t i)
     {
-        float w = static_cast<float>(q[0]) / 10000.f;
-        float x = static_cast<float>(q[1]) / 10000.f;
-        float y = static_cast<float>(q[2]) / 10000.f;
-        float z = static_cast<float>(q[3]) / 10000.f;
-
-        return /*glm::normalize*/(glm::quat(w, x, y, z));
+        return (1 + (i * -2));
     }
 
-    static inline std::int16_t compressFloat(float f)
+    static inline std::vector<std::uint8_t> createStringPacket(const cro::String& str)
     {
-        return static_cast<std::int16_t>(f * 10000.f);
+        std::uint8_t size = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, str.size() * sizeof(std::uint32_t)));
+        std::vector<std::uint8_t> buffer(size + 1);
+        buffer[0] = size;
+        std::memcpy(&buffer[1], str.data(), size);
+
+        return buffer;
     }
 
-    static inline float decompressFloat(std::int16_t i)
+    static inline cro::String readStringPacket(const cro::NetEvent::Packet& packet)
     {
-        return static_cast<float>(i) / 10000.f;
+        if (packet.getSize() > 0)
+        {
+            std::uint8_t size = static_cast<const std::uint8_t*>(packet.getData())[0];
+            size = std::min(size, static_cast<std::uint8_t>(ConstVal::MaxStringDataSize));
+
+            if (size % sizeof(std::uint32_t) == 0)
+            {
+                std::vector<std::uint32_t> buffer(size / sizeof(std::uint32_t));
+                std::memcpy(buffer.data(), static_cast<const std::uint8_t*>(packet.getData()) + 1, size);
+
+                return cro::String::fromUtf32(buffer.begin(), buffer.end());
+            }
+        }
+
+        return "Bad packet data";
     }
 }

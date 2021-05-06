@@ -74,7 +74,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
                     if ((hudItem.type == HudItem::Type::Bomb && id == CollectableItem::Bomb) ||
                         (hudItem.type == HudItem::Type::Emp && id == CollectableItem::EMP))
                     {
-                         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Cyan());
+                         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Cyan);
                          if (hudItem.type == HudItem::Type::Emp)
                          {
                              auto childEnt = hudItem.child;
@@ -94,7 +94,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
                 const auto& hudItem = entity.getComponent<HudItem>();
                 if (hudItem.type == HudItem::Type::Emp)
                 {
-                    entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
+                    entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                     auto childEnt = hudItem.child;
                     childEnt.getComponent<cro::Callback>().active = false;
                     childEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_time", 0.f);
@@ -115,11 +115,11 @@ void HudDirector::handleMessage(const cro::Message& msg)
                 {
                     if (hudItem.value < lives)
                     {
-                        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Cyan());
+                        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Cyan);
                     }
                     else
                     {
-                        entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
+                        entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                     }
                 }
             };
@@ -146,7 +146,7 @@ void HudDirector::handleMessage(const cro::Message& msg)
                 const auto& hudItem = entity.getComponent<HudItem>();
                 if (hudItem.type == HudItem::Type::Emp)
                 {
-                    entity.getComponent<cro::Sprite>().setColour(cro::Colour::White());
+                    entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                     auto childEnt = hudItem.child;
                     childEnt.getComponent<cro::Callback>().active = false;
                     childEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_time", 0.f);

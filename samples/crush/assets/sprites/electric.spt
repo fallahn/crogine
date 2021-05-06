@@ -1,0 +1,23 @@
+
+sprite_sheet electric
+{
+	src = "assets/images/electric.png"
+	blendmode = alpha
+	smooth = true
+
+	sprite electric
+	{
+		bounds = 0,0,128,52
+
+		animation idle
+		{
+			frame = 0,0,128,52
+			frame = 0,52,128,52
+			frame = 0,104,128,52
+			frame = 0,156,128,52
+
+			framerate = 16
+			loop = true
+		}
+	}
+}

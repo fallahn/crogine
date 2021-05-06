@@ -1,0 +1,16 @@
+model player_spinner
+{
+    mesh = "assets/models/player_spinner.cmb"
+    cast_shadows = true
+
+    material PBR
+    {
+        mask_colour = 1.000000,0.623529,1.000000,1.000000
+        name = "Untitled"
+        colour = 0.752212,0.756601,1.000000,1.000000
+        smooth = true
+        repeat = true
+        blendmode = "none"
+
+    }
+}

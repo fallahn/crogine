@@ -34,7 +34,6 @@ source distribution.
 using namespace cro;
 
 //---Time class---//
-Time::Time() : m_value(0) {}
 
 //public
 float Time::asSeconds() const
@@ -68,7 +67,6 @@ Time Clock::restart()
     return retVal;
 }
 
-//---operator overloads---//
 CRO_EXPORT_API Time cro::seconds(float seconds)
 {
     Time t;
@@ -83,6 +81,7 @@ CRO_EXPORT_API Time cro::milliseconds(std::int32_t millis)
     return t;
 }
 
+//---operator overloads---//
 bool cro::operator == (Time l, Time r)
 {
     return l.asMilliseconds() == r.asMilliseconds();

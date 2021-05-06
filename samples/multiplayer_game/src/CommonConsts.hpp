@@ -53,36 +53,3 @@ namespace ConstVal
     //fixed for this anyway)
     static const float FixedGameUpdate = 1.f / 60.f;
 }
-
-namespace Util
-{
-    static inline std::array<std::int16_t, 4u> compressQuat(glm::quat q)
-    {
-        std::int16_t w = static_cast<std::int16_t>(q.w * 10000.f);
-        std::int16_t x = static_cast<std::int16_t>(q.x * 10000.f);
-        std::int16_t y = static_cast<std::int16_t>(q.y * 10000.f);
-        std::int16_t z = static_cast<std::int16_t>(q.z * 10000.f);
-
-        return { w,x,y,z };
-    }
-
-    static inline glm::quat decompressQuat(std::array<std::int16_t, 4u> q)
-    {
-        float w = static_cast<float>(q[0]) / 10000.f;
-        float x = static_cast<float>(q[1]) / 10000.f;
-        float y = static_cast<float>(q[2]) / 10000.f;
-        float z = static_cast<float>(q[3]) / 10000.f;
-
-        return /*glm::normalize*/(glm::quat(w, x, y, z));
-    }
-
-    static inline std::int16_t compressFloat(float f)
-    {
-        return static_cast<std::int16_t>(f * 10000.f);
-    }
-
-    static inline float decompressFloat(std::int16_t i)
-    {
-        return static_cast<float>(i) / 10000.f;
-    }
-}

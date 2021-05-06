@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Network.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
@@ -73,7 +74,7 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
 
         //apply position/rotation from server
         tx.setPosition(update.position);
-        tx.setRotation(Util::decompressQuat(update.rotation));
+        tx.setRotation(cro::Util::Net::decompressQuat(update.rotation));
 
         //rewind player's last input to timestamp and
         //re-process all succeeding events
@@ -132,7 +133,7 @@ void PlayerSystem::processMovement(cro::Entity entity, Input input)
     auto& tx = entity.getComponent<cro::Transform>();
 
     //walking speed in metres per second (1 world unit == 1 metre)
-    const float moveSpeed = 10.f * Util::decompressFloat(input.analogueMultiplier) * ConstVal::FixedGameUpdate;
+    const float moveSpeed = 10.f * cro::Util::Net::decompressFloat(input.analogueMultiplier, 8) * ConstVal::FixedGameUpdate;
 
     glm::vec3 movement = glm::vec3(0.f);
 

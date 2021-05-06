@@ -32,20 +32,32 @@ source distribution.
 #include "ServerPacketData.hpp"
 #include "Messages.hpp"
 #include "GameConsts.hpp"
+#include "Collision.hpp"
+#include "DebugDraw.hpp"
+#include "AvatarScaleSystem.hpp"
 
-#include <crogine/core/App.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/util/Constants.hpp>
-#include <crogine/util/Maths.hpp>
-#include <crogine/detail/glm/gtc/matrix_transform.hpp>
-#include <crogine/detail/glm/gtx/norm.hpp>
+#include <crogine/ecs/components/DynamicTreeComponent.hpp>
 
+#include <crogine/ecs/systems/DynamicTreeSystem.hpp>
+
+#include <crogine/util/Network.hpp>
+#include <crogine/util/Maths.hpp>
+#include <crogine/util/Easings.hpp>
 
 PlayerSystem::PlayerSystem(cro::MessageBus& mb)
-    : cro::System   (mb, typeid(PlayerSystem))
+    : cro::System       (mb, typeid(PlayerSystem))
 {
     requireComponent<Player>();
     requireComponent<cro::Transform>();
+
+    m_playerStates[Player::State::Falling] = std::make_unique<PlayerStateFalling>();
+    m_playerStates[Player::State::Walking] = std::make_unique<PlayerStateWalking>();
+    m_playerStates[Player::State::Teleport] = std::make_unique<PlayerStateTeleport>();
+    m_playerStates[Player::State::Dead] = std::make_unique<PlayerStateDead>();
+    m_playerStates[Player::State::Reset] = std::make_unique<PlayerStateReset>();
+    m_playerStates[Player::State::Spectate] = std::make_unique<PlayerStateSpectate>();
 }
 
 //public
@@ -71,8 +83,9 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
         auto& player = entity.getComponent<Player>();
 
         //apply position/rotation from server
-        tx.setPosition(update.position);
-        tx.setRotation(Util::decompressQuat(update.rotation));
+        tx.setPosition(cro::Util::Net::decompressVec3(update.position));
+        tx.setRotation(cro::Util::Net::decompressQuat(update.rotation));
+        update.unpack(player);
 
         //rewind player's last input to timestamp and
         //re-process all succeeding events
@@ -110,67 +123,212 @@ void PlayerSystem::reconcile(cro::Entity entity, const PlayerUpdate& update)
 void PlayerSystem::processInput(cro::Entity entity)
 {
     auto& player = entity.getComponent<Player>();
-
+    player.collisionLayer;
     //update all the inputs until 1 before next
     //free input. Remember to take into account
     //the wrap around of the indices
+    //auto lastIdx = (player.nextFreeInput + (Player::HistorySize - 2)) % Player::HistorySize;
+    //player.previousInputFlags = player.inputStack[lastIdx].buttonFlags; //adjust for correct value
+
     auto lastIdx = (player.nextFreeInput + (Player::HistorySize - 1)) % Player::HistorySize;
     while (player.lastUpdatedInput != lastIdx)
     {
-        processMovement(entity, player.inputStack[player.lastUpdatedInput]);
-        processCollision(entity);
-        processAvatar(player.avatar);
+        auto lastState = player.state;
+
+        m_playerStates[player.state]->processMovement(entity, player.inputStack[player.lastUpdatedInput], *getScene());
+        processCollision(entity, player.state);
+
+        if (lastState != player.state)
+        {
+            //raise a message to say something happened
+            auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+            msg->player = entity;
+
+            switch (player.state)
+            {
+            default: break;
+            case Player::State::Teleport:
+                msg->type = PlayerEvent::Teleported;
+                break;
+            case Player::State::Walking:
+                msg->type = PlayerEvent::Landed;
+                break;
+            case Player::State::Falling:
+                if (player.velocity.y > 0)
+                {
+                    msg->type = PlayerEvent::Jumped;
+                }
+                else if (lastState == Player::State::Reset)
+                {
+                    msg->type = PlayerEvent::Spawned;
+                }
+                break;
+            case Player::State::Reset:
+                msg->type = PlayerEvent::Reset;
+                break;
+            case Player::State::Spectate:
+                msg->type = PlayerEvent::Retired;
+                break;
+            case Player::State::Dead:
+                msg->type = PlayerEvent::Died;
+                break;
+            }
+        }
 
         player.lastUpdatedInput = (player.lastUpdatedInput + 1) % Player::HistorySize;
     }
+
+
+    //update the avatar (which in turn is sent to client actors)
+    auto& avatar = player.avatar.getComponent<PlayerAvatar>();
+
+    auto targetRotation = cro::Util::Const::PI;
+    targetRotation *= 1 - ((player.direction + 1) / 2);
+    targetRotation += cro::Util::Const::PI * player.collisionLayer;
+
+    avatar.rotation += cro::Util::Maths::shortestRotation(avatar.rotation, targetRotation) * 20.f * ConstVal::FixedGameUpdate;
+    player.avatar.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, avatar.rotation);
+
+    if (avatar.holoEnt.isValid())
+    {
+        avatar.holoEnt.getComponent<AvatarScale>().target = player.carrying ? 1.f : 0.f;
+    }
+
+    if (avatar.crateEnt.isValid())
+    {
+        auto offset = CrateCarryOffset;
+        offset.x *= player.direction;
+        offset.x *= Util::direction(player.collisionLayer);
+        avatar.crateEnt.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getPosition() + offset);
+    }
+
+    //recharge the punt if this is server side
+    if (!player.local)
+    {
+        player.puntLevelLinear = std::min(Player::PuntCoolDown, player.puntLevelLinear + ConstVal::FixedGameUpdate);
+        player.puntLevel = cro::Util::Easing::easeInQuint(player.puntLevelLinear / Player::PuntCoolDown) * Player::PuntCoolDown;
+    }
+
+    //do some basic bounds checking in case we escape the map
+    if (entity.getComponent<cro::Transform>().getPosition().y < -1)
+    {
+        player.state = Player::State::Dead;
+
+        auto* msg = postMessage<PlayerEvent>(MessageID::PlayerMessage);
+        msg->player = entity;
+        msg->type = PlayerEvent::Died;
+    }
 }
 
-void PlayerSystem::processMovement(cro::Entity entity, Input input)
-{ 
+void PlayerSystem::processCollision(cro::Entity entity, std::uint32_t playerState)
+{
+    //do broadphase pass then send results to specific state for processing
     auto& player = entity.getComponent<Player>();
-    auto& tx = entity.getComponent<cro::Transform>();
+    player.collisionFlags = 0;
 
-    //walking speed in metres per second (1 world unit == 1 metre)
-    const float moveSpeed = 10.f * Util::decompressFloat(input.analogueMultiplier) * ConstVal::FixedGameUpdate;
+    auto position = entity.getComponent<cro::Transform>().getPosition();
 
-    glm::vec3 movement = glm::vec3(0.f);
+    auto bb = PlayerBounds;
+    bb += position;
 
-    if (input.buttonFlags & InputFlag::Up)
+    auto& collisionComponent = entity.getComponent<CollisionComponent>();
+    
+    //adjust crate rect for direction
+    auto crateOffset = CrateCarryOffset;
+    crateOffset.x *= player.direction * Util::direction(player.collisionLayer);
+    auto crateArea = CrateArea;
+    crateArea.left += crateOffset.x;
+    crateArea.bottom += crateOffset.y;
+    collisionComponent.rects[2].bounds = crateArea;
+
+    auto bounds2D = collisionComponent.sumRect;
+    bounds2D.left += position.x;
+    bounds2D.bottom += position.y;
+
+    std::vector<cro::Entity> collisions;
+
+    //broadphase
+    auto entities = getScene()->getSystem<cro::DynamicTreeSystem>().query(bb, player.collisionLayer + 1);
+    for (auto e : entities)
     {
-        movement.z = -1.f;
-    }
-    if (input.buttonFlags & InputFlag::Down)
-    {
-        movement.z += 1.f;
+        //make sure we skip our own ent
+        if (e != entity)
+        {
+            auto otherPos = e.getComponent<cro::Transform>().getPosition();
+            auto otherBounds = e.getComponent<CollisionComponent>().sumRect;
+            otherBounds.left += otherPos.x;
+            otherBounds.bottom += otherPos.y;
+
+            if (otherBounds.intersects(bounds2D))
+            {
+                collisions.push_back(e);
+            }
+        }
     }
 
-    if (input.buttonFlags & InputFlag::Left)
+#ifdef CRO_DEBUG_
+    if (entity.hasComponent<DebugInfo>())
     {
-        movement.x = -1.f;
+        auto& db = entity.getComponent<DebugInfo>();
+        db.nearbyEnts = static_cast<std::int32_t>(entities.size());
+        db.collidingEnts = static_cast<std::int32_t>(collisions.size());
+        db.bounds = bb;
     }
-    if (input.buttonFlags & InputFlag::Right)
-    {
-        movement.x += 1.f;
-    }
+#endif
 
-    if (glm::length2(movement) > 1)
+    m_playerStates[playerState]->processCollision(entity, collisions);
+
+    //if the collision changed the player state, update the collision
+    //again using the new result
+    if (player.state != playerState)
     {
-        movement = glm::normalize(movement);
+        player.collisionFlags = 0;
+        m_playerStates[player.state]->processCollision(entity, collisions);
     }
-    tx.move(movement * moveSpeed);
 }
 
-void PlayerSystem::processCollision(cro::Entity)
-{
 
+std::uint8_t PlayerUpdate::getPlayerID() const
+{
+    return (bitfield & 0x03);
 }
 
-void PlayerSystem::processAvatar(cro::Entity entity)
+//packs/unpacks player data in the the update struct
+void PlayerUpdate::pack(const Player& player) 
 {
-    //TODO remove this
-    auto position = entity.getComponent<cro::Transform>().getWorldPosition();
-    position.x += (50.f); //puts the position relative to the grid - this should be the origin coords
-    position.z += (50.f);
+    velocity = cro::Util::Net::compressVec3(player.velocity);
+    timestamp = player.inputStack[player.lastUpdatedInput].timeStamp;
+    prevInputFlags = player.previousInputFlags;
+    collisionFlags = player.collisionFlags;
+    puntLevel = static_cast<std::uint8_t>(255.f * (player.puntLevel / Player::PuntCoolDown));
+    state = player.state;    
+    
 
-    entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
+    bitfield = player.id;
+    bitfield |= ((player.collisionLayer & 0x01) << 2);
+
+    if (player.direction == Player::Direction::Right)
+    {
+        bitfield |= DirectionBit;
+    }
+
+    if (player.carrying)
+    {
+        bitfield |= CarryBit;
+    }
+}
+
+void PlayerUpdate::unpack(Player& player) const
+{
+    player.velocity = cro::Util::Net::decompressVec3(velocity);
+
+    //set the state
+    player.previousInputFlags = prevInputFlags;
+    player.collisionFlags = collisionFlags;
+    player.puntLevel = (static_cast<float>(puntLevel) / 255.f) * Player::PuntCoolDown;
+    player.state = state;
+
+    player.collisionLayer = (bitfield & LayerBit) >> 2;
+    player.direction = (bitfield & DirectionBit) ? Player::Right : Player::Left;
+    player.carrying = (bitfield & CarryBit) != 0;
 }

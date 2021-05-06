@@ -1,5 +1,5 @@
-project(islands)
-SET(PROJECT_NAME islands)
+project(crush)
+SET(PROJECT_NAME crush)
 cmake_minimum_required(VERSION 3.2.2)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -30,11 +30,13 @@ SET (OpenGL_GL_PREFERENCE "GLVND")
 find_package(CROGINE REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(TMXLITE REQUIRED)
 
 include_directories(
   ${CROGINE_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
+  ${TMXLITE_INCLUDE_DIR}
   src)
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -45,4 +47,5 @@ add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
   ${SDL2_LIBRARY}
-  ${OPENGL_LIBRARIES})
+  ${OPENGL_LIBRARIES}
+  ${TMXLITE_LIBRARIES})

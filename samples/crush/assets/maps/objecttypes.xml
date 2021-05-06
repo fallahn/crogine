@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objecttypes>
+ <objecttype name="Collision" color="#0000ff"/>
+ <objecttype name="Crate" color="#ffaa00"/>
+ <objecttype name="Player Size" color="#ff0000"/>
+ <objecttype name="Spawn Base" color="#9600a4"/>
+ <objecttype name="Teleport" color="#00aa00"/>
+</objecttypes>
