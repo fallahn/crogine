@@ -326,6 +326,7 @@ void Scene::enableSkybox()
             Logger::log("Failed to create skybox", cro::Logger::Type::Error);
         }
     }
+    glCheck(glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS));
 }
 
 void Scene::disableSkybox()

@@ -96,7 +96,7 @@ namespace
 
     const std::uint32_t CubemapSize = 512u;
     const std::uint32_t IrradianceMapSize = 32u;
-    const std::uint32_t PrefilterMapSize = 128u;
+    const std::uint32_t PrefilterMapSize = 512u;
     const std::int32_t CubeVertCount = 36;
 
     const auto projectionMatrix = glm::perspective(90.f * cro::Util::Const::degToRad, 1.f, 0.1f, 2.f);
@@ -225,7 +225,7 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
-    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
     //render each side of the cube map
@@ -259,6 +259,9 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
         glCheck(glBindVertexArray(m_cubeVAO));
         glCheck(glDrawArrays(GL_TRIANGLES, 0, CubeVertCount));
     }
+
+    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_textures[Skybox]));
+    glCheck(glGenerateMipmap(GL_TEXTURE_CUBE_MAP));
 
     if (!shader.loadFromString(PBRCubeVertex, IrradianceFrag))
     {
@@ -320,6 +323,7 @@ void EnvironmentMap::renderIrradianceMap(std::uint32_t fbo, std::uint32_t rbo, S
     glCheck(glUniform1i(shader.getUniformMap().at("u_environmentMap"), 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_textures[Skybox]));
+    //glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
 
     glCheck(glViewport(0, 0, IrradianceMapSize, IrradianceMapSize));
     glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
@@ -351,13 +355,14 @@ void EnvironmentMap::renderPrefilterMap(std::uint32_t fbo, std::uint32_t rbo, Sh
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)); // be sure to set minification filter to mip_linear 
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    glCheck(glGenerateMipmap(GL_TEXTURE_CUBE_MAP));
+    glCheck(glGenerateMipmap(GL_TEXTURE_CUBE_MAP));    
 
     //read from the skybox
     glCheck(glUseProgram(shader.getGLHandle()));
     glCheck(glUniform1i(shader.getUniformMap().at("u_environmentMap"), 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_textures[Skybox]));
+
 
     //render multiple mip levels to vary the roughness
     glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
