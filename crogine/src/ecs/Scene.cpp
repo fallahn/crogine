@@ -54,7 +54,7 @@ namespace
     //same order as GL_TEXTURE_CUBE_MAP_XXXX_YYYY
     enum CubemapDirection
     {
-        Left, Right, Up, Down, Front, Back, Count
+        Right, Left, Up, Down, Front, Back, Count
     };
 
     const std::string skyboxVertex = 
