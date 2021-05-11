@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -127,4 +127,33 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_orthographic = true;
+}
+
+glm::vec2 Camera::coordsToPixel(glm::vec3 worldPoint, std::int32_t passIdx) const
+{
+    CRO_ASSERT(passIdx > -1 && passIdx < Pass::Refraction, "");
+
+    const auto& pass = m_passes[passIdx];
+
+    glm::vec4 clipPos = pass.viewProjectionMatrix * glm::vec4(worldPoint, 1.f);
+    
+    //discard anything on or behind the view plane
+    if (clipPos.w <= 0)
+    {
+        return glm::vec2(0.f);
+    }
+    
+    glm::vec3 ndcPos = glm::vec3(clipPos) / clipPos.w;
+
+    glm::vec2 windowSize = cro::App::getWindow().getSize();
+    
+    glm::vec2 viewSize = windowSize;
+    viewSize.x *= viewport.width;
+    viewSize.y *= viewport.height;
+
+    glm::vec2 windowPos = ((glm::vec2(ndcPos) + 1.f) / 2.f) * viewSize;
+    windowPos.x += viewport.left * windowSize.x;
+    windowPos.y += viewport.bottom * windowSize.y;
+    
+    return windowPos;
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -376,6 +376,20 @@ namespace cro
         returns -1
         */
         float getFOV() const { return m_verticalFOV; }
+
+        /*!
+        \brief Returns the window coordinates of the given
+        3D world coordinates, as they would appear if rendered
+        by this camera.
+        \param worldPoint a vec3 containing world coords to convert
+        \param pass The render pass to use. For example the reflected
+        render pass will return the reflected coordinates of the given
+        point. Defaults to the Final pass. Note that the final pass 
+        is the same as the Refraction pass.
+        \see Pass
+        returns vec2 in window coordinates.
+        */
+        glm::vec2 coordsToPixel(glm::vec3 worldPoint, std::int32_t pass = Pass::Final) const;
 
 #ifdef CRO_DEBUG_
         //l,r,b,t,n,f
