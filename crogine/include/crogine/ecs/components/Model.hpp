@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -113,6 +113,20 @@ namespace cro
         \brief Returns the current render flags of this model.
         */
         std::uint64_t getRenderFlags() const { return m_renderFlags; }
+
+        /*!
+        \brief Returns the joint count if this model has a skeleton
+        */
+        std::size_t getJointCount() const { return m_jointCount; }
+
+        /*!
+        \brief Returns the material datat associated with the given submesh
+        at the given pass.
+        \param pass Can be indexData::Final or IndexData::Shadow
+        \param submesh Index of the submesh to retrieve.
+        \returns const reference to the material if it exists
+        */
+        const Material::Data& getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const;
 
     private:
         bool m_visible = false;

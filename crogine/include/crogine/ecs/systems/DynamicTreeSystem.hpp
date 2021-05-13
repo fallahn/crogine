@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -108,8 +108,6 @@ namespace cro
         std::vector<TreeNode> m_nodes;
 
         std::int32_t m_freeList; //must be signed!
-
-        std::size_t m_path;
 
         std::size_t m_insertionCount;
 
