@@ -104,6 +104,8 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height)
     {
         glCheck(glDeleteTextures(1, &m_textureID));
     }
+    m_size = { 0, 0 };
+    m_viewport = { 0,0,0,0 };
 
     //create the texture
     glCheck(glGenTextures(1, &m_textureID));
@@ -116,8 +118,6 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height)
     const float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glCheck(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor));
 
-    m_viewport.width = width;
-    m_viewport.height = height;
 
     //create the frame buffer
     glCheck(glGenFramebuffers(1, &m_fboID));
@@ -129,6 +129,13 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height)
     bool result = (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    if (result)
+    {
+        m_viewport.width = width;
+        m_viewport.height = height;
+        m_size = { width, height };
+    }
 
     return result;
 #endif
