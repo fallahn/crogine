@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -54,13 +54,13 @@ namespace
     //same order as GL_TEXTURE_CUBE_MAP_XXXX_YYYY
     enum CubemapDirection
     {
-        Left, Right, Up, Down, Front, Back, Count
+        Right, Left, Up, Down, Front, Back, Count
     };
 
     const std::string skyboxVertex = 
         R"(
         uniform mat4 u_projectionMatrix;
-        uniform mat4 u_viewMatrix;        
+        uniform mat4 u_modelViewMatrix;   
 
         ATTRIBUTE vec3 a_position;
 
@@ -69,7 +69,7 @@ namespace
         void main()
         {
             v_texCoords = a_position;
-            vec4 pos = u_projectionMatrix * u_viewMatrix * vec4(a_position, 1.0);
+            vec4 pos = u_projectionMatrix * u_modelViewMatrix * vec4(a_position, 1.0);
             gl_Position = pos.xyww;
         })";
     const std::string skyboxFrag = 
@@ -326,6 +326,7 @@ void Scene::enableSkybox()
             Logger::log("Failed to create skybox", cro::Logger::Type::Error);
         }
     }
+    glCheck(glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS));
 }
 
 void Scene::disableSkybox()
@@ -573,6 +574,11 @@ void Scene::updateDrawLists(Entity camera)
     }
 }
 
+void Scene::setSkyboxOrientation(glm::quat q)
+{
+    m_skybox.modelMatrix = glm::mat4(q);
+}
+
 //private
 void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, std::size_t cameraCount)
 {
@@ -608,10 +614,10 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
             glCheck(glEnable(GL_DEPTH_TEST));
 
             //remove translation from the view matrix
-            auto view = glm::mat4(glm::mat3(pass.viewMatrix));
+            auto view = glm::mat4(glm::mat3(pass.viewMatrix)) * m_skybox.modelMatrix;
 
             glCheck(glUseProgram(m_skyboxShaders[m_shaderIndex].getGLHandle()));
-            glCheck(glUniformMatrix4fv(m_skybox.viewUniform, 1, GL_FALSE, glm::value_ptr(view)));
+            glCheck(glUniformMatrix4fv(m_skybox.modelViewUniform, 1, GL_FALSE, glm::value_ptr(view)));
             glCheck(glUniformMatrix4fv(m_skybox.projectionUniform, 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
 
             //bind the texture if it exists

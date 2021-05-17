@@ -44,9 +44,9 @@ namespace cro
 class PlayerState
 {
 public:
-    static constexpr float MaxVelocity = 10.f;
-    static constexpr float Acceleration = 0.9f;// 1.2f;
-    static constexpr float Deceleration = 16.f;
+    static constexpr float MaxVelocity = 9.f;// 10.f;
+    static constexpr float Acceleration = 0.8f;// 0.9f;// 1.2f;
+    static constexpr float Deceleration = 12.f;// 16.f;
     static constexpr float Friction = Acceleration;
     static constexpr float AirAcceleration = Acceleration * 2.f;
     static constexpr float HardStopAmount = 0.2f;

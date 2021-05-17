@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -93,6 +93,12 @@ void Model::setShadowMaterial(std::size_t idx, Material::Data material)
 #ifdef PLATFORM_DESKTOP
     updateVAO(idx, Mesh::IndexData::Shadow);
 #endif //DESKTOP
+}
+
+const Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const
+{
+    CRO_ASSERT(submesh < m_materials[pass].size(), "submesh index out of range");
+    return m_materials[pass][submesh];
 }
 
 //private

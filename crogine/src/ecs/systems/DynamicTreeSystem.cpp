@@ -1,7 +1,7 @@
 /*-----------------------------------------------------------------------
 
 Copyright (c) 2009 Erin Catto http://www.box2d.org
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -46,7 +46,6 @@ DynamicTreeSystem::DynamicTreeSystem(MessageBus& mb, float unitsPerMetre)
     m_nodeCapacity  (64),
     m_nodes         (m_nodeCapacity),
     m_freeList      (0),
-    m_path          (0),
     m_insertionCount(0),
     m_fattenAmount  (unitsPerMetre)
 {

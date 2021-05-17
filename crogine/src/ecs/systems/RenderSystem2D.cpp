@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -267,7 +267,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
             {
                 glCheck(glUniform1i(uniform, value));
             }
-            for (const auto [uniform, value] : drawable.m_matBindings)
+            for (const auto& [uniform, value] : drawable.m_matBindings)
             {
                 glCheck(glUniformMatrix4fv(uniform, 1, GL_FALSE, value));
             }

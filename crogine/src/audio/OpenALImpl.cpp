@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -40,6 +40,8 @@ source distribution.
 //oh apple you so quirky
 #ifdef __APPLE__
 #include <alc.h>
+//silence deprecated openal warnings
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #else
 #include <AL/al.h>
 #endif

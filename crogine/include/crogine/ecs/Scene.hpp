@@ -43,6 +43,9 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/postprocess/PostProcess.hpp>
 
+#include <crogine/detail/glm/mat4x4.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
+
 #include <functional>
 
 namespace cro
@@ -320,6 +323,11 @@ namespace cro
         template <typename T>
         T* postMessage(Message::ID id);
 
+        /*
+        \brief Sets the orientation of the skybox to the given quaternion
+        */
+        void setSkyboxOrientation(glm::quat);
+
     private:
         MessageBus& m_messageBus;
 
@@ -355,7 +363,7 @@ namespace cro
         {
             std::uint32_t vbo = 0;
             std::uint32_t vao = 0;
-            std::uint32_t viewUniform = 0;
+            std::uint32_t modelViewUniform = 0;
             std::uint32_t projectionUniform = 0;
             std::uint32_t texture = 0;
             std::uint32_t textureUniform = 0;
@@ -363,11 +371,13 @@ namespace cro
 
             const Shader* activeShader = nullptr;
 
+            glm::mat4 modelMatrix = glm::mat4(1.f);
+
             void setShader(const Shader& shader)
             {
                 activeShader = &shader;
 
-                viewUniform = shader.getUniformMap().at("u_viewMatrix");
+                modelViewUniform = shader.getUniformMap().at("u_modelViewMatrix");
                 projectionUniform = shader.getUniformMap().at("u_projectionMatrix");
                 if (shader.getUniformMap().count("u_skybox"))
                 {
