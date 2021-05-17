@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/gui/Gui.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
 #include <cstdint>
@@ -51,4 +52,17 @@ namespace ui
 
     static const cro::Colour PreviewClearColour = cro::Colour(0.f, 0.f, 0.f, 0.2f);
     static constexpr std::uint32_t PreviewTextureSize = 512u;
+
+    static inline void showToolTip(const std::string message)
+    {
+        ImGui::TextDisabled("(?)");
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(450.0f);
+            ImGui::TextUnformatted(message.c_str());
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
 }

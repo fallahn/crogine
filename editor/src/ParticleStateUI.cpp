@@ -263,23 +263,61 @@ void ParticleState::drawInspector()
         if (ImGui::BeginTabItem("Behaviour"))
         {
             //initial velocity
+            ImGui::SliderFloat3("Initial Velocity", &m_particleSettings->initialVelocity[0], -5.f, 5.f);
+            
             //gravity
+            ImGui::SliderFloat3("Gravity", &m_particleSettings->gravity[0], -5.f, 5.f);
+            
             //spawn offset
+            ImGui::SliderFloat3("Spawn Offset", &m_particleSettings->spawnOffset[0], -5.f, 5.f);
+            
             //forces
+            
+            
             //emit count
+            std::int32_t count = static_cast<std::int32_t>(m_particleSettings->emitCount);
+            if (ImGui::InputInt("Emit Count", &count))
+            {
+                count = std::max(1, count);
+                m_particleSettings->emitCount = static_cast<std::uint32_t>(count);
+            }
+            ImGui::SameLine();
+            ui::showToolTip("Number of particles released each tick");
+            
             //release count
+            count = m_particleSettings->releaseCount;
+            if (ImGui::InputInt("Release Count", &count))
+            {
+                count = std::max(0, count);
+                m_particleSettings->releaseCount = count;
+            }
+            ImGui::SameLine();
+            ui::showToolTip("Total number of particles to release before the system stops. 0 spawns particles infinitely");
 
             //random initial rotation
+            ImGui::Checkbox("Random Initial Rotation", &m_particleSettings->randomInitialRotation);
+
             //inherit rotation
+            ImGui::Checkbox("Inherit Rotation", &m_particleSettings->inheritRotation);
 
             ImGui::EndTabItem();
         }
 
         ImGui::EndTabBar();
 
-        if (ImGui::Button("Start"))
+        if (m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().stopped())
         {
-
+            if (ImGui::Button("Start"))
+            {
+                m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().start();
+            }
+        }
+        else
+        {
+            if (ImGui::Button("Stop"))
+            {
+                m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().stop();
+            }
         }
     }
     ImGui::End();
