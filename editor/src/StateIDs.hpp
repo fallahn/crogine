@@ -34,6 +34,7 @@ namespace States
     enum ID
     {
         WorldEditor,
-        ModelViewer
+        ModelViewer,
+        ParticleEditor
     };
 }

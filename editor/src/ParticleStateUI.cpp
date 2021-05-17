@@ -1,4 +1,4 @@
-#include "WorldState.hpp"
+#include "ParticleState.hpp"
 #include "UIConsts.hpp"
 #include "SharedStateData.hpp"
 
@@ -30,7 +30,7 @@ namespace
     };
 }
 
-void WorldState::initUI()
+void ParticleState::initUI()
 {
     loadPrefs();
 
@@ -51,7 +51,7 @@ void WorldState::initUI()
     updateLayout(size.x, size.y);
 }
 
-void WorldState::drawMenuBar()
+void ParticleState::drawMenuBar()
 {
     if (ImGui::BeginMainMenuBar())
     {
@@ -71,10 +71,16 @@ void WorldState::drawMenuBar()
             {
 
             }
-            /*if (ImGui::MenuItem("Import", nullptr, nullptr))
-            {
 
-            }*/
+            if (getStateCount() > 1)
+            {
+                if (ImGui::MenuItem("Return To World Editor"))
+                {
+                    getContext().mainWindow.setTitle("Crogine Editor");
+                    requestStackPop();
+                }
+            }
+
             if (ImGui::MenuItem("Quit", nullptr, nullptr))
             {
                 cro::App::quit();
@@ -89,16 +95,6 @@ void WorldState::drawMenuBar()
             {
 
             }
-            if (ImGui::MenuItem("Model Viewer/Importer", nullptr, nullptr))
-            {
-                requestStackPush(States::ModelViewer);
-                unregisterWindows();
-            }
-            if (ImGui::MenuItem("Particle Editor", nullptr, nullptr))
-            {
-                requestStackPush(States::ParticleEditor);
-                unregisterWindows();
-            }
 
             ImGui::EndMenu();
         }
@@ -108,7 +104,7 @@ void WorldState::drawMenuBar()
 
 }
 
-void WorldState::drawInspector()
+void ParticleState::drawInspector()
 {
     auto [pos, size] = WindowLayouts[WindowID::Inspector];
     ImGui::SetNextWindowPos({ pos.x, pos.y });
@@ -189,7 +185,7 @@ void WorldState::drawInspector()
     ImGui::End();
 }
 
-void WorldState::drawBrowser()
+void ParticleState::drawBrowser()
 {
     auto [pos, size] = WindowLayouts[WindowID::Browser];
 
@@ -272,7 +268,7 @@ void WorldState::drawBrowser()
     ImGui::End();
 }
 
-void WorldState::drawInfo()
+void ParticleState::drawInfo()
 {
     auto [pos, size] = WindowLayouts[WindowID::Info];
     ImGui::SetNextWindowPos({ pos.x, pos.y });
@@ -296,7 +292,7 @@ void WorldState::drawInfo()
     ImGui::End();
 }
 
-void WorldState::drawGizmo()
+void ParticleState::drawGizmo()
 {
     ImGuiIO& io = ImGui::GetIO();
     ImGuizmo::SetRect(io.DisplaySize.x * ui::InspectorWidth, 0, io.DisplaySize.x - (ui::InspectorWidth * io.DisplaySize.x),
@@ -343,7 +339,7 @@ void WorldState::drawGizmo()
     }
 }
 
-void WorldState::updateLayout(std::int32_t w, std::int32_t h)
+void ParticleState::updateLayout(std::int32_t w, std::int32_t h)
 {
     float width = static_cast<float>(w);
     float height = static_cast<float>(h);
@@ -362,7 +358,7 @@ void WorldState::updateLayout(std::int32_t w, std::int32_t h)
         std::make_pair(glm::vec2(width - ui::ViewManipSize, ui::TitleHeight), glm::vec2(ui::ViewManipSize, ui::ViewManipSize));
 }
 
-void WorldState::updateMouseInput(const cro::Event& evt)
+void ParticleState::updateMouseInput(const cro::Event& evt)
 {
     //TODO this isn't really consistent with the controls for model viewer...
 
@@ -394,7 +390,7 @@ void WorldState::updateMouseInput(const cro::Event& evt)
     }
 }
 
-void WorldState::openModel(const std::string& path)
+void ParticleState::openModel(const std::string& path)
 {
     cro::ModelDefinition modelDef(m_sharedData.workingDirectory);
     if (modelDef.loadFromFile(path, m_resources, &m_environmentMap))

@@ -31,6 +31,12 @@
     <Filter Include="Source Files\model viewer\gltf">
       <UniqueIdentifier>{a8c2f695-573e-4b4b-9376-8dd3350f1a2f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\particle editor">
+      <UniqueIdentifier>{bd2aafb4-1a19-4054-8d53-ba0db821c78b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\particle editor">
+      <UniqueIdentifier>{b485ac72-2379-4c40-81d8-b83c5c3ae6da}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -68,6 +74,12 @@
     </ClCompile>
     <ClCompile Include="src\WorldStateUI.cpp">
       <Filter>Source Files\world viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParticleState.cpp">
+      <Filter>Source Files\particle editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParticleStateUI.cpp">
+      <Filter>Source Files\particle editor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -121,6 +133,9 @@
     </ClInclude>
     <ClInclude Include="src\gltf\tiny_gltf.h">
       <Filter>Header Files\model viewer\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleState.hpp">
+      <Filter>Header Files\particle editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

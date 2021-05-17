@@ -164,6 +164,8 @@
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\NormalVisMeshBuilder.cpp" />
     <ClCompile Include="src\OriginIconBuilder.cpp" />
+    <ClCompile Include="src\ParticleState.cpp" />
+    <ClCompile Include="src\ParticleStateUI.cpp" />
     <ClCompile Include="src\WorldState.cpp" />
     <ClCompile Include="src\WorldStateUI.cpp" />
   </ItemGroup>
@@ -180,6 +182,7 @@
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\NormalVisMeshBuilder.hpp" />
     <ClInclude Include="src\OriginIconBuilder.hpp" />
+    <ClInclude Include="src\ParticleState.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\SharedStateData.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />

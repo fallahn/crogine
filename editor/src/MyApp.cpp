@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2021
 http://trederia.blogspot.com
 
 crogine model viewer/importer - Zlib license.
@@ -30,6 +30,7 @@ source distribution.
 #include "MyApp.hpp"
 #include "ModelState.hpp"
 #include "WorldState.hpp"
+#include "ParticleState.hpp"
 #include "LoadingScreen.hpp"
 #include "SharedStateData.hpp"
 #include "Messages.hpp"
@@ -51,6 +52,7 @@ MyApp::MyApp()
 
     m_stateStack.registerState<ModelState>(States::ID::ModelViewer, sharedData);
     m_stateStack.registerState<WorldState>(States::ID::WorldEditor, sharedData);
+    m_stateStack.registerState<ParticleState>(States::ID::ParticleEditor, sharedData);
 }
 
 //public
