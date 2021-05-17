@@ -40,8 +40,10 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/util/Matrix.hpp>
@@ -56,14 +58,14 @@ namespace
 }
 
 ParticleState::ParticleState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State    (ss, ctx),
-    m_sharedData    (sd),
-    m_scene         (ctx.appInstance.getMessageBus()),
-    m_previewScene  (ctx.appInstance.getMessageBus()),
-    m_viewportRatio (1.f),
-    m_fov           (DefaultFOV),
-    m_gizmoMode     (ImGuizmo::TRANSLATE),
-    m_selectedModel (0)
+    : cro::State        (ss, ctx),
+    m_sharedData        (sd),
+    m_scene             (ctx.appInstance.getMessageBus()),
+    m_viewportRatio     (1.f),
+    m_fov               (DefaultFOV),
+    m_gizmoMode         (ImGuizmo::TRANSLATE),
+    m_particleSettings  (nullptr),
+    m_selectedBlendMode (0)
 {
     ctx.mainWindow.loadResources([this]() {
         addSystems();
@@ -93,7 +95,7 @@ bool ParticleState::handleEvent(const cro::Event& evt)
     switch(evt.type)
     {
     default: break;
-    case SDL_KEYUP:
+    case SDL_KEYDOWN:
         if (evt.key.keysym.mod & (KMOD_LSHIFT | KMOD_RSHIFT))
         {
             switch (evt.key.keysym.sym)
@@ -106,7 +108,7 @@ bool ParticleState::handleEvent(const cro::Event& evt)
                 m_gizmoMode = ImGuizmo::OPERATION::ROTATE;
                 break;
             case SDLK_s:
-                    m_gizmoMode = ImGuizmo::OPERATION::SCALE;
+                m_gizmoMode = ImGuizmo::OPERATION::SCALE;
                 break;
             }
         }
@@ -239,10 +241,8 @@ void ParticleState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_scene.addSystem<cro::CameraSystem>(mb);
+    m_scene.addSystem<cro::ParticleSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
-
-    m_previewScene.addSystem<cro::CameraSystem>(mb);
-    m_previewScene.addSystem<cro::ModelRenderer>(mb);
 }
 
 void ParticleState::setupScene()
@@ -259,29 +259,17 @@ void ParticleState::setupScene()
     m_entities[EntityID::ArcBall].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    m_entities[EntityID::Emitter] = m_scene.createEntity();
+    m_entities[EntityID::Emitter].addComponent<cro::Transform>();
+    m_entities[EntityID::Emitter].addComponent<cro::ParticleEmitter>().start();
+    m_particleSettings = &m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().settings;
+    m_selectedEntity = m_entities[EntityID::Emitter];
+
     //sunlight node
-    cro::ModelDefinition def;
+    /*cro::ModelDefinition def;
     def.loadFromFile("assets/models/arrow.cmt", m_resources);
     def.createModel(m_scene.getSunlight(), m_resources);
-    m_scene.getSunlight().setLabel("Sunlight");
-
-    m_selectedEntity = m_scene.getSunlight();
-
-
-
-    //preview scene to render model thumbs
-    entity = m_previewScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
-    entity.addComponent<cro::Camera>();
-    auto& cam3D = entity.getComponent<cro::Camera>();
-    cam3D.setPerspective(DefaultFOV, 1.f, 0.1f, 10.f);
-
-    m_previewScene.setActiveCamera(entity);
-
-    //not rendering shadows on here, but we still want a light direction
-    m_previewScene.getSunlight().getComponent<cro::Sunlight>().setDirection({ 0.5f, -0.5f, -0.5f });
-
-    //m_previewScene.setCubemap(m_environmentMap);
+    m_scene.getSunlight().setLabel("Sunlight");*/
 }
 
 void ParticleState::loadPrefs()

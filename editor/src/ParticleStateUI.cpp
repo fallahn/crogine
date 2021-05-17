@@ -6,10 +6,12 @@
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Constants.hpp>
 
+#include <crogine/graphics/MaterialData.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
@@ -28,6 +30,8 @@ namespace
     {
         std::make_pair(glm::vec2(), glm::vec2())
     };
+
+    std::string lastSavePath;
 }
 
 void ParticleState::initUI()
@@ -45,8 +49,6 @@ void ParticleState::initUI()
             drawGizmo();
         });
 
-
-
     auto size = getContext().mainWindow.getSize();
     updateLayout(size.x, size.y);
 }
@@ -56,20 +58,57 @@ void ParticleState::drawMenuBar()
     if (ImGui::BeginMainMenuBar())
     {
         //file menu
-        if (ImGui::BeginMenu("File"))
+        if (ImGui::BeginMenu("File##Particle"))
         {
-            if (ImGui::MenuItem("Open", nullptr, nullptr))
+            if (ImGui::MenuItem("Open##Particle", nullptr, nullptr))
             {
+                auto path = cro::FileSystem::openFileDialogue(lastSavePath, "xyp,cps");
+                if (!path.empty())
+                {
+                    (m_particleSettings->loadFromFile(path, m_resources.textures));
+                    {
+                        lastSavePath = path;
 
+                        m_selectedBlendMode = m_particleSettings->blendmode;
+                        m_particleSettings->textureID = 0;
+
+                        if (!m_particleSettings->texturePath.empty())
+                        {
+                            auto texPath = m_sharedData.workingDirectory + "/" + m_particleSettings->texturePath;
+                            if (cro::FileSystem::fileExists(texPath))
+                            {
+                                m_texture.loadFromFile(texPath);
+                                m_particleSettings->textureID = m_texture.getGLHandle();
+                            }
+                        }
+                    }
+                }
             }
-            if (ImGui::MenuItem("Save", nullptr, nullptr))
+            if (ImGui::MenuItem("Save##Particle", nullptr, nullptr))
             {
-
+                if (!lastSavePath.empty())
+                {
+                    m_particleSettings->saveToFile(lastSavePath);
+                }
+                else
+                {
+                    auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
+                    if (!path.empty())
+                    {
+                        m_particleSettings->saveToFile(path);
+                        lastSavePath = path;
+                    }
+                }
             }
 
-            if (ImGui::MenuItem("Save As...", nullptr, nullptr))
+            if (ImGui::MenuItem("Save As...##Particle", nullptr, nullptr))
             {
-
+                auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
+                if (!path.empty())
+                {
+                    m_particleSettings->saveToFile(path);
+                    lastSavePath = path;
+                }
             }
 
             if (getStateCount() > 1)
@@ -81,7 +120,7 @@ void ParticleState::drawMenuBar()
                 }
             }
 
-            if (ImGui::MenuItem("Quit", nullptr, nullptr))
+            if (ImGui::MenuItem("Quit##Particle", nullptr, nullptr))
             {
                 cro::App::quit();
             }
@@ -89,11 +128,26 @@ void ParticleState::drawMenuBar()
         }
 
         //view menu
-        if (ImGui::BeginMenu("View"))
+        if (ImGui::BeginMenu("View##Particle"))
         {
             if (ImGui::MenuItem("Options", nullptr, nullptr))
             {
 
+            }
+
+            if (ImGui::MenuItem("Load Preview Model", nullptr, nullptr))
+            {
+                if (m_sharedData.workingDirectory.empty())
+                {
+                    cro::FileSystem::showMessageBox("Warning", "Working Directory not set.\nModel may not load correctly.");
+                }
+
+                //TODO track last used path
+                auto path = cro::FileSystem::openFileDialogue("", "cmt");
+                if (!path.empty())
+                {
+                    openModel(path);
+                }
             }
 
             ImGui::EndMenu();
@@ -109,77 +163,123 @@ void ParticleState::drawInspector()
     auto [pos, size] = WindowLayouts[WindowID::Inspector];
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
-    if (ImGui::Begin("Inspector##0", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    if (ImGui::Begin("Inspector##Particle", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
-        if (ImGui::BeginTabBar("##0"))
+        ImGui::BeginTabBar("Properties");
+        if (ImGui::BeginTabItem("Appearance"))
         {
-            if (ImGui::BeginTabItem("Navigator"))
-            {
-                //imgui demo 706
+            //lifetime
+            ImGui::SliderFloat("Lifetime", &m_particleSettings->lifetime, 0.1f, 10.f);
 
-                ImGui::EndTabItem();
+            //spread
+            ImGui::SliderFloat("Spread", &m_particleSettings->spread, 0.f, 360.f);
+
+            //scale modifier
+            ImGui::SliderFloat("Scale Modifier", &m_particleSettings->scaleModifier, -5.f, 5.f);
+
+            //acceleration
+            ImGui::SliderFloat("Acceleration", &m_particleSettings->acceleration, 0.f, 10.f);
+            
+            //size
+            ImGui::SliderFloat("Size", &m_particleSettings->size, 0.01f, 1.f);
+            
+            //emit rate
+            ImGui::SliderFloat("Emit Rate", &m_particleSettings->emitRate, 0.1f, 50.f);
+            
+            //rotation speed
+            ImGui::SliderFloat("Rotation Speed", &m_particleSettings->rotationSpeed, -180.f, 180.f);
+            
+            //spawn radius
+            ImGui::SliderFloat("Spawn Radius", &m_particleSettings->spawnRadius, 0.f, 4.f);
+
+            //----Animation----
+            ImGui::Separator();
+
+
+            //frame count
+            std::int32_t count = static_cast<std::int32_t>(m_particleSettings->frameCount);
+            if (ImGui::InputInt("Frame Count", &count))
+            {
+                count = std::max(1, count);
+                m_particleSettings->frameCount = count;
+            }
+            
+            //frame rate
+            ImGui::InputFloat("Frame Rate", &m_particleSettings->framerate, 0.1f, 50.f);
+            
+            //animate
+            ImGui::Checkbox("Animate", &m_particleSettings->animate);
+            
+            //use random frame
+            ImGui::Checkbox("Use Random Frame", &m_particleSettings->useRandomFrame);
+
+
+            ImGui::Separator();
+
+            //colour
+            ImGui::ColorEdit4("Colour", m_particleSettings->colour.asArray());
+
+            //blend mode
+            if (ImGui::Combo("Blend Mode", &m_selectedBlendMode, "Alpha\0Add\0Multiply\0\0"))
+            {
+                m_particleSettings->blendmode = static_cast<cro::EmitterSettings::BlendMode>(m_selectedBlendMode);
+            }
+            
+            //open tetxure
+            if (m_particleSettings->texturePath.empty())
+            {
+                ImGui::Text("No Texture Loaded.");
+            }
+            else
+            {
+                ImGui::Text("%s", m_particleSettings->texturePath.c_str());
             }
 
-            if (ImGui::BeginTabItem("Selected"))
+
+            if (ImGui::Button("Set Texture"))
             {
-                if (m_selectedEntity.isValid())
+                auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory, "png,jpg,bmp");
+                if (!path.empty())
                 {
-                    auto name = m_selectedEntity.getLabel();
-                    if (name.empty())
+                    m_particleSettings->textureID = 0;
+                    m_texture.loadFromFile(path);
+                    m_particleSettings->textureID = m_texture.getGLHandle();
+
+                    //try correcting with current working directory
+                    if (!m_sharedData.workingDirectory.empty())
                     {
-                        name = "Untitled";
-                    }
-                    if (ImGui::InputText("Name", &name))
-                    {
-                        if (name.empty())
+                        if (path.find(m_sharedData.workingDirectory) != std::string::npos)
                         {
-                            name = "Untitled";
+                            path = path.substr(m_sharedData.workingDirectory.size());
                         }
-                        m_selectedEntity.setLabel(name);
                     }
-
-
-                    auto& tx = m_selectedEntity.getComponent<cro::Transform>();
-                    auto pos = tx.getPosition();
-                    if (ImGui::DragFloat3("Position", &pos[0], 0.1f))
-                    {
-                        tx.setPosition(pos);
-                    }
-                    auto scale = tx.getScale();
-                    if (ImGui::DragFloat3("Scale", &scale[0], 0.1f))
-                    {
-                        tx.setScale(scale);
-                    }
-                    auto rotation = glm::degrees(glm::eulerAngles(tx.getRotation()));
-                    if (ImGui::DragFloat3("Rotation", &rotation[0], 0.1f))
-                    {
-                        glm::quat q(glm::radians(rotation));
-                        tx.setRotation(q);
-                    }
+                    m_particleSettings->texturePath = path;
                 }
-                else
-                {
-                    ImGui::Text("Nothing Selected");
-                }
-
-                ImGui::EndTabItem();
             }
 
-            if (ImGui::BeginTabItem("World Properties"))
-            {
-                auto cc = getContext().appInstance.getClearColour();
-                float c[3]{cc.getRed(),cc.getGreen(),cc.getBlue()};
+            ImGui::EndTabItem();
+        }
 
-                if (ImGui::ColorPicker3("Sky Colour", c))
-                {
-                    getContext().appInstance.setClearColour(cro::Colour(c[0], c[1], c[2]));
-                    //savePrefs(); //this probably happens too frequently
-                }
+        if (ImGui::BeginTabItem("Behaviour"))
+        {
+            //initial velocity
+            //gravity
+            //spawn offset
+            //forces
+            //emit count
+            //release count
 
-                ImGui::EndTabItem();
-            }
+            //random initial rotation
+            //inherit rotation
 
-            ImGui::EndTabBar();
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
+
+        if (ImGui::Button("Start"))
+        {
+
         }
     }
     ImGui::End();
@@ -191,78 +291,9 @@ void ParticleState::drawBrowser()
 
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
-    if (ImGui::Begin("Browser##0", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    if (ImGui::Begin("Browser##Particle", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
-        ImGui::BeginTabBar("##0d0d0");
-
-        if (ImGui::BeginTabItem("Models"))
-        {
-            if (ImGui::Button("Add Model"))
-            {
-                if (m_sharedData.workingDirectory.empty())
-                {
-                    if (cro::FileSystem::showMessageBox("", "Working directory currently not set. Would you like to set one now?", cro::FileSystem::YesNo, cro::FileSystem::Question))
-                    {
-                        auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
-                        if (!path.empty())
-                        {
-                            m_sharedData.workingDirectory = path;
-                            std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
-                        }
-                    }
-                }
-
-                //browse model files
-                auto path = cro::FileSystem::openFileDialogue("", "cmt");
-                if (!path.empty())
-                {
-                    std::replace(path.begin(), path.end(), '\\', '/');
-                    if (path.find(m_sharedData.workingDirectory) == std::string::npos)
-                    {
-                        cro::FileSystem::showMessageBox("Warning", "This model was not opened from the current working directory.");
-                    }
-
-                    openModel(path);
-                }
-            }
-
-            ImGui::SameLine();
-            if (ImGui::Button("Import Model"))
-            {
-                //launch model importer
-                requestStackPush(States::ModelViewer);
-                unregisterWindows();
-            }
-
-            ImGui::SameLine();
-            //TODO if selected
-            if (ImGui::Button("Remove"))
-            {
-                //TODO warn this will remove all instances
-                //TODO remove model from project
-            }
-
-            ImGui::BeginChild("##modelChild");
-            //TODO layout the thumb nails / drag n drop
-
-            for (const auto& m : m_models)
-            {
-                ImGui::Image(m.thumbnail.getTexture(), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                ImGui::SameLine();
-            }
-
-
-            ImGui::EndChild();
-
-            ImGui::EndTabItem();
-        }
-
-        if (ImGui::BeginTabItem("Collision"))
-        {
-            //TODO is this really what we want?
-        }
-
-        ImGui::EndTabBar();
+        
     }
 
     ImGui::End();
@@ -273,7 +304,7 @@ void ParticleState::drawInfo()
     auto [pos, size] = WindowLayouts[WindowID::Info];
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
-    if (ImGui::Begin("InfoBar", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar))
+    if (ImGui::Begin("InfoBar##Particle", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar))
     {
         ImGui::PushStyleColor(ImGuiCol_Text, m_messageColour);
         ImGui::Text("%s", cro::Console::getLastOutput().c_str());
@@ -395,35 +426,16 @@ void ParticleState::openModel(const std::string& path)
     cro::ModelDefinition modelDef(m_sharedData.workingDirectory);
     if (modelDef.loadFromFile(path, m_resources, &m_environmentMap))
     {
-        auto& mdl = m_models.emplace_back();
-        mdl.modelDef = modelDef;
-        mdl.modelID = 0; 
-        //TODO we need to assign existing IDs if loading a scene and adjust the
-        //free pool as necessary? Or does it matter as long as all existing IDs are correctly reassigned
+        if (m_entities[EntityID::Model].isValid())
+        {
+            m_scene.destroyEntity(m_entities[EntityID::Model]);
+        }
 
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        modelDef.createModel(entity, m_resources);
 
-        m_previewEntity = m_previewScene.createEntity();
-        m_previewEntity.addComponent<cro::Transform>().rotate(glm::vec3(0.f, 1.f, 0.f), 45.f * cro::Util::Const::degToRad);
-        //m_previewEntity.getComponent<cro::Transform>().rotate(glm::vec3(0.f, 0.f, 1.f), 25.f * cro::Util::Const::degToRad);
-        modelDef.createModel(m_previewEntity, m_resources);
-
-        auto bb = m_previewEntity.getComponent<cro::Model>().getMeshData().boundingSphere;
-
-        m_previewEntity.getComponent<cro::Transform>().move(-bb.centre);
-        m_previewEntity.getComponent<cro::Transform>().move({ 0.f, 0.f, -bb.radius }); //TODO move back until no longer intersecting fristum
-
-        m_previewScene.simulate(0.f);
-
-        mdl.thumbnail.create(128, 128);
-        mdl.thumbnail.clear();
-        //draw the thumbnail
-        m_previewScene.render(mdl.thumbnail);
-        mdl.thumbnail.display();
-
-        //TODO can we store thumbnails as images with scene?
-        //TODO can we create thumbnails in the model importer?
-
-
-        m_previewScene.destroyEntity(m_previewEntity);
+        m_entities[EntityID::Emitter].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_entities[EntityID::Model] = entity;
     }
 }

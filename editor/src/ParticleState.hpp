@@ -37,8 +37,14 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/Texture.hpp>
 
 struct SharedStateData;
+namespace cro
+{
+    struct EmitterSettings;
+}
+
 class ParticleState final : public cro::State, public cro::GuiClient
 {
 public:
@@ -56,7 +62,6 @@ private:
 
     SharedStateData& m_sharedData;
     cro::Scene m_scene;
-    cro::Scene m_previewScene; //used to draw model thumbnails
     cro::EnvironmentMap m_environmentMap;
     cro::ResourceCollection m_resources;
 
@@ -76,6 +81,8 @@ private:
         enum
         {
             ArcBall,
+            Emitter,
+            Model,
 
             Count
         };
@@ -85,6 +92,10 @@ private:
     cro::Entity m_selectedEntity;
     std::int32_t m_gizmoMode;
 
+    cro::EmitterSettings* m_particleSettings;
+    std::int32_t m_selectedBlendMode;
+    cro::Texture m_texture;
+
     void initUI();
     void drawMenuBar();
     void drawInspector();
@@ -93,18 +104,6 @@ private:
     void drawGizmo();
     void updateLayout(std::int32_t, std::int32_t);
     void updateMouseInput(const cro::Event&);
-
-
-
-    struct ReferenceModel final
-    {
-        std::size_t modelID = 0;
-        cro::ModelDefinition modelDef;
-        cro::RenderTexture thumbnail;
-    };
-    std::vector<ReferenceModel> m_models;
-    std::size_t m_selectedModel;
-    cro::Entity m_previewEntity;
 
     void openModel(const std::string&);
 };

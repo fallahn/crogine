@@ -71,21 +71,21 @@ namespace cro
     {
         std::string texturePath;
 
-        enum
+        enum BlendMode
         {
             Alpha,
             Add,
             Multiply
         } blendmode = Alpha;
         glm::vec3 gravity = glm::vec3(0.f);
-        glm::vec3 initialVelocity = glm::vec3(0.f);
+        glm::vec3 initialVelocity = glm::vec3(0.f, 1.f, 0.f);
         glm::vec3 spawnOffset = glm::vec3(0.f);
 
         std::array<glm::vec3, 4> forces{ glm::vec3(0.f) };
         Colour colour = Colour::White;
 
         std::uint32_t emitCount = 1; //!< amount released at once
-        std::int32_t releaseCount = 1; //!< number of particles released before stopping (0 for infinite)
+        std::int32_t releaseCount = 0; //!< number of particles released before stopping (0 for infinite)
         std::uint32_t frameCount = 1; //!< must be at least one. Texture width is divided by this
 
         float lifetime = 1.f;
@@ -93,7 +93,7 @@ namespace cro
         float spread = 0.f;
         float scaleModifier = 0.f;
         float acceleration = 1.f;
-        float size = 10.f; //!< diameter of particle
+        float size = 0.05f; //!< diameter of particle
         float emitRate = 10.f; //!< particles per second
         float rotationSpeed = 0.f;
         float spawnRadius = 0.f;
