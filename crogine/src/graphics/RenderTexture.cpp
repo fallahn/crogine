@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -80,6 +80,16 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
 {
     if (&other != this)
     {
+        //tidy up anything we currently own first
+        if (m_fboID)
+        {
+            glCheck(glDeleteFramebuffers(1, &m_fboID));
+        }
+        if (m_rboID)
+        {
+            glCheck(glDeleteRenderbuffers(1, &m_rboID));
+        }
+
         m_fboID = other.m_fboID;
         m_rboID = other.m_rboID;
         m_clearBits = other.m_clearBits;

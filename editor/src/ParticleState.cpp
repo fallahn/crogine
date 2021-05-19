@@ -219,11 +219,8 @@ bool ParticleState::simulate(float dt)
 
 void ParticleState::render()
 {
-    if (getStateCount() == 1)
-    {
-        auto& rw = getContext().mainWindow;
-        m_scene.render(rw);
-    }
+    auto& rw = getContext().mainWindow;
+    m_scene.render(rw);
 }
 
 //private

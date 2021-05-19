@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -77,6 +77,17 @@ DepthTexture& DepthTexture::operator=(DepthTexture&& other) noexcept
 {
     if (&other != this)
     {
+        //tidy up anything we own first!
+        if (m_fboID)
+        {
+            glCheck(glDeleteFramebuffers(1, &m_fboID));
+        }
+
+        if (m_textureID)
+        {
+            glCheck(glDeleteTextures(1, &m_textureID));
+        }
+
         m_fboID = other.m_fboID;
         m_textureID = other.m_textureID;
         m_viewport = other.m_viewport;
