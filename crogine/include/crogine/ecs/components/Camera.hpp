@@ -378,18 +378,21 @@ namespace cro
         float getFOV() const { return m_verticalFOV; }
 
         /*!
-        \brief Returns the window coordinates of the given
+        \brief Returns the render target coordinates of the given
         3D world coordinates, as they would appear if rendered
         by this camera.
         \param worldPoint a vec3 containing world coords to convert
+        \param targetSize The size of the target which would be rendered
+        to. By default this is the size of the window but the size of
+        a RenderTexture or DepthTexture may be provided.
         \param pass The render pass to use. For example the reflected
         render pass will return the reflected coordinates of the given
         point. Defaults to the Final pass. Note that the final pass 
         is the same as the Refraction pass.
         \see Pass
-        returns vec2 in window coordinates.
+        returns vec2 in target coordinates.
         */
-        glm::vec2 coordsToPixel(glm::vec3 worldPoint, std::int32_t pass = Pass::Final) const;
+        glm::vec2 coordsToPixel(glm::vec3 worldPoint, glm::vec2 targetSize = cro::App::getWindow().getSize(), std::int32_t pass = Pass::Final) const;
 
 #ifdef CRO_DEBUG_
         //l,r,b,t,n,f

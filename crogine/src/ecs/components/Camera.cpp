@@ -129,7 +129,7 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     m_orthographic = true;
 }
 
-glm::vec2 Camera::coordsToPixel(glm::vec3 worldPoint, std::int32_t passIdx) const
+glm::vec2 Camera::coordsToPixel(glm::vec3 worldPoint, glm::vec2 targetSize, std::int32_t passIdx) const
 {
     CRO_ASSERT(passIdx > -1 && passIdx < Pass::Refraction, "");
 
@@ -145,7 +145,7 @@ glm::vec2 Camera::coordsToPixel(glm::vec3 worldPoint, std::int32_t passIdx) cons
     
     glm::vec3 ndcPos = glm::vec3(clipPos) / clipPos.w;
 
-    glm::vec2 windowSize = cro::App::getWindow().getSize();
+    glm::vec2 windowSize = targetSize;
     
     glm::vec2 viewSize = windowSize;
     viewSize.x *= viewport.width;
