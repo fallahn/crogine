@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -125,6 +125,12 @@ Material::BlendMode Drawable2D::getBlendMode() const
 
 std::vector<Vertex2D>& Drawable2D::getVertexData()
 {
+    //this assumes as we're non-const that we'll
+    //want to update some of the vertex data. It
+    //means we can change the colour/texcoords
+    //without having to recalc (or manually call)
+    //updateLocalBounds() repeatedly
+    m_updateBufferData = !m_vertices.empty();
     return m_vertices;
 }
 

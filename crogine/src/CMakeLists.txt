@@ -104,6 +104,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/RenderTexture.cpp
   ${PROJECT_DIR}/graphics/Shader.cpp
   ${PROJECT_DIR}/graphics/ShaderResource.cpp
+  ${PROJECT_DIR}/graphics/Shape2D.cpp
   ${PROJECT_DIR}/graphics/Spatial.cpp
   ${PROJECT_DIR}/graphics/SpriteSheet.cpp
   ${PROJECT_DIR}/graphics/StaticMeshBuilder.cpp

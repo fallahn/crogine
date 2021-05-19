@@ -46,7 +46,7 @@ source distribution.
 
 #include <crogine/util/Matrix.hpp>
 
-#include<array>
+#include <array>
 
 namespace
 {

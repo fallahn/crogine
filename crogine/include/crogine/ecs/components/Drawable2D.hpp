@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -143,9 +143,11 @@ namespace cro
 
         /*!
         \brief Returns a reference to the vector of vertex data
-        currently being used to render this geometry. Modifying
-        the vertex data via this function requires manually calling
-        updateLocalBounds() afterwards.
+        currently being used to render this geometry. If you add,
+        remove vertices or modify their positions you will need
+        to call updateLocalBounds() for changes to take effect.
+        Just modifying colour or texture coordinates should be
+        automatically updated.
         \see updateLocalBounds()
         */
         std::vector<Vertex2D>& getVertexData();
