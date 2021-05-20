@@ -30,6 +30,7 @@ source distribution.
 #include "ModelState.hpp"
 #include "SharedStateData.hpp"
 #include "ModelViewerConsts.inl"
+#include "UIConsts.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -505,7 +506,7 @@ void ModelState::buildUI()
             if (m_showPreferences)
             {
                 ImGui::SetNextWindowSize({ 400.f, 260.f });
-                if (ImGui::Begin("Preferences", &m_showPreferences))
+                if (ImGui::Begin("Preferences##model", &m_showPreferences))
                 {
                     ImGui::Text("%s", "Working Directory:");
                     if (m_sharedData.workingDirectory.empty())

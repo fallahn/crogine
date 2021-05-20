@@ -94,6 +94,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
                     textureID = textures.get(texPath).getGLHandle();
                     textureSize = textures.get(texPath).getSize();  
                     textures.get(texturePath).setSmooth(true);
+                    textures.get(texturePath).setRepeated(true);
                 }
             }
             else if (name == "blendmode")
@@ -251,7 +252,7 @@ bool EmitterSettings::saveToFile(const std::string& path)
         }
     }
 
-    cfg.addProperty("src", "\"" + texPath + "\"");
+    cfg.addProperty("src", texPath);
 
     if (blendmode == Add)
     {
@@ -272,7 +273,7 @@ bool EmitterSettings::saveToFile(const std::string& path)
     cfg.addProperty("spread").setValue(spread * 2.f);
     cfg.addProperty("lifetime").setValue(lifetime);
     cfg.addProperty("lifetime_variance").setValue(lifetimeVariance);
-    cfg.addProperty("colour").setValue(glm::vec4(colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()));
+    cfg.addProperty("colour").setValue(glm::vec4(colour.getRedByte(), colour.getGreenByte(), colour.getBlueByte(), colour.getAlphaByte()));
     cfg.addProperty("random_initial_rotation").setValue(randomInitialRotation);
     cfg.addProperty("rotation_speed").setValue(rotationSpeed);
     cfg.addProperty("scale_affector").setValue(scaleModifier);

@@ -75,10 +75,13 @@ void ParticleState::drawMenuBar()
                         if (!m_particleSettings->texturePath.empty())
                         {
                             auto texPath = m_sharedData.workingDirectory + "/" + m_particleSettings->texturePath;
-                            if (cro::FileSystem::fileExists(texPath))
+                            if (cro::FileSystem::fileExists(texPath)
+                                && m_texture.loadFromFile(texPath))
                             {
-                                m_texture.loadFromFile(texPath);
                                 m_particleSettings->textureID = m_texture.getGLHandle();
+                                m_particleSettings->textureSize = m_texture.getSize();
+                                m_texture.setSmooth(true);
+                                m_texture.setRepeated(true);
                             }
                         }
                     }
@@ -132,7 +135,7 @@ void ParticleState::drawMenuBar()
         {
             if (ImGui::MenuItem("Options", nullptr, nullptr))
             {
-
+                m_showPreferences = !m_showPreferences;
             }
 
             if (ImGui::MenuItem("Load Preview Model", nullptr, nullptr))
@@ -156,6 +159,10 @@ void ParticleState::drawMenuBar()
         ImGui::EndMainMenuBar();
     }
 
+    if (m_showPreferences)
+    {
+        drawOptions();
+    }
 }
 
 void ParticleState::drawInspector()
@@ -239,11 +246,13 @@ void ParticleState::drawInspector()
             if (ImGui::Button("Set Texture"))
             {
                 auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory, "png,jpg,bmp");
-                if (!path.empty())
+                if (!path.empty()
+                    && m_texture.loadFromFile(path))
                 {
-                    m_particleSettings->textureID = 0;
-                    m_texture.loadFromFile(path);
-                    m_particleSettings->textureID = m_texture.getGLHandle();
+                    m_texture.setSmooth(true);
+                    m_texture.setRepeated(true);
+
+                    std::replace(path.begin(), path.end(), '\\', '/');
 
                     //try correcting with current working directory
                     if (!m_sharedData.workingDirectory.empty())
@@ -253,7 +262,9 @@ void ParticleState::drawInspector()
                             path = path.substr(m_sharedData.workingDirectory.size());
                         }
                     }
+                    m_particleSettings->textureID = m_texture.getGLHandle();
                     m_particleSettings->texturePath = path;
+                    m_particleSettings->textureSize = m_texture.getSize();
                 }
             }
 
@@ -405,6 +416,59 @@ void ParticleState::drawGizmo()
         tx = m_selectedEntity.getComponent<cro::Transform>().getLocalTransform();
         ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], static_cast<ImGuizmo::OPERATION>(m_gizmoMode), ImGuizmo::MODE::LOCAL, &tx[0][0]);
         m_selectedEntity.getComponent<cro::Transform>().setLocalTransform(tx);
+    }
+}
+
+void ParticleState::drawOptions()
+{
+    if (m_showPreferences)
+    {
+        ImGui::SetNextWindowSize({ 400.f, 260.f });
+        if (ImGui::Begin("Preferences##world", &m_showPreferences))
+        {
+            ImGui::Text("%s", "Working Directory:");
+            if (m_sharedData.workingDirectory.empty())
+            {
+                ImGui::Text("%s", "Not Set");
+            }
+            else
+            {
+                auto dir = m_sharedData.workingDirectory.substr(0, 30) + "...";
+                ImGui::Text("%s", dir.c_str());
+                ImGui::SameLine();
+                ui::showToolTip(m_sharedData.workingDirectory.c_str());
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Browse"))
+            {
+                auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
+                if (!path.empty())
+                {
+                    m_sharedData.workingDirectory = path;
+                    std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
+                }
+            }
+
+            ImGui::NewLine();
+            ImGui::Separator();
+            ImGui::NewLine();
+
+            auto skyColour = getContext().appInstance.getClearColour();
+            if (ImGui::ColorEdit3("Sky Colour", skyColour.asArray()))
+            {
+                getContext().appInstance.setClearColour(skyColour);
+            }
+
+            ImGui::NewLine();
+            ImGui::NewLine();
+            if (!m_showPreferences ||
+                ImGui::Button("Close"))
+            {
+                savePrefs();
+                m_showPreferences = false;
+            }
+        }
+        ImGui::End();
     }
 }
 

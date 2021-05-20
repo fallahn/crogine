@@ -85,12 +85,15 @@ private:
     cro::Entity m_selectedEntity;
     std::int32_t m_gizmoMode;
 
+    bool m_showPreferences;
+
     void initUI();
     void drawMenuBar();
     void drawInspector();
     void drawBrowser();
     void drawInfo();
     void drawGizmo();
+    void drawOptions();
     void updateLayout(std::int32_t, std::int32_t);
     void updateMouseInput(const cro::Event&);
 

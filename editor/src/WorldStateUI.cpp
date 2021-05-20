@@ -87,7 +87,7 @@ void WorldState::drawMenuBar()
         {
             if (ImGui::MenuItem("Options", nullptr, nullptr))
             {
-
+                m_showPreferences = !m_showPreferences;
             }
             if (ImGui::MenuItem("Model Viewer/Importer", nullptr, nullptr))
             {
@@ -106,6 +106,10 @@ void WorldState::drawMenuBar()
         ImGui::EndMainMenuBar();
     }
 
+    if (m_showPreferences)
+    {
+        drawOptions();
+    }
 }
 
 void WorldState::drawInspector()
@@ -340,6 +344,59 @@ void WorldState::drawGizmo()
         tx = m_selectedEntity.getComponent<cro::Transform>().getLocalTransform();
         ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], static_cast<ImGuizmo::OPERATION>(m_gizmoMode), ImGuizmo::MODE::LOCAL, &tx[0][0]);
         m_selectedEntity.getComponent<cro::Transform>().setLocalTransform(tx);
+    }
+}
+
+void WorldState::drawOptions()
+{
+    if (m_showPreferences)
+    {
+        ImGui::SetNextWindowSize({ 400.f, 260.f });
+        if (ImGui::Begin("Preferences##world", &m_showPreferences))
+        {
+            ImGui::Text("%s", "Working Directory:");
+            if (m_sharedData.workingDirectory.empty())
+            {
+                ImGui::Text("%s", "Not Set");
+            }
+            else
+            {
+                auto dir = m_sharedData.workingDirectory.substr(0, 30) + "...";
+                ImGui::Text("%s", dir.c_str());
+                ImGui::SameLine();
+                ui::showToolTip(m_sharedData.workingDirectory.c_str());
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Browse"))
+            {
+                auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
+                if (!path.empty())
+                {
+                    m_sharedData.workingDirectory = path;
+                    std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
+                }
+            }
+
+            ImGui::NewLine();
+            ImGui::Separator();
+            ImGui::NewLine();
+
+            auto skyColour = getContext().appInstance.getClearColour();
+            if (ImGui::ColorEdit3("Sky Colour", skyColour.asArray()))
+            {
+                getContext().appInstance.setClearColour(skyColour);
+            }
+
+            ImGui::NewLine();
+            ImGui::NewLine();
+            if (!m_showPreferences ||
+                ImGui::Button("Close"))
+            {
+                savePrefs();
+                m_showPreferences = false;
+            }
+        }
+        ImGui::End();
     }
 }
 

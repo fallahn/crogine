@@ -56,14 +56,15 @@ namespace
 }
 
 WorldState::WorldState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State    (ss, ctx),
-    m_sharedData    (sd),
-    m_scene         (ctx.appInstance.getMessageBus()),
-    m_previewScene  (ctx.appInstance.getMessageBus()),
-    m_viewportRatio (1.f),
-    m_fov           (DefaultFOV),
-    m_gizmoMode     (ImGuizmo::TRANSLATE),
-    m_selectedModel (0)
+    : cro::State        (ss, ctx),
+    m_sharedData        (sd),
+    m_scene             (ctx.appInstance.getMessageBus()),
+    m_previewScene      (ctx.appInstance.getMessageBus()),
+    m_viewportRatio     (1.f),
+    m_fov               (DefaultFOV),
+    m_gizmoMode         (ImGuizmo::TRANSLATE),
+    m_showPreferences   (false),
+    m_selectedModel     (0)
 {
     ctx.mainWindow.loadResources([this]() {
         addSystems();

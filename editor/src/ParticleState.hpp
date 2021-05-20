@@ -96,12 +96,15 @@ private:
     std::int32_t m_selectedBlendMode;
     cro::Texture m_texture;
 
+    bool m_showPreferences;
+
     void initUI();
     void drawMenuBar();
     void drawInspector();
     void drawBrowser();
     void drawInfo();
     void drawGizmo();
+    void drawOptions();
     void updateLayout(std::int32_t, std::int32_t);
     void updateMouseInput(const cro::Event&);
 

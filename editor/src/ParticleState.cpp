@@ -65,7 +65,8 @@ ParticleState::ParticleState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_fov               (DefaultFOV),
     m_gizmoMode         (ImGuizmo::TRANSLATE),
     m_particleSettings  (nullptr),
-    m_selectedBlendMode (0)
+    m_selectedBlendMode (0),
+    m_showPreferences   (false)
 {
     ctx.mainWindow.loadResources([this]() {
         addSystems();

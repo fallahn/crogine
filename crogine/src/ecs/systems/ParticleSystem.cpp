@@ -316,7 +316,7 @@ void ParticleSystem::process(float dt)
                     randRot = glm::rotate(randRot, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::Z_AXIS);
 
                     p.velocity = randRot * settings.initialVelocity;
-                    p.rotation = Util::Random::value(-Util::Const::TAU, Util::Const::TAU);
+                    p.rotation = (settings.randomInitialRotation) ? Util::Random::value(-Util::Const::PI, Util::Const::PI) : 0.f;
                     p.scale = 1.f;
                     p.acceleration = settings.acceleration;
                     p.frameID = (settings.useRandomFrame && settings.frameCount > 1) ? cro::Util::Random::value(0, static_cast<std::int32_t>(settings.frameCount) - 1) : 0;
