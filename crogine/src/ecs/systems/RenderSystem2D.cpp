@@ -177,15 +177,7 @@ void RenderSystem2D::process(float)
 
         if (drawable.m_cropped)
         {
-            
-            auto scale = tx.getScale();
-
-            //update world positions - using world tx directly doesn't account for orignal offset
-            drawable.m_croppingWorldArea = drawable.m_croppingArea;
-            drawable.m_croppingWorldArea.left += pos.x;
-            drawable.m_croppingWorldArea.bottom += pos.y;
-            drawable.m_croppingWorldArea.width *= scale.x;
-            drawable.m_croppingWorldArea.height *= scale.y;
+            drawable.m_croppingWorldArea = drawable.m_croppingArea.transform(tx.getWorldTransform());
         }
     }
 }
