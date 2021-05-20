@@ -239,8 +239,8 @@ void ParticleState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<cro::ParticleSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
+    m_scene.addSystem<cro::ParticleSystem>(mb);
 }
 
 void ParticleState::setupScene()
