@@ -28,8 +28,6 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ParticleDirector.hpp"
-#include "Messages.hpp"
-#include "PlayerSystem.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
@@ -43,36 +41,13 @@ namespace
     const std::size_t MinEmitters = 4;
 }
 
-ParticleDirector::ParticleDirector(cro::TextureResource& tr)
-    : m_textures        (tr),
-    m_nextFreeEmitter   (0)
+ParticleDirector::ParticleDirector()
+    : m_nextFreeEmitter   (0)
 {
 
 }
 
 //public
-void ParticleDirector::handleMessage(const cro::Message& msg)
-{
-    if (m_messageHandler)
-    {
-        auto result = m_messageHandler(msg);
-        if (result)
-        {
-            auto& [index, position] = *result;
-            CRO_ASSERT(index < m_emitterSettings.size(), "Index out of range");
-            auto ent = getNextEntity();
-            ent.getComponent<cro::Transform>().setPosition(position);
-            ent.getComponent<cro::ParticleEmitter>().settings = m_emitterSettings[index];
-            ent.getComponent<cro::ParticleEmitter>().start();
-        }
-    }
-}
-
-void ParticleDirector::handleEvent(const cro::Event&)
-{
-
-}
-
 void ParticleDirector::process(float)
 {
     //check for finished systems then free up by swapping
@@ -87,12 +62,6 @@ void ParticleDirector::process(float)
             i--;
         }
     }
-}
-
-std::size_t ParticleDirector::loadSettings(const std::string& path)
-{
-    m_emitterSettings.emplace_back().loadFromFile(path, m_textures);
-    return m_emitterSettings.size() - 1;
 }
 
 //private

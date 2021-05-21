@@ -31,91 +31,56 @@ source distribution.
 #include <crogine/ecs/Director.hpp>
 #include <crogine/ecs/Entity.hpp>
 
-#include <crogine/ecs/components/ParticleEmitter.hpp>
-#include <crogine/graphics/TextureResource.hpp>
-#include <crogine/detail/glm/vec3.hpp>
-
 #include <vector>
-#include <optional>
-#include <functional>
 
 /*
-\brief Fires a requested particle effect at a given position in the Scene.
+\brief Creates a recycled pool of Entity objects
+with attached ParticleEmitters.
+
+Inherit this class and implement handleMessage() to
+trigger specific particle effects on incoming events.
+
+Use getNextEntity() to retrieve the next available
+ParticleEmtter, and apply your custom particle settings to it.
+
+\begincode
+if(msg.id == PlayerMessage)
+{
+    const auto& data = msg.getData<PlayerEvent>();
+    
+    auto emitter = getNextEntity();
+    emitter.getComponent<cro::Transform>().setPosition(data.position);
+
+    switch(data.type)
+    {
+    case PlayerEvent::Died:
+        emitter.getComponent<cro::ParticleEmitter>().settings = settings[Explosion];
+        break;
+    case PlayerEvent::Respawned:
+        emitter.getComponent<cro::ParticleEmitter>().settings = setting[Sparkles];
+        break;
+    }
+    emitter.getComponent<cro::ParticleEmitter>().start();
+}
+\endcode
 */
 
-class ParticleDirector final : public cro::Director 
+class ParticleDirector : public cro::Director 
 {
 public:
-    /*!
-    \brief Handles messages forwarded by handleMessage()
-    In order to customise which particles are fired by a particular event
-    a custom message handler should be supplied to the ParticleDirector
-    via setMessageHandler().
-    The handler returns a std::optional<std::pair<std::size_t, glm::vec3>>,
-    or std::nullopt as a default. The std::pair contains the index of the
-    loaded ParticleEmitter to fire, and a glm::vec3 containing the world
-    coordinates at which to start the emitter.
+    ParticleDirector();
 
-    The indices for ParticleEmitter settings are returned by loadSettings()
-
-    \begincode
-    std::array indices = 
-    {
-        director.loadSettings("explosion.xyp),
-        director.loadSettings("sparks.xyp)
-    };
-
-    auto handler = [indices](const cro::Message& msg)->std::optional<std::pair<std::size_t, glm::vec3>>
-    {
-        if(msg.id == MessageID::SomeEffect)
-        {
-            const auto& evt = msg.getData<EffectEvent>();
-            if(evt.type == Explosion)
-            {
-                return std::make_pair(indices[0], evt.position);
-            }
-            else if(evt.type == Spark)
-            {
-                return std::make_pair(indices[1], evt.position);
-            }
-        }
-
-        return std::nullopt
-    };
-
-    director.setMessageHandler(handler);
-    \endcode
-    */
-
-    using MessageHandler = std::function<std::optional<std::pair<std::size_t, glm::vec3>>(const cro::Message&)>;
-
-    explicit ParticleDirector(cro::TextureResource&);
-
-    void handleMessage(const cro::Message&) override;
-
-    void handleEvent(const cro::Event&) override;
+    virtual void handleMessage(const cro::Message&) = 0;
 
     void process(float) override;
 
-    std::size_t getBufferSize() const { return m_emitters.size(); }
-
-    //returns the index of the loaded settings
-    //note settings may not successfully load from file
-    std::size_t loadSettings(const std::string&); 
-
-    //registers a message handler
-    void setMessageHandler(MessageHandler mh) { m_messageHandler = mh; }
+protected:
+    cro::Entity getNextEntity();
 
 private:
-
-    cro::TextureResource& m_textures;
-    std::vector<cro::EmitterSettings> m_emitterSettings;
 
     std::size_t m_nextFreeEmitter;
     std::vector<cro::Entity> m_emitters;
 
-    MessageHandler m_messageHandler;
-
     void resizeEmitters();
-    cro::Entity getNextEntity();
 };
