@@ -378,6 +378,16 @@ namespace cro
         float getFOV() const { return m_verticalFOV; }
 
         /*!
+        \brief Returns the near plane value of the projection matrix
+        */
+        float getNearPlane() const { return m_nearPlane; }
+
+        /*!
+        \brief Returns the far plane value of the projection matrix
+        */
+        float getFarPlane() const { return m_farPlane; }
+
+        /*!
         \brief Returns the render target coordinates of the given
         3D world coordinates, as they would appear if rendered
         by this camera.

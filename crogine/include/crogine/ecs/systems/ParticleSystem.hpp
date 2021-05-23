@@ -97,7 +97,7 @@ namespace cro
             Viewport,
             ParticleSize,
             FrameCount,
-            DepthMap,
+            CameraRange,
 
             Count
         };

@@ -81,6 +81,7 @@ namespace
         VARYING_OUT LOW vec4 v_colour;
         VARYING_OUT MED mat2 v_rotation;
         VARYING_OUT LOW float v_currentFrame;
+        VARYING_OUT HIGH float v_depth;
 
         void main()
         {
@@ -95,6 +96,8 @@ namespace
             gl_Position = u_viewProjection * a_position;
             gl_PointSize = u_viewportHeight * u_projection[1][1] / gl_Position.w * u_particleSize * a_normal.y;
 
+            v_depth = gl_Position.z / gl_Position.w;
+
 #if defined (MOBILE)
 
 #else
@@ -108,11 +111,26 @@ namespace
         uniform sampler2D u_texture;
         uniform float u_frameCount;
         uniform vec2 u_textureSize;
+        uniform vec2 u_cameraRange;
 
         VARYING_IN LOW vec4 v_colour;
         VARYING_IN MED mat2 v_rotation;
         VARYING_IN LOW float v_currentFrame;
+        VARYING_IN HIGH float v_depth;
         OUTPUT
+
+#if defined (MOBILE)
+        float smoothstep(float edge0, float edge1, float x)
+        {
+            float t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+            return t * t * (3.0 - 2.0 * t);
+        }
+#endif
+
+        float linearise(float z)
+        {
+            return (2.0 * u_cameraRange.x) / (u_cameraRange.y + u_cameraRange.x - z*(u_cameraRange.y - u_cameraRange.x));
+        }
 
         void main()
         {
@@ -133,7 +151,12 @@ namespace
             //and back to UV space
             coord /= u_textureSize;
 
-            FRAG_OUT = v_colour * TEXTURE(u_texture, coord);
+            //frag depth should have geometry depth stored as depth writes are disabled
+            float geomDepth = linearise(gl_FragCoord.z);
+            float diff = clamp(geomDepth - linearise(v_depth), 0.0, 1.0);
+            float strength = smoothstep(0.0, 0.05, diff);
+
+            FRAG_OUT = v_colour * TEXTURE(u_texture, coord) * strength;
         }
     )";
 
@@ -185,6 +208,7 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
         m_uniformIDs[UniformID::ParticleSize] = uniforms.find("u_particleSize")->second;
         m_uniformIDs[UniformID::TextureSize] = uniforms.find("u_textureSize")->second;
         m_uniformIDs[UniformID::FrameCount] = uniforms.find("u_frameCount")->second;
+        m_uniformIDs[UniformID::CameraRange] = uniforms.find("u_cameraRange")->second;
 
         //map attributes
         const auto& attribMap = m_shader.getAttribMap();
@@ -478,9 +502,10 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
     glCheck(glUniform1f(m_uniformIDs[UniformID::Viewport], static_cast<float>(vp.height)));
     glCheck(glUniform1i(m_uniformIDs[UniformID::Texture], 0));
+    glCheck(glUniform2f(m_uniformIDs[UniformID::CameraRange], cam.getNearPlane(), cam.getFarPlane()));
     glCheck(glActiveTexture(GL_TEXTURE0));
 
-
+    
     
     const auto& entities = std::any_cast<const std::vector<Entity>&>(pass.drawList.at(getType()));
     for(auto entity : entities)

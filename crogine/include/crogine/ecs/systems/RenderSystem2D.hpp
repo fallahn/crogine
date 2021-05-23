@@ -82,7 +82,7 @@ namespace cro
         ~RenderSystem2D();
 
         RenderSystem2D(const RenderSystem2D&) = delete;
-        RenderSystem2D(RenderSystem2D&&) = default;
+        RenderSystem2D(RenderSystem2D&&) noexcept = default;
 
         const RenderSystem2D& operator = (const RenderSystem2D&) = delete;
         RenderSystem2D& operator = (RenderSystem2D&&) = default;

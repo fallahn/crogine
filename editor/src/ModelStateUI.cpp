@@ -1198,7 +1198,7 @@ void ModelState::drawInspector()
                     }
                     else
                     {
-                        helpMarker("Defines the mask colour of the material in lieu of a mask map. The metallic value is stored n the red channel, roughness in the blue channel and AO in the green channel");
+                        helpMarker("Defines the mask colour of the material in lieu of a mask map. The metallic value is stored in the red channel, roughness in the green channel and AO in the blue channel");
                     }
                 }
 
