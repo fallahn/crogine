@@ -48,7 +48,15 @@ namespace cro
     struct TextureID final
     {
         std::uint32_t textureID = 0;
+
+        TextureID() = default;
         explicit TextureID(std::uint32_t id) : textureID(id) {}
+
+        TextureID& operator = (std::uint32_t id)
+        {
+            textureID = id;
+            return *this;
+        }
     };
 
     /*!
@@ -57,7 +65,15 @@ namespace cro
     struct CubemapID final
     {
         std::uint32_t textureID = 0;
+
+        CubemapID() = default;
         explicit CubemapID(std::uint32_t id) : textureID(id) {}
+
+        CubemapID& operator = (std::uint32_t id)
+        {
+            textureID = id;
+            return *this;
+        }
     };
 
     class Texture;
