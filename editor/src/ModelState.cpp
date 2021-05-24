@@ -80,6 +80,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_sharedData            (sd),
     m_scene                 (context.appInstance.getMessageBus()),
     m_previewScene          (context.appInstance.getMessageBus()),
+    m_showMaskEditor        (false),
     m_fov                   (DefaultFOV),
     m_viewportRatio         (1.f),
     m_showPreferences       (false),

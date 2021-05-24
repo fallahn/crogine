@@ -84,6 +84,7 @@ private:
     cro::ResourceCollection m_resources;
 
     MaskEditor m_maskEditor;
+    bool m_showMaskEditor;
 
     float m_fov;
     float m_viewportRatio;

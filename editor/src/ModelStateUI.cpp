@@ -489,6 +489,10 @@ void ModelState::buildUI()
                     {
 
                     }
+                    if (ImGui::MenuItem("Mask Editor", nullptr, &m_showMaskEditor))
+                    {
+
+                    }
                     if (ImGui::MenuItem("Reset Camera"))
                     {
                         m_entities[EntityID::ArcBall].getComponent<cro::Transform>().setLocalTransform(glm::mat4(1.f));
@@ -660,7 +664,7 @@ void ModelState::buildUI()
                 showGLTFBrowser();
             }
 
-            m_maskEditor.doImGui();
+            m_maskEditor.doImGui(&m_showMaskEditor);
 
             /*if (ImGui::Begin("Buns"))
             {

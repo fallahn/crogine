@@ -53,7 +53,7 @@ public:
     MaskEditor& operator = (const MaskEditor&) = delete;
     MaskEditor& operator = (MaskEditor&&) = delete;
 
-    void doImGui();
+    void doImGui(bool*);
 
 private:
     struct ChannelID final

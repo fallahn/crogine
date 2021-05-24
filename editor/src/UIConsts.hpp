@@ -53,9 +53,8 @@ namespace uiConst
     static const cro::Colour PreviewClearColour = cro::Colour(0.f, 0.f, 0.f, 0.2f);
     static constexpr std::uint32_t PreviewTextureSize = 512u;
 
-    static inline void showToolTip(const std::string message)
+    static inline void showTipMessage(const std::string& message)
     {
-        ImGui::TextDisabled("(?)");
         if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
@@ -64,5 +63,11 @@ namespace uiConst
             ImGui::PopTextWrapPos();
             ImGui::EndTooltip();
         }
+    }
+
+    static inline void showToolTip(const std::string message)
+    {
+        ImGui::TextDisabled("(?)");
+        showTipMessage(message);
     }
 }

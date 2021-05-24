@@ -29,6 +29,7 @@ source distribution.
 
 #include "MaskEditor.hpp"
 #include "ErrorCheck.hpp"
+#include "UIConsts.hpp"
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/Image.hpp>
@@ -136,6 +137,8 @@ MaskEditor::MaskEditor()
 
     //create the output
     m_outputTexture.create(1024, 1024, false);
+    m_outputTexture.clear(cro::Colour::White);
+    m_outputTexture.display();
 }
 
 MaskEditor::~MaskEditor()
@@ -153,13 +156,16 @@ MaskEditor::~MaskEditor()
 }
 
 //public
-void MaskEditor::doImGui()
+void MaskEditor::doImGui(bool* open)
 {
-    ImGui::SetNextWindowSize({ 550.f, 550.f });
-    if (ImGui::Begin("Mask Editor"))
+    if (!*open)
     {
-        ImGui::Image(m_outputTexture.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+        return;
+    }
 
+    ImGui::SetNextWindowSize({ 550.f, 550.f });
+    if (ImGui::Begin("Mask Editor", open))
+    {
         if (ImGui::SliderFloat("Metalness", &m_metalValue, 0.f, 1.f))
         {
             updateOutput();
@@ -183,6 +189,7 @@ void MaskEditor::doImGui()
             }
         }
         ImGui::PopID();
+        uiConst::showTipMessage("Click to select the metalness map");
         ImGui::SameLine();
 
         ImGui::PushID(101);
@@ -197,6 +204,7 @@ void MaskEditor::doImGui()
             }
         }
         ImGui::PopID();
+        uiConst::showTipMessage("Click to select the roughness map");
         ImGui::SameLine();
 
         ImGui::PushID(102);
@@ -211,9 +219,61 @@ void MaskEditor::doImGui()
             }
         }
         ImGui::PopID();
+        uiConst::showTipMessage("Click to select the ambient occlusion map");
 
+        if (ImGui::Button("Clear", { 72.f, 20.f }))
+        {
+            m_quad.activeTextures[ChannelID::Metal] = m_whiteTexture.getGLHandle();
+            updateOutput();
+        }
+        uiConst::showTipMessage("Clears the metal map");
+        ImGui::SameLine();
+        if (ImGui::Button("Clear##Roughness", { 72.f, 20.f }))
+        {
+            m_quad.activeTextures[ChannelID::Roughness] = m_whiteTexture.getGLHandle();
+            updateOutput();
+        }
+        uiConst::showTipMessage("Clears the roughness map");
+        ImGui::SameLine();
+        if (ImGui::Button("Clear##Ambient", { 72.f, 20.f }))
+        {
+            m_quad.activeTextures[ChannelID::AO] = m_whiteTexture.getGLHandle();
+            updateOutput();
+        }
+        uiConst::showTipMessage("Clears the ambient occlusion map");
+        ImGui::SameLine();
+        if (ImGui::Button("Clear All"))
+        {
+            for (auto& t : m_quad.activeTextures)
+            {
+                t = m_whiteTexture.getGLHandle();
+            }
+            updateOutput();
+        }
 
+        ImGui::NewLine();
 
+        ImGui::Text("TODO: select the resolution here. (currently 1024x1024)");
+        /*if (ImGui::BeginCombo("##Shader", ShaderStrings[matDef.type]))
+        {
+            for (auto i = 0u; i < ShaderStrings.size(); ++i)
+            {
+                bool selected = matDef.type == i;
+                if (ImGui::Selectable(ShaderStrings[i], selected))
+                {
+                    matDef.type = static_cast<MaterialDefinition::Type>(i);
+                }
+
+                if (selected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+
+            ImGui::EndCombo();
+        }*/
+
+        ImGui::SameLine();
         if (ImGui::Button("Save File"))
         {
             auto path = cro::FileSystem::saveFileDialogue("", "png");
@@ -222,6 +282,8 @@ void MaskEditor::doImGui()
                 m_outputTexture.saveToFile(path);
             }
         }
+
+        ImGui::Image(m_outputTexture.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
     }
     ImGui::End();
 }
