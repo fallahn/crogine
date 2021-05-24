@@ -401,7 +401,7 @@ FloatRect Texture::getNormalisedSubrect(FloatRect rect) const
     return { rect.left / m_size.x, rect.bottom / m_size.y, rect.width / m_size.x, rect.height / m_size.y };
 }
 
-bool Texture::saveToFile(const std::string& path)
+bool Texture::saveToFile(const std::string& path) const
 {
     if (m_handle == 0)
     {

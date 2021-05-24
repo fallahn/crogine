@@ -198,7 +198,7 @@ void ModelState::render()
     //render active material preview
     if (!m_materialDefs.empty())
     {
-        m_materialDefs[m_selectedMaterial].previewTexture.clear(ui::PreviewClearColour);
+        m_materialDefs[m_selectedMaterial].previewTexture.clear(uiConst::PreviewClearColour);
         m_previewScene.render(m_materialDefs[m_selectedMaterial].previewTexture);
         m_materialDefs[m_selectedMaterial].previewTexture.display();
     }

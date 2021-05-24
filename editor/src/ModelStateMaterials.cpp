@@ -274,7 +274,7 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
     applyPreviewSettings(def);
     m_previewEntity.getComponent<cro::Model>().setMaterial(0, def.materialData);
 
-    def.previewTexture.clear(ui::PreviewClearColour);
+    def.previewTexture.clear(uiConst::PreviewClearColour);
     m_previewScene.render(def.previewTexture);
     def.previewTexture.display();
 }

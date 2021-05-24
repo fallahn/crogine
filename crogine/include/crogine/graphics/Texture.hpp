@@ -166,7 +166,7 @@ namespace cro
         \param path A string containg a path to same the texture to.
         \returns true if successful else returns false
         */
-        bool saveToFile(const std::string& path);
+        bool saveToFile(const std::string& path) const;
 
     private:
         glm::uvec2 m_size;

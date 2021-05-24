@@ -249,3 +249,12 @@ URect RenderTexture::getDefaultViewport() const
 {
     return { 0, 0, m_texture.getSize().x, m_texture.getSize().y };
 }
+
+bool RenderTexture::saveToFile(const std::string& path) const
+{
+    if (m_fboID)
+    {
+        return m_texture.saveToFile(path);
+    }
+    return false;
+}

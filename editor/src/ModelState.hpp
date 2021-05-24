@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine model viewer/importer - Zlib license.
@@ -31,6 +31,9 @@ source distribution.
 
 #include "gltf/tiny_gltf.h"
 #include "ResourceIDs.hpp"
+#include "StateIDs.hpp"
+#include "MaterialDefinition.hpp"
+#include "MaskEditor.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -39,9 +42,6 @@ source distribution.
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/gui/detail/imgui.h>
-
-#include "StateIDs.hpp"
-#include "MaterialDefinition.hpp"
 
 #include <map>
 #include <memory>
@@ -82,6 +82,8 @@ private:
     cro::Scene m_scene;
     cro::Scene m_previewScene;
     cro::ResourceCollection m_resources;
+
+    MaskEditor m_maskEditor;
 
     float m_fov;
     float m_viewportRatio;

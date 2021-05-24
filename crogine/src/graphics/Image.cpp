@@ -108,8 +108,20 @@ bool Image::loadFromFile(const std::string& filePath)
     {
         m_flipped = true;
 
-        ImageFormat::Type format = (fmt == 4) ? ImageFormat::RGBA : ImageFormat::RGB;
-        auto result = loadFromMemory(static_cast<std::uint8_t*>(img), w, h, format);
+        ImageFormat::Type format = ImageFormat::A;
+        switch (fmt)
+        {
+        default: break;
+        case 4:
+            format = ImageFormat::Type::RGBA;
+            break;
+        case 3:
+            format = ImageFormat::Type::RGB;
+            break;
+        }
+
+        //we don't support 2 channel images.
+        auto result = fmt == 2 ? false : loadFromMemory(static_cast<std::uint8_t*>(img), w, h, format);
         
         stbi_image_free(img);
         SDL_RWclose(file);

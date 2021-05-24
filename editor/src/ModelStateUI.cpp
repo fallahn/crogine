@@ -281,15 +281,15 @@ namespace
 float updateView(cro::Entity entity, float farPlane, float fov)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
-    size.x -= (size.x * ui::InspectorWidth);
-    size.y -= (size.y * ui::BrowserHeight);
+    size.x -= (size.x * uiConst::InspectorWidth);
+    size.y -= (size.y * uiConst::BrowserHeight);
 
     auto& cam3D = entity.getComponent<cro::Camera>();
     cam3D.setPerspective(fov, size.x / size.y, 0.1f, farPlane);
-    cam3D.viewport.left = ui::InspectorWidth;
-    cam3D.viewport.width = 1.f - ui::InspectorWidth;
-    cam3D.viewport.bottom = ui::BrowserHeight;
-    cam3D.viewport.height = 1.f - ui::BrowserHeight;
+    cam3D.viewport.left = uiConst::InspectorWidth;
+    cam3D.viewport.width = 1.f - uiConst::InspectorWidth;
+    cam3D.viewport.bottom = uiConst::BrowserHeight;
+    cam3D.viewport.height = 1.f - uiConst::BrowserHeight;
 
     return size.x / size.y;
 }
@@ -589,7 +589,7 @@ void ModelState::buildUI()
                 ImGui::Begin("Material Preview", &m_showMaterialWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
                 if (!m_materialDefs.empty())
                 {
-                    ImGui::Image(m_materialDefs[m_selectedMaterial].previewTexture.getTexture(), { ui::PreviewTextureSize, ui::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::Image(m_materialDefs[m_selectedMaterial].previewTexture.getTexture(), { uiConst::PreviewTextureSize, uiConst::PreviewTextureSize }, { 0.f, 1.f }, { 1.f, 0.f });
                 }
                 ImGui::End();
 
@@ -619,7 +619,7 @@ void ModelState::buildUI()
 
                 for (auto i = 0u; i < meshData.submeshCount && i < m_lightmapTextures.size(); ++i) //only show tetures for the current model (there may be more from a previous bake)
                 {
-                    ImGui::Image(*m_lightmapTextures[i], { ui::PreviewTextureSize / 4.f, ui::PreviewTextureSize / 4.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::Image(*m_lightmapTextures[i], { uiConst::PreviewTextureSize / 4.f, uiConst::PreviewTextureSize / 4.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                     if (i > 0 && (i % 3) != 0)
                     {
@@ -659,6 +659,8 @@ void ModelState::buildUI()
             {
                 showGLTFBrowser();
             }
+
+            m_maskEditor.doImGui();
 
             /*if (ImGui::Begin("Buns"))
             {
@@ -790,7 +792,7 @@ void ModelState::drawInspector()
                 }
                 else
                 {
-                    ImGui::PushItemWidth(size.x * ui::TextBoxWidth);
+                    ImGui::PushItemWidth(size.x * uiConst::TextBoxWidth);
                     ImGui::InputText("##name_model", &m_modelProperties.name);
                     ImGui::PopItemWidth();
 
@@ -949,12 +951,12 @@ void ModelState::drawInspector()
             {
                 auto& matDef = m_materialDefs[m_selectedMaterial];
 
-                ImGui::PushItemWidth(size.x * ui::TextBoxWidth);
+                ImGui::PushItemWidth(size.x * uiConst::TextBoxWidth);
                 ImGui::InputText("##name", &matDef.name);
                 ImGui::PopItemWidth();
 
                 auto imgSize = size;
-                imgSize.x *= ui::MaterialPreviewWidth;
+                imgSize.x *= uiConst::MaterialPreviewWidth;
                 imgSize.y = imgSize.x;
 
                 ImGui::SetCursorPos({ pos.x + ((size.x - imgSize.y) / 2.f), pos.y + 60.f });
@@ -962,7 +964,7 @@ void ModelState::drawInspector()
                     { imgSize.x, imgSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
 
                 static float rotation = 0.f;
-                ImGui::PushItemWidth(size.x * ui::TextBoxWidth);
+                ImGui::PushItemWidth(size.x * uiConst::TextBoxWidth);
                 if (ImGui::SliderFloat("##rotation", &rotation, -180.f, 180.f))
                 {
                     m_previewEntity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
@@ -988,7 +990,7 @@ void ModelState::drawInspector()
 
                 ImGui::NewLine();
                 ImGui::Text("Shader Type:");
-                ImGui::PushItemWidth(size.x * ui::TextBoxWidth);
+                ImGui::PushItemWidth(size.x * uiConst::TextBoxWidth);
                 auto oldType = matDef.type;
                 if (ImGui::BeginCombo("##Shader", ShaderStrings[matDef.type]))
                 {
@@ -1280,7 +1282,7 @@ void ModelState::drawInspector()
 
                 ImGui::NewLine();
                 ImGui::Text("Blend Mode:");
-                ImGui::PushItemWidth(size.x * ui::TextBoxWidth);
+                ImGui::PushItemWidth(size.x * uiConst::TextBoxWidth);
                 auto oldMode = matDef.blendMode;
                 if (ImGui::BeginCombo("##BlendMode", BlendStrings[static_cast<std::int32_t>(matDef.blendMode)]))
                 {
@@ -1392,7 +1394,7 @@ void ModelState::drawInspector()
                 ImGui::Text("%s", texture.name.c_str());
 
                 auto imgSize = size;
-                imgSize.x *= ui::TexturePreviewWidth;
+                imgSize.x *= uiConst::TexturePreviewWidth;
                 imgSize.y = imgSize.x;
 
                 ImGui::SetCursorPos({ pos.x + ((size.x - imgSize.y) / 2.f), pos.y + 60.f });
@@ -1464,7 +1466,7 @@ void ModelState::drawBrowser()
         {
             if (ImGui::Button("Add##01"))
             {
-                if (m_materialDefs.size() < ui::MaxMaterials)
+                if (m_materialDefs.size() < uiConst::MaxMaterials)
                 {
                     m_materialDefs.emplace_back();
                     m_materialDefs.back().materialData = m_resources.materials.get(m_materialIDs[MaterialID::Default]);
@@ -1538,12 +1540,12 @@ void ModelState::drawBrowser()
             static std::size_t lastSelected = std::numeric_limits<std::uint32_t>::max();
 
             auto thumbSize = size;
-            thumbSize.y *= ui::ThumbnailHeight;
+            thumbSize.y *= uiConst::ThumbnailHeight;
             thumbSize.x = thumbSize.y;
 
             auto frameSize = thumbSize;
-            frameSize.x += ImGui::GetStyle().FramePadding.x * ui::FramePadding.x;
-            frameSize.y += ImGui::GetStyle().FramePadding.y * ui::FramePadding.y;
+            frameSize.x += ImGui::GetStyle().FramePadding.x * uiConst::FramePadding.x;
+            frameSize.y += ImGui::GetStyle().FramePadding.y * uiConst::FramePadding.y;
 
             std::int32_t thumbsPerRow = static_cast<std::int32_t>(std::floor(size.x / frameSize.x) - 1);
 
@@ -1624,7 +1626,7 @@ void ModelState::drawBrowser()
             {
                 auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp", true);
                 if (!path.empty()
-                    && m_materialTextures.size() < ui::MaxMaterials)
+                    && m_materialTextures.size() < uiConst::MaxMaterials)
                 {
                     auto files = cro::Util::String::tokenize(path, '|');
                     for (const auto& f : files)
@@ -1688,12 +1690,12 @@ void ModelState::drawBrowser()
             static std::size_t lastSelected = 0;
 
             auto thumbSize = size;
-            thumbSize.y *= ui::ThumbnailHeight;
+            thumbSize.y *= uiConst::ThumbnailHeight;
             thumbSize.x = thumbSize.y;
 
             auto frameSize = thumbSize;
-            frameSize.x += ImGui::GetStyle().FramePadding.x * ui::FramePadding.x;
-            frameSize.y += ImGui::GetStyle().FramePadding.y * ui::FramePadding.y;
+            frameSize.x += ImGui::GetStyle().FramePadding.x * uiConst::FramePadding.x;
+            frameSize.y += ImGui::GetStyle().FramePadding.y * uiConst::FramePadding.y;
 
             std::int32_t thumbsPerRow = static_cast<std::int32_t>(std::floor(size.x / frameSize.x) - 1);
             std::int32_t count = 0;
@@ -1849,8 +1851,8 @@ void ModelState::drawInfo()
 void ModelState::drawGizmo()
 {
     ImGuiIO& io = ImGui::GetIO();
-    ImGuizmo::SetRect(io.DisplaySize.x * ui::InspectorWidth, 0, io.DisplaySize.x - (ui::InspectorWidth * io.DisplaySize.x),
-        io.DisplaySize.y - (ui::BrowserHeight * io.DisplaySize.y));
+    ImGuizmo::SetRect(io.DisplaySize.x * uiConst::InspectorWidth, 0, io.DisplaySize.x - (uiConst::InspectorWidth * io.DisplaySize.x),
+        io.DisplaySize.y - (uiConst::BrowserHeight * io.DisplaySize.y));
 
 
     auto [pos, size] = WindowLayouts[WindowID::ViewGizmo];
@@ -1900,21 +1902,21 @@ void ModelState::updateLayout(std::int32_t w, std::int32_t h)
     float height = static_cast<float>(h);
 
     WindowLayouts[WindowID::Inspector] =
-        std::make_pair(glm::vec2(0.f, ui::TitleHeight),
-            glm::vec2(width * ui::InspectorWidth, height - (ui::TitleHeight + ui::InfoBarHeight)));
+        std::make_pair(glm::vec2(0.f, uiConst::TitleHeight),
+            glm::vec2(width * uiConst::InspectorWidth, height - (uiConst::TitleHeight + uiConst::InfoBarHeight)));
 
     WindowLayouts[WindowID::Browser] =
-        std::make_pair(glm::vec2(width * ui::InspectorWidth, height - (height * ui::BrowserHeight) - ui::InfoBarHeight),
-            glm::vec2(width - (width * ui::InspectorWidth), height * ui::BrowserHeight));
+        std::make_pair(glm::vec2(width * uiConst::InspectorWidth, height - (height * uiConst::BrowserHeight) - uiConst::InfoBarHeight),
+            glm::vec2(width - (width * uiConst::InspectorWidth), height * uiConst::BrowserHeight));
 
     WindowLayouts[WindowID::Info] =
-        std::make_pair(glm::vec2(0.f, height - ui::InfoBarHeight), glm::vec2(width, ui::InfoBarHeight));
+        std::make_pair(glm::vec2(0.f, height - uiConst::InfoBarHeight), glm::vec2(width, uiConst::InfoBarHeight));
 
     float ratio = width / 800.f;
-    float matSlotWidth = std::max(ui::MinMaterialSlotSize, ui::MinMaterialSlotSize * ratio);
+    float matSlotWidth = std::max(uiConst::MinMaterialSlotSize, uiConst::MinMaterialSlotSize * ratio);
     WindowLayouts[WindowID::MaterialSlot] =
         std::make_pair(glm::vec2(0.f), glm::vec2(matSlotWidth));
 
     WindowLayouts[WindowID::ViewGizmo] =
-        std::make_pair(glm::vec2(width - ui::ViewManipSize, ui::TitleHeight), glm::vec2(ui::ViewManipSize, ui::ViewManipSize));
+        std::make_pair(glm::vec2(width - uiConst::ViewManipSize, uiConst::TitleHeight), glm::vec2(uiConst::ViewManipSize, uiConst::ViewManipSize));
 }

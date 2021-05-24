@@ -34,7 +34,7 @@ source distribution.
 
 #include <cstdint>
 
-namespace ui
+namespace uiConst
 {
     static constexpr float TitleHeight = 22.f;
     static constexpr float InspectorWidth = 0.25f; //percent of window width

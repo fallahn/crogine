@@ -157,6 +157,7 @@
     <ClCompile Include="src\gltf\gltf.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\MaskEditor.cpp" />
     <ClCompile Include="src\ModelState.cpp" />
     <ClCompile Include="src\ModelStateMaterials.cpp" />
     <ClCompile Include="src\ModelStateModels.cpp" />
@@ -176,6 +177,7 @@
     <ClInclude Include="src\gltf\stb_image_write.h" />
     <ClInclude Include="src\gltf\tiny_gltf.h" />
     <ClInclude Include="src\LoadingScreen.hpp" />
+    <ClInclude Include="src\MaskEditor.hpp" />
     <ClInclude Include="src\MaterialDefinition.hpp" />
     <ClInclude Include="src\ModelState.hpp" />
     <ClInclude Include="src\Messages.hpp" />

@@ -81,6 +81,9 @@
     <ClCompile Include="src\ParticleStateUI.cpp">
       <Filter>Source Files\particle editor</Filter>
     </ClCompile>
+    <ClCompile Include="src\MaskEditor.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -136,6 +139,9 @@
     </ClInclude>
     <ClInclude Include="src\ParticleState.hpp">
       <Filter>Header Files\particle editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MaskEditor.hpp">
+      <Filter>Header Files\model viewer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -303,8 +303,8 @@ void WorldState::drawInfo()
 void WorldState::drawGizmo()
 {
     ImGuiIO& io = ImGui::GetIO();
-    ImGuizmo::SetRect(io.DisplaySize.x * ui::InspectorWidth, 0, io.DisplaySize.x - (ui::InspectorWidth * io.DisplaySize.x),
-        io.DisplaySize.y - (ui::BrowserHeight * io.DisplaySize.y));
+    ImGuizmo::SetRect(io.DisplaySize.x * uiConst::InspectorWidth, 0, io.DisplaySize.x - (uiConst::InspectorWidth * io.DisplaySize.x),
+        io.DisplaySize.y - (uiConst::BrowserHeight * io.DisplaySize.y));
 
     auto [pos, size] = WindowLayouts[WindowID::ViewGizmo];
 
@@ -364,7 +364,7 @@ void WorldState::drawOptions()
                 auto dir = m_sharedData.workingDirectory.substr(0, 30) + "...";
                 ImGui::Text("%s", dir.c_str());
                 ImGui::SameLine();
-                ui::showToolTip(m_sharedData.workingDirectory.c_str());
+                uiConst::showToolTip(m_sharedData.workingDirectory.c_str());
             }
             ImGui::SameLine();
             if (ImGui::Button("Browse"))
@@ -405,18 +405,18 @@ void WorldState::updateLayout(std::int32_t w, std::int32_t h)
     float width = static_cast<float>(w);
     float height = static_cast<float>(h);
     WindowLayouts[WindowID::Inspector] = 
-        std::make_pair(glm::vec2(0.f, ui::TitleHeight),
-            glm::vec2(width * ui::InspectorWidth, height - (ui::TitleHeight + ui::InfoBarHeight)));
+        std::make_pair(glm::vec2(0.f, uiConst::TitleHeight),
+            glm::vec2(width * uiConst::InspectorWidth, height - (uiConst::TitleHeight + uiConst::InfoBarHeight)));
 
     WindowLayouts[WindowID::Browser] =
-        std::make_pair(glm::vec2(width * ui::InspectorWidth, height - (height * ui::BrowserHeight) - ui::InfoBarHeight),
-            glm::vec2(width - (width * ui::InspectorWidth), height * ui::BrowserHeight));
+        std::make_pair(glm::vec2(width * uiConst::InspectorWidth, height - (height * uiConst::BrowserHeight) - uiConst::InfoBarHeight),
+            glm::vec2(width - (width * uiConst::InspectorWidth), height * uiConst::BrowserHeight));
 
     WindowLayouts[WindowID::Info] =
-        std::make_pair(glm::vec2(0.f, height - ui::InfoBarHeight), glm::vec2(width, ui::InfoBarHeight));
+        std::make_pair(glm::vec2(0.f, height - uiConst::InfoBarHeight), glm::vec2(width, uiConst::InfoBarHeight));
 
     WindowLayouts[WindowID::ViewGizmo] =
-        std::make_pair(glm::vec2(width - ui::ViewManipSize, ui::TitleHeight), glm::vec2(ui::ViewManipSize, ui::ViewManipSize));
+        std::make_pair(glm::vec2(width - uiConst::ViewManipSize, uiConst::TitleHeight), glm::vec2(uiConst::ViewManipSize, uiConst::ViewManipSize));
 }
 
 void WorldState::updateMouseInput(const cro::Event& evt)

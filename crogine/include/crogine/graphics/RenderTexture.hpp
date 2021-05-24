@@ -145,6 +145,15 @@ namespace cro
         */
         bool available() const { return m_fboID != 0; }
 
+        /*
+        \brief Saves the texture to a png file if it is a valid texture.
+        If the texture contains no data, or create() had not been called
+        then this function does nothing.
+        \param path A string containg a path to same the texture to.
+        \returns true if successful else returns false
+        */
+        bool saveToFile(const std::string& path) const;
+
     private:
         std::uint32_t m_fboID;
         std::uint32_t m_rboID;
