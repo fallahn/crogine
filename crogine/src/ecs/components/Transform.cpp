@@ -393,6 +393,7 @@ bool Transform::addChild(Transform& child)
 {
     CRO_ASSERT(&child != this, "can't parent to ourselves");
 
+    //don't really remember why there's a limit
     if (m_children.size() < MaxChildren)
     {
         //remove any existing parent

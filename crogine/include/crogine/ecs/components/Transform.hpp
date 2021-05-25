@@ -50,7 +50,7 @@ namespace cro
     public:
         enum
         {
-            MaxChildren = 16
+            MaxChildren = 320
         };
 
 
