@@ -27,9 +27,9 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/components/Drawable2D.hpp>
 #include "../../detail/glad.hpp"
 #include "../../detail/GLCheck.hpp"
+#include <crogine/ecs/components/Drawable2D.hpp>
 
 
 #include <limits>
@@ -41,6 +41,7 @@ Drawable2D::Drawable2D()
     m_shader            (nullptr),
     m_customShader      (false),
     m_applyDefaultShader(true),
+    m_autoCrop          (true),
     m_textureUniform    (-1),
     m_worldViewUniform  (-1),
     m_projectionUniform (-1),

@@ -234,12 +234,19 @@ namespace cro
         */
         static constexpr std::uint64_t DefaultFilterFlag = (1ull << 63);
 
+
+        /*!
+        \brief Disables or enables automatic frustum culling. Defaults to enabled
+        */
+        void setCullingEnabled(bool enabled) { m_autoCrop = enabled; }
+
     private:
 
         const Texture* m_texture;
         Shader* m_shader;
         bool m_customShader;
         bool m_applyDefaultShader;
+        bool m_autoCrop;
         std::int32_t m_textureUniform;
         std::int32_t m_worldViewUniform;
         std::int32_t m_projectionUniform;

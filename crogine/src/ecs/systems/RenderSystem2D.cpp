@@ -91,20 +91,28 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
     for (auto entity : entities)
     {
         auto& drawable = entity.getComponent<Drawable2D>();
-        const auto worldMat = entity.getComponent<cro::Transform>().getWorldTransform();
 
-        //check local bounds for visibility and draw if visible
-        auto bounds = drawable.m_localBounds.transform(worldMat);
-        cro::Box aabb(glm::vec3(bounds.left, bounds.bottom, -0.1f), glm::vec3(bounds.left + bounds.width, bounds.bottom + bounds.height, 0.1f));
-
-        bool visible = true;
-        std::size_t i = 0;
-        while (visible && i < frustum.size())
+        if (drawable.m_autoCrop)
         {
-            visible = (Spatial::intersects(frustum[i++], aabb) != Planar::Back);
-        }
+            const auto worldMat = entity.getComponent<cro::Transform>().getWorldTransform();
 
-        if (visible)
+            //check local bounds for visibility and draw if visible
+            auto bounds = drawable.m_localBounds.transform(worldMat);
+            cro::Box aabb(glm::vec3(bounds.left, bounds.bottom, -0.1f), glm::vec3(bounds.left + bounds.width, bounds.bottom + bounds.height, 0.1f));
+
+            bool visible = true;
+            std::size_t i = 0;
+            while (visible && i < frustum.size())
+            {
+                visible = (Spatial::intersects(frustum[i++], aabb) != Planar::Back);
+            }
+
+            if (visible)
+            {
+                m_drawList.push_back(entity);
+            }
+        }
+        else
         {
             m_drawList.push_back(entity);
         }
