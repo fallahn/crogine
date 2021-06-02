@@ -109,7 +109,7 @@ namespace cro
         static constexpr std::int16_t AxisMin = -32768;
 
         /*!
-        \brief Returns the event ID associated with the controlelr at the given index
+        \brief Returns the event ID associated with the controller at the given index
         Events such as SDL_CONTROLLERBUTTONDOWN do not contain the ControllerID in the
         button.which field, rather the underlying ID of the device. This function returns
         that ID currently mapped to the given controller index (which may be -1 if the

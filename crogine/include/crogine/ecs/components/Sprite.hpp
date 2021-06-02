@@ -148,12 +148,12 @@ namespace cro
 
 
         /*!
-        /brief Returns a reference to the sprites animation array.
+        \brief Returns a reference to the sprites animation array.
         */
         std::vector<Animation>& getAnimations() { return m_animations; }
 
         /*!
-        /brief Returns a const reference to the sprites animation array.
+        \brief Returns a const reference to the sprites animation array.
         */
         const std::vector<Animation>& getAnimations() const { return m_animations; }
 
