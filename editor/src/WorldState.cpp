@@ -82,10 +82,10 @@ WorldState::~WorldState()
 //public
 bool WorldState::handleEvent(const cro::Event& evt)
 {
-    if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    /*if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
         return true;
-    }
+    }*/
 
     //if (evt.type == SDL_KEYUP)
     switch(evt.type)
@@ -104,9 +104,10 @@ bool WorldState::handleEvent(const cro::Event& evt)
                 m_gizmoMode = ImGuizmo::OPERATION::ROTATE;
                 break;
             case SDLK_s:
-                    m_gizmoMode = ImGuizmo::OPERATION::SCALE;
+                m_gizmoMode = ImGuizmo::OPERATION::SCALE;
                 break;
-            }
+
+            }            
         }
         break;
     case SDL_MOUSEWHEEL:

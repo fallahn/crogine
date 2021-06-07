@@ -168,22 +168,13 @@ Transform::~Transform()
     //remove this transform from its parent
     if (m_parent)
     {
-        auto& siblings = m_parent->m_children;
-        siblings.erase(
-            std::remove_if(siblings.begin(), siblings.end(),
-                [this](const Transform* ptr)
-                {return ptr == this; }),
-            siblings.end());
+        m_parent->removeChild(*this);
     }
 
     //orphan any children
     for (auto c : m_children)
     {
-        c->m_parent = nullptr;
-        while (c->m_depth > 0)
-        {
-            c->decreaseDepth();
-        }
+        removeChild(*c);
     }
 }
 
