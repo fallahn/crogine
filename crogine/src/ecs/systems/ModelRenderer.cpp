@@ -27,18 +27,18 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../../detail/GLCheck.hpp"
+
+#include <crogine/core/Clock.hpp>
+#include <crogine/core/Console.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
-#include <crogine/detail/Assert.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/core/Clock.hpp>
-#include <crogine/core/Console.hpp>
 #include <crogine/util/Matrix.hpp>
 
-#include "../../detail/GLCheck.hpp"
-
+#include <crogine/detail/Assert.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
@@ -335,6 +335,11 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         switch (material.optionalUniforms[i])
         {
         default: break;
+        case Material::SkyBox:
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+            glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, scene.getCubemap().textureID));
+            glCheck(glUniform1i(material.uniforms[Material::SkyBox], currentTextureUnit++));
+            break;
         case Material::Skinning:
             glCheck(glUniformMatrix4fv(material.uniforms[Material::Skinning], static_cast<GLsizei>(model.m_jointCount), GL_FALSE, &model.m_skeleton[0][0].x));
             break;

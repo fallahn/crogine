@@ -105,6 +105,7 @@ namespace cro
             ReflectionMap,
             RefractionMap,
             ReflectionMatrix,
+            SkyBox,
             Total
         };
         

@@ -207,7 +207,7 @@ namespace cro
 
         /*!
         \brief Returns the texture handle to the active cubemap texture.
-        This is useful for settings cubemap properties of materials.
+        This is useful for setting cubemap properties of materials.
         */
         CubemapID getCubemap() const;
 

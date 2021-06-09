@@ -132,7 +132,10 @@ Models in crogine are described in a text format that can be loaded via the `Mod
         {
             //Supplies a path to a texture containing mask data, used to control the lighting
             //properties of the material. The red channel controls specular intensity, the green
-            //channel controls the specular amount, and the blue channel controls self illumination
+            //channel controls the specular amount, and the blue channel controls self illumination.
+            //The alpha channel controls the amount of reflection of the Scene's skybox, if it
+            //has one, else reflections appear black. An alpha value of 0 is full reflection,
+            //and 1 is no reflection, so by default materials arenot reflective.
             mask = "path/to/mask.png"
 
             //Alternatively a mask colour can be provided in normalised 4 component format. This
@@ -150,7 +153,8 @@ Models in crogine are described in a text format that can be loaded via the `Mod
         //workflow) in the red channel, the roughness in the green channel and the ambient occlusion
         //(ao) in the green channel. The diffuse property (both colour and texture map) is used to
         //store the albedo of the PBR material. PBR materials are not designed with mobile builds in
-        //mind, however crogine will still attempt to load them.
+        //mind, however crogine will still attempt to load them. For PBR materials to render correctly
+        //an EnvironmentMap must be loaded from and HDRI file (see EnvironmentMap documentation)
         material PBR
         {
             //see VertexLit for properties.

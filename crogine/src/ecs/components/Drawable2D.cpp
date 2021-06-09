@@ -27,10 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "../../detail/glad.hpp"
 #include "../../detail/GLCheck.hpp"
 #include <crogine/ecs/components/Drawable2D.hpp>
-
 
 #include <limits>
 

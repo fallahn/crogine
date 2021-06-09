@@ -283,6 +283,11 @@ void Data::setShader(const Shader& s)
             uniforms[Material::ReflectionMatrix] = handle;
             optionalUniforms[optionalUniformCount++] = Material::ReflectionMatrix;
         }
+        else if (uniform == "u_skybox")
+        {
+            uniforms[Material::SkyBox] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::SkyBox;
+        }
         //else these are user settable uniforms - ie optional, but set by user such as textures
         else
         {

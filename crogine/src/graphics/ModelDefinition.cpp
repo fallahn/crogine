@@ -498,16 +498,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         //check to see if we can map environment lighting
         if (shaderType == ShaderResource::PBR)
         {
-            if (envMap)
-            {
-                material.setProperty("u_irradianceMap", envMap->getIrradianceMap());
-                material.setProperty("u_prefilterMap", envMap->getPrefilterMap());
-                material.setProperty("u_brdfMap", envMap->getBRDFMap());
-            }
-            else
-            {
-                LogW << "No environment mapping has been supplied to PBR material. This will need to be done manually." << std::endl;
-            }
+            CRO_ASSERT(envMap, "No environment map has been supplied for PBR material");
+            material.setProperty("u_irradianceMap", envMap->getIrradianceMap());
+            material.setProperty("u_prefilterMap", envMap->getPrefilterMap());
+            material.setProperty("u_brdfMap", envMap->getBRDFMap());
         }
 
         m_materialIDs[m_materialCount] = matID;

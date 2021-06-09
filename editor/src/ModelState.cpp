@@ -410,6 +410,7 @@ void ModelState::createScene()
     //not rendering shadows on here, but we still want a light direction
     m_previewScene.getSunlight().getComponent<cro::Sunlight>().setDirection({ 0.5f, -0.5f, -0.5f });
 
+    m_scene.setCubemap(m_environmentMap);
     m_previewScene.setCubemap(m_environmentMap);
 }
 
@@ -446,16 +447,6 @@ void ModelState::loadPrefs()
             {
                 m_showMaterialWindow = prop.getValue<bool>();
             }
-            else if (name == "sky_top")
-            {
-                m_preferences.skyTop = prop.getValue<cro::Colour>();
-                m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
-            }
-            else if (name == "sky_bottom")
-            {
-                m_preferences.skyBottom = prop.getValue<cro::Colour>();
-                m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
-            }
             else if (name == "import_dir")
             {
                 m_preferences.lastImportDirectory = prop.getValue<std::string>();
@@ -467,6 +458,10 @@ void ModelState::loadPrefs()
             else if (name == "model_dir")
             {
                 m_preferences.lastModelDirectory = prop.getValue<std::string>();
+            }
+            else if (name == "sky_colour")
+            {
+                getContext().appInstance.setClearColour(prop.getValue<cro::Colour>());
             }
         }
     }
@@ -482,9 +477,8 @@ void ModelState::savePrefs()
     cro::ConfigFile prefsOut;
     prefsOut.addProperty("show_groundplane", m_showGroundPlane ? "true" : "false");
     prefsOut.addProperty("show_skybox", m_showSkybox ? "true" : "false");
-    prefsOut.addProperty("sky_top", toString(m_preferences.skyTop));
-    prefsOut.addProperty("sky_bottom", toString(m_preferences.skyBottom));
     prefsOut.addProperty("show_material").setValue(m_showMaterialWindow);
+    prefsOut.addProperty("sky_colour").setValue(getContext().appInstance.getClearColour());
 
     prefsOut.addProperty("import_dir", m_preferences.lastImportDirectory);
     prefsOut.addProperty("export_dir", m_preferences.lastExportDirectory);

@@ -382,7 +382,7 @@ void Scene::setCubemap(const std::string& path)
     {
         if (!m_skyboxShaders[SkyboxType::Cubemap].loadFromString(skyboxVertex, skyboxFragTextured))
         {
-            LogE << "Failed creatng cubemap shader" << std::endl;
+            LogE << "Failed creating cubemap shader" << std::endl;
             return;
         }
     }

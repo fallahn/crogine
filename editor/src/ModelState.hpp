@@ -91,9 +91,6 @@ private:
 
     struct Preferences final
     {
-        cro::Colour skyBottom = cro::Colour(0.82f, 0.98f, 0.99f);
-        cro::Colour skyTop = cro::Colour(0.21f, 0.5f, 0.96f);
-
         std::string lastImportDirectory;
         std::string lastExportDirectory;
         std::string lastModelDirectory;

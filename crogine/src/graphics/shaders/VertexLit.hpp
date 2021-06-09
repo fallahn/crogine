@@ -200,6 +200,8 @@ namespace cro
                 uniform sampler2D u_lightMap;
                 #endif
 
+                uniform samplerCube u_skybox;
+
                 uniform HIGH vec3 u_lightDirection;
                 uniform LOW vec4 u_lightColour;
                 uniform HIGH vec3 u_cameraWorldPosition;
@@ -317,7 +319,7 @@ namespace cro
 
                 LOW vec4 diffuseColour = vec4(1.0);
                 HIGH vec3 eyeDirection;
-                LOW vec3 mask = vec3(1.0, 1.0, 0.0);
+                LOW vec4 mask = vec4(1.0, 1.0, 0.0, 1.0);
                 vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
                 {
                     MED float diffuseAmount = max(dot(normal, lightDirection), 0.0);
@@ -349,9 +351,9 @@ namespace cro
                 #endif
 
                 #if defined(MASK_MAP)
-                    mask = TEXTURE(u_maskMap, v_texCoord0).rgb;
+                    mask = TEXTURE(u_maskMap, v_texCoord0);
                 #else
-                    mask = u_maskColour.rgb;
+                    mask = u_maskColour;
                 #endif
 
                 #if defined(COLOURED)
@@ -393,6 +395,11 @@ namespace cro
                         }
                     }
                 #endif
+
+                    vec3 I = normalize(v_worldPosition - u_cameraWorldPosition);
+                    vec3 R = reflect(I, normal);
+                    FRAG_OUT.rgb = mix(texture(u_skybox, R).rgb, FRAG_OUT.rgb, mask.a);
+
 
                 #if defined (RIMMING)
                     LOW float rim = 1.0 - dot(normal, eyeDirection);

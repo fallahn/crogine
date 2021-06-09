@@ -184,7 +184,7 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
         return false;
     }
     stbi_set_flip_vertically_on_load(0);
-
+    SDL_RWclose(file);
 
     //create a temp render buffer/frame buffer to render the sides with
     TempFrameBuffer tempFBO;

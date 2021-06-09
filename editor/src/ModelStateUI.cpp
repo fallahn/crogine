@@ -459,7 +459,7 @@ void ModelState::buildUI()
                     {
                         if (m_showSkybox)
                         {
-                            m_scene.enableSkybox();
+                            m_scene.setCubemap(m_environmentMap);
                         }
                         else
                         {
@@ -564,14 +564,10 @@ void ModelState::buildUI()
                     ImGui::Separator();
                     ImGui::NewLine();
 
-
-                    if (ImGui::ColorEdit3("Sky Top", m_preferences.skyTop.asArray()))
+                    auto skyColour = getContext().appInstance.getClearColour();
+                    if (ImGui::ColorEdit3("Sky Colour", skyColour.asArray()))
                     {
-                        m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
-                    }
-                    if (ImGui::ColorEdit3("Sky Bottom", m_preferences.skyBottom.asArray()))
-                    {
-                        m_scene.setSkyboxColours(m_preferences.skyBottom, m_preferences.skyTop);
+                        getContext().appInstance.setClearColour(skyColour);
                     }
 
                     ImGui::NewLine();
@@ -1193,18 +1189,23 @@ void ModelState::drawInspector()
                 if (type != MaterialDefinition::Unlit
                     && matDef.textureIDs[MaterialDefinition::Mask] == 0)
                 {
-                    if (ImGui::ColorEdit3("Mask Colour", matDef.maskColour.asArray()))
-                    {
-                        applyMaterial = true;
-                    }
-                    ImGui::SameLine();
                     if (type == MaterialDefinition::VertexLit)
                     {
-                        helpMarker("Defines the mask colour of the material. Specular intensity is stored in the red channel, specular amount in the green channel, and self-illumination is stored in the blue channel");
+                        if (ImGui::ColorEdit4("Mask Colour", matDef.maskColour.asArray()))
+                        {
+                            applyMaterial = true;
+                        }
+                        ImGui::SameLine();
+                        helpMarker("Defines the mask colour of the material. Specular intensity is stored in the red channel, specular amount in the green channel, self-illumination is stored in the blue channel and skybox reflection in the alpha channel.");
                     }
                     else
                     {
-                        helpMarker("Defines the mask colour of the material in lieu of a mask map. The metallic value is stored in the red channel, roughness in the green channel and AO in the blue channel");
+                        if (ImGui::ColorEdit3("Mask Colour", matDef.maskColour.asArray()))
+                        {
+                            applyMaterial = true;
+                        }
+                        ImGui::SameLine();
+                        helpMarker("Defines the mask colour of the material in lieu of a mask map. The metallic value is stored in the red channel, roughness in the green channel and AO in the blue channel.");
                     }
                 }
 
