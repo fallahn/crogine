@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -404,11 +404,12 @@ void ModelRenderer::applyBlendMode(Material::BlendMode mode)
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
     case Material::BlendMode::Alpha:
-        glCheck(glDisable(GL_CULL_FACE));
-        //glCheck(glDisable(GL_DEPTH_TEST));
+        //make sure to test existing depth
+        //values, just don't write new ones.
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_FALSE));
         glCheck(glEnable(GL_BLEND));
+        glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
