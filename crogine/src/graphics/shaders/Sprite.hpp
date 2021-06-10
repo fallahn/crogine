@@ -66,7 +66,7 @@ namespace cro
             
                 void main()
                 {
-                    FRAG_OUT  = v_colour;
+                    FRAG_OUT = v_colour;
                 })";
 
             static const std::string Textured = R"(
@@ -78,7 +78,7 @@ namespace cro
             
                 void main()
                 {
-                    FRAG_OUT  = TEXTURE(u_texture, v_texCoord) * v_colour;
+                    FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
                 })";
         }
 

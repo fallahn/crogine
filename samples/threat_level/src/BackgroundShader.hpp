@@ -58,7 +58,7 @@ namespace Shaders
                 MED vec2 threshold = normalize(v_texCoord0 - circlePos);
     
                 MED float T = mod(u_time, duration);
-                MED float angle  = mix(start, end, cos(pi / duration  * T - pi) / 2.0 + 0.5);
+                MED float angle  = mix(start, end, cos(pi / duration * T - pi) / 2.0 + 0.5);
                 //MED float xReq = cos(angle);
                 MED float yReq = sin(angle);
 
