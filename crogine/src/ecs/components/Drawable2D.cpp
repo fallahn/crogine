@@ -62,6 +62,8 @@ void Drawable2D::setTexture(const Texture* texture)
 {
     m_texture = texture;
     m_applyDefaultShader = !m_customShader;
+
+    applyShader();
 }
 
 void Drawable2D::setShader(Shader* shader)
@@ -77,6 +79,8 @@ void Drawable2D::setShader(Shader* shader)
     m_vec4Bindings.clear();
     m_boolBindings.clear();
     m_matBindings.clear();
+
+    m_vertexAttributes.clear();
 
     applyShader();
 }
@@ -234,8 +238,6 @@ void Drawable2D::applyShader()
             {
                 m_textureUniform = -1;
                 Logger::log("Missing texture uniform in Drawable2D shader", Logger::Type::Error);
-
-                setShader(nullptr);
                 return;
             }
         }
@@ -309,7 +311,6 @@ void Drawable2D::applyShader()
             if (attribs[Mesh::Attribute::UV0] == -1)
             {
                 Logger::log("UV0 attribute missing from Drawable2D shader", Logger::Type::Error);
-                setShader(nullptr);
                 return;
             }
             else

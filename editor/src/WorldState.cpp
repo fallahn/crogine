@@ -51,7 +51,6 @@ source distribution.
 namespace
 {
     const std::string prefPath = cro::FileSystem::getConfigDirectory("crogine_editor") + "world_viewer.cfg";
-
     const float CamSpeed = 10.f;
 }
 
