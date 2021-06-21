@@ -245,11 +245,10 @@ void GameState::createScene()
 {
     //dat cat man
     auto entity = m_scene.createEntity();
-    m_modelDefs[GameModelID::BatCat].createModel(entity, m_resources);
-
     entity.addComponent<cro::Transform>().setScale(glm::vec3(0.03f));
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f);
     entity.getComponent<cro::Transform>().setPosition({ -19.f, 0.f, 6.f });
+    m_modelDefs[GameModelID::BatCat].createModel(entity, m_resources);
     entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Run);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
@@ -257,8 +256,8 @@ void GameState::createScene()
 
     //load terrain chunks
     entity = m_scene.createEntity();
-    m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
     entity.addComponent<cro::Transform>().setScale({ 200.f / 175.f, 1.f, 1.f });
+    m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
     //auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
     entity.addComponent<TerrainChunk>().inUse = true;
     entity.getComponent<TerrainChunk>().width = 200.f;// bb[1].x - bb[0].x; //TODO fix this
@@ -271,8 +270,8 @@ void GameState::createScene()
     board.colour = cro::Colour::Green;
 
     auto bbEnt = m_scene.createEntity();
-    m_modelDefs[GameModelID::Billboards].createModel(bbEnt, m_resources);
     bbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 6.f });
+    m_modelDefs[GameModelID::Billboards].createModel(bbEnt, m_resources);
 
     for (auto i = 0u; i < 46u; ++i)
     {
@@ -288,15 +287,15 @@ void GameState::createScene()
     for (auto i = 0; i < count; ++i)
     {
         entity = m_scene.createEntity();
-        m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
         entity.addComponent<cro::Transform>().setPosition({ 400.f, 0.f, 0.f });
         entity.getComponent<cro::Transform>().setScale({ 200.f / 175.f, 1.f, 1.f });
         //auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+        m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
         entity.addComponent<TerrainChunk>().width = 200.f;
 
         bbEnt = m_scene.createEntity();
-        m_modelDefs[GameModelID::Billboards].createModel(bbEnt, m_resources);
         bbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 3.f + (3.f * i) });
+        m_modelDefs[GameModelID::Billboards].createModel(bbEnt, m_resources);
 
         board.position.x = 0.f;
         for (auto i = 0u; i < 46u; ++i)
@@ -311,14 +310,14 @@ void GameState::createScene()
 
     //moon and stars background
     entity = m_scene.createEntity();
-    m_modelDefs[GameModelID::Moon].createModel(entity, m_resources);
     entity.addComponent<cro::Transform>().setPosition({ -60.f, 70.f, -180.f });
     entity.getComponent<cro::Transform>().setScale(glm::vec3(6.f));
+    m_modelDefs[GameModelID::Moon].createModel(entity, m_resources);
 
     entity = m_scene.createEntity();
-    m_modelDefs[GameModelID::Stars].createModel(entity, m_resources);
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.5, -200.f });
     entity.getComponent<cro::Transform>().setScale(glm::vec3(3.f));
+    m_modelDefs[GameModelID::Stars].createModel(entity, m_resources);
 
     //3D camera
     auto ent = m_scene.createEntity();
@@ -451,8 +450,8 @@ void GameState::createScene()
 
     //this ent spawns our sound entities
     entity = m_scene.createEntity();
-    m_modelDefs[GameModelID::Arrow].createModel(entity, m_resources);
     entity.addComponent<cro::Transform>();
+    m_modelDefs[GameModelID::Arrow].createModel(entity, m_resources);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(10.f);
     entity.getComponent<cro::Callback>().function =

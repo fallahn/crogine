@@ -371,6 +371,20 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         auto matID = rc.materials.add(rc.shaders.get(shaderID));
         auto& material = rc.materials.get(matID);
 
+        //set a default mask colour - this is overwritten
+        //below, if a custom property is found.
+        if ((flags & ShaderResource::MaskMap) == 0)
+        {
+            if (shaderType == ShaderResource::VertexLit)
+            {
+                material.setProperty("u_maskColour", cro::Colour::Yellow);
+            }
+            else if (shaderType == ShaderResource::PBR)
+            {
+                material.setProperty("u_maskColour", cro::Colour::Blue);
+            }
+        }
+
         //store the diffuse and dalpha clip properties in case
         //they need to be set on the shadow map material.
         Texture* diffuseTex = nullptr;

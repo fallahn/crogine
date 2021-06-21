@@ -6,6 +6,6 @@ model arrow
 
     material VertexLit
     {
-        colour = 1.0, 0.0, 0.9
+        colour = 1.0, 0.0, 0.9, 1.0
     }
 }
