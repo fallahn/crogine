@@ -54,7 +54,8 @@ void TextSystem::process(float)
         auto& text = entity.getComponent<Text>();
 
         CRO_ASSERT(text.m_font, "no font has been assigned");
-        if (text.m_dirtyFlags || text.m_font->pageUpdated())
+        bool isPageUpdate = text.m_font->pageUpdated(text.getCharacterSize());
+        if (text.m_dirtyFlags || isPageUpdate)
         {
             if (text.m_dirtyFlags == Text::DirtyFlags::Colour)
             {
@@ -70,11 +71,20 @@ void TextSystem::process(float)
                 text.updateVertices(drawable);
                 drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
                 drawable.setPrimitiveType(GL_TRIANGLES);
-
-                static int i = 0;
-                //LogI << "flaps" << i++ << std::endl;
+                m_readPages.push_back({ text.getFont(), text.getCharacterSize() }); //font needs its pages marked as read
             }
+
             text.m_dirtyFlags = 0;
         }
     }
+
+    //delay this update as some earlier entities
+    //may have not been marked as needing update
+    //when later updates resize the font page.
+    m_readPages.swap(m_pageBuffer);
+    for (auto [font, charSize] : m_readPages)
+    {
+        font->markPageRead(charSize);
+    }
+    m_readPages.clear();
 }

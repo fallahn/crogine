@@ -41,7 +41,7 @@ Text::Text()
     m_verticalSpacing   (0.f),
     m_fillColour        (Colour::White),
     //m_outlineThickness(0.f),
-    m_dirtyFlags        (0),
+    m_dirtyFlags        (DirtyFlags::All),
     m_alignment         (Alignment::Left)
 {
 
@@ -53,7 +53,7 @@ Text::Text(const Font& font)
     m_verticalSpacing   (0.f),
     m_fillColour        (Colour::White),
     //m_outlineThickness(0.f),
-    m_dirtyFlags        (0),
+    m_dirtyFlags        (DirtyFlags::All),
     m_alignment         (Alignment::Left)
 {
     setFont(font);

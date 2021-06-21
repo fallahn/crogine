@@ -33,6 +33,8 @@ source distribution.
 
 namespace cro
 {
+    class Font;
+
     /*!
     \brief Updates the geometry of Drawable2D components which
     are attached to entities with a Text component. Each entity
@@ -55,6 +57,15 @@ namespace cro
 
     private:
 
-
+        //mechanism for marking fonts with updated pages
+        //as read. This is double buffered to save iterating
+        //over twice in the same update loop
+        struct ReadPage final
+        {
+            const Font* f = nullptr;
+            std::uint32_t charSize = 0;
+        };
+        std::vector<ReadPage> m_readPages;
+        std::vector<ReadPage> m_pageBuffer;
     };
 }

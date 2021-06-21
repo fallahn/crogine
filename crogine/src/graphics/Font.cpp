@@ -55,7 +55,6 @@ namespace
 }
 
 Font::Font()
-    : m_pageUpdated(false)
 {
 
 }
@@ -374,7 +373,7 @@ FloatRect Font::getGlyphRect(Page& page, std::uint32_t width, std::uint32_t heig
                 texture.setSmooth(true);
                 texture.update(page.texture);
                 page.texture.swap(texture);
-                m_pageUpdated = true;
+                page.updated = true;
             }
             else
             {
@@ -450,6 +449,11 @@ void Font::cleanup()
 
     m_pages.clear();
     m_pixelBuffer.clear();
+}
+
+void Font::markPageRead(std::uint32_t charSize) const
+{
+    m_pages[charSize].updated = false;
 }
 
 Font::Page::Page()

@@ -317,7 +317,7 @@ void Console::draw()
                     }
                     ImGui::SameLine();
                     ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
-                    ImGui::Text("Note not all platforms support this.");
+                    ImGui::Text("Note not all platforms support this. Doesn't affect post processes or RenderTextures.");
                     ImGui::PopStyleColor();
 
                     if (ui::Button("Apply", { 50.f, 20.f }))

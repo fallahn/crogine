@@ -96,9 +96,9 @@ namespace cro
         float getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charSize) const;
 
         /*!
-        \brief Returns true if any underlying textures have been updated
+        \brief Returns true if the underlying texture of the given character size has changed
         */
-        bool pageUpdated() const { return m_pageUpdated; }
+        bool pageUpdated(std::uint32_t charSize) const { return m_pages[charSize].updated; }
 
     private:
 
@@ -119,12 +119,11 @@ namespace cro
             std::map<std::uint32_t, Glyph> glyphs;
             std::uint32_t nextRow = 0;
             std::vector<Row> rows;
+            bool updated = false;
         };
 
         mutable std::unordered_map<std::uint32_t, Page> m_pages;
         mutable std::vector<std::uint8_t> m_pixelBuffer;
-
-        mutable bool m_pageUpdated; //if a page has been updated we want to trigger an update on any text components
 
         //use std::any so we don't expose freetype pointers to public API
         std::any m_library;
@@ -136,5 +135,8 @@ namespace cro
         bool setCurrentCharacterSize(std::uint32_t) const;
 
         void cleanup();
+
+        friend class TextSystem;
+        void markPageRead(std::uint32_t charSize) const;
     };
 }
