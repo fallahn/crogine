@@ -55,7 +55,7 @@ namespace cro
         template <typename T>
         void setMaterialProperty(std::size_t idx, const std::string& str, T val)
         {
-            CRO_ASSERT(idx < m_materials.size(), "Index out of range");
+            CRO_ASSERT(idx < m_materials[Mesh::IndexData::Final].size(), "Index out of range");
             m_materials[Mesh::IndexData::Final][idx].setProperty(str, val);
         }
 
