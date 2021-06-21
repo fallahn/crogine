@@ -41,7 +41,7 @@ Text::Text()
     m_verticalSpacing   (0.f),
     m_fillColour        (Colour::White),
     //m_outlineThickness(0.f),
-    m_dirty             (true),
+    m_dirtyFlags        (0),
     m_alignment         (Alignment::Left)
 {
 
@@ -53,7 +53,7 @@ Text::Text(const Font& font)
     m_verticalSpacing   (0.f),
     m_fillColour        (Colour::White),
     //m_outlineThickness(0.f),
-    m_dirty             (true),
+    m_dirtyFlags        (0),
     m_alignment         (Alignment::Left)
 {
     setFont(font);
@@ -63,19 +63,19 @@ Text::Text(const Font& font)
 void Text::setFont(const Font& font)
 {
     m_font = &font;
-    m_dirty = true;
+    m_dirtyFlags = DirtyFlags::All;
 }
 
 void Text::setCharacterSize(std::uint32_t size)
 {
     m_charSize = size;
-    m_dirty = true;
+    m_dirtyFlags = DirtyFlags::All;
 }
 
 void Text::setVerticalSpacing(float spacing)
 {
     m_verticalSpacing = spacing;
-    m_dirty = true;
+    m_dirtyFlags = DirtyFlags::All;
 }
 
 void Text::setString(const String& str)
@@ -83,7 +83,7 @@ void Text::setString(const String& str)
     if (m_string != str)
     {
         m_string = str;
-        m_dirty = true;
+        m_dirtyFlags = DirtyFlags::All;
     }
 }
 
@@ -94,7 +94,7 @@ void Text::setFillColour(Colour colour)
         //TODO rather than dirty just update the vert
         //colours if the text is not already dirty
         m_fillColour = colour;
-        m_dirty = true;
+        m_dirtyFlags = DirtyFlags::Colour;
     }
 }
 
@@ -103,7 +103,7 @@ void Text::setFillColour(Colour colour)
 //    if (m_outlineColour != colour)
 //    {
 //        m_outlineColour = colour;
-//        m_dirty = true;
+//        m_dirtyFlags = DirtyFlags::All;
 //    }
 //}
 //
@@ -112,7 +112,7 @@ void Text::setFillColour(Colour colour)
 //    if (m_outlineThickness != thickness)
 //    {
 //        m_outlineThickness = thickness;
-//        m_dirty = true;
+//        m_dirtyFlags = DirtyFlags::All;
 //    }
 //}
 
@@ -157,11 +157,23 @@ FloatRect Text::getLocalBounds(Entity entity)
 
     auto& text = entity.getComponent<Text>();
     auto& drawable = entity.getComponent<Drawable2D>();
-    if (text.m_dirty)
+    if (text.m_dirtyFlags)
     {
-        text.updateVertices(drawable);
-        drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
-        drawable.setPrimitiveType(GL_TRIANGLES);
+        //check if only the colour needs updating
+        if (text.m_dirtyFlags == DirtyFlags::Colour)
+        {
+            auto& verts = drawable.getVertexData();
+            for (auto v : verts)
+            {
+                v.colour = text.m_fillColour;
+            }
+        }
+        else
+        {
+            text.updateVertices(drawable);
+            drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
+            drawable.setPrimitiveType(GL_TRIANGLES);
+        }
     }
     return drawable.getLocalBounds();
 }
@@ -169,13 +181,13 @@ FloatRect Text::getLocalBounds(Entity entity)
 void Text::setAlignment(Text::Alignment alignment)
 {
     m_alignment = alignment;
-    m_dirty = true;
+    m_dirtyFlags = DirtyFlags::All;
 }
 
 //private
 void Text::updateVertices(Drawable2D& drawable)
 {
-    m_dirty = false;
+    m_dirtyFlags = 0;
 
     auto& vertices = drawable.getVertexData();
     vertices.clear();

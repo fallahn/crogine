@@ -159,7 +159,19 @@ namespace cro
         //Colour m_outlineColour;
         //float m_outlineThickness;
 
-        bool m_dirty;
+        struct DirtyFlags final
+        {
+            enum
+            {
+                Colour = 0x1,
+                Font   = 0x2,
+                String = 0x4,
+
+                All = Colour | Font | String
+            };
+        };
+        std::uint16_t m_dirtyFlags;
+
         Alignment m_alignment;
 
         void updateVertices(Drawable2D&);

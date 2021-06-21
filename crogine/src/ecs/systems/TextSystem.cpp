@@ -54,11 +54,23 @@ void TextSystem::process(float)
         auto& text = entity.getComponent<Text>();
 
         CRO_ASSERT(text.m_font, "no font has been assigned");
-        if (text.m_dirty || text.m_font->pageUpdated())
+        if (text.m_dirtyFlags || text.m_font->pageUpdated())
         {
-            text.updateVertices(drawable);
-            drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
-            drawable.setPrimitiveType(GL_TRIANGLES);
+            if (text.m_dirtyFlags == Text::DirtyFlags::Colour)
+            {
+                //don't rebuild the entire array
+                auto& verts = drawable.getVertexData();
+                for (auto& v : verts)
+                {
+                    v.colour = text.m_fillColour;
+                }
+            }
+            else
+            {
+                text.updateVertices(drawable);
+                drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
+                drawable.setPrimitiveType(GL_TRIANGLES);
+            }
         }
     }
 }
