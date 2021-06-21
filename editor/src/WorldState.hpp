@@ -53,7 +53,6 @@ public:
     void render() override;
 
 private:
-
     SharedStateData& m_sharedData;
     cro::Scene m_scene;
     cro::Scene m_previewScene; //used to draw model thumbnails

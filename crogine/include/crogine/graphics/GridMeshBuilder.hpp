@@ -51,7 +51,7 @@ namespace cro
         By default this has a value of 1,1 but increasing this will tile any given
         textures across its surface. Must be greater than zero.
         */
-        GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions, glm::vec2 multiplier = glm::vec2(1.f), bool vertexColoured= false);
+        GridMeshBuilder(glm::vec2 size, std::uint32_t subDivisions, glm::vec2 multiplier = glm::vec2(1.f), bool vertexColoured = false);
 
         std::size_t getUID() const override { return 0; }
 
