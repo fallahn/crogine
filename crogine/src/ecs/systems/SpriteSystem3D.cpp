@@ -63,7 +63,7 @@ void SpriteSystem3D::process(float)
     for (auto entity : entities)
     {
         auto& sprite = entity.getComponent<Sprite>();
-        if (sprite.m_dirty)
+        if (sprite.m_dirtyFlags)
         {
             auto subRect = sprite.m_textureRect;
             FloatRect textureRect;
@@ -74,6 +74,9 @@ void SpriteSystem3D::process(float)
                 //TODO we need to check if we previously had no texture and update
                 //the material (definitely don't do this if we don't have to)
             }
+
+            //TODO check the flags to see if only the colour changed
+            //this requires we keep a local copy of the vertex data somewhere.
 
             std::vector<float> verts;
 
@@ -174,7 +177,7 @@ void SpriteSystem3D::process(float)
             meshData.boundingSphere.centre = meshData.boundingBox[0] + rad;
             meshData.boundingSphere.radius = glm::length(rad);
 
-            sprite.m_dirty = false;
+            sprite.m_dirtyFlags = 0;
         }
     }
 }

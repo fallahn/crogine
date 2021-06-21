@@ -48,40 +48,50 @@ void SpriteSystem2D::process(float)
     for (auto entity : entities)
     {
         auto& sprite = entity.getComponent<Sprite>();
-        if (sprite.m_dirty)
+        if (sprite.m_dirtyFlags)
         {
             auto& drawable = entity.getComponent<Drawable2D>();
-
-            auto subRect = sprite.m_textureRect;
             auto& verts = drawable.getVertexData();
 
-            verts.resize(4);
-
-            verts[0].position = { 0.f, subRect.height };
-            verts[1].position = { 0.f, 0.f };
-            verts[2].position = { subRect.width, subRect.height };
-            verts[3].position = { subRect.width, 0.f };
-
-            //update vert coords
-            if (sprite.m_texture)
+            if (sprite.m_dirtyFlags == Sprite::DirtyFlags::Colour)
             {
-                glm::vec2 texSize = sprite.m_texture->getSize();
-                verts[0].UV = { subRect.left / texSize.x, (subRect.bottom + subRect.height) / texSize.y };
-                verts[1].UV = { subRect.left / texSize.x, subRect.bottom / texSize.y };
-                verts[2].UV = { (subRect.left + subRect.width) / texSize.x, (subRect.bottom + subRect.height) / texSize.y };
-                verts[3].UV = { (subRect.left + subRect.width) / texSize.x, subRect.bottom / texSize.y };
+                //only need to update existing vertices
+                for (auto& v : verts)
+                {
+                    v.colour = sprite.m_colour;
+                }
             }
-            //update colour
-            verts[0].colour = sprite.m_colour;
-            verts[1].colour = sprite.m_colour;
-            verts[2].colour = sprite.m_colour;
-            verts[3].colour = sprite.m_colour;
+            else
+            {
+                //rebuild the sprite
+                auto subRect = sprite.m_textureRect;
+                verts.resize(4);
 
+                verts[0].position = { 0.f, subRect.height };
+                verts[1].position = { 0.f, 0.f };
+                verts[2].position = { subRect.width, subRect.height };
+                verts[3].position = { subRect.width, 0.f };
 
-            drawable.setTexture(sprite.m_texture);
-            drawable.updateLocalBounds();
+                //update vert coords
+                if (sprite.m_texture)
+                {
+                    glm::vec2 texSize = sprite.m_texture->getSize();
+                    verts[0].UV = { subRect.left / texSize.x, (subRect.bottom + subRect.height) / texSize.y };
+                    verts[1].UV = { subRect.left / texSize.x, subRect.bottom / texSize.y };
+                    verts[2].UV = { (subRect.left + subRect.width) / texSize.x, (subRect.bottom + subRect.height) / texSize.y };
+                    verts[3].UV = { (subRect.left + subRect.width) / texSize.x, subRect.bottom / texSize.y };
+                }
+                //update colour
+                verts[0].colour = sprite.m_colour;
+                verts[1].colour = sprite.m_colour;
+                verts[2].colour = sprite.m_colour;
+                verts[3].colour = sprite.m_colour;
 
-            sprite.m_dirty = false;
+                drawable.setTexture(sprite.m_texture);
+                drawable.updateLocalBounds();
+            }
+
+            sprite.m_dirtyFlags = 0;
         }
     }
 }

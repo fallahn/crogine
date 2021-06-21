@@ -63,19 +63,19 @@ Text::Text(const Font& font)
 void Text::setFont(const Font& font)
 {
     m_font = &font;
-    m_dirtyFlags = DirtyFlags::All;
+    m_dirtyFlags |= DirtyFlags::All;
 }
 
 void Text::setCharacterSize(std::uint32_t size)
 {
     m_charSize = size;
-    m_dirtyFlags = DirtyFlags::All;
+    m_dirtyFlags |= DirtyFlags::All;
 }
 
 void Text::setVerticalSpacing(float spacing)
 {
     m_verticalSpacing = spacing;
-    m_dirtyFlags = DirtyFlags::All;
+    m_dirtyFlags |= DirtyFlags::All;
 }
 
 void Text::setString(const String& str)
@@ -83,7 +83,7 @@ void Text::setString(const String& str)
     if (m_string != str)
     {
         m_string = str;
-        m_dirtyFlags = DirtyFlags::All;
+        m_dirtyFlags |= DirtyFlags::All;
     }
 }
 
@@ -94,7 +94,7 @@ void Text::setFillColour(Colour colour)
         //TODO rather than dirty just update the vert
         //colours if the text is not already dirty
         m_fillColour = colour;
-        m_dirtyFlags = DirtyFlags::Colour;
+        m_dirtyFlags |= DirtyFlags::Colour;
     }
 }
 
@@ -103,7 +103,7 @@ void Text::setFillColour(Colour colour)
 //    if (m_outlineColour != colour)
 //    {
 //        m_outlineColour = colour;
-//        m_dirtyFlags = DirtyFlags::All;
+//        m_dirtyFlags |= DirtyFlags::Colour;
 //    }
 //}
 //
@@ -112,7 +112,7 @@ void Text::setFillColour(Colour colour)
 //    if (m_outlineThickness != thickness)
 //    {
 //        m_outlineThickness = thickness;
-//        m_dirtyFlags = DirtyFlags::All;
+//        m_dirtyFlags |= DirtyFlags::All;
 //    }
 //}
 
@@ -174,6 +174,7 @@ FloatRect Text::getLocalBounds(Entity entity)
             drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
             drawable.setPrimitiveType(GL_TRIANGLES);
         }
+        text.m_dirtyFlags = 0;
     }
     return drawable.getLocalBounds();
 }
@@ -181,7 +182,7 @@ FloatRect Text::getLocalBounds(Entity entity)
 void Text::setAlignment(Text::Alignment alignment)
 {
     m_alignment = alignment;
-    m_dirtyFlags = DirtyFlags::All;
+    m_dirtyFlags |= DirtyFlags::All;
 }
 
 //private

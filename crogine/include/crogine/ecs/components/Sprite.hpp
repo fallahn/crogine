@@ -161,7 +161,18 @@ namespace cro
         FloatRect m_textureRect;
         const Texture* m_texture;
         Colour m_colour;
-        bool m_dirty;
+
+        struct DirtyFlags final
+        {
+            enum
+            {
+                Colour  = 0x1,
+                Texture = 0x2,
+
+                All = Colour | Texture
+            };
+        };
+        std::uint16_t m_dirtyFlags;
 
         std::vector<Animation> m_animations;
 

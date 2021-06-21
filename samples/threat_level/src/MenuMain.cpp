@@ -118,6 +118,7 @@ void MainState::createMainMenu(std::uint32_t mouseEnterCallback, std::uint32_t m
     auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
     auto textEnt = m_menuScene.createEntity();
     textEnt.addComponent<cro::Drawable2D>();
+    
     auto& gameText = textEnt.addComponent<cro::Text>(menuFont);
     gameText.setString("Play");
     gameText.setFillColour(textColourNormal);

@@ -70,7 +70,11 @@ void TextSystem::process(float)
                 text.updateVertices(drawable);
                 drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
                 drawable.setPrimitiveType(GL_TRIANGLES);
+
+                static int i = 0;
+                //LogI << "flaps" << i++ << std::endl;
             }
+            text.m_dirtyFlags = 0;
         }
     }
 }

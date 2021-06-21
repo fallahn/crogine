@@ -35,7 +35,7 @@ using namespace cro;
 Sprite::Sprite()
     : m_texture         (nullptr),
     m_colour            (Colour::White),
-    m_dirty             (true),
+    m_dirtyFlags        (DirtyFlags::All),
     m_overrideBlendMode (false),
     m_blendMode         (Material::BlendMode::Alpha)
 {
@@ -45,7 +45,7 @@ Sprite::Sprite()
 Sprite::Sprite(const Texture& texture)
     : m_texture         (nullptr),
     m_colour            (Colour::White),
-    m_dirty             (true),
+    m_dirtyFlags        (DirtyFlags::All),
     m_overrideBlendMode (false),
     m_blendMode         (Material::BlendMode::Alpha)
 {
@@ -60,19 +60,19 @@ void Sprite::setTexture(const Texture& texture, bool resize)
     {
         setTextureRect({ glm::vec2(), texture.getSize() });
     }
-    m_dirty = true;
+    m_dirtyFlags |= DirtyFlags::Texture;
 }
 
 void Sprite::setTextureRect(FloatRect rect)
 {
     m_textureRect = rect;
-    m_dirty = true;
+    m_dirtyFlags |= DirtyFlags::Texture;
 }
 
 void Sprite::setColour(Colour colour)
 {
     m_colour = colour;
-    m_dirty = true;
+    m_dirtyFlags |= DirtyFlags::Colour;
 }
 
 Colour Sprite::getColour() const
