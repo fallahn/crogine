@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -92,8 +92,15 @@ namespace cro
         */
         void setFillColour(Colour);
 
-        //void setOutlineColour(Colour)
-        //void setOutlineThickness(float)
+        /*!
+        \brief Set the colour used for the text outline
+        */
+        void setOutlineColour(Colour colour);
+
+        /*!
+        \brief Set the thickness of the text outline
+        */
+        void setOutlineThickness(float outlineThickness);
 
         /*!
         \brief Return a pointer to the active font
@@ -121,8 +128,15 @@ namespace cro
         */
         Colour getFillColour() const;
 
-        //Colour getOutlineColour() const;
-        //float getOutlineThickness() const;
+        /*!
+        \brief Get the colour used to draw the text outline
+        */
+        Colour getOutlineColour() const;
+
+        /*!
+        \brief Get the thickness of the text outline
+        */
+        float getOutlineThickness() const;
         
         /*!
         \brief Returns the AABB of the Text component
@@ -156,8 +170,8 @@ namespace cro
         float m_verticalSpacing;
         Colour m_fillColour;
 
-        //Colour m_outlineColour;
-        //float m_outlineThickness;
+        Colour m_outlineColour;
+        float m_outlineThickness;
 
         struct DirtyFlags final
         {

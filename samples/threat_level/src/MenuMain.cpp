@@ -118,6 +118,28 @@ void MainState::createMainMenu(std::uint32_t mouseEnterCallback, std::uint32_t m
     auto& menuFont = m_sharedResources.fonts.get(FontID::MenuFont);
     auto textEnt = m_menuScene.createEntity();
     textEnt.addComponent<cro::Drawable2D>();
+    textEnt.addComponent<cro::Callback>().active = true;
+    textEnt.getComponent<cro::Callback>().function = 
+        [](cro::Entity e, float dt)
+    {
+        static float t = 0.f;
+        t += dt;
+        if (t > 1)
+        {
+            t -= 1.f;
+            static bool o = false;
+            o = !o;
+
+            if (o)
+            {
+                e.getComponent<cro::Text>().setOutlineThickness(8.f);
+            }
+            else
+            {
+                e.getComponent<cro::Text>().setOutlineThickness(0.f);
+            }
+        }
+    };
     
     auto& gameText = textEnt.addComponent<cro::Text>(menuFont);
     gameText.setString("Play");

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -40,7 +40,8 @@ Text::Text()
     m_charSize          (30),
     m_verticalSpacing   (0.f),
     m_fillColour        (Colour::White),
-    //m_outlineThickness(0.f),
+    m_outlineColour     (Colour::Black),
+    m_outlineThickness  (0.f),
     m_dirtyFlags        (DirtyFlags::All),
     m_alignment         (Alignment::Left)
 {
@@ -48,13 +49,7 @@ Text::Text()
 }
 
 Text::Text(const Font& font)
-    : m_font            (nullptr),
-    m_charSize          (30),
-    m_verticalSpacing   (0.f),
-    m_fillColour        (Colour::White),
-    //m_outlineThickness(0.f),
-    m_dirtyFlags        (DirtyFlags::All),
-    m_alignment         (Alignment::Left)
+    : Text()
 {
     setFont(font);
 }
@@ -91,30 +86,28 @@ void Text::setFillColour(Colour colour)
 {
     if (m_fillColour != colour)
     {
-        //TODO rather than dirty just update the vert
-        //colours if the text is not already dirty
         m_fillColour = colour;
         m_dirtyFlags |= DirtyFlags::Colour;
     }
 }
 
-//void Text::setOutlineColour(sf::Color colour)
-//{
-//    if (m_outlineColour != colour)
-//    {
-//        m_outlineColour = colour;
-//        m_dirtyFlags |= DirtyFlags::Colour;
-//    }
-//}
-//
-//void Text::setOutlineThickness(float thickness)
-//{
-//    if (m_outlineThickness != thickness)
-//    {
-//        m_outlineThickness = thickness;
-//        m_dirtyFlags |= DirtyFlags::All;
-//    }
-//}
+void Text::setOutlineColour(Colour colour)
+{
+    if (m_outlineColour != colour)
+    {
+        m_outlineColour = colour;
+        m_dirtyFlags |= DirtyFlags::Colour;
+    }
+}
+
+void Text::setOutlineThickness(float thickness)
+{
+    if (m_outlineThickness != thickness)
+    {
+        m_outlineThickness = thickness;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
+}
 
 const Font* Text::getFont() const
 {
@@ -141,15 +134,15 @@ Colour Text::getFillColour() const
     return m_fillColour;
 }
 
-//Colour Text::getOutlineColour() const
-//{
-//    return m_outlineColour;
-//}
-//
-//float Text::getOutlineThickness() const
-//{
-//    return m_outlineThickness;
-//}
+Colour Text::getOutlineColour() const
+{
+    return m_outlineColour;
+}
+
+float Text::getOutlineThickness() const
+{
+    return m_outlineThickness;
+}
 
 FloatRect Text::getLocalBounds(Entity entity)
 {
@@ -163,9 +156,27 @@ FloatRect Text::getLocalBounds(Entity entity)
         if (text.m_dirtyFlags == DirtyFlags::Colour)
         {
             auto& verts = drawable.getVertexData();
-            for (auto v : verts)
+
+            if (text.m_outlineThickness == 0)
             {
-                v.colour = text.m_fillColour;
+                for (auto v : verts)
+                {
+                    v.colour = text.m_fillColour;
+                }
+            }
+            else
+            {
+                for (auto i = 0u; i < verts.size(); ++i)
+                {
+                    if (i < verts.size() / 2)
+                    {
+                        verts[i].colour = text.m_outlineColour;
+                    }
+                    else
+                    {
+                        verts[i].colour = text.m_fillColour;
+                    }
+                }
             }
         }
         else
@@ -190,8 +201,8 @@ void Text::updateVertices(Drawable2D& drawable)
 {
     m_dirtyFlags = 0;
 
-    auto& vertices = drawable.getVertexData();
-    vertices.clear();
+    std::vector<Vertex2D> outlineVerts;
+    std::vector<Vertex2D> characterVerts;
 
     FloatRect localBounds;
 
@@ -204,7 +215,7 @@ void Text::updateVertices(Drawable2D& drawable)
     
     //update glyphs
     glm::vec2 textureSize = m_font->getTexture(m_charSize).getSize();
-    float xOffset = static_cast<float>(m_font->getGlyph(L' ', m_charSize).advance);
+    float xOffset = static_cast<float>(m_font->getGlyph(L' ', m_charSize, m_outlineThickness).advance);
     float yOffset = static_cast<float>(m_font->getLineHeight(m_charSize));
     float x = 0.f;
     float y = 0.f;// static_cast<float>(m_charSize);
@@ -251,38 +262,35 @@ void Text::updateVertices(Drawable2D& drawable)
         }
 
         //create the quads. //TODO reimplement (font doesn't yet support it)
-        //auto addOutline = [&]()
-        //{
-        //    const auto& glyph = m_font->getGlyph(currChar, m_charSize, m_outlineThickness);
+        auto addOutline = [&]()
+        {
+            const auto& glyph = m_font->getGlyph(currChar, m_charSize, m_outlineThickness);
 
-        //    float left = glyph.bounds.left;
-        //    float top = glyph.bounds.top;
-        //    float right = glyph.bounds.left + glyph.bounds.width;
-        //    float bottom = glyph.bounds.top + glyph.bounds.height;
+            //TODO mental jiggery to figure out why these caus an alignment
+            //offset - although it's not important, it just means the localBounds
+            //won't include any outline.
+            /*float left = glyph.bounds.left;
+            float top = glyph.bounds.bottom + glyph.bounds.height;
+            float right = glyph.bounds.left + glyph.bounds.width;
+            float bottom = glyph.bounds.bottom;*/
 
-        //    //add the outline glyph to the vertices
-        //    addQuad(vertices, glm::vec2(x, y), m_outlineColour, glyph, m_outlineThickness);
+            //add the outline glyph to the vertices
+            addQuad(outlineVerts, glm::vec2(x, y), m_outlineColour, glyph, textureSize, m_outlineThickness);
 
-        //    minX = std::min(minX, x + left - m_outlineThickness);
-        //    maxX = std::max(maxX, x + right - m_outlineThickness);
-        //    minY = std::min(minY, y + top - m_outlineThickness);
-        //    maxY = std::max(maxY, y + bottom - m_outlineThickness);
-        //};
+            /*minX = std::min(minX, x + left - m_outlineThickness);
+            maxX = std::max(maxX, x + right + m_outlineThickness);
+            minY = std::min(minY, y + bottom - m_outlineThickness);
+            maxY = std::max(maxY, y + top + m_outlineThickness);*/
+        };
+
+        const auto& glyph = m_font->getGlyph(currChar, m_charSize, 0.f);
 
         //if outline is larger, add first
-        /*if (m_outlineThickness > 0)
+        if (m_outlineThickness > 0)
         {
             addOutline();
-        }*/
-
-        const auto& glyph = m_font->getGlyph(currChar, m_charSize);
-        addQuad(vertices, glm::vec2(x, y), m_fillColour, glyph, textureSize);
-
-        //else add outline on top TODO this just doesn't make sense, don't bother
-        /*if (m_outlineThickness < 0)
-        {
-            addOutline();
-        }*/
+        }
+        addQuad(characterVerts, glm::vec2(x, y), m_fillColour, glyph, textureSize);
 
         //only do this if not outlined
         //if (m_outlineThickness == 0)
@@ -306,6 +314,11 @@ void Text::updateVertices(Drawable2D& drawable)
     localBounds.width = maxX - minX;
     localBounds.height = maxY - minY;
 
+    //ensures the outline is always drawn first
+    outlineVerts.insert(outlineVerts.end(), characterVerts.begin(), characterVerts.end());
+
+    auto& vertices = drawable.getVertexData();
+    vertices.swap(outlineVerts);
 
     //check for alignment
     float offset = 0.f;
@@ -345,11 +358,11 @@ void Text::addQuad(std::vector<Vertex2D>& vertices, glm::vec2 position, Colour c
     float u2 = static_cast<float>(glyph.textureBounds.left + glyph.textureBounds.width) / textureSize.x;
     float v2 = static_cast<float>(glyph.textureBounds.bottom + glyph.textureBounds.height) / textureSize.y;
 
-    vertices.emplace_back(glm::vec2(position.x + left - outlineThickness, position.y + top - outlineThickness), glm::vec2(u1, v1), colour);
+    vertices.emplace_back(glm::vec2(position.x + left - outlineThickness, position.y + top + outlineThickness), glm::vec2(u1, v1), colour);
     vertices.emplace_back(glm::vec2(position.x + left - outlineThickness, position.y + bottom - outlineThickness), glm::vec2(u1, v2), colour);
-    vertices.emplace_back(glm::vec2(position.x + right - outlineThickness, position.y + top - outlineThickness), glm::vec2(u2, v1), colour);
+    vertices.emplace_back(glm::vec2(position.x + right + outlineThickness, position.y + top + outlineThickness), glm::vec2(u2, v1), colour);
 
-    vertices.emplace_back(glm::vec2(position.x + right - outlineThickness, position.y + top - outlineThickness), glm::vec2(u2, v1), colour);
+    vertices.emplace_back(glm::vec2(position.x + right + outlineThickness, position.y + top + outlineThickness), glm::vec2(u2, v1), colour);
     vertices.emplace_back(glm::vec2(position.x + left - outlineThickness, position.y + bottom - outlineThickness), glm::vec2(u1, v2), colour);
-    vertices.emplace_back(glm::vec2(position.x + right - outlineThickness, position.y + bottom - outlineThickness), glm::vec2(u2, v2), colour);
+    vertices.emplace_back(glm::vec2(position.x + right + outlineThickness, position.y + bottom - outlineThickness), glm::vec2(u2, v2), colour);
 }

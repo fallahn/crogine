@@ -46,12 +46,29 @@ by Laurent Gomila et al https://github.com/SFML/SFML/blob/master/src/SFML/Graphi
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 #include FT_BITMAP_H
+#include FT_OUTLINE_H
+#include FT_STROKER_H
 
 using namespace cro;
 
 namespace
 {
-    const float MagicNumber = static_cast<float>(1 << 6);
+    constexpr float MagicNumber = static_cast<float>(1 << 6);
+
+    //used to create a unique key for bold/outline/codepoint glyphs
+    //see https://github.com/SFML/SFML/blob/master/src/SFML/Graphics/Font.cpp#L66
+    template <typename T, typename U>
+    inline T reinterpret(const U& input)
+    {
+        CRO_ASSERT(sizeof(T) == sizeof(U), "");
+        T output = 0;
+        std::memcpy(&output, &input, sizeof(U));
+        return output;
+    }
+    std::uint64_t combine(float outlineThickness, bool bold, std::uint32_t index)
+    {
+        return (static_cast<std::uint64_t>(reinterpret<std::uint32_t>(outlineThickness)) << 32) | (static_cast<std::uint64_t>(bold) << 31) | index;
+    }
 }
 
 Font::Font()
@@ -67,6 +84,9 @@ Font::~Font()
 //public
 bool Font::loadFromFile(const std::string& filePath)
 {
+    //remove existing loaded font
+    cleanup();
+
     auto path = FileSystem::getResourcePath() + filePath;
 
     //init freetype
@@ -97,14 +117,21 @@ bool Font::loadFromFile(const std::string& filePath)
     SDL_RWread(fontFile.file, m_buffer.data(), m_buffer.size(), 1);
 
 
-    FT_Face face;
+    FT_Face face = nullptr;
     if (FT_New_Memory_Face(library, m_buffer.data(), m_buffer.size(), 0, &face) != 0)
     {
         Logger::log("Failed to load font " + path + ": Failed creating font face", Logger::Type::Error);
         return false;
     }
 
-    //TODO could use FT's stroke functions for creating text outlines
+    //stroker used for rendering outlines
+    FT_Stroker stroker = nullptr;
+    if (FT_Stroker_New(library, &stroker) != 0)
+    {
+        LogE << "Failed to load font " << path << ": Failed to create stroker" << std::endl;
+        return false;
+    }
+
 
     //using unicode
     if (FT_Select_Charmap(face, FT_ENCODING_UNICODE) != 0)
@@ -115,19 +142,18 @@ bool Font::loadFromFile(const std::string& filePath)
     }
 
     m_face = std::make_any<FT_Face>(face);
+    m_stroker = std::make_any<FT_Stroker>(stroker);
 
     return true;
 }
 
-Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize) const
+Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, float outlineThickness) const
 {
     auto& currentGlyphs = m_pages[charSize].glyphs;
 
-    //TODO this assumes pages all contain the default font style
-    //ie not bold or underlined - in these cases we'd need to create
-    //a unique key instead of just using the codepoint value...
+    auto key = combine(outlineThickness, false, FT_Get_Char_Index(std::any_cast<FT_Face>(m_face), codepoint));
 
-    auto result = currentGlyphs.find(codepoint);
+    auto result = currentGlyphs.find(key);
     if (result != currentGlyphs.end())
     {
         return result->second;
@@ -135,8 +161,8 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize) const
     else
     {
         //add the glyph to the page
-        auto glyph = loadGlyph(codepoint, charSize);
-        return currentGlyphs.insert(std::make_pair(codepoint, glyph)).first->second;
+        auto glyph = loadGlyph(codepoint, charSize, outlineThickness);
+        return currentGlyphs.insert(std::make_pair(key, glyph)).first->second;
     }
 
     return {};
@@ -200,7 +226,7 @@ float Font::getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charS
 }
 
 //private
-Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize) const
+Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, float outlineThickness) const
 {
     Glyph retVal;
 
@@ -233,6 +259,17 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize) const
     {
         return retVal;
     }
+
+    //get the outline
+    bool outline = (glyphDesc->format == FT_GLYPH_FORMAT_OUTLINE);
+    if (outline
+        && outlineThickness != 0)
+    {
+        auto stroker = std::any_cast<FT_Stroker>(m_stroker);
+        FT_Stroker_Set(stroker, static_cast<FT_Fixed>(outlineThickness * MagicNumber), FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
+        FT_Glyph_Stroke(&glyphDesc, stroker, true);
+    }
+
 
     //rasterise it
     FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1);
@@ -387,7 +424,7 @@ FloatRect Font::getGlyphRect(Page& page, std::uint32_t width, std::uint32_t heig
         page.nextRow += rowHeight;
     }
 
-    FloatRect retVal(row->width, row->top, width, height);
+    FloatRect retVal(static_cast<float>(row->width), static_cast<float>(row->top), static_cast<float>(width), static_cast<float>(height));
     row->width += width;
 
     return retVal;
@@ -426,6 +463,15 @@ bool Font::setCurrentCharacterSize(std::uint32_t size) const
 
 void Font::cleanup()
 {
+    if (m_stroker.has_value())
+    {
+        auto stroker = std::any_cast<FT_Stroker>(m_stroker);
+        if (stroker)
+        {
+            FT_Stroker_Done(stroker);
+        }
+    }
+
     if (m_face.has_value())
     {
         auto face = std::any_cast<FT_Face>(m_face);
@@ -444,6 +490,7 @@ void Font::cleanup()
         }
     }
 
+    m_stroker.reset();
     m_face.reset();
     m_library.reset();
 

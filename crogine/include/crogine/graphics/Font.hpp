@@ -78,7 +78,7 @@ namespace cro
         \brief Attempts to return a float rect representing the sub rectangle of the atlas
         for the given codepoint.
         */
-        Glyph getGlyph(std::uint32_t codepoint, std::uint32_t charSize) const;
+        Glyph getGlyph(std::uint32_t codepoint, std::uint32_t charSize, float outlineThickness) const;
 
         /*!
         \brief Returns a reference to the texture used by the font
@@ -116,7 +116,7 @@ namespace cro
         {
             Page();
             Texture texture;
-            std::map<std::uint32_t, Glyph> glyphs;
+            std::map<std::uint64_t, Glyph> glyphs;
             std::uint32_t nextRow = 0;
             std::vector<Row> rows;
             bool updated = false;
@@ -128,9 +128,9 @@ namespace cro
         //use std::any so we don't expose freetype pointers to public API
         std::any m_library;
         std::any m_face;
-        //std::unique_ptr<std::int32_t> m_refCount; //use this if we decide to make font copyable
+        std::any m_stroker;
 
-        Glyph loadGlyph(std::uint32_t cp, std::uint32_t charSize) const;
+        Glyph loadGlyph(std::uint32_t cp, std::uint32_t charSize, float outlineThickness) const;
         FloatRect getGlyphRect(Page&, std::uint32_t w, std::uint32_t h) const;
         bool setCurrentCharacterSize(std::uint32_t) const;
 

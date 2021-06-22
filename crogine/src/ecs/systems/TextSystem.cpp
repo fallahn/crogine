@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -61,9 +61,29 @@ void TextSystem::process(float)
             {
                 //don't rebuild the entire array
                 auto& verts = drawable.getVertexData();
-                for (auto& v : verts)
+                if (text.m_outlineThickness == 0)
                 {
-                    v.colour = text.m_fillColour;
+                    for (auto& v : verts)
+                    {
+                        v.colour = text.m_fillColour;
+                    }
+                }
+                else
+                {
+                    std::size_t idx = 0;
+                    std::array colours =
+                    {
+                        text.m_outlineColour,
+                        text.m_fillColour
+                    };
+                    for (auto i = 0u; i < verts.size(); ++i)
+                    {
+                        if ((i % 4) == 0)
+                        {
+                            idx = (idx + 1) % 2;
+                        }
+                        verts[i].colour = colours[idx];
+                    }
                 }
             }
             else
