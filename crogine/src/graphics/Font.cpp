@@ -118,7 +118,7 @@ bool Font::loadFromFile(const std::string& filePath)
 
 
     FT_Face face = nullptr;
-    if (FT_New_Memory_Face(library, m_buffer.data(), m_buffer.size(), 0, &face) != 0)
+    if (FT_New_Memory_Face(library, m_buffer.data(), static_cast<FT_Long>(m_buffer.size()), 0, &face) != 0)
     {
         Logger::log("Failed to load font " + path + ": Failed creating font face", Logger::Type::Error);
         return false;
