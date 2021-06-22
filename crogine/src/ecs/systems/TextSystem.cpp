@@ -70,19 +70,16 @@ void TextSystem::process(float)
                 }
                 else
                 {
-                    std::size_t idx = 0;
-                    std::array colours =
-                    {
-                        text.m_outlineColour,
-                        text.m_fillColour
-                    };
                     for (auto i = 0u; i < verts.size(); ++i)
                     {
-                        if ((i % 4) == 0)
+                        if (i < verts.size() / 2)
                         {
-                            idx = (idx + 1) % 2;
+                            verts[i].colour = text.m_outlineColour;
                         }
-                        verts[i].colour = colours[idx];
+                        else
+                        {
+                            verts[i].colour = text.m_fillColour;
+                        }
                     }
                 }
             }
