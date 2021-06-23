@@ -67,5 +67,5 @@ void WavetableAnimatorSystem::onEntityAdded(cro::Entity entity)
 {
     auto& anim = entity.getComponent<WavetableAnimator>();
     anim.basePosition = entity.getComponent<cro::Transform>().getPosition();
-    anim.wavetableIndex = cro::Util::Random::value(std::size_t(0), m_wavetable.size());
+    anim.wavetableIndex = cro::Util::Random::value(std::size_t(0), m_wavetable.size() - 1);
 }

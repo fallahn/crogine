@@ -78,7 +78,7 @@ AudioEmitter::~AudioEmitter()
 }
 
 AudioEmitter::AudioEmitter(AudioEmitter&& other) noexcept
-    : m_state(State::Stopped)
+    : AudioEmitter()
 {
     m_newDataSource = true;
     other.m_newDataSource = true;

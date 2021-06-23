@@ -951,7 +951,11 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                             {
                                 detailPositions.emplace_back(std::make_pair(positionA, data.tileIDs[0]));
                             }
-                            faceA->visible = false;
+
+                            if (faceA)
+                            {
+                                faceA->visible = false;
+                            }
                         }
                         voxelID = chunk.getVoxel(positionB);
                         data = m_voxelData.getVoxel(voxelID);
@@ -961,7 +965,11 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                             {
                                 detailPositions.emplace_back(std::make_pair(positionB, data.tileIDs[0]));
                             }
-                            faceB->visible = false;
+
+                            if (faceB)
+                            {
+                                faceB->visible = false;
+                            }
                         }
 
                         faceMask[maskIndex] = (faceA != std::nullopt && faceB != std::nullopt && (*faceA == *faceB)) ?
@@ -974,7 +982,10 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                 //do this out here halves the amount of calls!
                 for (auto& f : faceMask)
                 {
-                    calcAO(chunk, *f);
+                    if (f)
+                    {
+                        calcAO(chunk, *f);
+                    }
                 }
                 m_chunkMutex->unlock();
 

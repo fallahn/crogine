@@ -69,6 +69,11 @@ Transform::Transform(Transform&& other) noexcept
         for (auto c : m_children)
         {
             c->m_parent = nullptr;
+
+            while (c->m_depth > 0)
+            {
+                c->decreaseDepth();
+            }
         }
 
         //and adopt new
@@ -98,6 +103,18 @@ Transform::Transform(Transform&& other) noexcept
             CRO_ASSERT(c != this, "we already exist in the child list!");
 
             c->m_parent = this;
+
+            //should already be at the correct depth if
+            //we're taking on theexisting depth..?
+            while (c->m_depth > m_depth + 1)
+            {
+                c->decreaseDepth();
+            }
+
+            while (c->m_depth <= m_depth)
+            {
+                c->increaseDepth();
+            }
         }
 
         //actually take on the other transform
@@ -121,6 +138,11 @@ Transform& Transform::operator=(Transform&& other) noexcept
         for (auto c : m_children)
         {
             c->m_parent = nullptr;
+
+            while (c->m_depth > 0)
+            {
+                c->decreaseDepth();
+            }
         }
 
         m_parent = other.m_parent;
@@ -149,6 +171,16 @@ Transform& Transform::operator=(Transform&& other) noexcept
         {
             CRO_ASSERT(c != this, "we already exist in the child list!");
             c->m_parent = this;
+
+            while (c->m_depth > m_depth + 1)
+            {
+                c->decreaseDepth();
+            }
+
+            while (c->m_depth <= m_depth)
+            {
+                c->increaseDepth();
+            }
         }
 
         //actually take on the other transform
@@ -174,7 +206,12 @@ Transform::~Transform()
     //orphan any children
     for (auto c : m_children)
     {
-        removeChild(*c);
+        c->m_parent = nullptr;
+
+        while (c->m_depth > 0)
+        {
+            c->decreaseDepth();
+        }
     }
 }
 

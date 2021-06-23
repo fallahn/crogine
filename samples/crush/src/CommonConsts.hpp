@@ -83,7 +83,12 @@ namespace Util
         std::uint8_t size = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, str.size() * sizeof(std::uint32_t)));
         std::vector<std::uint8_t> buffer(size + 1);
         buffer[0] = size;
-        std::memcpy(&buffer[1], str.data(), size);
+
+        //don't try and copy empty data...
+        if (size > 0)
+        {
+            std::memcpy(&buffer[1], str.data(), size);
+        }
 
         return buffer;
     }
