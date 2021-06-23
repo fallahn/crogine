@@ -568,7 +568,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\debug;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies);openal32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -585,7 +585,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\debug;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies);openal32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
