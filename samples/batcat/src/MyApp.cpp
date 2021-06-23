@@ -85,7 +85,7 @@ bool MyApp::initialise()
 {
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setIcon(icon);
-    getWindow().setTitle("House of Woo");
+    getWindow().setTitle("Batcat");
 
     m_stateStack.pushState(States::GamePlaying);
 
