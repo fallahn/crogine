@@ -1039,15 +1039,17 @@ void ChunkSystem::generateChunkMesh(const Chunk& chunk, VertexOutput& output)
                                     }
                                 }
                                 
-                                //move the prev face to the beginning of the row
-                                //so next iter we check appending vertically
-                                prevFace = *faceMask[rowStart + WorldConst::ChunkSize];
-
-
+                                //check this first as it will be trus if face
+                                //mask is nullopt and we  won't try assigning
+                                //mullopt to prevFace.
                                 if (complete)
                                 {
                                     break;
                                 }
+
+                                //move the prev face to the beginning of the row
+                                //so next iter we check appending vertically
+                                prevFace = *faceMask[rowStart + WorldConst::ChunkSize];
                             }
 
                             //create the quad geom

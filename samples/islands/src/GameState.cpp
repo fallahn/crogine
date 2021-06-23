@@ -907,8 +907,8 @@ void GameState::updateIslandVerts(const std::vector<float>& heightmap)
 
     auto heightAt = [&](std::int32_t x, std::int32_t y)
     {
-        x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
-        y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
+        x = std::min(static_cast<std::int32_t>(IslandTileCount) - 1, std::max(0, x));
+        y = std::min(static_cast<std::int32_t>(IslandTileCount) - 1, std::max(0, y));
 
         return heightmap[y * IslandTileCount + x];
     };

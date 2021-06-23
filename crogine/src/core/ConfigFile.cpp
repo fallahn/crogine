@@ -104,7 +104,9 @@ std::vector<float> ConfigProperty::valueAsArray() const
     std::vector<float> retval;
     std::size_t start = 0u;
     std::size_t next = m_value.find_first_of(',');
-    while (next != std::string::npos && start < m_value.length())
+    std::size_t end = std::min(m_value.length(), std::size_t(20));
+
+    while (next != std::string::npos && start < end)
     {
         float val;
         std::istringstream is(m_value.substr(start, next));
@@ -115,6 +117,13 @@ std::vector<float> ConfigProperty::valueAsArray() const
         next = m_value.find_first_of(',', start);
         if (next > m_value.length()) next = m_value.length();
     }
+    
+    //pack out to max supported size
+    while (retval.size() < 4)
+    {
+        retval.push_back(0.f);
+    }
+
     return retval;
 }
 
