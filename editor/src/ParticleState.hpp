@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 struct SharedStateData;
 namespace cro
@@ -98,6 +99,16 @@ private:
 
     bool m_showPreferences;
 
+    static constexpr float RenderNear = 1.f;
+    static constexpr float RenderFar = 9.f;
+
+    bool m_showRenderer;
+    cro::RenderTexture m_renderTexture;
+    cro::Colour m_renderClearColour;
+    cro::Entity m_renderCamera;
+    float m_renderFOV;
+    float m_renderFrameRate;
+
     void initUI();
     void drawMenuBar();
     void drawInspector();
@@ -105,6 +116,7 @@ private:
     void drawInfo();
     void drawGizmo();
     void drawOptions();
+    void drawRenderPreview();
     void updateLayout(std::int32_t, std::int32_t);
     void updateMouseInput(const cro::Event&);
 

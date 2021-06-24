@@ -66,7 +66,10 @@ ParticleState::ParticleState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_gizmoMode         (ImGuizmo::TRANSLATE),
     m_particleSettings  (nullptr),
     m_selectedBlendMode (0),
-    m_showPreferences   (false)
+    m_showPreferences   (false),
+    m_showRenderer      (false),
+    m_renderFOV         (0.5f),
+    m_renderFrameRate   (6.f)
 {
     ctx.mainWindow.loadResources([this]() {
         addSystems();
@@ -220,6 +223,17 @@ bool ParticleState::simulate(float dt)
 
 void ParticleState::render()
 {
+    if (m_showRenderer)
+    {
+        auto oldCam = m_scene.getActiveCamera();
+        m_scene.setActiveCamera(m_renderCamera);
+        m_renderTexture.clear(m_renderClearColour);
+        m_scene.render(m_renderTexture);
+        m_renderTexture.display();
+
+        m_scene.setActiveCamera(oldCam);
+    }
+
     auto& rw = getContext().mainWindow;
     m_scene.render(rw);
 }
@@ -232,6 +246,15 @@ void ParticleState::loadAssets()
     {
         m_environmentMap.loadFromFile("assets/images/brooklyn_bridge.hdr");
     }
+
+    m_renderTexture.create(256, 256);
+    m_renderTexture.clear(cro::Colour::Black);
+    m_renderTexture.display();
+
+    m_renderCamera = m_scene.createEntity();
+    m_renderCamera.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 5.f });
+    //m_renderCamera.addComponent<cro::Camera>().setOrthographic(-5.f, 5.f, -5.f, 5.f, 1.f, 18.f);
+    m_renderCamera.addComponent<cro::Camera>().setPerspective(m_renderFOV, 1.f, RenderNear, RenderFar);
 }
 
 void ParticleState::addSystems()
@@ -283,6 +306,10 @@ void ParticleState::loadPrefs()
             {
                 getContext().appInstance.setClearColour(prop.getValue<cro::Colour>());
             }
+            else if (name == "render_colour")
+            {
+                m_renderClearColour = prop.getValue<cro::Colour>();
+            }
         }
     }
 }
@@ -291,7 +318,7 @@ void ParticleState::savePrefs()
 {
     cro::ConfigFile cfg;
     cfg.addProperty("sky_colour").setValue(getContext().appInstance.getClearColour());
-
+    cfg.addProperty("render_colour").setValue(m_renderClearColour);
 
 
     cfg.save(prefPath);

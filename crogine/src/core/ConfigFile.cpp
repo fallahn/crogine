@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -90,6 +90,12 @@ void ConfigProperty::setValue(const glm::vec3& v)
 void ConfigProperty::setValue(const glm::vec4& v)
 {
     m_value = std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z) + "," + std::to_string(v.w);
+    m_isStringValue = false;
+}
+
+void ConfigProperty::setValue(const cro::FloatRect& r)
+{
+    m_value = std::to_string(r.left) + "," + std::to_string(r.bottom) + "," + std::to_string(r.width) + "," + std::to_string(r.height);
     m_isStringValue = false;
 }
 

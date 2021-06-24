@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -100,6 +100,7 @@ namespace cro
         void setValue(const glm::vec2& v);
         void setValue(const glm::vec3& v);
         void setValue(const glm::vec4& v);
+        void setValue(const cro::FloatRect& v);
         void setValue(const cro::Colour& v);
         
     private:

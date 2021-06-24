@@ -2,6 +2,8 @@
 #include "UIConsts.hpp"
 #include "SharedStateData.hpp"
 
+#include <crogine/core/ConfigFile.hpp>
+
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -12,6 +14,7 @@
 #include <crogine/util/Constants.hpp>
 
 #include <crogine/graphics/MaterialData.hpp>
+#include <crogine/graphics/Image.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
@@ -47,6 +50,7 @@ void ParticleState::initUI()
             drawBrowser();
             drawInfo();
             drawGizmo();
+            drawRenderPreview();
         });
 
     auto size = getContext().mainWindow.getSize();
@@ -65,6 +69,8 @@ void ParticleState::drawMenuBar()
                 auto path = cro::FileSystem::openFileDialogue(lastSavePath, "xyp,cps");
                 if (!path.empty())
                 {
+                    m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().stop();
+
                     (m_particleSettings->loadFromFile(path, m_resources.textures));
                     {
                         lastSavePath = path;
@@ -151,6 +157,11 @@ void ParticleState::drawMenuBar()
                 {
                     openModel(path);
                 }
+            }
+
+            if (ImGui::MenuItem("Sprite Renderer", nullptr, nullptr))
+            {
+                m_showRenderer = !m_showRenderer;
             }
 
             ImGui::EndMenu();
@@ -466,6 +477,166 @@ void ParticleState::drawOptions()
             {
                 savePrefs();
                 m_showPreferences = false;
+            }
+        }
+        ImGui::End();
+    }
+}
+
+void ParticleState::drawRenderPreview() 
+{
+    if (m_showRenderer)
+    {
+        ImGui::SetNextWindowSize({ 300.f, 460.f });
+        if (ImGui::Begin("Render", &m_showRenderer, ImGuiWindowFlags_NoResize))
+        {
+            const auto size = glm::vec2(m_renderTexture.getSize());
+            const auto scale = size / 256.f;
+
+            int texSize = static_cast<std::int32_t>(size.x);
+            if (ImGui::InputInt("Frame Size", &texSize))
+            {
+                if (texSize > size.x)
+                {
+                    texSize = std::min(256, static_cast<std::int32_t>(size.x) * 2);
+                }
+                else
+                {
+                    texSize = std::max(16, static_cast<std::int32_t>(size.x) / 2);
+                }
+                m_renderTexture.create(texSize, texSize);
+            }
+
+            if (ImGui::SliderFloat("Zoom", &m_renderFOV, 0.05f, cro::Util::Const::PI / 2.f))
+            {
+                m_renderCamera.getComponent<cro::Camera>().setPerspective(m_renderFOV, 1.f, RenderNear, RenderFar);
+            }
+            ImGui::SliderFloat("Frame Rate", &m_renderFrameRate, 1.f, 16.f);
+            ImGui::ColorEdit4("Background", m_renderClearColour.asArray());
+
+            ImGui::Image(m_renderTexture.getTexture(), { size.x / scale.x, size.y / scale.y }, { 0.f, 1.f }, { 1.f, 0.f });
+
+            if (m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().stopped()
+                && m_particleSettings->releaseCount > 0)
+            {
+                static bool spt = false;
+                ImGui::Checkbox("Write sprite (*.spt) file", &spt);
+
+                if (ImGui::Button("Render"))
+                {
+                    auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/untitled.png", "png");
+                    if (!path.empty())
+                    {
+                        std::replace(path.begin(), path.end(), '\\', '/');
+
+                        auto outputName = cro::FileSystem::getFileName(path);
+                        outputName = outputName.substr(0, outputName.find(cro::FileSystem::getFileExtension(outputName)));
+                        auto outputPath = cro::FileSystem::getFilePath(path);
+
+                        std::int32_t frameCount = 0;
+                        const float dt = 1.f / m_renderFrameRate;
+                        m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().start();
+
+                        std::vector<std::string> fileNames;
+
+                        auto oldCam = m_scene.getActiveCamera();
+                        m_scene.setActiveCamera(m_renderCamera);
+
+                        do
+                        {
+                            m_scene.simulate(dt);
+
+                            m_renderTexture.clear(m_renderClearColour);
+                            m_scene.render(m_renderTexture);
+                            m_renderTexture.display();
+
+                            //output file
+                            std::string fileName = outputPath + outputName + std::to_string(frameCount) + ".png";
+                            m_renderTexture.saveToFile(fileName);
+                            fileNames.push_back(fileName);
+
+                            frameCount++;
+
+                        } while (!m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().stopped()
+                            && frameCount < 50); //just put a cap on the frame count
+
+                        m_scene.setActiveCamera(oldCam);
+
+                        //stitch files
+                        auto stride = texSize * frameCount * 4;
+                        std::vector<std::uint8_t> pixelBuffer(stride * texSize);
+                        cro::Image img(true);
+                        for (auto i = 0; i < frameCount; ++i)
+                        {
+                            if (img.loadFromFile(fileNames[i]))
+                            {
+                                auto xSrc = 0;
+                                auto xDest = texSize * i * 4;
+                                auto y = 0;
+                                auto pixels = img.getPixelData();
+
+                                for (; y < texSize; ++y)
+                                {
+                                    std::memcpy(pixelBuffer.data() + xDest, pixels + xSrc, texSize * 4);
+                                    xDest += stride;
+                                    xSrc += texSize * 4;
+                                }
+
+                                std::remove(fileNames[i].c_str());
+                            }
+                        }
+                        img.loadFromMemory(pixelBuffer.data(), frameCount * texSize, texSize, cro::ImageFormat::Type::RGBA);
+                        img.write(outputPath + outputName + ".png");
+
+                        //check if we want to write a sprite sheet
+                        if (spt)
+                        {
+                            auto relPath = outputPath + outputName + ".png";
+                            if (relPath.find(m_sharedData.workingDirectory) != std::string::npos)
+                            {
+                                relPath = relPath.substr(m_sharedData.workingDirectory.size() + 1);
+                            }
+
+                            cro::ConfigFile cfg("spritesheet", outputName);
+                            cfg.addProperty("src").setValue(relPath);
+                            switch (m_particleSettings->blendmode)
+                            {
+                            default: break;
+                            case cro::EmitterSettings::Add:
+                                cfg.addProperty("blendmode", "add");
+                                break;
+                            case cro::EmitterSettings::Alpha:
+                                cfg.addProperty("blendmode", "alpha");
+                                break;
+                            case cro::EmitterSettings::Multiply:
+                                cfg.addProperty("blendmode", "multiply");
+                                break;
+                            }
+
+                            auto bounds = cro::FloatRect(0.f, 0.f, static_cast<float>(texSize), static_cast<float>(texSize));
+
+                            auto spriteObj = cfg.addObject("sprite", outputName);
+                            spriteObj->addProperty("bounds").setValue(bounds);
+
+                            auto animObj = spriteObj->addObject("animation", "default");
+                            for (auto i = 0; i < frameCount; ++i)
+                            {
+                                animObj->addProperty("frame").setValue(bounds);
+                                bounds.left += texSize;
+                            }
+                            animObj->addProperty("loop").setValue(false);
+                            animObj->addProperty("framerate").setValue(m_renderFrameRate);
+
+                            cfg.save(outputPath + outputName + ".spt");
+                        }
+
+                        cro::FileSystem::showMessageBox("Done", "Output " + std::to_string(frameCount) + " frames");
+                    }
+                }
+            }
+            else
+            {
+                ImGui::Text("Make sure preview is stopped and\nRelease Count greater than 0");
             }
         }
         ImGui::End();
