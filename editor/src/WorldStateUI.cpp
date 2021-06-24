@@ -99,6 +99,11 @@ void WorldState::drawMenuBar()
                 requestStackPush(States::ParticleEditor);
                 unregisterWindows();
             }
+            if (ImGui::MenuItem("Layout Editor", nullptr, nullptr))
+            {
+                requestStackPush(States::LayoutEditor);
+                unregisterWindows();
+            }
 
             ImGui::EndMenu();
         }

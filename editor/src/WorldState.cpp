@@ -140,10 +140,14 @@ void WorldState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::StateEvent>();
         if (data.action == cro::Message::StateEvent::Popped)
         {
-            if (data.id == States::ModelViewer
-                || data.id == States::ParticleEditor)
+            switch (data.id)
             {
+            default: break;
+            case States::ModelViewer:
+            case States::ParticleEditor:
+            case States::LayoutEditor:
                 initUI();
+                break;
             }
         }
     }

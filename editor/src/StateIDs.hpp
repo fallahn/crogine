@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine model viewer/importer - Zlib license.
@@ -35,6 +35,7 @@ namespace States
     {
         WorldEditor,
         ModelViewer,
-        ParticleEditor
+        ParticleEditor,
+        LayoutEditor
     };
 }

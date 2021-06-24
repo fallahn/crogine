@@ -40,7 +40,7 @@ namespace cro
 
     /*
     \brief Simple Quad drawable.
-    The Simple Quad draws a textured quad to the screen, in screen coordinates.
+    The Simple Quad draws a textured quad to the active target, in target coordinates.
     Useful for quick previewing of textures. SimpleQuads are non-copyable.
     */
     class CRO_EXPORT_API SimpleQuad final : public Detail::SDLResource

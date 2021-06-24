@@ -37,6 +37,12 @@
     <Filter Include="Source Files\particle editor">
       <UniqueIdentifier>{b485ac72-2379-4c40-81d8-b83c5c3ae6da}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\layout editor">
+      <UniqueIdentifier>{4c7305a9-6992-4a0c-b60b-96385820a75e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\layout editor">
+      <UniqueIdentifier>{5c9a054a-0ef9-4f78-94f5-74dc47707042}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -83,6 +89,12 @@
     </ClCompile>
     <ClCompile Include="src\MaskEditor.cpp">
       <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LayoutState.cpp">
+      <Filter>Source Files\layout editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LayoutStateUI.cpp">
+      <Filter>Source Files\layout editor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -142,6 +154,9 @@
     </ClInclude>
     <ClInclude Include="src\MaskEditor.hpp">
       <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LayoutState.hpp">
+      <Filter>Header Files\layout editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -31,6 +31,7 @@ source distribution.
 #include "ModelState.hpp"
 #include "WorldState.hpp"
 #include "ParticleState.hpp"
+#include "LayoutState.hpp"
 #include "LoadingScreen.hpp"
 #include "SharedStateData.hpp"
 #include "Messages.hpp"
@@ -53,6 +54,7 @@ MyApp::MyApp()
     m_stateStack.registerState<ModelState>(States::ID::ModelViewer, sharedData);
     m_stateStack.registerState<WorldState>(States::ID::WorldEditor, sharedData);
     m_stateStack.registerState<ParticleState>(States::ID::ParticleEditor, sharedData);
+    m_stateStack.registerState<LayoutState>(States::ID::LayoutEditor, sharedData);
 }
 
 //public
