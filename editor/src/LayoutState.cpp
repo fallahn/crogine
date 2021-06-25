@@ -57,6 +57,7 @@ LayoutState::LayoutState(cro::StateStack& stack, cro::State::Context context, Sh
     : cro::State    (stack, context),
     m_modelScene    (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
+    m_thumbScene    (context.appInstance.getMessageBus()),
     m_sharedData    (sd),
     m_layoutSize    (le::DefaultLayoutSize),
     m_nextResourceID(1),
@@ -154,6 +155,12 @@ void LayoutState::addSystems()
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+
+
+    m_thumbScene.addSystem<cro::SpriteSystem2D>(mb);
+    m_thumbScene.addSystem<cro::TextSystem>(mb);
+    m_thumbScene.addSystem<cro::CameraSystem>(mb);
+    m_thumbScene.addSystem<cro::RenderSystem2D>(mb);
 }
 
 void LayoutState::loadAssets()
@@ -186,6 +193,13 @@ void LayoutState::createScene()
     camEnt = m_uiScene.getActiveCamera();
     updateView2D(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&LayoutState::updateView2D, this, std::placeholders::_1);
+
+    
+
+    //this is used to render the thumbnail previews in the browser
+    //so the camera can be set once and left as it's not affected by resizing the window
+    camEnt = m_thumbScene.getActiveCamera();
+    camEnt.getComponent<cro::Camera>().setOrthographic(0.f, static_cast<float>(uiConst::ThumbTextureSize), 0.f, static_cast<float>(uiConst::ThumbTextureSize), -0.1f, 1.f);
 }
 
 void LayoutState::updateView2D(cro::Camera& cam2D)

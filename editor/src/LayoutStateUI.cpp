@@ -33,6 +33,9 @@ source distribution.
 
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 
 #include <crogine/util/String.hpp>
 
@@ -276,9 +279,10 @@ void LayoutState::drawBrowser()
 
             static std::size_t lastSelected = 0;
 
-            auto thumbSize = size;
+            /*auto thumbSize = size;
             thumbSize.y *= uiConst::ThumbnailHeight;
-            thumbSize.x = thumbSize.y;
+            thumbSize.x = thumbSize.y;*/
+            glm::vec2 thumbSize(uiConst::ThumbTextureSize);
 
             auto frameSize = thumbSize;
             frameSize.x += ImGui::GetStyle().FramePadding.x * uiConst::FramePadding.x;
@@ -312,7 +316,7 @@ void LayoutState::drawBrowser()
 
                 if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
                 {
-                    //set payload to carry the GL id of the texture
+                    //set payload to carry the resource id of the font
                     ImGui::SetDragDropPayload("FONT_SRC", &id, sizeof(std::uint32_t));
 
                     //display preview
@@ -328,6 +332,7 @@ void LayoutState::drawBrowser()
                 if (ImGui::IsItemHovered())
                 {
                     ImGui::BeginTooltip();
+                    ImGui::Image(thumb.texture.getTexture(), { thumbSize.x * 2.f, thumbSize.y * 2.f }, { 0.f, 1.f }, { 1.f, 0.f });
                     ImGui::Text("%s", thumb.name.c_str());
                     ImGui::EndTooltip();
                 }
@@ -401,10 +406,35 @@ void LayoutState::loadFont(const std::string& path)
         m_fontThumbs.insert(std::make_pair(m_nextResourceID, FontThumb()));
 
         //render the preview
+        std::uint32_t charSize = 32;
+        auto& font = m_resources.fonts.get(m_nextResourceID);
+
+        auto entity = m_thumbScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 10.f, static_cast<float>(uiConst::ThumbTextureSize) });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("AaBbCc");
+        entity.getComponent<cro::Text>().setCharacterSize(charSize);
+
+        m_thumbScene.simulate(0.f);
+
         auto& [texture, relPath, name] = m_fontThumbs.at(m_nextResourceID);
-        texture.create(64, 64, false);
-        texture.clear(cro::Colour::Cyan);
+        texture.create(uiConst::ThumbTextureSize, uiConst::ThumbTextureSize, false);
+        texture.setSmooth(false);
+        texture.clear(cro::Colour::Black);
+        for (auto i = 0u; i < 3; ++i)
+        {
+            m_thumbScene.render(texture);
+            charSize /= 2;
+            entity.getComponent<cro::Transform>().move(glm::vec2(0.f, -48.f));
+            entity.getComponent<cro::Text>().setCharacterSize(charSize);
+            m_thumbScene.simulate(0.f);
+        }
+        m_thumbScene.render(texture);
         texture.display();
+
+        m_thumbScene.destroyEntity(entity);
+        m_thumbScene.simulate(0.f);
+
 
         name = cro::FileSystem::getFileName(path);
 

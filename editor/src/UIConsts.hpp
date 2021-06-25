@@ -52,6 +52,7 @@ namespace uiConst
 
     static const cro::Colour PreviewClearColour = cro::Colour(0.f, 0.f, 0.f, 0.2f);
     static constexpr std::uint32_t PreviewTextureSize = 512u;
+    static constexpr std::uint32_t ThumbTextureSize = 96u;
 
     static inline void showTipMessage(const std::string& message)
     {

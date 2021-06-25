@@ -61,6 +61,7 @@ private:
 
     cro::Scene m_modelScene;
     cro::Scene m_uiScene;
+    cro::Scene m_thumbScene;
     SharedStateData& m_sharedData;
 
     cro::ResourceCollection m_resources;
