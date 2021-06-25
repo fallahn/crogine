@@ -3,7 +3,7 @@
 Matt Marchant 2020 - 2021
 http://trederia.blogspot.com
 
-crogine model viewer/importer - Zlib license.
+crogine editor - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held

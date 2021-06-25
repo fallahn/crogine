@@ -3,7 +3,7 @@
 Matt Marchant 2020 - 2021
 http://trederia.blogspot.com
 
-crogine model viewer/importer - Zlib license.
+crogine editor - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -143,7 +143,7 @@ void ParticleState::handleMessage(const cro::Message& msg)
             m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
         }
     }
-    else if (msg.id == cro::Message::StateMessage)
+    /*else if (msg.id == cro::Message::StateMessage)
     {
         const auto& data = msg.getData<cro::Message::StateEvent>();
         if (data.action == cro::Message::StateEvent::Popped)
@@ -153,7 +153,7 @@ void ParticleState::handleMessage(const cro::Message& msg)
                 initUI();
             }
         }
-    }
+    }*/
     else if (msg.id == cro::Message::ConsoleMessage)
     {
         const auto& data = msg.getData<cro::Message::ConsoleEvent>();

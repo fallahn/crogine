@@ -29,12 +29,12 @@ source distribution.
 
 #pragma once
 
+#include "StateIDs.hpp"
+#include "ResourceIDs.hpp"
+
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
-
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
 
 namespace cro
 {

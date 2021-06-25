@@ -158,6 +158,9 @@
     <ClInclude Include="src\LayoutState.hpp">
       <Filter>Header Files\layout editor</Filter>
     </ClInclude>
+    <ClInclude Include="src\LayoutConsts.hpp">
+      <Filter>Header Files\layout editor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\LightmapShader.inl">

@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2020 - 2021
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+crogine editor - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,13 +29,14 @@ source distribution.
 
 #pragma once
 
+#include "StateIDs.hpp"
+#include "ResourceIDs.hpp"
+
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/gui/GuiClient.hpp>
-
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
+#include <crogine/gui/Gui.hpp>
 
 namespace cro
 {
@@ -63,14 +64,24 @@ private:
     SharedStateData& m_sharedData;
 
     cro::ResourceCollection m_resources;
+    cro::Texture m_backgroundTexture;
 
     void addSystems();
     void loadAssets();
     void createScene();
-    void createUI();
 
     //assigned to camera resize callback
-    void updateView(cro::Camera&);
+    glm::vec2 m_layoutSize;
+    void updateView2D(cro::Camera&);
+    void updateView3D(cro::Camera&);
 
+    ImVec4 m_messageColour;
+
+    void initUI();
     void drawMenuBar();
+    void drawInspector();
+    void drawBrowser();
+    void drawInfo();
+
+    void updateLayout(std::int32_t, std::int32_t);
 };

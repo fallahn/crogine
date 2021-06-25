@@ -3,7 +3,7 @@
 Matt Marchant 2020 - 2021
 http://trederia.blogspot.com
 
-crogine model viewer/importer - Zlib license.
+crogine editor - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -111,9 +111,10 @@ bool MyApp::initialise()
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Crogine Editor");
 
-    m_stateStack.pushState(States::WorldEditor);
+    //m_stateStack.pushState(States::WorldEditor);
     //m_stateStack.pushState(States::ModelViewer);
     //m_stateStack.pushState(States::ParticleEditor);
+    m_stateStack.pushState(States::LayoutEditor);
 
     return true;
 }

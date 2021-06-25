@@ -29,14 +29,9 @@ source distribution.
 
 #pragma once
 
-#include <crogine/graphics/MeshBuilder.hpp>
+#include <crogine/detail/glm/vec2.hpp>
 
-class OriginIconBuilder final : public cro::MeshBuilder
+namespace le
 {
-public:
-    OriginIconBuilder() = default;
-
-private:
-
-    cro::Mesh::Data build() const override;
-};
+    static constexpr glm::vec2 DefaultLayoutSize(1920.f, 1080.f);
+}

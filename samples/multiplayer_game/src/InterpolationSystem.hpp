@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "CircularBuffer.hpp"
+
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/detail/glm/vec3.hpp>

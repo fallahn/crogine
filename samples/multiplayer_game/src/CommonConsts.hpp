@@ -29,11 +29,11 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/glm/gtc/quaternion.hpp>
+
 #include <cstdint>
 #include <cstddef>
 #include <array>
-
-#include <crogine/detail/glm/gtc/quaternion.hpp>
 
 namespace ConstVal
 {

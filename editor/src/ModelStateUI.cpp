@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2020 - 2021
 http://trederia.blogspot.com
 
-crogine model viewer/importer - Zlib license.
+crogine editor - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -281,6 +281,7 @@ namespace
 float updateView(cro::Entity entity, float farPlane, float fov)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
+    auto windowHeight = size.y;
     size.x -= (size.x * uiConst::InspectorWidth);
     size.y -= (size.y * uiConst::BrowserHeight);
 
@@ -288,8 +289,8 @@ float updateView(cro::Entity entity, float farPlane, float fov)
     cam3D.setPerspective(fov, size.x / size.y, 0.1f, farPlane);
     cam3D.viewport.left = uiConst::InspectorWidth;
     cam3D.viewport.width = 1.f - uiConst::InspectorWidth;
-    cam3D.viewport.bottom = uiConst::BrowserHeight;
-    cam3D.viewport.height = 1.f - uiConst::BrowserHeight;
+    cam3D.viewport.bottom = uiConst::BrowserHeight + (uiConst::InfoBarHeight / windowHeight);
+    cam3D.viewport.height = 1.f - cam3D.viewport.bottom;
 
     return size.x / size.y;
 }

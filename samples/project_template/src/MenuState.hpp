@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "StateIDs.hpp"
+
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/MeshResource.hpp>
@@ -36,7 +38,6 @@ source distribution.
 #include <crogine/graphics/MaterialResource.hpp>
 #include <crogine/graphics/TextureResource.hpp>
 
-#include "StateIDs.hpp"
 
 /*!
 Creates a state to render a menu.
