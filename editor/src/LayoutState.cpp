@@ -58,7 +58,9 @@ LayoutState::LayoutState(cro::StateStack& stack, cro::State::Context context, Sh
     m_modelScene    (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
     m_sharedData    (sd),
-    m_layoutSize    (le::DefaultLayoutSize)
+    m_layoutSize    (le::DefaultLayoutSize),
+    m_nextResourceID(1),
+    m_selectedFont  (0)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -66,6 +68,10 @@ LayoutState::LayoutState(cro::StateStack& stack, cro::State::Context context, Sh
         createScene();
         initUI();
     });
+
+#ifdef CRO_DEBUG_
+    loadFont("assets/fonts/ProggyClean.ttf");
+#endif
 }
 
 //public

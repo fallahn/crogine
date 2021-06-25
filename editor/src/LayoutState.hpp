@@ -85,4 +85,18 @@ private:
     void drawInfo();
 
     void updateLayout(std::int32_t, std::int32_t);
+
+    //TODO could we improve this by rendering all thumbs to a large
+    //texture and only previewing part of it?
+    std::uint32_t m_nextResourceID;
+
+    struct FontThumb final
+    {
+        cro::RenderTexture texture;
+        std::string relPath;
+        std::string name;
+    };
+    std::uint32_t m_selectedFont;
+    std::unordered_map<std::uint32_t, FontThumb> m_fontThumbs;
+    void loadFont(const std::string&);
 };

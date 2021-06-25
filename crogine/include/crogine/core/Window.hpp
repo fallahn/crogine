@@ -58,7 +58,7 @@ namespace cro
         {
             FullScreen = SDL_WINDOW_FULLSCREEN_DESKTOP,
             Borderless = SDL_WINDOW_BORDERLESS,
-            Resizeble  = SDL_WINDOW_RESIZABLE
+            Resizable  = SDL_WINDOW_RESIZABLE
         };
 
         Window();
