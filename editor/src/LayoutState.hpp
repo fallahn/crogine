@@ -72,6 +72,7 @@ private:
 
     //assigned to camera resize callback
     glm::vec2 m_layoutSize;
+    cro::Entity m_backgroundEntity;
     void updateView2D(cro::Camera&);
     void updateView3D(cro::Camera&);
 

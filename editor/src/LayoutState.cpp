@@ -175,6 +175,7 @@ void LayoutState::createScene()
     entity.getComponent<cro::Transform>().setScale(m_layoutSize / 2.f);
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_backgroundTexture);
+    m_backgroundEntity = entity;
 
     camEnt = m_uiScene.getActiveCamera();
     updateView2D(camEnt.getComponent<cro::Camera>());
@@ -218,6 +219,9 @@ void LayoutState::updateView2D(cro::Camera& cam2D)
     }
 
     cam2D.setOrthographic(0.f, m_layoutSize.x, 0.f, m_layoutSize.y, -0.1f, 11.f);
+
+    m_backgroundEntity.getComponent<cro::Transform>().setScale(
+        m_layoutSize / m_backgroundEntity.getComponent<cro::Sprite>().getSize());
 }
 
 void LayoutState::updateView3D(cro::Camera& cam3D)

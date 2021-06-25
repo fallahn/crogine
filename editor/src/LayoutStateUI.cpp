@@ -29,7 +29,10 @@ source distribution.
 
 #include "LayoutState.hpp"
 #include "UIConsts.hpp"
+#include "SharedStateData.hpp"
 
+#include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 
 namespace
 {
@@ -63,6 +66,8 @@ void LayoutState::initUI()
 
     auto size = getContext().mainWindow.getSize();
     updateLayout(size.x, size.y);
+
+    //TODO load the last used workspace (keep a ref to this in the prefs file?)
 }
 
 void LayoutState::drawMenuBar()
@@ -102,6 +107,33 @@ void LayoutState::drawMenuBar()
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Edit##layout"))
+        {
+            if (ImGui::BeginMenu("Add"))
+            {
+                if (ImGui::MenuItem("Sprite"))
+                {
+
+                }
+                
+                if (ImGui::MenuItem("Text"))
+                {
+
+                }
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::MenuItem("Remove"))
+            {
+                if (cro::FileSystem::showMessageBox("", "Delete the selected node?", cro::FileSystem::YesNo, cro::FileSystem::IconType::Question))
+                {
+                    //TODO delete the selected node
+                }
+            }
+
+            ImGui::EndMenu();
+        }
+
         //view menu
         if (ImGui::BeginMenu("View##Layout"))
         {
@@ -110,14 +142,12 @@ void LayoutState::drawMenuBar()
                // m_showPreferences = !m_showPreferences;
             }
 
-            if (ImGui::MenuItem("Set Background"))
-            {
 
-            }
 
             ImGui::EndMenu();
         }
 
+        //workspace menu
         if (ImGui::BeginMenu("Workspace"))
         {
             if (ImGui::MenuItem("Open##workspace"))
@@ -127,8 +157,33 @@ void LayoutState::drawMenuBar()
 
             if (ImGui::MenuItem("Save##workspace"))
             {
-
+                //TODO save background info,
+                //the layout size
+                //and any loaded spritesheets/fonts
+                //the layout tree is saved as its own file
             }
+
+            if (ImGui::MenuItem("Set Background"))
+            {
+                auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory + "untitled.png", "png,jpg,bmp");
+                if (!path.empty())
+                {
+                    if (m_backgroundTexture.loadFromFile(path))
+                    {
+                        //technically it's already set, just a lazy way of telling the sprite to resize
+                        m_backgroundEntity.getComponent<cro::Sprite>().setTexture(m_backgroundTexture);
+                        m_layoutSize = m_backgroundTexture.getSize();
+                        updateView2D(m_uiScene.getActiveCamera().getComponent<cro::Camera>());
+                    }
+                }
+            }
+            uiConst::showTipMessage("This will resize the the workspace to match the background image if possible");
+
+
+            /*if (ImGui::MenuItem("Set Size"))
+            {
+
+            }*/
 
             ImGui::EndMenu();
         }
