@@ -54,6 +54,13 @@ namespace cro
     class CRO_EXPORT_API Window final : public RenderTarget// : public cro::Detail::SDLResource
     {
     public:
+        enum StyleFlags
+        {
+            FullScreen = SDL_WINDOW_FULLSCREEN_DESKTOP,
+            Borderless = SDL_WINDOW_BORDERLESS,
+            Resizeble  = SDL_WINDOW_RESIZABLE
+        };
+
         Window();
         ~Window();
         Window(const Window&) = delete;
@@ -66,11 +73,10 @@ namespace cro
         \param width Width of the window to create in pixels
         \param height Height of the widow to create in pixels
         \param title Title to appear on the window (if supported by the current platform)
-        \param fullscreen If set to true the window is created in fullscreen mode
-        \param borderless If set to true the window is rendered borderless when not fullscreen
+        \param styleFlags An unsigned integer containing 0 or more Window::StyleFlags OR'd together
         \returns true on success, else false
         */
-        bool create(std::uint32_t width, std::uint32_t height, const std::string& title, bool fullscreen = false, bool borderless = false);
+        bool create(std::uint32_t width, std::uint32_t height, const std::string& title, std::uint32_t styleFlags = 0);
 
         /*!
         \brief Enables or disables vsync

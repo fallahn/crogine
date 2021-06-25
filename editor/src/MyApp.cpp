@@ -47,7 +47,8 @@ namespace
 }
 
 MyApp::MyApp()
-    : m_stateStack({*this, getWindow()})
+    : cro::App  (cro::Window::Resizeble),
+    m_stateStack({*this, getWindow()})
 {
     setApplicationStrings("Trederia", "Crogine Editor");
 

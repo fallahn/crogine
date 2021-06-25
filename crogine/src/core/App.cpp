@@ -142,11 +142,12 @@ namespace
 }
 
 
-App::App()
-    : m_frameClock  (nullptr),
-    m_running       (false),
-    m_orgString     ("Trederia"),
-    m_appString     ("CrogineApp")
+App::App(std::uint32_t styleFlags)
+    : m_windowStyleFlags(styleFlags),
+    m_frameClock        (nullptr),
+    m_running           (false),
+    m_orgString         ("Trederia"),
+    m_appString         ("CrogineApp")
 {
     CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
@@ -231,7 +232,7 @@ void App::run()
 {
     auto settings = loadSettings();
 
-    if (m_window.create(settings.width, settings.height, "crogine game"))
+    if (m_window.create(settings.width, settings.height, "crogine game", m_windowStyleFlags))
     {
         //load opengl - TODO choose which loader to use based on
         //current platform, ie mobile or desktop

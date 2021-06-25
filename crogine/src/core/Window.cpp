@@ -65,7 +65,7 @@ Window::~Window()
 }
 
 //public
-bool Window::create(std::uint32_t width, std::uint32_t height, const std::string& title, bool fullscreen, bool borderless)
+bool Window::create(std::uint32_t width, std::uint32_t height, const std::string& title, std::uint32_t styleFlags)
 {
     if (!Detail::SDLResource::valid()) return false;
     
@@ -76,10 +76,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
     borderless = true;
 #endif //PLATFORM_MOBILE
 
-    int styleMask = SDL_WINDOW_OPENGL;
-    if (fullscreen) styleMask |= SDL_WINDOW_FULLSCREEN;
-    if (borderless) styleMask |= SDL_WINDOW_BORDERLESS;
-    //TODO set up proper masks for all window options
+    int styleMask = SDL_WINDOW_OPENGL | styleFlags;
 
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);

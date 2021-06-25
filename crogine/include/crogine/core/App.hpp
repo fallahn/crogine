@@ -65,7 +65,11 @@ namespace cro
     {
     public:
         friend class Detail::SDLResource;
-        App();
+        /*!
+        \param windowStyleFlags Style flags with which to create the default window
+        \see Window
+        */
+        explicit App(std::uint32_t windowStyleFlags = 0);
         virtual ~App();
 
         App(const App&) = delete;
@@ -158,7 +162,7 @@ namespace cro
         void setApplicationStrings(const std::string& organisation, const std::string& applicationName);
 
     private:
-
+        std::uint32_t m_windowStyleFlags;
         Window m_window;
         Colour m_clearColour;
         HiResTimer* m_frameClock;
