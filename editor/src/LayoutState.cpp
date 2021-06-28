@@ -206,6 +206,7 @@ void LayoutState::createScene()
 void LayoutState::updateView2D(cro::Camera& cam2D)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
+
     float infoHeight = (uiConst::InfoBarHeight / size.y);
     float titleHeight = (uiConst::TitleHeight / size.y);
 
@@ -223,19 +224,19 @@ void LayoutState::updateView2D(cro::Camera& cam2D)
     if (windowRatio > viewRatio)
     {
         //side bars
-        float size = cam2D.viewport.width * (viewRatio / windowRatio);
-        float offset = (cam2D.viewport.width - size) / 2.f;
+        float sizeW = cam2D.viewport.width * (viewRatio / windowRatio);
+        float offset = (cam2D.viewport.width - sizeW) / 2.f;
 
-        cam2D.viewport.width = size;
+        cam2D.viewport.width = sizeW;
         cam2D.viewport.left += offset;
     }
     else
     {
         //top/bottom bars
-        float size = cam2D.viewport.height * (windowRatio / viewRatio);
-        float offset = (cam2D.viewport.height - size) / 2.f;
+        float sizeH = cam2D.viewport.height * (windowRatio / viewRatio);
+        float offset = (cam2D.viewport.height - sizeH) / 2.f;
 
-        cam2D.viewport.height = size;
+        cam2D.viewport.height = sizeH;
         cam2D.viewport.bottom += offset;
     }
 

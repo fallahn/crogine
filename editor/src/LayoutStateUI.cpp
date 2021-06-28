@@ -201,6 +201,25 @@ void LayoutState::drawMenuBar()
 
 void LayoutState::drawInspector()
 {
+    static int uid = 0;
+
+    const std::function<void(const TreeNode&)> drawNode = 
+        [&](const TreeNode& node)
+    {
+        //TODO limit recursion
+        std::string label = "label##" + std::to_string(uid++);
+
+        if (ImGui::TreeNode(label.c_str()))
+        {
+            for (const auto& child : node.children)
+            {
+                drawNode(child);
+            }
+
+            ImGui::TreePop();
+        }
+    };
+
     auto [pos, size] = WindowLayouts[WindowID::Inspector];
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
@@ -209,7 +228,16 @@ void LayoutState::drawInspector()
         ImGui::BeginTabBar("Scene");
         if (ImGui::BeginTabItem("Tree"))
         {
+            if (ImGui::TreeNode("Scene"))
+            {
+                for (const auto& node : m_treeNodes)
+                {
+                    //recursively draw nodes
+                    drawNode(node);
+                }
 
+                ImGui::TreePop();
+            }
 
             ImGui::EndTabItem();
         }
@@ -241,10 +269,16 @@ void LayoutState::drawBrowser()
             ImGui::SameLine();
             if (ImGui::Button("Remove Sprites"))
             {
-                //TODO warn this will remove all sprites from the
-                //selected sprite's sprite sheet
-                //TODO skip this because it will re-index all the thumbs?
-                //or should we switch to a map?
+                if (cro::FileSystem::showMessageBox("Warning", "This will remove all sprites which\nshare a sprite sheet.\nAre you sure?", cro::FileSystem::YesNo))
+                {
+                    std::string sheet = m_spriteThumbs[m_selectedSprite].spriteSheet;
+                    m_spriteThumbs.erase(std::remove_if(m_spriteThumbs.begin(), m_spriteThumbs.end(), 
+                        [&sheet](const SpriteThumb& t)
+                        {
+                            return t.spriteSheet == sheet;
+                        }), m_spriteThumbs.end());
+                    m_selectedSprite = 0;
+                }
             }
             uiConst::showTipMessage("This will remove all sprites which share the selected sprite sheet");
 
@@ -505,11 +539,11 @@ void LayoutState::loadSpriteSheet(const std::string& path)
     if (spriteSheet.loadFromFile(path, m_resources.textures, m_sharedData.workingDirectory + "/"))
     {
         std::string relPath = path;
+        std::replace(relPath.begin(), relPath.end(), '\\', '/');
         if (relPath.find(m_sharedData.workingDirectory) != std::string::npos)
         {
             relPath = relPath.substr(m_sharedData.workingDirectory.size() + 1);
         }
-        std::replace(relPath.begin(), relPath.end(), '\\', '/');
 
         const auto& sprites = spriteSheet.getSprites();
         for (const auto& [name, sprite] : sprites)

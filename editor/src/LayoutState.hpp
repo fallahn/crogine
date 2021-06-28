@@ -88,6 +88,19 @@ private:
 
     void updateLayout(std::int32_t, std::int32_t);
 
+    struct TreeNode final
+    {
+        std::string name;
+        cro::Entity entity;
+        enum
+        {
+            Sprite, Text
+        }type = Sprite;
+        std::vector<TreeNode> children;
+    };
+    std::vector<TreeNode> m_treeNodes;
+
+
     struct SpriteThumb final
     {
         std::string spriteSheet;
