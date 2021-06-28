@@ -202,22 +202,26 @@ void LayoutState::drawMenuBar()
 void LayoutState::drawInspector()
 {
     static int uid = 0;
+    uid = 0;
 
-    const std::function<void(const TreeNode&)> drawNode = 
-        [&](const TreeNode& node)
+    const std::function<void(TreeNode&)> drawNode = 
+        [&](TreeNode& node)
     {
         //TODO limit recursion
-        std::string label = "label##" + std::to_string(uid++);
-
-        if (ImGui::TreeNode(label.c_str()))
+        std::string label = "label";// +std::to_string(uid++);
+        uid++;
+        if (ImGui::TreeNode(&uid, "%s %d", label.c_str(), uid))
         {
-            for (const auto& child : node.children)
+            doDrop(node);
+
+            for (auto& child : node.children)
             {
                 drawNode(child);
             }
 
             ImGui::TreePop();
         }
+
     };
 
     auto [pos, size] = WindowLayouts[WindowID::Inspector];
@@ -228,16 +232,7 @@ void LayoutState::drawInspector()
         ImGui::BeginTabBar("Scene");
         if (ImGui::BeginTabItem("Tree"))
         {
-            if (ImGui::TreeNode("Scene"))
-            {
-                for (const auto& node : m_treeNodes)
-                {
-                    //recursively draw nodes
-                    drawNode(node);
-                }
-
-                ImGui::TreePop();
-            }
+            drawNode(m_treeNode);
 
             ImGui::EndTabItem();
         }
@@ -531,6 +526,23 @@ void LayoutState::updateLayout(std::int32_t w, std::int32_t h)
 
     WindowLayouts[WindowID::Info] =
         std::make_pair(glm::vec2(0.f, height - uiConst::InfoBarHeight), glm::vec2(width, uiConst::InfoBarHeight));
+}
+
+void LayoutState::doDrop(TreeNode& node)
+{
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (auto* payload = ImGui::AcceptDragDropPayload("SPRITE_SRC"))
+        {
+            node.children.emplace_back();
+        }
+        else if (auto* payload = ImGui::AcceptDragDropPayload("FONT_SRC"))
+        {
+            node.children.emplace_back();
+        }
+
+        ImGui::EndDragDropTarget();
+    }
 }
 
 void LayoutState::loadSpriteSheet(const std::string& path)

@@ -98,8 +98,8 @@ private:
         }type = Sprite;
         std::vector<TreeNode> children;
     };
-    std::vector<TreeNode> m_treeNodes;
-
+    TreeNode m_treeNode;
+    void doDrop(TreeNode&);
 
     struct SpriteThumb final
     {
