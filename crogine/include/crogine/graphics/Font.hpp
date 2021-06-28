@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -96,13 +96,15 @@ namespace cro
         float getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charSize) const;
 
         /*!
-        \brief Returns true if the underlying texture of the given character size has changed
+        \brief Enables or disables smoothing on the font's internal texture
+        The default value is false.
         */
-        bool pageUpdated(std::uint32_t charSize) const { return m_pages[charSize].updated; }
+        void setSmooth(bool smooth);
 
     private:
 
         std::vector<Uint8> m_buffer;
+        bool m_useSmoothing;
 
         struct Row final
         {
@@ -137,6 +139,7 @@ namespace cro
         void cleanup();
 
         friend class TextSystem;
+        bool pageUpdated(std::uint32_t charSize) const;
         void markPageRead(std::uint32_t charSize) const;
     };
 }

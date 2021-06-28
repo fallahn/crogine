@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,10 +32,11 @@ Based on the source of SFML's font class
 by Laurent Gomila et al https://github.com/SFML/SFML/blob/master/src/SFML/Graphics/Font.cpp 
 */
 
+#include "../detail/DistanceField.hpp"
+
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/Colour.hpp>
-#include "../detail/DistanceField.hpp"
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/FileSystem.hpp>
 
@@ -72,6 +73,7 @@ namespace
 }
 
 Font::Font()
+    : m_useSmoothing(false)
 {
 
 }
@@ -225,6 +227,19 @@ float Font::getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charS
     }
 }
 
+void Font::setSmooth(bool smooth)
+{
+    if (smooth != m_useSmoothing)
+    {
+        m_useSmoothing = smooth;
+
+        for (auto& page : m_pages)
+        {
+            page.second.texture.setSmooth(smooth);
+        }
+    }
+}
+
 //private
 Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, float outlineThickness) const
 {
@@ -290,6 +305,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, float out
 
         //get the current page
         auto& page = m_pages[charSize];
+        page.texture.setSmooth(m_useSmoothing);
 
         //find somewhere to insert the glyph
         retVal.textureBounds = getGlyphRect(page, width, height);
@@ -498,6 +514,11 @@ void Font::cleanup()
     m_pixelBuffer.clear();
 }
 
+bool Font::pageUpdated(std::uint32_t charSize) const
+{
+    return m_pages[charSize].updated;
+}
+
 void Font::markPageRead(std::uint32_t charSize) const
 {
     m_pages[charSize].updated = false;
@@ -509,5 +530,4 @@ Font::Page::Page()
     img.create(128, 128, Colour(1.f, 1.f, 1.f, 0.f));
     texture.create(128, 128);
     texture.update(img.getPixelData());
-    texture.setSmooth(true);
 }
