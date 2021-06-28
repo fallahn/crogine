@@ -163,5 +163,8 @@ namespace cro
         std::array<std::int32_t, 4u> m_lastViewport = {};
         std::array<float, 4u> m_lastClearColour = {};
         std::int32_t m_lastBuffer;
+
+        bool m_hasDepthBuffer;
+        bool m_hasStencilBuffer;
     };
 }
