@@ -34,6 +34,7 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -86,6 +87,17 @@ private:
     void drawInfo();
 
     void updateLayout(std::int32_t, std::int32_t);
+
+    struct SpriteThumb final
+    {
+        std::string spriteSheet;
+        std::string spriteName;
+        cro::Sprite sprite;
+    };
+
+    std::uint32_t m_selectedSprite;
+    std::vector<SpriteThumb> m_spriteThumbs;
+    void loadSpriteSheet(const std::string&);
 
     //TODO could we improve this by rendering all thumbs to a large
     //texture and only previewing part of it?

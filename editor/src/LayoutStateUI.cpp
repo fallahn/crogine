@@ -37,6 +37,8 @@ source distribution.
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 
+#include <crogine/graphics/SpriteSheet.hpp>
+
 #include <crogine/util/String.hpp>
 
 namespace
@@ -229,18 +231,116 @@ void LayoutState::drawBrowser()
         {
             if (ImGui::Button("Open Sprite Sheet"))
             {
-                //TODO add all the sprites from a sprite sheet
+                //add all the sprites from a sprite sheet
+                auto path = cro::FileSystem::openFileDialogue("", "spt");
+                if (!path.empty())
+                {
+                    loadSpriteSheet(path);
+                }
             }
             ImGui::SameLine();
             if (ImGui::Button("Remove Sprites"))
             {
                 //TODO warn this will remove all sprites from the
                 //selected sprite's sprite sheet
+                //TODO skip this because it will re-index all the thumbs?
+                //or should we switch to a map?
             }
             uiConst::showTipMessage("This will remove all sprites which share the selected sprite sheet");
 
             //thumbnail window
             ImGui::BeginChild("##spriteChild");
+
+            static std::size_t lastSelected = 0;
+
+            auto thumbSize = size;
+            thumbSize.y *= uiConst::ThumbnailHeight;
+            thumbSize.x = thumbSize.y;
+
+            auto frameSize = thumbSize;
+            frameSize.x += ImGui::GetStyle().FramePadding.x * uiConst::FramePadding.x;
+            frameSize.y += ImGui::GetStyle().FramePadding.y * uiConst::FramePadding.y;
+
+            std::int32_t thumbsPerRow = static_cast<std::int32_t>(std::floor(size.x / frameSize.x) - 1);
+            std::int32_t count = 0;
+            std::uint32_t removeID = 0;
+
+            auto id = 0u;
+            for (const auto& [sheet, name, sprite] : m_spriteThumbs)
+            {
+                ImVec4 colour(0.f, 0.f, 0.f, 1.f);
+                if (id == m_selectedSprite)
+                {
+                    colour = { 1.f, 1.f, 0.f, 1.f };
+                    if (lastSelected != m_selectedSprite)
+                    {
+                        ImGui::SetScrollHereY();
+                    }
+                }
+
+                ImGui::BeginChildFrame(897654 + id, { frameSize.x, frameSize.y }, ImGuiWindowFlags_NoScrollbar);
+
+                const auto* tex = sprite.getTexture();
+                auto subrect = sprite.getTextureRect();
+                ImVec2 uvStart(subrect.left / tex->getSize().x, (subrect.bottom + subrect.height) / tex->getSize().y);
+                ImVec2 uvEnd((subrect.left + subrect.width) / tex->getSize().x, subrect.bottom / tex->getSize().y);
+
+                float ratio = subrect.width / subrect.height;
+                auto displaySize = thumbSize;
+                if (subrect.width > subrect.height)
+                {
+                    displaySize.y *= 1.f / ratio;;
+                }
+                else
+                {
+                    displaySize.x *= ratio;
+                }
+
+                ImGui::PushStyleColor(ImGuiCol_Border, colour);
+                if (ImGui::ImageButton(*tex, { displaySize.x, displaySize.y }, uvStart, uvEnd))
+                {
+                    m_selectedSprite = id;
+                    ImGui::SetScrollHereY();
+                }
+                ImGui::PopStyleColor();
+
+                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                {
+                    //set payload to carry the thumb index of the sprite
+                    ImGui::SetDragDropPayload("SPRITE_SRC", &id, sizeof(std::uint32_t));
+
+                    //display preview
+                    ImGui::Image(*tex, { displaySize.x, displaySize.y }, uvStart, uvEnd);
+                    ImGui::Text("%s", name.c_str());
+                    ImGui::EndDragDropSource();
+
+                    m_selectedSprite = id;
+                    ImGui::SetScrollHereY();
+                }
+
+                ImGui::Text("%s", name.c_str());
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::Image(*tex, { displaySize.x * 2.f, displaySize.y * 2.f }, uvStart, uvEnd);
+                    ImGui::Text("%s", name.c_str());
+                    ImGui::EndTooltip();
+                }
+
+                ImGui::EndChildFrame();
+
+                //put on same line if we fit
+                count++;
+                if (count % thumbsPerRow != 0)
+                {
+                    ImGui::SameLine();
+                }
+
+                id++;
+            }
+
+            lastSelected = m_selectedSprite;
+
 
             ImGui::EndChild();
             ImGui::EndTabItem();
@@ -399,6 +499,29 @@ void LayoutState::updateLayout(std::int32_t w, std::int32_t h)
         std::make_pair(glm::vec2(0.f, height - uiConst::InfoBarHeight), glm::vec2(width, uiConst::InfoBarHeight));
 }
 
+void LayoutState::loadSpriteSheet(const std::string& path)
+{
+    cro::SpriteSheet spriteSheet;
+    if (spriteSheet.loadFromFile(path, m_resources.textures, m_sharedData.workingDirectory + "/"))
+    {
+        std::string relPath = path;
+        if (relPath.find(m_sharedData.workingDirectory) != std::string::npos)
+        {
+            relPath = relPath.substr(m_sharedData.workingDirectory.size() + 1);
+        }
+        std::replace(relPath.begin(), relPath.end(), '\\', '/');
+
+        const auto& sprites = spriteSheet.getSprites();
+        for (const auto& [name, sprite] : sprites)
+        {
+            auto& thumb = m_spriteThumbs.emplace_back();
+            thumb.sprite = sprite;
+            thumb.spriteName = name;
+            thumb.spriteSheet = relPath;
+        }
+    }
+}
+
 void LayoutState::loadFont(const std::string& path)
 {
     if (m_resources.fonts.load(m_nextResourceID, path))
@@ -451,6 +574,7 @@ void LayoutState::loadFont(const std::string& path)
         {
             relPath = name;
         }
+        std::replace(relPath.begin(), relPath.end(), '\\', '/');
 
         m_nextResourceID++;
     }

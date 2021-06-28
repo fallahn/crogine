@@ -61,6 +61,7 @@ LayoutState::LayoutState(cro::StateStack& stack, cro::State::Context context, Sh
     m_sharedData    (sd),
     m_layoutSize    (le::DefaultLayoutSize),
     m_nextResourceID(1),
+    m_selectedSprite(0),
     m_selectedFont  (0)
 {
     context.mainWindow.loadResources([this]() {

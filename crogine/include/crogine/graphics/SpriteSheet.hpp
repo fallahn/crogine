@@ -54,7 +54,7 @@ namespace cro
         the sprite sheet texture.
         \returns true if successful, else false
         */
-        bool loadFromFile(const std::string& path, TextureResource& rx);
+        bool loadFromFile(const std::string& path, TextureResource& rx, const std::string& workingDirectory = "");
 
         /*!
         \brief Returns a sprite component with the given name as it
@@ -68,6 +68,12 @@ namespace cro
         on the given sprite if it exists, else returns 0
         */
         std::size_t getAnimationIndex(const std::string& name, const std::string& sprite) const;
+
+        /*!
+        
+        \brief Returns the Sprite components definied in the spritesheet, mapped to their name
+        */
+        const std::unordered_map<std::string, Sprite>& getSprites() const { return m_sprites; }
 
     private:
         mutable std::unordered_map<std::string, Sprite> m_sprites;

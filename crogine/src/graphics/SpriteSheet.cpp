@@ -39,7 +39,7 @@ SpriteSheet::SpriteSheet()
 }
 
 //public
-bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& textures)
+bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& textures, const std::string& workingDirectory)
 {
     ConfigFile sheetFile;
     if (!sheetFile.loadFromFile(path))
@@ -57,7 +57,7 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
     //validate sprites, increase count
     if (auto* p = sheetFile.findProperty("src"))
     {
-        texture = &textures.get(p->getValue<std::string>());
+        texture = &textures.get(workingDirectory + p->getValue<std::string>());
     }
     else
     {
