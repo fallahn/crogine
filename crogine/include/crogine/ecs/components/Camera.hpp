@@ -342,9 +342,9 @@ namespace cro
         any relevant shaders when the Scene is rendered with this camera.
         */
 #ifdef PLATFORM_DESKTOP
-        cro::DepthTexture depthBuffer;
+        cro::DepthTexture shadowMapBuffer;
 #else
-        cro::RenderTexture depthBuffer;
+        cro::RenderTexture shadowMapBuffer;
 #endif
 
         /*!

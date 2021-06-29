@@ -110,6 +110,15 @@ void Model::setGBufferMaterial(std::size_t idx, Material::Data material)
 #endif
 }
 
+bool Model::hasGBufferMaterial() const
+{
+#ifdef PLATFORM_DESKTOP
+    return m_meshData.indexData[0].vao[Mesh::IndexData::Pass::GBuffer] != 0;
+#else
+    return false;
+#endif
+}
+
 const Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const
 {
     CRO_ASSERT(submesh < m_materials[pass].size(), "submesh index out of range");

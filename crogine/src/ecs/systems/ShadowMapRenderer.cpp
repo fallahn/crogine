@@ -78,7 +78,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
     //the camera should actually be updated then render all the
     //cameras at once in process(), above
     auto& camera = camEnt.getComponent<Camera>();
-    if (camera.depthBuffer.available())
+    if (camera.shadowMapBuffer.available())
     {
         if (m_drawLists.size() <= m_activeCameras.size())
         {
@@ -235,9 +235,9 @@ void ShadowMapRenderer::render()
         glCheck(glEnable(GL_DEPTH_TEST));
 
 #ifdef PLATFORM_DESKTOP
-        camera.depthBuffer.clear();
+        camera.shadowMapBuffer.clear();
 #else
-        camera.depthBuffer.clear(cro::Colour::White());
+        camera.shadowMapBuffer.clear(cro::Colour::White());
 #endif
 
         for (const auto& [e, f] : m_drawLists[c])
@@ -346,7 +346,7 @@ void ShadowMapRenderer::render()
         glCheck(glDisable(GL_DEPTH_TEST));
         glCheck(glDisable(GL_CULL_FACE));
         glCheck(glCullFace(GL_BACK));
-        camera.depthBuffer.display();
+        camera.shadowMapBuffer.display();
     }
 }
 

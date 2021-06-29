@@ -310,7 +310,7 @@ void ModelState::createScene()
     //create the camera - using a custom camera prevents the scene updating the projection on window resize
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition);
-    entity.addComponent<cro::Camera>().depthBuffer.create(4096, 4096);
+    entity.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
     m_viewportRatio = updateView(entity, DefaultFarPlane, DefaultFOV);
     m_scene.setActiveCamera(entity);
 

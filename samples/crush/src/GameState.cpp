@@ -608,7 +608,7 @@ void GameState::loadAssets()
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 6.f, 30.f));
     entity.addComponent<cro::Camera>().setOrthographic(-10.f, 10.f, -10.f, 10.f, 10.f, 60.f);
-    entity.getComponent<cro::Camera>().depthBuffer.create(1024, 1024);
+    entity.getComponent<cro::Camera>().shadowMapBuffer.create(1024, 1024);
 
     m_debugCam = entity;
 #endif
@@ -1364,7 +1364,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             cam.reflectionBuffer.setSmooth(true);
             cam.refractionBuffer.create(ReflectionMapSize, ReflectionMapSize);
             cam.refractionBuffer.setSmooth(true);
-            cam.depthBuffer.create(2048, 2048);
+            cam.shadowMapBuffer.create(2048, 2048);
 
             auto camController = m_gameScene.createEntity();
             camController.addComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());

@@ -60,6 +60,10 @@ void CameraSystem::handleMessage(const Message& msg)
                 {
                     camera.resizeCallback(camera);
                 }
+
+#ifdef PLATFORM_DESKTOP
+                //TODO resize the camera's gbuffer if it is active
+#endif
             }
         }
     }

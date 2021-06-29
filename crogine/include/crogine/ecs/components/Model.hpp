@@ -97,6 +97,12 @@ namespace cro
         void setGBufferMaterial(std::size_t idx, Material::Data material);
 
         /*!
+        \brief Returns true if at least one g-buffer material is set.
+        Use this to determin if a model can be rendered during the g-buffer pass
+        */
+        bool hasGBufferMaterial() const;
+
+        /*!
         \brief returns whether or not the model is currently inside the
         frustum of the active camera according the the last render pass.
         This may be out of date by a frame when switching active scene cameras

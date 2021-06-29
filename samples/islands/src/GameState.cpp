@@ -587,7 +587,7 @@ void GameState::spawnPlayer(PlayerInfo info)
             cam.reflectionBuffer.setSmooth(true);
             cam.refractionBuffer.create(ReflectionMapSize, ReflectionMapSize);
             cam.refractionBuffer.setSmooth(true);
-            cam.depthBuffer.create(4096, 4096);
+            cam.shadowMapBuffer.create(4096, 4096);
 
             auto waterEnt = addSeaplane();
             waterEnt.getComponent<cro::Model>().setRenderFlags(PlayerPlanes[NextPlayerPlane++]);

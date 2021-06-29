@@ -119,7 +119,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
                 if (ImGui::Begin("Window of funnage"))
                 {
-                    ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().depthBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                     ImGui::DragFloat("Rate", &fireRate, 0.1f, 0.1f, 10.f);
                     ImGui::DragFloat("Position", &sourcePosition.x, 0.1f, -19.f, 19.f);
@@ -323,7 +323,7 @@ void GameState::createScene()
     auto ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 50.f });
     //projection is set in updateView()
-    ent.addComponent<cro::Camera>().depthBuffer.create(4096, 4096);
+    ent.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
 
 
