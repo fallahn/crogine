@@ -46,8 +46,10 @@ namespace cro
         
         /*!
         \brief Applies the given material to the given sub-mesh index
+        \param idx The index of the sub-mesh to which to applyh the material
+        \param material Data struct containing the material definition
         */
-        void setMaterial(std::size_t, Material::Data);
+        void setMaterial(std::size_t idx, Material::Data material);
 
         /*!
         \brief Sets a parameter on the material applied at the given index
@@ -77,11 +79,22 @@ namespace cro
         void setSkeleton(glm::mat4* frame, std::size_t size);
 
         /*!
-        brief Sets the material used when casting shadows.
+        \brief Sets the material used when casting shadows.
         This material is used by ShadowMap systems to render the depth data
         of the model.
+        \param idx The index of the sub-mesh to which to applyh the material
+        \param material Data struct containing the material definition
         */
         void setShadowMaterial(std::size_t idx, Material::Data material);
+
+        /*!
+        \brief Sets the material to use for rendering a given sub-mesh to the
+        active camera's g-buffer. This is set automatically when a model is created
+        with a ModelDefinition - and has no effect on mobile platforms.
+        \param idx The index of the sub-mesh to which to applyh the material
+        \param material Data struct containing the material definition
+        */
+        void setGBufferMaterial(std::size_t idx, Material::Data material);
 
         /*!
         \brief returns whether or not the model is currently inside the

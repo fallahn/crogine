@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -174,6 +174,9 @@ namespace cro
         std::size_t m_meshID = 0; //!< ID of the mesh in the mesh resource
         std::array<std::int32_t, Mesh::IndexData::MaxBuffers> m_materialIDs{}; //!< list of material IDs in the order in which they appear on the model
         std::array<std::int32_t, Mesh::IndexData::MaxBuffers> m_shadowIDs{}; //!< IDs of shadow map materials if this model casts shadows
+#ifdef PLATFORM_DESKTOP
+        std::array<std::int32_t, Mesh::IndexData::MaxBuffers> m_gbufferIDs{}; //!< IDs of gbuffer materials
+#endif
         std::size_t m_materialCount = 0; //!< number of active materials
         Skeleton m_skeleton; //!< overloaded operator bool indicates if currently valid
         bool m_castShadows = false; //!< if this is true the model entity also requires a shadow cast component

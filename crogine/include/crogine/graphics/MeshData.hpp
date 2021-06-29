@@ -83,9 +83,9 @@ namespace cro
             std::uint32_t ibo = 0;
             enum Pass
             {
-                Final, Shadow, Count
+                Final, Shadow, GBuffer, Count
             };
-            std::array<std::uint32_t, Pass::Count> vao = {0,0}; //< required for core profile on desktop, ignored on mobile (one for both regular and shadow map pass)
+            std::array<std::uint32_t, Pass::Count> vao = {0,0,0}; //< required for core profile on desktop, ignored on mobile (one for each pass)
             std::uint32_t primitiveType = 0;
             std::uint32_t indexCount = 0;
             std::uint32_t format = 0;

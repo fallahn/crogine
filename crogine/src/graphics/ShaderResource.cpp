@@ -91,7 +91,12 @@ bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, 
 
 std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
 {
+#ifdef PLATFORM_DESKTOP
+    CRO_ASSERT(type >= BuiltIn::GBuffer && flags > 0, "Invalid type of flags value");
+#else
     CRO_ASSERT(type >= BuiltIn::Unlit && flags > 0, "Invalid type of flags value");
+#endif
+
     std::int32_t id = type | flags;
 
     //check not already loaded
@@ -209,16 +214,12 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
     case BuiltIn::PBR:
         success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::PBR::Fragment, defines);
         break;
-    }
-
 #ifdef PLATFORM_DESKTOP
-    std::int32_t gbufferID = BuiltIn::GBuffer | flags;
-    if (m_shaders.count(gbufferID) == 0)
-    {
-        loadFromString(gbufferID, Shaders::GBuffer::Vertex, Shaders::GBuffer::Fragment, defines);
-    }
+    case BuiltIn::GBuffer:
+        success = loadFromString(id, Shaders::GBuffer::Vertex, Shaders::GBuffer::Fragment, defines);
+        break;
 #endif
-
+    }
 
     if (success)
     {
@@ -234,5 +235,5 @@ cro::Shader& ShaderResource::get(std::int32_t ID)
         Logger::log("Could not find shader with ID " + std::to_string(ID) + ", returning default shader", Logger::Type::Warning);
         return m_defaultShader;
     }
-    return m_shaders.find(ID)->second;
+    return m_shaders.at(ID);// .second;
 }

@@ -59,6 +59,9 @@ Model::Model(Mesh::Data data, Material::Data material)
         mat = material;
     }
 #ifdef PLATFORM_DESKTOP
+    //TODO we need to set materials for gbuffer here too...
+
+
     for (auto i = 0u; i < m_meshData.submeshCount; ++i)
     {
         updateVAO(i, Mesh::IndexData::Final);
@@ -93,6 +96,18 @@ void Model::setShadowMaterial(std::size_t idx, Material::Data material)
 #ifdef PLATFORM_DESKTOP
     updateVAO(idx, Mesh::IndexData::Shadow);
 #endif //DESKTOP
+}
+
+void Model::setGBufferMaterial(std::size_t idx, Material::Data material)
+{
+#ifdef PLATFORM_DESKTOP
+    CRO_ASSERT(idx < m_materials[Mesh::IndexData::Shadow].size(), "Index out of range");
+    bindMaterial(material);
+    m_materials[Mesh::IndexData::GBuffer][idx] = material;
+    updateVAO(idx, Mesh::IndexData::GBuffer);
+#else
+    LogE << "g-buffer is not supported on mobile platforms" << std::endl;
+#endif
 }
 
 const Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const
