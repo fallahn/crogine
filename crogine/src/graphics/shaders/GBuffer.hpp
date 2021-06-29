@@ -31,28 +31,7 @@ source distribution.
 
 #include <string>
 
-namespace cro::Shaders::Debug
+namespace cro::Shaders::GBuffer
 {
-    static const std::string Vertex = R"(
-        ATTRIBUTE vec4 a_position;
-        ATTRIBUTE LOW vec4 a_colour;
-
-        uniform mat4 u_projectionMatrix;
-
-        VARYING_OUT MED vec4 v_colour;
-
-        void main()
-        {
-            gl_Position = u_projectionMatrix * a_position;
-            v_colour = a_colour;
-        })";
-
-    static const std::string Fragment = R"(
-        VARYING_IN LOW vec4 v_colour;
-        OUTPUT
-
-        void main()
-        {
-            FRAG_OUT = v_colour;
-        })";
+    static const std::string Vertex = R"()";
 }

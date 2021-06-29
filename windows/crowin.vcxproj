@@ -198,6 +198,7 @@
     <ClInclude Include="..\crogine\src\graphics\shaders\Billboard.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Debug.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Default.hpp" />
+    <ClInclude Include="..\crogine\src\graphics\shaders\GBuffer.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\PBR.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\PBRBRDF.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\PBRCubemap.hpp" />

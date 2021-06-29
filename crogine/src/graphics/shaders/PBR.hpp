@@ -13,7 +13,7 @@ namespace cro::Shaders::PBR
     //note that this shader is not designed with mobile
     //devices in mind. It also shares a vertex shader
     //with the VertexLit type.
-    const static std::string Fragment = 
+    static const std::string Fragment = 
         R"(
         OUTPUT
         #if defined(DIFFUSE_MAP)

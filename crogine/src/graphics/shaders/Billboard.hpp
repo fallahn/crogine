@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,7 +33,7 @@ source distribution.
 
 namespace cro::Shaders::Billboard
 {
-    const static std::string Vertex = R"(
+    static const std::string Vertex = R"(
         ATTRIBUTE vec4 a_position; //relative to root position (below)
         ATTRIBUTE vec3 a_normal; //actually contains root position of billboard
         ATTRIBUTE vec4 a_colour;
@@ -70,35 +70,35 @@ namespace cro::Shaders::Billboard
 
         void main()
         {
-                vec3 position = (u_worldMatrix * vec4(a_normal, 1.0)).xyz;
+            vec3 position = (u_worldMatrix * vec4(a_normal, 1.0)).xyz;
 
 #if defined (LOCK_SCALE)
 
-                gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
-                gl_Position /= gl_Position.w;
-                gl_Position.xy += a_position.xy * (a_texCoord1 / u_screenSize);
+            gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
+            gl_Position /= gl_Position.w;
+            gl_Position.xy += a_position.xy * (a_texCoord1 / u_screenSize);
 
-                #if defined (VERTEX_LIT)
-                v_normalVector = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
-                v_worldPosition = position;
-                #endif
+            #if defined (VERTEX_LIT)
+            v_normalVector = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
+            v_worldPosition = position;
+            #endif
 #else
-                //TODO setting these as uniforms is more efficient, but also more faff.
-                vec3 camRight = vec3(u_viewMatrix[0][0], u_viewMatrix[1][0], u_viewMatrix[2][0]);
+            //TODO setting these as uniforms is more efficient, but also more faff.
+            vec3 camRight = vec3(u_viewMatrix[0][0], u_viewMatrix[1][0], u_viewMatrix[2][0]);
 #if defined(LOCK_ROTATION)
-                vec3 camUp = vec3(0.0, 1.0, 0.0);
+            vec3 camUp = vec3(0.0, 1.0, 0.0);
 #else
-                vec3 camUp = vec3(u_viewMatrix[0][1], u_viewMatrix[1][1], u_viewMatrix[2][1]);
+            vec3 camUp = vec3(u_viewMatrix[0][1], u_viewMatrix[1][1], u_viewMatrix[2][1]);
 #endif
-                position = position + camRight * a_position.x
-                                    + camUp * a_position.y;
+            position = position + camRight * a_position.x
+                                + camUp * a_position.y;
 
-                gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
+            gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
 
-                #if defined (VERTEX_LIT)
-                v_normalVector = normalize(cross(camRight, camUp));
-                v_worldPosition = position;
-                #endif
+            #if defined (VERTEX_LIT)
+            v_normalVector = normalize(cross(camRight, camUp));
+            v_worldPosition = position;
+            #endif
 #endif
 
 
@@ -106,26 +106,26 @@ namespace cro::Shaders::Billboard
 
 //TODO: defs for scaled billboards
 
-                #if defined (RX_SHADOWS)
-                    v_lightWorldPosition = u_lightViewProjectionMatrix * vec4(position, 1.0);
-                #endif
+            #if defined (RX_SHADOWS)
+                v_lightWorldPosition = u_lightViewProjectionMatrix * vec4(position, 1.0);
+            #endif
 
-                #if defined (VERTEX_COLOUR)
-                    v_colour = a_colour;
-                #endif
-                #if defined (TEXTURED)
-                    v_texCoord0 = a_texCoord0;
-                #endif
+            #if defined (VERTEX_COLOUR)
+                v_colour = a_colour;
+            #endif
+            #if defined (TEXTURED)
+                v_texCoord0 = a_texCoord0;
+            #endif
 
-                #if defined (MOBILE)
+            #if defined (MOBILE)
 
-                #else
-                    gl_ClipDistance[0] = dot(u_worldMatrix * vec4(position, 1.0), u_clipPlane);
-                #endif
+            #else
+                gl_ClipDistance[0] = dot(u_worldMatrix * vec4(position, 1.0), u_clipPlane);
+            #endif
         })";
 
     //not actually used, rather the VertxLit/Unlit fragment shaders are
-    const static std::string Fragment = R"(
+    static const std::string Fragment = R"(
 
         #if defined (VERTEX_COLOUR)
         VARYING_IN LOW vec4 v_colour;

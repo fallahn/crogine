@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,98 +31,92 @@ source distribution.
 
 #include <string>
 
-namespace cro
+namespace cro::Shaders::Default
 {
-    namespace Shaders
-    {
-        namespace Default
-        {
-            const static std::string Vertex = R"(
-                ATTRIBUTE vec4 a_position;
-                ATTRIBUTE LOW vec4 a_colour;
-                ATTRIBUTE vec3 a_normal;
-                ATTRIBUTE vec3 a_tangent;
-                ATTRIBUTE vec3 a_bitangent;
-                ATTRIBUTE MED vec2 a_texCoord0;
-                ATTRIBUTE MED vec2 a_texCoord1;
+    static const std::string Vertex = R"(
+        ATTRIBUTE vec4 a_position;
+        ATTRIBUTE LOW vec4 a_colour;
+        ATTRIBUTE vec3 a_normal;
+        ATTRIBUTE vec3 a_tangent;
+        ATTRIBUTE vec3 a_bitangent;
+        ATTRIBUTE MED vec2 a_texCoord0;
+        ATTRIBUTE MED vec2 a_texCoord1;
 
-                uniform mat4 u_worldMatrix;
-                uniform mat4 u_worldViewMatrix;
-                uniform mat3 u_normalMatrix;                
-                uniform mat4 u_projectionMatrix;
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_worldViewMatrix;
+        uniform mat3 u_normalMatrix;                
+        uniform mat4 u_projectionMatrix;
                 
-                VARYING_OUT vec3 v_worldPosition;
-                VARYING_OUT LOW vec4 v_colour;
-                VARYING_OUT vec3 v_normalVector;
-                VARYING_OUT MED vec2 v_texCoord0;
-                VARYING_OUT MED vec2 v_texCoord1;
+        VARYING_OUT vec3 v_worldPosition;
+        VARYING_OUT LOW vec4 v_colour;
+        VARYING_OUT vec3 v_normalVector;
+        VARYING_OUT MED vec2 v_texCoord0;
+        VARYING_OUT MED vec2 v_texCoord1;
 
 
-                void main()
-                {
-                    mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
-                    gl_Position = wvp * a_position;
+        void main()
+        {
+            mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+            gl_Position = wvp * a_position;
 
-                    v_worldPosition = (u_worldMatrix * a_position).xyz;
+            v_worldPosition = (u_worldMatrix * a_position).xyz;
 
-                    v_colour = a_colour;
-                    v_normalVector = u_normalMatrix * a_normal;
+            v_colour = a_colour;
+            v_normalVector = u_normalMatrix * a_normal;
 
-                    v_texCoord0 = a_texCoord0;
-                    v_texCoord1 = a_texCoord1;
+            v_texCoord0 = a_texCoord0;
+            v_texCoord1 = a_texCoord1;
 
-                })";
+        })";
 
-            const static std::string Fragment = R"(
+    static const std::string Fragment = R"(
 
-                uniform sampler2D u_diffuseMap;
-                uniform sampler2D u_normalMap;
-                uniform sampler2D u_maskMap;
-                uniform sampler2D u_lightMap;
+        uniform sampler2D u_diffuseMap;
+        uniform sampler2D u_normalMap;
+        uniform sampler2D u_maskMap;
+        uniform sampler2D u_lightMap;
 
-                uniform vec3 u_cameraWorldPosition;
+        uniform vec3 u_cameraWorldPosition;
 
-                VARYING_IN vec3 v_worldPosition;
-                VARYING_IN vec4 v_colour;
-                VARYING_IN vec3 v_normalVector;
-                VARYING_IN vec2 v_texCoord0;
-                VARYING_IN vec2 v_texCoord1;
+        VARYING_IN vec3 v_worldPosition;
+        VARYING_IN vec4 v_colour;
+        VARYING_IN vec3 v_normalVector;
+        VARYING_IN vec2 v_texCoord0;
+        VARYING_IN vec2 v_texCoord1;
 
-                OUTPUT                
+        OUTPUT                
 
-                vec3 lightDir = vec3(0.1, -0.8, -0.2);
+        vec3 lightDir = vec3(0.1, -0.8, -0.2);
 
-                vec3 diffuseColour;
-                vec3 eyeDirection;
-                vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
-                {
-                    float diffuseAmount = max(dot(normal, lightDirection), 0.0);
-                    //diffuseAmount = pow((diffuseAmount * 0.5) + 5.0, 2.0);
-                    vec3 mixedColour = diffuseColour * lightDiffuse * diffuseAmount * falloff;
+        vec3 diffuseColour;
+        vec3 eyeDirection;
+        vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
+        {
+            float diffuseAmount = max(dot(normal, lightDirection), 0.0);
+            //diffuseAmount = pow((diffuseAmount * 0.5) + 5.0, 2.0);
+            vec3 mixedColour = diffuseColour * lightDiffuse * diffuseAmount * falloff;
 
-                    vec3 halfVec = normalize(eyeDirection + lightDirection);
-                    float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
-                    vec3 specularColour = lightSpecular * vec3(pow(specularAngle, 255.0)) * falloff;
+            vec3 halfVec = normalize(eyeDirection + lightDirection);
+            float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
+            vec3 specularColour = lightSpecular * vec3(pow(specularAngle, 255.0)) * falloff;
 
-                    return mixedColour + specularColour;
-                }
-
-                void main()
-                {
-                    vec3 normal = normalize(v_normalVector);
-                    vec4 diffuse = TEXTURE(u_diffuseMap, v_texCoord0);
-                    diffuseColour = diffuse.rgb;
-                    vec3 blendedColour = diffuse.rgb * 0.2; //ambience
-                    eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
-
-                    blendedColour += calcLighting(normal, normalize(-lightDir), vec3(0.18), vec3(1.0), 1.0);
-                    FRAG_OUT.rgb = blendedColour;
-
-                    //FRAG_OUT = vec4(v_texCoord0.x, v_texCoord0.y, 1.0, 1.0);
-                    //FRAG_OUT.rgb *= v_normalVector;
-                    //FRAG_OUT *= TEXTURE(u_diffuseMap, v_texCoord0);
-                    //FRAG_OUT *= TEXTURE(u_normalMap, v_texCoord0);
-                })";
+            return mixedColour + specularColour;
         }
-    }
+
+        void main()
+        {
+            vec3 normal = normalize(v_normalVector);
+            vec4 diffuse = TEXTURE(u_diffuseMap, v_texCoord0);
+            diffuseColour = diffuse.rgb;
+            vec3 blendedColour = diffuse.rgb * 0.2; //ambience
+            eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+
+            blendedColour += calcLighting(normal, normalize(-lightDir), vec3(0.18), vec3(1.0), 1.0);
+            FRAG_OUT.rgb = blendedColour;
+
+            //FRAG_OUT = vec4(v_texCoord0.x, v_texCoord0.y, 1.0, 1.0);
+            //FRAG_OUT.rgb *= v_normalVector;
+            //FRAG_OUT *= TEXTURE(u_diffuseMap, v_texCoord0);
+            //FRAG_OUT *= TEXTURE(u_normalMap, v_texCoord0);
+        })";
 }

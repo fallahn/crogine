@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,121 +31,115 @@ source distribution.
 
 #include <string>
 
-namespace cro
+namespace cro::Shaders::ShadowMap
 {
-    namespace Shaders
-    {
-        namespace ShadowMap
+    static const std::string Vertex = R"(
+        ATTRIBUTE vec4 a_position;
+
+        #if defined (ALPHA_CLIP)
+        ATTRIBUTE vec2 a_texCoord0;
+        #endif
+
+        #if defined(SKINNED)
+        ATTRIBUTE vec4 a_boneIndices;
+        ATTRIBUTE vec4 a_boneWeights;
+        uniform mat4 u_boneMatrices[MAX_BONES];
+        #endif
+
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_worldViewMatrix;
+        uniform mat4 u_projectionMatrix;
+        uniform vec4 u_clipPlane;
+
+        #if defined (MOBILE)
+        VARYING_OUT vec4 v_position;
+        #endif
+
+        #if defined (ALPHA_CLIP)
+        VARYING_OUT vec2 v_texCoord0;
+        #endif
+
+        void main()
         {
-            const static std::string Vertex = R"(
-                ATTRIBUTE vec4 a_position;
+            mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+            vec4 position = a_position;
 
-                #if defined (ALPHA_CLIP)
-                ATTRIBUTE vec2 a_texCoord0;
-                #endif
+        #if defined (SKINNED)
+            mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
+            skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
+            skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
+            skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
+            position = skinMatrix * position;
+        #endif                    
 
-                #if defined(SKINNED)
-                ATTRIBUTE vec4 a_boneIndices;
-                ATTRIBUTE vec4 a_boneWeights;
-                uniform mat4 u_boneMatrices[MAX_BONES];
-                #endif
+            gl_Position = wvp * position;
 
-                uniform mat4 u_worldMatrix;
-                uniform mat4 u_worldViewMatrix;
-                uniform mat4 u_projectionMatrix;
-                uniform vec4 u_clipPlane;
-
-                #if defined (MOBILE)
-                VARYING_OUT vec4 v_position;
-                #endif
-
-                #if defined (ALPHA_CLIP)
-                VARYING_OUT vec2 v_texCoord0;
-                #endif
-
-                void main()
-                {
-                    mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
-                    vec4 position = a_position;
-
-                #if defined (SKINNED)
-                    mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
-                	skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
-                	skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
-                	skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
-                	position = skinMatrix * position;
-                #endif                    
-
-                    gl_Position = wvp * position;
-
-                #if defined (MOBILE)
-                    v_position = gl_Position;
+        #if defined (MOBILE)
+            v_position = gl_Position;
 
 
 
-                #else
-                    gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
-                #endif
+        #else
+            gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
+        #endif
 
-                #if defined (ALPHA_CLIP)
-                    v_texCoord0 = a_texCoord0;
-                #endif
+        #if defined (ALPHA_CLIP)
+            v_texCoord0 = a_texCoord0;
+        #endif
 
-                })";
+        })";
 
-            const static std::string FragmentMobile = R"(
-                //ideally we want highp but not all mobile hardware supports it in the frag shader :(
-                #if defined(MOBILE)
-                #if defined (GL_FRAGMENT_PRECISION_HIGH)
-                #define PREC highp
-                #else
-                #define PREC mediump
-                #endif
-                #else
-                #define PREC
-                #endif
+    static const std::string FragmentMobile = R"(
+        //ideally we want highp but not all mobile hardware supports it in the frag shader :(
+        #if defined(MOBILE)
+        #if defined (GL_FRAGMENT_PRECISION_HIGH)
+        #define PREC highp
+        #else
+        #define PREC mediump
+        #endif
+        #else
+        #define PREC
+        #endif
 
-                VARYING_IN vec4 v_position;
-                OUTPUT
+        VARYING_IN vec4 v_position;
+        OUTPUT
 
-                PREC vec4 pack(const float depth)
-                {
-	                const PREC vec4 bitshift = vec4(16777216.0, 65536.0, 256.0, 1.0);
-	                const PREC vec4 bitmask = vec4(0.0, 0.00390625, 0.00390625, 0.00390625);
-	                PREC vec4 result = fract(depth * bitshift);
-	                result -= result.xxyz * bitmask;
-	                return result;
-                }
-
-                void main()
-                {
-                    PREC float distanceNorm = v_position.z / v_position.w;
-                    distanceNorm = (distanceNorm + 1.0) / 2.0;
-                    FRAG_OUT = pack(distanceNorm);
-                })";
-
-
-            const static std::string FragmentDesktop = R"(
-                #if defined(ALPHA_CLIP)
-
-                uniform sampler2D u_diffuseMap;
-                uniform float u_alphaClip;
-
-                in vec2 v_texCoord0;
-
-                void main()
-                {
-                    if(texture(u_diffuseMap, v_texCoord0).a < u_alphaClip) discard;   
-                }
-                #else
-
-                OUTPUT             
-                void main()
-                {
-                    FRAG_OUT = vec4(1.0);
-                }
-                #endif
-                )";
+        PREC vec4 pack(const float depth)
+        {
+	        const PREC vec4 bitshift = vec4(16777216.0, 65536.0, 256.0, 1.0);
+	        const PREC vec4 bitmask = vec4(0.0, 0.00390625, 0.00390625, 0.00390625);
+	        PREC vec4 result = fract(depth * bitshift);
+	        result -= result.xxyz * bitmask;
+	        return result;
         }
-    }
+
+        void main()
+        {
+            PREC float distanceNorm = v_position.z / v_position.w;
+            distanceNorm = (distanceNorm + 1.0) / 2.0;
+            FRAG_OUT = pack(distanceNorm);
+        })";
+
+
+    const static std::string FragmentDesktop = R"(
+        #if defined(ALPHA_CLIP)
+
+        uniform sampler2D u_diffuseMap;
+        uniform float u_alphaClip;
+
+        in vec2 v_texCoord0;
+
+        void main()
+        {
+            if(texture(u_diffuseMap, v_texCoord0).a < u_alphaClip) discard;   
+        }
+        #else
+
+        OUTPUT             
+        void main()
+        {
+            FRAG_OUT = vec4(1.0);
+        }
+        #endif
+        )";
 }
