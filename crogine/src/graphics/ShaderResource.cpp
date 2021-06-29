@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,6 +34,9 @@ source distribution.
 #include "shaders/VertexLit.hpp"
 #include "shaders/ShadowMap.hpp"
 #include "shaders/PBR.hpp"
+#ifdef PLATFORM_DESKTOP
+#include "shaders/GBuffer.hpp"
+#endif
 #include "../detail/GLCheck.hpp"
 
 using namespace cro;
@@ -207,6 +210,15 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
         success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::PBR::Fragment, defines);
         break;
     }
+
+#ifdef PLATFORM_DESKTOP
+    std::int32_t gbufferID = BuiltIn::GBuffer | flags;
+    if (m_shaders.count(gbufferID) == 0)
+    {
+        loadFromString(gbufferID, Shaders::GBuffer::Vertex, Shaders::GBuffer::Fragment, defines);
+    }
+#endif
+
 
     if (success)
     {

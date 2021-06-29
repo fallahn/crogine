@@ -33,5 +33,129 @@ source distribution.
 
 namespace cro::Shaders::GBuffer
 {
-    static const std::string Vertex = R"()";
+    static const std::string Vertex = R"(
+        ATTRIBUTE vec4 a_position;
+        ATTRIBUTE vec3 a_normal;
+    #if defined(BUMP)
+        ATTRIBUTE vec3 a_tangent;
+        ATTRIBUTE vec3 a_bitangent;
+    #endif
+    #if defined(TEXTURED)
+        ATTRIBUTE vec2 a_texCoord0;
+    #endif
+
+    #if defined(SKINNED)
+        ATTRIBUTE vec4 a_boneIndices;
+        ATTRIBUTE vec4 a_boneWeights;
+        uniform mat4 u_boneMatrices[MAX_BONES];
+    #endif
+
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_worldViewMatrix;
+        uniform mat3 u_normalMatrix;
+        uniform mat4 u_projectionMatrix;
+
+        uniform vec4 u_clipPlane;
+        
+    #if defined(BUMP)
+        VARYING_OUT vec3 v_tbn[3];
+    #else
+        VARYING_OUT vec3 v_normal;
+    #endif
+
+    #if defined(TEXTURED)
+        VARYING_OUT vec2 v_texCoord;
+    #endif
+
+        VARYING_OUT vec4 v_fragPosition;
+
+        void main()
+        {
+            vec4 position = a_position;
+
+        #if defined(SKINNED)
+            mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
+            skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
+            skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
+            skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
+            position = skinMatrix * position;
+        #endif
+
+            v_fragPosition = u_worldViewMatrix * position;
+            //gl_Position = u_projectionMatrix * v_fragPosition; //we need this to render the depth buffer
+            gl_Position = v_fragPosition; //we need this to render the depth buffer
+
+            vec3 normal = a_normal;
+
+        #if defined(SKINNED)
+            normal = (skinMatrix * vec4(normal, 0.0)).xyz;
+        #endif
+
+        #if defined (BUMP)
+            vec4 tangent = vec4(a_tangent, 0.0);
+            vec4 bitangent = vec4(a_bitangent, 0.0);
+        #if defined (SKINNED)
+            tangent = skinMatrix * tangent;
+            bitangent = skinMatrix * bitangent;
+        #endif
+            v_tbn[0] = normalize(u_normalMatrix * tangent.xyz);
+            v_tbn[1] = normalize(u_normalMatrix * bitangent.xyz);
+            v_tbn[2] = normalize(u_normalMatrix * normal);
+        #else
+            v_normal = u_normalMatrix * normal;
+        #endif
+
+        #if defined(TEXTURED)
+            v_texCoord = a_texCoord0;
+        #endif
+
+        #if defined (MOBILE)
+
+        #else
+            gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
+        #endif
+
+        })";
+
+    static const std::string Fragment = R"(
+    #if defined(TEXTURED)
+    #if defined(ALPHA_CLIP)
+        uniform sampler2D u_diffuseMap;
+        uniform float u_alphaClip;
+    #endif
+    #endif
+
+    #if defined(BUMP)
+        uniform sampler2D u_normalMap;
+ 
+        VARYING_IN vec3 v_tbn[3];
+    #else
+        VARYING_IN vec3 v_normal;
+    #endif
+
+    #if defined(TEXTURED)
+        VARYING_IN vec2 v_texCoord;
+    #endif
+
+        VARYING_IN vec4 v_fragPosition;
+
+        out vec4[2] output;
+
+        void main()
+        {
+            #if defined(TEXTURED)
+            #if defined(ALPHA_CLIP)
+                if(TEXTURE(u_diffuseMap, v_texCoord).a < u_alphaClip) discard;
+            #endif
+            #endif
+
+            #if defined (BUMP)
+                vec3 texNormal = TEXTURE(u_normalMap, v_texCoord).rgb * 2.0 - 1.0;
+                vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
+            #else
+                vec3 normal = normalize(v_normal);
+            #endif
+                output[0] = vec4(normal, 1.0);
+                output[1] = v_fragPosition;
+        })";
 }

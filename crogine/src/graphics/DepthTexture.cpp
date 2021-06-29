@@ -107,14 +107,20 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height)
     LogE << "Depth Textures are not available on mobile platforms" << std::endl;
     return false;
 #else
-    if (m_fboID)
-    {
-        glCheck(glDeleteFramebuffers(1, &m_fboID));
-    }
     if (m_textureID)
     {
-        glCheck(glDeleteTextures(1, &m_textureID));
+        //resize the buffer
+        glCheck(glBindTexture(GL_TEXTURE_2D, m_textureID));
+        glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
+
+        m_viewport.width = width;
+        m_viewport.height = height;
+        m_size = { width, height };
+
+        return true;
     }
+
+    //else create it
     m_size = { 0, 0 };
     m_viewport = { 0,0,0,0 };
 

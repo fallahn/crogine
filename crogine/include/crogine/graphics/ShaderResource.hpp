@@ -47,6 +47,7 @@ namespace cro
     public:
         enum BuiltIn
         {
+            GBuffer            = 0x79000000,
             Unlit              = 0x7A000000,
             BillboardUnlit     = 0x7B000000,
             VertexLit          = 0x7C000000,
