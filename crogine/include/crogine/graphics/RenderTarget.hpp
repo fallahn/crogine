@@ -65,6 +65,7 @@ namespace cro
 
         friend class RenderTexture;
         friend class DepthTexture;
+        friend class MultiRenderTexture;
 
         //used by render targets such as render texture or depth texture
         //to track the  current FBO without having to query OpenGL

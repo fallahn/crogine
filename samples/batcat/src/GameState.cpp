@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/Keyboard.hpp>
+#include <crogine/core/Mouse.hpp>
 
 #include <crogine/graphics/QuadBuilder.hpp>
 #include <crogine/graphics/StaticMeshBuilder.hpp>
@@ -152,10 +153,10 @@ bool GameState::handleEvent(const cro::Event& evt)
         auto y = static_cast<float>(evt.motion.y); 
 
         //convert to world coords
-        //bit of a kludge using fixed view size
         auto windowSize = cro::App::getWindow().getSize();
         x = (x / windowSize.x) * 1280.f;
         y = (1.f - (y / windowSize.y)) * 720.f;
+
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Cursor;
@@ -180,6 +181,7 @@ void GameState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::WindowEvent>();
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
+            //TODO this should probably be on the Camera::resized callback
             updateView();
         }
     }
@@ -615,7 +617,8 @@ void GameState::createUI()
 
 void GameState::updateView()
 {
-    glm::vec2 size(cro::App::getWindow().getSize());
+    auto windowSize = cro::App::getWindow().getSize();
+    glm::vec2 size(windowSize);
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
@@ -623,6 +626,8 @@ void GameState::updateView()
     cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 280.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
+
+    cam3D.gBuffer.create(windowSize.x, windowSize.y);
 
     auto& cam2D = m_overlayScene.getActiveCamera().getComponent<cro::Camera>();
     cam2D.viewport = cam3D.viewport;

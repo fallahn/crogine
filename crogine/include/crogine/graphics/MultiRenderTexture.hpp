@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -38,31 +38,36 @@ source distribution.
 namespace cro
 {
     /*!
-    \brief A render buffer with only a depth component attached.
-    DepthTextures are non-copyable objects but *can* be moved.
+    \brief A render buffer with a position buffer, normal buffer and a depth component attached.
+    MultiRenderTextures are non-copyable objects but *can* be moved. MultiRenderTextures are used
+    as g-buffers, accumulating scene data that can be used for screen space effects such as
+    ambient occlusion, reflections, depth of field and so on. Models require materials which use
+    the cro::ShaderResource::BuiltIn::GBuffer shader. Fragment positions, normals and depths are
+    written to the corresponding buffers, in world-view space, unless a custom shader is supplied.
+    MultiRenderTextures are not available on mobile platforms.
     */
-    class CRO_EXPORT_API DepthTexture final : public RenderTarget, public Detail::SDLResource
+    class CRO_EXPORT_API MultiRenderTexture final : public RenderTarget, public Detail::SDLResource
     {
     public:
         /*!
         \brief Constructor.
-        By default DepthTextures are in an invalid state until create() has been called
+        By default MultiRenderTextures are in an invalid state until create() has been called
         at least once.
-        To draw to a depth texture first call its clear() function, which then activates
+        To draw to an MRT first call its clear() function, which then activates
         it as the current target. All drawing operations will then be performed on it
         until display() is called. Both clear AND display() *must* be called either side of
         drawing to prevent undefined results.
         */
-        DepthTexture();
-        ~DepthTexture();
+        MultiRenderTexture();
+        ~MultiRenderTexture();
 
-        DepthTexture(const DepthTexture&) = delete;
-        DepthTexture(DepthTexture&&) noexcept;
-        const DepthTexture& operator = (const DepthTexture&) = delete;
-        DepthTexture& operator = (DepthTexture&&) noexcept;
+        MultiRenderTexture(const MultiRenderTexture&) = delete;
+        MultiRenderTexture(MultiRenderTexture&&) noexcept;
+        const MultiRenderTexture& operator = (const MultiRenderTexture&) = delete;
+        MultiRenderTexture& operator = (MultiRenderTexture&&) noexcept;
 
         /*!
-        \brief Creates (or recreates) the depth texture
+        \brief Creates (or recreates) the multi render texture
         \param width Width of the texture to create. This should be
         power of 2 on mobile platforms
         \param height Height of the texture.
@@ -71,14 +76,14 @@ namespace cro
         bool create(std::uint32_t width, std::uint32_t height);
 
         /*!
-        \brief Returns the current size in pixels of the depth texture (zero if not yet created)
+        \brief Returns the current size in pixels of the texture (zero if not yet created)
         */
         glm::uvec2 getSize() const override;
 
         /*!
         \brief Clears the texture ready for drawing
-        This should be called to activate the depth texture as the current draw target.
-        From then on all drawing operations will be applied to the DepthTexture until display()
+        This should be called to activate the texture as the current drawing target.
+        From then on all drawing operations will be applied to the MultiRenderTexture until display()
         is called. For every clear() call there must be exactly one display() call. This
         also attempts to save and restore any existing viewport, while also applying its
         own during rendering.
@@ -87,13 +92,13 @@ namespace cro
 
         /*!
         \brief This must be called once for each call to clear to properly validate
-        the final state of the depth texture. Failing to do this will result in undefined
+        the final state of the texture. Failing to do this will result in undefined
         behaviour.
         */
         void display();
 
         /*!
-        \brief Defines the area of the DepthTexture on to which to draw.
+        \brief Defines the area of the MultiRenderTexture on to which to draw.
         */
         void setViewport(URect);
 
@@ -103,7 +108,7 @@ namespace cro
         URect getViewport() const;
 
         /*!
-        \brief Returns the default viewport of the DepthTexture
+        \brief Returns the default viewport of the MultiRenderTexture
         */
         URect getDefaultViewport() const;
 
@@ -115,14 +120,33 @@ namespace cro
         bool available() const { return m_fboID != 0; }
 
         /*!
-        \brief Returns the texture ID wrappped in a handle which can be bound to
-        material uniforms.
+        \brief Returns the texture ID of the Position texture wrappped 
+        in a handle which can be bound to material uniforms.
         */
-        TextureID getTexture() const;
+        TextureID getPositionTexture() const;
+
+        /*!
+        \brief Returns the texture ID of the Normal texture wrappped
+        in a handle which can be bound to material uniforms.
+        */
+        TextureID getNormalTexture() const;
+
+        /*!
+        \brief Returns the texture ID of the Depth texture wrappped
+        in a handle which can be bound to material uniforms.
+        */
+        TextureID getDepthTexture() const;
 
     private:
         std::uint32_t m_fboID;
-        std::uint32_t m_textureID;
+        
+        enum TextureIndex
+        {
+            Position, Normal, Depth,
+            Count
+        };
+        std::array<std::uint32_t, TextureIndex::Count> m_textureIDs;
+
         glm::uvec2 m_size;
         URect m_viewport;
         std::array<std::int32_t, 4u> m_lastViewport = {};

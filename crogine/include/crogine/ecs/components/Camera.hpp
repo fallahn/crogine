@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/graphics/Spatial.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/MultiRenderTexture.hpp>
 #include <crogine/graphics/DepthTexture.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
@@ -209,7 +210,7 @@ namespace cro
             /*!
             \brief Returns which direction the water plane should be facing.
             When implementing a custom render which uses the reflect/refract passes
-            multiply the Scenes water plane by this value so that it points in
+            multiply the Scene's water plane by this value so that it points in
             the correct direction for clipping.
             */
             float getClipPlaneMultiplier() const { return m_planeMultiplier; }
@@ -295,8 +296,8 @@ namespace cro
 
         /*!
         \brief Resize callback.
-        Optional callback automatically called by the camera's Scene if the camera
-        is currently the active one. Useful for resizing viewports or letterboxing
+        Optional callback automatically called by the camera's Scene if the 
+        main window is resized. Useful for resizing viewports or letterboxing
         2D views when the current window has changed aspect ratio. The callback
         takes the current camera as a parameter and returns void
         */
@@ -342,10 +343,26 @@ namespace cro
         any relevant shaders when the Scene is rendered with this camera.
         */
 #ifdef PLATFORM_DESKTOP
-        cro::DepthTexture shadowMapBuffer;
+        DepthTexture shadowMapBuffer;
 #else
-        cro::RenderTexture shadowMapBuffer;
+        RenderTexture shadowMapBuffer;
 #endif
+
+        /*!
+        \brief MultiRenderTexture g-buffer.
+        This target can be used to render separate buffers for Position,
+        Normal and Depth values, by default in world-view space.
+        To use this buffer it must be created explicitly by the user,
+        and any models which ought to be rendered to it must have a 
+        GBuffer material assigned to them. This is done automatically for
+        models which are created via a ModelDefinition.
+        MultiRenderTextures are not available on mobile platforms, in
+        which case this does nothing.
+        The g-buffer can be used for screen-space post processes such
+        as SSAO, screen space reflections or depth of field effects.
+        \see MultiRenderTexture
+        */
+        MultiRenderTexture gBuffer;
 
         /*!
         \brief View-projection matrix used when rendering the depth buffer.
