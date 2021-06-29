@@ -153,16 +153,13 @@ bool GameState::handleEvent(const cro::Event& evt)
         auto y = static_cast<float>(evt.motion.y); 
 
         //convert to world coords
-        auto windowSize = cro::App::getWindow().getSize();
-        x = (x / windowSize.x) * 1280.f;
-        y = (1.f - (y / windowSize.y)) * 720.f;
-
+        auto worldPos = m_overlayScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ x, y });
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Cursor;
-        cmd.action = [x, y](cro::Entity entity, float)
+        cmd.action = [worldPos](cro::Entity entity, float)
         {
-            entity.getComponent<cro::Transform>().setPosition({ x, y, 0 });
+            entity.getComponent<cro::Transform>().setPosition(worldPos);
         };
         commandSystem->sendCommand(cmd);
     }

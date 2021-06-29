@@ -157,3 +157,12 @@ glm::vec2 Camera::coordsToPixel(glm::vec3 worldPoint, glm::vec2 targetSize, std:
     
     return windowPos;
 }
+
+glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize)
+{
+    glm::uvec4 viewport(targetSize.x * viewport.left, targetSize.y * viewport.bottom, targetSize.x * viewport.width, targetSize.y * viewport.height);
+
+    //mouse coords are inverse in Y direction.
+    screenPosition.y = targetSize.y - screenPosition.y;
+    return glm::unProject(glm::vec3(screenPosition, 0.f), m_passes[Pass::Final].viewMatrix, m_projectionMatrix, viewport);
+}

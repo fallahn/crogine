@@ -421,6 +421,12 @@ namespace cro
         */
         glm::vec2 coordsToPixel(glm::vec3 worldPoint, glm::vec2 targetSize = cro::App::getWindow().getSize(), std::int32_t pass = Pass::Final) const;
 
+        /*
+        \brief Returns the world coordinates currently projected onto
+        the given screen coordinates.
+        */
+        glm::vec3 pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize = cro::App::getWindow().getSize());
+
 #ifdef CRO_DEBUG_
         //l,r,b,t,n,f
         std::array<float, 6u> depthDebug = {};
