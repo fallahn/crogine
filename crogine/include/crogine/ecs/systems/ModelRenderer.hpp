@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
@@ -41,7 +42,6 @@ source distribution.
 namespace cro
 {
     class MessageBus;
-    class Model;
     struct Camera;
 
     //don't export this, used internally.
@@ -82,8 +82,23 @@ namespace cro
         */
         void render(Entity, const RenderTarget&) override;
 
+        /*!
+        \brief Sets the active render material.
+        When using a MultiRenderTexture to draw to a GBuffer this should be
+        set to Model::MaterialPass::GBuffer, otherwise set it to Model::MaterialPass::Final
+        (the default value). This has no effect on mobile platforms. Note that
+        models not loaded via a ModelDefinition require the GBuffer material
+        to be explicitly set
+        \param material Either Model::MaterialPass::GBuffer or Model::MaterialPass::Final
+        */
+        void setRenderMaterial(Model::MaterialPass material);
+
     private:
         std::array<MaterialList, 2u> m_visibleEnts;
+        Mesh::IndexData::Pass m_pass;
+
+        void renderGBuffer(Entity, const RenderTarget&);
+        void renderFinal(Entity, const RenderTarget&);
 
         static void applyProperties(const Material::Data&, const Model&, const Scene&, const Camera&);
         static void applyBlendMode(Material::BlendMode);

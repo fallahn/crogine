@@ -82,8 +82,7 @@ namespace cro::Shaders::GBuffer
         #endif
 
             v_fragPosition = u_worldViewMatrix * position;
-            //gl_Position = u_projectionMatrix * v_fragPosition; //we need this to render the depth buffer
-            gl_Position = v_fragPosition; //we need this to render the depth buffer
+            gl_Position = u_projectionMatrix * v_fragPosition; //we need this to render the depth buffer
 
             vec3 normal = a_normal;
 

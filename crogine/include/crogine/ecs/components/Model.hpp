@@ -147,6 +147,12 @@ namespace cro
         */
         const Material::Data& getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const;
 
+        enum class MaterialPass
+        {
+            Final,
+            GBuffer
+        };
+
     private:
         bool m_visible = false;
         bool m_hidden = false;

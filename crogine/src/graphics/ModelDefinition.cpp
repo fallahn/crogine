@@ -572,7 +572,7 @@ bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
     if (m_meshID != 0)
     {
         auto& model = entity.addComponent<cro::Model>(rc.meshes.getMesh(m_meshID), rc.materials.get(m_materialIDs[0]));
-        for (auto i = 1u; i < m_materialCount; ++i)
+        for (auto i = 0u; i < m_materialCount; ++i)
         {
             model.setMaterial(i, rc.materials.get(m_materialIDs[i]));
 

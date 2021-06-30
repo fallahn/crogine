@@ -48,14 +48,12 @@ using namespace cro;
 
 namespace
 {
-    /*const std::vector<cro::Colour> colours =
-    {
-        cro::Colour::Red, cro::Colour::Green, cro::Colour::Cyan
-    };*/
+
 }
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
-    : System            (mb, typeid(ModelRenderer))
+    : System(mb, typeid(ModelRenderer)),
+    m_pass  (Mesh::IndexData::Final)
 {
     requireComponent<Transform>();
     requireComponent<Model>();
@@ -172,6 +170,121 @@ void ModelRenderer::process(float)
 
 void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 {
+#ifdef PLATFORM_DESKTOP
+    m_pass == Mesh::IndexData::GBuffer ? renderGBuffer(camera, rt) : renderFinal(camera, rt);
+    //renderFinal(camera, rt);
+#else
+    renderFinal(camera, rt);
+#endif
+}
+
+void ModelRenderer::setRenderMaterial(Model::MaterialPass pass)
+{
+#ifdef PLATFORM_DESKTOP
+    if (pass == Model::MaterialPass::GBuffer)
+    {
+        m_pass = Mesh::IndexData::GBuffer;
+    }
+    else
+    {
+        m_pass = Mesh::IndexData::Final;
+    }
+#endif
+}
+
+//private
+void ModelRenderer::renderGBuffer(Entity camera, const RenderTarget& rt)
+{
+    const auto& camComponent = camera.getComponent<Camera>();
+    const auto& pass = camComponent.getActivePass();
+
+    glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
+
+    if (pass.drawList.count(getType()) == 0)
+    {
+        return;
+    }
+
+    const auto& camTx = camera.getComponent<Transform>();
+    auto cameraPosition = camTx.getWorldPosition();
+    auto screenSize = glm::vec2(rt.getSize());
+
+    glCheck(glCullFace(pass.getCullFace()));
+    applyBlendMode(cro::Material::BlendMode::None); //apply this for all geometry as we're only writing position/normal
+
+    //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
+    const auto& visibleEntities = std::any_cast<const MaterialList&>(pass.drawList.at(getType()));
+    for (const auto& [entity, sortData] : visibleEntities)
+    {
+        //foreach submesh / material:
+        const auto& model = entity.getComponent<Model>();
+
+        if ((model.m_renderFlags & camComponent.renderFlags) == 0
+            || !model.hasGBufferMaterial())
+        {
+            continue;
+        }
+
+        //calc entity transform
+        const auto& tx = entity.getComponent<Transform>();
+        glm::mat4 worldMat = tx.getWorldTransform();
+        glm::mat4 worldView = pass.viewMatrix * worldMat;
+
+        for (auto i : sortData.matIDs)
+        {
+            //only draw solid objects? This means transparent
+            //objects won't contribute to post processes like AO...
+            /*if (model.m_materials[Mesh::IndexData::GBuffer][i].blendMode != cro::Material::BlendMode::None)
+            {
+                continue;
+            }*/
+
+            //bind shader
+            glCheck(glUseProgram(model.m_materials[Mesh::IndexData::GBuffer][i].shader));
+
+            //apply shader uniforms from material
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+            applyProperties(model.m_materials[Mesh::IndexData::GBuffer][i], model, *getScene(), camComponent);
+
+            //apply standard uniforms
+            //glCheck(glUniform3f(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
+            //glCheck(glUniform2f(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
+            glCheck(glUniform4f(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
+            glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
+
+            //applyBlendMode(cro::Material::BlendMode::None);
+
+            //check for depth test override
+            if (model.m_materials[Mesh::IndexData::GBuffer][i].enableDepthTest)
+            {
+                glCheck(glEnable(GL_DEPTH_TEST));
+            }
+            else
+            {
+                glCheck(glDisable(GL_DEPTH_TEST));
+            }
+
+            const auto& indexData = model.m_meshData.indexData[i];
+            glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::GBuffer]));
+            glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+        }
+    }
+
+    glCheck(glBindVertexArray(0));
+    glCheck(glUseProgram(0));
+
+    glCheck(glDisable(GL_BLEND));
+    glCheck(glDisable(GL_CULL_FACE));
+    glCheck(glDisable(GL_DEPTH_TEST));
+    //glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
+}
+
+void ModelRenderer::renderFinal(Entity camera, const RenderTarget& rt)
+{
     const auto& camComponent = camera.getComponent<Camera>();
     const auto& pass = camComponent.getActivePass();
 
@@ -285,7 +398,6 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
 }
 
-//private
 void ModelRenderer::applyProperties(const Material::Data& material, const Model& model, const Scene& scene, const Camera& camera)
 {
     std::uint32_t currentTextureUnit = 0;

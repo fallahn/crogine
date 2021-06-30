@@ -198,9 +198,11 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
+    m_scene.getSystem<cro::ModelRenderer>().setRenderMaterial(cro::Model::MaterialPass::GBuffer);
     m_mrt.clear();
     m_scene.render(m_mrt);
     m_mrt.display();
+    m_scene.getSystem<cro::ModelRenderer>().setRenderMaterial(cro::Model::MaterialPass::Final);
 
     auto& rt = cro::App::getWindow();
     m_scene.render(rt);
