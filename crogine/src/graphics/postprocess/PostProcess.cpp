@@ -62,6 +62,7 @@ PostProcess::~PostProcess()
         glCheck(glDeleteBuffers(1, &m_vbo));
     }
 
+#ifdef PLATFORM_DESKTOP
     for (auto& [shader, vao] : m_passes)
     {
         if (vao)
@@ -69,6 +70,7 @@ PostProcess::~PostProcess()
             glCheck(glDeleteVertexArrays(1, &vao));
         }
     }
+#endif
 }
 
 //public

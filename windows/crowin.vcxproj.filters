@@ -606,6 +606,9 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\MultiRenderTexture.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostSSAO.hpp">
+      <Filter>Header Files\graphics\post process</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -997,6 +1000,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\MultiRenderTexture.cpp">
       <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\postprocess\PostSSAO.cpp">
+      <Filter>Source Files\graphics\post process</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

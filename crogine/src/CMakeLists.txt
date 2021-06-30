@@ -115,6 +115,7 @@ set(PROJECT_SRC
   
   ${PROJECT_DIR}/graphics/postprocess/PostChromeAB.cpp
   ${PROJECT_DIR}/graphics/postprocess/PostProcess.cpp
+  ${PROJECT_DIR}/graphics/postprocess/PostSSAO.cpp
 
   ${PROJECT_DIR}/imgui/Gui.cpp
   ${PROJECT_DIR}/imgui/GuiClient.cpp
