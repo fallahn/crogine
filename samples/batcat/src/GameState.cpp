@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -120,7 +120,12 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
                 if (ImGui::Begin("Window of funnage"))
                 {
-                    ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    //ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::Image(m_mrt.getPositionTexture(), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::SameLine();
+                    ImGui::Image(m_mrt.getNormalTexture(), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::SameLine();
+                    ImGui::Image(m_mrt.getDepthTexture(), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                     ImGui::DragFloat("Rate", &fireRate, 0.1f, 0.1f, 10.f);
                     ImGui::DragFloat("Position", &sourcePosition.x, 0.1f, -19.f, 19.f);
@@ -193,6 +198,10 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
+    m_mrt.clear();
+    m_scene.render(m_mrt);
+    m_mrt.display();
+
     auto& rt = cro::App::getWindow();
     m_scene.render(rt);
     m_overlayScene.render(rt);
@@ -620,11 +629,11 @@ void GameState::updateView()
     size.x = 1.f;
 
     auto& cam3D = m_scene.getActiveCamera().getComponent<cro::Camera>();
-    cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 280.f);
+    cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 6.f, 280.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 
-    cam3D.gBuffer.create(windowSize.x, windowSize.y);
+    m_mrt.create(windowSize.x, windowSize.y);
 
     auto& cam2D = m_overlayScene.getActiveCamera().getComponent<cro::Camera>();
     cam2D.viewport = cam3D.viewport;

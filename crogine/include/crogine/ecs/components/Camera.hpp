@@ -349,22 +349,6 @@ namespace cro
 #endif
 
         /*!
-        \brief MultiRenderTexture g-buffer.
-        This target can be used to render separate buffers for Position,
-        Normal and Depth values, by default in world-view space.
-        To use this buffer it must be created explicitly by the user,
-        and any models which ought to be rendered to it must have a 
-        GBuffer material assigned to them. This is done automatically for
-        models which are created via a ModelDefinition.
-        MultiRenderTextures are not available on mobile platforms, in
-        which case this does nothing.
-        The g-buffer can be used for screen-space post processes such
-        as SSAO, screen space reflections or depth of field effects.
-        \see MultiRenderTexture
-        */
-        MultiRenderTexture gBuffer;
-
-        /*!
         \brief View-projection matrix used when rendering the depth buffer.
         This contains the view-projection matrix used by the ShadowMapRenderer
         to render the depth buffer for the Scene's directional light. This is

@@ -27,6 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include <crogine/core/App.hpp>
 #include <crogine/graphics/MultiRenderTexture.hpp>
 
 #include "../detail/GLCheck.hpp"
@@ -204,6 +205,10 @@ void MultiRenderTexture::clear()
     glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fboID));
     RenderTarget::ActiveTarget = m_fboID;
 
+    //stoer previous clear colour
+    m_lastClearColour = App::getInstance().getClearColour();
+    App::getInstance().setClearColour(cro::Colour::Black);
+
     //clear buffer - UH OH this will clear the main buffer if FBO is null
     glCheck(glClear(GL_COLOR_BUFFER_BIT |GL_DEPTH_BUFFER_BIT));
 #endif
@@ -219,6 +224,8 @@ void MultiRenderTexture::display()
     //unbind buffer
     glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_lastBuffer));
     RenderTarget::ActiveTarget = m_lastBuffer;
+
+    App::getInstance().setClearColour(m_lastClearColour);
 #endif
 }
 

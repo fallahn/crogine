@@ -48,10 +48,10 @@ using namespace cro;
 
 namespace
 {
-    const std::vector<cro::Colour> colours =
+    /*const std::vector<cro::Colour> colours =
     {
         cro::Colour::Red, cro::Colour::Green, cro::Colour::Cyan
-    };
+    };*/
 }
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
@@ -244,8 +244,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 #else //GLES 2 doesn't have VAO support without extensions
 
             //bind attribs
-            const auto& attribs = model.m_materials[i].attribs;
-            for (auto j = 0u; j < model.m_materials[i].attribCount; ++j)
+            const auto& attribs = model.m_materials[Mesh::IndexData::Final][i].attribs;
+            for (auto j = 0u; j < model.m_materials[Mesh::IndexData::Final][i].attribCount; ++j)
             {
                 glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
                 glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
@@ -263,7 +263,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
             //unbind attribs
-            for (auto j = 0u; j < model.m_materials[i].attribCount; ++j)
+            for (auto j = 0u; j < model.m_materials[Mesh::IndexData::Final][i].attribCount; ++j)
             {
                 glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
             }
