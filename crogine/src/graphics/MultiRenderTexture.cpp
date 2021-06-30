@@ -38,9 +38,13 @@ MultiRenderTexture::MultiRenderTexture()
     : m_fboID           (0),
     m_size              (0, 0),
     m_viewport          (0, 0, 1, 1),
-    m_lastBuffer        (0)
+    m_lastBuffer        (0),
+    m_maxAttachments    (0),
+    m_depthTextureID    (0)
 {
-    std::fill(m_textureIDs.begin(), m_textureIDs.end(), 0);
+#ifdef PLATFORM_DESKTOP
+    glCheck(glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &m_maxAttachments));
+#endif
 }
 
 MultiRenderTexture::~MultiRenderTexture()
@@ -48,7 +52,8 @@ MultiRenderTexture::~MultiRenderTexture()
     if (m_fboID)
     {
         glCheck(glDeleteFramebuffers(1, &m_fboID));
-        glCheck(glDeleteTextures(3, m_textureIDs.data()));
+        glCheck(glDeleteTextures(static_cast<GLsizei>(m_textureIDs.size()), m_textureIDs.data()));
+        glCheck(glDeleteTextures(1, &m_depthTextureID));
     }
 }
 
@@ -60,9 +65,12 @@ MultiRenderTexture::MultiRenderTexture(MultiRenderTexture&& other) noexcept
     m_viewport = other.m_viewport;
     m_lastViewport = other.m_lastViewport;
     m_lastBuffer = other.m_lastBuffer;
+    m_maxAttachments = other.m_maxAttachments;
+    m_depthTextureID = other.m_depthTextureID;
+    m_textureIDs = std::move(other.m_textureIDs);
 
     other.m_fboID = 0;
-    std::fill(other.m_textureIDs.begin(), other.m_textureIDs.end(), 0);
+    other.m_depthTextureID = 0;
 }
 
 MultiRenderTexture& MultiRenderTexture::operator=(MultiRenderTexture&& other) noexcept
@@ -73,7 +81,8 @@ MultiRenderTexture& MultiRenderTexture::operator=(MultiRenderTexture&& other) no
         if (m_fboID)
         {
             glCheck(glDeleteFramebuffers(1, &m_fboID));
-            glCheck(glDeleteTextures(3, m_textureIDs.data()));
+            glCheck(glDeleteTextures(static_cast<GLsizei>(m_textureIDs.size()), m_textureIDs.data()));
+            glCheck(glDeleteTextures(1, &m_depthTextureID));
         }
 
         m_fboID = other.m_fboID;
@@ -81,30 +90,65 @@ MultiRenderTexture& MultiRenderTexture::operator=(MultiRenderTexture&& other) no
         m_viewport = other.m_viewport;
         m_lastViewport = other.m_lastViewport;
         m_lastBuffer = other.m_lastBuffer;
+        m_maxAttachments = other.m_maxAttachments;
 
         other.m_fboID = 0;
-        std::fill(other.m_textureIDs.begin(), other.m_textureIDs.end(), 0);
     }
     return *this;
 }
 
 //public
-bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height)
+bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::size_t colourCount)
 {
 #ifdef PLATFORM_MOBILE
     LogE << "Depth Textures are not available on mobile platforms" << std::endl;
     return false;
 #else
-    if (m_fboID)
+    CRO_ASSERT(colourCount > 0 && colourCount < m_maxAttachments, "Out of Range");
+
+    if (m_maxAttachments == 0)
     {
-        //resize the buffers
-        glBindTexture(GL_TEXTURE_2D, m_textureIDs[TextureIndex::Position]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+        LogE << "No attachments are available" << std::endl;
+        return false;
+    }
 
-        glBindTexture(GL_TEXTURE_2D, m_textureIDs[TextureIndex::Normal]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+    if (m_fboID == 0)
+    {
+        //create the frame buffer
+        glCheck(glGenFramebuffers(1, &m_fboID));
+        
+        if (m_fboID == 0)
+        {
+            return false;
+        }
+        
+        //depth
+        glCheck(glGenTextures(1, &m_depthTextureID));
+        glCheck(glBindTexture(GL_TEXTURE_2D, m_depthTextureID));
+        glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
+        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
+        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
+        const float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        glCheck(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor));
 
-        glCheck(glBindTexture(GL_TEXTURE_2D, m_textureIDs[TextureIndex::Depth]));
+        glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
+        glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthTextureID, 0));
+        glCheck(glReadBuffer(GL_NONE));
+    }
+
+
+    if (colourCount == m_textureIDs.size())
+    {
+        //resize the existing buffers
+        for (auto id : m_textureIDs)
+        {
+            glBindTexture(GL_TEXTURE_2D, id);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+        }
+
+        glCheck(glBindTexture(GL_TEXTURE_2D, m_depthTextureID));
         glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
 
         m_viewport.width = width;
@@ -113,74 +157,59 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height)
 
         return true;
     }
-
-    //else create them
-    m_size = { 0, 0 };
-    m_viewport = { 0,0,0,0 };
-
-    //create the texture
-    glCheck(glGenTextures(3, m_textureIDs.data()));
-
-    //position
-    glCheck(glBindTexture(GL_TEXTURE_2D, m_textureIDs[TextureIndex::Position]));
-    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL));
-    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
-    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-
-    //normals
-    glCheck(glBindTexture(GL_TEXTURE_2D, m_textureIDs[TextureIndex::Normal]));
-    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL));
-    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
-    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-
-    //depth
-    glCheck(glBindTexture(GL_TEXTURE_2D, m_textureIDs[TextureIndex::Depth]));
-    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
-    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
-    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
-    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
-    const float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glCheck(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor));
-
-
-    //create the frame buffer
-    glCheck(glGenFramebuffers(1, &m_fboID));
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
-    glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textureIDs[TextureIndex::Position], 0));
-    glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_textureIDs[TextureIndex::Normal], 0));
-    glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_textureIDs[TextureIndex::Depth], 0));
-    
-    std::array<GLenum, 2u> colourAttachments =
+    else
     {
-        GL_COLOR_ATTACHMENT0,
-        GL_COLOR_ATTACHMENT1
-    };
-    
-    glCheck(glDrawBuffers(colourAttachments.size(), colourAttachments.data()));
-    glCheck(glReadBuffer(GL_NONE));
+        if (colourCount > m_textureIDs.size())
+        {
+            //add new textures
+            for (auto i = m_textureIDs.size(); i < colourCount; ++i)
+            {
+                std::uint32_t id = 0;
+                glCheck(glGenTextures(1, &id));
+                glCheck(glBindTexture(GL_TEXTURE_2D, id));
+                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL));
+                glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+                glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+                glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+                glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+                m_textureIDs.push_back(id);
+            }
+        }
+        else
+        {
+            //remove the difference
+            for (auto i = colourCount; i < m_textureIDs.size(); ++i)
+            {
+                glCheck(glDeleteTextures(1, &m_textureIDs[i]));
+            }
 
-    bool result = (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+            std::vector<std::uint32_t> temp(m_textureIDs.begin(), m_textureIDs.begin() + (colourCount - 1));
+            m_textureIDs.swap(temp);
+        }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        //and rebind to FBO
+        glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
 
-    if (result)
-    {
+        std::vector<GLenum> attachments;
+        for (auto i = 0u; i < m_textureIDs.size(); ++i)
+        {
+            glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_textureIDs[i], 0));
+            attachments.push_back(GL_COLOR_ATTACHMENT0 + i);
+        }
+        glCheck(glDrawBuffers(static_cast<GLsizei>(attachments.size()), attachments.data()));
+
+        bool result = (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         m_viewport.width = width;
         m_viewport.height = height;
         m_size = { width, height };
-    }
-    else
-    {
-        //we should probably tidy up by deleting partially created
-        //buffers/textures?
+
+        return result;
     }
 
-    return result;
+    return false;
 #endif
 }
 
@@ -217,7 +246,6 @@ void MultiRenderTexture::clear()
 void MultiRenderTexture::display()
 {
 #ifdef PLATFORM_DESKTOP
-
     //restore viewport
     glCheck(glViewport(m_lastViewport[0], m_lastViewport[1], m_lastViewport[2], m_lastViewport[3]));
 
@@ -244,17 +272,13 @@ URect MultiRenderTexture::getDefaultViewport() const
     return { 0, 0, m_size.x, m_size.y };
 }
 
-TextureID MultiRenderTexture::getPositionTexture() const
+TextureID MultiRenderTexture::getTexture(std::size_t idx) const
 {
-    return TextureID(m_textureIDs[TextureIndex::Position]);
-}
-
-TextureID MultiRenderTexture::getNormalTexture() const
-{
-    return TextureID(m_textureIDs[TextureIndex::Normal]);
+    CRO_ASSERT(idx < m_textureIDs.size(), "");
+    return TextureID(m_textureIDs[idx]);
 }
 
 TextureID MultiRenderTexture::getDepthTexture() const
 {
-    return TextureID(m_textureIDs[TextureIndex::Depth]);
+    return TextureID(m_depthTextureID);
 }

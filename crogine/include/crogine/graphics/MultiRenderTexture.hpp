@@ -38,13 +38,14 @@ source distribution.
 namespace cro
 {
     /*!
-    \brief A render buffer with a position buffer, normal buffer and a depth component attached.
-    MultiRenderTextures are non-copyable objects but *can* be moved. MultiRenderTextures are used
-    as g-buffers, accumulating scene data that can be used for screen space effects such as
-    ambient occlusion, reflections, depth of field and so on. Models require materials which use
-    the cro::ShaderResource::BuiltIn::GBuffer shader. Fragment positions, normals and depths are
-    written to the corresponding buffers, in world-view space, unless a custom shader is supplied.
-    MultiRenderTextures are not available on mobile platforms.
+    \brief A render buffer with 1 or more colour targets and a depth buffer.
+    MultiRenderTextures (or MRTs) have multiple colour targets and can be used
+    as a G-Buffer for techniques such as deferred rendering or screen-space
+    post processes like SSAO or depth of field. Unlike the standard RenderTexture
+    the colour buffers are 16 bit floating point format for higher precision
+    when rendering data such as normal or vertex position information.
+    MultiRenderTextures are not available on mobile platforms, and RenderTexture
+    should be used instead.
     */
     class CRO_EXPORT_API MultiRenderTexture final : public RenderTarget, public Detail::SDLResource
     {
@@ -68,12 +69,15 @@ namespace cro
 
         /*!
         \brief Creates (or recreates) the multi render texture
-        \param width Width of the texture to create. This should be
-        power of 2 on mobile platforms
+        \param width Width of the texture to create.
         \param height Height of the texture.
+        \param colourCount The number of colour buffers to create. This should be at least 1
+        and less than getMaxAttachments(). For instances where only a depth buffer is required
+        use DepthTexture. When only one target is required and lower precision is acceptable,
+        use RenderTexture.
         \returns true on success, else returns false
         */
-        bool create(std::uint32_t width, std::uint32_t height);
+        bool create(std::uint32_t width, std::uint32_t height, std::size_t colourCount = 2);
 
         /*!
         \brief Returns the current size in pixels of the texture (zero if not yet created)
@@ -120,16 +124,11 @@ namespace cro
         bool available() const { return m_fboID != 0; }
 
         /*!
-        \brief Returns the texture ID of the Position texture wrappped 
+        \brief Returns the texture ID of a texture wrappped 
         in a handle which can be bound to material uniforms.
+        \param index The index of the texture to return.
         */
-        TextureID getPositionTexture() const;
-
-        /*!
-        \brief Returns the texture ID of the Normal texture wrappped
-        in a handle which can be bound to material uniforms.
-        */
-        TextureID getNormalTexture() const;
+        TextureID getTexture(std::size_t index) const;
 
         /*!
         \brief Returns the texture ID of the Depth texture wrappped
@@ -137,15 +136,17 @@ namespace cro
         */
         TextureID getDepthTexture() const;
 
+        /*!
+        \brief Returns the maximum number of colour attachments available
+        */
+        std::int32_t getMaxAttaments() const { return m_maxAttachments; }
+
     private:
         std::uint32_t m_fboID;
+        std::int32_t m_maxAttachments;
         
-        enum TextureIndex
-        {
-            Position, Normal, Depth,
-            Count
-        };
-        std::array<std::uint32_t, TextureIndex::Count> m_textureIDs;
+        std::vector<std::uint32_t> m_textureIDs;
+        std::uint32_t m_depthTextureID;
 
         glm::uvec2 m_size;
         URect m_viewport;

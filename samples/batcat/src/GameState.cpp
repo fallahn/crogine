@@ -121,9 +121,9 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
                 if (ImGui::Begin("Window of funnage"))
                 {
                     //ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                    ImGui::Image(m_mrt.getPositionTexture(), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::Image(m_mrt.getTexture(0), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
                     ImGui::SameLine();
-                    ImGui::Image(m_mrt.getNormalTexture(), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::Image(m_mrt.getTexture(1), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
                     ImGui::SameLine();
                     ImGui::Image(m_mrt.getDepthTexture(), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
