@@ -290,17 +290,21 @@ namespace cro
         \brief Draws any renderable systems in this scene, in the order in which they were added
         using the currently active camera
         \param target The target to be rendered to, either the active window or a render texture
+        \param doPost If post process effects have been added to the Scene setting this to false
+        will ignore them. Useful for rendering multipass effects, for example a reflection buffer
         \see setActiveCamera()
         */
-        void render(const RenderTarget& target);
+        void render(const RenderTarget& target, bool doPost = true);
 
         /*!
         \brief Draws any renderable systems in this scene, in the order in which they were added
         using the given list of camera entities. Useful for split screen views for example
         \param target The target to be rendered to, either the active window or a render texture
         \param cameras Vector of camera entities to draw the Scene with
+        \param doPost If post process effects have been added to the Scene setting this to false
+        will ignore them. Useful for rendering multipass effects, for example a reflection buffer
         */
-        void render(const RenderTarget& target, const std::vector<Entity>& cameras);
+        void render(const RenderTarget& target, const std::vector<Entity>& cameras, bool doPost = true);
 
         /*!
         \brief Returns a pointer to the array of active projection maps, with the count.

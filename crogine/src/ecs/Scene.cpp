@@ -548,14 +548,28 @@ void Scene::forwardMessage(const Message& msg)
     }
 }
 
-void Scene::render(const RenderTarget& rt)
+void Scene::render(const RenderTarget& rt, bool doPost)
 {
-    currentRenderPath(rt, &m_activeCamera, 1);
+    if (doPost)
+    {
+        currentRenderPath(rt, &m_activeCamera, 1);
+    }
+    else
+    {
+        defaultRenderPath(rt, &m_activeCamera, 1);
+    }
 }
 
-void Scene::render(const RenderTarget& rt, const std::vector<Entity>& cameras)
+void Scene::render(const RenderTarget& rt, const std::vector<Entity>& cameras, bool doPost)
 {
-    currentRenderPath(rt, cameras.data(), cameras.size());
+    if (doPost)
+    {
+        currentRenderPath(rt, cameras.data(), cameras.size());
+    }
+    else
+    {
+        defaultRenderPath(rt, cameras.data(), cameras.size());
+    }
 }
 
 std::pair<const float*, std::size_t> Scene::getActiveProjectionMaps() const
