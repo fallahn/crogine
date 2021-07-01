@@ -58,7 +58,7 @@ PostRadial::PostRadial()
 }
 
 //public
-void PostRadial::apply(const cro::RenderTexture& source)
+void PostRadial::apply(const cro::RenderTexture& source, const cro::Camera&)
 {
     glm::vec2 size(getCurrentBufferSize());
     setUniform("u_texture", source.getTexture(), m_inputShader);

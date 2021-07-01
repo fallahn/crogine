@@ -39,7 +39,7 @@ class PostRadial final : public cro::PostProcess
 public:
     PostRadial();
 
-    void apply(const cro::RenderTexture& source) override;
+    void apply(const cro::RenderTexture& source, const cro::Camera&) override;
 
 private:
     cro::Shader m_inputShader;

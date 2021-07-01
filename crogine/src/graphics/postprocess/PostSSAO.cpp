@@ -27,7 +27,10 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include <crogine/ecs/components/Camera.hpp>
+
 #include <crogine/graphics/postprocess/PostSSAO.hpp>
+#include <crogine/graphics/postprocess/PostVertex.hpp>
 #include <crogine/graphics/MultiRenderTexture.hpp>
 
 #include "../../detail/GLCheck.hpp"
@@ -38,6 +41,8 @@ using namespace cro;
 
 namespace
 {
+#include "PostSSAO.inl"
+
     constexpr std::size_t KernelSize = 64;
     constexpr std::size_t NoiseSize = 16;
 }
@@ -53,8 +58,44 @@ PostSSAO::PostSSAO(const MultiRenderTexture& mrt)
     createNoiseSampler();
 
     //TODO load shaders
+    std::fill(m_ssaoUniforms.begin(), m_ssaoUniforms.end(), -1);
+    if (m_ssaoShader.loadFromString(PostVertex, SSAOFrag))
+    {
+        //parse uniforms
+        const auto& uniforms = m_ssaoShader.getUniformMap();
+        if (uniforms.count("u_position"))
+        {
+            m_ssaoUniforms[SSAOUniformID::Position] = uniforms.at("u_position");
+        }
+
+        if (uniforms.count("u_normal"))
+        {
+            m_ssaoUniforms[SSAOUniformID::Normal] = uniforms.at("u_normal");
+        }
+
+        if (uniforms.count("u_noise"))
+        {
+            m_ssaoUniforms[SSAOUniformID::Noise] = uniforms.at("u_noise");
+        }
+
+        if (uniforms.count("u_samples[0]"))
+        {
+            m_ssaoUniforms[SSAOUniformID::Samples] = uniforms.at("u_samples[0]");
+        }
+
+        if (uniforms.count("u_camProjectionMatrix"))
+        {
+            m_ssaoUniforms[SSAOUniformID::ProjectionMatrix] = uniforms.at("u_camProjectionMatrix");
+        }
+
+        if (uniforms.count("u_bufferSize"))
+        {
+            m_ssaoUniforms[SSAOUniformID::BufferSize] = uniforms.at("u_bufferSize");
+        }
+    }
 
     //TODO add passes
+    m_passIDs[PassID::SSAO] = addPass(m_ssaoShader);
 #endif
 }
 
@@ -77,16 +118,49 @@ PostSSAO::~PostSSAO()
 }
 
 //public
-void PostSSAO::apply(const RenderTexture& source)
+void PostSSAO::apply(const RenderTexture& source, const Camera& camera)
 {
 #ifdef PLATFORM_DESKTOP
-    //TODO activate ssao fbo
-    //TODO render associated pass
+    //-----SSAO Pass-----//
     
+    glCheck(glActiveTexture(GL_TEXTURE0));
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_mrt.getTexture(0).textureID));
+    
+    glCheck(glActiveTexture(GL_TEXTURE1));
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_mrt.getTexture(1).textureID));
+
+    glCheck(glActiveTexture(GL_TEXTURE2));
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_noiseTexture));
+
+    glCheck(glUseProgram(m_ssaoShader.getGLHandle()));
+    glCheck(glUniform1i(m_ssaoUniforms[SSAOUniformID::Normal], 0));
+    glCheck(glUniform1i(m_ssaoUniforms[SSAOUniformID::Position], 1));
+    glCheck(glUniform1i(m_ssaoUniforms[SSAOUniformID::Noise], 2));
+    glCheck(glUniform3fv(m_ssaoUniforms[SSAOUniformID::Samples], KernelSize, &m_kernel.data()[0][0]));
+    glCheck(glUniform2f(m_ssaoUniforms[SSAOUniformID::BufferSize], m_bufferSize.x, m_bufferSize.y));
+    glCheck(glUniformMatrix4fv(m_ssaoUniforms[SSAOUniformID::ProjectionMatrix], 1, GL_FALSE, &camera.getProjectionMatrix()[0][0]));
+
+    //activate ssao fbo
+    GLint currentBinding = 0;
+    glCheck(glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &currentBinding));
+    glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_ssaoFBO));
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    std::array<std::int32_t, 4u> lastViewport;
+    glCheck(glGetIntegerv(GL_VIEWPORT, lastViewport.data()));
+    glCheck(glViewport(0, 0, static_cast<std::int32_t>(m_bufferSize.x), static_cast<std::int32_t>(m_bufferSize.y)));
+
+    //render associated pass
+    drawQuad(m_passIDs[PassID::SSAO], { glm::vec2(0.f), m_bufferSize });
+
+
     //TODO TODO blur pass
     
     
-    //TODO activate main buffer
+    //activate main buffer
+    glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, currentBinding));
+    glCheck(glViewport(lastViewport[0], lastViewport[1], lastViewport[2], lastViewport[3]));
+
     //TODO render final pass
 
 #endif
@@ -151,4 +225,7 @@ void PostSSAO::bufferResized()
 
 
     //TODO create and update blur buffer
+
+
+    m_bufferSize = size;
 }

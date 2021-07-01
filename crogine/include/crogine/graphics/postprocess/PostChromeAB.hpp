@@ -42,7 +42,7 @@ namespace cro
     public:
         PostChromeAB();
 
-        void apply(const RenderTexture& source) override;
+        void apply(const RenderTexture& source, const Camera&) override;
 
     private:
         Shader m_postShader;

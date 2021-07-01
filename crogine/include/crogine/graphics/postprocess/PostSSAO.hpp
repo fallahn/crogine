@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/graphics/Shader.hpp>
 
 #include <vector>
+#include <array>
 
 namespace cro
 {
@@ -79,7 +80,7 @@ namespace cro
     \endcode
 
     */
-    class PostSSAO final : public cro::PostProcess
+    class CRO_EXPORT_API PostSSAO final : public cro::PostProcess
     {
     public:
         /*!
@@ -99,7 +100,9 @@ namespace cro
         /*!
         \brief Automatically called by Scene::render()
         */
-        void apply(const RenderTexture& source) override;
+        void apply(const RenderTexture& source, const Camera&) override;
+
+        TextureID getSSAOTexture() const { return TextureID(m_ssaoTexture); }
 
     private:
         const MultiRenderTexture& m_mrt;
@@ -112,6 +115,31 @@ namespace cro
         std::uint32_t m_ssaoTexture;
 
         std::uint32_t m_ssaoFBO;
+        glm::vec2 m_bufferSize;
+
+        struct SSAOUniformID final
+        {
+            enum
+            {
+                Position, Normal, Noise,
+                Samples, ProjectionMatrix,
+                BufferSize,
+
+                Count
+            };
+        };
+        std::array<std::int32_t, SSAOUniformID::Count> m_ssaoUniforms;
+
+
+        struct PassID final
+        {
+            enum
+            {
+                SSAO, Blur, Final,
+                Count
+            };
+        };
+        std::array<std::size_t, PassID::Count> m_passIDs;
 
         void createNoiseSampler();
         void bufferResized() override;

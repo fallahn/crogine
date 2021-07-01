@@ -695,6 +695,7 @@ void Scene::postRenderPath(const RenderTarget&, const Entity* cameraList, std::s
     defaultRenderPath(m_sceneBuffer, cameraList, cameraCount);
     m_sceneBuffer.display();
 
+    const auto& cam = m_activeCamera.getComponent<Camera>(); //kludge until we get per-camera post processes
     RenderTexture* inTex = &m_sceneBuffer;
     RenderTexture* outTex = nullptr;
 
@@ -702,14 +703,14 @@ void Scene::postRenderPath(const RenderTarget&, const Entity* cameraList, std::s
     {
         outTex = &m_postBuffers[i % 2];
         outTex->clear();
-        m_postEffects[i]->apply(*inTex);
+        m_postEffects[i]->apply(*inTex, cam);
         outTex->display();
         inTex = outTex;
     }
 
     auto vp = m_sceneBuffer.getDefaultViewport();
     glViewport(vp.left, vp.bottom, vp.width, vp.height);
-    m_postEffects.back()->apply(*inTex);
+    m_postEffects.back()->apply(*inTex, cam);
 }
 
 void Scene::destroySkybox()

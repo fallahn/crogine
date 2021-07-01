@@ -48,6 +48,8 @@ source distribution.
 #include <crogine/graphics/IqmBuilder.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
+#include <crogine/graphics/postprocess/PostSSAO.hpp>
+
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -100,6 +102,8 @@ namespace
     float fireRate = 0.1f; //rate per second
     glm::vec3 sourcePosition = glm::vec3(-19.f, 10.f, 6.f);
     float sourceRotation = -cro::Util::Const::PI / 2.f;
+
+    cro::PostSSAO* ssao = nullptr;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -126,6 +130,8 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
                     ImGui::Image(m_mrt.getTexture(1), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
                     ImGui::SameLine();
                     ImGui::Image(m_mrt.getDepthTexture(), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                    ImGui::Image(ssao->getSSAOTexture(), { 200.f, 150.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                     ImGui::DragFloat("Rate", &fireRate, 0.1f, 0.1f, 10.f);
                     ImGui::DragFloat("Position", &sourcePosition.x, 0.1f, -19.f, 19.f);
@@ -225,6 +231,8 @@ void GameState::addSystems()
     m_scene.addSystem<cro::AudioSystem>(mb);
 
     m_scene.addDirector<PlayerDirector>();
+
+    ssao = &m_scene.addPostProcess<cro::PostSSAO>(m_mrt);
 
     uiSystem = &m_overlayScene.addSystem<cro::UISystem>(mb);
     m_overlayScene.addSystem<cro::CameraSystem>(mb);

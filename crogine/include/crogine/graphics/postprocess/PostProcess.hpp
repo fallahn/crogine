@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -47,6 +47,7 @@ namespace cro
     class RenderTexture;
     class Shader;
     class Texture;
+    struct Camera;
 
     /*!
     \brief Post Process interface.
@@ -80,8 +81,10 @@ namespace cro
         \brief Applies the Post Process to the source texture and
         renders it to the current active buffer.
         Called automatically by the scene to which this effect belongs
+        \param source The source texture to process
+        \param camera The camera component with which the source was rendered
         */
-        virtual void apply(const RenderTexture& source) = 0;
+        virtual void apply(const RenderTexture& source, const Camera& camera) = 0;
 
         /*
         \brief Used by crogine to update the post process should the buffer be resized.

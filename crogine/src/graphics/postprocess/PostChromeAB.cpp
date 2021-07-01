@@ -54,7 +54,7 @@ PostChromeAB::PostChromeAB()
 }
 
 //public
-void PostChromeAB::apply(const RenderTexture& input)
+void PostChromeAB::apply(const RenderTexture& input, const Camera&)
 {
     glCheck(glUseProgram(m_postShader.getGLHandle()));
     glCheck(glActiveTexture(GL_TEXTURE0));

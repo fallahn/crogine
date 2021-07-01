@@ -609,6 +609,9 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostSSAO.hpp">
       <Filter>Header Files\graphics\post process</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostVertex.hpp">
+      <Filter>Header Files\graphics\post process</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1044,6 +1047,9 @@
     </None>
     <None Include="..\crogine\include\crogine\core\Utf.inl">
       <Filter>Header Files\core</Filter>
+    </None>
+    <None Include="..\crogine\src\graphics\postprocess\PostSSAO.inl">
+      <Filter>Header Files\graphics\post process</Filter>
     </None>
   </ItemGroup>
 </Project>
