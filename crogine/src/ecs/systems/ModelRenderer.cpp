@@ -243,18 +243,18 @@ void ModelRenderer::renderGBuffer(Entity camera, const RenderTarget& rt)
             glCheck(glUseProgram(model.m_materials[Mesh::IndexData::GBuffer][i].shader));
 
             //apply shader uniforms from material
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
             applyProperties(model.m_materials[Mesh::IndexData::GBuffer][i], model, *getScene(), camComponent);
 
             //apply standard uniforms
             //glCheck(glUniform3f(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
             //glCheck(glUniform2f(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
-            glCheck(glUniform4f(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
+            //glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
+            //glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-            glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
+            glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldView)))));
+            glCheck(glUniform4f(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
 
             //applyBlendMode(cro::Material::BlendMode::None);
 

@@ -123,13 +123,22 @@ namespace cro
             {
                 Position, Normal, Noise,
                 Samples, ProjectionMatrix,
-                BufferSize,
+                BufferSize, BufferViewport,
 
                 Count
             };
         };
         std::array<std::int32_t, SSAOUniformID::Count> m_ssaoUniforms;
 
+        struct BlendUniformID final
+        {
+            enum
+            {
+                Base, SSAO,
+                Count
+            };
+        };
+        std::array<std::int32_t, BlendUniformID::Count> m_blendUniforms;
 
         struct PassID final
         {

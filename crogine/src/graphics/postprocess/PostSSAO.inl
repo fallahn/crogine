@@ -45,6 +45,7 @@ R"(
     uniform mat4 u_camProjectionMatrix;
 
     uniform vec2 u_bufferSize;
+    uniform vec4 u_bufferViewport;
 
     VARYING_IN vec2 v_texCoord;
 
@@ -55,10 +56,10 @@ R"(
         vec2 noiseScale = u_bufferSize / NoiseSize;
 
         vec3 position = TEXTURE(u_position, v_texCoord).rgb;
-        vec3 normal = TEXTURE(u_normal, v_texCoord).rgb;
-        vec3 randomOffset = TEXTURE(u_noise, v_texCoord * noiseScale).rgb;
+        vec3 normal = normalize(TEXTURE(u_normal, v_texCoord).rgb);
+        vec3 randomOffset = normalize(TEXTURE(u_noise, v_texCoord * noiseScale).rgb);
 
-        vec3 tan = normalize(randomOffset - normal * dot(normal, randomOffset));
+        vec3 tan = normalize(randomOffset - normal * dot(randomOffset, normal));
         vec3 bitan = cross(normal, tan);
         mat3 tbn = mat3(tan, bitan, normal);
 
@@ -73,14 +74,33 @@ R"(
             vec4 offset = vec4(samplePos, 1.0);
             offset = u_camProjectionMatrix * offset;
             offset.xyz /= offset.w;
-            offset.xyz = offset.xyz * 0.5 + 0.5;
+            offset.xy = offset.xy * 0.5 + 0.5;
+
+            offset.xy *= u_bufferViewport.zw;
+            offset.xy += u_bufferViewport.xy;
 
             float depth = TEXTURE(u_position, offset.xy).z;
             float range = smoothstep(0.0, 1.0, radius / abs(position.z - depth));
-            occlusion += (depth > samplePos.z + epsilon ? 1.0 : 0.0) * range;
+            occlusion += (depth >= samplePos.z + epsilon ? 1.0 : 0.0) * range;
         }
 
         occlusion = 1.f - (occlusion / KERNEL_SIZE);
         FRAG_OUT.r = occlusion;
+    }
+)";
+
+
+static const std::string BlendFrag =
+R"(
+    OUTPUT
+
+    uniform sampler2D u_baseTexture;
+    uniform sampler2D u_ssaoTexture;
+
+    VARYING_IN vec2 v_texCoord;
+
+    void main()
+    {
+        FRAG_OUT = mix(TEXTURE(u_baseTexture, v_texCoord), vec4(vec3(TEXTURE(u_ssaoTexture, v_texCoord).r), 1.0), step(v_texCoord.x, 0.5));
     }
 )";

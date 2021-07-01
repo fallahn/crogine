@@ -35,6 +35,7 @@ source distribution.
 
 #include "../../detail/GLCheck.hpp"
 #include <crogine/detail/glm/gtx/compatibility.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/util/Random.hpp>
 
 using namespace cro;
@@ -92,10 +93,31 @@ PostSSAO::PostSSAO(const MultiRenderTexture& mrt)
         {
             m_ssaoUniforms[SSAOUniformID::BufferSize] = uniforms.at("u_bufferSize");
         }
+
+        if (uniforms.count("u_bufferViewport"))
+        {
+            m_ssaoUniforms[SSAOUniformID::BufferViewport] = uniforms.at("u_bufferViewport");
+        }
+    }
+
+    std::fill(m_blendUniforms.begin(), m_blendUniforms.end(), -1);
+    if (m_blendShader.loadFromString(PostVertex, BlendFrag))
+    {
+        const auto& uniforms = m_blendShader.getUniformMap();
+        if (uniforms.count("u_baseTexture"))
+        {
+            m_blendUniforms[BlendUniformID::Base] = uniforms.at("u_baseTexture");
+        }
+
+        if (uniforms.count("u_ssaoTexture"))
+        {
+            m_blendUniforms[BlendUniformID::SSAO] = uniforms.at("u_ssaoTexture");
+        }
     }
 
     //TODO add passes
     m_passIDs[PassID::SSAO] = addPass(m_ssaoShader);
+    m_passIDs[PassID::Final] = addPass(m_blendShader);
 #endif
 }
 
@@ -136,8 +158,9 @@ void PostSSAO::apply(const RenderTexture& source, const Camera& camera)
     glCheck(glUniform1i(m_ssaoUniforms[SSAOUniformID::Normal], 0));
     glCheck(glUniform1i(m_ssaoUniforms[SSAOUniformID::Position], 1));
     glCheck(glUniform1i(m_ssaoUniforms[SSAOUniformID::Noise], 2));
-    glCheck(glUniform3fv(m_ssaoUniforms[SSAOUniformID::Samples], KernelSize, &m_kernel.data()[0][0]));
+    glCheck(glUniform3fv(m_ssaoUniforms[SSAOUniformID::Samples], KernelSize, glm::value_ptr(m_kernel[0])));
     glCheck(glUniform2f(m_ssaoUniforms[SSAOUniformID::BufferSize], m_bufferSize.x, m_bufferSize.y));
+    glCheck(glUniform4f(m_ssaoUniforms[SSAOUniformID::BufferViewport], camera.viewport.left, camera.viewport.bottom, camera.viewport.width,camera.viewport.height));
     glCheck(glUniformMatrix4fv(m_ssaoUniforms[SSAOUniformID::ProjectionMatrix], 1, GL_FALSE, &camera.getProjectionMatrix()[0][0]));
 
     //activate ssao fbo
@@ -148,7 +171,8 @@ void PostSSAO::apply(const RenderTexture& source, const Camera& camera)
 
     std::array<std::int32_t, 4u> lastViewport;
     glCheck(glGetIntegerv(GL_VIEWPORT, lastViewport.data()));
-    glCheck(glViewport(0, 0, static_cast<std::int32_t>(m_bufferSize.x), static_cast<std::int32_t>(m_bufferSize.y)));
+
+    glCheck(glViewport(0,0, static_cast<std::int32_t>(m_bufferSize.x), static_cast<std::int32_t>(m_bufferSize.y)));
 
     //render associated pass
     drawQuad(m_passIDs[PassID::SSAO], { glm::vec2(0.f), m_bufferSize });
@@ -157,11 +181,25 @@ void PostSSAO::apply(const RenderTexture& source, const Camera& camera)
     //TODO TODO blur pass
     
     
+
+    //-----final pass------//
+    glCheck(glActiveTexture(GL_TEXTURE0));
+    glCheck(glBindTexture(GL_TEXTURE_2D, source.getTexture().getGLHandle()));
+
+    glCheck(glActiveTexture(GL_TEXTURE1));
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_ssaoTexture));
+
+    glCheck(glUseProgram(m_blendShader.getGLHandle()));
+    glCheck(glUniform1i(m_blendUniforms[BlendUniformID::Base], 0));
+    glCheck(glUniform1i(m_blendUniforms[BlendUniformID::SSAO], 1));
+
+
     //activate main buffer
     glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, currentBinding));
     glCheck(glViewport(lastViewport[0], lastViewport[1], lastViewport[2], lastViewport[3]));
 
-    //TODO render final pass
+    //render final pass
+    drawQuad(m_passIDs[PassID::Final], { glm::vec2(0.f), glm::vec2(App::getWindow().getSize()) });
 
 #endif
 }
@@ -171,7 +209,7 @@ void PostSSAO::createNoiseSampler()
 {
     for (auto i = 0u; i < KernelSize; ++i)
     {
-        auto sample = m_kernel.emplace_back(
+        auto& sample = m_kernel.emplace_back(
             cro::Util::Random::value(-1.f, 1.f),
             cro::Util::Random::value(-1.f, 1.f),
             cro::Util::Random::value(0.f, 1.f) );
@@ -221,11 +259,11 @@ void PostSSAO::bufferResized()
         glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ssaoTexture, 0));
     }
 
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_ssaoTexture));
     glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_FLOAT, nullptr));
 
 
     //TODO create and update blur buffer
-
 
     m_bufferSize = size;
 }
