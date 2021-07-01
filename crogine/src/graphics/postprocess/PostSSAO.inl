@@ -46,6 +46,9 @@ R"(
 
     uniform vec2 u_bufferSize;
     uniform vec4 u_bufferViewport;
+    
+    uniform float u_intensity = 1.0;
+    uniform float u_bias = 0.005;
 
     VARYING_IN vec2 v_texCoord;
 
@@ -63,8 +66,7 @@ R"(
         vec3 bitan = cross(normal, tan);
         mat3 tbn = mat3(tan, bitan, normal);
 
-        const float radius = 0.5;
-        const float epsilon = 0.025;
+        const float radius = 0.6;
         float occlusion = 0.0;
         for(int i = 0; i < KERNEL_SIZE; ++i)
         {
@@ -81,10 +83,12 @@ R"(
 
             float depth = TEXTURE(u_position, offset.xy).z;
             float range = smoothstep(0.0, 1.0, radius / abs(position.z - depth));
-            occlusion += (depth >= samplePos.z + epsilon ? 1.0 : 0.0) * range;
+            occlusion += (depth >= samplePos.z + u_bias ? 1.0 : 0.0) * range;
         }
 
         occlusion = 1.f - (occlusion / KERNEL_SIZE);
+        occlusion = pow(occlusion, u_intensity);
+
         FRAG_OUT.r = occlusion;
     }
 )";
@@ -131,6 +135,8 @@ R"(
         float ao = TEXTURE(u_ssaoTexture, v_texCoord).r;
         vec3 baseColour = TEXTURE(u_baseTexture, v_texCoord).rgb;
 
-        FRAG_OUT = mix(vec4(baseColour, 1.0), vec4(/*baseColour **/ vec3(ao), 1.0), step(v_texCoord.x, 0.5));
+        //FRAG_OUT = mix(vec4(baseColour, 1.0), vec4(baseColour * ao, 1.0), step(v_texCoord.x, 0.5));
+        //FRAG_OUT = mix(vec4(baseColour, 1.0), vec4(vec3(ao), 1.0), step(v_texCoord.x, 0.5));
+        FRAG_OUT = vec4(baseColour * ao, 1.0);
     }
 )";

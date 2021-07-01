@@ -104,6 +104,29 @@ namespace cro
 
         TextureID getSSAOTexture() const { return TextureID(m_ssaoTexture); }
 
+        /*
+        \brief Sets the intensity of the effect.
+        Valid between 0.1f - 5.f
+        */
+        void setIntensity(float amount);
+
+        /*!
+        \brief Returns the current intensity value
+        */
+        float getIntensity() const { return m_intensity; }
+
+        /*
+        \brief Sets the Depth bias
+        This can help reduce z-fighting effects
+        Valid between 0.001f and 0.1f
+        */
+        void setBias(float amount);
+
+        /*!
+        \brief Returns the current bias value
+        */
+        float getBias() const { return m_bias; }
+
     private:
         const MultiRenderTexture& m_mrt;
         Shader m_ssaoShader;
@@ -119,6 +142,9 @@ namespace cro
         std::uint32_t m_blurFBO;
         glm::vec2 m_bufferSize;
 
+        float m_intensity;
+        float m_bias;
+
         struct SSAOUniformID final
         {
             enum
@@ -126,6 +152,7 @@ namespace cro
                 Position, Normal, Noise,
                 Samples, ProjectionMatrix,
                 BufferSize, BufferViewport,
+                Bias, Intensity,
 
                 Count
             };

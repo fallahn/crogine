@@ -54,7 +54,9 @@ PostSSAO::PostSSAO(const MultiRenderTexture& mrt)
     m_ssaoTexture   (0),
     m_blurTexture   (0),
     m_ssaoFBO       (0),
-    m_blurFBO       (0)
+    m_blurFBO       (0),
+    m_intensity     (1.f),
+    m_bias          (0.005f)
 {
 #ifdef PLATFORM_DESKTOP
     //create noise texture/samples
@@ -99,6 +101,16 @@ PostSSAO::PostSSAO(const MultiRenderTexture& mrt)
         if (uniforms.count("u_bufferViewport"))
         {
             m_ssaoUniforms[SSAOUniformID::BufferViewport] = uniforms.at("u_bufferViewport");
+        }
+
+        if (uniforms.count("u_bias"))
+        {
+            m_ssaoUniforms[SSAOUniformID::Bias] = uniforms.at("u_bias");
+        }
+
+        if (uniforms.count("u_intensity"))
+        {
+            m_ssaoUniforms[SSAOUniformID::Intensity] = uniforms.at("u_intensity");
         }
     }
 
@@ -178,6 +190,8 @@ void PostSSAO::apply(const RenderTexture& source, const Camera& camera)
     glCheck(glActiveTexture(GL_TEXTURE2));
     glCheck(glBindTexture(GL_TEXTURE_2D, m_noiseTexture));
 
+    //TODO we could optomise this a bit by only setting the
+    //texture uniforms once and the bias/intensity only when they're changed
     glCheck(glUseProgram(m_ssaoShader.getGLHandle()));
     glCheck(glUniform1i(m_ssaoUniforms[SSAOUniformID::Normal], 0));
     glCheck(glUniform1i(m_ssaoUniforms[SSAOUniformID::Position], 1));
@@ -186,6 +200,8 @@ void PostSSAO::apply(const RenderTexture& source, const Camera& camera)
     glCheck(glUniform2f(m_ssaoUniforms[SSAOUniformID::BufferSize], m_bufferSize.x, m_bufferSize.y));
     glCheck(glUniform4f(m_ssaoUniforms[SSAOUniformID::BufferViewport], camera.viewport.left, camera.viewport.bottom, camera.viewport.width,camera.viewport.height));
     glCheck(glUniformMatrix4fv(m_ssaoUniforms[SSAOUniformID::ProjectionMatrix], 1, GL_FALSE, &camera.getProjectionMatrix()[0][0]));
+    glCheck(glUniform1f(m_ssaoUniforms[SSAOUniformID::Bias], m_bias));
+    glCheck(glUniform1f(m_ssaoUniforms[SSAOUniformID::Intensity], m_intensity));
 
     //activate ssao fbo
     GLint currentBinding = 0;
@@ -237,6 +253,16 @@ void PostSSAO::apply(const RenderTexture& source, const Camera& camera)
     drawQuad(m_passIDs[PassID::Final], { glm::vec2(0.f), glm::vec2(App::getWindow().getSize()) });
 
 #endif
+}
+
+void PostSSAO::setIntensity(float amount)
+{
+    m_intensity = std::min(5.f, std::max(0.1f, amount));
+}
+
+void PostSSAO::setBias(float amount)
+{
+    m_bias = std::min(0.1f, std::max(0.001f, amount));
 }
 
 //private

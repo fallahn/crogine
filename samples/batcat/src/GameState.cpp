@@ -133,6 +133,18 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
                     ImGui::Image(ssao->getSSAOTexture(), { 200.f, 150.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
+                    float bias = ssao->getBias();
+                    if (ImGui::SliderFloat("Bias", &bias, 0.001f, 0.1f))
+                    {
+                        ssao->setBias(bias);
+                    }
+
+                    float intensity = ssao->getIntensity();
+                    if (ImGui::SliderFloat("Intensity", &intensity, 0.1f, 5.f))
+                    {
+                        ssao->setIntensity(intensity);
+                    }
+
                     ImGui::DragFloat("Rate", &fireRate, 0.1f, 0.1f, 10.f);
                     ImGui::DragFloat("Position", &sourcePosition.x, 0.1f, -19.f, 19.f);
                     ImGui::DragFloat("Rotation", &sourceRotation, 0.02f, -cro::Util::Const::PI, cro::Util::Const::PI);
