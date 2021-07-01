@@ -90,6 +90,33 @@ R"(
 )";
 
 
+static const std::string BlurFrag =
+R"(
+    OUTPUT
+
+    uniform sampler2D u_texture;
+    uniform vec2 u_bufferSize;
+
+    VARYING_IN vec2 v_texCoord;
+
+    void main()
+    {
+        vec2 texelSize = 1.0 / u_bufferSize;
+        float result = 0.0;
+
+        for (int x = -2; x < 2; ++x) 
+        {
+            for (int y = -2; y < 2; ++y) 
+            {
+                vec2 offset = vec2(float(x), float(y)) * texelSize;
+                result += TEXTURE(u_texture, v_texCoord + offset).r;
+            }
+        }
+        FRAG_OUT.r = result / 16.0;
+    }
+)";
+
+
 static const std::string BlendFrag =
 R"(
     OUTPUT
@@ -101,6 +128,9 @@ R"(
 
     void main()
     {
-        FRAG_OUT = mix(TEXTURE(u_baseTexture, v_texCoord), vec4(vec3(TEXTURE(u_ssaoTexture, v_texCoord).r), 1.0), step(v_texCoord.x, 0.5));
+        float ao = TEXTURE(u_ssaoTexture, v_texCoord).r;
+        vec3 baseColour = TEXTURE(u_baseTexture, v_texCoord).rgb;
+
+        FRAG_OUT = mix(vec4(baseColour, 1.0), vec4(/*baseColour **/ vec3(ao), 1.0), step(v_texCoord.x, 0.5));
     }
 )";

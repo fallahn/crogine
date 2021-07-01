@@ -113,8 +113,10 @@ namespace cro
         std::vector<glm::vec3> m_kernel;
         std::uint32_t m_noiseTexture;
         std::uint32_t m_ssaoTexture;
+        std::uint32_t m_blurTexture;
 
         std::uint32_t m_ssaoFBO;
+        std::uint32_t m_blurFBO;
         glm::vec2 m_bufferSize;
 
         struct SSAOUniformID final
@@ -129,6 +131,17 @@ namespace cro
             };
         };
         std::array<std::int32_t, SSAOUniformID::Count> m_ssaoUniforms;
+
+        struct BlurUniformID final
+        {
+            enum
+            {
+                Texture, BufferSize,
+
+                Count
+            };
+        };
+        std::array<std::int32_t, BlurUniformID::Count> m_blurUniforms;
 
         struct BlendUniformID final
         {

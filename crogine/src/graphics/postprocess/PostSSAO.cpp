@@ -52,13 +52,15 @@ PostSSAO::PostSSAO(const MultiRenderTexture& mrt)
     : m_mrt         (mrt),
     m_noiseTexture  (0),
     m_ssaoTexture   (0),
-    m_ssaoFBO       (0)
+    m_blurTexture   (0),
+    m_ssaoFBO       (0),
+    m_blurFBO       (0)
 {
 #ifdef PLATFORM_DESKTOP
     //create noise texture/samples
     createNoiseSampler();
 
-    //TODO load shaders
+    //load shaders
     std::fill(m_ssaoUniforms.begin(), m_ssaoUniforms.end(), -1);
     if (m_ssaoShader.loadFromString(PostVertex, SSAOFrag))
     {
@@ -100,6 +102,21 @@ PostSSAO::PostSSAO(const MultiRenderTexture& mrt)
         }
     }
 
+    std::fill(m_blurUniforms.begin(), m_blurUniforms.end(), -1);
+    if (m_blurShader.loadFromString(PostVertex, BlurFrag))
+    {
+        const auto& uniforms = m_blurShader.getUniformMap();
+        if (uniforms.count("u_texture"))
+        {
+            m_blurUniforms[BlurUniformID::Texture] = uniforms.at("u_texture");
+        }
+
+        if (uniforms.count("u_bufferSize"))
+        {
+            m_blurUniforms[BlurUniformID::BufferSize] = uniforms.at("u_bufferSize");
+        }
+    }
+
     std::fill(m_blendUniforms.begin(), m_blendUniforms.end(), -1);
     if (m_blendShader.loadFromString(PostVertex, BlendFrag))
     {
@@ -115,8 +132,9 @@ PostSSAO::PostSSAO(const MultiRenderTexture& mrt)
         }
     }
 
-    //TODO add passes
+    //add passes
     m_passIDs[PassID::SSAO] = addPass(m_ssaoShader);
+    m_passIDs[PassID::Blur] = addPass(m_blurShader);
     m_passIDs[PassID::Final] = addPass(m_blendShader);
 #endif
 }
@@ -134,6 +152,12 @@ PostSSAO::~PostSSAO()
     {
         glCheck(glDeleteFramebuffers(1, &m_ssaoFBO));
         glCheck(glDeleteTextures(1, &m_ssaoTexture));
+    }
+
+    if (m_blurTexture)
+    {
+        glCheck(glDeleteFramebuffers(1, &m_blurFBO));
+        glCheck(glDeleteTextures(1, &m_blurTexture));
     }
 
 #endif
@@ -172,29 +196,40 @@ void PostSSAO::apply(const RenderTexture& source, const Camera& camera)
     std::array<std::int32_t, 4u> lastViewport;
     glCheck(glGetIntegerv(GL_VIEWPORT, lastViewport.data()));
 
-    glCheck(glViewport(0,0, static_cast<std::int32_t>(m_bufferSize.x), static_cast<std::int32_t>(m_bufferSize.y)));
+    glCheck(glViewport(0, 0, static_cast<std::int32_t>(m_bufferSize.x), static_cast<std::int32_t>(m_bufferSize.y)));
 
     //render associated pass
     drawQuad(m_passIDs[PassID::SSAO], { glm::vec2(0.f), m_bufferSize });
 
 
-    //TODO TODO blur pass
+    //-----blur pass-----//
+    glCheck(glActiveTexture(GL_TEXTURE0));
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_ssaoTexture));
+
+    glCheck(glUseProgram(m_blurShader.getGLHandle()));
+    glCheck(glUniform1i(m_blurUniforms[BlurUniformID::Texture], 0));
+    glCheck(glUniform2f(m_blurUniforms[BlurUniformID::BufferSize], m_bufferSize.x, m_bufferSize.y));
     
-    
+    //TODO if we resize this make sure to update the viewport
+    glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_blurFBO));
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    drawQuad(m_passIDs[PassID::Blur], { glm::vec2(0.f), m_bufferSize });
+
 
     //-----final pass------//
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glBindTexture(GL_TEXTURE_2D, source.getTexture().getGLHandle()));
 
     glCheck(glActiveTexture(GL_TEXTURE1));
-    glCheck(glBindTexture(GL_TEXTURE_2D, m_ssaoTexture));
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_blurTexture));
 
     glCheck(glUseProgram(m_blendShader.getGLHandle()));
     glCheck(glUniform1i(m_blendUniforms[BlendUniformID::Base], 0));
     glCheck(glUniform1i(m_blendUniforms[BlendUniformID::SSAO], 1));
 
 
-    //activate main buffer
+    //activate original buffer
     glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, currentBinding));
     glCheck(glViewport(lastViewport[0], lastViewport[1], lastViewport[2], lastViewport[3]));
 
@@ -244,8 +279,10 @@ void PostSSAO::bufferResized()
 {
     auto size = getCurrentBufferSize();
 
-    //TODO reduce size ?
+    //TODO reduce size? Looks pretty awful, could make this a
+    //performance preference
 
+    //create SSAO buffer
     if (m_ssaoFBO == 0)
     {
         glCheck(glGenFramebuffers(1, &m_ssaoFBO));
@@ -263,7 +300,22 @@ void PostSSAO::bufferResized()
     glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_FLOAT, nullptr));
 
 
-    //TODO create and update blur buffer
+    //create blur buffer
+    if (m_blurFBO == 0)
+    {
+        glCheck(glGenFramebuffers(1, &m_blurFBO));
+        glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO));
+
+        glCheck(glGenTextures(1, &m_blurTexture));
+        glCheck(glBindTexture(GL_TEXTURE_2D, m_blurTexture));
+        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+        glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_blurTexture, 0));
+    }
+
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_blurTexture));
+    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, size.x, size.y, 0, GL_RED, GL_FLOAT, nullptr));
 
     m_bufferSize = size;
 }
