@@ -44,7 +44,7 @@ namespace
 {
 #include "PostSSAO.inl"
 
-    constexpr std::size_t KernelSize = 64;
+    constexpr std::int32_t KernelSize = 32;
     constexpr std::size_t NoiseSize = 16;
 }
 
@@ -55,8 +55,8 @@ PostSSAO::PostSSAO(const MultiRenderTexture& mrt)
     m_blurTexture   (0),
     m_ssaoFBO       (0),
     m_blurFBO       (0),
-    m_intensity     (1.f),
-    m_bias          (0.005f)
+    m_intensity     (0.5f),
+    m_bias          (0.001f)
 {
 #ifdef PLATFORM_DESKTOP
     //create noise texture/samples
@@ -268,19 +268,29 @@ void PostSSAO::setBias(float amount)
 //private
 void PostSSAO::createNoiseSampler()
 {
-    for (auto i = 0u; i < KernelSize; ++i)
+    constexpr glm::vec3 normal(0.f, 0.f, 1.f);
+    constexpr std::int32_t MaxTries = KernelSize * 4;
+    for (auto i = 0, j = 0; i < KernelSize, j < MaxTries; ++j)
     {
-        auto& sample = m_kernel.emplace_back(
+        auto sample = glm::vec3(
             cro::Util::Random::value(-1.f, 1.f),
             cro::Util::Random::value(-1.f, 1.f),
             cro::Util::Random::value(0.f, 1.f) );
 
         sample = glm::normalize(sample);
-        sample *= cro::Util::Random::value(0.f, 1.f);
 
-        float scale = static_cast<float>(i) / KernelSize;
-        scale = glm::lerp(0.1f, 1.f, scale * scale);
-        sample *= scale;
+        //don't inclue low-angle normals
+        if (glm::dot(sample, normal) > 0.15f)
+        {
+            sample *= cro::Util::Random::value(0.f, 1.f);
+
+            float scale = static_cast<float>(i) / KernelSize;
+            scale = glm::lerp(0.1f, 1.f, scale * scale);
+            sample *= scale;
+
+            m_kernel.push_back(sample);
+            i++;
+        }
     }
 
     std::vector<glm::vec3> noise;

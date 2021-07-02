@@ -35,7 +35,7 @@ static const std::string SSAOFrag =
 R"(
     OUTPUT
     
-    #define KERNEL_SIZE 64
+    #define KERNEL_SIZE 32
 
     uniform sampler2D u_position;
     uniform sampler2D u_normal;
@@ -120,6 +120,73 @@ R"(
     }
 )";
 
+//kuwahara filter blur
+static const std::string BlurFrag2 =
+R"(
+    OUTPUT
+
+    uniform sampler2D u_texture;
+    uniform vec2 u_bufferSize;
+
+    VARYING_IN vec2 v_texCoord;
+
+    const int MAX_SIZE = 5;
+    const int MAX_KERNEL_SIZE = ((MAX_SIZE * 2 + 1) * (MAX_SIZE * 2 + 1));
+    const vec3 ratio = vec3(0.3, 0.59, 0.11);
+
+    vec4 mean = vec4(0.0);
+    float variance = 0.0;
+    float minVariance = -1.0;
+
+    void findMean(int i0, int i1, int j0, int j1)
+    {
+        vec4 temp = vec4(0.0);
+        int count = 0;
+        float values[MAX_KERNEL_SIZE];
+
+        for(int i = i0; i < i1; ++i)
+        {
+            for(int j = j0; j < j1; ++j)
+            {
+                vec4 colour = TEXTURE(u_texture, (gl_FragCoord.xy + vec2(i, j)) / u_bufferSize);
+                temp += colour;
+
+                values[count] = dot(colour.rgb, ratio);
+                count++;
+            }
+        }
+
+        temp.rgb /= count;
+        float meanValue = dot(temp.rgb, ratio);
+
+        float variance = 0.0;
+        for(int i = 0; i < count; ++i)
+        {
+            variance += pow(values[i] - meanValue, 2.0);
+        }
+
+        variance /= count;
+
+        if(variance < minVariance || minVariance <= 1.0)
+        {
+            mean = temp;
+            minVariance = variance;
+        }
+    }
+
+    void main()
+    {
+        int size = 4;
+
+        findMean(-size, 0, -size, 0);
+        findMean(0, size, 0, size);
+        findMean(-size, 0, 0, size);
+        findMean(0, size, -size, 0);
+
+        FRAG_OUT = vec4(mean.rgb, 1.0);
+    }
+)";
+
 
 static const std::string BlendFrag =
 R"(
@@ -136,7 +203,7 @@ R"(
         vec3 baseColour = TEXTURE(u_baseTexture, v_texCoord).rgb;
 
         //FRAG_OUT = mix(vec4(baseColour, 1.0), vec4(baseColour * ao, 1.0), step(v_texCoord.x, 0.5));
-        //FRAG_OUT = mix(vec4(baseColour, 1.0), vec4(vec3(ao), 1.0), step(v_texCoord.x, 0.5));
-        FRAG_OUT = vec4(baseColour * ao, 1.0);
+        FRAG_OUT = mix(vec4(baseColour, 1.0), vec4(vec3(ao), 1.0), step(v_texCoord.x, 0.5));
+        //FRAG_OUT = vec4(baseColour * ao, 1.0);
     }
 )";

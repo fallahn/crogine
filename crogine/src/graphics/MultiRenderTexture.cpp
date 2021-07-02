@@ -145,7 +145,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
         for (auto id : m_textureIDs)
         {
             glBindTexture(GL_TEXTURE_2D, id);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
         }
 
         glCheck(glBindTexture(GL_TEXTURE_2D, m_depthTextureID));
@@ -167,7 +167,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
                 std::uint32_t id = 0;
                 glCheck(glGenTextures(1, &id));
                 glCheck(glBindTexture(GL_TEXTURE_2D, id));
-                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL));
+                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
