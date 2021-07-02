@@ -115,7 +115,7 @@ PostSSAO::PostSSAO(const MultiRenderTexture& mrt)
     }
 
     std::fill(m_blurUniforms.begin(), m_blurUniforms.end(), -1);
-    if (m_blurShader.loadFromString(PostVertex, BlurFrag))
+    if (m_blurShader.loadFromString(PostVertex, BlurFrag2))
     {
         const auto& uniforms = m_blurShader.getUniformMap();
         if (uniforms.count("u_texture"))

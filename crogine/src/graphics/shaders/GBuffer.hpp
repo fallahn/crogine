@@ -116,6 +116,79 @@ namespace cro::Shaders::GBuffer
 
         })";
 
+    static const std::string BillboardVertex = R"(
+        ATTRIBUTE vec4 a_position; //relative to root position (below)
+        ATTRIBUTE vec3 a_normal; //actually contains root position of billboard
+
+        ATTRIBUTE MED vec2 a_texCoord0;
+        ATTRIBUTE MED vec2 a_texCoord1; //contains the size of the billboard to which this vertex belongs
+
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_viewMatrix;
+        uniform mat4 u_viewProjectionMatrix;
+
+        uniform vec4 u_clipPlane;
+
+    #if defined (LOCK_SCALE)
+        uniform vec2 u_screenSize;
+    #endif
+
+    #if defined(BUMP)
+        VARYING_OUT vec3 v_tbn[3];
+    #else
+        VARYING_OUT vec3 v_normal;
+    #endif
+
+    #if defined(TEXTURED)
+        VARYING_OUT vec2 v_texCoord;
+    #endif
+
+        VARYING_OUT vec4 v_fragPosition;
+
+        void main()
+        {
+            vec3 position = (u_worldMatrix * vec4(a_normal, 1.0)).xyz;
+
+#if defined (LOCK_SCALE)
+
+
+
+            gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
+            gl_Position /= gl_Position.w;
+            gl_Position.xy += a_position.xy * (a_texCoord1 / u_screenSize);
+
+            v_normal = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
+
+
+
+
+#else
+            //TODO setting these as uniforms is more efficient, but also more faff.
+            vec3 camRight = vec3(u_viewMatrix[0][0], u_viewMatrix[1][0], u_viewMatrix[2][0]);
+    #if defined(LOCK_ROTATION)
+            vec3 camUp = vec3(0.0, 1.0, 0.0);
+    #else
+            vec3 camUp = vec3(u_viewMatrix[0][1], u_viewMatrix[1][1], u_viewMatrix[2][1]);
+    #endif
+            position = position + camRight * a_position.x
+                                + camUp * a_position.y;
+
+            gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
+
+            v_normal = normalize(cross(camRight, camUp));
+#endif
+
+            #if defined (TEXTURED)
+                v_texCoord = a_texCoord0;
+            #endif
+
+            #if defined (MOBILE)
+
+            #else
+                gl_ClipDistance[0] = dot(u_worldMatrix * vec4(position, 1.0), u_clipPlane);
+            #endif
+        })";
+
     static const std::string Fragment = R"(
     #if defined(TEXTURED)
     #if defined(ALPHA_CLIP)

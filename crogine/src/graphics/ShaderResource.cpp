@@ -218,6 +218,9 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
     case BuiltIn::GBuffer:
         success = loadFromString(id, Shaders::GBuffer::Vertex, Shaders::GBuffer::Fragment, defines);
         break;
+    case BuiltIn::BillboardGBuffer:
+        success = loadFromString(id, Shaders::GBuffer::BillboardVertex, Shaders::GBuffer::Fragment, defines);
+        break;
 #endif
     }
 

@@ -373,7 +373,8 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 
 #ifdef PLATFORM_DESKTOP
         //create a material for the g-buffer pass
-        auto gbuffShader = rc.shaders.loadBuiltIn(ShaderResource::GBuffer, flags);
+        auto type = m_billboard ? ShaderResource::BillboardGBuffer : ShaderResource::GBuffer;
+        auto gbuffShader = rc.shaders.loadBuiltIn(type, flags);
         auto gbuffID = rc.materials.add(rc.shaders.get(gbuffShader));
         auto& gbuffMat = rc.materials.get(gbuffID);
 #endif
