@@ -36,11 +36,11 @@ using namespace cro;
 
 MultiRenderTexture::MultiRenderTexture()
     : m_fboID           (0),
+    m_maxAttachments    (0),
+    m_depthTextureID    (0),
     m_size              (0, 0),
     m_viewport          (0, 0, 1, 1),
-    m_lastBuffer        (0),
-    m_maxAttachments    (0),
-    m_depthTextureID    (0)
+    m_lastBuffer        (0)
 {
 #ifdef PLATFORM_DESKTOP
     glCheck(glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &m_maxAttachments));
