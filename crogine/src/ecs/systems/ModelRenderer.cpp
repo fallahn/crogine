@@ -205,9 +205,9 @@ void ModelRenderer::renderGBuffer(Entity camera, const RenderTarget& rt)
         return;
     }
 
-    const auto& camTx = camera.getComponent<Transform>();
-    auto cameraPosition = camTx.getWorldPosition();
-    auto screenSize = glm::vec2(rt.getSize());
+    //const auto& camTx = camera.getComponent<Transform>();
+    //auto cameraPosition = camTx.getWorldPosition();
+    //auto screenSize = glm::vec2(rt.getSize());
 
     glCheck(glCullFace(pass.getCullFace()));
     applyBlendMode(cro::Material::BlendMode::None); //apply this for all geometry as we're only writing position/normal

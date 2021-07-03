@@ -270,7 +270,7 @@ void PostSSAO::createNoiseSampler()
 {
     constexpr glm::vec3 normal(0.f, 0.f, 1.f);
     constexpr std::int32_t MaxTries = KernelSize * 4;
-    for (auto i = 0, j = 0; i < KernelSize, j < MaxTries; ++j)
+    for (auto i = 0, j = 0; i < KernelSize && j < MaxTries; ++j)
     {
         auto sample = glm::vec3(
             cro::Util::Random::value(-1.f, 1.f),

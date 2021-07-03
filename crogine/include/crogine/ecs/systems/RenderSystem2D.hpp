@@ -82,10 +82,10 @@ namespace cro
         ~RenderSystem2D();
 
         RenderSystem2D(const RenderSystem2D&) = delete;
-        RenderSystem2D(RenderSystem2D&&) noexcept = default;
+        RenderSystem2D(RenderSystem2D&&) noexcept = delete;
 
         const RenderSystem2D& operator = (const RenderSystem2D&) = delete;
-        RenderSystem2D& operator = (RenderSystem2D&&) = default;
+        RenderSystem2D& operator = (RenderSystem2D&&) = delete;
 
         /*!
         \brief Performs frustum culling and Material sorting by depth and blend mode
