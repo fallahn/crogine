@@ -152,15 +152,11 @@ namespace cro::Shaders::GBuffer
 
 #if defined (LOCK_SCALE)
 
-
-
             gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
             gl_Position /= gl_Position.w;
             gl_Position.xy += a_position.xy * (a_texCoord1 / u_screenSize);
 
             v_normal = vec3(u_worldViewMatrix[0][2], u_worldViewMatrix[1][2], u_worldViewMatrix[2][2]);
-
-
 
 #else
             //TODO setting these as uniforms is more efficient, but also more faff.
@@ -174,7 +170,6 @@ namespace cro::Shaders::GBuffer
                                 + camUp * a_position.y;
 
             gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
-
 
             camRight = vec3(u_worldViewMatrix[0][0], u_worldViewMatrix[1][0], u_worldViewMatrix[2][0]);
 

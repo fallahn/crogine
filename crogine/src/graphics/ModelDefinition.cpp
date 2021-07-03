@@ -545,7 +545,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         {
             flags = ShaderResource::DepthMap | (flags & (ShaderResource::Skinning | ShaderResource::AlphaClip));
 
-            shaderID = rc.shaders.loadBuiltIn(ShaderResource::ShadowMap, flags);
+            shaderID = rc.shaders.loadBuiltIn(m_billboard ? ShaderResource::BillboardShadowMap : ShaderResource::ShadowMap, flags);
             matID = rc.materials.add(rc.shaders.get(shaderID));
             m_shadowIDs[m_materialCount] = matID;
 
@@ -585,6 +585,11 @@ bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
 
         if (m_castShadows)
         {
+            //while this technically works the nature of billboards
+            //mean that the output would be facing the camera in the
+            //depth map view, which is incorrect - in this pass we'd
+            //still need to supply the viewProj for the active camera
+            //not the light source.
             if (!m_billboard)
             {
                 for (auto i = 0u; i < m_materialCount; ++i)

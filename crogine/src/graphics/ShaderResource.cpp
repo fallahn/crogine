@@ -211,6 +211,13 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
         success = loadFromString(id, Shaders::ShadowMap::Vertex, Shaders::ShadowMap::FragmentMobile, defines);
 #endif
         break;
+    case BillboardShadowMap:
+#ifdef PLATFORM_DESKTOP
+        success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::ShadowMap::FragmentDesktop, defines);
+#else
+        success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::ShadowMap::FragmentMobile, defines);
+#endif
+        break;
     case BuiltIn::PBR:
         success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::PBR::Fragment, defines);
         break;

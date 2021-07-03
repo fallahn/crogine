@@ -1,6 +1,7 @@
 model tree
 {
 	mesh = billboard
+	cast_shadows = true
 
 	material VertexLit
 	{
