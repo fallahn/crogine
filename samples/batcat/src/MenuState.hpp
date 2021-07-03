@@ -30,6 +30,9 @@ source distribution.
 #ifndef TEST_MENUSTATE_HPP_
 #define TEST_MENUSTATE_HPP_
 
+#include "StateIDs.hpp"
+#include "CircularBuffer.hpp"
+
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/MeshResource.hpp>
@@ -37,7 +40,6 @@ source distribution.
 #include <crogine/graphics/MaterialResource.hpp>
 #include <crogine/graphics/TextureResource.hpp>
 
-#include "StateIDs.hpp"
 
 namespace cro
 {
@@ -57,17 +59,16 @@ public:
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
-    bool simulate(cro::Time) override;
+    bool simulate(float) override;
     void render() override;
 
 private:
 
-    cro::Scene m_scene;
-    cro::MeshResource m_meshResource;
-    cro::ShaderResource m_shaderResource;
-    cro::MaterialResource m_materialResource;
-    cro::TextureResource m_textureResource;
-    cro::CommandSystem* m_commandSystem;
+    std::vector<float> m_wavetable;
+    std::size_t m_tableIndex;
+
+    CircularBuffer<float, 16384> m_leftChannel;
+    CircularBuffer<float, 16384> m_rightChannel;
 
     void addSystems();
     void loadAssets();

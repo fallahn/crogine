@@ -31,20 +31,14 @@ source distribution.
 #include "GameState.hpp"
 #include "LoadingScreen.hpp"
 #include "icon.hpp"
+#include "MenuState.hpp"
 
 #include <crogine/core/Clock.hpp>
 
 MyApp::MyApp()
     : m_stateStack({*this, getWindow()})
 {
-    //register states
-//#ifdef PLATFORM_MOBILE
-//    //m_stateStack.registerState<MenuState>(States::ID::MainMenu);
-//    m_stateStack.registerState<MainState>(States::ID::MainMenu);
-//#else
-//  m_stateStack.registerState<MainState>(States::ID::MainMenu);
-//#endif //PLATFORM_MOBILE
-
+    m_stateStack.registerState<MenuState>(States::ID::MainMenu);
     m_stateStack.registerState<GameState>(States::ID::GamePlaying);
 }
 
@@ -87,7 +81,8 @@ bool MyApp::initialise()
     getWindow().setIcon(icon);
     getWindow().setTitle("Batcat");
 
-    m_stateStack.pushState(States::GamePlaying);
+    m_stateStack.pushState(States::MainMenu);
+    //m_stateStack.pushState(States::GamePlaying);
 
     return true;
 }

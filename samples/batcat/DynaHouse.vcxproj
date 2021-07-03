@@ -365,15 +365,18 @@
     <ClCompile Include="src\GameState.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\PlayerDirector.cpp" />
     <ClCompile Include="src\PlayerWeaponSystem.cpp" />
     <ClCompile Include="src\TerrainSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\CircularBuffer.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
+    <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\PlayerDirector.hpp" />
