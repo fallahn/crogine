@@ -125,6 +125,7 @@ namespace cro::Shaders::GBuffer
 
         uniform mat4 u_worldMatrix;
         uniform mat4 u_viewMatrix;
+        uniform mat4 u_worldViewMatrix;
         uniform mat4 u_viewProjectionMatrix;
 
         uniform vec4 u_clipPlane;
@@ -157,8 +158,7 @@ namespace cro::Shaders::GBuffer
             gl_Position /= gl_Position.w;
             gl_Position.xy += a_position.xy * (a_texCoord1 / u_screenSize);
 
-            v_normal = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
-
+            v_normal = vec3(u_worldViewMatrix[0][2], u_worldViewMatrix[1][2], u_worldViewMatrix[2][2]);
 
 
 
@@ -175,6 +175,13 @@ namespace cro::Shaders::GBuffer
 
             gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
 
+
+            camRight = vec3(u_worldViewMatrix[0][0], u_worldViewMatrix[1][0], u_worldViewMatrix[2][0]);
+
+    #if !defined(LOCK_ROTATION)
+            camUp = vec3(u_worldViewMatrix[0][1], u_worldViewMatrix[1][1], u_worldViewMatrix[2][1]);
+    #endif
+
             v_normal = normalize(cross(camRight, camUp));
 #endif
 
@@ -187,6 +194,8 @@ namespace cro::Shaders::GBuffer
             #else
                 gl_ClipDistance[0] = dot(u_worldMatrix * vec4(position, 1.0), u_clipPlane);
             #endif
+
+            v_fragPosition = u_viewMatrix * vec4(position, 1.0);
         })";
 
     static const std::string Fragment = R"(
@@ -215,19 +224,20 @@ namespace cro::Shaders::GBuffer
 
         void main()
         {
-            #if defined(TEXTURED)
-            #if defined(ALPHA_CLIP)
-                if(TEXTURE(u_diffuseMap, v_texCoord).a < u_alphaClip) discard;
-            #endif
-            #endif
+        #if defined(TEXTURED)
+        #if defined(ALPHA_CLIP)
+            if(TEXTURE(u_diffuseMap, v_texCoord).a < u_alphaClip) discard;
+        #endif
+        #endif
 
-            #if defined (BUMP)
-                vec3 texNormal = TEXTURE(u_normalMap, v_texCoord).rgb * 2.0 - 1.0;
-                vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
-            #else
-                vec3 normal = normalize(v_normal);
-            #endif
-                output[0] = vec4(normal, 1.0);
-                output[1] = v_fragPosition;
+        #if defined (BUMP)
+            vec3 texNormal = TEXTURE(u_normalMap, v_texCoord).rgb * 2.0 - 1.0;
+            vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
+        #else
+            vec3 normal = normalize(v_normal);
+        #endif
+
+            output[0] = vec4(normal, 1.0);
+            output[1] = v_fragPosition;
         })";
 }

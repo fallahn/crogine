@@ -248,8 +248,8 @@ void ModelRenderer::renderGBuffer(Entity camera, const RenderTarget& rt)
             //apply standard uniforms
             //glCheck(glUniform3f(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
             //glCheck(glUniform2f(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
-            //glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
-            //glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
             glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
             glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::GBuffer][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
