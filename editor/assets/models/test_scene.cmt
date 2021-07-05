@@ -1,0 +1,18 @@
+model test_scene
+{
+    mesh = "assets/models/test_scene.cmb"
+    cast_shadows = true
+
+    material PBR
+    {
+        mask = "assets/images/test_scene.mask.png"
+        name = "Untitled"
+        colour = 1.000000,0.999990,1.000000,1.000000
+        smooth = true
+        repeat = true
+        vertex_coloured = true
+        rx_shadows = true
+        blendmode = "none"
+
+    }
+}

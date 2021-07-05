@@ -269,7 +269,15 @@ void WorldState::setupScene()
     m_scene.getSunlight().setLabel("Sunlight");
 
     m_selectedEntity = m_scene.getSunlight();
+    m_selectedEntity.getComponent<cro::Transform>().setPosition({ -2.f, 1.4f, -0.75f });
+    m_selectedEntity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.5f);
+    m_selectedEntity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.5f);
 
+
+    def.loadFromFile("assets/models/test_scene.cmt", m_resources, &m_environmentMap);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    def.createModel(entity, m_resources);
 
 
     //preview scene to render model thumbs
