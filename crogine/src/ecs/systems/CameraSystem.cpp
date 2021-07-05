@@ -60,6 +60,7 @@ void CameraSystem::handleMessage(const Message& msg)
                 {
                     camera.resizeCallback(camera);
                 }
+                camera.resizeBuffer();
             }
         }
     }
@@ -115,8 +116,15 @@ void CameraSystem::process(float)
     }
 }
 
+const std::vector<Entity>& CameraSystem::getCameras() const
+{
+    return getEntities1();
+}
+
 //private
 void CameraSystem::onEntityAdded(Entity entity)
 {
-    entity.getComponent<Camera>().setPriority(static_cast<std::uint32_t>(getEntities().size()));
+    auto& camera = entity.getComponent<Camera>();
+    camera.setPriority(static_cast<std::uint32_t>(getEntities().size()));
+    camera.resizeBuffer();
 }

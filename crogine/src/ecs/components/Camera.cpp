@@ -177,3 +177,13 @@ void Camera::setPriority(std::uint32_t priority)
         m_wantsSorting = true;
     }
 }
+
+//private
+void Camera::resizeBuffer()
+{
+    glm::vec2 size(App::getWindow().getSize());
+    size.x *= viewport.width;
+    size.y *= viewport.height;
+
+    outputBuffer.create(static_cast<std::uint32_t>(size.x), static_cast<std::uint32_t>(size.y));
+}

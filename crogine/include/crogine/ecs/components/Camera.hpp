@@ -430,6 +430,18 @@ namespace cro
         */
         std::uint32_t getPriority() const { return m_priority; }
 
+
+        /*!
+        \brief Output buffer for the Camera.
+        The output of this Camera is rendered to this buffer by a drawable
+        system. The output is then composited by the Scene to the 
+        Scene's active render target in the order of Camera priority.
+
+        This buffer is resized by the CameraSystem when the window is resized
+        based on the current viewport of the camera.
+        */
+        RenderTexture outputBuffer;
+
 #ifdef CRO_DEBUG_
         //l,r,b,t,n,f
         std::array<float, 6u> depthDebug = {};
@@ -455,5 +467,7 @@ namespace cro
         bool m_wantsSorting;
 
         friend class ShadowMapRenderer;
+
+        void resizeBuffer();
     };
 }

@@ -108,7 +108,7 @@ namespace
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
-    m_scene         (context.appInstance.getMessageBus(), 124),
+    m_scene         (context.appInstance.getMessageBus(), 1024),
     m_overlayScene  (context.appInstance.getMessageBus())
 {
     context.mainWindow.loadResources([this]() {
@@ -162,8 +162,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 
     });
 
-    updateView();
-
     auto* msg = getContext().appInstance.getMessageBus().post<GameEvent>(MessageID::GameMessage);
     msg->type = GameEvent::RoundStart;
 
@@ -198,16 +196,6 @@ bool GameState::handleEvent(const cro::Event& evt)
 void GameState::handleMessage(const cro::Message& msg)
 {
     m_scene.forwardMessage(msg);
-
-    if (msg.id == cro::Message::WindowMessage)
-    {
-        const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-        {
-            //TODO this should probably be on the Camera::resized callback
-            updateView();
-        }
-    }
 }
 
 bool GameState::simulate(float dt)
@@ -357,8 +345,9 @@ void GameState::createScene()
     ent.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 50.f });
     //projection is set in updateView()
     ent.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
+    ent.getComponent<cro::Camera>().resizeCallback = std::bind(&GameState::updateView, this, std::placeholders::_1);
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
-
+    updateView(ent.getComponent<cro::Camera>());
 
 #ifdef CRO_DEBUG_
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
@@ -516,16 +505,10 @@ void GameState::createUI()
     auto ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>();
     auto& cam2D = ent.addComponent<cro::Camera>();
-    cam2D.setOrthographic(0.f, /*static_cast<float>(cro::DefaultSceneSize.x)*/1280.f, 0.f, /*static_cast<float>(cro::DefaultSceneSize.y)*/720.f, -0.1f, 100.f);
+    cam2D.setOrthographic(0.f, 1280.f, 0.f, 720.f, -0.1f, 10.f);
     m_overlayScene.setActiveCamera(ent);
-
-    //preview shadow map
-    /*ent = m_overlayScene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 20.f, 20.f, 0.f });
-    ent.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
-    ent.addComponent<cro::Sprite>(m_scene.getSystem<cro::ShadowMapRenderer>().getDepthMapTexture());
-    ent.addComponent<cro::Drawable2D>();*/
-
+    cam2D.resizeCallback = std::bind(&GameState::calcViewport, this, std::placeholders::_1);
+    calcViewport(cam2D);
 
     cro::SpriteSheet targetSheet;
     targetSheet.loadFromFile("assets/sprites/target.spt", m_resources.textures);
@@ -542,7 +525,7 @@ void GameState::createUI()
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 200.f, 100.f });
     ent.addComponent<cro::Drawable2D>();
-    ent.addComponent<cro::Text>(m_resources.fonts.get(1)).setString("dslkdfgklfd");
+    ent.addComponent<cro::Text>(m_resources.fonts.get(1)).setString("Hallo! I am text.");
 
 #ifdef PLATFORM_MOBILE
     m_resources.textures.get("assets/ui/ui_buttons.png", false).setSmooth(true);
@@ -646,20 +629,22 @@ void GameState::createUI()
 #endif //PLATFORM_MOBILE
 }
 
-void GameState::updateView()
+void GameState::calcViewport(cro::Camera& cam)
 {
     auto windowSize = cro::App::getWindow().getSize();
     glm::vec2 size(windowSize);
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
-    auto& cam3D = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    cam.viewport.bottom = (1.f - size.y) / 2.f;
+    cam.viewport.height = size.y;
+}
+
+void GameState::updateView(cro::Camera& cam3D)
+{
     cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 6.f, 280.f);
-    cam3D.viewport.bottom = (1.f - size.y) / 2.f;
-    cam3D.viewport.height = size.y;
+    calcViewport(cam3D);
 
+    auto windowSize = cro::App::getWindow().getSize();
     m_mrt.create(windowSize.x, windowSize.y);
-
-    auto& cam2D = m_overlayScene.getActiveCamera().getComponent<cro::Camera>();
-    cam2D.viewport = cam3D.viewport;
 }

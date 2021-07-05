@@ -74,5 +74,6 @@ private:
     void createScene();
     void createUI();
 
-    void updateView();
+    void calcViewport(cro::Camera&);
+    void updateView(cro::Camera&);
 };
