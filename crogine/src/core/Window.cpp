@@ -119,12 +119,12 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
         SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &maj);
         SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &min);
 
-        if (maj < 3 || min < 3)
+        if (maj != 4 || min != 1)
         {
             Logger::log("Unable to create requested context version");
             Logger::log("Returned version was: " + std::to_string(maj) + "." + std::to_string(min));
         }
-        LOG("Returned version was: " + std::to_string(maj) + "." + std::to_string(min), Logger::Type::Info);
+        LOG("Created OpenGL context version: " + std::to_string(maj) + "." + std::to_string(min), Logger::Type::Info);
     }
     return true;
 }

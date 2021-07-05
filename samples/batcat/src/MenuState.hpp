@@ -27,8 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifndef TEST_MENUSTATE_HPP_
-#define TEST_MENUSTATE_HPP_
+#pragma once
 
 #include "StateIDs.hpp"
 #include "CircularBuffer.hpp"
@@ -53,12 +52,32 @@ public:
 private:
     cro::Scene m_scene;
     
+    struct Speaker final
+    {
+        enum
+        {
+            Left, Right,
+            Centre, LFE,
+            LeftR, RightR,
+
+            Count
+        };
+    };
+
+    struct AudioListener final
+    {
+        cro::Entity root;
+        std::array<cro::Entity, Speaker::Count> nodes = {};
+    }m_listener;
+
     struct AudioSource final
     {
         std::vector<float> wavetable;
         std::size_t tableIndex = 0;
 
-        std::array<float, 6u> levels = {};
+        std::array<float, Speaker::Count> levels = {};
+
+        static constexpr float MaxDistance = 1.f;
     }m_audioSource;
 
     CircularBuffer<float, 16384> m_leftChannel;
@@ -72,6 +91,7 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
-};
 
-#endif //TEST_MENUSTATE_HPP_
+    void updateLevels();
+    void mix();
+};

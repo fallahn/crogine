@@ -111,60 +111,17 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
-    static std::size_t addedSamples = 0;
-    
-    //update each channel
-    for (auto i = 0u; i < UpdatesPerTick; ++i)
-    {
-        m_leftChannel.push_back(m_audioSource.wavetable[m_audioSource.tableIndex] * 0.2f);
-        m_rightChannel.push_back(m_audioSource.wavetable[m_audioSource.tableIndex] * 0.2f);
-        m_centreChannel.push_back(m_audioSource.wavetable[m_audioSource.tableIndex] * 0.2f);
-        m_leftChannelRear.push_back(m_audioSource.wavetable[m_audioSource.tableIndex] * 0.2f);
-        m_rightChannelRear.push_back(m_audioSource.wavetable[m_audioSource.tableIndex] * 0.2f);
+    updateLevels();
+    mix();
 
-        m_audioSource.tableIndex = (m_audioSource.tableIndex + 1) % m_audioSource.wavetable.size();
-        addedSamples++;
+    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_Q))
+    {
+        m_listener.root.getComponent<cro::Transform>().rotate(dt);
     }
-
-    static std::int32_t updateTicker = 0;
-    updateTicker = (updateTicker + 1) % 6;
-
-    if (updateTicker == 0)
+    
+    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_E))
     {
-        auto bufferSize = /*(m_leftChannel.size())*/addedSamples * ChannelCount; //channel count
-        //bufferSize /= 2;
-        addedSamples = 0;
-
-        static std::vector<float> mixedBuffer(bufferSize);
-        for (auto i = 0u; i < bufferSize; ++i)
-        {
-            mixedBuffer[i] = m_leftChannel.front(); //L
-            m_leftChannel.pop_front();
-            
-            i++;
-            mixedBuffer[i] = m_rightChannel.front(); //R
-            m_rightChannel.pop_front();
-
-             i++;
-            mixedBuffer[i] = m_centreChannel.front(); //C
-            m_centreChannel.pop_front();
-
-            i++;
-            mixedBuffer[i] = 0.f; //LFE - TODO research how this is calc'd - sum of output through low pass filter?
-
-
-            i++;
-            mixedBuffer[i] = m_leftChannelRear.front(); //L2
-            m_leftChannelRear.pop_front();
-
-
-            i++;
-            mixedBuffer[i] = m_rightChannelRear.front(); //R2
-            m_rightChannelRear.pop_front();
-        }
-
-        //send buffer to output
-        SDL_QueueAudio(audioDevice, mixedBuffer.data(), mixedBuffer.size() * sizeof(float));
+        m_listener.root.getComponent<cro::Transform>().rotate(-dt);
     }
 
     m_scene.simulate(dt);
@@ -218,44 +175,57 @@ void MenuState::createScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setVertexData(cro::Shape::circle(0.02f, cro::Colour::Red, 16));
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
-    auto listener = entity;
+    m_listener.root = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(-0.5f, 0.5f));
     entity.addComponent<cro::Drawable2D>().setVertexData(cro::Shape::circle(0.02f, cro::Colour::Blue, 16));
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
-    listener.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_listener.root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_listener.nodes[Speaker::Left] = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.5f, 0.5f));
     entity.addComponent<cro::Drawable2D>().setVertexData(cro::Shape::circle(0.02f, cro::Colour::Blue, 16));
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
-    listener.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_listener.root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_listener.nodes[Speaker::Right] = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(-0.55f, -0.5f));
     entity.addComponent<cro::Drawable2D>().setVertexData(cro::Shape::circle(0.02f, cro::Colour::Blue, 16));
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
-    listener.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_listener.root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_listener.nodes[Speaker::LeftR] = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.55f, -0.5f));
     entity.addComponent<cro::Drawable2D>().setVertexData(cro::Shape::circle(0.02f, cro::Colour::Blue, 16));
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
-    listener.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_listener.root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_listener.nodes[Speaker::RightR] = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 0.6f));
     entity.addComponent<cro::Drawable2D>().setVertexData(cro::Shape::circle(0.02f, cro::Colour::Blue, 16));
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
-    listener.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_listener.root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_listener.nodes[Speaker::Centre] = entity;
 
+    //create a dummy for the LFE
+    m_listener.nodes[Speaker::LFE] = m_scene.createEntity();
+    m_listener.nodes[Speaker::LFE].addComponent<cro::Transform>();
 
     m_sourceEnt = m_scene.createEntity();
     m_sourceEnt.addComponent<cro::Transform>();
     m_sourceEnt.addComponent<cro::Drawable2D>().setVertexData(cro::Shape::circle(0.025f, cro::Colour::Yellow));
     m_sourceEnt.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
 
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(cro::Shape::circle(AudioSource::MaxDistance, cro::Colour(1.f, 0.5f, 0.f), 16));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    m_sourceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto camCallback =
         [](cro::Camera& cam)
@@ -271,4 +241,75 @@ void MenuState::createScene()
     auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = camCallback;
     camCallback(cam);
+}
+
+void MenuState::updateLevels()
+{
+    auto srcPos = m_sourceEnt.getComponent<cro::Transform>().getPosition();
+    for (auto i = 0u; i < Speaker::Count; ++i)
+    {
+        float dist = glm::length(srcPos - m_listener.nodes[i].getComponent<cro::Transform>().getWorldPosition());
+        float level = 1.f - std::min(1.f, std::max(0.f, dist / AudioSource::MaxDistance));
+
+        level *= level;
+        m_audioSource.levels[i] = level;
+    }
+}
+
+void MenuState::mix()
+{
+    static std::size_t addedSamples = 0;
+
+    //update each channel
+    for (auto i = 0u; i < UpdatesPerTick; ++i)
+    {
+        m_leftChannel.push_back(m_audioSource.wavetable[m_audioSource.tableIndex] * m_audioSource.levels[Speaker::Left]);
+        m_rightChannel.push_back(m_audioSource.wavetable[m_audioSource.tableIndex] * m_audioSource.levels[Speaker::Right]);
+        m_centreChannel.push_back(m_audioSource.wavetable[m_audioSource.tableIndex] * m_audioSource.levels[Speaker::Centre]);
+        m_leftChannelRear.push_back(m_audioSource.wavetable[m_audioSource.tableIndex] * m_audioSource.levels[Speaker::LeftR]);
+        m_rightChannelRear.push_back(m_audioSource.wavetable[m_audioSource.tableIndex] * m_audioSource.levels[Speaker::RightR]);
+
+        m_audioSource.tableIndex = (m_audioSource.tableIndex + 1) % m_audioSource.wavetable.size();
+        addedSamples++;
+    }
+
+    static std::int32_t updateTicker = 0;
+    updateTicker = (updateTicker + 1) % 6;
+
+    if (updateTicker == 0)
+    {
+        auto bufferSize = addedSamples * ChannelCount;
+        addedSamples = 0;
+
+        static std::vector<float> mixedBuffer(bufferSize);
+        for (auto i = 0u; i < bufferSize; ++i)
+        {
+            mixedBuffer[i] = m_leftChannel.front(); //L
+            m_leftChannel.pop_front();
+
+            i++;
+            mixedBuffer[i] = m_rightChannel.front(); //R
+            m_rightChannel.pop_front();
+
+            i++;
+            mixedBuffer[i] = m_centreChannel.front(); //C
+            m_centreChannel.pop_front();
+
+            i++;
+            mixedBuffer[i] = 0.f; //LFE - TODO research how this is calc'd - sum of output through low pass filter?
+
+
+            i++;
+            mixedBuffer[i] = m_leftChannelRear.front(); //L2
+            m_leftChannelRear.pop_front();
+
+
+            i++;
+            mixedBuffer[i] = m_rightChannelRear.front(); //R2
+            m_rightChannelRear.pop_front();
+        }
+
+        //send buffer to output
+        SDL_QueueAudio(audioDevice, mixedBuffer.data(), mixedBuffer.size() * sizeof(float));
+    }
 }
