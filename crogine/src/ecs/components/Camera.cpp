@@ -39,7 +39,9 @@ Camera::Camera()
     m_aspectRatio   (1.f),
     m_nearPlane     (0.1f),
     m_farPlane      (150.f),
-    m_orthographic  (false)
+    m_orthographic  (false),
+    m_wantsSorting  (true),
+    m_priority      (0)
 {
     glm::vec2 windowSize(App::getWindow().getSize());
     m_aspectRatio = windowSize.x / windowSize.y;
@@ -165,4 +167,13 @@ glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize)
     //mouse coords are inverse in Y direction.
     screenPosition.y = targetSize.y - screenPosition.y;
     return glm::unProject(glm::vec3(screenPosition, 0.f), m_passes[Pass::Final].viewMatrix, m_projectionMatrix, vp);
+}
+
+void Camera::setPriority(std::uint32_t priority)
+{
+    if (priority != m_priority)
+    {
+        m_priority = priority;
+        m_wantsSorting = true;
+    }
 }

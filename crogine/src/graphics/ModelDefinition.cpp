@@ -370,9 +370,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         auto shaderID = rc.shaders.loadBuiltIn(shaderType, flags);
         auto matID = rc.materials.add(rc.shaders.get(shaderID));
         auto& material = rc.materials.get(matID);
+        material.deferred = shaderType == ShaderResource::PBR;
 
 #ifdef PLATFORM_DESKTOP
-        //create a material for the g-buffer pass
+        //create a material for the g-buffer pass TODO remove this
         auto type = m_billboard ? ShaderResource::BillboardGBuffer : ShaderResource::GBuffer;
         auto gbuffShader = rc.shaders.loadBuiltIn(type, flags);
         auto gbuffID = rc.materials.add(rc.shaders.get(gbuffShader));

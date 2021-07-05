@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -44,9 +44,8 @@ namespace cro
     matrices updated. It also makes sure the Frustum property
     is current. All Scenes should have an active camera system
     to ensure correct rendering. NOTE it is worth ensuring that
-    the CameraSystem is added to a Scene AFTER a SceneGraph
-    but before any rendering systems, so that the values are
-    updated in the correct order.
+    the CameraSystem is added to a Scene before any rendering 
+    systems, so that the values are updated in the correct order.
     */
 
     class CRO_EXPORT_API CameraSystem final : public cro::System
@@ -58,7 +57,9 @@ namespace cro
 
         void process(float) override;
 
-
+        const std::vector<Entity>& getCameras() const;
     private:
+
+        void onEntityAdded(Entity) override;
     };
 }

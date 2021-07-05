@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -68,6 +68,8 @@ void CameraSystem::handleMessage(const Message& msg)
 void CameraSystem::process(float)
 {
     auto& entities = getEntities();
+
+    bool sort = false;
     for (auto entity : entities)
     {
         //TODO could dirty flag optimise as updating the frustum
@@ -96,5 +98,25 @@ void CameraSystem::process(float)
             //reflectionPass.drawList.clear();
             getScene()->updateDrawLists(entity);
         }
+
+        if (camera.m_wantsSorting)
+        {
+            sort = true;
+        }
     }
+
+    if (sort)
+    {
+        std::sort(entities.begin(), entities.end(),
+            [](const Entity& a, const Entity& b)
+            {
+                return a.getComponent<Camera>().getPriority() < b.getComponent<Camera>().getPriority();
+            });
+    }
+}
+
+//private
+void CameraSystem::onEntityAdded(Entity entity)
+{
+    entity.getComponent<Camera>().setPriority(static_cast<std::uint32_t>(getEntities().size()));
 }

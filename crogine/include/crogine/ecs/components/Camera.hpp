@@ -349,27 +349,27 @@ namespace cro
 #endif
 
         /*!
-        \brief View-projection matrix used when rendering the depth buffer.
+        \brief View-projection matrix used when rendering the shadow map buffer.
         This contains the view-projection matrix used by the ShadowMapRenderer
         to render the depth buffer for the Scene's directional light. This is
         automatically bound to any materials used by the ModelRenderer when
         shadow casting is enabled. When rendering shadows for this camera with
         any custom materials or render system this should be used with the
-        camera's depthBuffer property.
+        camera's shadowMapBuffer property.
         */
-        glm::mat4 depthViewProjectionMatrix = glm::mat4(1.f);
+        glm::mat4 shadowViewProjectionMatrix = glm::mat4(1.f);
 
         /*!
-        \brief View matrix used to render the depthBuffer.
+        \brief View matrix used to render the shadow map buffer.
         Automatically updated by the ShadowMapRenderer system
         */
-        glm::mat4 depthViewMatrix = glm::mat4(1.f);
+        glm::mat4 shadowViewMatrix = glm::mat4(1.f);
 
         /*!
-        \brief Projection matrix used to render the depth buffer
+        \brief Projection matrix used to render the shadow map buffer
         Automatically updated by the ShadowMapRenderer system
         */
-        glm::mat4 depthProjectionMatrix = glm::mat4(1.f);
+        glm::mat4 shadowProjectionMatrix = glm::mat4(1.f);
 
         /*!
         \brief Returns the vertical FOV in radians if the
@@ -411,6 +411,25 @@ namespace cro
         */
         glm::vec3 pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize = cro::App::getWindow().getSize());
 
+
+        /*!
+        \brief Sets the priority for this Camera during composition.
+        When the Scene is rendered each camera is rendered to its own
+        buffer, before all Cameras are composited to the output. This
+        value dictates the order in whic cameras are composited with
+        higher values being drawn over lower values. Cameras with the
+        same value can cause flickering, so by default when a new
+        Camera is added to the system its priority is automatically
+        set to the highest.
+        */
+        void setPriority(std::uint32_t priority);
+
+        /*!
+        \brief Returns the current composition priority of the Camera
+        \see setPriority()
+        */
+        std::uint32_t getPriority() const { return m_priority; }
+
 #ifdef CRO_DEBUG_
         //l,r,b,t,n,f
         std::array<float, 6u> depthDebug = {};
@@ -431,6 +450,9 @@ namespace cro
         float m_farPlane;
 
         bool m_orthographic;
+
+        std::uint32_t m_priority;
+        bool m_wantsSorting;
 
         friend class ShadowMapRenderer;
     };

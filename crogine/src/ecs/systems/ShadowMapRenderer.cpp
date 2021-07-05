@@ -97,7 +97,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         auto centre = aabb[0] + ((aabb[1] - aabb[0]) / 2.f);
         auto lightPos = centre - (lightDir * ((camera.m_farPlane - camera.m_nearPlane) / 2.f));
 
-        camera.depthViewMatrix = glm::inverse(glm::toMat4(lightRotation));
+        camera.shadowViewMatrix = glm::inverse(glm::toMat4(lightRotation));
 
         //frustum in camera coords
         float tanHalfFOVY = std::tan(camera.m_verticalFOV / 2.f);
@@ -135,7 +135,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             auto worldPoint = camTx * frustumCorners[i];
 
             //convert to light space
-            lightCorners[i] = camera.depthViewMatrix * worldPoint;
+            lightCorners[i] = camera.shadowViewMatrix * worldPoint;
         }
 
         auto xExtremes = std::minmax_element(lightCorners.begin(), lightCorners.end(),
@@ -164,8 +164,8 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         float maxZ = zExtremes.second->z;
 
         //convert to ortho projection
-        camera.depthProjectionMatrix = glm::ortho(minX, maxX, minY, maxY, -maxZ, -minZ);
-        camera.depthViewProjectionMatrix = camera.depthProjectionMatrix * camera.depthViewMatrix;
+        camera.shadowProjectionMatrix = glm::ortho(minX, maxX, minY, maxY, -maxZ, -minZ);
+        camera.shadowViewProjectionMatrix = camera.shadowProjectionMatrix * camera.shadowViewMatrix;
 
 #ifdef CRO_DEBUG_
         camera.depthDebug = { minX, maxX, minY, maxY, -maxZ, -minZ };
@@ -175,7 +175,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         //use depth frustum to cull entities
         Frustum frustum = {};
-        Spatial::updateFrustum(frustum, camera.depthViewProjectionMatrix);
+        Spatial::updateFrustum(frustum, camera.shadowViewProjectionMatrix);
 
         auto& entities = getEntities();
         for (auto& entity : entities)
@@ -252,7 +252,7 @@ void ShadowMapRenderer::render()
             //calc entity transform
             const auto& tx = e.getComponent<Transform>();
             glm::mat4 worldMat = tx.getWorldTransform();
-            glm::mat4 worldView = camera.depthViewMatrix * worldMat;
+            glm::mat4 worldView = camera.shadowViewMatrix * worldMat;
 
             //foreach submesh / material:
 
@@ -301,7 +301,7 @@ void ShadowMapRenderer::render()
                 //glCheck(glUniformMatrix4fv(mat.uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
                 //glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.depthViewMatrix)));
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-                glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.depthProjectionMatrix)));
+                glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.shadowProjectionMatrix)));
                 //glCheck(glUniformMatrix4fv(mat.uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camera.depthViewProjectionMatrix)));
 
 #ifdef PLATFORM_DESKTOP

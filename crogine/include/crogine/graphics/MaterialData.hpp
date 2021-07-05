@@ -253,6 +253,14 @@ namespace cro
             bool enableDepthTest = true;
 
             /*!
+            \brief If this is true the material is rendered via the GBuffer
+            in the deferred renderer, else is rendered via forward rendering.
+            This is only valid for PBR materials, settings this to true for
+            other types will have undesirable results
+            */
+            bool deferred = false;
+
+            /*!
             \brief Applies a new shader to this material by updating the
             the uniform and vertex attribute maps
             */
