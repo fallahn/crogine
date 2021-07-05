@@ -607,18 +607,20 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
 
     for (auto i = 0u; i < cameraCount; ++i)
     {
-        //auto camera = m_activeCamera;
+        //TODO
+        /*
+        Set the viewport to 1:1 and render the scene to the
+        Camera's output buffer
+        */
+
         const auto& cam = cameraList[i].getComponent<Camera>();
         const auto& pass = cam.getActivePass();
 
         auto rect = rt.getViewport(cam.viewport);
         glViewport(rect.left, rect.bottom, rect.width, rect.height);
 
-        //see comment after skybox render
-        //for (auto r : m_renderables)
-        //{
-        //    r->render(camera);
-        //}
+        //TODO the skybox pass ought to be placed between opaque
+        //and transparent passes
 
         //draw the skybox if enabled
         if (m_skybox.vbo)
@@ -685,17 +687,21 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
 
     //restore old view port
     glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
+
+
+    //TODO loop over camera list again then use camera viewports to composite
+    //each camera buffer to the passed in render target
 }
 
 void Scene::postRenderPath(const RenderTarget&, const Entity* cameraList, std::size_t cameraCount)
 {
-    //TODO this only needs to be cleared once per frame
-    //currently it is cleared for every active camera we draw...
     m_sceneBuffer.clear(Colour::Transparent);
     defaultRenderPath(m_sceneBuffer, cameraList, cameraCount);
     m_sceneBuffer.display();
 
-    const auto& cam = m_activeCamera.getComponent<Camera>(); //kludge until we get per-camera post processes
+    //TODO remove camera param. screen space effects shouldn't
+    //be post processes.
+    const auto& cam = m_activeCamera.getComponent<Camera>();
     RenderTexture* inTex = &m_sceneBuffer;
     RenderTexture* outTex = nullptr;
 
