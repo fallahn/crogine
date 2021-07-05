@@ -42,6 +42,7 @@ source distribution.
 
 #include <crogine/util/Wavetable.hpp>
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include <SDL_audio.h>
 
@@ -69,6 +70,23 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
     createScene();
 
     context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
+
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Levels"))
+            {
+                auto position = m_sourceEnt.getComponent<cro::Transform>().getPosition();
+                ImGui::Text("Source pos: %3.3f, %3.3f, %3.3f", position.x, position.y, position.z);
+
+                ImGui::Text("Left: %3.3f", m_audioSource.levels[0]);
+                ImGui::Text("Right: %3.3f", m_audioSource.levels[1]);
+                ImGui::Text("Centre: %3.3f", m_audioSource.levels[2]);
+                ImGui::Text("LFE: %3.3f", m_audioSource.levels[3]);
+                ImGui::Text("Rear Left: %3.3f", m_audioSource.levels[4]);
+                ImGui::Text("Rear Right: %3.3f", m_audioSource.levels[5]);
+            }
+            ImGui::End();
+        });
 }
 
 //public
@@ -248,7 +266,7 @@ void MenuState::createScene()
         float height = width * (size.y / size.x);
 
         cam.setOrthographic(-width / 2.f, width / 2.f, -height / 2.f, height / 2.f, -0.1f, 10.f);
-
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = camCallback;

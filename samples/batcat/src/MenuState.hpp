@@ -36,13 +36,12 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/TextureResource.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
-
-class MenuState final : public cro::State
+class MenuState final : public cro::State, public cro::GuiClient
 {
 public:
     MenuState(cro::StateStack&, cro::State::Context);
-    ~MenuState() = default;
 
     cro::StateID getStateID() const override { return States::MainMenu; }
 
@@ -58,6 +57,8 @@ private:
     {
         std::vector<float> wavetable;
         std::size_t tableIndex = 0;
+
+        std::array<float, 6u> levels = {};
     }m_audioSource;
 
     CircularBuffer<float, 16384> m_leftChannel;
