@@ -34,6 +34,7 @@ source distribution.
 #include "shaders/VertexLit.hpp"
 #include "shaders/ShadowMap.hpp"
 #include "shaders/PBR.hpp"
+#include "shaders/Deferred.hpp"
 #ifdef PLATFORM_DESKTOP
 #include "shaders/GBuffer.hpp"
 #endif
@@ -219,7 +220,8 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
 #endif
         break;
     case BuiltIn::PBR:
-        success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::PBR::Fragment, defines);
+        success = loadFromString(id, Shaders::Deferred::Vertex, Shaders::Deferred::GBufferFragment, defines);
+        //success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::PBR::Fragment, defines);
         break;
 #ifdef PLATFORM_DESKTOP
     case BuiltIn::GBuffer:

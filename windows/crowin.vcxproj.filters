@@ -612,6 +612,9 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostVertex.hpp">
       <Filter>Header Files\graphics\post process</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\src\graphics\shaders\Deferred.hpp">
+      <Filter>Header Files\graphics\shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
