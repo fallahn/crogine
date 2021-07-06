@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,37 +30,21 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
-#include <crogine/ecs/System.hpp>
-
+#include <crogine/graphics/MultiRenderTexture.hpp>
 
 namespace cro
 {
-    struct Camera;
-
     /*!
-    \brief Updates camera properties.
-    The CameraSystem ensures all Camera components add to a
-    Scene correctly have their current view and viewProjection
-    matrices updated. It also makes sure the Frustum property
-    is current. All Scenes should have an active camera system
-    to ensure correct rendering. NOTE it is worth ensuring that
-    the CameraSystem is added to a Scene before any rendering 
-    systems, so that the values are updated in the correct order.
+    \brief Wraps a MultiRenderTexture into a component.
+    GBuffer components sre used for Cameras which output
+    via deferred renderering. Therefore it only makes sense
+    to add this component to an entity with a Camera component
+    which belongs to a Scene using the DeferredRenderSystem.
+
+    The buffer size/setup is managed by the Scene's CameraSystem.
     */
-
-    class CRO_EXPORT_API CameraSystem final : public cro::System
+    struct CRO_EXPORT_API GBuffer final
     {
-    public:
-        explicit CameraSystem(cro::MessageBus&);
-
-        void handleMessage(const Message&) override;
-
-        void process(float) override;
-
-        const std::vector<Entity>& getCameras() const;
-    private:
-
-        void resizeGBuffer(Entity);
-        void onEntityAdded(Entity) override;
+        MultiRenderTexture buffer;
     };
 }

@@ -251,6 +251,7 @@ namespace cro
         \brief Returns a reference to the drawlist at the requested pass
         */
         DrawList& getDrawList(std::uint32_t pass);
+        const DrawList& getDrawList(std::uint32_t pass) const;
 
         /*!
         \brief Sets the projection matrix to a perspective projection
@@ -312,7 +313,10 @@ namespace cro
         /*!
         \brief Target to use as this camera's reflection buffer.
         This is up to the user to initiate and draw to - by default
-        the buffer remains uninitialised.
+        the buffer remains uninitialised. Note that the visibility
+        list for this buffer is only updated by the ModelRenderer
+        and not the DeferredRenderSystem which prefers screen space
+        reflections.
         \see Camera::Pass
         */
         RenderTexture reflectionBuffer;
@@ -411,13 +415,6 @@ namespace cro
         */
         glm::vec3 pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize = cro::App::getWindow().getSize());
 
-        /*!
-        \brief GBuffer for the Camera
-        The GBuffer is used with deferred rendering and order 
-        independent transparency. Not available on mobile platforms.
-        */
-        MultiRenderTexture GBuffer;
-
 #ifdef CRO_DEBUG_
         //l,r,b,t,n,f
         std::array<float, 6u> depthDebug = {};
@@ -440,7 +437,5 @@ namespace cro
         bool m_orthographic;
 
         friend class ShadowMapRenderer;
-
-        void resizeBuffer();
     };
 }

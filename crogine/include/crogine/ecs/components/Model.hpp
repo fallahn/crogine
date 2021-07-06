@@ -124,7 +124,7 @@ namespace cro
         std::size_t getJointCount() const { return m_jointCount; }
 
         /*!
-        \brief Returns the material datat associated with the given submesh
+        \brief Returns the material data associated with the given submesh
         at the given pass.
         \param pass Can be indexData::Final or IndexData::Shadow
         \param submesh Index of the submesh to retrieve.
@@ -151,7 +151,7 @@ namespace cro
         std::size_t m_jointCount = 0;
 
         friend class ModelRenderer;
-        friend class ReflectionMapRenderer;
         friend class ShadowMapRenderer;
+        friend class DeferredRenderSystem;
     };
 }

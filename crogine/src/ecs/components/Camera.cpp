@@ -109,6 +109,20 @@ Camera::DrawList& Camera::getDrawList(std::uint32_t pass)
     }
 }
 
+const Camera::DrawList& Camera::getDrawList(std::uint32_t pass) const
+{
+    CRO_ASSERT(pass <= Camera::Pass::Refraction, "Must be a value for Camera::Pass enum");
+    switch (pass)
+    {
+    default:
+    case Camera::Pass::Final:
+    case Camera::Pass::Refraction:
+        return m_passes[Pass::Final].drawList;
+    case Camera::Pass::Reflection:
+        return m_passes[Pass::Reflection].drawList;
+    }
+}
+
 void Camera::setPerspective(float fov, float aspect, float nearPlane, float farPlane)
 {
     m_projectionMatrix = glm::perspective(fov, aspect, nearPlane, farPlane);
@@ -165,14 +179,4 @@ glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize)
     //mouse coords are inverse in Y direction.
     screenPosition.y = targetSize.y - screenPosition.y;
     return glm::unProject(glm::vec3(screenPosition, 0.f), m_passes[Pass::Final].viewMatrix, m_projectionMatrix, vp);
-}
-
-//private
-void Camera::resizeBuffer()
-{
-    glm::vec2 size(App::getWindow().getSize());
-    size.x *= viewport.width;
-    size.y *= viewport.height;
-
-    GBuffer.create(static_cast<std::uint32_t>(size.x), static_cast<std::uint32_t>(size.y), 4);
 }

@@ -55,6 +55,7 @@ source distribution.
 #include <crogine/core/GameController.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/GBuffer.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -72,6 +73,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/DeferredRenderSystem.hpp>
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
@@ -477,11 +479,11 @@ void GameState::render()
 
 #ifdef CRO_DEBUG_
     //render a far view of the scene in debug to a render texture
-    auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
+    /*auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
     m_debugViewTexture.clear();
     m_gameScene.render(m_debugViewTexture);
     m_debugViewTexture.display();
-    m_gameScene.setActiveCamera(oldCam);
+    m_gameScene.setActiveCamera(oldCam);*/
 #endif
 }
 
@@ -504,7 +506,8 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::SpriteSystem3D>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
-    m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    //m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::DeferredRenderSystem>(mb);
 #ifdef CRO_DEBUG_
     m_gameScene.addSystem<cro::RenderSystem2D>(mb).setFilterFlags(~TwoDeeFlags::Debug);
 #endif
@@ -539,6 +542,7 @@ void GameState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).deferred = true;
     //m_resources.materials.get(m_materialIDs[MaterialID::Default]).blendMode = cro::Material::BlendMode::Alpha;
 
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
@@ -603,14 +607,14 @@ void GameState::loadAssets()
     mesh.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
 
 #ifdef CRO_DEBUG_
-    m_debugViewTexture.create(512, 512);
+    /*m_debugViewTexture.create(512, 512);
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 6.f, 30.f));
     entity.addComponent<cro::Camera>().setOrthographic(-10.f, 10.f, -10.f, 10.f, 10.f, 60.f);
     entity.getComponent<cro::Camera>().shadowMapBuffer.create(1024, 1024);
 
-    m_debugCam = entity;
+    m_debugCam = entity;*/
 #endif
 
     //set up the particle director
@@ -795,6 +799,10 @@ void GameState::createScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
     modelDef.createModel(entity, m_resources);
+
+
+    //disable the default camera so we don't need a gbuffer on it
+    m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = false;
 }
 
 void GameState::createDayCycle()
@@ -1354,16 +1362,17 @@ void GameState::spawnPlayer(PlayerInfo info)
 
             auto camEnt = m_cameras.emplace_back(m_gameScene.createEntity());
             camEnt.addComponent<cro::Transform>().setPosition({ 0.f, CameraHeight, CameraDistance });
+            camEnt.addComponent<cro::GBuffer>();
 
             auto rotation = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(0.f, 0.f, -50.f), cro::Transform::Y_AXIS);
             camEnt.getComponent<cro::Transform>().rotate(glm::inverse(rotation));
             camEnt.addComponent<std::uint8_t>() = playerNumber; //so we can tell which player this cam follows
 
             auto& cam = m_cameras.back().addComponent<cro::Camera>();
-            cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+            /*cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
             cam.reflectionBuffer.setSmooth(true);
             cam.refractionBuffer.create(ReflectionMapSize, ReflectionMapSize);
-            cam.refractionBuffer.setSmooth(true);
+            cam.refractionBuffer.setSmooth(true);*/
             cam.shadowMapBuffer.create(2048, 2048);
 
             auto camController = m_gameScene.createEntity();

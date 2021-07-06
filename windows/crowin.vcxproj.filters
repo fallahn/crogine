@@ -615,6 +615,12 @@
     <ClInclude Include="..\crogine\src\graphics\shaders\Deferred.hpp">
       <Filter>Header Files\graphics\shaders</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\GBuffer.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\DeferredRenderSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1009,6 +1015,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\postprocess\PostSSAO.cpp">
       <Filter>Source Files\graphics\post process</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\DeferredRenderSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

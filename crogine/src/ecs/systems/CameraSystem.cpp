@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/GBuffer.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/graphics/Spatial.hpp>
@@ -60,7 +61,7 @@ void CameraSystem::handleMessage(const Message& msg)
                 {
                     camera.resizeCallback(camera);
                 }
-                camera.resizeBuffer();
+                resizeGBuffer(entity);
             }
         }
     }
@@ -107,8 +108,20 @@ const std::vector<Entity>& CameraSystem::getCameras() const
 }
 
 //private
+void CameraSystem::resizeGBuffer(Entity entity)
+{
+    if (entity.hasComponent<GBuffer>())
+    {
+        glm::vec2 size(App::getWindow().getSize());
+        const auto& cam = entity.getComponent<Camera>();
+        size.x *= cam.viewport.width;
+        size.y *= cam.viewport.height;
+
+        entity.getComponent<GBuffer>().buffer.create(static_cast<std::uint32_t>(size.x), static_cast<std::uint32_t>(size.y), 5);
+    }
+}
+
 void CameraSystem::onEntityAdded(Entity entity)
 {
-    auto& camera = entity.getComponent<Camera>();
-    camera.resizeBuffer();
+    resizeGBuffer(entity);
 }
