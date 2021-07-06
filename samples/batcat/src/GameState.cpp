@@ -48,8 +48,6 @@ source distribution.
 #include <crogine/graphics/IqmBuilder.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
-#include <crogine/graphics/postprocess/PostSSAO.hpp>
-
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -102,8 +100,6 @@ namespace
     float fireRate = 0.1f; //rate per second
     glm::vec3 sourcePosition = glm::vec3(-19.f, 10.f, 6.f);
     float sourceRotation = -cro::Util::Const::PI / 2.f;
-
-    cro::PostSSAO* ssao = nullptr;
 }
 
 GameState::GameState(cro::StateStack& stack, cro::State::Context context)
@@ -125,28 +121,6 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
                 if (ImGui::Begin("Window of funnage"))
                 {
                     //ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                    ImGui::Image(m_mrt.getTexture(0), { 360.f, 180.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                    ImGui::SameLine();
-                    ImGui::Image(m_mrt.getTexture(1), { 360.f, 180.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                    //ImGui::SameLine();
-                    ImGui::Image(m_mrt.getDepthTexture(), { 360.f, 180.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                    ImGui::SameLine();
-                    ImGui::Image(ssao->getSSAOTexture(), { 360.f, 180.f }, { 0.f, 1.f }, { 1.f, 0.f });
-
-                    /*auto shadowTex = m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture();
-                    ImGui::Image(shadowTex, { 640.f, 640.f }, { 0.f, 1.f }, { 1.f, 0.f });*/
-
-                    float bias = ssao->getBias();
-                    if (ImGui::SliderFloat("Bias", &bias, 0.001f, 0.1f))
-                    {
-                        ssao->setBias(bias);
-                    }
-
-                    float intensity = ssao->getIntensity();
-                    if (ImGui::SliderFloat("Intensity", &intensity, 0.1f, 5.f))
-                    {
-                        ssao->setIntensity(intensity);
-                    }
 
                     ImGui::DragFloat("Rate", &fireRate, 0.1f, 0.1f, 10.f);
                     ImGui::DragFloat("Position", &sourcePosition.x, 0.1f, -19.f, 19.f);
@@ -207,12 +181,6 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
-    m_scene.getSystem<cro::ModelRenderer>().setRenderMaterial(cro::Model::MaterialPass::GBuffer);
-    m_mrt.clear();
-    m_scene.render(m_mrt, false);
-    m_mrt.display();
-    m_scene.getSystem<cro::ModelRenderer>().setRenderMaterial(cro::Model::MaterialPass::Final);
-
     auto& rt = cro::App::getWindow();
     m_scene.render(rt);
     m_overlayScene.render(rt);
@@ -234,8 +202,6 @@ void GameState::addSystems()
     m_scene.addSystem<cro::AudioSystem>(mb);
 
     m_scene.addDirector<PlayerDirector>();
-
-    ssao = &m_scene.addPostProcess<cro::PostSSAO>(m_mrt);
 
     uiSystem = &m_overlayScene.addSystem<cro::UISystem>(mb);
     m_overlayScene.addSystem<cro::CameraSystem>(mb);
@@ -644,7 +610,4 @@ void GameState::updateView(cro::Camera& cam3D)
 {
     cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 6.f, 280.f);
     calcViewport(cam3D);
-
-    auto windowSize = cro::App::getWindow().getSize();
-    m_mrt.create(windowSize.x, windowSize.y);
 }

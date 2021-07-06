@@ -67,7 +67,6 @@ private:
     std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs;
 
     cro::AudioBuffer m_audioBuffer;
-    cro::MultiRenderTexture m_mrt;
 
     void addSystems();
     void loadAssets();

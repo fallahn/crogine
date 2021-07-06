@@ -411,36 +411,12 @@ namespace cro
         */
         glm::vec3 pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize = cro::App::getWindow().getSize());
 
-
         /*!
-        \brief Sets the priority for this Camera during composition.
-        When the Scene is rendered each camera is rendered to its own
-        buffer, before all Cameras are composited to the output. This
-        value dictates the order in whic cameras are composited with
-        higher values being drawn over lower values. Cameras with the
-        same value can cause flickering, so by default when a new
-        Camera is added to the system its priority is automatically
-        set to the highest.
+        \brief GBuffer for the Camera
+        The GBuffer is used with deferred rendering and order 
+        independent transparency. Not available on mobile platforms.
         */
-        void setPriority(std::uint32_t priority);
-
-        /*!
-        \brief Returns the current composition priority of the Camera
-        \see setPriority()
-        */
-        std::uint32_t getPriority() const { return m_priority; }
-
-
-        /*!
-        \brief Output buffer for the Camera.
-        The output of this Camera is rendered to this buffer by a drawable
-        system. The output is then composited by the Scene to the 
-        Scene's active render target in the order of Camera priority.
-
-        This buffer is resized by the CameraSystem when the window is resized
-        based on the current viewport of the camera.
-        */
-        RenderTexture outputBuffer;
+        MultiRenderTexture GBuffer;
 
 #ifdef CRO_DEBUG_
         //l,r,b,t,n,f
@@ -462,9 +438,6 @@ namespace cro
         float m_farPlane;
 
         bool m_orthographic;
-
-        std::uint32_t m_priority;
-        bool m_wantsSorting;
 
         friend class ShadowMapRenderer;
 

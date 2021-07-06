@@ -128,8 +128,9 @@ namespace cro::Shaders::Deferred
     #if defined(DIFFUSE_MAP)
         uniform sampler2D u_diffuseMap;
     #endif
+    #if defined (COLOURED)
         uniform vec4 u_colour;
-
+    #endif
     #if defined(ALPHA_CLIP)
         uniform float u_alphaClip;
     #endif
@@ -171,9 +172,15 @@ namespace cro::Shaders::Deferred
             vec3 normal = normalize(v_normal);
         #endif
 
-            vec4 colour = v_colour;
+            vec4 colour = vec4(1.0);
         #if defined(DIFFUSE_MAP)
             colour *= TEXTURE(u_diffuseMap, v_texCoord);
+        #endif
+        #if defined(COLOURED)
+            colour *= u_colour;
+        #endif
+        #if defined(VERTEX_COLOUR)
+            colour *= v_colour;
         #endif
 
             output[0] = vec4(normal, 1.0);

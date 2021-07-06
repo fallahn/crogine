@@ -607,12 +607,6 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
 
     for (auto i = 0u; i < cameraCount; ++i)
     {
-        //TODO
-        /*
-        Set the viewport to 1:1 and render the scene to the
-        Camera's output buffer
-        */
-
         const auto& cam = cameraList[i].getComponent<Camera>();
         const auto& pass = cam.getActivePass();
 
@@ -687,10 +681,6 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
 
     //restore old view port
     glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
-
-
-    //TODO loop over camera list again then use camera viewports to composite
-    //each camera buffer to the passed in render target
 }
 
 void Scene::postRenderPath(const RenderTarget&, const Entity* cameraList, std::size_t cameraCount)

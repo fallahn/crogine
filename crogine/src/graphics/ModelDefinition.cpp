@@ -372,14 +372,6 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         auto& material = rc.materials.get(matID);
         material.deferred = shaderType == ShaderResource::PBR;
 
-#ifdef PLATFORM_DESKTOP
-        //create a material for the g-buffer pass TODO remove this
-        auto type = m_billboard ? ShaderResource::BillboardGBuffer : ShaderResource::GBuffer;
-        auto gbuffShader = rc.shaders.loadBuiltIn(type, flags);
-        auto gbuffID = rc.materials.add(rc.shaders.get(gbuffShader));
-        auto& gbuffMat = rc.materials.get(gbuffID);
-#endif
-
         //set a default mask colour - this is overwritten
         //below, if a custom property is found.
         if ((flags & ShaderResource::MaskMap) == 0)
@@ -424,9 +416,6 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_normalMap", tex);
-#ifdef PLATFORM_DESKTOP
-                gbuffMat.setProperty("u_normalMap", tex);
-#endif
             }
             else if (name == "lightmap")
             {
@@ -518,13 +507,6 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             {
                 alphaClip = Util::Maths::clamp(p.getValue<float>(), 0.f, 1.f);
                 material.setProperty("u_alphaClip", alphaClip);
-#ifdef PLATFORM_DESKTOP
-                gbuffMat.setProperty("u_alphaClip", alphaClip);
-                if (diffuseTex != nullptr)
-                {
-                    gbuffMat.setProperty("u_diffuseMap", *diffuseTex);
-                }
-#endif
             }
         }
 
@@ -538,9 +520,6 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         }
 
         m_materialIDs[m_materialCount] = matID;
-#ifdef PLATFORM_DESKTOP
-        m_gbufferIDs[m_materialCount] = gbuffID;
-#endif
 
         if (m_castShadows)
         {
@@ -574,14 +553,9 @@ bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
     if (m_meshID != 0)
     {
         auto& model = entity.addComponent<cro::Model>(rc.meshes.getMesh(m_meshID), rc.materials.get(m_materialIDs[0]));
-        for (auto i = 0u; i < m_materialCount; ++i)
+        for (auto i = 1u; i < m_materialCount; ++i)
         {
             model.setMaterial(i, rc.materials.get(m_materialIDs[i]));
-
-#ifdef PLATFORM_DESKTOP
-            //set the gbuffer material
-            model.setGBufferMaterial(i, rc.materials.get(m_gbufferIDs[i]));
-#endif 
         }
 
         if (m_castShadows)

@@ -88,21 +88,6 @@ namespace cro
         void setShadowMaterial(std::size_t idx, Material::Data material);
 
         /*!
-        \brief Sets the material to use for rendering a given sub-mesh to the
-        active camera's g-buffer. This is set automatically when a model is created
-        with a ModelDefinition - and has no effect on mobile platforms.
-        \param idx The index of the sub-mesh to which to applyh the material
-        \param material Data struct containing the material definition
-        */
-        void setGBufferMaterial(std::size_t idx, Material::Data material);
-
-        /*!
-        \brief Returns true if at least one g-buffer material is set.
-        Use this to determin if a model can be rendered during the g-buffer pass
-        */
-        bool hasGBufferMaterial() const;
-
-        /*!
         \brief returns whether or not the model is currently inside the
         frustum of the active camera according the the last render pass.
         This may be out of date by a frame when switching active scene cameras
@@ -147,11 +132,6 @@ namespace cro
         */
         const Material::Data& getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const;
 
-        enum class MaterialPass
-        {
-            Final,
-            GBuffer
-        };
 
     private:
         bool m_visible = false;
