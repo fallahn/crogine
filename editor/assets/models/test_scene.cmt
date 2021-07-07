@@ -5,7 +5,8 @@ model test_scene
 
     material PBR
     {
-        mask = "assets/images/test_scene.mask.png"
+        mask = "assets/images/test_scene_mask.png"
+        normal = "assets/images/test_scene_normal.png"
         name = "Untitled"
         colour = 1.000000,0.999990,1.000000,1.000000
         smooth = true
@@ -13,6 +14,18 @@ model test_scene
         vertex_coloured = true
         rx_shadows = true
         blendmode = "none"
+
+    }
+    material VertexLit
+    {
+        mask_colour = 0.988235,0.184314,0.000000,0.874510
+        normal = "assets/images/test_scene_normal.png"
+        name = "Untitled"
+        colour = 0.976471,0.670588,0.490196,0.376471
+        smooth = true
+        repeat = true
+        rx_shadows = true
+        blendmode = "alpha"
 
     }
 }
