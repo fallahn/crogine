@@ -281,7 +281,7 @@ namespace cro::Shaders::PBR
             //HDR tonemapping
             colour = colour / (colour + vec3(1.0));
             //gamma correct
-            colour = pow(colour, vec3(1.0/2.2)); 
+            colour = pow(colour, vec3(1.0 / 2.2)); 
 
             #if defined (RX_SHADOWS)
             colour *= shadowAmount(v_lightWorldPosition, surfProp);

@@ -282,24 +282,25 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
             glCheck(glUseProgram(model.m_materials[Mesh::IndexData::Final][i].shader));
 
             //apply shader uniforms from material
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+            //TODO this does a lot of unnecessary things we need to implement a lighter weight version.
             ModelRenderer::applyProperties(model.m_materials[Mesh::IndexData::Final][i], model, *getScene(), cam);
 
             //apply standard uniforms - TODO check all these are necessary
             //glCheck(glUniform3f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
             //glCheck(glUniform2f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
+            //glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
+            //glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
             glCheck(glUniform4f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
             glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
             glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldView)))));
 
             //check for depth test override
-            if (!model.m_materials[Mesh::IndexData::Final][i].enableDepthTest)
+            /*if (!model.m_materials[Mesh::IndexData::Final][i].enableDepthTest)
             {
                 glCheck(glDisable(GL_DEPTH_TEST));
-            }
+            }*/
 
             const auto& indexData = model.m_meshData.indexData[i];
             glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Final]));
@@ -311,6 +312,10 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     //TODO render forward/transparent items to GBuffer (inc normals/position for screen space effects)
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glEnable(GL_BLEND)); //TODO set correct blend mode for individual buffers
+    for (auto [entity, matIDs, depth] : forward)
+    {
+
+    }
 
     buffer.display();
 
@@ -333,7 +338,7 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     size.x *= cam.viewport.width;
     size.y *= cam.viewport.height;
     glm::mat4 transform = glm::scale(glm::mat4(1.f), { size.x, size.y, 0.f });
-    //transform = glm::translate(transform, { left, bottom, 0.f });
+    //transform offset should be correct as Scene::Render has set the viewport already
     glm::mat4 projection = glm::ortho(0.f, size.x, 0.f, size.y, -0.1f, 1.f);
 
     glCheck(glUseProgram(m_pbrShader.getGLHandle()));
@@ -358,10 +363,42 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glUniform1i(m_pbrUniforms[PBRUniformIDs::Position], 3));
 
 
+    const auto& sun = getScene()->getSunlight().getComponent<Sunlight>();
+    auto lightDir = pass.viewMatrix * glm::vec4(sun.getDirection(), 1.f);
+    glCheck(glUniform3f(m_pbrUniforms[PBRUniformIDs::LightDirection], lightDir.x, lightDir.y, lightDir.z));
+    auto lightCol = sun.getColour().getVec4();
+    glCheck(glUniform4f(m_pbrUniforms[PBRUniformIDs::LightColour], lightCol.r, lightCol.g, lightCol.b, lightCol.a));
+
+
+    glCheck(glActiveTexture(GL_TEXTURE4));
+    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_envMap->getIrradianceMap().textureID));
+
+    glCheck(glActiveTexture(GL_TEXTURE5));
+    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_envMap->getPrefilterMap().textureID));
+
+    glCheck(glActiveTexture(GL_TEXTURE6));
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_envMap->getBRDFMap().textureID));
+
+    glCheck(glUniform1i(m_pbrUniforms[PBRUniformIDs::IrradianceMap], 4));
+    glCheck(glUniform1i(m_pbrUniforms[PBRUniformIDs::PrefilterMap], 5));
+    glCheck(glUniform1i(m_pbrUniforms[PBRUniformIDs::BRDFMap], 6));
+
+
+    glActiveTexture(GL_TEXTURE7);
+    glCheck(glBindTexture(GL_TEXTURE_2D, cam.shadowMapBuffer.getTexture().textureID)); //TODO use shadow map sampler directly?
+    glCheck(glUniform1i(m_pbrUniforms[PBRUniformIDs::ShadowMap], 7));
+
+    auto invViewMatrix = glm::inverse(pass.viewMatrix);
+    glCheck(glUniformMatrix4fv(m_pbrUniforms[PBRUniformIDs::InverseViewMat], 1, GL_FALSE, &invViewMatrix[0][0]));
+    glCheck(glUniformMatrix4fv(m_pbrUniforms[PBRUniformIDs::LightViewProjMat], 1, GL_FALSE, &cam.shadowViewProjectionMatrix[0][0]));
 
     glCheck(glBindVertexArray(m_vao));
     glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
+
+    //TODO we ought to be drawing the skybox here, but this would mean
+    //it's renderer specific instead of generally available in the Scene
+    //for other systems.
 
     //TODO Transparent pass to render target
 
@@ -411,6 +448,48 @@ bool DeferredRenderSystem::loadPBRShader()
         if (uniforms.count("u_positionMap"))
         {
             m_pbrUniforms[PBRUniformIDs::Position] = uniforms.at("u_positionMap");
+        }
+
+
+
+        if (uniforms.count("u_lightDirection"))
+        {
+            m_pbrUniforms[PBRUniformIDs::LightDirection] = uniforms.at("u_lightDirection");
+        }
+        if (uniforms.count("u_lightColour"))
+        {
+            m_pbrUniforms[PBRUniformIDs::LightColour] = uniforms.at("u_lightColour");
+        }
+        /*if (uniforms.count("u_cameraWorldPosition"))
+        {
+            m_pbrUniforms[PBRUniformIDs::CameraWorldPosition] = uniforms.at("u_cameraWorldPosition");
+        }*/
+
+
+        if (uniforms.count("u_irradianceMap"))
+        {
+            m_pbrUniforms[PBRUniformIDs::IrradianceMap] = uniforms.at("u_irradianceMap");
+        }
+        if (uniforms.count("u_prefilterMap"))
+        {
+            m_pbrUniforms[PBRUniformIDs::PrefilterMap] = uniforms.at("u_prefilterMap");
+        }
+        if (uniforms.count("u_brdfMap"))
+        {
+            m_pbrUniforms[PBRUniformIDs::BRDFMap] = uniforms.at("u_brdfMap");
+        }
+
+        if (uniforms.count("u_inverseViewMatrix"))
+        {
+            m_pbrUniforms[PBRUniformIDs::InverseViewMat] = uniforms.at("u_inverseViewMatrix");
+        }
+        if (uniforms.count("u_lightViewProjectionMatrix"))
+        {
+            m_pbrUniforms[PBRUniformIDs::LightViewProjMat] = uniforms.at("u_lightViewProjectionMatrix");
+        }
+        if (uniforms.count("u_shadowMap"))
+        {
+            m_pbrUniforms[PBRUniformIDs::ShadowMap] = uniforms.at("u_shadowMap");
         }
     }
 

@@ -110,6 +110,17 @@ namespace cro
                 Mask,
                 Position,
 
+                LightDirection,
+                LightColour,
+
+                IrradianceMap,
+                PrefilterMap,
+                BRDFMap,
+
+                InverseViewMat,
+                LightViewProjMat,
+                ShadowMap,
+
                 Count
             };
         };
