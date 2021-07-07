@@ -34,7 +34,7 @@ source distribution.
 
 namespace cro::Shaders::Deferred
 {
-    static const std::string Vertex = R"(
+    static const std::string GBufferVertex = R"(
         ATTRIBUTE vec4 a_position;
     #if defined (VERTEX_COLOUR)
         ATTRIBUTE LOW vec4 a_colour;
@@ -157,7 +157,7 @@ namespace cro::Shaders::Deferred
     #endif
         VARYING_IN vec4 v_fragPosition;
 
-        out vec4[4] output;
+        out vec4[4] o_colour;
 
         void main()
         {
@@ -183,17 +183,48 @@ namespace cro::Shaders::Deferred
             colour *= v_colour;
         #endif
 
-            output[0] = vec4(normal, 1.0);
-            output[1] = v_fragPosition;
-            output[2] = colour;
+            o_colour[0] = vec4(normal, 1.0);
+            o_colour[1] = v_fragPosition;
+            o_colour[2] = colour;
 
         #if defined(MASK_MAP)
-            output[3] = TEXTURE(u_maskMap, v_texCoord);
+            o_colour[3] = TEXTURE(u_maskMap, v_texCoord);
         #else
-            output[3] = u_maskColour;
+            o_colour[3] = u_maskColour;
         #endif
 
         })";
 
-    static const std::string LightingFragment = R"()";
+    static const std::string LightingVertex = 
+        R"(
+            ATTRIBUTE vec4 a_position;
+
+            uniform mat4 u_worldMatrix;
+            uniform mat4 u_projectionMatrix;
+            
+            VARYING_OUT MED vec2 v_texCoord;
+
+            void main()
+            {
+                gl_Position = u_projectionMatrix * u_worldMatrix * a_position;
+                v_texCoord = a_position.xy;
+            }
+        )";
+    
+    static const std::string LightingFragment = 
+        R"(
+            uniform sampler2D u_diffuseMap;
+            uniform sampler2D u_maskMap;
+            uniform sampler2D u_normalMap;
+            uniform sampler2D u_positionMap;
+
+            VARYING_IN vec2 v_texCoord;
+
+            out vec4 o_colour;
+
+            void main()
+            {
+                o_colour = TEXTURE(u_diffuseMap, v_texCoord);
+            }
+        )";
 }

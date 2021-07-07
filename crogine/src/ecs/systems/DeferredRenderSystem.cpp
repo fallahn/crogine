@@ -41,15 +41,19 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 
 #include <crogine/util/Matrix.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 
+#include "../../graphics/shaders/Deferred.hpp"
+
 using namespace cro;
 
 namespace
 {
+
     /*
     GBuffer layout:
     Channel 0 - View space normal, RGB (A) potentially revealage
@@ -58,6 +62,17 @@ namespace
     Channel 3 - PBR mask, RGB(A) potentially emission
     Channel 4 - Accumulated colour for transparency, RGBA
     */
+
+    struct TextureIndex final
+    {
+        enum
+        {
+            Normal,
+            Position,
+            Diffuse,
+            Mask
+        };
+    };
 
     std::vector<Colour> ClearColours; /*=
     {
@@ -71,7 +86,10 @@ namespace
 
 DeferredRenderSystem::DeferredRenderSystem(MessageBus& mb)
     : System        (mb, typeid(DeferredRenderSystem)),
-    m_cameraCount   (0)
+    m_cameraCount   (0),
+    m_vao           (0),
+    m_vbo           (0),
+    m_envMap        (nullptr)
 {
     requireComponent<Model>();
     requireComponent<Transform>();
@@ -86,6 +104,23 @@ DeferredRenderSystem::DeferredRenderSystem(MessageBus& mb)
         cro::Colour::Black,
         cro::Colour::Transparent
     };
+
+    setupRenderQuad();
+}
+
+DeferredRenderSystem::~DeferredRenderSystem()
+{
+#ifdef PLATFORM_DESKTOP
+    if (m_vbo)
+    {
+        glCheck(glDeleteBuffers(1, &m_vbo));
+    }
+
+    if (m_vao)
+    {
+        glCheck(glDeleteVertexArrays(1, &m_vao));
+    }
+#endif
 }
 
 //public
@@ -251,8 +286,8 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
             ModelRenderer::applyProperties(model.m_materials[Mesh::IndexData::Final][i], model, *getScene(), cam);
 
             //apply standard uniforms - TODO check all these are necessary
-            glCheck(glUniform3f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
-            glCheck(glUniform2f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
+            //glCheck(glUniform3f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
+            //glCheck(glUniform2f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
             glCheck(glUniform4f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
             glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
             glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
@@ -269,21 +304,64 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
             const auto& indexData = model.m_meshData.indexData[i];
             glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Final]));
             glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
-
         }
-
     }
 
 
     //TODO render forward/transparent items to GBuffer (inc normals/position for screen space effects)
     glCheck(glDisable(GL_CULL_FACE));
+    glCheck(glEnable(GL_BLEND)); //TODO set correct blend mode for individual buffers
 
     buffer.display();
 
 
     //TODO optionally calc screen space effects (ao, reflections etc)
 
-    //TODO PBR lighting pass of deferred items to render target
+
+
+    //PBR lighting pass of deferred items to render target
+    //blend alpha so background shows through
+    glCheck(glDepthMask(GL_FALSE));
+    glCheck(glEnable(GL_CULL_FACE));
+    glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    glCheck(glBlendEquation(GL_FUNC_ADD));
+
+    CRO_ASSERT(m_envMap, "Env map not set!");
+
+    //TODO can we cache these?
+    glm::vec2 size(rt.getSize());
+    size.x *= cam.viewport.width;
+    size.y *= cam.viewport.height;
+    glm::mat4 transform = glm::scale(glm::mat4(1.f), { size.x, size.y, 0.f });
+    //transform = glm::translate(transform, { left, bottom, 0.f });
+    glm::mat4 projection = glm::ortho(0.f, size.x, 0.f, size.y, -0.1f, 1.f);
+
+    glCheck(glUseProgram(m_pbrShader.getGLHandle()));
+    glCheck(glUniformMatrix4fv(m_pbrUniforms[PBRUniformIDs::WorldMat], 1, GL_FALSE, glm::value_ptr(transform)));
+    glCheck(glUniformMatrix4fv(m_pbrUniforms[PBRUniformIDs::ProjMat], 1, GL_FALSE, glm::value_ptr(projection)));
+
+    glCheck(glActiveTexture(GL_TEXTURE0));
+    glCheck(glBindTexture(GL_TEXTURE_2D, buffer.getTexture(TextureIndex::Diffuse).textureID));
+
+    glCheck(glActiveTexture(GL_TEXTURE1));
+    glCheck(glBindTexture(GL_TEXTURE_2D, buffer.getTexture(TextureIndex::Mask).textureID));
+
+    glCheck(glActiveTexture(GL_TEXTURE2));
+    glCheck(glBindTexture(GL_TEXTURE_2D, buffer.getTexture(TextureIndex::Normal).textureID));
+
+    glCheck(glActiveTexture(GL_TEXTURE3));
+    glCheck(glBindTexture(GL_TEXTURE_2D, buffer.getTexture(TextureIndex::Position).textureID));
+
+    glCheck(glUniform1i(m_pbrUniforms[PBRUniformIDs::Diffuse], 0));
+    glCheck(glUniform1i(m_pbrUniforms[PBRUniformIDs::Mask], 1));
+    glCheck(glUniform1i(m_pbrUniforms[PBRUniformIDs::Normal], 2));
+    glCheck(glUniform1i(m_pbrUniforms[PBRUniformIDs::Position], 3));
+
+
+
+    glCheck(glBindVertexArray(m_vao));
+    glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+
 
     //TODO Transparent pass to render target
 
@@ -297,5 +375,87 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
 
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDepthMask(GL_TRUE));
+#endif
+}
+
+void DeferredRenderSystem::setEnvironmentMap(const EnvironmentMap& map)
+{
+    m_envMap = &map;
+}
+
+//private
+bool DeferredRenderSystem::loadPBRShader()
+{
+    std::fill(m_pbrUniforms.begin(), m_pbrUniforms.end(), -1);
+
+    auto result = m_pbrShader.loadFromString(Shaders::Deferred::LightingVertex, Shaders::Deferred::LightingFragment);
+    if (result)
+    {
+        //load uniform mappings
+        const auto& uniforms = m_pbrShader.getUniformMap();
+        m_pbrUniforms[PBRUniformIDs::WorldMat] = uniforms.at("u_worldMatrix");
+        m_pbrUniforms[PBRUniformIDs::ProjMat] = uniforms.at("u_projectionMatrix");
+
+        if (uniforms.count("u_diffuseMap"))
+        {
+            m_pbrUniforms[PBRUniformIDs::Diffuse] = uniforms.at("u_diffuseMap");
+        }
+        if (uniforms.count("u_maskMap"))
+        {
+            m_pbrUniforms[PBRUniformIDs::Mask] = uniforms.at("u_maskMap");
+        }
+        if (uniforms.count("u_normalMap"))
+        {
+            m_pbrUniforms[PBRUniformIDs::Normal] = uniforms.at("u_normalMap");
+        }
+        if (uniforms.count("u_positionMap"))
+        {
+            m_pbrUniforms[PBRUniformIDs::Position] = uniforms.at("u_positionMap");
+        }
+    }
+
+    return result;
+}
+
+bool DeferredRenderSystem::loadOITShader()
+{
+    return true;
+}
+
+void DeferredRenderSystem::setupRenderQuad()
+{
+#ifdef PLATFORM_DESKTOP
+    if (loadPBRShader() && loadOITShader())
+    {
+        glCheck(glGenBuffers(1, &m_vbo));
+        glCheck(glGenVertexArrays(1, &m_vao));
+
+        //0------2
+        //|      |
+        //|      |
+        //1------3
+
+        std::vector<float> verts =
+        {
+            0.f, 1.f, //0.f, 1.f,
+            0.f, 0.f,// 0.f, 0.f,
+            1.f, 1.f, //1.f, 1.f,
+            1.f, 0.f, //1.f, 0.f
+        };
+        static constexpr std::uint32_t VertexSize = 2 * sizeof(float);
+
+        glCheck(glBindVertexArray(m_vao));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, VertexSize * verts.size(), verts.data(), GL_STATIC_DRAW));
+
+        const auto& attribs = m_pbrShader.getAttribMap();
+        glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::Position]));
+        glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Position], 2, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(VertexSize), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+        glCheck(glDisableVertexAttribArray(attribs[Mesh::Attribute::Position]));
+        glCheck(glEnableVertexAttribArray(0));
+
+        glCheck(glBindVertexArray(0));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    }
 #endif
 }

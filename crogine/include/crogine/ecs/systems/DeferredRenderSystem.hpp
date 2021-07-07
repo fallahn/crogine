@@ -32,11 +32,14 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
+#include <crogine/graphics/Shader.hpp>
 
 #include <vector>
 
 namespace cro
 {
+    class EnvironmentMap;
+
     /*
     \brief Deferred rendering system.
     This sytem renders PBR via a deferred system using the MRT (multi-render target)
@@ -54,10 +57,23 @@ namespace cro
     {
     public:
         explicit DeferredRenderSystem(MessageBus&);
+        ~DeferredRenderSystem();
+
+        DeferredRenderSystem(const DeferredRenderSystem&) = delete;
+        DeferredRenderSystem(DeferredRenderSystem&&) = delete;
+        DeferredRenderSystem& operator = (const DeferredRenderSystem&) = delete;
+        DeferredRenderSystem& operator = (DeferredRenderSystem&&) = delete;
 
         void updateDrawList(Entity camera) override;
 
         void render(Entity camera, const RenderTarget& target) override;
+
+        /*!
+        \brief Sets the environment map used by the renderer.
+        This is usually the same as the EnvironmentMap set on the active Scene.
+        This must be set for the system to render correctly.
+        */
+        void setEnvironmentMap(const EnvironmentMap&);
 
     private:
 
@@ -78,5 +94,30 @@ namespace cro
         //camer holds a index into this
         std::vector<VisibleList> m_visibleLists;
         std::uint32_t m_cameraCount;
+
+        std::uint32_t m_vao;
+        std::uint32_t m_vbo;
+        Shader m_pbrShader;
+        struct PBRUniformIDs final
+        {
+            enum
+            {
+                WorldMat,
+                ProjMat,
+
+                Diffuse,
+                Normal,
+                Mask,
+                Position,
+
+                Count
+            };
+        };
+        std::array<std::int32_t, PBRUniformIDs::Count> m_pbrUniforms;
+        const EnvironmentMap* m_envMap;
+
+        bool loadPBRShader();
+        bool loadOITShader();
+        void setupRenderQuad();
     };
 }

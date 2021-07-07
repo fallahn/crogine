@@ -215,7 +215,7 @@ namespace cro::Shaders::GBuffer
 
         VARYING_IN vec4 v_fragPosition;
 
-        out vec4[2] output;
+        out vec4[2] o_colour;
 
         void main()
         {
@@ -232,7 +232,7 @@ namespace cro::Shaders::GBuffer
             vec3 normal = normalize(v_normal);
         #endif
 
-            output[0] = vec4(normal, 1.0);
-            output[1] = v_fragPosition;
+            o_colour[0] = vec4(normal, 1.0);
+            o_colour[1] = v_fragPosition;
         })";
 }

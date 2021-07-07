@@ -179,8 +179,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     //debug output
     registerWindow([&]()
         {
-            if (ImGui::Begin("GBuffer 0")
-                && !m_cameras.empty())
+            if (ImGui::Begin("GBuffer 0"))
             {
                 for (auto cam : m_cameras)
                 {
@@ -528,7 +527,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     //m_gameScene.addSystem<cro::ModelRenderer>(mb);
-    m_gameScene.addSystem<cro::DeferredRenderSystem>(mb);
+    m_gameScene.addSystem<cro::DeferredRenderSystem>(mb).setEnvironmentMap(m_environmentMap);
 #ifdef CRO_DEBUG_
     m_gameScene.addSystem<cro::RenderSystem2D>(mb).setFilterFlags(~TwoDeeFlags::Debug);
 #endif
@@ -1906,7 +1905,7 @@ void GameState::crateUpdate(const CrateState& data)
                 break;
             }
 #ifdef CRO_DEBUG_
-            LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << std::endl;
+            //LogI << "Set crate to " << state << ", with owner " << e.getComponent<Crate>().owner << std::endl;
 #endif //DEBUG
         }
     };
