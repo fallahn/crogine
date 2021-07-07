@@ -126,7 +126,8 @@ namespace cro
         populated with IDs referring to the newly loaded data.
         \param envMap A pointer to a valid EnvironmentMap instance. This will
         automatically assign any required lighting parameters to PBR materials.
-        This can be omitted if no PBR materials are being loaded.
+        This should be nullptr if no PBR materials are being loaded, or PBR materials
+        are going to be rendered with a DeferredRenderSystem.
         \param forceReload Forces the ResourceCollection to reload any mesh data from
         file, rather than recycling any existing VBO. Generally should be false.
         \returns true if the configuration file was parsed without error.

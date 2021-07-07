@@ -39,9 +39,11 @@ source distribution.
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/GBuffer.hpp>
 #include <crogine/ecs/components/Model.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/DeferredRenderSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/util/Matrix.hpp>
@@ -242,7 +244,8 @@ void WorldState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<cro::ModelRenderer>(mb);
+    //m_scene.addSystem<cro::ModelRenderer>(mb);
+    m_scene.addSystem<cro::DeferredRenderSystem>(mb).setEnvironmentMap(m_environmentMap);
 
     m_previewScene.addSystem<cro::CameraSystem>(mb);
     m_previewScene.addSystem<cro::ModelRenderer>(mb);
@@ -278,6 +281,8 @@ void WorldState::setupScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     def.createModel(entity, m_resources);
+
+    m_scene.getActiveCamera().addComponent<cro::GBuffer>();
 
 
     //preview scene to render model thumbs

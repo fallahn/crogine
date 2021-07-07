@@ -93,7 +93,7 @@ bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, 
 std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
 {
 #ifdef PLATFORM_DESKTOP
-    CRO_ASSERT(type >= BuiltIn::GBuffer && flags > 0, "Invalid type of flags value");
+    CRO_ASSERT(type >= BuiltIn::PBRDeferred && flags > 0, "Invalid type of flags value");
 #else
     CRO_ASSERT(type >= BuiltIn::Unlit && flags > 0, "Invalid type of flags value");
 #endif
@@ -219,18 +219,20 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
         success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::ShadowMap::FragmentMobile, defines);
 #endif
         break;
-    case BuiltIn::PBR:
+    case BuiltIn::PBRDeferred:
         success = loadFromString(id, Shaders::Deferred::GBufferVertex, Shaders::Deferred::GBufferFragment, defines);
-        //success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::PBR::Fragment, defines);
         break;
-#ifdef PLATFORM_DESKTOP
-    case BuiltIn::GBuffer:
-        success = loadFromString(id, Shaders::GBuffer::Vertex, Shaders::GBuffer::Fragment, defines);
+    case BuiltIn::PBR:
+        success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::PBR::Fragment, defines);
         break;
-    case BuiltIn::BillboardGBuffer:
-        success = loadFromString(id, Shaders::GBuffer::BillboardVertex, Shaders::GBuffer::Fragment, defines);
-        break;
-#endif
+//#ifdef PLATFORM_DESKTOP
+//    case BuiltIn::GBuffer:
+//        success = loadFromString(id, Shaders::GBuffer::Vertex, Shaders::GBuffer::Fragment, defines);
+//        break;
+//    case BuiltIn::BillboardGBuffer:
+//        success = loadFromString(id, Shaders::GBuffer::BillboardVertex, Shaders::GBuffer::Fragment, defines);
+//        break;
+//#endif
     }
 
     if (success)

@@ -555,13 +555,13 @@ void GameState::loadAssets()
     //m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
 
     //materials
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, cro::ShaderResource::DiffuseColour | cro::ShaderResource::RxShadows);
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBRDeferred, cro::ShaderResource::DiffuseColour | cro::ShaderResource::RxShadows);
     m_materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_maskColour", cro::Colour(0.f, 1.f, 1.f));
-    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
-    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
-    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
+    //m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
+    //m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
+    //m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).deferred = true;
     //m_resources.materials.get(m_materialIDs[MaterialID::Default]).blendMode = cro::Material::BlendMode::Alpha;
 
@@ -583,9 +583,9 @@ void GameState::loadAssets()
     }
 
     //model defs - don't forget to pass the env map here!
-    m_modelDefs[GameModelID::Crate].loadFromFile("assets/models/box.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Spawner].loadFromFile("assets/models/spawner.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Balloon].loadFromFile("assets/models/balloon.cmt", m_resources, &m_environmentMap);
+    m_modelDefs[GameModelID::Crate].loadFromFile("assets/models/box.cmt", m_resources/*, &m_environmentMap*/);
+    m_modelDefs[GameModelID::Spawner].loadFromFile("assets/models/spawner.cmt", m_resources/*, &m_environmentMap*/);
+    m_modelDefs[GameModelID::Balloon].loadFromFile("assets/models/balloon.cmt", m_resources/*, &m_environmentMap*/);
     m_modelDefs[GameModelID::Hologram].loadFromFile("assets/models/hologram.cmt", m_resources/*, &m_environmentMap*/);
 
 
@@ -763,7 +763,7 @@ void GameState::createScene()
 
     //ground plane
     cro::ModelDefinition modelDef;
-    modelDef.loadFromFile("assets/models/ground_plane.cmt", m_resources, &m_environmentMap);
+    modelDef.loadFromFile("assets/models/ground_plane.cmt", m_resources/*, &m_environmentMap*/);
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -771,7 +771,7 @@ void GameState::createScene()
 
 
     //hedz
-    modelDef.loadFromFile("assets/models/head01.cmt", m_resources, &m_environmentMap);
+    modelDef.loadFromFile("assets/models/head01.cmt", m_resources/*, &m_environmentMap*/);
     
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 23.f, -20.f });
@@ -793,7 +793,7 @@ void GameState::createScene()
     };
 
 
-    modelDef.loadFromFile("assets/models/head02.cmt", m_resources, &m_environmentMap);
+    modelDef.loadFromFile("assets/models/head02.cmt", m_resources/*, &m_environmentMap*/);
 
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 23.f, 20.f });
@@ -814,7 +814,7 @@ void GameState::createScene()
     };
 
     //hillz
-    modelDef.loadFromFile("assets/models/hills.cmt", m_resources, &m_environmentMap);
+    modelDef.loadFromFile("assets/models/hills.cmt", m_resources/*, &m_environmentMap*/);
 
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -874,7 +874,7 @@ void GameState::loadMap()
         };
 
         cro::ModelDefinition portalModel;
-        portalModel.loadFromFile("assets/models/portal.cmt", m_resources, &m_environmentMap);
+        portalModel.loadFromFile("assets/models/portal.cmt", m_resources/*, &m_environmentMap*/);
 
         cro::EmitterSettings smokeParticles;
         smokeParticles.loadFromFile("assets/particles/smoke.xyp", m_resources.textures);
@@ -1125,10 +1125,10 @@ void GameState::loadMap()
 
 
         cro::ModelDefinition spawnModel;
-        spawnModel.loadFromFile("assets/models/player_spawn.cmt", m_resources, &m_environmentMap);
+        spawnModel.loadFromFile("assets/models/player_spawn.cmt", m_resources/*, &m_environmentMap*/);
 
         cro::ModelDefinition spinModel;
-        spinModel.loadFromFile("assets/models/player_spinner.cmt", m_resources, &m_environmentMap);
+        spinModel.loadFromFile("assets/models/player_spinner.cmt", m_resources/*, &m_environmentMap*/);
 
         cro::EmitterSettings spawnParticles;
         spawnParticles.loadFromFile("assets/particles/spawn.xyp", m_resources.textures);
@@ -1319,7 +1319,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
     //placeholder for player scale
     cro::ModelDefinition md;
-    md.loadFromFile("assets/models/player_box.cmt", m_resources, &m_environmentMap);
+    md.loadFromFile("assets/models/player_box.cmt", m_resources/*, &m_environmentMap*/);
 
     cro::EmitterSettings particles;
     particles.loadFromFile("assets/particles/portal.xyp", m_resources.textures);

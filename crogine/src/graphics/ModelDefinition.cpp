@@ -240,7 +240,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             }
             else
             {
-                shaderType = ShaderResource::PBR;
+                shaderType = envMap ? ShaderResource::PBR : ShaderResource::PBRDeferred;
             }
         }
         else if (m_billboard)
@@ -370,7 +370,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         auto shaderID = rc.shaders.loadBuiltIn(shaderType, flags);
         auto matID = rc.materials.add(rc.shaders.get(shaderID));
         auto& material = rc.materials.get(matID);
-        material.deferred = shaderType == ShaderResource::PBR;
+        material.deferred = shaderType == ShaderResource::PBRDeferred;
 
         //set a default mask colour - this is overwritten
         //below, if a custom property is found.
@@ -513,7 +513,6 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         //check to see if we can map environment lighting
         if (shaderType == ShaderResource::PBR)
         {
-            CRO_ASSERT(envMap, "No environment map has been supplied for PBR material");
             material.setProperty("u_irradianceMap", envMap->getIrradianceMap());
             material.setProperty("u_prefilterMap", envMap->getPrefilterMap());
             material.setProperty("u_brdfMap", envMap->getBRDFMap());

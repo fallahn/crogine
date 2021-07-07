@@ -439,7 +439,7 @@ namespace cro::Shaders::Deferred
 
                 vec4 lightPos = u_inverseViewMatrix * position;
                 lightPos = u_lightViewProjectionMatrix * lightPos;
-                surfProp.lightDir = (u_inverseViewMatrix * vec4(surfProp.lightDir, 0.0)).xyz;
+                //surfProp.lightDir = (u_inverseViewMatrix * vec4(surfProp.lightDir, 0.0)).xyz;
                 colour *= shadowAmount(lightPos, surfProp);
 
 
