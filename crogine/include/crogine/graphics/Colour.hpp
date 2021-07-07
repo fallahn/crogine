@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -157,7 +157,8 @@ namespace cro
         static const Colour White;
         static const Colour Transparent;
 
-        float* asArray() { return reinterpret_cast<float*>(this); }
+        float* asArray() { return &r; }
+        const float* asArray() const { return &r; }
 
     private:
 

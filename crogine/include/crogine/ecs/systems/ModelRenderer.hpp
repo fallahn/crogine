@@ -86,6 +86,8 @@ namespace cro
         std::array<MaterialList, 2u> m_visibleEnts;
         Mesh::IndexData::Pass m_pass;
 
+        friend class DeferredRenderSystem;
+        //these funcs are shared with above system - should probably be free funcs somewhere?
         static void applyProperties(const Material::Data&, const Model&, const Scene&, const Camera&);
         static void applyBlendMode(Material::BlendMode);
     };

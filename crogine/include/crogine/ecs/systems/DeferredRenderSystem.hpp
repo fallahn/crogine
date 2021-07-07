@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
 
-#include <map>
+#include <vector>
 
 namespace cro
 {
@@ -76,7 +76,7 @@ namespace cro
 
         //one for each camera we encounter
         //camer holds a index into this
-        std::map<std::uint32_t, VisibleList> m_visibleLists;
+        std::vector<VisibleList> m_visibleLists;
         std::uint32_t m_cameraCount;
     };
 }

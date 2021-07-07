@@ -218,7 +218,7 @@ glm::uvec2 MultiRenderTexture::getSize() const
     return m_size;
 }
 
-void MultiRenderTexture::clear()
+void MultiRenderTexture::clear(cro::Colour clearColour)
 {
 #ifdef PLATFORM_DESKTOP
     CRO_ASSERT(m_fboID, "No FBO created!");
@@ -234,12 +234,40 @@ void MultiRenderTexture::clear()
     glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fboID));
     RenderTarget::ActiveTarget = m_fboID;
 
-    //stoer previous clear colour
+    //store previous clear colour
     m_lastClearColour = App::getInstance().getClearColour();
-    App::getInstance().setClearColour(cro::Colour::Black);
+    glCheck(glClearColor(clearColour.getRed(), clearColour.getGreen(), clearColour.getBlue(), clearColour.getAlpha()));
 
     //clear buffer - UH OH this will clear the main buffer if FBO is null
     glCheck(glClear(GL_COLOR_BUFFER_BIT |GL_DEPTH_BUFFER_BIT));
+#endif
+}
+
+void MultiRenderTexture::clear(const std::vector<Colour>& colours)
+{
+#ifdef PLATFORM_DESKTOP
+    CRO_ASSERT(m_fboID, "No FBO created!");
+
+    //store existing viewport - and apply ours
+    glCheck(glGetIntegerv(GL_VIEWPORT, m_lastViewport.data()));
+    glCheck(glViewport(m_viewport.left, m_viewport.bottom, m_viewport.width, m_viewport.height));
+
+    //store active buffer
+    m_lastBuffer = RenderTarget::ActiveTarget;
+
+    //set buffer active
+    glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fboID));
+    RenderTarget::ActiveTarget = m_fboID;
+
+    //store previous clear colour
+    m_lastClearColour = App::getInstance().getClearColour();
+
+    for (auto i = 0u; i < colours.size() && i < m_textureIDs.size(); ++i)
+    {
+        glCheck(glClearBufferfv(GL_COLOR, i, colours[i].asArray()));
+    }
+    static const auto depthColour = glm::vec4(1.f);
+    glCheck(glClearBufferfv(GL_DEPTH, 0, &depthColour[0]));
 #endif
 }
 

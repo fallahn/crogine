@@ -91,8 +91,18 @@ namespace cro
         is called. For every clear() call there must be exactly one display() call. This
         also attempts to save and restore any existing viewport, while also applying its
         own during rendering.
+        This version clears all attached buffers with the given colour.
         */
-        void clear();
+        void clear(Colour colour = cro::Colour::Black);
+
+        /*!
+        \brief Clears the buffer with the array of given colours
+        MultiRenderTextures can clear each attached buffer with a different colour.
+        If too few colours are passed then only as many buffers as there are
+        colours are cleared. If too many are passed only as many buffers are present
+        will be cleared with the given colours in the vector up to the buffer count.
+        */
+        void clear(const std::vector<Colour>& colours);
 
         /*!
         \brief This must be called once for each call to clear to properly validate

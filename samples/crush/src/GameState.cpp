@@ -179,6 +179,27 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     //debug output
     registerWindow([&]()
         {
+            if (ImGui::Begin("GBuffer 0")
+                && !m_cameras.empty())
+            {
+                for (auto cam : m_cameras)
+                {
+                    const auto& buffer = cam.getComponent<cro::GBuffer>().buffer;
+                    auto size = glm::vec2(buffer.getSize());
+                    for (auto i = 0; i < 5; ++i)
+                    {
+                        ImGui::Image(buffer.getTexture(i), { size.x / 4.f, size.y / 4.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                        if ((i % 3) == 0)
+                        {
+                            ImGui::SameLine();
+                        }
+                    }
+                    //ImGui::NewLine();
+                    ImGui::Separator();
+                }
+            }
+            ImGui::End();
+
             if (ImGui::Begin("Info"))
             {
                 if (playerEntity.isValid())
