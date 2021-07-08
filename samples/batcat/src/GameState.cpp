@@ -214,14 +214,19 @@ void GameState::addSystems()
 
 void GameState::loadAssets()
 {
-    m_modelDefs[GameModelID::BatCat].loadFromFile("assets/models/batcat.cmt", m_resources);
-    m_modelDefs[GameModelID::TestRoom].loadFromFile("assets/models/scene03.cmt", m_resources);
-    m_modelDefs[GameModelID::Moon].loadFromFile("assets/models/moon.cmt", m_resources);
-    m_modelDefs[GameModelID::Stars].loadFromFile("assets/models/stars.cmt", m_resources);
+    for (auto& md : m_modelDefs)
+    {
+        md = std::make_unique<cro::ModelDefinition>(m_resources);
+    }
 
-    m_modelDefs[GameModelID::Cube].loadFromFile("assets/models/cube.cmt", m_resources);
-    m_modelDefs[GameModelID::Arrow].loadFromFile("assets/models/arrow.cmt", m_resources);
-    m_modelDefs[GameModelID::Billboards].loadFromFile("assets/models/tree.cmt", m_resources);
+    m_modelDefs[GameModelID::BatCat]->loadFromFile("assets/models/batcat.cmt");
+    m_modelDefs[GameModelID::TestRoom]->loadFromFile("assets/models/scene03.cmt");
+    m_modelDefs[GameModelID::Moon]->loadFromFile("assets/models/moon.cmt");
+    m_modelDefs[GameModelID::Stars]->loadFromFile("assets/models/stars.cmt");
+
+    m_modelDefs[GameModelID::Cube]->loadFromFile("assets/models/cube.cmt");
+    m_modelDefs[GameModelID::Arrow]->loadFromFile("assets/models/arrow.cmt");
+    m_modelDefs[GameModelID::Billboards]->loadFromFile("assets/models/tree.cmt");
 
     //CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
 
@@ -235,7 +240,7 @@ void GameState::createScene()
     entity.addComponent<cro::Transform>().setScale(glm::vec3(0.03f));
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f);
     entity.getComponent<cro::Transform>().setPosition({ -19.f, 0.f, 6.f });
-    m_modelDefs[GameModelID::BatCat].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::BatCat]->createModel(entity);
     entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Run);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
@@ -244,7 +249,7 @@ void GameState::createScene()
     //load terrain chunks
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 200.f / 175.f, 1.f, 1.f });
-    m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::TestRoom]->createModel(entity);
     //auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
     entity.addComponent<TerrainChunk>().inUse = true;
     entity.getComponent<TerrainChunk>().width = 200.f;// bb[1].x - bb[0].x; //TODO fix this
@@ -258,7 +263,7 @@ void GameState::createScene()
 
     auto bbEnt = m_scene.createEntity();
     bbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 6.f });
-    m_modelDefs[GameModelID::Billboards].createModel(bbEnt, m_resources);
+    m_modelDefs[GameModelID::Billboards]->createModel(bbEnt);
 
     for (auto i = 0u; i < 46u; ++i)
     {
@@ -277,12 +282,12 @@ void GameState::createScene()
         entity.addComponent<cro::Transform>().setPosition({ 400.f, 0.f, 0.f });
         entity.getComponent<cro::Transform>().setScale({ 200.f / 175.f, 1.f, 1.f });
         //auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
-        m_modelDefs[GameModelID::TestRoom].createModel(entity, m_resources);
+        m_modelDefs[GameModelID::TestRoom]->createModel(entity);
         entity.addComponent<TerrainChunk>().width = 200.f;
 
         bbEnt = m_scene.createEntity();
         bbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 3.f + (3.f * i) });
-        m_modelDefs[GameModelID::Billboards].createModel(bbEnt, m_resources);
+        m_modelDefs[GameModelID::Billboards]->createModel(bbEnt);
 
         board.position.x = 0.f;
         for (auto i = 0u; i < 46u; ++i)
@@ -299,12 +304,12 @@ void GameState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ -60.f, 70.f, -180.f });
     entity.getComponent<cro::Transform>().setScale(glm::vec3(6.f));
-    m_modelDefs[GameModelID::Moon].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::Moon]->createModel(entity);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.5, -200.f });
     entity.getComponent<cro::Transform>().setScale(glm::vec3(3.f));
-    m_modelDefs[GameModelID::Stars].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::Stars]->createModel(entity);
 
     //3D camera
     auto ent = m_scene.createEntity();
@@ -406,7 +411,7 @@ void GameState::createScene()
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(sourcePosition);
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, sourceRotation);
-        m_modelDefs[GameModelID::Cube].createModel(e, m_resources);
+        m_modelDefs[GameModelID::Cube]->createModel(e);
 
         static const float Speed = 35.f;
 
@@ -439,7 +444,7 @@ void GameState::createScene()
     //this ent spawns our sound entities
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    m_modelDefs[GameModelID::Arrow].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::Arrow]->createModel(entity);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(10.f);
     entity.getComponent<cro::Callback>().function =

@@ -725,8 +725,8 @@ void ParticleState::updateMouseInput(const cro::Event& evt)
 
 void ParticleState::openModel(const std::string& path)
 {
-    cro::ModelDefinition modelDef(m_sharedData.workingDirectory);
-    if (modelDef.loadFromFile(path, m_resources, &m_environmentMap))
+    cro::ModelDefinition modelDef(m_resources, &m_environmentMap, m_sharedData.workingDirectory);
+    if (modelDef.loadFromFile(path))
     {
         if (m_entities[EntityID::Model].isValid())
         {
@@ -735,7 +735,7 @@ void ParticleState::openModel(const std::string& path)
 
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();
-        modelDef.createModel(entity, m_resources);
+        modelDef.createModel(entity);
 
         m_entities[EntityID::Emitter].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_entities[EntityID::Model] = entity;

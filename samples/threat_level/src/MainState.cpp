@@ -204,13 +204,18 @@ void MainState::addSystems()
 
 void MainState::loadAssets()
 {
-    m_modelDefs[MenuModelID::LookoutBase].loadFromFile("assets/models/lookout_base.cmt", m_resources);
-    m_modelDefs[MenuModelID::ArcticPost].loadFromFile("assets/models/arctic_outpost.cmt", m_resources);
-    m_modelDefs[MenuModelID::GasPlanet].loadFromFile("assets/models/planet.cmt", m_resources);
-    m_modelDefs[MenuModelID::Moon].loadFromFile("assets/models/moon.cmt", m_resources);
-    m_modelDefs[MenuModelID::Roids].loadFromFile("assets/models/roid_belt.cmt", m_resources);
-    m_modelDefs[MenuModelID::Stars].loadFromFile("assets/models/stars.cmt", m_resources);
-    m_modelDefs[MenuModelID::Sun].loadFromFile("assets/models/sun.cmt", m_resources);
+    for (auto& md : m_modelDefs)
+    {
+        md = std::make_unique<cro::ModelDefinition>(m_resources);
+    }
+
+    m_modelDefs[MenuModelID::LookoutBase]->loadFromFile("assets/models/lookout_base.cmt");
+    m_modelDefs[MenuModelID::ArcticPost]->loadFromFile("assets/models/arctic_outpost.cmt");
+    m_modelDefs[MenuModelID::GasPlanet]->loadFromFile("assets/models/planet.cmt");
+    m_modelDefs[MenuModelID::Moon]->loadFromFile("assets/models/moon.cmt");
+    m_modelDefs[MenuModelID::Roids]->loadFromFile("assets/models/roid_belt.cmt");
+    m_modelDefs[MenuModelID::Stars]->loadFromFile("assets/models/stars.cmt");
+    m_modelDefs[MenuModelID::Sun]->loadFromFile("assets/models/sun.cmt");
 
     m_sharedResources.fonts.load(FontID::MenuFont, "assets/fonts/Audiowide-Regular.ttf");
     m_sharedResources.fonts.load(FontID::ScoreboardFont, "assets/fonts/Now-Bold.otf");
@@ -229,7 +234,7 @@ void MainState::createScene()
     entity.addComponent<cro::Transform>().setPosition(planetPos);
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.25f);
     entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.8f);
-    m_modelDefs[MenuModelID::GasPlanet].createModel(entity, m_resources);
+    m_modelDefs[MenuModelID::GasPlanet]->createModel(entity);
     auto& planetRotator = entity.addComponent<Rotator>();
     planetRotator.speed = 0.02f;
     planetRotator.axis.y = 0.2f;
@@ -244,7 +249,7 @@ void MainState::createScene()
     moonTx.setScale(glm::vec3(0.34f));
     //moonTx.setOrigin({ 11.f, 0.f, 0.f });
     moonAxisTx.addChild(moonTx);
-    m_modelDefs[MenuModelID::Moon].createModel(moonEntity, m_resources);
+    m_modelDefs[MenuModelID::Moon]->createModel(moonEntity);
     auto& moonRotator = moonEntity.addComponent<Rotator>();
     moonRotator.axis.y = 1.f;
     moonRotator.speed = 0.1f;   
@@ -254,7 +259,7 @@ void MainState::createScene()
     arcticTx.setScale(glm::vec3(0.8f));
     arcticTx.setOrigin({ 5.8f, 0.f, 5.f });
     entity.getComponent<cro::Transform>().addChild(arcticTx);
-    m_modelDefs[MenuModelID::ArcticPost].createModel(arcticEntity, m_resources);
+    m_modelDefs[MenuModelID::ArcticPost]->createModel(arcticEntity);
     arcticEntity.addComponent<cro::AudioEmitter>(m_resources.audio.get(AudioID::TestStream)).setLooped(true);
     arcticEntity.getComponent<cro::AudioEmitter>().play();
     //arcticEntity.getComponent<cro::AudioEmitter>().setRolloff(20.f);
@@ -266,13 +271,13 @@ void MainState::createScene()
     lookoutTx.setScale(glm::vec3(0.7f));
     lookoutTx.setOrigin({ -8.f, 0.f, 2.f });
     entity.getComponent<cro::Transform>().addChild(lookoutTx);
-    m_modelDefs[MenuModelID::LookoutBase].createModel(lookoutEntity, m_resources);
+    m_modelDefs[MenuModelID::LookoutBase]->createModel(lookoutEntity);
     //lookoutEntity.addComponent<cro::AudioEmitter>(m_resources.audio.get(AudioID::Test)).play(true);
     
     auto roidEntity = m_backgroundScene.createEntity();  
     roidEntity.addComponent<cro::Transform>().setScale({ 0.7f, 0.7f, 0.7f });
     entity.getComponent<cro::Transform>().addChild(roidEntity.getComponent<cro::Transform>());
-    m_modelDefs[MenuModelID::Roids].createModel(roidEntity, m_resources);
+    m_modelDefs[MenuModelID::Roids]->createModel(roidEntity);
     auto& roidRotator = roidEntity.addComponent<Rotator>();
     roidRotator.speed = -0.03f;
     roidRotator.axis.y = 1.f;
@@ -280,17 +285,17 @@ void MainState::createScene()
     //create stars / sun
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -39.f });
-    m_modelDefs[MenuModelID::Stars].createModel(entity, m_resources);
+    m_modelDefs[MenuModelID::Stars]->createModel(entity);
 
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -28.f });
     entity.getComponent<cro::Transform>().rotate({ 0.f, 0.f, 1.f }, 3.14f);
-    m_modelDefs[MenuModelID::Stars].createModel(entity, m_resources);
+    m_modelDefs[MenuModelID::Stars]->createModel(entity);
     entity.addComponent<Drifter>().amplitude = -0.1f;
 
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ -4.f, 2.6f, -11.9f });
-    m_modelDefs[MenuModelID::Sun].createModel(entity, m_resources);
+    m_modelDefs[MenuModelID::Sun]->createModel(entity);
 
 
     //set up lighting

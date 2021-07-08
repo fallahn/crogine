@@ -45,6 +45,7 @@ source distribution.
 
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -379,9 +380,9 @@ void ModelState::createScene()
 
     m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(m_scene.getSunlight().getComponent<cro::Transform>());
 
-    cro::ModelDefinition def;
-    def.loadFromFile("assets/models/arrow.cmt", m_resources);
-    def.createModel(m_scene.getSunlight(), m_resources);
+    cro::ModelDefinition def(m_resources);
+    def.loadFromFile("assets/models/arrow.cmt", true);
+    def.createModel(m_scene.getSunlight());
     //m_scene.getSunlight().getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", cro::Colour(1.f, 1.f, 0.f, 1.f));
 
 
@@ -390,11 +391,11 @@ void ModelState::createScene()
     m_entities[EntityID::ArcBall].getComponent<cro::Transform>().addChild(m_scene.getActiveCamera().getComponent<cro::Transform>());
 
     //create the material preview scene
-    cro::ModelDefinition modelDef;
-    modelDef.loadFromFile("assets/models/preview.cmt", m_resources);
+    cro::ModelDefinition modelDef(m_resources);
+    modelDef.loadFromFile("assets/models/preview.cmt");
     entity = m_previewScene.createEntity();
     entity.addComponent<cro::Transform>();
-    modelDef.createModel(entity, m_resources);
+    modelDef.createModel(entity);
 
     m_previewEntity = entity;
 

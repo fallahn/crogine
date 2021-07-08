@@ -339,30 +339,34 @@ void GameState::loadAssets()
     cro::QuadBuilder qb(backgroundSize);
     m_resources.meshes.loadMesh(MeshID::GameBackground, qb);
 
+    for (auto& md : m_modelDefs)
+    {
+        md = std::make_unique<cro::ModelDefinition>(m_resources);
+    }
 
-    m_modelDefs[GameModelID::Player].loadFromFile("assets/models/player.cmt", m_resources);
-    m_modelDefs[GameModelID::PlayerShield].loadFromFile("assets/models/player_shield.cmt", m_resources);
-    m_modelDefs[GameModelID::CollectableBatt].loadFromFile("assets/models/collectable_batt.cmt", m_resources);
-    m_modelDefs[GameModelID::CollectableBomb].loadFromFile("assets/models/collectable_bomb.cmt", m_resources);
-    m_modelDefs[GameModelID::CollectableBot].loadFromFile("assets/models/collectable_bot.cmt", m_resources);
-    m_modelDefs[GameModelID::CollectableHeart].loadFromFile("assets/models/collectable_heart.cmt", m_resources);
-    m_modelDefs[GameModelID::CollectableShield].loadFromFile("assets/models/collectable_shield.cmt", m_resources);
-    m_modelDefs[GameModelID::CollectableWeaponUpgrade].loadFromFile("assets/models/weapon_upgrade.cmt", m_resources);
-    m_modelDefs[GameModelID::Elite].loadFromFile("assets/models/elite.cmt", m_resources);
-    m_modelDefs[GameModelID::TurretBase].loadFromFile("assets/models/turret_base.cmt", m_resources);
-    m_modelDefs[GameModelID::TurretCannon].loadFromFile("assets/models/turret_cannon.cmt", m_resources);
-    m_modelDefs[GameModelID::Choppa].loadFromFile("assets/models/choppa.cmt", m_resources);
-    m_modelDefs[GameModelID::Speedray].loadFromFile("assets/models/speed.cmt", m_resources);
-    m_modelDefs[GameModelID::WeaverHead].loadFromFile("assets/models/weaver_head.cmt", m_resources);
-    m_modelDefs[GameModelID::WeaverBody].loadFromFile("assets/models/weaver_body.cmt", m_resources);
-    m_modelDefs[GameModelID::Buddy].loadFromFile("assets/models/buddy.cmt", m_resources);
-    m_modelDefs[GameModelID::Boss].loadFromFile("assets/models/placeholder.cmt", m_resources);
+    m_modelDefs[GameModelID::Player]->loadFromFile("assets/models/player.cmt");
+    m_modelDefs[GameModelID::PlayerShield]->loadFromFile("assets/models/player_shield.cmt");
+    m_modelDefs[GameModelID::CollectableBatt]->loadFromFile("assets/models/collectable_batt.cmt");
+    m_modelDefs[GameModelID::CollectableBomb]->loadFromFile("assets/models/collectable_bomb.cmt");
+    m_modelDefs[GameModelID::CollectableBot]->loadFromFile("assets/models/collectable_bot.cmt");
+    m_modelDefs[GameModelID::CollectableHeart]->loadFromFile("assets/models/collectable_heart.cmt");
+    m_modelDefs[GameModelID::CollectableShield]->loadFromFile("assets/models/collectable_shield.cmt");
+    m_modelDefs[GameModelID::CollectableWeaponUpgrade]->loadFromFile("assets/models/weapon_upgrade.cmt");
+    m_modelDefs[GameModelID::Elite]->loadFromFile("assets/models/elite.cmt");
+    m_modelDefs[GameModelID::TurretBase]->loadFromFile("assets/models/turret_base.cmt");
+    m_modelDefs[GameModelID::TurretCannon]->loadFromFile("assets/models/turret_cannon.cmt");
+    m_modelDefs[GameModelID::Choppa]->loadFromFile("assets/models/choppa.cmt");
+    m_modelDefs[GameModelID::Speedray]->loadFromFile("assets/models/speed.cmt");
+    m_modelDefs[GameModelID::WeaverHead]->loadFromFile("assets/models/weaver_head.cmt");
+    m_modelDefs[GameModelID::WeaverBody]->loadFromFile("assets/models/weaver_body.cmt");
+    m_modelDefs[GameModelID::Buddy]->loadFromFile("assets/models/buddy.cmt");
+    m_modelDefs[GameModelID::Boss]->loadFromFile("assets/models/placeholder.cmt");
 
-    m_modelDefs[GameModelID::PlayerPulse].loadFromFile("assets/models/player_pulse.cmt", m_resources);
-    m_modelDefs[GameModelID::PlayerLaser].loadFromFile("assets/models/player_laser.cmt", m_resources);
-    m_modelDefs[GameModelID::EnemyPulse].loadFromFile("assets/models/enemy_pulse.cmt", m_resources);
-    m_modelDefs[GameModelID::EnemyLaser].loadFromFile("assets/models/enemy_laser.cmt", m_resources);
-    m_modelDefs[GameModelID::EnemyOrb].loadFromFile("assets/models/enemy_orb.cmt", m_resources);
+    m_modelDefs[GameModelID::PlayerPulse]->loadFromFile("assets/models/player_pulse.cmt");
+    m_modelDefs[GameModelID::PlayerLaser]->loadFromFile("assets/models/player_laser.cmt");
+    m_modelDefs[GameModelID::EnemyPulse]->loadFromFile("assets/models/enemy_pulse.cmt");
+    m_modelDefs[GameModelID::EnemyLaser]->loadFromFile("assets/models/enemy_laser.cmt");
+    m_modelDefs[GameModelID::EnemyOrb]->loadFromFile("assets/models/enemy_orb.cmt");
 
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::VertexColour);
     m_resources.materials.add(MaterialID::TerrainChunk, m_resources.shaders.get(shaderID));
@@ -729,7 +733,7 @@ void GameState::loadTerrain()
 
     //some rockfall parts
     glm::vec3 rockscale(0.6f, 1.2f, 1.f);
-    auto bb = m_resources.meshes.getMesh(m_modelDefs[MeshID::RockQuad].getMeshID()).boundingBox;
+    auto bb = m_resources.meshes.getMesh(m_modelDefs[MeshID::RockQuad]->getMeshID()).boundingBox;
     cro::PhysicsShape ps;
     ps.type = cro::PhysicsShape::Type::Box;
     ps.extent = (bb[1] - bb[0]) * rockscale / 2.f;
@@ -757,10 +761,10 @@ void GameState::loadModels()
     auto& playerTx = entity.addComponent<cro::Transform>();
     playerTx.setPosition({ -35.4f, 0.f, -9.3f });
     playerTx.setScale(playerScale);
-    m_modelDefs[GameModelID::Player].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::Player]->createModel(entity);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Velocity>().friction = 3.5f;
-    auto bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player].getMeshID()).boundingBox;
+    auto bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Player]->getMeshID()).boundingBox;
     cro::PhysicsShape shipShape;
     shipShape.type = cro::PhysicsShape::Type::Box;
     shipShape.extent = (bb[1] - bb[0]) * playerScale / 2.f;
@@ -778,7 +782,7 @@ void GameState::loadModels()
     //shield
     entity = m_scene.createEntity();
     playerEntity.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
-    m_modelDefs[GameModelID::PlayerShield].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::PlayerShield]->createModel(entity);
     entity.addComponent<Rotator>().speed = 1.f;
     entity.getComponent<Rotator>().axis.z = 1.f;
     playerEntity.getComponent<PlayerInfo>().shieldEntity = entity.getIndex();
@@ -794,7 +798,7 @@ void GameState::loadModels()
 
     auto buddyEnt = m_scene.createEntity();
     axisEnt.getComponent<cro::Transform>().addChild(buddyEnt.addComponent<cro::Transform>());
-    m_modelDefs[GameModelID::Buddy].createModel(buddyEnt, m_resources);
+    m_modelDefs[GameModelID::Buddy]->createModel(buddyEnt);
     buddyEnt.getComponent<cro::Transform>().setPosition({ 0.f, 1.8f, 0.f });
     buddyEnt.addComponent<Buddy>().parent = axisEnt;
     buddyEnt.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/particles/buddy_smoke.cps", m_resources.textures);
@@ -810,19 +814,19 @@ void GameState::loadModels()
     bossEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
     bossEnt.addComponent<cro::CommandTarget>().ID = CommandID::Boss;
     bossEnt.addComponent<Boss>();
-    m_modelDefs[GameModelID::Boss].createModel(bossEnt, m_resources);
+    m_modelDefs[GameModelID::Boss]->createModel(bossEnt);
     //TODO add some particle effects
 
     //collectables
     static const glm::vec3 coinScale(0.12f);
     cro::PhysicsShape coinShape;
     coinShape.type = cro::PhysicsShape::Type::Box;
-    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBatt].getMeshID()).boundingBox;
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::CollectableBatt]->getMeshID()).boundingBox;
     coinShape.extent = (bb[1] - bb[0]) * coinScale / 2.f;
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.41f, 1.4f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    m_modelDefs[GameModelID::CollectableBatt].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::CollectableBatt]->createModel(entity);
     auto& battSpin = entity.addComponent<Rotator>();
     battSpin.axis.y = 1.f;
     battSpin.speed = 3.2f;
@@ -835,7 +839,7 @@ void GameState::loadModels()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.42f, 0.6f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    m_modelDefs[GameModelID::CollectableBomb].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::CollectableBomb]->createModel(entity);
     auto& bombSpin = entity.addComponent<Rotator>();
     bombSpin.axis.y = 1.f;
     bombSpin.speed = 2.9f;
@@ -848,7 +852,7 @@ void GameState::loadModels()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.6f, -0.2f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    m_modelDefs[GameModelID::CollectableBot].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::CollectableBot]->createModel(entity);
     auto& botSpin = entity.addComponent<Rotator>();
     botSpin.axis.y = 1.f;
     botSpin.speed = 2.994f;
@@ -861,7 +865,7 @@ void GameState::loadModels()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.38f, -1.f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(coinScale);
-    m_modelDefs[GameModelID::CollectableHeart].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::CollectableHeart]->createModel(entity);
     auto& heartSpin = entity.addComponent<Rotator>();
     heartSpin.axis.y = 1.f;
     heartSpin.speed = 2.873f;
@@ -882,7 +886,7 @@ void GameState::loadModels()
     entity.addComponent<cro::PhysicsObject>().addShape(coinShape);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player | CollisionID::PlayerLaser);
-    m_modelDefs[GameModelID::CollectableShield].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::CollectableShield]->createModel(entity);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 7.f, 0.f, -9.3f });
@@ -892,18 +896,18 @@ void GameState::loadModels()
     entity.addComponent<cro::PhysicsObject>().addShape(coinShape);
     entity.getComponent<cro::PhysicsObject>().setCollisionGroups(CollisionID::Collectable);
     entity.getComponent<cro::PhysicsObject>().setCollisionFlags(CollisionID::Player);
-    m_modelDefs[GameModelID::CollectableWeaponUpgrade].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::CollectableWeaponUpgrade]->createModel(entity);
 
     //----NPCs----//
     //elite
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 5.9f, 1.5f, -9.3f });
     entity.getComponent<cro::Transform>().setScale(glm::vec3(0.6f));
-    m_modelDefs[GameModelID::Elite].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::Elite]->createModel(entity);
     entity.addComponent<Npc>().type = Npc::Elite;
     entity.getComponent<Npc>().hasDyingAnim = true;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Elite;
-    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Elite].getMeshID()).boundingBox;
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Elite]->getMeshID()).boundingBox;
     
     cro::PhysicsShape eliteShape;
     eliteShape.type = cro::PhysicsShape::Type::Box;
@@ -924,7 +928,7 @@ void GameState::loadModels()
     flames.loadFromFile("assets/particles/flames.cps", m_resources.textures);
     const float choppaSpacing = ChoppaNavigator::spacing;
     glm::vec3 choppaScale(0.6f);
-    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa].getMeshID()).boundingBox;
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Choppa]->getMeshID()).boundingBox;
     cro::PhysicsShape choppaShape;
     choppaShape.type = cro::PhysicsShape::Type::Box;
     choppaShape.extent = (bb[1] - bb[0]) * choppaScale / 2.f;
@@ -934,8 +938,8 @@ void GameState::loadModels()
         entity.addComponent<cro::Transform>().setPosition({ 5.9f, -choppaSpacing + (i * choppaSpacing), -9.3f });
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
         entity.getComponent<cro::Transform>().setScale(choppaScale);
-        m_modelDefs[GameModelID::Choppa].createModel(entity, m_resources);
-        CRO_ASSERT(m_modelDefs[GameModelID::Choppa].hasSkeleton(), "Skeleton missing from choppa!");
+        m_modelDefs[GameModelID::Choppa]->createModel(entity);
+        CRO_ASSERT(m_modelDefs[GameModelID::Choppa]->hasSkeleton(), "Skeleton missing from choppa!");
         
         entity.getComponent<cro::Skeleton>().play(0);
         entity.addComponent<Npc>().type = Npc::Choppa;
@@ -950,7 +954,7 @@ void GameState::loadModels()
     }
 
     //speedray
-    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Speedray].getMeshID()).boundingBox;
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::Speedray]->getMeshID()).boundingBox;
     glm::vec3 speedrayScale(0.8f);
     cro::PhysicsShape speedrayShape;
     speedrayShape.type = cro::PhysicsShape::Type::Box;
@@ -963,7 +967,7 @@ void GameState::loadModels()
         entity.addComponent<cro::Transform>().setPosition({ 6.f, 0.f, -9.3f });
         entity.getComponent<cro::Transform>().rotate(glm::vec3(1.f, 0.f, 0.f), cro::Util::Const::PI - rotateOffset);
         entity.getComponent<cro::Transform>().setScale(speedrayScale);
-        m_modelDefs[GameModelID::Speedray].createModel(entity, m_resources);
+        m_modelDefs[GameModelID::Speedray]->createModel(entity);
         auto& speedRot = entity.addComponent<Rotator>();
         speedRot.axis.x = 1.f;
         speedRot.speed = -cro::Util::Const::TAU / 2.f;
@@ -983,13 +987,13 @@ void GameState::loadModels()
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f }); //places off screen to start
     entity.getComponent<cro::Transform>().setScale({ 0.3f, 0.3f, 0.3f });
     chunkEntityA.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>()); //attach to scenery
-    m_modelDefs[GameModelID::TurretBase].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::TurretBase]->createModel(entity);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::TurretA;
     entity.addComponent<Family>().parent = chunkEntityA;
 
     auto canEnt = m_scene.createEntity();
     entity.getComponent<cro::Transform>().addChild(canEnt.addComponent<cro::Transform>());
-    m_modelDefs[GameModelID::TurretCannon].createModel(canEnt, m_resources);
+    m_modelDefs[GameModelID::TurretCannon]->createModel(canEnt);
     canEnt.addComponent<Npc>().type = Npc::Turret;
     canEnt.addComponent<cro::PhysicsObject>().addShape(turrShape);
     entity.getComponent<Family>().child = canEnt;
@@ -998,20 +1002,20 @@ void GameState::loadModels()
     entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
     entity.getComponent<cro::Transform>().setScale({ 0.3f, 0.3f, 0.3f });
     chunkEntityB.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>()); //attach to scenery
-    m_modelDefs[GameModelID::TurretBase].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::TurretBase]->createModel(entity);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::TurretB;
     entity.addComponent<Family>().parent = chunkEntityB;
 
     canEnt = m_scene.createEntity();
     entity.getComponent<cro::Transform>().addChild(canEnt.addComponent<cro::Transform>());
-    m_modelDefs[GameModelID::TurretCannon].createModel(canEnt, m_resources);
+    m_modelDefs[GameModelID::TurretCannon]->createModel(canEnt);
     canEnt.addComponent<Npc>().type = Npc::Turret;
     canEnt.addComponent<cro::PhysicsObject>().addShape(turrShape);
     entity.getComponent<Family>().child = canEnt;
 
     //weaver
     glm::vec3 weaverScale(0.35f);
-    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::WeaverBody].getMeshID()).boundingBox;
+    bb = m_resources.meshes.getMesh(m_modelDefs[GameModelID::WeaverBody]->getMeshID()).boundingBox;
     cro::PhysicsShape weaverShape;
     weaverShape.type = cro::PhysicsShape::Type::Box;
     for (auto i = 0u; i < WeaverNavigator::count; ++i)
@@ -1023,7 +1027,7 @@ void GameState::loadModels()
         entity.getComponent<cro::Transform>().setScale(weaverScale);
         entity.getComponent<cro::Transform>().rotate({ 1.f, 0.f, 0.f }, static_cast<float>(i) * 0.3f);
         entity.getComponent<cro::Transform>().rotate({ 0.f, 1.f, 0.f }, cro::Util::Const::PI / 2.f);
-        m_modelDefs[modelID].createModel(entity, m_resources);
+        m_modelDefs[modelID]->createModel(entity);
         entity.addComponent<Npc>().type = Npc::Weaver;
         entity.getComponent<Npc>().weaver.ident = static_cast<std::uint8_t>(WeaverNavigator::count - i);
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Weaver;
@@ -1115,7 +1119,7 @@ void GameState::loadWeapons()
         auto entity = m_scene.createEntity();
 
         entity.addComponent<cro::Transform>().setPosition(glm::vec3(-10.f));
-        m_modelDefs[GameModelID::PlayerPulse].createModel(entity, m_resources);
+        m_modelDefs[GameModelID::PlayerPulse]->createModel(entity);
         auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
 
         cro::PhysicsShape ps;
@@ -1132,7 +1136,7 @@ void GameState::loadWeapons()
     //use a single laser we'll scale it to make it look bigger or smaller
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(-9.3f));
-    m_modelDefs[GameModelID::PlayerLaser].createModel(entity, m_resources);
+    m_modelDefs[GameModelID::PlayerLaser]->createModel(entity);
     auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
 
     entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f)); //hides the laser intially
@@ -1159,7 +1163,7 @@ void GameState::loadWeapons()
     {
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, -8.f });
-        m_modelDefs[GameModelID::EnemyOrb].createModel(entity, m_resources);
+        m_modelDefs[GameModelID::EnemyOrb]->createModel(entity);
         auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
 
         ps.extent = glm::vec3(bb[1].x / 2.f, bb[1].y / 2.f, 1.f);
@@ -1173,7 +1177,7 @@ void GameState::loadWeapons()
     //elite laser is an orb and a beam attached to the weapon ent (see elite entity above)
     auto laserEnt = m_scene.createEntity();
     laserEnt.addComponent<cro::Transform>().setScale(glm::vec3(0.f)); //initially invisible
-    m_modelDefs[GameModelID::EnemyLaser].createModel(laserEnt, m_resources);
+    m_modelDefs[GameModelID::EnemyLaser]->createModel(laserEnt);
     bb = laserEnt.getComponent<cro::Model>().getMeshData().boundingBox;
 
     weaponEntity.getComponent<cro::Transform>().addChild(laserEnt.getComponent<cro::Transform>());
@@ -1207,7 +1211,7 @@ void GameState::loadWeapons()
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(glm::vec3(10.f));
 
-        m_modelDefs[GameModelID::EnemyPulse].createModel(entity, m_resources);
+        m_modelDefs[GameModelID::EnemyPulse]->createModel(entity);
         auto bb = entity.getComponent<cro::Model>().getMeshData().boundingBox;
 
         ps.type = cro::PhysicsShape::Type::Box;

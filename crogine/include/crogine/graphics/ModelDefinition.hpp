@@ -70,31 +70,36 @@ namespace cro
     This is useful for loading model data from disk once and
     then creating multiple instances of it:
     \begincode
-    ModelDefinition definition;
-    if(definition.loadFromFile("assets/models/crate.cmt", resources))
+    ModelDefinition definition(resources);
+    if(definition.loadFromFile("assets/models/crate.cmt"))
     {
         //create the first model
         auto entity = scene.createEntity();
         entity.addComponent<Transform>().setPosition({100.f, 0.f, 100.f}):
-        definition.createModel(entity, resources);
+        definition.createModel(entity);
 
         //create a second model
         entity = scene.createEntity();
         entity.addComponent<Transform>().setPosition({40.f, 0.f, -30.f});
-        definition.createModel(entity, resources);
+        definition.createModel(entity);
     }
     \endcode
 
-    Optionally, when loading models with a PBR material, a reference to an
-    EnvironmentMap can be supplied to the load function so that lighting
-    uniforms are automatically mapped to the material properties:
-
+    If the model is going to be renderer with a DeferredRenderSystem then
+    specify the need for deferred shaders when loading:
     \begincode
-    if(definition.loadFromFile("assets/models/crate.cmt", resources, &environmentMap))
-    {
-        //create model...
-    }
+    definition.loadFromFile(path, true);
     \endcode
+
+    If the model is NOT rendered with the deferred render system, but uses
+    PBR materials then a pointer to the active Environment map must be
+    passed to the ModelDefinition on construction:
+    \begincode
+    ModelDefinition definition(resource, &environmentMap);
+    \endcode
+
+    Note that models without PBR materials are unaffected and will
+    load correctly whether the EnvironmentMap pointer is passed or not
 
     */
     class CRO_EXPORT_API ModelDefinition final
@@ -102,38 +107,28 @@ namespace cro
     public:
         /*!
         \brief Constructor.
-        \param workingDir Set this to have resources open at a file location
-        relative to a directory other than the current working directory
-        */
-        ModelDefinition(const std::string& workingDir = "") : m_workingDir(workingDir)
-        {
-            if (!workingDir.empty())
-            {
-                std::replace(m_workingDir.begin(), m_workingDir.end(), '\\', '/');
-                if (m_workingDir.back() != '/')
-                {
-                    m_workingDir += '/';
-                }
-            }        
-        }
-
-        /*!
-        \brief Attempts to load a definition from a ConfigFile at a given path.
-        \param path String containing the path to a configuration file. These are
-        specially formatted files containing data about a model.
         \param resources A reference to a resource collection. Resources such
         as textures and materials are loaded into this, and the ModelDefinition
         populated with IDs referring to the newly loaded data.
         \param envMap A pointer to a valid EnvironmentMap instance. This will
         automatically assign any required lighting parameters to PBR materials.
-        This should be nullptr if no PBR materials are being loaded, or PBR materials
-        are going to be rendered with a DeferredRenderSystem.
+        \param workingDir Set this to have resources open at a file location
+        relative to a directory other than the current working directory
+        */
+        explicit ModelDefinition(ResourceCollection& resources, EnvironmentMap* envMap = nullptr, const std::string& workingDir = "");
+
+
+        /*!
+        \brief Attempts to load a definition from a ConfigFile at a given path.
+        \param path String containing the path to a configuration file. These are
+        specially formatted files containing data about a model.
+        \param useDeferredShaders Set this to true if using the DeferredRenderingSystem
         \param forceReload Forces the ResourceCollection to reload any mesh data from
         file, rather than recycling any existing VBO. Generally should be false.
         \returns true if the configuration file was parsed without error.
         \see ConfigFile, EnvironmentMap
         */
-        bool loadFromFile(const std::string& path, ResourceCollection& resources, EnvironmentMap* envMap = nullptr, bool forceReload = false);
+        bool loadFromFile(const std::string& path, bool useDeferredShaders = false, bool forceReload = false);
 
         /*!
         \brief Creates a Model component from the loaded config on the given entity.
@@ -143,10 +138,8 @@ namespace cro
         not components such as Transform, which still need to be added manually.
         \param entity A valid entity with a Transform component to which the Model
         component should be attached
-        \param resources A reference to the ResourceCollection used when loading 
-        the mdel definition from disk.
         */
-        bool createModel(Entity entity, ResourceCollection& resoures);
+        bool createModel(Entity entity);
 
         /*!
         \brief Returns true if the material for this model requested that it casts
@@ -170,6 +163,8 @@ namespace cro
         bool hasSkeleton() const { return m_skeleton; }
 
     private:
+        ResourceCollection& m_resources;
+        EnvironmentMap* m_envMap;
         std::string m_workingDir;
 
         std::size_t m_meshID = 0; //!< ID of the mesh in the mesh resource

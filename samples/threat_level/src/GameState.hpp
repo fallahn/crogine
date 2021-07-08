@@ -30,12 +30,14 @@ source distribution.
 #ifndef TL_GAME_STATE_HPP_
 #define TL_GAME_STATE_HPP_
 
+#include "StateIDs.hpp"
+#include "ResourceIDs.hpp"
+
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
+#include <memory>
 
 namespace cro
 {
@@ -46,7 +48,6 @@ class GameState final : public cro::State
 {
 public:
     GameState(cro::StateStack&, cro::State::Context);
-    ~GameState() = default;
 
     cro::StateID getStateID() const override { return States::GamePlaying; }
 
@@ -62,7 +63,7 @@ private:
     cro::Scene m_uiScene;
 
 
-    std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs;
+    std::array<std::unique_ptr<cro::ModelDefinition>, GameModelID::Count> m_modelDefs;
 
     cro::UISystem* m_uiSystem;
 

@@ -305,8 +305,8 @@ void GameState::createScene()
     };
 
     //placeholder for player scale
-    cro::ModelDefinition md;
-    md.loadFromFile("assets/models/player_box.cmt", m_resources, &m_environmentMap);
+    cro::ModelDefinition md(m_resources, &m_environmentMap);
+    md.loadFromFile("assets/models/player_box.cmt");
 
     //as many cameras as there are local players
     for (auto i = 0u; i < m_cameras.size(); ++i)
@@ -336,7 +336,7 @@ void GameState::createScene()
         auto playerEnt = m_gameScene.createEntity();
         playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
         //playerEnt.getComponent<cro::Transform>().setPosition({ 0.f, CameraHeight / 2.f, 0.f });
-        md.createModel(playerEnt, m_resources);
+        md.createModel(playerEnt);
         playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[i]);
 
         playerEnt.addComponent<cro::Callback>().active = true;
@@ -410,9 +410,9 @@ void GameState::createDayCycle()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -SunOffset });
     children.moonNode = entity;
 
-    cro::ModelDefinition definition;
-    definition.loadFromFile("assets/models/moon.cmt", m_resources);
-    definition.createModel(entity, m_resources);
+    cro::ModelDefinition definition(m_resources);
+    definition.loadFromFile("assets/models/moon.cmt");
+    definition.createModel(entity);
     entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -421,8 +421,8 @@ void GameState::createDayCycle()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, SunOffset });
     children.sunNode = entity;
 
-    definition.loadFromFile("assets/models/sun.cmt", m_resources);
-    definition.createModel(entity, m_resources);
+    definition.loadFromFile("assets/models/sun.cmt");
+    definition.createModel(entity);
     entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

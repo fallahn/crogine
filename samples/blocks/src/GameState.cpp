@@ -505,14 +505,14 @@ void GameState::spawnPlayer(PlayerInfo info)
         entity.addComponent<Actor>().id = info.playerID;
         entity.getComponent<Actor>().serverEntityId = info.serverID;
 
-        cro::ModelDefinition modelDef;
-        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
-        modelDef.createModel(entity, m_resources);
+        cro::ModelDefinition modelDef(m_resources);
+        modelDef.loadFromFile("assets/models/head.cmt");
+        modelDef.createModel(entity);
 
         auto headEnt = entity;
 
         //body model
-        modelDef.loadFromFile("assets/models/body_animated.cmt", m_resources);
+        modelDef.loadFromFile("assets/models/body_animated.cmt");
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::BodyMesh;
@@ -551,7 +551,7 @@ void GameState::spawnPlayer(PlayerInfo info)
                 //TODO interpolate rotation to delay slightly
             }
         };
-        modelDef.createModel(entity, m_resources);
+        modelDef.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(hideBody);
         entity.getComponent<cro::Skeleton>().play(0);
 

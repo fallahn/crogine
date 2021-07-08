@@ -58,7 +58,22 @@ namespace
     };
 }
 
-bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& rc, EnvironmentMap* envMap, bool forceReload)
+ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap, const std::string& workingDir)
+    : m_resources   (rc),
+    m_envMap        (envMap),
+    m_workingDir    (workingDir)
+{
+    if (!workingDir.empty())
+    {
+        std::replace(m_workingDir.begin(), m_workingDir.end(), '\\', '/');
+        if (m_workingDir.back() != '/')
+        {
+            m_workingDir += '/';
+        }
+    }
+}
+
+bool ModelDefinition::loadFromFile(const std::string& path, bool useDeferredShaders, bool forceReload)
 {
     if (m_modelLoaded)
     {
@@ -211,14 +226,14 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 
     //do all the resource loading last when we know properties are valid,
     //to prevent partially loading a model and wasting resources.
-    m_meshID = rc.meshes.loadMesh(*meshBuilder.get(), forceReload);
+    m_meshID = m_resources.meshes.loadMesh(*meshBuilder.get(), forceReload);
     if (m_meshID == 0)
     {
         Logger::log(path + ": preloading mesh failed", Logger::Type::Error);
         return false;
     }
 
-    auto skel = rc.meshes.getSkeltalAnimation(m_meshID);
+    auto skel = m_resources.meshes.getSkeltalAnimation(m_meshID);
     if (skel)
     {
         m_skeleton = skel;
@@ -226,10 +241,17 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
 
     for (auto& mat : materials)
     {
-        ShaderResource::BuiltIn shaderType = ShaderResource::Unlit;
+        ShaderResource::BuiltIn shaderType = useDeferredShaders ? ShaderResource::UnlitDeferred : ShaderResource::Unlit;
         if (mat.getId() == "VertexLit")
         {
-            shaderType = m_billboard ? ShaderResource::BillboardVertexLit : ShaderResource::VertexLit;
+            if (m_billboard)
+            {
+                shaderType = ShaderResource::BillboardVertexLit;
+            }
+            else
+            {
+                shaderType = useDeferredShaders ? ShaderResource::VertexLitDeferred : ShaderResource::VertexLit;
+            }
         }
         else if (mat.getId() == "PBR")
         {
@@ -240,7 +262,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             }
             else
             {
-                shaderType = envMap ? ShaderResource::PBR : ShaderResource::PBRDeferred;
+                shaderType = useDeferredShaders ? ShaderResource::PBRDeferred : ShaderResource::PBR;
             }
         }
         else if (m_billboard)
@@ -367,9 +389,9 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         }
 
         //load the material then check properties again for material properties
-        auto shaderID = rc.shaders.loadBuiltIn(shaderType, flags);
-        auto matID = rc.materials.add(rc.shaders.get(shaderID));
-        auto& material = rc.materials.get(matID);
+        auto shaderID = m_resources.shaders.loadBuiltIn(shaderType, flags);
+        auto matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+        auto& material = m_resources.materials.get(matID);
         material.deferred = shaderType == ShaderResource::PBRDeferred;
 
         //set a default mask colour - this is overwritten
@@ -396,7 +418,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             const auto& name = Util::String::toLower(p.getName());
             if (name == "diffuse")
             {
-                auto& tex = rc.textures.get(m_workingDir + p.getValue<std::string>());
+                auto& tex = m_resources.textures.get(m_workingDir + p.getValue<std::string>());
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_diffuseMap", tex);
@@ -405,21 +427,21 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             }
             else if (name == "mask")
             {
-                auto& tex = rc.textures.get(m_workingDir + p.getValue<std::string>());
+                auto& tex = m_resources.textures.get(m_workingDir + p.getValue<std::string>());
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_maskMap", tex);
             }
             else if (name == "normal")
             {
-                auto& tex = rc.textures.get(m_workingDir + p.getValue<std::string>());
+                auto& tex = m_resources.textures.get(m_workingDir + p.getValue<std::string>());
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_normalMap", tex);
             }
             else if (name == "lightmap")
             {
-                auto& tex = rc.textures.get(m_workingDir + p.getValue<std::string>());
+                auto& tex = m_resources.textures.get(m_workingDir + p.getValue<std::string>());
                 tex.setSmooth(true);
                 material.setProperty("u_lightMap", tex);
             }
@@ -444,7 +466,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
             }
             else if (name == "projection")
             {
-                auto& tex = rc.textures.get(p.getValue<std::string>(), false);
+                auto& tex = m_resources.textures.get(p.getValue<std::string>(), false);
                 tex.setSmooth(smoothTextures);
                 material.setProperty("u_projectionMap", tex);
             }
@@ -513,9 +535,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         //check to see if we can map environment lighting
         if (shaderType == ShaderResource::PBR)
         {
-            material.setProperty("u_irradianceMap", envMap->getIrradianceMap());
-            material.setProperty("u_prefilterMap", envMap->getPrefilterMap());
-            material.setProperty("u_brdfMap", envMap->getBRDFMap());
+            CRO_ASSERT(m_envMap, "No environment map was pass on construction");
+            material.setProperty("u_irradianceMap", m_envMap->getIrradianceMap());
+            material.setProperty("u_prefilterMap", m_envMap->getPrefilterMap());
+            material.setProperty("u_brdfMap", m_envMap->getBRDFMap());
         }
 
         m_materialIDs[m_materialCount] = matID;
@@ -524,14 +547,14 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
         {
             flags = ShaderResource::DepthMap | (flags & (ShaderResource::Skinning | ShaderResource::AlphaClip));
 
-            shaderID = rc.shaders.loadBuiltIn(m_billboard ? ShaderResource::BillboardShadowMap : ShaderResource::ShadowMap, flags);
-            matID = rc.materials.add(rc.shaders.get(shaderID));
+            shaderID = m_resources.shaders.loadBuiltIn(m_billboard ? ShaderResource::BillboardShadowMap : ShaderResource::ShadowMap, flags);
+            matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
             m_shadowIDs[m_materialCount] = matID;
 
             if (flags & ShaderResource::AlphaClip
                 && diffuseTex != nullptr)
             {
-                auto& m = rc.materials.get(matID);
+                auto& m = m_resources.materials.get(matID);
                 m.setProperty("u_diffuseMap", *diffuseTex);
                 m.setProperty("u_alphaClip", alphaClip);
             }
@@ -544,17 +567,17 @@ bool ModelDefinition::loadFromFile(const std::string& path, ResourceCollection& 
     return true;
 }
 
-bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
+bool ModelDefinition::createModel(Entity entity)
 {
     CRO_ASSERT(entity.isValid(), "Invalid Entity");
     CRO_ASSERT(entity.hasComponent<cro::Transform>(), "Missing transform component");
 
     if (m_meshID != 0)
     {
-        auto& model = entity.addComponent<cro::Model>(rc.meshes.getMesh(m_meshID), rc.materials.get(m_materialIDs[0]));
+        auto& model = entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshID), m_resources.materials.get(m_materialIDs[0]));
         for (auto i = 1u; i < m_materialCount; ++i)
         {
-            model.setMaterial(i, rc.materials.get(m_materialIDs[i]));
+            model.setMaterial(i, m_resources.materials.get(m_materialIDs[i]));
         }
 
         if (m_castShadows)
@@ -570,7 +593,7 @@ bool ModelDefinition::createModel(Entity entity, ResourceCollection& rc)
                 {
                     if (m_shadowIDs[i] > 0)
                     {
-                        model.setShadowMaterial(i, rc.materials.get(m_shadowIDs[i]));
+                        model.setShadowMaterial(i, m_resources.materials.get(m_shadowIDs[i]));
                     }
                 }
                 entity.addComponent<ShadowCaster>().skinned = (m_skeleton);

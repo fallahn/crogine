@@ -30,13 +30,15 @@ source distribution.
 #ifndef TL_MAIN_STATE_HPP_
 #define TL_MAIN_STATE_HPP_
 
+#include "StateIDs.hpp"
+#include "ResourceIDs.hpp"
+
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
+#include <memory>
 
 namespace GroupID
 {
@@ -79,7 +81,7 @@ private:
     cro::Scene m_menuScene;
     SharedResources& m_sharedResources;
 
-    std::array<cro::ModelDefinition, MenuModelID::Count> m_modelDefs;
+    std::array<std::unique_ptr<cro::ModelDefinition>, MenuModelID::Count> m_modelDefs;
 
     cro::CommandSystem* m_commandSystem;
     cro::UISystem* m_uiSystem;

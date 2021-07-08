@@ -38,6 +38,8 @@ source distribution.
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
+#include <memory>
+
 struct SharedStateData;
 class WorldState final : public cro::State, public cro::GuiClient
 {
@@ -101,7 +103,7 @@ private:
     struct ReferenceModel final
     {
         std::size_t modelID = 0;
-        cro::ModelDefinition modelDef;
+        std::unique_ptr<cro::ModelDefinition> modelDef;
         cro::RenderTexture thumbnail;
     };
     std::vector<ReferenceModel> m_models;

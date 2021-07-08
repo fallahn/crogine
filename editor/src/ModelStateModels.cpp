@@ -91,15 +91,15 @@ void ModelState::openModelAtPath(const std::string& path)
 
     closeModel();
 
-    cro::ModelDefinition def(m_sharedData.workingDirectory);
-    if (def.loadFromFile(path, m_resources, &m_environmentMap, true))
+    cro::ModelDefinition def(m_resources, &m_environmentMap, m_sharedData.workingDirectory);
+    if (def.loadFromFile(path, true))
     {
         m_currentFilePath = path;
 
         m_entities[EntityID::ActiveModel] = m_scene.createEntity();
         m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(m_entities[EntityID::ActiveModel].addComponent<cro::Transform>());
 
-        def.createModel(m_entities[EntityID::ActiveModel], m_resources);
+        def.createModel(m_entities[EntityID::ActiveModel]);
 
         //always have the option to cast shadows
         if (!m_entities[EntityID::ActiveModel].hasComponent<cro::ShadowCaster>())

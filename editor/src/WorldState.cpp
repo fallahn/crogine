@@ -244,8 +244,8 @@ void WorldState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_scene.addSystem<cro::CameraSystem>(mb);
-    //m_scene.addSystem<cro::ModelRenderer>(mb);
-    m_scene.addSystem<cro::DeferredRenderSystem>(mb).setEnvironmentMap(m_environmentMap);
+    m_scene.addSystem<cro::ModelRenderer>(mb);
+    //m_scene.addSystem<cro::DeferredRenderSystem>(mb).setEnvironmentMap(m_environmentMap);
 
     m_previewScene.addSystem<cro::CameraSystem>(mb);
     m_previewScene.addSystem<cro::ModelRenderer>(mb);
@@ -266,9 +266,9 @@ void WorldState::setupScene()
 
 
     //sunlight node
-    cro::ModelDefinition def;
-    def.loadFromFile("assets/models/arrow.cmt", m_resources);
-    def.createModel(m_scene.getSunlight(), m_resources);
+    cro::ModelDefinition def(m_resources, &m_environmentMap);
+    def.loadFromFile("assets/models/arrow.cmt");
+    def.createModel(m_scene.getSunlight());
     m_scene.getSunlight().setLabel("Sunlight");
 
     m_selectedEntity = m_scene.getSunlight();
@@ -277,10 +277,10 @@ void WorldState::setupScene()
     m_selectedEntity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.5f);
 
 
-    def.loadFromFile("assets/models/test_scene.cmt", m_resources, &m_environmentMap);
+    def.loadFromFile("assets/models/test_scene.cmt");
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    def.createModel(entity, m_resources);
+    def.createModel(entity);
 
     m_scene.getActiveCamera().addComponent<cro::GBuffer>();
 

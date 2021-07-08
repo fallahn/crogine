@@ -316,7 +316,9 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
 
 
     //render forward/transparent items to GBuffer 
-    //TODO (inc normals/position for screen space effects - problem is revelage sharing normal buffer means incorrect blend mode)
+    //TODO (inc normals/position for screen space effects - 
+    //problem is revealage sharing normal buffer means 
+    //incorrect blend mode for writing normals)
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glEnable(GL_BLEND)); 
     //set correct blend mode for individual buffers
@@ -451,8 +453,6 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glBindTexture(GL_TEXTURE_2D, buffer.getTexture(4).textureID));
     //reveal is already bound to 2 via normal map
-    /*glCheck(glActiveTexture(GL_TEXTURE2));
-    glCheck(glBindTexture(GL_TEXTURE_2D, buffer.getTexture(0).textureID));*/
 
     glCheck(glUseProgram(m_oitShader.getGLHandle()));
     glCheck(glUniformMatrix4fv(m_oitUniforms[OITUniformIDs::WorldMat], 1, GL_FALSE, glm::value_ptr(transform)));

@@ -49,6 +49,7 @@ source distribution.
 
 #include <unordered_map>
 #include <array>
+#include <memory>
 
 namespace cro
 {
@@ -82,7 +83,7 @@ private:
     std::array<std::size_t, MeshID::Count> m_meshIDs = {};
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
-    std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs = {};
+    std::array<std::unique_ptr<cro::ModelDefinition>, GameModelID::Count> m_modelDefs = {};
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
     cro::EnvironmentMap m_environmentMap;

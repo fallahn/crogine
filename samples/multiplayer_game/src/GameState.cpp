@@ -283,16 +283,16 @@ void GameState::loadAssets()
 void GameState::createScene()
 {
     //create ground plane for testing
-    cro::ModelDefinition modelDef;
-    modelDef.loadFromFile("assets/models/ground_plane.cmt", m_resources);
+    cro::ModelDefinition modelDef(m_resources);
+    modelDef.loadFromFile("assets/models/ground_plane.cmt");
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    modelDef.createModel(entity, m_resources);
+    modelDef.createModel(entity);
 
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -7.f });
-    modelDef.createModel(entity, m_resources);
+    modelDef.createModel(entity);
     entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Green);
 }
 
@@ -452,17 +452,17 @@ void GameState::spawnPlayer(PlayerInfo info)
         auto rotation = entity.getComponent<cro::Transform>().getRotation();
 
         //TODO do we want to cache this model def?
-        cro::ModelDefinition modelDef;
-        modelDef.loadFromFile("assets/models/head.cmt", m_resources);
+        cro::ModelDefinition modelDef(m_resources);
+        modelDef.loadFromFile("assets/models/head.cmt");
 
         entity.addComponent<cro::CommandTarget>().ID = Client::CommandID::Interpolated;
         entity.addComponent<InterpolationComponent>(InterpolationPoint(info.spawnPosition, rotation, info.timestamp));
-        modelDef.createModel(entity, m_resources);
+        modelDef.createModel(entity);
 
         auto headEnt = entity;
 
         //body model
-        modelDef.loadFromFile("assets/models/body.cmt", m_resources);
+        modelDef.loadFromFile("assets/models/body.cmt");
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.55f, 0.f }); //TODO we need to get some sizes from the mesh - will AABB do?
         entity.addComponent<cro::Callback>().active = true;
@@ -480,7 +480,7 @@ void GameState::spawnPlayer(PlayerInfo info)
                 e.getComponent<cro::Transform>().setPosition(headEnt.getComponent<cro::Transform>().getPosition());
             }
         };
-        modelDef.createModel(entity, m_resources);
+        modelDef.createModel(entity);
     }
 }
 

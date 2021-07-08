@@ -588,11 +588,15 @@ void GameState::loadAssets()
         portalUniform = m_resources.shaders.get(ShaderID::Portal).getUniformMap().at("u_time");
     }
 
-    //model defs - don't forget to pass the env map here!
-    m_modelDefs[GameModelID::Crate].loadFromFile("assets/models/box.cmt", m_resources/*, &m_environmentMap*/);
-    m_modelDefs[GameModelID::Spawner].loadFromFile("assets/models/spawner.cmt", m_resources/*, &m_environmentMap*/);
-    m_modelDefs[GameModelID::Balloon].loadFromFile("assets/models/balloon.cmt", m_resources/*, &m_environmentMap*/);
-    m_modelDefs[GameModelID::Hologram].loadFromFile("assets/models/hologram.cmt", m_resources/*, &m_environmentMap*/);
+    //model defs
+    for (auto& md : m_modelDefs)
+    {
+        md = std::make_unique<cro::ModelDefinition>(m_resources);
+    }
+    m_modelDefs[GameModelID::Crate]->loadFromFile("assets/models/box.cmt", true);
+    m_modelDefs[GameModelID::Spawner]->loadFromFile("assets/models/spawner.cmt", true);
+    m_modelDefs[GameModelID::Balloon]->loadFromFile("assets/models/balloon.cmt", true);
+    m_modelDefs[GameModelID::Hologram]->loadFromFile("assets/models/hologram.cmt", true);
 
 
     //sprites
@@ -768,21 +772,21 @@ void GameState::createScene()
     loadMap();
 
     //ground plane
-    cro::ModelDefinition modelDef;
-    modelDef.loadFromFile("assets/models/ground_plane.cmt", m_resources/*, &m_environmentMap*/);
+    cro::ModelDefinition modelDef(m_resources);
+    modelDef.loadFromFile("assets/models/ground_plane.cmt", true);
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
-    modelDef.createModel(entity, m_resources);
+    modelDef.createModel(entity);
 
 
     //hedz
-    modelDef.loadFromFile("assets/models/head01.cmt", m_resources/*, &m_environmentMap*/);
+    modelDef.loadFromFile("assets/models/head01.cmt", true);
     
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 23.f, -20.f });
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
-    modelDef.createModel(entity, m_resources);
+    modelDef.createModel(entity);
 
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -799,12 +803,12 @@ void GameState::createScene()
     };
 
 
-    modelDef.loadFromFile("assets/models/head02.cmt", m_resources/*, &m_environmentMap*/);
+    modelDef.loadFromFile("assets/models/head02.cmt", true);
 
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 23.f, 20.f });
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.154f);
-    modelDef.createModel(entity, m_resources);
+    modelDef.createModel(entity);
 
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -820,11 +824,11 @@ void GameState::createScene()
     };
 
     //hillz
-    modelDef.loadFromFile("assets/models/hills.cmt", m_resources/*, &m_environmentMap*/);
+    modelDef.loadFromFile("assets/models/hills.cmt", true);
 
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
-    modelDef.createModel(entity, m_resources);
+    modelDef.createModel(entity);
 
 
     //disable the default camera so we don't need a gbuffer on it
@@ -844,9 +848,9 @@ void GameState::createDayCycle()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -SunOffset });
     children.moonNode = entity;
 
-    cro::ModelDefinition definition;
-    definition.loadFromFile("assets/models/moon.cmt", m_resources);
-    definition.createModel(entity, m_resources);
+    cro::ModelDefinition definition(m_resources);
+    definition.loadFromFile("assets/models/moon.cmt", true);
+    definition.createModel(entity);
     entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -855,8 +859,8 @@ void GameState::createDayCycle()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, SunOffset });
     children.sunNode = entity;
 
-    definition.loadFromFile("assets/models/sun.cmt", m_resources);
-    definition.createModel(entity, m_resources);
+    definition.loadFromFile("assets/models/sun.cmt", true);
+    definition.createModel(entity);
     entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -879,8 +883,8 @@ void GameState::loadMap()
             cro::Colour(0.8f, 0.8f, 1.f)
         };
 
-        cro::ModelDefinition portalModel;
-        portalModel.loadFromFile("assets/models/portal.cmt", m_resources/*, &m_environmentMap*/);
+        cro::ModelDefinition portalModel(m_resources);
+        portalModel.loadFromFile("assets/models/portal.cmt", true);
 
         cro::EmitterSettings smokeParticles;
         smokeParticles.loadFromFile("assets/particles/smoke.xyp", m_resources.textures);
@@ -1090,7 +1094,7 @@ void GameState::loadMap()
                 entity.addComponent<cro::Transform>().setPosition({ rect.left, rect.bottom, layerDepth });
                 entity.getComponent<cro::Transform>().move({ rect.width / 2.f, 0.f, 0.f });
                 entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI* i);
-                portalModel.createModel(entity, m_resources);
+                portalModel.createModel(entity);
 
                 //force field
                 /*entity = m_gameScene.createEntity();
@@ -1107,7 +1111,7 @@ void GameState::loadMap()
                 entity.addComponent<cro::Transform>().setPosition(glm::vec3(p, layerDepth ));
                 entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, i* cro::Util::Const::PI);
                 entity.addComponent<WavetableAnimator>();
-                m_modelDefs[GameModelID::Spawner].createModel(entity, m_resources);
+                m_modelDefs[GameModelID::Spawner]->createModel(entity);
 
                 auto particleEnt = m_gameScene.createEntity();
                 particleEnt.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -0.5f));
@@ -1130,11 +1134,11 @@ void GameState::loadMap()
         }
 
 
-        cro::ModelDefinition spawnModel;
-        spawnModel.loadFromFile("assets/models/player_spawn.cmt", m_resources/*, &m_environmentMap*/);
+        cro::ModelDefinition spawnModel(m_resources);
+        spawnModel.loadFromFile("assets/models/player_spawn.cmt", true);
 
-        cro::ModelDefinition spinModel;
-        spinModel.loadFromFile("assets/models/player_spinner.cmt", m_resources/*, &m_environmentMap*/);
+        cro::ModelDefinition spinModel(m_resources);
+        spinModel.loadFromFile("assets/models/player_spinner.cmt", true);
 
         cro::EmitterSettings spawnParticles;
         spawnParticles.loadFromFile("assets/particles/spawn.xyp", m_resources.textures);
@@ -1147,7 +1151,7 @@ void GameState::loadMap()
 
             auto spawnEnt = m_gameScene.createEntity();
             spawnEnt.addComponent<cro::Transform>().setPosition(glm::vec3(spawnPoints[i].x, spawnPoints[i].y, layerDepth));
-            spawnModel.createModel(spawnEnt, m_resources);
+            spawnModel.createModel(spawnEnt);
 
             spawnEnt.addComponent<cro::DynamicTreeComponent>().setArea({ glm::vec3(rect.left, rect.bottom, LayerThickness), glm::vec3(rect.width, rect.height, -LayerThickness) });
             spawnEnt.getComponent<cro::DynamicTreeComponent>().setFilterFlags(layerDepth > 0 ? 1 : 2);
@@ -1163,7 +1167,7 @@ void GameState::loadMap()
             spinEnt.addComponent<cro::ParticleEmitter>().settings = spawnParticles;
             spinEnt.getComponent<cro::ParticleEmitter>().start();
 
-            spinModel.createModel(spinEnt, m_resources);
+            spinModel.createModel(spinEnt);
             spawnEnt.getComponent<cro::Transform>().addChild(spinEnt.getComponent<cro::Transform>());
 #ifdef CRO_DEBUG_
             addBoxDebug(spawnEnt, m_gameScene, cro::Colour::Red);
@@ -1324,8 +1328,8 @@ void GameState::spawnPlayer(PlayerInfo info)
     };
 
     //placeholder for player scale
-    cro::ModelDefinition md;
-    md.loadFromFile("assets/models/player_box.cmt", m_resources/*, &m_environmentMap*/);
+    cro::ModelDefinition md(m_resources);
+    md.loadFromFile("assets/models/player_box.cmt", true);
 
     cro::EmitterSettings particles;
     particles.loadFromFile("assets/particles/portal.xyp", m_resources.textures);
@@ -1411,14 +1415,14 @@ void GameState::spawnPlayer(PlayerInfo info)
             auto holoEnt = m_gameScene.createEntity();
             holoEnt.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, PlayerBounds[1].y * 1.5f, 0.f));
             holoEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-            m_modelDefs[GameModelID::Hologram].createModel(holoEnt, m_resources);
+            m_modelDefs[GameModelID::Hologram]->createModel(holoEnt);
             holoEnt.addComponent<AvatarScale>().rotationSpeed = HoloRotationSpeed;
             
 
             //placeholder for player model
             auto playerEnt = m_gameScene.createEntity();
             playerEnt.addComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
-            md.createModel(playerEnt, m_resources);
+            md.createModel(playerEnt);
             playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", PlayerColours[info.playerID + info.connectionID]);
             playerEnt.addComponent<PlayerAvatar>().holoEnt = holoEnt;
             playerEnt.addComponent<cro::ParticleEmitter>().settings = particles;
@@ -1533,7 +1537,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         //spawn an avatar
         //TODO check this avatar doesn't already exist
         auto entity = createActor();
-        md.createModel(entity, m_resources);
+        md.createModel(entity);
 
         auto rotation = entity.getComponent<cro::Transform>().getRotation();
         entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.4f, 0.f });
@@ -1557,7 +1561,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         holoEnt.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, PlayerBounds[1].y * 1.5f, 0.f));
         holoEnt.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
         holoEnt.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-        m_modelDefs[GameModelID::Hologram].createModel(holoEnt, m_resources);
+        m_modelDefs[GameModelID::Hologram]->createModel(holoEnt);
         holoEnt.addComponent<AvatarScale>().rotationSpeed = HoloRotationSpeed;
 
         entity.addComponent<PlayerAvatar>().holoEnt = holoEnt; //to track joined crates
@@ -1611,7 +1615,7 @@ void GameState::spawnActor(ActorSpawn as)
         LogW << "Spawned actor with unrecognised id " << as.id << std::endl;
         break;
     case ActorID::Crate:
-        m_modelDefs[GameModelID::Crate].createModel(entity, m_resources);
+        m_modelDefs[GameModelID::Crate]->createModel(entity);
 
         //add some collision properties which are updated from the server
         //rather than simulated locally, so the player gets proper collision
@@ -1637,7 +1641,7 @@ void GameState::spawnActor(ActorSpawn as)
 
         break;
     case ActorID::Balloon:
-        m_modelDefs[GameModelID::Balloon].createModel(entity, m_resources);
+        m_modelDefs[GameModelID::Balloon]->createModel(entity);
         break;
     case ActorID::PoopSnail:
         entity.addComponent<cro::Model>();

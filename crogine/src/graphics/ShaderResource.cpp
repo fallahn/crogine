@@ -200,11 +200,15 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
         success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::VertexLit::Fragment, defines);
         break;
     case BuiltIn::Unlit:
-        //success = loadFromString(id, Shaders::Unlit::Vertex, Shaders::Unlit::Fragment, defines);
+        success = loadFromString(id, Shaders::Unlit::Vertex, Shaders::Unlit::Fragment, defines);
+        break;
+    case BuiltIn::UnlitDeferred:
         success = loadFromString(id, Shaders::Unlit::Vertex, Shaders::Deferred::OITUnlitFragment, defines);
         break;
     case BuiltIn::VertexLit:
-        //success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, defines);
+        success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, defines);
+        break;
+    case BuiltIn::VertexLitDeferred:
         success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::Deferred::OITShadedFragment, defines);
         break;
     case BuiltIn::ShadowMap:
@@ -227,14 +231,6 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
     case BuiltIn::PBR:
         success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::PBR::Fragment, defines);
         break;
-//#ifdef PLATFORM_DESKTOP
-//    case BuiltIn::GBuffer:
-//        success = loadFromString(id, Shaders::GBuffer::Vertex, Shaders::GBuffer::Fragment, defines);
-//        break;
-//    case BuiltIn::BillboardGBuffer:
-//        success = loadFromString(id, Shaders::GBuffer::BillboardVertex, Shaders::GBuffer::Fragment, defines);
-//        break;
-//#endif
     }
 
     if (success)

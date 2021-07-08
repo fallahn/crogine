@@ -487,11 +487,11 @@ void WorldState::updateMouseInput(const cro::Event& evt)
 
 void WorldState::openModel(const std::string& path)
 {
-    cro::ModelDefinition modelDef(m_sharedData.workingDirectory);
-    if (modelDef.loadFromFile(path, m_resources, &m_environmentMap))
+    cro::ModelDefinition modelDef(m_resources, &m_environmentMap, m_sharedData.workingDirectory);
+    if (modelDef.loadFromFile(path))
     {
         auto& mdl = m_models.emplace_back();
-        mdl.modelDef = modelDef;
+        //mdl.modelDef = modelDef;
         mdl.modelID = 0; 
         //TODO we need to assign existing IDs if loading a scene and adjust the
         //free pool as necessary? Or does it matter as long as all existing IDs are correctly reassigned
@@ -500,7 +500,7 @@ void WorldState::openModel(const std::string& path)
         m_previewEntity = m_previewScene.createEntity();
         m_previewEntity.addComponent<cro::Transform>().rotate(glm::vec3(0.f, 1.f, 0.f), 45.f * cro::Util::Const::degToRad);
         //m_previewEntity.getComponent<cro::Transform>().rotate(glm::vec3(0.f, 0.f, 1.f), 25.f * cro::Util::Const::degToRad);
-        modelDef.createModel(m_previewEntity, m_resources);
+        modelDef.createModel(m_previewEntity);
 
         auto bb = m_previewEntity.getComponent<cro::Model>().getMeshData().boundingSphere;
 

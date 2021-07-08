@@ -29,6 +29,9 @@ source distribution.
 
 #pragma once
 
+#include "StateIDs.hpp"
+#include "ResourceIDs.hpp"
+
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -37,8 +40,7 @@ source distribution.
 
 #include <crogine/audio/AudioBuffer.hpp>
 
-#include "StateIDs.hpp"
-#include "ResourceIDs.hpp"
+#include <memory>
 
 namespace cro
 {
@@ -49,7 +51,6 @@ class GameState final : public cro::State, public cro::GuiClient
 {
 public:
     GameState(cro::StateStack&, cro::State::Context);
-    ~GameState() = default;
 
     cro::StateID getStateID() const override { return States::GamePlaying; }
 
@@ -64,7 +65,7 @@ private:
     cro::Scene m_overlayScene;
 
     cro::ResourceCollection m_resources;
-    std::array<cro::ModelDefinition, GameModelID::Count> m_modelDefs;
+    std::array<std::unique_ptr<cro::ModelDefinition>, GameModelID::Count> m_modelDefs;
 
     cro::AudioBuffer m_audioBuffer;
 

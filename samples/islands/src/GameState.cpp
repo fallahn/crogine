@@ -387,9 +387,14 @@ void GameState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_depthMap", m_islandTexture);
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_foamMap", m_foamEffect.getTexture());
 
-    m_modelDefs[GameModelID::GroundBush].loadFromFile("assets/models/ground_plant01.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Palm].loadFromFile("assets/models/palm01.cmt", m_resources, &m_environmentMap);
-    m_modelDefs[GameModelID::Shrub].loadFromFile("assets/models/shrub01.cmt", m_resources, &m_environmentMap);
+    for (auto& md : m_modelDefs)
+    {
+        md = std::make_unique<cro::ModelDefinition>(m_resources, &m_environmentMap);
+    }
+
+    m_modelDefs[GameModelID::GroundBush]->loadFromFile("assets/models/ground_plant01.cmt");
+    m_modelDefs[GameModelID::Palm]->loadFromFile("assets/models/palm01.cmt");
+    m_modelDefs[GameModelID::Shrub]->loadFromFile("assets/models/shrub01.cmt");
    
 
     loadIslandAssets();
@@ -418,9 +423,9 @@ void GameState::createDayCycle()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -SunOffset });
     children.moonNode = entity;
 
-    cro::ModelDefinition definition;
-    definition.loadFromFile("assets/models/moon.cmt", m_resources);
-    definition.createModel(entity, m_resources);
+    cro::ModelDefinition definition(m_resources);
+    definition.loadFromFile("assets/models/moon.cmt");
+    definition.createModel(entity);
     entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -429,8 +434,8 @@ void GameState::createDayCycle()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, SunOffset });
     children.sunNode = entity;
 
-    definition.loadFromFile("assets/models/sun.cmt", m_resources);
-    definition.createModel(entity, m_resources);
+    definition.loadFromFile("assets/models/sun.cmt");
+    definition.createModel(entity);
     entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -545,8 +550,8 @@ void GameState::spawnPlayer(PlayerInfo info)
     };
 
     //placeholder for player scale
-    cro::ModelDefinition md;
-    md.loadFromFile("assets/models/pirate.cmt", m_resources, &m_environmentMap);
+    cro::ModelDefinition md(m_resources, &m_environmentMap);
+    md.loadFromFile("assets/models/pirate.cmt");
 
     auto addSeaplane = [&]()
     {
@@ -603,7 +608,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
             auto playerEnt = m_gameScene.createEntity();
             playerEnt.addComponent<cro::Transform>().setScale({ 2.f, 2.f, 2.f });// .setOrigin({ 0.f, -0.8f, 0.f });
-            md.createModel(playerEnt, m_resources);
+            md.createModel(playerEnt);
             //playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Colours[info.playerID + info.connectionID]);
 
             root.getComponent<Player>().avatar = playerEnt;
@@ -634,7 +639,7 @@ void GameState::spawnPlayer(PlayerInfo info)
         //spawn an avatar
         //TODO check this avatar doesn't already exist
         auto entity = createActor();
-        md.createModel(entity, m_resources);
+        md.createModel(entity);
 
         auto rotation = entity.getComponent<cro::Transform>().getRotation();
         entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.8f, 0.f });
@@ -746,8 +751,8 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
         m_requestFlags |= ClientRequestFlags::Heightmap;
 
         //spawn boats now that we have a heightmap
-        cro::ModelDefinition modelDef;
-        modelDef.loadFromFile("assets/models/boat.cmt", m_resources, &m_environmentMap);
+        cro::ModelDefinition modelDef(m_resources, &m_environmentMap);
+        modelDef.loadFromFile("assets/models/boat.cmt");
 
         for (auto i = 0u; i < BoatSpawns.size(); ++i)
         {
@@ -763,7 +768,7 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
             entity.addComponent<cro::Transform>().setPosition(spawn);
             entity.getComponent<cro::Transform>().setScale({ 1.6f,1.6f,1.6f });
             entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, ((cro::Util::Const::PI / 2.f) * i) - (cro::Util::Const::PI / 4.f));
-            modelDef.createModel(entity, m_resources);
+            modelDef.createModel(entity);
         }
     }
 }
@@ -784,7 +789,7 @@ void GameState::updateBushmap(const cro::NetEvent::Packet& packet)
 
         //simpler to load from the model def because material and vertex
         //properties are automagically configured for us
-        m_modelDefs[GameModelID::Shrub].createModel(entity, m_resources);
+        m_modelDefs[GameModelID::Shrub]->createModel(entity);
         
         auto& meshData = entity.getComponent<cro::Model>().getMeshData();
         cro::MeshBatch batch(meshData.attributeFlags);
@@ -833,7 +838,7 @@ void GameState::updateBushmap(const cro::NetEvent::Packet& packet)
 
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
-        m_modelDefs[GameModelID::GroundBush].createModel(entity, m_resources);
+        m_modelDefs[GameModelID::GroundBush]->createModel(entity);
         auto& bushData = entity.getComponent<cro::Model>().getMeshData();
 
         cro::MeshBatch bushBatch(bushData.attributeFlags);
@@ -856,7 +861,7 @@ void GameState::updateTreemap(const cro::NetEvent::Packet& packet)
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
-        m_modelDefs[GameModelID::Palm].createModel(entity, m_resources);
+        m_modelDefs[GameModelID::Palm]->createModel(entity);
 
         auto& meshData = entity.getComponent<cro::Model>().getMeshData();
 
