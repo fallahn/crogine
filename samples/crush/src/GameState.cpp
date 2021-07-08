@@ -181,14 +181,20 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("GBuffer 0"))
             {
+                auto lightDir = glm::vec4(m_gameScene.getSunlight().getComponent<cro::Sunlight>().getDirection(), 0.f);
+                ImGui::Text("Light Dir: %3.3f, %3.3f, %3.3f", lightDir.x, lightDir.y, lightDir.z);
+
                 for (auto cam : m_cameras)
                 {
+                    auto dir = cam.getComponent<cro::Camera>().getActivePass().viewMatrix * lightDir;
+                    ImGui::Text("Light view %3.3f, %3.3f, %3.3f", dir.x, dir.y, dir.z);
+
                     const auto& buffer = cam.getComponent<cro::GBuffer>().buffer;
                     auto size = glm::vec2(buffer.getSize());
                     for (auto i = 0; i < 5; ++i)
                     {
-                        ImGui::Image(buffer.getTexture(i), { size.x / 4.f, size.y / 4.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                        if ((i % 3) == 0)
+                        ImGui::Image(buffer.getTexture(i), { size.x / 3.f, size.y / 3.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                        //if ((i % 3) != 0)
                         {
                             ImGui::SameLine();
                         }
@@ -1087,11 +1093,11 @@ void GameState::loadMap()
                 portalModel.createModel(entity, m_resources);
 
                 //force field
-                entity = m_gameScene.createEntity();
+                /*entity = m_gameScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ rect.left - ((PortalWidth - rect.width) / 2.f), rect.bottom, layerDepth });
                 entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Portal]), m_resources.materials.get(m_materialIDs[MaterialID::Portal]));
                 entity.getComponent<cro::Transform>().move({ PortalWidth * i, 0.f, 0.f });
-                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI* i);
+                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI* i);*/
             }
 
             const auto& cratePoints = mapData.getCratePositions(i);
@@ -1111,7 +1117,7 @@ void GameState::loadMap()
                 entity.getComponent<cro::Transform>().addChild(particleEnt.getComponent<cro::Transform>());
 
                 //attach electricity sprite
-                auto elecEnt = m_gameScene.createEntity();
+                /*auto elecEnt = m_gameScene.createEntity();
                 elecEnt.addComponent<cro::Transform>().setScale(glm::vec3(1.f) / ConstVal::MapUnits);
                 elecEnt.addComponent<cro::Model>();
                 elecEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("electric");
@@ -1119,7 +1125,7 @@ void GameState::loadMap()
                 elecEnt.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
                 elecEnt.addComponent<cro::SpriteAnimation>().play(0);
 
-                entity.getComponent<cro::Transform>().addChild(elecEnt.getComponent<cro::Transform>());
+                entity.getComponent<cro::Transform>().addChild(elecEnt.getComponent<cro::Transform>());*/
             }
         }
 

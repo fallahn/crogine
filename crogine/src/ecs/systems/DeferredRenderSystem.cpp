@@ -87,7 +87,8 @@ namespace
 DeferredRenderSystem::DeferredRenderSystem(MessageBus& mb)
     : System        (mb, typeid(DeferredRenderSystem)),
     m_cameraCount   (0),
-    m_vao           (0),
+    m_deferredVao   (0),
+    m_forwardVao    (0),
     m_vbo           (0),
     m_envMap        (nullptr)
 {
@@ -116,9 +117,14 @@ DeferredRenderSystem::~DeferredRenderSystem()
         glCheck(glDeleteBuffers(1, &m_vbo));
     }
 
-    if (m_vao)
+    if (m_deferredVao)
     {
-        glCheck(glDeleteVertexArrays(1, &m_vao));
+        glCheck(glDeleteVertexArrays(1, &m_deferredVao));
+    }
+
+    if (m_forwardVao)
+    {
+        glCheck(glDeleteVertexArrays(1, &m_forwardVao));
     }
 #endif
 }
@@ -309,12 +315,54 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     }
 
 
-    //TODO render forward/transparent items to GBuffer (inc normals/position for screen space effects)
+    //render forward/transparent items to GBuffer 
+    //TODO (inc normals/position for screen space effects - problem is revelage sharing normal buffer means incorrect blend mode)
     glCheck(glDisable(GL_CULL_FACE));
-    glCheck(glEnable(GL_BLEND)); //TODO set correct blend mode for individual buffers
+    glCheck(glEnable(GL_BLEND)); 
+    //set correct blend mode for individual buffers
+    glCheck(glBlendFunci(0, GL_ZERO, GL_ONE_MINUS_SRC_COLOR)); //revealage
+    glCheck(glBlendFunci(4, GL_ONE, GL_ONE)); //accum
+    glCheck(glBlendEquation(GL_FUNC_ADD));
+
     for (auto [entity, matIDs, depth] : forward)
     {
+        //foreach submesh / material:
+        const auto& model = entity.getComponent<Model>();
 
+        if ((model.m_renderFlags & cam.renderFlags) == 0)
+        {
+            continue;
+        }
+
+        //calc entity transform
+        const auto& tx = entity.getComponent<Transform>();
+        glm::mat4 worldMat = tx.getWorldTransform();
+        glm::mat4 worldView = pass.viewMatrix * worldMat;
+
+        for (auto i : matIDs)
+        {
+            //bind shader
+            glCheck(glUseProgram(model.m_materials[Mesh::IndexData::Final][i].shader));
+
+            //apply shader uniforms from material
+            ModelRenderer::applyProperties(model.m_materials[Mesh::IndexData::Final][i], model, *getScene(), cam);
+
+            //apply standard uniforms
+            glCheck(glUniform3f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
+            glCheck(glUniform2f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
+            glCheck(glUniform4f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
+            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
+            glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
+
+            //and... draw.
+            const auto& indexData = model.m_meshData.indexData[i];
+            glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Final]));
+            glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+        }
     }
 
     buffer.display();
@@ -329,7 +377,6 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glDepthMask(GL_FALSE));
     glCheck(glEnable(GL_CULL_FACE));
     glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-    glCheck(glBlendEquation(GL_FUNC_ADD));
 
     CRO_ASSERT(m_envMap, "Env map not set!");
 
@@ -364,7 +411,7 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
 
 
     const auto& sun = getScene()->getSunlight().getComponent<Sunlight>();
-    auto lightDir = pass.viewMatrix * glm::vec4(sun.getDirection(), 1.f);
+    auto lightDir = pass.viewMatrix * glm::vec4(sun.getDirection(), 0.f);
     glCheck(glUniform3f(m_pbrUniforms[PBRUniformIDs::LightDirection], lightDir.x, lightDir.y, lightDir.z));
     auto lightCol = sun.getColour().getVec4();
     glCheck(glUniform4f(m_pbrUniforms[PBRUniformIDs::LightColour], lightCol.r, lightCol.g, lightCol.b, lightCol.a));
@@ -388,11 +435,10 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glBindTexture(GL_TEXTURE_2D, cam.shadowMapBuffer.getTexture().textureID)); //TODO use shadow map sampler directly?
     glCheck(glUniform1i(m_pbrUniforms[PBRUniformIDs::ShadowMap], 7));
 
-    auto invViewMatrix = glm::inverse(pass.viewMatrix);
+    auto invViewMatrix = cam.shadowViewProjectionMatrix * glm::inverse(pass.viewMatrix);
     glCheck(glUniformMatrix4fv(m_pbrUniforms[PBRUniformIDs::InverseViewMat], 1, GL_FALSE, &invViewMatrix[0][0]));
-    glCheck(glUniformMatrix4fv(m_pbrUniforms[PBRUniformIDs::LightViewProjMat], 1, GL_FALSE, &cam.shadowViewProjectionMatrix[0][0]));
 
-    glCheck(glBindVertexArray(m_vao));
+    glCheck(glBindVertexArray(m_deferredVao));
     glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
 
@@ -400,8 +446,22 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     //it's renderer specific instead of generally available in the Scene
     //for other systems.
 
-    //TODO Transparent pass to render target
+    //Transparent pass to render target
+    glCheck(glDepthFunc(GL_ALWAYS));
+    glCheck(glActiveTexture(GL_TEXTURE0));
+    glCheck(glBindTexture(GL_TEXTURE_2D, buffer.getTexture(4).textureID));
+    //reveal is already bound to 2 via normal map
+    /*glCheck(glActiveTexture(GL_TEXTURE2));
+    glCheck(glBindTexture(GL_TEXTURE_2D, buffer.getTexture(0).textureID));*/
 
+    glCheck(glUseProgram(m_oitShader.getGLHandle()));
+    glCheck(glUniformMatrix4fv(m_oitUniforms[OITUniformIDs::WorldMat], 1, GL_FALSE, glm::value_ptr(transform)));
+    glCheck(glUniformMatrix4fv(m_oitUniforms[OITUniformIDs::ProjMat], 1, GL_FALSE, glm::value_ptr(projection)));
+    glCheck(glUniform1i(m_oitUniforms[OITUniformIDs::Accum], 0));
+    glCheck(glUniform1i(m_oitUniforms[OITUniformIDs::Reveal], 2));
+
+    glCheck(glBindVertexArray(m_forwardVao));
+    glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
     //just reset the camera count - it's only
     //used to track how many visible lists we have
@@ -483,10 +543,6 @@ bool DeferredRenderSystem::loadPBRShader()
         {
             m_pbrUniforms[PBRUniformIDs::InverseViewMat] = uniforms.at("u_inverseViewMatrix");
         }
-        if (uniforms.count("u_lightViewProjectionMatrix"))
-        {
-            m_pbrUniforms[PBRUniformIDs::LightViewProjMat] = uniforms.at("u_lightViewProjectionMatrix");
-        }
         if (uniforms.count("u_shadowMap"))
         {
             m_pbrUniforms[PBRUniformIDs::ShadowMap] = uniforms.at("u_shadowMap");
@@ -498,7 +554,19 @@ bool DeferredRenderSystem::loadPBRShader()
 
 bool DeferredRenderSystem::loadOITShader()
 {
-    return true;
+    std::fill(m_oitUniforms.begin(), m_oitUniforms.end(), -1);
+
+    auto result = m_oitShader.loadFromString(Shaders::Deferred::LightingVertex, Shaders::Deferred::OITOutputFragment);
+    if (result)
+    {
+        const auto& uniforms = m_oitShader.getUniformMap();
+        m_oitUniforms[OITUniformIDs::WorldMat] = uniforms.at("u_worldMatrix");
+        m_oitUniforms[OITUniformIDs::ProjMat] = uniforms.at("u_projectionMatrix");
+        m_oitUniforms[OITUniformIDs::Accum] = uniforms.at("u_accumMap");
+        m_oitUniforms[OITUniformIDs::Reveal] = uniforms.at("u_revealMap");
+    }
+
+    return result;
 }
 
 void DeferredRenderSystem::setupRenderQuad()
@@ -507,7 +575,8 @@ void DeferredRenderSystem::setupRenderQuad()
     if (loadPBRShader() && loadOITShader())
     {
         glCheck(glGenBuffers(1, &m_vbo));
-        glCheck(glGenVertexArrays(1, &m_vao));
+        glCheck(glGenVertexArrays(1, &m_deferredVao));
+        glCheck(glGenVertexArrays(1, &m_forwardVao));
 
         //0------2
         //|      |
@@ -523,11 +592,22 @@ void DeferredRenderSystem::setupRenderQuad()
         };
         static constexpr std::uint32_t VertexSize = 2 * sizeof(float);
 
-        glCheck(glBindVertexArray(m_vao));
+        //deferred lighting pass
+        glCheck(glBindVertexArray(m_deferredVao));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
         glCheck(glBufferData(GL_ARRAY_BUFFER, VertexSize * verts.size(), verts.data(), GL_STATIC_DRAW));
 
-        const auto& attribs = m_pbrShader.getAttribMap();
+        auto attribs = m_pbrShader.getAttribMap();
+        glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::Position]));
+        glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Position], 2, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(VertexSize), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+        glCheck(glDisableVertexAttribArray(attribs[Mesh::Attribute::Position]));
+        glCheck(glEnableVertexAttribArray(0));
+
+        //forward pass
+        glCheck(glBindVertexArray(m_forwardVao));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+        
+        attribs = m_oitShader.getAttribMap();
         glCheck(glEnableVertexAttribArray(attribs[Mesh::Attribute::Position]));
         glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Position], 2, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(VertexSize), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
         glCheck(glDisableVertexAttribArray(attribs[Mesh::Attribute::Position]));

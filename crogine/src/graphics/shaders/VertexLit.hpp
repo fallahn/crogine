@@ -394,7 +394,7 @@ namespace cro::Shaders::VertexLit
 
             vec3 I = normalize(v_worldPosition - u_cameraWorldPosition);
             vec3 R = reflect(I, normal);
-            FRAG_OUT.rgb = mix(texture(u_skybox, R).rgb, FRAG_OUT.rgb, mask.a);
+            FRAG_OUT.rgb = mix(TEXTURE_CUBE(u_skybox, R).rgb, FRAG_OUT.rgb, mask.a);
 
 
         #if defined (RIMMING)

@@ -95,7 +95,8 @@ namespace cro
         std::vector<VisibleList> m_visibleLists;
         std::uint32_t m_cameraCount;
 
-        std::uint32_t m_vao;
+        std::uint32_t m_deferredVao;
+        std::uint32_t m_forwardVao;
         std::uint32_t m_vbo;
         Shader m_pbrShader;
         struct PBRUniformIDs final
@@ -117,8 +118,7 @@ namespace cro
                 PrefilterMap,
                 BRDFMap,
 
-                InverseViewMat,
-                LightViewProjMat,
+                InverseViewMat, //actually multiplied with light view/proj for shadow mapping
                 ShadowMap,
 
                 Count
@@ -126,6 +126,22 @@ namespace cro
         };
         std::array<std::int32_t, PBRUniformIDs::Count> m_pbrUniforms;
         const EnvironmentMap* m_envMap;
+
+        Shader m_oitShader;
+        struct OITUniformIDs final
+        {
+            enum
+            {
+                WorldMat,
+                ProjMat,
+
+                Accum,
+                Reveal,
+
+                Count
+            };
+        };
+        std::array<std::int32_t, OITUniformIDs::Count> m_oitUniforms;
 
         bool loadPBRShader();
         bool loadOITShader();

@@ -202,7 +202,7 @@ namespace cro::Shaders::Deferred
             uniform mat4 u_worldMatrix;
             uniform mat4 u_projectionMatrix;
             
-            VARYING_OUT MED vec2 v_texCoord;
+            VARYING_OUT vec2 v_texCoord;
 
             void main()
             {
@@ -219,7 +219,6 @@ namespace cro::Shaders::Deferred
             uniform sampler2D u_positionMap;
 
             uniform sampler2D u_shadowMap;
-            uniform mat4 u_lightViewProjectionMatrix;
             uniform mat4 u_inverseViewMatrix;
 
             uniform vec3 u_lightDirection;
@@ -366,10 +365,6 @@ namespace cro::Shaders::Deferred
                 return (kD * matProp.albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
             }
 
-
-
-
-
             void main()
             {
                 MaterialProperties matProp;
@@ -435,17 +430,325 @@ namespace cro::Shaders::Deferred
                 //gamma correct
                 colour = pow(colour, vec3(1.0 / 2.2)); 
 
-
-
                 vec4 lightPos = u_inverseViewMatrix * position;
-                lightPos = u_lightViewProjectionMatrix * lightPos;
-                //surfProp.lightDir = (u_inverseViewMatrix * vec4(surfProp.lightDir, 0.0)).xyz;
                 colour *= shadowAmount(lightPos, surfProp);
-
 
                 colour *= u_lightColour.rgb;
 
                 o_colour = vec4(colour, albedo.a);
+            }
+        )";
+
+
+    static const std::string OITShadedFragment = 
+        R"(
+            out vec4[5] o_outColour;
+
+        #if defined(DIFFUSE_MAP)
+            uniform sampler2D u_diffuseMap;
+
+        #if defined(ALPHA_CLIP)
+            uniform float u_alphaClip;
+        #endif
+        #endif
+
+        #if defined(MASK_MAP)
+            uniform sampler2D u_maskMap;
+        #else
+            uniform LOW vec4 u_maskColour;
+        #endif
+
+        #if defined(BUMP)
+            uniform sampler2D u_normalMap;
+        #endif
+
+            uniform samplerCube u_skybox;
+
+            uniform HIGH vec3 u_lightDirection;
+            uniform LOW vec4 u_lightColour;
+            uniform HIGH vec3 u_cameraWorldPosition;
+                
+        #if defined(COLOURED)
+            uniform LOW vec4 u_colour;
+        #endif
+
+        #if defined (RX_SHADOWS)
+            uniform sampler2D u_shadowMap;
+        #endif
+
+            VARYING_IN HIGH vec3 v_worldPosition;
+        #if defined(VERTEX_COLOUR)
+            VARYING_IN LOW vec4 v_colour;
+        #endif
+        #if defined (BUMP)
+            VARYING_IN HIGH vec3 v_tbn[3];
+        #else
+            VARYING_IN HIGH vec3 v_normalVector;
+        #endif
+        #if defined(TEXTURED)
+            VARYING_IN MED vec2 v_texCoord0;
+        #endif
+ 
+        #if defined(RX_SHADOWS)
+            VARYING_IN LOW vec4 v_lightWorldPosition;
+
+        #define PREC
+
+            //some fancier pcf on desktop
+            const vec2 kernel[16] = vec2[](
+                vec2(-0.94201624, -0.39906216),
+                vec2(0.94558609, -0.76890725),
+                vec2(-0.094184101, -0.92938870),
+                vec2(0.34495938, 0.29387760),
+                vec2(-0.91588581, 0.45771432),
+                vec2(-0.81544232, -0.87912464),
+                vec2(-0.38277543, 0.27676845),
+                vec2(0.97484398, 0.75648379),
+                vec2(0.44323325, -0.97511554),
+                vec2(0.53742981, -0.47373420),
+                vec2(-0.26496911, -0.41893023),
+                vec2(0.79197514, 0.19090188),
+                vec2(-0.24188840, 0.99706507),
+                vec2(-0.81409955, 0.91437590),
+                vec2(0.19984126, 0.78641367),
+                vec2(0.14383161, -0.14100790)
+            );
+            const int filterSize = 3;
+            float shadowAmount(vec4 lightWorldPos)
+            {
+                vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+                projectionCoords = projectionCoords * 0.5 + 0.5;
+
+                if(projectionCoords.z > 1.0) return 1.0;
+
+                float shadow = 0.0;
+                vec2 texelSize = 1.0 / textureSize(u_shadowMap, 0).xy;
+                for(int x = 0; x < filterSize; ++x)
+                {
+                    for(int y = 0; y < filterSize; ++y)
+                    {
+                        float pcfDepth = TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize).r;
+                        shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
+                    }
+                }
+                return 1.0 - (shadow / 9.0);
+            }
+        #endif               
+
+            LOW vec4 diffuseColour = vec4(1.0);
+            HIGH vec3 eyeDirection;
+            LOW vec4 mask = vec4(1.0, 1.0, 0.0, 1.0);
+            vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
+            {
+                MED float diffuseAmount = max(dot(normal, lightDirection), 0.0);
+                //diffuseAmount = pow((diffuseAmount * 0.5) + 5.0, 2.0);
+                MED vec3 mixedColour = diffuseColour.rgb * lightDiffuse * diffuseAmount * falloff;
+
+                MED vec3 halfVec = normalize(eyeDirection + lightDirection);
+                MED float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
+                LOW vec3 specularColour = lightSpecular * vec3(pow(specularAngle, ((254.0 * mask.r) + 1.0))) * falloff;
+
+                return clamp(mixedColour + (specularColour * mask.g), 0.0, 1.0);
+            }
+
+            void main()
+            {
+            #if defined (BUMP)
+                MED vec3 texNormal = TEXTURE(u_normalMap, v_texCoord0).rgb * 2.0 - 1.0;
+                MED vec3 normal = normalize(v_tbn[0] * texNormal.r + v_tbn[1] * texNormal.g + v_tbn[2] * texNormal.b);
+            #else
+                MED vec3 normal = normalize(v_normalVector);
+            #endif
+
+            #if defined (DIFFUSE_MAP)
+                diffuseColour *= TEXTURE(u_diffuseMap, v_texCoord0);
+
+            #if defined(ALPHA_CLIP)
+                if(diffuseColour.a < u_alphaClip) discard;
+            #endif
+            #endif
+
+            #if defined(MASK_MAP)
+                mask = TEXTURE(u_maskMap, v_texCoord0);
+            #else
+                mask = u_maskColour;
+            #endif
+
+            #if defined(COLOURED)
+                diffuseColour *= u_colour;
+            #endif
+                
+            #if defined(VERTEX_COLOUR)
+                diffuseColour *= v_colour;
+            #endif
+                LOW vec3 blendedColour = diffuseColour.rgb * 0.2; //ambience
+                eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+
+                blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, vec3(1.0), 1.0);
+            #if defined (RX_SHADOWS)
+                blendedColour *= shadowAmount(v_lightWorldPosition);
+            #endif
+
+                vec4 finalColour = vec4(1.0);
+
+                finalColour.rgb = mix(blendedColour, diffuseColour.rgb, mask.b);
+                finalColour.a = diffuseColour.a;
+
+                vec3 I = normalize(v_worldPosition - u_cameraWorldPosition);
+                vec3 R = reflect(I, normal);
+                finalColour.rgb = mix(TEXTURE_CUBE(u_skybox, R).rgb, finalColour.rgb, mask.a);
+
+                float weight = clamp(pow(min(1.0, finalColour.a * 10.0) + 0.01, 3.0) * 1e8 * 
+                                             pow(1.0 - gl_FragCoord.z * 0.9, 3.0), 1e-2, 3e3);
+                finalColour.rgb *= finalColour.a;
+                o_outColour[4] = finalColour * weight;
+
+                o_outColour[0].a = finalColour.a;
+        })";
+
+    static const std::string OITUnlitFragment = 
+        R"(
+            out vec4[5] o_outColour;
+
+        #if defined (TEXTURED)
+            uniform sampler2D u_diffuseMap;
+        #if defined(ALPHA_CLIP)
+            uniform float u_alphaClip;
+        #endif
+        #endif
+        
+        #if defined(COLOURED)
+            uniform LOW vec4 u_colour;
+        #endif
+        
+        #if defined (RX_SHADOWS)
+            uniform sampler2D u_shadowMap;
+        #endif
+
+        #if defined (VERTEX_COLOUR)
+            VARYING_IN LOW vec4 v_colour;
+        #endif
+        #if defined (TEXTURED)
+            VARYING_IN MED vec2 v_texCoord0;
+        #endif
+
+        #if defined(RX_SHADOWS)
+            VARYING_IN LOW vec4 v_lightWorldPosition;
+
+        #define PREC
+            //some fancier pcf on desktop
+            const vec2 kernel[16] = vec2[](
+                vec2(-0.94201624, -0.39906216),
+                vec2(0.94558609, -0.76890725),
+                vec2(-0.094184101, -0.92938870),
+                vec2(0.34495938, 0.29387760),
+                vec2(-0.91588581, 0.45771432),
+                vec2(-0.81544232, -0.87912464),
+                vec2(-0.38277543, 0.27676845),
+                vec2(0.97484398, 0.75648379),
+                vec2(0.44323325, -0.97511554),
+                vec2(0.53742981, -0.47373420),
+                vec2(-0.26496911, -0.41893023),
+                vec2(0.79197514, 0.19090188),
+                vec2(-0.24188840, 0.99706507),
+                vec2(-0.81409955, 0.91437590),
+                vec2(0.19984126, 0.78641367),
+                vec2(0.14383161, -0.14100790)
+            );
+            const int filterSize = 3;
+            float shadowAmount(vec4 lightWorldPos)
+            {
+                vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+                projectionCoords = projectionCoords * 0.5 + 0.5;
+
+                if(projectionCoords.z > 1.0) return 1.0;
+
+                float shadow = 0.0;
+                vec2 texelSize = 1.0 / textureSize(u_shadowMap, 0).xy;
+                for(int x = 0; x < filterSize; ++x)
+                {
+                    for(int y = 0; y < filterSize; ++y)
+                    {
+                        float pcfDepth = TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize).r;
+                        shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
+                    }
+                }
+                return 1.0 - (shadow / 9.0);
+            }
+            #endif
+
+            void main()
+            {
+            #if defined (VERTEX_COLOUR)
+                o_outColour[4] = v_colour;
+            #else
+                o_outColour[4] = vec4(1.0);
+            #endif
+            #if defined (TEXTURED)
+                o_outColour[4] *= TEXTURE(u_diffuseMap, v_texCoord0);
+            #if defined(ALPHA_CLIP)
+                if(o_outColour[4].a < u_alphaClip) discard;
+            #endif
+            #endif
+
+            #if defined(COLOURED)
+                o_outColour[4] *= u_colour;
+            #endif
+
+            #if defined (RX_SHADOWS)
+                o_outColour[4].rgb *= shadowAmount(v_lightWorldPosition);
+            #endif
+
+            float weight = clamp(pow(min(1.0, o_outColour[4].a * 10.0) + 0.01, 3.0) * 1e8 * 
+                                     pow(1.0 - gl_FragCoord.z * 0.9, 3.0), 1e-2, 3e3);
+
+            o_outColour[4].rgb *= o_outColour[4].a;
+            o_outColour[4] *= weight;
+
+            o_outColour[0].a = o_outColour[4].a;
+        })";
+
+    static const std::string OITOutputFragment =
+        R"(
+            OUTPUT
+
+            uniform sampler2D u_accumMap;
+            uniform sampler2D u_revealMap;
+
+            VARYING_IN vec2 v_texCoord;
+
+            const float Epsilon = 0.00001;
+
+            bool approxEqual(float a, float b)
+            {
+                return abs(a - b) <= (abs(a) < abs(b) ? abs(b) : abs(a)) * Epsilon;
+            }
+
+            float max3(vec3 v)
+            {
+                return max(max(v.x, v.y), v.z);
+            }
+
+            void main()
+            {
+                ivec2 coord = ivec2(gl_FragCoord.xy);
+                float revealage = TEXTURE(u_revealMap, v_texCoord).a;
+                
+                if(approxEqual(revealage, 1.0))
+                {
+                    discard;
+                }
+
+                vec4 accum = TEXTURE(u_accumMap, v_texCoord);
+
+                if(isinf(max3(abs(accum.rgb))))
+                {
+                    accum.rgb = vec3(accum.a);
+                }
+
+                vec3 colour = accum.rgb / max(accum.a, Epsilon);
+
+                FRAG_OUT = vec4(colour, 1.0 - revealage);
             }
         )";
 }

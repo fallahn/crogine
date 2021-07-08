@@ -200,10 +200,12 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
         success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::VertexLit::Fragment, defines);
         break;
     case BuiltIn::Unlit:
-        success = loadFromString(id, Shaders::Unlit::Vertex, Shaders::Unlit::Fragment, defines);
+        //success = loadFromString(id, Shaders::Unlit::Vertex, Shaders::Unlit::Fragment, defines);
+        success = loadFromString(id, Shaders::Unlit::Vertex, Shaders::Deferred::OITUnlitFragment, defines);
         break;
     case BuiltIn::VertexLit:
-        success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, defines);
+        //success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::VertexLit::Fragment, defines);
+        success = loadFromString(id, Shaders::VertexLit::Vertex, Shaders::Deferred::OITShadedFragment, defines);
         break;
     case BuiltIn::ShadowMap:
 #ifdef PLATFORM_DESKTOP
