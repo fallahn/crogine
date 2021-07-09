@@ -117,7 +117,7 @@ void CameraSystem::resizeGBuffer(Entity entity)
         size.x *= cam.viewport.width;
         size.y *= cam.viewport.height;
 
-        entity.getComponent<GBuffer>().buffer.create(static_cast<std::uint32_t>(size.x), static_cast<std::uint32_t>(size.y), 5);
+        entity.getComponent<GBuffer>().buffer.create(static_cast<std::uint32_t>(size.x), static_cast<std::uint32_t>(size.y), GBuffer::TargetCount);
     }
 }
 

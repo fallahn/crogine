@@ -46,5 +46,6 @@ namespace cro
     struct CRO_EXPORT_API GBuffer final
     {
         MultiRenderTexture buffer;
+        static constexpr std::size_t TargetCount = 6;
     };
 }

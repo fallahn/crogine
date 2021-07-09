@@ -445,7 +445,7 @@ namespace cro::Shaders::Deferred
 
     static const std::string OITShadedFragment = 
         R"(
-            out vec4[5] o_outColour;
+            out vec4[6] o_outColour;
 
 uniform mat4 u_viewMatrix;
 
@@ -607,14 +607,15 @@ uniform mat4 u_viewMatrix;
                                              pow(1.0 - gl_FragCoord.z * 0.9, 3.0), 1e-2, 3e3);
                 finalColour.rgb *= finalColour.a;
                 o_outColour[4] = finalColour * weight;
+                o_outColour[5].r = finalColour.a;
 
-//o_outColour[0].rgb = (u_viewMatrix * vec4(normal, 0.0)).xyz;
-                o_outColour[0].a = finalColour.a;
+o_outColour[0].rgb = (u_viewMatrix * vec4(normal, 0.0)).xyz;
+o_outColour[1].rgb = (u_viewMatrix * vec4(v_worldPosition, 1.0)).xyz;
         })";
 
     static const std::string OITUnlitFragment = 
         R"(
-            out vec4[5] o_outColour;
+            out vec4[6] o_outColour;
 
         #if defined (TEXTURED)
             uniform sampler2D u_diffuseMap;
@@ -715,7 +716,7 @@ float weight =
 */
 
             o_outColour[4] = vec4(finalColour.rgb * finalColour.a, finalColour.a) * weight;
-            o_outColour[0].a = finalColour.a;
+            o_outColour[5].r = finalColour.a;
         })";
 
     static const std::string OITOutputFragment =
@@ -741,7 +742,7 @@ float weight =
 
             void main()
             {
-                float revealage = TEXTURE(u_revealMap, v_texCoord).a;
+                float revealage = TEXTURE(u_revealMap, v_texCoord).r;
                 
                 if(approxEqual(revealage, 1.0))
                 {

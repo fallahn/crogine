@@ -36,7 +36,7 @@ using namespace cro;
 
 MultiRenderTexture::MultiRenderTexture()
     : m_fboID           (0),
-    m_maxAttachments    (0),
+    m_maxAttachments    (-1),
     m_depthTextureID    (0),
     m_size              (0, 0),
     m_viewport          (0, 0, 1, 1),
@@ -102,8 +102,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
     LogE << "Depth Textures are not available on mobile platforms" << std::endl;
     return false;
 #else
-    glCheck(glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &m_maxAttachments));
-
+    getMaxAttaments(); //just updates the attachment count if not init
     CRO_ASSERT(colourCount > 0 && colourCount < m_maxAttachments, "Out of Range");
 
     if (m_maxAttachments == 0)
@@ -309,4 +308,13 @@ TextureID MultiRenderTexture::getTexture(std::size_t idx) const
 TextureID MultiRenderTexture::getDepthTexture() const
 {
     return TextureID(m_depthTextureID);
+}
+
+std::int32_t MultiRenderTexture::getMaxAttaments() const
+{
+    if (m_maxAttachments == -1)
+    {
+        glCheck(glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &m_maxAttachments));
+    }
+    return m_maxAttachments;
 }

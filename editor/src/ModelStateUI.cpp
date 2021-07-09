@@ -672,7 +672,7 @@ void ModelState::buildUI()
                     static std::int32_t index = 0;
                     if (ImGui::InputInt("Channel", &index))
                     {
-                        index = (index + 5) % 5;
+                        index = (index + 6) % 6;
                     }
 
                     const auto& buffer = m_scene.getActiveCamera().getComponent<cro::GBuffer>().buffer;

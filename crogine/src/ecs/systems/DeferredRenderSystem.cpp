@@ -56,11 +56,12 @@ namespace
 
     /*
     GBuffer layout:
-    Channel 0 - View space normal, RGB (A) potentially revealage
+    Channel 0 - View space normal, RGB
     Channel 1 - View space position, RGB (A) potentially reflectivity? (SSR)
     Channel 2 - Albedo, RGBA
     Channel 3 - PBR mask, RGB(A) potentially emission
     Channel 4 - Accumulated colour for transparency, RGBA
+    Channel 5 - R revealage for OIT (G) potentially SSAO blurred buffer
     */
 
     struct TextureIndex final
@@ -70,7 +71,10 @@ namespace
             Normal,
             Position,
             Diffuse,
-            Mask
+            Mask,
+
+            Accum,
+            Reveal
         };
     };
 
@@ -99,11 +103,12 @@ DeferredRenderSystem::DeferredRenderSystem(MessageBus& mb)
     //the colours all end up zeroed..?
     ClearColours =
     {
-        cro::Colour::White,
+        cro::Colour::Transparent,
         cro::Colour::Black,
         cro::Colour::Transparent,
         cro::Colour::Black,
-        cro::Colour::Transparent
+        cro::Colour::Transparent,
+        cro::Colour::White
     };
 
     setupRenderQuad();
@@ -302,12 +307,6 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
             glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
             glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldView)))));
 
-            //check for depth test override
-            /*if (!model.m_materials[Mesh::IndexData::Final][i].enableDepthTest)
-            {
-                glCheck(glDisable(GL_DEPTH_TEST));
-            }*/
-
             const auto& indexData = model.m_meshData.indexData[i];
             glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Final]));
             glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
@@ -316,17 +315,15 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
 
 
     //render forward/transparent items to GBuffer 
-    //TODO (inc normals/position for screen space effects - 
-    //problem is revealage sharing normal buffer means 
-    //incorrect blend mode for writing normals)
     glCheck(glDisable(GL_CULL_FACE));
-    glCheck(glDisable(GL_DEPTH_TEST));
+    glCheck(glDepthMask(GL_FALSE));
     glCheck(glEnable(GL_BLEND)); 
-    //glCheck(glDepthMask(GL_FALSE));
+
     //set correct blend mode for individual buffers
-    glCheck(glBlendFunci(0, GL_ZERO, GL_ONE_MINUS_SRC_COLOR)); //revealage
-    glCheck(glBlendFunci(4, GL_ONE, GL_ONE)); //accum
-    glCheck(glBlendEquation(GL_FUNC_ADD));
+    glCheck(glBlendFunci(TextureIndex::Accum, GL_ONE, GL_ONE)); //accum
+    glCheck(glBlendFunci(TextureIndex::Reveal, GL_ZERO, GL_ONE_MINUS_SRC_COLOR)); //revealage
+    glCheck(glBlendEquationi(TextureIndex::Accum, GL_FUNC_ADD));
+    glCheck(glBlendEquationi(TextureIndex::Reveal, GL_FUNC_ADD));
 
     for (auto [entity, matIDs, depth] : forward)
     {
@@ -378,7 +375,6 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
 
     //PBR lighting pass of deferred items to render target
     //blend alpha so background shows through
-    //glCheck(glDepthMask(GL_FALSE));
     glCheck(glEnable(GL_CULL_FACE));
     glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
@@ -415,7 +411,7 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
 
 
     const auto& sun = getScene()->getSunlight().getComponent<Sunlight>();
-    auto lightDir = sun.getDirection();//PBR compositin is actually done in world space.
+    auto lightDir = sun.getDirection();//PBR compositing is actually done in world space.
     glCheck(glUniform3f(m_pbrUniforms[PBRUniformIDs::LightDirection], lightDir.x, lightDir.y, lightDir.z));
     auto lightCol = sun.getColour().getVec4();
     glCheck(glUniform4f(m_pbrUniforms[PBRUniformIDs::LightColour], lightCol.r, lightCol.g, lightCol.b, lightCol.a));
@@ -453,16 +449,16 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     //for other systems.
 
     //Transparent pass to render target
-    glCheck(glDepthFunc(GL_ALWAYS));
     glCheck(glActiveTexture(GL_TEXTURE0));
-    glCheck(glBindTexture(GL_TEXTURE_2D, buffer.getTexture(4).textureID));
-    //reveal is already bound to 2 via normal map
+    glCheck(glBindTexture(GL_TEXTURE_2D, buffer.getTexture(TextureIndex::Accum).textureID));
+    glCheck(glActiveTexture(GL_TEXTURE1));
+    glCheck(glBindTexture(GL_TEXTURE_2D, buffer.getTexture(TextureIndex::Reveal).textureID));
 
     glCheck(glUseProgram(m_oitShader.getGLHandle()));
     glCheck(glUniformMatrix4fv(m_oitUniforms[OITUniformIDs::WorldMat], 1, GL_FALSE, glm::value_ptr(transform)));
     glCheck(glUniformMatrix4fv(m_oitUniforms[OITUniformIDs::ProjMat], 1, GL_FALSE, glm::value_ptr(projection)));
     glCheck(glUniform1i(m_oitUniforms[OITUniformIDs::Accum], 0));
-    glCheck(glUniform1i(m_oitUniforms[OITUniformIDs::Reveal], 2));
+    glCheck(glUniform1i(m_oitUniforms[OITUniformIDs::Reveal], 1));
 
     glCheck(glBindVertexArray(m_forwardVao));
     glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
@@ -474,7 +470,6 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glBindVertexArray(0));
     glCheck(glUseProgram(0));
 
-    //glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDepthMask(GL_TRUE));
 #endif
 }
