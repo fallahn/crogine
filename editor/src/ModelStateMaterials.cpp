@@ -200,7 +200,7 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
     }
     if (def.type == MaterialDefinition::VertexLit)
     {
-        shaderType = cro::ShaderResource::VertexLit;
+        shaderType = m_useDeferred ? cro::ShaderResource::VertexLitDeferred : cro::ShaderResource::VertexLit;
         if (m_modelProperties.type == ModelProperties::Billboard)
         {
             shaderType = cro::ShaderResource::BillboardVertexLit;
@@ -208,7 +208,7 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
     }
     else if (def.type == MaterialDefinition::PBR)
     {
-        shaderType = cro::ShaderResource::PBR;
+        shaderType = m_useDeferred ? cro::ShaderResource::PBRDeferred : cro::ShaderResource::PBR;
     }
 
     if (def.type != cro::ShaderResource::Unlit &&
@@ -270,6 +270,7 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
 
     def.shaderID = m_resources.shaders.loadBuiltIn(shaderType, def.shaderFlags);
     def.materialData.setShader(m_resources.shaders.get(def.shaderID));
+    def.materialData.deferred = (shaderType == cro::ShaderResource::PBRDeferred);
 
     applyPreviewSettings(def);
     m_previewEntity.getComponent<cro::Model>().setMaterial(0, def.materialData);

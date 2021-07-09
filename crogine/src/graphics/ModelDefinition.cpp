@@ -398,11 +398,13 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool useDeferredShad
         //below, if a custom property is found.
         if ((flags & ShaderResource::MaskMap) == 0)
         {
-            if (shaderType == ShaderResource::VertexLit)
+            if (shaderType == ShaderResource::VertexLit
+                || shaderType == ShaderResource::VertexLitDeferred)
             {
                 material.setProperty("u_maskColour", cro::Colour::Yellow);
             }
-            else if (shaderType == ShaderResource::PBR)
+            else if (shaderType == ShaderResource::PBR
+                || shaderType == ShaderResource::PBRDeferred)
             {
                 material.setProperty("u_maskColour", cro::Colour::Blue);
             }

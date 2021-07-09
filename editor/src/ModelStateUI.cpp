@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/ShadowCaster.hpp>
+#include <crogine/ecs/components/GBuffer.hpp>
 
 #include <crogine/graphics/MeshBuilder.hpp>
 
@@ -663,12 +664,23 @@ void ModelState::buildUI()
 
             m_maskEditor.doImGui(&m_showMaskEditor);
 
-            /*if (ImGui::Begin("Buns"))
+#ifdef CRO_DEBUG_
+            if (m_useDeferred)
             {
-                auto tex = m_scene.getActiveCamera().getComponent<cro::Camera>().depthBuffer.getTexture();
-                ImGui::Image(tex, { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                if (ImGui::Begin("GBuffer"))
+                {
+                    static std::int32_t index = 0;
+                    if (ImGui::InputInt("Channel", &index))
+                    {
+                        index = (index + 5) % 5;
+                    }
+
+                    const auto& buffer = m_scene.getActiveCamera().getComponent<cro::GBuffer>().buffer;
+                    ImGui::Image(buffer.getTexture(index), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                }
+                ImGui::End();
             }
-            ImGui::End();*/
+#endif
         });
 
     auto size = getContext().mainWindow.getSize();
@@ -1349,7 +1361,7 @@ void ModelState::drawInspector()
 
                     if (matDef.type == MaterialDefinition::VertexLit)
                     {
-                        shaderType = cro::ShaderResource::VertexLit;
+                        shaderType = m_useDeferred ? cro::ShaderResource::VertexLitDeferred : cro::ShaderResource::VertexLit;
 
                         if (m_modelProperties.type == ModelProperties::Billboard)
                         {
@@ -1358,7 +1370,7 @@ void ModelState::drawInspector()
                     }
                     else if (matDef.type == MaterialDefinition::PBR)
                     {
-                        shaderType = cro::ShaderResource::PBR;
+                        shaderType = m_useDeferred ? cro::ShaderResource::PBRDeferred : cro::ShaderResource::PBR;
                     }
 
                     matDef.shaderID = m_resources.shaders.loadBuiltIn(shaderType, shaderFlags);

@@ -113,12 +113,14 @@ namespace cro
 
                 LightDirection,
                 LightColour,
+                CameraWorldPosition,
 
                 IrradianceMap,
                 PrefilterMap,
                 BRDFMap,
 
-                InverseViewMat, //actually multiplied with light view/proj for shadow mapping
+                InverseViewMat,
+                LightProjMat, //actually multiplied with invView for shadow mapping
                 ShadowMap,
 
                 Count

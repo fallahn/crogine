@@ -322,50 +322,50 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glEnable(GL_BLEND)); 
     //set correct blend mode for individual buffers
-    glCheck(glBlendFunci(0, GL_ZERO, GL_ONE_MINUS_SRC_COLOR)); //revealage
-    glCheck(glBlendFunci(4, GL_ONE, GL_ONE)); //accum
+    //glCheck(glBlendFunci(0, GL_ZERO, GL_ONE_MINUS_SRC_COLOR)); //revealage
+    //glCheck(glBlendFunci(4, GL_ONE, GL_ONE)); //accum
     glCheck(glBlendEquation(GL_FUNC_ADD));
 
-    for (auto [entity, matIDs, depth] : forward)
-    {
-        //foreach submesh / material:
-        const auto& model = entity.getComponent<Model>();
+    //for (auto [entity, matIDs, depth] : forward)
+    //{
+    //    //foreach submesh / material:
+    //    const auto& model = entity.getComponent<Model>();
 
-        if ((model.m_renderFlags & cam.renderFlags) == 0)
-        {
-            continue;
-        }
+    //    if ((model.m_renderFlags & cam.renderFlags) == 0)
+    //    {
+    //        continue;
+    //    }
 
-        //calc entity transform
-        const auto& tx = entity.getComponent<Transform>();
-        glm::mat4 worldMat = tx.getWorldTransform();
-        glm::mat4 worldView = pass.viewMatrix * worldMat;
+    //    //calc entity transform
+    //    const auto& tx = entity.getComponent<Transform>();
+    //    glm::mat4 worldMat = tx.getWorldTransform();
+    //    glm::mat4 worldView = pass.viewMatrix * worldMat;
 
-        for (auto i : matIDs)
-        {
-            //bind shader
-            glCheck(glUseProgram(model.m_materials[Mesh::IndexData::Final][i].shader));
+    //    for (auto i : matIDs)
+    //    {
+    //        //bind shader
+    //        glCheck(glUseProgram(model.m_materials[Mesh::IndexData::Final][i].shader));
 
-            //apply shader uniforms from material
-            ModelRenderer::applyProperties(model.m_materials[Mesh::IndexData::Final][i], model, *getScene(), cam);
+    //        //apply shader uniforms from material
+    //        ModelRenderer::applyProperties(model.m_materials[Mesh::IndexData::Final][i], model, *getScene(), cam);
 
-            //apply standard uniforms
-            glCheck(glUniform3f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
-            glCheck(glUniform2f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
-            glCheck(glUniform4f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-            glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
+    //        //apply standard uniforms
+    //        glCheck(glUniform3f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
+    //        glCheck(glUniform2f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
+    //        glCheck(glUniform4f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
+    //        glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
+    //        glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+    //        glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+    //        glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
+    //        glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
+    //        glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
 
-            //and... draw.
-            const auto& indexData = model.m_meshData.indexData[i];
-            glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Final]));
-            glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
-        }
-    }
+    //        //and... draw.
+    //        const auto& indexData = model.m_meshData.indexData[i];
+    //        glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Final]));
+    //        glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+    //    }
+    //}
 
     buffer.display();
 
@@ -413,11 +413,11 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
 
 
     const auto& sun = getScene()->getSunlight().getComponent<Sunlight>();
-    auto lightDir = pass.viewMatrix * glm::vec4(sun.getDirection(), 0.f);
+    auto lightDir = sun.getDirection();//PBR compositin is actually done in world space.
     glCheck(glUniform3f(m_pbrUniforms[PBRUniformIDs::LightDirection], lightDir.x, lightDir.y, lightDir.z));
     auto lightCol = sun.getColour().getVec4();
     glCheck(glUniform4f(m_pbrUniforms[PBRUniformIDs::LightColour], lightCol.r, lightCol.g, lightCol.b, lightCol.a));
-
+    //glCheck(glUniform3f(m_pbrUniforms[PBRUniformIDs::CameraWorldPosition], cameraPosition.x, cameraPosition.y, cameraPosition.z));
 
     glCheck(glActiveTexture(GL_TEXTURE4));
     glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_envMap->getIrradianceMap().textureID));
@@ -437,8 +437,10 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glBindTexture(GL_TEXTURE_2D, cam.shadowMapBuffer.getTexture().textureID)); //TODO use shadow map sampler directly?
     glCheck(glUniform1i(m_pbrUniforms[PBRUniformIDs::ShadowMap], 7));
 
-    auto invViewMatrix = cam.shadowViewProjectionMatrix * glm::inverse(pass.viewMatrix);
+    auto invViewMatrix =  glm::inverse(pass.viewMatrix);
+    auto lightProjMatrix = cam.shadowViewProjectionMatrix * invViewMatrix;
     glCheck(glUniformMatrix4fv(m_pbrUniforms[PBRUniformIDs::InverseViewMat], 1, GL_FALSE, &invViewMatrix[0][0]));
+    glCheck(glUniformMatrix4fv(m_pbrUniforms[PBRUniformIDs::LightProjMat], 1, GL_FALSE, &lightProjMatrix[0][0]));
 
     glCheck(glBindVertexArray(m_deferredVao));
     glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
@@ -461,7 +463,7 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glUniform1i(m_oitUniforms[OITUniformIDs::Reveal], 2));
 
     glCheck(glBindVertexArray(m_forwardVao));
-    glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    //glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
     //just reset the camera count - it's only
     //used to track how many visible lists we have
@@ -520,10 +522,10 @@ bool DeferredRenderSystem::loadPBRShader()
         {
             m_pbrUniforms[PBRUniformIDs::LightColour] = uniforms.at("u_lightColour");
         }
-        /*if (uniforms.count("u_cameraWorldPosition"))
+        if (uniforms.count("u_cameraWorldPosition"))
         {
             m_pbrUniforms[PBRUniformIDs::CameraWorldPosition] = uniforms.at("u_cameraWorldPosition");
-        }*/
+        }
 
 
         if (uniforms.count("u_irradianceMap"))
@@ -542,6 +544,10 @@ bool DeferredRenderSystem::loadPBRShader()
         if (uniforms.count("u_inverseViewMatrix"))
         {
             m_pbrUniforms[PBRUniformIDs::InverseViewMat] = uniforms.at("u_inverseViewMatrix");
+        }
+        if (uniforms.count("u_lightProjectionMatrix"))
+        {
+            m_pbrUniforms[PBRUniformIDs::LightProjMat] = uniforms.at("u_lightProjectionMatrix");
         }
         if (uniforms.count("u_shadowMap"))
         {

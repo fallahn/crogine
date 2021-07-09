@@ -220,6 +220,7 @@ namespace cro::Shaders::Deferred
 
             uniform sampler2D u_shadowMap;
             uniform mat4 u_inverseViewMatrix;
+            uniform mat4 u_lightProjectionMatrix;
 
             uniform vec3 u_lightDirection;
             uniform vec4 u_lightColour;
@@ -370,10 +371,11 @@ namespace cro::Shaders::Deferred
                 MaterialProperties matProp;
                 SurfaceProperties surfProp;
 
-                surfProp.normalDir = TEXTURE(u_normalMap, v_texCoord).rgb;
+                surfProp.normalDir = normalize((u_inverseViewMatrix * vec4(TEXTURE(u_normalMap, v_texCoord).rgb, 0.0)).xyz);
                 
                 vec4 position = TEXTURE(u_positionMap, v_texCoord);
-                surfProp.viewDir = -position.rgb;
+                //surfProp.viewDir = normalize(u_cameraWorldPosition - (u_inverseViewMatrix * vec4(position.rgb, 0.0)).xyz);
+                surfProp.viewDir = normalize((u_inverseViewMatrix * vec4(-position.rgb, 0.0)).xyz);
 
                 vec4 albedo = TEXTURE(u_diffuseMap, v_texCoord);
                 matProp.albedo = albedo.rgb;
@@ -412,6 +414,7 @@ namespace cro::Shaders::Deferred
                 vec3 kS = fresnelSchlickRoughness(max(dot(surfProp.normalDir, surfProp.viewDir), 0.0), F0, matProp.roughness);
                 vec3 kD = 1.0 - kS;
                 kD *= 1.0 - matProp.metallic;
+
                 vec3 irradiance = TEXTURE(u_irradianceMap, surfProp.normalDir).rgb;
                 vec3 diffuse = irradiance * matProp.albedo;
 
@@ -430,7 +433,7 @@ namespace cro::Shaders::Deferred
                 //gamma correct
                 colour = pow(colour, vec3(1.0 / 2.2)); 
 
-                vec4 lightPos = u_inverseViewMatrix * position;
+                vec4 lightPos = u_lightProjectionMatrix * position; //undoes the view position too
                 colour *= shadowAmount(lightPos, surfProp);
 
                 colour *= u_lightColour.rgb;

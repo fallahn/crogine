@@ -77,6 +77,8 @@ public:
 
 private:
 
+    bool m_useDeferred;
+
     SharedStateData& m_sharedData;
     cro::EnvironmentMap m_environmentMap;
     cro::Scene m_scene;

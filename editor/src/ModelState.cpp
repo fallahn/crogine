@@ -52,6 +52,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/GBuffer.hpp>
 
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -59,6 +60,7 @@ source distribution.
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
+#include <crogine/ecs/systems/DeferredRenderSystem.hpp>
 
 #include <crogine/util/String.hpp>
 
@@ -78,6 +80,7 @@ namespace
 
 ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State            (stack, context),
+    m_useDeferred           (false),
     m_sharedData            (sd),
     m_scene                 (context.appInstance.getMessageBus()),
     m_previewScene          (context.appInstance.getMessageBus()),
@@ -219,11 +222,26 @@ void ModelState::addSystems()
     m_scene.addSystem<cro::BillboardSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
-    m_scene.addSystem<cro::ModelRenderer>(mb);
+    if (m_useDeferred)
+    {
+        m_scene.addSystem<cro::DeferredRenderSystem>(mb).setEnvironmentMap(m_environmentMap);
+    }
+    else
+    {
+        m_scene.addSystem<cro::ModelRenderer>(mb);
+    }
 
     m_previewScene.addSystem<cro::SkeletalAnimator>(mb);
     m_previewScene.addSystem<cro::CameraSystem>(mb);
-    m_previewScene.addSystem<cro::ModelRenderer>(mb);
+
+    if (m_useDeferred)
+    {
+        m_previewScene.addSystem<cro::DeferredRenderSystem>(mb).setEnvironmentMap(m_environmentMap);
+    }
+    else
+    {
+        m_previewScene.addSystem<cro::ModelRenderer>(mb);
+    }
 }
 
 void ModelState::loadAssets()
@@ -381,7 +399,7 @@ void ModelState::createScene()
     m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(m_scene.getSunlight().getComponent<cro::Transform>());
 
     cro::ModelDefinition def(m_resources);
-    def.loadFromFile("assets/models/arrow.cmt", true);
+    def.loadFromFile("assets/models/arrow.cmt", m_useDeferred);
     def.createModel(m_scene.getSunlight());
     //m_scene.getSunlight().getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", cro::Colour(1.f, 1.f, 0.f, 1.f));
 
@@ -390,9 +408,14 @@ void ModelState::createScene()
     m_entities[EntityID::ArcBall].addComponent<cro::Transform>().setPosition(DefaultArcballPosition);
     m_entities[EntityID::ArcBall].getComponent<cro::Transform>().addChild(m_scene.getActiveCamera().getComponent<cro::Transform>());
 
+    if (m_useDeferred)
+    {
+        m_scene.getActiveCamera().addComponent<cro::GBuffer>();
+    }
+
     //create the material preview scene
     cro::ModelDefinition modelDef(m_resources);
-    modelDef.loadFromFile("assets/models/preview.cmt");
+    modelDef.loadFromFile("assets/models/preview.cmt", m_useDeferred);
     entity = m_previewScene.createEntity();
     entity.addComponent<cro::Transform>();
     modelDef.createModel(entity);
@@ -402,6 +425,7 @@ void ModelState::createScene()
     //camera
     entity = m_previewScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
+    entity.addComponent<cro::GBuffer>();
     entity.addComponent<cro::Camera>();
     auto& cam3D = entity.getComponent<cro::Camera>();
     cam3D.setPerspective(DefaultFOV, 1.f, 0.1f, 10.f);

@@ -1,12 +1,16 @@
 model sphere
 {
-	mesh = sphere
-	radius = 0.5
+    mesh = "assets/models/sphere.cmb"
+    cast_shadows = false
 
-    cast_shadows = true
+    material PBR
+    {
+        mask_colour = 0.000000,0.156863,1.000000,1.000000
+        name = "Untitled"
+        colour = 0.133333,0.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        blendmode = "none"
 
-	material VertexLit
-	{
-		colour = 1,0.9,0.3,1
-	}	
+    }
 }
