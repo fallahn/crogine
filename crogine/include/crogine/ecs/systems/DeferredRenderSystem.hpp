@@ -45,7 +45,9 @@ namespace cro
     This sytem renders PBR via a deferred system using the MRT (multi-render target)
     component attached to an active Camera. Deferred rendering supports PBR materials
     as well as forward-rendering (semi)transparent VertexLit materials using order
-    independent depth sorting. If a Scene contains no PBR materials, then prefer the 
+    independent depth sorting. NON-PBR MATERIALS WILL ALWAYS APPEAR SLIGHTY TRANSPARENT.
+    
+    If a Scene contains no PBR materials, then prefer the 
     ModelRenderer system to this one. This system is also unavailable on mobile platforms, 
     in which case only VertexLit materials are available with the ModelRenderer.
 

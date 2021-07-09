@@ -447,6 +447,8 @@ namespace cro::Shaders::Deferred
         R"(
             out vec4[5] o_outColour;
 
+uniform mat4 u_viewMatrix;
+
         #if defined(DIFFUSE_MAP)
             uniform sampler2D u_diffuseMap;
 
@@ -606,6 +608,7 @@ namespace cro::Shaders::Deferred
                 finalColour.rgb *= finalColour.a;
                 o_outColour[4] = finalColour * weight;
 
+//o_outColour[0].rgb = (u_viewMatrix * vec4(normal, 0.0)).xyz;
                 o_outColour[0].a = finalColour.a;
         })";
 
@@ -683,32 +686,36 @@ namespace cro::Shaders::Deferred
             void main()
             {
             #if defined (VERTEX_COLOUR)
-                o_outColour[4] = v_colour;
+                vec4 finalColour = v_colour;
             #else
-                o_outColour[4] = vec4(1.0);
+                vec4 finalColour = vec4(1.0);
             #endif
             #if defined (TEXTURED)
-                o_outColour[4] *= TEXTURE(u_diffuseMap, v_texCoord0);
+                finalColour *= TEXTURE(u_diffuseMap, v_texCoord0);
             #if defined(ALPHA_CLIP)
-                if(o_outColour[4].a < u_alphaClip) discard;
+                if(finalColour.a < u_alphaClip) discard;
             #endif
             #endif
 
             #if defined(COLOURED)
-                o_outColour[4] *= u_colour;
+                finalColour *= u_colour;
             #endif
 
             #if defined (RX_SHADOWS)
-                o_outColour[4].rgb *= shadowAmount(v_lightWorldPosition);
+                finalColour.rgb *= shadowAmount(v_lightWorldPosition);
             #endif
 
-            float weight = clamp(pow(min(1.0, o_outColour[4].a * 10.0) + 0.01, 3.0) * 1e8 * 
-                                     pow(1.0 - gl_FragCoord.z * 0.9, 3.0), 1e-2, 3e3);
+            float weight = clamp(pow(min(1.0, finalColour.a * 10.0) + 0.01, 3.0) * 1e8 * 
+                                   pow(1.0 - gl_FragCoord.z * 0.9, 3.0), 1e-2, 3e3);
 
-            o_outColour[4].rgb *= o_outColour[4].a;
-            o_outColour[4] *= weight;
+/*
+float weight =
+    max(min(1.0, max(max(finalColour.r, finalColour.g), finalColour.b) * finalColour.a), finalColour.a) *
+            clamp(0.03 / (1e-5 + pow(gl_FragCoord.z / 200, 4.0)), 1e-2, 3e3);
+*/
 
-            o_outColour[0].a = o_outColour[4].a;
+            o_outColour[4] = vec4(finalColour.rgb * finalColour.a, finalColour.a) * weight;
+            o_outColour[0].a = finalColour.a;
         })";
 
     static const std::string OITOutputFragment =
@@ -734,7 +741,6 @@ namespace cro::Shaders::Deferred
 
             void main()
             {
-                ivec2 coord = ivec2(gl_FragCoord.xy);
                 float revealage = TEXTURE(u_revealMap, v_texCoord).a;
                 
                 if(approxEqual(revealage, 1.0))

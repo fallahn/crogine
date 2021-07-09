@@ -193,7 +193,7 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
 {
     def.shaderFlags = 0;
 
-    auto shaderType = cro::ShaderResource::Unlit;
+    auto shaderType = m_useDeferred ? cro::ShaderResource::UnlitDeferred : cro::ShaderResource::Unlit;
     if (m_modelProperties.type == ModelProperties::Billboard)
     {
         shaderType = cro::ShaderResource::BillboardUnlit;
@@ -211,14 +211,14 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
         shaderType = m_useDeferred ? cro::ShaderResource::PBRDeferred : cro::ShaderResource::PBR;
     }
 
-    if (def.type != cro::ShaderResource::Unlit &&
+    if (def.type != MaterialDefinition::Unlit &&
         def.textureIDs[MaterialDefinition::Normal])
     {
         def.shaderFlags |= cro::ShaderResource::NormalMap;
     }
 
 
-    if (def.type != cro::ShaderResource::PBR &&
+    if (def.type != MaterialDefinition::PBR &&
         def.textureIDs[MaterialDefinition::Lightmap])
     {
         def.shaderFlags |= cro::ShaderResource::LightMap;

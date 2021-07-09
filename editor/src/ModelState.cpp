@@ -80,7 +80,7 @@ namespace
 
 ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State            (stack, context),
-    m_useDeferred           (false),
+    m_useDeferred           (true),
     m_sharedData            (sd),
     m_scene                 (context.appInstance.getMessageBus()),
     m_previewScene          (context.appInstance.getMessageBus()),
@@ -267,24 +267,35 @@ void ModelState::loadAssets()
         m_environmentMap.loadFromFile("assets/images/brooklyn_bridge.hdr");
     }
 
+    auto pbrType = m_useDeferred ? cro::ShaderResource::PBRDeferred : cro::ShaderResource::PBR;
+
+
     //create a default material to display models on import
     std::uint32_t flags = cro::ShaderResource::DiffuseColour;// | cro::ShaderResource::MaskMap;
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, flags);
+    auto shaderID = m_resources.shaders.loadBuiltIn(pbrType, flags);
     m_materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
-    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_maskColour", cro::Colour(0.f, 1.f, 1.f));
-    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
-    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
-    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_maskColour", cro::Colour(0.f, 0.5f, 1.f));
+    if (!m_useDeferred)
+    {
+        m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
+        m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
+        m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
+    }
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).deferred = m_useDeferred;
 
     flags = cro::ShaderResource::DiffuseColour | cro::ShaderResource::Skinning;
-    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, flags);
+    shaderID = m_resources.shaders.loadBuiltIn(pbrType, flags);
     m_materialIDs[MaterialID::DefaultSkinned] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
-    m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_maskColour", cro::Colour(0.f, 1.f, 1.f));
-    m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
-    m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
-    m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
+    m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_maskColour", cro::Colour(0.f, 0.5f, 1.f));
+    if (!m_useDeferred)
+    {
+        m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
+        m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
+        m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
+    }
+    m_resources.materials.get(m_materialIDs[MaterialID::DefaultSkinned]).deferred = m_useDeferred;
 
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
     m_materialIDs[MaterialID::DefaultShadow] = m_resources.materials.add(m_resources.shaders.get(shaderID));
@@ -293,7 +304,8 @@ void ModelState::loadAssets()
     m_materialIDs[MaterialID::DefaultShadowSkinned] = m_resources.materials.add(m_resources.shaders.get(shaderID));
 
     //used for drawing debug lines
-    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    auto unlitType = m_useDeferred ? cro::ShaderResource::UnlitDeferred : cro::ShaderResource::Unlit;
+    shaderID = m_resources.shaders.loadBuiltIn(unlitType, cro::ShaderResource::VertexColour);
     m_materialIDs[MaterialID::DebugDraw] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::DebugDraw]).blendMode = cro::Material::BlendMode::Alpha;
 
@@ -305,7 +317,7 @@ void ModelState::loadAssets()
     m_resources.textures.load(texID, "assets/images/grid.png");
     m_resources.textures.get(texID).setSmooth(true);
 
-    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap | cro::ShaderResource::RxShadows);
+    shaderID = m_resources.shaders.loadBuiltIn(unlitType, cro::ShaderResource::DiffuseMap | cro::ShaderResource::RxShadows);
     m_materialIDs[MaterialID::GroundPlane] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::GroundPlane]).setProperty("u_diffuseMap", m_resources.textures.get(texID));
     m_resources.materials.get(m_materialIDs[MaterialID::GroundPlane]).setProperty("u_maskColour", cro::Colour(0.f, 0.f, 0.f));

@@ -3,11 +3,11 @@ model sphere
     mesh = "assets/models/sphere.cmb"
     cast_shadows = true
 
-    material PBR
+    material VertexLit
     {
-        mask_colour = 0.000000,0.156863,1.000000,1.000000
+        mask_colour = 1.000000,1.000000,0.000000,0.725490
         name = "Untitled"
-        colour = 0.133333,0.000000,1.000000,1.000000
+        colour = 0.133333,0.000000,1.000000,0.752941
         smooth = true
         repeat = true
         blendmode = "none"

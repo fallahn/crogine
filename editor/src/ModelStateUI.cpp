@@ -1353,7 +1353,7 @@ void ModelState::drawInspector()
                 if (matDef.shaderFlags != shaderFlags
                     || matDef.activeType != matDef.type)
                 {
-                    auto shaderType = cro::ShaderResource::Unlit;
+                    auto shaderType = m_useDeferred ? cro::ShaderResource::UnlitDeferred : cro::ShaderResource::Unlit;
                     if (m_modelProperties.type == ModelProperties::Billboard)
                     {
                         shaderType = cro::ShaderResource::BillboardUnlit;
