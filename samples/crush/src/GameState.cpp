@@ -616,7 +616,7 @@ void GameState::loadAssets()
     };
     std::vector<std::uint32_t> indices =
     {
-        0,1,2,3
+        0,1,2,3, 1,0,3,2
     };
     const std::size_t vertComponentCount = 5;
 
