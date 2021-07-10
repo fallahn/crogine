@@ -55,7 +55,6 @@ source distribution.
 #include <crogine/core/GameController.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
-#include <crogine/ecs/components/GBuffer.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -73,7 +72,6 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
-#include <crogine/ecs/systems/DeferredRenderSystem.hpp>
 #include <crogine/ecs/systems/DynamicTreeSystem.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
@@ -179,31 +177,31 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
     //debug output
     registerWindow([&]()
         {
-            if (ImGui::Begin("GBuffer 0"))
-            {
-                auto lightDir = glm::vec4(m_gameScene.getSunlight().getComponent<cro::Sunlight>().getDirection(), 0.f);
-                ImGui::Text("Light Dir: %3.3f, %3.3f, %3.3f", lightDir.x, lightDir.y, lightDir.z);
+            //if (ImGui::Begin("GBuffer 0"))
+            //{
+            //    auto lightDir = glm::vec4(m_gameScene.getSunlight().getComponent<cro::Sunlight>().getDirection(), 0.f);
+            //    ImGui::Text("Light Dir: %3.3f, %3.3f, %3.3f", lightDir.x, lightDir.y, lightDir.z);
 
-                for (auto cam : m_cameras)
-                {
-                    auto dir = cam.getComponent<cro::Camera>().getActivePass().viewMatrix * lightDir;
-                    ImGui::Text("Light view %3.3f, %3.3f, %3.3f", dir.x, dir.y, dir.z);
+            //    for (auto cam : m_cameras)
+            //    {
+            //        auto dir = cam.getComponent<cro::Camera>().getActivePass().viewMatrix * lightDir;
+            //        ImGui::Text("Light view %3.3f, %3.3f, %3.3f", dir.x, dir.y, dir.z);
 
-                    const auto& buffer = cam.getComponent<cro::GBuffer>().buffer;
-                    auto size = glm::vec2(buffer.getSize());
-                    for (auto i = 0; i < 5; ++i)
-                    {
-                        ImGui::Image(buffer.getTexture(i), { size.x / 3.f, size.y / 3.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                        //if ((i % 3) != 0)
-                        {
-                            ImGui::SameLine();
-                        }
-                    }
-                    //ImGui::NewLine();
-                    ImGui::Separator();
-                }
-            }
-            ImGui::End();
+            //        const auto& buffer = cam.getComponent<cro::GBuffer>().buffer;
+            //        auto size = glm::vec2(buffer.getSize());
+            //        for (auto i = 0; i < 5; ++i)
+            //        {
+            //            ImGui::Image(buffer.getTexture(i), { size.x / 3.f, size.y / 3.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            //            //if ((i % 3) != 0)
+            //            {
+            //                ImGui::SameLine();
+            //            }
+            //        }
+            //        //ImGui::NewLine();
+            //        ImGui::Separator();
+            //    }
+            //}
+            //ImGui::End();
 
             if (ImGui::Begin("Info"))
             {
@@ -505,11 +503,11 @@ void GameState::render()
 
 #ifdef CRO_DEBUG_
     //render a far view of the scene in debug to a render texture
-    /*auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
+    auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
     m_debugViewTexture.clear();
     m_gameScene.render(m_debugViewTexture);
     m_debugViewTexture.display();
-    m_gameScene.setActiveCamera(oldCam);*/
+    m_gameScene.setActiveCamera(oldCam);
 #endif
 }
 
@@ -532,8 +530,8 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::SpriteSystem3D>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
-    //m_gameScene.addSystem<cro::ModelRenderer>(mb);
-    m_gameScene.addSystem<cro::DeferredRenderSystem>(mb).setEnvironmentMap(m_environmentMap);
+    m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    //m_gameScene.addSystem<cro::DeferredRenderSystem>(mb).setEnvironmentMap(m_environmentMap);
 #ifdef CRO_DEBUG_
     m_gameScene.addSystem<cro::RenderSystem2D>(mb).setFilterFlags(~TwoDeeFlags::Debug);
 #endif
@@ -561,14 +559,14 @@ void GameState::loadAssets()
     //m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
 
     //materials
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBRDeferred, cro::ShaderResource::DiffuseColour | cro::ShaderResource::RxShadows);
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::PBR, cro::ShaderResource::DiffuseColour | cro::ShaderResource::RxShadows);
     m_materialIDs[MaterialID::Default] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_colour", cro::Colour(1.f, 1.f, 1.f));
     m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_maskColour", cro::Colour(0.f, 1.f, 1.f));
-    //m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
-    //m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
-    //m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
-    m_resources.materials.get(m_materialIDs[MaterialID::Default]).deferred = true;
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_irradianceMap", m_environmentMap.getIrradianceMap());
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_prefilterMap", m_environmentMap.getPrefilterMap());
+    m_resources.materials.get(m_materialIDs[MaterialID::Default]).setProperty("u_brdfMap", m_environmentMap.getBRDFMap());
+    //m_resources.materials.get(m_materialIDs[MaterialID::Default]).deferred = true;
     //m_resources.materials.get(m_materialIDs[MaterialID::Default]).blendMode = cro::Material::BlendMode::Alpha;
 
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
@@ -591,12 +589,12 @@ void GameState::loadAssets()
     //model defs
     for (auto& md : m_modelDefs)
     {
-        md = std::make_unique<cro::ModelDefinition>(m_resources);
+        md = std::make_unique<cro::ModelDefinition>(m_resources, &m_environmentMap);
     }
-    m_modelDefs[GameModelID::Crate]->loadFromFile("assets/models/box.cmt", true);
-    m_modelDefs[GameModelID::Spawner]->loadFromFile("assets/models/spawner.cmt", true);
-    m_modelDefs[GameModelID::Balloon]->loadFromFile("assets/models/balloon.cmt", true);
-    m_modelDefs[GameModelID::Hologram]->loadFromFile("assets/models/hologram.cmt", true);
+    m_modelDefs[GameModelID::Crate]->loadFromFile("assets/models/box.cmt");
+    m_modelDefs[GameModelID::Spawner]->loadFromFile("assets/models/spawner.cmt");
+    m_modelDefs[GameModelID::Balloon]->loadFromFile("assets/models/balloon.cmt");
+    m_modelDefs[GameModelID::Hologram]->loadFromFile("assets/models/hologram.cmt");
 
 
     //sprites
@@ -637,14 +635,14 @@ void GameState::loadAssets()
     mesh.indexData[0].indexCount = static_cast<std::uint32_t>(indices.size());
 
 #ifdef CRO_DEBUG_
-    /*m_debugViewTexture.create(512, 512);
+    m_debugViewTexture.create(512, 512);
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 6.f, 30.f));
     entity.addComponent<cro::Camera>().setOrthographic(-10.f, 10.f, -10.f, 10.f, 10.f, 60.f);
     entity.getComponent<cro::Camera>().shadowMapBuffer.create(1024, 1024);
 
-    m_debugCam = entity;*/
+    m_debugCam = entity;
 #endif
 
     //set up the particle director
@@ -772,8 +770,8 @@ void GameState::createScene()
     loadMap();
 
     //ground plane
-    cro::ModelDefinition modelDef(m_resources);
-    modelDef.loadFromFile("assets/models/ground_plane.cmt", true);
+    cro::ModelDefinition modelDef(m_resources, &m_environmentMap);
+    modelDef.loadFromFile("assets/models/ground_plane.cmt");
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -781,7 +779,7 @@ void GameState::createScene()
 
 
     //hedz
-    modelDef.loadFromFile("assets/models/head01.cmt", true);
+    modelDef.loadFromFile("assets/models/head01.cmt");
     
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 23.f, -20.f });
@@ -803,7 +801,7 @@ void GameState::createScene()
     };
 
 
-    modelDef.loadFromFile("assets/models/head02.cmt", true);
+    modelDef.loadFromFile("assets/models/head02.cmt");
 
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 23.f, 20.f });
@@ -824,7 +822,7 @@ void GameState::createScene()
     };
 
     //hillz
-    modelDef.loadFromFile("assets/models/hills.cmt", true);
+    modelDef.loadFromFile("assets/models/hills.cmt");
 
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -848,8 +846,8 @@ void GameState::createDayCycle()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -SunOffset });
     children.moonNode = entity;
 
-    cro::ModelDefinition definition(m_resources);
-    definition.loadFromFile("assets/models/moon.cmt", true);
+    cro::ModelDefinition definition(m_resources, &m_environmentMap);
+    definition.loadFromFile("assets/models/moon.cmt");
     definition.createModel(entity);
     entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -859,7 +857,7 @@ void GameState::createDayCycle()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, SunOffset });
     children.sunNode = entity;
 
-    definition.loadFromFile("assets/models/sun.cmt", true);
+    definition.loadFromFile("assets/models/sun.cmt");
     definition.createModel(entity);
     entity.getComponent<cro::Model>().setRenderFlags(NoRefract);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -883,8 +881,8 @@ void GameState::loadMap()
             cro::Colour(0.8f, 0.8f, 1.f)
         };
 
-        cro::ModelDefinition portalModel(m_resources);
-        portalModel.loadFromFile("assets/models/portal.cmt", true);
+        cro::ModelDefinition portalModel(m_resources, &m_environmentMap);
+        portalModel.loadFromFile("assets/models/portal.cmt");
 
         cro::EmitterSettings smokeParticles;
         smokeParticles.loadFromFile("assets/particles/smoke.xyp", m_resources.textures);
@@ -1097,11 +1095,11 @@ void GameState::loadMap()
                 portalModel.createModel(entity);
 
                 //force field
-                /*entity = m_gameScene.createEntity();
+                entity = m_gameScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ rect.left - ((PortalWidth - rect.width) / 2.f), rect.bottom, layerDepth });
                 entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_meshIDs[MeshID::Portal]), m_resources.materials.get(m_materialIDs[MaterialID::Portal]));
                 entity.getComponent<cro::Transform>().move({ PortalWidth * i, 0.f, 0.f });
-                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI* i);*/
+                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI* i);
             }
 
             const auto& cratePoints = mapData.getCratePositions(i);
@@ -1121,7 +1119,7 @@ void GameState::loadMap()
                 entity.getComponent<cro::Transform>().addChild(particleEnt.getComponent<cro::Transform>());
 
                 //attach electricity sprite
-                /*auto elecEnt = m_gameScene.createEntity();
+                auto elecEnt = m_gameScene.createEntity();
                 elecEnt.addComponent<cro::Transform>().setScale(glm::vec3(1.f) / ConstVal::MapUnits);
                 elecEnt.addComponent<cro::Model>();
                 elecEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("electric");
@@ -1129,16 +1127,16 @@ void GameState::loadMap()
                 elecEnt.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
                 elecEnt.addComponent<cro::SpriteAnimation>().play(0);
 
-                entity.getComponent<cro::Transform>().addChild(elecEnt.getComponent<cro::Transform>());*/
+                entity.getComponent<cro::Transform>().addChild(elecEnt.getComponent<cro::Transform>());
             }
         }
 
 
-        cro::ModelDefinition spawnModel(m_resources);
-        spawnModel.loadFromFile("assets/models/player_spawn.cmt", true);
+        cro::ModelDefinition spawnModel(m_resources, &m_environmentMap);
+        spawnModel.loadFromFile("assets/models/player_spawn.cmt");
 
-        cro::ModelDefinition spinModel(m_resources);
-        spinModel.loadFromFile("assets/models/player_spinner.cmt", true);
+        cro::ModelDefinition spinModel(m_resources, &m_environmentMap);
+        spinModel.loadFromFile("assets/models/player_spinner.cmt");
 
         cro::EmitterSettings spawnParticles;
         spawnParticles.loadFromFile("assets/particles/spawn.xyp", m_resources.textures);
@@ -1328,8 +1326,8 @@ void GameState::spawnPlayer(PlayerInfo info)
     };
 
     //placeholder for player scale
-    cro::ModelDefinition md(m_resources);
-    md.loadFromFile("assets/models/player_box.cmt", true);
+    cro::ModelDefinition md(m_resources, &m_environmentMap);
+    md.loadFromFile("assets/models/player_box.cmt");
 
     cro::EmitterSettings particles;
     particles.loadFromFile("assets/particles/portal.xyp", m_resources.textures);
@@ -1392,7 +1390,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
             auto camEnt = m_cameras.emplace_back(m_gameScene.createEntity());
             camEnt.addComponent<cro::Transform>().setPosition({ 0.f, CameraHeight, CameraDistance });
-            camEnt.addComponent<cro::GBuffer>();
+            //camEnt.addComponent<cro::GBuffer>();
 
             auto rotation = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(0.f, 0.f, -50.f), cro::Transform::Y_AXIS);
             camEnt.getComponent<cro::Transform>().rotate(glm::inverse(rotation));
