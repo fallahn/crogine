@@ -157,6 +157,14 @@ namespace cro
         static const Colour White;
         static const Colour Transparent;
 
+        static const Colour AliceBlue;
+        static const Colour CornflowerBlue;
+        static const Colour DarkGrey;
+        static const Colour Gainsboro;
+        static const Colour LightGrey;
+        static const Colour Plum;
+        static const Colour Teal;
+
         float* asArray() { return &r; }
         const float* asArray() const { return &r; }
 

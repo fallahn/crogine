@@ -42,6 +42,15 @@ const cro::Colour cro::Colour::Black = cro::Colour(0.f, 0.f, 0.f);
 const cro::Colour cro::Colour::White = cro::Colour(1.f, 1.f, 1.f);
 const cro::Colour cro::Colour::Transparent = cro::Colour(0.f, 0.f, 0.f, 0.f);
 
+
+const cro::Colour cro::Colour::AliceBlue = cro::Colour(0xF0F8FF);
+const cro::Colour cro::Colour::CornflowerBlue = cro::Colour(0x6495EDFF);
+const cro::Colour cro::Colour::DarkGrey = cro::Colour(0xA9A9A9FF);
+const cro::Colour cro::Colour::Gainsboro = cro::Colour(0xDCDCDCFF);
+const cro::Colour cro::Colour::LightGrey = cro::Colour(0xD3D3D3FF);
+const cro::Colour cro::Colour::Plum = cro::Colour(0xDDA0DDFF);
+const cro::Colour cro::Colour::Teal = cro::Colour(0x008080FF);
+
 cro::Colour::Colour()
     : r(0.f), g(0.f), b(0.f), a(1.f) {}
 
