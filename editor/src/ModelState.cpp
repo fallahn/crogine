@@ -80,7 +80,7 @@ namespace
 
 ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State            (stack, context),
-    m_useDeferred           (true),
+    m_useDeferred           (false),
     m_sharedData            (sd),
     m_scene                 (context.appInstance.getMessageBus()),
     m_previewScene          (context.appInstance.getMessageBus()),
