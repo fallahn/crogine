@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -331,6 +331,12 @@ namespace cro
         \brief Sets the orientation of the skybox to the given quaternion
         */
         void setSkyboxOrientation(glm::quat);
+
+        /*!
+        \brief Returns a reference to the Scene's active message bus
+        */
+        MessageBus& getMessageBus() { return m_messageBus; }
+        const MessageBus& getMessageBus() const { return m_messageBus; }
 
     private:
         MessageBus& m_messageBus;

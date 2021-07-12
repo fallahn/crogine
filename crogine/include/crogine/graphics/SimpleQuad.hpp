@@ -82,6 +82,28 @@ namespace cro
         glm::vec2 getPosition() const { return m_position; }
 
         /*!
+        \brief Set the rotation in degrees of the quad
+        This rotates about the origin point at the bottom left
+        */
+        void setRotation(float rotation);
+
+        /*!
+        \brief Returns the current rotation in degrees
+        */
+        float getRotation() const;
+
+        /*!
+        \brief Set the scale of the quad
+        \param scale A vec2 comtinaing the scale in the x and y axis
+        */
+        void setScale(glm::vec2 scale);
+
+        /*!
+        \brief Returns the current scale
+        */
+        glm::vec2 getScale() const { return m_scale; }
+
+        /*!
         \brief Set the blend mdoe with which to draw the quad
         Defaults to Material::BlendMode::Alpha
         */
@@ -100,6 +122,10 @@ namespace cro
     private:
 
         glm::vec2 m_position;
+        float m_rotation;
+        glm::vec2 m_scale;
+        glm::mat4 m_modelMatrix;
+
         std::uint32_t m_vbo;
 
 #ifdef PLATFORM_DESKTOP
@@ -110,5 +136,6 @@ namespace cro
 
         void updateVertexData(glm::vec2 size);
         void applyBlendMode() const;
+        void updateTransform();
     };
 }

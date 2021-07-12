@@ -220,10 +220,13 @@ void MenuState::createScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
-
-
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::LoSpec);
+                }
             });
     textPos.y -= 80.f;
 

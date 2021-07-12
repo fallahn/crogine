@@ -25,6 +25,12 @@
     <Filter Include="Source Files\bsp">
       <UniqueIdentifier>{ea1ac335-4c3b-4a0b-bc09-98e40e9fc36f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf">
+      <UniqueIdentifier>{223ba715-5ad5-4690-90c9-039a16979013}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf">
+      <UniqueIdentifier>{2dc529c6-e396-45e2-b984-720bea400709}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -62,6 +68,9 @@
     </ClCompile>
     <ClCompile Include="src\bsp\Q3BspSystem.cpp">
       <Filter>Source Files\bsp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\GolfState.cpp">
+      <Filter>Source Files\golf</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +136,9 @@
     </ClInclude>
     <ClInclude Include="src\bsp\Q3BspSystem.hpp">
       <Filter>Header Files\bsp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GolfState.hpp">
+      <Filter>Header Files\golf</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

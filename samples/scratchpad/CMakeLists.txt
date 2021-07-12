@@ -40,11 +40,13 @@ SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/batcat/CMakeLists.txt)
 include(${PROJECT_DIR}/bsp/CMakeLists.txt)
+include(${PROJECT_DIR}/golf/CMakeLists.txt)
 
 add_executable(${PROJECT_NAME}
                ${PROJECT_SRC}
                ${BATCAT_SRC}
-               ${BSP_SRC})
+               ${BSP_SRC}
+               ${GOLF_SRC})
 
 target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}

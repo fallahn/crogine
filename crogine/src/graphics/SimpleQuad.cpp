@@ -31,10 +31,13 @@ source distribution.
 
 #include <crogine/core/App.hpp>
 
+#include <crogine/ecs/components/Transform.hpp>
+
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/Texture.hpp>
 
+#include <crogine/util/Constants.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 #include <memory>
@@ -54,14 +57,14 @@ namespace
         ATTRIBUTE vec2 a_position;
         ATTRIBUTE vec2 a_texCoord0;
 
+        uniform mat4 u_worldMatrix;
         uniform mat4 u_projectionMatrix;
-        uniform vec2 u_position;
 
         VARYING_OUT vec2 v_texCoord;
 
         void main()
         {
-            gl_Position = u_projectionMatrix * vec4(a_position + u_position, 0.0, 1.0);
+            gl_Position = u_projectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
             v_texCoord = a_texCoord0;
         })";
 
@@ -79,12 +82,15 @@ namespace
         })";
 
     std::int32_t projectionUniform = -1;
-    std::int32_t positionUniform = -1;
+    std::int32_t worldUniform = -1;
     std::int32_t textureUniform = -1;
 }
 
 SimpleQuad::SimpleQuad()
     : m_position    (0.f),
+    m_rotation      (0.f),
+    m_scale         (1.f),
+    m_modelMatrix   (1.f),
     m_vbo           (0),
 #ifdef PLATFORM_DESKTOP
     m_vao           (0),
@@ -100,7 +106,7 @@ SimpleQuad::SimpleQuad()
 
         auto uniforms = shader->getUniformMap();
         projectionUniform = uniforms.at("u_projectionMatrix");
-        positionUniform = uniforms.at("u_position");
+        worldUniform = uniforms.at("u_worldMatrix");
         textureUniform = uniforms.at("u_texture");
     }
     activeCount++;
@@ -124,6 +130,8 @@ SimpleQuad::SimpleQuad()
     glCheck(glBindVertexArray(0));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif
+
+    updateTransform();
 }
 
 SimpleQuad::SimpleQuad(const cro::Texture& texture)
@@ -151,7 +159,7 @@ SimpleQuad::~SimpleQuad()
     {
         shader.reset();
         projectionUniform = -1;
-        positionUniform = -1;
+        worldUniform = -1;
         textureUniform = -1;
     }
 }
@@ -160,6 +168,24 @@ SimpleQuad::~SimpleQuad()
 void SimpleQuad::setPosition(glm::vec2 position)
 {
     m_position = position;
+    updateTransform();
+}
+
+void SimpleQuad::setRotation(float rotation)
+{
+    m_rotation = cro::Util::Const::degToRad * rotation;
+    updateTransform();
+}
+
+float SimpleQuad::getRotation() const
+{
+    return m_rotation * cro::Util::Const::radToDeg;
+}
+
+void SimpleQuad::setScale(glm::vec2 scale)
+{
+    m_scale = scale;
+    updateTransform();
 }
 
 void SimpleQuad::setTexture(const cro::Texture& texture)
@@ -206,7 +232,7 @@ void SimpleQuad::draw() const
         //bind shader
         glCheck(glUseProgram(shader->getGLHandle()));
         glCheck(glUniform1i(textureUniform, 0));
-        glCheck(glUniform2f(positionUniform, m_position.x, m_position.y));
+        glCheck(glUniformMatrix4fv(worldUniform, 1, GL_FALSE, &m_modelMatrix[0][0]));
         glCheck(glUniformMatrix4fv(projectionUniform, 1, GL_FALSE, &projectionMatrix[0][0]));
 
         //draw
@@ -288,4 +314,11 @@ void SimpleQuad::applyBlendMode() const
         glCheck(glDisable(GL_BLEND));
         break;
     }
+}
+
+void SimpleQuad::updateTransform()
+{
+    m_modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(m_position, 0.f));
+    m_modelMatrix = glm::rotate(m_modelMatrix, m_rotation, cro::Transform::Z_AXIS);
+    m_modelMatrix = glm::scale(m_modelMatrix, glm::vec3(m_scale, 1.f));
 }
