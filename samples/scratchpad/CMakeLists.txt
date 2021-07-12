@@ -39,6 +39,7 @@ include_directories(
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/batcat/CMakeLists.txt)
+include(${PROJECT_DIR}/bsp/CMakeLists.txt)
 
 add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 

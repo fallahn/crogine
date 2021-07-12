@@ -29,25 +29,21 @@ source distribution.
 
 #pragma once
 
-#include <crogine/detail/OpenGL.hpp>
-#include <crogine/core/Log.hpp>
+#include "Q3Bsp.hpp"
 
-#include <sstream>
+#include <vector>
+#include <array>
 
-#ifdef CRO_DEBUG_
-#define glCheck(x) do{x; glErrorCheck(__FILE__, __LINE__, #x);}while (false)
-#else
-#define glCheck(x) (x)
-#endif //_DEBUG_
-
-static inline void glErrorCheck(const char* file, unsigned int line, const char* expression)
+class Patch final
 {
-    GLenum err = glGetError();
-    while(err != GL_NO_ERROR)
-    {
-        std::stringstream ss;
-        ss << file << ", " << line << ": " << expression << ". " << " glError: " << err << std::endl;
-        cro::Logger::log(ss.str(), cro::Logger::Type::Error);
-        err = glGetError();
-    }
-}
+public: 
+    Patch(const Q3::Face&, const std::vector<Q3::Vertex>& mapVerts, std::vector<float>& dest);
+
+    const std::vector<std::uint32_t>& getIndices() const { return m_indices; }
+
+
+private:
+    std::vector<std::uint32_t> m_indices;
+
+    void tessellate(const std::array<Q3::Vertex, 9u>&, std::vector<float>&);
+};

@@ -29,25 +29,59 @@ source distribution.
 
 #pragma once
 
-#include <crogine/detail/OpenGL.hpp>
-#include <crogine/core/Log.hpp>
+/*
+Input parser. In charge of reading input events and applying
+them to the camera controller of the active entity.
+*/
 
-#include <sstream>
+#include <crogine/core/Clock.hpp>
+#include <crogine/ecs/Entity.hpp>
 
-#ifdef CRO_DEBUG_
-#define glCheck(x) do{x; glErrorCheck(__FILE__, __LINE__, #x);}while (false)
-#else
-#define glCheck(x) (x)
-#endif //_DEBUG_
+#include <SDL_events.h>
 
-static inline void glErrorCheck(const char* file, unsigned int line, const char* expression)
+struct Input final
 {
-    GLenum err = glGetError();
-    while(err != GL_NO_ERROR)
+    enum Flags
     {
-        std::stringstream ss;
-        ss << file << ", " << line << ": " << expression << ". " << " glError: " << err << std::endl;
-        cro::Logger::log(ss.str(), cro::Logger::Type::Error);
-        err = glGetError();
-    }
-}
+        Forward = 0x1,
+        Backward = 0x2,
+        Left = 0x4,
+        Right = 0x8,
+        LeftMouse = 0x10,
+        RightMouse = 0x20,
+        Crouch = 0x40,
+        Jump = 0x80
+    };
+
+    std::uint32_t timeStamp = 0;
+    std::uint16_t buttonFlags = 0;
+    std::int8_t xMove = 0;
+    std::int8_t yMove = 0;
+};
+
+
+class InputParser final
+{
+public:
+    InputParser();
+
+    void handleEvent(const SDL_Event&);
+
+    void update();
+
+    void setEntity(cro::Entity);
+
+    cro::Entity getEntity() const { return m_entity; }
+
+    void setEnabled(bool enabled) { m_enabled = enabled; }
+
+private:
+    std::uint16_t m_inputFlags;
+    cro::Entity m_entity;
+    std::int32_t m_mouseMoveX;
+    std::int32_t m_mouseMoveY;
+
+    bool m_enabled;
+
+    cro::Clock m_timestampClock;
+};

@@ -29,25 +29,35 @@ source distribution.
 
 #pragma once
 
-#include <crogine/detail/OpenGL.hpp>
-#include <crogine/core/Log.hpp>
+#include "InputParser.hpp"
 
-#include <sstream>
+#include <crogine/ecs/System.hpp>
 
-#ifdef CRO_DEBUG_
-#define glCheck(x) do{x; glErrorCheck(__FILE__, __LINE__, #x);}while (false)
-#else
-#define glCheck(x) (x)
-#endif //_DEBUG_
+/*
+First person camera controller. Probably works as 3rd person too with some adjustments
+*/
 
-static inline void glErrorCheck(const char* file, unsigned int line, const char* expression)
+struct FpsCamera final
 {
-    GLenum err = glGetError();
-    while(err != GL_NO_ERROR)
-    {
-        std::stringstream ss;
-        ss << file << ", " << line << ": " << expression << ". " << " glError: " << err << std::endl;
-        cro::Logger::log(ss.str(), cro::Logger::Type::Error);
-        err = glGetError();
-    }
-}
+    Input currentInput;
+
+    float cameraPitch = 0.f; //used to clamp camera
+    float cameraYaw = 0.f; //used to calc forward vector
+
+    float moveSpeed = 80.f; //units per second
+
+    bool flyMode = true;
+};
+
+
+class FpsCameraSystem final : public cro::System
+{
+public:
+    explicit FpsCameraSystem(cro::MessageBus&);
+
+    void process(float) override;
+
+private:
+
+    void onEntityAdded(cro::Entity) override;
+};

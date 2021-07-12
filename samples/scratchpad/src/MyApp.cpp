@@ -30,6 +30,7 @@ source distribution.
 #include "MyApp.hpp"
 #include "MenuState.hpp"
 #include "batcat/BatcatState.hpp"
+#include "bsp/BspState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -39,6 +40,7 @@ MyApp::MyApp()
 {
     m_stateStack.registerState<MenuState>(States::ID::MainMenu);
     m_stateStack.registerState<BatcatState>(States::ID::BatCat);
+    m_stateStack.registerState<BspState>(States::ID::BSP);
 }
 
 //public

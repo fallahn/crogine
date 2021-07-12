@@ -19,6 +19,12 @@
     <Filter Include="Source Files\batcat">
       <UniqueIdentifier>{192d3b2e-6935-4b32-8a01-d84f71cc6f0f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\bsp">
+      <UniqueIdentifier>{39cc1772-ebfc-4513-9240-45c49d0dad89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bsp">
+      <UniqueIdentifier>{ea1ac335-4c3b-4a0b-bc09-98e40e9fc36f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -41,6 +47,21 @@
     </ClCompile>
     <ClCompile Include="src\batcat\TerrainSystem.cpp">
       <Filter>Source Files\batcat</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bsp\BspState.cpp">
+      <Filter>Source Files\bsp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bsp\FpsCameraSystem.cpp">
+      <Filter>Source Files\bsp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bsp\InputParser.cpp">
+      <Filter>Source Files\bsp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bsp\Patch.cpp">
+      <Filter>Source Files\bsp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bsp\Q3BspSystem.cpp">
+      <Filter>Source Files\bsp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -88,6 +109,24 @@
     </ClInclude>
     <ClInclude Include="src\batcat\TerrainSystem.hpp">
       <Filter>Header Files\batcat</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bsp\BspState.hpp">
+      <Filter>Header Files\bsp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bsp\FpsCameraSystem.hpp">
+      <Filter>Header Files\bsp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bsp\InputParser.hpp">
+      <Filter>Header Files\bsp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bsp\Patch.hpp">
+      <Filter>Header Files\bsp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bsp\Q3Bsp.hpp">
+      <Filter>Header Files\bsp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bsp\Q3BspSystem.hpp">
+      <Filter>Header Files\bsp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

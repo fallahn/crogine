@@ -224,6 +224,11 @@
     <ClCompile Include="src\batcat\BatcatState.cpp" />
     <ClCompile Include="src\batcat\PlayerDirector.cpp" />
     <ClCompile Include="src\batcat\TerrainSystem.cpp" />
+    <ClCompile Include="src\bsp\BspState.cpp" />
+    <ClCompile Include="src\bsp\FpsCameraSystem.cpp" />
+    <ClCompile Include="src\bsp\InputParser.cpp" />
+    <ClCompile Include="src\bsp\Patch.cpp" />
+    <ClCompile Include="src\bsp\Q3BspSystem.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
@@ -238,6 +243,12 @@
     <ClInclude Include="src\batcat\ResourceIDs.hpp" />
     <ClInclude Include="src\batcat\TerrainChunk.hpp" />
     <ClInclude Include="src\batcat\TerrainSystem.hpp" />
+    <ClInclude Include="src\bsp\BspState.hpp" />
+    <ClInclude Include="src\bsp\FpsCameraSystem.hpp" />
+    <ClInclude Include="src\bsp\InputParser.hpp" />
+    <ClInclude Include="src\bsp\Patch.hpp" />
+    <ClInclude Include="src\bsp\Q3Bsp.hpp" />
+    <ClInclude Include="src\bsp\Q3BspSystem.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
