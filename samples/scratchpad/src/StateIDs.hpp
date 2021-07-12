@@ -35,7 +35,7 @@ namespace States
     {
         MainMenu,
         BatCat,
-        Water,
+        LoSpec,
         BSP
     };
 }
