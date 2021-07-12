@@ -1,5 +1,5 @@
 
-set(PROJECT_SRC
+set(BSP_SRC
   ${PROJECT_DIR}/bsp/BspState.cpp
   ${PROJECT_DIR}/bsp/FpsCameraSystem.cpp
   ${PROJECT_DIR}/bsp/InputParser.cpp
