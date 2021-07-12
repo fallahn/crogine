@@ -46,6 +46,26 @@ source distribution.
 namespace
 {
     constexpr glm::vec2 ViewSize(1920.f, 1080.f);
+
+    bool activated(const cro::ButtonEvent& evt)
+    {
+        switch (evt.type)
+        {
+        default: return false;
+        case SDL_MOUSEBUTTONUP:
+        case SDL_MOUSEBUTTONDOWN:
+            return evt.button.button == SDL_BUTTON_LEFT;
+        case SDL_CONTROLLERBUTTONUP:
+        case SDL_CONTROLLERBUTTONDOWN:
+            return evt.cbutton.button == SDL_CONTROLLER_BUTTON_A;
+        case SDL_FINGERUP:
+        case SDL_FINGERDOWN:
+            return true;
+        case SDL_KEYUP:
+        case SDL_KEYDOWN:
+            return (evt.key.keysym.sym == SDLK_SPACE || evt.key.keysym.sym == SDLK_RETURN);
+        }
+    }
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
@@ -157,10 +177,13 @@ void MenuState::createScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
-            
-            
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::BatCat);
+                }
             });
     textPos.y -= 40.f;
 
@@ -199,7 +222,33 @@ void MenuState::createScene()
 
 
             });
-    textPos.y -= 40.f;
+    textPos.y -= 80.f;
+
+
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(textPos);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_font).setString("Quit");
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
+    entity.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
+    entity.getComponent<cro::Text>().setOutlineThickness(1.f);
+    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    cro::App::quit();
+                }
+            });
+
+
+
+
+
 
 
     //camera

@@ -1,0 +1,13 @@
+model Moon
+{
+	mesh = "assets/batcat/models/moon.cmf"
+	//cast_shadows = true
+
+	material VertexLit
+	{
+		diffuse = "assets/batcat/textures/moon_diffuse.png"
+		mask = "assets/batcat/textures/moon_mask.png"
+		normal = "assets/batcat/textures/moon_normal.png"
+		rim = 0.485,0.45,0.425,1.0
+	}
+}

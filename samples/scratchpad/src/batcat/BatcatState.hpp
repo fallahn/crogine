@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+crogine test application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,25 +29,30 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
+#include "../StateIDs.hpp"
 #include "ResourceIDs.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/MultiRenderTexture.hpp>
+#include <crogine/gui/GuiClient.hpp>
+
+#include <crogine/audio/AudioBuffer.hpp>
+
+#include <memory>
 
 namespace cro
 {
-    struct Camera;
+    class UISystem;
 }
 
-class GameState final : public cro::State
+class BatcatState final : public cro::State, public cro::GuiClient
 {
 public:
-    GameState(cro::StateStack&, cro::State::Context);
-    ~GameState() = default;
+    BatcatState(cro::StateStack&, cro::State::Context);
 
-    cro::StateID getStateID() const override { return States::Game; }
+    cro::StateID getStateID() const override { return States::BatCat; }
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
@@ -56,16 +61,19 @@ public:
 
 private:
 
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
+    cro::Scene m_scene;
+    cro::Scene m_overlayScene;
 
     cro::ResourceCollection m_resources;
+    std::array<std::unique_ptr<cro::ModelDefinition>, GameModelID::Count> m_modelDefs;
+
+    cro::AudioBuffer m_audioBuffer;
 
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
 
-    //assigned to camera resize callback
+    void calcViewport(cro::Camera&);
     void updateView(cro::Camera&);
 };

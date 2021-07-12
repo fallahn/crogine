@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -28,8 +28,8 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MyApp.hpp"
-#include "GameState.hpp"
 #include "MenuState.hpp"
+#include "batcat/BatcatState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -38,12 +38,13 @@ MyApp::MyApp()
     : m_stateStack({*this, getWindow()})
 {
     m_stateStack.registerState<MenuState>(States::ID::MainMenu);
-    m_stateStack.registerState<GameState>(States::ID::Game);
+    m_stateStack.registerState<BatcatState>(States::ID::BatCat);
 }
 
 //public
 void MyApp::handleEvent(const cro::Event& evt)
 {
+#ifdef CRO_DEBUG_
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
@@ -55,6 +56,7 @@ void MyApp::handleEvent(const cro::Event& evt)
             break;
         }
     }
+#endif
     
     m_stateStack.handleEvent(evt);
 }
@@ -77,7 +79,7 @@ void MyApp::render()
 bool MyApp::initialise()
 {
     getWindow().setLoadingScreen<LoadingScreen>();
-    getWindow().setTitle("Crogine Application");
+    getWindow().setTitle("Scratchpad Browser");
 
     m_stateStack.pushState(States::MainMenu);
 

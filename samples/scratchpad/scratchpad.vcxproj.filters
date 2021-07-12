@@ -13,11 +13,14 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\batcat">
+      <UniqueIdentifier>{ef3aad82-eec2-40cb-abb0-b02805e66aa7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\batcat">
+      <UniqueIdentifier>{192d3b2e-6935-4b32-8a01-d84f71cc6f0f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\GameState.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\LoadingScreen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -30,12 +33,18 @@
     <ClCompile Include="src\MyApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\batcat\BatcatState.cpp">
+      <Filter>Source Files\batcat</Filter>
+    </ClCompile>
+    <ClCompile Include="src\batcat\PlayerDirector.cpp">
+      <Filter>Source Files\batcat</Filter>
+    </ClCompile>
+    <ClCompile Include="src\batcat\TerrainSystem.cpp">
+      <Filter>Source Files\batcat</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\GameState.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\LoadingScreen.hpp">
@@ -55,6 +64,30 @@
     </ClInclude>
     <ClInclude Include="src\StateIDs.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\batcat\BatcatState.hpp">
+      <Filter>Header Files\batcat</Filter>
+    </ClInclude>
+    <ClInclude Include="src\batcat\icon.hpp">
+      <Filter>Header Files\batcat</Filter>
+    </ClInclude>
+    <ClInclude Include="src\batcat\LoadingScreen.hpp">
+      <Filter>Header Files\batcat</Filter>
+    </ClInclude>
+    <ClInclude Include="src\batcat\Messages.hpp">
+      <Filter>Header Files\batcat</Filter>
+    </ClInclude>
+    <ClInclude Include="src\batcat\PlayerDirector.hpp">
+      <Filter>Header Files\batcat</Filter>
+    </ClInclude>
+    <ClInclude Include="src\batcat\ResourceIDs.hpp">
+      <Filter>Header Files\batcat</Filter>
+    </ClInclude>
+    <ClInclude Include="src\batcat\TerrainChunk.hpp">
+      <Filter>Header Files\batcat</Filter>
+    </ClInclude>
+    <ClInclude Include="src\batcat\TerrainSystem.hpp">
+      <Filter>Header Files\batcat</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

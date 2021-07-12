@@ -221,15 +221,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\GameState.cpp" />
+    <ClCompile Include="src\batcat\BatcatState.cpp" />
+    <ClCompile Include="src\batcat\PlayerDirector.cpp" />
+    <ClCompile Include="src\batcat\TerrainSystem.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\batcat\BatcatState.hpp" />
+    <ClInclude Include="src\batcat\icon.hpp" />
+    <ClInclude Include="src\batcat\LoadingScreen.hpp" />
+    <ClInclude Include="src\batcat\Messages.hpp" />
+    <ClInclude Include="src\batcat\PlayerDirector.hpp" />
+    <ClInclude Include="src\batcat\ResourceIDs.hpp" />
+    <ClInclude Include="src\batcat\TerrainChunk.hpp" />
+    <ClInclude Include="src\batcat\TerrainSystem.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
-    <ClInclude Include="src\GameState.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />

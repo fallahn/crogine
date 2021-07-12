@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -34,6 +34,8 @@ namespace States
     enum ID
     {
         MainMenu,
-        Game
+        BatCat,
+        Water,
+        BSP
     };
 }

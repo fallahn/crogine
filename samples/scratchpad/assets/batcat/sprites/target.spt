@@ -1,6 +1,6 @@
 sprite_sheet
 {
-	src = "assets/sprites/target.png"
+	src = "assets/batcat/sprites/target.png"
 	//blendmode = add
 	smooth = true
 

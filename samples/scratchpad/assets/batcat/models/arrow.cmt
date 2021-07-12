@@ -1,6 +1,6 @@
 model arrow
 {
-    mesh = "assets/models/arrow.cmf"
+    mesh = "assets/batcat/models/arrow.cmf"
 
     cast_shadows = true
 

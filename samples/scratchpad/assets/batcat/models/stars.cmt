@@ -6,7 +6,7 @@ model Stars
 
 	material Unlit
 	{
-		diffuse = "assets/textures/stars.png"
+		diffuse = "assets/batcat/textures/stars.png"
 		repeat = true
 		blendmode = add
 		smooth = true

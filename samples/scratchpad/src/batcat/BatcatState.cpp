@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "GameState.hpp"
+#include "BatcatState.hpp"
 #include "ResourceIDs.hpp"
 #include "Messages.hpp"
 #include "PlayerDirector.hpp"
@@ -102,7 +102,7 @@ namespace
     float sourceRotation = -cro::Util::Const::PI / 2.f;
 }
 
-GameState::GameState(cro::StateStack& stack, cro::State::Context context)
+BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_scene         (context.appInstance.getMessageBus(), 1024),
     m_overlayScene  (context.appInstance.getMessageBus())
@@ -143,7 +143,7 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context)
 }
 
 //public
-bool GameState::handleEvent(const cro::Event& evt)
+bool BatcatState::handleEvent(const cro::Event& evt)
 {    
     if (evt.type == SDL_MOUSEMOTION)
     {
@@ -161,25 +161,38 @@ bool GameState::handleEvent(const cro::Event& evt)
         };
         commandSystem->sendCommand(cmd);
     }
-    
+    else if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_ESCAPE:
+        case SDLK_AC_BACK:
+        case SDLK_BACKSPACE:
+            requestStackClear();
+            requestStackPush(States::MainMenu);
+            break;
+        }
+    }
+
     uiSystem->handleEvent(evt);
     m_scene.forwardEvent(evt);
     return true;
 }
 
-void GameState::handleMessage(const cro::Message& msg)
+void BatcatState::handleMessage(const cro::Message& msg)
 {
     m_scene.forwardMessage(msg);
 }
 
-bool GameState::simulate(float dt)
+bool BatcatState::simulate(float dt)
 {
     m_scene.simulate(dt);
     m_overlayScene.simulate(dt);
     return true;
 }
 
-void GameState::render()
+void BatcatState::render()
 {
     auto& rt = cro::App::getWindow();
     m_scene.render(rt);
@@ -187,7 +200,7 @@ void GameState::render()
 }
 
 //private
-void GameState::addSystems()
+void BatcatState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
@@ -212,28 +225,28 @@ void GameState::addSystems()
     commandSystem = &m_overlayScene.addSystem<cro::CommandSystem>(mb);
 }
 
-void GameState::loadAssets()
+void BatcatState::loadAssets()
 {
     for (auto& md : m_modelDefs)
     {
         md = std::make_unique<cro::ModelDefinition>(m_resources);
     }
 
-    m_modelDefs[GameModelID::BatCat]->loadFromFile("assets/models/batcat.cmt");
-    m_modelDefs[GameModelID::TestRoom]->loadFromFile("assets/models/scene03.cmt");
-    m_modelDefs[GameModelID::Moon]->loadFromFile("assets/models/moon.cmt");
-    m_modelDefs[GameModelID::Stars]->loadFromFile("assets/models/stars.cmt");
+    m_modelDefs[GameModelID::BatCat]->loadFromFile("assets/batcat/models/batcat.cmt");
+    m_modelDefs[GameModelID::TestRoom]->loadFromFile("assets/batcat/models/scene03.cmt");
+    m_modelDefs[GameModelID::Moon]->loadFromFile("assets/batcat/models/moon.cmt");
+    m_modelDefs[GameModelID::Stars]->loadFromFile("assets/batcat/models/stars.cmt");
 
-    m_modelDefs[GameModelID::Cube]->loadFromFile("assets/models/cube.cmt");
-    m_modelDefs[GameModelID::Arrow]->loadFromFile("assets/models/arrow.cmt");
-    m_modelDefs[GameModelID::Billboards]->loadFromFile("assets/models/tree.cmt");
+    m_modelDefs[GameModelID::Cube]->loadFromFile("assets/batcat/models/cube.cmt");
+    m_modelDefs[GameModelID::Arrow]->loadFromFile("assets/batcat/models/arrow.cmt");
+    m_modelDefs[GameModelID::Billboards]->loadFromFile("assets/batcat/models/tree.cmt");
 
     //CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
 
-    m_audioBuffer.loadFromFile("assets/sound/laser.wav");
+    m_audioBuffer.loadFromFile("assets/batcat/sound/laser.wav");
 }
 
-void GameState::createScene()
+void BatcatState::createScene()
 {
     //dat cat man
     auto entity = m_scene.createEntity();
@@ -316,7 +329,7 @@ void GameState::createScene()
     ent.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 50.f });
     //projection is set in updateView()
     ent.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
-    ent.getComponent<cro::Camera>().resizeCallback = std::bind(&GameState::updateView, this, std::placeholders::_1);
+    ent.getComponent<cro::Camera>().resizeCallback = std::bind(&BatcatState::updateView, this, std::placeholders::_1);
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
     updateView(ent.getComponent<cro::Camera>());
 
@@ -470,7 +483,7 @@ namespace
     const cro::FloatRect buttonArea(0.f, 0.f, 64.f, 64.f);
 }
 
-void GameState::createUI()
+void BatcatState::createUI()
 {
     //2D camera
     auto ent = m_overlayScene.createEntity();
@@ -478,11 +491,11 @@ void GameState::createUI()
     auto& cam2D = ent.addComponent<cro::Camera>();
     cam2D.setOrthographic(0.f, 1280.f, 0.f, 720.f, -0.1f, 10.f);
     m_overlayScene.setActiveCamera(ent);
-    cam2D.resizeCallback = std::bind(&GameState::calcViewport, this, std::placeholders::_1);
+    cam2D.resizeCallback = std::bind(&BatcatState::calcViewport, this, std::placeholders::_1);
     calcViewport(cam2D);
 
     cro::SpriteSheet targetSheet;
-    targetSheet.loadFromFile("assets/sprites/target.spt", m_resources.textures);
+    targetSheet.loadFromFile("assets/batcat/sprites/target.spt", m_resources.textures);
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Sprite>() = targetSheet.getSprite("target");
     ent.addComponent<cro::Drawable2D>();
@@ -491,7 +504,7 @@ void GameState::createUI()
     ent.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Cursor;
 
-    m_resources.fonts.load(1, "assets/VeraMono.ttf");
+    m_resources.fonts.load(1, "assets/fonts/VeraMono.ttf");
     
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 200.f, 100.f });
@@ -600,7 +613,7 @@ void GameState::createUI()
 #endif //PLATFORM_MOBILE
 }
 
-void GameState::calcViewport(cro::Camera& cam)
+void BatcatState::calcViewport(cro::Camera& cam)
 {
     auto windowSize = cro::App::getWindow().getSize();
     glm::vec2 size(windowSize);
@@ -611,7 +624,7 @@ void GameState::calcViewport(cro::Camera& cam)
     cam.viewport.height = size.y;
 }
 
-void GameState::updateView(cro::Camera& cam3D)
+void BatcatState::updateView(cro::Camera& cam3D)
 {
     cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 6.f, 280.f);
     calcViewport(cam3D);

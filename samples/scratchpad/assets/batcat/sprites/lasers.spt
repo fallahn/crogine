@@ -1,6 +1,6 @@
 sprite_sheet
 {
-	src = "assets/sprites/lasers.png"
+	src = "assets/batcat/sprites/lasers.png"
 	//blendmode = add
 
 	sprite player_pulse

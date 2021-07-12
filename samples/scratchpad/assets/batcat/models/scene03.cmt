@@ -1,0 +1,11 @@
+model scene03
+{
+	mesh = "assets/batcat/models/scene03.cmf"
+	
+	material Unlit
+	{
+		diffuse = "assets/batcat/textures/scene03.png"
+		smooth = true
+		rx_shadows = true		
+	}
+}
