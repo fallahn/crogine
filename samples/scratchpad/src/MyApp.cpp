@@ -85,7 +85,11 @@ bool MyApp::initialise()
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Scratchpad Browser");
 
+#ifdef CRO_DEBUG_
+    m_stateStack.pushState(States::LoSpec);
+#else
     m_stateStack.pushState(States::MainMenu);
+#endif
 
     return true;
 }

@@ -29,44 +29,7 @@ source distribution.
 
 #pragma once
 
-#include "../StateIDs.hpp"
+#include <cstdint>
 
-#include <crogine/core/State.hpp>
-#include <crogine/gui/GuiClient.hpp>
-
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ModelDefinition.hpp>
-#include <crogine/graphics/RenderTexture.hpp>
-#include <crogine/graphics/Image.hpp>
-
-class GolfState final : public cro::State, public cro::GuiClient
-{
-public:
-    GolfState(cro::StateStack&, cro::State::Context);
-
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-
-    void render() override;
-
-    cro::StateID getStateID() const override { return States::LoSpec; }
-
-private:
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-
-    cro::ResourceCollection m_resources;
-    cro::RenderTexture m_renderTexture;
-    struct HoleData final
-    {
-        glm::vec3 tee = glm::vec3(0.f);
-        glm::vec3 pin = glm::vec3(0.f);
-        cro::Image map;
-    }m_holeData;
-
-    void loadAssets();
-    void addSystems();
-    void buildScene();
-    void buildUI();
-};
+static constexpr float CameraHeight = 2.f;
+static constexpr float CameraOffset = 6.f;
