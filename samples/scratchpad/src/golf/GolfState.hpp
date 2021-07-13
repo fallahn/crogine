@@ -90,4 +90,5 @@ private:
     void buildUI();
 
     void setCameraPosition(glm::vec3);
+    void hitBall();
 };

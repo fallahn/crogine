@@ -29,11 +29,25 @@ source distribution.
 
 #pragma once
 
-struct CommandID final
+#include <crogine/ecs/System.hpp>
+
+struct Ball final
 {
-    enum
+    enum class State
     {
-        FlagSprite = 0x1,
-        Ball       = 0x2
-    };
+        Idle, Flight
+    }state = State::Idle;
+
+    glm::vec3 velocity = glm::vec3(0.f);
+};
+
+class BallSystem final : public cro::System
+{
+public:
+    explicit BallSystem(cro::MessageBus&);
+
+    void process(float) override;
+
+private:
+    void doCollision(cro::Entity);
 };

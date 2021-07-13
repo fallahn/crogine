@@ -1,0 +1,10 @@
+model sphere
+{
+    mesh = sphere
+    radius = 0.043
+
+    material Unlit
+    {
+        colour = 1.0, 1.0, 1.0, 1.0
+    }
+}

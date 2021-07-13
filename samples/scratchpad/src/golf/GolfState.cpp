@@ -30,6 +30,7 @@ source distribution.
 #include "GolfState.hpp"
 #include "GameConsts.hpp"
 #include "CommandIDs.hpp"
+#include "BallSystem.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -105,6 +106,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             requestStackClear();
             requestStackPush(States::MainMenu);
             break;
+        case SDLK_SPACE:
+            hitBall();
+            break;
         }
     }
 
@@ -116,7 +120,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
 void GolfState::handleMessage(const cro::Message& msg)
 {
-
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
@@ -127,11 +130,11 @@ bool GolfState::simulate(float dt)
     const float speed = 20.f * dt;
     if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_W))
     {
-        move.z += speed;
+        move.z -= speed;
     }
     if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_S))
     {
-        move.z -= speed;
+        move.z += speed;
     }
     if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_A))
     {
@@ -179,6 +182,8 @@ void GolfState::addSystems()
 {
     auto& mb = m_gameScene.getMessageBus();
 
+    m_gameScene.addSystem<cro::CommandSystem>(mb);
+    m_gameScene.addSystem<BallSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -248,6 +253,16 @@ void GolfState::buildScene()
     entity.addComponent<cro::Transform>().setOrigin(glm::vec3(-courseSize.x / 2.f, 0.f, courseSize.y / 2.f));
     modelDef.createModel(entity);
 
+
+    modelDef.loadFromFile("assets/golf/models/sphere.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(m_holeData.tee);
+    entity.getComponent<cro::Transform>().move({ 0.f, 0.043f, 0.f });
+    modelDef.createModel(entity);
+    entity.addComponent<Ball>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
+
+
     auto updateView = [](cro::Camera& cam)
     {
         cam.setPerspective(60.f * cro::Util::Const::degToRad, ViewportSize.x / ViewportSize.y, 0.1f, ViewportSize.x);
@@ -286,7 +301,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Player];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, 0.f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width, 0.f));
     courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //this is updated by a command sent when the 3D camera is positioned
@@ -352,9 +367,31 @@ void GolfState::setCameraPosition(glm::vec3 position)
     cmd.action = [&, flag](cro::Entity e, float)
     {
         e.getComponent<cro::Sprite>() = m_sprites[flag];
-
+        //TODO scale the sprite based on the distance to its cutoff?
+        //rememberthe view will actually be static so we won't see the size animating
         auto pos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(m_holeData.pin, m_renderTexture.getSize());
         e.getComponent<cro::Transform>().setPosition(pos);
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
+void GolfState::hitBall()
+{
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Ball;
+    cmd.action = 
+        [&](cro::Entity e, float)
+    {
+        auto impulse = glm::normalize((m_holeData.pin /*+ glm::vec3(0.f, 320.f, 0.f)*/) - e.getComponent<cro::Transform>().getPosition());
+        glm::vec3 rightVector(impulse.z, impulse.y, -impulse.x);
+        auto elevation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), cro::Util::Const::PI / 2.f, cro::Transform::X_AXIS);
+        impulse * elevation * impulse;
+
+        impulse *= 20.f; //TODO get this magnitude from input
+
+        e.getComponent<Ball>().velocity = impulse;
+        e.getComponent<Ball>().state = Ball::State::Flight;
+    };
+
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }

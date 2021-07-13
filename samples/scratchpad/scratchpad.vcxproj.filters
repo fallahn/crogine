@@ -72,6 +72,9 @@
     <ClCompile Include="src\golf\GolfState.cpp">
       <Filter>Source Files\golf</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\BallSystem.cpp">
+      <Filter>Source Files\golf</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -144,6 +147,9 @@
       <Filter>Header Files\golf</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\CommandIDs.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BallSystem.hpp">
       <Filter>Header Files\golf</Filter>
     </ClInclude>
   </ItemGroup>

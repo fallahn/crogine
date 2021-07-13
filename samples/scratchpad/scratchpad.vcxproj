@@ -229,6 +229,7 @@
     <ClCompile Include="src\bsp\InputParser.cpp" />
     <ClCompile Include="src\bsp\Patch.cpp" />
     <ClCompile Include="src\bsp\Q3BspSystem.cpp" />
+    <ClCompile Include="src\golf\BallSystem.cpp" />
     <ClCompile Include="src\golf\GolfState.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -251,6 +252,7 @@
     <ClInclude Include="src\bsp\Q3Bsp.hpp" />
     <ClInclude Include="src\bsp\Q3BspSystem.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
+    <ClInclude Include="src\golf\BallSystem.hpp" />
     <ClInclude Include="src\golf\CommandIDs.hpp" />
     <ClInclude Include="src\golf\GameConsts.hpp" />
     <ClInclude Include="src\golf\GolfState.hpp" />
