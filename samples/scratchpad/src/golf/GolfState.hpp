@@ -35,9 +35,12 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/Image.hpp>
+
+#include <array>
 
 class GolfState final : public cro::State, public cro::GuiClient
 {
@@ -58,6 +61,7 @@ private:
 
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_renderTexture;
+
     struct HoleData final
     {
         glm::vec3 tee = glm::vec3(0.f);
@@ -65,8 +69,25 @@ private:
         cro::Image map;
     }m_holeData;
 
+    struct SpriteID final
+    {
+        enum
+        {
+            Flag01,
+            Flag02,
+            Flag03,
+            Flag04,
+            Player,
+
+            Count
+        };
+    };
+    std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
+
     void loadAssets();
     void addSystems();
     void buildScene();
     void buildUI();
+
+    void setCameraPosition(glm::vec3);
 };

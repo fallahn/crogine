@@ -143,6 +143,22 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     m_orthographic = true;
 }
 
+void Camera::updateMatrices(const Transform& tx, float level)
+{
+    auto& finalPass = m_passes[Camera::Pass::Final];
+    auto& reflectionPass =m_passes[Camera::Pass::Reflection];
+
+    finalPass.viewMatrix = glm::inverse(tx.getWorldTransform());
+    finalPass.viewProjectionMatrix = m_projectionMatrix * finalPass.viewMatrix;
+    finalPass.m_aabb = Spatial::updateFrustum(finalPass.m_frustum, finalPass.viewProjectionMatrix);
+
+
+    reflectionPass.viewMatrix = glm::scale(finalPass.viewMatrix, glm::vec3(1.f, -1.f, 1.f));
+    reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, level, 0.f));
+    reflectionPass.viewProjectionMatrix = m_projectionMatrix * reflectionPass.viewMatrix;
+    reflectionPass.m_aabb = Spatial::updateFrustum(reflectionPass.m_frustum, reflectionPass.viewProjectionMatrix);
+}
+
 glm::vec2 Camera::coordsToPixel(glm::vec3 worldPoint, glm::vec2 targetSize, std::int32_t passIdx) const
 {
     CRO_ASSERT(passIdx > -1 && passIdx < Pass::Refraction, "");

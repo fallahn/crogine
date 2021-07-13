@@ -77,22 +77,11 @@ void CameraSystem::process(float)
         //requires 6(!!) sqrts
 
         auto& camera = entity.getComponent<Camera>();
-        auto& finalPass = camera.m_passes[Camera::Pass::Final];
-        auto& reflectionPass = camera.m_passes[Camera::Pass::Reflection];
 
         if (camera.active)
         {
             const auto& tx = entity.getComponent<Transform>();
-
-            finalPass.viewMatrix = glm::inverse(tx.getWorldTransform());
-            finalPass.viewProjectionMatrix = camera.m_projectionMatrix * finalPass.viewMatrix;
-            finalPass.m_aabb = Spatial::updateFrustum(finalPass.m_frustum, finalPass.viewProjectionMatrix);
-
-
-            reflectionPass.viewMatrix = glm::scale(finalPass.viewMatrix, glm::vec3(1.f, -1.f, 1.f));
-            reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, -getScene()->getWaterLevel() * 2.f, 0.f));
-            reflectionPass.viewProjectionMatrix = camera.m_projectionMatrix * reflectionPass.viewMatrix;
-            reflectionPass.m_aabb = Spatial::updateFrustum(reflectionPass.m_frustum, reflectionPass.viewProjectionMatrix);
+            camera.updateMatrices(tx, -getScene()->getWaterLevel() * 2.f);
 
             //don't clear these then systems updating them can just do swaps
             //finalPass.drawList.clear();

@@ -251,6 +251,7 @@
     <ClInclude Include="src\bsp\Q3Bsp.hpp" />
     <ClInclude Include="src\bsp\Q3BspSystem.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
+    <ClInclude Include="src\golf\CommandIDs.hpp" />
     <ClInclude Include="src\golf\GameConsts.hpp" />
     <ClInclude Include="src\golf\GolfState.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />

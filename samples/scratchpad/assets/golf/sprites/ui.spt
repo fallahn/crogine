@@ -1,0 +1,29 @@
+spritesheet ui
+{
+    src="assets/golf/images/ui.png"
+
+    sprite flag01
+    {
+        bounds = 0,16,32,64
+    }
+
+    sprite flag02
+    {
+        bounds = 32,16,16,16
+    }
+
+    sprite flag03
+    {
+        bounds = 32,48,8,8
+    }
+
+    sprite flag04
+    {
+        bounds = 40, 48 ,8,8
+    }
+
+    sprite player
+    {
+        bounds = 48,0,32,80
+    }
+}

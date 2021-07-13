@@ -29,7 +29,10 @@ source distribution.
 
 #pragma once
 
-#include <cstdint>
-
-static constexpr float CameraHeight = 2.5f;
-static constexpr float CameraOffset = 5.f;
+struct CommandID final
+{
+    enum
+    {
+        FlagSprite = 0x1
+    };
+};

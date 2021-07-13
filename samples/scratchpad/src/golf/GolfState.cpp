@@ -29,6 +29,7 @@ source distribution.
 
 #include "GolfState.hpp"
 #include "GameConsts.hpp"
+#include "CommandIDs.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -37,6 +38,7 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -44,6 +46,9 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
+
+#include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Constants.hpp>
@@ -54,6 +59,8 @@ namespace
 {
     //not exactly EGA but close enough
     constexpr glm::vec2 ViewportSize(300.f, 225.f);
+
+    glm::vec3 debugPos;
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context)
@@ -116,6 +123,27 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
+    glm::vec3 move(0.f);
+    const float speed = 20.f * dt;
+    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_W))
+    {
+        move.z += speed;
+    }
+    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_S))
+    {
+        move.z -= speed;
+    }
+    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_A))
+    {
+        move.x -= speed;
+    }
+    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_D))
+    {
+        move.x += speed;
+    }
+    debugPos += move;
+    setCameraPosition(debugPos);
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
@@ -137,6 +165,14 @@ void GolfState::loadAssets()
     m_gameScene.setCubemap("assets/images/skybox/sky.ccm");
 
     m_renderTexture.create(static_cast<std::uint32_t>(ViewportSize.x) , static_cast<std::uint32_t>(ViewportSize.y)); //this is EGA res
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
+    m_sprites[SpriteID::Flag01] = spriteSheet.getSprite("flag01");
+    m_sprites[SpriteID::Flag02] = spriteSheet.getSprite("flag02");
+    m_sprites[SpriteID::Flag03] = spriteSheet.getSprite("flag03");
+    m_sprites[SpriteID::Flag04] = spriteSheet.getSprite("flag04");
+    m_sprites[SpriteID::Player] = spriteSheet.getSprite("player");
 }
 
 void GolfState::addSystems()
@@ -146,6 +182,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
+    m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
@@ -217,19 +254,15 @@ void GolfState::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
-    auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ m_holeData.tee.x, CameraHeight, m_holeData.tee.z });
-    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), m_holeData.pin, cro::Transform::Y_AXIS);
-    camEnt.getComponent<cro::Transform>().setRotation(glm::inverse(lookat));
+    setCameraPosition(m_holeData.tee);
 
-    auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
-    camEnt.getComponent<cro::Transform>().move(offset * CameraOffset);
-
-    auto& cam = camEnt.getComponent<cro::Camera>();
+    auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     updateView(cam);
 
     buildUI(); //put this here because we don't want to do this if the map data didn't load
+
+    debugPos = m_holeData.tee;
 }
 
 void GolfState::buildUI()
@@ -242,13 +275,27 @@ void GolfState::buildUI()
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
     auto courseEnt = entity;
 
+    //in theory we only have to set this once as the player avatar is always the
+    //same distance from the camera
+    auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    camera.updateMatrices(m_gameScene.getActiveCamera().getComponent<cro::Transform>());
+    auto pos = camera.coordsToPixel(m_holeData.tee, m_renderTexture.getSize());
+    
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(pos);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Player];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, 0.f));
+    courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
-
-
-
-
-
+    //this is updated by a command sent when the 3D camera is positioned
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Flag01];
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::FlagSprite;
+    courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto updateView = [courseEnt](cro::Camera& cam) mutable
     {
@@ -265,4 +312,49 @@ void GolfState::buildUI()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     updateView(cam);
+}
+
+void GolfState::setCameraPosition(glm::vec3 position)
+{
+    auto camEnt = m_gameScene.getActiveCamera();
+    camEnt.getComponent<cro::Transform>().setPosition({ position.x, CameraHeight, position.z });
+    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), m_holeData.pin, cro::Transform::Y_AXIS);
+    camEnt.getComponent<cro::Transform>().setRotation(glm::inverse(lookat));
+
+    auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
+    camEnt.getComponent<cro::Transform>().move(offset * CameraOffset);
+
+    //calc which one of the flag sprites to use based on distance
+    const auto maxLength = glm::length(m_holeData.pin - m_holeData.tee) * 0.75f;
+    const auto currLength = glm::length(m_holeData.pin - position);
+
+    const std::int32_t size = static_cast<std::int32_t>(maxLength / currLength);
+    std::int32_t flag = SpriteID::Flag01; //largest
+    switch (size)
+    {
+    case 0:
+        flag = SpriteID::Flag04;
+        break;
+    case 1:
+        flag = SpriteID::Flag03;
+        break;
+    case 2:
+        flag = SpriteID::Flag02;
+        break;
+    case 3:
+    default: break;
+        flag = SpriteID::Flag01;
+        break;
+    }
+
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::FlagSprite;
+    cmd.action = [&, flag](cro::Entity e, float)
+    {
+        e.getComponent<cro::Sprite>() = m_sprites[flag];
+
+        auto pos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(m_holeData.pin, m_renderTexture.getSize());
+        e.getComponent<cro::Transform>().setPosition(pos);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }

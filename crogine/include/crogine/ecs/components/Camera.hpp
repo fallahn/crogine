@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/Window.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/graphics/Spatial.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
@@ -391,6 +392,16 @@ namespace cro
         \brief Returns the far plane value of the projection matrix
         */
         float getFarPlane() const { return m_farPlane; }
+
+        /*!
+        \brief Updates the Camera's view and projection matrices
+        This is automatically called by the CameraSystem, but can be useful
+        to force an update when needing to use coordsToPixel() when building
+        a Scene.
+        \param tx A reference to the Camera's entity transform
+        \param reflectionLevel The level about which to set the reflection matrix
+        */
+        void updateMatrices(const Transform& tx, float reflectionLevel = 0.f);
 
         /*!
         \brief Returns the render target coordinates of the given

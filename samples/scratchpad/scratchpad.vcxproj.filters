@@ -143,5 +143,8 @@
     <ClInclude Include="src\golf\GameConsts.hpp">
       <Filter>Header Files\golf</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\CommandIDs.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
