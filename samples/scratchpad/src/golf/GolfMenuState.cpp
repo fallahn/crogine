@@ -422,7 +422,6 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
         {
             std::uint16_t data = evt.packet.as<std::uint16_t>();
             m_readyState[((data & 0xff00) >> 8)] = (data & 0x00ff) ? true : false;
-            updateReadyDisplay();
         }
             break;
         }

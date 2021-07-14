@@ -127,7 +127,6 @@ private:
     void applyTextEdit();
     void updateLobbyData(const cro::NetEvent&);
     void updateLobbyStrings();
-    void updateReadyDisplay();
 
     void handleNetEvent(const cro::NetEvent&);
     void updateView(cro::Camera&);

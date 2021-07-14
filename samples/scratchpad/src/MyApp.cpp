@@ -100,6 +100,7 @@ bool MyApp::initialise()
     m_sharedGolfData.localPlayer.playerData[0].name = "Ralph";
     m_sharedGolfData.localPlayer.playerData[1].name = "Stacy";
     m_sharedGolfData.localPlayer.playerCount = 2;
+    m_sharedGolfData.targetIP = "255.255.255.255";
 
     m_sharedGolfData.clientConnection.netClient.create(4);
 

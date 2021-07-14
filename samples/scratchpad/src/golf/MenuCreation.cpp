@@ -416,7 +416,8 @@ void GolfMenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter,
                 if (activated(evt))
                 {
                     applyTextEdit(); //finish any pending changes
-                    if (!m_sharedData.clientConnection.connected)
+                    if (!m_sharedData.targetIP.empty() &&
+                        !m_sharedData.clientConnection.connected)
                     {
                         m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
                         if (!m_sharedData.clientConnection.connected)
@@ -467,6 +468,33 @@ void GolfMenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::LobbyList;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    for (auto i = 0u; i < m_readyState.size(); ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 360.f, 668.f + (i * -58.f) });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, i](cro::Entity e, float)
+        {
+            cro::Colour c =
+                m_sharedData.connectionData[i].playerCount == 0 ? cro::Colour::Transparent :
+                m_readyState[i] ? cro::Colour::Green : cro::Colour::Red;
+
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            verts =
+            {
+                cro::Vertex2D(glm::vec2(0.f), c),
+                cro::Vertex2D(glm::vec2(20.f, 0.f), c),
+                cro::Vertex2D(glm::vec2(0.f, 20.f), c),
+                cro::Vertex2D(glm::vec2(20.f), c)
+            };
+            e.getComponent<cro::Drawable2D>().updateLocalBounds();
+        };
+
+        menuTransform.addChild(entity.getComponent<cro::Transform>());
+    }
 
     //back
     entity = m_scene.createEntity();
@@ -579,10 +607,12 @@ void GolfMenuState::updateLobbyStrings()
         {
             if (c.playerCount > 0)
             {
-                for (auto i = 0u; i < c.playerCount; ++i)
+                str += c.playerData[0].name;
+                for (auto i = 1u; i < c.playerCount; ++i)
                 {
-                    str += c.playerData[i].name + "\n";
+                    str += ", " + c.playerData[i].name;
                 }
+                str += "\n";
             }
         }
 
@@ -596,12 +626,4 @@ void GolfMenuState::updateLobbyStrings()
         }
     };
     m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-}
-
-void GolfMenuState::updateReadyDisplay()
-{
-    for (auto b : m_readyState)
-    {
-        
-    }
 }
