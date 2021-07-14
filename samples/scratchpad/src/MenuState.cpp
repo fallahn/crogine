@@ -43,6 +43,8 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+using namespace sp;
+
 namespace
 {
     constexpr glm::vec2 ViewSize(1920.f, 1080.f);

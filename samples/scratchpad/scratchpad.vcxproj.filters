@@ -31,6 +31,12 @@
     <Filter Include="Source Files\golf">
       <UniqueIdentifier>{2dc529c6-e396-45e2-b984-720bea400709}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\server">
+      <UniqueIdentifier>{fa470af2-0f42-461f-a1a1-e611d162355a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\server">
+      <UniqueIdentifier>{08716eb7-be0f-4e65-8a07-0717962e4559}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -74,6 +80,15 @@
     </ClCompile>
     <ClCompile Include="src\golf\BallSystem.cpp">
       <Filter>Source Files\golf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\Server.cpp">
+      <Filter>Source Files\golf\server</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\ServerGameState.cpp">
+      <Filter>Source Files\golf\server</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\ServerLobbyState.cpp">
+      <Filter>Source Files\golf\server</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -150,6 +165,33 @@
       <Filter>Header Files\golf</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\BallSystem.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\Server.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\ServerGameState.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\ServerLobbyState.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\ServerMessages.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\ServerPacketData.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\ServerState.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PacketIDs.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CommonConsts.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ClientPacketData.hpp">
       <Filter>Header Files\golf</Filter>
     </ClInclude>
   </ItemGroup>

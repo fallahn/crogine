@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,35 +29,27 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
+#include <crogine/detail/glm/gtc/quaternion.hpp>
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/Font.hpp>
+#include <cstdint>
+#include <cstddef>
+#include <array>
 
-
-namespace sp
+namespace ConstVal
 {
-    class MenuState final : public cro::State
-    {
-    public:
-        MenuState(cro::StateStack&, cro::State::Context);
-        ~MenuState() = default;
+    //max string vars for name/limiting packet size
+    static std::size_t MaxStringChars = 24;
+    //this is sent as a byte in packet headers - so don't increase MaxStringChars above 32!!
+    static std::size_t MaxStringDataSize = MaxStringChars * sizeof(std::uint32_t);
 
-        cro::StateID getStateID() const override { return States::MainMenu; }
+    static const std::uint16_t GamePort = 16002;
+    static const std::size_t MaxClients = 4;
+    static const uint8_t NetChannelReliable = 1;
+    static const uint8_t NetChannelStrings = 2;
 
-        bool handleEvent(const cro::Event&) override;
-        void handleMessage(const cro::Message&) override;
-        bool simulate(float) override;
-        void render() override;
-
-    private:
-
-        cro::Scene m_scene;
-        cro::Font m_font;
-
-        void addSystems();
-        void loadAssets();
-        void createScene();
-    };
+    //rather than tag each player input with the same
+    //value and sending over the network, assume this
+    //is the delta between updates (as the engine is
+    //fixed for this anyway)
+    static const float FixedGameUpdate = 1.f / 60.f;
 }

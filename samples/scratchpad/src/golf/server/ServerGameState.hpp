@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,35 +29,40 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
 
-#include <crogine/core/State.hpp>
+#include "ServerState.hpp"
+
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/Font.hpp>
+#include <crogine/core/Clock.hpp>
 
-
-namespace sp
+namespace Sv
 {
-    class MenuState final : public cro::State
+    class GameState final : public State
     {
     public:
-        MenuState(cro::StateStack&, cro::State::Context);
-        ~MenuState() = default;
+        explicit GameState(SharedData&);
 
-        cro::StateID getStateID() const override { return States::MainMenu; }
-
-        bool handleEvent(const cro::Event&) override;
         void handleMessage(const cro::Message&) override;
-        bool simulate(float) override;
-        void render() override;
+        void netEvent(const cro::NetEvent&) override;
+        void netBroadcast() override;
+        std::int32_t process(float) override;
+
+        std::int32_t stateID() const override { return StateID::Game; }
 
     private:
+        std::int32_t m_returnValue;
+        SharedData& m_sharedData;
+
+        cro::Clock m_serverTime; //used in timestamping
 
         cro::Scene m_scene;
-        cro::Font m_font;
+        std::array<cro::Entity, ConstVal::MaxClients> m_playerEntities;
 
-        void addSystems();
-        void loadAssets();
-        void createScene();
+        void sendInitialGameState(std::uint8_t);
+        void handlePlayerInput(const cro::NetEvent::Packet&);
+        void doServerCommand(const cro::NetEvent&);
+
+        void initScene();
+        void buildWorld();
     };
 }

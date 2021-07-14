@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,35 +29,43 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
+#include "../CommonConsts.hpp"
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/Font.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+#include <array>
 
+using CompressedQuat = std::array<std::int16_t, 4u>;
 
-namespace sp
+struct LobbyData final
 {
-    class MenuState final : public cro::State
-    {
-    public:
-        MenuState(cro::StateStack&, cro::State::Context);
-        ~MenuState() = default;
+    std::uint8_t playerID = 4;
+    std::uint8_t skinFlags = 0;
+    std::uint8_t stringSize = 0;
+};
 
-        cro::StateID getStateID() const override { return States::MainMenu; }
+struct PlayerInfo final
+{
+    CompressedQuat rotation{};
+    glm::vec3 spawnPosition = glm::vec3(0.f);
+    std::uint32_t serverID = 0;
+    std::int32_t timestamp = 0;
+    std::uint8_t playerID = ConstVal::MaxClients;
+};
 
-        bool handleEvent(const cro::Event&) override;
-        void handleMessage(const cro::Message&) override;
-        bool simulate(float) override;
-        void render() override;
+struct PlayerUpdate final
+{
+    CompressedQuat rotation{};
+    glm::vec3 position = glm::vec3(0.f);
+    std::int16_t pitch = 0;
+    std::int16_t yaw = 0;
+    std::uint32_t timestamp = 0;
+};
 
-    private:
-
-        cro::Scene m_scene;
-        cro::Font m_font;
-
-        void addSystems();
-        void loadAssets();
-        void createScene();
-    };
-}
+struct ActorUpdate final
+{
+    CompressedQuat rotation{};
+    glm::vec3 position = glm::vec3(0.f);
+    std::uint32_t serverID = 0;
+    std::int32_t timestamp = 0;
+    std::int8_t actorID = -1;
+};

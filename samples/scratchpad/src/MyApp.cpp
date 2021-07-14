@@ -39,7 +39,7 @@ source distribution.
 MyApp::MyApp()
     : m_stateStack({*this, getWindow()})
 {
-    m_stateStack.registerState<MenuState>(States::ID::MainMenu);
+    m_stateStack.registerState<sp::MenuState>(States::ID::MainMenu);
     m_stateStack.registerState<BatcatState>(States::ID::BatCat);
     m_stateStack.registerState<BspState>(States::ID::BSP);
     m_stateStack.registerState<GolfState>(States::ID::Golf);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,35 +29,29 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
+#include "ServerState.hpp"
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/Font.hpp>
+#include <array>
 
-
-namespace sp
+namespace Sv
 {
-    class MenuState final : public cro::State
+    class LobbyState final : public State
     {
     public:
-        MenuState(cro::StateStack&, cro::State::Context);
-        ~MenuState() = default;
+        explicit LobbyState(SharedData&);
 
-        cro::StateID getStateID() const override { return States::MainMenu; }
-
-        bool handleEvent(const cro::Event&) override;
         void handleMessage(const cro::Message&) override;
-        bool simulate(float) override;
-        void render() override;
+        void netEvent(const cro::NetEvent&) override;
+        std::int32_t process(float) override;
+
+        std::int32_t stateID() const override { return StateID::Lobby; }
 
     private:
+        std::int32_t m_returnValue;
+        SharedData& m_sharedData;
 
-        cro::Scene m_scene;
-        cro::Font m_font;
+        std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
-        void addSystems();
-        void loadAssets();
-        void createScene();
+        void insertPlayerInfo(const cro::NetEvent&);
     };
 }

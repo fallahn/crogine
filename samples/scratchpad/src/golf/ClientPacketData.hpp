@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,35 +29,8 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
-
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/Font.hpp>
-
-
-namespace sp
+struct InputUpdate final
 {
-    class MenuState final : public cro::State
-    {
-    public:
-        MenuState(cro::StateStack&, cro::State::Context);
-        ~MenuState() = default;
-
-        cro::StateID getStateID() const override { return States::MainMenu; }
-
-        bool handleEvent(const cro::Event&) override;
-        void handleMessage(const cro::Message&) override;
-        bool simulate(float) override;
-        void render() override;
-
-    private:
-
-        cro::Scene m_scene;
-        cro::Font m_font;
-
-        void addSystems();
-        void loadAssets();
-        void createScene();
-    };
-}
+    //Input input;
+    std::uint8_t playerID = 4;
+};

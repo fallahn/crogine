@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,35 +29,38 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
+#include "ServerState.hpp"
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/Font.hpp>
+#include <atomic>
+#include <memory>
+#include <thread>
 
-
-namespace sp
+class Server final
 {
-    class MenuState final : public cro::State
-    {
-    public:
-        MenuState(cro::StateStack&, cro::State::Context);
-        ~MenuState() = default;
+public:
+    Server();
+    ~Server();
 
-        cro::StateID getStateID() const override { return States::MainMenu; }
+    Server(const Server&) = delete;
+    Server(Server&&) = delete;
+    Server& operator = (const Server&) = delete;
+    Server& operator = (Server&&) = delete;
 
-        bool handleEvent(const cro::Event&) override;
-        void handleMessage(const cro::Message&) override;
-        bool simulate(float) override;
-        void render() override;
+    void launch();
+    bool running() const { return m_running; }
+    void stop();
 
-    private:
+private:
+    std::atomic_bool m_running;
+    std::unique_ptr<std::thread> m_thread;
 
-        cro::Scene m_scene;
-        cro::Font m_font;
+    std::unique_ptr<Sv::State> m_currentState;
 
-        void addSystems();
-        void loadAssets();
-        void createScene();
-    };
-}
+    Sv::SharedData m_sharedData;
+
+    void run();
+
+    //returns slot index, or >= MaxClients if full
+    std::uint8_t addClient(const cro::NetEvent&);
+    void removeClient(const cro::NetEvent&);
+};
