@@ -1,7 +1,7 @@
 model sphere
 {
     mesh = sphere
-    radius = 0.043
+    radius = 0.5043
 
     material Unlit
     {

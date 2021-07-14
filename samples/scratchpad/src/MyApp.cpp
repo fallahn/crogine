@@ -42,7 +42,7 @@ MyApp::MyApp()
     m_stateStack.registerState<MenuState>(States::ID::MainMenu);
     m_stateStack.registerState<BatcatState>(States::ID::BatCat);
     m_stateStack.registerState<BspState>(States::ID::BSP);
-    m_stateStack.registerState<GolfState>(States::ID::LoSpec);
+    m_stateStack.registerState<GolfState>(States::ID::Golf);
 }
 
 //public
@@ -86,7 +86,7 @@ bool MyApp::initialise()
     getWindow().setTitle("Scratchpad Browser");
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::LoSpec);
+    m_stateStack.pushState(States::Golf);
 #else
     m_stateStack.pushState(States::MainMenu);
 #endif

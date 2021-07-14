@@ -69,6 +69,7 @@ void BallSystem::process(float dt)
                 //ball.state = Ball::State::Idle;
                 tx.move({ 0.f, -y, 0.f });
                 ball.velocity = glm::reflect(ball.velocity, glm::vec3(0.f, 1.f, 0.f));
+                ball.velocity *= 0.5f;
             }
 
             //if current surface is green, test distance to pin

@@ -50,11 +50,14 @@ source distribution.
 #include <crogine/ecs/components/CommandTarget.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Matrix.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include "../ErrorCheck.hpp"
 
 namespace
 {
@@ -62,6 +65,9 @@ namespace
     constexpr glm::vec2 ViewportSize(300.f, 225.f);
 
     glm::vec3 debugPos;
+    std::int32_t debugMaterial = -1;
+    cro::Entity pointerEnt;
+    glm::vec3 pointerEuler = glm::vec3(0.f);
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context)
@@ -76,14 +82,20 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context)
         });
 
 #ifdef CRO_DEBUG_
-    //registerWindow([]() 
-    //    {
-    //        if (ImGui::Begin("buns"))
-    //        {
-
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([]() 
+        {
+            if (ImGui::Begin("buns"))
+            {
+                if (ImGui::SliderFloat3("Pointer", &pointerEuler[0], 0.f, cro::Util::Const::PI))
+                {
+                    //auto rotation = glm::rotate(glm::mat4(1.f), pointerEuler.x, cro::Transform::X_AXIS);
+                    //rotation = glm::rotate(rotation, pointerEuler.x, cro::Util::Matrix::getRightVector(rotation));
+                    pointerEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, pointerEuler.y);
+                    pointerEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, pointerEuler.x);
+                }
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -159,6 +171,14 @@ void GolfState::render()
     m_gameScene.render(m_renderTexture);
     m_renderTexture.display();
 
+#ifdef CRO_DEBUG_
+    auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
+    m_debugTexture.clear(cro::Colour::Magenta);
+    m_gameScene.render(m_debugTexture);
+    m_debugTexture.display();
+    m_gameScene.setActiveCamera(oldCam);
+#endif
+
     m_uiScene.render(cro::App::getWindow());
 }
 
@@ -176,6 +196,16 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::Flag03] = spriteSheet.getSprite("flag03");
     m_sprites[SpriteID::Flag04] = spriteSheet.getSprite("flag04");
     m_sprites[SpriteID::Player] = spriteSheet.getSprite("player");
+
+#ifdef CRO_DEBUG_
+    m_debugTexture.create(800, 100);
+
+    //debug material for wireframes
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    debugMaterial = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_resources.materials.get(debugMaterial).blendMode = cro::Material::BlendMode::Alpha;
+
+#endif
 }
 
 void GolfState::addSystems()
@@ -278,6 +308,47 @@ void GolfState::buildScene()
     buildUI(); //put this here because we don't want to do this if the map data didn't load
 
     debugPos = m_holeData.tee;
+
+
+#ifdef CRO_DEBUG_
+    m_debugCam = m_gameScene.createEntity();
+    m_debugCam.addComponent<cro::Transform>().setPosition({ 20.f, -10.f, 100.f });
+    auto& dCam = m_debugCam.addComponent<cro::Camera>();
+    dCam.setOrthographic(0.f, 250.f, 0.f, 31.25f, -0.1f, 200.f);
+
+    //displays the potential ball arc
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(m_holeData.tee);
+
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    auto material = m_resources.materials.get(debugMaterial);
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    auto& meshData = entity.getComponent<cro::Model>().getMeshData();
+
+    std::vector<float> verts =
+    {
+        0.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f,
+        1.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f,
+    };
+    std::vector<std::uint32_t> indices =
+    {
+        0,1
+    };
+
+    auto vertStride = (meshData.vertexSize / sizeof(float));
+    meshData.vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto& submesh = meshData.indexData[0];
+    submesh.indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    pointerEnt = entity;
+#endif
 }
 
 void GolfState::buildUI()
@@ -327,6 +398,13 @@ void GolfState::buildUI()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     updateView(cam);
+
+#ifdef CRO_DEBUG_
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 500.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_debugTexture.getTexture());
+#endif
 }
 
 void GolfState::setCameraPosition(glm::vec3 position)
@@ -382,10 +460,18 @@ void GolfState::hitBall()
     cmd.action = 
         [&](cro::Entity e, float)
     {
-        auto impulse = glm::normalize((m_holeData.pin /*+ glm::vec3(0.f, 320.f, 0.f)*/) - e.getComponent<cro::Transform>().getPosition());
-        glm::vec3 rightVector(impulse.z, impulse.y, -impulse.x);
-        auto elevation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), cro::Util::Const::PI / 2.f, cro::Transform::X_AXIS);
-        impulse * elevation * impulse;
+        //TODO adjust pitch on player input
+        auto pitch = cro::Util::Const::PI / 4.f;
+
+        auto direction = glm::normalize(m_holeData.pin - e.getComponent<cro::Transform>().getPosition());
+        auto yaw = std::atan2(-direction.z, direction.x);
+
+        //TODO add hook/slice to yaw
+
+        glm::vec3 impulse(1.f, 0.f, 0.f);
+        auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
+        rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
+        impulse = glm::toMat3(rotation) * impulse;
 
         impulse *= 20.f; //TODO get this magnitude from input
 

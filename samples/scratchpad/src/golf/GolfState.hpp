@@ -53,7 +53,7 @@ public:
 
     void render() override;
 
-    cro::StateID getStateID() const override { return States::LoSpec; }
+    cro::StateID getStateID() const override { return States::Golf; }
 
 private:
     cro::Scene m_gameScene;
@@ -91,4 +91,9 @@ private:
 
     void setCameraPosition(glm::vec3);
     void hitBall();
+
+#ifdef CRO_DEBUG_
+    cro::Entity m_debugCam;
+    cro::RenderTexture m_debugTexture;
+#endif
 };

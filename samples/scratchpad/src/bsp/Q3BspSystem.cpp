@@ -31,8 +31,6 @@ source distribution.
 #define STBIR_DEFAULT_FILTER_UPSAMPLE    STBIR_FILTER_CUBICBSPLINE
 #include "stb_image_resize.h"
 
-
-#include "../ErrorCheck.hpp"
 #include "Q3BspSystem.hpp"
 
 #include <crogine/core/FileSystem.hpp>
@@ -49,6 +47,8 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 
 #include <crogine/ecs/Scene.hpp>
+
+#include "../ErrorCheck.hpp" //include last to prevent redef of APIENTRY on windows
 
 namespace
 {

@@ -212,7 +212,7 @@ void MenuState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(textPos);
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Lo-spec");
+    entity.addComponent<cro::Text>(m_font).setString("Golf");
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
     entity.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
     entity.getComponent<cro::Text>().setOutlineThickness(1.f);
@@ -225,7 +225,7 @@ void MenuState::createScene()
                 if (activated(evt))
                 {
                     requestStackClear();
-                    requestStackPush(States::LoSpec);
+                    requestStackPush(States::Golf);
                 }
             });
     textPos.y -= 80.f;
