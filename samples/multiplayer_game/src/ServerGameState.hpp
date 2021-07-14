@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
 
-namespace Sv
+namespace sv
 {
     class GameState final : public State
     {

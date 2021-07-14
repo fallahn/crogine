@@ -33,14 +33,14 @@ source distribution.
 #include "bsp/BspState.hpp"
 #include "golf/GolfMenuState.hpp"
 #include "golf/GolfState.hpp"
-#include "golf/SharedStateData.hpp"
+#include "golf/ErrorState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
 
 namespace
 {
-    SharedStateData golfData;
+
 }
 
 MyApp::MyApp()
@@ -51,8 +51,9 @@ MyApp::MyApp()
     m_stateStack.registerState<BspState>(States::ScratchPad::BSP);
 
 
-    m_stateStack.registerState<GolfMenuState>(States::Golf::Menu, golfData);
+    m_stateStack.registerState<GolfMenuState>(States::Golf::Menu, m_sharedGolfData);
     m_stateStack.registerState<GolfState>(States::Golf::Game);
+    m_stateStack.registerState<ErrorState>(States::Golf::Error, m_sharedGolfData);
 }
 
 //public
@@ -94,6 +95,13 @@ bool MyApp::initialise()
 {
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Scratchpad Browser");
+
+    //TODO we only want to do this if launching the golf game
+    m_sharedGolfData.localPlayer.playerData[0].name = "Ralph";
+    m_sharedGolfData.localPlayer.playerData[1].name = "Stacy";
+    m_sharedGolfData.localPlayer.playerCount = 2;
+
+    m_sharedGolfData.clientConnection.netClient.create(4);
 
 #ifdef CRO_DEBUG_
     m_stateStack.pushState(States::Golf::Menu);

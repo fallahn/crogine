@@ -31,7 +31,7 @@ source distribution.
 
 #include <crogine/core/Message.hpp>
 
-namespace Sv::MessageID
+namespace sv::MessageID
 {
     enum
     {

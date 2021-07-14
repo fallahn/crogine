@@ -107,7 +107,7 @@ bool NetClient::connect(const std::string& address, std::uint16_t port, std::uin
     if (!m_client)
     {
         //must call create() successfully first!
-        Logger::log("Unable to connect, client has not yet been created.", Logger::Type::Error);
+        Logger::log("Unable to connect, call NetClient::create() first!", Logger::Type::Error);
         return false;
     }
 

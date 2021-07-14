@@ -108,6 +108,12 @@
     <ClCompile Include="src\golf\GolfState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ErrorState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\SharedStateData.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -220,6 +226,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\GameConsts.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ErrorState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -93,7 +93,7 @@ void Server::run()
     
     LOG("Server launched", cro::Logger::Type::Info);
 
-    m_currentState = std::make_unique<Sv::LobbyState>(m_sharedData);
+    m_currentState = std::make_unique<sv::LobbyState>(m_sharedData);
     std::int32_t nextState = m_currentState->stateID();
 
     //network broadcasts are called less regularly
@@ -122,7 +122,7 @@ void Server::run()
             {
                 //refuse if not in lobby state
                 //else add to client list
-                if (m_currentState->stateID() == Sv::StateID::Lobby)
+                if (m_currentState->stateID() == sv::StateID::Lobby)
                 {
                     if (auto i = addClient(evt); i >= ConstVal::MaxClients)
                     {
@@ -153,11 +153,11 @@ void Server::run()
                 {
                 default: break;
                 case PacketID::RequestGameStart:
-                    if (m_currentState->stateID() == Sv::StateID::Lobby)
+                    if (m_currentState->stateID() == sv::StateID::Lobby)
                     {
                         //TODO assert sender is host
-                        m_currentState = std::make_unique<Sv::GameState>(m_sharedData);
-                        nextState = Sv::StateID::Game;
+                        m_currentState = std::make_unique<sv::GameState>(m_sharedData);
+                        nextState = sv::StateID::Game;
 
                         m_sharedData.host.broadcastPacket(PacketID::StateChange, std::uint8_t(nextState), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     }
@@ -188,11 +188,11 @@ void Server::run()
             switch (nextState)
             {
             default: m_running = false; break;
-            case Sv::StateID::Game:
-                m_currentState = std::make_unique<Sv::GameState>(m_sharedData);
+            case sv::StateID::Game:
+                m_currentState = std::make_unique<sv::GameState>(m_sharedData);
                 break;
-            case Sv::StateID::Lobby:
-                m_currentState = std::make_unique<Sv::LobbyState>(m_sharedData);
+            case sv::StateID::Lobby:
+                m_currentState = std::make_unique<sv::LobbyState>(m_sharedData);
                 break;
             }
 
@@ -230,7 +230,7 @@ std::uint8_t Server::addClient(const cro::NetEvent& evt)
             //so they can update lobby view.
             m_sharedData.host.broadcastPacket(PacketID::ClientConnected, i, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-            auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(Sv::MessageID::ConnectionMessage);
+            auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
             msg->playerID = i;
             msg->type = ConnectionEvent::Connected;
 
@@ -244,17 +244,17 @@ std::uint8_t Server::addClient(const cro::NetEvent& evt)
 void Server::removeClient(const cro::NetEvent& evt)
 {
     auto result = std::find_if(m_sharedData.clients.begin(), m_sharedData.clients.end(), 
-        [&evt](const Sv::ClientConnection& c) 
+        [&evt](const sv::ClientConnection& c) 
         {
             return c.peer == evt.peer;
         });
 
     if (result != m_sharedData.clients.end())
     {
-        *result = Sv::ClientConnection();
+        *result = sv::ClientConnection();
 
         auto playerID = std::distance(m_sharedData.clients.begin(), result);
-        auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(Sv::MessageID::ConnectionMessage);
+        auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
         msg->playerID = static_cast<std::uint8_t>(playerID);
         msg->type = ConnectionEvent::Disconnected;
 

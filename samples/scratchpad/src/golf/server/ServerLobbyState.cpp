@@ -29,6 +29,7 @@ source distribution.
 
 #include "../PacketIDs.hpp"
 #include "../CommonConsts.hpp"
+#include "../SharedStateData.hpp"
 #include "ServerLobbyState.hpp"
 #include "ServerPacketData.hpp"
 
@@ -37,7 +38,7 @@ source distribution.
 
 #include <cstring>
 
-using namespace Sv;
+using namespace sv;
 
 LobbyState::LobbyState(SharedData& sd)
     : m_returnValue (StateID::Lobby),
@@ -92,29 +93,35 @@ std::int32_t LobbyState::process(float dt)
 //private
 void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
 {
-    std::uint8_t playerID = 4;
+    //find the connection index
+    std::uint8_t connectionID = 4;
     for(auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
         if (m_sharedData.clients[i].peer == evt.peer)
         {
-            playerID = i;
+            connectionID = i;
             break;
         }
     }
 
-    if (playerID < ConstVal::MaxClients)
+    if (connectionID < ConstVal::MaxClients)
     {
         if (evt.packet.getSize() > 0)
         {
-            std::uint8_t size = static_cast<const std::uint8_t*>(evt.packet.getData())[0];
-            size = std::min(size, static_cast<std::uint8_t>(ConstVal::MaxStringDataSize));
-
-            if (size % sizeof(std::uint32_t) == 0)
+            ConnectionData cd;
+            if (cd.deserialise(evt.packet))
             {
-                std::vector<std::uint32_t> buffer(size / sizeof(std::uint32_t));
-                std::memcpy(buffer.data(), static_cast<const std::uint8_t*>(evt.packet.getData()) + 1, size);
-
-                m_sharedData.clients[playerID].name = cro::String::fromUtf32(buffer.begin(), buffer.end());
+                m_sharedData.clients[connectionID].playerCount = cd.playerCount;
+                for (auto i = 0u; i < cd.playerCount; ++i)
+                {
+                    m_sharedData.clients[connectionID].playerData[i] = cd.playerData[i].name;
+                    //TODO avatar flags
+                }
+            }
+            else
+            {
+                //TODO reject the client
+                LogE << "Server - reject client, unable to read player info packet" << std::endl;
             }
         }
     }
@@ -125,14 +132,14 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
         const auto& c = m_sharedData.clients[i];
         if (c.connected)
         {
-            LobbyData data;
-            data.playerID = static_cast<std::uint8_t>(i);
-            data.skinFlags = 0;
-            data.stringSize = static_cast<std::uint8_t>(c.name.size() * sizeof(std::uint32_t)); //we're not checking valid size here because we assume it was validated on arrival
-
-            std::vector<std::uint8_t> buffer(data.stringSize + sizeof(LobbyData));
-            std::memcpy(buffer.data(), &data, sizeof(data));
-            std::memcpy(buffer.data() + sizeof(data), c.name.data(), data.stringSize);
+            ConnectionData cd;
+            cd.connectionID = static_cast<std::uint8_t>(i);
+            cd.playerCount = c.playerCount;
+            for (auto j = 0u; j < c.playerCount; ++j)
+            {
+                cd.playerData[j].name = c.playerData[j];
+            }
+            auto buffer = cd.serialise();
 
             m_sharedData.host.broadcastPacket(PacketID::LobbyUpdate, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
         }

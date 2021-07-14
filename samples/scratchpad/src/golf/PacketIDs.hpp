@@ -48,7 +48,7 @@ namespace PacketID
         ConnectionRefused, //< uint8 MessageType
         ConnectionAccepted, //< uint8 assigned player ID (0-3)
         StateChange, //< uint8 state ID
-        LobbyUpdate, //< LobbyData struct, name string bytes
+        LobbyUpdate, //< ConnectionData array
 
         PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
         PlayerUpdate, //< world pos, rotation, uint32 timestamp - used for reconciliation, send directly to targeted peer
@@ -60,7 +60,7 @@ namespace PacketID
         RequestGameStart,
         ClientReady, //< uint8 playerID - requests game data from server. Sent repeatedly until ack'd
         InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput)
-        PlayerInfo, //< uint8 name length in bytes followed by uint32 array string
+        PlayerInfo, //< ConnectionData array
 
         //both directions
         LobbyReady, //< uint8 playerID uint8 0 false 1 true

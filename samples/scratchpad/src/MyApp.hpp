@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "golf/SharedStateData.hpp"
+
 #include <crogine/core/App.hpp>
 #include <crogine/core/StateStack.hpp>
 
@@ -36,10 +38,10 @@ class MyApp final : public cro::App
 {
 public:
     MyApp();
-    ~MyApp() = default;
 
 private:
     
+    SharedStateData m_sharedGolfData;
     cro::StateStack m_stateStack;
 
     void handleEvent(const cro::Event&) override;

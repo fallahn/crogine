@@ -91,7 +91,7 @@ void GolfMenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter,
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 120.f, 900.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Title!");
+    entity.addComponent<cro::Text>(m_font).setString("Golf!");
     entity.getComponent<cro::Text>().setCharacterSize(LargeTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -203,55 +203,20 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    //name text
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString(m_sharedData.localPlayer.name);
-    entity.getComponent<cro::Text>().setCharacterSize(SmallTextSize);
-    auto bounds = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
-    entity.addComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
+    //name text - TODO currently we've hardcorded 2 players
+    //eventually we ewant this menu to be able to add/remove players
+    cro::String names;
+    for (auto i = 0u; i < m_sharedData.localPlayer.playerCount; ++i)
     {
-        //add a cursor to the end of the string when active
-        cro::String str = m_sharedData.localPlayer.name + "_";
-        e.getComponent<cro::Text>().setString(str);
-    };
-    menuTransform.addChild(entity.getComponent<cro::Transform>());
-    auto textEnt = entity;
-
-    //box background
+        names += m_sharedData.localPlayer.playerData[i].name + "\n";
+    }
+    
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
+    entity.addComponent<cro::Transform>().setPosition({ 400.f, 700.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/golf/images/textbox.png"));
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setGroup(GroupID::Avatar);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback(
-            [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
-            {
-                if (activated(evt))
-                {
-                    auto& callback = textEnt.getComponent<cro::Callback>();
-                    callback.active = !callback.active;
-                    if (callback.active)
-                    {
-                        textEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-                        m_textEdit.string = &m_sharedData.localPlayer.name;
-                        m_textEdit.entity = textEnt;
-                        SDL_StartTextInput();
-                    }
-                    else
-                    {
-                        applyTextEdit();
-                    }
-                }
-            });
-
+    entity.addComponent<cro::Text>(m_font).setString(names);
+    entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     //back
@@ -286,7 +251,7 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
-    bounds = cro::Text::getLocalBounds(entity);
+    auto bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(GroupID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
@@ -556,7 +521,7 @@ void GolfMenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter
                         bool ready = true;
                         for (auto i = 0u; i < ConstVal::MaxClients; ++i)
                         {
-                            if (!m_sharedData.playerData[i].name.empty()
+                            if (m_sharedData.connectionData[i].playerCount != 0
                                 && !m_readyState[i])
                             {
                                 ready = false;
@@ -573,8 +538,8 @@ void GolfMenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter
                     else
                     {
                         //toggle readyness
-                        std::uint8_t ready = m_readyState[m_sharedData.clientConnection.playerID] ? 0 : 1;
-                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.playerID << 8 | ready),
+                        std::uint8_t ready = m_readyState[m_sharedData.clientConnection.connectionID] ? 0 : 1;
+                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
                             cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     }
                 }
@@ -594,17 +559,10 @@ void GolfMenuState::createOptionsMenu(cro::Entity parent, std::uint32_t, std::ui
 
 void GolfMenuState::updateLobbyData(const cro::NetEvent& evt)
 {
-    LobbyData data;
-    std::memcpy(&data, evt.packet.getData(), sizeof(data));
-
-    auto size = std::min(data.stringSize, static_cast<std::uint8_t>(ConstVal::MaxStringDataSize));
-    if (size % sizeof(std::uint32_t) == 0
-        && data.playerID < ConstVal::MaxClients)
+    ConnectionData cd;
+    if (cd.deserialise(evt.packet))
     {
-        std::vector<std::uint32_t> buffer(size / sizeof(std::uint32_t));
-        std::memcpy(buffer.data(), static_cast<const std::uint8_t*>(evt.packet.getData()) + sizeof(data), size);
-
-        m_sharedData.playerData[data.playerID].name = cro::String::fromUtf32(buffer.begin(), buffer.end());
+        m_sharedData.connectionData[cd.connectionID] = cd;
     }
 
     updateLobbyStrings();
@@ -617,11 +575,14 @@ void GolfMenuState::updateLobbyStrings()
     cmd.action = [&](cro::Entity e, float)
     {
         cro::String str;
-        for (const auto& c : m_sharedData.playerData)
+        for (const auto& c : m_sharedData.connectionData)
         {
-            if (!c.name.empty())
+            if (c.playerCount > 0)
             {
-                str += c.name + "\n";
+                for (auto i = 0u; i < c.playerCount; ++i)
+                {
+                    str += c.playerData[i].name + "\n";
+                }
             }
         }
 

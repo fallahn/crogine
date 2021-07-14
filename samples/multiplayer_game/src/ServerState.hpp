@@ -39,7 +39,7 @@ source distribution.
 #include <cstdint>
 #include <array>
 
-namespace Sv
+namespace sv
 {
     struct ClientConnection final
     {
@@ -52,7 +52,7 @@ namespace Sv
     struct SharedData final
     {
         cro::NetHost host;
-        std::array<Sv::ClientConnection, ConstVal::MaxClients> clients;
+        std::array<sv::ClientConnection, ConstVal::MaxClients> clients;
         cro::MessageBus messageBus;
     };
 

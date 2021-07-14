@@ -37,7 +37,7 @@ source distribution.
 
 #include <cstring>
 
-using namespace Sv;
+using namespace sv;
 
 LobbyState::LobbyState(SharedData& sd)
     : m_returnValue (StateID::Lobby),

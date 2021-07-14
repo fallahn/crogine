@@ -54,9 +54,9 @@ private:
     std::atomic_bool m_running;
     std::unique_ptr<std::thread> m_thread;
 
-    std::unique_ptr<Sv::State> m_currentState;
+    std::unique_ptr<sv::State> m_currentState;
 
-    Sv::SharedData m_sharedData;
+    sv::SharedData m_sharedData;
 
     void run();
 

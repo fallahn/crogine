@@ -33,7 +33,7 @@ source distribution.
 
 #include <array>
 
-namespace Sv
+namespace sv
 {
     class LobbyState final : public State
     {

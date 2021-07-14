@@ -43,7 +43,7 @@ source distribution.
 #include <crogine/util/Network.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
-using namespace Sv;
+using namespace sv;
 
 namespace
 {
@@ -69,7 +69,7 @@ GameState::GameState(SharedData& sd)
 
 void GameState::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == Sv::MessageID::ConnectionMessage)
+    if (msg.id == sv::MessageID::ConnectionMessage)
     {
         const auto& data = msg.getData<ConnectionEvent>();
         if (data.type == ConnectionEvent::Disconnected)

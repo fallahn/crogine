@@ -39,20 +39,24 @@ source distribution.
 #include <cstdint>
 #include <array>
 
-namespace Sv
+namespace sv
 {
     struct ClientConnection final
     {
         bool ready = false; //< player is ready to recieve game data, not lobby readiness (see GameState)
         bool connected = false;
         cro::NetPeer peer;
-        cro::String name;
+        
+        //TODO this is basically the same as the ConnectionData struct in client shared data
+        static constexpr std::size_t MaxPlayers = 4;
+        std::size_t playerCount = 0;
+        std::array<cro::String, MaxPlayers> playerData = {};
     };
 
     struct SharedData final
     {
         cro::NetHost host;
-        std::array<Sv::ClientConnection, ConstVal::MaxClients> clients;
+        std::array<sv::ClientConnection, ConstVal::MaxClients> clients;
         cro::MessageBus messageBus;
     };
 

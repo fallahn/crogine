@@ -80,11 +80,8 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
     //context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
 
     sd.clientConnection.ready = false;
-    for (auto& b : m_readyState)
-    {
-        b = false;
-    }
-    
+    std::fill(m_readyState.begin(), m_readyState.end(), false);
+        
     //we returned from a previous game
     if (sd.clientConnection.connected)
     {
@@ -99,6 +96,14 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
             m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
         };
         m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    }
+    else
+    {
+        //we ought to be resetting previous data here?
+        for (auto& cd : m_sharedData.connectionData)
+        {
+            cd.playerCount = 0;
+        }
     }
 }
 
@@ -360,7 +365,7 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
         {
         default: break;
         case PacketID::StateChange:
-            if (evt.packet.as<std::uint8_t>() == Sv::StateID::Game)
+            if (evt.packet.as<std::uint8_t>() == sv::StateID::Game)
             {
                 requestStackClear();
                 requestStackPush(States::Golf::Game);
@@ -369,14 +374,11 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
         case PacketID::ConnectionAccepted:
             {
                 //update local player data
-                m_sharedData.clientConnection.playerID = evt.packet.as<std::uint8_t>();
-                m_sharedData.playerData[m_sharedData.clientConnection.playerID] = m_sharedData.localPlayer;
+                m_sharedData.clientConnection.connectionID = evt.packet.as<std::uint8_t>();
+                m_sharedData.connectionData[m_sharedData.clientConnection.connectionID] = m_sharedData.localPlayer;
 
                 //send player details to server (name, skin)
-                std::uint8_t size = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, m_sharedData.localPlayer.name.size() * sizeof(std::uint32_t)));
-                std::vector<std::uint8_t> buffer(size + 1);
-                buffer[0] = size;
-                std::memcpy(&buffer[1], m_sharedData.localPlayer.name.data(), size);
+                auto buffer = m_sharedData.localPlayer.serialise();
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                 //switch to lobby view
@@ -393,7 +395,7 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
                 {
                     //auto ready up if host
                     m_sharedData.clientConnection.netClient.sendPacket(
-                        PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.playerID << 8 | std::uint8_t(1)),
+                        PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
                         cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
 
@@ -413,7 +415,7 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
             updateLobbyData(evt);
             break;
         case PacketID::ClientDisconnected:
-            m_sharedData.playerData[evt.packet.as<std::uint8_t>()].name.clear();
+            m_sharedData.connectionData[evt.packet.as<std::uint8_t>()].playerCount = 0;
             updateLobbyStrings();
             break;
         case PacketID::LobbyReady:

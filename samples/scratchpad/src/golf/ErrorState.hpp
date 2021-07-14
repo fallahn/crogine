@@ -29,51 +29,39 @@ source distribution.
 
 #pragma once
 
-#include "server/Server.hpp"
+#include "../StateIDs.hpp"
 
-#include <crogine/network/NetClient.hpp>
-#include <crogine/core/String.hpp>
+#include <crogine/core/State.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
-#include <string>
-#include <array>
+#include <crogine/ecs/Scene.hpp>
 
-struct PlayerData final
+struct SharedStateData;
+namespace cro
 {
-    cro::String name;
-    std::uint32_t avatarFlags = 0;
-};
+    struct Camera;
+}
 
-struct ConnectionData final
+class ErrorState final : public cro::State, public cro::GuiClient
 {
-    static constexpr std::uint8_t MaxPlayers = 4;
-    std::uint8_t connectionID = MaxPlayers;
+public:
+    ErrorState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
-    std::uint8_t playerCount = 0;
-    std::array<PlayerData, MaxPlayers> playerData = {};
+    bool handleEvent(const cro::Event&) override;
 
-    std::vector<std::uint8_t> serialise() const;
-    bool deserialise(const cro::NetEvent::Packet&);
-};
+    void handleMessage(const cro::Message&) override;
 
-struct SharedStateData final
-{
-    Server serverInstance;
+    bool simulate(float) override;
 
-    struct ClientConnection final
-    {
-        cro::NetClient netClient;
-        bool connected = false;
-        bool ready = false;
-        std::uint8_t connectionID = 4;
-    }clientConnection;
+    void render() override;
 
-    //data of all players rx'd from server
-    std::array<ConnectionData, 4u> connectionData = {};
+    cro::StateID getStateID() const override { return States::Golf::Error; }
 
-    //our local player data
-    ConnectionData localPlayer;
-    cro::String targetIP;
+private:
 
-    //printed by the error state
-    std::string errorMessage;
+    cro::Scene m_scene;
+    cro::Texture m_backgroundTexture;
+
+    void buildScene();
+    void updateView(cro::Camera&);
 };
