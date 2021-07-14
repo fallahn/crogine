@@ -31,18 +31,28 @@ source distribution.
 #include "MenuState.hpp"
 #include "batcat/BatcatState.hpp"
 #include "bsp/BspState.hpp"
+#include "golf/GolfMenuState.hpp"
 #include "golf/GolfState.hpp"
+#include "golf/SharedStateData.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
 
+namespace
+{
+    SharedStateData golfData;
+}
+
 MyApp::MyApp()
     : m_stateStack({*this, getWindow()})
 {
-    m_stateStack.registerState<sp::MenuState>(States::ID::MainMenu);
-    m_stateStack.registerState<BatcatState>(States::ID::BatCat);
-    m_stateStack.registerState<BspState>(States::ID::BSP);
-    m_stateStack.registerState<GolfState>(States::ID::Golf);
+    m_stateStack.registerState<sp::MenuState>(States::ScratchPad::MainMenu);
+    m_stateStack.registerState<BatcatState>(States::ScratchPad::BatCat);
+    m_stateStack.registerState<BspState>(States::ScratchPad::BSP);
+
+
+    m_stateStack.registerState<GolfMenuState>(States::Golf::Menu, golfData);
+    m_stateStack.registerState<GolfState>(States::Golf::Game);
 }
 
 //public
@@ -86,9 +96,9 @@ bool MyApp::initialise()
     getWindow().setTitle("Scratchpad Browser");
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::Golf);
+    m_stateStack.pushState(States::Golf::Menu);
 #else
-    m_stateStack.pushState(States::MainMenu);
+    m_stateStack.pushState(States::ScratchPad::MainMenu);
 #endif
 
     return true;

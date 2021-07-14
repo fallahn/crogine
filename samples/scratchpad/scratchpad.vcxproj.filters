@@ -37,6 +37,18 @@
     <Filter Include="Source Files\golf\server">
       <UniqueIdentifier>{08716eb7-be0f-4e65-8a07-0717962e4559}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\client">
+      <UniqueIdentifier>{0334852e-a3d7-40a5-9327-9012d15bd76b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\golf\client\states">
+      <UniqueIdentifier>{d60308a8-5f22-45eb-841c-0232f1ed22a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client">
+      <UniqueIdentifier>{09a8a285-f5aa-486f-8110-65ed9d2f9651}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client\states">
+      <UniqueIdentifier>{5960c170-5e2f-420b-8929-4b38ad1f396c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -75,9 +87,6 @@
     <ClCompile Include="src\bsp\Q3BspSystem.cpp">
       <Filter>Source Files\bsp</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\GolfState.cpp">
-      <Filter>Source Files\golf</Filter>
-    </ClCompile>
     <ClCompile Include="src\golf\BallSystem.cpp">
       <Filter>Source Files\golf</Filter>
     </ClCompile>
@@ -89,6 +98,15 @@
     </ClCompile>
     <ClCompile Include="src\golf\server\ServerLobbyState.cpp">
       <Filter>Source Files\golf\server</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\MenuCreation.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\GolfMenuState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\GolfState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -155,15 +173,6 @@
     <ClInclude Include="src\bsp\Q3BspSystem.hpp">
       <Filter>Header Files\bsp</Filter>
     </ClInclude>
-    <ClInclude Include="src\golf\GolfState.hpp">
-      <Filter>Header Files\golf</Filter>
-    </ClInclude>
-    <ClInclude Include="src\golf\GameConsts.hpp">
-      <Filter>Header Files\golf</Filter>
-    </ClInclude>
-    <ClInclude Include="src\golf\CommandIDs.hpp">
-      <Filter>Header Files\golf</Filter>
-    </ClInclude>
     <ClInclude Include="src\golf\BallSystem.hpp">
       <Filter>Header Files\golf</Filter>
     </ClInclude>
@@ -192,7 +201,25 @@
       <Filter>Header Files\golf</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\ClientPacketData.hpp">
-      <Filter>Header Files\golf</Filter>
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\MenuConsts.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GolfMenuState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\SharedStateData.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GolfState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CommandIDs.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GameConsts.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

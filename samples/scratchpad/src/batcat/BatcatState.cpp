@@ -170,7 +170,7 @@ bool BatcatState::handleEvent(const cro::Event& evt)
         case SDLK_AC_BACK:
         case SDLK_BACKSPACE:
             requestStackClear();
-            requestStackPush(States::MainMenu);
+            requestStackPush(States::ScratchPad::MainMenu);
             break;
         }
     }

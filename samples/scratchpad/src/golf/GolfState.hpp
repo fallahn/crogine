@@ -53,7 +53,7 @@ public:
 
     void render() override;
 
-    cro::StateID getStateID() const override { return States::Golf; }
+    cro::StateID getStateID() const override { return States::Golf::Game; }
 
 private:
     cro::Scene m_gameScene;

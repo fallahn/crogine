@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,35 +29,37 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
+#include "server/Server.hpp"
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/Font.hpp>
+#include <crogine/network/NetClient.hpp>
+#include <crogine/core/String.hpp>
 
+#include <string>
 
-namespace sp
+struct PlayerData final
 {
-    class MenuState final : public cro::State
+    cro::String name;
+    //TODO other stuff like skin data
+};
+
+struct SharedStateData final
+{
+    Server serverInstance;
+
+    struct ClientConnection final
     {
-    public:
-        MenuState(cro::StateStack&, cro::State::Context);
-        ~MenuState() = default;
+        cro::NetClient netClient;
+        bool connected = false;
+        bool ready = false;
+        std::uint8_t playerID = 4;
+    }clientConnection;
 
-        cro::StateID getStateID() const override { return States::ScratchPad::MainMenu; }
+    //data of all players rx'd from server
+    std::array<PlayerData, 4u> playerData = {};
 
-        bool handleEvent(const cro::Event&) override;
-        void handleMessage(const cro::Message&) override;
-        bool simulate(float) override;
-        void render() override;
+    //our local player data
+    PlayerData localPlayer;
+    cro::String targetIP;
 
-    private:
-
-        cro::Scene m_scene;
-        cro::Font m_font;
-
-        void addSystems();
-        void loadAssets();
-        void createScene();
-    };
-}
+    std::string errorMessage;
+};

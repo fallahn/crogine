@@ -113,11 +113,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_ESCAPE:
+        /*case SDLK_ESCAPE:
         case SDLK_BACKSPACE:
             requestStackClear();
             requestStackPush(States::MainMenu);
-            break;
+            break;*/
         case SDLK_SPACE:
             hitBall();
             break;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -30,28 +30,56 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
-#include "InputParser.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/core/String.hpp>
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/MeshResource.hpp>
 #include <crogine/graphics/ShaderResource.hpp>
 #include <crogine/graphics/MaterialResource.hpp>
 #include <crogine/graphics/TextureResource.hpp>
+#include <crogine/graphics/Font.hpp>
 
-#include <crogine/gui/GuiClient.hpp>
+#include <array>
 
+namespace MenuCommandID
+{
+    enum
+    {
+        RootNode = 0x1,
+        ReadyButton = 0x2,
+        LobbyList = 0x4
+    };
+}
+
+namespace GroupID
+{
+    enum
+    {
+        Main = 0,
+        Avatar,
+        Join,
+        Lobby,
+        Options
+    };
+}
+
+struct SharedStateData;
 namespace cro
 {
+    struct NetEvent;
     struct Camera;
 }
 
-class BspState final : public cro::State, public cro::GuiClient
+class GolfMenuState final : public cro::State, public cro::GuiClient
 {
 public:
-    BspState(cro::StateStack&, cro::State::Context);
+    GolfMenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    ~GolfMenuState() = default;
 
-    cro::StateID getStateID() const override { return States::ScratchPad::BSP; }
+    cro::StateID getStateID() const override { return States::Golf::Menu; }
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
@@ -60,16 +88,47 @@ public:
 
 private:
 
+    SharedStateData& m_sharedData;
+
     cro::Scene m_scene;
     cro::MeshResource m_meshResource;
     cro::ShaderResource m_shaderResource;
     cro::MaterialResource m_materialResource;
     cro::TextureResource m_textureResource;
 
-    InputParser m_inputParser;
+    cro::Font m_font;
+    bool m_hosting;
+    std::array<bool, ConstVal::MaxClients> m_readyState = {};
+
+    enum MenuID
+    {
+        Main, Avatar, Join, Lobby, Options, Count
+    };
+
+    static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
+
+    struct TextEdit final
+    {
+        cro::String* string = nullptr;
+        cro::Entity entity;
+    }m_textEdit;
 
     void addSystems();
     void loadAssets();
     void createScene();
+
+    void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createOptionsMenu(cro::Entity, std::uint32_t, std::uint32_t);
+
+    void handleTextEdit(const cro::Event&);
+    void applyTextEdit();
+    void updateLobbyData(const cro::NetEvent&);
+    void updateLobbyStrings();
+    void updateReadyDisplay();
+
+    void handleNetEvent(const cro::NetEvent&);
     void updateView(cro::Camera&);
 };

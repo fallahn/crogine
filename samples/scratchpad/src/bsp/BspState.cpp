@@ -107,7 +107,7 @@ bool BspState::handleEvent(const cro::Event& evt)
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
             requestStackClear();
-            requestStackPush(States::MainMenu);
+            requestStackPush(States::ScratchPad::MainMenu);
             break;
         }
     }

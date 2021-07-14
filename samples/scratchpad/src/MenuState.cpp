@@ -184,7 +184,7 @@ void MenuState::createScene()
                 if (activated(evt))
                 {
                     requestStackClear();
-                    requestStackPush(States::BatCat);
+                    requestStackPush(States::ScratchPad::BatCat);
                 }
             });
     textPos.y -= 40.f;
@@ -205,7 +205,7 @@ void MenuState::createScene()
                 if (activated(evt))
                 {
                     requestStackClear();
-                    requestStackPush(States::BSP);
+                    requestStackPush(States::ScratchPad::BSP);
                 }
             });
     textPos.y -= 40.f;
@@ -227,7 +227,7 @@ void MenuState::createScene()
                 if (activated(evt))
                 {
                     requestStackClear();
-                    requestStackPush(States::Golf);
+                    requestStackPush(States::Golf::Menu);
                 }
             });
     textPos.y -= 80.f;

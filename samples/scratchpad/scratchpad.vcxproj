@@ -231,6 +231,8 @@
     <ClCompile Include="src\bsp\Q3BspSystem.cpp" />
     <ClCompile Include="src\golf\BallSystem.cpp" />
     <ClCompile Include="src\golf\GolfState.cpp" />
+    <ClCompile Include="src\golf\MenuCreation.cpp" />
+    <ClCompile Include="src\golf\GolfMenuState.cpp" />
     <ClCompile Include="src\golf\server\Server.cpp" />
     <ClCompile Include="src\golf\server\ServerGameState.cpp" />
     <ClCompile Include="src\golf\server\ServerLobbyState.cpp" />
@@ -261,6 +263,8 @@
     <ClInclude Include="src\golf\CommonConsts.hpp" />
     <ClInclude Include="src\golf\GameConsts.hpp" />
     <ClInclude Include="src\golf\GolfState.hpp" />
+    <ClInclude Include="src\golf\MenuConsts.hpp" />
+    <ClInclude Include="src\golf\GolfMenuState.hpp" />
     <ClInclude Include="src\golf\PacketIDs.hpp" />
     <ClInclude Include="src\golf\server\Server.hpp" />
     <ClInclude Include="src\golf\server\ServerGameState.hpp" />
@@ -268,6 +272,7 @@
     <ClInclude Include="src\golf\server\ServerMessages.hpp" />
     <ClInclude Include="src\golf\server\ServerPacketData.hpp" />
     <ClInclude Include="src\golf\server\ServerState.hpp" />
+    <ClInclude Include="src\golf\SharedStateData.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />

@@ -52,7 +52,7 @@ class BatcatState final : public cro::State, public cro::GuiClient
 public:
     BatcatState(cro::StateStack&, cro::State::Context);
 
-    cro::StateID getStateID() const override { return States::BatCat; }
+    cro::StateID getStateID() const override { return States::ScratchPad::BatCat; }
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;

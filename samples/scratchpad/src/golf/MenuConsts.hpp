@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,35 +29,11 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
+#include <crogine/graphics/Colour.hpp>
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/Font.hpp>
+static const std::uint32_t LargeTextSize = 120;
+static const std::uint32_t MediumTextSize = 50;
+static const std::uint32_t SmallTextSize = 30;
 
-
-namespace sp
-{
-    class MenuState final : public cro::State
-    {
-    public:
-        MenuState(cro::StateStack&, cro::State::Context);
-        ~MenuState() = default;
-
-        cro::StateID getStateID() const override { return States::ScratchPad::MainMenu; }
-
-        bool handleEvent(const cro::Event&) override;
-        void handleMessage(const cro::Message&) override;
-        bool simulate(float) override;
-        void render() override;
-
-    private:
-
-        cro::Scene m_scene;
-        cro::Font m_font;
-
-        void addSystems();
-        void loadAssets();
-        void createScene();
-    };
-}
+static const cro::Colour TextNormalColour(0.9f, 0.58f, 0.1f);
+static const cro::Colour TextHighlightColour(0.99f, 0.08f, 0.1f);
