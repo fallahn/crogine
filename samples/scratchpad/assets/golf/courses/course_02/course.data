@@ -1,0 +1,10 @@
+course course_02
+{
+    skybox = "assets/images/skybox/sky.ccm"
+
+    description = "This is another test course. You can play this one too, but it's the same as the first one."
+
+
+    hole = "assets/golf/courses/course_02/01.hole"
+    hole = "assets/golf/courses/course_02/02.hole"
+}

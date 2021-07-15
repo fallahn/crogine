@@ -1,0 +1,8 @@
+hole 02
+{
+    map = "assets/golf/holes/02.png"
+    model = "assets/golf/models/hole_01.cmt"
+    pin = 22, 172
+    tee = 243, 30
+    par = 3
+}

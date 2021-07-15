@@ -53,7 +53,7 @@ namespace cro
             /*!
             \brief Replaces all instances of c with r
             */
-            static inline void replace(std::string& str, const char c, const char r)
+            static inline void replace(std::string& str, char c, char r)
             {
                 std::size_t start = 0u;
                 auto next = str.find_first_of(c, start);

@@ -49,6 +49,9 @@
     <Filter Include="Source Files\golf\client\states">
       <UniqueIdentifier>{5960c170-5e2f-420b-8929-4b38ad1f396c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\shared">
+      <UniqueIdentifier>{1bdc2a82-9c53-46f8-80ac-d48be17ca5c4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -229,6 +232,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\ErrorState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\Utility.hpp">
+      <Filter>Header Files\golf\shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

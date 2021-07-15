@@ -74,6 +74,11 @@ struct SharedStateData final
     ConnectionData localPlayer;
     cro::String targetIP;
 
+    //sent to server if hosting else rx'd from server
+    //for brevity this only contains a directory name
+    //within which a file named data.course is sought
+    cro::String mapDirectory;
+
     //printed by the error state
     std::string errorMessage;
 };

@@ -30,6 +30,7 @@ source distribution.
 #include "../PacketIDs.hpp"
 #include "../CommonConsts.hpp"
 #include "../SharedStateData.hpp"
+#include "../Utility.hpp"
 #include "ServerLobbyState.hpp"
 #include "ServerPacketData.hpp"
 
@@ -79,6 +80,13 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
             std::uint16_t data = evt.packet.as<std::uint16_t>();
             m_readyState[((data & 0xff00) >> 8)] = (data & 0x00ff) ? true : false;
             m_sharedData.host.broadcastPacket(PacketID::LobbyReady, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+            break;
+        case PacketID::MapInfo:
+        {
+            m_sharedData.mapDir = deserialiseString(evt.packet);
+            //forward to all clients
+            m_sharedData.host.broadcastPacket(PacketID::MapInfo, evt.packet.getData(), evt.packet.getSize(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
         }
             break;
         }
@@ -146,5 +154,8 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
 
         std::uint8_t ready = m_readyState[i] ? 1 : 0;
         m_sharedData.host.broadcastPacket(PacketID::LobbyReady, std::uint16_t(std::uint8_t(i) << 8 | ready), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        auto mapDir = serialiseString(m_sharedData.mapDir);
+        m_sharedData.host.broadcastPacket(PacketID::MapInfo, mapDir.data(), mapDir.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
     }
 }

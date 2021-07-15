@@ -34,6 +34,7 @@ source distribution.
 #include <cstdint>
 #include <cstddef>
 #include <array>
+#include <string>
 
 namespace ConstVal
 {
@@ -52,4 +53,8 @@ namespace ConstVal
     //is the delta between updates (as the engine is
     //fixed for this anyway)
     static constexpr float FixedGameUpdate = 1.f / 60.f;
+
+    //root dir for course files preprended to directory
+    //received from the hosting client
+    static const std::string MapPath("assets/golf/courses/");
 }

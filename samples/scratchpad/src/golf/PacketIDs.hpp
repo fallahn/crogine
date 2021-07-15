@@ -63,6 +63,7 @@ namespace PacketID
         PlayerInfo, //< ConnectionData array
 
         //both directions
+        MapInfo, //< serialised cro::String containing course directory
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
     };
 }

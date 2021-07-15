@@ -31,6 +31,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
+#include "Utility.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/detail/GlobalConsts.hpp>
@@ -291,6 +292,10 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
                                     e.getComponent<cro::Text>().setString("Start");
                                 };
                                 m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                                //send the selected map/course
+                                auto data = serialiseString(m_sharedData.mapDirectory);
+                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
                             }
                         }
                     }

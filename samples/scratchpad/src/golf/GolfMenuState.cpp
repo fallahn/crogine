@@ -31,6 +31,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
+#include "Utility.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -424,7 +425,15 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
             m_readyState[((data & 0xff00) >> 8)] = (data & 0x00ff) ? true : false;
         }
             break;
+        case PacketID::MapInfo:
+            m_sharedData.mapDirectory = deserialiseString(evt.packet);
+            break;
         }
+    }
+    else if (evt.type == cro::NetEvent::ClientDisconnect)
+    {
+        m_sharedData.errorMessage = "Lost Connection To Host";
+        requestStackPush(States::Golf::Error);
     }
 }
 

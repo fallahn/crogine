@@ -276,6 +276,7 @@
     <ClInclude Include="src\golf\server\ServerPacketData.hpp" />
     <ClInclude Include="src\golf\server\ServerState.hpp" />
     <ClInclude Include="src\golf\SharedStateData.hpp" />
+    <ClInclude Include="src\golf\Utility.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
