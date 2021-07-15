@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -50,6 +51,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -244,6 +246,7 @@ void GolfState::addSystems()
     auto& mb = m_gameScene.getMessageBus();
 
     m_gameScene.addSystem<cro::CommandSystem>(mb);
+    m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<BallSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
@@ -314,14 +317,73 @@ void GolfState::buildScene()
     entity.addComponent<cro::Transform>().setOrigin(glm::vec3(-courseSize.x / 2.f, 0.f, courseSize.y / 2.f));
     modelDef.createModel(entity);
 
+    //render the ball as a point so no perspective is applied to the scale
+    glCheck(glPointSize(BallPointSize));
 
-    modelDef.loadFromFile("assets/golf/models/sphere.cmt");
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    auto materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    auto material = m_resources.materials.get(materialID);
+
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(m_holeData.tee);
-    entity.getComponent<cro::Transform>().move({ 0.f, 0.043f, 0.f });
-    modelDef.createModel(entity);
     entity.addComponent<Ball>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
+    std::vector<float> verts =
+    {
+        0.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f,
+    };
+    std::vector<std::uint32_t> indices =
+    {
+        0
+    };
+    auto vertStride = (meshData->vertexSize / sizeof(float));
+    meshData->vertexCount = 1;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = 1;
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+    //ball shadow
+    auto ballEnt = entity;
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+    material.blendMode = cro::Material::BlendMode::Multiply;
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(m_holeData.tee);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [ballEnt](cro::Entity e, float)
+    {
+        auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
+        ballPos.y = 0.f;
+        e.getComponent<cro::Transform>().setPosition(ballPos);
+    };
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    meshData = &entity.getComponent<cro::Model>().getMeshData();
+
+    verts =
+    {
+        0.f, 0.f, 0.f,    0.5f, 0.5f, 0.5f, 1.f,
+    };
+    meshData->vertexCount = 1;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize* meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    submesh = &meshData->indexData[0];
+    submesh->indexCount = 1;
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
 
 
     auto updateView = [&](cro::Camera& cam)
@@ -358,31 +420,31 @@ void GolfState::buildScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(m_holeData.tee);
 
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
-    auto material = m_resources.materials.get(debugMaterial);
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    material = m_resources.materials.get(debugMaterial);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    auto& meshData = entity.getComponent<cro::Model>().getMeshData();
+    auto& md = entity.getComponent<cro::Model>().getMeshData();
 
-    std::vector<float> verts =
+    verts =
     {
         0.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f,
-        1.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f,
+        1.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f
     };
-    std::vector<std::uint32_t> indices =
+    indices =
     {
         0,1
     };
 
-    auto vertStride = (meshData.vertexSize / sizeof(float));
-    meshData.vertexCount = verts.size() / vertStride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_STATIC_DRAW));
+    vertStride = (md.vertexSize / sizeof(float));
+    md.vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, md.vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, md.vertexSize * md.vertexCount, verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    auto& submesh = meshData.indexData[0];
-    submesh.indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    auto& sub = md.indexData[0];
+    sub.indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sub.ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sub.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     pointerEnt = entity;

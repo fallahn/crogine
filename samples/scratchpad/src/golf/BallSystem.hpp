@@ -33,6 +33,7 @@ source distribution.
 
 struct Ball final
 {
+    static constexpr float Radius = 0.0043f;
     enum class State
     {
         Idle, Flight

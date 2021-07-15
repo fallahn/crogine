@@ -41,3 +41,4 @@ static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 //width either 300 or 400 depending on the ratio
 //of the window
 static constexpr float ViewportHeight = 225.f;
+static constexpr float BallPointSize = 1.5f;
