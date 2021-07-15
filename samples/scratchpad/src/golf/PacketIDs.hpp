@@ -43,8 +43,8 @@ namespace PacketID
     enum
     {
         //from server
-        ClientConnected, //< uint8 player ID
-        ClientDisconnected, //< uint8 player ID
+        ClientConnected, //< uint8 client ID
+        ClientDisconnected, //< uint8 client ID
         ConnectionRefused, //< uint8 MessageType
         ConnectionAccepted, //< uint8 assigned player ID (0-3)
         StateChange, //< uint8 state ID

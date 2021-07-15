@@ -31,6 +31,8 @@ source distribution.
 #include "GameConsts.hpp"
 #include "CommandIDs.hpp"
 #include "BallSystem.hpp"
+#include "PacketIDs.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -52,6 +54,8 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 
+#include <crogine/network/NetClient.hpp>
+
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Matrix.hpp>
@@ -70,8 +74,9 @@ namespace
     glm::vec3 pointerEuler = glm::vec3(0.f);
 }
 
-GolfState::GolfState(cro::StateStack& stack, cro::State::Context context)
+GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State(stack, context),
+    m_sharedData(sd),
     m_gameScene (context.appInstance.getMessageBus()),
     m_uiScene   (context.appInstance.getMessageBus())
 {
@@ -158,6 +163,25 @@ bool GolfState::simulate(float dt)
     }
     debugPos += move;
     setCameraPosition(debugPos);
+
+
+    if (m_sharedData.clientConnection.connected)
+    {
+        cro::NetEvent evt;
+        while (m_sharedData.clientConnection.netClient.pollEvent(evt))
+        {
+            //handle events
+            handleNetEvent(evt);
+        }
+    }
+    else
+    {
+        //we've been disconnected somewhere - push error state
+        m_sharedData.errorMessage = "Lost connection to host.";
+        requestStackPush(States::Golf::Error);
+    }
+
+
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -405,6 +429,38 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_debugTexture.getTexture());
 #endif
+}
+
+void GolfState::handleNetEvent(const cro::NetEvent& evt)
+{
+    switch (evt.type)
+    {
+    case cro::NetEvent::PacketReceived:
+        switch (evt.packet.getID())
+        {
+        default: break;
+        case PacketID::ClientDisconnected:
+        {
+            removeClient(evt.packet.as<std::uint8_t>());
+        }
+        break;
+        }
+        break;
+    case cro::NetEvent::ClientDisconnect:
+        m_sharedData.errorMessage = "Disconnected From Server (Host Quit)";
+        requestStackPush(States::Golf::Error);
+        break;
+    default: break;
+    }
+}
+
+void GolfState::removeClient(std::uint8_t clientID)
+{
+    for (auto i = 0u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
+    {
+        LogI << m_sharedData.connectionData[clientID].playerData[i].name.toAnsiString() << " left the game" << std::endl;
+    }
+    m_sharedData.connectionData[clientID].playerCount = 0;
 }
 
 void GolfState::setCameraPosition(glm::vec3 position)

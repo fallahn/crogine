@@ -160,7 +160,8 @@ void NetHost::stop()
                 enet_peer_reset(peer);
             }
         }
-
+        //make sure to send any disconnection packets to clients immediately.
+        enet_host_flush(m_host);
         enet_host_destroy(m_host);
         m_host = nullptr;
     }

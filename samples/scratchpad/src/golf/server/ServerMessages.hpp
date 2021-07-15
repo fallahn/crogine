@@ -41,7 +41,7 @@ namespace sv::MessageID
 
 struct ConnectionEvent final
 {
-    std::uint8_t playerID = 4;
+    std::uint8_t clientID = 4;
     enum
     {
         Connected, Disconnected

@@ -56,7 +56,6 @@ namespace sv
         cro::Clock m_serverTime; //used in timestamping
 
         cro::Scene m_scene;
-        std::array<cro::Entity, ConstVal::MaxClients> m_playerEntities;
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);

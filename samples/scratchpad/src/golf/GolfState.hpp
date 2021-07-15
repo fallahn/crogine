@@ -42,10 +42,16 @@ source distribution.
 
 #include <array>
 
+namespace cro
+{
+    struct NetEvent;
+}
+
+struct SharedStateData;
 class GolfState final : public cro::State, public cro::GuiClient
 {
 public:
-    GolfState(cro::StateStack&, cro::State::Context);
+    GolfState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
@@ -56,6 +62,7 @@ public:
     cro::StateID getStateID() const override { return States::Golf::Game; }
 
 private:
+    SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
 
@@ -88,6 +95,9 @@ private:
     void addSystems();
     void buildScene();
     void buildUI();
+
+    void handleNetEvent(const cro::NetEvent&);
+    void removeClient(std::uint8_t);
 
     void setCameraPosition(glm::vec3);
     void hitBall();

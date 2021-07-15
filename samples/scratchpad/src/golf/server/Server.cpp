@@ -202,10 +202,11 @@ void Server::run()
     }
 
     m_currentState.reset();
-    //TODO clear all client data
-    
+
+    //clear client data
     for (auto& c : m_sharedData.clients)
     {
+        c.playerCount = 0;
         m_sharedData.host.disconnect(c.peer);
     }
 
@@ -231,7 +232,7 @@ std::uint8_t Server::addClient(const cro::NetEvent& evt)
             m_sharedData.host.broadcastPacket(PacketID::ClientConnected, i, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
-            msg->playerID = i;
+            msg->clientID = i;
             msg->type = ConnectionEvent::Connected;
 
             break;
@@ -255,7 +256,7 @@ void Server::removeClient(const cro::NetEvent& evt)
 
         auto playerID = std::distance(m_sharedData.clients.begin(), result);
         auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
-        msg->playerID = static_cast<std::uint8_t>(playerID);
+        msg->clientID = static_cast<std::uint8_t>(playerID);
         msg->type = ConnectionEvent::Disconnected;
 
         //broadcast to all connected clients

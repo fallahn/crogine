@@ -45,14 +45,7 @@ using namespace sv;
 
 namespace
 {
-    //TODO work out a better way to create spawn points
-    const std::array<glm::vec3, ConstVal::MaxClients> playerSpawns =
-    {
-        glm::vec3(-1.5f, 1.f, -1.5f),
-        glm::vec3(1.5f, 1.f, -1.5f),
-        glm::vec3(1.5f, 1.f, 1.5f),
-        glm::vec3(-1.5f, 1.f, 1.5f)
-    };
+
 }
 
 GameState::GameState(SharedData& sd)
@@ -72,10 +65,7 @@ void GameState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<ConnectionEvent>();
         if (data.type == ConnectionEvent::Disconnected)
         {
-            auto entityID = m_playerEntities[data.playerID].getIndex();
-            m_scene.destroyEntity(m_playerEntities[data.playerID]);
-
-            m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            //disconnect notification packet is sent in Server
         }
     }
 
