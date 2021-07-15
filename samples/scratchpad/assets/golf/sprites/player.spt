@@ -1,0 +1,35 @@
+spritesheet player
+{
+    src="assets/golf/images/player.png"
+
+    sprite male
+    {
+        bounds = 0,0,52,56
+
+        animation idle
+        {
+            frame = 0,0,52,56
+
+            loop = true
+            framerate = 30
+        }
+
+        animation swing
+        {
+            frame = 0,0,52,56
+            frame = 52,0,52,56
+            frame = 104,0,52,56
+            frame = 156,0,52,56
+            frame = 208,0,52,56
+            frame = 260,0,52,56
+            frame = 312,0,52,56
+            frame = 364,0,52,56
+            frame = 416,0,52,56
+            frame = 468,0,52,56
+            frame = 520,0,52,56
+
+            loop = false
+            framerate = 16
+        }
+    }
+}
