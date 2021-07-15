@@ -236,5 +236,8 @@
     <ClInclude Include="src\golf\Utility.hpp">
       <Filter>Header Files\golf\shared</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\HoleData.hpp">
+      <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

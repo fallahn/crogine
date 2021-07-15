@@ -428,6 +428,7 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
         case PacketID::MapInfo:
             m_sharedData.mapDirectory = deserialiseString(evt.packet);
             break;
+        break;
         }
     }
     else if (evt.type == cro::NetEvent::ClientDisconnect)

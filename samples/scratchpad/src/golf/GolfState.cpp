@@ -83,10 +83,11 @@ namespace
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
-    : cro::State(stack, context),
-    m_sharedData(sd),
-    m_gameScene (context.appInstance.getMessageBus()),
-    m_uiScene   (context.appInstance.getMessageBus())
+    : cro::State    (stack, context),
+    m_sharedData    (sd),
+    m_gameScene     (context.appInstance.getMessageBus()),
+    m_uiScene       (context.appInstance.getMessageBus()),
+    m_wantsGameState(true)
 {
     context.mainWindow.loadResources([this]() {
         loadAssets();
@@ -181,6 +182,13 @@ bool GolfState::simulate(float dt)
             //handle events
             handleNetEvent(evt);
         }
+
+        if (m_wantsGameState)
+        {
+            //TODO ping this intermittently until ack'd
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable);
+            m_wantsGameState = false;
+        }
     }
     else
     {
@@ -199,6 +207,8 @@ bool GolfState::simulate(float dt)
 
 void GolfState::render()
 {
+    return;
+
     m_renderTexture.clear();
     m_gameScene.render(m_renderTexture);
     m_renderTexture.display();
@@ -217,6 +227,8 @@ void GolfState::render()
 //private
 void GolfState::loadAssets()
 {
+    //TODO validate course file and load assets therein
+
     m_gameScene.setCubemap("assets/images/skybox/sky.ccm");
 
     auto vpSize = calcVPSize();
@@ -260,6 +272,9 @@ void GolfState::addSystems()
 
 void GolfState::buildScene()
 {
+    //TODO load assets from course file data in loadAssets();
+    return;
+
     cro::ConfigFile mapData;
     if (!mapData.loadFromFile("assets/golf/holes/01.hole"))
     {
@@ -523,7 +538,19 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
         {
             removeClient(evt.packet.as<std::uint8_t>());
         }
-        break;
+            break;
+        case PacketID::ServerError:
+            switch (evt.packet.as<std::uint8_t>())
+            {
+            default:
+                m_sharedData.errorMessage = "Server Error (Unknown)";
+                break;
+            case MessageType::MapNotFound:
+                m_sharedData.errorMessage = "Server Failed To Load Map";
+                break;
+            }
+            requestStackPush(States::Golf::Error);
+            break;
         }
         break;
     case cro::NetEvent::ClientDisconnect:

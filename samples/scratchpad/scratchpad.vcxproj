@@ -266,6 +266,7 @@
     <ClInclude Include="src\golf\ErrorState.hpp" />
     <ClInclude Include="src\golf\GameConsts.hpp" />
     <ClInclude Include="src\golf\GolfState.hpp" />
+    <ClInclude Include="src\golf\HoleData.hpp" />
     <ClInclude Include="src\golf\MenuConsts.hpp" />
     <ClInclude Include="src\golf\GolfMenuState.hpp" />
     <ClInclude Include="src\golf\PacketIDs.hpp" />

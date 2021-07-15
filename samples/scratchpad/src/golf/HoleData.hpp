@@ -29,43 +29,16 @@ source distribution.
 
 #pragma once
 
-#include "../HoleData.hpp"
-#include "ServerState.hpp"
+#include <crogine/ecs/Entity.hpp>
+#include <crogine/graphics/Image.hpp>
 
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/core/Clock.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
-namespace sv
+struct HoleData final
 {
-    class GameState final : public State
-    {
-    public:
-        explicit GameState(SharedData&);
-
-        void handleMessage(const cro::Message&) override;
-        void netEvent(const cro::NetEvent&) override;
-        void netBroadcast() override;
-        std::int32_t process(float) override;
-
-        std::int32_t stateID() const override { return StateID::Game; }
-
-    private:
-        std::int32_t m_returnValue;
-        SharedData& m_sharedData;
-        bool m_mapDataValid;
-
-        std::vector<HoleData> m_holeData;
-
-        cro::Clock m_serverTime; //used in timestamping
-
-        cro::Scene m_scene;
-
-        void sendInitialGameState(std::uint8_t);
-        void handlePlayerInput(const cro::NetEvent::Packet&);
-        void doServerCommand(const cro::NetEvent&);
-
-        bool validateMap();
-        void initScene();
-        void buildWorld();
-    };
-}
+    glm::vec3 tee = glm::vec3(0.f);
+    glm::vec3 pin = glm::vec3(0.f);
+    std::int32_t par = 0;
+    cro::Image map;
+    cro::Entity modelEntity;
+};

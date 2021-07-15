@@ -22,7 +22,7 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
     buffer[5] = sizes[3];
 
     std::size_t offset = 6;
-    for (auto i = 0u; i < sizes.size(); ++i)
+    for (auto i = 0u; i < sizes.size() && offset < buffer.size(); ++i)
     {
         std::memcpy(&buffer[offset], playerData[i].name.data(), sizes[i]);
         offset += sizes[i];

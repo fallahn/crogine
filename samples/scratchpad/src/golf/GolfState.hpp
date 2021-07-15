@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "HoleData.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -66,15 +67,12 @@ private:
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
 
+    bool m_wantsGameState;
+
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_renderTexture;
 
-    struct HoleData final
-    {
-        glm::vec3 tee = glm::vec3(0.f);
-        glm::vec3 pin = glm::vec3(0.f);
-        cro::Image map;
-    }m_holeData;
+    HoleData m_holeData;
 
     struct SpriteID final
     {

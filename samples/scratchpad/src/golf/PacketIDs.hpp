@@ -35,6 +35,7 @@ namespace MessageType
     {
         ServerFull,
         NotInLobby,
+        MapNotFound
     };
 }
 
@@ -47,14 +48,15 @@ namespace PacketID
         ClientDisconnected, //< uint8 client ID
         ConnectionRefused, //< uint8 MessageType
         ConnectionAccepted, //< uint8 assigned player ID (0-3)
+        ServerError, //< uint8 MessageType
         StateChange, //< uint8 state ID
         LobbyUpdate, //< ConnectionData array
 
-        PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
-        PlayerUpdate, //< world pos, rotation, uint32 timestamp - used for reconciliation, send directly to targeted peer
-        ActorUpdate, //< uint8 ID pos, rotation - used for interpolation of other players and NPCs
+        //PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
+        //PlayerUpdate, //< world pos, rotation, uint32 timestamp - used for reconciliation, send directly to targeted peer
+        //ActorUpdate, //< uint8 ID pos, rotation - used for interpolation of other players and NPCs
 
-        EntityRemoved, //< uint32 entity ID
+        //EntityRemoved, //< uint32 entity ID
 
         //from client
         RequestGameStart,
