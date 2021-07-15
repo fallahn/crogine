@@ -29,7 +29,15 @@ source distribution.
 
 #pragma once
 
+#include <crogine/util/Constants.hpp>
+
 #include <cstdint>
 
 static constexpr float CameraHeight = 2.5f;
 static constexpr float CameraOffset = 5.f;
+static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
+
+//maintain a viewport height of 225, with the
+//width either 300 or 400 depending on the ratio
+//of the window
+static constexpr float ViewportHeight = 225.f;

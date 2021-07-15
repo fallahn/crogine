@@ -65,13 +65,19 @@ source distribution.
 
 namespace
 {
-    //not exactly EGA but close enough
-    constexpr glm::vec2 ViewportSize(300.f, 225.f);
-
     glm::vec3 debugPos;
     std::int32_t debugMaterial = -1;
     cro::Entity pointerEnt;
     glm::vec3 pointerEuler = glm::vec3(0.f);
+
+    glm::vec2 calcVPSize()
+    {
+        glm::vec2 size(cro::App::getWindow().getSize());
+        const float ratio = size.x / size.y;
+
+        const float width = std::min(400.f, std::max(300.f, ViewportHeight * ratio));
+        return { width, ViewportHeight };
+    }
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -211,7 +217,8 @@ void GolfState::loadAssets()
 {
     m_gameScene.setCubemap("assets/images/skybox/sky.ccm");
 
-    m_renderTexture.create(static_cast<std::uint32_t>(ViewportSize.x) , static_cast<std::uint32_t>(ViewportSize.y)); //this is EGA res
+    auto vpSize = calcVPSize();
+    m_renderTexture.create(static_cast<std::uint32_t>(vpSize.x) , static_cast<std::uint32_t>(vpSize.y));
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
@@ -317,10 +324,17 @@ void GolfState::buildScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
 
 
-    auto updateView = [](cro::Camera& cam)
+    auto updateView = [&](cro::Camera& cam)
     {
-        cam.setPerspective(60.f * cro::Util::Const::degToRad, ViewportSize.x / ViewportSize.y, 0.1f, ViewportSize.x);
+        auto vpSize = calcVPSize();
+
+        cam.setPerspective(FOV, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+
+        if (static_cast<std::uint32_t>(vpSize.x) != m_renderTexture.getSize().x)
+        {
+            m_renderTexture.create(static_cast<std::uint32_t>(vpSize.x), static_cast<std::uint32_t>(vpSize.y));
+        }
     };
 
     setCameraPosition(m_holeData.tee);
@@ -413,10 +427,14 @@ void GolfState::buildUI()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 1.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
+        auto vpSize = calcVPSize();
+
         //TODO call some sort of layout update
-        float viewScale = std::floor(size.x / ViewportSize.x);
+        float viewScale = std::floor(size.x / vpSize.x);
         courseEnt.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
         courseEnt.getComponent<cro::Transform>().setPosition(size / 2.f);
+        courseEnt.getComponent<cro::Transform>().setOrigin(vpSize / 2.f);
+        courseEnt.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, vpSize.x, vpSize.y });
     };
 
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
