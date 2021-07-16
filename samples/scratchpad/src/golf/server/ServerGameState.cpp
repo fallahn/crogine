@@ -30,6 +30,7 @@ source distribution.
 #include "../PacketIDs.hpp"
 #include "../CommonConsts.hpp"
 #include "../ClientPacketData.hpp"
+#include "../BallSystem.hpp"
 #include "ServerGameState.hpp"
 #include "ServerMessages.hpp"
 
@@ -37,6 +38,7 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
+
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Network.hpp>
 #include <crogine/detail/glm/vec3.hpp>
@@ -79,9 +81,14 @@ void GameState::handleMessage(const cro::Message& msg)
 
             //remove the player data
             m_playerInfo.erase(std::remove_if(m_playerInfo.begin(), m_playerInfo.end(),
-                [&data](const PlayerStatus& p)
+                [&, data](const PlayerStatus& p)
                 {
-                    return p.client == data.clientID;
+                    if (p.client == data.clientID)
+                    {
+                        m_scene.destroyEntity(p.ballEntity);
+                        return true;
+                    }
+                    return false;
                 }),
                 m_playerInfo.end());
 
@@ -120,7 +127,8 @@ void GameState::netEvent(const cro::NetEvent& evt)
 
 void GameState::netBroadcast()
 {
-    
+    //fetch ball ents and send updates to client
+    //TODO only send active player's ball
 }
 
 std::int32_t GameState::process(float dt)
@@ -132,13 +140,23 @@ std::int32_t GameState::process(float dt)
 //private
 void GameState::sendInitialGameState(std::uint8_t clientID)
 {
+    //only send data the first time
     if (!m_sharedData.clients[clientID].ready)
     {
-        //only send data the first time
         if (!m_mapDataValid)
         {
             m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), cro::NetFlag::Reliable);
             return;
+        }
+
+        //send all the ball positions
+        const auto& balls = m_scene.getSystem<BallSystem>().getEntities1();
+        for (auto ball : balls)
+        {
+            ActorInfo info;
+            info.serverID = static_cast<std::uint32_t>(ball.getIndex());
+            info.position = ball.getComponent<cro::Transform>().getPosition();
+            m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ActorSpawn, info, cro::NetFlag::Reliable);
         }
     }
 
@@ -171,6 +189,8 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
 
 void GameState::setNextPlayer()
 {
+    //TODO broadcast current player's score first?
+
     //sort players by distance
     std::sort(m_playerInfo.begin(), m_playerInfo.end(),
         [](const PlayerStatus& a, const PlayerStatus& b)
@@ -302,12 +322,19 @@ void GameState::initScene()
     }
 
     auto& mb = m_sharedData.messageBus;
+    m_scene.addSystem<BallSystem>(mb);
 }
 
 void GameState::buildWorld()
 {
-    //TODO create a ball entity for each player
-    //and sync with clients.
+    //create a ball entity for each player
+    //TODO sync with clients.
+    for (auto& player : m_playerInfo)
+    {
+        player.ballEntity = m_scene.createEntity();
+        player.ballEntity.addComponent<cro::Transform>().setPosition(player.position);
+        player.ballEntity.addComponent<Ball>();
+    }
 }
 
 void GameState::doServerCommand(const cro::NetEvent& evt)
@@ -320,6 +347,8 @@ void GameState::doServerCommand(const cro::NetEvent& evt)
 
         break;
     case ServerCommand::NextPlayer:
+        //this fakes the ball getting closer to the hole
+        m_playerInfo[0].distanceToHole *= 0.99f;
         setNextPlayer();
         break;
     }

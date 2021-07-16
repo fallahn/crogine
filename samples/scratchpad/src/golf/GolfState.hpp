@@ -90,10 +90,19 @@ private:
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
+    struct BallResource final
+    {
+        std::int32_t materialID = -1;
+        std::size_t ballMeshID = 0;
+        std::size_t shadowMeshID = 0;
+    }m_ballResources;
+
     void loadAssets();
     void addSystems();
     void buildScene();
     void buildUI();
+
+    void spawnBall(const struct ActorInfo&);
 
     void handleNetEvent(const cro::NetEvent&);
     void removeClient(std::uint8_t);
@@ -101,7 +110,7 @@ private:
     void setCurrentHole(std::uint32_t);
     void setCameraPosition(glm::vec3);
     void setCurrentPlayer(const struct ActivePlayer&);
-    void hitBall();
+    //void hitBall();
 
 #ifdef CRO_DEBUG_
     cro::Entity m_debugCam;

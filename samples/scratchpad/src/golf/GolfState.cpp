@@ -30,9 +30,9 @@ source distribution.
 #include "GolfState.hpp"
 #include "GameConsts.hpp"
 #include "CommandIDs.hpp"
-#include "BallSystem.hpp"
 #include "PacketIDs.hpp"
 #include "SharedStateData.hpp"
+#include "InterpolationSystem.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
@@ -137,7 +137,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             requestStackPush(States::MainMenu);
             break;*/
         case SDLK_SPACE:
-            hitBall();
+            //hitBall();
             break;
         case SDLK_F2:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextHole), cro::NetFlag::Reliable);
@@ -237,9 +237,11 @@ void GolfState::render()
 //private
 void GolfState::loadAssets()
 {
+    //render buffer
     auto vpSize = calcVPSize();
     m_renderTexture.create(static_cast<std::uint32_t>(vpSize.x) , static_cast<std::uint32_t>(vpSize.y));
 
+    //UI stuffs
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
     m_sprites[SpriteID::Flag01] = spriteSheet.getSprite("flag01");
@@ -249,6 +251,57 @@ void GolfState::loadAssets()
 
     spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
     m_sprites[SpriteID::Player] = spriteSheet.getSprite("male");
+
+
+    //ball resources - ball is rendered as a single point
+    glCheck(glPointSize(BallPointSize));
+
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    m_ballResources.materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_ballResources.ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+    m_ballResources.shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+
+    auto* meshData = &m_resources.meshes.getMesh(m_ballResources.ballMeshID);
+    std::vector<float> verts =
+    {
+        0.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f,
+    };
+    std::vector<std::uint32_t> indices =
+    {
+        0
+    };
+    auto vertStride = (meshData->vertexSize / sizeof(float));
+    meshData->vertexCount = 1;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = 1;
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    meshData = &m_resources.meshes.getMesh(m_ballResources.shadowMeshID);
+    verts =
+    {
+        0.f, 0.f, 0.f,    0.5f, 0.5f, 0.5f, 1.f,
+    };
+    meshData->vertexCount = 1;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    submesh = &meshData->indexData[0];
+    submesh->indexCount = 1;
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+
+
+
 
     //load the map data
     bool error = false;
@@ -379,7 +432,7 @@ void GolfState::loadAssets()
     m_debugTexture.create(800, 100);
 
     //debug material for wireframes
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     debugMaterial = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(debugMaterial).blendMode = cro::Material::BlendMode::Alpha;
 
@@ -390,9 +443,9 @@ void GolfState::addSystems()
 {
     auto& mb = m_gameScene.getMessageBus();
 
+    m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
-    m_gameScene.addSystem<BallSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -410,75 +463,6 @@ void GolfState::buildScene()
         return;
     }
 
-    //render the ball as a point so no perspective is applied to the scale
-    glCheck(glPointSize(BallPointSize));
-
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
-    auto materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
-    auto material = m_resources.materials.get(materialID);
-
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
-    entity.addComponent<Ball>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
-    std::vector<float> verts =
-    {
-        0.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f,
-    };
-    std::vector<std::uint32_t> indices =
-    {
-        0
-    };
-    auto vertStride = (meshData->vertexSize / sizeof(float));
-    meshData->vertexCount = 1;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-    auto* submesh = &meshData->indexData[0];
-    submesh->indexCount = 1;
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-
-    //ball shadow
-    auto ballEnt = entity;
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
-    material.blendMode = cro::Material::BlendMode::Multiply;
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [ballEnt](cro::Entity e, float)
-    {
-        auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
-        ballPos.y = 0.f;
-        e.getComponent<cro::Transform>().setPosition(ballPos);
-    };
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    meshData = &entity.getComponent<cro::Model>().getMeshData();
-
-    verts =
-    {
-        0.f, 0.f, 0.f,    0.5f, 0.5f, 0.5f, 1.f,
-    };
-    meshData->vertexCount = 1;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize* meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-    submesh = &meshData->indexData[0];
-    submesh->indexCount = 1;
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-
-
     auto updateView = [&](cro::Camera& cam)
     {
         auto vpSize = calcVPSize();
@@ -492,12 +476,11 @@ void GolfState::buildScene()
         }
     };
 
-    setCurrentHole(0);
-
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     updateView(cam);
 
+    setCurrentHole(0);
     buildUI(); //put this here because we don't want to do this if the map data didn't load
 
 
@@ -510,25 +493,25 @@ void GolfState::buildScene()
     dCam.setOrthographic(0.f, 250.f, 0.f, 31.25f, -0.1f, 200.f);
 
     //displays the potential ball arc
-    entity = m_gameScene.createEntity();
+    auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
 
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
-    material = m_resources.materials.get(debugMaterial);
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    auto material = m_resources.materials.get(debugMaterial);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto& md = entity.getComponent<cro::Model>().getMeshData();
 
-    verts =
+    std::vector<float> verts =
     {
         0.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f,
         1.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f
     };
-    indices =
+    std::vector<std::uint32_t> indices =
     {
         0,1
     };
 
-    vertStride = (md.vertexSize / sizeof(float));
+    auto vertStride = (md.vertexSize / sizeof(float));
     md.vertexCount = verts.size() / vertStride;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, md.vbo));
     glCheck(glBufferData(GL_ARRAY_BUFFER, md.vertexSize * md.vertexCount, verts.data(), GL_STATIC_DRAW));
@@ -609,6 +592,35 @@ void GolfState::buildUI()
 #endif
 }
 
+void GolfState::spawnBall(const ActorInfo& info)
+{
+    //render the ball as a point so no perspective is applied to the scale
+    auto material = m_resources.materials.get(m_ballResources.materialID);
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(info.position);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
+    entity.addComponent<InterpolationComponent>().setID(info.serverID);
+    entity.getComponent<InterpolationComponent>().setTarget({ info.position }); //TODO fix initial position
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
+
+    //ball shadow
+    auto ballEnt = entity;
+    material.blendMode = cro::Material::BlendMode::Multiply;
+
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(info.position);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [ballEnt](cro::Entity e, float)
+    {
+        auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
+        ballPos.y = 0.f;
+        e.getComponent<cro::Transform>().setPosition(ballPos);
+    };
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.shadowMeshID), material);
+}
+
 void GolfState::handleNetEvent(const cro::NetEvent& evt)
 {
     switch (evt.type)
@@ -641,6 +653,9 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                 setCameraPosition(playerData.position);
                 setCurrentPlayer(playerData);
             }
+            break;
+        case PacketID::ActorSpawn:
+            spawnBall(evt.packet.as<ActorInfo>());
             break;
         }
         break;
@@ -728,31 +743,31 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     LogI << "player set to " << (int)player.client << ", " << (int)player.player << std::endl;
 }
 
-void GolfState::hitBall()
-{
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::Ball;
-    cmd.action = 
-        [&](cro::Entity e, float)
-    {
-        //TODO adjust pitch on player input
-        auto pitch = cro::Util::Const::PI / 4.f;
-
-        auto direction = glm::normalize(m_holeData[0].pin - e.getComponent<cro::Transform>().getPosition());
-        auto yaw = std::atan2(-direction.z, direction.x);
-
-        //TODO add hook/slice to yaw
-
-        glm::vec3 impulse(1.f, 0.f, 0.f);
-        auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
-        rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
-        impulse = glm::toMat3(rotation) * impulse;
-
-        impulse *= 20.f; //TODO get this magnitude from input
-
-        e.getComponent<Ball>().velocity = impulse;
-        e.getComponent<Ball>().state = Ball::State::Flight;
-    };
-
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-}
+//void GolfState::hitBall()
+//{
+//    cro::Command cmd;
+//    cmd.targetFlags = CommandID::Ball;
+//    cmd.action = 
+//        [&](cro::Entity e, float)
+//    {
+//        //TODO adjust pitch on player input
+//        auto pitch = cro::Util::Const::PI / 4.f;
+//
+//        auto direction = glm::normalize(m_holeData[0].pin - e.getComponent<cro::Transform>().getPosition());
+//        auto yaw = std::atan2(-direction.z, direction.x);
+//
+//        //TODO add hook/slice to yaw
+//
+//        glm::vec3 impulse(1.f, 0.f, 0.f);
+//        auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
+//        rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
+//        impulse = glm::toMat3(rotation) * impulse;
+//
+//        impulse *= 20.f; //TODO get this magnitude from input
+//
+//        e.getComponent<Ball>().velocity = impulse;
+//        e.getComponent<Ball>().state = Ball::State::Flight;
+//    };
+//
+//    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+//}

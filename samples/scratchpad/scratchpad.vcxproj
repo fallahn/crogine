@@ -232,6 +232,8 @@
     <ClCompile Include="src\golf\BallSystem.cpp" />
     <ClCompile Include="src\golf\ErrorState.cpp" />
     <ClCompile Include="src\golf\GolfState.cpp" />
+    <ClCompile Include="src\golf\InterpolationComponent.cpp" />
+    <ClCompile Include="src\golf\InterpolationSystem.cpp" />
     <ClCompile Include="src\golf\MenuCreation.cpp" />
     <ClCompile Include="src\golf\GolfMenuState.cpp" />
     <ClCompile Include="src\golf\server\Server.cpp" />
@@ -260,6 +262,7 @@
     <ClInclude Include="src\bsp\Q3BspSystem.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\golf\BallSystem.hpp" />
+    <ClInclude Include="src\golf\CircularBuffer.hpp" />
     <ClInclude Include="src\golf\ClientPacketData.hpp" />
     <ClInclude Include="src\golf\CommandIDs.hpp" />
     <ClInclude Include="src\golf\CommonConsts.hpp" />
@@ -267,6 +270,7 @@
     <ClInclude Include="src\golf\GameConsts.hpp" />
     <ClInclude Include="src\golf\GolfState.hpp" />
     <ClInclude Include="src\golf\HoleData.hpp" />
+    <ClInclude Include="src\golf\InterpolationSystem.hpp" />
     <ClInclude Include="src\golf\MenuConsts.hpp" />
     <ClInclude Include="src\golf\GolfMenuState.hpp" />
     <ClInclude Include="src\golf\PacketIDs.hpp" />

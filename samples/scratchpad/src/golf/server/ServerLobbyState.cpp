@@ -142,7 +142,7 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
         {
             ConnectionData cd;
             cd.connectionID = static_cast<std::uint8_t>(i);
-            cd.playerCount = c.playerCount;
+            cd.playerCount = static_cast<std::uint8_t>(c.playerCount);
             for (auto j = 0u; j < c.playerCount; ++j)
             {
                 cd.playerData[j].name = c.playerData[j];

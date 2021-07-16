@@ -52,6 +52,18 @@
     <Filter Include="Header Files\golf\shared">
       <UniqueIdentifier>{1bdc2a82-9c53-46f8-80ac-d48be17ca5c4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\server\systems">
+      <UniqueIdentifier>{82fd6024-66a7-4c81-89bf-e99c87bda655}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\server\systems">
+      <UniqueIdentifier>{02db95df-396a-4102-bd9c-cd85745f5ac2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\golf\client\systems">
+      <UniqueIdentifier>{acdac83e-c873-4123-9186-41c89e6f6294}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client\systems">
+      <UniqueIdentifier>{f887ea67-27ad-4323-ab5c-67764d76bc6a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -90,9 +102,6 @@
     <ClCompile Include="src\bsp\Q3BspSystem.cpp">
       <Filter>Source Files\bsp</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\BallSystem.cpp">
-      <Filter>Source Files\golf</Filter>
-    </ClCompile>
     <ClCompile Include="src\golf\server\Server.cpp">
       <Filter>Source Files\golf\server</Filter>
     </ClCompile>
@@ -116,6 +125,15 @@
     </ClCompile>
     <ClCompile Include="src\golf\SharedStateData.cpp">
       <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\BallSystem.cpp">
+      <Filter>Source Files\golf\server\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\InterpolationComponent.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\InterpolationSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -182,9 +200,6 @@
     <ClInclude Include="src\bsp\Q3BspSystem.hpp">
       <Filter>Header Files\bsp</Filter>
     </ClInclude>
-    <ClInclude Include="src\golf\BallSystem.hpp">
-      <Filter>Header Files\golf</Filter>
-    </ClInclude>
     <ClInclude Include="src\golf\server\Server.hpp">
       <Filter>Header Files\golf\server</Filter>
     </ClInclude>
@@ -238,6 +253,15 @@
     </ClInclude>
     <ClInclude Include="src\golf\HoleData.hpp">
       <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BallSystem.hpp">
+      <Filter>Header Files\golf\server\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\InterpolationSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CircularBuffer.hpp">
+      <Filter>Header Files\golf</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
