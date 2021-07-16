@@ -31,13 +31,12 @@ source distribution.
 #include "../CommonConsts.hpp"
 #include "../ClientPacketData.hpp"
 #include "ServerGameState.hpp"
-#include "ServerPacketData.hpp"
 #include "ServerMessages.hpp"
 
 #include <crogine/core/Log.hpp>
 #include <crogine/core/ConfigFile.hpp>
 
-#include<crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Network.hpp>
 #include <crogine/detail/glm/vec3.hpp>
@@ -53,7 +52,9 @@ GameState::GameState(SharedData& sd)
     : m_returnValue (StateID::Game),
     m_sharedData    (sd),
     m_mapDataValid  (false),
-    m_scene         (sd.messageBus)
+    m_scene         (sd.messageBus),
+    m_gameStarted   (false),
+    m_currentHole   (0)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
@@ -72,6 +73,22 @@ void GameState::handleMessage(const cro::Message& msg)
         if (data.type == ConnectionEvent::Disconnected)
         {
             //disconnect notification packet is sent in Server
+
+            //TODO send update? switch to next player? Client already knows so can clear up anyway?
+            bool setNewPlayer = (data.clientID == m_playerInfo[0].client);
+
+            //remove the player data
+            m_playerInfo.erase(std::remove_if(m_playerInfo.begin(), m_playerInfo.end(),
+                [&data](const PlayerStatus& p)
+                {
+                    return p.client == data.clientID;
+                }),
+                m_playerInfo.end());
+
+            if (setNewPlayer)
+            {
+                setNextPlayer();
+            }
         }
     }
 
@@ -94,6 +111,9 @@ void GameState::netEvent(const cro::NetEvent& evt)
         case PacketID::InputUpdate:
             handlePlayerInput(evt.packet);
             break;
+        case PacketID::ServerCommand:
+            doServerCommand(evt);
+            break;
         }
     }
 }
@@ -112,19 +132,55 @@ std::int32_t GameState::process(float dt)
 //private
 void GameState::sendInitialGameState(std::uint8_t clientID)
 {
-    if (!m_mapDataValid)
+    if (!m_sharedData.clients[clientID].ready)
     {
-        m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), cro::NetFlag::Reliable);
-        return;
+        //only send data the first time
+        if (!m_mapDataValid)
+        {
+            m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), cro::NetFlag::Reliable);
+            return;
+        }
     }
 
-
     m_sharedData.clients[clientID].ready = true;
+
+    bool allReady = true;
+    for (const auto& client : m_sharedData.clients)
+    {
+        if (!client.connected && client.ready)
+        {
+            allReady = false;
+        }
+    }
+
+    if (allReady && !m_gameStarted)
+    {
+        //a guard to make sure this is sent just once
+        m_gameStarted = true;
+
+        //send command to set clients to first player
+        //this also tells the client to stop requesting state
+        setNextPlayer();
+    }
 }
 
 void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
 {
 
+}
+
+void GameState::setNextPlayer()
+{
+    //sort players by distance
+    std::sort(m_playerInfo.begin(), m_playerInfo.end(),
+        [](const PlayerStatus& a, const PlayerStatus& b)
+        {
+            return a.distanceToHole > b.distanceToHole;
+        });
+
+    ActivePlayer player = m_playerInfo[0]; //deliberate slice.
+
+    m_sharedData.host.broadcastPacket(PacketID::SetPlayer, player, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 bool GameState::validateMap()
@@ -230,10 +286,42 @@ bool GameState::validateMap()
 
 void GameState::initScene()
 {
+    for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
+    {
+        if (m_sharedData.clients[i].connected)
+        {
+            for (auto j = 0u; j < m_sharedData.clients[i].playerCount; ++j)
+            {
+                auto& player = m_playerInfo.emplace_back();
+                player.client = i;
+                player.player = j;
+                player.position = m_holeData[0].tee;
+                player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[0].pin);
+            }
+        }
+    }
+
     auto& mb = m_sharedData.messageBus;
 }
 
 void GameState::buildWorld()
 {
+    //TODO create a ball entity for each player
+    //and sync with clients.
+}
 
+void GameState::doServerCommand(const cro::NetEvent& evt)
+{
+#ifdef CRO_DEBUG_
+    switch (evt.packet.as<std::uint8_t>())
+    {
+    default: break;
+    case ServerCommand::NextHole:
+
+        break;
+    case ServerCommand::NextPlayer:
+        setNextPlayer();
+        break;
+    }
+#endif
 }

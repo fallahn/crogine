@@ -31,6 +31,7 @@ source distribution.
 
 #include "../HoleData.hpp"
 #include "ServerState.hpp"
+#include "ServerPacketData.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
@@ -55,17 +56,23 @@ namespace sv
         bool m_mapDataValid;
 
         std::vector<HoleData> m_holeData;
-
         cro::Clock m_serverTime; //used in timestamping
-
         cro::Scene m_scene;
+
+        //game rule stuff. TODO encapsulate somewhere
+        bool m_gameStarted;
+        std::uint8_t m_currentHole;
+        std::vector<PlayerStatus> m_playerInfo;
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);
-        void doServerCommand(const cro::NetEvent&);
+
+        void setNextPlayer();
 
         bool validateMap();
         void initScene();
         void buildWorld();
+
+        void doServerCommand(const cro::NetEvent&);
     };
 }

@@ -48,11 +48,10 @@ namespace cro
     struct NetEvent;
 }
 
-struct SharedStateData;
 class GolfState final : public cro::State, public cro::GuiClient
 {
 public:
-    GolfState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    GolfState(cro::StateStack&, cro::State::Context, struct SharedStateData&);
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
@@ -68,6 +67,7 @@ private:
     cro::Scene m_uiScene;
 
     bool m_wantsGameState;
+    cro::Clock m_readyClock; //pings ready state until ack'd
 
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_renderTexture;
@@ -100,6 +100,7 @@ private:
 
     void setCurrentHole(std::uint32_t);
     void setCameraPosition(glm::vec3);
+    void setCurrentPlayer(const struct ActivePlayer&);
     void hitBall();
 
 #ifdef CRO_DEBUG_

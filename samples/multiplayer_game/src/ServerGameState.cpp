@@ -38,7 +38,7 @@ source distribution.
 
 #include <crogine/core/Log.hpp>
 
-#include<crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Network.hpp>
 #include <crogine/detail/glm/vec3.hpp>

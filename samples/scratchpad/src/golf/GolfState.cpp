@@ -33,6 +33,7 @@ source distribution.
 #include "BallSystem.hpp"
 #include "PacketIDs.hpp"
 #include "SharedStateData.hpp"
+#include "server/ServerPacketData.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -80,6 +81,8 @@ namespace
         const float width = std::min(400.f, std::max(300.f, ViewportHeight * ratio));
         return { width, ViewportHeight };
     }
+
+    const cro::Time ReadyPingFreq = cro::seconds(1.f);
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -136,6 +139,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE:
             hitBall();
             break;
+        case SDLK_F2:
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextHole), cro::NetFlag::Reliable);
+            break;
+        case SDLK_F3:
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextPlayer), cro::NetFlag::Reliable);
+            break;
         }
     }
 
@@ -186,9 +195,11 @@ bool GolfState::simulate(float dt)
 
         if (m_wantsGameState)
         {
-            //TODO ping this intermittently until ack'd
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable);
-            m_wantsGameState = false;
+            if (m_readyClock.elapsed() > ReadyPingFreq)
+            {
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable);
+                m_readyClock.restart();
+            }
         }
     }
     else
@@ -235,7 +246,9 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::Flag02] = spriteSheet.getSprite("flag02");
     m_sprites[SpriteID::Flag03] = spriteSheet.getSprite("flag03");
     m_sprites[SpriteID::Flag04] = spriteSheet.getSprite("flag04");
-    m_sprites[SpriteID::Player] = spriteSheet.getSprite("player");
+
+    spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
+    m_sprites[SpriteID::Player] = spriteSheet.getSprite("male");
 
     //load the map data
     bool error = false;
@@ -557,7 +570,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Player];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width, 0.f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width * 0.75f, 0.f));
     courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //this is updated by a command sent when the 3D camera is positioned
@@ -621,6 +634,14 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             }
             requestStackPush(States::Golf::Error);
             break;
+        case PacketID::SetPlayer:
+            m_wantsGameState = false;
+            {
+                auto playerData = evt.packet.as<ActivePlayer>();
+                setCameraPosition(playerData.position);
+                setCurrentPlayer(playerData);
+            }
+            break;
         }
         break;
     case cro::NetEvent::ClientDisconnect:
@@ -651,7 +672,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     glm::vec2 size(m_holeData[m_currentHole].map.getSize());
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setOrigin({ -size.x / 2.f, 0.f, size.y / 2.f });
 
-    setCameraPosition(m_holeData[m_currentHole].tee);
+    setCameraPosition(m_holeData[m_currentHole].tee); //TODO is this not overriden by setting the active player?
 }
 
 void GolfState::setCameraPosition(glm::vec3 position)
@@ -699,6 +720,12 @@ void GolfState::setCameraPosition(glm::vec3 position)
         e.getComponent<cro::Transform>().setPosition(pos);
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
+void GolfState::setCurrentPlayer(const ActivePlayer& player)
+{
+    //TODO update UI to show player details
+    LogI << "player set to " << (int)player.client << ", " << (int)player.player << std::endl;
 }
 
 void GolfState::hitBall()

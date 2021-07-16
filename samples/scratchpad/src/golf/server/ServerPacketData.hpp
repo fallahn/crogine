@@ -32,33 +32,46 @@ source distribution.
 #include "../CommonConsts.hpp"
 
 #include <crogine/detail/glm/vec3.hpp>
-#include <array>
 
-using CompressedQuat = std::array<std::int16_t, 4u>;
-
-struct PlayerInfo final
+struct ActivePlayer
 {
-    CompressedQuat rotation{};
-    glm::vec3 spawnPosition = glm::vec3(0.f);
-    std::uint32_t serverID = 0;
-    std::int32_t timestamp = 0;
-    std::uint8_t playerID = ConstVal::MaxClients;
-};
-
-struct PlayerUpdate final
-{
-    CompressedQuat rotation{};
+    std::uint8_t client = 4;
+    std::uint8_t player = 4;
     glm::vec3 position = glm::vec3(0.f);
-    std::int16_t pitch = 0;
-    std::int16_t yaw = 0;
-    std::uint32_t timestamp = 0;
 };
 
-struct ActorUpdate final
+struct PlayerStatus final : public ActivePlayer
 {
-    CompressedQuat rotation{};
-    glm::vec3 position = glm::vec3(0.f);
-    std::uint32_t serverID = 0;
-    std::int32_t timestamp = 0;
-    std::int8_t actorID = -1;
+    std::uint8_t stroke = 0;
+    std::uint8_t score = 0;
+    float distanceToHole = 0.f; //used for sorting
 };
+
+//using CompressedQuat = std::array<std::int16_t, 4u>;
+//
+//struct PlayerInfo final
+//{
+//    CompressedQuat rotation{};
+//    glm::vec3 spawnPosition = glm::vec3(0.f);
+//    std::uint32_t serverID = 0;
+//    std::int32_t timestamp = 0;
+//    std::uint8_t playerID = ConstVal::MaxClients;
+//};
+//
+//struct PlayerUpdate final
+//{
+//    CompressedQuat rotation{};
+//    glm::vec3 position = glm::vec3(0.f);
+//    std::int16_t pitch = 0;
+//    std::int16_t yaw = 0;
+//    std::uint32_t timestamp = 0;
+//};
+//
+//struct ActorUpdate final
+//{
+//    CompressedQuat rotation{};
+//    glm::vec3 position = glm::vec3(0.f);
+//    std::uint32_t serverID = 0;
+//    std::int32_t timestamp = 0;
+//    std::int8_t actorID = -1;
+//};

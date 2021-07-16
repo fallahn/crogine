@@ -51,6 +51,7 @@ namespace PacketID
         ServerError, //< uint8 MessageType
         StateChange, //< uint8 state ID
         LobbyUpdate, //< ConnectionData array
+        SetPlayer, //< ActivePlayer struct
 
         //PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
         //PlayerUpdate, //< world pos, rotation, uint32 timestamp - used for reconciliation, send directly to targeted peer
@@ -63,9 +64,19 @@ namespace PacketID
         ClientReady, //< uint8 playerID - requests game data from server. Sent repeatedly until ack'd
         InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput)
         PlayerInfo, //< ConnectionData array
+        ServerCommand, //< uint8_t command type
 
         //both directions
         MapInfo, //< serialised cro::String containing course directory
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
+    };
+}
+
+namespace ServerCommand
+{
+    enum
+    {
+        NextHole,
+        NextPlayer
     };
 }
