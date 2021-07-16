@@ -87,7 +87,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData    (sd),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
-    m_wantsGameState(true)
+    m_wantsGameState(true),
+    m_currentHole   (0)
 {
     context.mainWindow.loadResources([this]() {
         loadAssets();
@@ -207,8 +208,6 @@ bool GolfState::simulate(float dt)
 
 void GolfState::render()
 {
-    return;
-
     m_renderTexture.clear();
     m_gameScene.render(m_renderTexture);
     m_renderTexture.display();
@@ -227,10 +226,6 @@ void GolfState::render()
 //private
 void GolfState::loadAssets()
 {
-    //TODO validate course file and load assets therein
-
-    m_gameScene.setCubemap("assets/images/skybox/sky.ccm");
-
     auto vpSize = calcVPSize();
     m_renderTexture.create(static_cast<std::uint32_t>(vpSize.x) , static_cast<std::uint32_t>(vpSize.y));
 
@@ -241,6 +236,131 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::Flag03] = spriteSheet.getSprite("flag03");
     m_sprites[SpriteID::Flag04] = spriteSheet.getSprite("flag04");
     m_sprites[SpriteID::Player] = spriteSheet.getSprite("player");
+
+    //load the map data
+    bool error = false;
+    auto mapDir = m_sharedData.mapDirectory.toAnsiString();
+    auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
+
+    if (!cro::FileSystem::fileExists(mapPath))
+    {
+        LOG("Course file doesn't exist", cro::Logger::Type::Error);
+        error = true;
+    }
+
+    cro::ConfigFile courseFile;
+    if (!courseFile.loadFromFile(mapPath))
+    {
+        error = true;
+    }
+
+    std::vector<std::string> holeStrings;
+    const auto& props = courseFile.getProperties();
+    for (const auto& prop : props)
+    {
+        const auto& name = prop.getName();
+        if (name == "hole")
+        {
+            holeStrings.push_back(prop.getValue<std::string>());
+        }
+        else if (name == "skybox")
+        {
+            m_gameScene.setCubemap(prop.getValue<std::string>());
+        }
+    }
+
+    if (holeStrings.empty())
+    {
+        LOG("No hole files in course data", cro::Logger::Type::Error);
+        error = true;
+    }
+
+    cro::ConfigFile holeCfg;
+    cro::ModelDefinition modelDef(m_resources);
+    for (const auto& hole : holeStrings)
+    {
+        if (!cro::FileSystem::fileExists(hole))
+        {
+            LOG("Hole file is missing", cro::Logger::Type::Error);
+            error = true;
+        }
+
+        if (!holeCfg.loadFromFile(hole))
+        {
+            LOG("Failed opening hole file", cro::Logger::Type::Error);
+            error = true;
+        }
+
+        static constexpr std::int32_t MaxProps = 5;
+        std::int32_t propCount = 0;
+        auto& holeData = m_holeData.emplace_back();
+
+        const auto& holeProps = holeCfg.getProperties();
+        for (const auto& holeProp : holeProps)
+        {
+            const auto& name = holeProp.getName();
+            if (name == "map")
+            {
+                if (!holeData.map.loadFromFile(holeProp.getValue<std::string>()))
+                {
+                    error = true;
+                }
+                propCount++;
+            }
+            else if (name == "pin")
+            {
+                //TODO not sure how we ensure these are sane values?
+                auto pin = holeProp.getValue<glm::vec2>();
+                holeData.pin = { pin.x, 0.f, -pin.y };
+                propCount++;
+            }
+            else if (name == "tee")
+            {
+                auto tee = holeProp.getValue<glm::vec2>();
+                holeData.tee = { tee.x, 0.f, -tee.y };
+                propCount++;
+            }
+            else if (name == "par")
+            {
+                holeData.par = holeProp.getValue<std::int32_t>();
+                if (holeData.par < 1 || holeData.par > 10)
+                {
+                    LOG("Invalid PAR value", cro::Logger::Type::Error);
+                    error = true;
+                }
+                propCount++;
+            }
+            else if (name == "model")
+            {
+                if (modelDef.loadFromFile(holeProp.getValue<std::string>()))
+                {
+                    holeData.modelEntity = m_gameScene.createEntity();
+                    holeData.modelEntity.addComponent<cro::Transform>();
+                    modelDef.createModel(holeData.modelEntity);
+                    holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
+                    propCount++;
+                }
+                else
+                {
+                    LOG("Failed loading model file", cro::Logger::Type::Error);
+                    error = true;
+                }
+            }
+        }
+
+        if (propCount != MaxProps)
+        {
+            LOG("Missing hole property", cro::Logger::Type::Error);
+            error = true;
+        }
+    }
+
+
+    if (error)
+    {
+        m_sharedData.errorMessage = "Failed to load course data";
+        requestStackPush(States::Golf::Error);
+    }
 
 #ifdef CRO_DEBUG_
     m_debugTexture.create(800, 100);
@@ -272,65 +392,10 @@ void GolfState::addSystems()
 
 void GolfState::buildScene()
 {
-    //TODO load assets from course file data in loadAssets();
-    return;
-
-    cro::ConfigFile mapData;
-    if (!mapData.loadFromFile("assets/golf/holes/01.hole"))
+    if (m_holeData.empty())
     {
-        //TODO better error handling of missing files
         return;
     }
-
-    static constexpr std::int32_t MaxProps = 4;
-    std::int32_t propCount = 0;
-
-    cro::ModelDefinition modelDef(m_resources);
-    const auto& props = mapData.getProperties();
-    for (const auto& prop : props)
-    {
-        const auto& name = prop.getName();
-        if (name == "map")
-        {
-            if (m_holeData.map.loadFromFile(prop.getValue<std::string>()))
-            {
-                propCount++;
-            }
-        }
-        else if (name == "model")
-        {
-            if (modelDef.loadFromFile(prop.getValue<std::string>()))
-            {
-                propCount++;
-            }
-        }
-        else if (name == "pin")
-        {
-            //TODO how do we make certain this is a reasonable value?
-            auto pin = prop.getValue<glm::vec2>();
-            m_holeData.pin = { pin.x, 0.f, -pin.y };
-            propCount++;
-        }
-        else if (name == "tee")
-        {
-            auto tee = prop.getValue<glm::vec2>();
-            m_holeData.tee = { tee.x, 0.f, -tee.y };
-            propCount++;
-        }
-    }
-
-    if (propCount != MaxProps)
-    {
-        LogE << "Missing properties from hole file" << std::endl;
-        return;
-    }
-
-    //model file is centred so needs offset correction
-    glm::vec2 courseSize(m_holeData.map.getSize());
-
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setOrigin(glm::vec3(-courseSize.x / 2.f, 0.f, courseSize.y / 2.f));
-    modelDef.createModel(entity);
 
     //render the ball as a point so no perspective is applied to the scale
     glCheck(glPointSize(BallPointSize));
@@ -340,8 +405,8 @@ void GolfState::buildScene()
     auto materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
     auto material = m_resources.materials.get(materialID);
 
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(m_holeData.tee);
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
     entity.addComponent<Ball>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
@@ -372,7 +437,7 @@ void GolfState::buildScene()
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
     material.blendMode = cro::Material::BlendMode::Multiply;
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(m_holeData.tee);
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [ballEnt](cro::Entity e, float)
@@ -414,7 +479,7 @@ void GolfState::buildScene()
         }
     };
 
-    setCameraPosition(m_holeData.tee);
+    setCurrentHole(0);
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
@@ -422,10 +487,10 @@ void GolfState::buildScene()
 
     buildUI(); //put this here because we don't want to do this if the map data didn't load
 
-    debugPos = m_holeData.tee;
-
 
 #ifdef CRO_DEBUG_
+    debugPos = m_holeData[0].tee;
+
     m_debugCam = m_gameScene.createEntity();
     m_debugCam.addComponent<cro::Transform>().setPosition({ 20.f, -10.f, 100.f });
     auto& dCam = m_debugCam.addComponent<cro::Camera>();
@@ -433,7 +498,7 @@ void GolfState::buildScene()
 
     //displays the potential ball arc
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(m_holeData.tee);
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
 
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     material = m_resources.materials.get(debugMaterial);
@@ -468,6 +533,11 @@ void GolfState::buildScene()
 
 void GolfState::buildUI()
 {
+    if (m_holeData.empty())
+    {
+        return;
+    }
+
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
@@ -480,7 +550,7 @@ void GolfState::buildUI()
     //same distance from the camera
     auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     camera.updateMatrices(m_gameScene.getActiveCamera().getComponent<cro::Transform>());
-    auto pos = camera.coordsToPixel(m_holeData.tee, m_renderTexture.getSize());
+    auto pos = camera.coordsToPixel(m_holeData[0].tee, m_renderTexture.getSize());
     
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
@@ -570,19 +640,34 @@ void GolfState::removeClient(std::uint8_t clientID)
     m_sharedData.connectionData[clientID].playerCount = 0;
 }
 
+void GolfState::setCurrentHole(std::uint32_t hole)
+{
+    CRO_ASSERT(hole < m_holeData.size(), "");
+
+    m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(true);
+    m_currentHole = hole;
+
+    m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(false);
+    glm::vec2 size(m_holeData[m_currentHole].map.getSize());
+    m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setOrigin({ -size.x / 2.f, 0.f, size.y / 2.f });
+
+    setCameraPosition(m_holeData[m_currentHole].tee);
+}
+
 void GolfState::setCameraPosition(glm::vec3 position)
 {
     auto camEnt = m_gameScene.getActiveCamera();
     camEnt.getComponent<cro::Transform>().setPosition({ position.x, CameraHeight, position.z });
-    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), m_holeData.pin, cro::Transform::Y_AXIS);
+    auto target = m_holeData[m_currentHole].pin;
+    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(target.x, CameraHeight, target.z), cro::Transform::Y_AXIS);
     camEnt.getComponent<cro::Transform>().setRotation(glm::inverse(lookat));
 
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
     camEnt.getComponent<cro::Transform>().move(offset * CameraOffset);
 
     //calc which one of the flag sprites to use based on distance
-    const auto maxLength = glm::length(m_holeData.pin - m_holeData.tee) * 0.75f;
-    const auto currLength = glm::length(m_holeData.pin - position);
+    const auto maxLength = glm::length(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee) * 0.75f;
+    const auto currLength = glm::length(m_holeData[m_currentHole].pin - position);
 
     const std::int32_t size = static_cast<std::int32_t>(maxLength / currLength);
     std::int32_t flag = SpriteID::Flag01; //largest
@@ -610,7 +695,7 @@ void GolfState::setCameraPosition(glm::vec3 position)
         e.getComponent<cro::Sprite>() = m_sprites[flag];
         //TODO scale the sprite based on the distance to its cutoff?
         //rememberthe view will actually be static so we won't see the size animating
-        auto pos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(m_holeData.pin, m_renderTexture.getSize());
+        auto pos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(m_holeData[m_currentHole].pin, m_renderTexture.getSize());
         e.getComponent<cro::Transform>().setPosition(pos);
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -626,7 +711,7 @@ void GolfState::hitBall()
         //TODO adjust pitch on player input
         auto pitch = cro::Util::Const::PI / 4.f;
 
-        auto direction = glm::normalize(m_holeData.pin - e.getComponent<cro::Transform>().getPosition());
+        auto direction = glm::normalize(m_holeData[0].pin - e.getComponent<cro::Transform>().getPosition());
         auto yaw = std::atan2(-direction.z, direction.x);
 
         //TODO add hook/slice to yaw

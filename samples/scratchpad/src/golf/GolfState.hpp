@@ -72,7 +72,8 @@ private:
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_renderTexture;
 
-    HoleData m_holeData;
+    std::vector<HoleData> m_holeData;
+    std::uint32_t m_currentHole;
 
     struct SpriteID final
     {
@@ -97,6 +98,7 @@ private:
     void handleNetEvent(const cro::NetEvent&);
     void removeClient(std::uint8_t);
 
+    void setCurrentHole(std::uint32_t);
     void setCameraPosition(glm::vec3);
     void hitBall();
 
