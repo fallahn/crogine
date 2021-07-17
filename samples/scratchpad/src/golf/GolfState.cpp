@@ -33,7 +33,7 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "SharedStateData.hpp"
 #include "InterpolationSystem.hpp"
-#include "server/ServerPacketData.hpp"
+#include "ClientPacketData.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -72,6 +72,7 @@ namespace
     std::int32_t debugMaterial = -1;
     cro::Entity pointerEnt;
     glm::vec3 pointerEuler = glm::vec3(0.f);
+    glm::vec3 ballpos = glm::vec3(0.f);
 
     glm::vec2 calcVPSize()
     {
@@ -104,6 +105,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("buns"))
             {
+                ImGui::Text("ball pos: %3.3f, %3.3f, %3.3f", ballpos.x, ballpos.y, ballpos.z);
+
                 if (ImGui::SliderFloat3("Pointer", &pointerEuler[0], 0.f, cro::Util::Const::PI))
                 {
                     //auto rotation = glm::rotate(glm::mat4(1.f), pointerEuler.x, cro::Transform::X_AXIS);
@@ -137,7 +140,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             requestStackPush(States::MainMenu);
             break;*/
         case SDLK_SPACE:
-            //hitBall();
+            hitBall();
             break;
         case SDLK_F2:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextHole), cro::NetFlag::Reliable);
@@ -224,11 +227,11 @@ void GolfState::render()
     m_renderTexture.display();
 
 #ifdef CRO_DEBUG_
-    auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
-    m_debugTexture.clear(cro::Colour::Magenta);
-    m_gameScene.render(m_debugTexture);
-    m_debugTexture.display();
-    m_gameScene.setActiveCamera(oldCam);
+    //auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
+    //m_debugTexture.clear(cro::Colour::Magenta);
+    //m_gameScene.render(m_debugTexture);
+    //m_debugTexture.display();
+    //m_gameScene.setActiveCamera(oldCam);
 #endif
 
     m_uiScene.render(cro::App::getWindow());
@@ -463,6 +466,14 @@ void GolfState::buildScene()
         return;
     }
 
+    cro::ModelDefinition m(m_resources);
+    m.loadFromFile("assets/golf/models/water_plane.cmt");
+
+    cro::Entity ent = m_gameScene.createEntity();
+    ent.addComponent<cro::Transform>().setPosition({ 150.f, -0.1f, -100.f });
+    m.createModel(ent);
+
+
     auto updateView = [&](cro::Camera& cam)
     {
         auto vpSize = calcVPSize();
@@ -601,7 +612,6 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Transform>().setPosition(info.position);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<InterpolationComponent>().setID(info.serverID);
-    entity.getComponent<InterpolationComponent>().setTarget({ info.position }); //TODO fix initial position
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
 
     //ball shadow
@@ -656,6 +666,27 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             break;
         case PacketID::ActorSpawn:
             spawnBall(evt.packet.as<ActorInfo>());
+            break;
+        case PacketID::ActorUpdate:
+        {
+            auto update = evt.packet.as<ActorInfo>();
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Ball;
+            cmd.action = [update](cro::Entity e, float)
+            {
+                if (e.isValid())
+                {
+                    auto& interp = e.getComponent<InterpolationComponent>();
+                    if (interp.getID() == update.serverID)
+                    {
+                        interp.setTarget({ update.position, {1.f,0.f,0.f,0.f}, update.timestamp });
+                    }
+                }
+                ballpos = update.position;
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        }
             break;
         }
         break;
@@ -739,35 +770,33 @@ void GolfState::setCameraPosition(glm::vec3 position)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    m_currentPlayer = player;
+
     //TODO update UI to show player details
-    LogI << "player set to " << (int)player.client << ", " << (int)player.player << std::endl;
+    LogI << "player set to " << (int)player.client << ", " << (int)player.player << ", at: " << player.position << std::endl;
 }
 
-//void GolfState::hitBall()
-//{
-//    cro::Command cmd;
-//    cmd.targetFlags = CommandID::Ball;
-//    cmd.action = 
-//        [&](cro::Entity e, float)
-//    {
-//        //TODO adjust pitch on player input
-//        auto pitch = cro::Util::Const::PI / 4.f;
-//
-//        auto direction = glm::normalize(m_holeData[0].pin - e.getComponent<cro::Transform>().getPosition());
-//        auto yaw = std::atan2(-direction.z, direction.x);
-//
-//        //TODO add hook/slice to yaw
-//
-//        glm::vec3 impulse(1.f, 0.f, 0.f);
-//        auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
-//        rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
-//        impulse = glm::toMat3(rotation) * impulse;
-//
-//        impulse *= 20.f; //TODO get this magnitude from input
-//
-//        e.getComponent<Ball>().velocity = impulse;
-//        e.getComponent<Ball>().state = Ball::State::Flight;
-//    };
-//
-//    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-//}
+void GolfState::hitBall()
+{
+    //TODO adjust pitch on player input
+    auto pitch = cro::Util::Const::PI / 4.f;
+
+    auto direction = glm::normalize(m_holeData[m_currentHole].pin - m_currentPlayer.position);
+    auto yaw = std::atan2(-direction.z, direction.x);
+
+    //TODO add hook/slice to yaw
+
+    glm::vec3 impulse(1.f, 0.f, 0.f);
+    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
+    rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
+    impulse = glm::toMat3(rotation) * impulse;
+
+    impulse *= 20.f; //TODO get this magnitude from input
+
+    InputUpdate update;
+    update.clientID = m_sharedData.localPlayer.connectionID;
+    update.playerID = m_currentPlayer.player;
+    update.impulse = impulse;
+
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}

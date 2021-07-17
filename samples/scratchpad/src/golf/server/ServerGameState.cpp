@@ -127,8 +127,27 @@ void GameState::netEvent(const cro::NetEvent& evt)
 
 void GameState::netBroadcast()
 {
+    if (m_playerInfo.empty())
+    {
+        return;
+    }
+
     //fetch ball ents and send updates to client
-    //TODO only send active player's ball
+    const auto& balls = m_scene.getSystem<BallSystem>().getEntities1();
+    for (auto ball : balls)
+    {
+        //only send active player's ball? this breaks initial positions for other players
+        //if (ball == m_playerInfo[0].ballEntity)
+        {
+            auto timestamp = m_serverTime.elapsed().asMilliseconds();
+
+            ActorInfo info;
+            info.serverID = static_cast<std::uint32_t>(ball.getIndex());
+            info.position = ball.getComponent<cro::Transform>().getPosition();
+            info.timestamp = timestamp;
+            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Unreliable);
+        }
+    }
 }
 
 std::int32_t GameState::process(float dt)
@@ -150,6 +169,7 @@ void GameState::sendInitialGameState(std::uint8_t clientID)
         }
 
         //send all the ball positions
+        auto timestamp = m_serverTime.elapsed().asMilliseconds();
         const auto& balls = m_scene.getSystem<BallSystem>().getEntities1();
         for (auto ball : balls)
         {
@@ -184,7 +204,18 @@ void GameState::sendInitialGameState(std::uint8_t clientID)
 
 void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
 {
+    if (m_playerInfo.empty())
+    {
+        return;
+    }
 
+    auto input = packet.as<InputUpdate>();
+    if (m_playerInfo[0].client == input.clientID
+        && m_playerInfo[0].player == input.playerID)
+    {
+        m_playerInfo[0].ballEntity.getComponent<Ball>().velocity = input.impulse;
+        m_playerInfo[0].ballEntity.getComponent<Ball>().state = Ball::State::Flight;
+    }
 }
 
 void GameState::setNextPlayer()

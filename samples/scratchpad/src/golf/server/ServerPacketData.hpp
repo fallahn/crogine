@@ -53,15 +53,5 @@ struct ActorInfo final
 {
     std::uint32_t serverID = 0;
     glm::vec3 position = glm::vec3(0.f);
+    std::int32_t timestamp = 0;
 };
-
-//using CompressedQuat = std::array<std::int16_t, 4u>;
-
-//struct ActorUpdate final
-//{
-//    CompressedQuat rotation{};
-//    glm::vec3 position = glm::vec3(0.f);
-//    std::uint32_t serverID = 0;
-//    std::int32_t timestamp = 0;
-//    std::int8_t actorID = -1;
-//};

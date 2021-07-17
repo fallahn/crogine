@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "HoleData.hpp"
+#include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -74,6 +75,7 @@ private:
 
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
+    ActivePlayer m_currentPlayer;
 
     struct SpriteID final
     {
@@ -109,8 +111,8 @@ private:
 
     void setCurrentHole(std::uint32_t);
     void setCameraPosition(glm::vec3);
-    void setCurrentPlayer(const struct ActivePlayer&);
-    //void hitBall();
+    void setCurrentPlayer(const ActivePlayer&);
+    void hitBall();
 
 #ifdef CRO_DEBUG_
     cro::Entity m_debugCam;

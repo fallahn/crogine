@@ -55,7 +55,7 @@ namespace PacketID
 
         //PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
         //PlayerUpdate, //< world pos, rotation, uint32 timestamp - used for reconciliation, send directly to targeted peer
-        //ActorUpdate, //< uint8 ID pos, rotation - used for interpolation of other players and NPCs
+        ActorUpdate, //< ActorInfo - ball interpolation
         ActorSpawn, //< ActorInfo
 
         //EntityRemoved, //< uint32 entity ID

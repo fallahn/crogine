@@ -29,8 +29,11 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/glm/vec3.hpp>
+
 struct InputUpdate final
 {
-    //Input input;
+    glm::vec3 impulse = glm::vec3(0.f);
+    std::uint8_t clientID = 4;
     std::uint8_t playerID = 4;
 };
