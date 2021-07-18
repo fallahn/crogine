@@ -253,7 +253,8 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::Flag04] = spriteSheet.getSprite("flag04");
 
     spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
-    m_sprites[SpriteID::Player] = spriteSheet.getSprite("male");
+    m_sprites[SpriteID::Player01] = spriteSheet.getSprite("female");
+    m_sprites[SpriteID::Player02] = spriteSheet.getSprite("male");
 
 
     //ball resources - ball is rendered as a single point
@@ -553,8 +554,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
     auto courseEnt = entity;
 
-    //in theory we only have to set this once as the player avatar is always the
-    //same distance from the camera
+
     auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     camera.updateMatrices(m_gameScene.getActiveCamera().getComponent<cro::Transform>());
     auto pos = camera.coordsToPixel(m_holeData[0].tee, m_renderTexture.getSize());
@@ -562,7 +562,7 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Player];
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Player01];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width * 0.75f, 0.f));
     courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

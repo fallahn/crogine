@@ -85,7 +85,8 @@ private:
             Flag02,
             Flag03,
             Flag04,
-            Player,
+            Player01,
+            Player02,
 
             Count
         };
