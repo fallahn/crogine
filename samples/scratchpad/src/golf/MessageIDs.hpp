@@ -29,30 +29,24 @@ source distribution.
 
 #pragma once
 
-#include <crogine/util/Constants.hpp>
+#include <crogine/core/Message.hpp>
 
-#include <cstdint>
+//be careful here as these messages overlap with the scratchpad messages
+//we're banking on the project not running golf at the same time as another
+//state - which will hopefully be true eventually after separating this project...
 
-static constexpr float CameraHeight = 2.5f;
-static constexpr float CameraOffset = 5.f;
-static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
-
-//maintain a viewport height of 225, with the
-//width either 300 or 400 depending on the ratio
-//of the window
-static constexpr float ViewportHeight = 225.f;
-static constexpr float BallPointSize = 1.5f;
-
-static constexpr float MaxHook = 0.1f;
-
-
-//ui components are layed out as a normalised value
-//relative to the window size.
-struct UIElement final
+namespace MessageID
 {
-    glm::vec2 position = glm::vec2(0.f);
+    enum
+    {
+        GameMessage = cro::Message::Count
+    };
+}
+
+struct GameEvent final
+{
+    enum
+    {
+        HitBall
+    }type = HitBall;
 };
-static constexpr glm::vec2 PlayerNamePosition(0.1f, 0.1f);
-static constexpr glm::vec2 PowerbarPosition(0.5f, 0.1f);
-static constexpr glm::vec2 WindPosition(0.11f, 0.9f);
-static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);

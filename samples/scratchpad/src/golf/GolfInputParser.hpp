@@ -34,32 +34,50 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
+namespace cro
+{
+    class MessageBus;
+}
+
 namespace golf
 {
     class InputParser final
     {
     public:
-        explicit InputParser(InputBinding);
+        InputParser(InputBinding, cro::MessageBus&);
 
         void handleEvent(const cro::Event&);
         void setHoleDirection(glm::vec3);
         float getYaw() const;
 
+        float getPower() const; //0-1 multiplied by selected club
+        float getHook() const; //-1 to -1 * some angle, probably club defined
+
         void setActive(bool);
-
-
         void update(float);
 
     private:
         InputBinding m_inputBinding;
+        cro::MessageBus& m_messageBus;
 
         std::uint16_t m_inputFlags;
+        std::uint16_t m_prevFlags;
         std::uint16_t m_prevStick;
         float m_analogueAmount;
 
         float m_holeDirection; //radians
         float m_rotation; //+- max rads
+
+        float m_power;
+        float m_hook;
+        float m_powerbarDirection;
+
         bool m_active;
+
+        enum class State
+        {
+            Aim, Power, Stroke
+        }m_state;
 
         void rotate(float);
         void checkControllerInput();

@@ -34,6 +34,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "InterpolationSystem.hpp"
 #include "ClientPacketData.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -70,8 +71,6 @@ namespace
 {
     glm::vec3 debugPos = glm::vec3(0.f);
     std::int32_t debugMaterial = -1;
-    //cro::Entity pointerEnt;
-    //glm::vec3 pointerEuler = glm::vec3(0.f);
     glm::vec3 ballpos = glm::vec3(0.f);
 
     glm::vec2 calcVPSize()
@@ -91,7 +90,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData    (sd),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
-    m_inputParser   (sd.inputBinding),
+    m_inputParser   (sd.inputBinding, context.appInstance.getMessageBus()),
     m_wantsGameState(true),
     m_currentHole   (0)
 {
@@ -108,16 +107,14 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             {
                 ImGui::Text("ball pos: %3.3f, %3.3f, %3.3f", ballpos.x, ballpos.y, ballpos.z);
 
-                //if (ImGui::SliderFloat3("Pointer", &pointerEuler[0], 0.f, cro::Util::Const::PI))
-                //{
-                //    //auto rotation = glm::rotate(glm::mat4(1.f), pointerEuler.x, cro::Transform::X_AXIS);
-                //    //rotation = glm::rotate(rotation, pointerEuler.x, cro::Util::Matrix::getRightVector(rotation));
-                //    pointerEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, pointerEuler.y);
-                //    pointerEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, pointerEuler.x);
-                //}
-
                 auto rot = m_inputParser.getYaw();
                 ImGui::Text("Rotation %3.2f", rot);
+
+                auto power = m_inputParser.getPower();
+                ImGui::Text("Power: %3.3f", power);
+
+                auto hook = m_inputParser.getHook();
+                ImGui::Text("Hook: %3.3f", hook);
             }
             ImGui::End();
         });
@@ -142,10 +139,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_BACKSPACE:
             requestStackClear();
             requestStackPush(States::MainMenu);
-            break;*/
+            break;
         case SDLK_SPACE:
             hitBall();
-            break;
+            break;*/
         case SDLK_F2:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextHole), cro::NetFlag::Reliable);
             break;
@@ -165,6 +162,20 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
 void GolfState::handleMessage(const cro::Message& msg)
 {
+    switch (msg.id)
+    {
+    default: break;
+    case MessageID::GameMessage:
+    {
+        const auto& data = msg.getData<GameEvent>();
+        if (data.type == GameEvent::HitBall)
+        {
+            hitBall();
+        }
+    }
+    break;
+    }
+
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
@@ -893,18 +904,20 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 void GolfState::hitBall()
 {
     //TODO adjust pitch on player input?
+    //should be 0 in putting mode, so perhaps adjust for club
     auto pitch = cro::Util::Const::PI / 4.f;
 
     auto yaw = m_inputParser.getYaw();
 
-    //TODO add hook/slice to yaw
+    //add hook/slice to yaw
+    yaw += MaxHook * m_inputParser.getHook();
 
     glm::vec3 impulse(1.f, 0.f, 0.f);
     auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     impulse = glm::toMat3(rotation) * impulse;
 
-    impulse *= 20.f; //TODO get this magnitude from input/current club
+    impulse *= 20.f * m_inputParser.getPower(); //TODO get this magnitude from input/current club
 
     InputUpdate update;
     update.clientID = m_sharedData.localPlayer.connectionID;
@@ -912,4 +925,6 @@ void GolfState::hitBall()
     update.impulse = impulse;
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_inputParser.setActive(false);
 }

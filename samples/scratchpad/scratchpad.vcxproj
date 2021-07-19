@@ -276,6 +276,7 @@
     <ClInclude Include="src\golf\InterpolationSystem.hpp" />
     <ClInclude Include="src\golf\MenuConsts.hpp" />
     <ClInclude Include="src\golf\GolfMenuState.hpp" />
+    <ClInclude Include="src\golf\MessageIDs.hpp" />
     <ClInclude Include="src\golf\PacketIDs.hpp" />
     <ClInclude Include="src\golf\PlayerColours.hpp" />
     <ClInclude Include="src\golf\server\Server.hpp" />

@@ -29,6 +29,7 @@ source distribution.
 
 #include "GolfInputParser.hpp"
 #include "InputBinding.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
@@ -42,14 +43,20 @@ namespace
 
 namespace golf
 {
-    InputParser::InputParser(InputBinding ip)
-        : m_inputBinding(ip),
-        m_inputFlags(0),
-        m_prevStick(0),
-        m_analogueAmount(0.f),
-        m_holeDirection(0.f),
-        m_rotation(0.f),
-        m_active(true)
+    InputParser::InputParser(InputBinding ip, cro::MessageBus& mb)
+        : m_inputBinding    (ip),
+        m_messageBus        (mb),
+        m_inputFlags        (0),
+        m_prevFlags         (0),
+        m_prevStick         (0),
+        m_analogueAmount    (0.f),
+        m_holeDirection     (0.f),
+        m_rotation          (0.f),
+        m_power             (0.f),
+        m_hook              (0.f),
+        m_powerbarDirection (1.f),
+        m_active            (true),
+        m_state             (State::Aim)
     {
 
     }
@@ -208,9 +215,23 @@ namespace golf
         return m_holeDirection + m_rotation;
     }
 
+    float InputParser::getPower() const
+    {
+        return m_power;
+    }
+
+    float InputParser::getHook() const
+    {
+        return m_hook * 2.f - 1.f;
+    }
+
     void InputParser::setActive(bool active)
     {
         m_active = active;
+        m_state = State::Aim;
+        m_power = 0.f;
+        m_hook = 0.f;
+        m_powerbarDirection = 1.f;
     }
 
     void InputParser::update(float dt)
@@ -218,18 +239,68 @@ namespace golf
         if (m_active)
         {
             checkControllerInput();
-            const float rotation = RotationSpeed * MaxRotation * m_analogueAmount * dt;
 
-            if (m_inputFlags & InputFlag::Left)
+            switch (m_state)
             {
-                rotate(rotation);
+            default: break;
+            case State::Aim:
+            {
+                const float rotation = RotationSpeed * MaxRotation * m_analogueAmount * dt;
+
+                if (m_inputFlags & InputFlag::Left)
+                {
+                    rotate(rotation);
+                }
+
+                if (m_inputFlags & InputFlag::Right)
+                {
+                    rotate(-rotation);
+                }
+
+                if (m_inputFlags & InputFlag::Action)
+                {
+                    m_state = State::Power;
+                }
             }
+            break;
+            case State::Power:
+                //move level to 1 and back (returning to 0 is a fluff)
+                m_power = std::min(1.f, std::max(0.f, m_power + (dt * m_powerbarDirection)));
 
-            if (m_inputFlags & InputFlag::Right)
-            {
-                rotate(-rotation);
+                if (m_power == 1)
+                {
+                    m_powerbarDirection = -1.f;
+                }
+
+                if (m_power == 0
+                    || ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0)))
+                {
+                    m_powerbarDirection = 1.f;
+                    m_state = State::Stroke;
+                }
+
+                break;
+            case State::Stroke:
+                m_hook = std::min(1.f, std::max(0.f, m_hook + (dt * m_powerbarDirection)));
+
+                if (m_hook == 1)
+                {
+                    m_powerbarDirection = -1.f;
+                }
+
+                if (m_hook == 0
+                    || ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0)))
+                {
+                    m_powerbarDirection = 1.f;
+                    //setActive(false); //can't set this false here because it resets the values before we read them...
+
+                    auto* msg = m_messageBus.post<GameEvent>(MessageID::GameMessage);
+                    msg->type = GameEvent::HitBall;
+                }
+                break;
             }
         }
+        m_prevFlags = m_inputFlags;
     }
 
     //private

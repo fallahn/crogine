@@ -275,5 +275,8 @@
     <ClInclude Include="src\golf\InputBinding.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\MessageIDs.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
