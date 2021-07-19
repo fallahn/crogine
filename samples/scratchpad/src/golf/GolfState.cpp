@@ -632,7 +632,6 @@ void GolfState::buildUI()
     entity.addComponent<UIElement>().position = PowerbarPosition;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
-    entity.getComponent<cro::Transform>().rotate(cro::Util::Const::PI / 2.f);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 

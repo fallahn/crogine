@@ -9,22 +9,32 @@ spritesheet ui
 
     sprite flag02
     {
-        bounds = 32,16,16,16
+        bounds = 32,48,16,16
     }
 
     sprite flag03
     {
-        bounds = 32,48,8,8
+        bounds = 32,64,8,8
     }
 
     sprite flag04
     {
-        bounds = 40, 48 ,8,8
+        bounds = 40, 64 ,8,8
     }
 
     sprite power_bar
     {
-        bounds = 48,0,32,80
+        bounds = 32,0,80,16
+    }
+
+    sprite power_bar_inner
+    {
+        bounds = 32,16,80,16
+    }
+
+    sprite hook_bar
+    {
+        bounds = 48, 32, 5, 18
     }
 
     sprite wind_dir
