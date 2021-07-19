@@ -135,6 +135,9 @@
     <ClCompile Include="src\golf\InterpolationSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\GolfInputParser.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -264,6 +267,12 @@
       <Filter>Header Files\golf</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\PlayerColours.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GolfInputParser.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\InputBinding.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>

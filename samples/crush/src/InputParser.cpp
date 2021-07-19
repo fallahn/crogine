@@ -40,7 +40,7 @@ source distribution.
 
 namespace
 {
-    const std::int16_t DeadZone = 8000;
+    constexpr std::int16_t DeadZone = 8000;
 }
 
 InputParser::InputParser(cro::NetClient& nc, InputBinding binding)

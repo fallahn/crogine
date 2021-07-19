@@ -29,22 +29,39 @@ source distribution.
 
 #pragma once
 
-struct CommandID final
-{
-    enum
-    {
-        Ball            = 0x1,
-        StrokeIndicator = 0x2
-    };
+#include "InputBinding.hpp"
 
-    struct UI final
+#include <crogine/core/App.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+
+namespace golf
+{
+    class InputParser final
     {
-        enum
-        {
-            FlagSprite = 0x1,
-            PlayerName = 0x2,
-            UIElement  = 0x4, //has its position updated on UI layout
-            Root       = 0x8
-        };
+    public:
+        explicit InputParser(InputBinding);
+
+        void handleEvent(const cro::Event&);
+        void setHoleDirection(glm::vec3);
+        float getYaw() const;
+
+        void setActive(bool);
+
+
+        void update(float);
+
+    private:
+        InputBinding m_inputBinding;
+
+        std::uint16_t m_inputFlags;
+        std::uint16_t m_prevStick;
+        float m_analogueAmount;
+
+        float m_holeDirection; //radians
+        float m_rotation; //+- max rads
+        bool m_active;
+
+        void rotate(float);
+        void checkControllerInput();
     };
-};
+}

@@ -29,22 +29,56 @@ source distribution.
 
 #pragma once
 
-struct CommandID final
+#include <SDL_events.h>
+
+#include <array>
+#include <cstdint>
+
+namespace InputFlag
 {
     enum
     {
-        Ball            = 0x1,
-        StrokeIndicator = 0x2
+        Up         = 0x1,
+        Down       = 0x2,
+        Left       = 0x4,
+        Right      = 0x8,
+        Action     = 0x10,
+        NextClub   = 0x20,
+        PrevClub   = 0x40,
+        Unused0    = 0x80,
+        Unused1    = 0x100
+    };
+}
+
+struct InputBinding final
+{
+    //buttons come before actions as this indexes into the controller
+    //button array as well as the key array
+    enum
+    {
+        Action, NextClub, PrevClub, Unused0, Unused1, Left, Right, Up, Down, Count
     };
 
-    struct UI final
+    std::array<std::int32_t, Count> keys =
     {
-        enum
-        {
-            FlagSprite = 0x1,
-            PlayerName = 0x2,
-            UIElement  = 0x4, //has its position updated on UI layout
-            Root       = 0x8
-        };
+        SDLK_SPACE,
+        SDLK_q,
+        SDLK_e,
+        SDLK_LCTRL,
+        SDLK_LSHIFT,
+        SDLK_a,
+        SDLK_d,
+        SDLK_w,
+        SDLK_s
     };
+
+    std::array<std::int32_t, 5u> buttons =
+    {
+        SDL_CONTROLLER_BUTTON_A,
+        SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
+        SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+        SDL_CONTROLLER_BUTTON_X,
+        SDL_CONTROLLER_BUTTON_B
+    };
+    std::int32_t controllerID = 0;
 };

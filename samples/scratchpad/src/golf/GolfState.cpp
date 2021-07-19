@@ -68,10 +68,10 @@ source distribution.
 
 namespace
 {
-    glm::vec3 debugPos;
+    glm::vec3 debugPos = glm::vec3(0.f);
     std::int32_t debugMaterial = -1;
-    cro::Entity pointerEnt;
-    glm::vec3 pointerEuler = glm::vec3(0.f);
+    //cro::Entity pointerEnt;
+    //glm::vec3 pointerEuler = glm::vec3(0.f);
     glm::vec3 ballpos = glm::vec3(0.f);
 
     glm::vec2 calcVPSize()
@@ -91,6 +91,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData    (sd),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
+    m_inputParser   (sd.inputBinding),
     m_wantsGameState(true),
     m_currentHole   (0)
 {
@@ -101,19 +102,22 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
 #ifdef CRO_DEBUG_
-    registerWindow([]() 
+    registerWindow([&]() 
         {
             if (ImGui::Begin("buns"))
             {
                 ImGui::Text("ball pos: %3.3f, %3.3f, %3.3f", ballpos.x, ballpos.y, ballpos.z);
 
-                if (ImGui::SliderFloat3("Pointer", &pointerEuler[0], 0.f, cro::Util::Const::PI))
-                {
-                    //auto rotation = glm::rotate(glm::mat4(1.f), pointerEuler.x, cro::Transform::X_AXIS);
-                    //rotation = glm::rotate(rotation, pointerEuler.x, cro::Util::Matrix::getRightVector(rotation));
-                    pointerEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, pointerEuler.y);
-                    pointerEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, pointerEuler.x);
-                }
+                //if (ImGui::SliderFloat3("Pointer", &pointerEuler[0], 0.f, cro::Util::Const::PI))
+                //{
+                //    //auto rotation = glm::rotate(glm::mat4(1.f), pointerEuler.x, cro::Transform::X_AXIS);
+                //    //rotation = glm::rotate(rotation, pointerEuler.x, cro::Util::Matrix::getRightVector(rotation));
+                //    pointerEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, pointerEuler.y);
+                //    pointerEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, pointerEuler.x);
+                //}
+
+                auto rot = m_inputParser.getYaw();
+                ImGui::Text("Rotation %3.2f", rot);
             }
             ImGui::End();
         });
@@ -151,6 +155,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
     }
 
+    m_inputParser.handleEvent(evt);
+
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
 
@@ -165,26 +171,26 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
-    glm::vec3 move(0.f);
-    const float speed = 20.f * dt;
-    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_W))
-    {
-        move.z -= speed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_S))
-    {
-        move.z += speed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_A))
-    {
-        move.x -= speed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_D))
-    {
-        move.x += speed;
-    }
-    debugPos += move;
-    setCameraPosition(debugPos);
+    //glm::vec3 move(0.f);
+    //const float speed = 20.f * dt;
+    //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_W))
+    //{
+    //    move.z -= speed;
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_S))
+    //{
+    //    move.z += speed;
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_A))
+    //{
+    //    move.x -= speed;
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_D))
+    //{
+    //    move.x += speed;
+    //}
+    //debugPos += move;
+    //setCameraPosition(debugPos);
 
 
     if (m_sharedData.clientConnection.connected)
@@ -212,7 +218,7 @@ bool GolfState::simulate(float dt)
         requestStackPush(States::Golf::Error);
     }
 
-
+    m_inputParser.update(dt);
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -471,12 +477,60 @@ void GolfState::buildScene()
         return;
     }
 
-    cro::ModelDefinition m(m_resources);
-    m.loadFromFile("assets/golf/models/water_plane.cmt");
+    cro::ModelDefinition md(m_resources);
+    md.loadFromFile("assets/golf/models/water_plane.cmt");
 
-    cro::Entity ent = m_gameScene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 150.f, -0.1f, -100.f });
-    m.createModel(ent);
+    cro::Entity entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 150.f, -0.1f, -100.f });
+    md.createModel(entity);
+
+
+
+
+    //displays the stroke direction
+    auto pos = m_holeData[0].tee;
+    pos.y += 0.01f;
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(pos);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
+    };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
+
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    auto material = m_resources.materials.get(debugMaterial);
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    auto& meshData = entity.getComponent<cro::Model>().getMeshData();
+
+    std::vector<float> verts =
+    {
+        0.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f,
+        5.f, 0.f, 0.f,    1.f, 1.f, 1.f, 0.2f
+    };
+    std::vector<std::uint32_t> indices =
+    {
+        0,1
+    };
+
+    auto vertStride = (meshData.vertexSize / sizeof(float));
+    meshData.vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto& sub = meshData.indexData[0];
+    sub.indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sub.ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sub.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    entity.getComponent<cro::Model>().setHidden(true);
+
+
+
 
 
     auto updateView = [&](cro::Camera& cam)
@@ -507,39 +561,6 @@ void GolfState::buildScene()
     m_debugCam.addComponent<cro::Transform>().setPosition({ 20.f, -10.f, 100.f });
     auto& dCam = m_debugCam.addComponent<cro::Camera>();
     dCam.setOrthographic(0.f, 250.f, 0.f, 31.25f, -0.1f, 200.f);
-
-    //displays the potential ball arc
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
-
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
-    auto material = m_resources.materials.get(debugMaterial);
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    auto& md = entity.getComponent<cro::Model>().getMeshData();
-
-    std::vector<float> verts =
-    {
-        0.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f,
-        1.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f
-    };
-    std::vector<std::uint32_t> indices =
-    {
-        0,1
-    };
-
-    auto vertStride = (md.vertexSize / sizeof(float));
-    md.vertexCount = verts.size() / vertStride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, md.vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, md.vertexSize * md.vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-    auto& sub = md.indexData[0];
-    sub.indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sub.ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sub.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-    pointerEnt = entity;
 #endif
 }
 
@@ -570,7 +591,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Player01];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width * 0.75f, 0.f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width * 0.78f, 0.f));
     courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //flag sprite. TODO make this less crap
@@ -845,25 +866,36 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
 
     //show ui if this is our client
-    auto uiPos = (player.client == m_sharedData.clientConnection.connectionID) ? glm::vec2(0.f) : UIHiddenPosition;
+    auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
     
     cmd.targetFlags = CommandID::UI::Root;
-    cmd.action = [uiPos](cro::Entity e, float)
+    cmd.action = [localPlayer](cro::Entity e, float)
     {
+        auto uiPos = localPlayer ? glm::vec2(0.f) : UIHiddenPosition;
         e.getComponent<cro::Transform>().setPosition(uiPos);
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
-    //TODO if client is ours activate input
+
+    //stroke indicator is in model scene...
+    cmd.targetFlags = CommandID::StrokeIndicator;
+    cmd.action = [localPlayer](cro::Entity e, float)
+    {
+        e.getComponent<cro::Model>().setHidden(!localPlayer);
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    //if client is ours activate input/set initial stroke direction
+    m_inputParser.setActive(localPlayer);
+    m_inputParser.setHoleDirection(m_holeData[m_currentHole].pin - player.position);
 }
 
 void GolfState::hitBall()
 {
-    //TODO adjust pitch on player input
+    //TODO adjust pitch on player input?
     auto pitch = cro::Util::Const::PI / 4.f;
 
-    auto direction = glm::normalize(m_holeData[m_currentHole].pin - m_currentPlayer.position);
-    auto yaw = std::atan2(-direction.z, direction.x);
+    auto yaw = m_inputParser.getYaw();
 
     //TODO add hook/slice to yaw
 
@@ -872,7 +904,7 @@ void GolfState::hitBall()
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     impulse = glm::toMat3(rotation) * impulse;
 
-    impulse *= 20.f; //TODO get this magnitude from input
+    impulse *= 20.f; //TODO get this magnitude from input/current club
 
     InputUpdate update;
     update.clientID = m_sharedData.localPlayer.connectionID;

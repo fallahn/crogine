@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include "InputBinding.hpp"
 #include "server/Server.hpp"
 
 #include <crogine/network/NetClient.hpp>
@@ -58,6 +59,8 @@ struct ConnectionData final
 struct SharedStateData final
 {
     Server serverInstance;
+
+    InputBinding inputBinding;
 
     struct ClientConnection final
     {

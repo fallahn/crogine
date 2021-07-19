@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "HoleData.hpp"
+#include "GolfInputParser.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -66,6 +67,8 @@ private:
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
+
+    golf::InputParser m_inputParser;
 
     bool m_wantsGameState;
     cro::Clock m_readyClock; //pings ready state until ack'd
