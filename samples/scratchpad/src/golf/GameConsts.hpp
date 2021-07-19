@@ -42,3 +42,15 @@ static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 //of the window
 static constexpr float ViewportHeight = 225.f;
 static constexpr float BallPointSize = 1.5f;
+
+
+//ui components are layed out as a normalised value
+//relative to the window size.
+struct UIElement final
+{
+    glm::vec2 position = glm::vec2(0.f);
+};
+static constexpr glm::vec2 PlayerNamePosition(0.1f, 0.1f);
+static constexpr glm::vec2 PowerbarPosition(0.5f, 0.1f);
+static constexpr glm::vec2 WindPosition(0.11f, 0.9f);
+static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);

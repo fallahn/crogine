@@ -22,8 +22,13 @@ spritesheet ui
         bounds = 40, 48 ,8,8
     }
 
-    sprite player
+    sprite power_bar
     {
         bounds = 48,0,32,80
+    }
+
+    sprite wind_dir
+    {
+        bounds = 80,48,32,32
     }
 }

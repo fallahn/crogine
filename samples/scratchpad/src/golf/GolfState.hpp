@@ -85,6 +85,8 @@ private:
             Flag02,
             Flag03,
             Flag04,
+            PowerBar,
+            WindIndicator,
             Player01,
             Player02,
 
@@ -92,6 +94,16 @@ private:
         };
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
+
+    struct FontID final
+    {
+        enum
+        {
+            UI,
+
+            Count
+        };
+    };
 
     struct BallResource final
     {

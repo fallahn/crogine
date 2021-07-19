@@ -251,11 +251,15 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::Flag02] = spriteSheet.getSprite("flag02");
     m_sprites[SpriteID::Flag03] = spriteSheet.getSprite("flag03");
     m_sprites[SpriteID::Flag04] = spriteSheet.getSprite("flag04");
+    m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar");
+    m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
 
     spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
     m_sprites[SpriteID::Player01] = spriteSheet.getSprite("female");
     m_sprites[SpriteID::Player02] = spriteSheet.getSprite("male");
 
+
+    m_resources.fonts.load(FontID::UI, "assets/fonts/VeraMono.ttf");
 
     //ball resources - ball is rendered as a single point
     glCheck(glPointSize(BallPointSize));
@@ -546,6 +550,7 @@ void GolfState::buildUI()
         return;
     }
 
+    //draws the background using the render texture
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
@@ -559,6 +564,7 @@ void GolfState::buildUI()
     camera.updateMatrices(m_gameScene.getActiveCamera().getComponent<cro::Transform>());
     auto pos = camera.coordsToPixel(m_holeData[0].tee, m_renderTexture.getSize());
     
+    //player sprite - TODO apply avatar customisation
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Drawable2D>();
@@ -567,15 +573,59 @@ void GolfState::buildUI()
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width * 0.75f, 0.f));
     courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //flag sprite. TODO make this less crap
     //this is updated by a command sent when the 3D camera is positioned
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Flag01];
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::FlagSprite;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::FlagSprite;
     courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto updateView = [courseEnt](cro::Camera& cam) mutable
+    //root used to show/hide input UI
+    auto rootNode = m_uiScene.createEntity();
+    rootNode.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
+    rootNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::Root;
+
+    auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(PowerbarPosition * windowSize);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBar];
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().position = PowerbarPosition;
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    entity.getComponent<cro::Transform>().rotate(cro::Util::Const::PI / 2.f);
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(WindPosition * windowSize);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().position = WindPosition;
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //TODO wind callback to rotate with wind direction
+
+
+
+    auto& font = m_resources.fonts.get(FontID::UI);
+
+    //player's name
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(PlayerNamePosition * windowSize);
+    entity.addComponent<UIElement>().position = PlayerNamePosition;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerName | CommandID::UI::UIElement;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+
+
+
+    auto updateView = [&, courseEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(cro::App::getWindow().getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 1.f);
@@ -583,12 +633,22 @@ void GolfState::buildUI()
 
         auto vpSize = calcVPSize();
 
-        //TODO call some sort of layout update
         float viewScale = std::floor(size.x / vpSize.x);
         courseEnt.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
-        courseEnt.getComponent<cro::Transform>().setPosition(size / 2.f);
+        courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
         courseEnt.getComponent<cro::Transform>().setOrigin(vpSize / 2.f);
         courseEnt.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, vpSize.x, vpSize.y });
+
+        //send command to UIElements and reposition (and potentially rescale)
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::UIElement;
+        cmd.action = [size, viewScale](cro::Entity e, float)
+        {
+            auto pos = size * e.getComponent<UIElement>().position;
+            e.getComponent<cro::Transform>().setPosition(pos);
+            e.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
+        };
+        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     };
 
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
@@ -756,7 +816,7 @@ void GolfState::setCameraPosition(glm::vec3 position)
     }
 
     cro::Command cmd;
-    cmd.targetFlags = CommandID::FlagSprite;
+    cmd.targetFlags = CommandID::UI::FlagSprite;
     cmd.action = [&, flag](cro::Entity e, float)
     {
         e.getComponent<cro::Sprite>() = m_sprites[flag];
@@ -770,10 +830,31 @@ void GolfState::setCameraPosition(glm::vec3 position)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    //LogI << "player set to " << (int)player.client << ", " << (int)player.player << ", at: " << player.position << std::endl;
+    
     m_currentPlayer = player;
 
-    //TODO update UI to show player details
-    LogI << "player set to " << (int)player.client << ", " << (int)player.player << ", at: " << player.position << std::endl;
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::PlayerName;
+    cmd.action =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+
+    //show ui if this is our client
+    auto uiPos = (player.client == m_sharedData.clientConnection.connectionID) ? glm::vec2(0.f) : UIHiddenPosition;
+    
+    cmd.targetFlags = CommandID::UI::Root;
+    cmd.action = [uiPos](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setPosition(uiPos);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    //TODO if client is ours activate input
 }
 
 void GolfState::hitBall()
