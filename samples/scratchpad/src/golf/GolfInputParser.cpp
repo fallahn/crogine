@@ -30,6 +30,7 @@ source distribution.
 #include "GolfInputParser.hpp"
 #include "InputBinding.hpp"
 #include "MessageIDs.hpp"
+#include "Clubs.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
@@ -56,7 +57,8 @@ namespace golf
         m_hook              (0.f),
         m_powerbarDirection (1.f),
         m_active            (true),
-        m_state             (State::Aim)
+        m_state             (State::Aim),
+        m_currentClub       (ClubID::Driver)
     {
 
     }
@@ -225,6 +227,11 @@ namespace golf
         return m_hook * 2.f - 1.f;
     }
 
+    std::int32_t InputParser::getClub() const
+    {
+        return m_currentClub;
+    }
+
     void InputParser::setActive(bool active)
     {
         m_active = active;
@@ -260,6 +267,18 @@ namespace golf
                 if (m_inputFlags & InputFlag::Action)
                 {
                     m_state = State::Power;
+                }
+
+                if ((m_prevFlags & InputFlag::PrevClub) == 0
+                    && (m_inputFlags & InputFlag::PrevClub))
+                {
+                    m_currentClub = (m_currentClub + ClubID::NineIron) % ClubID::PitchWedge;
+                }
+
+                if ((m_prevFlags & InputFlag::NextClub) == 0
+                    && (m_inputFlags & InputFlag::NextClub))
+                {
+                    m_currentClub = (m_currentClub + 1) % ClubID::PitchWedge;
                 }
             }
             break;

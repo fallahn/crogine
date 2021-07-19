@@ -278,5 +278,8 @@
     <ClInclude Include="src\golf\MessageIDs.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\Clubs.hpp">
+      <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -29,56 +29,37 @@ source distribution.
 
 #pragma once
 
-#include <SDL_events.h>
+#include <crogine/util/Constants.hpp>
 
+#include <string>
 #include <array>
-#include <cstdint>
 
-namespace InputFlag
+struct Club final
+{
+    std::string name;
+    float distance = 0.f;
+    float angle = 0.f;
+
+    Club(const std::string& n, float d, float a)
+        : name(n), distance(d), angle(a * cro::Util::Const::degToRad) {}
+};
+
+struct ClubID final
 {
     enum
     {
-        Up         = 0x1,
-        Down       = 0x2,
-        Left       = 0x4,
-        Right      = 0x8,
-        Action     = 0x10,
-        NextClub   = 0x20,
-        PrevClub   = 0x40,
-        Unused0    = 0x80,
-        Unused1    = 0x100
+        Driver, ThreeWood,
+        FiveIron, NineIron,
+        PitchWedge, Putter
     };
-}
+};
 
-struct InputBinding final
+static const std::array Clubs =
 {
-    //buttons come before actions as this indexes into the controller
-    //button array as well as the key array
-    enum
-    {
-        Action, NextClub, PrevClub, Unused0, Unused1, Left, Right, Up, Down, Count
-    };
-
-    std::array<std::int32_t, Count> keys =
-    {
-        SDLK_SPACE,
-        SDLK_e,
-        SDLK_q,
-        SDLK_LCTRL,
-        SDLK_LSHIFT,
-        SDLK_a,
-        SDLK_d,
-        SDLK_w,
-        SDLK_s
-    };
-
-    std::array<std::int32_t, 5u> buttons =
-    {
-        SDL_CONTROLLER_BUTTON_A,
-        SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
-        SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
-        SDL_CONTROLLER_BUTTON_X,
-        SDL_CONTROLLER_BUTTON_B
-    };
-    std::int32_t controllerID = 0;
+    Club("Driver", 220.f, 45.f),
+    Club("3 Wood", 180.f, 45.f),
+    Club("5 Iron", 140.f, 40.f),
+    Club("9 Iron", 100.f, 40.f),
+    Club("Pitch Wedge", 80.f, 60.f),
+    Club("Putter", 40.f, 4.f)
 };

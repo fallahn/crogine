@@ -35,6 +35,7 @@ source distribution.
 #include "InterpolationSystem.hpp"
 #include "ClientPacketData.hpp"
 #include "MessageIDs.hpp"
+#include "Clubs.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -115,6 +116,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 auto hook = m_inputParser.getHook();
                 ImGui::Text("Hook: %3.3f", hook);
+
+                auto club = Clubs[m_inputParser.getClub()];
+                ImGui::Text("Club: %s", club);
             }
             ImGui::End();
         });

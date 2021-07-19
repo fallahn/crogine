@@ -53,6 +53,8 @@ namespace golf
         float getPower() const; //0-1 multiplied by selected club
         float getHook() const; //-1 to -1 * some angle, probably club defined
 
+        std::int32_t getClub() const;
+
         void setActive(bool);
         void update(float);
 
@@ -78,6 +80,8 @@ namespace golf
         {
             Aim, Power, Stroke
         }m_state;
+
+        std::int32_t m_currentClub;
 
         void rotate(float);
         void checkControllerInput();
