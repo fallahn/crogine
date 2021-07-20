@@ -32,14 +32,38 @@ source distribution.
 #include "server/ServerMessages.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/util/Random.hpp>
+#include <crogine/util/Easings.hpp>
 
 namespace
 {
     constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
+
+    glm::vec3 interpolate(glm::vec3 a, glm::vec3 b, float t)
+    {
+        auto diff = b - a;
+        return a + (diff * cro::Util::Easing::easeOutElastic(t));
+    }
+
+    float interpolate(float a, float b, float t)
+    {
+        auto diff = b - a;
+        return a + (diff * t);
+    }
 }
 
 BallSystem::BallSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(BallSystem))
+    : cro::System           (mb, typeid(BallSystem)),
+    m_windDirTime           (cro::seconds(0.f)),
+    m_windStrengthTime      (cro::seconds(1.f)),
+    m_windInterpTime        (1.f),
+    m_currentWindInterpTime (0.f),
+    m_windDirection         (-1.f, 0.f, 0.f),
+    m_windDirSrc            (m_windDirection),
+    m_windDirTarget         (1.f, 0.f, 0.f),
+    m_windStrength          (0.f),
+    m_windStrengthSrc       (m_windStrength),
+    m_windStrengthTarget    (3.f)
 {
     requireComponent<cro::Transform>();
     requireComponent<Ball>();
@@ -48,11 +72,55 @@ BallSystem::BallSystem(cro::MessageBus& mb)
 //public
 void BallSystem::process(float dt)
 {
+    auto resetInterp =
+        [&]()
+    {
+        m_windDirSrc = m_windDirection;
+        m_windStrengthSrc = m_windStrength;
+
+        m_currentWindInterpTime = 0.f;
+        m_windInterpTime = static_cast<float>(cro::Util::Random::value(50, 75)) / 10.f;
+    };
+
+    //update wind direction
+    if (m_windDirClock.elapsed() > m_windDirTime)
+    {
+        m_windDirClock.restart();
+        m_windDirTime = cro::seconds(static_cast<float>(cro::Util::Random::value(100, 220)) / 10.f);
+
+        //create new direction
+        m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
+        m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
+
+        m_windDirTarget = glm::normalize(m_windDirTarget);
+
+        resetInterp();
+    }
+    
+
+    //update wind strength
+    if (m_windStrengthClock.elapsed() > m_windStrengthTime)
+    {
+        m_windStrengthClock.restart();
+        m_windStrengthTime = cro::seconds(static_cast<float>(cro::Util::Random::value(80, 180)) / 10.f);
+
+        m_windStrengthTarget = static_cast<float>(cro::Util::Random::value(1, 40)) / 10.f;
+
+        resetInterp();
+    }
+
+    //interpolate current strength/direction
+    //TODO - only do this when balls are idle?
+    m_currentWindInterpTime = std::min(m_windInterpTime, m_currentWindInterpTime + dt);
+    float interp = m_currentWindInterpTime / m_windInterpTime;
+    m_windDirection = interpolate(m_windDirSrc, m_windDirTarget, interp);
+    m_windStrength = interpolate(m_windStrengthSrc, m_windStrengthTarget, interp);
+
     auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& ball = entity.getComponent<Ball>();
-        switch(ball.state)
+        switch (ball.state)
         {
         default: break;
         case Ball::State::Flight:
@@ -64,6 +132,7 @@ void BallSystem::process(float dt)
                 ball.velocity += Gravity * dt;
 
                 //add wind
+                ball.velocity += m_windDirection * m_windStrength * dt;
 
                 //add air friction?
 
@@ -104,6 +173,13 @@ void BallSystem::process(float dt)
             break;
         }
     }
+}
+
+glm::vec3 BallSystem::getWindDirection() const
+{
+    //the Y value is unused so we pack the strength in here
+    //(it's only for vis on the client anyhoo)
+    return { m_windDirection.x, m_windStrength, m_windDirection.z };
 }
 
 //private

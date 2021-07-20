@@ -132,6 +132,9 @@ private:
     void setCurrentPlayer(const ActivePlayer&);
     void hitBall();
 
+    void createTransition(const ActivePlayer&);
+    void updateWindDisplay(glm::vec3);
+
 #ifdef CRO_DEBUG_
     cro::Entity m_debugCam;
     cro::RenderTexture m_debugTexture;

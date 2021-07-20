@@ -43,7 +43,7 @@ static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 static constexpr float ViewportHeight = 225.f;
 static constexpr float BallPointSize = 1.5f;
 
-static constexpr float MaxHook = 0.1f;
+static constexpr float MaxHook = -0.25f;
 
 
 //ui components are layed out as a normalised value

@@ -56,6 +56,7 @@ namespace PacketID
         ActorAnimation, //< Tell player sprite to play the given anim with uint8 ID
         ActorUpdate, //< ActorInfo - ball interpolation
         ActorSpawn, //< ActorInfo
+        WindDirection, //< compressed vec3
 
         //EntityRemoved, //< uint32 entity ID
 

@@ -31,6 +31,8 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 
+#include <crogine/core/Clock.hpp>
+
 struct Ball final
 {
     static constexpr float Radius = 0.0043f;
@@ -50,6 +52,26 @@ public:
 
     void process(float) override;
 
+    glm::vec3 getWindDirection() const;
+
 private:
+
+    cro::Clock m_windDirClock;
+    cro::Clock m_windStrengthClock;
+
+    cro::Time m_windDirTime;
+    cro::Time m_windStrengthTime;
+
+    glm::vec3 m_windDirection;
+    glm::vec3 m_windDirSrc;
+    glm::vec3 m_windDirTarget;
+
+    float m_windStrength;
+    float m_windStrengthSrc;
+    float m_windStrengthTarget;
+
+    float m_windInterpTime;
+    float m_currentWindInterpTime;
+
     void doCollision(cro::Entity);
 };

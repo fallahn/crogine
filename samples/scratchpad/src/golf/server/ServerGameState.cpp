@@ -159,6 +159,9 @@ void GameState::netBroadcast()
             m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Unreliable);
         }
     }
+
+    auto wind = cro::Util::Net::compressVec3(m_scene.getSystem<BallSystem>().getWindDirection());
+    m_sharedData.host.broadcastPacket(PacketID::WindDirection, wind, cro::NetFlag::Unreliable);
 }
 
 std::int32_t GameState::process(float dt)

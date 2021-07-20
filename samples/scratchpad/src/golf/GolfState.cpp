@@ -66,6 +66,7 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Matrix.hpp>
+#include <crogine/util/Network.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include "../ErrorCheck.hpp"
@@ -683,7 +684,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>().setPosition(WindPosition * windowSize);
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::WindSock;
     entity.addComponent<UIElement>().position = WindPosition;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
@@ -805,8 +806,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             m_wantsGameState = false;
             {
                 auto playerData = evt.packet.as<ActivePlayer>();
-                setCameraPosition(playerData.position);
-                setCurrentPlayer(playerData);
+                createTransition(playerData);
             }
             break;
         case PacketID::ActorSpawn:
@@ -844,6 +844,9 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             };
             m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
         }
+            break;
+        case PacketID::WindDirection:
+            updateWindDisplay(cro::Util::Net::decompressVec3(evt.packet.as<std::array<std::int16_t, 3u>>()));
             break;
         }
         break;
@@ -969,6 +972,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_inputParser.setHoleDirection(m_holeData[m_currentHole].pin - player.position);
 
     //TODO apply the correct sprite to the player entity
+    cmd.targetFlags = CommandID::UI::PlayerSprite;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
 void GolfState::hitBall()
@@ -995,4 +1004,73 @@ void GolfState::hitBall()
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_inputParser.setActive(false);
+}
+
+void GolfState::createTransition(const ActivePlayer& playerData)
+{
+    //hide player sprite
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::PlayerSprite;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    //hide hud
+    cmd.targetFlags = CommandID::UI::Root;
+    cmd.action = [](cro::Entity e, float) 
+    {
+        e.getComponent<cro::Transform>().setPosition(UIHiddenPosition);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+
+    //creates an entity which calls set campos in an
+    //interpolated manner until we reach the dest,
+    //at which point we update the active player and
+    //the ent destroys itself
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(m_currentPlayer.position);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<ActivePlayer>(playerData);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        const auto& playerData = e.getComponent<cro::Callback>().getUserData<ActivePlayer>();
+
+        auto currPos = e.getComponent<cro::Transform>().getPosition();
+        auto travel = playerData.position - currPos;
+
+        if (glm::length2(travel) < 0.01f)
+        {
+            //we're there
+            setCurrentPlayer(playerData);
+            setCameraPosition(playerData.position);
+
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+        else
+        {
+            static constexpr float Speed = 4.f;
+            e.getComponent<cro::Transform>().move(travel * Speed * dt);
+            setCameraPosition(e.getComponent<cro::Transform>().getPosition());
+        }
+    };
+}
+
+void GolfState::updateWindDisplay(glm::vec3 direction)
+{
+    //TODO nicely interpolate this (requires timestamps)
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::WindSock;
+    cmd.action = [direction](cro::Entity e, float)
+    {
+        float rotation = std::atan2(-direction.z, direction.x);
+        e.getComponent<cro::Transform>().setRotation(rotation);
+
+        //TODO strength is store in y component
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
