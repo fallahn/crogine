@@ -89,6 +89,8 @@ private:
             Flag03,
             Flag04,
             PowerBar,
+            PowerBarInner,
+            HookBar,
             WindIndicator,
             Player01,
             Player02,

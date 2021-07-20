@@ -29,7 +29,7 @@ spritesheet ui
 
     sprite power_bar_inner
     {
-        bounds = 32,16,80,16
+        bounds = 37,16,70,16
     }
 
     sprite hook_bar

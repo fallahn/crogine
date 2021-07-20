@@ -40,6 +40,9 @@ namespace
     constexpr float RotationSpeed = 3.f;
     constexpr float MaxRotation = 0.25f;
     constexpr std::int16_t DeadZone = 8000;
+
+    constexpr float MinPower = 0.01f;
+    constexpr float MaxPower = 1.f - MinPower;
 }
 
 namespace golf
@@ -54,7 +57,7 @@ namespace golf
         m_holeDirection     (0.f),
         m_rotation          (0.f),
         m_power             (0.f),
-        m_hook              (0.f),
+        m_hook              (0.5f),
         m_powerbarDirection (1.f),
         m_active            (true),
         m_state             (State::Aim),
@@ -219,7 +222,7 @@ namespace golf
 
     float InputParser::getPower() const
     {
-        return m_power;
+        return MinPower + (MaxPower * m_power);
     }
 
     float InputParser::getHook() const
@@ -236,9 +239,12 @@ namespace golf
     {
         m_active = active;
         m_state = State::Aim;
-        m_power = 0.f;
-        m_hook = 0.f;
-        m_powerbarDirection = 1.f;
+        if (active)
+        {
+            m_power = 0.f;
+            m_hook = 0.5f;
+            m_powerbarDirection = 1.f;
+        }
     }
 
     void InputParser::update(float dt)

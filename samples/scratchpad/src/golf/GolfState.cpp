@@ -273,6 +273,8 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::Flag03] = spriteSheet.getSprite("flag03");
     m_sprites[SpriteID::Flag04] = spriteSheet.getSprite("flag04");
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar");
+    m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner");
+    m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
 
     spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
@@ -478,6 +480,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
@@ -599,7 +602,7 @@ void GolfState::buildUI()
     auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     camera.updateMatrices(m_gameScene.getActiveCamera().getComponent<cro::Transform>());
     auto pos = camera.coordsToPixel(m_holeData[0].tee, m_renderTexture.getSize());
-    
+
     //player sprite - TODO apply avatar customisation
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
@@ -633,6 +636,40 @@ void GolfState::buildUI()
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //power bar
+    auto barEnt = entity;
+    auto barCentre = bounds.width / 2.f;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(5.f, 0.f)); //TODO expel the magic number!!
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBarInner];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float)
+    {
+        auto crop = bounds;
+        crop.width *= m_inputParser.getPower();
+        e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+    };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //hook/slice indicator
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(barCentre, 8.f, 0.1f)); //TODO expel the magic number!!
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, barCentre](cro::Entity e, float)
+    {
+        glm::vec3 pos(barCentre + (barCentre * m_inputParser.getHook()), 8.f, 0.1f);
+        e.getComponent<cro::Transform>().setPosition(pos);
+    };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     entity = m_uiScene.createEntity();
