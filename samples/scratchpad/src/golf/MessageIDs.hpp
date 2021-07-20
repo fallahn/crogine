@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/core/Message.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 //be careful here as these messages overlap with the scratchpad messages
 //we're banking on the project not running golf at the same time as another

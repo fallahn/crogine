@@ -28,6 +28,8 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BallSystem.hpp"
+#include "Terrain.hpp"
+#include "server/ServerMessages.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 
@@ -50,29 +52,56 @@ void BallSystem::process(float dt)
     for (auto entity : entities)
     {
         auto& ball = entity.getComponent<Ball>();
-        if (ball.state == Ball::State::Flight)
+        switch(ball.state)
         {
-            //add gravity
-            ball.velocity += Gravity * dt;
-
-            //add wind
-
-            //add air friction?
-
-            //move by velocity
-            auto& tx = entity.getComponent<cro::Transform>();
-            tx.move(ball.velocity * dt);
-
-            //test collision
-            if (auto y = entity.getComponent<cro::Transform>().getPosition().y; y < 0)
+        default: break;
+        case Ball::State::Flight:
+        {
+            ball.delay -= dt;
+            if (ball.delay < 0)
             {
-                //ball.state = Ball::State::Idle;
-                tx.move({ 0.f, -y, 0.f });
-                ball.velocity = glm::reflect(ball.velocity, glm::vec3(0.f, 1.f, 0.f));
-                ball.velocity *= 0.5f;
-            }
+                //add gravity
+                ball.velocity += Gravity * dt;
 
+                //add wind
+
+                //add air friction?
+
+                //move by velocity
+                auto& tx = entity.getComponent<cro::Transform>();
+                tx.move(ball.velocity * dt);
+
+                //test collision
+                if (auto y = entity.getComponent<cro::Transform>().getPosition().y; y < 0)
+                {
+                    //ball.state = Ball::State::Idle;
+                    tx.move({ 0.f, -y, 0.f });
+                    /*ball.velocity = glm::reflect(ball.velocity, glm::vec3(0.f, 1.f, 0.f));
+                    ball.velocity *= 0.5f;*/
+                    ball.state = Ball::State::Paused;
+                    ball.delay = 2.f;
+                }
+            }
+        }
+        break;
+        case Ball::State::Putt:
             //if current surface is green, test distance to pin
+            break;
+        case Ball::State::Paused:
+        {
+            ball.delay -= dt;
+            if (ball.delay < 0)
+            {
+                //send message to report status
+                auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
+                msg->type = BallEvent::Landed;
+                msg->terrain = TerrainID::Fairway;
+                msg->position = entity.getComponent<cro::Transform>().getPosition();
+
+                ball.state = Ball::State::Idle;
+            }
+        }
+            break;
         }
     }
 }

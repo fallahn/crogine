@@ -64,6 +64,16 @@ namespace sv
         std::uint8_t m_currentHole;
         std::vector<PlayerStatus> m_playerInfo; //active players. Sorted by distance so the front position is active player
 
+        struct AnimID final
+        {
+            enum
+            {
+                Idle, Swing,
+                Count
+            };
+        };
+        std::array<std::uint8_t, AnimID::Count> m_animIDs = {};
+
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);
 

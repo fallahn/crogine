@@ -41,10 +41,11 @@ struct CommandID final
     {
         enum
         {
-            FlagSprite = 0x1,
-            PlayerName = 0x2,
-            UIElement  = 0x4, //has its position updated on UI layout
-            Root       = 0x8
+            FlagSprite   = 0x1,
+            PlayerName   = 0x2,
+            UIElement    = 0x4, //has its position updated on UI layout
+            Root         = 0x8,
+            PlayerSprite = 0x10
         };
     };
 };

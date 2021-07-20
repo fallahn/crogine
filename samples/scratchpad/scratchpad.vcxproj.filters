@@ -281,5 +281,8 @@
     <ClInclude Include="src\golf\Clubs.hpp">
       <Filter>Header Files\golf\shared</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\Terrain.hpp">
+      <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

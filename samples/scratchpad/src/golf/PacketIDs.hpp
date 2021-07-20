@@ -53,8 +53,7 @@ namespace PacketID
         LobbyUpdate, //< ConnectionData array
         SetPlayer, //< ActivePlayer struct
 
-        //PlayerSpawn, //< uint8 ID (0-3) xyz world pos (PlayerInfo struct)
-        //PlayerUpdate, //< world pos, rotation, uint32 timestamp - used for reconciliation, send directly to targeted peer
+        ActorAnimation, //< Tell player sprite to play the given anim with uint8 ID
         ActorUpdate, //< ActorInfo - ball interpolation
         ActorSpawn, //< ActorInfo
 

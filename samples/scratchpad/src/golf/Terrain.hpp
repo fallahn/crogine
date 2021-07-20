@@ -29,27 +29,12 @@ source distribution.
 
 #pragma once
 
-#include <crogine/ecs/System.hpp>
-
-struct Ball final
+struct TerrainID final
 {
-    static constexpr float Radius = 0.0043f;
-    enum class State
+    enum
     {
-        Idle, Flight, Putt, Paused
-    }state = State::Idle;
-
-    glm::vec3 velocity = glm::vec3(0.f);
-    float delay = 0.f;
-};
-
-class BallSystem final : public cro::System
-{
-public:
-    explicit BallSystem(cro::MessageBus&);
-
-    void process(float) override;
-
-private:
-    void doCollision(cro::Entity);
+        Rough, Fairway,
+        Green, Bunker,
+        Water
+    };
 };

@@ -98,6 +98,17 @@ void GameState::handleMessage(const cro::Message& msg)
             }
         }
     }
+    else if (msg.id == sv::MessageID::BallMessage)
+    {
+        const auto& data = msg.getData<BallEvent>();
+        if (data.type == BallEvent::Landed)
+        {
+            m_playerInfo[0].position = data.position;
+            m_playerInfo[0].distanceToHole = glm::length(data.position - m_holeData[m_currentHole].pin);
+            //TODO update player terrain etc
+            setNextPlayer();
+        }
+    }
 
     m_scene.forwardMessage(msg);
 }
@@ -215,6 +226,12 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
     {
         m_playerInfo[0].ballEntity.getComponent<Ball>().velocity = input.impulse;
         m_playerInfo[0].ballEntity.getComponent<Ball>().state = Ball::State::Flight;
+        //this is a kludge to wait for the anim before hitting the ball
+        //Ideally we want to read the frame data from the sprite sheet
+        //as well as account for a frame of interp delay on the client
+        m_playerInfo[0].ballEntity.getComponent<Ball>().delay = 0.32f;
+
+        m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Swing], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }
 
@@ -232,6 +249,7 @@ void GameState::setNextPlayer()
     ActivePlayer player = m_playerInfo[0]; //deliberate slice.
 
     m_sharedData.host.broadcastPacket(PacketID::SetPlayer, player, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Idle], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 bool GameState::validateMap()
@@ -351,6 +369,18 @@ void GameState::initScene()
             }
         }
     }
+
+    //load the anims so we know which ID to
+    //TODO parse the sprite sheet manually as OpenGL 
+    //isn't available in the server thread and the default
+    //loader wants a texture resource
+    /*cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_textures);
+    m_animIDs[AnimID::Idle] = static_cast<std::uint8_t>(spriteSheet.getAnimationIndex("idle", "female"));
+    m_animIDs[AnimID::Swing] = static_cast<std::uint8_t>(spriteSheet.getAnimationIndex("swing", "female"));*/
+    m_animIDs[AnimID::Idle] = 0;
+    m_animIDs[AnimID::Swing] = 1;
+
 
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<BallSystem>(mb);

@@ -35,7 +35,8 @@ namespace sv::MessageID
 {
     enum
     {
-        ConnectionMessage = cro::Message::Count
+        ConnectionMessage = cro::Message::Count,
+        BallMessage
     };
 }
 
@@ -46,4 +47,14 @@ struct ConnectionEvent final
     {
         Connected, Disconnected
     }type = Connected;
+};
+
+struct BallEvent final
+{
+    enum
+    {
+        Landed
+    }type = Landed;
+    std::int32_t terrain = -1;
+    glm::vec3 position = glm::vec3(0.f);
 };

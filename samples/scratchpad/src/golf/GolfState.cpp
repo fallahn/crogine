@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
@@ -52,6 +53,7 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -485,6 +487,7 @@ void GolfState::addSystems()
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
+    m_uiScene.addSystem<cro::SpriteAnimator>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 }
 
@@ -607,10 +610,14 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Player01];
+    entity.addComponent<cro::SpriteAnimation>();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width * 0.78f, 0.f));
     courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto playerEnt = entity;
+    m_currentPlayer.position = m_holeData[0].tee;
 
     //flag sprite. TODO make this less crap
     //this is updated by a command sent when the 3D camera is positioned
@@ -697,7 +704,7 @@ void GolfState::buildUI()
 
 
 
-    auto updateView = [&, courseEnt, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, playerEnt, courseEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(cro::App::getWindow().getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 1.f);
@@ -705,11 +712,17 @@ void GolfState::buildUI()
 
         auto vpSize = calcVPSize();
 
-        float viewScale = std::floor(size.x / vpSize.x);
-        courseEnt.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
+        auto viewScale = glm::vec2(std::floor(size.x / vpSize.x));
+        courseEnt.getComponent<cro::Transform>().setScale(viewScale);
         courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
         courseEnt.getComponent<cro::Transform>().setOrigin(vpSize / 2.f);
         courseEnt.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, vpSize.x, vpSize.y });
+
+        //update avatar position
+        const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+        auto pos = camera.coordsToPixel(m_currentPlayer.position, m_renderTexture.getSize());
+        playerEnt.getComponent<cro::Transform>().setPosition(pos);
+
 
         //send command to UIElements and reposition (and potentially rescale)
         cro::Command cmd;
@@ -718,7 +731,7 @@ void GolfState::buildUI()
         {
             auto pos = size * e.getComponent<UIElement>().position;
             e.getComponent<cro::Transform>().setPosition(pos);
-            e.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
+            e.getComponent<cro::Transform>().setScale(viewScale);
         };
         m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     };
@@ -818,6 +831,18 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                 ballpos = update.position;
             };
             m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        }
+            break;
+        case PacketID::ActorAnimation:
+        {
+            auto animID = evt.packet.as<std::uint8_t>();
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::PlayerSprite;
+            cmd.action = [animID](cro::Entity e, float)
+            {
+                e.getComponent<cro::SpriteAnimation>().play(animID);
+            };
+            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
         }
             break;
         }
@@ -930,8 +955,11 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     //stroke indicator is in model scene...
     cmd.targetFlags = CommandID::StrokeIndicator;
-    cmd.action = [localPlayer](cro::Entity e, float)
+    cmd.action = [localPlayer, player](cro::Entity e, float)
     {
+        auto position = player.position;
+        position.y = 0.01f;
+        e.getComponent<cro::Transform>().setPosition(position);
         e.getComponent<cro::Model>().setHidden(!localPlayer);
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -939,6 +967,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     //if client is ours activate input/set initial stroke direction
     m_inputParser.setActive(localPlayer);
     m_inputParser.setHoleDirection(m_holeData[m_currentHole].pin - player.position);
+
+    //TODO apply the correct sprite to the player entity
 }
 
 void GolfState::hitBall()
