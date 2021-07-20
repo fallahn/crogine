@@ -943,9 +943,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
 void GolfState::hitBall()
 {
-    //TODO adjust pitch on player input?
-    //should be 0 in putting mode, so perhaps adjust for club
-    auto pitch = cro::Util::Const::PI / 4.f;
+    auto pitch = Clubs[m_inputParser.getClub()].angle;// cro::Util::Const::PI / 4.f;
 
     auto yaw = m_inputParser.getYaw();
 
@@ -957,7 +955,7 @@ void GolfState::hitBall()
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     impulse = glm::toMat3(rotation) * impulse;
 
-    impulse *= 20.f * m_inputParser.getPower(); //TODO get this magnitude from input/current club
+    impulse *= Clubs[m_inputParser.getClub()].power * m_inputParser.getPower();
 
     InputUpdate update;
     update.clientID = m_sharedData.localPlayer.connectionID;

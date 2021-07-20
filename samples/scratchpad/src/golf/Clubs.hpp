@@ -37,11 +37,12 @@ source distribution.
 struct Club final
 {
     std::string name;
-    float distance = 0.f;
+    std::string distance;
+    float power = 0.f;
     float angle = 0.f;
 
-    Club(const std::string& n, float d, float a)
-        : name(n), distance(d), angle(a * cro::Util::Const::degToRad) {}
+    Club(const std::string& n, const std::string d, float p, float a)
+        : name(n), distance(d), power(p), angle(a * cro::Util::Const::degToRad) {}
 };
 
 struct ClubID final
@@ -56,10 +57,10 @@ struct ClubID final
 
 static const std::array Clubs =
 {
-    Club("Driver", 220.f, 45.f),
-    Club("3 Wood", 180.f, 45.f),
-    Club("5 Iron", 140.f, 40.f),
-    Club("9 Iron", 100.f, 40.f),
-    Club("Pitch Wedge", 80.f, 60.f),
-    Club("Putter", 40.f, 4.f)
+    Club("Driver", "220m", 46.5f, 45.f),
+    Club("3 Wood", "180m", 42.02f, 45.f),
+    Club("5 Iron", "140m", 37.35f, 40.f),
+    Club("9 Iron", "100m", 31.56f, 40.f),
+    Club("Pitch Wedge", "80m", 30.1f, 60.f),
+    Club("Putter", "40m", 10.f, 4.f)
 };

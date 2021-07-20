@@ -33,7 +33,7 @@ source distribution.
 
 namespace
 {
-    constexpr glm::vec3 Gravity(0.f, -9.f, 0.f);
+    constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
 }
 
 BallSystem::BallSystem(cro::MessageBus& mb)
