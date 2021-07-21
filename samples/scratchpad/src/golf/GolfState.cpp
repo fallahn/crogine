@@ -131,6 +131,15 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::Text("Terrain: %s", TerrainStrings[m_currentPlayer.terrain]);
 
                 ImGui::Image(m_debugTexture.getTexture(), { 300.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                if (ImGui::Button("Save Image"))
+                {
+                    auto path = cro::FileSystem::saveFileDialogue("","png");
+                    if (!path.empty())
+                    {
+                        m_debugTexture.saveToFile(path);
+                    }
+                }
             }
             ImGui::End();
         });
@@ -472,7 +481,7 @@ void GolfState::loadAssets()
     }
 
 #ifdef CRO_DEBUG_
-    m_debugTexture.create(800, 100);
+    m_debugTexture.create(300, 200);
 
     //debug material for wireframes
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
@@ -510,13 +519,13 @@ void GolfState::buildScene()
 
 
     //TODO replace this with custom plane / reflection rendering (see islands demo)
-    cro::ModelDefinition md(m_resources);
+    /*cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/quad.cmt");
 
     cro::Entity ent = m_gameScene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 150.f, 0.1f, -100.f });
     ent.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
-    md.createModel(ent);
+    md.createModel(ent);*/
 
 
     //displays the stroke direction
