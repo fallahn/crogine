@@ -591,7 +591,8 @@ void GolfState::buildScene()
     m_debugCam.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
     m_debugCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& dCam = m_debugCam.addComponent<cro::Camera>();
-    dCam.setOrthographic(0.f, 300.f, 0.f, 200.f, -0.1f, 200.f);
+    dCam.setOrthographic(0.f, 300.f, 0.f, 200.f, -0.1f, 20.f);
+    dCam.viewport = { 0.f, 0.f, 1.f, 1.f };
 #endif
 }
 
