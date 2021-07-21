@@ -139,6 +139,7 @@ private:
 
     void createTransition(const ActivePlayer&);
     void updateWindDisplay(glm::vec3);
+    std::int32_t getClub() const;
 
 #ifdef CRO_DEBUG_
     cro::Entity m_debugCam;

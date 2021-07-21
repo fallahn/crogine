@@ -101,11 +101,11 @@ void GameState::handleMessage(const cro::Message& msg)
     else if (msg.id == sv::MessageID::BallMessage)
     {
         const auto& data = msg.getData<BallEvent>();
-        if (data.type == BallEvent::Landed)
+        if (data.type == BallEvent::TurnEnded)
         {
             m_playerInfo[0].position = data.position;
             m_playerInfo[0].distanceToHole = glm::length(data.position - m_holeData[m_currentHole].pin);
-            //TODO update player terrain etc
+            m_playerInfo[0].terrain = data.terrain;
             setNextPlayer();
         }
     }
@@ -320,6 +320,11 @@ bool GameState::validateMap()
                 {
                     return false;
                 }
+                if (holeData.map.getFormat() != cro::ImageFormat::RGBA)
+                {
+                    LogE << "Server: hole map requires RGBA format" << std::endl;
+                    return false;
+                }
                 propCount++;
             }
             else if (name == "pin")
@@ -386,13 +391,12 @@ void GameState::initScene()
 
 
     auto& mb = m_sharedData.messageBus;
-    m_scene.addSystem<BallSystem>(mb);
+    m_scene.addSystem<BallSystem>(mb).setCollisionMap(m_holeData[0].map);
 }
 
 void GameState::buildWorld()
 {
     //create a ball entity for each player
-    //TODO sync with clients.
     for (auto& player : m_playerInfo)
     {
         player.ballEntity = m_scene.createEntity();

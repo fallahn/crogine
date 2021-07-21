@@ -29,6 +29,9 @@ source distribution.
 
 #pragma once
 
+#include <array>
+#include <string>
+
 struct TerrainID final
 {
     //these values a re multiplied by 10 in the colours blue channel
@@ -37,6 +40,13 @@ struct TerrainID final
     {
         Rough, Fairway,
         Green, Bunker,
-        Water
+        Water,
+
+        Count
     };
+};
+
+static const std::array<std::string, TerrainID::Count> TerrainStrings =
+{
+    "Rough", "Fairway", "Green", "Bunker", "Water"
 };

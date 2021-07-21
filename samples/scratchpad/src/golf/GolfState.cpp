@@ -112,21 +112,25 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("buns"))
             {
-                ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
+                //ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
 
-                ImGui::Text("ball pos: %3.3f, %3.3f, %3.3f", ballpos.x, ballpos.y, ballpos.z);
+                //ImGui::Text("ball pos: %3.3f, %3.3f, %3.3f", ballpos.x, ballpos.y, ballpos.z);
 
-                auto rot = m_inputParser.getYaw();
+                /*auto rot = m_inputParser.getYaw();
                 ImGui::Text("Rotation %3.2f", rot);
 
                 auto power = m_inputParser.getPower();
                 ImGui::Text("Power: %3.3f", power);
 
                 auto hook = m_inputParser.getHook();
-                ImGui::Text("Hook: %3.3f", hook);
+                ImGui::Text("Hook: %3.3f", hook);*/
 
-                auto club = Clubs[m_inputParser.getClub()];
+                auto club = Clubs[getClub()];
                 ImGui::Text("Club: %s", club);
+
+                ImGui::Text("Terrain: %s", TerrainStrings[m_currentPlayer.terrain]);
+
+                ImGui::Image(m_debugTexture.getTexture(), { 300.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
         });
@@ -256,11 +260,11 @@ void GolfState::render()
     m_renderTexture.display();
 
 #ifdef CRO_DEBUG_
-    //auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
-    //m_debugTexture.clear(cro::Colour::Magenta);
-    //m_gameScene.render(m_debugTexture);
-    //m_debugTexture.display();
-    //m_gameScene.setActiveCamera(oldCam);
+    auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
+    m_debugTexture.clear(cro::Colour::Magenta);
+    m_gameScene.render(m_debugTexture);
+    m_debugTexture.display();
+    m_gameScene.setActiveCamera(oldCam);
 #endif
 
     m_uiScene.render(cro::App::getWindow());
@@ -507,17 +511,18 @@ void GolfState::buildScene()
 
     //TODO replace this with custom plane / reflection rendering (see islands demo)
     cro::ModelDefinition md(m_resources);
-    md.loadFromFile("assets/golf/models/water_plane.cmt");
+    md.loadFromFile("assets/golf/models/quad.cmt");
 
-    cro::Entity entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 150.f, -0.1f, -100.f });
-    md.createModel(entity);
+    cro::Entity ent = m_gameScene.createEntity();
+    ent.addComponent<cro::Transform>().setPosition({ 150.f, 0.1f, -100.f });
+    ent.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
+    md.createModel(ent);
 
 
     //displays the stroke direction
     auto pos = m_holeData[0].tee;
     pos.y += 0.01f;
-    entity = m_gameScene.createEntity();
+    auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -583,9 +588,10 @@ void GolfState::buildScene()
     debugPos = m_holeData[0].tee;
 
     m_debugCam = m_gameScene.createEntity();
-    m_debugCam.addComponent<cro::Transform>().setPosition({ 20.f, -10.f, 100.f });
+    m_debugCam.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
+    m_debugCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& dCam = m_debugCam.addComponent<cro::Camera>();
-    dCam.setOrthographic(0.f, 250.f, 0.f, 31.25f, -0.1f, 200.f);
+    dCam.setOrthographic(0.f, 300.f, 0.f, 200.f, -0.1f, 200.f);
 #endif
 }
 
@@ -691,7 +697,6 @@ void GolfState::buildUI()
     entity.addComponent<UIElement>().position = WindPosition;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
-    //rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto windsock = entity;
 
     auto camDir = m_holeData[0].pin - m_currentPlayer.position;
@@ -710,6 +715,8 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [windsock](cro::Entity e, float)
     {
+        //TODO this might be better as a UI element because an increased
+        //font scale means the text needs to move lower
         e.getComponent<cro::Transform>().setPosition(windsock.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -36.f, 0.001f));
         e.getComponent<cro::Transform>().setScale(windsock.getComponent<cro::Transform>().getScale());
     };
@@ -759,13 +766,6 @@ void GolfState::buildUI()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     updateView(cam);
-
-#ifdef CRO_DEBUG_
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 500.f, 0.f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_debugTexture.getTexture());
-#endif
 }
 
 void GolfState::spawnBall(const ActorInfo& info)
@@ -990,6 +990,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_inputParser.setActive(localPlayer);
     m_inputParser.setHoleDirection(m_holeData[m_currentHole].pin - player.position);
 
+
     //TODO apply the correct sprite to the player entity
     cmd.targetFlags = CommandID::UI::PlayerSprite;
     cmd.action = [](cro::Entity e, float)
@@ -1001,7 +1002,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
 void GolfState::hitBall()
 {
-    auto pitch = Clubs[m_inputParser.getClub()].angle;// cro::Util::Const::PI / 4.f;
+    auto pitch = Clubs[getClub()].angle;// cro::Util::Const::PI / 4.f;
 
     auto yaw = m_inputParser.getYaw();
 
@@ -1013,7 +1014,7 @@ void GolfState::hitBall()
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     impulse = glm::toMat3(rotation) * impulse;
 
-    impulse *= Clubs[m_inputParser.getClub()].power * m_inputParser.getPower();
+    impulse *= Clubs[getClub()].power * m_inputParser.getPower();
 
     InputUpdate update;
     update.clientID = m_sharedData.localPlayer.connectionID;
@@ -1092,14 +1093,10 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         rotation -= m_camRotation;
         //e.getComponent<cro::Transform>().setRotation(rotation);
 
-        //this is smoother but has a horrible static var
+        //this is smoother but uses a horrible static var
         static float currRotation = 0.f;
-
         currRotation += (rotation - currRotation) * dt;
         e.getComponent<cro::Transform>().setRotation(currRotation);
-
-        /*auto curr = e.getComponent<cro::Transform>().getRotation();
-        e.getComponent<cro::Transform>().rotate((rotation - curr) * dt);*/
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -1113,4 +1110,14 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         e.getComponent<cro::Text>().setString(ss.str());
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
+std::int32_t GolfState::getClub() const
+{
+    switch (m_currentPlayer.terrain)
+    {
+    default: return m_inputParser.getClub();
+    case TerrainID::Bunker: return ClubID::PitchWedge;
+    case TerrainID::Green: return ClubID::Putter;
+    }
 }

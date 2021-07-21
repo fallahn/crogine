@@ -30,23 +30,25 @@ source distribution.
 #pragma once
 
 #include "../CommonConsts.hpp"
+#include "../Terrain.hpp"
 
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 struct ActivePlayer
 {
+    glm::vec3 position = glm::vec3(0.f);
     std::uint8_t client = 4;
     std::uint8_t player = 4;
-    glm::vec3 position = glm::vec3(0.f);
+    std::uint8_t terrain = TerrainID::Fairway;
 };
 
 struct PlayerStatus final : public ActivePlayer
 {
+    cro::Entity ballEntity;
+    float distanceToHole = 0.f; //used for sorting
     std::uint8_t stroke = 0;
     std::uint8_t score = 0;
-    float distanceToHole = 0.f; //used for sorting
-    cro::Entity ballEntity;
 };
 
 struct ActorInfo final

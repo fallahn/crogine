@@ -29,9 +29,16 @@ source distribution.
 
 #pragma once
 
+#include "Terrain.hpp"
+
 #include <crogine/ecs/System.hpp>
 
 #include <crogine/core/Clock.hpp>
+
+namespace cro
+{
+    class Image;
+}
 
 struct Ball final
 {
@@ -40,6 +47,8 @@ struct Ball final
     {
         Idle, Flight, Putt, Paused
     }state = State::Idle;
+
+    std::uint8_t terrain = TerrainID::Fairway;
 
     glm::vec3 velocity = glm::vec3(0.f);
     float delay = 0.f;
@@ -53,6 +62,8 @@ public:
     void process(float) override;
 
     glm::vec3 getWindDirection() const;
+
+    void setCollisionMap(const cro::Image&);
 
 private:
 
@@ -72,6 +83,8 @@ private:
 
     float m_windInterpTime;
     float m_currentWindInterpTime;
+
+    const cro::Image* m_collisionMap;
 
     void doCollision(cro::Entity);
     void updateWind();

@@ -83,6 +83,7 @@ namespace golf
 
         std::int32_t m_currentClub;
 
+        void setClub(float); //picks closest club to given distance
         void rotate(float);
         void checkControllerInput();
     };

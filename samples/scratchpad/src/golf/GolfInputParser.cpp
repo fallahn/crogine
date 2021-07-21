@@ -206,9 +206,15 @@ namespace golf
 
     void InputParser::setHoleDirection(glm::vec3 dir)
     {
-        if (glm::length2(dir) > 0)
+        //this assumes that dir is a vector from the player to
+        //the hole - otherwise the club selection will be wrong.
+
+        if (auto len2 = glm::length2(dir); len2 > 0)
         {
-            auto direction = glm::normalize(dir);
+            auto length = std::sqrt(len2);
+            setClub(length);
+
+            auto direction = dir / length;
             m_holeDirection = std::atan2(-direction.z, direction.x);
 
             m_rotation = 0.f;
@@ -329,6 +335,16 @@ namespace golf
     }
 
     //private
+    void InputParser::setClub(float dist)
+    {
+        m_currentClub = ClubID::NineIron;
+        while (Clubs[m_currentClub].target < dist
+            && m_currentClub != ClubID::Driver)
+        {
+            m_currentClub = (m_currentClub + ClubID::NineIron) % ClubID::PitchWedge;
+        }
+    }
+
     void InputParser::rotate(float rotation)
     {
         m_rotation = std::min(MaxRotation, std::max(-MaxRotation, m_rotation + rotation));

@@ -53,7 +53,8 @@ struct BallEvent final
 {
     enum
     {
-        Landed
+        Landed,
+        TurnEnded
     }type = Landed;
     std::int32_t terrain = -1;
     glm::vec3 position = glm::vec3(0.f);

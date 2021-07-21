@@ -40,9 +40,10 @@ struct Club final
     std::string distance;
     float power = 0.f;
     float angle = 0.f;
+    const float target = 0.f;
 
-    Club(const std::string& n, const std::string d, float p, float a)
-        : name(n), distance(d), power(p), angle(a * cro::Util::Const::degToRad) {}
+    Club(const std::string& n, const std::string d, float p, float a, float t)
+        : name(n), distance(d), power(p), angle(a * cro::Util::Const::degToRad), target(t) {}
 };
 
 struct ClubID final
@@ -57,10 +58,10 @@ struct ClubID final
 
 static const std::array Clubs =
 {
-    Club("Driver", "220m", 46.5f, 45.f),
-    Club("3 Wood", "180m", 42.02f, 45.f),
-    Club("5 Iron", "140m", 37.35f, 40.f),
-    Club("9 Iron", "100m", 31.56f, 40.f),
-    Club("Pitch Wedge", "80m", 30.1f, 60.f),
-    Club("Putter", "40m", 10.f, 4.f)
+    Club("Driver", "220m", 46.5f, 45.f, 220.f),
+    Club("3 Wood", "180m", 42.02f, 45.f, 180.f),
+    Club("5 Iron", "140m", 37.35f, 40.f, 140.f),
+    Club("9 Iron", "100m", 31.56f, 40.f, 100.f),
+    Club("Pitch Wedge", "80m", 30.1f, 60.f, 80.f),
+    Club("Putter", "40m", 10.f, 4.f, 40.f)
 };

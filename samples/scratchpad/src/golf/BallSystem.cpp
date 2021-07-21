@@ -32,8 +32,13 @@ source distribution.
 #include "server/ServerMessages.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
+
+#include <crogine/graphics/Image.hpp>
+
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Easings.hpp>
+
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 namespace
 {
@@ -63,10 +68,13 @@ BallSystem::BallSystem(cro::MessageBus& mb)
     m_windDirTarget         (1.f, 0.f, 0.f),
     m_windStrength          (0.f),
     m_windStrengthSrc       (m_windStrength),
-    m_windStrengthTarget    (3.f)
+    m_windStrengthTarget    (0.1f),
+    m_collisionMap          (nullptr)
 {
     requireComponent<cro::Transform>();
     requireComponent<Ball>();
+
+    updateWind();
 }
 
 //public
@@ -103,15 +111,7 @@ void BallSystem::process(float dt)
                 tx.move(ball.velocity * dt);
 
                 //test collision
-                if (auto y = entity.getComponent<cro::Transform>().getPosition().y; y < 0)
-                {
-                    //ball.state = Ball::State::Idle;
-                    tx.move({ 0.f, -y, 0.f });
-                    /*ball.velocity = glm::reflect(ball.velocity, glm::vec3(0.f, 1.f, 0.f));
-                    ball.velocity *= 0.5f;*/
-                    ball.state = Ball::State::Paused;
-                    ball.delay = 2.f;
-                }
+                doCollision(entity);
             }
         }
         break;
@@ -125,8 +125,8 @@ void BallSystem::process(float dt)
             {
                 //send message to report status
                 auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
-                msg->type = BallEvent::Landed;
-                msg->terrain = TerrainID::Fairway;
+                msg->type = BallEvent::TurnEnded;
+                msg->terrain = ball.terrain;
                 msg->position = entity.getComponent<cro::Transform>().getPosition();
 
                 ball.state = Ball::State::Idle;
@@ -146,18 +146,67 @@ glm::vec3 BallSystem::getWindDirection() const
     return { m_windDirection.x, m_windStrength, m_windDirection.z };
 }
 
+void BallSystem::setCollisionMap(const cro::Image& map)
+{
+    m_collisionMap = &map;
+}
+
 //private
 void BallSystem::doCollision(cro::Entity entity)
 {
     //check height
+    auto& tx = entity.getComponent<cro::Transform>();
+    if (auto pos = tx.getPosition(); pos.y < 0)
+    {
+        pos.y = 0.f;
+        tx.setPosition(pos);
 
-    //if ball below radius, check terrain
+        auto& ball = entity.getComponent<Ball>();
 
-    //apply dampening based on terrain (or splash)
+        auto size = m_collisionMap->getSize();
+        std::uint32_t x = std::max(0u, std::min(size.x, static_cast<std::uint32_t>(std::floor(pos.x))));
+        std::uint32_t y = std::max(0u, std::min(size.y, static_cast<std::uint32_t>(std::floor(-pos.z))));
 
-    //check the surface map for normal vector for reflection
+        CRO_ASSERT(m_collisionMap->getFormat() == cro::ImageFormat::RGBA, "expected RGBA format");
 
-    //update ball velocity / state
+        auto index = ((y * size.x) + x) * 4;
+
+        //R,G are slope vector, B is terrain * 10
+        std::uint8_t terrain = m_collisionMap->getPixelData()[index + 2] / 10;
+        terrain = std::min(static_cast<std::uint8_t>(TerrainID::Water), terrain);
+
+        //TODO get normal from map info - potentially refactor so we have full surface normal
+        //and terrain shifted to alpha channel
+        glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
+
+
+        //apply dampening based on terrain (or splash)
+        switch (terrain)
+        {
+        default: break;
+        case TerrainID::Bunker:
+        case TerrainID::Water:
+            ball.velocity = glm::vec3(0.f);
+            break;
+        case TerrainID::Fairway:
+        case TerrainID::Green:
+            ball.velocity *= 0.2f;
+            ball.velocity = glm::reflect(ball.velocity, normal);
+            break;
+        case TerrainID::Rough:
+            ball.velocity *= 0.05f;
+            ball.velocity = glm::reflect(ball.velocity, normal);
+            break;
+        }
+
+        //stop the ball if velocity low enough
+        if (glm::length2(ball.velocity) < 0.01f)
+        {
+            ball.state = Ball::State::Paused;
+            ball.delay = 2.f;
+            ball.terrain = terrain;
+        }
+    }
 }
 
 void BallSystem::updateWind()
