@@ -80,6 +80,7 @@ private:
     std::uint32_t m_currentHole;
     ActivePlayer m_currentPlayer;
 
+    //UI stuffs
     struct SpriteID final
     {
         enum
@@ -109,6 +110,10 @@ private:
             Count
         };
     };
+    float m_camRotation; //used to offset the rotation of the wind indicator
+    //-----------
+
+
 
     struct BallResource final
     {

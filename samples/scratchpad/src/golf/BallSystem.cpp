@@ -72,45 +72,7 @@ BallSystem::BallSystem(cro::MessageBus& mb)
 //public
 void BallSystem::process(float dt)
 {
-    auto resetInterp =
-        [&]()
-    {
-        m_windDirSrc = m_windDirection;
-        m_windStrengthSrc = m_windStrength;
-
-        m_currentWindInterpTime = 0.f;
-        m_windInterpTime = static_cast<float>(cro::Util::Random::value(50, 75)) / 10.f;
-    };
-
-    //update wind direction
-    if (m_windDirClock.elapsed() > m_windDirTime)
-    {
-        m_windDirClock.restart();
-        m_windDirTime = cro::seconds(static_cast<float>(cro::Util::Random::value(100, 220)) / 10.f);
-
-        //create new direction
-        m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
-        m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
-
-        m_windDirTarget = glm::normalize(m_windDirTarget);
-
-        resetInterp();
-    }
-    
-
-    //update wind strength
-    if (m_windStrengthClock.elapsed() > m_windStrengthTime)
-    {
-        m_windStrengthClock.restart();
-        m_windStrengthTime = cro::seconds(static_cast<float>(cro::Util::Random::value(80, 180)) / 10.f);
-
-        m_windStrengthTarget = static_cast<float>(cro::Util::Random::value(1, 10)) / 10.f;
-
-        resetInterp();
-    }
-
     //interpolate current strength/direction
-    //TODO - only do this when balls are idle?
     m_currentWindInterpTime = std::min(m_windInterpTime, m_currentWindInterpTime + dt);
     float interp = m_currentWindInterpTime / m_windInterpTime;
     m_windDirection = interpolate(m_windDirSrc, m_windDirTarget, interp);
@@ -168,6 +130,8 @@ void BallSystem::process(float dt)
                 msg->position = entity.getComponent<cro::Transform>().getPosition();
 
                 ball.state = Ball::State::Idle;
+                updateWind(); //is a bit less random but at least stops the wind
+                //changing direction mid-stroke which is just annoying.
             }
         }
             break;
@@ -194,4 +158,43 @@ void BallSystem::doCollision(cro::Entity entity)
     //check the surface map for normal vector for reflection
 
     //update ball velocity / state
+}
+
+void BallSystem::updateWind()
+{
+    auto resetInterp =
+        [&]()
+    {
+        m_windDirSrc = m_windDirection;
+        m_windStrengthSrc = m_windStrength;
+
+        m_currentWindInterpTime = 0.f;
+        m_windInterpTime = static_cast<float>(cro::Util::Random::value(50, 75)) / 10.f;
+    };
+
+    //update wind direction
+    if (m_windDirClock.elapsed() > m_windDirTime)
+    {
+        m_windDirClock.restart();
+        m_windDirTime = cro::seconds(static_cast<float>(cro::Util::Random::value(100, 220)) / 10.f);
+
+        //create new direction
+        m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
+        m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
+
+        m_windDirTarget = glm::normalize(m_windDirTarget);
+
+        resetInterp();
+    }
+
+    //update wind strength
+    if (m_windStrengthClock.elapsed() > m_windStrengthTime)
+    {
+        m_windStrengthClock.restart();
+        m_windStrengthTime = cro::seconds(static_cast<float>(cro::Util::Random::value(80, 180)) / 10.f);
+
+        m_windStrengthTarget = static_cast<float>(cro::Util::Random::value(1, 10)) / 10.f;
+
+        resetInterp();
+    }
 }

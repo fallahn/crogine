@@ -74,4 +74,5 @@ private:
     float m_currentWindInterpTime;
 
     void doCollision(cro::Entity);
+    void updateWind();
 };

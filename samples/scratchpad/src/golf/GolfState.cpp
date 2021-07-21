@@ -71,6 +71,8 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include "../ErrorCheck.hpp"
 
+#include <sstream>
+
 namespace
 {
     glm::vec3 debugPos = glm::vec3(0.f);
@@ -96,7 +98,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_uiScene       (context.appInstance.getMessageBus()),
     m_inputParser   (sd.inputBinding, context.appInstance.getMessageBus()),
     m_wantsGameState(true),
-    m_currentHole   (0)
+    m_currentHole   (0),
+    m_camRotation   (0.f)
 {
     context.mainWindow.loadResources([this]() {
         loadAssets();
@@ -109,6 +112,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("buns"))
             {
+                ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
+
                 ImGui::Text("ball pos: %3.3f, %3.3f, %3.3f", ballpos.x, ballpos.y, ballpos.z);
 
                 auto rot = m_inputParser.getYaw();
@@ -499,14 +504,14 @@ void GolfState::buildScene()
         return;
     }
 
+
+    //TODO replace this with custom plane / reflection rendering (see islands demo)
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/water_plane.cmt");
 
     cro::Entity entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 150.f, -0.1f, -100.f });
     md.createModel(entity);
-
-
 
 
     //displays the stroke direction
@@ -550,8 +555,6 @@ void GolfState::buildScene()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     entity.getComponent<cro::Model>().setHidden(true);
-
-
 
 
 
@@ -688,12 +691,28 @@ void GolfState::buildUI()
     entity.addComponent<UIElement>().position = WindPosition;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
-    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    //TODO wind callback to rotate with wind direction
+    //rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto windsock = entity;
 
-
+    auto camDir = m_holeData[0].pin - m_currentPlayer.position;
+    m_camRotation = std::atan2(-camDir.z, camDir.y);
 
     auto& font = m_resources.fonts.get(FontID::UI);
+
+    //wind strength
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindString;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [windsock](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setPosition(windsock.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -36.f, 0.001f));
+        e.getComponent<cro::Transform>().setScale(windsock.getComponent<cro::Transform>().getScale());
+    };
 
     //player's name
     entity = m_uiScene.createEntity();
@@ -1026,7 +1045,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
 
-    //creates an entity which calls set campos in an
+    //creates an entity which calls setCamPosition() in an
     //interpolated manner until we reach the dest,
     //at which point we update the active player and
     //the ent destroys itself
@@ -1041,6 +1060,9 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
         auto currPos = e.getComponent<cro::Transform>().getPosition();
         auto travel = playerData.position - currPos;
+
+        auto pinDir = m_holeData[m_currentHole].pin - currPos;
+        m_camRotation = std::atan2(-pinDir.z, pinDir.x);
 
         if (glm::length2(travel) < 0.01f)
         {
@@ -1062,15 +1084,33 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
 void GolfState::updateWindDisplay(glm::vec3 direction)
 {
-    //TODO nicely interpolate this (requires timestamps)
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::WindSock;
-    cmd.action = [direction](cro::Entity e, float)
+    cmd.action = [&, direction](cro::Entity e, float dt)
     {
         float rotation = std::atan2(-direction.z, direction.x);
-        e.getComponent<cro::Transform>().setRotation(rotation);
+        rotation -= m_camRotation;
+        //e.getComponent<cro::Transform>().setRotation(rotation);
 
-        //TODO strength is store in y component
+        //this is smoother but has a horrible static var
+        static float currRotation = 0.f;
+
+        currRotation += (rotation - currRotation) * dt;
+        e.getComponent<cro::Transform>().setRotation(currRotation);
+
+        /*auto curr = e.getComponent<cro::Transform>().getRotation();
+        e.getComponent<cro::Transform>().rotate((rotation - curr) * dt);*/
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::UI::WindString;
+    cmd.action = [direction](cro::Entity e, float dt)
+    {
+        float knots = direction.y * KnotsPerMetre;
+        std::stringstream ss;
+        ss.precision(2);
+        ss << std::fixed << knots << " knots";
+        e.getComponent<cro::Text>().setString(ss.str());
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
